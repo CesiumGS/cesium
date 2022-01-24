@@ -111,7 +111,7 @@ function processInstanceFeatureIds(renderResources, instances, frameState) {
     var variableName = "instanceFeatureId_" + i;
 
     if (featureIds instanceof ModelComponents.FeatureIdAttribute) {
-      processAttribute(renderResources, featureIds, variableName);
+      processInstanceAttribute(renderResources, featureIds, variableName);
     } else {
       var instanceDivisor = 1;
       processImplicitRange(
@@ -152,6 +152,61 @@ function processPrimitiveFeatureIds(renderResources, primitive, frameState) {
       processTexture(renderResources, featureIds, variableName, i, frameState);
     }
   }
+}
+
+function processInstanceAttribute(
+  renderResources,
+  featureIdAttribute,
+  variableName
+) {
+  // Add a field to the FeatureIds struct.
+  // Example:
+  // struct FeatureIds {
+  //   ...
+  //   float instanceFeatureId_n;
+  //   ...
+  // }
+  var shaderBuilder = renderResources.shaderBuilder;
+  shaderBuilder.addStructField(
+    FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
+    "float",
+    variableName
+  );
+  shaderBuilder.addStructField(
+    FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
+    "float",
+    variableName
+  );
+
+  // Initialize the field from the corresponding attribute.
+  // Example: featureIds.instanceFeatureId_n = attributes.instanceFeatureId_0;
+  var setIndex = featureIdAttribute.setIndex;
+  var prefix = variableName.replace(/_\d+$/, "_");
+
+  var attributeName = "a_" + prefix + setIndex;
+  var varyingName = "v_" + prefix + setIndex;
+  var vertexLine = "featureIds." + variableName + " = " + attributeName + ";";
+  var fragmentLine = "featureIds." + variableName + " = " + varyingName + ";";
+
+  shaderBuilder.addFunctionLines(
+    FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_VS,
+    [vertexLine]
+  );
+  shaderBuilder.addFunctionLines(
+    FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,
+    [fragmentLine]
+  );
+
+  // Instanced attributes don't normally need varyings, so add one here
+  shaderBuilder.addVarying("float", varyingName);
+
+  // The varying needs initialization in the vertex shader
+  // Example:
+  // v_instanceFeatureId_n = a_instanceFeatureId_n;
+  shaderBuilder.addFunctionLines(
+    FeatureIdPipelineStage.FUNCTION_ID_SET_FEATURE_ID_VARYINGS,
+    [varyingName + " = " + attributeName + ";"]
+  );
 }
 
 function processAttribute(renderResources, featureIdAttribute, variableName) {
