@@ -168,6 +168,10 @@ Cesium3DTilesTester.rejectsReadyPromiseOnError = function (
     _statistics: {
       batchTableByteLength: 0,
     },
+    imageBasedLightingFactor: {
+      x: 1,
+      y: 1,
+    },
   };
   var url = Resource.createIfNeeded("");
   var content = Cesium3DTileContentFactory[type](
