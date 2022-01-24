@@ -79,6 +79,8 @@ export default function ModelExperimentalNode(options) {
 
   /**
    * Update stages to apply to this primitive.
+   *
+   * @private
    */
   this.updateStages = [];
 

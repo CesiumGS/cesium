@@ -611,7 +611,6 @@ Object.defineProperties(ModelExperimental.prototype, {
    * @memberof ModelExperimental.prototype
    *
    * @type {Number}
-   * @readonly
    *
    * @default 0
    */
