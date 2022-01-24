@@ -5056,14 +5056,14 @@ function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
       clampedCart.height += cartoPosition.height;
       ellipsoid.cartographicToCartesian(clampedCart, clampedPosition);
     } else if (model.heightReference === HeightReference.CLIP_TO_GROUND) {
-      var clampedCart = ellipsoid.cartesianToCartographic(
+      var clippedCart = ellipsoid.cartesianToCartographic(
         clampedPosition,
         scratchCartographic
       );
-      if (cartoPosition.height >= clampedCart.height) {
-        clampedCart.height = cartoPosition.height;
+      if (cartoPosition.height >= clippedCart.height) {
+        clippedCart.height = cartoPosition.height;
       }
-      ellipsoid.cartographicToCartesian(clampedCart, clampedPosition);
+      ellipsoid.cartographicToCartesian(clippedCart, clampedPosition);
     }
 
     var clampedModelMatrix = model._clampedModelMatrix;
