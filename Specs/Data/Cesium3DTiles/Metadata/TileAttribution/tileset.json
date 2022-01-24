@@ -9,6 +9,15 @@
     "3DTILES_metadata": {
       "schema": {
         "classes": {
+          "tileset": {
+            "properties": {
+              "attribution": {
+                "semantic": "ATTRIBUTION",
+                "type": "ARRAY",
+                "componentType": "STRING"
+              }
+            }
+          },
           "tile": {
             "properties": {
               "attribution": {
@@ -18,6 +27,14 @@
               }
             }
           }
+        }
+      },
+      "tileset": {
+        "class": "tileset",
+        "properties": {
+          "attribution": [
+            "<a href = \"https://github.com/CesiumGS/3d-tiles\" target=\"_blank\" rel=\"noopener\"><img alt=\"3D Tiles\" src=\"https://cesium.com/logo-kit/3d-tiles/3DTiles_light_color.png\" width=\"128\"></a>"
+          ]
         }
       }
     }
@@ -54,7 +71,7 @@
         "class": "tile",
         "properties": {
           "attribution": [
-            "<a href = \"https://github.com/CesiumGS/3d-tiles\" target=\"_blank\" rel=\"noopener\"><img alt=\"3D Tiles\" src=\"https://cesium.com/logo-kit/3d-tiles/3DTiles_light_color.png\" width=\"128\"></a>"
+            "Attribution First"
           ]
         }
       }
@@ -80,9 +97,9 @@
             "class": "tile",
             "properties": {
               "attribution": [
-                "Attribution First",
                 "Attribution Second",
-                "Attribution Third"
+                "Attribution Third",
+                "Attribution Fourth"
               ]
             }
           }
@@ -108,7 +125,7 @@
             "class": "tile",
             "properties": {
               "attribution": [
-                "Attribution First"
+                "Attribution Second"
               ]
             }
           }

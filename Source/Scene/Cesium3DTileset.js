@@ -41,6 +41,7 @@ import hasExtension from "./hasExtension.js";
 import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import LabelCollection from "./LabelCollection.js";
+import MetadataSemantic from "./MetadataSemantic.js";
 import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
 import PointCloudShading from "./PointCloudShading.js";
 import ResourceCache from "./ResourceCache.js";
@@ -1006,6 +1007,9 @@ function Cesium3DTileset(options) {
       that._gltfUpAxis = gltfUpAxis;
       that._extras = tilesetJson.extras;
 
+      var i;
+      var credits = defined(that._credits) ? that._credits : [];
+
       var extras = asset.extras;
       if (
         defined(extras) &&
@@ -1013,15 +1017,26 @@ function Cesium3DTileset(options) {
         defined(extras.cesium.credits)
       ) {
         var extraCredits = extras.cesium.credits;
-        var credits = that._credits;
-        if (!defined(credits)) {
-          credits = [];
-          that._credits = credits;
-        }
-        for (var i = 0; i < extraCredits.length; ++i) {
+        for (i = 0; i < extraCredits.length; ++i) {
           var credit = extraCredits[i];
           credits.push(new Credit(credit.html, credit.showOnScreen));
         }
+      }
+
+      if (defined(that.metadata) && defined(that.metadata.tileset)) {
+        var attribution = that.metadata.tileset.getPropertyBySemantic(
+          MetadataSemantic.ATTRIBUTION
+        );
+        if (defined(attribution)) {
+          var attributionLength = attribution.length;
+          for (i = 0; i < attributionLength; ++i) {
+            credits.push(new Credit(attribution[i]));
+          }
+        }
+      }
+
+      if (credits.length > 0) {
+        that._credits = credits;
       }
 
       // Save the original, untransformed bounding volume position so we can apply
