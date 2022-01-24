@@ -119,13 +119,17 @@ export default function ModelExperimental(options) {
   this._allowPicking = defaultValue(options.allowPicking, true);
   this._show = defaultValue(options.show, true);
 
+  this._style = undefined;
+
   this._featureIdIndex = defaultValue(options.featureIdIndex, 0);
   this._instanceFeatureIdIndex = defaultValue(
     options.instanceFeatureIdIndex,
     0
   );
+
   this._featureTables = [];
   this._featureTableId = undefined;
+  this._featureTableIdDirty = true;
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._resources = [];
@@ -212,7 +216,6 @@ function initialize(model) {
       var featureMetadata = components.featureMetadata;
 
       if (defined(featureMetadata) && featureMetadata.propertyTableCount > 0) {
-        model.featureTableId = selectFeatureTableId(components, model);
         createModelFeatureTables(model, featureMetadata);
       }
 
@@ -592,15 +595,11 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._featureIdIndex;
     },
     set: function(value) {
-      if (value === this._featureIdIndex) {
-        return;
+      if (value !== this._featureIdIndex) {
+        this._featureTableIdDirty = true;
       }
 
       this._featureIdIndex = value;
-      if (defined(this._sceneGraph)) {
-        this.featureTableId = selectFeatureTableId(this._sceneGraph.components, this);
-        this.resetDrawCommands();
-      }
     }
   },
 
@@ -621,15 +620,11 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._instanceFeatureIdIndex;
     },
     set: function(value) {
-      if (value === this._instanceFeatureIdIndex) {
-        return;
+      if (value !== this._instanceFeatureIdIndex) {
+        this._featureTableIdDirty = true;
       }
 
       this._instanceFeatureIdIndex = value;
-      if (defined(this._sceneGraph)) {
-        this.featureTableId = selectFeatureTableId(this._sceneGraph.components, this);
-        this.resetDrawCommands();
-      }
     }
   },
 });
@@ -682,6 +677,11 @@ ModelExperimental.prototype.update = function (frameState) {
     return;
   }
 
+  if (this._featureTableIdDirty) {
+    updateFeatureTableId(this);
+    this._featureTableIdDirty = false;
+  }
+
   var featureTables = this._featureTables;
   for (var i = 0; i < featureTables.length; i++) {
     featureTables[i].update(frameState);
@@ -729,6 +729,22 @@ ModelExperimental.prototype.update = function (frameState) {
     frameState.commandList.push.apply(frameState.commandList, drawCommands);
   }
 };
+
+function updateFeatureTableId(model) {
+  var components = model._sceneGraph.components;
+  var featureMetadata = components.featureMetadata;
+
+  if (defined(featureMetadata) && featureMetadata.propertyTableCount > 0) {
+    model.featureTableId = selectFeatureTableId(components, model);
+    
+    if (defined(model._style)) {
+      // Re-apply the style to reflect the new feature ID table
+      model.applyStyle(model._style);
+    } else {
+      model.resetDrawCommands();
+    }
+  }
+}
 
 /**
  * Returns true if this object was destroyed; otherwise, false.
