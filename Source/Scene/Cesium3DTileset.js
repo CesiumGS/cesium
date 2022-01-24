@@ -964,21 +964,21 @@ function Cesium3DTileset(options) {
   );
 
   /**
-   * The index into the list of primitive feature IDs used for picking and 
-   * styling. For EXT_feature_metadata, feature ID attributes are listed before 
+   * The index into the list of primitive feature IDs used for picking and
+   * styling. For EXT_feature_metadata, feature ID attributes are listed before
    * feature ID textures. If both per-primitive and per-instance feature IDs are
    * present, the instance feature IDs take priority.
-   * 
+   *
    * @type {Number}
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   this.featureIdIndex = defaultValue(options.featureIdIndex, 0);
-  
+
   /**
-   * The index into the list of instance feature IDs used for picking and 
+   * The index into the list of instance feature IDs used for picking and
    * styling. If both per-primitive and per-instance feature IDs are present,
    * the instance feature IDs take priority.
-   * 
+   *
    * @type {Number}
    * @readonly
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.

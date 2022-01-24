@@ -578,7 +578,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * The index into the list of primitive feature IDs used for picking and 
+   * The index into the list of primitive feature IDs used for picking and
    * styling. For EXT_feature_metadata, feature ID attributes are listed before
    * feature ID textures. If both per-primitive and per-instance feature IDs are
    * present, the instance feature IDs take priority.
@@ -594,18 +594,18 @@ Object.defineProperties(ModelExperimental.prototype, {
     get: function () {
       return this._featureIdIndex;
     },
-    set: function(value) {
+    set: function (value) {
       if (value !== this._featureIdIndex) {
         this._featureTableIdDirty = true;
       }
 
       this._featureIdIndex = value;
-    }
+    },
   },
 
   /**
-   * The index into the list of instance feature IDs used for picking and 
-   * styling. If both per-primitive and per-instance feature IDs are present, 
+   * The index into the list of instance feature IDs used for picking and
+   * styling. If both per-primitive and per-instance feature IDs are present,
    * the instance feature IDs take priority.
    *
    * @memberof ModelExperimental.prototype
@@ -619,13 +619,13 @@ Object.defineProperties(ModelExperimental.prototype, {
     get: function () {
       return this._instanceFeatureIdIndex;
     },
-    set: function(value) {
+    set: function (value) {
       if (value !== this._instanceFeatureIdIndex) {
         this._featureTableIdDirty = true;
       }
 
       this._instanceFeatureIdIndex = value;
-    }
+    },
   },
 });
 
@@ -736,7 +736,7 @@ function updateFeatureTableId(model) {
 
   if (defined(featureMetadata) && featureMetadata.propertyTableCount > 0) {
     model.featureTableId = selectFeatureTableId(components, model);
-    
+
     if (defined(model._style)) {
       // Re-apply the style to reflect the new feature ID table
       model.applyStyle(model._style);
