@@ -511,19 +511,27 @@ function loadAttribute(
   var bufferViewId = accessor.bufferView;
 
   // For .b3dm, rename _BATCHID (or the legacy BATCHID) to FEATURE_ID_0
-  // for compatibility with EXT_feature_metadata
+  // in the generated model components for compatibility with EXT_mesh_features
+  var renamedSemantic = gltfSemantic;
   if (
     loader._renameBatchIdSemantic &&
     (gltfSemantic === "_BATCHID" || gltfSemantic === "BATCHID")
   ) {
-    gltfSemantic = "FEATURE_ID_0";
+    renamedSemantic = "FEATURE_ID_0";
   }
 
   var name = gltfSemantic;
-  var semantic = semanticType.fromGltfSemantic(gltfSemantic);
-  var setIndex = defined(semantic) ? getSetIndex(gltfSemantic) : undefined;
-
-  var attribute = createAttribute(gltf, accessorId, name, semantic, setIndex);
+  var modelSemantic = semanticType.fromGltfSemantic(renamedSemantic);
+  var setIndex = defined(modelSemantic)
+    ? getSetIndex(renamedSemantic)
+    : undefined;
+  var attribute = createAttribute(
+    gltf,
+    accessorId,
+    name,
+    modelSemantic,
+    setIndex
+  );
 
   if (!defined(draco) && !defined(bufferViewId)) {
     return attribute;
