@@ -702,7 +702,11 @@ Entity.prototype.computeModelMatrixForHeightReference = function (
   }
 
   var carto = ellipsoid.cartesianToCartographic(position, cartoScratch);
-  if (heightReference === HeightReference.CLAMP_TO_GROUND) {
+  if (heightReference === HeightReference.CLIP_TO_GROUND) {
+    if (carto.height < heightOffset) {
+      carto.height = heightOffset;
+    }
+  } else if (heightReference === HeightReference.CLAMP_TO_GROUND) {
     carto.height = heightOffset;
   } else {
     carto.height += heightOffset;

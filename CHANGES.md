@@ -8,6 +8,7 @@
 - Added `I3dmLoader` to transcode .i3dm to `ModelExperimental`. [#9968](https://github.com/CesiumGS/cesium/pull/9968)
 - Added `PntsLoader` to transcode .pnts to `ModelExperimental`. [#9978](https://github.com/CesiumGS/cesium/pull/9978)
 - Added point cloud attenuation support to `ModelExperimental`. [#9998](https://github.com/CesiumGS/cesium/pull/9998)
+- Added `CLIP_TO_GROUND` to `HeightReference`. [#10029](https://github.com/CesiumGS/cesium/issues/10029)
 
 ##### Fixes :wrench:
 

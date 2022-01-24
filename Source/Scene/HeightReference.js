@@ -24,5 +24,12 @@ var HeightReference = {
    * @constant
    */
   RELATIVE_TO_GROUND: 2,
+
+  /**
+   * The position is absolute, but clipped so that it does not go underground.
+   * @type {Number}
+   * @constant
+   */
+  CLIP_TO_GROUND: 3,
 };
 export default Object.freeze(HeightReference);

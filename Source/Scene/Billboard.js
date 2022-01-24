@@ -1115,6 +1115,21 @@ Billboard._updateClamping = function (collection, owner) {
       } else {
         clampedPosition.x += position.height;
       }
+    } else if (owner._heightReference === HeightReference.CLIP_TO_GROUND) {
+      if (owner._mode === SceneMode.SCENE3D) {
+        var clampedCart = ellipsoid.cartesianToCartographic(
+          clampedPosition,
+          scratchCartographic
+        );
+        if (position.height >= clampedCart.height) {
+          clampedCart.height = position.height;
+        }
+        ellipsoid.cartographicToCartesian(clampedCart, clampedPosition);
+      } else {
+        if (position.height >= clampedPosition.x) {
+          clampedPosition.x = position.height;
+        }
+      }
     }
     owner._clampedPosition = Cartesian3.clone(
       clampedPosition,
