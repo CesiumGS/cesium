@@ -522,8 +522,16 @@ function loadAttribute(
 
   var name = gltfSemantic;
   var modelSemantic = semanticType.fromGltfSemantic(renamedSemantic);
-  var setIndex = defined(modelSemantic) ? getSetIndex(renamedSemantic) : undefined;
-  var attribute = createAttribute(gltf, accessorId, name, modelSemantic, setIndex);
+  var setIndex = defined(modelSemantic)
+    ? getSetIndex(renamedSemantic)
+    : undefined;
+  var attribute = createAttribute(
+    gltf,
+    accessorId,
+    name,
+    modelSemantic,
+    setIndex
+  );
 
   if (!defined(draco) && !defined(bufferViewId)) {
     return attribute;
