@@ -537,7 +537,9 @@ function handleZoom(
   // distanceMeasure should be the height above the ellipsoid.
   // When approaching the surface, the zoomRate slows and stops minimumZoomDistance above it.
   var approachingSurface = diff > 0;
-  var minHeight = approachingSurface ? object.minimumZoomDistance * percentage : 0;
+  var minHeight = approachingSurface
+    ? object.minimumZoomDistance * percentage
+    : 0;
   var maxHeight = object.maximumZoomDistance;
 
   var minDistance = distanceMeasure - minHeight;
