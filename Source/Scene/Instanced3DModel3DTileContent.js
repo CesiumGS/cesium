@@ -526,6 +526,7 @@ Instanced3DModel3DTileContent.prototype.update = function (
   this._modelInstanceCollection.shadows = this._tileset.shadows;
   this._modelInstanceCollection.lightColor = this._tileset.lightColor;
   this._modelInstanceCollection.luminanceAtZenith = this._tileset.luminanceAtZenith;
+  this._modelInstanceCollection.imageBasedLightingFactor = this._tileset.imageBasedLightingFactor;
   this._modelInstanceCollection.sphericalHarmonicCoefficients = this._tileset.sphericalHarmonicCoefficients;
   this._modelInstanceCollection.specularEnvironmentMaps = this._tileset.specularEnvironmentMaps;
   this._modelInstanceCollection.backFaceCulling = this._tileset.backFaceCulling;
