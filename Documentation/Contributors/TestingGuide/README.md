@@ -43,7 +43,7 @@ All new code should have 100% code coverage and should pass all tests. Always ru
 
 The CesiumJS tests are written in JavaScript and use [Jasmine](http://jasmine.github.io/), a behavior-driven testing framework. Jasmine calls an individual test, e.g., a function with one or more assertions, a **spec** (however, the Cesium team usually still say "test"), and a group of related tests, e.g., all the tests for `Cartesian3`, a **suite**. Jasmine also calls an assertion, an **expectation**.
 
-When running CesiumJS locally, browse to [http://localhost:8080/](http://localhost:8080/) and there are several test options:
+When running CesiumJS locally, [start the local server](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/BuildGuide#build-the-code), browse to [http://localhost:8080/](http://localhost:8080/) and there are several test options:
 
 ### Run All Tests
 
