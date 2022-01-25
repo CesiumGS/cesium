@@ -14,9 +14,10 @@
 - Fixed an error when loading GeoJSON with null `stroke` or `fill` properties but valid opacity values. [#9717](https://github.com/CesiumGS/cesium/pull/9717)
 - Fixed `scene.pickTranslucentDepth` for translucent point clouds with eye dome lighting. [#9991](https://github.com/CesiumGS/cesium/pull/9991)
 - Added a setter for `tileset.pointCloudShading` that throws if set to `undefined` to clarify that this is disallowed. [#9998](https://github.com/CesiumGS/cesium/pull/9998)
-- Fixes handling .b3dm `_BATCHID` accessors in `ModelExperimental` [#10008](https://github.com/CesiumGS/cesium/pull/10008)
+- Fixes handling .b3dm `_BATCHID` accessors in `ModelExperimental` [#10008](https://github.com/CesiumGS/cesium/pull/10008) and [10031](https://github.com/CesiumGS/cesium/pull/10031)
 - Fixed path entity being drawn when data is unavailable [#1704](https://github.com/CesiumGS/cesium/pull/1704)
 - Fixed setting `tileset.imageBasedLightingFactor` has no effect on i3dm tile content. [#10020](https://github.com/CesiumGS/cesium/pull/10020)
+- Zooming out is no longer sluggish when close to `screenSpaceCameraController.minimumDistance`. [#9932](https://github.com/CesiumGS/cesium/pull/9932)
 
 ### 1.89 - 2022-01-03
 
