@@ -488,6 +488,7 @@ function deriveChildTile(
   childTile.implicitCoordinates = implicitCoordinates;
   childTile.implicitSubtree = subtree;
   childTile.metadata = tileMetadata;
+  childTile.initializeCredits();
 
   return childTile;
 }

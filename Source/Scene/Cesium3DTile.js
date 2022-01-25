@@ -318,8 +318,6 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    */
   this.metadata = metadata;
 
-  this._credits = createCredits(metadata, parent, hasEmptyContent);
-
   /**
    * The node in the tileset's LRU cache, used to determine when to unload a tile's content.
    *
@@ -475,6 +473,9 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this._colorDirty = false;
 
   this._request = undefined;
+
+  this._credits = undefined;
+  this.initializeCredits();
 }
 
 // This can be overridden for testing purposes
@@ -757,20 +758,33 @@ Object.defineProperties(Cesium3DTile.prototype, {
   },
 });
 
-function createCredits(metadata, parent, hasEmptyContent) {
+/**
+ * Initialize tile credits from the tile metadata ATTRIBUTION semantic.
+ *
+ * @private
+ */
+Cesium3DTile.prototype.initializeCredits = function () {
+  var hasEmptyContent = this.hasEmptyContent;
+  var metadata = this.metadata;
+  var parent = this.parent;
+
   if (hasEmptyContent) {
-    return undefined;
+    return;
   }
 
+  var parentCredits = defined(parent) ? parent.credits : undefined;
+
   if (!defined(metadata)) {
-    return defined(parent) ? parent.credits : undefined;
+    this._credits = parentCredits;
+    return;
   }
 
   var attribution = metadata.getPropertyBySemantic(
     MetadataSemantic.ATTRIBUTION
   );
   if (!defined(attribution) || attribution.length === 0) {
-    return defined(parent) ? parent.credits : undefined;
+    this._credits = parentCredits;
+    return;
   }
 
   var attributionLength = attribution.length;
@@ -778,8 +792,8 @@ function createCredits(metadata, parent, hasEmptyContent) {
   for (var i = 0; i < attributionLength; ++i) {
     credits[i] = new Credit(attribution[i]);
   }
-  return credits;
-}
+  this._credits = credits;
+};
 
 var scratchCartesian = new Cartesian3();
 function isPriorityDeferred(tile, frameState) {

@@ -15,42 +15,12 @@
         "classes": {
           "tile": {
             "properties": {
-              "quadrant": {
-                "componentType": "ENUM",
-                "enumType": "quadrantType"
-              },
-              "color": {
-                "type": "VEC3",
-                "componentType": "UINT8"
+              "attribution": {
+                "semantic": "ATTRIBUTION",
+                "type": "ARRAY",
+                "componentType": "STRING"
               }
             }
-          }
-        },
-        "enums": {
-          "quadrantType": {
-            "valueType": "UINT8",
-            "values": [
-              {
-                "name": "Southwest",
-                "value": 0
-              },
-              {
-                "name": "Southeast",
-                "value": 1
-              },
-              {
-                "name": "Northwest",
-                "value": 2
-              },
-              {
-                "name": "Northeast",
-                "value": 3
-              },
-              {
-                "name": "None",
-                "value": 4
-              }
-            ]
           }
         }
       }

@@ -1,0 +1,99 @@
+{
+  "asset": {
+    "version": "1.0"
+  },
+  "extensionsUsed": [
+    "3DTILES_implicit_tiling",
+    "3DTILES_metadata",
+    "3DTILES_multiple_contents"
+  ],
+  "extensionsRequired": [
+    "3DTILES_implicit_tiling",
+    "3DTILES_multiple_contents"
+  ],
+  "extensions": {
+    "3DTILES_metadata": {
+      "schema": {
+        "classes": {
+          "group": {
+            "properties": {
+              "attribution": {
+                "semantic": "ATTRIBUTION",
+                "type": "ARRAY",
+                "componentType": "STRING"
+              }
+            }
+          },
+          "tile": {
+            "properties": {
+              "attribution": {
+                "semantic": "ATTRIBUTION",
+                "type": "ARRAY",
+                "componentType": "STRING"
+              }
+            }
+          }
+        }
+      },
+      "groups": {
+        "groupA": {
+          "class": "group",
+          "properties": {
+            "attribution": ["Attribution Group A"]
+          }
+        },
+        "groupB": {
+          "class": "group",
+          "properties": {
+            "attribution": ["Attribution Group B"]
+          }
+        }
+      }
+    }
+  },
+  "geometricError": 240,
+  "root": {
+    "boundingVolume": {
+      "region": [
+        -1.3197209591796106,
+        0.6988424218,
+        -1.3196390408203893,
+        0.6989055782,
+        0,
+        88
+      ]
+    },
+    "extensions": {
+      "3DTILES_implicit_tiling": {
+        "subdivisionScheme": "QUADTREE",
+        "subtreeLevels": 2,
+        "maximumLevel": 1,
+        "subtrees": {
+          "uri": "subtrees/{level}.{x}.{y}.subtree"
+        }
+      },
+      "3DTILES_multiple_contents": {
+        "content": [
+          {
+            "uri": "content/groupA/{level}/{x}/{y}.b3dm",
+            "extensions": {
+              "3DTILES_metadata": {
+                "group": "groupA"
+              }
+            }
+          },
+          {
+            "uri": "content/groupB/{level}/{x}/{y}.b3dm",
+            "extensions": {
+              "3DTILES_metadata": {
+                "group": "groupB"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "geometricError": 70,
+    "refine": "ADD"
+  }
+}

@@ -3,7 +3,11 @@
     "version": "1.0"
   },
   "extensionsUsed": [
-    "3DTILES_metadata"
+    "3DTILES_metadata",
+    "3DTILES_multiple_contents"
+  ],
+  "extensionsRequired": [
+    "3DTILES_multiple_contents"
   ],
   "extensions": {
     "3DTILES_metadata": {
