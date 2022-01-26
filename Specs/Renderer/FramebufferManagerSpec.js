@@ -389,7 +389,7 @@ describe(
       });
       spyOn(FramebufferManager.prototype, "destroy").and.callThrough();
       fbm.update(context, 1, 1);
-      fbm.update(context, 1, 1, PixelDatatype.UNSIGNED_BYTE);
+      fbm.update(context, 1, 1, 1, PixelDatatype.UNSIGNED_BYTE);
       expect(FramebufferManager.prototype.destroy.calls.count()).toEqual(2);
     });
 
@@ -399,7 +399,7 @@ describe(
       });
       spyOn(FramebufferManager.prototype, "destroy").and.callThrough();
       fbm.update(context, 1, 1);
-      fbm.update(context, 1, 1, undefined, PixelFormat.RGBA);
+      fbm.update(context, 1, 1, 1, undefined, PixelFormat.RGBA);
       expect(FramebufferManager.prototype.destroy.calls.count()).toEqual(2);
     });
 

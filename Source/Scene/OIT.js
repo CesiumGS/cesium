@@ -671,7 +671,7 @@ function executeTranslucentCommandsSortedMultipass(
   passState.framebuffer = oit._adjustAlphaFBO.framebuffer;
   oit._adjustAlphaCommand.execute(context, passState);
 
-  var debugFramebuffer = oit._opaqueFBO;
+  var debugFramebuffer = oit._opaqueFBO.framebuffer;
   passState.framebuffer = oit._translucentFBO.framebuffer;
 
   for (j = 0; j < length; ++j) {
@@ -762,7 +762,7 @@ function executeTranslucentCommandsSortedMRT(
   passState.framebuffer = oit._adjustTranslucentFBO.framebuffer;
   oit._adjustTranslucentCommand.execute(context, passState);
 
-  var debugFramebuffer = oit._opaqueFBO;
+  var debugFramebuffer = oit._opaqueFBO.framebuffer;
   passState.framebuffer = oit._translucentFBO.framebuffer;
 
   var command;
