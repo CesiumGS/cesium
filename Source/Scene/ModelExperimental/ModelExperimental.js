@@ -735,13 +735,9 @@ function updateFeatureTableId(model) {
 
   if (defined(featureMetadata) && featureMetadata.propertyTableCount > 0) {
     model.featureTableId = selectFeatureTableId(components, model);
-
-    if (defined(model._style)) {
-      // Re-apply the style to reflect the new feature ID table
-      model.applyStyle(model._style);
-    } else {
-      model.resetDrawCommands();
-    }
+    // Re-apply the style to reflect the new feature ID table.
+    // This in turn triggers a rebuild of the draw commands.
+    model.applyStyle(model._style);
   }
 }
 
