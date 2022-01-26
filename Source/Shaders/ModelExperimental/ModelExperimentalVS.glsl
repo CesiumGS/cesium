@@ -20,7 +20,6 @@ void main()
     dequantizationStage(attributes);
     #endif
 
-
     FeatureIds featureIds;
     featureIdStage(featureIds, attributes);
 
@@ -58,9 +57,12 @@ void main()
 
     #endif
 
+    Metadata metadata;
+    metadataStage(metadata, attributes);
+
     #ifdef HAS_CUSTOM_VERTEX_SHADER
     czm_modelVertexOutput vsOutput = defaultVertexOutput(attributes.positionMC);
-    customShaderStage(vsOutput, attributes, featureIds);
+    customShaderStage(vsOutput, attributes, featureIds, metadata);
     #endif
 
     // Compute the final position in each coordinate system needed.

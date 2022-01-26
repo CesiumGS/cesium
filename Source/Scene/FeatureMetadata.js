@@ -128,6 +128,20 @@ Object.defineProperties(FeatureMetadata.prototype, {
       return this._propertyTables;
     },
   },
+
+  /**
+   * The property textures
+   *
+   * @memberof FeatureMetadata.prototype
+   * @type {PropertyTexture[]}
+   * @readonly
+   * @private
+   */
+  propertyTextures: {
+    get: function () {
+      return this._propertyTextures;
+    },
+  },
 });
 
 /**

@@ -127,6 +127,12 @@ Object.defineProperties(PropertyTexture.prototype, {
       return this._extensions;
     },
   },
+
+  properties: {
+    get: function () {
+      return this._properties;
+    },
+  },
 });
 
 /**

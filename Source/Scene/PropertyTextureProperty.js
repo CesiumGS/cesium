@@ -90,4 +90,36 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
   },
 });
 
+// uint8, normalized:
+// float property = texture2D(...).r;
+// vec2 property = texture2D(...).rg;
+// vec3 property = texture2D(...).rgb;
+// vec4 property = texture2D(...).rgba;
+
+// int8, normalized:
+// float property = 1.0 + 2.0 * (texture2D(...).r)
+
+PropertyTextureProperty.prototype.getGlslType = function () {
+  // TODO: fill this out
+  return "float";
+  //var classProperty = this._classProperty;
+
+  // Supported types:
+  // UINT8, normalized -> float
+  // FLOAT -> float
+
+  //var componentCount = classProperty.componentCount;
+
+  //var normalized = classProperty.normalized;
+
+  //if (classProperty.isFloat)
+  // FLOAT -> float
+  // VECn -> vecn
+  // ARRAY[FLOAT, 1] -> float
+  // ARRAY[FLOAT, 2] -> vec2
+  // ARRAY[FLOAT, 3] -> vec3
+  // ARRAY[FLOAT, 4] -> vec4
+  // ARRAY[FLOAT]
+};
+
 export default PropertyTextureProperty;

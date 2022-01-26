@@ -393,6 +393,21 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * Get the feature metadata object
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {FeatureMetadata}
+   * @readonly
+   * @private
+   */
+  featureMetadata: {
+    get: function () {
+      return this._sceneGraph.components.featureMetadata;
+    },
+  },
+
+  /**
    * The ID for the feature table to use for picking and styling in this model.
    *
    * @memberof ModelExperimental.prototype
