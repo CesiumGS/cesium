@@ -40,10 +40,12 @@ function OIT(context) {
     colorAttachmentsLength: this._translucentMRTSupport ? 2 : 1,
     createColorAttachments: false,
     createDepthAttachments: false,
+    depth: true,
   });
   this._alphaFBO = new FramebufferManager({
     createColorAttachments: false,
     createDepthAttachments: false,
+    depth: true,
   });
 
   this._adjustTranslucentFBO = new FramebufferManager({

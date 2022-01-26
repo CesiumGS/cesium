@@ -2326,6 +2326,7 @@ function executeCommands(scene, passState) {
         commands,
         invertClassification
       ) {
+        view.globeDepth.prepareTextures(context);
         view.oit.executeCommands(
           scene,
           executeFunction,
@@ -3508,13 +3509,15 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   var usePostProcess = environmentState.usePostProcess;
 
   var defaultFramebuffer = environmentState.originalFramebuffer;
-  var globeFramebuffer = useGlobeDepthFramebuffer ? globeDepth : undefined;
-  var sceneFramebuffer = view.sceneFramebuffer.framebuffer;
+  var globeFramebuffer = useGlobeDepthFramebuffer
+    ? globeDepth._colorFramebuffer
+    : undefined;
+  var sceneFramebuffer = view.sceneFramebuffer._colorFramebuffer;
   var idFramebuffer = view.sceneFramebuffer.idFramebuffer;
 
   if (useOIT) {
     passState.framebuffer = usePostProcess
-      ? sceneFramebuffer
+      ? sceneFramebuffer.framebuffer
       : defaultFramebuffer;
     view.oit.execute(context, passState);
   }
@@ -3529,7 +3532,6 @@ Scene.prototype.resolveFramebuffers = function (passState) {
 
   if (usePostProcess) {
     view.sceneFramebuffer.prepareColorFramebuffer(context);
-    sceneFramebuffer = view.sceneFramebuffer._colorFramebuffer._multisampleFramebuffer.getColorFramebuffer(); // todo@eli: need color FB here
     var inputFramebuffer = sceneFramebuffer;
     if (useGlobeDepthFramebuffer && !useOIT) {
       inputFramebuffer = globeFramebuffer;
@@ -3538,8 +3540,10 @@ Scene.prototype.resolveFramebuffers = function (passState) {
     var postProcess = this.postProcessStages;
     var colorTexture = inputFramebuffer.getColorTexture(0);
     var idTexture = idFramebuffer.getColorTexture(0);
-    var depthTexture = defaultValue(globeFramebuffer, sceneFramebuffer)
-      .depthStencilTexture;
+    var depthTexture = defaultValue(
+      globeFramebuffer,
+      sceneFramebuffer
+    ).getDepthStencilTexture();
     postProcess.execute(context, colorTexture, depthTexture, idTexture);
     postProcess.copy(context, defaultFramebuffer);
   }

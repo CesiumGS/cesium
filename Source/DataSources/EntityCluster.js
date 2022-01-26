@@ -852,7 +852,7 @@ function updateEnable(entityCluster) {
  * queues the draw commands for billboards/points/labels created for entities.
  * @private
  */
-EntityCluster.prototype.update = function (frameState) {
+EntityCluster.prototype.update = function (frameState, numSamples) {
   if (!this.show) {
     return;
   }
@@ -908,13 +908,13 @@ EntityCluster.prototype.update = function (frameState) {
   }
 
   if (defined(this._labelCollection)) {
-    this._labelCollection.update(frameState);
+    this._labelCollection.update(frameState, numSamples);
   }
   if (defined(this._billboardCollection)) {
-    this._billboardCollection.update(frameState);
+    this._billboardCollection.update(frameState, numSamples);
   }
   if (defined(this._pointCollection)) {
-    this._pointCollection.update(frameState);
+    this._pointCollection.update(frameState, numSamples);
   }
 };
 
