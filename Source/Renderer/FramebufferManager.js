@@ -112,6 +112,7 @@ FramebufferManager.prototype.isDirty = function (
   pixelDatatype,
   pixelFormat
 ) {
+  numSamples = defaultValue(numSamples, 1);
   var dimensionChanged = this._width !== width || this._height !== height;
   var samplesChanged = this._numSamples !== numSamples;
   var pixelChanged =
