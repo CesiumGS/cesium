@@ -2,7 +2,7 @@ import { knockout } from "../../Source/Cesium.js";
 
 describe("ThirdParty/knockout", function () {
   it("can track all properties", function () {
-    var obj = {
+    const obj = {
       one: 1,
       two: undefined,
       three: knockout.observable(),

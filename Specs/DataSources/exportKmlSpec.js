@@ -25,13 +25,13 @@ import { VerticalOrigin } from "../../Source/Cesium.js";
 import { when } from "../../Source/Cesium.js";
 
 describe("DataSources/exportKml", function () {
-  var kmlDoc;
+  let kmlDoc;
   function checkKmlDoc(entities, properties, options) {
     options = defaultValue(options, {});
     options.entities = entities;
-    var promise = exportKml(options);
-    var kml = kmlDoc.documentElement;
-    var kmlChildNodes = kml.childNodes;
+    const promise = exportKml(options);
+    const kml = kmlDoc.documentElement;
+    const kmlChildNodes = kml.childNodes;
     expect(kml.localName).toEqual("kml");
     expect(kmlChildNodes.length).toBe(1);
 
@@ -41,13 +41,13 @@ describe("DataSources/exportKml", function () {
   }
 
   function checkTagWithProperties(element, properties) {
-    var attributes = properties._;
+    const attributes = properties._;
     if (defined(attributes)) {
-      var elementAttributes = element.attributes;
+      const elementAttributes = element.attributes;
       expect(elementAttributes.length).toBe(Object.keys(attributes).length);
-      for (var j = 0; j < elementAttributes.length; ++j) {
-        var nodeAttribute = elementAttributes[j];
-        var attribute = attributes[nodeAttribute.name];
+      for (let j = 0; j < elementAttributes.length; ++j) {
+        const nodeAttribute = elementAttributes[j];
+        const attribute = attributes[nodeAttribute.name];
 
         if (typeof attribute === "string") {
           expect(nodeAttribute.value).toEqual(attribute);
@@ -62,10 +62,10 @@ describe("DataSources/exportKml", function () {
       }
     }
 
-    var childNodes = element.childNodes;
-    for (var i = 0; i < childNodes.length; ++i) {
-      var node = childNodes[i];
-      var property = properties[node.tagName];
+    const childNodes = element.childNodes;
+    for (let i = 0; i < childNodes.length; ++i) {
+      const node = childNodes[i];
+      let property = properties[node.tagName];
       expect(property).toBeDefined();
 
       if (defined(property.getValue)) {
@@ -89,14 +89,14 @@ describe("DataSources/exportKml", function () {
     }
   }
 
-  var counter = 0;
-  var pointPosition = Cartesian3.fromDegrees(-75.59777, 40.03883, 12);
+  let counter = 0;
+  const pointPosition = Cartesian3.fromDegrees(-75.59777, 40.03883, 12);
   function checkPointCoord(textContent) {
-    var values = textContent.split(/\s*,\s*/);
+    const values = textContent.split(/\s*,\s*/);
     expect(values.length).toBe(3);
 
-    var cartographic1 = Cartographic.fromCartesian(pointPosition);
-    var cartographic2 = Cartographic.fromDegrees(
+    const cartographic1 = Cartographic.fromCartesian(pointPosition);
+    const cartographic2 = Cartographic.fromDegrees(
       Number(values[0]),
       Number(values[1]),
       Number(values[2])
@@ -110,7 +110,7 @@ describe("DataSources/exportKml", function () {
 
   function createEntity(properties) {
     ++counter;
-    var options = {
+    const options = {
       id: "e" + counter,
       name: "entity" + counter,
       show: true,
@@ -119,7 +119,7 @@ describe("DataSources/exportKml", function () {
     };
 
     if (defined(properties)) {
-      for (var propertyName in properties) {
+      for (const propertyName in properties) {
         if (properties.hasOwnProperty(propertyName)) {
           options[propertyName] = properties[propertyName];
         }
@@ -150,13 +150,13 @@ describe("DataSources/exportKml", function () {
     };
   }
 
-  var oldCreateState;
+  let oldCreateState;
   beforeAll(function () {
     oldCreateState = exportKml._createState;
 
     // We need to capture the DOM object
     exportKml._createState = function (options) {
-      var state = oldCreateState(options);
+      const state = oldCreateState(options);
       kmlDoc = state.kmlDoc;
       return state;
     };
@@ -171,27 +171,27 @@ describe("DataSources/exportKml", function () {
   });
 
   it("Hierarchy", function () {
-    var entity1 = createEntity({
+    const entity1 = createEntity({
       show: false,
       position: undefined,
     });
 
-    var entity2 = createEntity({
+    const entity2 = createEntity({
       position: undefined,
       parent: entity1,
     });
 
-    var entity3 = createEntity({
+    const entity3 = createEntity({
       parent: entity2,
       point: {},
     });
 
-    var entities = new EntityCollection();
+    const entities = new EntityCollection();
     entities.add(entity1);
     entities.add(entity2);
     entities.add(entity3);
 
-    var hierarchy = {
+    const hierarchy = {
       Document: {
         Style: {
           _: {
@@ -236,7 +236,7 @@ describe("DataSources/exportKml", function () {
 
   describe("Point Geometry", function () {
     it("Point with constant position", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         point: {
           color: Color.LINEN,
           pixelSize: 3,
@@ -244,10 +244,10 @@ describe("DataSources/exportKml", function () {
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.IconStyle = {
         color: "ffe6f0fa",
         colorMode: "normal",
@@ -262,7 +262,7 @@ describe("DataSources/exportKml", function () {
     });
 
     it("Point with label", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         point: {
           color: Color.LINEN,
           pixelSize: 3,
@@ -275,10 +275,10 @@ describe("DataSources/exportKml", function () {
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.IconStyle = {
         color: "ffe6f0fa",
         colorMode: "normal",
@@ -299,7 +299,7 @@ describe("DataSources/exportKml", function () {
     });
 
     it("Billboard with constant position", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         billboard: {
           image: "http://test.invalid/image.jpg",
           imageSubRegion: new BoundingRectangle(12, 0, 24, 36),
@@ -316,10 +316,10 @@ describe("DataSources/exportKml", function () {
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.IconStyle = {
         Icon: {
           href: "http://test.invalid/image.jpg",
@@ -350,17 +350,17 @@ describe("DataSources/exportKml", function () {
     });
 
     it("Billboard with AlignedAxis not Z", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         billboard: {
           rotation: CesiumMath.toRadians(10),
           alignedAxis: Cartesian3.UNIT_Y,
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.IconStyle = {};
       expectedResult.Document.Placemark.Point = {
         altitudeMode: "absolute",
@@ -371,17 +371,17 @@ describe("DataSources/exportKml", function () {
     });
 
     it("Billboard with 0 degree heading should be 360", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         billboard: {
           rotation: CesiumMath.toRadians(0),
           alignedAxis: Cartesian3.UNIT_Z,
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.IconStyle = {
         heading: 360,
       };
@@ -394,7 +394,7 @@ describe("DataSources/exportKml", function () {
     });
 
     it("Billboard with HotSpot at the center", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         billboard: {
           pixelOffset: new Cartesian2(2, 3),
           width: 24,
@@ -404,10 +404,10 @@ describe("DataSources/exportKml", function () {
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.IconStyle = {
         hotSpot: {
           _: {
@@ -427,7 +427,7 @@ describe("DataSources/exportKml", function () {
     });
 
     it("Billboard with HotSpot at the TopRight", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         billboard: {
           pixelOffset: new Cartesian2(2, 3),
           width: 24,
@@ -437,10 +437,10 @@ describe("DataSources/exportKml", function () {
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.IconStyle = {
         hotSpot: {
           _: {
@@ -460,16 +460,16 @@ describe("DataSources/exportKml", function () {
     });
 
     it("Billboard with a Canvas image", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         billboard: {
           image: document.createElement("canvas"),
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.IconStyle = {
         Icon: {
           href: "texture_1.png",
@@ -488,13 +488,13 @@ describe("DataSources/exportKml", function () {
     });
 
     it("Billboard with a Canvas image as KMZ", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         billboard: {
           image: document.createElement("canvas"),
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
       return exportKml({
@@ -505,8 +505,8 @@ describe("DataSources/exportKml", function () {
         expect(result.externalFiles).toBeUndefined();
         expect(result.kmz).toBeDefined();
 
-        var deferred = when.defer();
-        var fileReader = new FileReader();
+        const deferred = when.defer();
+        const fileReader = new FileReader();
         fileReader.onload = function (event) {
           // Verify its a zip archive
           expect(new DataView(event.target.result).getUint32(0, false)).toBe(
@@ -522,20 +522,20 @@ describe("DataSources/exportKml", function () {
   });
 
   describe("Tracks", function () {
-    var times = [
+    const times = [
       JulianDate.fromIso8601("2019-06-17"),
       JulianDate.fromIso8601("2019-06-18"),
       JulianDate.fromIso8601("2019-06-19"),
     ];
-    var positions = [
+    const positions = [
       Cartesian3.fromDegrees(-75.59777, 40.03883, 12),
       Cartesian3.fromDegrees(-76.59777, 39.03883, 12),
       Cartesian3.fromDegrees(-77.59777, 38.03883, 12),
     ];
 
     function checkWhen(textContent) {
-      var count = times.length;
-      for (var i = 0; i < count; ++i) {
+      const count = times.length;
+      for (let i = 0; i < count; ++i) {
         if (textContent === JulianDate.toIso8601(times[i])) {
           return true;
         }
@@ -545,13 +545,13 @@ describe("DataSources/exportKml", function () {
     }
 
     function checkCoord(textContent) {
-      var values = textContent.split(/\s*,\s*/);
+      const values = textContent.split(/\s*,\s*/);
       expect(values.length).toBe(3);
 
-      var cartographic1 = new Cartographic();
-      var cartographic2 = new Cartographic();
-      var count = positions.length;
-      for (var i = 0; i < count; ++i) {
+      const cartographic1 = new Cartographic();
+      const cartographic2 = new Cartographic();
+      const count = positions.length;
+      for (let i = 0; i < count; ++i) {
         Cartographic.fromCartesian(positions[i], undefined, cartographic1);
         Cartographic.fromDegrees(
           Number(values[0]),
@@ -574,20 +574,20 @@ describe("DataSources/exportKml", function () {
     }
 
     it("SampledPosition", function () {
-      var position = new SampledPositionProperty();
+      const position = new SampledPositionProperty();
       position.addSamples(times, positions);
 
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         position: position,
         point: {
           heightReference: HeightReference.CLAMP_TO_GROUND,
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.IconStyle = {};
       expectedResult.Document.Placemark.Track = {
         altitudeMode: "clampToGround",
@@ -599,23 +599,23 @@ describe("DataSources/exportKml", function () {
     });
 
     it("CallbackProperty", function () {
-      var index = 0;
-      var position = new CallbackProperty(function (time) {
+      let index = 0;
+      const position = new CallbackProperty(function (time) {
         expect(index < times.length);
         expect(JulianDate.equals(time, times[index])).toBe(true);
 
         return positions[index++];
       }, false);
 
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         position: position,
         point: {},
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.IconStyle = {};
       expectedResult.Document.Placemark.Track = {
         altitudeMode: "absolute",
@@ -633,20 +633,20 @@ describe("DataSources/exportKml", function () {
     });
 
     it("With Model", function () {
-      var position = new SampledPositionProperty();
+      const position = new SampledPositionProperty();
       position.addSamples(times, positions);
 
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         position: position,
         model: {
           uri: "http://test.invalid/test",
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Placemark.Track = {
         altitudeMode: "absolute",
         when: checkWhen,
@@ -658,7 +658,7 @@ describe("DataSources/exportKml", function () {
         },
       };
 
-      var blob = new Blob([new Uint8Array([])], {
+      const blob = new Blob([new Uint8Array([])], {
         type: "model/vnd.collada+xml",
       });
       return checkKmlDoc(entities, expectedResult, {
@@ -672,10 +672,10 @@ describe("DataSources/exportKml", function () {
     });
 
     it("With Path", function () {
-      var position = new SampledPositionProperty();
+      const position = new SampledPositionProperty();
       position.addSamples(times, positions);
 
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         position: position,
         point: {
           heightReference: HeightReference.CLAMP_TO_GROUND,
@@ -686,10 +686,10 @@ describe("DataSources/exportKml", function () {
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.IconStyle = {};
       expectedResult.Document.Style.LineStyle = {
         color: "ff008000",
@@ -707,7 +707,7 @@ describe("DataSources/exportKml", function () {
   });
 
   describe("Polylines", function () {
-    var positions = [
+    const positions = [
       Cartesian3.fromDegrees(-1, -1, 12),
       Cartesian3.fromDegrees(1, -1, 12),
       Cartesian3.fromDegrees(1, 1, 12),
@@ -715,15 +715,15 @@ describe("DataSources/exportKml", function () {
     ];
 
     function checkCoords(textContent) {
-      var coordinates = textContent.split(" ");
+      const coordinates = textContent.split(" ");
       expect(coordinates.length).toBe(4);
 
-      var cartographic1 = new Cartographic();
-      var cartographic2 = new Cartographic();
-      var count = positions.length;
-      for (var i = 0; i < count; ++i) {
+      const cartographic1 = new Cartographic();
+      const cartographic2 = new Cartographic();
+      const count = positions.length;
+      for (let i = 0; i < count; ++i) {
         Cartographic.fromCartesian(positions[i], undefined, cartographic1);
-        var values = coordinates[i].split(",");
+        const values = coordinates[i].split(",");
         expect(values.length).toBe(3);
         Cartographic.fromDegrees(
           Number(values[0]),
@@ -746,7 +746,7 @@ describe("DataSources/exportKml", function () {
     }
 
     it("Clamped to ground", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         polyline: {
           positions: positions,
           clampToGround: true,
@@ -756,10 +756,10 @@ describe("DataSources/exportKml", function () {
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.LineStyle = {
         color: "ff008000",
         colorMode: "normal",
@@ -776,7 +776,7 @@ describe("DataSources/exportKml", function () {
     });
 
     it("Not clamped to ground", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         polyline: {
           positions: positions,
           clampToGround: false,
@@ -786,10 +786,10 @@ describe("DataSources/exportKml", function () {
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.LineStyle = {
         color: "ff008000",
         colorMode: "normal",
@@ -805,7 +805,7 @@ describe("DataSources/exportKml", function () {
     });
 
     it("With outline", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         polyline: {
           positions: positions,
           clampToGround: false,
@@ -818,10 +818,10 @@ describe("DataSources/exportKml", function () {
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.LineStyle = {
         color: "ff008000",
         colorMode: "normal",
@@ -839,7 +839,7 @@ describe("DataSources/exportKml", function () {
   });
 
   describe("Polygons", function () {
-    var positions = [
+    const positions = [
       Cartesian3.fromDegrees(-1, -1, 12),
       Cartesian3.fromDegrees(1, -1, 12),
       Cartesian3.fromDegrees(1, 1, 12),
@@ -848,19 +848,19 @@ describe("DataSources/exportKml", function () {
 
     function getCheckCoords(height) {
       return function (textContent) {
-        var coordinates = textContent.split(" ");
+        const coordinates = textContent.split(" ");
         expect(coordinates.length).toBe(4);
 
-        var cartographic1 = new Cartographic();
-        var cartographic2 = new Cartographic();
-        var count = positions.length;
-        for (var i = 0; i < count; ++i) {
+        const cartographic1 = new Cartographic();
+        const cartographic2 = new Cartographic();
+        const count = positions.length;
+        for (let i = 0; i < count; ++i) {
           Cartographic.fromCartesian(positions[i], undefined, cartographic1);
           if (defined(height)) {
             cartographic1.height = height;
           }
 
-          var values = coordinates[i].split(",");
+          const values = coordinates[i].split(",");
           expect(values.length).toBe(3);
           Cartographic.fromDegrees(
             Number(values[0]),
@@ -884,7 +884,7 @@ describe("DataSources/exportKml", function () {
     }
 
     it("Polygon with outline", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         polygon: {
           hierarchy: positions,
           height: 10,
@@ -900,10 +900,10 @@ describe("DataSources/exportKml", function () {
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.PolyStyle = {
         color: "ff008000",
         colorMode: "normal",
@@ -928,7 +928,7 @@ describe("DataSources/exportKml", function () {
     });
 
     it("Polygon with extrusion", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         polygon: {
           hierarchy: positions,
           height: 10,
@@ -937,10 +937,10 @@ describe("DataSources/exportKml", function () {
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.PolyStyle = {};
       expectedResult.Document.Placemark.Polygon = {
         altitudeMode: "absolute",
@@ -956,7 +956,7 @@ describe("DataSources/exportKml", function () {
     });
 
     it("Polygon with extrusion and perPositionHeights", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         polygon: {
           hierarchy: positions,
           height: 10,
@@ -965,10 +965,10 @@ describe("DataSources/exportKml", function () {
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.PolyStyle = {};
       expectedResult.Document.Placemark.Polygon = {
         altitudeMode: "absolute",
@@ -984,7 +984,7 @@ describe("DataSources/exportKml", function () {
     });
 
     it("Polygon with holes", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         polygon: {
           hierarchy: new PolygonHierarchy(positions, [
             new PolygonHierarchy(positions),
@@ -993,10 +993,10 @@ describe("DataSources/exportKml", function () {
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.PolyStyle = {};
       expectedResult.Document.Placemark.Polygon = {
         altitudeMode: "absolute",
@@ -1016,7 +1016,7 @@ describe("DataSources/exportKml", function () {
     });
 
     it("Rectangle extruded", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         rectangle: {
           coordinates: Rectangle.fromDegrees(-1, -1, 1, 1),
           height: 10,
@@ -1032,10 +1032,10 @@ describe("DataSources/exportKml", function () {
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.PolyStyle = {
         color: "ff008000",
         colorMode: "normal",
@@ -1061,7 +1061,7 @@ describe("DataSources/exportKml", function () {
     });
 
     it("Rectangle not extruded", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         rectangle: {
           coordinates: Rectangle.fromDegrees(-1, -1, 1, 1),
           height: 10,
@@ -1070,10 +1070,10 @@ describe("DataSources/exportKml", function () {
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.PolyStyle = {
         color: "ff008000",
         colorMode: "normal",
@@ -1093,7 +1093,7 @@ describe("DataSources/exportKml", function () {
 
   describe("Models", function () {
     it("Model with constant position", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         model: {
           uri: "http://test.invalid/test.glb",
           scale: 3,
@@ -1101,11 +1101,11 @@ describe("DataSources/exportKml", function () {
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var cartographic = Cartographic.fromCartesian(pointPosition);
-      var expectedResult = createExpectResult(entity1);
+      const cartographic = Cartographic.fromCartesian(pointPosition);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Placemark.Model = {
         altitudeMode: "clampToGround",
         Location: {
@@ -1133,7 +1133,7 @@ describe("DataSources/exportKml", function () {
 
   describe("GroundOverlays", function () {
     it("Rectangle", function () {
-      var entity = createEntity({
+      const entity = createEntity({
         rectangle: {
           coordinates: Rectangle.fromDegrees(-1, -1, 1, 1),
           height: 10,
@@ -1145,10 +1145,10 @@ describe("DataSources/exportKml", function () {
         },
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity);
 
-      var expectedResult = {
+      const expectedResult = {
         Document: {
           GroundOverlay: {
             _: {
@@ -1178,7 +1178,7 @@ describe("DataSources/exportKml", function () {
   });
 
   describe("Multigeometry", function () {
-    var positions = [
+    const positions = [
       Cartesian3.fromDegrees(-1, -1, 12),
       Cartesian3.fromDegrees(1, -1, 12),
       Cartesian3.fromDegrees(1, 1, 12),
@@ -1187,17 +1187,17 @@ describe("DataSources/exportKml", function () {
 
     function getCheckCoords() {
       return function (textContent) {
-        var coordinates = textContent.split(" ");
+        const coordinates = textContent.split(" ");
         expect(coordinates.length).toBe(4);
 
-        var cartographic1 = new Cartographic();
-        var cartographic2 = new Cartographic();
-        var count = positions.length;
-        for (var i = 0; i < count; ++i) {
+        const cartographic1 = new Cartographic();
+        const cartographic2 = new Cartographic();
+        const count = positions.length;
+        for (let i = 0; i < count; ++i) {
           Cartographic.fromCartesian(positions[i], undefined, cartographic1);
           cartographic1.height = 0;
 
-          var values = coordinates[i].split(",");
+          const values = coordinates[i].split(",");
           expect(values.length).toBe(3);
           Cartographic.fromDegrees(
             Number(values[0]),
@@ -1221,17 +1221,17 @@ describe("DataSources/exportKml", function () {
     }
 
     it("Polygon and Point", function () {
-      var entity1 = createEntity({
+      const entity1 = createEntity({
         polygon: {
           hierarchy: positions,
         },
         point: {},
       });
 
-      var entities = new EntityCollection();
+      const entities = new EntityCollection();
       entities.add(entity1);
 
-      var expectedResult = createExpectResult(entity1);
+      const expectedResult = createExpectResult(entity1);
       expectedResult.Document.Style.IconStyle = {};
       expectedResult.Document.Style.PolyStyle = {};
       expectedResult.Document.Placemark.MultiGeometry = {

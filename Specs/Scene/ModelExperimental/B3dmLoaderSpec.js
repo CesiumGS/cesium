@@ -12,21 +12,21 @@ import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
 describe("Scene/ModelExperimental/B3dmLoader", function () {
-  var withBatchTableUrl =
+  const withBatchTableUrl =
     "./Data/Cesium3DTiles/Batched/BatchedWithBatchTable/batchedWithBatchTable.b3dm";
-  var withBatchTableBinaryUrl =
+  const withBatchTableBinaryUrl =
     "./Data/Cesium3DTiles/Batched/BatchedWithBatchTableBinary/batchedWithBatchTableBinary.b3dm";
-  var withoutBatchTableUrl =
+  const withoutBatchTableUrl =
     "./Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/batchedWithoutBatchTable.b3dm";
-  var withRtcCenterUrl =
+  const withRtcCenterUrl =
     "./Data/Cesium3DTiles/Batched/BatchedWithRtcCenter/batchedWithRtcCenter.b3dm";
-  var withBatchTableHierarchy =
+  const withBatchTableHierarchy =
     "./Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy/tile.b3dm";
-  var noBatchIdsUrl =
+  const noBatchIdsUrl =
     "Data/Cesium3DTiles/Batched/BatchedNoBatchIds/batchedNoBatchIds.b3dm";
 
-  var scene;
-  var b3dmLoaders = [];
+  let scene;
+  const b3dmLoaders = [];
 
   beforeAll(function () {
     scene = createScene();
@@ -39,8 +39,8 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
   });
 
   afterEach(function () {
-    for (var i = 0; i < b3dmLoaders.length; i++) {
-      var loader = b3dmLoaders[i];
+    for (let i = 0; i < b3dmLoaders.length; i++) {
+      const loader = b3dmLoaders[i];
       if (!loader.isDestroyed()) {
         loader.destroy();
       }
@@ -50,7 +50,7 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
   });
 
   function loadB3dmArrayBuffer(resource, arrayBuffer) {
-    var loader = new B3dmLoader({
+    const loader = new B3dmLoader({
       b3dmResource: resource,
       arrayBuffer: arrayBuffer,
     });
@@ -61,7 +61,7 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
   }
 
   function loadB3dm(b3dmPath) {
-    var resource = Resource.createIfNeeded(b3dmPath);
+    const resource = Resource.createIfNeeded(b3dmPath);
 
     return Resource.fetchArrayBuffer({
       url: b3dmPath,
@@ -71,7 +71,7 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
   }
 
   function expectLoadError(arrayBuffer) {
-    var resource = new Resource("http://example.com/test.b3dm");
+    const resource = new Resource("http://example.com/test.b3dm");
     expect(function () {
       return loadB3dmArrayBuffer(resource, arrayBuffer);
     }).toThrowRuntimeError();
@@ -79,18 +79,18 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
 
   it("loads BatchedNoBatchIds", function () {
     return loadB3dm(noBatchIdsUrl).then(function (loader) {
-      var components = loader.components;
+      const components = loader.components;
       expect(components).toBeDefined();
-      var featureMetadata = components.featureMetadata;
+      const featureMetadata = components.featureMetadata;
       expect(featureMetadata).toBeUndefined();
     });
   });
 
   it("loads BatchedWithBatchTable", function () {
     return loadB3dm(withBatchTableUrl).then(function (loader) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
-      var propertyTable = featureMetadata.getPropertyTable(0);
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
+      const propertyTable = featureMetadata.getPropertyTable(0);
       expect(propertyTable).toBeDefined();
       expect(propertyTable.count).toEqual(10);
       expect(propertyTable.class).toBeDefined();
@@ -99,9 +99,9 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
 
   it("loads BatchedWithBatchTableBinary", function () {
     return loadB3dm(withBatchTableBinaryUrl).then(function (loader) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
-      var propertyTable = featureMetadata.getPropertyTable(0);
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
+      const propertyTable = featureMetadata.getPropertyTable(0);
       expect(propertyTable).toBeDefined();
       expect(propertyTable.count).toEqual(10);
       expect(propertyTable.class).toBeDefined();
@@ -110,9 +110,9 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
 
   it("loads BatchedWithoutBatchTableUrl", function () {
     return loadB3dm(withoutBatchTableUrl).then(function (loader) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
-      var propertyTable = featureMetadata.getPropertyTable(0);
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
+      const propertyTable = featureMetadata.getPropertyTable(0);
       expect(propertyTable).toBeDefined();
       expect(propertyTable.count).toEqual(10);
       expect(propertyTable.class).toBeUndefined();
@@ -121,9 +121,9 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
 
   it("loads BatchedWithRtcCenterUrl", function () {
     return loadB3dm(withRtcCenterUrl).then(function (loader) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
-      var propertyTable = featureMetadata.getPropertyTable(0);
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
+      const propertyTable = featureMetadata.getPropertyTable(0);
       expect(propertyTable).toBeDefined();
       expect(propertyTable.count).toEqual(10);
 
@@ -135,9 +135,9 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
 
   it("loads BatchTableHierarchy", function () {
     return loadB3dm(withBatchTableHierarchy).then(function (loader) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
-      var propertyTable = featureMetadata.getPropertyTable(0);
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
+      const propertyTable = featureMetadata.getPropertyTable(0);
       expect(propertyTable).toBeDefined();
       expect(propertyTable.count).toEqual(30);
       expect(propertyTable._batchTableHierarchy).toBeDefined();
@@ -145,7 +145,7 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
   });
 
   it("throws with invalid version", function () {
-    var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer({
+    const arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer({
       version: 2,
     });
     expectLoadError(arrayBuffer);
@@ -153,12 +153,12 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
 
   it("throws with empty gltf", function () {
     // Expect to throw DeveloperError in Model due to invalid gltf magic
-    var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer();
+    const arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer();
     expectLoadError(arrayBuffer);
   });
 
   it("destroys b3dm loader", function () {
-    var unloadGltfLoader = spyOn(
+    const unloadGltfLoader = spyOn(
       GltfLoader.prototype,
       "unload"
     ).and.callThrough();

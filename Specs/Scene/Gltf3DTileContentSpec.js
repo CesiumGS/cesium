@@ -14,16 +14,16 @@ import createScene from "../createScene.js";
 describe(
   "Scene/Gltf3DTileContent",
   function () {
-    var scene;
-    var centerLongitude = -1.31968;
-    var centerLatitude = 0.698874;
+    let scene;
+    const centerLongitude = -1.31968;
+    const centerLatitude = 0.698874;
 
-    var gltfContentUrl = "./Data/Cesium3DTiles/GltfContent/glTF/tileset.json";
-    var glbContentUrl = "./Data/Cesium3DTiles/GltfContent/glb/tileset.json";
+    const gltfContentUrl = "./Data/Cesium3DTiles/GltfContent/glTF/tileset.json";
+    const glbContentUrl = "./Data/Cesium3DTiles/GltfContent/glb/tileset.json";
 
     function setCamera(longitude, latitude) {
       // One feature is located at the center, point the camera there
-      var center = Cartesian3.fromRadians(longitude, latitude);
+      const center = Cartesian3.fromRadians(longitude, latitude);
       scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 100.0));
     }
 
@@ -58,7 +58,7 @@ describe(
     it("Does not use a batch table", function () {
       return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
         function (tileset) {
-          var content = tileset.root.content;
+          const content = tileset.root.content;
           expect(content.batchTableByteLength).toBe(0);
           expect(content.batchTable).not.toBeDefined();
           expect(content.hasProperty(0, "height")).toBe(false);
@@ -78,7 +78,7 @@ describe(
     it("picks", function () {
       return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
         function (tileset) {
-          var content = tileset.root.content;
+          const content = tileset.root.content;
           tileset.show = false;
           expect(scene).toPickPrimitive(undefined);
           tileset.show = true;
@@ -94,11 +94,11 @@ describe(
     it("gets memory usage", function () {
       return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
         function (tileset) {
-          var content = tileset.root.content;
+          const content = tileset.root.content;
 
           // 10 buildings, 36 ushort indices and 24 vertices per building, 6 float components (position, normal) per vertex.
           // 10 * (24 * (6 * 4) + (36 * 2)) = 6480
-          var geometryByteLength = 6480;
+          const geometryByteLength = 6480;
 
           expect(content.geometryByteLength).toEqual(geometryByteLength);
           expect(content.texturesByteLength).toEqual(0);
@@ -109,16 +109,16 @@ describe(
     it("links model to tileset clipping planes based on bounding volume clipping", function () {
       return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
         function (tileset) {
-          var tile = tileset.root;
-          var content = tile.content;
-          var model = content._model;
-          var passOptions = Cesium3DTilePass.getPassOptions(
+          const tile = tileset.root;
+          const content = tile.content;
+          const model = content._model;
+          const passOptions = Cesium3DTilePass.getPassOptions(
             Cesium3DTilePass.RENDER
           );
 
           expect(model.clippingPlanes).toBeUndefined();
 
-          var clippingPlaneCollection = new ClippingPlaneCollection({
+          const clippingPlaneCollection = new ClippingPlaneCollection({
             planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
           });
           tileset.clippingPlanes = clippingPlaneCollection;
@@ -139,15 +139,15 @@ describe(
     it("links model to tileset clipping planes if tileset clipping planes are reassigned", function () {
       return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
         function (tileset) {
-          var tile = tileset.root;
-          var model = tile.content._model;
-          var passOptions = Cesium3DTilePass.getPassOptions(
+          const tile = tileset.root;
+          const model = tile.content._model;
+          const passOptions = Cesium3DTilePass.getPassOptions(
             Cesium3DTilePass.RENDER
           );
 
           expect(model.clippingPlanes).toBeUndefined();
 
-          var clippingPlaneCollection = new ClippingPlaneCollection({
+          const clippingPlaneCollection = new ClippingPlaneCollection({
             planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
           });
           tileset.clippingPlanes = clippingPlaneCollection;
@@ -157,7 +157,7 @@ describe(
           expect(model.clippingPlanes).toBeDefined();
           expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
 
-          var newClippingPlaneCollection = new ClippingPlaneCollection({
+          const newClippingPlaneCollection = new ClippingPlaneCollection({
             planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
           });
           tileset.clippingPlanes = newClippingPlaneCollection;
@@ -175,12 +175,12 @@ describe(
 
       return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
         function (tileset) {
-          var tile = tileset.root;
-          var passOptions = Cesium3DTilePass.getPassOptions(
+          const tile = tileset.root;
+          const passOptions = Cesium3DTilePass.getPassOptions(
             Cesium3DTilePass.RENDER
           );
 
-          var clippingPlaneCollection = new ClippingPlaneCollection({
+          const clippingPlaneCollection = new ClippingPlaneCollection({
             planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
           });
           tileset.clippingPlanes = clippingPlaneCollection;
@@ -197,7 +197,7 @@ describe(
     });
 
     describe("3DTILES_metadata", function () {
-      var metadataClass = new MetadataClass({
+      const metadataClass = new MetadataClass({
         id: "test",
         class: {
           properties: {
@@ -210,7 +210,7 @@ describe(
           },
         },
       });
-      var groupMetadata = new GroupMetadata({
+      const groupMetadata = new GroupMetadata({
         id: "testGroup",
         group: {
           properties: {
@@ -224,7 +224,7 @@ describe(
       it("assigns groupMetadata", function () {
         return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
           function (tileset) {
-            var content = tileset.root.content;
+            const content = tileset.root.content;
             content.groupMetadata = groupMetadata;
             expect(content.groupMetadata).toBe(groupMetadata);
           }

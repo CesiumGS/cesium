@@ -7,16 +7,16 @@ import { TileBoundingSphere } from "../../Source/Cesium.js";
 import createFrameState from "../createFrameState.js";
 
 describe("Scene/TileBoundingSphere", function () {
-  var tileBoundingSphere = new TileBoundingSphere(
+  const tileBoundingSphere = new TileBoundingSphere(
     new Cartesian3(0.0, 0.0, 0.0),
     1.0
   );
-  var frameState = createFrameState();
+  const frameState = createFrameState();
 
   it("can be instantiated with center and radius", function () {
-    var center = new Cartesian3(0.0, 0.0, 0.0);
-    var radius = 1.0;
-    var tbs = new TileBoundingSphere(center, radius);
+    const center = new Cartesian3(0.0, 0.0, 0.0);
+    const radius = 1.0;
+    const tbs = new TileBoundingSphere(center, radius);
     expect(tbs).toBeDefined();
     expect(tbs.boundingVolume).toBeDefined();
     expect(tbs.boundingSphere).toBeDefined();
@@ -31,7 +31,7 @@ describe("Scene/TileBoundingSphere", function () {
   });
 
   it("can create a debug volume", function () {
-    var debugVolume = tileBoundingSphere.createDebugVolume(Color.BLUE);
+    const debugVolume = tileBoundingSphere.createDebugVolume(Color.BLUE);
     expect(debugVolume).toBeDefined();
   });
 
@@ -58,8 +58,8 @@ describe("Scene/TileBoundingSphere", function () {
   });
 
   it("intersects plane", function () {
-    var normal = new Cartesian3(0.0, 0.0, 1.0);
-    var plane = new Plane(normal, CesiumMath.EPSILON6);
+    const normal = new Cartesian3(0.0, 0.0, 1.0);
+    const plane = new Plane(normal, CesiumMath.EPSILON6);
     expect(tileBoundingSphere.intersectPlane(plane)).toEqual(
       Intersect.INTERSECTING
     );

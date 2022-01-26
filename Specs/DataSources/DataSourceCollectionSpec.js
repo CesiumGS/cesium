@@ -4,8 +4,8 @@ import { when } from "../../Source/Cesium.js";
 
 describe("DataSources/DataSourceCollection", function () {
   it("contains, get, getLength, and indexOf work", function () {
-    var collection = new DataSourceCollection();
-    var source = new MockDataSource();
+    const collection = new DataSourceCollection();
+    const source = new MockDataSource();
 
     expect(collection.length).toEqual(0);
     expect(collection.contains(source)).toEqual(false);
@@ -27,33 +27,33 @@ describe("DataSources/DataSourceCollection", function () {
   });
 
   it("getByName works", function () {
-    var collection = new DataSourceCollection();
-    var source1 = new MockDataSource();
+    const collection = new DataSourceCollection();
+    const source1 = new MockDataSource();
     source1.name = "Name1";
     collection.add(source1);
 
-    var source2 = new MockDataSource();
+    const source2 = new MockDataSource();
     source2.name = "Name1";
     collection.add(source2);
 
-    var source3 = new MockDataSource();
+    const source3 = new MockDataSource();
     source3.name = "Name2";
     collection.add(source3);
 
-    var res = collection.getByName("Name1");
+    const res = collection.getByName("Name1");
     expect(res.length).toEqual(2);
     expect(res[0].name).toEqual("Name1");
     expect(res[1].name).toEqual("Name1");
   });
 
   it("add and remove events work", function () {
-    var source = new MockDataSource();
-    var collection = new DataSourceCollection();
+    const source = new MockDataSource();
+    const collection = new DataSourceCollection();
 
-    var addSpy = jasmine.createSpy("dataSourceAdded");
+    const addSpy = jasmine.createSpy("dataSourceAdded");
     collection.dataSourceAdded.addEventListener(addSpy);
 
-    var removeSpy = jasmine.createSpy("dataSourceRemoved");
+    const removeSpy = jasmine.createSpy("dataSourceRemoved");
     collection.dataSourceRemoved.addEventListener(removeSpy);
 
     collection.add(source);
@@ -69,11 +69,11 @@ describe("DataSources/DataSourceCollection", function () {
   });
 
   it("move event works", function () {
-    var source = new MockDataSource();
-    var collection = new DataSourceCollection();
+    const source = new MockDataSource();
+    const collection = new DataSourceCollection();
     collection.add(source);
 
-    var moveSpy = jasmine.createSpy("dataSourceMoved");
+    const moveSpy = jasmine.createSpy("dataSourceMoved");
     collection.dataSourceMoved.addEventListener(moveSpy);
 
     collection.raise(source);
@@ -100,11 +100,11 @@ describe("DataSources/DataSourceCollection", function () {
   });
 
   it("add works with promise", function () {
-    var promise = when.defer();
-    var source = new MockDataSource();
-    var collection = new DataSourceCollection();
+    const promise = when.defer();
+    const source = new MockDataSource();
+    const collection = new DataSourceCollection();
 
-    var addSpy = jasmine.createSpy("dataSourceAdded");
+    const addSpy = jasmine.createSpy("dataSourceAdded");
     collection.dataSourceAdded.addEventListener(addSpy);
     collection.add(promise);
 
@@ -117,11 +117,11 @@ describe("DataSources/DataSourceCollection", function () {
   });
 
   it("promise does not get added if not resolved before removeAll", function () {
-    var promise = when.defer();
-    var source = new MockDataSource();
-    var collection = new DataSourceCollection();
+    const promise = when.defer();
+    const source = new MockDataSource();
+    const collection = new DataSourceCollection();
 
-    var addSpy = jasmine.createSpy("dataSourceAdded");
+    const addSpy = jasmine.createSpy("dataSourceAdded");
     collection.dataSourceAdded.addEventListener(addSpy);
     collection.add(promise);
     expect(collection.length).toEqual(0);
@@ -135,14 +135,14 @@ describe("DataSources/DataSourceCollection", function () {
   });
 
   it("removeAll triggers events", function () {
-    var sources = [
+    const sources = [
       new MockDataSource(),
       new MockDataSource(),
       new MockDataSource(),
     ];
-    var collection = new DataSourceCollection();
+    const collection = new DataSourceCollection();
 
-    var removeCalled = 0;
+    let removeCalled = 0;
     collection.dataSourceRemoved.addEventListener(function (
       sender,
       dataSource
@@ -162,14 +162,14 @@ describe("DataSources/DataSourceCollection", function () {
   });
 
   it("destroy triggers remove events and calls destroy", function () {
-    var sources = [
+    const sources = [
       new MockDataSource(),
       new MockDataSource(),
       new MockDataSource(),
     ];
-    var collection = new DataSourceCollection();
+    const collection = new DataSourceCollection();
 
-    var removeCalled = 0;
+    let removeCalled = 0;
     collection.dataSourceRemoved.addEventListener(function (
       sender,
       dataSource
@@ -193,19 +193,19 @@ describe("DataSources/DataSourceCollection", function () {
   });
 
   it("remove returns fals for non-member", function () {
-    var collection = new DataSourceCollection();
+    const collection = new DataSourceCollection();
     expect(collection.remove(new MockDataSource())).toEqual(false);
   });
 
   it("get throws if passed undefined", function () {
-    var collection = new DataSourceCollection();
+    const collection = new DataSourceCollection();
     expect(function () {
       collection.get(undefined);
     }).toThrowDeveloperError();
   });
 
   it("add throws if passed undefined", function () {
-    var collection = new DataSourceCollection();
+    const collection = new DataSourceCollection();
     expect(function () {
       collection.add(undefined);
     }).toThrowDeveloperError();

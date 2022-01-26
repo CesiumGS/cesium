@@ -4,7 +4,7 @@ import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 
-var defaultSize = new Cartesian2(1.0, 1.0);
+const defaultSize = new Cartesian2(1.0, 1.0);
 
 /**
  * A particle emitted by a {@link ParticleSystem}.
@@ -124,7 +124,7 @@ Object.defineProperties(Particle.prototype, {
   },
 });
 
-var deltaScratch = new Cartesian3();
+const deltaScratch = new Cartesian3();
 
 /**
  * @private

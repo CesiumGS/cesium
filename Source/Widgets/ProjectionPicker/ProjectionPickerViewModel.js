@@ -67,7 +67,7 @@ function ProjectionPickerViewModel(scene) {
     "tooltipOrthographic",
   ]);
 
-  var that = this;
+  const that = this;
   knockout.defineProperty(this, "selectedTooltip", function () {
     if (that._orthographic) {
       return that.tooltipOrthographic;

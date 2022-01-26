@@ -143,9 +143,9 @@ Color.fromAlpha = function (color, alpha, result) {
   return result;
 };
 
-var scratchArrayBuffer;
-var scratchUint32Array;
-var scratchUint8Array;
+let scratchArrayBuffer;
+let scratchUint32Array;
+let scratchUint8Array;
 if (FeatureDetection.supportsTypedArrays()) {
   scratchArrayBuffer = new ArrayBuffer(4);
   scratchUint32Array = new Uint32Array(scratchArrayBuffer);
@@ -195,19 +195,19 @@ Color.fromHsl = function (hue, saturation, lightness, alpha, result) {
   lightness = defaultValue(lightness, 0.0);
   alpha = defaultValue(alpha, 1.0);
 
-  var red = lightness;
-  var green = lightness;
-  var blue = lightness;
+  let red = lightness;
+  let green = lightness;
+  let blue = lightness;
 
   if (saturation !== 0) {
-    var m2;
+    let m2;
     if (lightness < 0.5) {
       m2 = lightness * (1 + saturation);
     } else {
       m2 = lightness + saturation - lightness * saturation;
     }
 
-    var m1 = 2.0 * lightness - m2;
+    const m1 = 2.0 * lightness - m2;
     red = hue2rgb(m1, m2, hue + 1 / 3);
     green = hue2rgb(m1, m2, hue);
     blue = hue2rgb(m1, m2, hue - 1 / 3);
@@ -271,10 +271,10 @@ Color.fromHsl = function (hue, saturation, lightness, alpha, result) {
 Color.fromRandom = function (options, result) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var red = options.red;
+  let red = options.red;
   if (!defined(red)) {
-    var minimumRed = defaultValue(options.minimumRed, 0);
-    var maximumRed = defaultValue(options.maximumRed, 1.0);
+    const minimumRed = defaultValue(options.minimumRed, 0);
+    const maximumRed = defaultValue(options.maximumRed, 1.0);
 
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.number.lessThanOrEquals("minimumRed", minimumRed, maximumRed);
@@ -284,10 +284,10 @@ Color.fromRandom = function (options, result) {
       minimumRed + CesiumMath.nextRandomNumber() * (maximumRed - minimumRed);
   }
 
-  var green = options.green;
+  let green = options.green;
   if (!defined(green)) {
-    var minimumGreen = defaultValue(options.minimumGreen, 0);
-    var maximumGreen = defaultValue(options.maximumGreen, 1.0);
+    const minimumGreen = defaultValue(options.minimumGreen, 0);
+    const maximumGreen = defaultValue(options.maximumGreen, 1.0);
 
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.number.lessThanOrEquals(
@@ -301,10 +301,10 @@ Color.fromRandom = function (options, result) {
       CesiumMath.nextRandomNumber() * (maximumGreen - minimumGreen);
   }
 
-  var blue = options.blue;
+  let blue = options.blue;
   if (!defined(blue)) {
-    var minimumBlue = defaultValue(options.minimumBlue, 0);
-    var maximumBlue = defaultValue(options.maximumBlue, 1.0);
+    const minimumBlue = defaultValue(options.minimumBlue, 0);
+    const maximumBlue = defaultValue(options.maximumBlue, 1.0);
 
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.number.lessThanOrEquals(
@@ -318,10 +318,10 @@ Color.fromRandom = function (options, result) {
       minimumBlue + CesiumMath.nextRandomNumber() * (maximumBlue - minimumBlue);
   }
 
-  var alpha = options.alpha;
+  let alpha = options.alpha;
   if (!defined(alpha)) {
-    var minimumAlpha = defaultValue(options.minimumAlpha, 0);
-    var maximumAlpha = defaultValue(options.maximumAlpha, 1.0);
+    const minimumAlpha = defaultValue(options.minimumAlpha, 0);
+    const maximumAlpha = defaultValue(options.maximumAlpha, 1.0);
 
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.number.lessThanOrEquals(
@@ -348,13 +348,13 @@ Color.fromRandom = function (options, result) {
 };
 
 //#rgba
-var rgbaMatcher = /^#([0-9a-f])([0-9a-f])([0-9a-f])([0-9a-f])?$/i;
+const rgbaMatcher = /^#([0-9a-f])([0-9a-f])([0-9a-f])([0-9a-f])?$/i;
 //#rrggbbaa
-var rrggbbaaMatcher = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})?$/i;
+const rrggbbaaMatcher = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})?$/i;
 //rgb(), rgba(), or rgb%()
-var rgbParenthesesMatcher = /^rgba?\(\s*([0-9.]+%?)\s*,\s*([0-9.]+%?)\s*,\s*([0-9.]+%?)(?:\s*,\s*([0-9.]+))?\s*\)$/i;
+const rgbParenthesesMatcher = /^rgba?\(\s*([0-9.]+%?)\s*,\s*([0-9.]+%?)\s*,\s*([0-9.]+%?)(?:\s*,\s*([0-9.]+))?\s*\)$/i;
 //hsl() or hsla()
-var hslParenthesesMatcher = /^hsla?\(\s*([0-9.]+)\s*,\s*([0-9.]+%)\s*,\s*([0-9.]+%)(?:\s*,\s*([0-9.]+))?\s*\)$/i;
+const hslParenthesesMatcher = /^hsla?\(\s*([0-9.]+)\s*,\s*([0-9.]+%)\s*,\s*([0-9.]+%)(?:\s*,\s*([0-9.]+))?\s*\)$/i;
 
 /**
  * Creates a Color instance from a CSS color value.
@@ -382,13 +382,13 @@ Color.fromCssColorString = function (color, result) {
   // Remove all whitespaces from the color string
   color = color.replace(/\s/g, "");
 
-  var namedColor = Color[color.toUpperCase()];
+  const namedColor = Color[color.toUpperCase()];
   if (defined(namedColor)) {
     Color.clone(namedColor, result);
     return result;
   }
 
-  var matches = rgbaMatcher.exec(color);
+  let matches = rgbaMatcher.exec(color);
   if (matches !== null) {
     result.red = parseInt(matches[1], 16) / 15;
     result.green = parseInt(matches[2], 16) / 15.0;
@@ -626,9 +626,9 @@ Color.prototype.toString = function () {
  * @see {@link http://www.w3.org/TR/css3-color/#rgba-color|CSS RGB or RGBA color values}
  */
 Color.prototype.toCssColorString = function () {
-  var red = Color.floatToByte(this.red);
-  var green = Color.floatToByte(this.green);
-  var blue = Color.floatToByte(this.blue);
+  const red = Color.floatToByte(this.red);
+  const green = Color.floatToByte(this.green);
+  const blue = Color.floatToByte(this.blue);
   if (this.alpha === 1) {
     return "rgb(" + red + "," + green + "," + blue + ")";
   }
@@ -641,20 +641,20 @@ Color.prototype.toCssColorString = function () {
  * @returns {String} The CSS hex string equivalent of this color.
  */
 Color.prototype.toCssHexString = function () {
-  var r = Color.floatToByte(this.red).toString(16);
+  let r = Color.floatToByte(this.red).toString(16);
   if (r.length < 2) {
     r = "0" + r;
   }
-  var g = Color.floatToByte(this.green).toString(16);
+  let g = Color.floatToByte(this.green).toString(16);
   if (g.length < 2) {
     g = "0" + g;
   }
-  var b = Color.floatToByte(this.blue).toString(16);
+  let b = Color.floatToByte(this.blue).toString(16);
   if (b.length < 2) {
     b = "0" + b;
   }
   if (this.alpha < 1) {
-    var hexAlpha = Color.floatToByte(this.alpha).toString(16);
+    let hexAlpha = Color.floatToByte(this.alpha).toString(16);
     if (hexAlpha.length < 2) {
       hexAlpha = "0" + hexAlpha;
     }
@@ -671,10 +671,10 @@ Color.prototype.toCssHexString = function () {
  * @returns {Number[]} The modified result parameter or a new instance if result was undefined.
  */
 Color.prototype.toBytes = function (result) {
-  var red = Color.floatToByte(this.red);
-  var green = Color.floatToByte(this.green);
-  var blue = Color.floatToByte(this.blue);
-  var alpha = Color.floatToByte(this.alpha);
+  const red = Color.floatToByte(this.red);
+  const green = Color.floatToByte(this.green);
+  const blue = Color.floatToByte(this.blue);
+  const alpha = Color.floatToByte(this.alpha);
 
   if (!defined(result)) {
     return [red, green, blue, alpha];

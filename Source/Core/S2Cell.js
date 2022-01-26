@@ -105,28 +105,28 @@ import RuntimeError from "./RuntimeError.js";
  */
 
 // The maximum level supported within an S2 cell ID. Each level is represented by two bits in the final cell ID
-var S2_MAX_LEVEL = 30;
+const S2_MAX_LEVEL = 30;
 
 // The maximum index of a valid leaf cell plus one.  The range of valid leaf cell indices is [0..S2_LIMIT_IJ-1].
-var S2_LIMIT_IJ = 1 << S2_MAX_LEVEL;
+const S2_LIMIT_IJ = 1 << S2_MAX_LEVEL;
 
 // The maximum value of an si- or ti-coordinate.  The range of valid (si,ti) values is [0..S2_MAX_SITI].  Use `>>>` to convert to unsigned.
-var S2_MAX_SITI = (1 << (S2_MAX_LEVEL + 1)) >>> 0;
+const S2_MAX_SITI = (1 << (S2_MAX_LEVEL + 1)) >>> 0;
 
 // The number of bits in a S2 cell ID used for specifying the position along the Hilbert curve
-var S2_POSITION_BITS = 2 * S2_MAX_LEVEL + 1;
+const S2_POSITION_BITS = 2 * S2_MAX_LEVEL + 1;
 
 // The number of bits per I and J in the lookup tables
-var S2_LOOKUP_BITS = 4;
+const S2_LOOKUP_BITS = 4;
 
 // Lookup table for mapping 10 bits of IJ + orientation to 10 bits of Hilbert curve position + orientation.
-var S2_LOOKUP_POSITIONS = [];
+const S2_LOOKUP_POSITIONS = [];
 
 // Lookup table for mapping 10 bits of IJ + orientation to 10 bits of Hilbert curve position + orientation.
-var S2_LOOKUP_IJ = [];
+const S2_LOOKUP_IJ = [];
 
 // Lookup table of two bits of IJ from two bits of curve position, based also on the current curve orientation from the swap and invert bits
-var S2_POSITION_TO_IJ = [
+const S2_POSITION_TO_IJ = [
   [0, 1, 3, 2], // 0: Normal order, no swap or invert
   [0, 2, 3, 1], // 1: Swap bit set, swap I and J bits
   [3, 2, 0, 1], // 2: Invert bit set, invert bits
@@ -134,14 +134,14 @@ var S2_POSITION_TO_IJ = [
 ];
 
 // Mask that specifies the swap orientation bit for the Hilbert curve
-var S2_SWAP_MASK = 1;
+const S2_SWAP_MASK = 1;
 
 // Mask that specifies the invert orientation bit for the Hilbert curve
-var S2_INVERT_MASK = 2;
+const S2_INVERT_MASK = 2;
 
 // Lookup for the orientation update mask of one of the four sub-cells within a higher level cell.
 // This mask is XOR'ed with the current orientation to get the sub-cell orientation.
-var S2_POSITION_TO_ORIENTATION_MASK = [
+const S2_POSITION_TO_ORIENTATION_MASK = [
   S2_SWAP_MASK,
   0,
   0,
@@ -271,10 +271,10 @@ S2Cell.getTokenFromId = function (cellId) {
   Check.typeOf.bigint("cellId", cellId);
   //>>includeEnd('debug');
 
-  var trailingZeroHexChars = Math.floor(countTrailingZeroBits(cellId) / 4);
-  var hexString = cellId.toString(16).replace(/0*$/, "");
+  const trailingZeroHexChars = Math.floor(countTrailingZeroBits(cellId) / 4);
+  const hexString = cellId.toString(16).replace(/0*$/, "");
 
-  var zeroString = Array(17 - trailingZeroHexChars - hexString.length).join(
+  const zeroString = Array(17 - trailingZeroHexChars - hexString.length).join(
     "0"
   );
   return zeroString + hexString;
@@ -295,7 +295,7 @@ S2Cell.getLevel = function (cellId) {
   }
   //>>includeEnd('debug');
 
-  var lsbPosition = 0;
+  let lsbPosition = 0;
   // eslint-disable-next-line
   while (cellId !== BigInt(0)) {
     // eslint-disable-next-line
@@ -365,7 +365,7 @@ S2Cell.prototype.getParentAtLevel = function (level) {
     throw new DeveloperError("cannot get parent at invalid level.");
   }
   //>>includeEnd('debug');
-  var newLsb = lsbForLevel(level);
+  const newLsb = lsbForLevel(level);
   return new S2Cell((this._cellId & -newLsb) | newLsb);
 };
 
@@ -379,10 +379,10 @@ S2Cell.prototype.getParentAtLevel = function (level) {
 S2Cell.prototype.getCenter = function (ellipsoid) {
   ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
-  var center = getS2Center(this._cellId, this._level);
+  let center = getS2Center(this._cellId, this._level);
   // Normalize XYZ.
   center = Cartesian3.normalize(center, center);
-  var cartographic = new Cartographic.fromCartesian(
+  const cartographic = new Cartographic.fromCartesian(
     center,
     Ellipsoid.UNIT_SPHERE
   );
@@ -408,10 +408,10 @@ S2Cell.prototype.getVertex = function (index, ellipsoid) {
 
   ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
-  var vertex = getS2Vertex(this._cellId, this._level, index);
+  let vertex = getS2Vertex(this._cellId, this._level, index);
   // Normalize XYZ.
   vertex = Cartesian3.normalize(vertex, vertex);
-  var cartographic = new Cartographic.fromCartesian(
+  const cartographic = new Cartographic.fromCartesian(
     vertex,
     Ellipsoid.UNIT_SPHERE
   );
@@ -443,13 +443,13 @@ S2Cell.fromFacePositionLevel = function (face, position, level) {
   }
   //>>includeEnd('debug');
 
-  var faceBitString =
+  const faceBitString =
     (face < 4 ? "0" : "") + (face < 2 ? "0" : "") + face.toString(2);
-  var positionBitString = position.toString(2);
-  var positionPrefixPadding = Array(
+  const positionBitString = position.toString(2);
+  const positionPrefixPadding = Array(
     2 * level - positionBitString.length + 1
   ).join("0");
-  var positionSuffixPadding = Array(S2_POSITION_BITS - 2 * level).join("0");
+  const positionSuffixPadding = Array(S2_POSITION_BITS - 2 * level).join("0");
 
   // eslint-disable-next-line
   var cellId = BigInt(
@@ -467,17 +467,17 @@ S2Cell.fromFacePositionLevel = function (face, position, level) {
  * @private
  */
 function getS2Center(cellId, level) {
-  var faceSiTi = convertCellIdToFaceSiTi(cellId, level);
+  const faceSiTi = convertCellIdToFaceSiTi(cellId, level);
   return convertFaceSiTitoXYZ(faceSiTi[0], faceSiTi[1], faceSiTi[2]);
 }
 /**
  * @private
  */
 function getS2Vertex(cellId, level, index) {
-  var faceIJ = convertCellIdToFaceIJ(cellId, level);
-  var uv = convertIJLeveltoBoundUV([faceIJ[1], faceIJ[2]], level);
+  const faceIJ = convertCellIdToFaceIJ(cellId, level);
+  const uv = convertIJLeveltoBoundUV([faceIJ[1], faceIJ[2]], level);
   // Handles CCW ordering of the vertices.
-  var y = (index >> 1) & 1;
+  const y = (index >> 1) & 1;
   return convertFaceUVtoXYZ(faceIJ[0], uv[0][y ^ (index & 1)], uv[1][y]);
 }
 
@@ -487,21 +487,21 @@ function getS2Vertex(cellId, level, index) {
  * @private
  */
 function convertCellIdToFaceSiTi(cellId, level) {
-  var faceIJ = convertCellIdToFaceIJ(cellId);
-  var face = faceIJ[0];
-  var i = faceIJ[1];
-  var j = faceIJ[2];
+  const faceIJ = convertCellIdToFaceIJ(cellId);
+  const face = faceIJ[0];
+  const i = faceIJ[1];
+  const j = faceIJ[2];
 
   // We're resolving the center when we do the coordinate transform here. For the leaf cells, we're adding half the cell size
   // (remember that this space has 31 levels - which allows us to pick center and edges of the leaf cells). For non leaf cells,
   // we get one of either two cells diagonal to the cell center. The correction is used to make sure we pick the leaf cell edges
   // that represent the parent cell center.
-  var isLeaf = level === 30;
-  var shouldCorrect =
+  const isLeaf = level === 30;
+  const shouldCorrect =
     !isLeaf && (BigInt(i) ^ (cellId >> BigInt(2))) & BigInt(1); // eslint-disable-line
-  var correction = isLeaf ? 1 : shouldCorrect ? 2 : 0;
-  var si = (i << 1) + correction;
-  var ti = (j << 1) + correction;
+  const correction = isLeaf ? 1 : shouldCorrect ? 2 : 0;
+  const si = (i << 1) + correction;
+  const ti = (j << 1) + correction;
   return [face, si, ti];
 }
 
@@ -514,16 +514,16 @@ function convertCellIdToFaceIJ(cellId) {
   }
 
   var face = Number(cellId >> BigInt(S2_POSITION_BITS)); // eslint-disable-line
-  var bits = face & S2_SWAP_MASK;
-  var lookupMask = (1 << S2_LOOKUP_BITS) - 1;
+  let bits = face & S2_SWAP_MASK;
+  const lookupMask = (1 << S2_LOOKUP_BITS) - 1;
 
-  var i = 0;
-  var j = 0;
+  let i = 0;
+  let j = 0;
 
-  for (var k = 7; k >= 0; k--) {
-    var numberOfBits =
+  for (let k = 7; k >= 0; k--) {
+    const numberOfBits =
       k === 7 ? S2_MAX_LEVEL - 7 * S2_LOOKUP_BITS : S2_LOOKUP_BITS;
-    var extractMask = (1 << (2 * numberOfBits)) - 1;
+    const extractMask = (1 << (2 * numberOfBits)) - 1;
     bits +=
       Number(
         (cellId >> BigInt(k * 2 * S2_LOOKUP_BITS + 1)) & BigInt(extractMask) // eslint-disable-line
@@ -531,7 +531,7 @@ function convertCellIdToFaceIJ(cellId) {
 
     bits = S2_LOOKUP_IJ[bits];
 
-    var offset = k * S2_LOOKUP_BITS;
+    const offset = k * S2_LOOKUP_BITS;
     i += (bits >> (S2_LOOKUP_BITS + 2)) << offset;
     j += ((bits >> 2) & lookupMask) << offset;
 
@@ -545,11 +545,11 @@ function convertCellIdToFaceIJ(cellId) {
  * @private
  */
 function convertFaceSiTitoXYZ(face, si, ti) {
-  var s = convertSiTitoST(si);
-  var t = convertSiTitoST(ti);
+  const s = convertSiTitoST(si);
+  const t = convertSiTitoST(ti);
 
-  var u = convertSTtoUV(s);
-  var v = convertSTtoUV(t);
+  const u = convertSTtoUV(s);
+  const v = convertSTtoUV(t);
   return convertFaceUVtoXYZ(face, u, v);
 }
 
@@ -598,11 +598,11 @@ function convertSiTitoST(si) {
  * @private
  */
 function convertIJLeveltoBoundUV(ij, level) {
-  var result = [[], []];
-  var cellSize = getSizeIJ(level);
-  for (var d = 0; d < 2; ++d) {
-    var ijLow = ij[d] & -cellSize;
-    var ijHigh = ijLow + cellSize;
+  const result = [[], []];
+  const cellSize = getSizeIJ(level);
+  for (let d = 0; d < 2; ++d) {
+    const ijLow = ij[d] & -cellSize;
+    const ijHigh = ijLow + cellSize;
     result[d][0] = convertSTtoUV(convertIJtoSTMinimum(ijLow));
     result[d][1] = convertSTtoUV(convertIJtoSTMinimum(ijHigh));
   }
@@ -642,7 +642,7 @@ function generateLookupCell(
   orientation
 ) {
   if (level === S2_LOOKUP_BITS) {
-    var ij = (i << S2_LOOKUP_BITS) + j;
+    const ij = (i << S2_LOOKUP_BITS) + j;
     S2_LOOKUP_POSITIONS[(ij << 2) + originalOrientation] =
       (position << 2) + orientation;
     S2_LOOKUP_IJ[(position << 2) + originalOrientation] =
@@ -652,7 +652,7 @@ function generateLookupCell(
     i <<= 1;
     j <<= 1;
     position <<= 2;
-    var r = S2_POSITION_TO_IJ[orientation];
+    const r = S2_POSITION_TO_IJ[orientation];
     generateLookupCell(
       level,
       i + (r[0] >> 1),
@@ -723,7 +723,7 @@ function lsbForLevel(level) {
 
 // Lookup table for getting trailing zero bits.
 // https://graphics.stanford.edu/~seander/bithacks.html
-var Mod67BitPosition = [
+const Mod67BitPosition = [
   64,
   0,
   1,

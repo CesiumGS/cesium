@@ -3,10 +3,10 @@ import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import CesiumMath from "./Math.js";
 
-var maxShort = 32767;
+const maxShort = 32767;
 
-var scratchBVCartographic = new Cartographic();
-var scratchEncodedPosition = new Cartesian3();
+const scratchBVCartographic = new Cartographic();
+const scratchEncodedPosition = new Cartesian3();
 
 function decodeVectorPolylinePositions(
   positions,
@@ -15,32 +15,32 @@ function decodeVectorPolylinePositions(
   maximumHeight,
   ellipsoid
 ) {
-  var positionsLength = positions.length / 3;
-  var uBuffer = positions.subarray(0, positionsLength);
-  var vBuffer = positions.subarray(positionsLength, 2 * positionsLength);
-  var heightBuffer = positions.subarray(
+  const positionsLength = positions.length / 3;
+  const uBuffer = positions.subarray(0, positionsLength);
+  const vBuffer = positions.subarray(positionsLength, 2 * positionsLength);
+  const heightBuffer = positions.subarray(
     2 * positionsLength,
     3 * positionsLength
   );
   AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer, heightBuffer);
 
-  var decoded = new Float64Array(positions.length);
-  for (var i = 0; i < positionsLength; ++i) {
-    var u = uBuffer[i];
-    var v = vBuffer[i];
-    var h = heightBuffer[i];
+  const decoded = new Float64Array(positions.length);
+  for (let i = 0; i < positionsLength; ++i) {
+    const u = uBuffer[i];
+    const v = vBuffer[i];
+    const h = heightBuffer[i];
 
-    var lon = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
-    var lat = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
-    var alt = CesiumMath.lerp(minimumHeight, maximumHeight, h / maxShort);
+    const lon = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
+    const lat = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
+    const alt = CesiumMath.lerp(minimumHeight, maximumHeight, h / maxShort);
 
-    var cartographic = Cartographic.fromRadians(
+    const cartographic = Cartographic.fromRadians(
       lon,
       lat,
       alt,
       scratchBVCartographic
     );
-    var decodedPosition = ellipsoid.cartographicToCartesian(
+    const decodedPosition = ellipsoid.cartographicToCartesian(
       cartographic,
       scratchEncodedPosition
     );

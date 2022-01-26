@@ -10,7 +10,7 @@ import testMaterialDefinitionChanged from "../testMaterialDefinitionChanged.js";
 
 describe("DataSources/EllipseGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {
-    var options = {
+    const options = {
       material: Color.BLUE,
       show: true,
       semiMinorAxis: 1,
@@ -31,7 +31,7 @@ describe("DataSources/EllipseGraphics", function () {
       zIndex: 3,
     };
 
-    var ellipse = new EllipseGraphics(options);
+    const ellipse = new EllipseGraphics(options);
     expect(ellipse.material).toBeInstanceOf(ColorMaterialProperty);
     expect(ellipse.show).toBeInstanceOf(ConstantProperty);
     expect(ellipse.semiMinorAxis).toBeInstanceOf(ConstantProperty);
@@ -78,7 +78,7 @@ describe("DataSources/EllipseGraphics", function () {
   });
 
   it("merge assigns unassigned properties", function () {
-    var source = new EllipseGraphics();
+    const source = new EllipseGraphics();
     source.material = new ColorMaterialProperty();
     source.semiMinorAxis = new ConstantProperty();
     source.semiMajorAxis = new ConstantProperty();
@@ -102,7 +102,7 @@ describe("DataSources/EllipseGraphics", function () {
     );
     source.zIndex = new ConstantProperty(3);
 
-    var target = new EllipseGraphics();
+    const target = new EllipseGraphics();
     target.merge(source);
 
     expect(target.material).toBe(source.material);
@@ -128,28 +128,28 @@ describe("DataSources/EllipseGraphics", function () {
   });
 
   it("merge does not assign assigned properties", function () {
-    var source = new EllipseGraphics();
+    const source = new EllipseGraphics();
 
-    var material = new ColorMaterialProperty();
-    var semiMajorAxis = new ConstantProperty();
-    var semiMinorAxis = new ConstantProperty();
-    var show = new ConstantProperty();
-    var height = new ConstantProperty();
-    var extrudedHeight = new ConstantProperty();
-    var granularity = new ConstantProperty();
-    var rotation = new ConstantProperty();
-    var stRotation = new ConstantProperty();
-    var fill = new ConstantProperty();
-    var outline = new ConstantProperty();
-    var outlineColor = new ConstantProperty();
-    var outlineWidth = new ConstantProperty();
-    var numberOfVerticalLines = new ConstantProperty();
-    var shadows = new ConstantProperty();
-    var distanceDisplayCondition = new ConstantProperty();
-    var classificationType = new ConstantProperty();
-    var zIndex = new ConstantProperty();
+    const material = new ColorMaterialProperty();
+    const semiMajorAxis = new ConstantProperty();
+    const semiMinorAxis = new ConstantProperty();
+    const show = new ConstantProperty();
+    const height = new ConstantProperty();
+    const extrudedHeight = new ConstantProperty();
+    const granularity = new ConstantProperty();
+    const rotation = new ConstantProperty();
+    const stRotation = new ConstantProperty();
+    const fill = new ConstantProperty();
+    const outline = new ConstantProperty();
+    const outlineColor = new ConstantProperty();
+    const outlineWidth = new ConstantProperty();
+    const numberOfVerticalLines = new ConstantProperty();
+    const shadows = new ConstantProperty();
+    const distanceDisplayCondition = new ConstantProperty();
+    const classificationType = new ConstantProperty();
+    const zIndex = new ConstantProperty();
 
-    var target = new EllipseGraphics();
+    const target = new EllipseGraphics();
     target.material = material;
     target.semiMinorAxis = semiMinorAxis;
     target.semiMajorAxis = semiMajorAxis;
@@ -192,7 +192,7 @@ describe("DataSources/EllipseGraphics", function () {
   });
 
   it("clone works", function () {
-    var source = new EllipseGraphics();
+    const source = new EllipseGraphics();
     source.material = new ColorMaterialProperty();
     source.semiMinorAxis = new ConstantProperty();
     source.semiMajorAxis = new ConstantProperty();
@@ -212,7 +212,7 @@ describe("DataSources/EllipseGraphics", function () {
     source.classificationType = new ConstantProperty();
     source.zIndex = new ConstantProperty();
 
-    var result = source.clone();
+    const result = source.clone();
     expect(result.material).toBe(source.material);
     expect(result.semiMinorAxis).toBe(source.semiMinorAxis);
     expect(result.semiMajorAxis).toBe(source.semiMajorAxis);
@@ -236,14 +236,14 @@ describe("DataSources/EllipseGraphics", function () {
   });
 
   it("merge throws if source undefined", function () {
-    var target = new EllipseGraphics();
+    const target = new EllipseGraphics();
     expect(function () {
       target.merge(undefined);
     }).toThrowDeveloperError();
   });
 
   it("raises definitionChanged when a property is assigned or modified", function () {
-    var property = new EllipseGraphics();
+    const property = new EllipseGraphics();
     testMaterialDefinitionChanged(property, "material", Color.RED, Color.BLUE);
     testDefinitionChanged(property, "semiMinorAxis", 2, 3);
     testDefinitionChanged(property, "semiMajorAxis", 3, 4);

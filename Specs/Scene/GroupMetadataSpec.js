@@ -6,7 +6,7 @@ import {
 
 describe("Scene/GroupMetadata", function () {
   it("creates group metadata with default values", function () {
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -18,7 +18,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("creates group metadata", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
@@ -30,19 +30,19 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var extras = {
+    const extras = {
       other: 0,
     };
 
-    var extensions = {
+    const extensions = {
       EXT_other_extension: {},
     };
 
-    var properties = {
+    const properties = {
       position: [0.0, 0.0, 0.0],
     };
 
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -78,7 +78,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("hasProperty returns false when there's no properties", function () {
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -86,7 +86,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("hasProperty returns false when there's no property with the given property ID", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
@@ -97,7 +97,7 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -110,7 +110,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("hasProperty returns true when there's a property with the given property ID", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
@@ -121,7 +121,7 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -134,7 +134,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("hasProperty returns true when the class has a default value for a missing property", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
@@ -146,7 +146,7 @@ describe("Scene/GroupMetadata", function () {
         },
       },
     });
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {},
@@ -156,7 +156,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("hasProperty throws without propertyId", function () {
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -167,7 +167,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("hasPropertyBySemantic returns false when there's no properties", function () {
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -175,7 +175,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("hasPropertyBySemantic returns false when there's no property with the given semantic", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
@@ -186,7 +186,7 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -199,7 +199,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("hasPropertyBySemantic returns true when there's a property with the given semantic", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
@@ -211,7 +211,7 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -224,7 +224,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("hasPropertyBySemantic returns true when the class has a default value for a missing property", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
@@ -237,7 +237,7 @@ describe("Scene/GroupMetadata", function () {
         },
       },
     });
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {},
@@ -247,7 +247,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("hasPropertyBySemantic throws without semantic", function () {
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -258,7 +258,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("getPropertyIds returns empty array when there are no properties", function () {
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -267,7 +267,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("getPropertyIds returns array of property IDs", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
@@ -281,7 +281,7 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       id: "building",
       class: buildingClass,
       group: {
@@ -296,7 +296,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("getPropertyIds includes properties with default values", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
@@ -311,7 +311,7 @@ describe("Scene/GroupMetadata", function () {
         },
       },
     });
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -325,7 +325,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("getPropertyIds uses results argument", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
@@ -339,7 +339,7 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -350,15 +350,15 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var results = [];
-    var returnedResults = groupMetadata.getPropertyIds(results);
+    const results = [];
+    const returnedResults = groupMetadata.getPropertyIds(results);
 
     expect(results).toBe(returnedResults);
     expect(results.sort()).toEqual(["color", "height"]);
   });
 
   it("getProperty returns undefined when there's no properties", function () {
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -366,7 +366,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("getProperty returns undefined when there's no property with the given property ID", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
@@ -377,7 +377,7 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -390,7 +390,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("getProperty returns the property value", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
@@ -402,9 +402,9 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var position = [0.0, 0.0, 0.0];
+    const position = [0.0, 0.0, 0.0];
 
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -414,13 +414,13 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var value = groupMetadata.getProperty("position");
+    const value = groupMetadata.getProperty("position");
     expect(value).toEqual(Cartesian3.unpack(position));
   });
 
   it("getProperty returns the default value when the property is missing", function () {
-    var position = [0.0, 0.0, 0.0];
-    var buildingClass = new MetadataClass({
+    const position = [0.0, 0.0, 0.0];
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
@@ -434,18 +434,18 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {},
     });
 
-    var value = groupMetadata.getProperty("position");
+    const value = groupMetadata.getProperty("position");
     expect(value).toEqual(Cartesian3.unpack(position));
   });
 
   it("getProperty throws without propertyId", function () {
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -456,17 +456,17 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("setProperty returns false if property doesn't exist", function () {
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
 
-    var position = [0.0, 0.0, 0.0];
+    const position = [0.0, 0.0, 0.0];
     expect(groupMetadata.setProperty("position", position)).toBe(false);
   });
 
   it("setProperty sets property value", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
@@ -478,7 +478,7 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -488,14 +488,14 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var position = new Cartesian3(1.0, 1.0, 1.0);
+    const position = new Cartesian3(1.0, 1.0, 1.0);
     expect(groupMetadata.setProperty("position", position)).toBe(true);
     expect(groupMetadata.getProperty("position")).toEqual(position);
     expect(groupMetadata.getProperty("position")).not.toBe(position); // copies value
   });
 
   it("setProperty throws without propertyId", function () {
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -506,7 +506,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("setProperty throws without value", function () {
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -517,7 +517,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("getPropertyBySemantic returns undefined when there's no class", function () {
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -525,7 +525,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("getPropertyBySemantic returns undefined when there's no property with the given semantic", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
@@ -536,7 +536,7 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -550,7 +550,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("getPropertyBySemantic returns the property value", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
@@ -562,7 +562,7 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -576,7 +576,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("getPropertyBySemantic throws without semantic", function () {
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -587,7 +587,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("setPropertyBySemantic sets property value", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
@@ -599,7 +599,7 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -614,7 +614,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("setPropertyBySemantic returns false if the semantic does not exist", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
@@ -625,7 +625,7 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {
@@ -639,7 +639,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("setPropertyBySemantic throws without semantic", function () {
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
     });
@@ -650,7 +650,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("setPropertyBySemantic throws without value", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
@@ -662,7 +662,7 @@ describe("Scene/GroupMetadata", function () {
       },
     });
 
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
       group: {

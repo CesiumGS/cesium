@@ -23,18 +23,18 @@ import { SceneMode } from "../../Source/Cesium.js";
 import { TweenCollection } from "../../Source/Cesium.js";
 
 describe("Scene/Camera", function () {
-  var scene;
-  var camera;
+  let scene;
+  let camera;
 
-  var position;
-  var up;
-  var dir;
-  var right;
+  let position;
+  let up;
+  let dir;
+  let right;
 
-  var moveAmount = 3.0;
-  var turnAmount = CesiumMath.PI_OVER_TWO;
-  var rotateAmount = CesiumMath.PI_OVER_TWO;
-  var zoomAmount = 1.0;
+  const moveAmount = 3.0;
+  const turnAmount = CesiumMath.PI_OVER_TWO;
+  const rotateAmount = CesiumMath.PI_OVER_TWO;
+  const zoomAmount = 1.0;
 
   function FakeScene(projection) {
     this.canvas = {
@@ -87,12 +87,12 @@ describe("Scene/Camera", function () {
   });
 
   it("get view matrix", function () {
-    var viewMatrix = camera.viewMatrix;
-    var position = camera.position;
-    var up = camera.up;
-    var dir = camera.direction;
-    var right = camera.right;
-    var rotation = new Matrix4(
+    const viewMatrix = camera.viewMatrix;
+    const position = camera.position;
+    const up = camera.up;
+    const dir = camera.direction;
+    const right = camera.right;
+    const rotation = new Matrix4(
       right.x,
       right.y,
       right.z,
@@ -110,7 +110,7 @@ describe("Scene/Camera", function () {
       0.0,
       1.0
     );
-    var translation = new Matrix4(
+    const translation = new Matrix4(
       1.0,
       0.0,
       0.0,
@@ -128,12 +128,12 @@ describe("Scene/Camera", function () {
       0.0,
       1.0
     );
-    var expected = Matrix4.multiply(rotation, translation, new Matrix4());
+    const expected = Matrix4.multiply(rotation, translation, new Matrix4());
     expect(viewMatrix).toEqual(expected);
   });
 
   it("get inverse view matrix", function () {
-    var expected = Matrix4.inverse(camera.viewMatrix, new Matrix4());
+    const expected = Matrix4.inverse(camera.viewMatrix, new Matrix4());
     expect(expected).toEqualEpsilon(
       camera.inverseViewMatrix,
       CesiumMath.EPSILON15
@@ -161,7 +161,7 @@ describe("Scene/Camera", function () {
         1.0
       )
     );
-    var expected = Matrix4.inverseTransformation(
+    const expected = Matrix4.inverseTransformation(
       camera.transform,
       new Matrix4()
     );
@@ -195,7 +195,7 @@ describe("Scene/Camera", function () {
     );
 
     // Trigger updateMembers which normalizes the axes
-    var viewMatrix = camera.viewMatrix;
+    const viewMatrix = camera.viewMatrix;
     expect(Cartesian3.magnitude(camera.right)).toEqualEpsilon(
       1.0,
       CesiumMath.EPSILON8
@@ -205,11 +205,11 @@ describe("Scene/Camera", function () {
       CesiumMath.EPSILON8
     );
 
-    var inverseAffine = Matrix4.inverseTransformation(
+    const inverseAffine = Matrix4.inverseTransformation(
       viewMatrix,
       new Matrix4()
     );
-    var inverse = Matrix4.inverse(viewMatrix, new Matrix4());
+    const inverse = Matrix4.inverse(viewMatrix, new Matrix4());
     expect(inverseAffine).toEqualEpsilon(inverse, CesiumMath.EPSILON8);
   });
 
@@ -221,13 +221,13 @@ describe("Scene/Camera", function () {
   it("get heading in 2D", function () {
     camera._mode = SceneMode.SCENE2D;
 
-    var positionWC = Cartesian3.clone(camera.positionWC);
-    var position = Cartesian3.clone(camera.position);
-    var direction = Cartesian3.clone(camera.direction);
-    var up = Cartesian3.clone(camera.up);
-    var right = Cartesian3.clone(camera.right);
+    const positionWC = Cartesian3.clone(camera.positionWC);
+    const position = Cartesian3.clone(camera.position);
+    const direction = Cartesian3.clone(camera.direction);
+    const up = Cartesian3.clone(camera.up);
+    const right = Cartesian3.clone(camera.right);
 
-    var heading =
+    const heading =
       CesiumMath.TWO_PI - Math.atan2(camera.right.y, camera.right.x);
     expect(camera.heading).toEqual(heading);
 
@@ -241,13 +241,13 @@ describe("Scene/Camera", function () {
   it("get heading in CV", function () {
     camera._mode = SceneMode.COLUMBUS_VIEW;
 
-    var positionWC = Cartesian3.clone(camera.positionWC);
-    var position = Cartesian3.clone(camera.position);
-    var direction = Cartesian3.clone(camera.direction);
-    var up = Cartesian3.clone(camera.up);
-    var right = Cartesian3.clone(camera.right);
+    const positionWC = Cartesian3.clone(camera.positionWC);
+    const position = Cartesian3.clone(camera.position);
+    const direction = Cartesian3.clone(camera.direction);
+    const up = Cartesian3.clone(camera.up);
+    const right = Cartesian3.clone(camera.right);
 
-    var heading =
+    const heading =
       CesiumMath.TWO_PI - Math.atan2(camera.right.y, camera.right.x);
     expect(camera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON8);
 
@@ -261,26 +261,26 @@ describe("Scene/Camera", function () {
   it("get heading in 3D", function () {
     camera._mode = SceneMode.SCENE3D;
 
-    var ellipsoid = Ellipsoid.WGS84;
-    var toFixedFrame = Transforms.eastNorthUpToFixedFrame(
+    const ellipsoid = Ellipsoid.WGS84;
+    const toFixedFrame = Transforms.eastNorthUpToFixedFrame(
       camera.position,
       ellipsoid
     );
-    var transform = Matrix4.getMatrix3(toFixedFrame, new Matrix3());
+    const transform = Matrix4.getMatrix3(toFixedFrame, new Matrix3());
     Matrix3.transpose(transform, transform);
 
-    var right = Matrix3.multiplyByVector(
+    let right = Matrix3.multiplyByVector(
       transform,
       camera.right,
       new Cartesian3()
     );
-    var heading =
+    const heading =
       CesiumMath.TWO_PI - CesiumMath.zeroToTwoPi(Math.atan2(right.y, right.x));
 
-    var positionWC = Cartesian3.clone(camera.positionWC);
-    var position = Cartesian3.clone(camera.position);
-    var direction = Cartesian3.clone(camera.direction);
-    var up = Cartesian3.clone(camera.up);
+    const positionWC = Cartesian3.clone(camera.positionWC);
+    const position = Cartesian3.clone(camera.position);
+    const direction = Cartesian3.clone(camera.direction);
+    const up = Cartesian3.clone(camera.up);
     right = Cartesian3.clone(camera.right);
 
     expect(camera.heading).toEqual(heading);
@@ -296,10 +296,10 @@ describe("Scene/Camera", function () {
     scene.mapMode2D = MapMode2D.ROTATE;
     camera._mode = SceneMode.SCENE2D;
 
-    var heading = camera.heading;
-    var positionCartographic = camera.positionCartographic;
+    const heading = camera.heading;
+    const positionCartographic = camera.positionCartographic;
 
-    var newHeading = CesiumMath.toRadians(45.0);
+    const newHeading = CesiumMath.toRadians(45.0);
     camera.setView({
       orientation: {
         heading: newHeading,
@@ -314,10 +314,10 @@ describe("Scene/Camera", function () {
   it("does not set heading in 2D for infinite scrolling mode", function () {
     camera._mode = SceneMode.SCENE2D;
 
-    var heading = camera.heading;
-    var positionCartographic = camera.positionCartographic;
+    const heading = camera.heading;
+    const positionCartographic = camera.positionCartographic;
 
-    var newHeading = CesiumMath.toRadians(45.0);
+    const newHeading = CesiumMath.toRadians(45.0);
     camera.setView({
       orientation: {
         heading: newHeading,
@@ -343,10 +343,10 @@ describe("Scene/Camera", function () {
       new Cartesian3()
     );
 
-    var heading = camera.heading;
-    var positionCartographic = camera.positionCartographic;
+    const heading = camera.heading;
+    const positionCartographic = camera.positionCartographic;
 
-    var newHeading = CesiumMath.toRadians(45.0);
+    const newHeading = CesiumMath.toRadians(45.0);
     camera.setView({
       orientation: {
         heading: newHeading,
@@ -370,8 +370,8 @@ describe("Scene/Camera", function () {
       new Cartesian3()
     );
 
-    var heading = camera.heading;
-    var newHeading = CesiumMath.toRadians(45.0);
+    const heading = camera.heading;
+    const newHeading = CesiumMath.toRadians(45.0);
     camera.setView({
       orientation: {
         heading: newHeading,
@@ -392,7 +392,7 @@ describe("Scene/Camera", function () {
     Cartesian3.cross(camera.direction, camera.up, camera.right);
     Cartesian3.cross(camera.right, camera.direction, camera.up);
 
-    var positionCartographic = camera.positionCartographic;
+    const positionCartographic = camera.positionCartographic;
 
     camera.setView({
       orientation: {
@@ -438,13 +438,13 @@ describe("Scene/Camera", function () {
       new Cartesian3()
     );
 
-    var positionWC = Cartesian3.clone(camera.positionWC);
-    var position = Cartesian3.clone(camera.position);
-    var direction = Cartesian3.clone(camera.direction);
-    var up = Cartesian3.clone(camera.up);
-    var right = Cartesian3.clone(camera.right);
+    const positionWC = Cartesian3.clone(camera.positionWC);
+    const position = Cartesian3.clone(camera.position);
+    const direction = Cartesian3.clone(camera.direction);
+    const up = Cartesian3.clone(camera.up);
+    const right = Cartesian3.clone(camera.right);
 
-    var pitch = CesiumMath.PI_OVER_TWO - Math.acos(-camera.direction.z);
+    const pitch = CesiumMath.PI_OVER_TWO - Math.acos(-camera.direction.z);
     expect(camera.pitch).toEqualEpsilon(pitch, CesiumMath.EPSILON6);
 
     expect(camera.positionWC).toEqualEpsilon(positionWC, CesiumMath.EPSILON8);
@@ -457,17 +457,17 @@ describe("Scene/Camera", function () {
   it("get pitch in 3D", function () {
     camera._mode = SceneMode.SCENE3D;
 
-    var direction = Cartesian3.normalize(camera.position, new Cartesian3());
+    let direction = Cartesian3.normalize(camera.position, new Cartesian3());
     Cartesian3.negate(direction, direction);
-    var pitch =
+    const pitch =
       CesiumMath.PI_OVER_TWO -
       Math.acos(-Cartesian3.dot(camera.direction, direction));
 
-    var positionWC = Cartesian3.clone(camera.positionWC);
-    var position = Cartesian3.clone(camera.position);
+    const positionWC = Cartesian3.clone(camera.positionWC);
+    const position = Cartesian3.clone(camera.position);
     direction = Cartesian3.clone(camera.direction);
-    var up = Cartesian3.clone(camera.up);
-    var right = Cartesian3.clone(camera.right);
+    const up = Cartesian3.clone(camera.up);
+    const right = Cartesian3.clone(camera.right);
 
     expect(camera.pitch).toEqual(pitch);
 
@@ -493,10 +493,10 @@ describe("Scene/Camera", function () {
       new Cartesian3()
     );
 
-    var pitch = camera.pitch;
-    var positionCartographic = camera.positionCartographic;
+    const pitch = camera.pitch;
+    const positionCartographic = camera.positionCartographic;
 
-    var newPitch = CesiumMath.toRadians(45.0);
+    const newPitch = CesiumMath.toRadians(45.0);
     camera.setView({
       orientation: {
         pitch: newPitch,
@@ -520,10 +520,10 @@ describe("Scene/Camera", function () {
       new Cartesian3()
     );
 
-    var pitch = camera.pitch;
-    var positionCartographic = camera.positionCartographic;
+    const pitch = camera.pitch;
+    const positionCartographic = camera.positionCartographic;
 
-    var newPitch = CesiumMath.toRadians(45.0);
+    const newPitch = CesiumMath.toRadians(45.0);
     camera.setView({
       orientation: {
         pitch: newPitch,
@@ -552,13 +552,13 @@ describe("Scene/Camera", function () {
 
     camera.look(camera.direction, CesiumMath.toRadians(45.0));
 
-    var positionWC = Cartesian3.clone(camera.positionWC);
-    var position = Cartesian3.clone(camera.position);
-    var direction = Cartesian3.clone(camera.direction);
-    var up = Cartesian3.clone(camera.up);
-    var right = Cartesian3.clone(camera.right);
+    const positionWC = Cartesian3.clone(camera.positionWC);
+    const position = Cartesian3.clone(camera.position);
+    const direction = Cartesian3.clone(camera.direction);
+    const up = Cartesian3.clone(camera.up);
+    const right = Cartesian3.clone(camera.right);
 
-    var roll = CesiumMath.zeroToTwoPi(-CesiumMath.toRadians(45.0));
+    const roll = CesiumMath.zeroToTwoPi(-CesiumMath.toRadians(45.0));
     expect(camera.roll).toEqualEpsilon(roll, CesiumMath.EPSILON6);
 
     expect(camera.positionWC).toEqualEpsilon(positionWC, CesiumMath.EPSILON8);
@@ -571,7 +571,7 @@ describe("Scene/Camera", function () {
   it("get roll in 3D", function () {
     camera._mode = SceneMode.SCENE3D;
 
-    var ellipsoid = Ellipsoid.WGS84;
+    const ellipsoid = Ellipsoid.WGS84;
     camera.position = Cartesian3.clone(Cartesian3.UNIT_X);
     Cartesian3.multiplyByScalar(
       camera.position,
@@ -592,24 +592,24 @@ describe("Scene/Camera", function () {
       new Cartesian3()
     );
 
-    var toFixedFrame = Transforms.eastNorthUpToFixedFrame(
+    const toFixedFrame = Transforms.eastNorthUpToFixedFrame(
       camera.position,
       ellipsoid
     );
-    var transform = Matrix4.getMatrix3(toFixedFrame, new Matrix3());
+    const transform = Matrix4.getMatrix3(toFixedFrame, new Matrix3());
     Matrix3.transpose(transform, transform);
 
-    var right = Matrix3.multiplyByVector(
+    let right = Matrix3.multiplyByVector(
       transform,
       camera.right,
       new Cartesian3()
     );
-    var roll = CesiumMath.TWO_PI - Math.atan2(right.z, right.x);
+    const roll = CesiumMath.TWO_PI - Math.atan2(right.z, right.x);
 
-    var positionWC = Cartesian3.clone(camera.positionWC);
-    var position = Cartesian3.clone(camera.position);
-    var direction = Cartesian3.clone(camera.direction);
-    var up = Cartesian3.clone(camera.up);
+    const positionWC = Cartesian3.clone(camera.positionWC);
+    const position = Cartesian3.clone(camera.position);
+    const direction = Cartesian3.clone(camera.direction);
+    const up = Cartesian3.clone(camera.up);
     right = Cartesian3.clone(camera.right);
 
     expect(camera.roll).toEqual(roll);
@@ -622,7 +622,7 @@ describe("Scene/Camera", function () {
   });
 
   it("get roll returns correct value past 90 degrees", function () {
-    var roll = CesiumMath.toRadians(110.0);
+    const roll = CesiumMath.toRadians(110.0);
     camera.setView({
       destination: Cartesian3.fromDegrees(-72.0, 40.0, 20.0),
       orientation: {
@@ -647,10 +647,10 @@ describe("Scene/Camera", function () {
       new Cartesian3()
     );
 
-    var roll = camera.roll;
-    var positionCartographic = camera.positionCartographic;
+    const roll = camera.roll;
+    const positionCartographic = camera.positionCartographic;
 
-    var newRoll = CesiumMath.PI_OVER_FOUR;
+    const newRoll = CesiumMath.PI_OVER_FOUR;
     camera.setView({
       orientation: {
         pitch: camera.pitch,
@@ -676,10 +676,12 @@ describe("Scene/Camera", function () {
       new Cartesian3()
     );
 
-    var roll = camera.roll;
-    var positionCartographic = Cartographic.clone(camera.positionCartographic);
+    const roll = camera.roll;
+    const positionCartographic = Cartographic.clone(
+      camera.positionCartographic
+    );
 
-    var newRoll = CesiumMath.PI_OVER_FOUR;
+    const newRoll = CesiumMath.PI_OVER_FOUR;
     camera.setView({
       orientation: {
         pitch: camera.pitch,
@@ -715,14 +717,14 @@ describe("Scene/Camera", function () {
   });
 
   it("setView with cartesian in 2D", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var projection = new GeographicProjection(ellipsoid);
-    var maxRadii = ellipsoid.maximumRadius;
+    const ellipsoid = Ellipsoid.WGS84;
+    const projection = new GeographicProjection(ellipsoid);
+    const maxRadii = ellipsoid.maximumRadius;
 
     camera._mode = SceneMode.SCENE2D;
     camera._projection = projection;
 
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.right = maxRadii * Math.PI;
     frustum.left = -frustum.right;
     frustum.top =
@@ -732,13 +734,13 @@ describe("Scene/Camera", function () {
     frustum.far = 60.0 * maxRadii;
     camera.frustum = frustum;
 
-    var ratio = frustum.top / frustum.right;
-    var cartesian = Cartesian3.fromDegrees(-75.0, 42.0, 100.0);
+    const ratio = frustum.top / frustum.right;
+    const cartesian = Cartesian3.fromDegrees(-75.0, 42.0, 100.0);
     camera.setView({
       destination: cartesian,
     });
 
-    var cart = ellipsoid.cartesianToCartographic(cartesian);
+    const cart = ellipsoid.cartesianToCartographic(cartesian);
     expect(camera.positionCartographic).toEqualEpsilon(
       cart,
       CesiumMath.EPSILON6
@@ -757,18 +759,18 @@ describe("Scene/Camera", function () {
   });
 
   it("setView with cartesian in Columbus View", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var projection = new GeographicProjection(ellipsoid);
+    const ellipsoid = Ellipsoid.WGS84;
+    const projection = new GeographicProjection(ellipsoid);
 
     camera._mode = SceneMode.COLUMBUS_VIEW;
     camera._projection = projection;
 
-    var cartesian = Cartesian3.fromDegrees(-75.0, 42.0, 100.0);
+    const cartesian = Cartesian3.fromDegrees(-75.0, 42.0, 100.0);
     camera.setView({
       destination: cartesian,
     });
 
-    var cart = ellipsoid.cartesianToCartographic(cartesian);
+    const cart = ellipsoid.cartesianToCartographic(cartesian);
     expect(camera.positionCartographic).toEqualEpsilon(
       cart,
       CesiumMath.EPSILON11
@@ -782,13 +784,13 @@ describe("Scene/Camera", function () {
   });
 
   it("setView with cartesian in 3D", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var projection = new GeographicProjection(ellipsoid);
+    const ellipsoid = Ellipsoid.WGS84;
+    const projection = new GeographicProjection(ellipsoid);
 
     camera._mode = SceneMode.SCENE3D;
     camera._projection = projection;
 
-    var cartesian = Cartesian3.fromDegrees(-75.0, 0.0, 100.0);
+    const cartesian = Cartesian3.fromDegrees(-75.0, 0.0, 100.0);
     camera.setView({
       destination: cartesian,
     });
@@ -812,8 +814,8 @@ describe("Scene/Camera", function () {
   });
 
   it("setView with cartesian in Columbus View and orthographic frustum", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var projection = new GeographicProjection(ellipsoid);
+    const ellipsoid = Ellipsoid.WGS84;
+    const projection = new GeographicProjection(ellipsoid);
 
     camera._mode = SceneMode.COLUMBUS_VIEW;
     camera._projection = projection;
@@ -823,12 +825,12 @@ describe("Scene/Camera", function () {
       scene.drawingBufferWidth / scene.drawingBufferHeight;
     camera.frustum.width = camera.positionCartographic.height;
 
-    var cartesian = Cartesian3.fromDegrees(-75.0, 42.0, 100.0);
+    const cartesian = Cartesian3.fromDegrees(-75.0, 42.0, 100.0);
     camera.setView({
       destination: cartesian,
     });
 
-    var cart = ellipsoid.cartesianToCartographic(cartesian);
+    const cart = ellipsoid.cartesianToCartographic(cartesian);
     expect(camera.positionCartographic).toEqualEpsilon(
       cart,
       CesiumMath.EPSILON11
@@ -843,8 +845,8 @@ describe("Scene/Camera", function () {
   });
 
   it("setView with cartesian in 3D and orthographic frustum", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var projection = new GeographicProjection(ellipsoid);
+    const ellipsoid = Ellipsoid.WGS84;
+    const projection = new GeographicProjection(ellipsoid);
 
     camera._mode = SceneMode.SCENE3D;
     camera._projection = projection;
@@ -854,12 +856,12 @@ describe("Scene/Camera", function () {
       scene.drawingBufferWidth / scene.drawingBufferHeight;
     camera.frustum.width = camera.positionCartographic.height;
 
-    var cartesian = Cartesian3.fromDegrees(-75.0, 0.0, 100.0);
+    const cartesian = Cartesian3.fromDegrees(-75.0, 0.0, 100.0);
     camera.setView({
       destination: cartesian,
     });
 
-    var cart = ellipsoid.cartesianToCartographic(cartesian);
+    const cart = ellipsoid.cartesianToCartographic(cartesian);
     expect(camera.positionCartographic).toEqualEpsilon(
       cart,
       CesiumMath.EPSILON6
@@ -880,10 +882,10 @@ describe("Scene/Camera", function () {
   });
 
   it("setView right rotation order", function () {
-    var position = Cartesian3.fromDegrees(-117.16, 32.71, 0.0);
-    var heading = CesiumMath.toRadians(180.0);
-    var pitch = CesiumMath.toRadians(0.0);
-    var roll = CesiumMath.toRadians(45.0);
+    const position = Cartesian3.fromDegrees(-117.16, 32.71, 0.0);
+    const heading = CesiumMath.toRadians(180.0);
+    const pitch = CesiumMath.toRadians(0.0);
+    const roll = CesiumMath.toRadians(45.0);
 
     camera.setView({
       destination: position,
@@ -901,10 +903,10 @@ describe("Scene/Camera", function () {
   });
 
   it("setView (1)", function () {
-    var position = Cartesian3.fromDegrees(-117.16, 32.71, 0.0);
-    var heading = CesiumMath.toRadians(45.0);
-    var pitch = CesiumMath.toRadians(-50.0);
-    var roll = CesiumMath.toRadians(45.0);
+    const position = Cartesian3.fromDegrees(-117.16, 32.71, 0.0);
+    let heading = CesiumMath.toRadians(45.0);
+    const pitch = CesiumMath.toRadians(-50.0);
+    const roll = CesiumMath.toRadians(45.0);
 
     camera.setView({
       destination: position,
@@ -937,10 +939,10 @@ describe("Scene/Camera", function () {
   });
 
   it("setView (2)", function () {
-    var position = Cartesian3.fromDegrees(-117.16, 32.71, 0.0);
-    var heading = CesiumMath.toRadians(45.0);
-    var pitch = CesiumMath.toRadians(50.0);
-    var roll = CesiumMath.toRadians(45.0);
+    const position = Cartesian3.fromDegrees(-117.16, 32.71, 0.0);
+    const heading = CesiumMath.toRadians(45.0);
+    let pitch = CesiumMath.toRadians(50.0);
+    const roll = CesiumMath.toRadians(45.0);
 
     camera.setView({
       destination: position,
@@ -973,10 +975,10 @@ describe("Scene/Camera", function () {
   });
 
   it("setView (3)", function () {
-    var position = Cartesian3.fromDegrees(-117.16, 32.71, 0.0);
-    var heading = CesiumMath.toRadians(45.0);
-    var pitch = CesiumMath.toRadians(50.0);
-    var roll = CesiumMath.toRadians(45.0);
+    const position = Cartesian3.fromDegrees(-117.16, 32.71, 0.0);
+    const heading = CesiumMath.toRadians(45.0);
+    const pitch = CesiumMath.toRadians(50.0);
+    let roll = CesiumMath.toRadians(45.0);
 
     camera.setView({
       destination: position,
@@ -1011,10 +1013,10 @@ describe("Scene/Camera", function () {
   it("setView with direction, up", function () {
     scene.mode = SceneMode.SCENE3D;
 
-    var direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
-    var up = Cartesian3.clone(Cartesian3.UNIT_Y);
+    const direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
+    const up = Cartesian3.clone(Cartesian3.UNIT_Y);
 
-    var options = {
+    const options = {
       destination: Cartesian3.fromDegrees(-117.16, 32.71, 0.0),
       orientation: {
         direction: direction,
@@ -1087,7 +1089,7 @@ describe("Scene/Camera", function () {
         1.0
       )
     );
-    var expected = Cartesian3.add(
+    const expected = Cartesian3.add(
       Matrix4.getColumn(camera.inverseTransform, 3, new Cartesian4()),
       Cartesian3.UNIT_Z,
       new Cartesian3()
@@ -1188,7 +1190,7 @@ describe("Scene/Camera", function () {
         1.0
       )
     );
-    var expected = Cartesian3.add(
+    const expected = Cartesian3.add(
       Cartesian3.UNIT_X,
       Matrix4.getColumn(camera.transform, 3, new Cartesian4()),
       new Cartesian3()
@@ -1237,7 +1239,7 @@ describe("Scene/Camera", function () {
   });
 
   it("moves", function () {
-    var direction = Cartesian3.normalize(
+    const direction = Cartesian3.normalize(
       new Cartesian3(1.0, 1.0, 0.0),
       new Cartesian3()
     );
@@ -1318,7 +1320,7 @@ describe("Scene/Camera", function () {
   });
 
   it("moves forward in 2D mode zooms in camera instead of moving it", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.left = -2.0;
@@ -1328,7 +1330,7 @@ describe("Scene/Camera", function () {
     camera.frustum = frustum;
 
     camera.update(SceneMode.SCENE2D);
-    var oldCamera = Camera.clone(camera);
+    const oldCamera = Camera.clone(camera);
 
     camera.moveForward(moveAmount);
 
@@ -1342,7 +1344,7 @@ describe("Scene/Camera", function () {
   });
 
   it("moves backward in 2D mode zooms out camera instead of moving it", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.left = -2.0;
@@ -1352,7 +1354,7 @@ describe("Scene/Camera", function () {
     camera.frustum = frustum;
 
     camera.update(SceneMode.SCENE2D);
-    var oldCamera = Camera.clone(camera);
+    const oldCamera = Camera.clone(camera);
 
     camera.moveBackward(moveAmount);
 
@@ -1365,7 +1367,7 @@ describe("Scene/Camera", function () {
   });
 
   it("move clamps position in 2D", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.left = -2.0;
@@ -1376,12 +1378,12 @@ describe("Scene/Camera", function () {
 
     camera.update(SceneMode.SCENE2D);
 
-    var max = scene.mapProjection.project(
+    const max = scene.mapProjection.project(
       new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878))
     );
-    var factor = 1000.0;
-    var dx = max.x * factor;
-    var dy = max.y * factor;
+    const factor = 1000.0;
+    const dx = max.x * factor;
+    const dy = max.y * factor;
 
     camera.moveUp(dy);
     camera.moveRight(dx);
@@ -1459,7 +1461,7 @@ describe("Scene/Camera", function () {
   });
 
   it("looks left in 2D mode does not modify the camera at all", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.left = -2.0;
@@ -1469,7 +1471,7 @@ describe("Scene/Camera", function () {
     camera.frustum = frustum;
 
     camera.update(SceneMode.SCENE2D);
-    var oldCamera = Camera.clone(camera);
+    const oldCamera = Camera.clone(camera);
 
     camera.lookLeft(turnAmount);
 
@@ -1484,7 +1486,7 @@ describe("Scene/Camera", function () {
   });
 
   it("looks right in 2D mode does not modify the camera at all", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.left = -2.0;
@@ -1494,7 +1496,7 @@ describe("Scene/Camera", function () {
     camera.frustum = frustum;
 
     camera.update(SceneMode.SCENE2D);
-    var oldCamera = Camera.clone(camera);
+    const oldCamera = Camera.clone(camera);
 
     camera.lookRight(turnAmount);
 
@@ -1509,7 +1511,7 @@ describe("Scene/Camera", function () {
   });
 
   it("looks up in 2D mode does not modify the camera at all", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.left = -2.0;
@@ -1519,7 +1521,7 @@ describe("Scene/Camera", function () {
     camera.frustum = frustum;
 
     camera.update(SceneMode.SCENE2D);
-    var oldCamera = Camera.clone(camera);
+    const oldCamera = Camera.clone(camera);
 
     camera.lookUp(turnAmount);
 
@@ -1534,7 +1536,7 @@ describe("Scene/Camera", function () {
   });
 
   it("looks down in 2D mode does not modify the camera at all", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.left = -2.0;
@@ -1544,7 +1546,7 @@ describe("Scene/Camera", function () {
     camera.frustum = frustum;
 
     camera.update(SceneMode.SCENE2D);
-    var oldCamera = Camera.clone(camera);
+    const oldCamera = Camera.clone(camera);
 
     camera.lookDown(turnAmount);
 
@@ -1758,7 +1760,7 @@ describe("Scene/Camera", function () {
   });
 
   it("rotates", function () {
-    var axis = Cartesian3.normalize(
+    const axis = Cartesian3.normalize(
       new Cartesian3(
         Math.cos(CesiumMath.PI_OVER_FOUR),
         Math.sin(CesiumMath.PI_OVER_FOUR),
@@ -1766,7 +1768,7 @@ describe("Scene/Camera", function () {
       ),
       new Cartesian3()
     );
-    var angle = CesiumMath.PI_OVER_TWO;
+    const angle = CesiumMath.PI_OVER_TWO;
     camera.rotate(axis, angle);
 
     expect(camera.position).toEqualEpsilon(
@@ -1806,7 +1808,7 @@ describe("Scene/Camera", function () {
   });
 
   it("zooms out 2D", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.left = -2.0;
@@ -1825,7 +1827,7 @@ describe("Scene/Camera", function () {
   });
 
   it("zooms out 2D when frustrum has greater height than width", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.left = -1.0;
@@ -1844,7 +1846,7 @@ describe("Scene/Camera", function () {
   });
 
   it("zooms in 2D", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.left = -2.0;
@@ -1863,7 +1865,7 @@ describe("Scene/Camera", function () {
   });
 
   it("zooms in 2D when frustrum has greater height than width", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.left = -1.0;
@@ -1882,7 +1884,7 @@ describe("Scene/Camera", function () {
   });
 
   it("clamps zoom out in 2D", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.left = -2.0;
@@ -1893,12 +1895,12 @@ describe("Scene/Camera", function () {
 
     camera.update(SceneMode.SCENE2D);
 
-    var max = scene.mapProjection.project(
+    const max = scene.mapProjection.project(
       new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878))
     );
-    var factor = 1000.0;
-    var dx = max.x * factor;
-    var ratio = frustum.top / frustum.right;
+    const factor = 1000.0;
+    const dx = max.x * factor;
+    const ratio = frustum.top / frustum.right;
 
     camera.zoomOut(dx);
     expect(frustum.right).toBeLessThan(dx);
@@ -1908,7 +1910,7 @@ describe("Scene/Camera", function () {
   });
 
   it("clamps zoom in in 2D", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.left = -2.0;
@@ -1919,11 +1921,11 @@ describe("Scene/Camera", function () {
 
     camera.update(SceneMode.SCENE2D);
 
-    var max = scene.mapProjection.project(
+    const max = scene.mapProjection.project(
       new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878))
     );
-    var factor = 1000.0;
-    var dx = max.x * factor;
+    const factor = 1000.0;
+    const dx = max.x * factor;
 
     camera.zoomIn(dx * 2.0);
     expect(frustum.right).toEqual(1.0);
@@ -1961,10 +1963,10 @@ describe("Scene/Camera", function () {
   });
 
   it("lookAt", function () {
-    var target = Cartesian3.fromDegrees(0.0, 0.0);
-    var offset = new Cartesian3(0.0, -1.0, 0.0);
+    const target = Cartesian3.fromDegrees(0.0, 0.0);
+    const offset = new Cartesian3(0.0, -1.0, 0.0);
 
-    var tempCamera = Camera.clone(camera);
+    const tempCamera = Camera.clone(camera);
     tempCamera.lookAt(target, offset);
 
     expect(tempCamera.position).toEqualEpsilon(offset, CesiumMath.EPSILON11);
@@ -2004,12 +2006,12 @@ describe("Scene/Camera", function () {
   });
 
   it("lookAt with heading, pitch and range", function () {
-    var target = Cartesian3.fromDegrees(0.0, 0.0);
-    var heading = CesiumMath.toRadians(45.0);
-    var pitch = CesiumMath.toRadians(-45.0);
-    var range = 2.0;
+    const target = Cartesian3.fromDegrees(0.0, 0.0);
+    const heading = CesiumMath.toRadians(45.0);
+    const pitch = CesiumMath.toRadians(-45.0);
+    const range = 2.0;
 
-    var tempCamera = Camera.clone(camera);
+    const tempCamera = Camera.clone(camera);
     tempCamera.lookAt(target, new HeadingPitchRange(heading, pitch, range));
 
     tempCamera.lookAtTransform(Matrix4.IDENTITY);
@@ -2033,10 +2035,10 @@ describe("Scene/Camera", function () {
   });
 
   it("lookAt when target is zero", function () {
-    var target = Cartesian3.clone(Cartesian3.ZERO);
-    var offset = new Cartesian3(0.0, -1.0, 0.0);
+    const target = Cartesian3.clone(Cartesian3.ZERO);
+    const offset = new Cartesian3(0.0, -1.0, 0.0);
 
-    var tempCamera = Camera.clone(camera);
+    const tempCamera = Camera.clone(camera);
     tempCamera.lookAt(target, offset);
 
     expect(tempCamera.position).toEqualEpsilon(offset, CesiumMath.EPSILON11);
@@ -2066,10 +2068,10 @@ describe("Scene/Camera", function () {
   });
 
   it("lookAt when target and camera are zero", function () {
-    var target = Cartesian3.clone(Cartesian3.ZERO);
-    var offset = new Cartesian3(0.0, -1.0, 0.0);
+    const target = Cartesian3.clone(Cartesian3.ZERO);
+    const offset = new Cartesian3(0.0, -1.0, 0.0);
 
-    var tempCamera = Camera.clone(camera);
+    const tempCamera = Camera.clone(camera);
     tempCamera.position = Cartesian3.clone(Cartesian3.ZERO);
     tempCamera.lookAt(target, offset);
 
@@ -2112,7 +2114,7 @@ describe("Scene/Camera", function () {
   });
 
   it("lookAt in 2D mode", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.left = -2.0;
@@ -2120,12 +2122,12 @@ describe("Scene/Camera", function () {
     frustum.top = 1.0;
     frustum.bottom = -1.0;
 
-    var tempCamera = Camera.clone(camera);
+    const tempCamera = Camera.clone(camera);
     tempCamera.frustum = frustum;
     tempCamera.update(SceneMode.SCENE2D);
 
-    var target = Cartesian3.fromDegrees(0.0, 0.0);
-    var offset = new Cartesian3(10000.0, 10000.0, 30000.0);
+    const target = Cartesian3.fromDegrees(0.0, 0.0);
+    const offset = new Cartesian3(10000.0, 10000.0, 30000.0);
     tempCamera.lookAt(target, offset);
 
     expect(Cartesian2.clone(tempCamera.position)).toEqual(Cartesian2.ZERO);
@@ -2152,7 +2154,7 @@ describe("Scene/Camera", function () {
   });
 
   it("lookAt in 2D mode with heading, pitch and range", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.left = -2.0;
@@ -2160,14 +2162,14 @@ describe("Scene/Camera", function () {
     frustum.top = 1.0;
     frustum.bottom = -1.0;
 
-    var tempCamera = Camera.clone(camera);
+    const tempCamera = Camera.clone(camera);
     tempCamera.frustum = frustum;
     tempCamera.update(SceneMode.SCENE2D);
 
-    var target = Cartesian3.fromDegrees(0.0, 0.0);
-    var heading = CesiumMath.toRadians(90.0);
-    var pitch = CesiumMath.toRadians(-45.0);
-    var range = 2.0;
+    const target = Cartesian3.fromDegrees(0.0, 0.0);
+    const heading = CesiumMath.toRadians(90.0);
+    const pitch = CesiumMath.toRadians(-45.0);
+    const range = 2.0;
 
     tempCamera.lookAt(target, new HeadingPitchRange(heading, pitch, range));
 
@@ -2191,14 +2193,14 @@ describe("Scene/Camera", function () {
   });
 
   it("lookAtTransform", function () {
-    var target = new Cartesian3(-1.0, -1.0, 0.0);
-    var offset = new Cartesian3(1.0, 1.0, 0.0);
-    var transform = Transforms.eastNorthUpToFixedFrame(
+    const target = new Cartesian3(-1.0, -1.0, 0.0);
+    const offset = new Cartesian3(1.0, 1.0, 0.0);
+    const transform = Transforms.eastNorthUpToFixedFrame(
       target,
       Ellipsoid.UNIT_SPHERE
     );
 
-    var tempCamera = Camera.clone(camera);
+    const tempCamera = Camera.clone(camera);
     tempCamera.lookAtTransform(transform, offset);
 
     expect(tempCamera.position).toEqualEpsilon(offset, CesiumMath.EPSILON11);
@@ -2238,12 +2240,12 @@ describe("Scene/Camera", function () {
   });
 
   it("lookAtTransform with no offset parameter", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var cartOrigin = Cartographic.fromDegrees(-75.59777, 40.03883);
-    var origin = ellipsoid.cartographicToCartesian(cartOrigin);
-    var transform = Transforms.eastNorthUpToFixedFrame(origin);
+    const ellipsoid = Ellipsoid.WGS84;
+    const cartOrigin = Cartographic.fromDegrees(-75.59777, 40.03883);
+    const origin = ellipsoid.cartographicToCartesian(cartOrigin);
+    const transform = Transforms.eastNorthUpToFixedFrame(origin);
 
-    var height = 1000.0;
+    const height = 1000.0;
     cartOrigin.height = height;
 
     camera.position = ellipsoid.cartographicToCartesian(cartOrigin);
@@ -2275,13 +2277,13 @@ describe("Scene/Camera", function () {
   });
 
   it("lookAtTransform with heading, pitch and range", function () {
-    var target = Cartesian3.fromDegrees(0.0, 0.0);
-    var heading = CesiumMath.toRadians(45.0);
-    var pitch = CesiumMath.toRadians(-45.0);
-    var range = 2.0;
-    var transform = Transforms.eastNorthUpToFixedFrame(target);
+    const target = Cartesian3.fromDegrees(0.0, 0.0);
+    const heading = CesiumMath.toRadians(45.0);
+    const pitch = CesiumMath.toRadians(-45.0);
+    const range = 2.0;
+    const transform = Transforms.eastNorthUpToFixedFrame(target);
 
-    var tempCamera = Camera.clone(camera);
+    const tempCamera = Camera.clone(camera);
     tempCamera.lookAtTransform(
       transform,
       new HeadingPitchRange(heading, pitch, range)
@@ -2314,7 +2316,7 @@ describe("Scene/Camera", function () {
   });
 
   it("lookAtTransform in 2D mode", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.left = -2.0;
@@ -2322,14 +2324,14 @@ describe("Scene/Camera", function () {
     frustum.top = 1.0;
     frustum.bottom = -1.0;
 
-    var tempCamera = Camera.clone(camera);
+    const tempCamera = Camera.clone(camera);
     tempCamera.frustum = frustum;
     tempCamera.update(SceneMode.SCENE2D);
 
-    var transform = Transforms.eastNorthUpToFixedFrame(
+    const transform = Transforms.eastNorthUpToFixedFrame(
       Cartesian3.fromDegrees(0.0, 0.0)
     );
-    var offset = new Cartesian3(10000.0, 10000.0, 30000.0);
+    const offset = new Cartesian3(10000.0, 10000.0, 30000.0);
     tempCamera.lookAtTransform(transform, offset);
 
     expect(Cartesian2.clone(tempCamera.position)).toEqual(Cartesian2.ZERO);
@@ -2356,7 +2358,7 @@ describe("Scene/Camera", function () {
   });
 
   it("lookAtTransform in 2D mode with heading, pitch and range", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.left = -2.0;
@@ -2364,15 +2366,15 @@ describe("Scene/Camera", function () {
     frustum.top = 1.0;
     frustum.bottom = -1.0;
 
-    var tempCamera = Camera.clone(camera);
+    const tempCamera = Camera.clone(camera);
     tempCamera.frustum = frustum;
     tempCamera.update(SceneMode.SCENE2D);
 
-    var target = Cartesian3.fromDegrees(0.0, 0.0);
-    var heading = CesiumMath.toRadians(90.0);
-    var pitch = CesiumMath.toRadians(-45.0);
-    var range = 2.0;
-    var transform = Transforms.eastNorthUpToFixedFrame(target);
+    const target = Cartesian3.fromDegrees(0.0, 0.0);
+    const heading = CesiumMath.toRadians(90.0);
+    const pitch = CesiumMath.toRadians(-45.0);
+    const range = 2.0;
+    const transform = Transforms.eastNorthUpToFixedFrame(target);
 
     tempCamera.lookAtTransform(
       transform,
@@ -2391,14 +2393,14 @@ describe("Scene/Camera", function () {
   });
 
   it("lookAtTransform in 3D with orthographic projection", function () {
-    var target = new Cartesian3(-1.0, -1.0, 0.0);
-    var offset = new Cartesian3(1.0, 1.0, 0.0);
-    var transform = Transforms.eastNorthUpToFixedFrame(
+    const target = new Cartesian3(-1.0, -1.0, 0.0);
+    const offset = new Cartesian3(1.0, 1.0, 0.0);
+    const transform = Transforms.eastNorthUpToFixedFrame(
       target,
       Ellipsoid.UNIT_SPHERE
     );
 
-    var tempCamera = Camera.clone(camera);
+    const tempCamera = Camera.clone(camera);
     tempCamera.frustum = new OrthographicFrustum();
     tempCamera.frustum.aspectRatio =
       scene.drawingBufferWidth / scene.drawingBufferHeight;
@@ -2455,7 +2457,7 @@ describe("Scene/Camera", function () {
   });
 
   it("setView rectangle in 3D (1)", function () {
-    var rectangle = new Rectangle(
+    const rectangle = new Rectangle(
       -Math.PI,
       -CesiumMath.PI_OVER_TWO,
       Math.PI,
@@ -2478,7 +2480,7 @@ describe("Scene/Camera", function () {
   });
 
   it("setView rectangle in 3D (2)", function () {
-    var rectangle = new Rectangle(
+    const rectangle = new Rectangle(
       CesiumMath.toRadians(21.25),
       CesiumMath.toRadians(41.23),
       CesiumMath.toRadians(21.51),
@@ -2512,7 +2514,7 @@ describe("Scene/Camera", function () {
   });
 
   it("setView rectangle in 3D (3)", function () {
-    var rectangle = new Rectangle(
+    const rectangle = new Rectangle(
       CesiumMath.toRadians(90.0),
       CesiumMath.toRadians(-50.0),
       CesiumMath.toRadians(157.0),
@@ -2546,7 +2548,7 @@ describe("Scene/Camera", function () {
   });
 
   it("setView rectangle in 3D (4)", function () {
-    var rectangle = new Rectangle(
+    const rectangle = new Rectangle(
       CesiumMath.toRadians(90.0),
       CesiumMath.toRadians(-62.0),
       CesiumMath.toRadians(174.0),
@@ -2580,7 +2582,7 @@ describe("Scene/Camera", function () {
   });
 
   it("views rectangle in 3D across IDL", function () {
-    var rectangle = new Rectangle(
+    const rectangle = new Rectangle(
       0.1,
       -CesiumMath.PI_OVER_TWO,
       -0.1,
@@ -2603,7 +2605,7 @@ describe("Scene/Camera", function () {
   });
 
   it("setView rectangle in 2D with larger longitude", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.left = -10.0;
     frustum.right = 10.0;
     frustum.bottom = -10.0;
@@ -2612,17 +2614,17 @@ describe("Scene/Camera", function () {
     frustum.far = 21.0;
     camera.frustum = frustum;
 
-    var rectangle = new Rectangle(
+    const rectangle = new Rectangle(
       -CesiumMath.PI_OVER_TWO,
       -CesiumMath.PI_OVER_FOUR,
       CesiumMath.PI_OVER_TWO,
       CesiumMath.PI_OVER_FOUR
     );
-    var projection = new GeographicProjection();
-    var edge = projection.project(
+    const projection = new GeographicProjection();
+    const edge = projection.project(
       new Cartographic(CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_FOUR)
     );
-    var expected = Math.max(edge.x, edge.y);
+    const expected = Math.max(edge.x, edge.y);
 
     camera._mode = SceneMode.SCENE2D;
     camera._projection = projection;
@@ -2637,7 +2639,7 @@ describe("Scene/Camera", function () {
   });
 
   it("setView rectangle in 2D with larger latitude", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.left = -10.0;
     frustum.right = 10.0;
     frustum.bottom = -10.0;
@@ -2646,17 +2648,17 @@ describe("Scene/Camera", function () {
     frustum.far = 21.0;
     camera.frustum = frustum;
 
-    var rectangle = new Rectangle(
+    const rectangle = new Rectangle(
       -CesiumMath.PI_OVER_FOUR,
       -CesiumMath.PI_OVER_TWO,
       CesiumMath.PI_OVER_FOUR,
       CesiumMath.PI_OVER_TWO
     );
-    var projection = new GeographicProjection();
-    var edge = projection.project(
+    const projection = new GeographicProjection();
+    const edge = projection.project(
       new Cartographic(CesiumMath.PI_OVER_FOUR, CesiumMath.PI_OVER_TWO)
     );
-    var expected = Math.max(edge.x, edge.y);
+    const expected = Math.max(edge.x, edge.y);
 
     camera._mode = SceneMode.SCENE2D;
     camera._projection = projection;
@@ -2671,13 +2673,13 @@ describe("Scene/Camera", function () {
   });
 
   it("setView rectangle in Columbus View", function () {
-    var rectangle = new Rectangle(
+    const rectangle = new Rectangle(
       -CesiumMath.PI_OVER_TWO,
       -CesiumMath.PI_OVER_TWO,
       CesiumMath.PI_OVER_TWO,
       CesiumMath.PI_OVER_TWO
     );
-    var projection = new GeographicProjection();
+    const projection = new GeographicProjection();
     camera._mode = SceneMode.COLUMBUS_VIEW;
     camera._projection = projection;
     camera.setView({ destination: rectangle });
@@ -2711,14 +2713,14 @@ describe("Scene/Camera", function () {
     // force update of off-center frustum
     expect(camera.frustum.projectionMatrix).toBeDefined();
 
-    var rectangle = new Rectangle(
+    const rectangle = new Rectangle(
       CesiumMath.toRadians(21.25),
       CesiumMath.toRadians(41.23),
       CesiumMath.toRadians(21.51),
       CesiumMath.toRadians(41.38)
     );
 
-    var projection = new GeographicProjection();
+    const projection = new GeographicProjection();
     camera._mode = SceneMode.SCENE3D;
     camera._projection = projection;
     camera.setView({ destination: rectangle });
@@ -2761,14 +2763,14 @@ describe("Scene/Camera", function () {
     // force update of off-center frustum
     expect(camera.frustum.projectionMatrix).toBeDefined();
 
-    var rectangle = new Rectangle(
+    const rectangle = new Rectangle(
       CesiumMath.toRadians(21.25),
       CesiumMath.toRadians(41.23),
       CesiumMath.toRadians(21.51),
       CesiumMath.toRadians(41.38)
     );
 
-    var projection = new GeographicProjection();
+    const projection = new GeographicProjection();
     camera._mode = SceneMode.COLUMBUS_VIEW;
     camera._projection = projection;
     camera.setView({ destination: rectangle });
@@ -2795,16 +2797,16 @@ describe("Scene/Camera", function () {
   });
 
   it("getRectangleCameraCoordinates rectangle in 3D", function () {
-    var rectangle = new Rectangle(
+    const rectangle = new Rectangle(
       -Math.PI,
       -CesiumMath.PI_OVER_TWO,
       Math.PI,
       CesiumMath.PI_OVER_TWO
     );
-    var position = Cartesian3.clone(camera.position);
-    var direction = Cartesian3.clone(camera.direction);
-    var up = Cartesian3.clone(camera.up);
-    var right = Cartesian3.clone(camera.right);
+    const position = Cartesian3.clone(camera.position);
+    const direction = Cartesian3.clone(camera.direction);
+    const up = Cartesian3.clone(camera.up);
+    const right = Cartesian3.clone(camera.right);
     camera._mode = SceneMode.SCENE3D;
     camera.getRectangleCameraCoordinates(rectangle, position);
     expect(position).toEqualEpsilon(
@@ -2817,16 +2819,16 @@ describe("Scene/Camera", function () {
   });
 
   it("gets coordinates for rectangle in 3D across IDL", function () {
-    var rectangle = new Rectangle(
+    const rectangle = new Rectangle(
       0.1,
       -CesiumMath.PI_OVER_TWO,
       -0.1,
       CesiumMath.PI_OVER_TWO
     );
-    var position = new Cartesian3();
-    var direction = Cartesian3.clone(camera.direction);
-    var up = Cartesian3.clone(camera.up);
-    var right = Cartesian3.clone(camera.right);
+    let position = new Cartesian3();
+    const direction = Cartesian3.clone(camera.direction);
+    const up = Cartesian3.clone(camera.up);
+    const right = Cartesian3.clone(camera.right);
     camera._mode = SceneMode.SCENE3D;
     position = camera.getRectangleCameraCoordinates(rectangle);
     expect(position).toEqualEpsilon(
@@ -2839,15 +2841,15 @@ describe("Scene/Camera", function () {
   });
 
   it("views rectangle in 2D with larger latitude", function () {
-    var rectangle = new Rectangle(
+    const rectangle = new Rectangle(
       -CesiumMath.PI_OVER_FOUR,
       -CesiumMath.PI_OVER_TWO,
       CesiumMath.PI_OVER_FOUR,
       CesiumMath.PI_OVER_TWO
     );
-    var projection = new GeographicProjection();
-    var cam = new Camera(scene);
-    var frustum = new OrthographicOffCenterFrustum();
+    const projection = new GeographicProjection();
+    const cam = new Camera(scene);
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.right = 1.0;
     frustum.left = -1.0;
     frustum.top = 1.0;
@@ -2855,7 +2857,7 @@ describe("Scene/Camera", function () {
     frustum.near = 1.0;
     frustum.far = 2.0;
     cam.frustum = frustum;
-    var z = cam.position.z;
+    const z = cam.position.z;
 
     cam._mode = SceneMode.SCENE2D;
     cam._projection = projection;
@@ -2870,18 +2872,18 @@ describe("Scene/Camera", function () {
   });
 
   it("gets coordinates for rectangle in Columbus View", function () {
-    var rectangle = new Rectangle(
+    const rectangle = new Rectangle(
       -CesiumMath.PI_OVER_TWO,
       -CesiumMath.PI_OVER_TWO,
       CesiumMath.PI_OVER_TWO,
       CesiumMath.PI_OVER_TWO
     );
-    var projection = new GeographicProjection();
+    const projection = new GeographicProjection();
     camera._mode = SceneMode.COLUMBUS_VIEW;
     camera._projection = projection;
-    var direction = Cartesian3.clone(camera.direction);
-    var up = Cartesian3.clone(camera.up);
-    var right = Cartesian3.clone(camera.right);
+    const direction = Cartesian3.clone(camera.direction);
+    const up = Cartesian3.clone(camera.up);
+    const right = Cartesian3.clone(camera.right);
     camera.position = camera.getRectangleCameraCoordinates(rectangle);
     expect(camera.position).toEqualEpsilon(
       new Cartesian3(0.0, 0.0, 23137321.67119748),
@@ -2893,19 +2895,19 @@ describe("Scene/Camera", function () {
   });
 
   it("get rectangle coordinate returns camera position if scene mode is morphing", function () {
-    var rectangle = new Rectangle(
+    const rectangle = new Rectangle(
       -CesiumMath.PI_OVER_TWO,
       -CesiumMath.PI_OVER_TWO,
       CesiumMath.PI_OVER_TWO,
       CesiumMath.PI_OVER_TWO
     );
-    var projection = new GeographicProjection();
+    const projection = new GeographicProjection();
     camera._mode = SceneMode.MORPHING;
     camera._projection = projection;
-    var position = Cartesian3.clone(camera.position);
-    var direction = Cartesian3.clone(camera.direction);
-    var up = Cartesian3.clone(camera.up);
-    var right = Cartesian3.clone(camera.right);
+    const position = Cartesian3.clone(camera.position);
+    const direction = Cartesian3.clone(camera.direction);
+    const up = Cartesian3.clone(camera.up);
+    const right = Cartesian3.clone(camera.right);
     camera.getRectangleCameraCoordinates(rectangle, camera.position);
     expect(camera.position).toEqual(position);
     expect(camera.direction).toEqual(direction);
@@ -2930,8 +2932,8 @@ describe("Scene/Camera", function () {
   });
 
   it("pick ellipsoid", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var maxRadii = ellipsoid.maximumRadius;
+    const ellipsoid = Ellipsoid.WGS84;
+    const maxRadii = ellipsoid.maximumRadius;
 
     camera.position = Cartesian3.multiplyByScalar(
       Cartesian3.UNIT_X,
@@ -2949,19 +2951,19 @@ describe("Scene/Camera", function () {
       new Cartesian3()
     );
 
-    var frustum = new PerspectiveFrustum();
+    const frustum = new PerspectiveFrustum();
     frustum.fov = CesiumMath.toRadians(60.0);
     frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
     frustum.near = 100;
     frustum.far = 60.0 * maxRadii;
     camera.frustum = frustum;
 
-    var windowCoord = new Cartesian2(
+    const windowCoord = new Cartesian2(
       scene.canvas.clientWidth * 0.5,
       scene.canvas.clientHeight * 0.5
     );
-    var p = camera.pickEllipsoid(windowCoord, ellipsoid);
-    var c = ellipsoid.cartesianToCartographic(p);
+    let p = camera.pickEllipsoid(windowCoord, ellipsoid);
+    const c = ellipsoid.cartesianToCartographic(p);
     expect(c).toEqual(new Cartographic(0.0, 0.0, 0.0));
 
     p = camera.pickEllipsoid(Cartesian2.ZERO, ellipsoid);
@@ -2969,8 +2971,8 @@ describe("Scene/Camera", function () {
   });
 
   it("pickEllipsoid works near the surface", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var minRadii = ellipsoid.minimumRadius;
+    const ellipsoid = Ellipsoid.WGS84;
+    const minRadii = ellipsoid.minimumRadius;
 
     // Ten meters above the surface at the north pole, looking down.
     camera.position = new Cartesian3(0.0, 0.0, minRadii + 10.0);
@@ -2978,14 +2980,14 @@ describe("Scene/Camera", function () {
     camera.up = new Cartesian3(1.0, 0.0, 0.0);
     camera.right = new Cartesian3(0.0, 1.0, 0.0);
 
-    var p = camera.pickEllipsoid(Cartesian2.ZERO, ellipsoid);
+    const p = camera.pickEllipsoid(Cartesian2.ZERO, ellipsoid);
     expect(p.z).toEqualEpsilon(minRadii, 1e-4);
   });
 
   it("pick map in 2D", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var projection = new GeographicProjection(ellipsoid);
-    var maxRadii = ellipsoid.maximumRadius;
+    const ellipsoid = Ellipsoid.WGS84;
+    const projection = new GeographicProjection(ellipsoid);
+    const maxRadii = ellipsoid.maximumRadius;
 
     camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
     camera.direction = Cartesian3.normalize(
@@ -2994,7 +2996,7 @@ describe("Scene/Camera", function () {
     );
     camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
 
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.right = maxRadii * Math.PI;
     frustum.left = -frustum.right;
     frustum.top =
@@ -3007,19 +3009,19 @@ describe("Scene/Camera", function () {
     camera._mode = SceneMode.SCENE2D;
     camera._projection = projection;
 
-    var windowCoord = new Cartesian2(
+    const windowCoord = new Cartesian2(
       scene.canvas.clientWidth * 0.5,
       scene.canvas.clientHeight * 0.5
     );
-    var p = camera.pickEllipsoid(windowCoord);
-    var c = ellipsoid.cartesianToCartographic(p);
+    const p = camera.pickEllipsoid(windowCoord);
+    const c = ellipsoid.cartesianToCartographic(p);
     expect(c).toEqual(new Cartographic(0.0, 0.0, 0.0));
   });
 
   it("pick rotated map in 2D", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var projection = new GeographicProjection(ellipsoid);
-    var maxRadii = ellipsoid.maximumRadius;
+    const ellipsoid = Ellipsoid.WGS84;
+    const projection = new GeographicProjection(ellipsoid);
+    const maxRadii = ellipsoid.maximumRadius;
 
     camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
     camera.direction = Cartesian3.normalize(
@@ -3028,7 +3030,7 @@ describe("Scene/Camera", function () {
     );
     camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
 
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.right = maxRadii * Math.PI;
     frustum.left = -frustum.right;
     frustum.top =
@@ -3041,12 +3043,12 @@ describe("Scene/Camera", function () {
     camera._mode = SceneMode.SCENE2D;
     camera._projection = projection;
 
-    var windowCoord = new Cartesian2(
+    const windowCoord = new Cartesian2(
       scene.canvas.clientWidth * 0.5,
       scene.canvas.clientHeight * 0.5 + 1.0
     );
-    var p = camera.pickEllipsoid(windowCoord);
-    var c = ellipsoid.cartesianToCartographic(p);
+    let p = camera.pickEllipsoid(windowCoord);
+    let c = ellipsoid.cartesianToCartographic(p);
     expect(c.longitude).toEqual(0.0);
     expect(c.latitude).toBeLessThan(0.0);
 
@@ -3060,8 +3062,8 @@ describe("Scene/Camera", function () {
   });
 
   it("pick map in columbus view", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var maxRadii = ellipsoid.maximumRadius;
+    const ellipsoid = Ellipsoid.WGS84;
+    const maxRadii = ellipsoid.maximumRadius;
 
     camera.position = Cartesian3.multiplyByScalar(
       Cartesian3.normalize(new Cartesian3(0.0, -1.0, 1.0), new Cartesian3()),
@@ -3082,7 +3084,7 @@ describe("Scene/Camera", function () {
       new Cartesian3()
     );
 
-    var frustum = new PerspectiveFrustum();
+    const frustum = new PerspectiveFrustum();
     frustum.fov = CesiumMath.toRadians(60.0);
     frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
     frustum.near = 0.01 * maxRadii;
@@ -3091,12 +3093,12 @@ describe("Scene/Camera", function () {
 
     camera.update(SceneMode.COLUMBUS_VIEW);
 
-    var windowCoord = new Cartesian2(
+    const windowCoord = new Cartesian2(
       scene.canvas.clientWidth * 0.5,
       scene.canvas.clientHeight * 0.5
     );
-    var p = camera.pickEllipsoid(windowCoord);
-    var c = ellipsoid.cartesianToCartographic(p);
+    let p = camera.pickEllipsoid(windowCoord);
+    const c = ellipsoid.cartesianToCartographic(p);
     expect(c).toEqual(new Cartographic(0.0, 0.0, 0.0));
 
     p = camera.pickEllipsoid(Cartesian2.ZERO);
@@ -3104,8 +3106,8 @@ describe("Scene/Camera", function () {
   });
 
   it("pick map in morph", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var maxRadii = ellipsoid.maximumRadius;
+    const ellipsoid = Ellipsoid.WGS84;
+    const maxRadii = ellipsoid.maximumRadius;
 
     camera.position = Cartesian3.multiplyByScalar(
       Cartesian3.UNIT_X,
@@ -3123,7 +3125,7 @@ describe("Scene/Camera", function () {
       new Cartesian3()
     );
 
-    var frustum = new PerspectiveFrustum();
+    const frustum = new PerspectiveFrustum();
     frustum.fov = CesiumMath.toRadians(60.0);
     frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
     frustum.near = 100;
@@ -3132,11 +3134,11 @@ describe("Scene/Camera", function () {
 
     camera.update(SceneMode.MORPHING);
 
-    var windowCoord = new Cartesian2(
+    const windowCoord = new Cartesian2(
       scene.canvas.clientWidth * 0.5,
       scene.canvas.clientHeight * 0.5
     );
-    var p = camera.pickEllipsoid(windowCoord);
+    const p = camera.pickEllipsoid(windowCoord);
     expect(p).toBeUndefined();
   });
 
@@ -3147,15 +3149,15 @@ describe("Scene/Camera", function () {
   });
 
   it("get pick ray perspective", function () {
-    var windowCoord = new Cartesian2(
+    const windowCoord = new Cartesian2(
       scene.canvas.clientWidth / 2,
       scene.canvas.clientHeight
     );
-    var ray = camera.getPickRay(windowCoord);
+    const ray = camera.getPickRay(windowCoord);
 
-    var windowHeight =
+    const windowHeight =
       camera.frustum.near * Math.tan(camera.frustum.fovy * 0.5);
-    var expectedDirection = Cartesian3.normalize(
+    const expectedDirection = Cartesian3.normalize(
       new Cartesian3(0.0, -windowHeight, -1.0),
       new Cartesian3()
     );
@@ -3167,7 +3169,7 @@ describe("Scene/Camera", function () {
   });
 
   it("get pick ray orthographic in 2D", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.left = -10.0;
     frustum.right = 10.0;
     frustum.bottom = -10.0;
@@ -3178,14 +3180,14 @@ describe("Scene/Camera", function () {
 
     camera.update(SceneMode.SCENE2D);
 
-    var windowCoord = new Cartesian2(
+    const windowCoord = new Cartesian2(
       (3.0 / 5.0) * scene.canvas.clientWidth,
       (1.0 - 3.0 / 5.0) * scene.canvas.clientHeight
     );
-    var ray = camera.getPickRay(windowCoord);
+    const ray = camera.getPickRay(windowCoord);
 
-    var cameraPosition = camera.position;
-    var expectedPosition = new Cartesian3(
+    const cameraPosition = camera.position;
+    const expectedPosition = new Cartesian3(
       cameraPosition.z,
       cameraPosition.x + 2.0,
       cameraPosition.y + 2.0
@@ -3195,7 +3197,7 @@ describe("Scene/Camera", function () {
   });
 
   it("get pick ray orthographic in 3D", function () {
-    var frustum = new OrthographicFrustum();
+    const frustum = new OrthographicFrustum();
     frustum.aspectRatio = 1.0;
     frustum.width = 20.0;
     frustum.near = 1.0;
@@ -3207,14 +3209,14 @@ describe("Scene/Camera", function () {
 
     camera.update(SceneMode.SCENE3D);
 
-    var windowCoord = new Cartesian2(
+    const windowCoord = new Cartesian2(
       (3.0 / 5.0) * scene.canvas.clientWidth,
       (1.0 - 3.0 / 5.0) * scene.canvas.clientHeight
     );
-    var ray = camera.getPickRay(windowCoord);
+    const ray = camera.getPickRay(windowCoord);
 
-    var cameraPosition = camera.position;
-    var expectedPosition = new Cartesian3(
+    const cameraPosition = camera.position;
+    const expectedPosition = new Cartesian3(
       cameraPosition.x + 2.0,
       cameraPosition.y + 2,
       cameraPosition.z
@@ -3224,7 +3226,7 @@ describe("Scene/Camera", function () {
   });
 
   it("get pick ray orthographic in Columbus view", function () {
-    var frustum = new OrthographicFrustum();
+    const frustum = new OrthographicFrustum();
     frustum.aspectRatio = 1.0;
     frustum.width = 20.0;
     frustum.near = 1.0;
@@ -3236,14 +3238,14 @@ describe("Scene/Camera", function () {
 
     camera.update(SceneMode.COLUMBUS_VIEW);
 
-    var windowCoord = new Cartesian2(
+    const windowCoord = new Cartesian2(
       (3.0 / 5.0) * scene.canvas.clientWidth,
       (1.0 - 3.0 / 5.0) * scene.canvas.clientHeight
     );
-    var ray = camera.getPickRay(windowCoord);
+    const ray = camera.getPickRay(windowCoord);
 
-    var cameraPosition = camera.position;
-    var expectedPosition = new Cartesian3(
+    const cameraPosition = camera.position;
+    const expectedPosition = new Cartesian3(
       cameraPosition.z,
       cameraPosition.x + 2.0,
       cameraPosition.y + 2
@@ -3253,14 +3255,14 @@ describe("Scene/Camera", function () {
   });
 
   it("gets magnitude in 2D", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var projection = new GeographicProjection(ellipsoid);
-    var maxRadii = ellipsoid.maximumRadius;
+    const ellipsoid = Ellipsoid.WGS84;
+    const projection = new GeographicProjection(ellipsoid);
+    const maxRadii = ellipsoid.maximumRadius;
 
     camera._mode = SceneMode.SCENE2D;
     camera._projection = projection;
 
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.right = maxRadii * Math.PI;
     frustum.left = -frustum.right;
     frustum.top =
@@ -3295,7 +3297,7 @@ describe("Scene/Camera", function () {
   });
 
   it("does not animate in 2D", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.left = -2.0;
@@ -3306,12 +3308,12 @@ describe("Scene/Camera", function () {
 
     camera.update(SceneMode.SCENE2D);
 
-    var max = scene.mapProjection.project(
+    const max = scene.mapProjection.project(
       new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO)
     );
-    var factor = 1000.0;
-    var dx = max.x * factor;
-    var dy = max.y * factor;
+    const factor = 1000.0;
+    const dx = max.x * factor;
+    const dy = max.y * factor;
 
     camera.moveUp(dy);
     camera.moveRight(dx);
@@ -3320,8 +3322,8 @@ describe("Scene/Camera", function () {
   });
 
   it("animates position to visible map in Columbus view", function () {
-    var maxRadii = Ellipsoid.WGS84.maximumRadius;
-    var frustum = new PerspectiveFrustum();
+    const maxRadii = Ellipsoid.WGS84.maximumRadius;
+    const frustum = new PerspectiveFrustum();
     frustum.fov = CesiumMath.toRadians(60.0);
     frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
     frustum.near = 100;
@@ -3335,20 +3337,20 @@ describe("Scene/Camera", function () {
 
     camera.update(SceneMode.COLUMBUS_VIEW);
 
-    var max = scene.mapProjection.project(
+    const max = scene.mapProjection.project(
       new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO)
     );
-    var factor = 1000.0;
-    var dx = max.x * factor;
-    var dy = max.y * factor;
-    var tweens = new TweenCollection();
+    const factor = 1000.0;
+    const dx = max.x * factor;
+    const dy = max.y * factor;
+    const tweens = new TweenCollection();
 
     camera.moveUp(dy);
     camera.moveRight(dx);
 
-    var correctAnimation = camera.createCorrectPositionTween(0.05);
+    let correctAnimation = camera.createCorrectPositionTween(0.05);
     expect(correctAnimation).toBeDefined();
-    var animation = tweens.add(correctAnimation);
+    let animation = tweens.add(correctAnimation);
     while (tweens.contains(animation)) {
       tweens.update();
     }
@@ -3371,8 +3373,8 @@ describe("Scene/Camera", function () {
   });
 
   it("animates position to visible map in Columbus view with web mercator projection", function () {
-    var projection = new WebMercatorProjection();
-    var mercatorCamera = new Camera(new FakeScene(projection));
+    const projection = new WebMercatorProjection();
+    const mercatorCamera = new Camera(new FakeScene(projection));
     mercatorCamera.position = Cartesian3.clone(position);
     mercatorCamera.up = Cartesian3.clone(up);
     mercatorCamera.direction = Cartesian3.clone(dir);
@@ -3380,8 +3382,8 @@ describe("Scene/Camera", function () {
     mercatorCamera.minimumZoomDistance = 0.0;
     mercatorCamera.update(SceneMode.COLUMBUS_VIEW);
 
-    var maxRadii = Ellipsoid.WGS84.maximumRadius;
-    var frustum = new PerspectiveFrustum();
+    const maxRadii = Ellipsoid.WGS84.maximumRadius;
+    const frustum = new PerspectiveFrustum();
     frustum.fov = CesiumMath.toRadians(60.0);
     frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
     frustum.near = 100;
@@ -3393,20 +3395,20 @@ describe("Scene/Camera", function () {
       new Cartesian3()
     );
 
-    var max = projection.project(
+    const max = projection.project(
       new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO)
     );
-    var factor = 1000.0;
-    var dx = max.x * factor;
-    var dy = max.y * factor;
-    var tweens = new TweenCollection();
+    const factor = 1000.0;
+    const dx = max.x * factor;
+    const dy = max.y * factor;
+    const tweens = new TweenCollection();
 
     mercatorCamera.moveUp(dy);
     mercatorCamera.moveRight(dx);
 
-    var correctAnimation = mercatorCamera.createCorrectPositionTween(0.05);
+    let correctAnimation = mercatorCamera.createCorrectPositionTween(0.05);
     expect(correctAnimation).toBeDefined();
-    var animation = tweens.add(correctAnimation);
+    let animation = tweens.add(correctAnimation);
     while (tweens.contains(animation)) {
       tweens.update();
     }
@@ -3447,7 +3449,7 @@ describe("Scene/Camera", function () {
       duration: 0.001,
     });
 
-    var options = {
+    const options = {
       destination: Cartesian3.fromDegrees(-117.16, 32.71, 15000.0),
       orientation: {
         heading: 0,
@@ -3467,8 +3469,8 @@ describe("Scene/Camera", function () {
     };
     camera.flyTo(options);
 
-    var args = CameraFlightPath.createTween.calls.argsFor(0);
-    var passedOptions = args[1];
+    const args = CameraFlightPath.createTween.calls.argsFor(0);
+    const passedOptions = args[1];
 
     expect(CameraFlightPath.createTween).toHaveBeenCalled();
     expect(args[0]).toBe(scene);
@@ -3498,14 +3500,14 @@ describe("Scene/Camera", function () {
       cancelTween: jasmine.createSpy("cancelTween"),
     });
 
-    var options = {
+    const options = {
       destination: Cartesian3.fromDegrees(-117.16, 32.71, 15000.0),
     };
     camera.flyTo(options);
 
     expect(camera._currentFlight).toBeDefined();
 
-    var createdTween = camera._currentFlight;
+    const createdTween = camera._currentFlight;
     spyOn(createdTween, "cancelTween");
     camera.cancelFlight();
 
@@ -3525,7 +3527,7 @@ describe("Scene/Camera", function () {
 
     spyOn(camera, "setView");
 
-    var options = {
+    const options = {
       destination: Cartesian3.fromDegrees(-117.16, 32.71, 15000.0),
       orientation: {
         heading: 1,
@@ -3537,7 +3539,7 @@ describe("Scene/Camera", function () {
 
     expect(camera._currentFlight).toBeDefined();
 
-    var createdTween = camera._currentFlight;
+    const createdTween = camera._currentFlight;
     spyOn(createdTween, "cancelTween");
     camera.completeFlight();
 
@@ -3550,11 +3552,11 @@ describe("Scene/Camera", function () {
   it("flyTo with heading, pitch and roll", function () {
     scene.mode = SceneMode.SCENE3D;
 
-    var heading = CesiumMath.toRadians(180.0);
-    var pitch = 0.0;
-    var roll = CesiumMath.toRadians(45.0);
+    const heading = CesiumMath.toRadians(180.0);
+    const pitch = 0.0;
+    const roll = CesiumMath.toRadians(45.0);
 
-    var options = {
+    const options = {
       destination: Cartesian3.fromDegrees(-117.16, 32.71, 0.0),
       orientation: {
         heading: heading,
@@ -3573,10 +3575,10 @@ describe("Scene/Camera", function () {
   it("flyTo with direction, up", function () {
     scene.mode = SceneMode.SCENE3D;
 
-    var direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
-    var up = Cartesian3.clone(Cartesian3.UNIT_Y);
+    const direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
+    const up = Cartesian3.clone(Cartesian3.UNIT_Y);
 
-    var options = {
+    const options = {
       destination: Cartesian3.fromDegrees(-117.16, 32.71, 0.0),
       orientation: {
         direction: direction,
@@ -3593,7 +3595,7 @@ describe("Scene/Camera", function () {
   it("flyHome works in 3D", function () {
     camera._mode = SceneMode.SCENE3D;
 
-    var destination = Cartesian3.fromDegrees(30, 20, 1000);
+    const destination = Cartesian3.fromDegrees(30, 20, 1000);
     camera.setView({
       destination: destination,
     });
@@ -3627,7 +3629,7 @@ describe("Scene/Camera", function () {
   it("flyHome works in 2D", function () {
     camera._mode = SceneMode.SCENE2D;
 
-    var destination = Cartesian3.fromDegrees(30, 20, 1000);
+    const destination = Cartesian3.fromDegrees(30, 20, 1000);
     camera.setView({
       destination: destination,
     });
@@ -3644,10 +3646,10 @@ describe("Scene/Camera", function () {
   });
 
   it("flyHome works in CV", function () {
-    var sq2Over2 = Math.sqrt(2) * 0.5;
+    const sq2Over2 = Math.sqrt(2) * 0.5;
     camera._mode = SceneMode.COLUMBUS_VIEW;
 
-    var destination = Cartesian3.fromDegrees(30, 20, 1000);
+    const destination = Cartesian3.fromDegrees(30, 20, 1000);
     camera.setView({
       destination: destination,
     });
@@ -3669,14 +3671,14 @@ describe("Scene/Camera", function () {
   it("viewBoundingSphere", function () {
     scene.mode = SceneMode.SCENE3D;
 
-    var sphere = new BoundingSphere(
+    const sphere = new BoundingSphere(
       Cartesian3.fromDegrees(-117.16, 32.71, 0.0),
       10000.0
     );
     camera.viewBoundingSphere(sphere);
     camera._setTransform(Matrix4.IDENTITY);
 
-    var distance = Cartesian3.distance(camera.position, sphere.center);
+    const distance = Cartesian3.distance(camera.position, sphere.center);
     expect(distance).toBeGreaterThan(sphere.radius);
     expect(distance).toBeLessThan(sphere.radius * 3.0);
   });
@@ -3684,11 +3686,11 @@ describe("Scene/Camera", function () {
   it("viewBoundingSphere with offset", function () {
     scene.mode = SceneMode.SCENE3D;
 
-    var heading = CesiumMath.toRadians(45.0);
-    var pitch = CesiumMath.toRadians(-45.0);
-    var range = 15.0;
+    const heading = CesiumMath.toRadians(45.0);
+    const pitch = CesiumMath.toRadians(-45.0);
+    const range = 15.0;
 
-    var sphere = new BoundingSphere(
+    const sphere = new BoundingSphere(
       Cartesian3.fromDegrees(-117.16, 32.71, 0.0),
       10.0
     );
@@ -3698,7 +3700,7 @@ describe("Scene/Camera", function () {
     );
     camera._setTransform(Matrix4.IDENTITY);
 
-    var distance = Cartesian3.distance(camera.position, sphere.center);
+    const distance = Cartesian3.distance(camera.position, sphere.center);
     expect(distance).toEqualEpsilon(range, CesiumMath.EPSILON10);
     expect(camera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
     expect(camera.pitch).toEqualEpsilon(pitch, CesiumMath.EPSILON5);
@@ -3707,12 +3709,12 @@ describe("Scene/Camera", function () {
   it("viewBoundingSphere does not modify offset.range when it is zero", function () {
     scene.mode = SceneMode.SCENE3D;
 
-    var heading = CesiumMath.toRadians(45.0);
-    var pitch = CesiumMath.toRadians(-45.0);
-    var range = 0.0;
-    var offset = new HeadingPitchRange(heading, pitch, range);
+    const heading = CesiumMath.toRadians(45.0);
+    const pitch = CesiumMath.toRadians(-45.0);
+    const range = 0.0;
+    const offset = new HeadingPitchRange(heading, pitch, range);
 
-    var sphere = new BoundingSphere(
+    const sphere = new BoundingSphere(
       Cartesian3.fromDegrees(-117.16, 32.71, 0.0),
       10.0
     );
@@ -3725,7 +3727,7 @@ describe("Scene/Camera", function () {
   });
 
   it("viewBoundingSphere in 2D", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.left = -10.0;
     frustum.right = 10.0;
     frustum.bottom = -10.0;
@@ -3736,20 +3738,20 @@ describe("Scene/Camera", function () {
 
     camera.update(SceneMode.SCENE2D);
 
-    var sphere = new BoundingSphere(
+    const sphere = new BoundingSphere(
       Cartesian3.fromDegrees(-117.16, 32.71, 0.0),
       10000.0
     );
     camera.viewBoundingSphere(sphere);
     camera._setTransform(Matrix4.IDENTITY);
 
-    var distance = frustum.right - frustum.left;
+    const distance = frustum.right - frustum.left;
     expect(distance).toBeGreaterThan(sphere.radius);
     expect(distance).toBeLessThan(sphere.radius * 3.0);
   });
 
   it("viewBoundingSphere in 3D with orthographic", function () {
-    var frustum = new OrthographicFrustum();
+    const frustum = new OrthographicFrustum();
     frustum.aspectRatio = 1.0;
     frustum.width = 20.0;
     frustum.near = 1.0;
@@ -3761,14 +3763,14 @@ describe("Scene/Camera", function () {
     // force off center update
     expect(frustum.projectionMatrix).toBeDefined();
 
-    var sphere = new BoundingSphere(
+    const sphere = new BoundingSphere(
       Cartesian3.fromDegrees(-117.16, 32.71, 0.0),
       10000.0
     );
     camera.viewBoundingSphere(sphere);
     camera._setTransform(Matrix4.IDENTITY);
 
-    var distance = frustum.width;
+    const distance = frustum.width;
     expect(distance).toBeGreaterThan(sphere.radius);
     expect(distance).toBeLessThan(sphere.radius * 3.0);
   });
@@ -3796,7 +3798,7 @@ describe("Scene/Camera", function () {
       duration: 0.0,
     });
 
-    var sphere = new BoundingSphere(
+    const sphere = new BoundingSphere(
       Cartesian3.fromDegrees(-117.16, 32.71, 0.0),
       100000.0
     );
@@ -3808,7 +3810,7 @@ describe("Scene/Camera", function () {
   it("flyToBoundingSphere uses CameraFlightPath", function () {
     scene.mode = SceneMode.SCENE3D;
 
-    var sphere = new BoundingSphere(
+    const sphere = new BoundingSphere(
       Cartesian3.fromDegrees(-117.16, 32.71, 0.0),
       10000.0
     );
@@ -3816,17 +3818,17 @@ describe("Scene/Camera", function () {
       duration: 0.0,
     });
 
-    var distance = Cartesian3.distance(camera.position, sphere.center);
+    const distance = Cartesian3.distance(camera.position, sphere.center);
     expect(distance).toBeGreaterThan(sphere.radius);
     expect(distance).toBeLessThan(sphere.radius * 3.0);
   });
 
   it("flyToBoundingSphere does not zoom closer than minimumZoomDistance", function () {
     scene.mode = SceneMode.SCENE3D;
-    var minValue = 1000;
+    const minValue = 1000;
     scene.screenSpaceCameraController.minimumZoomDistance = minValue;
 
-    var sphere = new BoundingSphere(
+    const sphere = new BoundingSphere(
       Cartesian3.fromDegrees(-117.16, 32.71, 0.0),
       10.0
     );
@@ -3835,16 +3837,16 @@ describe("Scene/Camera", function () {
       duration: 0.0,
     });
 
-    var distance = Cartesian3.distance(camera.position, sphere.center);
+    const distance = Cartesian3.distance(camera.position, sphere.center);
     expect(CesiumMath.equalsEpsilon(distance, minValue, 0.1)).toBe(true);
   });
 
   it("flyToBoundingSphere does not zoom further than maximumZoomDistance", function () {
     scene.mode = SceneMode.SCENE3D;
-    var maxValue = 10000;
+    const maxValue = 10000;
     scene.screenSpaceCameraController.maximumZoomDistance = maxValue;
 
-    var sphere = new BoundingSphere(
+    const sphere = new BoundingSphere(
       Cartesian3.fromDegrees(-117.16, 32.71, 0.0),
       100000
     );
@@ -3853,17 +3855,17 @@ describe("Scene/Camera", function () {
       duration: 0.0,
     });
 
-    var distance = Cartesian3.distance(camera.position, sphere.center);
+    const distance = Cartesian3.distance(camera.position, sphere.center);
     expect(CesiumMath.equalsEpsilon(distance, maxValue, 0.1)).toBe(true);
   });
 
   it("flyToBoundingSphere does not modify options.offset range if it is zero ", function () {
     scene.mode = SceneMode.SCENE3D;
-    var options = {
+    const options = {
       offset: new HeadingPitchRange(0.0, -1.5, 0.0),
     };
 
-    var sphere = new BoundingSphere(
+    const sphere = new BoundingSphere(
       Cartesian3.fromDegrees(-117.16, 32.71, 0.0),
       100000.0
     );
@@ -3877,8 +3879,8 @@ describe("Scene/Camera", function () {
   it("distanceToBoundingSphere", function () {
     scene.mode = SceneMode.SCENE3D;
 
-    var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
-    var distance = camera.distanceToBoundingSphere(sphere);
+    const sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
+    const distance = camera.distanceToBoundingSphere(sphere);
     expect(distance).toEqual(0.5);
   });
 
@@ -3893,26 +3895,26 @@ describe("Scene/Camera", function () {
   it("getPixelSize", function () {
     scene.mode = SceneMode.SCENE3D;
 
-    var oldPixelRatio = scene.pixelRatio;
+    const oldPixelRatio = scene.pixelRatio;
     scene.pixelRatio = 1.0;
 
-    var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
-    var context = scene.context;
-    var drawingBufferWidth = context.drawingBufferWidth;
-    var drawingBufferHeight = context.drawingBufferHeight;
+    const sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
+    const context = scene.context;
+    const drawingBufferWidth = context.drawingBufferWidth;
+    const drawingBufferHeight = context.drawingBufferHeight;
 
     // Compute expected pixel size
-    var distance = camera.distanceToBoundingSphere(sphere);
-    var pixelDimensions = camera.frustum.getPixelDimensions(
+    const distance = camera.distanceToBoundingSphere(sphere);
+    const pixelDimensions = camera.frustum.getPixelDimensions(
       drawingBufferWidth,
       drawingBufferHeight,
       distance,
       scene.pixelRatio,
       new Cartesian2()
     );
-    var expectedPixelSize = Math.max(pixelDimensions.x, pixelDimensions.y);
+    const expectedPixelSize = Math.max(pixelDimensions.x, pixelDimensions.y);
 
-    var pixelSize = camera.getPixelSize(
+    const pixelSize = camera.getPixelSize(
       sphere,
       drawingBufferWidth,
       drawingBufferHeight
@@ -3932,7 +3934,7 @@ describe("Scene/Camera", function () {
 
   it("getPixelSize throws when there is no drawing buffer width", function () {
     scene.mode = SceneMode.SCENE3D;
-    var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
+    const sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
 
     expect(function () {
       camera.getPixelSize(sphere);
@@ -3941,7 +3943,7 @@ describe("Scene/Camera", function () {
 
   it("getPixelSize throws when there is no drawing buffer height", function () {
     scene.mode = SceneMode.SCENE3D;
-    var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
+    const sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
 
     expect(function () {
       camera.getPixelSize(sphere, 10);
@@ -3951,7 +3953,7 @@ describe("Scene/Camera", function () {
   it("computeViewRectangle when zoomed in", function () {
     scene.mode = SceneMode.SCENE3D;
 
-    var position = Cartesian3.clone(Cartesian3.UNIT_X);
+    const position = Cartesian3.clone(Cartesian3.UNIT_X);
     Cartesian3.multiplyByScalar(position, 7000000, position);
 
     camera.position = position;
@@ -3963,21 +3965,21 @@ describe("Scene/Camera", function () {
       new Cartesian3()
     );
 
-    var correctResult = new Rectangle(
+    const correctResult = new Rectangle(
       -0.05789100547374969,
       -0.04365869998457809,
       0.05789100547374969,
       0.04365869998457809
     );
 
-    var rect = camera.computeViewRectangle();
+    const rect = camera.computeViewRectangle();
     expect(rect).toEqualEpsilon(correctResult, CesiumMath.EPSILON10);
   });
 
   it("computeViewRectangle when zoomed in to pole", function () {
     scene.mode = SceneMode.SCENE3D;
 
-    var position = Cartesian3.clone(Cartesian3.UNIT_Z);
+    const position = Cartesian3.clone(Cartesian3.UNIT_Z);
     Cartesian3.multiplyByScalar(position, 7000000, position);
     camera.position = position;
     camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
@@ -3988,21 +3990,21 @@ describe("Scene/Camera", function () {
       new Cartesian3()
     );
 
-    var correctResult = new Rectangle(
+    const correctResult = new Rectangle(
       -CesiumMath.PI,
       1.4961779388065022,
       CesiumMath.PI,
       CesiumMath.PI_OVER_TWO
     );
 
-    var rect = camera.computeViewRectangle();
+    const rect = camera.computeViewRectangle();
     expect(rect).toEqual(correctResult);
   });
 
   it("computeViewRectangle when zoomed in to IDL", function () {
     scene.mode = SceneMode.SCENE3D;
 
-    var position = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
+    const position = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
     Cartesian3.multiplyByScalar(position, 7000000, position);
     camera.position = position;
     camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
@@ -4013,21 +4015,21 @@ describe("Scene/Camera", function () {
       new Cartesian3()
     );
 
-    var correctResult = new Rectangle(
+    const correctResult = new Rectangle(
       3.0837016481160435,
       -0.04365869998457809,
       -3.0837016481160435,
       0.04365869998457809
     );
 
-    var rect = camera.computeViewRectangle();
+    const rect = camera.computeViewRectangle();
     expect(rect).toEqualEpsilon(correctResult, CesiumMath.EPSILON10);
   });
 
   it("computeViewRectangle when zoomed out", function () {
     scene.mode = SceneMode.SCENE3D;
 
-    var position = Cartesian3.clone(Cartesian3.UNIT_X);
+    const position = Cartesian3.clone(Cartesian3.UNIT_X);
     Cartesian3.multiplyByScalar(position, 25000000, position);
 
     camera.position = position;
@@ -4039,14 +4041,14 @@ describe("Scene/Camera", function () {
       new Cartesian3()
     );
 
-    var rect = camera.computeViewRectangle();
+    const rect = camera.computeViewRectangle();
     expect(rect).toEqual(Rectangle.MAX_VALUE);
   });
 
   it("computeViewRectangle when globe isn't visible", function () {
     scene.mode = SceneMode.SCENE3D;
 
-    var position = Cartesian3.clone(Cartesian3.UNIT_X);
+    const position = Cartesian3.clone(Cartesian3.UNIT_X);
     Cartesian3.multiplyByScalar(position, 7000000, position);
 
     camera.position = position;
@@ -4058,17 +4060,17 @@ describe("Scene/Camera", function () {
       new Cartesian3()
     );
 
-    var rect = camera.computeViewRectangle();
+    const rect = camera.computeViewRectangle();
     expect(rect).not.toBeDefined();
   });
 
   it("flyTo rectangle in 2D", function () {
-    var tweenSpy = spyOn(CameraFlightPath, "createTween").and.returnValue({});
+    const tweenSpy = spyOn(CameraFlightPath, "createTween").and.returnValue({});
     spyOn(scene.tweens, "add");
 
     camera._mode = SceneMode.SCENE2D;
 
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.left = -10.0;
     frustum.right = 10.0;
     frustum.bottom = -10.0;
@@ -4077,13 +4079,13 @@ describe("Scene/Camera", function () {
     frustum.far = 21.0;
     camera.frustum = frustum;
 
-    var west = 0.3323436621771766;
-    var south = 0.8292930502744068;
-    var east = 0.3325710961342694;
-    var north = 0.8297059734014236;
-    var rectangle = new Rectangle(west, south, east, north);
+    const west = 0.3323436621771766;
+    const south = 0.8292930502744068;
+    const east = 0.3325710961342694;
+    const north = 0.8297059734014236;
+    const rectangle = new Rectangle(west, south, east, north);
 
-    var expectedDestination = camera.getRectangleCameraCoordinates(rectangle);
+    const expectedDestination = camera.getRectangleCameraCoordinates(rectangle);
     camera.flyTo({ destination: rectangle });
 
     expect(
@@ -4094,18 +4096,18 @@ describe("Scene/Camera", function () {
   });
 
   it("flyTo rectangle in CV", function () {
-    var tweenSpy = spyOn(CameraFlightPath, "createTween").and.returnValue({});
+    const tweenSpy = spyOn(CameraFlightPath, "createTween").and.returnValue({});
     spyOn(scene.tweens, "add");
 
     camera._mode = SceneMode.COLUMBUS_VIEW;
 
-    var west = 0.3323436621771766;
-    var south = 0.8292930502744068;
-    var east = 0.3325710961342694;
-    var north = 0.8297059734014236;
-    var rectangle = new Rectangle(west, south, east, north);
+    const west = 0.3323436621771766;
+    const south = 0.8292930502744068;
+    const east = 0.3325710961342694;
+    const north = 0.8297059734014236;
+    const rectangle = new Rectangle(west, south, east, north);
 
-    var expectedDestination = camera.getRectangleCameraCoordinates(rectangle);
+    const expectedDestination = camera.getRectangleCameraCoordinates(rectangle);
     camera.flyTo({ destination: rectangle });
 
     expect(
@@ -4116,18 +4118,18 @@ describe("Scene/Camera", function () {
   });
 
   it("flyTo rectangle in 3D", function () {
-    var tweenSpy = spyOn(CameraFlightPath, "createTween").and.returnValue({});
+    const tweenSpy = spyOn(CameraFlightPath, "createTween").and.returnValue({});
     spyOn(scene.tweens, "add");
 
     camera._mode = SceneMode.SCENE3D;
 
-    var west = 0.3323436621771766;
-    var south = 0.8292930502744068;
-    var east = 0.3325710961342694;
-    var north = 0.8297059734014236;
-    var rectangle = new Rectangle(west, south, east, north);
+    const west = 0.3323436621771766;
+    const south = 0.8292930502744068;
+    const east = 0.3325710961342694;
+    const north = 0.8297059734014236;
+    const rectangle = new Rectangle(west, south, east, north);
 
-    var expectedDestination = camera.getRectangleCameraCoordinates(rectangle);
+    const expectedDestination = camera.getRectangleCameraCoordinates(rectangle);
     camera.flyTo({ destination: rectangle });
 
     expect(
@@ -4138,15 +4140,15 @@ describe("Scene/Camera", function () {
   });
 
   it("flyTo does not zoom closer than minimumZoomDistance", function () {
-    var tweenSpy = spyOn(CameraFlightPath, "createTween").and.returnValue({});
+    const tweenSpy = spyOn(CameraFlightPath, "createTween").and.returnValue({});
     spyOn(scene.tweens, "add");
 
     scene.mode = SceneMode.SCENE3D;
     scene.screenSpaceCameraController.minimumZoomDistance = 1000;
     scene.screenSpaceCameraController.maximumZoomDistance = 10000;
 
-    var sourceDestination = Cartesian3.fromDegrees(-117.16, 32.71, 100);
-    var expectedDestination = Cartesian3.clone(sourceDestination);
+    const sourceDestination = Cartesian3.fromDegrees(-117.16, 32.71, 100);
+    const expectedDestination = Cartesian3.clone(sourceDestination);
     expectedDestination.z = Cartesian3.fromDegrees(-117.16, 32.71, 1000).z;
 
     camera.flyTo({ destination: sourceDestination });
@@ -4159,15 +4161,15 @@ describe("Scene/Camera", function () {
   });
 
   it("flyTo does not zoom further than maximumZoomDistance", function () {
-    var tweenSpy = spyOn(CameraFlightPath, "createTween").and.returnValue({});
+    const tweenSpy = spyOn(CameraFlightPath, "createTween").and.returnValue({});
     spyOn(scene.tweens, "add");
 
     scene.mode = SceneMode.SCENE3D;
     scene.screenSpaceCameraController.minimumZoomDistance = 1000;
     scene.screenSpaceCameraController.maximumZoomDistance = 10000;
 
-    var sourceDestination = Cartesian3.fromDegrees(-117.16, 32.71, 100000);
-    var expectedDestination = Cartesian3.clone(sourceDestination);
+    const sourceDestination = Cartesian3.fromDegrees(-117.16, 32.71, 100000);
+    const expectedDestination = Cartesian3.clone(sourceDestination);
     expectedDestination.z = Cartesian3.fromDegrees(-117.16, 32.71, 10000).z;
 
     camera.flyTo({ destination: sourceDestination });
@@ -4180,15 +4182,15 @@ describe("Scene/Camera", function () {
   });
 
   it("flyTo zooms in between minimumZoomDistance and maximumZoomDistance", function () {
-    var tweenSpy = spyOn(CameraFlightPath, "createTween").and.returnValue({});
+    const tweenSpy = spyOn(CameraFlightPath, "createTween").and.returnValue({});
     spyOn(scene.tweens, "add");
 
     scene.mode = SceneMode.SCENE3D;
     scene.screenSpaceCameraController.minimumZoomDistance = 1000;
     scene.screenSpaceCameraController.maximumZoomDistance = 10000;
 
-    var sourceDestination = Cartesian3.fromDegrees(-117.16, 32.71, 5000);
-    var expectedDestination = Cartesian3.clone(sourceDestination);
+    const sourceDestination = Cartesian3.fromDegrees(-117.16, 32.71, 5000);
+    const expectedDestination = Cartesian3.clone(sourceDestination);
 
     camera.flyTo({ destination: sourceDestination });
 
@@ -4200,7 +4202,7 @@ describe("Scene/Camera", function () {
   });
 
   it("_currentFlight is not set for a flight that doesn't go anywhere", function () {
-    var complete = jasmine.createSpy("complete");
+    const complete = jasmine.createSpy("complete");
     spyOn(CameraFlightPath, "createTween").and.returnValue({
       complete: complete,
       duration: 0,
@@ -4224,14 +4226,14 @@ describe("Scene/Camera", function () {
   });
 
   it("does not switch projection in 2D", function () {
-    var ellipsoid = Ellipsoid.WGS84;
-    var projection = new GeographicProjection(ellipsoid);
-    var maxRadii = ellipsoid.maximumRadius;
+    const ellipsoid = Ellipsoid.WGS84;
+    const projection = new GeographicProjection(ellipsoid);
+    const maxRadii = ellipsoid.maximumRadius;
 
     camera._mode = SceneMode.SCENE2D;
     camera._projection = projection;
 
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.right = maxRadii * Math.PI;
     frustum.left = -frustum.right;
     frustum.top =
@@ -4249,7 +4251,7 @@ describe("Scene/Camera", function () {
   });
 
   it("normalizes WC members", function () {
-    var transform = Matrix4.fromScale(new Cartesian3(2, 2, 2));
+    const transform = Matrix4.fromScale(new Cartesian3(2, 2, 2));
     camera.lookAtTransform(transform);
     expect(Cartesian3.magnitude(camera.directionWC)).toEqualEpsilon(
       1.0,

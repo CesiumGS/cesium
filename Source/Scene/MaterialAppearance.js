@@ -49,9 +49,9 @@ import Material from "./Material.js";
 function MaterialAppearance(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var translucent = defaultValue(options.translucent, true);
-  var closed = defaultValue(options.closed, false);
-  var materialSupport = defaultValue(
+  const translucent = defaultValue(options.translucent, true);
+  const closed = defaultValue(options.closed, false);
+  const materialSupport = defaultValue(
     options.materialSupport,
     MaterialAppearance.MaterialSupport.TEXTURED
   );

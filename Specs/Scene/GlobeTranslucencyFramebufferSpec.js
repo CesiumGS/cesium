@@ -7,7 +7,7 @@ import { Texture } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 
 describe("Scene/GlobeTranslucencyFramebuffer", function () {
-  var scene;
+  let scene;
 
   beforeAll(function () {
     scene = createScene();
@@ -18,10 +18,10 @@ describe("Scene/GlobeTranslucencyFramebuffer", function () {
   });
 
   it("creates resources", function () {
-    var globeTranslucency = new GlobeTranslucencyFramebuffer();
-    var context = scene.context;
-    var viewport = new BoundingRectangle(0, 0, 100, 100);
-    var passState = new PassState(context);
+    const globeTranslucency = new GlobeTranslucencyFramebuffer();
+    const context = scene.context;
+    const viewport = new BoundingRectangle(0, 0, 100, 100);
+    const passState = new PassState(context);
     globeTranslucency.updateAndClear(false, viewport, context, passState);
     expect(globeTranslucency.classificationTexture).toBeDefined();
     expect(globeTranslucency.classificationFramebuffer).toBeDefined();
@@ -39,15 +39,16 @@ describe("Scene/GlobeTranslucencyFramebuffer", function () {
   });
 
   it("recreates resources when viewport changes", function () {
-    var globeTranslucency = new GlobeTranslucencyFramebuffer();
-    var frameState = scene.frameState;
-    var context = frameState.context;
-    var viewport = new BoundingRectangle(0, 0, 100, 100);
-    var passState = new PassState(context);
+    const globeTranslucency = new GlobeTranslucencyFramebuffer();
+    const frameState = scene.frameState;
+    const context = frameState.context;
+    const viewport = new BoundingRectangle(0, 0, 100, 100);
+    const passState = new PassState(context);
     globeTranslucency.updateAndClear(false, viewport, context, passState);
-    var firstColorTexture = globeTranslucency.classificationTexture;
-    var firstFramebuffer = globeTranslucency.classificationFramebuffer;
-    var firstPackedDepthFramebuffer = globeTranslucency.packedDepthFramebuffer;
+    const firstColorTexture = globeTranslucency.classificationTexture;
+    const firstFramebuffer = globeTranslucency.classificationFramebuffer;
+    const firstPackedDepthFramebuffer =
+      globeTranslucency.packedDepthFramebuffer;
     expect(globeTranslucency._clearCommand.framebuffer).toBe(firstFramebuffer);
     expect(globeTranslucency._packedDepthCommand.framebuffer).toBe(
       firstPackedDepthFramebuffer
@@ -70,15 +71,15 @@ describe("Scene/GlobeTranslucencyFramebuffer", function () {
       return;
     }
 
-    var frameState = scene.frameState;
-    var context = frameState.context;
-    var globeTranslucency = new GlobeTranslucencyFramebuffer();
-    var viewport = new BoundingRectangle(0, 0, 100, 100);
-    var passState = new PassState(context);
+    const frameState = scene.frameState;
+    const context = frameState.context;
+    const globeTranslucency = new GlobeTranslucencyFramebuffer();
+    const viewport = new BoundingRectangle(0, 0, 100, 100);
+    const passState = new PassState(context);
     globeTranslucency.updateAndClear(false, viewport, context, passState);
-    var firstColorTexture = globeTranslucency.classificationTexture;
+    const firstColorTexture = globeTranslucency.classificationTexture;
 
-    var expectedPixelDatatype = context.halfFloatingPointTexture
+    const expectedPixelDatatype = context.halfFloatingPointTexture
       ? PixelDatatype.HALF_FLOAT
       : PixelDatatype.FLOAT;
     globeTranslucency.updateAndClear(true, viewport, context, passState);
@@ -90,11 +91,11 @@ describe("Scene/GlobeTranslucencyFramebuffer", function () {
   });
 
   it("destroys", function () {
-    var globeTranslucency = new GlobeTranslucencyFramebuffer();
-    var frameState = scene.frameState;
-    var context = frameState.context;
-    var viewport = new BoundingRectangle(0, 0, 100, 100);
-    var passState = new PassState(context);
+    const globeTranslucency = new GlobeTranslucencyFramebuffer();
+    const frameState = scene.frameState;
+    const context = frameState.context;
+    const viewport = new BoundingRectangle(0, 0, 100, 100);
+    const passState = new PassState(context);
 
     globeTranslucency.updateAndClear(false, viewport, context, passState);
 

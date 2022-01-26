@@ -41,16 +41,16 @@ function getStringFromTypedArray(uint8Array, byteOffset, byteLength) {
 
 // Exposed functions for testing
 getStringFromTypedArray.decodeWithTextDecoder = function (view) {
-  var decoder = new TextDecoder("utf-8");
+  const decoder = new TextDecoder("utf-8");
   return decoder.decode(view);
 };
 
 getStringFromTypedArray.decodeWithFromCharCode = function (view) {
-  var result = "";
-  var codePoints = utf8Handler(view);
-  var length = codePoints.length;
-  for (var i = 0; i < length; ++i) {
-    var cp = codePoints[i];
+  let result = "";
+  const codePoints = utf8Handler(view);
+  const length = codePoints.length;
+  for (let i = 0; i < length; ++i) {
+    let cp = codePoints[i];
     if (cp <= 0xffff) {
       result += String.fromCharCode(cp);
     } else {
@@ -67,16 +67,16 @@ function inRange(a, min, max) {
 
 // This code is inspired by public domain code found here: https://github.com/inexorabletash/text-encoding
 function utf8Handler(utfBytes) {
-  var codePoint = 0;
-  var bytesSeen = 0;
-  var bytesNeeded = 0;
-  var lowerBoundary = 0x80;
-  var upperBoundary = 0xbf;
+  let codePoint = 0;
+  let bytesSeen = 0;
+  let bytesNeeded = 0;
+  let lowerBoundary = 0x80;
+  let upperBoundary = 0xbf;
 
-  var codePoints = [];
-  var length = utfBytes.length;
-  for (var i = 0; i < length; ++i) {
-    var currentByte = utfBytes[i];
+  const codePoints = [];
+  const length = utfBytes.length;
+  for (let i = 0; i < length; ++i) {
+    const currentByte = utfBytes[i];
 
     // If bytesNeeded = 0, then we are starting a new character
     if (bytesNeeded === 0) {

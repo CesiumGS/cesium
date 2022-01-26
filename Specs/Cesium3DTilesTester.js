@@ -9,7 +9,7 @@ import { Cesium3DTileset } from "../Source/Cesium.js";
 import { TileBoundingSphere } from "../Source/Cesium.js";
 import pollToPromise from "./pollToPromise.js";
 
-var mockTile = {
+const mockTile = {
   contentBoundingVolume: new TileBoundingSphere(),
   _contentBoundingVolume: new TileBoundingSphere(),
   _header: {
@@ -24,20 +24,20 @@ var mockTile = {
 function Cesium3DTilesTester() {}
 
 function padStringToByteAlignment(string, byteAlignment) {
-  var length = string.length;
-  var paddedLength = Math.ceil(length / byteAlignment) * byteAlignment; // Round up to the required alignment
-  var padding = paddedLength - length;
-  var whitespace = "";
-  for (var i = 0; i < padding; ++i) {
+  const length = string.length;
+  const paddedLength = Math.ceil(length / byteAlignment) * byteAlignment; // Round up to the required alignment
+  const padding = paddedLength - length;
+  let whitespace = "";
+  for (let i = 0; i < padding; ++i) {
     whitespace += " ";
   }
   return string + whitespace;
 }
 
-var time = new JulianDate(2457522.0);
+const time = new JulianDate(2457522.0);
 
 Cesium3DTilesTester.expectRender = function (scene, tileset, callback) {
-  var renderOptions = {
+  const renderOptions = {
     scene: scene,
     time: time,
   };
@@ -53,7 +53,7 @@ Cesium3DTilesTester.expectRender = function (scene, tileset, callback) {
 };
 
 Cesium3DTilesTester.expectRenderBlank = function (scene, tileset) {
-  var renderOptions = {
+  const renderOptions = {
     scene: scene,
     time: time,
   };
@@ -117,14 +117,14 @@ Cesium3DTilesTester.loadTileset = function (scene, url, options) {
     false
   );
   // Load all visible tiles
-  var tileset = scene.primitives.add(new Cesium3DTileset(options));
+  const tileset = scene.primitives.add(new Cesium3DTileset(options));
 
   return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
 };
 
 Cesium3DTilesTester.loadTileExpectError = function (scene, arrayBuffer, type) {
-  var tileset = {};
-  var url = Resource.createIfNeeded("");
+  const tileset = {};
+  const url = Resource.createIfNeeded("");
   expect(function () {
     return Cesium3DTileContentFactory[type](
       tileset,
@@ -137,14 +137,14 @@ Cesium3DTilesTester.loadTileExpectError = function (scene, arrayBuffer, type) {
 };
 
 Cesium3DTilesTester.loadTile = function (scene, arrayBuffer, type) {
-  var tileset = {
+  const tileset = {
     _statistics: {
       batchTableByteLength: 0,
     },
     root: {},
   };
-  var url = Resource.createIfNeeded("");
-  var content = Cesium3DTileContentFactory[type](
+  const url = Resource.createIfNeeded("");
+  const content = Cesium3DTileContentFactory[type](
     tileset,
     mockTile,
     url,
@@ -157,13 +157,13 @@ Cesium3DTilesTester.loadTile = function (scene, arrayBuffer, type) {
 
 // Use counter to prevent models from sharing the same cache key,
 // this fixes tests that load a model with the same invalid url
-var counter = 0;
+let counter = 0;
 Cesium3DTilesTester.rejectsReadyPromiseOnError = function (
   scene,
   arrayBuffer,
   type
 ) {
-  var tileset = {
+  const tileset = {
     basePath: counter++,
     _statistics: {
       batchTableByteLength: 0,
@@ -173,8 +173,8 @@ Cesium3DTilesTester.rejectsReadyPromiseOnError = function (
       y: 1,
     },
   };
-  var url = Resource.createIfNeeded("");
-  var content = Cesium3DTileContentFactory[type](
+  const url = Resource.createIfNeeded("");
+  const content = Cesium3DTileContentFactory[type](
     tileset,
     mockTile,
     url,
@@ -196,7 +196,7 @@ Cesium3DTilesTester.resolvesReadyPromise = function (scene, url, options) {
   return Cesium3DTilesTester.loadTileset(scene, url, options).then(function (
     tileset
   ) {
-    var content = tileset.root.content;
+    const content = tileset.root.content;
     return content.readyPromise.then(function (content) {
       expect(content).toBeDefined();
     });
@@ -207,7 +207,7 @@ Cesium3DTilesTester.tileDestroys = function (scene, url, options) {
   return Cesium3DTilesTester.loadTileset(scene, url, options).then(function (
     tileset
   ) {
-    var content = tileset.root.content;
+    const content = tileset.root.content;
     expect(content.isDestroyed()).toEqual(false);
     scene.primitives.remove(tileset);
     expect(content.isDestroyed()).toEqual(true);
@@ -217,19 +217,19 @@ Cesium3DTilesTester.tileDestroys = function (scene, url, options) {
 Cesium3DTilesTester.generateBatchedTileBuffer = function (options) {
   // Procedurally generate the tile array buffer for testing purposes
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var magic = defaultValue(options.magic, [98, 51, 100, 109]);
-  var version = defaultValue(options.version, 1);
-  var featuresLength = defaultValue(options.featuresLength, 1);
-  var featureTableJson = {
+  const magic = defaultValue(options.magic, [98, 51, 100, 109]);
+  const version = defaultValue(options.version, 1);
+  const featuresLength = defaultValue(options.featuresLength, 1);
+  const featureTableJson = {
     BATCH_LENGTH: featuresLength,
   };
-  var featureTableJsonString = JSON.stringify(featureTableJson);
-  var featureTableJsonByteLength = featureTableJsonString.length;
+  const featureTableJsonString = JSON.stringify(featureTableJson);
+  const featureTableJsonByteLength = featureTableJsonString.length;
 
-  var headerByteLength = 28;
-  var byteLength = headerByteLength + featureTableJsonByteLength;
-  var buffer = new ArrayBuffer(byteLength);
-  var view = new DataView(buffer);
+  const headerByteLength = 28;
+  const byteLength = headerByteLength + featureTableJsonByteLength;
+  const buffer = new ArrayBuffer(byteLength);
+  const view = new DataView(buffer);
   view.setUint8(0, magic[0]);
   view.setUint8(1, magic[1]);
   view.setUint8(2, magic[2]);
@@ -241,8 +241,8 @@ Cesium3DTilesTester.generateBatchedTileBuffer = function (options) {
   view.setUint32(20, 0, true); // batchTableJsonByteLength
   view.setUint32(24, 0, true); // batchTableBinaryByteLength
 
-  var i;
-  var byteOffset = headerByteLength;
+  let i;
+  let byteOffset = headerByteLength;
   for (i = 0; i < featureTableJsonByteLength; i++) {
     view.setUint8(byteOffset, featureTableJsonString.charCodeAt(i));
     byteOffset++;
@@ -254,59 +254,59 @@ Cesium3DTilesTester.generateBatchedTileBuffer = function (options) {
 Cesium3DTilesTester.generateInstancedTileBuffer = function (options) {
   // Procedurally generate the tile array buffer for testing purposes
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var magic = defaultValue(options.magic, [105, 51, 100, 109]);
-  var version = defaultValue(options.version, 1);
+  const magic = defaultValue(options.magic, [105, 51, 100, 109]);
+  const version = defaultValue(options.version, 1);
 
-  var gltfFormat = defaultValue(options.gltfFormat, 1);
-  var gltfUri = defaultValue(options.gltfUri, "model.gltf");
-  var gltfUriByteLength = gltfUri.length;
+  const gltfFormat = defaultValue(options.gltfFormat, 1);
+  const gltfUri = defaultValue(options.gltfUri, "model.gltf");
+  const gltfUriByteLength = gltfUri.length;
 
-  var featureTableJson = options.featureTableJson;
-  var featureTableJsonString = "";
+  const featureTableJson = options.featureTableJson;
+  let featureTableJsonString = "";
   if (defined(featureTableJson)) {
     if (Object.keys(featureTableJson).length > 0) {
       featureTableJsonString = JSON.stringify(featureTableJson);
     }
   } else {
-    var featuresLength = defaultValue(options.featuresLength, 1);
+    const featuresLength = defaultValue(options.featuresLength, 1);
     featureTableJsonString = JSON.stringify({
       INSTANCES_LENGTH: featuresLength,
       POSITION: arrayFill(new Array(featuresLength * 3), 0),
     });
   }
   featureTableJsonString = padStringToByteAlignment(featureTableJsonString, 8);
-  var featureTableJsonByteLength = featureTableJsonString.length;
+  const featureTableJsonByteLength = featureTableJsonString.length;
 
-  var featureTableBinary = defaultValue(
+  const featureTableBinary = defaultValue(
     options.featureTableBinary,
     new Uint8Array(0)
   );
-  var featureTableBinaryByteLength = featureTableBinary.length;
+  const featureTableBinaryByteLength = featureTableBinary.length;
 
-  var batchTableJson = options.batchTableJson;
-  var batchTableJsonString = "";
+  const batchTableJson = options.batchTableJson;
+  let batchTableJsonString = "";
   if (defined(batchTableJson) && Object.keys(batchTableJson).length > 0) {
     batchTableJsonString = JSON.stringify(batchTableJson);
   }
   batchTableJsonString = padStringToByteAlignment(batchTableJsonString, 8);
-  var batchTableJsonByteLength = batchTableJsonString.length;
+  const batchTableJsonByteLength = batchTableJsonString.length;
 
-  var batchTableBinary = defaultValue(
+  const batchTableBinary = defaultValue(
     options.batchTableBinary,
     new Uint8Array(0)
   );
-  var batchTableBinaryByteLength = batchTableBinary.length;
+  const batchTableBinaryByteLength = batchTableBinary.length;
 
-  var headerByteLength = 32;
-  var byteLength =
+  const headerByteLength = 32;
+  const byteLength =
     headerByteLength +
     featureTableJsonByteLength +
     featureTableBinaryByteLength +
     batchTableJsonByteLength +
     batchTableBinaryByteLength +
     gltfUriByteLength;
-  var buffer = new ArrayBuffer(byteLength);
-  var view = new DataView(buffer);
+  const buffer = new ArrayBuffer(byteLength);
+  const view = new DataView(buffer);
   view.setUint8(0, magic[0]);
   view.setUint8(1, magic[1]);
   view.setUint8(2, magic[2]);
@@ -319,8 +319,8 @@ Cesium3DTilesTester.generateInstancedTileBuffer = function (options) {
   view.setUint32(24, batchTableBinaryByteLength, true);
   view.setUint32(28, gltfFormat, true);
 
-  var i;
-  var byteOffset = headerByteLength;
+  let i;
+  let byteOffset = headerByteLength;
   for (i = 0; i < featureTableJsonByteLength; i++) {
     view.setUint8(byteOffset, featureTableJsonString.charCodeAt(i));
     byteOffset++;
@@ -347,9 +347,9 @@ Cesium3DTilesTester.generateInstancedTileBuffer = function (options) {
 Cesium3DTilesTester.generatePointCloudTileBuffer = function (options) {
   // Procedurally generate the tile array buffer for testing purposes
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var magic = defaultValue(options.magic, [112, 110, 116, 115]);
-  var version = defaultValue(options.version, 1);
-  var featureTableJson = options.featureTableJson;
+  const magic = defaultValue(options.magic, [112, 110, 116, 115]);
+  const version = defaultValue(options.version, 1);
+  let featureTableJson = options.featureTableJson;
   if (!defined(featureTableJson)) {
     featureTableJson = {
       POINTS_LENGTH: 1,
@@ -359,23 +359,23 @@ Cesium3DTilesTester.generatePointCloudTileBuffer = function (options) {
     };
   }
 
-  var featureTableJsonString = JSON.stringify(featureTableJson);
+  let featureTableJsonString = JSON.stringify(featureTableJson);
   featureTableJsonString = padStringToByteAlignment(featureTableJsonString, 4);
-  var featureTableJsonByteLength = defaultValue(
+  const featureTableJsonByteLength = defaultValue(
     options.featureTableJsonByteLength,
     featureTableJsonString.length
   );
 
-  var featureTableBinary = new ArrayBuffer(12); // Enough space to hold 3 floats
-  var featureTableBinaryByteLength = featureTableBinary.byteLength;
+  const featureTableBinary = new ArrayBuffer(12); // Enough space to hold 3 floats
+  const featureTableBinaryByteLength = featureTableBinary.byteLength;
 
-  var headerByteLength = 28;
-  var byteLength =
+  const headerByteLength = 28;
+  const byteLength =
     headerByteLength +
     featureTableJsonByteLength +
     featureTableBinaryByteLength;
-  var buffer = new ArrayBuffer(byteLength);
-  var view = new DataView(buffer);
+  const buffer = new ArrayBuffer(byteLength);
+  const view = new DataView(buffer);
   view.setUint8(0, magic[0]);
   view.setUint8(1, magic[1]);
   view.setUint8(2, magic[2]);
@@ -387,8 +387,8 @@ Cesium3DTilesTester.generatePointCloudTileBuffer = function (options) {
   view.setUint32(20, 0, true); // batchTableJsonByteLength
   view.setUint32(24, 0, true); // batchTableBinaryByteLength
 
-  var i;
-  var byteOffset = headerByteLength;
+  let i;
+  let byteOffset = headerByteLength;
   for (i = 0; i < featureTableJsonByteLength; i++) {
     view.setUint8(byteOffset, featureTableJsonString.charCodeAt(i));
     byteOffset++;
@@ -403,22 +403,22 @@ Cesium3DTilesTester.generatePointCloudTileBuffer = function (options) {
 Cesium3DTilesTester.generateCompositeTileBuffer = function (options) {
   // Procedurally generate the tile array buffer for testing purposes
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var magic = defaultValue(options.magic, [99, 109, 112, 116]);
-  var version = defaultValue(options.version, 1);
-  var tiles = defaultValue(options.tiles, []);
-  var tilesLength = tiles.length;
+  const magic = defaultValue(options.magic, [99, 109, 112, 116]);
+  const version = defaultValue(options.version, 1);
+  const tiles = defaultValue(options.tiles, []);
+  const tilesLength = tiles.length;
 
-  var i;
-  var tilesByteLength = 0;
+  let i;
+  let tilesByteLength = 0;
   for (i = 0; i < tilesLength; ++i) {
     tilesByteLength += tiles[i].byteLength;
   }
 
-  var headerByteLength = 16;
-  var byteLength = headerByteLength + tilesByteLength;
-  var buffer = new ArrayBuffer(byteLength);
-  var uint8Array = new Uint8Array(buffer);
-  var view = new DataView(buffer);
+  const headerByteLength = 16;
+  const byteLength = headerByteLength + tilesByteLength;
+  const buffer = new ArrayBuffer(byteLength);
+  const uint8Array = new Uint8Array(buffer);
+  const view = new DataView(buffer);
   view.setUint8(0, magic[0]);
   view.setUint8(1, magic[1]);
   view.setUint8(2, magic[2]);
@@ -427,9 +427,9 @@ Cesium3DTilesTester.generateCompositeTileBuffer = function (options) {
   view.setUint32(8, byteLength, true); // byteLength
   view.setUint32(12, tilesLength, true); // tilesLength
 
-  var byteOffset = headerByteLength;
+  let byteOffset = headerByteLength;
   for (i = 0; i < tilesLength; ++i) {
-    var tile = new Uint8Array(tiles[i]);
+    const tile = new Uint8Array(tiles[i]);
     uint8Array.set(tile, byteOffset);
     byteOffset += tile.byteLength;
   }
@@ -440,15 +440,15 @@ Cesium3DTilesTester.generateCompositeTileBuffer = function (options) {
 Cesium3DTilesTester.generateVectorTileBuffer = function (options) {
   // Procedurally generate the tile array buffer for testing purposes
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var magic = defaultValue(options.magic, [118, 99, 116, 114]);
-  var version = defaultValue(options.version, 1);
+  const magic = defaultValue(options.magic, [118, 99, 116, 114]);
+  const version = defaultValue(options.version, 1);
 
-  var featureTableJsonString;
-  var featureTableJsonByteLength = 0;
-  var defineFeatureTable = defaultValue(options.defineFeatureTable, true);
+  let featureTableJsonString;
+  let featureTableJsonByteLength = 0;
+  const defineFeatureTable = defaultValue(options.defineFeatureTable, true);
   if (defineFeatureTable) {
-    var defineRegion = defaultValue(options.defineRegion, true);
-    var featureTableJson = {
+    const defineRegion = defaultValue(options.defineRegion, true);
+    const featureTableJson = {
       REGION: defineRegion ? [-1.0, -1.0, 1.0, 1.0, -1.0, 1.0] : undefined,
       POLYGONS_LENGTH: defaultValue(options.polygonsLength, 0),
       POLYLINES_LENGTH: defaultValue(options.polylinesLength, 0),
@@ -461,10 +461,10 @@ Cesium3DTilesTester.generateVectorTileBuffer = function (options) {
     featureTableJsonByteLength = featureTableJsonString.length;
   }
 
-  var headerByteLength = 44;
-  var byteLength = headerByteLength + featureTableJsonByteLength;
-  var buffer = new ArrayBuffer(byteLength);
-  var view = new DataView(buffer);
+  const headerByteLength = 44;
+  const byteLength = headerByteLength + featureTableJsonByteLength;
+  const buffer = new ArrayBuffer(byteLength);
+  const view = new DataView(buffer);
   view.setUint8(0, magic[0]);
   view.setUint8(1, magic[1]);
   view.setUint8(2, magic[2]);
@@ -480,8 +480,8 @@ Cesium3DTilesTester.generateVectorTileBuffer = function (options) {
   view.setUint32(36, 0, true); // polylinePositionByteLength
   view.setUint32(40, 0, true); // pointsPositionByteLength
 
-  var i;
-  var byteOffset = headerByteLength;
+  let i;
+  let byteOffset = headerByteLength;
   for (i = 0; i < featureTableJsonByteLength; i++) {
     view.setUint8(byteOffset, featureTableJsonString.charCodeAt(i));
     byteOffset++;
@@ -493,14 +493,14 @@ Cesium3DTilesTester.generateVectorTileBuffer = function (options) {
 Cesium3DTilesTester.generateGeometryTileBuffer = function (options) {
   // Procedurally generate the tile array buffer for testing purposes
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var magic = defaultValue(options.magic, [103, 101, 111, 109]);
-  var version = defaultValue(options.version, 1);
+  const magic = defaultValue(options.magic, [103, 101, 111, 109]);
+  const version = defaultValue(options.version, 1);
 
-  var featureTableJsonString;
-  var featureTableJsonByteLength = 0;
-  var defineFeatureTable = defaultValue(options.defineFeatureTable, true);
+  let featureTableJsonString;
+  let featureTableJsonByteLength = 0;
+  const defineFeatureTable = defaultValue(options.defineFeatureTable, true);
   if (defineFeatureTable) {
-    var featureTableJson = {
+    const featureTableJson = {
       BOXES_LENGTH: defaultValue(options.boxesLength, 0),
       CYLINDERS_LENGTH: defaultValue(options.cylindersLength, 0),
       ELLIPSOIDS_LENGTH: defaultValue(options.ellipsoidsLength, 0),
@@ -514,10 +514,10 @@ Cesium3DTilesTester.generateGeometryTileBuffer = function (options) {
     featureTableJsonByteLength = featureTableJsonString.length;
   }
 
-  var headerByteLength = 28;
-  var byteLength = headerByteLength + featureTableJsonByteLength;
-  var buffer = new ArrayBuffer(byteLength);
-  var view = new DataView(buffer);
+  const headerByteLength = 28;
+  const byteLength = headerByteLength + featureTableJsonByteLength;
+  const buffer = new ArrayBuffer(byteLength);
+  const view = new DataView(buffer);
   view.setUint8(0, magic[0]);
   view.setUint8(1, magic[1]);
   view.setUint8(2, magic[2]);
@@ -529,8 +529,8 @@ Cesium3DTilesTester.generateGeometryTileBuffer = function (options) {
   view.setUint32(20, 0, true); // batchTableJsonByteLength
   view.setUint32(24, 0, true); // batchTableBinaryByteLength
 
-  var i;
-  var byteOffset = headerByteLength;
+  let i;
+  let byteOffset = headerByteLength;
   for (i = 0; i < featureTableJsonByteLength; i++) {
     view.setUint8(byteOffset, featureTableJsonString.charCodeAt(i));
     byteOffset++;

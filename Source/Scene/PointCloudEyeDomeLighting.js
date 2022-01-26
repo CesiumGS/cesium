@@ -57,15 +57,15 @@ function destroyFramebuffer(processor) {
   processor._clearCommand = undefined;
 }
 
-var distanceAndEdlStrengthScratch = new Cartesian2();
+const distanceAndEdlStrengthScratch = new Cartesian2();
 
 function createCommands(processor, context) {
-  var blendFS = new ShaderSource({
+  const blendFS = new ShaderSource({
     defines: ["LOG_DEPTH_WRITE"],
     sources: [PointCloudEyeDomeLightingShader],
   });
 
-  var blendUniformMap = {
+  const blendUniformMap = {
     u_pointCloud_colorGBuffer: function () {
       return processor.colorGBuffer;
     },
@@ -79,7 +79,7 @@ function createCommands(processor, context) {
     },
   };
 
-  var blendRenderState = RenderState.fromCache({
+  const blendRenderState = RenderState.fromCache({
     blending: BlendingState.ALPHA_BLEND,
     depthMask: true,
     depthTest: {
@@ -107,8 +107,8 @@ function createCommands(processor, context) {
 }
 
 function createResources(processor, context) {
-  var width = context.drawingBufferWidth;
-  var height = context.drawingBufferHeight;
+  const width = context.drawingBufferWidth;
+  const height = context.drawingBufferHeight;
   processor._framebuffer.update(context, width, height);
   createCommands(processor, context);
 }
@@ -120,11 +120,11 @@ function isSupported(context) {
 PointCloudEyeDomeLighting.isSupported = isSupported;
 
 function getECShaderProgram(context, shaderProgram) {
-  var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, "EC");
+  let shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, "EC");
   if (!defined(shader)) {
-    var attributeLocations = shaderProgram._attributeLocations;
+    const attributeLocations = shaderProgram._attributeLocations;
 
-    var fs = shaderProgram.fragmentShaderSource.clone();
+    const fs = shaderProgram.fragmentShaderSource.clone();
 
     fs.sources = fs.sources.map(function (source) {
       source = ShaderSource.replaceMain(
@@ -180,15 +180,15 @@ PointCloudEyeDomeLighting.prototype.update = function (
   createResources(this, frameState.context);
 
   // Hijack existing point commands to render into an offscreen FBO.
-  var i;
-  var commandList = frameState.commandList;
-  var commandEnd = commandList.length;
+  let i;
+  const commandList = frameState.commandList;
+  const commandEnd = commandList.length;
 
-  var derivedCommand;
-  var originalShaderProgram;
+  let derivedCommand;
+  let originalShaderProgram;
 
   for (i = commandStart; i < commandEnd; ++i) {
-    var command = commandList[i];
+    const command = commandList[i];
     if (
       command.primitiveType !== PrimitiveType.POINTS ||
       command.pass === Pass.TRANSLUCENT
@@ -201,7 +201,7 @@ PointCloudEyeDomeLighting.prototype.update = function (
     derivedCommand = undefined;
     originalShaderProgram = undefined;
 
-    var derivedCommandObject = command.derivedCommands.pointCloudProcessor;
+    let derivedCommandObject = command.derivedCommands.pointCloudProcessor;
     if (defined(derivedCommandObject)) {
       derivedCommand = derivedCommandObject.command;
       originalShaderProgram = derivedCommandObject.originalShaderProgram;
@@ -238,8 +238,8 @@ PointCloudEyeDomeLighting.prototype.update = function (
     commandList[i] = derivedCommand;
   }
 
-  var clearCommand = this._clearCommand;
-  var blendCommand = this._drawCommand;
+  const clearCommand = this._clearCommand;
+  const blendCommand = this._drawCommand;
 
   blendCommand.boundingVolume = boundingVolume;
 

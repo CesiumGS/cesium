@@ -42,8 +42,8 @@ import Spline from "./Spline.js";
 function LinearSpline(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var points = options.points;
-  var times = options.times;
+  const points = options.points;
+  const times = options.times;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(points) || !defined(times)) {
@@ -139,14 +139,14 @@ LinearSpline.prototype.clampTime = Spline.prototype.clampTime;
  *                             in the array <code>times</code>.
  */
 LinearSpline.prototype.evaluate = function (time, result) {
-  var points = this.points;
-  var times = this.times;
+  const points = this.points;
+  const times = this.times;
 
-  var i = (this._lastTimeIndex = this.findTimeInterval(
+  const i = (this._lastTimeIndex = this.findTimeInterval(
     time,
     this._lastTimeIndex
   ));
-  var u = (time - times[i]) / (times[i + 1] - times[i]);
+  const u = (time - times[i]) / (times[i + 1] - times[i]);
 
   if (!defined(result)) {
     result = new Cartesian3();

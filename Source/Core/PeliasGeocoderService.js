@@ -58,7 +58,7 @@ PeliasGeocoderService.prototype.geocode = function (query, type) {
   Check.typeOf.string("query", query);
   //>>includeEnd('debug');
 
-  var resource = this._url.getDerivedResource({
+  const resource = this._url.getDerivedResource({
     url: type === GeocodeType.AUTOCOMPLETE ? "autocomplete" : "search",
     queryParameters: {
       text: query,
@@ -67,8 +67,8 @@ PeliasGeocoderService.prototype.geocode = function (query, type) {
 
   return resource.fetchJson().then(function (results) {
     return results.features.map(function (resultObject) {
-      var destination;
-      var bboxDegrees = resultObject.bbox;
+      let destination;
+      const bboxDegrees = resultObject.bbox;
 
       if (defined(bboxDegrees)) {
         destination = Rectangle.fromDegrees(
@@ -78,8 +78,8 @@ PeliasGeocoderService.prototype.geocode = function (query, type) {
           bboxDegrees[3]
         );
       } else {
-        var lon = resultObject.geometry.coordinates[0];
-        var lat = resultObject.geometry.coordinates[1];
+        const lon = resultObject.geometry.coordinates[0];
+        const lat = resultObject.geometry.coordinates[1];
         destination = Cartesian3.fromDegrees(lon, lat);
       }
 

@@ -5,8 +5,8 @@ import { Material } from "../../Source/Cesium.js";
 
 describe("Scene/Appearance", function () {
   it("constructor", function () {
-    var material = Material.fromType("Color");
-    var vs =
+    const material = Material.fromType("Color");
+    const vs =
       "attribute vec3 position3DHigh;\n" +
       "attribute vec3 position3DLow;\n" +
       "attribute vec4 color;\n" +
@@ -15,17 +15,17 @@ describe("Scene/Appearance", function () {
       "    gl_Position = czm_modelViewProjectionRelativeToEye * czm_computePosition();\n" +
       "    v_color = color;\n" +
       "}\n";
-    var fs =
+    const fs =
       "varying vec4 v_color;\n" +
       "void main() {\n" +
       "    gl_FragColor = v_color;\n" +
       "}\n";
-    var renderState = {
+    const renderState = {
       depthTest: {
         enabled: true,
       },
     };
-    var appearance = new Appearance({
+    const appearance = new Appearance({
       material: material,
       vertexShaderSource: vs,
       fragmentShaderSource: fs,
@@ -43,12 +43,12 @@ describe("Scene/Appearance", function () {
   });
 
   it("getFragmentShaderSource", function () {
-    var fs =
+    const fs =
       "varying vec4 v_color;\n" +
       "void main() {\n" +
       "    gl_FragColor = v_color;\n" +
       "}\n";
-    var appearance = new Appearance({
+    const appearance = new Appearance({
       fragmentShaderSource: fs,
     });
 
@@ -58,24 +58,24 @@ describe("Scene/Appearance", function () {
   });
 
   it("getFragmentShaderSource with material", function () {
-    var material = Material.fromType("Color");
-    var fs =
+    const material = Material.fromType("Color");
+    const fs =
       "varying vec4 v_color;\n" +
       "void main() {\n" +
       "    gl_FragColor = v_color;\n" +
       "}\n";
-    var appearance = new Appearance({
+    const appearance = new Appearance({
       material: material,
       fragmentShaderSource: fs,
     });
 
-    var fragmentSource = appearance.getFragmentShaderSource();
+    const fragmentSource = appearance.getFragmentShaderSource();
     expect(fragmentSource.indexOf(material.shaderSource)).toBeGreaterThan(-1);
     expect(fragmentSource.indexOf(fs)).toBeGreaterThan(-1);
   });
 
   it("getDefaultRenderState", function () {
-    var renderState = Appearance.getDefaultRenderState(true, true);
+    const renderState = Appearance.getDefaultRenderState(true, true);
 
     expect(renderState.depthTest).toBeDefined();
     expect(renderState.depthTest.enabled).toEqual(true);
@@ -87,7 +87,7 @@ describe("Scene/Appearance", function () {
   });
 
   it("isTranslucent", function () {
-    var appearance = new Appearance({
+    const appearance = new Appearance({
       translucent: false,
     });
 
@@ -103,13 +103,13 @@ describe("Scene/Appearance", function () {
   });
 
   it("getRenderState", function () {
-    var appearance = new Appearance({
+    const appearance = new Appearance({
       translucent: false,
       closed: true,
       renderState: Appearance.getDefaultRenderState(false, true),
     });
 
-    var rs = appearance.getRenderState();
+    let rs = appearance.getRenderState();
     expect(rs.depthMask).toEqual(true);
     expect(rs.blending).not.toBeDefined();
 

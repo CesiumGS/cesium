@@ -174,8 +174,8 @@ EllipsoidTerrainProvider.prototype.requestTileGeometry = function (
   level,
   request
 ) {
-  var width = 16;
-  var height = 16;
+  const width = 16;
+  const height = 16;
   return when.resolve(
     new HeightmapTerrainData({
       buffer: new Uint8Array(width * height),

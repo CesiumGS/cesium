@@ -50,20 +50,20 @@ function sampleTerrain(terrainProvider, level, positions) {
 }
 
 function doSampling(terrainProvider, level, positions) {
-  var tilingScheme = terrainProvider.tilingScheme;
+  const tilingScheme = terrainProvider.tilingScheme;
 
-  var i;
+  let i;
 
   // Sort points into a set of tiles
-  var tileRequests = []; // Result will be an Array as it's easier to work with
-  var tileRequestSet = {}; // A unique set
+  const tileRequests = []; // Result will be an Array as it's easier to work with
+  const tileRequestSet = {}; // A unique set
   for (i = 0; i < positions.length; ++i) {
-    var xy = tilingScheme.positionToTileXY(positions[i], level);
-    var key = xy.toString();
+    const xy = tilingScheme.positionToTileXY(positions[i], level);
+    const key = xy.toString();
 
     if (!tileRequestSet.hasOwnProperty(key)) {
       // When tile is requested for the first time
-      var value = {
+      const value = {
         x: xy.x,
         y: xy.y,
         level: level,
@@ -80,15 +80,15 @@ function doSampling(terrainProvider, level, positions) {
   }
 
   // Send request for each required tile
-  var tilePromises = [];
+  const tilePromises = [];
   for (i = 0; i < tileRequests.length; ++i) {
-    var tileRequest = tileRequests[i];
-    var requestPromise = tileRequest.terrainProvider.requestTileGeometry(
+    const tileRequest = tileRequests[i];
+    const requestPromise = tileRequest.terrainProvider.requestTileGeometry(
       tileRequest.x,
       tileRequest.y,
       tileRequest.level
     );
-    var tilePromise = requestPromise
+    const tilePromise = requestPromise
       .then(createInterpolateFunction(tileRequest))
       .otherwise(createMarkFailedFunction(tileRequest));
     tilePromises.push(tilePromise);
@@ -111,7 +111,7 @@ function doSampling(terrainProvider, level, positions) {
  * @private
  */
 function interpolateAndAssignHeight(position, terrainData, rectangle) {
-  var height = terrainData.interpolateHeight(
+  const height = terrainData.interpolateHeight(
     rectangle,
     position.longitude,
     position.latitude
@@ -127,17 +127,17 @@ function interpolateAndAssignHeight(position, terrainData, rectangle) {
 }
 
 function createInterpolateFunction(tileRequest) {
-  var tilePositions = tileRequest.positions;
-  var rectangle = tileRequest.tilingScheme.tileXYToRectangle(
+  const tilePositions = tileRequest.positions;
+  const rectangle = tileRequest.tilingScheme.tileXYToRectangle(
     tileRequest.x,
     tileRequest.y,
     tileRequest.level
   );
   return function (terrainData) {
-    var isMeshRequired = false;
-    for (var i = 0; i < tilePositions.length; ++i) {
-      var position = tilePositions[i];
-      var isHeightAssigned = interpolateAndAssignHeight(
+    let isMeshRequired = false;
+    for (let i = 0; i < tilePositions.length; ++i) {
+      const position = tilePositions[i];
+      const isHeightAssigned = interpolateAndAssignHeight(
         position,
         terrainData,
         rectangle
@@ -171,8 +171,8 @@ function createInterpolateFunction(tileRequest) {
       .then(function () {
         // mesh has been created - so go through every position (maybe again)
         //  and re-interpolate the heights - presumably using the mesh this time
-        for (var i = 0; i < tilePositions.length; ++i) {
-          var position = tilePositions[i];
+        for (let i = 0; i < tilePositions.length; ++i) {
+          const position = tilePositions[i];
           // if it doesn't work this time - that's fine, we tried.
           interpolateAndAssignHeight(position, terrainData, rectangle);
         }
@@ -181,10 +181,10 @@ function createInterpolateFunction(tileRequest) {
 }
 
 function createMarkFailedFunction(tileRequest) {
-  var tilePositions = tileRequest.positions;
+  const tilePositions = tileRequest.positions;
   return function () {
-    for (var i = 0; i < tilePositions.length; ++i) {
-      var position = tilePositions[i];
+    for (let i = 0; i < tilePositions.length; ++i) {
+      const position = tilePositions[i];
       position.height = undefined;
     }
   };

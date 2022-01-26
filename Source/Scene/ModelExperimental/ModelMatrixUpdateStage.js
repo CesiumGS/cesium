@@ -9,7 +9,7 @@ import Matrix4 from "../../Core/Matrix4.js";
  *
  * @private
  */
-var ModelMatrixUpdateStage = {};
+const ModelMatrixUpdateStage = {};
 ModelMatrixUpdateStage.name = "ModelMatrixUpdateStage"; // Helps with debugging
 
 /**
@@ -33,7 +33,7 @@ ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
   }
 };
 
-var transformScratch = new Matrix4();
+const transformScratch = new Matrix4();
 
 /**
  * Recursively update all child runtime nodes and their runtime primitives.
@@ -41,12 +41,12 @@ var transformScratch = new Matrix4();
  * @private
  */
 function updateRuntimeNode(runtimeNode, sceneGraph, transform) {
-  var i, j;
+  let i, j;
 
   for (i = 0; i < runtimeNode.runtimePrimitives.length; i++) {
-    var runtimePrimitive = runtimeNode.runtimePrimitives[i];
+    const runtimePrimitive = runtimeNode.runtimePrimitives[i];
     for (j = 0; j < runtimePrimitive.drawCommands.length; j++) {
-      var drawCommand = runtimePrimitive.drawCommands[j];
+      const drawCommand = runtimePrimitive.drawCommands[j];
 
       Matrix4.multiplyTransformation(
         sceneGraph._computedModelMatrix,
@@ -64,7 +64,8 @@ function updateRuntimeNode(runtimeNode, sceneGraph, transform) {
 
   if (defined(runtimeNode.children)) {
     for (i = 0; i < runtimeNode.children.length; i++) {
-      var childRuntimeNode = sceneGraph._runtimeNodes[runtimeNode.children[i]];
+      const childRuntimeNode =
+        sceneGraph._runtimeNodes[runtimeNode.children[i]];
 
       Matrix4.multiplyTransformation(
         runtimeNode.transform,

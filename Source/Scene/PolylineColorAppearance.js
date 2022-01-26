@@ -6,9 +6,9 @@ import PolylineColorAppearanceVS from "../Shaders/Appearances/PolylineColorAppea
 import PolylineCommon from "../Shaders/PolylineCommon.js";
 import Appearance from "./Appearance.js";
 
-var defaultVertexShaderSource =
+let defaultVertexShaderSource =
   PolylineCommon + "\n" + PolylineColorAppearanceVS;
-var defaultFragmentShaderSource = PerInstanceFlatColorAppearanceFS;
+const defaultFragmentShaderSource = PerInstanceFlatColorAppearanceFS;
 
 if (!FeatureDetection.isInternetExplorer()) {
   defaultVertexShaderSource =
@@ -54,9 +54,9 @@ if (!FeatureDetection.isInternetExplorer()) {
 function PolylineColorAppearance(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var translucent = defaultValue(options.translucent, true);
-  var closed = false;
-  var vertexFormat = PolylineColorAppearance.VERTEX_FORMAT;
+  const translucent = defaultValue(options.translucent, true);
+  const closed = false;
+  const vertexFormat = PolylineColorAppearance.VERTEX_FORMAT;
 
   /**
    * This property is part of the {@link Appearance} interface, but is not

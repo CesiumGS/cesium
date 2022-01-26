@@ -17,7 +17,7 @@ import createScene from "../createScene.js";
 describe(
   "DataSources/PlaneGeometryUpdater",
   function () {
-    var scene;
+    let scene;
 
     beforeAll(function () {
       scene = createScene();
@@ -28,12 +28,12 @@ describe(
     });
 
     function createBasicPlane() {
-      var planeGraphics = new PlaneGraphics();
+      const planeGraphics = new PlaneGraphics();
       planeGraphics.plane = new ConstantProperty(
         new Plane(Cartesian3.UNIT_X, 0.0)
       );
       planeGraphics.dimensions = new ConstantProperty(new Cartesian2(1.0, 2.0));
-      var entity = new Entity();
+      const entity = new Entity();
       entity.position = new ConstantPositionProperty(
         Cartesian3.fromDegrees(0, 0, 0)
       );
@@ -42,7 +42,7 @@ describe(
     }
 
     function createDynamicPlane() {
-      var entity = createBasicPlane();
+      const entity = createBasicPlane();
       entity.plane.plane = createDynamicProperty(
         new Plane(Cartesian3.UNIT_X, 0.0)
       );
@@ -51,8 +51,8 @@ describe(
     }
 
     it("A time-varying plane causes geometry to be dynamic", function () {
-      var entity = createBasicPlane();
-      var updater = new PlaneGeometryUpdater(entity, scene);
+      const entity = createBasicPlane();
+      const updater = new PlaneGeometryUpdater(entity, scene);
       entity.plane.plane = createDynamicProperty();
       updater._onEntityPropertyChanged(entity, "plane");
 
@@ -60,8 +60,8 @@ describe(
     });
 
     it("A time-varying dimensions causes geometry to be dynamic", function () {
-      var entity = createBasicPlane();
-      var updater = new PlaneGeometryUpdater(entity, scene);
+      const entity = createBasicPlane();
+      const updater = new PlaneGeometryUpdater(entity, scene);
       entity.plane.dimensions = createDynamicProperty();
       updater._onEntityPropertyChanged(entity, "plane");
 
@@ -69,24 +69,24 @@ describe(
     });
 
     it("dynamic updater sets properties", function () {
-      var entity = createDynamicPlane();
+      const entity = createDynamicPlane();
 
-      var updater = new PlaneGeometryUpdater(entity, scene);
-      var dynamicUpdater = updater.createDynamicUpdater(
+      const updater = new PlaneGeometryUpdater(entity, scene);
+      const dynamicUpdater = updater.createDynamicUpdater(
         new PrimitiveCollection(),
         new PrimitiveCollection()
       );
       dynamicUpdater.update(JulianDate.now());
 
-      var options = dynamicUpdater._options;
+      const options = dynamicUpdater._options;
       expect(options.plane).toEqual(entity.plane.plane.getValue());
       expect(options.dimensions).toEqual(entity.plane.dimensions.getValue());
     });
 
     it("geometryChanged event is raised when expected", function () {
-      var entity = createBasicPlane();
-      var updater = new PlaneGeometryUpdater(entity, scene);
-      var listener = jasmine.createSpy("listener");
+      const entity = createBasicPlane();
+      const updater = new PlaneGeometryUpdater(entity, scene);
+      const listener = jasmine.createSpy("listener");
       updater.geometryChanged.addEventListener(listener);
 
       entity.plane.dimensions = new ConstantProperty();

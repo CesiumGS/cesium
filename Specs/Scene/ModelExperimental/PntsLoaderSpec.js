@@ -15,41 +15,41 @@ import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 
 describe("Scene/ModelExperimental/PntsLoader", function () {
-  var pointCloudRGBUrl =
+  const pointCloudRGBUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudRGB/pointCloudRGB.pnts";
-  var pointCloudRGBAUrl =
+  const pointCloudRGBAUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudRGBA/pointCloudRGBA.pnts";
-  var pointCloudRGB565Url =
+  const pointCloudRGB565Url =
     "./Data/Cesium3DTiles/PointCloud/PointCloudRGB565/pointCloudRGB565.pnts";
-  var pointCloudNoColorUrl =
+  const pointCloudNoColorUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudNoColor/pointCloudNoColor.pnts";
-  var pointCloudConstantColorUrl =
+  const pointCloudConstantColorUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudConstantColor/pointCloudConstantColor.pnts";
-  var pointCloudNormalsUrl =
+  const pointCloudNormalsUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudNormals/pointCloudNormals.pnts";
-  var pointCloudNormalsOctEncodedUrl =
+  const pointCloudNormalsOctEncodedUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudNormalsOctEncoded/pointCloudNormalsOctEncoded.pnts";
-  var pointCloudQuantizedUrl =
+  const pointCloudQuantizedUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudQuantized/pointCloudQuantized.pnts";
-  var pointCloudQuantizedOctEncodedUrl =
+  const pointCloudQuantizedOctEncodedUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded/pointCloudQuantizedOctEncoded.pnts";
-  var pointCloudDracoUrl =
+  const pointCloudDracoUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudDraco/pointCloudDraco.pnts";
-  var pointCloudDracoPartialUrl =
+  const pointCloudDracoPartialUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudDracoPartial/pointCloudDracoPartial.pnts";
-  var pointCloudDracoBatchedUrl =
+  const pointCloudDracoBatchedUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudDracoBatched/pointCloudDracoBatched.pnts";
-  var pointCloudWGS84Url =
+  const pointCloudWGS84Url =
     "./Data/Cesium3DTiles/PointCloud/PointCloudWGS84/pointCloudWGS84.pnts";
-  var pointCloudBatchedUrl =
+  const pointCloudBatchedUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudBatched/pointCloudBatched.pnts";
-  var pointCloudWithPerPointPropertiesUrl =
+  const pointCloudWithPerPointPropertiesUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/pointCloudWithPerPointProperties.pnts";
-  var pointCloudWithUnicodePropertyNamesUrl =
+  const pointCloudWithUnicodePropertyNamesUrl =
     "./Data/Cesium3DTiles/PointCloud/PointCloudWithUnicodePropertyNames/pointCloudWithUnicodePropertyNames.pnts";
 
-  var scene;
-  var pntsLoaders = [];
+  let scene;
+  const pntsLoaders = [];
 
   beforeAll(function () {
     scene = createScene();
@@ -60,8 +60,8 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
   });
 
   afterEach(function () {
-    for (var i = 0; i < pntsLoaders.length; i++) {
-      var loader = pntsLoaders[i];
+    for (let i = 0; i < pntsLoaders.length; i++) {
+      const loader = pntsLoaders[i];
       if (!loader.isDestroyed()) {
         loader.destroy();
       }
@@ -71,7 +71,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
   });
 
   function loadPntsArrayBuffer(arrayBuffer) {
-    var loader = new PntsLoader({
+    const loader = new PntsLoader({
       arrayBuffer: arrayBuffer,
     });
     pntsLoaders.push(loader);
@@ -95,26 +95,26 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     expect(featureMetadata).toBeDefined();
     expect(featureMetadata.schema).toEqual({});
     expect(featureMetadata.propertyTableCount).toEqual(1);
-    var propertyTable = featureMetadata.getPropertyTable(0);
+    const propertyTable = featureMetadata.getPropertyTable(0);
     expect(propertyTable.getPropertyIds(0)).toEqual([]);
   }
 
   function expectMetadata(featureMetadata, expectedProperties) {
     expect(featureMetadata).toBeDefined();
-    var schema = featureMetadata.schema;
-    var batchClass = schema.classes[MetadataClass.BATCH_TABLE_CLASS_NAME];
-    var properties = batchClass.properties;
+    const schema = featureMetadata.schema;
+    const batchClass = schema.classes[MetadataClass.BATCH_TABLE_CLASS_NAME];
+    const properties = batchClass.properties;
 
     expect(featureMetadata.propertyTableCount).toEqual(1);
-    var propertyTable = featureMetadata.getPropertyTable(0);
+    const propertyTable = featureMetadata.getPropertyTable(0);
     expect(propertyTable.getPropertyIds(0).sort()).toEqual(
       Object.keys(expectedProperties).sort()
     );
 
-    for (var propertyName in expectedProperties) {
+    for (const propertyName in expectedProperties) {
       if (expectedProperties.hasOwnProperty(propertyName)) {
-        var expectedProperty = expectedProperties[propertyName];
-        var property = properties[propertyName];
+        const expectedProperty = expectedProperties[propertyName];
+        const property = properties[propertyName];
 
         if (expectedProperty.isJson) {
           // If the batch table had JSON properties, the property will not
@@ -151,7 +151,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     expect(attribute.max).toBeDefined();
     expect(attribute.min).toBeDefined();
 
-    var quantization = attribute.quantization;
+    const quantization = attribute.quantization;
     expect(quantization.componentDatatype).toBe(
       ComponentDatatype.UNSIGNED_SHORT
     );
@@ -226,11 +226,11 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     expect(attribute.type).toBe(AttributeType.VEC3);
     expect(attribute.normalized).toBe(false);
 
-    var quantization = attribute.quantization;
+    const quantization = attribute.quantization;
     expect(quantization.componentDatatype).toBe(componentDatatype);
     expect(quantization.normalizationRange).toBeDefined();
     expect(quantization.octEncoded).toBe(true);
-    var isZXY = isDraco;
+    const isZXY = isDraco;
     expect(quantization.octEncodedZXY).toBe(isZXY);
     expect(quantization.quantizedVolumeDimensions).not.toBeDefined();
     expect(quantization.quantizedVolumeOffset).not.toBeDefined();
@@ -249,12 +249,12 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
   it("loads PointCloudRGB", function () {
     return loadPnts(pointCloudRGBUrl).then(function (loader) {
-      var components = loader.components;
+      const components = loader.components;
       expect(components).toBeDefined();
       expectEmptyMetadata(components.featureMetadata);
 
-      var primitive = components.nodes[0].primitives[0];
-      var attributes = primitive.attributes;
+      const primitive = components.nodes[0].primitives[0];
+      const attributes = primitive.attributes;
       expect(attributes.length).toBe(2);
       expectPosition(attributes[0]);
       expectColorRGB(attributes[1]);
@@ -263,12 +263,12 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
   it("loads PointCloudRGBA", function () {
     return loadPnts(pointCloudRGBAUrl).then(function (loader) {
-      var components = loader.components;
+      const components = loader.components;
       expect(components).toBeDefined();
       expectEmptyMetadata(components.featureMetadata);
 
-      var primitive = components.nodes[0].primitives[0];
-      var attributes = primitive.attributes;
+      const primitive = components.nodes[0].primitives[0];
+      const attributes = primitive.attributes;
       expect(attributes.length).toBe(2);
       expectPosition(attributes[0]);
       expectColorRGBA(attributes[1]);
@@ -277,12 +277,12 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
   it("loads PointCloudRGB565", function () {
     return loadPnts(pointCloudRGB565Url).then(function (loader) {
-      var components = loader.components;
+      const components = loader.components;
       expect(components).toBeDefined();
       expectEmptyMetadata(components.featureMetadata);
 
-      var primitive = components.nodes[0].primitives[0];
-      var attributes = primitive.attributes;
+      const primitive = components.nodes[0].primitives[0];
+      const attributes = primitive.attributes;
       expect(attributes.length).toBe(2);
       expectPosition(attributes[0]);
       expectColorRGB565(attributes[1]);
@@ -291,12 +291,12 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
   it("loads PointCloudNoColor", function () {
     return loadPnts(pointCloudNoColorUrl).then(function (loader) {
-      var components = loader.components;
+      const components = loader.components;
       expect(components).toBeDefined();
       expectEmptyMetadata(components.featureMetadata);
 
-      var primitive = components.nodes[0].primitives[0];
-      var attributes = primitive.attributes;
+      const primitive = components.nodes[0].primitives[0];
+      const attributes = primitive.attributes;
       expect(attributes.length).toBe(2);
       expectPosition(attributes[0]);
       expectDefaultColor(attributes[1]);
@@ -305,12 +305,12 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
   it("loads PointCloudConstantColor", function () {
     return loadPnts(pointCloudConstantColorUrl).then(function (loader) {
-      var components = loader.components;
+      const components = loader.components;
       expect(components).toBeDefined();
       expectEmptyMetadata(components.featureMetadata);
 
-      var primitive = components.nodes[0].primitives[0];
-      var attributes = primitive.attributes;
+      const primitive = components.nodes[0].primitives[0];
+      const attributes = primitive.attributes;
       expect(attributes.length).toBe(2);
       expectPosition(attributes[0]);
       expectConstantColor(attributes[1]);
@@ -319,12 +319,12 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
   it("loads PointCloudNormals", function () {
     return loadPnts(pointCloudNormalsUrl).then(function (loader) {
-      var components = loader.components;
+      const components = loader.components;
       expect(components).toBeDefined();
       expectEmptyMetadata(components.featureMetadata);
 
-      var primitive = components.nodes[0].primitives[0];
-      var attributes = primitive.attributes;
+      const primitive = components.nodes[0].primitives[0];
+      const attributes = primitive.attributes;
       expect(attributes.length).toBe(3);
       expectPosition(attributes[0]);
       expectNormal(attributes[1]);
@@ -334,12 +334,12 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
   it("loads PointCloudNormalsOctEncoded", function () {
     return loadPnts(pointCloudNormalsOctEncodedUrl).then(function (loader) {
-      var components = loader.components;
+      const components = loader.components;
       expect(components).toBeDefined();
       expectEmptyMetadata(components.featureMetadata);
 
-      var primitive = components.nodes[0].primitives[0];
-      var attributes = primitive.attributes;
+      const primitive = components.nodes[0].primitives[0];
+      const attributes = primitive.attributes;
       expect(attributes.length).toBe(3);
       expectPosition(attributes[0]);
       expectNormalOctEncoded(
@@ -353,12 +353,12 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
   it("loads PointCloudQuantized", function () {
     return loadPnts(pointCloudQuantizedUrl).then(function (loader) {
-      var components = loader.components;
+      const components = loader.components;
       expect(components).toBeDefined();
       expectEmptyMetadata(components.featureMetadata);
 
-      var primitive = components.nodes[0].primitives[0];
-      var attributes = primitive.attributes;
+      const primitive = components.nodes[0].primitives[0];
+      const attributes = primitive.attributes;
       expect(attributes.length).toBe(2);
       expectPositionQuantized(attributes[0], ComponentDatatype.UNSIGNED_BYTE);
       expectColorRGB(attributes[1]);
@@ -367,12 +367,12 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
   it("loads PointCloudQuantizedOctEncoded", function () {
     return loadPnts(pointCloudQuantizedOctEncodedUrl).then(function (loader) {
-      var components = loader.components;
+      const components = loader.components;
       expect(components).toBeDefined();
       expectEmptyMetadata(components.featureMetadata);
 
-      var primitive = components.nodes[0].primitives[0];
-      var attributes = primitive.attributes;
+      const primitive = components.nodes[0].primitives[0];
+      const attributes = primitive.attributes;
       expect(attributes.length).toBe(3);
       expectPositionQuantized(attributes[0]);
       expectNormalOctEncoded(
@@ -386,12 +386,12 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
   it("loads PointCloudDraco", function () {
     return loadPnts(pointCloudDracoUrl).then(function (loader) {
-      var components = loader.components;
+      const components = loader.components;
       expect(components).toBeDefined();
       expectEmptyMetadata(components.featureMetadata);
 
-      var primitive = components.nodes[0].primitives[0];
-      var attributes = primitive.attributes;
+      const primitive = components.nodes[0].primitives[0];
+      const attributes = primitive.attributes;
       expect(attributes.length).toBe(3);
       expectPositionQuantized(attributes[0]);
       expectNormalOctEncoded(
@@ -405,12 +405,12 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
   it("loads PointCloudDracoPartial", function () {
     return loadPnts(pointCloudDracoPartialUrl).then(function (loader) {
-      var components = loader.components;
+      const components = loader.components;
       expect(components).toBeDefined();
       expectEmptyMetadata(components.featureMetadata);
 
-      var primitive = components.nodes[0].primitives[0];
-      var attributes = primitive.attributes;
+      const primitive = components.nodes[0].primitives[0];
+      const attributes = primitive.attributes;
       expect(attributes.length).toBe(3);
       expectPositionQuantized(attributes[0]);
       expectNormal(attributes[1]);
@@ -420,7 +420,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
   it("loads PointCloudDracoBatched", function () {
     return loadPnts(pointCloudDracoBatchedUrl).then(function (loader) {
-      var components = loader.components;
+      const components = loader.components;
       expect(components).toBeDefined();
       expectMetadata(components.featureMetadata, {
         dimensions: {
@@ -437,8 +437,8 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
         },
       });
 
-      var primitive = components.nodes[0].primitives[0];
-      var attributes = primitive.attributes;
+      const primitive = components.nodes[0].primitives[0];
+      const attributes = primitive.attributes;
       expect(attributes.length).toBe(4);
       expectPositionQuantized(attributes[0]);
       expectNormalOctEncoded(
@@ -453,12 +453,12 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
   it("loads PointCloudWGS84", function () {
     return loadPnts(pointCloudWGS84Url).then(function (loader) {
-      var components = loader.components;
+      const components = loader.components;
       expect(components).toBeDefined();
       expectEmptyMetadata(components.featureMetadata);
 
-      var primitive = components.nodes[0].primitives[0];
-      var attributes = primitive.attributes;
+      const primitive = components.nodes[0].primitives[0];
+      const attributes = primitive.attributes;
       expect(attributes.length).toBe(2);
       expectPosition(attributes[0]);
       expectColorRGB(attributes[1]);
@@ -467,7 +467,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
 
   it("loads PointCloudBatched", function () {
     return loadPnts(pointCloudBatchedUrl).then(function (loader) {
-      var components = loader.components;
+      const components = loader.components;
       expect(components).toBeDefined();
       expectMetadata(components.featureMetadata, {
         dimensions: {
@@ -484,8 +484,8 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
         },
       });
 
-      var primitive = components.nodes[0].primitives[0];
-      var attributes = primitive.attributes;
+      const primitive = components.nodes[0].primitives[0];
+      const attributes = primitive.attributes;
       expect(attributes.length).toBe(4);
       expectPosition(attributes[0]);
       expectNormal(attributes[1]);
@@ -498,7 +498,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudWithPerPointPropertiesUrl).then(function (
       loader
     ) {
-      var components = loader.components;
+      const components = loader.components;
       expect(components).toBeDefined();
       expectMetadata(components.featureMetadata, {
         temperature: {
@@ -515,8 +515,8 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
         },
       });
 
-      var primitive = components.nodes[0].primitives[0];
-      var attributes = primitive.attributes;
+      const primitive = components.nodes[0].primitives[0];
+      const attributes = primitive.attributes;
       expect(attributes.length).toBe(2);
       expectPosition(attributes[0]);
       expectColorRGB(attributes[1]);
@@ -527,7 +527,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudWithUnicodePropertyNamesUrl).then(function (
       loader
     ) {
-      var components = loader.components;
+      const components = loader.components;
       expect(components).toBeDefined();
       expectMetadata(components.featureMetadata, {
         "temperature ℃": {
@@ -544,8 +544,8 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
         },
       });
 
-      var primitive = components.nodes[0].primitives[0];
-      var attributes = primitive.attributes;
+      const primitive = components.nodes[0].primitives[0];
+      const attributes = primitive.attributes;
       expect(attributes.length).toBe(2);
       expectPosition(attributes[0]);
       expectColorRGB(attributes[1]);
@@ -553,21 +553,21 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
   });
 
   it("throws with invalid version", function () {
-    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+    const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
       version: 2,
     });
     expectLoadError(arrayBuffer);
   });
 
   it("throws if featureTableJsonByteLength is 0", function () {
-    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+    const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
       featureTableJsonByteLength: 0,
     });
     expectLoadError(arrayBuffer);
   });
 
   it("throws if the feature table does not contain POINTS_LENGTH", function () {
-    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+    const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
       featureTableJson: {
         POSITION: {
           byteOffset: 0,
@@ -578,7 +578,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
   });
 
   it("throws if the feature table does not contain POSITION or POSITION_QUANTIZED", function () {
-    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+    const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
       featureTableJson: {
         POINTS_LENGTH: 1,
       },
@@ -587,7 +587,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
   });
 
   it("throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_SCALE", function () {
-    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+    const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
       featureTableJson: {
         POINTS_LENGTH: 1,
         POSITION_QUANTIZED: {
@@ -600,7 +600,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
   });
 
   it("throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_OFFSET", function () {
-    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+    const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
       featureTableJson: {
         POINTS_LENGTH: 1,
         POSITION_QUANTIZED: {
@@ -613,7 +613,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
   });
 
   it("throws if the BATCH_ID semantic is defined but BATCH_LENGTH is not", function () {
-    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+    const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
       featureTableJson: {
         POINTS_LENGTH: 2,
         POSITION: [0.0, 0.0, 0.0, 1.0, 1.0, 1.0],

@@ -10,37 +10,37 @@ import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
 describe("Scene/ModelExperimental/I3dmLoader", function () {
-  var InstancedGltfExternalUrl =
+  const InstancedGltfExternalUrl =
     "./Data/Cesium3DTiles/Instanced/InstancedGltfExternal/instancedGltfExternal.i3dm";
-  var InstancedWithBatchTableUrl =
+  const InstancedWithBatchTableUrl =
     "./Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/instancedWithBatchTable.i3dm";
-  var InstancedWithBatchTableBinaryUrl =
+  const InstancedWithBatchTableBinaryUrl =
     "./Data/Cesium3DTiles/Instanced/InstancedWithBatchTableBinary/instancedWithBatchTableBinary.i3dm";
-  var InstancedWithoutBatchTableUrl =
+  const InstancedWithoutBatchTableUrl =
     "./Data/Cesium3DTiles/Instanced/InstancedWithoutBatchTable/instancedWithoutBatchTable.i3dm";
-  var InstancedOrientationUrl =
+  const InstancedOrientationUrl =
     "./Data/Cesium3DTiles/Instanced/InstancedOrientation/instancedOrientation.i3dm";
-  var InstancedOct32POrientationUrl =
+  const InstancedOct32POrientationUrl =
     "./Data/Cesium3DTiles/Instanced/InstancedOct32POrientation/instancedOct32POrientation.i3dm";
-  var InstancedScaleUrl =
+  const InstancedScaleUrl =
     "./Data/Cesium3DTiles/Instanced/InstancedScale/instancedScale.i3dm";
-  var InstancedScaleNonUniformUrl =
+  const InstancedScaleNonUniformUrl =
     "./Data/Cesium3DTiles/Instanced/InstancedScaleNonUniform/instancedScaleNonUniform.i3dm";
-  var InstancedRTCUrl =
+  const InstancedRTCUrl =
     "./Data/Cesium3DTiles/Instanced/InstancedRTC/instancedRTC.i3dm";
-  var InstancedQuantizedUrl =
+  const InstancedQuantizedUrl =
     "./Data/Cesium3DTiles/Instanced/InstancedQuantized/instancedQuantized.i3dm";
-  var InstancedQuantizedOct32POrientationUrl =
+  const InstancedQuantizedOct32POrientationUrl =
     "./Data/Cesium3DTiles/Instanced/InstancedQuantizedOct32POrientation/instancedQuantizedOct32POrientation.i3dm";
-  var InstancedWithTransformUrl =
+  const InstancedWithTransformUrl =
     "./Data/Cesium3DTiles/Instanced/InstancedWithTransform/instancedWithTransform.i3dm";
-  var InstancedWithBatchIdsUrl =
+  const InstancedWithBatchIdsUrl =
     "./Data/Cesium3DTiles/Instanced/InstancedWithBatchIds/instancedWithBatchIds.i3dm";
-  var InstancedTexturedUrl =
+  const InstancedTexturedUrl =
     "./Data/Cesium3DTiles/Instanced/InstancedTextured/instancedTextured.i3dm";
 
-  var scene;
-  var i3dmLoaders = [];
+  let scene;
+  const i3dmLoaders = [];
 
   beforeAll(function () {
     scene = createScene();
@@ -53,8 +53,8 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
   });
 
   afterEach(function () {
-    for (var i = 0; i < i3dmLoaders.length; i++) {
-      var loader = i3dmLoaders[i];
+    for (let i = 0; i < i3dmLoaders.length; i++) {
+      const loader = i3dmLoaders[i];
       if (!loader.isDestroyed()) {
         loader.destroy();
       }
@@ -64,12 +64,12 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
   });
 
   function loadI3dm(path) {
-    var resource = Resource.createIfNeeded(path);
+    const resource = Resource.createIfNeeded(path);
 
     return Resource.fetchArrayBuffer({
       url: path,
     }).then(function (arrayBuffer) {
-      var loader = new I3dmLoader({
+      const loader = new I3dmLoader({
         i3dmResource: resource,
         arrayBuffer: arrayBuffer,
       });
@@ -81,16 +81,16 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
   }
 
   function verifyInstances(components, expectedSemantics, instancesLength) {
-    for (var i = 0; i < components.nodes.length; i++) {
-      var node = components.nodes[i];
+    for (let i = 0; i < components.nodes.length; i++) {
+      const node = components.nodes[i];
       // Every node that has a primitive should have an ModelComponents.Instances object.
       if (node.primitives.length > 0) {
         expect(node.instances).toBeDefined();
-        var attributesLength = node.instances.attributes.length;
+        const attributesLength = node.instances.attributes.length;
         expect(attributesLength).toEqual(expectedSemantics.length);
         // Iterate through the attributes of the node with instances and check for all expected semantics.
-        for (var j = 0; j < attributesLength; j++) {
-          var attribute = node.instances.attributes[j];
+        for (let j = 0; j < attributesLength; j++) {
+          const attribute = node.instances.attributes[j];
           expect(expectedSemantics.indexOf(attribute.semantic) > -1).toEqual(
             true
           );
@@ -102,8 +102,8 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
 
   it("loads InstancedGltfExternalUrl", function () {
     return loadI3dm(InstancedGltfExternalUrl).then(function (loader) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
 
       expect(featureMetadata).toBeDefined();
 
@@ -121,8 +121,8 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
 
   it("loads InstancedWithBatchTableUrl", function () {
     return loadI3dm(InstancedWithBatchTableUrl).then(function (loader) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
 
       expect(featureMetadata).toBeDefined();
 
@@ -140,8 +140,8 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
 
   it("loads InstancedWithBatchTableBinaryUrl", function () {
     return loadI3dm(InstancedWithBatchTableBinaryUrl).then(function (loader) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
 
       expect(featureMetadata).toBeDefined();
 
@@ -159,8 +159,8 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
 
   it("loads InstancedWithoutBatchTableUrl", function () {
     return loadI3dm(InstancedWithoutBatchTableUrl).then(function (loader) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
 
       expect(featureMetadata).toBeDefined();
 
@@ -178,8 +178,8 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
 
   it("loads InstancedOrientationUrl", function () {
     return loadI3dm(InstancedOrientationUrl).then(function (loader) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
 
       expect(featureMetadata).toBeDefined();
       verifyInstances(
@@ -196,8 +196,8 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
 
   it("loads InstancedOct32POrientationUrl", function () {
     return loadI3dm(InstancedOct32POrientationUrl).then(function (loader) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
 
       expect(featureMetadata).toBeDefined();
       verifyInstances(
@@ -214,8 +214,8 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
 
   it("loads InstancedScaleUrl", function () {
     return loadI3dm(InstancedScaleUrl).then(function (loader) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
 
       expect(featureMetadata).toBeDefined();
       verifyInstances(
@@ -233,8 +233,8 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
 
   it("loads InstancedScaleNonUniformUrl", function () {
     return loadI3dm(InstancedScaleNonUniformUrl).then(function (loader) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
 
       expect(featureMetadata).toBeDefined();
       verifyInstances(
@@ -252,8 +252,8 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
 
   it("loads InstancedRTCUrl", function () {
     return loadI3dm(InstancedRTCUrl).then(function (loader) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
 
       expect(featureMetadata).toBeDefined();
       verifyInstances(
@@ -266,7 +266,7 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
         25
       );
 
-      var transform = loader.components.transform;
+      const transform = loader.components.transform;
       expect(transform[Matrix4.COLUMN0ROW0]).toEqual(1.0);
       expect(transform[Matrix4.COLUMN1ROW0]).toEqual(0.0);
       expect(transform[Matrix4.COLUMN2ROW0]).toEqual(0.0);
@@ -288,8 +288,8 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
 
   it("loads InstancedQuantizedUrl", function () {
     return loadI3dm(InstancedQuantizedUrl).then(function (loader) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
 
       expect(featureMetadata).toBeDefined();
       verifyInstances(
@@ -308,8 +308,8 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
     return loadI3dm(InstancedQuantizedOct32POrientationUrl).then(function (
       loader
     ) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
 
       expect(featureMetadata).toBeDefined();
       verifyInstances(
@@ -326,8 +326,8 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
 
   it("loads InstancedWithTransformUrl", function () {
     return loadI3dm(InstancedWithTransformUrl).then(function (loader) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
 
       expect(featureMetadata).toBeDefined();
       verifyInstances(
@@ -343,8 +343,8 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
 
   it("loads InstancedWithBatchIdsUrl", function () {
     return loadI3dm(InstancedWithBatchIdsUrl).then(function (loader) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
 
       expect(featureMetadata).toBeDefined();
       verifyInstances(
@@ -361,8 +361,8 @@ describe("Scene/ModelExperimental/I3dmLoader", function () {
 
   it("loads InstancedTexturedUrl", function () {
     return loadI3dm(InstancedTexturedUrl).then(function (loader) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
 
       expect(featureMetadata).toBeDefined();
       verifyInstances(

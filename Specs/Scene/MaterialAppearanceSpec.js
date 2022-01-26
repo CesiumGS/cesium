@@ -13,10 +13,10 @@ import createScene from "../createScene.js";
 describe(
   "Scene/MaterialAppearance",
   function () {
-    var scene;
-    var primitive;
-    var rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
-    var backgroundColor = [0, 0, 255, 255];
+    let scene;
+    let primitive;
+    const rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
+    const backgroundColor = [0, 0, 255, 255];
 
     beforeAll(function () {
       scene = createScene();
@@ -54,7 +54,7 @@ describe(
     }
 
     it("constructor", function () {
-      var a = new MaterialAppearance();
+      const a = new MaterialAppearance();
 
       expect(a.materialSupport).toEqual(
         MaterialAppearance.MaterialSupport.TEXTURED

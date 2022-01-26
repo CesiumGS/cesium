@@ -32,24 +32,24 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain({
             requestWaterMask: true,
             requestVertexNormals: true,
           }),
         });
 
-        var scene = viewer.scene;
+        const scene = viewer.scene;
         scene.globe.enableLighting = true;
 
-        var scratchIcrfToFixed = new Cesium.Matrix3();
-        var scratchMoonPosition = new Cesium.Cartesian3();
-        var scratchMoonDirection = new Cesium.Cartesian3();
+        const scratchIcrfToFixed = new Cesium.Matrix3();
+        const scratchMoonPosition = new Cesium.Cartesian3();
+        const scratchMoonDirection = new Cesium.Cartesian3();
 
         function getMoonDirection(result) {
           result = Cesium.defined(result) ? result : new Cesium.Cartesian3();
-          var icrfToFixed = scratchIcrfToFixed;
-          var date = viewer.clock.currentTime;
+          const icrfToFixed = scratchIcrfToFixed;
+          const date = viewer.clock.currentTime;
           if (
             !Cesium.defined(
               Cesium.Transforms.computeIcrfToFixedMatrix(date, icrfToFixed)
@@ -57,7 +57,7 @@
           ) {
             Cesium.Transforms.computeTemeToPseudoFixedMatrix(date, icrfToFixed);
           }
-          var moonPosition = Cesium.Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(
+          const moonPosition = Cesium.Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(
             date,
             scratchMoonPosition
           );
@@ -66,14 +66,14 @@
             moonPosition,
             moonPosition
           );
-          var moonDirection = Cesium.Cartesian3.normalize(
+          const moonDirection = Cesium.Cartesian3.normalize(
             moonPosition,
             scratchMoonDirection
           );
           return Cesium.Cartesian3.negate(moonDirection, result);
         }
 
-        var directionalLight = new Cesium.DirectionalLight({
+        const directionalLight = new Cesium.DirectionalLight({
           direction: new Cesium.Cartesian3(
             0.2454278300540191,
             0.8842635425193919,
@@ -81,19 +81,19 @@
           ),
         });
 
-        var flashlight = new Cesium.DirectionalLight({
+        const flashlight = new Cesium.DirectionalLight({
           direction: scene.camera.directionWC, // Updated every frame
         });
 
-        var moonLight = new Cesium.DirectionalLight({
+        const moonLight = new Cesium.DirectionalLight({
           direction: getMoonDirection(), // Updated every frame
           color: new Cesium.Color(0.9, 0.925, 1.0),
           intensity: 0.5,
         });
 
-        var sunLight = new Cesium.SunLight();
+        const sunLight = new Cesium.SunLight();
 
-        var customColorLight = new Cesium.DirectionalLight({
+        const customColorLight = new Cesium.DirectionalLight({
           direction: new Cesium.Cartesian3(
             -0.2454278300540191,
             0.8842635425193919,
@@ -152,8 +152,8 @@
         });
 
         function setTime(iso8601) {
-          var currentTime = Cesium.JulianDate.fromIso8601(iso8601);
-          var endTime = Cesium.JulianDate.addDays(
+          const currentTime = Cesium.JulianDate.fromIso8601(iso8601);
+          const endTime = Cesium.JulianDate.addDays(
             currentTime,
             2,
             new Cesium.JulianDate()
@@ -185,7 +185,7 @@
           endTransform: Cesium.Matrix4.IDENTITY,
         });
 
-        var options = [
+        const options = [
           {
             text: "Fixed lighting",
             onselect: function () {

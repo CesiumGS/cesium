@@ -6,7 +6,7 @@ import { SceneModePicker } from "../../../Source/Cesium.js";
 describe(
   "Widgets/SceneModePicker/SceneModePicker",
   function () {
-    var scene;
+    let scene;
 
     beforeAll(function () {
       scene = createScene();
@@ -17,11 +17,11 @@ describe(
     });
 
     it("can create and destroy", function () {
-      var container = document.createElement("span");
+      const container = document.createElement("span");
       container.id = "testContainer";
       document.body.appendChild(container);
 
-      var widget = new SceneModePicker("testContainer", scene);
+      const widget = new SceneModePicker("testContainer", scene);
       expect(widget.container.id).toBe(container.id);
       expect(widget.isDestroyed()).toEqual(false);
 
@@ -35,11 +35,11 @@ describe(
       it(
         name + " event closes dropdown if target is not inside container",
         function () {
-          var container = document.createElement("span");
+          const container = document.createElement("span");
           container.id = "testContainer";
           document.body.appendChild(container);
 
-          var widget = new SceneModePicker("testContainer", scene);
+          const widget = new SceneModePicker("testContainer", scene);
 
           widget.viewModel.dropDownVisible = true;
           func(document.body);

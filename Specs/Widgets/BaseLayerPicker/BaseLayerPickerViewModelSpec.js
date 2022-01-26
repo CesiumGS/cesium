@@ -9,25 +9,25 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     this.terrainProvider = new EllipsoidTerrainProvider();
   }
 
-  var testProvider = {
+  const testProvider = {
     isReady: function () {
       return false;
     },
   };
 
-  var testProvider2 = {
+  const testProvider2 = {
     isReady: function () {
       return false;
     },
   };
 
-  var testProvider3 = {
+  const testProvider3 = {
     isReady: function () {
       return false;
     },
   };
 
-  var testProviderViewModel = new ProviderViewModel({
+  const testProviderViewModel = new ProviderViewModel({
     name: "name",
     tooltip: "tooltip",
     iconUrl: "url",
@@ -36,7 +36,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     },
   });
 
-  var testProviderViewModel2 = new ProviderViewModel({
+  const testProviderViewModel2 = new ProviderViewModel({
     name: "name2",
     tooltip: "tooltip2",
     iconUrl: "url2",
@@ -45,7 +45,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     },
   });
 
-  var testProviderViewModel3 = new ProviderViewModel({
+  const testProviderViewModel3 = new ProviderViewModel({
     name: "name3",
     tooltip: "tooltip3",
     iconUrl: "url3",
@@ -55,12 +55,12 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
   });
 
   it("constructor sets expected values", function () {
-    var imageryViewModels = [];
-    var terrainViewModels = [];
+    const imageryViewModels = [];
+    const terrainViewModels = [];
 
-    var globe = new MockGlobe();
+    const globe = new MockGlobe();
 
-    var viewModel = new BaseLayerPickerViewModel({
+    const viewModel = new BaseLayerPickerViewModel({
       globe: globe,
       imageryProviderViewModels: imageryViewModels,
       terrainProviderViewModels: terrainViewModels,
@@ -71,7 +71,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
   });
 
   it("separates providers into categories", function () {
-    var imageryProviders = [
+    const imageryProviders = [
       new ProviderViewModel({
         name: "name",
         tooltip: "tooltip",
@@ -100,7 +100,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
         },
       }),
     ];
-    var terrainProviders = [
+    const terrainProviders = [
       new ProviderViewModel({
         name: "name",
         tooltip: "tooltip",
@@ -130,7 +130,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
       }),
     ];
 
-    var viewModel = new BaseLayerPickerViewModel({
+    const viewModel = new BaseLayerPickerViewModel({
       globe: new MockGlobe(),
       imageryProviderViewModels: imageryProviders,
       terrainProviderViewModels: terrainProviders,
@@ -152,9 +152,9 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
   });
 
   it("selecting imagery closes the dropDown", function () {
-    var imageryViewModels = [testProviderViewModel];
-    var globe = new MockGlobe();
-    var viewModel = new BaseLayerPickerViewModel({
+    const imageryViewModels = [testProviderViewModel];
+    const globe = new MockGlobe();
+    const viewModel = new BaseLayerPickerViewModel({
       globe: globe,
       imageryProviderViewModels: imageryViewModels,
     });
@@ -165,9 +165,9 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
   });
 
   it("selecting terrain closes the dropDown", function () {
-    var imageryViewModels = [testProviderViewModel];
-    var globe = new MockGlobe();
-    var viewModel = new BaseLayerPickerViewModel({
+    const imageryViewModels = [testProviderViewModel];
+    const globe = new MockGlobe();
+    const viewModel = new BaseLayerPickerViewModel({
       globe: globe,
       imageryProviderViewModels: imageryViewModels,
     });
@@ -178,11 +178,11 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
   });
 
   it("tooltip, buttonImageUrl, and selectedImagery all return expected values", function () {
-    var imageryViewModels = [testProviderViewModel];
-    var terrainViewModels = [testProviderViewModel3];
-    var globe = new MockGlobe();
+    const imageryViewModels = [testProviderViewModel];
+    const terrainViewModels = [testProviderViewModel3];
+    const globe = new MockGlobe();
 
-    var viewModel = new BaseLayerPickerViewModel({
+    const viewModel = new BaseLayerPickerViewModel({
       globe: globe,
       imageryProviderViewModels: imageryViewModels,
       terrainProviderViewModels: terrainViewModels,
@@ -204,10 +204,10 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
   });
 
   it("selectedImagery actually sets base layer", function () {
-    var imageryViewModels = [testProviderViewModel];
-    var globe = new MockGlobe();
-    var imageryLayers = globe.imageryLayers;
-    var viewModel = new BaseLayerPickerViewModel({
+    const imageryViewModels = [testProviderViewModel];
+    const globe = new MockGlobe();
+    const imageryLayers = globe.imageryLayers;
+    const viewModel = new BaseLayerPickerViewModel({
       globe: globe,
       imageryProviderViewModels: imageryViewModels,
     });
@@ -225,12 +225,12 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
   });
 
   it("selectedTerrain actually sets terrainPRovider", function () {
-    var terrainProviderViewModels = [
+    const terrainProviderViewModels = [
       testProviderViewModel,
       testProviderViewModel3,
     ];
-    var globe = new MockGlobe();
-    var viewModel = new BaseLayerPickerViewModel({
+    const globe = new MockGlobe();
+    const viewModel = new BaseLayerPickerViewModel({
       globe: globe,
       terrainProviderViewModels: terrainProviderViewModels,
     });
@@ -240,10 +240,10 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
   });
 
   it("settings selectedImagery only removes layers added by view model", function () {
-    var imageryViewModels = [testProviderViewModel];
-    var globe = new MockGlobe();
-    var imageryLayers = globe.imageryLayers;
-    var viewModel = new BaseLayerPickerViewModel({
+    const imageryViewModels = [testProviderViewModel];
+    const globe = new MockGlobe();
+    const imageryLayers = globe.imageryLayers;
+    const viewModel = new BaseLayerPickerViewModel({
       globe: globe,
       imageryProviderViewModels: imageryViewModels,
     });
@@ -265,7 +265,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
   });
 
   it("dropDownVisible and toggleDropDown work", function () {
-    var viewModel = new BaseLayerPickerViewModel({
+    const viewModel = new BaseLayerPickerViewModel({
       globe: new MockGlobe(),
     });
 

@@ -9,7 +9,7 @@ import { when } from "../../Source/Cesium.js";
 describe(
   "Scene/PostProcessStageComposite",
   function () {
-    var scene;
+    let scene;
 
     beforeAll(function () {
       scene = createScene();
@@ -25,12 +25,12 @@ describe(
     });
 
     it("constructs", function () {
-      var stage = new PostProcessStage({
+      const stage = new PostProcessStage({
         fragmentShader:
           "uniform vec4 color; void main() { gl_FragColor = color; }",
         uniforms: { color: Color.clone(Color.RED) },
       });
-      var uniforms = {
+      const uniforms = {
         color: {
           get: function () {
             return stage.uniforms.color;
@@ -40,10 +40,10 @@ describe(
           },
         },
       };
-      var inputPreviousStageTexture = false;
-      var name = "kaleidoscope";
+      const inputPreviousStageTexture = false;
+      const name = "kaleidoscope";
 
-      var composite = new PostProcessStageComposite({
+      const composite = new PostProcessStageComposite({
         stages: [stage],
         uniforms: uniforms,
         inputPreviousStageTexture: inputPreviousStageTexture,
@@ -60,14 +60,14 @@ describe(
     });
 
     it("default constructs", function () {
-      var stage1 = new PostProcessStage({
+      const stage1 = new PostProcessStage({
         fragmentShader: "void main() { gl_FragColor = vec4(1.0); }",
       });
-      var stage2 = new PostProcessStage({
+      const stage2 = new PostProcessStage({
         fragmentShader:
           "void main() { gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }",
       });
-      var composite = new PostProcessStageComposite({
+      const composite = new PostProcessStageComposite({
         stages: [stage1, stage2],
       });
       expect(composite.ready).toEqual(false);
@@ -88,14 +88,14 @@ describe(
     });
 
     it("gets stages", function () {
-      var stage1 = new PostProcessStage({
+      const stage1 = new PostProcessStage({
         fragmentShader: "void main() { gl_FragColor = vec4(1.0); }",
       });
-      var stage2 = new PostProcessStage({
+      const stage2 = new PostProcessStage({
         fragmentShader:
           "void main() { gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }",
       });
-      var composite = new PostProcessStageComposite({
+      const composite = new PostProcessStageComposite({
         stages: [stage1, stage2],
       });
       expect(composite.get(0)).toEqual(stage1);
@@ -103,14 +103,14 @@ describe(
     });
 
     it("throws when get index is invalid", function () {
-      var stage1 = new PostProcessStage({
+      const stage1 = new PostProcessStage({
         fragmentShader: "void main() { gl_FragColor = vec4(1.0); }",
       });
-      var stage2 = new PostProcessStage({
+      const stage2 = new PostProcessStage({
         fragmentShader:
           "void main() { gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }",
       });
-      var composite = new PostProcessStageComposite({
+      const composite = new PostProcessStageComposite({
         stages: [stage1, stage2],
       });
       expect(function () {
@@ -122,10 +122,10 @@ describe(
     });
 
     it("renders with inputPreviousStageTexture is true", function () {
-      var stage1 = new PostProcessStage({
+      const stage1 = new PostProcessStage({
         fragmentShader: "void main() { gl_FragColor = vec4(1.0); }",
       });
-      var stage2 = new PostProcessStage({
+      const stage2 = new PostProcessStage({
         fragmentShader:
           "uniform sampler2D colorTexture;\n" +
           "varying vec2 v_textureCoordinates;\n" +
@@ -134,7 +134,7 @@ describe(
           "    gl_FragColor = vec4(color.r, 0.0, 1.0, 1.0);\n" +
           "}",
       });
-      var composite = new PostProcessStageComposite({
+      const composite = new PostProcessStageComposite({
         stages: [stage1, stage2],
       });
 
@@ -145,10 +145,10 @@ describe(
     });
 
     it("renders with inputPreviousStageTexture is false", function () {
-      var stage1 = new PostProcessStage({
+      const stage1 = new PostProcessStage({
         fragmentShader: "void main() { gl_FragColor = vec4(1.0); }",
       });
-      var stage2 = new PostProcessStage({
+      const stage2 = new PostProcessStage({
         fragmentShader:
           "uniform sampler2D colorTexture;\n" +
           "varying vec2 v_textureCoordinates;\n" +
@@ -157,7 +157,7 @@ describe(
           "    gl_FragColor = vec4(color.r, 0.0, 1.0, 1.0);\n" +
           "}",
       });
-      var composite = new PostProcessStageComposite({
+      const composite = new PostProcessStageComposite({
         stages: [stage1, stage2],
         inputPreviousStageTexture: false,
       });
@@ -169,7 +169,7 @@ describe(
     });
 
     it("does not run a stage that requires depth textures when depth textures are not supported", function () {
-      var s = createScene();
+      const s = createScene();
       s.context._depthTexture = false;
 
       if (defined(s._view.globeDepth)) {
@@ -183,7 +183,7 @@ describe(
 
       expect(s).toRender([0, 0, 0, 255]);
       // Dummy Stage
-      var bgColor = 51; // Choose a factor of 255 to make sure there aren't rounding issues
+      const bgColor = 51; // Choose a factor of 255 to make sure there aren't rounding issues
       s.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
@@ -194,7 +194,7 @@ describe(
       );
 
       //Stage we expect to not run
-      var stage = s.postProcessStages.add(
+      const stage = s.postProcessStages.add(
         new PostProcessStageComposite({
           stages: [
             new PostProcessStage({
@@ -220,14 +220,14 @@ describe(
     });
 
     it("destroys", function () {
-      var stage1 = new PostProcessStage({
+      const stage1 = new PostProcessStage({
         fragmentShader: "void main() { gl_FragColor = vec4(1.0); }",
       });
-      var stage2 = new PostProcessStage({
+      const stage2 = new PostProcessStage({
         fragmentShader:
           "void main() { gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }",
       });
-      var composite = new PostProcessStageComposite({
+      const composite = new PostProcessStageComposite({
         stages: [stage1, stage2],
       });
       expect(stage1.isDestroyed()).toEqual(false);

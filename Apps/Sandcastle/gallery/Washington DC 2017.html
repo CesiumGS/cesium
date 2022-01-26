@@ -36,9 +36,9 @@
         "use strict";
         //Sandcastle_Begin
         // 3 inch (0.08m) resolution imagery of Washington DC collected in 2017
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
-        var imageryLayer = viewer.imageryLayers.addImageryProvider(
+        const imageryLayer = viewer.imageryLayers.addImageryProvider(
           new Cesium.IonImageryProvider({ assetId: 3827 })
         );
         viewer.flyTo(imageryLayer);

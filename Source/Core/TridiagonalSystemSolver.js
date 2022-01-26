@@ -8,7 +8,7 @@ import DeveloperError from "./DeveloperError.js";
  *
  * @namespace TridiagonalSystemSolver
  */
-var TridiagonalSystemSolver = {};
+const TridiagonalSystemSolver = {};
 
 /**
  * Solves a tridiagonal system of linear equations.
@@ -66,11 +66,11 @@ TridiagonalSystemSolver.solve = function (lower, diagonal, upper, right) {
   }
   //>>includeEnd('debug');
 
-  var c = new Array(upper.length);
-  var d = new Array(right.length);
-  var x = new Array(right.length);
+  const c = new Array(upper.length);
+  const d = new Array(right.length);
+  const x = new Array(right.length);
 
-  var i;
+  let i;
   for (i = 0; i < d.length; i++) {
     d[i] = new Cartesian3();
     x[i] = new Cartesian3();
@@ -79,7 +79,7 @@ TridiagonalSystemSolver.solve = function (lower, diagonal, upper, right) {
   c[0] = upper[0] / diagonal[0];
   d[0] = Cartesian3.multiplyByScalar(right[0], 1.0 / diagonal[0], d[0]);
 
-  var scalar;
+  let scalar;
   for (i = 1; i < c.length; ++i) {
     scalar = 1.0 / (diagonal[i] - c[i - 1] * lower[i - 1]);
     c[i] = upper[i] * scalar;
