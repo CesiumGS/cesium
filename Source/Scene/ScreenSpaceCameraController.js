@@ -532,9 +532,14 @@ function handleZoom(
     );
   }
 
+  const diff = movement.endPosition.y - movement.startPosition.y;
+
   // distanceMeasure should be the height above the ellipsoid.
-  // The zoomRate slows as it approaches the surface and stops minimumZoomDistance above it.
-  const minHeight = object.minimumZoomDistance * percentage;
+  // When approaching the surface, the zoomRate slows and stops minimumZoomDistance above it.
+  const approachingSurface = diff > 0;
+  const minHeight = approachingSurface
+    ? object.minimumZoomDistance * percentage
+    : 0;
   const maxHeight = object.maximumZoomDistance;
 
   const minDistance = distanceMeasure - minHeight;
@@ -545,7 +550,6 @@ function handleZoom(
     object._maximumZoomRate
   );
 
-  const diff = movement.endPosition.y - movement.startPosition.y;
   let rangeWindowRatio = diff / object._scene.canvas.clientHeight;
   rangeWindowRatio = Math.min(rangeWindowRatio, object.maximumMovementRatio);
   let distance = zoomRate * rangeWindowRatio;
