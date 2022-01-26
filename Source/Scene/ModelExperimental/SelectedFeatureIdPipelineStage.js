@@ -61,6 +61,15 @@ SelectedFeatureIdPipelineStage.process = function (
     selectedFeatureIds.shaderDestination
   );
 
+  // Add a define to the shader to distinguish feature ID attributes from
+  // textures. This is needed for determining where to filter features
+  // by pass type.
+  shaderBuilder.addDefine(
+    selectedFeatureIds.featureIdDefine,
+    undefined,
+    selectedFeatureIds.shaderDestination
+  );
+
   updateFeatureStruct(shaderBuilder);
 
   if (selectedFeatureIds.shaderDestination === ShaderDestination.BOTH) {
@@ -68,6 +77,14 @@ SelectedFeatureIdPipelineStage.process = function (
   }
   shaderBuilder.addFragmentLines([SelectedFeatureIdStageCommon]);
 };
+
+function getFeatureIdDefine(featureIds) {
+  if (featureIds instanceof ModelComponents.FeatureIdTexture) {
+    return "HAS_SELECTED_FEATURE_ID_TEXTURE";
+  }
+
+  return "HAS_SELECTED_FEATURE_ID_ATTRIBUTE";
+}
 
 function getShaderDestination(featureIds) {
   // Feature ID textures are only supported in the fragment shader.
@@ -92,6 +109,7 @@ function getSelectedFeatureIds(model, node, primitive) {
         featureIds: featureIds,
         variableName: variableName,
         shaderDestination: getShaderDestination(featureIds),
+        featureIdDefine: getFeatureIdDefine(featureIds),
       };
     }
   }
@@ -102,6 +120,7 @@ function getSelectedFeatureIds(model, node, primitive) {
     featureIds: featureIds,
     variableName: variableName,
     shaderDestination: getShaderDestination(featureIds),
+    featureIdDefine: getFeatureIdDefine(featureIds),
   };
 }
 

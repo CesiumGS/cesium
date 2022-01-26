@@ -24,7 +24,7 @@ void cpuStylingStage(inout czm_modelMaterial material, SelectedFeature feature)
 
     // If a feature ID vertex attribute is used, the pass type filter is applied in the vertex shader.
     // So, we only apply in in the fragment shader if the feature ID texture is used.
-    #ifdef FEATURE_ID_TEXTURE
+    #ifdef HAS_SELECTED_FEAATURE_ID_TEXTURE
     filterByPassType(featureColor);
     #endif
 

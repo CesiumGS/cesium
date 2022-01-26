@@ -124,10 +124,12 @@ describe(
         verifyFeatureStruct(shaderBuilder);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_SELECTED_FEATURE_ID",
+          "HAS_SELECTED_FEATURE_ID_ATTRIBUTE",
           "SELECTED_FEATURE_ID featureId_2",
         ]);
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
           "HAS_SELECTED_FEATURE_ID",
+          "HAS_SELECTED_FEATURE_ID_ATTRIBUTE",
           "SELECTED_FEATURE_ID featureId_2",
         ]);
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
@@ -160,6 +162,7 @@ describe(
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
           "HAS_SELECTED_FEATURE_ID",
+          "HAS_SELECTED_FEATURE_ID_TEXTURE",
           "SELECTED_FEATURE_ID featureId_0",
         ]);
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, []);
@@ -189,10 +192,12 @@ describe(
         verifyFeatureStruct(shaderBuilder);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_SELECTED_FEATURE_ID",
+          "HAS_SELECTED_FEATURE_ID_ATTRIBUTE",
           "SELECTED_FEATURE_ID instanceFeatureId_1",
         ]);
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
           "HAS_SELECTED_FEATURE_ID",
+          "HAS_SELECTED_FEATURE_ID_ATTRIBUTE",
           "SELECTED_FEATURE_ID instanceFeatureId_1",
         ]);
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
