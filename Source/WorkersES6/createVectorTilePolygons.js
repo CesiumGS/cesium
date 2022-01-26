@@ -10,19 +10,19 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import Rectangle from "../Core/Rectangle.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
-var scratchCenter = new Cartesian3();
-var scratchEllipsoid = new Ellipsoid();
-var scratchRectangle = new Rectangle();
-var scratchScalars = {
+const scratchCenter = new Cartesian3();
+const scratchEllipsoid = new Ellipsoid();
+const scratchRectangle = new Rectangle();
+const scratchScalars = {
   min: undefined,
   max: undefined,
   indexBytesPerElement: undefined,
 };
 
 function unpackBuffer(buffer) {
-  var packedBuffer = new Float64Array(buffer);
+  const packedBuffer = new Float64Array(buffer);
 
-  var offset = 0;
+  let offset = 0;
   scratchScalars.indexBytesPerElement = packedBuffer[offset++];
 
   scratchScalars.min = packedBuffer[offset++];
@@ -38,39 +38,39 @@ function unpackBuffer(buffer) {
 }
 
 function packedBatchedIndicesLength(batchedIndices) {
-  var length = batchedIndices.length;
-  var count = 0;
-  for (var i = 0; i < length; ++i) {
+  const length = batchedIndices.length;
+  let count = 0;
+  for (let i = 0; i < length; ++i) {
     count += Color.packedLength + 3 + batchedIndices[i].batchIds.length;
   }
   return count;
 }
 
 function packBuffer(indexDatatype, boundingVolumes, batchedIndices) {
-  var numBVs = boundingVolumes.length;
-  var length =
+  const numBVs = boundingVolumes.length;
+  const length =
     1 +
     1 +
     numBVs * OrientedBoundingBox.packedLength +
     1 +
     packedBatchedIndicesLength(batchedIndices);
 
-  var packedBuffer = new Float64Array(length);
+  const packedBuffer = new Float64Array(length);
 
-  var offset = 0;
+  let offset = 0;
   packedBuffer[offset++] = indexDatatype;
   packedBuffer[offset++] = numBVs;
 
-  for (var i = 0; i < numBVs; ++i) {
+  for (let i = 0; i < numBVs; ++i) {
     OrientedBoundingBox.pack(boundingVolumes[i], packedBuffer, offset);
     offset += OrientedBoundingBox.packedLength;
   }
 
-  var indicesLength = batchedIndices.length;
+  const indicesLength = batchedIndices.length;
   packedBuffer[offset++] = indicesLength;
 
-  for (var j = 0; j < indicesLength; ++j) {
-    var batchedIndex = batchedIndices[j];
+  for (let j = 0; j < indicesLength; ++j) {
+    const batchedIndex = batchedIndices[j];
 
     Color.pack(batchedIndex.color, packedBuffer, offset);
     offset += Color.packedLength;
@@ -78,11 +78,11 @@ function packBuffer(indexDatatype, boundingVolumes, batchedIndices) {
     packedBuffer[offset++] = batchedIndex.offset;
     packedBuffer[offset++] = batchedIndex.count;
 
-    var batchIds = batchedIndex.batchIds;
-    var batchIdsLength = batchIds.length;
+    const batchIds = batchedIndex.batchIds;
+    const batchIdsLength = batchIds.length;
     packedBuffer[offset++] = batchIdsLength;
 
-    for (var k = 0; k < batchIdsLength; ++k) {
+    for (let k = 0; k < batchIdsLength; ++k) {
       packedBuffer[offset++] = batchIds[k];
     }
   }
@@ -90,78 +90,78 @@ function packBuffer(indexDatatype, boundingVolumes, batchedIndices) {
   return packedBuffer;
 }
 
-var maxShort = 32767;
+const maxShort = 32767;
 
-var scratchEncodedPosition = new Cartesian3();
-var scratchNormal = new Cartesian3();
-var scratchScaledNormal = new Cartesian3();
-var scratchMinHeightPosition = new Cartesian3();
-var scratchMaxHeightPosition = new Cartesian3();
-var scratchBVCartographic = new Cartographic();
-var scratchBVRectangle = new Rectangle();
+const scratchEncodedPosition = new Cartesian3();
+const scratchNormal = new Cartesian3();
+const scratchScaledNormal = new Cartesian3();
+const scratchMinHeightPosition = new Cartesian3();
+const scratchMaxHeightPosition = new Cartesian3();
+const scratchBVCartographic = new Cartographic();
+const scratchBVRectangle = new Rectangle();
 
 function createVectorTilePolygons(parameters, transferableObjects) {
   unpackBuffer(parameters.packedBuffer);
 
-  var indices;
-  var indexBytesPerElement = scratchScalars.indexBytesPerElement;
+  let indices;
+  const indexBytesPerElement = scratchScalars.indexBytesPerElement;
   if (indexBytesPerElement === 2) {
     indices = new Uint16Array(parameters.indices);
   } else {
     indices = new Uint32Array(parameters.indices);
   }
 
-  var positions = new Uint16Array(parameters.positions);
-  var counts = new Uint32Array(parameters.counts);
-  var indexCounts = new Uint32Array(parameters.indexCounts);
-  var batchIds = new Uint32Array(parameters.batchIds);
-  var batchTableColors = new Uint32Array(parameters.batchTableColors);
+  const positions = new Uint16Array(parameters.positions);
+  const counts = new Uint32Array(parameters.counts);
+  const indexCounts = new Uint32Array(parameters.indexCounts);
+  const batchIds = new Uint32Array(parameters.batchIds);
+  const batchTableColors = new Uint32Array(parameters.batchTableColors);
 
-  var boundingVolumes = new Array(counts.length);
+  const boundingVolumes = new Array(counts.length);
 
-  var center = scratchCenter;
-  var ellipsoid = scratchEllipsoid;
-  var rectangle = scratchRectangle;
-  var minHeight = scratchScalars.min;
-  var maxHeight = scratchScalars.max;
+  const center = scratchCenter;
+  const ellipsoid = scratchEllipsoid;
+  let rectangle = scratchRectangle;
+  const minHeight = scratchScalars.min;
+  const maxHeight = scratchScalars.max;
 
-  var minimumHeights = parameters.minimumHeights;
-  var maximumHeights = parameters.maximumHeights;
+  let minimumHeights = parameters.minimumHeights;
+  let maximumHeights = parameters.maximumHeights;
   if (defined(minimumHeights) && defined(maximumHeights)) {
     minimumHeights = new Float32Array(minimumHeights);
     maximumHeights = new Float32Array(maximumHeights);
   }
 
-  var i;
-  var j;
-  var rgba;
+  let i;
+  let j;
+  let rgba;
 
-  var positionsLength = positions.length / 2;
-  var uBuffer = positions.subarray(0, positionsLength);
-  var vBuffer = positions.subarray(positionsLength, 2 * positionsLength);
+  const positionsLength = positions.length / 2;
+  const uBuffer = positions.subarray(0, positionsLength);
+  const vBuffer = positions.subarray(positionsLength, 2 * positionsLength);
   AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer);
 
-  var decodedPositions = new Float64Array(positionsLength * 3);
+  const decodedPositions = new Float64Array(positionsLength * 3);
   for (i = 0; i < positionsLength; ++i) {
-    var u = uBuffer[i];
-    var v = vBuffer[i];
+    const u = uBuffer[i];
+    const v = vBuffer[i];
 
-    var x = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
-    var y = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
+    const x = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
+    const y = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
 
-    var cart = Cartographic.fromRadians(x, y, 0.0, scratchBVCartographic);
-    var decodedPosition = ellipsoid.cartographicToCartesian(
+    const cart = Cartographic.fromRadians(x, y, 0.0, scratchBVCartographic);
+    const decodedPosition = ellipsoid.cartographicToCartesian(
       cart,
       scratchEncodedPosition
     );
     Cartesian3.pack(decodedPosition, decodedPositions, i * 3);
   }
 
-  var countsLength = counts.length;
-  var offsets = new Array(countsLength);
-  var indexOffsets = new Array(countsLength);
-  var currentOffset = 0;
-  var currentIndexOffset = 0;
+  const countsLength = counts.length;
+  const offsets = new Array(countsLength);
+  const indexOffsets = new Array(countsLength);
+  let currentOffset = 0;
+  let currentIndexOffset = 0;
   for (i = 0; i < countsLength; ++i) {
     offsets[i] = currentOffset;
     indexOffsets[i] = currentIndexOffset;
@@ -170,13 +170,13 @@ function createVectorTilePolygons(parameters, transferableObjects) {
     currentIndexOffset += indexCounts[i];
   }
 
-  var batchedPositions = new Float32Array(positionsLength * 3 * 2);
-  var batchedIds = new Uint16Array(positionsLength * 2);
-  var batchedIndexOffsets = new Uint32Array(indexOffsets.length);
-  var batchedIndexCounts = new Uint32Array(indexCounts.length);
-  var batchedIndices = [];
+  const batchedPositions = new Float32Array(positionsLength * 3 * 2);
+  const batchedIds = new Uint16Array(positionsLength * 2);
+  const batchedIndexOffsets = new Uint32Array(indexOffsets.length);
+  const batchedIndexCounts = new Uint32Array(indexCounts.length);
+  let batchedIndices = [];
 
-  var colorToBuffers = {};
+  const colorToBuffers = {};
   for (i = 0; i < countsLength; ++i) {
     rgba = batchTableColors[i];
     if (!defined(colorToBuffers[rgba])) {
@@ -195,17 +195,17 @@ function createVectorTilePolygons(parameters, transferableObjects) {
   }
 
   // get the offsets and counts for the positions and indices of each primitive
-  var buffer;
-  var byColorPositionOffset = 0;
-  var byColorIndexOffset = 0;
+  let buffer;
+  let byColorPositionOffset = 0;
+  let byColorIndexOffset = 0;
   for (rgba in colorToBuffers) {
     if (colorToBuffers.hasOwnProperty(rgba)) {
       buffer = colorToBuffers[rgba];
       buffer.offset = byColorPositionOffset;
       buffer.indexOffset = byColorIndexOffset;
 
-      var positionLength = buffer.positionLength * 2;
-      var indexLength = buffer.indexLength * 2 + buffer.positionLength * 6;
+      const positionLength = buffer.positionLength * 2;
+      const indexLength = buffer.indexLength * 2 + buffer.positionLength * 6;
 
       byColorPositionOffset += positionLength;
       byColorIndexOffset += indexLength;
@@ -214,7 +214,7 @@ function createVectorTilePolygons(parameters, transferableObjects) {
     }
   }
 
-  var batchedDrawCalls = [];
+  const batchedDrawCalls = [];
 
   for (rgba in colorToBuffers) {
     if (colorToBuffers.hasOwnProperty(rgba)) {
@@ -233,53 +233,53 @@ function createVectorTilePolygons(parameters, transferableObjects) {
     rgba = batchTableColors[i];
 
     buffer = colorToBuffers[rgba];
-    var positionOffset = buffer.offset;
-    var positionIndex = positionOffset * 3;
-    var batchIdIndex = positionOffset;
+    const positionOffset = buffer.offset;
+    let positionIndex = positionOffset * 3;
+    let batchIdIndex = positionOffset;
 
-    var polygonOffset = offsets[i];
-    var polygonCount = counts[i];
-    var batchId = batchIds[i];
+    const polygonOffset = offsets[i];
+    const polygonCount = counts[i];
+    const batchId = batchIds[i];
 
-    var polygonMinimumHeight = minHeight;
-    var polygonMaximumHeight = maxHeight;
+    let polygonMinimumHeight = minHeight;
+    let polygonMaximumHeight = maxHeight;
     if (defined(minimumHeights) && defined(maximumHeights)) {
       polygonMinimumHeight = minimumHeights[i];
       polygonMaximumHeight = maximumHeights[i];
     }
 
-    var minLat = Number.POSITIVE_INFINITY;
-    var maxLat = Number.NEGATIVE_INFINITY;
-    var minLon = Number.POSITIVE_INFINITY;
-    var maxLon = Number.NEGATIVE_INFINITY;
+    let minLat = Number.POSITIVE_INFINITY;
+    let maxLat = Number.NEGATIVE_INFINITY;
+    let minLon = Number.POSITIVE_INFINITY;
+    let maxLon = Number.NEGATIVE_INFINITY;
 
     for (j = 0; j < polygonCount; ++j) {
-      var position = Cartesian3.unpack(
+      const position = Cartesian3.unpack(
         decodedPositions,
         polygonOffset * 3 + j * 3,
         scratchEncodedPosition
       );
       ellipsoid.scaleToGeodeticSurface(position, position);
 
-      var carto = ellipsoid.cartesianToCartographic(
+      const carto = ellipsoid.cartesianToCartographic(
         position,
         scratchBVCartographic
       );
-      var lat = carto.latitude;
-      var lon = carto.longitude;
+      const lat = carto.latitude;
+      const lon = carto.longitude;
 
       minLat = Math.min(lat, minLat);
       maxLat = Math.max(lat, maxLat);
       minLon = Math.min(lon, minLon);
       maxLon = Math.max(lon, maxLon);
 
-      var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
-      var scaledNormal = Cartesian3.multiplyByScalar(
+      const normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
+      let scaledNormal = Cartesian3.multiplyByScalar(
         normal,
         polygonMinimumHeight,
         scratchScaledNormal
       );
-      var minHeightPosition = Cartesian3.add(
+      const minHeightPosition = Cartesian3.add(
         position,
         scaledNormal,
         scratchMinHeightPosition
@@ -290,7 +290,7 @@ function createVectorTilePolygons(parameters, transferableObjects) {
         polygonMaximumHeight,
         scaledNormal
       );
-      var maxHeightPosition = Cartesian3.add(
+      const maxHeightPosition = Cartesian3.add(
         position,
         scaledNormal,
         scratchMaxHeightPosition
@@ -322,17 +322,17 @@ function createVectorTilePolygons(parameters, transferableObjects) {
       ellipsoid
     );
 
-    var indicesIndex = buffer.indexOffset;
+    let indicesIndex = buffer.indexOffset;
 
-    var indexOffset = indexOffsets[i];
-    var indexCount = indexCounts[i];
+    const indexOffset = indexOffsets[i];
+    const indexCount = indexCounts[i];
 
     batchedIndexOffsets[i] = indicesIndex;
 
     for (j = 0; j < indexCount; j += 3) {
-      var i0 = indices[indexOffset + j] - polygonOffset;
-      var i1 = indices[indexOffset + j + 1] - polygonOffset;
-      var i2 = indices[indexOffset + j + 2] - polygonOffset;
+      const i0 = indices[indexOffset + j] - polygonOffset;
+      const i1 = indices[indexOffset + j + 1] - polygonOffset;
+      const i2 = indices[indexOffset + j + 2] - polygonOffset;
 
       // triangle on the top of the extruded polygon
       batchedIndices[indicesIndex++] = i0 * 2 + positionOffset;
@@ -347,8 +347,8 @@ function createVectorTilePolygons(parameters, transferableObjects) {
 
     // indices for the walls of the extruded polygon
     for (j = 0; j < polygonCount; ++j) {
-      var v0 = j;
-      var v1 = (j + 1) % polygonCount;
+      const v0 = j;
+      const v1 = (j + 1) % polygonCount;
 
       batchedIndices[indicesIndex++] = v0 * 2 + 1 + positionOffset;
       batchedIndices[indicesIndex++] = v1 * 2 + positionOffset;
@@ -370,22 +370,22 @@ function createVectorTilePolygons(parameters, transferableObjects) {
     batchedIndices
   );
 
-  var batchedIndicesLength = batchedDrawCalls.length;
-  for (var m = 0; m < batchedIndicesLength; ++m) {
-    var tempIds = batchedDrawCalls[m].batchIds;
-    var count = 0;
-    var tempIdsLength = tempIds.length;
-    for (var n = 0; n < tempIdsLength; ++n) {
+  const batchedIndicesLength = batchedDrawCalls.length;
+  for (let m = 0; m < batchedIndicesLength; ++m) {
+    const tempIds = batchedDrawCalls[m].batchIds;
+    let count = 0;
+    const tempIdsLength = tempIds.length;
+    for (let n = 0; n < tempIdsLength; ++n) {
       count += batchedIndexCounts[tempIds[n]];
     }
     batchedDrawCalls[m].count = count;
   }
 
-  var indexDatatype =
+  const indexDatatype =
     batchedIndices.BYTES_PER_ELEMENT === 2
       ? IndexDatatype.UNSIGNED_SHORT
       : IndexDatatype.UNSIGNED_INT;
-  var packedBuffer = packBuffer(
+  const packedBuffer = packBuffer(
     indexDatatype,
     boundingVolumes,
     batchedDrawCalls

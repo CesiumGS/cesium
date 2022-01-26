@@ -4,7 +4,7 @@
  *
  * @enum {Number}
  */
-var ShadowMode = {
+const ShadowMode = {
   /**
    * The object does not cast or receive shadows.
    *

@@ -9,11 +9,11 @@ function subscribeAll(property, eventHelper, definitionChanged, intervals) {
   function callback() {
     definitionChanged.raiseEvent(property);
   }
-  var items = [];
+  const items = [];
   eventHelper.removeAll();
-  var length = intervals.length;
-  for (var i = 0; i < length; i++) {
-    var interval = intervals.get(i);
+  const length = intervals.length;
+  for (let i = 0; i < length; i++) {
+    const interval = intervals.get(i);
     if (defined(interval.data) && items.indexOf(interval.data) === -1) {
       eventHelper.add(interval.data.definitionChanged, callback);
     }
@@ -117,7 +117,7 @@ CompositeProperty.prototype.getValue = function (time, result) {
   }
   //>>includeEnd('debug');
 
-  var innerProperty = this._intervals.findDataForIntervalContainingDate(time);
+  const innerProperty = this._intervals.findDataForIntervalContainingDate(time);
   if (defined(innerProperty)) {
     return innerProperty.getValue(time, result);
   }

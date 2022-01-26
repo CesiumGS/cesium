@@ -2,7 +2,7 @@ import barycentricCoordinates from "./barycentricCoordinates.js";
 import Cartesian3 from "./Cartesian3.js";
 import defined from "./defined.js";
 
-var scratchBarycentricCoords = new Cartesian3();
+const scratchBarycentricCoords = new Cartesian3();
 
 /**
  * Determines if a point is inside a triangle.
@@ -24,7 +24,7 @@ var scratchBarycentricCoords = new Cartesian3();
  *   new Cesium.Cartesian2(0.0, 1.0));
  */
 function pointInsideTriangle(point, p0, p1, p2) {
-  var coords = barycentricCoordinates(
+  const coords = barycentricCoordinates(
     point,
     p0,
     p1,

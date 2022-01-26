@@ -15,15 +15,15 @@ import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js"
 import TextureWrap from "../Renderer/TextureWrap.js";
 import Material from "./Material.js";
 
-var scratchColor = new Color();
-var scratchColorAbove = new Color();
-var scratchColorBelow = new Color();
-var scratchColorBlend = new Color();
-var scratchPackedFloat = new Cartesian4();
-var scratchColorBytes = new Uint8Array(4);
+const scratchColor = new Color();
+const scratchColorAbove = new Color();
+const scratchColorBelow = new Color();
+const scratchColorBlend = new Color();
+const scratchPackedFloat = new Cartesian4();
+const scratchColorBytes = new Uint8Array(4);
 
 function lerpEntryColor(height, entryBefore, entryAfter, result) {
-  var lerpFactor =
+  const lerpFactor =
     entryBefore.height === entryAfter.height
       ? 0.0
       : (height - entryBefore.height) /
@@ -43,49 +43,49 @@ function removeDuplicates(entries) {
 
   // Remove entries that have the same height as before and after.
   entries = entries.filter(function (entry, index, array) {
-    var hasPrev = index > 0;
-    var hasNext = index < array.length - 1;
+    const hasPrev = index > 0;
+    const hasNext = index < array.length - 1;
 
-    var sameHeightAsPrev = hasPrev
+    const sameHeightAsPrev = hasPrev
       ? entry.height === array[index - 1].height
       : true;
-    var sameHeightAsNext = hasNext
+    const sameHeightAsNext = hasNext
       ? entry.height === array[index + 1].height
       : true;
 
-    var keep = !sameHeightAsPrev || !sameHeightAsNext;
+    const keep = !sameHeightAsPrev || !sameHeightAsNext;
     return keep;
   });
 
   // Remove entries that have the same color as before and after.
   entries = entries.filter(function (entry, index, array) {
-    var hasPrev = index > 0;
-    var hasNext = index < array.length - 1;
+    const hasPrev = index > 0;
+    const hasNext = index < array.length - 1;
 
-    var sameColorAsPrev = hasPrev
+    const sameColorAsPrev = hasPrev
       ? Color.equals(entry.color, array[index - 1].color)
       : false;
-    var sameColorAsNext = hasNext
+    const sameColorAsNext = hasNext
       ? Color.equals(entry.color, array[index + 1].color)
       : false;
 
-    var keep = !sameColorAsPrev || !sameColorAsNext;
+    const keep = !sameColorAsPrev || !sameColorAsNext;
     return keep;
   });
 
   // Also remove entries that have the same height AND color as the entry before.
   entries = entries.filter(function (entry, index, array) {
-    var hasPrev = index > 0;
+    const hasPrev = index > 0;
 
-    var sameColorAsPrev = hasPrev
+    const sameColorAsPrev = hasPrev
       ? Color.equals(entry.color, array[index - 1].color)
       : false;
 
-    var sameHeightAsPrev = hasPrev
+    const sameHeightAsPrev = hasPrev
       ? entry.height === array[index - 1].height
       : true;
 
-    var keep = !sameColorAsPrev || !sameHeightAsPrev;
+    const keep = !sameColorAsPrev || !sameHeightAsPrev;
     return keep;
   });
 
@@ -93,15 +93,15 @@ function removeDuplicates(entries) {
 }
 
 function preprocess(layers) {
-  var i, j;
+  let i, j;
 
-  var layeredEntries = [];
+  const layeredEntries = [];
 
-  var layersLength = layers.length;
+  const layersLength = layers.length;
   for (i = 0; i < layersLength; i++) {
-    var layer = layers[i];
-    var entriesOrig = layer.entries;
-    var entriesLength = entriesOrig.length;
+    const layer = layers[i];
+    const entriesOrig = layer.entries;
+    const entriesLength = entriesOrig.length;
 
     //>>includeStart('debug', pragmas.debug);
     if (!Array.isArray(entriesOrig) || entriesLength === 0) {
@@ -109,10 +109,10 @@ function preprocess(layers) {
     }
     //>>includeEnd('debug');
 
-    var entries = [];
+    let entries = [];
 
     for (j = 0; j < entriesLength; j++) {
-      var entryOrig = entriesOrig[j];
+      const entryOrig = entriesOrig[j];
 
       //>>includeStart('debug', pragmas.debug);
       if (!defined(entryOrig.height)) {
@@ -123,14 +123,14 @@ function preprocess(layers) {
       }
       //>>includeEnd('debug');
 
-      var height = CesiumMath.clamp(
+      const height = CesiumMath.clamp(
         entryOrig.height,
         createElevationBandMaterial._minimumHeight,
         createElevationBandMaterial._maximumHeight
       );
 
       // premultiplied alpha
-      var color = Color.clone(entryOrig.color, scratchColor);
+      const color = Color.clone(entryOrig.color, scratchColor);
       color.red *= color.alpha;
       color.green *= color.alpha;
       color.blue *= color.alpha;
@@ -138,11 +138,11 @@ function preprocess(layers) {
       entries.push(createNewEntry(height, color));
     }
 
-    var sortedAscending = true;
-    var sortedDescending = true;
+    let sortedAscending = true;
+    let sortedDescending = true;
     for (j = 0; j < entriesLength - 1; j++) {
-      var currEntry = entries[j + 0];
-      var nextEntry = entries[j + 1];
+      const currEntry = entries[j + 0];
+      const nextEntry = entries[j + 1];
 
       sortedAscending = sortedAscending && currEntry.height <= nextEntry.height;
       sortedDescending =
@@ -159,8 +159,8 @@ function preprocess(layers) {
       });
     }
 
-    var extendDownwards = defaultValue(layer.extendDownwards, false);
-    var extendUpwards = defaultValue(layer.extendUpwards, false);
+    let extendDownwards = defaultValue(layer.extendDownwards, false);
+    let extendUpwards = defaultValue(layer.extendUpwards, false);
 
     // Interpret a single entry to extend all the way up and down.
     if (entries.length === 1 && !extendDownwards && !extendUpwards) {
@@ -199,44 +199,44 @@ function preprocess(layers) {
 
 function createLayeredEntries(layers) {
   // clean up the input data and check for errors
-  var layeredEntries = preprocess(layers);
+  const layeredEntries = preprocess(layers);
 
-  var entriesAccumNext = [];
-  var entriesAccumCurr = [];
-  var i;
+  let entriesAccumNext = [];
+  let entriesAccumCurr = [];
+  let i;
 
   function addEntry(height, color) {
     entriesAccumNext.push(createNewEntry(height, color));
   }
   function addBlendEntry(height, a, b) {
-    var result = Color.multiplyByScalar(b, 1.0 - a.alpha, scratchColorBlend);
+    let result = Color.multiplyByScalar(b, 1.0 - a.alpha, scratchColorBlend);
     result = Color.add(result, a, result);
     addEntry(height, result);
   }
 
   // alpha blend new layers on top of old ones
-  var layerLength = layeredEntries.length;
+  const layerLength = layeredEntries.length;
   for (i = 0; i < layerLength; i++) {
-    var entries = layeredEntries[i];
-    var idx = 0;
-    var accumIdx = 0;
+    const entries = layeredEntries[i];
+    let idx = 0;
+    let accumIdx = 0;
 
     // swap the arrays
     entriesAccumCurr = entriesAccumNext;
     entriesAccumNext = [];
 
-    var entriesLength = entries.length;
-    var entriesAccumLength = entriesAccumCurr.length;
+    const entriesLength = entries.length;
+    const entriesAccumLength = entriesAccumCurr.length;
     while (idx < entriesLength || accumIdx < entriesAccumLength) {
-      var entry = idx < entriesLength ? entries[idx] : undefined;
-      var prevEntry = idx > 0 ? entries[idx - 1] : undefined;
-      var nextEntry = idx < entriesLength - 1 ? entries[idx + 1] : undefined;
+      const entry = idx < entriesLength ? entries[idx] : undefined;
+      const prevEntry = idx > 0 ? entries[idx - 1] : undefined;
+      const nextEntry = idx < entriesLength - 1 ? entries[idx + 1] : undefined;
 
-      var entryAccum =
+      const entryAccum =
         accumIdx < entriesAccumLength ? entriesAccumCurr[accumIdx] : undefined;
-      var prevEntryAccum =
+      const prevEntryAccum =
         accumIdx > 0 ? entriesAccumCurr[accumIdx - 1] : undefined;
-      var nextEntryAccum =
+      const nextEntryAccum =
         accumIdx < entriesAccumLength - 1
           ? entriesAccumCurr[accumIdx + 1]
           : undefined;
@@ -247,15 +247,15 @@ function createLayeredEntries(layers) {
         entry.height === entryAccum.height
       ) {
         // New entry directly on top of accum entry
-        var isSplitAccum =
+        const isSplitAccum =
           defined(nextEntryAccum) &&
           entryAccum.height === nextEntryAccum.height;
-        var isStartAccum = !defined(prevEntryAccum);
-        var isEndAccum = !defined(nextEntryAccum);
+        const isStartAccum = !defined(prevEntryAccum);
+        const isEndAccum = !defined(nextEntryAccum);
 
-        var isSplit = defined(nextEntry) && entry.height === nextEntry.height;
-        var isStart = !defined(prevEntry);
-        var isEnd = !defined(nextEntry);
+        const isSplit = defined(nextEntry) && entry.height === nextEntry.height;
+        const isStart = !defined(prevEntry);
+        const isEnd = !defined(nextEntry);
 
         if (isSplitAccum) {
           if (isSplit) {
@@ -321,7 +321,7 @@ function createLayeredEntries(layers) {
         entry.height < entryAccum.height
       ) {
         // New entry between two accum entries
-        var colorBelow = lerpEntryColor(
+        const colorBelow = lerpEntryColor(
           entry.height,
           prevEntryAccum,
           entryAccum,
@@ -345,7 +345,7 @@ function createLayeredEntries(layers) {
         entryAccum.height < entry.height
       ) {
         // Accum entry between two new entries
-        var colorAbove = lerpEntryColor(
+        const colorAbove = lerpEntryColor(
           entryAccum.height,
           prevEntry,
           entry,
@@ -404,7 +404,7 @@ function createLayeredEntries(layers) {
   }
 
   // one final cleanup pass in case duplicate colors show up in the final result
-  var allEntries = removeDuplicates(entriesAccumNext);
+  const allEntries = removeDuplicates(entriesAccumNext);
   return allEntries;
 }
 
@@ -463,8 +463,8 @@ function createLayeredEntries(layers) {
  */
 function createElevationBandMaterial(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var scene = options.scene;
-  var layers = options.layers;
+  const scene = options.scene;
+  const layers = options.layers;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.scene", scene);
@@ -472,15 +472,15 @@ function createElevationBandMaterial(options) {
   Check.typeOf.number.greaterThan("options.layers.length", layers.length, 0);
   //>>includeEnd('debug');
 
-  var entries = createLayeredEntries(layers);
-  var entriesLength = entries.length;
-  var i;
+  const entries = createLayeredEntries(layers);
+  const entriesLength = entries.length;
+  let i;
 
-  var heightTexBuffer;
-  var heightTexDatatype;
-  var heightTexFormat;
+  let heightTexBuffer;
+  let heightTexDatatype;
+  let heightTexFormat;
 
-  var isPackedHeight = !createElevationBandMaterial._useFloatTexture(
+  const isPackedHeight = !createElevationBandMaterial._useFloatTexture(
     scene.context
   );
   if (isPackedHeight) {
@@ -500,7 +500,7 @@ function createElevationBandMaterial(options) {
     }
   }
 
-  var heightsTex = Texture.create({
+  const heightsTex = Texture.create({
     context: scene.context,
     pixelFormat: heightTexFormat,
     pixelDatatype: heightTexDatatype,
@@ -517,9 +517,9 @@ function createElevationBandMaterial(options) {
     }),
   });
 
-  var colorsArray = new Uint8Array(entriesLength * 4);
+  const colorsArray = new Uint8Array(entriesLength * 4);
   for (i = 0; i < entriesLength; i++) {
-    var color = entries[i].color;
+    const color = entries[i].color;
     color.toBytes(scratchColorBytes);
     colorsArray[i * 4 + 0] = scratchColorBytes[0];
     colorsArray[i * 4 + 1] = scratchColorBytes[1];
@@ -527,7 +527,7 @@ function createElevationBandMaterial(options) {
     colorsArray[i * 4 + 3] = scratchColorBytes[3];
   }
 
-  var colorsTex = Texture.create({
+  const colorsTex = Texture.create({
     context: scene.context,
     pixelFormat: PixelFormat.RGBA,
     pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
@@ -544,7 +544,7 @@ function createElevationBandMaterial(options) {
     }),
   });
 
-  var material = Material.fromType("ElevationBand", {
+  const material = Material.fromType("ElevationBand", {
     heights: heightsTex,
     colors: colorsTex,
   });

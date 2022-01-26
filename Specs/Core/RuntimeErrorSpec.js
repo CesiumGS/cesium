@@ -1,10 +1,10 @@
 import { RuntimeError } from "../../Source/Cesium.js";
 
 describe("Core/RuntimeError", function () {
-  var name = "RuntimeError";
-  var testMessage = "Testing";
+  const name = "RuntimeError";
+  const testMessage = "Testing";
 
-  var e;
+  let e;
   beforeEach(function () {
     e = new RuntimeError(testMessage);
   });
@@ -26,7 +26,7 @@ describe("Core/RuntimeError", function () {
   });
 
   it("has a working toString", function () {
-    var str = new RuntimeError(testMessage).toString();
+    const str = new RuntimeError(testMessage).toString();
 
     expect(str).toContain(name + ": " + testMessage);
 

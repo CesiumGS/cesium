@@ -10,7 +10,7 @@ import createContext from "../createContext.js";
 describe(
   "Renderer/VertexArray",
   function () {
-    var context;
+    let context;
 
     beforeAll(function () {
       context = createContext();
@@ -21,13 +21,13 @@ describe(
     });
 
     it("binds", function () {
-      var positionBuffer = Buffer.createVertexBuffer({
+      const positionBuffer = Buffer.createVertexBuffer({
         context: context,
         sizeInBytes: 3,
         usage: BufferUsage.STATIC_DRAW,
       });
 
-      var attributes = [
+      const attributes = [
         {
           index: 0,
           enabled: true,
@@ -42,7 +42,7 @@ describe(
         },
       ];
 
-      var va = new VertexArray({
+      let va = new VertexArray({
         context: context,
         attributes: attributes,
       });
@@ -52,20 +52,20 @@ describe(
     });
 
     it("binds with default values", function () {
-      var positionBuffer = Buffer.createVertexBuffer({
+      const positionBuffer = Buffer.createVertexBuffer({
         context: context,
         sizeInBytes: 3,
         usage: BufferUsage.STATIC_DRAW,
       });
 
-      var attributes = [
+      const attributes = [
         {
           vertexBuffer: positionBuffer,
           componentsPerAttribute: 3,
         },
       ];
 
-      var va = new VertexArray({
+      let va = new VertexArray({
         context: context,
         attributes: attributes,
       });
@@ -89,19 +89,19 @@ describe(
     });
 
     it("binds with multiple buffers", function () {
-      var attributeSize = 3 * Float32Array.BYTES_PER_ELEMENT;
-      var positionBuffer = Buffer.createVertexBuffer({
+      const attributeSize = 3 * Float32Array.BYTES_PER_ELEMENT;
+      const positionBuffer = Buffer.createVertexBuffer({
         context: context,
         sizeInBytes: attributeSize,
         usage: BufferUsage.STATIC_DRAW,
       });
-      var normalBuffer = Buffer.createVertexBuffer({
+      const normalBuffer = Buffer.createVertexBuffer({
         context: context,
         sizeInBytes: attributeSize,
         usage: BufferUsage.STATIC_DRAW,
       });
 
-      var attributes = [
+      const attributes = [
         {
           index: 0,
           vertexBuffer: positionBuffer,
@@ -116,7 +116,7 @@ describe(
         },
       ];
 
-      var va = new VertexArray({
+      let va = new VertexArray({
         context: context,
         attributes: attributes,
       });
@@ -128,14 +128,14 @@ describe(
     });
 
     it("binds with interleaved buffer", function () {
-      var attributeSize = 3 * Float32Array.BYTES_PER_ELEMENT;
-      var buffer = Buffer.createVertexBuffer({
+      const attributeSize = 3 * Float32Array.BYTES_PER_ELEMENT;
+      const buffer = Buffer.createVertexBuffer({
         context: context,
         sizeInBytes: attributeSize,
         usage: BufferUsage.STATIC_DRAW,
       });
 
-      var attributes = [
+      const attributes = [
         {
           vertexBuffer: buffer,
           componentsPerAttribute: 3,
@@ -153,7 +153,7 @@ describe(
         },
       ];
 
-      var va = new VertexArray({
+      let va = new VertexArray({
         context: context,
         attributes: attributes,
       });
@@ -165,13 +165,13 @@ describe(
     });
 
     it("adds attributes", function () {
-      var positionBuffer = Buffer.createVertexBuffer({
+      const positionBuffer = Buffer.createVertexBuffer({
         context: context,
         sizeInBytes: 3,
         usage: BufferUsage.STATIC_DRAW,
       });
 
-      var va = new VertexArray({
+      let va = new VertexArray({
         context: context,
         attributes: [
           {
@@ -198,20 +198,20 @@ describe(
     });
 
     it("modifies attributes", function () {
-      var buffer = Buffer.createVertexBuffer({
+      const buffer = Buffer.createVertexBuffer({
         context: context,
         sizeInBytes: 6,
         usage: BufferUsage.STATIC_DRAW,
       });
 
-      var attributes = [
+      const attributes = [
         {
           vertexBuffer: buffer,
           componentsPerAttribute: 3,
         },
       ];
 
-      var va = new VertexArray({
+      let va = new VertexArray({
         context: context,
         attributes: attributes,
       });
@@ -235,7 +235,7 @@ describe(
     // an attribute backed by a buffer anyway.
 
     it("renders with a one-component constant value", function () {
-      var vs =
+      const vs =
         "attribute float firefoxWorkaround;" +
         "attribute float attr;" +
         "varying vec4 v_color;" +
@@ -244,9 +244,9 @@ describe(
         "  gl_PointSize = 1.0;" +
         "  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);" +
         "}";
-      var fs =
+      const fs =
         "varying vec4 v_color;" + "void main() { gl_FragColor = v_color; }";
-      var sp = ShaderProgram.fromCache({
+      let sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
         fragmentShaderSource: fs,
@@ -256,7 +256,7 @@ describe(
         },
       });
 
-      var va = new VertexArray({
+      let va = new VertexArray({
         context: context,
         attributes: [
           {
@@ -273,7 +273,7 @@ describe(
         ],
       });
 
-      var command = new DrawCommand({
+      const command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -288,7 +288,7 @@ describe(
     });
 
     it("renders with a two-component constant value", function () {
-      var vs =
+      const vs =
         "attribute float firefoxWorkaround;" +
         "attribute vec2 attr;" +
         "varying vec4 v_color;" +
@@ -297,9 +297,9 @@ describe(
         "  gl_PointSize = 1.0;" +
         "  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);" +
         "}";
-      var fs =
+      const fs =
         "varying vec4 v_color;" + "void main() { gl_FragColor = v_color; }";
-      var sp = ShaderProgram.fromCache({
+      let sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
         fragmentShaderSource: fs,
@@ -309,7 +309,7 @@ describe(
         },
       });
 
-      var va = new VertexArray({
+      let va = new VertexArray({
         context: context,
         attributes: [
           {
@@ -326,7 +326,7 @@ describe(
         ],
       });
 
-      var command = new DrawCommand({
+      const command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -341,7 +341,7 @@ describe(
     });
 
     it("renders with a three-component constant value", function () {
-      var vs =
+      const vs =
         "attribute float firefoxWorkaround;" +
         "attribute vec3 attr;" +
         "varying vec4 v_color;" +
@@ -350,9 +350,9 @@ describe(
         "  gl_PointSize = 1.0;" +
         "  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);" +
         "}";
-      var fs =
+      const fs =
         "varying vec4 v_color;" + "void main() { gl_FragColor = v_color; }";
-      var sp = ShaderProgram.fromCache({
+      let sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
         fragmentShaderSource: fs,
@@ -362,7 +362,7 @@ describe(
         },
       });
 
-      var va = new VertexArray({
+      let va = new VertexArray({
         context: context,
         attributes: [
           {
@@ -379,7 +379,7 @@ describe(
         ],
       });
 
-      var command = new DrawCommand({
+      const command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -394,7 +394,7 @@ describe(
     });
 
     it("renders with a four-component constant value", function () {
-      var vs =
+      const vs =
         "attribute float firefoxWorkaround;" +
         "attribute vec4 attr;" +
         "varying vec4 v_color;" +
@@ -403,9 +403,9 @@ describe(
         "  gl_PointSize = 1.0;" +
         "  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);" +
         "}";
-      var fs =
+      const fs =
         "varying vec4 v_color;" + "void main() { gl_FragColor = v_color; }";
-      var sp = ShaderProgram.fromCache({
+      let sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
         fragmentShaderSource: fs,
@@ -415,7 +415,7 @@ describe(
         },
       });
 
-      var va = new VertexArray({
+      let va = new VertexArray({
         context: context,
         attributes: [
           {
@@ -432,7 +432,7 @@ describe(
         ],
       });
 
-      var command = new DrawCommand({
+      const command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -447,7 +447,7 @@ describe(
     });
 
     it("renders two vertex arrays with constant values", function () {
-      var vs =
+      const vs =
         "attribute float firefoxWorkaround;" +
         "attribute vec4 attr;" +
         "varying vec4 v_color;" +
@@ -457,10 +457,10 @@ describe(
         "  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);" +
         "}";
 
-      var fs =
+      const fs =
         "varying vec4 v_color;" + "void main() { gl_FragColor = v_color; }";
 
-      var sp = ShaderProgram.fromCache({
+      let sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
         fragmentShaderSource: fs,
@@ -470,13 +470,13 @@ describe(
         },
       });
 
-      var vertexBuffer = Buffer.createVertexBuffer({
+      const vertexBuffer = Buffer.createVertexBuffer({
         context: context,
         sizeInBytes: Float32Array.BYTES_PER_ELEMENT,
         usage: BufferUsage.STATIC_DRAW,
       });
 
-      var vaRed = new VertexArray({
+      let vaRed = new VertexArray({
         context: context,
         attributes: [
           {
@@ -489,7 +489,7 @@ describe(
         ],
       });
 
-      var vaGreen = new VertexArray({
+      let vaGreen = new VertexArray({
         context: context,
         attributes: [
           {
@@ -502,14 +502,14 @@ describe(
         ],
       });
 
-      var commandRed = new DrawCommand({
+      const commandRed = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: vaRed,
         count: 1,
       });
 
-      var commandGreen = new DrawCommand({
+      const commandGreen = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: vaGreen,
@@ -528,7 +528,7 @@ describe(
     });
 
     it("destroys", function () {
-      var va = new VertexArray({
+      const va = new VertexArray({
         context: context,
         attributes: [
           {
@@ -548,7 +548,7 @@ describe(
     });
 
     it("fails to create (missing vertexBuffer and value)", function () {
-      var attributes = [
+      const attributes = [
         {
           componentsPerAttribute: 3,
         },
@@ -563,13 +563,13 @@ describe(
     });
 
     it("fails to create (provides both vertexBuffer and value)", function () {
-      var buffer = Buffer.createVertexBuffer({
+      const buffer = Buffer.createVertexBuffer({
         context: context,
         sizeInBytes: 3,
         usage: BufferUsage.STATIC_DRAW,
       });
 
-      var attributes = [
+      const attributes = [
         {
           vertexBuffer: buffer,
           value: [1, 2, 3],
@@ -586,13 +586,13 @@ describe(
     });
 
     it("fails to create with duplicate indices", function () {
-      var buffer = Buffer.createVertexBuffer({
+      const buffer = Buffer.createVertexBuffer({
         context: context,
         sizeInBytes: 1,
         usage: BufferUsage.STATIC_DRAW,
       });
 
-      var attributes = [
+      const attributes = [
         {
           index: 1,
           vertexBuffer: buffer,
@@ -614,13 +614,13 @@ describe(
     });
 
     it("fails to create (componentsPerAttribute missing)", function () {
-      var buffer = Buffer.createVertexBuffer({
+      const buffer = Buffer.createVertexBuffer({
         context: context,
         sizeInBytes: 3,
         usage: BufferUsage.STATIC_DRAW,
       });
 
-      var attributes = [
+      const attributes = [
         {
           vertexBuffer: buffer,
         },
@@ -635,7 +635,7 @@ describe(
     });
 
     it("fails to create (componentsPerAttribute < 1)", function () {
-      var attributes = [
+      const attributes = [
         {
           componentsPerAttribute: 0,
         },
@@ -650,7 +650,7 @@ describe(
     });
 
     it("fails to create (componentsPerAttribute > 4)", function () {
-      var attributes = [
+      const attributes = [
         {
           componentsPerAttribute: 5,
         },
@@ -665,7 +665,7 @@ describe(
     });
 
     it("fails to create (value.length < 1)", function () {
-      var attributes = [
+      const attributes = [
         {
           value: [],
         },
@@ -680,7 +680,7 @@ describe(
     });
 
     it("fails to create (value.length > 4)", function () {
-      var attributes = [
+      const attributes = [
         {
           value: [1.0, 2.0, 3.0, 4.0, 5.0],
         },
@@ -695,13 +695,13 @@ describe(
     });
 
     it("fails to create (componentDatatype)", function () {
-      var buffer = Buffer.createVertexBuffer({
+      const buffer = Buffer.createVertexBuffer({
         context: context,
         sizeInBytes: 3,
         usage: BufferUsage.STATIC_DRAW,
       });
 
-      var attributes = [
+      const attributes = [
         {
           vertexBuffer: buffer,
           componentsPerAttribute: 3,
@@ -718,13 +718,13 @@ describe(
     });
 
     it("fails to create (strideInBytes)", function () {
-      var buffer = Buffer.createVertexBuffer({
+      const buffer = Buffer.createVertexBuffer({
         context: context,
         sizeInBytes: 3,
         usage: BufferUsage.STATIC_DRAW,
       });
 
-      var attributes = [
+      const attributes = [
         {
           vertexBuffer: buffer,
           componentsPerAttribute: 3,
@@ -741,14 +741,14 @@ describe(
     });
 
     it("fails to get attribute", function () {
-      var attributes = [
+      const attributes = [
         {
           value: [0.0, 0.0, 0.0],
           componentsPerAttribute: 3,
         },
       ];
 
-      var va = new VertexArray({
+      const va = new VertexArray({
         context: context,
         attributes: attributes,
       });
@@ -759,14 +759,14 @@ describe(
     });
 
     it("fails to destroy", function () {
-      var attributes = [
+      const attributes = [
         {
           value: [0.0, 0.0, 0.0],
           componentsPerAttribute: 3,
         },
       ];
 
-      var va = new VertexArray({
+      const va = new VertexArray({
         context: context,
         attributes: attributes,
       });
@@ -785,13 +785,13 @@ describe(
     });
 
     it("throws if instanceDivisor is less than zero", function () {
-      var buffer = Buffer.createVertexBuffer({
+      const buffer = Buffer.createVertexBuffer({
         context: context,
         sizeInBytes: 3,
         usage: BufferUsage.STATIC_DRAW,
       });
 
-      var attributes = [
+      const attributes = [
         {
           vertexBuffer: buffer,
           componentsPerAttribute: 3,
@@ -810,13 +810,13 @@ describe(
     // Direct3D 9 requires vertex attribute zero to not be instanced. While ANGLE can work around this, it is best
     // to follow this convention. This test also guarantees that not all vertex attributes are instanced.
     it("throws if vertex attribute zero is instanced", function () {
-      var buffer = Buffer.createVertexBuffer({
+      const buffer = Buffer.createVertexBuffer({
         context: context,
         sizeInBytes: 3,
         usage: BufferUsage.STATIC_DRAW,
       });
 
-      var attributes = [
+      const attributes = [
         {
           index: 0,
           vertexBuffer: buffer,
@@ -839,13 +839,13 @@ describe(
     });
 
     it("throws if an attribute has an instanceDivisor and is not backed by a buffer", function () {
-      var buffer = Buffer.createVertexBuffer({
+      const buffer = Buffer.createVertexBuffer({
         context: context,
         sizeInBytes: 3,
         usage: BufferUsage.STATIC_DRAW,
       });
 
-      var attributes = [
+      const attributes = [
         {
           index: 0,
           vertexBuffer: buffer,
@@ -869,13 +869,13 @@ describe(
 
     it("throws when instanceDivisor is greater than zero and the instanced arrays extension is not supported.", function () {
       if (!context.instancedArrays) {
-        var buffer = Buffer.createVertexBuffer({
+        const buffer = Buffer.createVertexBuffer({
           context: context,
           sizeInBytes: 3,
           usage: BufferUsage.STATIC_DRAW,
         });
 
-        var attributes = [
+        const attributes = [
           {
             index: 0,
             vertexBuffer: buffer,

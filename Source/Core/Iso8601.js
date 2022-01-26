@@ -1,13 +1,13 @@
 import JulianDate from "./JulianDate.js";
 import TimeInterval from "./TimeInterval.js";
 
-var MINIMUM_VALUE = Object.freeze(
+const MINIMUM_VALUE = Object.freeze(
   JulianDate.fromIso8601("0000-01-01T00:00:00Z")
 );
-var MAXIMUM_VALUE = Object.freeze(
+const MAXIMUM_VALUE = Object.freeze(
   JulianDate.fromIso8601("9999-12-31T24:00:00Z")
 );
-var MAXIMUM_INTERVAL = Object.freeze(
+const MAXIMUM_INTERVAL = Object.freeze(
   new TimeInterval({
     start: MINIMUM_VALUE,
     stop: MAXIMUM_VALUE,
@@ -23,7 +23,7 @@ var MAXIMUM_INTERVAL = Object.freeze(
  * @see JulianDate
  * @see TimeInterval
  */
-var Iso8601 = {
+const Iso8601 = {
   /**
    * A {@link JulianDate} representing the earliest time representable by an ISO8601 date.
    * This is equivalent to the date string '0000-01-01T00:00:00Z'

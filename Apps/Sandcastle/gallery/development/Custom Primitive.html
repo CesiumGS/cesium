@@ -41,7 +41,7 @@
         "use strict";
         //Sandcastle_Begin
 
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
         /**
          * Simple example of writing a Primitive from scratch. This
@@ -61,7 +61,7 @@
           // Compute a model matrix that puts the surface at a specific point on
           // the globe.
           this.cartographicPosition = cartographicPosition;
-          var cartesianPosition = Cesium.Cartographic.toCartesian(
+          const cartesianPosition = Cesium.Cartographic.toCartesian(
             cartographicPosition,
             Cesium.Ellipsoid.WGS84,
             new Cesium.Cartesian3()
@@ -86,18 +86,18 @@
          * The vertices will be adjusted in the vertex shader.
          */
         function generateVertices(faceResolution, halfWidthMeters) {
-          var vertexResolution = faceResolution + 1;
-          var vertexCount = vertexResolution * vertexResolution;
-          var componentsPerVertex = 3;
-          var vertices = new Float32Array(vertexCount * componentsPerVertex);
-          for (var i = 0; i < vertexResolution; i++) {
-            for (var j = 0; j < vertexResolution; j++) {
-              var u = i / (vertexResolution - 1);
-              var v = j / (vertexResolution - 1);
-              var index = i * vertexResolution + j;
-              var x = halfWidthMeters * (2 * u - 1);
-              var y = halfWidthMeters * (2 * v - 1);
-              var z = 0;
+          const vertexResolution = faceResolution + 1;
+          const vertexCount = vertexResolution * vertexResolution;
+          const componentsPerVertex = 3;
+          const vertices = new Float32Array(vertexCount * componentsPerVertex);
+          for (let i = 0; i < vertexResolution; i++) {
+            for (let j = 0; j < vertexResolution; j++) {
+              const u = i / (vertexResolution - 1);
+              const v = j / (vertexResolution - 1);
+              const index = i * vertexResolution + j;
+              const x = halfWidthMeters * (2 * u - 1);
+              const y = halfWidthMeters * (2 * v - 1);
+              const z = 0;
 
               vertices[index * componentsPerVertex] = x;
               vertices[index * componentsPerVertex + 1] = y;
@@ -111,19 +111,19 @@
          * Tessellate a big square region into faceResolution x faceResolution quads
          */
         function generateIndices(faceResolution) {
-          var indicesPerQuad = 6;
-          var indexCount = faceResolution * faceResolution * indicesPerQuad;
-          var indices = new Uint16Array(indexCount);
+          const indicesPerQuad = 6;
+          const indexCount = faceResolution * faceResolution * indicesPerQuad;
+          const indices = new Uint16Array(indexCount);
 
-          var vertexResolution = faceResolution + 1;
+          const vertexResolution = faceResolution + 1;
 
-          var quadIndex = 0;
-          for (var i = 0; i < faceResolution; i++) {
-            for (var j = 0; j < faceResolution; j++) {
-              var a = i * vertexResolution + j;
-              var b = i * vertexResolution + (j + 1);
-              var c = (i + 1) * vertexResolution + (j + 1);
-              var d = (i + 1) * vertexResolution + j;
+          let quadIndex = 0;
+          for (let i = 0; i < faceResolution; i++) {
+            for (let j = 0; j < faceResolution; j++) {
+              const a = i * vertexResolution + j;
+              const b = i * vertexResolution + (j + 1);
+              const c = (i + 1) * vertexResolution + (j + 1);
+              const d = (i + 1) * vertexResolution + j;
 
               indices[quadIndex * indicesPerQuad] = a;
               indices[quadIndex * indicesPerQuad + 1] = b;
@@ -138,17 +138,17 @@
           return indices;
         }
 
-        var scratchColor = new Cesium.Color();
+        const scratchColor = new Cesium.Color();
         /**
          * Generate a 1D texture for the color palette
          */
         function generateTexture(context) {
-          var width = 256;
-          var textureTypedArray = new Uint8Array(width * 4);
-          for (var i = 0; i < width; i++) {
-            var bucket32 = 32 * Math.floor(i / 32);
-            var bucket4 = 4 * Math.floor(i / 4);
-            var color = Cesium.Color.fromHsl(
+          const width = 256;
+          const textureTypedArray = new Uint8Array(width * 4);
+          for (let i = 0; i < width; i++) {
+            const bucket32 = 32 * Math.floor(i / 32);
+            const bucket4 = 4 * Math.floor(i / 4);
+            const color = Cesium.Color.fromHsl(
               bucket32 / width,
               bucket32 / width,
               (255 - bucket4) / width,
@@ -183,7 +183,7 @@
         function initialize(primitive, context) {
           // Inteference patterns made by two plane waves crossing each
           // other at an angle. The color is based on the height.
-          var vertexShader =
+          const vertexShader =
             "attribute vec3 a_position;\n" +
             "varying vec3 v_position;\n" +
             "uniform float u_time;\n" +
@@ -198,7 +198,7 @@
             "    gl_Position = czm_modelViewProjection * vec4(a_position.xy, z, 1.0);\n" +
             "}\n";
 
-          var fragmentShader =
+          const fragmentShader =
             "varying vec3 v_position;\n" +
             "uniform float u_time;\n" +
             "uniform sampler2D u_texture;\n" +
@@ -216,35 +216,35 @@
             "    gl_FragColor = texture2D(u_texture, vec2(z, 0.5));\n" +
             "}\n";
 
-          var positionLocation = 0;
-          var attributeLocations = {
+          const positionLocation = 0;
+          const attributeLocations = {
             a_position: positionLocation,
           };
 
-          var renderState = Cesium.RenderState.fromCache({
+          const renderState = Cesium.RenderState.fromCache({
             depthTest: {
               enabled: true,
             },
           });
 
-          var shaderProgram = Cesium.ShaderProgram.fromCache({
+          const shaderProgram = Cesium.ShaderProgram.fromCache({
             context: context,
             vertexShaderSource: vertexShader,
             fragmentShaderSource: fragmentShader,
             attributeLocations: attributeLocations,
           });
 
-          var positionTypedArray = generateVertices(
+          const positionTypedArray = generateVertices(
             primitive.faceResolution,
             primitive.halfWidthMeters
           );
-          var positionVertexBuffer = Cesium.Buffer.createVertexBuffer({
+          const positionVertexBuffer = Cesium.Buffer.createVertexBuffer({
             context: context,
             typedArray: positionTypedArray,
             usage: Cesium.BufferUsage.STATIC_DRAW,
           });
 
-          var positionAttribute = {
+          const positionAttribute = {
             index: positionLocation,
             vertexBuffer: positionVertexBuffer,
             componentsPerAttribute: 3,
@@ -253,10 +253,10 @@
             ),
           };
 
-          var indexCount =
+          const indexCount =
             primitive.faceResolution * primitive.faceResolution * 6;
-          var indexTypedArray = generateIndices(primitive.faceResolution);
-          var indexBuffer = Cesium.Buffer.createIndexBuffer({
+          const indexTypedArray = generateIndices(primitive.faceResolution);
+          const indexBuffer = Cesium.Buffer.createIndexBuffer({
             context: context,
             typedArray: indexTypedArray,
             indexDatatype: Cesium.ComponentDatatype.fromTypedArray(
@@ -265,18 +265,18 @@
             usage: Cesium.BufferUsage.STATIC_DRAW,
           });
 
-          var vertexArray = new Cesium.VertexArray({
+          const vertexArray = new Cesium.VertexArray({
             context: context,
             attributes: [positionAttribute],
             indexBuffer: indexBuffer,
           });
 
-          var texture = generateTexture(context);
+          const texture = generateTexture(context);
 
           primitive.time = performance.now();
-          var uniformMap = {
+          const uniformMap = {
             u_time: function () {
-              var now = performance.now();
+              const now = performance.now();
               return now - primitive.time;
             },
             u_texture: function () {
@@ -284,7 +284,7 @@
             },
           };
 
-          var drawCommand = new Cesium.DrawCommand({
+          const drawCommand = new Cesium.DrawCommand({
             boundingVolume: primitive.boundingSphere,
             modelMatrix: primitive.modelMatrix,
             pass: Cesium.Pass.OPAQUE,
@@ -312,8 +312,8 @@
           frameState.commandList.push(this.drawCommand);
         };
 
-        var position = new Cesium.Cartographic(0, 0, 1000.0);
-        var primitive = viewer.scene.primitives.add(
+        const position = new Cesium.Cartographic(0, 0, 1000.0);
+        const primitive = viewer.scene.primitives.add(
           new CustomPrimitive(position)
         );
         viewer.camera.flyTo({

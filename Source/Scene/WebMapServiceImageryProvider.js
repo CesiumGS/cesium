@@ -13,7 +13,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  *
  * @type {number[]}
  */
-var includesReverseAxis = [
+const includesReverseAxis = [
   3034, // ETRS89-extended / LCC Europe
   3035, // ETRS89-extended / LAEA Europe
   3042, // ETRS89 / UTM zone 30N (N-E)
@@ -26,7 +26,7 @@ var includesReverseAxis = [
  *
  * @type {number[]}
  */
-var excludesReverseAxis = [
+const excludesReverseAxis = [
   4471, // Mayotte
   4559, // French Antilles
 ];
@@ -209,8 +209,8 @@ function WebMapServiceImageryProvider(options) {
     options.url
   );
 
-  var resource = Resource.createIfNeeded(options.url);
-  var pickFeatureResource = Resource.createIfNeeded(this._getFeatureInfoUrl);
+  const resource = Resource.createIfNeeded(options.url);
+  const pickFeatureResource = Resource.createIfNeeded(this._getFeatureInfoUrl);
 
   resource.setQueryParameters(
     WebMapServiceImageryProvider.DefaultParameters,
@@ -231,7 +231,7 @@ function WebMapServiceImageryProvider(options) {
     );
   }
 
-  var that = this;
+  const that = this;
   this._reload = undefined;
   if (defined(options.times)) {
     this._timeDynamicImagery = new TimeDynamicImagery({
@@ -248,7 +248,7 @@ function WebMapServiceImageryProvider(options) {
     });
   }
 
-  var parameters = {};
+  const parameters = {};
   parameters.layers = options.layers;
   parameters.bbox =
     "{westProjected},{southProjected},{eastProjected},{northProjected}";
@@ -275,9 +275,9 @@ function WebMapServiceImageryProvider(options) {
     // makes sure that coordinates passed to the server (as part of the GetMap BBOX parameter) as well as those advertised
     // in the capabilities document reflect the inverse axe orders for EPSG codes between 4000 and 5000.
     //  - Taken from Section 9.1.3 of https://download.osgeo.org/mapserver/docs/MapServer-56.pdf
-    var parts = parameters.crs.split(":");
+    const parts = parameters.crs.split(":");
     if (parts[0] === "EPSG" && parts.length === 2) {
-      var code = Number(parts[1]);
+      const code = Number(parts[1]);
       if (
         (code >= 4000 && code < 5000 && !excludesReverseAxis.includes(code)) ||
         includesReverseAxis.includes(code)
@@ -300,7 +300,7 @@ function WebMapServiceImageryProvider(options) {
   resource.setQueryParameters(parameters, true);
   pickFeatureResource.setQueryParameters(parameters, true);
 
-  var pickFeatureParams = {
+  const pickFeatureParams = {
     query_layers: options.layers,
     info_format: "{format}",
   };
@@ -343,8 +343,8 @@ function WebMapServiceImageryProvider(options) {
 }
 
 function requestImage(imageryProvider, col, row, level, request, interval) {
-  var dynamicIntervalData = defined(interval) ? interval.data : undefined;
-  var tileProvider = imageryProvider._tileProvider;
+  const dynamicIntervalData = defined(interval) ? interval.data : undefined;
+  const tileProvider = imageryProvider._tileProvider;
 
   if (defined(dynamicIntervalData)) {
     // We set the query parameters within the tile provider, because it is managing the query.
@@ -362,8 +362,8 @@ function pickFeatures(
   latitude,
   interval
 ) {
-  var dynamicIntervalData = defined(interval) ? interval.data : undefined;
-  var tileProvider = imageryProvider._tileProvider;
+  const dynamicIntervalData = defined(interval) ? interval.data : undefined;
+  const tileProvider = imageryProvider._tileProvider;
 
   if (defined(dynamicIntervalData)) {
     // We set the query parameters within the tile provider, because it is managing the query.
@@ -665,9 +665,9 @@ WebMapServiceImageryProvider.prototype.requestImage = function (
   level,
   request
 ) {
-  var result;
-  var timeDynamicImagery = this._timeDynamicImagery;
-  var currentInterval;
+  let result;
+  const timeDynamicImagery = this._timeDynamicImagery;
+  let currentInterval;
 
   // Try and load from cache
   if (defined(timeDynamicImagery)) {
@@ -710,8 +710,8 @@ WebMapServiceImageryProvider.prototype.pickFeatures = function (
   longitude,
   latitude
 ) {
-  var timeDynamicImagery = this._timeDynamicImagery;
-  var currentInterval = defined(timeDynamicImagery)
+  const timeDynamicImagery = this._timeDynamicImagery;
+  const currentInterval = defined(timeDynamicImagery)
     ? timeDynamicImagery.currentInterval
     : undefined;
 
@@ -759,8 +759,8 @@ WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats = Object.freeze([
 ]);
 
 function objectToLowercase(obj) {
-  var result = {};
-  for (var key in obj) {
+  const result = {};
+  for (const key in obj) {
     if (obj.hasOwnProperty(key)) {
       result[key.toLowerCase()] = obj[key];
     }

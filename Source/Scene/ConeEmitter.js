@@ -3,7 +3,7 @@ import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import CesiumMath from "../Core/Math.js";
 
-var defaultAngle = CesiumMath.toRadians(30.0);
+const defaultAngle = CesiumMath.toRadians(30.0);
 
 /**
  * A ParticleEmitter that emits particles within a cone.
@@ -45,15 +45,15 @@ Object.defineProperties(ConeEmitter.prototype, {
  * @param {Particle} particle The particle to initialize
  */
 ConeEmitter.prototype.emit = function (particle) {
-  var radius = Math.tan(this._angle);
+  const radius = Math.tan(this._angle);
 
   // Compute a random point on the cone's base
-  var theta = CesiumMath.randomBetween(0.0, CesiumMath.TWO_PI);
-  var rad = CesiumMath.randomBetween(0.0, radius);
+  const theta = CesiumMath.randomBetween(0.0, CesiumMath.TWO_PI);
+  const rad = CesiumMath.randomBetween(0.0, radius);
 
-  var x = rad * Math.cos(theta);
-  var y = rad * Math.sin(theta);
-  var z = 1.0;
+  const x = rad * Math.cos(theta);
+  const y = rad * Math.sin(theta);
+  const z = 1.0;
 
   particle.velocity = Cartesian3.fromElements(x, y, z, particle.velocity);
   Cartesian3.normalize(particle.velocity, particle.velocity);

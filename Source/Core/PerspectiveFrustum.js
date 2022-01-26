@@ -167,7 +167,7 @@ function update(frustum) {
   }
   //>>includeEnd('debug');
 
-  var f = frustum._offCenterFrustum;
+  const f = frustum._offCenterFrustum;
 
   if (
     frustum.fov !== frustum._fov ||

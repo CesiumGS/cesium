@@ -25,14 +25,14 @@ function CullingVolume(planes) {
   this.planes = defaultValue(planes, []);
 }
 
-var faces = [new Cartesian3(), new Cartesian3(), new Cartesian3()];
+const faces = [new Cartesian3(), new Cartesian3(), new Cartesian3()];
 Cartesian3.clone(Cartesian3.UNIT_X, faces[0]);
 Cartesian3.clone(Cartesian3.UNIT_Y, faces[1]);
 Cartesian3.clone(Cartesian3.UNIT_Z, faces[2]);
 
-var scratchPlaneCenter = new Cartesian3();
-var scratchPlaneNormal = new Cartesian3();
-var scratchPlane = new Plane(new Cartesian3(1.0, 0.0, 0.0), 0.0);
+const scratchPlaneCenter = new Cartesian3();
+const scratchPlaneNormal = new Cartesian3();
+const scratchPlane = new Plane(new Cartesian3(1.0, 0.0, 0.0), 0.0);
 
 /**
  * Constructs a culling volume from a bounding sphere. Creates six planes that create a box containing the sphere.
@@ -53,20 +53,20 @@ CullingVolume.fromBoundingSphere = function (boundingSphere, result) {
     result = new CullingVolume();
   }
 
-  var length = faces.length;
-  var planes = result.planes;
+  const length = faces.length;
+  const planes = result.planes;
   planes.length = 2 * length;
 
-  var center = boundingSphere.center;
-  var radius = boundingSphere.radius;
+  const center = boundingSphere.center;
+  const radius = boundingSphere.radius;
 
-  var planeIndex = 0;
+  let planeIndex = 0;
 
-  for (var i = 0; i < length; ++i) {
-    var faceNormal = faces[i];
+  for (let i = 0; i < length; ++i) {
+    const faceNormal = faces[i];
 
-    var plane0 = planes[planeIndex];
-    var plane1 = planes[planeIndex + 1];
+    let plane0 = planes[planeIndex];
+    let plane1 = planes[planeIndex + 1];
 
     if (!defined(plane0)) {
       plane0 = planes[planeIndex] = new Cartesian4();
@@ -113,10 +113,10 @@ CullingVolume.prototype.computeVisibility = function (boundingVolume) {
   }
   //>>includeEnd('debug');
 
-  var planes = this.planes;
-  var intersecting = false;
-  for (var k = 0, len = planes.length; k < len; ++k) {
-    var result = boundingVolume.intersectPlane(
+  const planes = this.planes;
+  let intersecting = false;
+  for (let k = 0, len = planes.length; k < len; ++k) {
+    const result = boundingVolume.intersectPlane(
       Plane.fromCartesian4(planes[k], scratchPlane)
     );
     if (result === Intersect.OUTSIDE) {
@@ -164,18 +164,18 @@ CullingVolume.prototype.computeVisibilityWithPlaneMask = function (
 
   // Start with MASK_INSIDE (all zeros) so that after the loop, the return value can be compared with MASK_INSIDE.
   // (Because if there are fewer than 31 planes, the upper bits wont be changed.)
-  var mask = CullingVolume.MASK_INSIDE;
+  let mask = CullingVolume.MASK_INSIDE;
 
-  var planes = this.planes;
-  for (var k = 0, len = planes.length; k < len; ++k) {
+  const planes = this.planes;
+  for (let k = 0, len = planes.length; k < len; ++k) {
     // For k greater than 31 (since 31 is the maximum number of INSIDE/INTERSECTING bits we can store), skip the optimization.
-    var flag = k < 31 ? 1 << k : 0;
+    const flag = k < 31 ? 1 << k : 0;
     if (k < 31 && (parentPlaneMask & flag) === 0) {
       // boundingVolume is known to be INSIDE this plane.
       continue;
     }
 
-    var result = boundingVolume.intersectPlane(
+    const result = boundingVolume.intersectPlane(
       Plane.fromCartesian4(planes[k], scratchPlane)
     );
     if (result === Intersect.OUTSIDE) {

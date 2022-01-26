@@ -6,7 +6,7 @@
  *
  * @enum {Number}
  */
-var Intersect = {
+const Intersect = {
   /**
    * Represents that an object is not contained within the frustum.
    *

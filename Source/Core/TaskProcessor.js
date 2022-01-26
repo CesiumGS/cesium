@@ -13,14 +13,16 @@ import RuntimeError from "./RuntimeError.js";
 
 function canTransferArrayBuffer() {
   if (!defined(TaskProcessor._canTransferArrayBuffer)) {
-    var worker = new Worker(getWorkerUrl("Workers/transferTypedArrayTest.js"));
+    const worker = new Worker(
+      getWorkerUrl("Workers/transferTypedArrayTest.js")
+    );
     worker.postMessage = defaultValue(
       worker.webkitPostMessage,
       worker.postMessage
     );
 
-    var value = 99;
-    var array = new Int8Array([value]);
+    const value = 99;
+    const array = new Int8Array([value]);
 
     try {
       // postMessage might fail with a DataCloneError
@@ -36,15 +38,15 @@ function canTransferArrayBuffer() {
       return TaskProcessor._canTransferArrayBuffer;
     }
 
-    var deferred = when.defer();
+    const deferred = when.defer();
 
     worker.onmessage = function (event) {
-      var array = event.data.array;
+      const array = event.data.array;
 
       // some versions of Firefox silently fail to transfer typed arrays.
       // https://bugzilla.mozilla.org/show_bug.cgi?id=841904
       // Check to make sure the value round-trips successfully.
-      var result = defined(array) && array[0] === value;
+      const result = defined(array) && array[0] === value;
       deferred.resolve(result);
 
       worker.terminate();
@@ -58,22 +60,22 @@ function canTransferArrayBuffer() {
   return TaskProcessor._canTransferArrayBuffer;
 }
 
-var taskCompletedEvent = new Event();
+const taskCompletedEvent = new Event();
 
 function completeTask(processor, data) {
   --processor._activeTasks;
 
-  var id = data.id;
+  const id = data.id;
   if (!defined(id)) {
     // This is not one of ours.
     return;
   }
 
-  var deferreds = processor._deferreds;
-  var deferred = deferreds[id];
+  const deferreds = processor._deferreds;
+  const deferred = deferreds[id];
 
   if (defined(data.error)) {
-    var error = data.error;
+    let error = data.error;
     if (error.name === "RuntimeError") {
       error = new RuntimeError(data.error.message);
       error.stack = data.error.stack;
@@ -92,36 +94,36 @@ function completeTask(processor, data) {
 }
 
 function getWorkerUrl(moduleID) {
-  var url = buildModuleUrl(moduleID);
+  let url = buildModuleUrl(moduleID);
 
   if (isCrossOriginUrl(url)) {
     //to load cross-origin, create a shim worker from a blob URL
-    var script = 'importScripts("' + url + '");';
+    const script = 'importScripts("' + url + '");';
 
-    var blob;
+    let blob;
     try {
       blob = new Blob([script], {
         type: "application/javascript",
       });
     } catch (e) {
-      var BlobBuilder =
+      const BlobBuilder =
         window.BlobBuilder ||
         window.WebKitBlobBuilder ||
         window.MozBlobBuilder ||
         window.MSBlobBuilder;
-      var blobBuilder = new BlobBuilder();
+      const blobBuilder = new BlobBuilder();
       blobBuilder.append(script);
       blob = blobBuilder.getBlob("application/javascript");
     }
 
-    var URL = window.URL || window.webkitURL;
+    const URL = window.URL || window.webkitURL;
     url = URL.createObjectURL(blob);
   }
 
   return url;
 }
 
-var bootstrapperUrlResult;
+let bootstrapperUrlResult;
 function getBootstrapperUrl() {
   if (!defined(bootstrapperUrlResult)) {
     bootstrapperUrlResult = getWorkerUrl("Workers/cesiumWorkerBootstrapper.js");
@@ -130,13 +132,13 @@ function getBootstrapperUrl() {
 }
 
 function createWorker(processor) {
-  var worker = new Worker(getBootstrapperUrl());
+  const worker = new Worker(getBootstrapperUrl());
   worker.postMessage = defaultValue(
     worker.webkitPostMessage,
     worker.postMessage
   );
 
-  var bootstrapMessage = {
+  const bootstrapMessage = {
     loaderConfig: {
       paths: {
         Workers: buildModuleUrl("Workers"),
@@ -155,7 +157,7 @@ function createWorker(processor) {
 }
 
 function getWebAssemblyLoaderConfig(processor, wasmOptions) {
-  var config = {
+  const config = {
     modulePath: undefined,
     wasmBinaryFile: undefined,
     wasmBinary: undefined,
@@ -200,7 +202,7 @@ function getWebAssemblyLoaderConfig(processor, wasmOptions) {
  *                                        work to be rescheduled in future frames.
  */
 function TaskProcessor(workerPath, maximumActiveTasks) {
-  var uri = new Uri(workerPath);
+  const uri = new Uri(workerPath);
   this._workerPath =
     uri.scheme().length !== 0 && uri.fragment().length === 0
       ? workerPath
@@ -214,7 +216,7 @@ function TaskProcessor(workerPath, maximumActiveTasks) {
   this._nextID = 0;
 }
 
-var emptyTransferableObjectArray = [];
+const emptyTransferableObjectArray = [];
 
 /**
  * Schedule a task to be processed by the web worker asynchronously.  If there are currently more
@@ -256,7 +258,7 @@ TaskProcessor.prototype.scheduleTask = function (
 
   ++this._activeTasks;
 
-  var processor = this;
+  const processor = this;
   return when(canTransferArrayBuffer(), function (canTransferArrayBuffer) {
     if (!defined(transferableObjects)) {
       transferableObjects = emptyTransferableObjectArray;
@@ -264,8 +266,8 @@ TaskProcessor.prototype.scheduleTask = function (
       transferableObjects.length = 0;
     }
 
-    var id = processor._nextID++;
-    var deferred = when.defer();
+    const id = processor._nextID++;
+    const deferred = when.defer();
     processor._deferreds[id] = deferred;
 
     processor._worker.postMessage(
@@ -297,15 +299,15 @@ TaskProcessor.prototype.initWebAssemblyModule = function (webAssemblyOptions) {
     this._worker = createWorker(this);
   }
 
-  var deferred = when.defer();
-  var processor = this;
-  var worker = this._worker;
+  const deferred = when.defer();
+  const processor = this;
+  const worker = this._worker;
   getWebAssemblyLoaderConfig(this, webAssemblyOptions).then(function (
     wasmConfig
   ) {
     return when(canTransferArrayBuffer(), function (canTransferArrayBuffer) {
-      var transferableObjects;
-      var binary = wasmConfig.wasmBinary;
+      let transferableObjects;
+      const binary = wasmConfig.wasmBinary;
       if (defined(binary) && canTransferArrayBuffer) {
         transferableObjects = [binary];
       }

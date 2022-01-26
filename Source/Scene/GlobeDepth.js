@@ -68,11 +68,11 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
   globeDepth._viewport.width = width;
   globeDepth._viewport.height = height;
 
-  var useScissorTest = !BoundingRectangle.equals(
+  const useScissorTest = !BoundingRectangle.equals(
     globeDepth._viewport,
     passState.viewport
   );
-  var updateScissor = useScissorTest !== globeDepth._useScissorTest;
+  let updateScissor = useScissorTest !== globeDepth._useScissorTest;
   globeDepth._useScissorTest = useScissorTest;
 
   if (
@@ -216,10 +216,10 @@ GlobeDepth.prototype.update = function (
   hdr,
   clearGlobeDepth
 ) {
-  var width = viewport.width;
-  var height = viewport.height;
+  const width = viewport.width;
+  const height = viewport.height;
 
-  var pixelDatatype = hdr
+  const pixelDatatype = hdr
     ? context.halfFloatingPointTexture
       ? PixelDatatype.HALF_FLOAT
       : PixelDatatype.FLOAT
@@ -245,7 +245,7 @@ GlobeDepth.prototype.executeUpdateDepth = function (
   passState,
   clearGlobeDepth
 ) {
-  var depthTextureToCopy = passState.framebuffer.depthStencilTexture;
+  const depthTextureToCopy = passState.framebuffer.depthStencilTexture;
   if (
     clearGlobeDepth ||
     depthTextureToCopy !== this._colorFramebuffer.getDepthStencilTexture()
@@ -262,13 +262,13 @@ GlobeDepth.prototype.executeUpdateDepth = function (
         this._updateDepthFramebuffer.getColorTexture() !==
           this._copyDepthFramebuffer.getColorTexture()
       ) {
-        var width = this._copyDepthFramebuffer.getColorTexture().width;
-        var height = this._copyDepthFramebuffer.getColorTexture().height;
+        const width = this._copyDepthFramebuffer.getColorTexture().width;
+        const height = this._copyDepthFramebuffer.getColorTexture().height;
         this._tempCopyDepthFramebuffer.destroy();
         this._tempCopyDepthFramebuffer.update(context, width, height);
 
-        var colorTexture = this._copyDepthFramebuffer.getColorTexture();
-        var depthStencilTexture = passState.framebuffer.depthStencilTexture;
+        const colorTexture = this._copyDepthFramebuffer.getColorTexture();
+        const depthStencilTexture = passState.framebuffer.depthStencilTexture;
         this._updateDepthFramebuffer.setColorTexture(colorTexture, 0);
         this._updateDepthFramebuffer.setDepthStencilTexture(
           depthStencilTexture
@@ -297,7 +297,7 @@ GlobeDepth.prototype.executeCopyColor = function (context, passState) {
 };
 
 GlobeDepth.prototype.clear = function (context, passState, clearColor) {
-  var clear = this._clearGlobeColorCommand;
+  const clear = this._clearGlobeColorCommand;
   if (defined(clear)) {
     Color.clone(clearColor, clear.color);
     this._colorFramebuffer.clear(context, clear, passState);

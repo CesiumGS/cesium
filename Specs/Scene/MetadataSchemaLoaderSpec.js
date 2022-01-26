@@ -7,7 +7,7 @@ import {
 } from "../../Source/Cesium.js";
 
 describe("Scene/MetadataSchemaLoader", function () {
-  var schemaJson = {
+  const schemaJson = {
     classes: {
       tree: {
         properties: {
@@ -37,7 +37,7 @@ describe("Scene/MetadataSchemaLoader", function () {
     },
   };
 
-  var resource = new Resource({ url: "https://example.com/schema.json" });
+  const resource = new Resource({ url: "https://example.com/schema.json" });
 
   afterEach(function () {
     ResourceCache.clearForSpecs();
@@ -62,10 +62,10 @@ describe("Scene/MetadataSchemaLoader", function () {
   });
 
   it("rejects promise if schema cannot be fetched", function () {
-    var error = new Error("404 Not Found");
+    const error = new Error("404 Not Found");
     spyOn(Resource.prototype, "fetchJson").and.returnValue(when.reject(error));
 
-    var schemaLoader = new MetadataSchemaLoader({
+    const schemaLoader = new MetadataSchemaLoader({
       resource: resource,
     });
 
@@ -83,29 +83,29 @@ describe("Scene/MetadataSchemaLoader", function () {
   });
 
   it("loads schema from JSON", function () {
-    var schemaLoader = new MetadataSchemaLoader({
+    const schemaLoader = new MetadataSchemaLoader({
       schema: schemaJson,
     });
     schemaLoader.load();
 
     return schemaLoader.promise.then(function (schemaLoader) {
-      var schema = schemaLoader.schema;
+      const schema = schemaLoader.schema;
       expect(schema).toBeDefined();
 
-      var enums = schema.enums;
+      const enums = schema.enums;
       expect(enums.treeType).toBeDefined();
 
-      var classes = schema.classes;
+      const classes = schema.classes;
       expect(classes.tree).toBeDefined();
     });
   });
 
   it("loads external schema", function () {
-    var fetchJson = spyOn(Resource.prototype, "fetchJson").and.returnValue(
+    const fetchJson = spyOn(Resource.prototype, "fetchJson").and.returnValue(
       when.resolve(schemaJson)
     );
 
-    var schemaLoader = new MetadataSchemaLoader({
+    const schemaLoader = new MetadataSchemaLoader({
       resource: resource,
     });
 
@@ -114,13 +114,13 @@ describe("Scene/MetadataSchemaLoader", function () {
     return schemaLoader.promise.then(function (schemaLoader) {
       expect(fetchJson).toHaveBeenCalled();
 
-      var schema = schemaLoader.schema;
+      const schema = schemaLoader.schema;
       expect(schema).toBeDefined();
 
-      var enums = schema.enums;
+      const enums = schema.enums;
       expect(enums.treeType).toBeDefined();
 
-      var classes = schema.classes;
+      const classes = schema.classes;
       expect(classes.tree).toBeDefined();
     });
   });
@@ -130,7 +130,7 @@ describe("Scene/MetadataSchemaLoader", function () {
       when.resolve(schemaJson)
     );
 
-    var schemaLoader = new MetadataSchemaLoader({
+    const schemaLoader = new MetadataSchemaLoader({
       resource: resource,
     });
 
@@ -149,12 +149,12 @@ describe("Scene/MetadataSchemaLoader", function () {
   });
 
   function resolveJsonAfterDestroy(reject) {
-    var deferredPromise = when.defer();
+    const deferredPromise = when.defer();
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
       deferredPromise.promise
     );
 
-    var schemaLoader = new MetadataSchemaLoader({
+    const schemaLoader = new MetadataSchemaLoader({
       resource: resource,
     });
 

@@ -15,8 +15,8 @@ import { CesiumInspectorViewModel } from "../../../Source/Cesium.js";
 describe(
   "Widgets/CesiumInspector/CesiumInspectorViewModel",
   function () {
-    var scene;
-    var performanceContainer;
+    let scene;
+    let performanceContainer;
 
     function createRectangle(rectangle, rotation) {
       return new Primitive({
@@ -52,7 +52,10 @@ describe(
     });
 
     it("can create and destroy", function () {
-      var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
+      const viewModel = new CesiumInspectorViewModel(
+        scene,
+        performanceContainer
+      );
       expect(viewModel.scene).toBe(scene);
       expect(viewModel.performanceContainer).toBe(performanceContainer);
       expect(viewModel.isDestroyed()).toEqual(false);
@@ -73,7 +76,10 @@ describe(
     });
 
     it("show frustums", function () {
-      var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
+      const viewModel = new CesiumInspectorViewModel(
+        scene,
+        performanceContainer
+      );
       viewModel.frustums = true;
       expect(viewModel.scene.debugShowFrustums).toBe(true);
 
@@ -84,7 +90,10 @@ describe(
     });
 
     it("show performance", function () {
-      var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
+      const viewModel = new CesiumInspectorViewModel(
+        scene,
+        performanceContainer
+      );
       viewModel.performance = true;
       scene.render();
       expect(performanceContainer.innerHTML).not.toEqual("");
@@ -95,7 +104,7 @@ describe(
     });
 
     it("primitive bounding sphere", function () {
-      var p = scene.primitives.add(
+      const p = scene.primitives.add(
         createRectangle(
           new Rectangle(
             CesiumMath.toRadians(-110.0),
@@ -106,7 +115,10 @@ describe(
           CesiumMath.toRadians(45)
         )
       );
-      var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
+      const viewModel = new CesiumInspectorViewModel(
+        scene,
+        performanceContainer
+      );
       scene.render();
       viewModel.primitive = p;
       viewModel.primitiveBoundingSphere = true;
@@ -118,7 +130,7 @@ describe(
     });
 
     it("primitive filter", function () {
-      var p = scene.primitives.add(
+      const p = scene.primitives.add(
         createRectangle(
           new Rectangle(
             CesiumMath.toRadians(-110.0),
@@ -130,7 +142,7 @@ describe(
         )
       );
 
-      var q = scene.primitives.add(
+      const q = scene.primitives.add(
         createRectangle(
           new Rectangle(
             CesiumMath.toRadians(-10.0),
@@ -141,7 +153,10 @@ describe(
         )
       );
 
-      var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
+      const viewModel = new CesiumInspectorViewModel(
+        scene,
+        performanceContainer
+      );
       scene.render();
       viewModel.primitive = p;
       viewModel.filterPrimitive = true;
@@ -154,7 +169,7 @@ describe(
     });
 
     it("primitive reference frame", function () {
-      var p = scene.primitives.add(
+      const p = scene.primitives.add(
         createRectangle(
           new Rectangle(
             CesiumMath.toRadians(-110.0),
@@ -166,7 +181,10 @@ describe(
         )
       );
 
-      var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
+      const viewModel = new CesiumInspectorViewModel(
+        scene,
+        performanceContainer
+      );
       scene.render();
       viewModel.primitive = p;
       viewModel.primitiveReferenceFrame = true;
@@ -178,7 +196,10 @@ describe(
     });
 
     it("show wireframe", function () {
-      var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
+      const viewModel = new CesiumInspectorViewModel(
+        scene,
+        performanceContainer
+      );
       viewModel.wireframe = true;
       expect(viewModel.scene.globe._surface.tileProvider._debug.wireframe).toBe(
         true
@@ -191,7 +212,10 @@ describe(
     });
 
     it("suspend updates", function () {
-      var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
+      const viewModel = new CesiumInspectorViewModel(
+        scene,
+        performanceContainer
+      );
       viewModel.suspendUpdates = true;
       expect(viewModel.scene.globe._surface._debug.suspendLodUpdate).toBe(true);
 
@@ -202,7 +226,10 @@ describe(
     });
 
     it("show tile coords", function () {
-      var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
+      const viewModel = new CesiumInspectorViewModel(
+        scene,
+        performanceContainer
+      );
       expect(viewModel.scene.imageryLayers.length).toBe(0);
 
       viewModel.tileCoordinates = true;
@@ -213,8 +240,11 @@ describe(
     });
 
     it("show tile bounding sphere", function () {
-      var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
-      var tile = new QuadtreeTile({
+      const viewModel = new CesiumInspectorViewModel(
+        scene,
+        performanceContainer
+      );
+      const tile = new QuadtreeTile({
         tilingScheme: new WebMercatorTilingScheme(),
         x: 0,
         y: 0,
@@ -235,8 +265,11 @@ describe(
     });
 
     it("filter tile", function () {
-      var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
-      var tile = new QuadtreeTile({
+      const viewModel = new CesiumInspectorViewModel(
+        scene,
+        performanceContainer
+      );
+      const tile = new QuadtreeTile({
         tilingScheme: new WebMercatorTilingScheme(),
         x: 0,
         y: 0,
@@ -255,8 +288,11 @@ describe(
     });
 
     it("does not try to render a non-renderable tile", function () {
-      var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
-      var tile = new QuadtreeTile({
+      const viewModel = new CesiumInspectorViewModel(
+        scene,
+        performanceContainer
+      );
+      const tile = new QuadtreeTile({
         tilingScheme: new WebMercatorTilingScheme(),
         x: 0,
         y: 0,

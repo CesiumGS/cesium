@@ -67,13 +67,13 @@ function viewerDragDropMixin(viewer, options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   //Local variables to be closed over by defineProperties.
-  var dropEnabled = true;
-  var flyToOnDrop = defaultValue(options.flyToOnDrop, true);
-  var dropError = new Event();
-  var clearOnDrop = defaultValue(options.clearOnDrop, true);
-  var dropTarget = defaultValue(options.dropTarget, viewer.container);
-  var clampToGround = defaultValue(options.clampToGround, true);
-  var proxy = options.proxy;
+  let dropEnabled = true;
+  let flyToOnDrop = defaultValue(options.flyToOnDrop, true);
+  const dropError = new Event();
+  let clearOnDrop = defaultValue(options.clearOnDrop, true);
+  let dropTarget = defaultValue(options.dropTarget, viewer.container);
+  let clampToGround = defaultValue(options.clampToGround, true);
+  let proxy = options.proxy;
 
   dropTarget = getElement(dropTarget);
 
@@ -198,11 +198,11 @@ function viewerDragDropMixin(viewer, options) {
       viewer.dataSources.removeAll();
     }
 
-    var files = event.dataTransfer.files;
-    var length = files.length;
-    for (var i = 0; i < length; i++) {
-      var file = files[i];
-      var reader = new FileReader();
+    const files = event.dataTransfer.files;
+    const length = files.length;
+    for (let i = 0; i < length; i++) {
+      const file = files[i];
+      const reader = new FileReader();
       reader.onload = createOnLoadCallback(viewer, file, proxy, clampToGround);
       reader.onerror = createDropErrorCallback(viewer, file);
       reader.readAsText(file);
@@ -227,7 +227,7 @@ function stop(event) {
 }
 
 function unsubscribe(dropTarget, handleDrop) {
-  var currentTarget = dropTarget;
+  const currentTarget = dropTarget;
   if (defined(currentTarget)) {
     currentTarget.removeEventListener("drop", handleDrop, false);
     currentTarget.removeEventListener("dragenter", stop, false);
@@ -244,11 +244,11 @@ function subscribe(dropTarget, handleDrop) {
 }
 
 function createOnLoadCallback(viewer, file, proxy, clampToGround) {
-  var scene = viewer.scene;
+  const scene = viewer.scene;
   return function (evt) {
-    var fileName = file.name;
+    const fileName = file.name;
     try {
-      var loadPromise;
+      let loadPromise;
 
       if (/\.czml$/i.test(fileName)) {
         loadPromise = CzmlDataSource.load(JSON.parse(evt.target.result), {

@@ -3,7 +3,7 @@ import createScene from "../createScene.js";
 
 describe("Scene/PointCloudShading", function () {
   it("creates expected instance from raw assignment and construction", function () {
-    var pointCloudShading = new PointCloudShading();
+    let pointCloudShading = new PointCloudShading();
     expect(pointCloudShading.attenuation).toEqual(false);
     expect(pointCloudShading.geometricErrorScale).toEqual(1.0);
     expect(pointCloudShading.maximumAttenuation).not.toBeDefined();
@@ -14,7 +14,7 @@ describe("Scene/PointCloudShading", function () {
     expect(pointCloudShading.backFaceCulling).toEqual(false);
     expect(pointCloudShading.normalShading).toEqual(true);
 
-    var options = {
+    const options = {
       geometricErrorScale: 2.0,
       maximumAttenuation: 16,
       baseResolution: 0.1,
@@ -44,9 +44,9 @@ describe("Scene/PointCloudShading", function () {
   });
 
   it("provides a method for checking if point cloud shading is supported", function () {
-    var scene = createScene();
-    var context = scene.context;
-    var expectedSupport =
+    const scene = createScene();
+    const context = scene.context;
+    const expectedSupport =
       context.floatingPointTexture &&
       context.drawBuffers &&
       context.fragmentDepth;

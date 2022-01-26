@@ -37,27 +37,27 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
-        var scene = viewer.scene;
-        var context = scene.context;
+        const scene = viewer.scene;
+        const context = scene.context;
 
         scene.debugShowFramesPerSecond = true;
 
-        var ellipsoid = scene.globe.ellipsoid;
-        var billboardCollection;
-        var instancingEnabled = true;
-        var instancedArraysExtension = context._instancedArrays;
-        var billboardCount = 100489;
-        var scale = 1.0;
+        const ellipsoid = scene.globe.ellipsoid;
+        let billboardCollection;
+        let instancingEnabled = true;
+        const instancedArraysExtension = context._instancedArrays;
+        let billboardCount = 100489;
+        let scale = 1.0;
 
         // seneca
-        var centerLongitude = -1.385205433269729;
-        var centerLatitude = 0.6777926580888163;
-        var rectangleHalfSize = 0.5;
-        var e = new Cesium.Rectangle(
+        const centerLongitude = -1.385205433269729;
+        const centerLatitude = 0.6777926580888163;
+        const rectangleHalfSize = 0.5;
+        const e = new Cesium.Rectangle(
           centerLongitude - rectangleHalfSize,
           centerLatitude - rectangleHalfSize,
           centerLongitude + rectangleHalfSize,
@@ -75,20 +75,20 @@
             })
           );
 
-          var gridSize = Math.sqrt(billboardCount);
-          for (var y = 0; y < gridSize; ++y) {
-            for (var x = 0; x < gridSize; ++x) {
-              var longitude = Cesium.Math.lerp(
+          const gridSize = Math.sqrt(billboardCount);
+          for (let y = 0; y < gridSize; ++y) {
+            for (let x = 0; x < gridSize; ++x) {
+              const longitude = Cesium.Math.lerp(
                 e.west,
                 e.east,
                 x / (gridSize - 1)
               );
-              var latitude = Cesium.Math.lerp(
+              const latitude = Cesium.Math.lerp(
                 e.south,
                 e.north,
                 y / (gridSize - 1)
               );
-              var position = new Cesium.Cartographic(
+              const position = new Cesium.Cartographic(
                 longitude,
                 latitude,
                 10000.0
@@ -103,13 +103,13 @@
           }
         }
 
-        var moveAmount = new Cesium.Cartesian3(1000, 0.0, 0.0);
-        var positionScratch = new Cesium.Cartesian3();
+        const moveAmount = new Cesium.Cartesian3(1000, 0.0, 0.0);
+        const positionScratch = new Cesium.Cartesian3();
         function animateBillboards() {
-          var billboards = billboardCollection._billboards;
-          var length = billboards.length;
-          for (var i = 0; i < length; ++i) {
-            var billboard = billboards[i];
+          const billboards = billboardCollection._billboards;
+          const length = billboards.length;
+          for (let i = 0; i < length; ++i) {
+            const billboard = billboards[i];
             Cesium.Cartesian3.clone(billboard.position, positionScratch);
             Cesium.Cartesian3.add(positionScratch, moveAmount, positionScratch);
             billboard.position = positionScratch;

@@ -145,19 +145,22 @@ function createColorChangedCallback(content) {
 }
 
 function getBatchIds(featureTableJson, featureTableBinary) {
-  var boxBatchIds;
-  var cylinderBatchIds;
-  var ellipsoidBatchIds;
-  var sphereBatchIds;
-  var i;
+  let boxBatchIds;
+  let cylinderBatchIds;
+  let ellipsoidBatchIds;
+  let sphereBatchIds;
+  let i;
 
-  var numberOfBoxes = defaultValue(featureTableJson.BOXES_LENGTH, 0);
-  var numberOfCylinders = defaultValue(featureTableJson.CYLINDERS_LENGTH, 0);
-  var numberOfEllipsoids = defaultValue(featureTableJson.ELLIPSOIDS_LENGTH, 0);
-  var numberOfSpheres = defaultValue(featureTableJson.SPHERES_LENGTH, 0);
+  const numberOfBoxes = defaultValue(featureTableJson.BOXES_LENGTH, 0);
+  const numberOfCylinders = defaultValue(featureTableJson.CYLINDERS_LENGTH, 0);
+  const numberOfEllipsoids = defaultValue(
+    featureTableJson.ELLIPSOIDS_LENGTH,
+    0
+  );
+  const numberOfSpheres = defaultValue(featureTableJson.SPHERES_LENGTH, 0);
 
   if (numberOfBoxes > 0 && defined(featureTableJson.BOX_BATCH_IDS)) {
-    var boxBatchIdsByteOffset =
+    const boxBatchIdsByteOffset =
       featureTableBinary.byteOffset + featureTableJson.BOX_BATCH_IDS.byteOffset;
     boxBatchIds = new Uint16Array(
       featureTableBinary.buffer,
@@ -167,7 +170,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
   }
 
   if (numberOfCylinders > 0 && defined(featureTableJson.CYLINDER_BATCH_IDS)) {
-    var cylinderBatchIdsByteOffset =
+    const cylinderBatchIdsByteOffset =
       featureTableBinary.byteOffset +
       featureTableJson.CYLINDER_BATCH_IDS.byteOffset;
     cylinderBatchIds = new Uint16Array(
@@ -178,7 +181,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
   }
 
   if (numberOfEllipsoids > 0 && defined(featureTableJson.ELLIPSOID_BATCH_IDS)) {
-    var ellipsoidBatchIdsByteOffset =
+    const ellipsoidBatchIdsByteOffset =
       featureTableBinary.byteOffset +
       featureTableJson.ELLIPSOID_BATCH_IDS.byteOffset;
     ellipsoidBatchIds = new Uint16Array(
@@ -189,7 +192,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
   }
 
   if (numberOfSpheres > 0 && defined(featureTableJson.SPHERE_BATCH_IDS)) {
-    var sphereBatchIdsByteOffset =
+    const sphereBatchIdsByteOffset =
       featureTableBinary.byteOffset +
       featureTableJson.SPHERE_BATCH_IDS.byteOffset;
     sphereBatchIds = new Uint16Array(
@@ -199,12 +202,12 @@ function getBatchIds(featureTableJson, featureTableBinary) {
     );
   }
 
-  var atLeastOneDefined =
+  const atLeastOneDefined =
     defined(boxBatchIds) ||
     defined(cylinderBatchIds) ||
     defined(ellipsoidBatchIds) ||
     defined(sphereBatchIds);
-  var atLeastOneUndefined =
+  const atLeastOneUndefined =
     (numberOfBoxes > 0 && !defined(boxBatchIds)) ||
     (numberOfCylinders > 0 && !defined(cylinderBatchIds)) ||
     (numberOfEllipsoids > 0 && !defined(ellipsoidBatchIds)) ||
@@ -216,13 +219,13 @@ function getBatchIds(featureTableJson, featureTableBinary) {
     );
   }
 
-  var allUndefinedBatchIds =
+  const allUndefinedBatchIds =
     !defined(boxBatchIds) &&
     !defined(cylinderBatchIds) &&
     !defined(ellipsoidBatchIds) &&
     !defined(sphereBatchIds);
   if (allUndefinedBatchIds) {
-    var id = 0;
+    let id = 0;
     if (!defined(boxBatchIds) && numberOfBoxes > 0) {
       boxBatchIds = new Uint16Array(numberOfBoxes);
       for (i = 0; i < numberOfBoxes; ++i) {
@@ -257,16 +260,16 @@ function getBatchIds(featureTableJson, featureTableBinary) {
   };
 }
 
-var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
 function initialize(content, arrayBuffer, byteOffset) {
   byteOffset = defaultValue(byteOffset, 0);
 
-  var uint8Array = new Uint8Array(arrayBuffer);
-  var view = new DataView(arrayBuffer);
+  const uint8Array = new Uint8Array(arrayBuffer);
+  const view = new DataView(arrayBuffer);
   byteOffset += sizeOfUint32; // Skip magic number
 
-  var version = view.getUint32(byteOffset, true);
+  const version = view.getUint32(byteOffset, true);
   if (version !== 1) {
     throw new RuntimeError(
       "Only Geometry tile version 1 is supported.  Version " +
@@ -276,7 +279,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   }
   byteOffset += sizeOfUint32;
 
-  var byteLength = view.getUint32(byteOffset, true);
+  const byteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
   if (byteLength === 0) {
@@ -284,7 +287,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     return;
   }
 
-  var featureTableJSONByteLength = view.getUint32(byteOffset, true);
+  const featureTableJSONByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
   if (featureTableJSONByteLength === 0) {
@@ -293,29 +296,29 @@ function initialize(content, arrayBuffer, byteOffset) {
     );
   }
 
-  var featureTableBinaryByteLength = view.getUint32(byteOffset, true);
+  const featureTableBinaryByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
-  var batchTableJSONByteLength = view.getUint32(byteOffset, true);
+  const batchTableJSONByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
-  var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
+  const batchTableBinaryByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var featureTableJson = getJsonFromTypedArray(
+  const featureTableJson = getJsonFromTypedArray(
     uint8Array,
     byteOffset,
     featureTableJSONByteLength
   );
   byteOffset += featureTableJSONByteLength;
 
-  var featureTableBinary = new Uint8Array(
+  const featureTableBinary = new Uint8Array(
     arrayBuffer,
     byteOffset,
     featureTableBinaryByteLength
   );
   byteOffset += featureTableBinaryByteLength;
 
-  var batchTableJson;
-  var batchTableBinary;
+  let batchTableJson;
+  let batchTableBinary;
   if (batchTableJSONByteLength > 0) {
     // PERFORMANCE_IDEA: is it possible to allocate this on-demand?  Perhaps keep the
     // arraybuffer/string compressed in memory and then decompress it when it is first accessed.
@@ -341,15 +344,18 @@ function initialize(content, arrayBuffer, byteOffset) {
     }
   }
 
-  var numberOfBoxes = defaultValue(featureTableJson.BOXES_LENGTH, 0);
-  var numberOfCylinders = defaultValue(featureTableJson.CYLINDERS_LENGTH, 0);
-  var numberOfEllipsoids = defaultValue(featureTableJson.ELLIPSOIDS_LENGTH, 0);
-  var numberOfSpheres = defaultValue(featureTableJson.SPHERES_LENGTH, 0);
+  const numberOfBoxes = defaultValue(featureTableJson.BOXES_LENGTH, 0);
+  const numberOfCylinders = defaultValue(featureTableJson.CYLINDERS_LENGTH, 0);
+  const numberOfEllipsoids = defaultValue(
+    featureTableJson.ELLIPSOIDS_LENGTH,
+    0
+  );
+  const numberOfSpheres = defaultValue(featureTableJson.SPHERES_LENGTH, 0);
 
-  var totalPrimitives =
+  const totalPrimitives =
     numberOfBoxes + numberOfCylinders + numberOfEllipsoids + numberOfSpheres;
 
-  var batchTable = new Cesium3DTileBatchTable(
+  const batchTable = new Cesium3DTileBatchTable(
     content,
     totalPrimitives,
     batchTableJson,
@@ -362,15 +368,15 @@ function initialize(content, arrayBuffer, byteOffset) {
     return;
   }
 
-  var modelMatrix = content.tile.computedTransform;
+  const modelMatrix = content.tile.computedTransform;
 
-  var center;
+  let center;
   if (defined(featureTableJson.RTC_CENTER)) {
     center = Cartesian3.unpack(featureTableJson.RTC_CENTER);
     Matrix4.multiplyByPoint(modelMatrix, center, center);
   }
 
-  var batchIds = getBatchIds(featureTableJson, featureTableBinary);
+  const batchIds = getBatchIds(featureTableJson, featureTableBinary);
 
   if (
     numberOfBoxes > 0 ||
@@ -378,13 +384,13 @@ function initialize(content, arrayBuffer, byteOffset) {
     numberOfEllipsoids > 0 ||
     numberOfSpheres > 0
   ) {
-    var boxes;
-    var cylinders;
-    var ellipsoids;
-    var spheres;
+    let boxes;
+    let cylinders;
+    let ellipsoids;
+    let spheres;
 
     if (numberOfBoxes > 0) {
-      var boxesByteOffset =
+      const boxesByteOffset =
         featureTableBinary.byteOffset + featureTableJson.BOXES.byteOffset;
       boxes = new Float32Array(
         featureTableBinary.buffer,
@@ -394,7 +400,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     }
 
     if (numberOfCylinders > 0) {
-      var cylindersByteOffset =
+      const cylindersByteOffset =
         featureTableBinary.byteOffset + featureTableJson.CYLINDERS.byteOffset;
       cylinders = new Float32Array(
         featureTableBinary.buffer,
@@ -404,7 +410,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     }
 
     if (numberOfEllipsoids > 0) {
-      var ellipsoidsByteOffset =
+      const ellipsoidsByteOffset =
         featureTableBinary.byteOffset + featureTableJson.ELLIPSOIDS.byteOffset;
       ellipsoids = new Float32Array(
         featureTableBinary.buffer,
@@ -414,7 +420,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     }
 
     if (numberOfSpheres > 0) {
-      var spheresByteOffset =
+      const spheresByteOffset =
         featureTableBinary.byteOffset + featureTableJson.SPHERES.byteOffset;
       spheres = new Float32Array(
         featureTableBinary.buffer,
@@ -441,9 +447,9 @@ function initialize(content, arrayBuffer, byteOffset) {
 }
 
 function createFeatures(content) {
-  var featuresLength = content.featuresLength;
+  const featuresLength = content.featuresLength;
   if (!defined(content._features) && featuresLength > 0) {
-    var features = new Array(featuresLength);
+    const features = new Array(featuresLength);
     if (defined(content._geometries)) {
       content._geometries.createFeatures(content, features);
     }
@@ -457,7 +463,7 @@ Geometry3DTileContent.prototype.hasProperty = function (batchId, name) {
 
 Geometry3DTileContent.prototype.getFeature = function (batchId) {
   //>>includeStart('debug', pragmas.debug);
-  var featuresLength = this.featuresLength;
+  const featuresLength = this.featuresLength;
   if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
     throw new DeveloperError(
       "batchId is required and between zero and featuresLength - 1 (" +
@@ -495,7 +501,7 @@ Geometry3DTileContent.prototype.update = function (tileset, frameState) {
   }
 
   if (!defined(this._contentReadyPromise)) {
-    var that = this;
+    const that = this;
     this._contentReadyPromise = this._geometries.readyPromise.then(function () {
       that._readyPromise.resolve(that);
     });

@@ -15,7 +15,7 @@ import { ShadowMode } from "../../Source/Cesium.js";
 
 describe("DataSources/ModelGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {
-    var options = {
+    const options = {
       uri: "0",
       scale: 1,
       show: false,
@@ -47,7 +47,7 @@ describe("DataSources/ModelGraphics", function () {
       },
     };
 
-    var model = new ModelGraphics(options);
+    const model = new ModelGraphics(options);
     expect(model.uri).toBeInstanceOf(ConstantProperty);
     expect(model.scale).toBeInstanceOf(ConstantProperty);
     expect(model.show).toBeInstanceOf(ConstantProperty);
@@ -99,10 +99,10 @@ describe("DataSources/ModelGraphics", function () {
     expect(model.runAnimations.getValue()).toEqual(options.runAnimations);
     expect(model.clampAnimations.getValue()).toEqual(options.clampAnimations);
 
-    var actualNodeTransformations = model.nodeTransformations.getValue(
+    let actualNodeTransformations = model.nodeTransformations.getValue(
       new JulianDate()
     );
-    var expectedNodeTransformations = options.nodeTransformations;
+    let expectedNodeTransformations = options.nodeTransformations;
 
     // by default toEqual requires constructors to match.  for the purposes of this test, we only care about the structure.
     actualNodeTransformations = JSON.parse(
@@ -113,8 +113,8 @@ describe("DataSources/ModelGraphics", function () {
     );
     expect(actualNodeTransformations).toEqual(expectedNodeTransformations);
 
-    var actualArticulations = model.articulations.getValue(new JulianDate());
-    var expectedArticulations = options.articulations;
+    let actualArticulations = model.articulations.getValue(new JulianDate());
+    let expectedArticulations = options.articulations;
 
     // by default toEqual requires constructors to match.  for the purposes of this test, we only care about the structure.
     actualArticulations = JSON.parse(JSON.stringify(actualArticulations));
@@ -123,7 +123,7 @@ describe("DataSources/ModelGraphics", function () {
   });
 
   it("merge assigns unassigned properties", function () {
-    var source = new ModelGraphics();
+    const source = new ModelGraphics();
     source.uri = new ConstantProperty("");
     source.show = new ConstantProperty(true);
     source.scale = new ConstantProperty(1.0);
@@ -166,7 +166,7 @@ describe("DataSources/ModelGraphics", function () {
       "a2 s2": 20,
     };
 
-    var target = new ModelGraphics();
+    const target = new ModelGraphics();
     target.merge(source);
 
     expect(target.uri).toBe(source.uri);
@@ -199,7 +199,7 @@ describe("DataSources/ModelGraphics", function () {
   });
 
   it("merge does not assign assigned properties", function () {
-    var source = new ModelGraphics();
+    const source = new ModelGraphics();
     source.uri = new ConstantProperty("");
     source.show = new ConstantProperty(true);
     source.scale = new ConstantProperty(1.0);
@@ -233,38 +233,40 @@ describe("DataSources/ModelGraphics", function () {
       "a2 s2": 20,
     };
 
-    var uri = new ConstantProperty("");
-    var show = new ConstantProperty(true);
-    var scale = new ConstantProperty(1.0);
-    var minimumPixelSize = new ConstantProperty(2.0);
-    var maximumScale = new ConstantProperty(200.0);
-    var incrementallyLoadTextures = new ConstantProperty(true);
-    var shadows = new ConstantProperty(ShadowMode.ENABLED);
-    var heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
-    var distanceDisplayCondition = new ConstantProperty(
+    const uri = new ConstantProperty("");
+    const show = new ConstantProperty(true);
+    const scale = new ConstantProperty(1.0);
+    const minimumPixelSize = new ConstantProperty(2.0);
+    const maximumScale = new ConstantProperty(200.0);
+    const incrementallyLoadTextures = new ConstantProperty(true);
+    const shadows = new ConstantProperty(ShadowMode.ENABLED);
+    const heightReference = new ConstantProperty(
+      HeightReference.CLAMP_TO_GROUND
+    );
+    const distanceDisplayCondition = new ConstantProperty(
       new DistanceDisplayCondition()
     );
-    var silhouetteColor = new ConstantProperty(new Color());
-    var silhouetteSize = new ConstantProperty(1.0);
-    var color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
-    var colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
-    var colorBlendAmount = new ConstantProperty(0.5);
-    var clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
-    var imageBasedLightingFactor = new ConstantProperty(
+    const silhouetteColor = new ConstantProperty(new Color());
+    const silhouetteSize = new ConstantProperty(1.0);
+    const color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
+    const colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
+    const colorBlendAmount = new ConstantProperty(0.5);
+    const clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
+    const imageBasedLightingFactor = new ConstantProperty(
       new Cartesian2(0.5, 0.5)
     );
-    var lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
-    var runAnimations = new ConstantProperty(true);
-    var clampAnimations = new ConstantProperty(true);
-    var nodeTransformations = new PropertyBag({
+    const lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
+    const runAnimations = new ConstantProperty(true);
+    const clampAnimations = new ConstantProperty(true);
+    const nodeTransformations = new PropertyBag({
       transform: new NodeTransformationProperty(),
     });
-    var articulations = new PropertyBag({
+    const articulations = new PropertyBag({
       "a1 s1": 10,
       "a2 s2": 20,
     });
 
-    var target = new ModelGraphics();
+    const target = new ModelGraphics();
     target.uri = uri;
     target.show = show;
     target.scale = scale;
@@ -313,7 +315,7 @@ describe("DataSources/ModelGraphics", function () {
   });
 
   it("clone works", function () {
-    var source = new ModelGraphics();
+    const source = new ModelGraphics();
     source.uri = new ConstantProperty("");
     source.show = new ConstantProperty(true);
     source.scale = new ConstantProperty(1.0);
@@ -348,7 +350,7 @@ describe("DataSources/ModelGraphics", function () {
       "a2 s2": 20,
     };
 
-    var result = source.clone();
+    const result = source.clone();
     expect(result.uri).toBe(source.uri);
     expect(result.show).toBe(source.show);
     expect(result.scale).toBe(source.scale);
@@ -379,7 +381,7 @@ describe("DataSources/ModelGraphics", function () {
   });
 
   it("merge throws if source undefined", function () {
-    var target = new ModelGraphics();
+    const target = new ModelGraphics();
     expect(function () {
       target.merge(undefined);
     }).toThrowDeveloperError();

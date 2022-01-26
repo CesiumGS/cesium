@@ -5,9 +5,9 @@ import Event from "../Core/Event.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import Property from "./Property.js";
 
-var defaultColor = Color.WHITE;
-var defaultGlowPower = 0.25;
-var defaultTaperPower = 1.0;
+const defaultColor = Color.WHITE;
+const defaultGlowPower = 0.25;
+const defaultTaperPower = 1.0;
 
 /**
  * A {@link MaterialProperty} that maps to polyline glow {@link Material} uniforms.

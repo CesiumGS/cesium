@@ -2,35 +2,35 @@ import { JulianDate } from "../../Source/Cesium.js";
 import { CallbackProperty } from "../../Source/Cesium.js";
 
 describe("DataSources/CallbackProperty", function () {
-  var time = JulianDate.now();
+  const time = JulianDate.now();
 
   it("callback received proper parameters", function () {
-    var result = {};
-    var callback = jasmine.createSpy("callback");
-    var property = new CallbackProperty(callback, true);
+    const result = {};
+    const callback = jasmine.createSpy("callback");
+    const property = new CallbackProperty(callback, true);
     property.getValue(time, result);
     expect(callback).toHaveBeenCalledWith(time, result);
   });
 
   it("getValue returns callback result", function () {
-    var result = {};
-    var callback = function (time, result) {
+    const result = {};
+    const callback = function (time, result) {
       return result;
     };
-    var property = new CallbackProperty(callback, true);
+    const property = new CallbackProperty(callback, true);
     expect(property.getValue(time, result)).toBe(result);
   });
 
   it("isConstant returns correct value", function () {
-    var property = new CallbackProperty(function () {}, true);
+    const property = new CallbackProperty(function () {}, true);
     expect(property.isConstant).toBe(true);
     property.setCallback(function () {}, false);
     expect(property.isConstant).toBe(false);
   });
 
   it("setCallback raises definitionChanged event", function () {
-    var property = new CallbackProperty(function () {}, true);
-    var listener = jasmine.createSpy("listener");
+    const property = new CallbackProperty(function () {}, true);
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
     property.setCallback(function () {}, false);
     expect(listener).toHaveBeenCalledWith(property);
@@ -49,9 +49,9 @@ describe("DataSources/CallbackProperty", function () {
   });
 
   it("equals works", function () {
-    var callback = function () {};
-    var left = new CallbackProperty(callback, true);
-    var right = new CallbackProperty(callback, true);
+    const callback = function () {};
+    const left = new CallbackProperty(callback, true);
+    const right = new CallbackProperty(callback, true);
 
     expect(left.equals(right)).toEqual(true);
 

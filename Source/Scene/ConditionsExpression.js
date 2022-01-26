@@ -60,16 +60,16 @@ function Statement(condition, expression) {
 }
 
 function setRuntime(expression, defines) {
-  var runtimeConditions = [];
-  var conditions = expression._conditions;
+  const runtimeConditions = [];
+  const conditions = expression._conditions;
   if (!defined(conditions)) {
     return;
   }
-  var length = conditions.length;
-  for (var i = 0; i < length; ++i) {
-    var statement = conditions[i];
-    var cond = String(statement[0]);
-    var condExpression = String(statement[1]);
+  const length = conditions.length;
+  for (let i = 0; i < length; ++i) {
+    const statement = conditions[i];
+    const cond = String(statement[0]);
+    const condExpression = String(statement[1]);
     runtimeConditions.push(
       new Statement(
         new Expression(cond, defines),
@@ -95,13 +95,13 @@ function setRuntime(expression, defines) {
  * @returns {Boolean|Number|String|RegExp|Cartesian2|Cartesian3|Cartesian4|Color} The result of evaluating the expression.
  */
 ConditionsExpression.prototype.evaluate = function (feature, result) {
-  var conditions = this._runtimeConditions;
+  const conditions = this._runtimeConditions;
   if (!defined(conditions)) {
     return undefined;
   }
-  var length = conditions.length;
-  for (var i = 0; i < length; ++i) {
-    var statement = conditions[i];
+  const length = conditions.length;
+  for (let i = 0; i < length; ++i) {
+    const statement = conditions[i];
     if (statement.condition.evaluate(feature)) {
       return statement.expression.evaluate(feature, result);
     }
@@ -118,13 +118,13 @@ ConditionsExpression.prototype.evaluate = function (feature, result) {
  * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
  */
 ConditionsExpression.prototype.evaluateColor = function (feature, result) {
-  var conditions = this._runtimeConditions;
+  const conditions = this._runtimeConditions;
   if (!defined(conditions)) {
     return undefined;
   }
-  var length = conditions.length;
-  for (var i = 0; i < length; ++i) {
-    var statement = conditions[i];
+  const length = conditions.length;
+  for (let i = 0; i < length; ++i) {
+    const statement = conditions[i];
     if (statement.condition.evaluate(feature)) {
       return statement.expression.evaluateColor(feature, result);
     }
@@ -150,21 +150,21 @@ ConditionsExpression.prototype.getShaderFunction = function (
   shaderState,
   returnType
 ) {
-  var conditions = this._runtimeConditions;
+  const conditions = this._runtimeConditions;
   if (!defined(conditions) || conditions.length === 0) {
     return undefined;
   }
 
-  var shaderFunction = "";
-  var length = conditions.length;
-  for (var i = 0; i < length; ++i) {
-    var statement = conditions[i];
+  let shaderFunction = "";
+  const length = conditions.length;
+  for (let i = 0; i < length; ++i) {
+    const statement = conditions[i];
 
-    var condition = statement.condition.getShaderExpression(
+    const condition = statement.condition.getShaderExpression(
       variableSubstitutionMap,
       shaderState
     );
-    var expression = statement.expression.getShaderExpression(
+    const expression = statement.expression.getShaderExpression(
       variableSubstitutionMap,
       shaderState
     );
@@ -206,16 +206,16 @@ ConditionsExpression.prototype.getShaderFunction = function (
  * @private
  */
 ConditionsExpression.prototype.getVariables = function () {
-  var variables = [];
+  let variables = [];
 
-  var conditions = this._runtimeConditions;
+  const conditions = this._runtimeConditions;
   if (!defined(conditions) || conditions.length === 0) {
     return variables;
   }
 
-  var length = conditions.length;
-  for (var i = 0; i < length; ++i) {
-    var statement = conditions[i];
+  const length = conditions.length;
+  for (let i = 0; i < length; ++i) {
+    const statement = conditions[i];
     variables.push.apply(variables, statement.condition.getVariables());
     variables.push.apply(variables, statement.expression.getVariables());
   }

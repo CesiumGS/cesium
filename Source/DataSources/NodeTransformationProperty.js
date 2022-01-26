@@ -5,7 +5,7 @@ import TranslationRotationScale from "../Core/TranslationRotationScale.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import Property from "./Property.js";
 
-var defaultNodeTransformation = new TranslationRotationScale();
+const defaultNodeTransformation = new TranslationRotationScale();
 
 /**
  * A {@link Property} that produces {@link TranslationRotationScale} data.

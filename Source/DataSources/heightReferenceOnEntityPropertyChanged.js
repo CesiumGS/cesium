@@ -20,7 +20,7 @@ function heightReferenceOnEntityPropertyChanged(
     return;
   }
 
-  var geometry = this._entity[this._geometryPropertyName];
+  const geometry = this._entity[this._geometryPropertyName];
   if (!defined(geometry)) {
     return;
   }
@@ -30,10 +30,10 @@ function heightReferenceOnEntityPropertyChanged(
     this._terrainOffsetProperty = undefined;
   }
 
-  var heightReferenceProperty = geometry.heightReference;
+  const heightReferenceProperty = geometry.heightReference;
 
   if (defined(heightReferenceProperty)) {
-    var centerPosition = new CallbackProperty(
+    const centerPosition = new CallbackProperty(
       this._computeCenter.bind(this),
       !this._dynamic
     );

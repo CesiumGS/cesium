@@ -471,7 +471,7 @@ describe("Core/Math", function () {
   });
 
   it("factorial produces the correct results", function () {
-    var factorials = [
+    const factorials = [
       1,
       1,
       2,
@@ -499,9 +499,9 @@ describe("Core/Math", function () {
       620448401733239439360000,
     ];
 
-    var length = factorials.length;
-    var i;
-    var indices = [];
+    const length = factorials.length;
+    let i;
+    const indices = [];
 
     // Populate indices array
     for (i = 0; i < length; i++) {
@@ -510,14 +510,14 @@ describe("Core/Math", function () {
 
     // Randomize the indices array
     for (i = 0; i < length; i++) {
-      var tmp = indices[i];
-      var randomIndex = Math.floor(Math.random() * length);
+      const tmp = indices[i];
+      const randomIndex = Math.floor(Math.random() * length);
       indices[i] = indices[randomIndex];
       indices[randomIndex] = tmp;
     }
 
     for (i = 0; i < length; i++) {
-      var index = indices[i];
+      const index = indices[i];
       expect(CesiumMath.factorial(index)).toEqual(factorials[index]);
     }
   });
@@ -536,8 +536,8 @@ describe("Core/Math", function () {
 
   it("isPowerOfTwo finds powers of two", function () {
     // Test all power of twos from 1 to 2^31
-    for (var i = 0; i < 32; i++) {
-      var powerOfTwo = (1 << i) >>> 0; // `>>>` converts to unsigned
+    for (let i = 0; i < 32; i++) {
+      const powerOfTwo = (1 << i) >>> 0; // `>>>` converts to unsigned
       expect(CesiumMath.isPowerOfTwo(powerOfTwo)).toEqual(true);
     }
   });

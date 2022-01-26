@@ -35,12 +35,15 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
         });
 
-        var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706);
-        var url = "../../SampleData/models/CesiumMan/Cesium_Man.glb";
+        const position = Cesium.Cartesian3.fromDegrees(
+          -123.0744619,
+          44.0503706
+        );
+        const url = "../../SampleData/models/CesiumMan/Cesium_Man.glb";
         viewer.trackedEntity = viewer.entities.add({
           name: url,
           position: position,
@@ -49,7 +52,7 @@
           },
         });
 
-        var fragmentShaderSource =
+        const fragmentShaderSource =
           "uniform sampler2D colorTexture; \n" +
           "varying vec2 v_textureCoordinates; \n" +
           "const int KERNEL_WIDTH = 16; \n" +

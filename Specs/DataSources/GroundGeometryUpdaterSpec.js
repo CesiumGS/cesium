@@ -14,9 +14,9 @@ describe("DataSources/GroundGeometryUpdater", function () {
   });
 
   it("getGeometryHeight works for for height reference NONE and RELATIVE_TO_GROUND", function () {
-    var expected = 30;
-    var height = expected;
-    var heightReference = HeightReference.NONE;
+    const expected = 30;
+    const height = expected;
+    let heightReference = HeightReference.NONE;
     expect(
       GroundGeometryUpdater.getGeometryHeight(height, heightReference)
     ).toEqual(expected);
@@ -28,17 +28,17 @@ describe("DataSources/GroundGeometryUpdater", function () {
   });
 
   it("getGeometryHeight works for for height reference CLAMP_TO_GROUND", function () {
-    var height = 50;
-    var heightReference = HeightReference.CLAMP_TO_GROUND;
+    const height = 50;
+    const heightReference = HeightReference.CLAMP_TO_GROUND;
     expect(
       GroundGeometryUpdater.getGeometryHeight(height, heightReference)
     ).toEqual(0);
   });
 
   it("getGeometryExtrudedHeight works for for height reference NONE and RELATIVE_TO_GROUND", function () {
-    var expected = 30;
-    var height = expected;
-    var heightReference = HeightReference.NONE;
+    const expected = 30;
+    const height = expected;
+    let heightReference = HeightReference.NONE;
     expect(
       GroundGeometryUpdater.getGeometryExtrudedHeight(height, heightReference)
     ).toEqual(expected);
@@ -50,19 +50,19 @@ describe("DataSources/GroundGeometryUpdater", function () {
   });
 
   it("getGeometryExtrudedHeight works for for height reference CLAMP_TO_GROUND", function () {
-    var height = 50;
-    var heightReference = HeightReference.CLAMP_TO_GROUND;
+    const height = 50;
+    const heightReference = HeightReference.CLAMP_TO_GROUND;
     expect(
       GroundGeometryUpdater.getGeometryExtrudedHeight(height, heightReference)
     ).toEqual(GroundGeometryUpdater.CLAMP_TO_GROUND);
   });
 
   it("computeGeometryOffsetAttribute works", function () {
-    var height = 50;
-    var extrudedHeight = 30;
-    var heightReference;
-    var extrudedHeightReference;
-    var result = GroundGeometryUpdater.computeGeometryOffsetAttribute(
+    const height = 50;
+    const extrudedHeight = 30;
+    let heightReference;
+    let extrudedHeightReference;
+    let result = GroundGeometryUpdater.computeGeometryOffsetAttribute(
       height,
       heightReference,
       extrudedHeight,
@@ -170,7 +170,7 @@ describe("DataSources/GroundGeometryUpdater", function () {
   });
 
   it("Overridden version of destroy is called", function () {
-    var options = {
+    const options = {
       scene: {
         frameState: {
           context: {
@@ -184,10 +184,10 @@ describe("DataSources/GroundGeometryUpdater", function () {
       observedPropertyNames: [],
     };
 
-    var groundGeometryUpdater = new GroundGeometryUpdater(options);
+    const groundGeometryUpdater = new GroundGeometryUpdater(options);
 
     // Just make the terrain propery a dummy object with a destroy method
-    var destroySpy = jasmine.createSpy("destroy");
+    const destroySpy = jasmine.createSpy("destroy");
     groundGeometryUpdater._terrainOffsetProperty = {
       destroy: destroySpy,
     };

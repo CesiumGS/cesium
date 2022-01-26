@@ -1,8 +1,8 @@
 import Check from "./Check.js";
 import RuntimeError from "./RuntimeError.js";
 
-var compressedMagic = 0x7468dead;
-var compressedMagicSwap = 0xadde6874;
+const compressedMagic = 0x7468dead;
+const compressedMagicSwap = 0xadde6874;
 
 /**
  * Decodes data that is received from the Google Earth Enterprise server.
@@ -22,28 +22,28 @@ function decodeGoogleEarthEnterpriseData(key, data) {
   Check.typeOf.object("data", data);
   //>>includeEnd('debug');
 
-  var keyLength = key.byteLength;
+  const keyLength = key.byteLength;
   if (keyLength === 0 || keyLength % 4 !== 0) {
     throw new RuntimeError(
       "The length of key must be greater than 0 and a multiple of 4."
     );
   }
 
-  var dataView = new DataView(data);
-  var magic = dataView.getUint32(0, true);
+  const dataView = new DataView(data);
+  const magic = dataView.getUint32(0, true);
   if (magic === compressedMagic || magic === compressedMagicSwap) {
     // Occasionally packets don't come back encoded, so just return
     return data;
   }
 
-  var keyView = new DataView(key);
+  const keyView = new DataView(key);
 
-  var dp = 0;
-  var dpend = data.byteLength;
-  var dpend64 = dpend - (dpend % 8);
-  var kpend = keyLength;
-  var kp;
-  var off = 8;
+  let dp = 0;
+  const dpend = data.byteLength;
+  const dpend64 = dpend - (dpend % 8);
+  const kpend = keyLength;
+  let kp;
+  let off = 8;
 
   // This algorithm is intentionally asymmetric to make it more difficult to
   // guess. Security through obscurity. :-(

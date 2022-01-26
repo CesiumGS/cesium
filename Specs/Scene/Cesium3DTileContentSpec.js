@@ -2,7 +2,7 @@ import { Cesium3DTileContent } from "../../Source/Cesium.js";
 
 describe("Scene/Cesium3DTileContent", function () {
   it("throws", function () {
-    var content = new Cesium3DTileContent();
+    const content = new Cesium3DTileContent();
     expect(function () {
       return content.featuresLength;
     }).toThrowDeveloperError();

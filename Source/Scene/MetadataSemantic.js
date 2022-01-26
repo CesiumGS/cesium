@@ -7,7 +7,7 @@
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata/Semantics|3D Metadata Semantic Reference}
  */
-var MetadataSemantic = {
+const MetadataSemantic = {
   /**
    * A unique identifier, stored as a <code>STRING</code>.
    *

@@ -46,14 +46,14 @@ describe("Scene/QuadtreeTile", function () {
   });
 
   it("creates rectangle on construction", function () {
-    var desc = {
+    const desc = {
       tilingScheme: new WebMercatorTilingScheme(),
       x: 0,
       y: 0,
       level: 0,
     };
-    var tile = new QuadtreeTile(desc);
-    var rectangle = desc.tilingScheme.tileXYToRectangle(
+    const tile = new QuadtreeTile(desc);
+    const rectangle = desc.tilingScheme.tileXYToRectangle(
       desc.x,
       desc.y,
       desc.level
@@ -112,37 +112,37 @@ describe("Scene/QuadtreeTile", function () {
   });
 
   it("can get tiles around a root tile", function () {
-    var tilingScheme = new GeographicTilingScheme({
+    const tilingScheme = new GeographicTilingScheme({
       numberOfLevelZeroTilesX: 3,
       numberOfLevelZeroTilesY: 3,
     });
-    var levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
+    const levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
 
-    var L0X0Y0 = levelZeroTiles.filter(function (tile) {
+    const L0X0Y0 = levelZeroTiles.filter(function (tile) {
       return tile.x === 0 && tile.y === 0;
     })[0];
-    var L0X1Y0 = levelZeroTiles.filter(function (tile) {
+    const L0X1Y0 = levelZeroTiles.filter(function (tile) {
       return tile.x === 1 && tile.y === 0;
     })[0];
-    var L0X2Y0 = levelZeroTiles.filter(function (tile) {
+    const L0X2Y0 = levelZeroTiles.filter(function (tile) {
       return tile.x === 2 && tile.y === 0;
     })[0];
-    var L0X0Y1 = levelZeroTiles.filter(function (tile) {
+    const L0X0Y1 = levelZeroTiles.filter(function (tile) {
       return tile.x === 0 && tile.y === 1;
     })[0];
-    var L0X1Y1 = levelZeroTiles.filter(function (tile) {
+    const L0X1Y1 = levelZeroTiles.filter(function (tile) {
       return tile.x === 1 && tile.y === 1;
     })[0];
-    var L0X2Y1 = levelZeroTiles.filter(function (tile) {
+    const L0X2Y1 = levelZeroTiles.filter(function (tile) {
       return tile.x === 2 && tile.y === 1;
     })[0];
-    var L0X0Y2 = levelZeroTiles.filter(function (tile) {
+    const L0X0Y2 = levelZeroTiles.filter(function (tile) {
       return tile.x === 0 && tile.y === 2;
     })[0];
-    var L0X1Y2 = levelZeroTiles.filter(function (tile) {
+    const L0X1Y2 = levelZeroTiles.filter(function (tile) {
       return tile.x === 1 && tile.y === 2;
     })[0];
-    var L0X2Y2 = levelZeroTiles.filter(function (tile) {
+    const L0X2Y2 = levelZeroTiles.filter(function (tile) {
       return tile.x === 2 && tile.y === 2;
     })[0];
 
@@ -193,17 +193,17 @@ describe("Scene/QuadtreeTile", function () {
   });
 
   it("can get tiles around a tile when they share a common parent", function () {
-    var tilingScheme = new GeographicTilingScheme({
+    const tilingScheme = new GeographicTilingScheme({
       numberOfLevelZeroTilesX: 2,
       numberOfLevelZeroTilesY: 1,
     });
 
-    var levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
-    var parent = levelZeroTiles[1];
-    var sw = parent.southwestChild;
-    var se = parent.southeastChild;
-    var nw = parent.northwestChild;
-    var ne = parent.northeastChild;
+    const levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
+    const parent = levelZeroTiles[1];
+    const sw = parent.southwestChild;
+    const se = parent.southeastChild;
+    const nw = parent.northwestChild;
+    const ne = parent.northeastChild;
 
     expect(sw.findTileToEast(levelZeroTiles)).toBe(se);
     expect(sw.findTileToNorth(levelZeroTiles)).toBe(nw);
@@ -216,32 +216,32 @@ describe("Scene/QuadtreeTile", function () {
   });
 
   it("can get tiles around a tile when they do not share a common parent", function () {
-    var tilingScheme = new GeographicTilingScheme({
+    const tilingScheme = new GeographicTilingScheme({
       numberOfLevelZeroTilesX: 2,
       numberOfLevelZeroTilesY: 2,
     });
 
-    var levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
+    const levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
 
-    var northwest = levelZeroTiles[0];
-    var nwse = northwest.southeastChild;
-    var nwne = northwest.northeastChild;
-    var nwsw = northwest.southwestChild;
+    const northwest = levelZeroTiles[0];
+    const nwse = northwest.southeastChild;
+    const nwne = northwest.northeastChild;
+    const nwsw = northwest.southwestChild;
 
-    var northeast = levelZeroTiles[1];
-    var nesw = northeast.southwestChild;
-    var nenw = northeast.northwestChild;
-    var nese = northeast.southeastChild;
+    const northeast = levelZeroTiles[1];
+    const nesw = northeast.southwestChild;
+    const nenw = northeast.northwestChild;
+    const nese = northeast.southeastChild;
 
-    var southwest = levelZeroTiles[2];
-    var swne = southwest.northeastChild;
-    var swnw = southwest.northwestChild;
-    var swse = southwest.southeastChild;
+    const southwest = levelZeroTiles[2];
+    const swne = southwest.northeastChild;
+    const swnw = southwest.northwestChild;
+    const swse = southwest.southeastChild;
 
-    var southeast = levelZeroTiles[3];
-    var senw = southeast.northwestChild;
-    var sene = southeast.northeastChild;
-    var sesw = southeast.southwestChild;
+    const southeast = levelZeroTiles[3];
+    const senw = southeast.northwestChild;
+    const sene = southeast.northeastChild;
+    const sesw = southeast.southwestChild;
 
     expect(nwse.findTileToEast(levelZeroTiles)).toBe(nesw);
     expect(nwse.findTileToSouth(levelZeroTiles)).toBe(swne);
@@ -265,20 +265,20 @@ describe("Scene/QuadtreeTile", function () {
   });
 
   it("can get adjacent tiles wrapping around the anti-meridian", function () {
-    var tilingScheme = new GeographicTilingScheme({
+    const tilingScheme = new GeographicTilingScheme({
       numberOfLevelZeroTilesX: 2,
       numberOfLevelZeroTilesY: 1,
     });
 
-    var levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
+    const levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
 
-    var west = levelZeroTiles[0];
-    var wsw = west.southwestChild;
-    var wnw = west.northwestChild;
+    const west = levelZeroTiles[0];
+    const wsw = west.southwestChild;
+    const wnw = west.northwestChild;
 
-    var east = levelZeroTiles[1];
-    var ene = east.northeastChild;
-    var ese = east.southeastChild;
+    const east = levelZeroTiles[1];
+    const ene = east.northeastChild;
+    const ese = east.southeastChild;
 
     expect(wsw.findTileToWest(levelZeroTiles)).toBe(ese);
     expect(wnw.findTileToWest(levelZeroTiles)).toBe(ene);
@@ -288,26 +288,26 @@ describe("Scene/QuadtreeTile", function () {
   });
 
   it("returns undefined when asked for adjacent tiles north of the north pole or south of the south pole", function () {
-    var tilingScheme = new GeographicTilingScheme({
+    const tilingScheme = new GeographicTilingScheme({
       numberOfLevelZeroTilesX: 2,
       numberOfLevelZeroTilesY: 1,
     });
 
-    var levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
+    const levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
 
-    var west = levelZeroTiles[0];
-    var wnw = west.northwestChild;
-    var wsw = west.southwestChild;
+    const west = levelZeroTiles[0];
+    const wnw = west.northwestChild;
+    const wsw = west.southwestChild;
 
     expect(wnw.findTileToNorth(levelZeroTiles)).toBeUndefined();
     expect(wsw.findTileToSouth(levelZeroTiles)).toBeUndefined();
   });
 
   describe("createLevelZeroTiles", function () {
-    var tilingScheme1x1;
-    var tilingScheme2x2;
-    var tilingScheme2x1;
-    var tilingScheme1x2;
+    let tilingScheme1x1;
+    let tilingScheme2x2;
+    let tilingScheme2x1;
+    let tilingScheme1x2;
 
     beforeEach(function () {
       tilingScheme1x1 = new GeographicTilingScheme({
@@ -335,7 +335,7 @@ describe("Scene/QuadtreeTile", function () {
     });
 
     it("creates expected number of tiles", function () {
-      var tiles = QuadtreeTile.createLevelZeroTiles(tilingScheme1x1);
+      let tiles = QuadtreeTile.createLevelZeroTiles(tilingScheme1x1);
       expect(tiles.length).toBe(1);
 
       tiles = QuadtreeTile.createLevelZeroTiles(tilingScheme2x2);
@@ -349,18 +349,18 @@ describe("Scene/QuadtreeTile", function () {
     });
 
     it("created tiles are associated with specified tiling scheme", function () {
-      var tiles = QuadtreeTile.createLevelZeroTiles(tilingScheme2x2);
-      for (var i = 0; i < tiles.length; ++i) {
+      const tiles = QuadtreeTile.createLevelZeroTiles(tilingScheme2x2);
+      for (let i = 0; i < tiles.length; ++i) {
         expect(tiles[i].tilingScheme).toBe(tilingScheme2x2);
       }
     });
 
     it("created tiles are ordered from the northwest and proceeding east and then south", function () {
-      var tiles = QuadtreeTile.createLevelZeroTiles(tilingScheme2x2);
-      var northwest = tiles[0];
-      var northeast = tiles[1];
-      var southwest = tiles[2];
-      var southeast = tiles[3];
+      const tiles = QuadtreeTile.createLevelZeroTiles(tilingScheme2x2);
+      const northwest = tiles[0];
+      const northeast = tiles[1];
+      const southwest = tiles[2];
+      const southeast = tiles[3];
 
       expect(northeast.rectangle.west).toBeGreaterThan(
         northwest.rectangle.west

@@ -5,10 +5,10 @@ describe("ThirdParty/when", function () {
   // When I switched to cujojs/when, I figured I may as well leave these here since
   // they all still work.  - SKH
 
-  var capturedValue;
-  var capturedError;
-  var promise;
-  var resolver;
+  let capturedValue;
+  let capturedError;
+  let promise;
+  let resolver;
 
   function captureValue(value) {
     capturedValue = value;
@@ -19,7 +19,7 @@ describe("ThirdParty/when", function () {
   }
 
   beforeEach(function () {
-    var deferred = when.defer();
+    const deferred = when.defer();
     promise = deferred.promise;
     resolver = deferred.resolver;
     capturedValue = undefined;
@@ -34,7 +34,7 @@ describe("ThirdParty/when", function () {
   });
 
   it("calls success when resolved before then is called", function () {
-    var value = 1;
+    const value = 1;
 
     resolver.resolve(value);
 
@@ -45,7 +45,7 @@ describe("ThirdParty/when", function () {
   });
 
   it("calls success when resolved after then is called", function () {
-    var value = 1;
+    const value = 1;
 
     promise.then(captureValue, captureError);
 
@@ -56,7 +56,7 @@ describe("ThirdParty/when", function () {
   });
 
   it("calls success when failure is omitted", function () {
-    var value = 1;
+    const value = 1;
 
     promise.then(captureValue);
 
@@ -67,7 +67,7 @@ describe("ThirdParty/when", function () {
   });
 
   it("calls failure when rejected before then is called", function () {
-    var error = "error";
+    const error = "error";
 
     resolver.reject(error);
 
@@ -78,7 +78,7 @@ describe("ThirdParty/when", function () {
   });
 
   it("calls failure when rejected after then is called", function () {
-    var error = "error";
+    const error = "error";
 
     promise.then(captureValue, captureError);
 
@@ -89,7 +89,7 @@ describe("ThirdParty/when", function () {
   });
 
   it("calls failure when success is omitted", function () {
-    var error = "error";
+    const error = "error";
 
     promise.then(undefined, captureError);
 
@@ -135,14 +135,14 @@ describe("ThirdParty/when", function () {
   });
 
   it("can handle resolving to another promise that resolves", function () {
-    var resolveNext;
-    var promiseResolved = false;
+    let resolveNext;
+    let promiseResolved = false;
 
     promise
       .then(function (value) {
         promiseResolved = true;
 
-        var next = when.defer();
+        const next = when.defer();
         resolveNext = function (v) {
           next.resolve(v);
         };
@@ -161,14 +161,14 @@ describe("ThirdParty/when", function () {
   });
 
   it("can handle resolving to another promise that rejects", function () {
-    var rejectNext;
-    var promiseResolved = false;
+    let rejectNext;
+    let promiseResolved = false;
 
     promise
       .then(function (value) {
         promiseResolved = true;
 
-        var next = when.defer();
+        const next = when.defer();
         rejectNext = function (e) {
           next.reject(e);
         };
@@ -188,9 +188,9 @@ describe("ThirdParty/when", function () {
   });
 
   it("can handle rejecting to another promise that resolves", function () {
-    var resolveNext;
-    var promiseResolved = false;
-    var promiseRejected = false;
+    let resolveNext;
+    let promiseResolved = false;
+    let promiseRejected = false;
 
     promise
       .then(
@@ -199,7 +199,7 @@ describe("ThirdParty/when", function () {
         },
         function (error) {
           promiseRejected = true;
-          var next = when.defer();
+          const next = when.defer();
           resolveNext = function (v) {
             next.resolve(v);
           };
@@ -221,9 +221,9 @@ describe("ThirdParty/when", function () {
   });
 
   it("can handle rejecting to another promise that rejects", function () {
-    var rejectNext;
-    var promiseResolved = false;
-    var promiseRejected = false;
+    let rejectNext;
+    let promiseResolved = false;
+    let promiseRejected = false;
 
     promise
       .then(
@@ -232,7 +232,7 @@ describe("ThirdParty/when", function () {
         },
         function (error) {
           promiseRejected = true;
-          var next = when.defer();
+          const next = when.defer();
           rejectNext = function (e) {
             next.reject(e);
           };
@@ -281,7 +281,7 @@ describe("ThirdParty/when", function () {
 
   describe("when", function () {
     it("works with values", function () {
-      var value = 1;
+      const value = 1;
 
       when(value, captureValue, captureError);
 
@@ -290,7 +290,7 @@ describe("ThirdParty/when", function () {
     });
 
     it("works with promises that resolve", function () {
-      var value = 1;
+      const value = 1;
 
       when(promise, captureValue, captureError);
 
@@ -301,7 +301,7 @@ describe("ThirdParty/when", function () {
     });
 
     it("works with deferreds that reject", function () {
-      var error = "error";
+      const error = "error";
 
       when(promise, captureValue, captureError);
 

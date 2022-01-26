@@ -14,8 +14,8 @@ import hasExtension from "./hasExtension.js";
  */
 export default function findGroupMetadata(tileset, contentHeader) {
   if (hasExtension(contentHeader, "3DTILES_metadata")) {
-    var extension = contentHeader.extensions["3DTILES_metadata"];
-    var groupId = extension.group;
+    const extension = contentHeader.extensions["3DTILES_metadata"];
+    const groupId = extension.group;
     return tileset.metadata.groups[groupId];
   }
 

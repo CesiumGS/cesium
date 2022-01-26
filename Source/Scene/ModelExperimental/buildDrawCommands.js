@@ -27,24 +27,24 @@ export default function buildDrawCommands(
   primitiveRenderResources,
   frameState
 ) {
-  var shaderBuilder = primitiveRenderResources.shaderBuilder;
+  const shaderBuilder = primitiveRenderResources.shaderBuilder;
   shaderBuilder.addVertexLines([ModelExperimentalVS]);
   shaderBuilder.addFragmentLines([ModelExperimentalFS]);
 
-  var indexBuffer = defined(primitiveRenderResources.indices)
+  const indexBuffer = defined(primitiveRenderResources.indices)
     ? primitiveRenderResources.indices.buffer
     : undefined;
 
-  var vertexArray = new VertexArray({
+  const vertexArray = new VertexArray({
     context: frameState.context,
     indexBuffer: indexBuffer,
     attributes: primitiveRenderResources.attributes,
   });
 
-  var model = primitiveRenderResources.model;
+  const model = primitiveRenderResources.model;
   model._resources.push(vertexArray);
 
-  var renderState = primitiveRenderResources.renderStateOptions;
+  let renderState = primitiveRenderResources.renderStateOptions;
 
   if (model.opaquePass === Pass.CESIUM_3D_TILE) {
     // Set stencil values for classification on 3D Tiles
@@ -55,13 +55,13 @@ export default function buildDrawCommands(
 
   renderState = RenderState.fromCache(renderState);
 
-  var shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
+  const shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
   model._resources.push(shaderProgram);
 
-  var pass = primitiveRenderResources.alphaOptions.pass;
+  const pass = primitiveRenderResources.alphaOptions.pass;
 
-  var sceneGraph = model.sceneGraph;
-  var modelMatrix = Matrix4.multiply(
+  const sceneGraph = model.sceneGraph;
+  const modelMatrix = Matrix4.multiply(
     sceneGraph.computedModelMatrix,
     primitiveRenderResources.transform,
     new Matrix4()
@@ -73,7 +73,7 @@ export default function buildDrawCommands(
     primitiveRenderResources.boundingSphere
   );
 
-  var command = new DrawCommand({
+  const command = new DrawCommand({
     boundingVolume: primitiveRenderResources.boundingSphere,
     modelMatrix: modelMatrix,
     uniformMap: primitiveRenderResources.uniformMap,
@@ -89,12 +89,12 @@ export default function buildDrawCommands(
     debugShowBoundingVolume: model.debugShowBoundingVolume,
   });
 
-  var styleCommandsNeeded = primitiveRenderResources.styleCommandsNeeded;
+  const styleCommandsNeeded = primitiveRenderResources.styleCommandsNeeded;
 
-  var commandList = [];
+  const commandList = [];
 
   if (defined(styleCommandsNeeded)) {
-    var derivedCommands = createDerivedCommands(command);
+    const derivedCommands = createDerivedCommands(command);
 
     if (pass !== Pass.TRANSLUCENT) {
       switch (styleCommandsNeeded) {
@@ -131,7 +131,7 @@ export default function buildDrawCommands(
  * @private
  */
 function createDerivedCommands(command) {
-  var derivedCommands = {};
+  const derivedCommands = {};
   derivedCommands.translucent = deriveTranslucentCommand(command);
   return derivedCommands;
 }
@@ -140,9 +140,9 @@ function createDerivedCommands(command) {
  * @private
  */
 function deriveTranslucentCommand(command) {
-  var derivedCommand = DrawCommand.shallowClone(command);
+  const derivedCommand = DrawCommand.shallowClone(command);
   derivedCommand.pass = Pass.TRANSLUCENT;
-  var rs = clone(command.renderState, true);
+  const rs = clone(command.renderState, true);
   rs.cull.enabled = false;
   rs.depthTest.enabled = true;
   rs.depthMask = false;

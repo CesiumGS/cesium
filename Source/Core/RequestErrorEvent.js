@@ -49,7 +49,7 @@ function RequestErrorEvent(statusCode, response, responseHeaders) {
  * @returns {String} A string representing the provided RequestErrorEvent.
  */
 RequestErrorEvent.prototype.toString = function () {
-  var str = "Request has failed.";
+  let str = "Request has failed.";
   if (defined(this.statusCode)) {
     str += " Status Code: " + this.statusCode;
   }

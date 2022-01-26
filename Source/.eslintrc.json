@@ -12,6 +12,7 @@
     "rules": {
         "no-unused-vars": ["error", {"vars": "all", "args": "none"}],
         "es/no-modules": "off",
-        "es/no-typed-arrays": "off"
+        "es/no-typed-arrays": "off",
+        "es/no-block-scoped-variables": "off"
     }
 }

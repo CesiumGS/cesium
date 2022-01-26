@@ -16,7 +16,7 @@ import FeatureStageVS from "../../Shaders/ModelExperimental/FeatureStageVS.js";
  * @namespace FeatureIdPipelineStage
  * @private
  */
-var FeatureIdPipelineStage = {};
+const FeatureIdPipelineStage = {};
 FeatureIdPipelineStage.name = "FeatureIdPipelineStage"; // Helps with debugging
 
 FeatureIdPipelineStage.STRUCT_ID_FEATURE = "FeatureStruct";
@@ -46,7 +46,7 @@ FeatureIdPipelineStage.process = function (
   primitive,
   frameState
 ) {
-  var shaderBuilder = renderResources.shaderBuilder;
+  const shaderBuilder = renderResources.shaderBuilder;
 
   renderResources.hasFeatureIds = true;
 
@@ -54,7 +54,7 @@ FeatureIdPipelineStage.process = function (
   updateFeatureStruct(shaderBuilder);
 
   // Handle feature attribution: through feature ID texture or feature ID vertex attribute.
-  var featureIdTextures = primitive.featureIdTextures;
+  const featureIdTextures = primitive.featureIdTextures;
   if (featureIdTextures.length > 0) {
     processFeatureIdTextures(renderResources, frameState, featureIdTextures);
   } else {
@@ -73,10 +73,10 @@ function getFeatureIdAttributeInfo(
   primitive,
   instances
 ) {
-  var featureIdCount;
-  var featureIdAttribute;
-  var featureIdAttributePrefix;
-  var featureIdInstanceDivisor = 0;
+  let featureIdCount;
+  let featureIdAttribute;
+  let featureIdAttributePrefix;
+  let featureIdInstanceDivisor = 0;
 
   if (defined(instances)) {
     featureIdAttribute = instances.featureIdAttributes[featureIdAttributeIndex];
@@ -85,7 +85,7 @@ function getFeatureIdAttributeInfo(
     featureIdInstanceDivisor = 1;
   } else {
     featureIdAttribute = primitive.featureIdAttributes[featureIdAttributeIndex];
-    var positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+    const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
       primitive,
       VertexAttributeSemantic.POSITION
     );
@@ -175,21 +175,21 @@ function generateFeatureFunctions(shaderBuilder) {
  * @private
  */
 function processFeatureIdAttributes(renderResources, frameState, primitive) {
-  var shaderBuilder = renderResources.shaderBuilder;
-  var model = renderResources.model;
-  var instances = renderResources.runtimeNode.node.instances;
+  const shaderBuilder = renderResources.shaderBuilder;
+  const model = renderResources.model;
+  const instances = renderResources.runtimeNode.node.instances;
 
-  var featureIdAttributeIndex = model.featureIdAttributeIndex;
+  const featureIdAttributeIndex = model.featureIdAttributeIndex;
 
-  var featureIdAttributeInfo = getFeatureIdAttributeInfo(
+  const featureIdAttributeInfo = getFeatureIdAttributeInfo(
     featureIdAttributeIndex,
     primitive,
     instances
   );
 
-  var featureIdAttribute = featureIdAttributeInfo.attribute;
-  var featureIdAttributePrefix = featureIdAttributeInfo.prefix;
-  var featureIdAttributeSetIndex;
+  const featureIdAttribute = featureIdAttributeInfo.attribute;
+  const featureIdAttributePrefix = featureIdAttributeInfo.prefix;
+  let featureIdAttributeSetIndex;
 
   // Check if the Feature ID attribute references an existing vertex attribute.
   if (defined(featureIdAttribute.setIndex)) {
@@ -228,14 +228,14 @@ function processFeatureIdTextures(
   frameState,
   featureIdTextures
 ) {
-  var shaderBuilder = renderResources.shaderBuilder;
-  var uniformMap = renderResources.uniformMap;
-  var featureIdTextureIndex = renderResources.model.featureIdTextureIndex;
-  var featureIdTexture = featureIdTextures[featureIdTextureIndex];
+  const shaderBuilder = renderResources.shaderBuilder;
+  const uniformMap = renderResources.uniformMap;
+  const featureIdTextureIndex = renderResources.model.featureIdTextureIndex;
+  const featureIdTexture = featureIdTextures[featureIdTextureIndex];
 
-  var featureIdTextureReader = featureIdTexture.textureReader;
+  const featureIdTextureReader = featureIdTexture.textureReader;
 
-  var featureIdTextureUniformName =
+  const featureIdTextureUniformName =
     "u_featureIdTexture_" + featureIdTextureIndex;
   shaderBuilder.addDefine(
     "FEATURE_ID_TEXTURE",
@@ -277,19 +277,19 @@ function generateFeatureIdAttribute(
   frameState,
   renderResources
 ) {
-  var model = renderResources.model;
-  var shaderBuilder = renderResources.shaderBuilder;
-  var featureIdAttribute = featureIdAttributeInfo.attribute;
-  var featureIdAttributePrefix = featureIdAttributeInfo.prefix;
+  const model = renderResources.model;
+  const shaderBuilder = renderResources.shaderBuilder;
+  const featureIdAttribute = featureIdAttributeInfo.attribute;
+  const featureIdAttributePrefix = featureIdAttributeInfo.prefix;
 
   // If offset or repeat is used, a new vertex attribute will need to be created.
-  var value;
-  var vertexBuffer;
+  let value;
+  let vertexBuffer;
 
   if (!defined(featureIdAttribute.repeat)) {
     value = featureIdAttribute.offset;
   } else {
-    var typedArray = generateFeatureIdTypedArray(
+    const typedArray = generateFeatureIdTypedArray(
       featureIdAttribute,
       featureIdAttributeInfo.count
     );
@@ -302,7 +302,7 @@ function generateFeatureIdAttribute(
     model._resources.push(vertexBuffer);
   }
 
-  var generatedFeatureIdAttribute = {
+  const generatedFeatureIdAttribute = {
     index: renderResources.attributeIndex++,
     instanceDivisor: featureIdAttributeInfo.instanceDivisor,
     value: value,
@@ -328,11 +328,11 @@ function generateFeatureIdAttribute(
  * @private
  */
 function generateFeatureIdTypedArray(featureIdAttribute, count) {
-  var offset = featureIdAttribute.offset;
-  var repeat = featureIdAttribute.repeat;
+  const offset = featureIdAttribute.offset;
+  const repeat = featureIdAttribute.repeat;
 
-  var typedArray = new Float32Array(count);
-  for (var i = 0; i < count; i++) {
+  const typedArray = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
     typedArray[i] = offset + Math.floor(i / repeat);
   }
 

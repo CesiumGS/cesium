@@ -2,8 +2,8 @@ import { Cartesian3 } from "../../Source/Cesium.js";
 import { LinearSpline } from "../../Source/Cesium.js";
 
 describe("Core/LinearSpline", function () {
-  var points;
-  var times;
+  let points;
+  let times;
 
   beforeEach(function () {
     points = [
@@ -39,7 +39,7 @@ describe("Core/LinearSpline", function () {
   });
 
   it("evaluate throws without time", function () {
-    var ls = new LinearSpline({
+    const ls = new LinearSpline({
       points: points,
       times: times,
     });
@@ -50,7 +50,7 @@ describe("Core/LinearSpline", function () {
   });
 
   it("evaluate throws when time is out of range", function () {
-    var ls = new LinearSpline({
+    const ls = new LinearSpline({
       points: points,
       times: times,
     });
@@ -61,28 +61,28 @@ describe("Core/LinearSpline", function () {
   });
 
   it("evaluate without result parameter", function () {
-    var ls = new LinearSpline({
+    const ls = new LinearSpline({
       points: points,
       times: times,
     });
 
     expect(ls.evaluate(times[0])).toEqual(points[0]);
 
-    var time = (times[1] + times[0]) * 0.5;
-    var t = (time - times[0]) / (times[1] - times[0]);
+    const time = (times[1] + times[0]) * 0.5;
+    const t = (time - times[0]) / (times[1] - times[0]);
     expect(ls.evaluate(time)).toEqual(
       Cartesian3.lerp(points[0], points[1], t, new Cartesian3())
     );
   });
 
   it("evaluate with result parameter", function () {
-    var ls = new LinearSpline({
+    const ls = new LinearSpline({
       points: points,
       times: times,
     });
-    var result = new Cartesian3();
+    const result = new Cartesian3();
 
-    var point = ls.evaluate(times[0], result);
+    const point = ls.evaluate(times[0], result);
     expect(point).toBe(result);
     expect(result).toEqual(points[0]);
   });

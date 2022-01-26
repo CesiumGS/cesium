@@ -49,13 +49,13 @@ OrderedGroundPrimitiveCollection.prototype.add = function (primitive, zIndex) {
   //>>includeEnd('debug');
 
   zIndex = defaultValue(zIndex, 0);
-  var collection = this._collections[zIndex];
+  let collection = this._collections[zIndex];
   if (!defined(collection)) {
     collection = new PrimitiveCollection({ destroyPrimitives: false });
     collection._zIndex = zIndex;
     this._collections[zIndex] = collection;
-    var array = this._collectionsArray;
-    var i = 0;
+    const array = this._collectionsArray;
+    let i = 0;
     while (i < array.length && array[i]._zIndex < zIndex) {
       i++;
     }
@@ -102,9 +102,9 @@ OrderedGroundPrimitiveCollection.prototype.remove = function (
   doNotDestroy
 ) {
   if (this.contains(primitive)) {
-    var index = primitive._zIndex;
-    var collection = this._collections[index];
-    var result;
+    const index = primitive._zIndex;
+    const collection = this._collections[index];
+    let result;
     if (doNotDestroy) {
       result = collection.remove(primitive);
     } else {
@@ -138,9 +138,9 @@ OrderedGroundPrimitiveCollection.prototype.remove = function (
  * @see OrderedGroundPrimitiveCollection#destroyPrimitives
  */
 OrderedGroundPrimitiveCollection.prototype.removeAll = function () {
-  var collections = this._collectionsArray;
-  for (var i = 0; i < collections.length; i++) {
-    var collection = collections[i];
+  const collections = this._collectionsArray;
+  for (let i = 0; i < collections.length; i++) {
+    const collection = collections[i];
     collection.destroyPrimitives = true;
     collection.destroy();
   }
@@ -160,7 +160,7 @@ OrderedGroundPrimitiveCollection.prototype.contains = function (primitive) {
   if (!defined(primitive)) {
     return false;
   }
-  var collection = this._collections[primitive._zIndex];
+  const collection = this._collections[primitive._zIndex];
   return defined(collection) && collection.contains(primitive);
 };
 
@@ -172,8 +172,8 @@ OrderedGroundPrimitiveCollection.prototype.update = function (frameState) {
     return;
   }
 
-  var collections = this._collectionsArray;
-  for (var i = 0; i < collections.length; i++) {
+  const collections = this._collectionsArray;
+  for (let i = 0; i < collections.length; i++) {
     collections[i].update(frameState);
   }
 };

@@ -20,12 +20,12 @@ function MockScene(canvas) {
 function createCamera(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var scene = new MockScene(options.canvas);
-  var camera = new Camera(scene);
+  const scene = new MockScene(options.canvas);
+  const camera = new Camera(scene);
   camera.frustum.near = defaultValue(options.near, 0.01);
   camera.frustum.far = defaultValue(options.far, 10.0);
 
-  var offset = defaultValue(options.offset, new Cartesian3(-1.0, 0.0, 0.0));
+  const offset = defaultValue(options.offset, new Cartesian3(-1.0, 0.0, 0.0));
 
   if (defined(options.target)) {
     camera.lookAt(options.target, offset);

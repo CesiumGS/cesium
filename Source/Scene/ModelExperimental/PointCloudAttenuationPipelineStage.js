@@ -21,10 +21,10 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
  *
  * @private
  */
-var PointCloudAttenuationPipelineStage = {};
+const PointCloudAttenuationPipelineStage = {};
 PointCloudAttenuationPipelineStage.name = "PointCloudAttenuationPipelineStage"; // Helps with debugging
 
-var scratchAttenuationUniform = new Cartesian3();
+const scratchAttenuationUniform = new Cartesian3();
 
 /**
  * This stage does the following:
@@ -43,7 +43,7 @@ PointCloudAttenuationPipelineStage.process = function (
   primitive,
   frameState
 ) {
-  var shaderBuilder = renderResources.shaderBuilder;
+  const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addVertexLines([PointCloudAttenuationStageVS]);
   shaderBuilder.addDefine(
     "USE_POINT_CLOUD_ATTENUATION",
@@ -51,12 +51,12 @@ PointCloudAttenuationPipelineStage.process = function (
     ShaderDestination.VERTEX
   );
 
-  var model = renderResources.model;
-  var pointCloudShading = model.pointCloudShading;
+  const model = renderResources.model;
+  const pointCloudShading = model.pointCloudShading;
 
-  var content;
-  var is3DTiles;
-  var usesAddRefinement;
+  let content;
+  let is3DTiles;
+  let usesAddRefinement;
   if (ModelExperimentalType.is3DTiles(model.type)) {
     is3DTiles = true;
     content = model.content;
@@ -69,10 +69,10 @@ PointCloudAttenuationPipelineStage.process = function (
     ShaderDestination.VERTEX
   );
   renderResources.uniformMap.model_pointCloudAttenuation = function () {
-    var scratch = scratchAttenuationUniform;
+    const scratch = scratchAttenuationUniform;
 
     // attenuation.x = pointSize
-    var defaultPointSize = 1.0;
+    let defaultPointSize = 1.0;
     if (is3DTiles) {
       defaultPointSize = usesAddRefinement
         ? 5.0
@@ -85,7 +85,7 @@ PointCloudAttenuationPipelineStage.process = function (
     scratch.x *= frameState.pixelRatio;
 
     // attenuation.y = geometricError
-    var geometricError = getGeometricError(
+    const geometricError = getGeometricError(
       renderResources,
       primitive,
       pointCloudShading,
@@ -93,9 +93,9 @@ PointCloudAttenuationPipelineStage.process = function (
     );
     scratch.y = geometricError * pointCloudShading.geometricErrorScale;
 
-    var context = frameState.context;
-    var frustum = frameState.camera.frustum;
-    var depthMultiplier;
+    const context = frameState.context;
+    const frustum = frameState.camera.frustum;
+    let depthMultiplier;
 
     // Attenuation is maximumAttenuation in 2D/ortho
     if (
@@ -115,7 +115,7 @@ PointCloudAttenuationPipelineStage.process = function (
   };
 };
 
-var scratchDimensions = new Cartesian3();
+const scratchDimensions = new Cartesian3();
 function getGeometricError(
   renderResources,
   primitive,
@@ -123,7 +123,7 @@ function getGeometricError(
   content
 ) {
   if (defined(content)) {
-    var geometricError = content.tile.geometricError;
+    const geometricError = content.tile.geometricError;
 
     if (geometricError > 0) {
       return geometricError;
@@ -134,15 +134,15 @@ function getGeometricError(
     return pointCloudShading.baseResolution;
   }
 
-  var positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+  const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
     primitive,
     VertexAttributeSemantic.POSITION
   );
-  var pointsLength = positionAttribute.count;
+  const pointsLength = positionAttribute.count;
 
   // Estimate the geometric error
-  var nodeTransform = renderResources.runtimeNode.transform;
-  var dimensions = Cartesian3.subtract(
+  const nodeTransform = renderResources.runtimeNode.transform;
+  let dimensions = Cartesian3.subtract(
     positionAttribute.max,
     positionAttribute.min,
     scratchDimensions
@@ -153,8 +153,8 @@ function getGeometricError(
     dimensions,
     scratchDimensions
   );
-  var volume = dimensions.x * dimensions.y * dimensions.z;
-  var geometricErrorEstimate = CesiumMath.cbrt(volume / pointsLength);
+  const volume = dimensions.x * dimensions.y * dimensions.z;
+  const geometricErrorEstimate = CesiumMath.cbrt(volume / pointsLength);
   return geometricErrorEstimate;
 }
 

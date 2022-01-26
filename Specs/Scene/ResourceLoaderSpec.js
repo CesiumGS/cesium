@@ -2,7 +2,7 @@ import { ResourceLoader } from "../../Source/Cesium.js";
 
 describe("Scene/ResourceLoader", function () {
   it("throws when using ResourceLoader directly", function () {
-    var resourceLoader = new ResourceLoader();
+    const resourceLoader = new ResourceLoader();
     expect(function () {
       return resourceLoader.promise;
     }).toThrowDeveloperError();
@@ -15,29 +15,29 @@ describe("Scene/ResourceLoader", function () {
   });
 
   it("getError from error message", function () {
-    var resourceLoader = new ResourceLoader();
-    var errorMessage = "Resource failed";
-    var runtimeError = resourceLoader.getError(errorMessage);
+    const resourceLoader = new ResourceLoader();
+    const errorMessage = "Resource failed";
+    const runtimeError = resourceLoader.getError(errorMessage);
     expect(runtimeError.message).toBe(errorMessage);
   });
 
   it("getError from error message and error", function () {
-    var resourceLoader = new ResourceLoader();
-    var errorMessage = "Resource failed";
-    var error = new Error("404 Not Found");
-    var runtimeError = resourceLoader.getError(errorMessage, error);
+    const resourceLoader = new ResourceLoader();
+    const errorMessage = "Resource failed";
+    const error = new Error("404 Not Found");
+    const runtimeError = resourceLoader.getError(errorMessage, error);
     expect(runtimeError.message).toBe("Resource failed\n404 Not Found");
   });
 
   it("getError throws if errorMessage is undefined", function () {
-    var resourceLoader = new ResourceLoader();
+    const resourceLoader = new ResourceLoader();
     expect(function () {
       resourceLoader.getError();
     }).toThrowDeveloperError();
   });
 
   it("destroys", function () {
-    var resourceLoader = new ResourceLoader();
+    const resourceLoader = new ResourceLoader();
     expect(resourceLoader.isDestroyed()).toBe(false);
     resourceLoader.destroy();
     expect(resourceLoader.isDestroyed()).toBe(true);

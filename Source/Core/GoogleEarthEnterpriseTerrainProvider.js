@@ -19,14 +19,14 @@ import RuntimeError from "./RuntimeError.js";
 import TaskProcessor from "./TaskProcessor.js";
 import TileProviderError from "./TileProviderError.js";
 
-var TerrainState = {
+const TerrainState = {
   UNKNOWN: 0,
   NONE: 1,
   SELF: 2,
   PARENT: 3,
 };
 
-var julianDateScratch = new JulianDate();
+const julianDateScratch = new JulianDate();
 
 function TerrainCache() {
   this._terrainCache = {};
@@ -41,8 +41,8 @@ TerrainCache.prototype.add = function (quadKey, buffer) {
 };
 
 TerrainCache.prototype.get = function (quadKey) {
-  var terrainCache = this._terrainCache;
-  var result = terrainCache[quadKey];
+  const terrainCache = this._terrainCache;
+  const result = terrainCache[quadKey];
   if (defined(result)) {
     delete this._terrainCache[quadKey];
     return result.buffer;
@@ -52,12 +52,12 @@ TerrainCache.prototype.get = function (quadKey) {
 TerrainCache.prototype.tidy = function () {
   JulianDate.now(julianDateScratch);
   if (JulianDate.secondsDifference(julianDateScratch, this._lastTidy) > 10) {
-    var terrainCache = this._terrainCache;
-    var keys = Object.keys(terrainCache);
-    var count = keys.length;
-    for (var i = 0; i < count; ++i) {
-      var k = keys[i];
-      var e = terrainCache[k];
+    const terrainCache = this._terrainCache;
+    const keys = Object.keys(terrainCache);
+    const count = keys.length;
+    for (let i = 0; i < count; ++i) {
+      const k = keys[i];
+      const e = terrainCache[k];
       if (JulianDate.secondsDifference(julianDateScratch, e.timestamp) > 10) {
         delete terrainCache[k];
       }
@@ -99,11 +99,11 @@ function GoogleEarthEnterpriseTerrainProvider(options) {
   }
   //>>includeEnd('debug');
 
-  var metadata;
+  let metadata;
   if (defined(options.metadata)) {
     metadata = options.metadata;
   } else {
-    var resource = Resource.createIfNeeded(options.url);
+    const resource = Resource.createIfNeeded(options.url);
     metadata = new GoogleEarthEnterpriseMetadata(resource);
   }
 
@@ -120,7 +120,7 @@ function GoogleEarthEnterpriseTerrainProvider(options) {
     ellipsoid: options.ellipsoid,
   });
 
-  var credit = options.credit;
+  let credit = options.credit;
   if (typeof credit === "string") {
     credit = new Credit(credit);
   }
@@ -136,12 +136,12 @@ function GoogleEarthEnterpriseTerrainProvider(options) {
   this._errorEvent = new Event();
 
   this._ready = false;
-  var that = this;
-  var metadataError;
+  const that = this;
+  let metadataError;
   this._readyPromise = metadata.readyPromise
     .then(function (result) {
       if (!metadata.terrainPresent) {
-        var e = new RuntimeError(
+        const e = new RuntimeError(
           "The server " + metadata.url + " doesn't have terrain"
         );
         metadataError = TileProviderError.handleError(
@@ -317,16 +317,16 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
   },
 });
 
-var taskProcessor = new TaskProcessor("decodeGoogleEarthEnterprisePacket");
+const taskProcessor = new TaskProcessor("decodeGoogleEarthEnterprisePacket");
 
 // If the tile has its own terrain, then you can just use its child bitmask. If it was requested using it's parent
 //  then you need to check all of its children to see if they have terrain.
 function computeChildMask(quadKey, info, metadata) {
-  var childMask = info.getChildBitmask();
+  let childMask = info.getChildBitmask();
   if (info.terrainState === TerrainState.PARENT) {
     childMask = 0;
-    for (var i = 0; i < 4; ++i) {
-      var child = metadata.getTileInformationFromQuadKey(
+    for (let i = 0; i < 4; ++i) {
+      const child = metadata.getTileInformationFromQuadKey(
         quadKey + i.toString()
       );
       if (defined(child) && child.hasTerrain()) {
@@ -368,26 +368,26 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
   }
   //>>includeEnd('debug');
 
-  var quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
-  var terrainCache = this._terrainCache;
-  var metadata = this._metadata;
-  var info = metadata.getTileInformationFromQuadKey(quadKey);
+  const quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
+  const terrainCache = this._terrainCache;
+  const metadata = this._metadata;
+  const info = metadata.getTileInformationFromQuadKey(quadKey);
 
   // Check if this tile is even possibly available
   if (!defined(info)) {
     return when.reject(new RuntimeError("Terrain tile doesn't exist"));
   }
 
-  var terrainState = info.terrainState;
+  let terrainState = info.terrainState;
   if (!defined(terrainState)) {
     // First time we have tried to load this tile, so set terrain state to UNKNOWN
     terrainState = info.terrainState = TerrainState.UNKNOWN;
   }
 
   // If its in the cache, return it
-  var buffer = terrainCache.get(quadKey);
+  const buffer = terrainCache.get(quadKey);
   if (defined(buffer)) {
-    var credit = metadata.providers[info.terrainProvider];
+    const credit = metadata.providers[info.terrainProvider];
     return when.resolve(
       new GoogleEarthEnterpriseTerrainData({
         buffer: buffer,
@@ -418,9 +418,9 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
   }
 
   // Figure out where we are getting the terrain and what version
-  var parentInfo;
-  var q = quadKey;
-  var terrainVersion = -1;
+  let parentInfo;
+  let q = quadKey;
+  let terrainVersion = -1;
   switch (terrainState) {
     case TerrainState.SELF: // We have terrain and have retrieved it before
       terrainVersion = info.terrainVersion;
@@ -449,10 +449,10 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
   }
 
   // Load that terrain
-  var terrainPromises = this._terrainPromises;
-  var terrainRequests = this._terrainRequests;
-  var sharedPromise;
-  var sharedRequest;
+  const terrainPromises = this._terrainPromises;
+  const terrainRequests = this._terrainRequests;
+  let sharedPromise;
+  let sharedRequest;
   if (defined(terrainPromises[q])) {
     // Already being loaded possibly from another child, so return existing promise
     sharedPromise = terrainPromises[q];
@@ -460,7 +460,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
   } else {
     // Create new request for terrain
     sharedRequest = request;
-    var requestPromise = buildTerrainResource(
+    const requestPromise = buildTerrainResource(
       this,
       q,
       terrainVersion,
@@ -484,16 +484,16 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
           )
           .then(function (terrainTiles) {
             // Add requested tile and mark it as SELF
-            var requestedInfo = metadata.getTileInformationFromQuadKey(q);
+            const requestedInfo = metadata.getTileInformationFromQuadKey(q);
             requestedInfo.terrainState = TerrainState.SELF;
             terrainCache.add(q, terrainTiles[0]);
-            var provider = requestedInfo.terrainProvider;
+            const provider = requestedInfo.terrainProvider;
 
             // Add children to cache
-            var count = terrainTiles.length - 1;
-            for (var j = 0; j < count; ++j) {
-              var childKey = q + j.toString();
-              var child = metadata.getTileInformationFromQuadKey(childKey);
+            const count = terrainTiles.length - 1;
+            for (let j = 0; j < count; ++j) {
+              const childKey = q + j.toString();
+              const child = metadata.getTileInformationFromQuadKey(childKey);
               if (defined(child)) {
                 terrainCache.add(childKey, terrainTiles[j + 1]);
                 child.terrainState = TerrainState.PARENT;
@@ -520,9 +520,9 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
 
   return sharedPromise
     .then(function () {
-      var buffer = terrainCache.get(quadKey);
+      const buffer = terrainCache.get(quadKey);
       if (defined(buffer)) {
-        var credit = metadata.providers[info.terrainProvider];
+        const credit = metadata.providers[info.terrainProvider];
         return new GoogleEarthEnterpriseTerrainData({
           buffer: buffer,
           childTileMask: computeChildMask(quadKey, info, metadata),
@@ -569,10 +569,10 @@ GoogleEarthEnterpriseTerrainProvider.prototype.getTileDataAvailable = function (
   y,
   level
 ) {
-  var metadata = this._metadata;
-  var quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
+  const metadata = this._metadata;
+  let quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
 
-  var info = metadata.getTileInformation(x, y, level);
+  const info = metadata.getTileInformation(x, y, level);
   if (info === null) {
     return false;
   }
@@ -582,7 +582,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.getTileDataAvailable = function (
       return true; // We'll just return the ellipsoid
     }
 
-    var terrainState = info.terrainState;
+    const terrainState = info.terrainState;
     if (terrainState === TerrainState.NONE) {
       return false; // Terrain is not available
     }
@@ -591,7 +591,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.getTileDataAvailable = function (
       info.terrainState = TerrainState.UNKNOWN;
       if (!info.hasTerrain()) {
         quadKey = quadKey.substring(0, quadKey.length - 1);
-        var parentInfo = metadata.getTileInformationFromQuadKey(quadKey);
+        const parentInfo = metadata.getTileInformationFromQuadKey(quadKey);
         if (!defined(parentInfo) || !parentInfo.hasTerrain()) {
           return false;
         }
@@ -603,7 +603,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.getTileDataAvailable = function (
 
   if (metadata.isValid(quadKey)) {
     // We will need this tile, so request metadata and return false for now
-    var request = new Request({
+    const request = new Request({
       throttle: false,
       throttleByServer: true,
       type: RequestType.TERRAIN,

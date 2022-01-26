@@ -2,7 +2,7 @@ import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
-var warnings = {};
+const warnings = {};
 
 /**
  * Logs a one time message to the console.  Use this function instead of

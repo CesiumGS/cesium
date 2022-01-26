@@ -111,26 +111,26 @@ export default function ModelExperimentalPrimitive(options) {
  * @private
  */
 ModelExperimentalPrimitive.prototype.configurePipeline = function () {
-  var pipelineStages = this.pipelineStages;
+  const pipelineStages = this.pipelineStages;
   pipelineStages.length = 0;
 
-  var primitive = this.primitive;
-  var node = this.node;
-  var model = this.model;
-  var customShader = model.customShader;
+  const primitive = this.primitive;
+  const node = this.node;
+  const model = this.model;
+  const customShader = model.customShader;
 
-  var hasCustomShader = defined(customShader);
-  var hasCustomFragmentShader =
+  const hasCustomShader = defined(customShader);
+  const hasCustomFragmentShader =
     hasCustomShader && defined(customShader.fragmentShaderText);
-  var materialsEnabled =
+  const materialsEnabled =
     !hasCustomFragmentShader ||
     customShader.mode !== CustomShaderMode.REPLACE_MATERIAL;
-  var hasQuantization = ModelExperimentalUtility.hasQuantizedAttributes(
+  const hasQuantization = ModelExperimentalUtility.hasQuantizedAttributes(
     primitive.attributes
   );
 
-  var pointCloudShading = model.pointCloudShading;
-  var hasAttenuation =
+  const pointCloudShading = model.pointCloudShading;
+  const hasAttenuation =
     defined(pointCloudShading) && pointCloudShading.attenuation;
 
   pipelineStages.push(GeometryPipelineStage);
@@ -159,28 +159,28 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
   // - the primitive has a feature ID texture
   // It must be noted that we check for the presence of feature ID vertex attributes, and not feature ID attributes, because it is possible to have features in a model
   // without a feature table (for example, in 3D Tiles 1.0, where batch length > 0 but a batch table is not defined.)
-  var featureIdAttributeIndex = model.featureIdAttributeIndex;
-  var featureIdTextureIndex = model.featureIdTextureIndex;
-  var hasInstancedFeatureIdAttribute;
+  const featureIdAttributeIndex = model.featureIdAttributeIndex;
+  const featureIdTextureIndex = model.featureIdTextureIndex;
+  let hasInstancedFeatureIdAttribute;
   if (
     defined(node.instances) &&
     node.instances.featureIdAttributes.length > 0
   ) {
-    var featureIdAttributes = node.instances.featureIdAttributes;
+    const featureIdAttributes = node.instances.featureIdAttributes;
     if (defined(featureIdAttributes[featureIdAttributeIndex])) {
       hasInstancedFeatureIdAttribute = true;
     }
   }
-  var hasFeatureIdVertexAttribute = defined(
+  const hasFeatureIdVertexAttribute = defined(
     ModelExperimentalUtility.getAttributeBySemantic(
       primitive,
       VertexAttributeSemantic.FEATURE_ID
     )
   );
-  var hasFeatureIdTexture = defined(
+  const hasFeatureIdTexture = defined(
     primitive.featureIdTextures[featureIdTextureIndex]
   );
-  var hasFeatureIds =
+  const hasFeatureIds =
     hasInstancedFeatureIdAttribute ||
     hasFeatureIdVertexAttribute ||
     hasFeatureIdTexture;

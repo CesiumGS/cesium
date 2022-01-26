@@ -32,7 +32,7 @@ function DoublyLinkedListNode(item, previous, next) {
  * @return {DoublyLinkedListNode}
  */
 DoublyLinkedList.prototype.add = function (item) {
-  var node = new DoublyLinkedListNode(item, this.tail, undefined);
+  const node = new DoublyLinkedListNode(item, this.tail, undefined);
 
   if (defined(this.tail)) {
     this.tail.next = node;
@@ -96,7 +96,7 @@ DoublyLinkedList.prototype.splice = function (node, nextNode) {
   // Remove nextNode, then insert after node
   remove(this, nextNode);
 
-  var oldNodeNext = node.next;
+  const oldNodeNext = node.next;
   node.next = nextNode;
 
   // nextNode is the new tail

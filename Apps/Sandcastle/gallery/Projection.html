@@ -36,29 +36,29 @@
         "use strict";
         //Sandcastle_Begin
         // Click the projection picker to switch between orthographic and perspective projections.
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           projectionPicker: true,
         });
 
         // start with orthographic projection
         viewer.projectionPicker.viewModel.switchToOrthographic();
 
-        var position = Cesium.Cartesian3.fromDegrees(
+        const position = Cesium.Cartesian3.fromDegrees(
           -123.0744619,
           44.0503706,
           0.0
         );
-        var hpr = new Cesium.HeadingPitchRoll(
+        const hpr = new Cesium.HeadingPitchRoll(
           Cesium.Math.toRadians(135),
           0.0,
           0.0
         );
-        var orientation = Cesium.Transforms.headingPitchRollQuaternion(
+        const orientation = Cesium.Transforms.headingPitchRollQuaternion(
           position,
           hpr
         );
 
-        var entity = viewer.entities.add({
+        const entity = viewer.entities.add({
           position: position,
           orientation: orientation,
           model: {

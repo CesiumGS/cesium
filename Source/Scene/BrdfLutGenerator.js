@@ -26,7 +26,7 @@ Object.defineProperties(BrdfLutGenerator.prototype, {
 });
 
 function createCommand(generator, context, framebuffer) {
-  var drawCommand = context.createViewportQuadCommand(BrdfLutGeneratorFS, {
+  const drawCommand = context.createViewportQuadCommand(BrdfLutGeneratorFS, {
     framebuffer: framebuffer,
     renderState: RenderState.fromCache({
       viewport: new BoundingRectangle(0.0, 0.0, 256.0, 256.0),
@@ -38,8 +38,8 @@ function createCommand(generator, context, framebuffer) {
 
 BrdfLutGenerator.prototype.update = function (frameState) {
   if (!defined(this._colorTexture)) {
-    var context = frameState.context;
-    var colorTexture = new Texture({
+    const context = frameState.context;
+    const colorTexture = new Texture({
       context: context,
       width: 256,
       height: 256,
@@ -49,7 +49,7 @@ BrdfLutGenerator.prototype.update = function (frameState) {
     });
 
     this._colorTexture = colorTexture;
-    var framebuffer = new Framebuffer({
+    const framebuffer = new Framebuffer({
       context: context,
       colorTextures: [colorTexture],
       destroyAttachments: false,
