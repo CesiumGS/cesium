@@ -109,7 +109,7 @@ function processPickTexture(renderResources, primitive, instances) {
   var featureTableId;
   var featureIdAttribute;
   var featureIdIndex = model.featureIdIndex;
-  var instanceFeatureIdIndex = model.featureIdIndex;
+  var instanceFeatureIdIndex = model.instanceFeatureIdIndex;
 
   if (defined(model.featureTableId)) {
     // Extract the Feature Table ID from the Cesium3DTileContent.
