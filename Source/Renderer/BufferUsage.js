@@ -3,7 +3,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 /**
  * @private
  */
-var BufferUsage = {
+const BufferUsage = {
   STREAM_DRAW: WebGLConstants.STREAM_DRAW,
   STATIC_DRAW: WebGLConstants.STATIC_DRAW,
   DYNAMIC_DRAW: WebGLConstants.DYNAMIC_DRAW,

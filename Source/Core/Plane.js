@@ -95,7 +95,7 @@ Plane.fromPointNormal = function (point, normal, result) {
   }
   //>>includeEnd('debug');
 
-  var distance = -Cartesian3.dot(normal, point);
+  const distance = -Cartesian3.dot(normal, point);
 
   if (!defined(result)) {
     return new Plane(normal, distance);
@@ -106,7 +106,7 @@ Plane.fromPointNormal = function (point, normal, result) {
   return result;
 };
 
-var scratchNormal = new Cartesian3();
+const scratchNormal = new Cartesian3();
 /**
  * Creates a plane from the general equation
  *
@@ -121,8 +121,8 @@ Plane.fromCartesian4 = function (coefficients, result) {
   Check.typeOf.object("coefficients", coefficients);
   //>>includeEnd('debug');
 
-  var normal = Cartesian3.fromCartesian4(coefficients, scratchNormal);
-  var distance = coefficients.w;
+  const normal = Cartesian3.fromCartesian4(coefficients, scratchNormal);
+  const distance = coefficients.w;
 
   //>>includeStart('debug', pragmas.debug);
   if (
@@ -164,7 +164,7 @@ Plane.getPointDistance = function (plane, point) {
   return Cartesian3.dot(plane.normal, point) + plane.distance;
 };
 
-var scratchCartesian = new Cartesian3();
+const scratchCartesian = new Cartesian3();
 /**
  * Projects a point onto the plane.
  * @param {Plane} plane The plane to project the point onto
@@ -183,8 +183,8 @@ Plane.projectPointOntoPlane = function (plane, point, result) {
   }
 
   // projectedPoint = point - (normal.point + scale) * normal
-  var pointDistance = Plane.getPointDistance(plane, point);
-  var scaledNormal = Cartesian3.multiplyByScalar(
+  const pointDistance = Plane.getPointDistance(plane, point);
+  const scaledNormal = Cartesian3.multiplyByScalar(
     plane.normal,
     pointDistance,
     scratchCartesian
@@ -193,9 +193,9 @@ Plane.projectPointOntoPlane = function (plane, point, result) {
   return Cartesian3.subtract(point, scaledNormal, result);
 };
 
-var scratchInverseTranspose = new Matrix4();
-var scratchPlaneCartesian4 = new Cartesian4();
-var scratchTransformNormal = new Cartesian3();
+const scratchInverseTranspose = new Matrix4();
+const scratchPlaneCartesian4 = new Cartesian4();
+const scratchTransformNormal = new Cartesian3();
 /**
  * Transforms the plane by the given transformation matrix.
  *
@@ -210,13 +210,13 @@ Plane.transform = function (plane, transform, result) {
   Check.typeOf.object("transform", transform);
   //>>includeEnd('debug');
 
-  var normal = plane.normal;
-  var distance = plane.distance;
-  var inverseTranspose = Matrix4.inverseTranspose(
+  const normal = plane.normal;
+  const distance = plane.distance;
+  const inverseTranspose = Matrix4.inverseTranspose(
     transform,
     scratchInverseTranspose
   );
-  var planeAsCartesian4 = Cartesian4.fromElements(
+  let planeAsCartesian4 = Cartesian4.fromElements(
     normal.x,
     normal.y,
     normal.z,
@@ -230,7 +230,7 @@ Plane.transform = function (plane, transform, result) {
   );
 
   // Convert the transformed plane to Hessian Normal Form
-  var transformedNormal = Cartesian3.fromCartesian4(
+  const transformedNormal = Cartesian3.fromCartesian4(
     planeAsCartesian4,
     scratchTransformNormal
   );

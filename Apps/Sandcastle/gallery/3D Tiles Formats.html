@@ -41,18 +41,18 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shadows: true,
         });
         viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
-        var inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
+        const inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
 
         viewer.clock.currentTime = new Cesium.JulianDate(2457522.154792);
 
-        var scene = viewer.scene;
-        var tileset;
+        const scene = viewer.scene;
+        let tileset;
 
-        var viewModel = {
+        const viewModel = {
           tilesets: [
             {
               name: "Tileset",
@@ -131,7 +131,7 @@
 
         Cesium.knockout.track(viewModel);
 
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
         Cesium.knockout
@@ -169,7 +169,7 @@
                   )
                 );
 
-                var properties = tileset.properties;
+                const properties = tileset.properties;
                 if (
                   Cesium.defined(properties) &&
                   Cesium.defined(properties.Height)
@@ -196,15 +196,15 @@
 
         viewModel.selectedTileset = viewModel.tilesets[0];
 
-        var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 
         handler.setInputAction(function (movement) {
-          var feature = inspectorViewModel.feature;
+          const feature = inspectorViewModel.feature;
           if (Cesium.defined(feature)) {
-            var propertyNames = feature.getPropertyNames();
-            var length = propertyNames.length;
-            for (var i = 0; i < length; ++i) {
-              var propertyName = propertyNames[i];
+            const propertyNames = feature.getPropertyNames();
+            const length = propertyNames.length;
+            for (let i = 0; i < length; ++i) {
+              const propertyName = propertyNames[i];
               console.log(
                 propertyName + ": " + feature.getProperty(propertyName)
               );
@@ -213,7 +213,7 @@
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         handler.setInputAction(function (movement) {
-          var feature = inspectorViewModel.feature;
+          const feature = inspectorViewModel.feature;
           if (Cesium.defined(feature)) {
             feature.show = false;
           }

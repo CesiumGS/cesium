@@ -25,15 +25,15 @@ import PropertyTable from "../PropertyTable.js";
 import ResourceLoaderState from "../ResourceLoaderState.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
-var Components = ModelComponents.Components;
-var Scene = ModelComponents.Scene;
-var Node = ModelComponents.Node;
-var Primitive = ModelComponents.Primitive;
-var Attribute = ModelComponents.Attribute;
-var Quantization = ModelComponents.Quantization;
-var FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
-var Material = ModelComponents.Material;
-var MetallicRoughness = ModelComponents.MetallicRoughness;
+const Components = ModelComponents.Components;
+const Scene = ModelComponents.Scene;
+const Node = ModelComponents.Node;
+const Primitive = ModelComponents.Primitive;
+const Attribute = ModelComponents.Attribute;
+const Quantization = ModelComponents.Quantization;
+const FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
+const Material = ModelComponents.Material;
+const MetallicRoughness = ModelComponents.MetallicRoughness;
 
 /**
  * Loads a .pnts point cloud and transcodes it into a {@link ModelComponents}
@@ -50,8 +50,8 @@ var MetallicRoughness = ModelComponents.MetallicRoughness;
 export default function PntsLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var arrayBuffer = options.arrayBuffer;
-  var byteOffset = defaultValue(options.byteOffset, 0);
+  const arrayBuffer = options.arrayBuffer;
+  const byteOffset = defaultValue(options.byteOffset, 0);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.arrayBuffer", arrayBuffer);
@@ -158,10 +158,10 @@ PntsLoader.prototype.process = function (frameState) {
 };
 
 function decodeDraco(loader, context) {
-  var parsedContent = loader._parsedContent;
-  var draco = parsedContent.draco;
+  const parsedContent = loader._parsedContent;
+  const draco = parsedContent.draco;
 
-  var decodePromise;
+  let decodePromise;
   if (!defined(draco)) {
     // The draco extension wasn't present,
     decodePromise = when.resolve();
@@ -191,16 +191,16 @@ function decodeDraco(loader, context) {
     .otherwise(function (error) {
       loader.unload();
       loader._state = ResourceLoaderState.FAILED;
-      var errorMessage = "Failed to load Draco";
+      const errorMessage = "Failed to load Draco";
       loader._promise.reject(loader.getError(errorMessage, error));
     });
 }
 
 function processDracoAttributes(loader, draco, result) {
   loader._state = ResourceLoaderState.READY;
-  var parsedContent = loader._parsedContent;
+  const parsedContent = loader._parsedContent;
 
-  var attribute;
+  let attribute;
   if (defined(result.POSITION)) {
     attribute = {
       name: "POSITION",
@@ -214,11 +214,11 @@ function processDracoAttributes(loader, draco, result) {
     if (defined(result.POSITION.data.quantization)) {
       // Draco quantization range == quantized volume scale - size in meters of the quantized volume
       // Internal quantized range is the range of values of the quantized data, e.g. 255 for 8-bit, 1023 for 10-bit, etc
-      var quantization = result.POSITION.data.quantization;
-      var range = quantization.range;
-      var quantizedVolumeScale = Cartesian3.fromElements(range, range, range);
-      var quantizedVolumeOffset = Cartesian3.unpack(quantization.minValues);
-      var quantizedRange = (1 << quantization.quantizationBits) - 1.0;
+      const quantization = result.POSITION.data.quantization;
+      const range = quantization.range;
+      const quantizedVolumeScale = Cartesian3.fromElements(range, range, range);
+      const quantizedVolumeOffset = Cartesian3.unpack(quantization.minValues);
+      const quantizedRange = (1 << quantization.quantizationBits) - 1.0;
 
       attribute.isQuantized = true;
       attribute.quantizedRange = quantizedRange;
@@ -244,7 +244,7 @@ function processDracoAttributes(loader, draco, result) {
     };
 
     if (defined(result.NORMAL.data.quantization)) {
-      var octEncodedRange =
+      const octEncodedRange =
         (1 << result.NORMAL.data.quantization.quantizationBits) - 1.0;
       attribute.quantizedRange = octEncodedRange;
       attribute.octEncoded = true;
@@ -282,7 +282,7 @@ function processDracoAttributes(loader, draco, result) {
 
   // Transcode Batch ID (3D Tiles 1.0) -> Feature ID (3D Tiles Next)
   if (defined(result.BATCH_ID)) {
-    var batchIds = result.BATCH_ID.array;
+    const batchIds = result.BATCH_ID.array;
     parsedContent.batchIds = {
       name: "FEATURE_ID",
       semantic: VertexAttributeSemantic.FEATURE_ID,
@@ -293,11 +293,11 @@ function processDracoAttributes(loader, draco, result) {
     };
   }
 
-  var styleableProperties = parsedContent.styleableProperties;
-  var batchTableProperties = draco.batchTableProperties;
-  for (var name in batchTableProperties) {
+  let styleableProperties = parsedContent.styleableProperties;
+  const batchTableProperties = draco.batchTableProperties;
+  for (const name in batchTableProperties) {
     if (batchTableProperties.hasOwnProperty(name)) {
-      var property = result[name];
+      const property = result[name];
       if (!defined(styleableProperties)) {
         styleableProperties = {};
       }
@@ -311,8 +311,8 @@ function processDracoAttributes(loader, draco, result) {
 }
 
 function makeAttribute(loader, attributeInfo, context) {
-  var typedArray = attributeInfo.typedArray;
-  var quantization;
+  let typedArray = attributeInfo.typedArray;
+  let quantization;
   if (attributeInfo.octEncoded) {
     quantization = new Quantization();
     quantization.octEncoded = attributeInfo.octEncoded;
@@ -323,12 +323,12 @@ function makeAttribute(loader, attributeInfo, context) {
   }
   if (attributeInfo.isQuantized) {
     quantization = new Quantization();
-    var normalizationRange = attributeInfo.quantizedRange;
+    const normalizationRange = attributeInfo.quantizedRange;
     quantization.normalizationRange = normalizationRange;
     // volume offset sometimes requires 64-bit precision so this is handled
     // in the components.transform matrix.
     quantization.quantizedVolumeOffset = Cartesian3.ZERO;
-    var quantizedVolumeDimensions = attributeInfo.quantizedVolumeScale;
+    const quantizedVolumeDimensions = attributeInfo.quantizedVolumeScale;
     quantization.quantizedVolumeDimensions = quantizedVolumeDimensions;
     quantization.quantizedVolumeStepSize = Cartesian3.divideByScalar(
       quantizedVolumeDimensions,
@@ -339,7 +339,7 @@ function makeAttribute(loader, attributeInfo, context) {
     quantization.type = attributeInfo.quantizedType;
   }
 
-  var attribute = new Attribute();
+  const attribute = new Attribute();
   attribute.name = attributeInfo.name;
   attribute.semantic = attributeInfo.semantic;
   attribute.setIndex = attributeInfo.setIndex;
@@ -355,10 +355,10 @@ function makeAttribute(loader, attributeInfo, context) {
   }
 
   if (defined(attributeInfo.constantColor)) {
-    var packedColor = new Array(4);
+    const packedColor = new Array(4);
     attribute.constant = Color.pack(attributeInfo.constantColor, packedColor);
   } else {
-    var buffer = Buffer.createVertexBuffer({
+    const buffer = Buffer.createVertexBuffer({
       typedArray: typedArray,
       context: context,
       usage: BufferUsage.STATIC_DRAW,
@@ -371,8 +371,8 @@ function makeAttribute(loader, attributeInfo, context) {
   return attribute;
 }
 
-var randomNumberGenerator;
-var randomValues;
+let randomNumberGenerator;
+let randomValues;
 
 function getRandomValues(samplesLength) {
   // Use same random values across all runs
@@ -381,29 +381,29 @@ function getRandomValues(samplesLength) {
     // See https://github.com/CesiumGS/cesium/issues/9730
     randomNumberGenerator = new MersenneTwister(0);
     randomValues = new Array(samplesLength);
-    for (var i = 0; i < samplesLength; ++i) {
+    for (let i = 0; i < samplesLength; ++i) {
       randomValues[i] = randomNumberGenerator.random();
     }
   }
   return randomValues;
 }
 
-var scratchMin = new Cartesian3();
-var scratchMax = new Cartesian3();
-var scratchPosition = new Cartesian3();
+const scratchMin = new Cartesian3();
+const scratchMax = new Cartesian3();
+const scratchPosition = new Cartesian3();
 function computeApproximateExtrema(positions) {
-  var positionsArray = positions.typedArray;
-  var maximumSamplesLength = 20;
-  var pointsLength = positionsArray.length / 3;
-  var samplesLength = Math.min(pointsLength, maximumSamplesLength);
-  var randomValues = getRandomValues(maximumSamplesLength);
-  var maxValue = Number.MAX_VALUE;
-  var minValue = -Number.MAX_VALUE;
-  var min = Cartesian3.fromElements(maxValue, maxValue, maxValue, scratchMin);
-  var max = Cartesian3.fromElements(minValue, minValue, minValue, scratchMax);
-  var i;
-  var index;
-  var position;
+  const positionsArray = positions.typedArray;
+  const maximumSamplesLength = 20;
+  const pointsLength = positionsArray.length / 3;
+  const samplesLength = Math.min(pointsLength, maximumSamplesLength);
+  const randomValues = getRandomValues(maximumSamplesLength);
+  const maxValue = Number.MAX_VALUE;
+  const minValue = -Number.MAX_VALUE;
+  let min = Cartesian3.fromElements(maxValue, maxValue, maxValue, scratchMin);
+  let max = Cartesian3.fromElements(minValue, minValue, minValue, scratchMax);
+  let i;
+  let index;
+  let position;
   if (positions.isQuantized) {
     // The quantized volume offset is not used here since it will become part of
     // the model matrix.
@@ -424,7 +424,7 @@ function computeApproximateExtrema(positions) {
 }
 
 // By default, point clouds are rendered as dark gray.
-var defaultColorAttribute = {
+const defaultColorAttribute = {
   name: VertexAttributeSemantic.COLOR,
   semantic: VertexAttributeSemantic.COLOR,
   setIndex: 0,
@@ -436,9 +436,9 @@ var defaultColorAttribute = {
 };
 
 function makeAttributes(loader, parsedContent, context) {
-  var attributes = [];
-  var attribute;
-  var positions = parsedContent.positions;
+  const attributes = [];
+  let attribute;
+  const positions = parsedContent.positions;
   if (defined(positions)) {
     computeApproximateExtrema(positions);
     attribute = makeAttribute(loader, positions, context);
@@ -468,12 +468,12 @@ function makeAttributes(loader, parsedContent, context) {
 }
 
 function makeFeatureMetadata(parsedContent) {
-  var batchLength = parsedContent.batchLength;
-  var pointsLength = parsedContent.pointsLength;
-  var batchTableBinary = parsedContent.batchTableBinary;
+  const batchLength = parsedContent.batchLength;
+  const pointsLength = parsedContent.pointsLength;
+  const batchTableBinary = parsedContent.batchTableBinary;
 
   if (defined(batchTableBinary)) {
-    var count = defaultValue(batchLength, pointsLength);
+    const count = defaultValue(batchLength, pointsLength);
     return parseBatchTable({
       count: count,
       batchTable: parsedContent.batchTableJson,
@@ -482,7 +482,7 @@ function makeFeatureMetadata(parsedContent) {
   }
 
   // If batch table is not defined, create a property table without any properties.
-  var emptyPropertyTable = new PropertyTable({
+  const emptyPropertyTable = new PropertyTable({
     name: MetadataClass.BATCH_TABLE_CLASS_NAME,
     count: pointsLength,
   });
@@ -493,46 +493,46 @@ function makeFeatureMetadata(parsedContent) {
 }
 
 function makeComponents(loader, context) {
-  var parsedContent = loader._parsedContent;
+  const parsedContent = loader._parsedContent;
 
-  var metallicRoughness = new MetallicRoughness();
+  const metallicRoughness = new MetallicRoughness();
   metallicRoughness.metallicFactor = 0;
   metallicRoughness.roughnessFactor = 0.9;
 
-  var material = new Material();
+  const material = new Material();
   material.metallicRoughness = metallicRoughness;
 
-  var colors = parsedContent.colors;
+  const colors = parsedContent.colors;
   if (defined(colors) && colors.isTranslucent) {
     material.alphaMode = AlphaMode.BLEND;
   }
 
   // Render point clouds as unlit, unless normals are present, in which case
   // render as a PBR material.
-  var isUnlit = !defined(parsedContent.normals);
+  const isUnlit = !defined(parsedContent.normals);
   material.unlit = isUnlit;
 
-  var primitive = new Primitive();
+  const primitive = new Primitive();
   primitive.attributes = makeAttributes(loader, parsedContent, context);
   primitive.primitiveType = PrimitiveType.POINTS;
   primitive.material = material;
 
   if (defined(parsedContent.batchIds)) {
-    var featureIdAttribute = new FeatureIdAttribute();
+    const featureIdAttribute = new FeatureIdAttribute();
     featureIdAttribute.propertyTableId = 0;
     featureIdAttribute.setIndex = 0;
     primitive.featureIds.push(featureIdAttribute);
   }
 
-  var node = new Node();
+  const node = new Node();
   node.primitives = [primitive];
 
-  var scene = new Scene();
+  const scene = new Scene();
   scene.nodes = [node];
   scene.upAxis = Axis.Z;
   scene.forwardAxis = Axis.X;
 
-  var components = new Components();
+  const components = new Components();
   components.scene = scene;
   components.nodes = [node];
   components.featureMetadata = makeFeatureMetadata(parsedContent);
@@ -545,7 +545,7 @@ function makeComponents(loader, context) {
     );
   }
 
-  var positions = parsedContent.positions;
+  const positions = parsedContent.positions;
   if (defined(positions) && positions.isQuantized) {
     // The volume offset is sometimes in ECEF, so this is applied here rather
     // than the dequantization shader to avoid jitter
@@ -563,8 +563,8 @@ function makeComponents(loader, context) {
 }
 
 PntsLoader.prototype.unload = function () {
-  var buffers = this._buffers;
-  for (var i = 0; i < buffers.length; i++) {
+  const buffers = this._buffers;
+  for (let i = 0; i < buffers.length; i++) {
     buffers[i].destroy();
   }
   buffers.length = 0;

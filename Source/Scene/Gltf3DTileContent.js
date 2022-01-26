@@ -115,11 +115,11 @@ Object.defineProperties(Gltf3DTileContent.prototype, {
 });
 
 function initialize(content, gltf) {
-  var tileset = content._tileset;
-  var tile = content._tile;
-  var resource = content._resource;
+  const tileset = content._tileset;
+  const tile = content._tile;
+  const resource = content._resource;
 
-  var pickObject = {
+  const pickObject = {
     content: content,
     primitive: tileset,
   };
@@ -168,8 +168,8 @@ Gltf3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
 };
 
 Gltf3DTileContent.prototype.applyStyle = function (style) {
-  var hasColorStyle = defined(style) && defined(style.color);
-  var hasShowStyle = defined(style) && defined(style.show);
+  const hasColorStyle = defined(style) && defined(style.color);
+  const hasShowStyle = defined(style) && defined(style.show);
   this._model.color = hasColorStyle
     ? style.color.evaluateColor(undefined, this._model.color)
     : Color.clone(Color.WHITE, this._model.color);
@@ -177,8 +177,8 @@ Gltf3DTileContent.prototype.applyStyle = function (style) {
 };
 
 Gltf3DTileContent.prototype.update = function (tileset, frameState) {
-  var model = this._model;
-  var tile = this._tile;
+  const model = this._model;
+  const tile = this._tile;
 
   model.modelMatrix = tile.computedTransform;
   model.shadows = tileset.shadows;
@@ -191,7 +191,7 @@ Gltf3DTileContent.prototype.update = function (tileset, frameState) {
   model.debugWireframe = tileset.debugWireframe;
 
   // Update clipping planes
-  var tilesetClippingPlanes = tileset.clippingPlanes;
+  const tilesetClippingPlanes = tileset.clippingPlanes;
   model.referenceMatrix = tileset.clippingPlanesOriginMatrix;
   if (defined(tilesetClippingPlanes) && tile.clippingPlanesDirty) {
     // Dereference the clipping planes from the model if they are irrelevant.

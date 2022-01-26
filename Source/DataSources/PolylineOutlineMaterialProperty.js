@@ -5,9 +5,9 @@ import Event from "../Core/Event.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import Property from "./Property.js";
 
-var defaultColor = Color.WHITE;
-var defaultOutlineColor = Color.BLACK;
-var defaultOutlineWidth = 1.0;
+const defaultColor = Color.WHITE;
+const defaultOutlineColor = Color.BLACK;
+const defaultOutlineWidth = 1.0;
 
 /**
  * A {@link MaterialProperty} that maps to polyline outline {@link Material} uniforms.

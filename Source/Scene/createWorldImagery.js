@@ -30,7 +30,7 @@ import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
  */
 function createWorldImagery(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var style = defaultValue(options.style, IonWorldImageryStyle.AERIAL);
+  const style = defaultValue(options.style, IonWorldImageryStyle.AERIAL);
   return new IonImageryProvider({
     assetId: style,
   });

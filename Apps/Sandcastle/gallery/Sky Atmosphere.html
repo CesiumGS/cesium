@@ -89,15 +89,15 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           sceneModePicker: false,
         });
-        var scene = viewer.scene;
-        var skyAtmosphere = scene.skyAtmosphere;
-        var globe = scene.globe;
+        const scene = viewer.scene;
+        const skyAtmosphere = scene.skyAtmosphere;
+        const globe = scene.globe;
 
         // The viewModel tracks the state of our mini application.
-        var viewModel = {
+        const viewModel = {
           hueShift: 0.0,
           saturationShift: 0.0,
           brightnessShift: 0.0,
@@ -106,7 +106,7 @@
         Cesium.knockout.track(viewModel);
 
         // Bind the viewModel to the DOM elements of the UI that call for it.
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
         // Make the skyAtmosphere's HSB parameters subscribers of the viewModel.
@@ -135,7 +135,7 @@
           scene.fog.enabled = checked;
         });
 
-        var camera = viewer.camera;
+        const camera = viewer.camera;
         camera.setView({
           destination: Cesium.Cartesian3.fromDegrees(-75.5847, 40.0397, 1000.0),
           orientation: {

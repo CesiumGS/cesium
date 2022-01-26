@@ -56,13 +56,13 @@
 
         // How to use the 3D Tiles Styling language to style individual features, like buildings.
         // Styling language specification: https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
-        var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 
         // Add Cesium OSM buildings to the scene as our example 3D Tileset.
-        var osmBuildingsTileset = Cesium.createOsmBuildings();
+        const osmBuildingsTileset = Cesium.createOsmBuildings();
         viewer.scene.primitives.add(osmBuildingsTileset);
 
         // Set the initial camera to look at Seattle
@@ -161,7 +161,7 @@
 
         // Add event listeners to dropdown menu options
         document.querySelector(".infoPanel").style.visibility = "hidden";
-        var menu = document.getElementById("dropdown");
+        const menu = document.getElementById("dropdown");
 
         menu.options[0].onselect = function () {
           removeCoordinatePickingOnLeftClick();
@@ -175,12 +175,12 @@
           // Add left click input to select a building to and extract its coordinates
           handler.setInputAction(function (movement) {
             viewer.selectedEntity = undefined;
-            var pickedBuilding = viewer.scene.pick(movement.position);
+            const pickedBuilding = viewer.scene.pick(movement.position);
             if (pickedBuilding) {
-              var pickedLatitude = pickedBuilding.getProperty(
+              const pickedLatitude = pickedBuilding.getProperty(
                 "cesium#latitude"
               );
-              var pickedLongitude = pickedBuilding.getProperty(
+              const pickedLongitude = pickedBuilding.getProperty(
                 "cesium#longitude"
               );
               colorByDistanceToCoordinate(pickedLatitude, pickedLongitude);
@@ -205,7 +205,7 @@
 
         menu.onchange = function () {
           Sandcastle.reset();
-          var item = menu.options[menu.selectedIndex];
+          const item = menu.options[menu.selectedIndex];
           if (item && typeof item.onselect === "function") {
             item.onselect();
           }

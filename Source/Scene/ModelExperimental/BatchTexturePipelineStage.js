@@ -7,7 +7,7 @@ import defaultValue from "../../Core/defaultValue.js";
  * @namespace BatchTexturePipelineStage
  * @private
  */
-var BatchTexturePipelineStage = {};
+const BatchTexturePipelineStage = {};
 BatchTexturePipelineStage.name = "BatchTexturePipelineStage"; // Helps with debugging
 
 /**
@@ -26,22 +26,22 @@ BatchTexturePipelineStage.process = function (
   primitive,
   frameState
 ) {
-  var shaderBuilder = renderResources.shaderBuilder;
-  var batchTextureUniforms = {};
+  const shaderBuilder = renderResources.shaderBuilder;
+  const batchTextureUniforms = {};
 
-  var model = renderResources.model;
+  const model = renderResources.model;
 
-  var featureTable = model.featureTables[model.featureTableId];
+  const featureTable = model.featureTables[model.featureTableId];
 
   // Number of features in the feature table.
-  var featuresLength = featureTable.featuresLength;
+  const featuresLength = featureTable.featuresLength;
   shaderBuilder.addUniform("float", "model_featuresLength");
   batchTextureUniforms.model_featuresLength = function () {
     return featuresLength;
   };
 
   // Batch texture
-  var batchTexture = featureTable.batchTexture;
+  const batchTexture = featureTable.batchTexture;
   shaderBuilder.addUniform("sampler2D", "model_batchTexture");
   batchTextureUniforms.model_batchTexture = function () {
     return defaultValue(batchTexture.batchTexture, batchTexture.defaultTexture);

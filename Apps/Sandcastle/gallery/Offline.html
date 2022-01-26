@@ -40,7 +40,7 @@
         // does not rely on any outside resources or services.  For more info, see:
         // https://github.com/CesiumGS/cesium/wiki/Offline-Guide
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           imageryProvider: new Cesium.TileMapServiceImageryProvider({
             url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
           }),

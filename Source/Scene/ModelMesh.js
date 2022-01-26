@@ -11,11 +11,11 @@
  * @see Model#getMesh
  */
 function ModelMesh(mesh, runtimeMaterialsById, id) {
-  var materials = [];
-  var primitives = mesh.primitives;
-  var length = primitives.length;
-  for (var i = 0; i < length; ++i) {
-    var p = primitives[i];
+  const materials = [];
+  const primitives = mesh.primitives;
+  const length = primitives.length;
+  for (let i = 0; i < length; ++i) {
+    const p = primitives[i];
     materials[i] = runtimeMaterialsById[p.material];
   }
 

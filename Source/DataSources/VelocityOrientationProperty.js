@@ -36,7 +36,7 @@ function VelocityOrientationProperty(position, ellipsoid) {
 
   this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
-  var that = this;
+  const that = this;
   this._velocityVectorProperty.definitionChanged.addEventListener(function () {
     that._definitionChanged.raiseEvent(that);
   });
@@ -92,7 +92,7 @@ Object.defineProperties(VelocityOrientationProperty.prototype, {
       return this._ellipsoid;
     },
     set: function (value) {
-      var oldValue = this._ellipsoid;
+      const oldValue = this._ellipsoid;
       if (oldValue !== value) {
         this._ellipsoid = value;
         this._definitionChanged.raiseEvent(this);
@@ -101,9 +101,9 @@ Object.defineProperties(VelocityOrientationProperty.prototype, {
   },
 });
 
-var positionScratch = new Cartesian3();
-var velocityScratch = new Cartesian3();
-var rotationScratch = new Matrix3();
+const positionScratch = new Cartesian3();
+const velocityScratch = new Cartesian3();
+const rotationScratch = new Matrix3();
 
 /**
  * Gets the value of the property at the provided time.
@@ -113,7 +113,7 @@ var rotationScratch = new Matrix3();
  * @returns {Quaternion} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 VelocityOrientationProperty.prototype.getValue = function (time, result) {
-  var velocity = this._velocityVectorProperty._getValue(
+  const velocity = this._velocityVectorProperty._getValue(
     time,
     velocityScratch,
     positionScratch

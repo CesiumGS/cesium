@@ -29,8 +29,8 @@ import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 
 describe("DataSources/StaticGeometryPerMaterialBatch", function () {
-  var time = JulianDate.now();
-  var scene;
+  const time = JulianDate.now();
+  let scene;
   beforeAll(function () {
     scene = createScene();
   });
@@ -40,7 +40,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
   });
 
   it("handles shared material being invalidated with geometry", function () {
-    var batch = new StaticGeometryPerMaterialBatch(
+    const batch = new StaticGeometryPerMaterialBatch(
       scene.primitives,
       MaterialAppearance,
       undefined,
@@ -48,36 +48,36 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       ShadowMode.DISABLED
     );
 
-    var ellipse = new EllipseGraphics();
+    const ellipse = new EllipseGraphics();
     ellipse.semiMajorAxis = new ConstantProperty(2);
     ellipse.semiMinorAxis = new ConstantProperty(1);
     ellipse.material = new GridMaterialProperty();
 
-    var entity = new Entity();
+    const entity = new Entity();
     entity.position = new ConstantPositionProperty(
       new Cartesian3(1234, 5678, 9101112)
     );
     entity.ellipse = ellipse;
 
-    var ellipse2 = new EllipseGraphics();
+    const ellipse2 = new EllipseGraphics();
     ellipse2.semiMajorAxis = new ConstantProperty(3);
     ellipse2.semiMinorAxis = new ConstantProperty(2);
     ellipse2.material = new GridMaterialProperty();
 
-    var entity2 = new Entity();
+    const entity2 = new Entity();
     entity2.position = new ConstantPositionProperty(
       new Cartesian3(1234, 5678, 9101112)
     );
     entity2.ellipse = ellipse2;
 
-    var updater = new EllipseGeometryUpdater(entity, scene);
-    var updater2 = new EllipseGeometryUpdater(entity2, scene);
+    const updater = new EllipseGeometryUpdater(entity, scene);
+    const updater2 = new EllipseGeometryUpdater(entity2, scene);
     batch.add(time, updater);
     batch.add(time, updater2);
 
     return pollToPromise(function () {
       scene.initializeFrame();
-      var isUpdated = batch.update(time);
+      const isUpdated = batch.update(time);
       scene.render(time);
       return isUpdated;
     }).then(function () {
@@ -86,7 +86,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
 
       return pollToPromise(function () {
         scene.initializeFrame();
-        var isUpdated = batch.update(time);
+        const isUpdated = batch.update(time);
         scene.render(time);
         return isUpdated;
       }).then(function () {
@@ -97,16 +97,16 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
   });
 
   it("updates with sampled distance display condition out of range", function () {
-    var validTime = JulianDate.fromIso8601("2018-02-14T04:10:00+1100");
-    var outOfRangeTime = JulianDate.fromIso8601("2018-02-14T04:20:00+1100");
-    var ddc = new TimeIntervalCollectionProperty();
+    const validTime = JulianDate.fromIso8601("2018-02-14T04:10:00+1100");
+    const outOfRangeTime = JulianDate.fromIso8601("2018-02-14T04:20:00+1100");
+    const ddc = new TimeIntervalCollectionProperty();
     ddc.intervals.addInterval(
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: new DistanceDisplayCondition(1.0, 2.0),
       })
     );
-    var entity = new Entity({
+    const entity = new Entity({
       availability: new TimeIntervalCollection([
         TimeInterval.fromIso8601({
           iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100",
@@ -122,7 +122,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       },
     });
 
-    var batch = new StaticGeometryPerMaterialBatch(
+    const batch = new StaticGeometryPerMaterialBatch(
       scene.primitives,
       MaterialAppearance,
       undefined,
@@ -130,18 +130,18 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       ShadowMode.DISABLED
     );
 
-    var updater = new EllipseGeometryUpdater(entity, scene);
+    const updater = new EllipseGeometryUpdater(entity, scene);
     batch.add(validTime, updater);
 
     return pollToPromise(function () {
       scene.initializeFrame();
-      var isUpdated = batch.update(validTime);
+      const isUpdated = batch.update(validTime);
       scene.render(validTime);
       return isUpdated;
     }).then(function () {
       expect(scene.primitives.length).toEqual(1);
-      var primitive = scene.primitives.get(0);
-      var attributes = primitive.getGeometryInstanceAttributes(entity);
+      let primitive = scene.primitives.get(0);
+      let attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(attributes.distanceDisplayCondition).toEqualEpsilon(
         [1.0, 2.0],
         CesiumMath.EPSILON6
@@ -159,16 +159,16 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
   });
 
   it("updates with sampled show out of range", function () {
-    var validTime = JulianDate.fromIso8601("2018-02-14T04:10:00+1100");
-    var outOfRangeTime = JulianDate.fromIso8601("2018-02-14T04:20:00+1100");
-    var show = new TimeIntervalCollectionProperty();
+    const validTime = JulianDate.fromIso8601("2018-02-14T04:10:00+1100");
+    const outOfRangeTime = JulianDate.fromIso8601("2018-02-14T04:20:00+1100");
+    const show = new TimeIntervalCollectionProperty();
     show.intervals.addInterval(
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: true,
       })
     );
-    var entity = new Entity({
+    const entity = new Entity({
       availability: new TimeIntervalCollection([
         TimeInterval.fromIso8601({
           iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100",
@@ -184,7 +184,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       },
     });
 
-    var batch = new StaticGeometryPerMaterialBatch(
+    const batch = new StaticGeometryPerMaterialBatch(
       scene.primitives,
       MaterialAppearance,
       undefined,
@@ -192,18 +192,18 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       ShadowMode.DISABLED
     );
 
-    var updater = new EllipseGeometryUpdater(entity, scene);
+    const updater = new EllipseGeometryUpdater(entity, scene);
     batch.add(validTime, updater);
 
     return pollToPromise(function () {
       scene.initializeFrame();
-      var isUpdated = batch.update(validTime);
+      const isUpdated = batch.update(validTime);
       scene.render(validTime);
       return isUpdated;
     }).then(function () {
       expect(scene.primitives.length).toEqual(1);
-      var primitive = scene.primitives.get(0);
-      var attributes = primitive.getGeometryInstanceAttributes(entity);
+      let primitive = scene.primitives.get(0);
+      let attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(attributes.show).toEqual([1]);
 
       batch.update(outOfRangeTime);
@@ -218,7 +218,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
   });
 
   it("handles shared material being invalidated for polyline", function () {
-    var batch = new StaticGeometryPerMaterialBatch(
+    const batch = new StaticGeometryPerMaterialBatch(
       scene.primitives,
       PolylineMaterialAppearance,
       undefined,
@@ -226,34 +226,34 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       ShadowMode.DISABLED
     );
 
-    var polyline = new PolylineGraphics();
+    const polyline = new PolylineGraphics();
     polyline.positions = new ConstantProperty([
       Cartesian3.fromDegrees(0.0, 0.0),
       Cartesian3.fromDegrees(0.0, 1.0),
     ]);
     polyline.material = new PolylineArrowMaterialProperty();
 
-    var entity = new Entity();
+    const entity = new Entity();
     entity.polyline = polyline;
 
-    var polyline2 = new PolylineGraphics();
+    const polyline2 = new PolylineGraphics();
     polyline2.positions = new ConstantProperty([
       Cartesian3.fromDegrees(0.0, 0.0),
       Cartesian3.fromDegrees(0.0, 1.0),
     ]);
     polyline2.material = new PolylineArrowMaterialProperty();
 
-    var entity2 = new Entity();
+    const entity2 = new Entity();
     entity2.polyline = polyline2;
 
-    var updater = new PolylineGeometryUpdater(entity, scene);
-    var updater2 = new PolylineGeometryUpdater(entity2, scene);
+    const updater = new PolylineGeometryUpdater(entity, scene);
+    const updater2 = new PolylineGeometryUpdater(entity2, scene);
     batch.add(time, updater);
     batch.add(time, updater2);
 
     return pollToPromise(function () {
       scene.initializeFrame();
-      var isUpdated = batch.update(time);
+      const isUpdated = batch.update(time);
       scene.render(time);
       return isUpdated;
     }).then(function () {
@@ -262,7 +262,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
 
       return pollToPromise(function () {
         scene.initializeFrame();
-        var isUpdated = batch.update(time);
+        const isUpdated = batch.update(time);
         scene.render(time);
         return isUpdated;
       }).then(function () {
@@ -273,15 +273,15 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
   });
 
   it("updates with sampled depth fail color out of range", function () {
-    var validTime = JulianDate.fromIso8601("2018-02-14T04:10:00+1100");
-    var color = new TimeIntervalCollectionProperty();
+    const validTime = JulianDate.fromIso8601("2018-02-14T04:10:00+1100");
+    const color = new TimeIntervalCollectionProperty();
     color.intervals.addInterval(
       TimeInterval.fromIso8601({
         iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100",
         data: Color.RED,
       })
     );
-    var entity = new Entity({
+    const entity = new Entity({
       availability: new TimeIntervalCollection([
         TimeInterval.fromIso8601({
           iso8601: "2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100",
@@ -297,7 +297,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       },
     });
 
-    var batch = new StaticGeometryPerMaterialBatch(
+    const batch = new StaticGeometryPerMaterialBatch(
       scene.primitives,
       PolylineMaterialAppearance,
       PolylineColorAppearance,
@@ -305,18 +305,18 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       ShadowMode.DISABLED
     );
 
-    var updater = new PolylineGeometryUpdater(entity, scene);
+    const updater = new PolylineGeometryUpdater(entity, scene);
     batch.add(validTime, updater);
 
     return pollToPromise(function () {
       scene.initializeFrame();
-      var isUpdated = batch.update(validTime);
+      const isUpdated = batch.update(validTime);
       scene.render(validTime);
       return isUpdated;
     }).then(function () {
       expect(scene.primitives.length).toEqual(1);
-      var primitive = scene.primitives.get(0);
-      var attributes = primitive.getGeometryInstanceAttributes(entity);
+      let primitive = scene.primitives.get(0);
+      let attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(attributes.depthFailColor).toEqual([255, 0, 0, 255]);
 
       batch.update(time);
@@ -331,7 +331,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
   });
 
   it("shows only one primitive while rebuilding primitive", function () {
-    var batch = new StaticGeometryPerMaterialBatch(
+    const batch = new StaticGeometryPerMaterialBatch(
       scene.primitives,
       MaterialAppearance,
       undefined,
@@ -340,7 +340,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
     );
 
     function buildEntity() {
-      var material = new GridMaterialProperty({
+      const material = new GridMaterialProperty({
         color: Color.YELLOW,
         cellAlpha: 0.3,
         lineCount: new Cartesian2(8, 8),
@@ -360,22 +360,22 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
 
     function renderScene() {
       scene.initializeFrame();
-      var isUpdated = batch.update(time);
+      const isUpdated = batch.update(time);
       scene.render(time);
       return isUpdated;
     }
 
-    var entity1 = buildEntity();
-    var entity2 = buildEntity();
+    const entity1 = buildEntity();
+    const entity2 = buildEntity();
 
-    var updater1 = new EllipseGeometryUpdater(entity1, scene);
-    var updater2 = new EllipseGeometryUpdater(entity2, scene);
+    const updater1 = new EllipseGeometryUpdater(entity1, scene);
+    const updater2 = new EllipseGeometryUpdater(entity2, scene);
 
     batch.add(time, updater1);
     return pollToPromise(renderScene)
       .then(function () {
         expect(scene.primitives.length).toEqual(1);
-        var primitive = scene.primitives.get(0);
+        const primitive = scene.primitives.get(0);
         expect(primitive.show).toBeTruthy();
       })
       .then(function () {
@@ -388,7 +388,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
         });
       })
       .then(function () {
-        var showCount = 0;
+        let showCount = 0;
         expect(scene.primitives.length).toEqual(2);
         showCount += !!scene.primitives.get(0).show;
         showCount += !!scene.primitives.get(1).show;
@@ -399,7 +399,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       })
       .then(function () {
         expect(scene.primitives.length).toEqual(1);
-        var primitive = scene.primitives.get(0);
+        const primitive = scene.primitives.get(0);
         expect(primitive.show).toBeTruthy();
 
         batch.removeAllPrimitives();
@@ -407,7 +407,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
   });
 
   it("removes all updaters", function () {
-    var batch = new StaticGeometryPerMaterialBatch(
+    const batch = new StaticGeometryPerMaterialBatch(
       scene.primitives,
       MaterialAppearance,
       undefined,
@@ -416,7 +416,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
     );
 
     function buildEntity(MaterialProperty) {
-      var material = new MaterialProperty({
+      const material = new MaterialProperty({
         evenColor: Color.YELLOW,
         oddColor: Color.BLUE,
       });
@@ -434,21 +434,21 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
 
     function renderScene() {
       scene.initializeFrame();
-      var isUpdated = batch.update(time);
+      const isUpdated = batch.update(time);
       scene.render(time);
       return isUpdated;
     }
 
-    var entity1 = buildEntity(StripeMaterialProperty);
-    var entity2 = buildEntity(CheckerboardMaterialProperty);
-    var entity3 = buildEntity(StripeMaterialProperty);
-    var entity4 = buildEntity(CheckerboardMaterialProperty);
+    const entity1 = buildEntity(StripeMaterialProperty);
+    const entity2 = buildEntity(CheckerboardMaterialProperty);
+    const entity3 = buildEntity(StripeMaterialProperty);
+    const entity4 = buildEntity(CheckerboardMaterialProperty);
 
-    var updater1 = new EllipseGeometryUpdater(entity1, scene);
-    var updater2 = new EllipseGeometryUpdater(entity2, scene);
-    var updater3 = new EllipseGeometryUpdater(entity3, scene);
-    var updater4 = new EllipseGeometryUpdater(entity4, scene);
-    var emptyUpdater = new BoxGeometryUpdater(entity1, scene);
+    const updater1 = new EllipseGeometryUpdater(entity1, scene);
+    const updater2 = new EllipseGeometryUpdater(entity2, scene);
+    const updater3 = new EllipseGeometryUpdater(entity3, scene);
+    const updater4 = new EllipseGeometryUpdater(entity4, scene);
+    const emptyUpdater = new BoxGeometryUpdater(entity1, scene);
 
     batch.add(time, updater1);
     batch.add(time, updater2);
@@ -473,7 +473,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
   });
 
   it("has correct show attribute after rebuilding primitive", function () {
-    var batch = new StaticGeometryPerMaterialBatch(
+    const batch = new StaticGeometryPerMaterialBatch(
       scene.primitives,
       MaterialAppearance,
       undefined,
@@ -482,7 +482,7 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
     );
 
     function buildEntity() {
-      var material = new GridMaterialProperty({
+      const material = new GridMaterialProperty({
         color: Color.YELLOW,
         cellAlpha: 0.3,
         lineCount: new Cartesian2(8, 8),
@@ -502,23 +502,23 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
 
     function renderScene() {
       scene.initializeFrame();
-      var isUpdated = batch.update(time);
+      const isUpdated = batch.update(time);
       scene.render(time);
       return isUpdated;
     }
 
-    var entity1 = buildEntity();
-    var updater1 = new EllipseGeometryUpdater(entity1, scene);
+    const entity1 = buildEntity();
+    const updater1 = new EllipseGeometryUpdater(entity1, scene);
     batch.add(time, updater1);
 
-    var entity2 = buildEntity();
-    var updater2 = new EllipseGeometryUpdater(entity2, scene);
+    const entity2 = buildEntity();
+    const updater2 = new EllipseGeometryUpdater(entity2, scene);
 
     return pollToPromise(renderScene)
       .then(function () {
         expect(scene.primitives.length).toEqual(1);
-        var primitive = scene.primitives.get(0);
-        var attributes = primitive.getGeometryInstanceAttributes(entity1);
+        const primitive = scene.primitives.get(0);
+        const attributes = primitive.getGeometryInstanceAttributes(entity1);
         expect(attributes.show).toEqual([1]);
 
         entity1.show = false;
@@ -527,8 +527,8 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       })
       .then(function () {
         expect(scene.primitives.length).toEqual(1);
-        var primitive = scene.primitives.get(0);
-        var attributes = primitive.getGeometryInstanceAttributes(entity1);
+        const primitive = scene.primitives.get(0);
+        const attributes = primitive.getGeometryInstanceAttributes(entity1);
         expect(attributes.show).toEqual([0]);
 
         batch.add(time, updater2);
@@ -536,8 +536,8 @@ describe("DataSources/StaticGeometryPerMaterialBatch", function () {
       })
       .then(function () {
         expect(scene.primitives.length).toEqual(1);
-        var primitive = scene.primitives.get(0);
-        var attributes = primitive.getGeometryInstanceAttributes(entity1);
+        const primitive = scene.primitives.get(0);
+        let attributes = primitive.getGeometryInstanceAttributes(entity1);
         expect(attributes.show).toEqual([0]);
 
         attributes = primitive.getGeometryInstanceAttributes(entity2);

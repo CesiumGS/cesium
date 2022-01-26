@@ -40,53 +40,54 @@ import waitForLoaderProcess from "../waitForLoaderProcess.js";
 describe(
   "Scene/GltfLoader",
   function () {
-    var boxInterleaved =
+    const boxInterleaved =
       "./Data/Models/GltfLoader/BoxInterleaved/glTF/BoxInterleaved.gltf";
-    var boxTextured =
+    const boxTextured =
       "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
-    var boxTexturedBinary =
+    const boxTexturedBinary =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
-    var boxTexturedEmbedded =
+    const boxTexturedEmbedded =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Embedded/BoxTextured.gltf";
-    var boxTexturedKtx2Basis =
+    const boxTexturedKtx2Basis =
       "./Data/Models/GltfLoader/BoxTexturedKtx2Basis/glTF/BoxTexturedKtx2Basis.gltf";
-    var boxTexturedKtx2BasisBinary =
+    const boxTexturedKtx2BasisBinary =
       "./Data/Models/GltfLoader/BoxTexturedKtx2Basis/glTF-Binary/BoxTexturedKtx2Basis.glb";
-    var boxVertexColors =
+    const boxVertexColors =
       "./Data/Models/GltfLoader/BoxVertexColors/glTF/BoxVertexColors.gltf";
-    var simpleMorph =
+    const simpleMorph =
       "./Data/Models/GltfLoader/SimpleMorph/glTF/SimpleMorph.gltf";
-    var simpleSkin = "./Data/Models/GltfLoader/SimpleSkin/glTF/SimpleSkin.gltf";
-    var triangle = "./Data/Models/GltfLoader/Triangle/glTF/Triangle.gltf";
-    var triangleWithoutIndices =
+    const simpleSkin =
+      "./Data/Models/GltfLoader/SimpleSkin/glTF/SimpleSkin.gltf";
+    const triangle = "./Data/Models/GltfLoader/Triangle/glTF/Triangle.gltf";
+    const triangleWithoutIndices =
       "./Data/Models/GltfLoader/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf";
-    var twoSidedPlane =
+    const twoSidedPlane =
       "./Data/Models/GltfLoader/TwoSidedPlane/glTF/TwoSidedPlane.gltf";
-    var unlitTest = "./Data/Models/GltfLoader/UnlitTest/glTF/UnlitTest.gltf";
-    var microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
-    var microcosmLegacy =
+    const unlitTest = "./Data/Models/GltfLoader/UnlitTest/glTF/UnlitTest.gltf";
+    const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
+    const microcosmLegacy =
       "./Data/Models/GltfLoader/Microcosm/glTF/microcosm_EXT_feature_metadata.gltf";
-    var buildingsMetadata =
+    const buildingsMetadata =
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
-    var weather = "./Data/Models/GltfLoader/Weather/glTF/weather.gltf";
-    var weatherLegacy =
+    const weather = "./Data/Models/GltfLoader/Weather/glTF/weather.gltf";
+    const weatherLegacy =
       "./Data/Models/GltfLoader/Weather/glTF/weather_EXT_feature_metadata.gltf";
-    var boxInstanced =
+    const boxInstanced =
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
-    var boxInstancedLegacy =
+    const boxInstancedLegacy =
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced_EXT_feature_metadata.gltf";
-    var boxInstancedInterleaved =
+    const boxInstancedInterleaved =
       "./Data/Models/GltfLoader/BoxInstancedInterleaved/glTF/box-instanced-interleaved.gltf";
-    var boxInstancedTranslation =
+    const boxInstancedTranslation =
       "./Data/Models/GltfLoader/BoxInstancedTranslation/glTF/box-instanced-translation.gltf";
-    var boxInstancedTranslationMinMax =
+    const boxInstancedTranslationMinMax =
       "./Data/Models/GltfLoader/BoxInstancedTranslationWithMinMax/glTF/box-instanced-translation-min-max.gltf";
-    var duckDraco = "./Data/Models/GltfLoader/Duck/glTF-Draco/Duck.gltf";
-    var boomBoxSpecularGlossiness =
+    const duckDraco = "./Data/Models/GltfLoader/Duck/glTF-Draco/Duck.gltf";
+    const boomBoxSpecularGlossiness =
       "./Data/Models/GltfLoader/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
 
-    var scene;
-    var gltfLoaders = [];
+    let scene;
+    const gltfLoaders = [];
 
     beforeAll(function () {
       scene = createScene();
@@ -97,9 +98,9 @@ describe(
     });
 
     afterEach(function () {
-      var gltfLoadersLength = gltfLoaders.length;
-      for (var i = 0; i < gltfLoadersLength; ++i) {
-        var gltfLoader = gltfLoaders[i];
+      const gltfLoadersLength = gltfLoaders.length;
+      for (let i = 0; i < gltfLoadersLength; ++i) {
+        const gltfLoader = gltfLoaders[i];
         if (!gltfLoader.isDestroyed()) {
           gltfLoader.destroy();
         }
@@ -117,7 +118,7 @@ describe(
     });
 
     function getOptions(gltfPath, options) {
-      var resource = new Resource({
+      const resource = new Resource({
         url: gltfPath,
       });
 
@@ -128,7 +129,7 @@ describe(
     }
 
     function loadGltf(gltfPath, options) {
-      var gltfLoader = new GltfLoader(getOptions(gltfPath, options));
+      const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
       gltfLoaders.push(gltfLoader);
       gltfLoader.load();
 
@@ -139,14 +140,14 @@ describe(
       return Resource.fetchJson({
         url: gltfPath,
       }).then(function (gltf) {
-        var loaderOptions = combine(options, {
+        const loaderOptions = combine(options, {
           gltf: gltf,
           gltfResource: new Resource({
             url: gltfPath,
           }),
           incrementallyLoadTextures: false,
         });
-        var gltfLoader = new GltfLoader(loaderOptions);
+        const gltfLoader = new GltfLoader(loaderOptions);
         gltfLoaders.push(gltfLoader);
         gltfLoader.load();
 
@@ -164,7 +165,7 @@ describe(
           when.resolve(generateJsonBuffer(gltf).buffer)
         );
 
-        var gltfLoader = new GltfLoader(getOptions(gltfPath, options));
+        const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
         gltfLoaders.push(gltfLoader);
         gltfLoader.load();
 
@@ -173,9 +174,9 @@ describe(
     }
 
     function getAttribute(attributes, semantic, setIndex) {
-      var attributesLength = attributes.length;
-      for (var i = 0; i < attributesLength; ++i) {
-        var attribute = attributes[i];
+      const attributesLength = attributes.length;
+      for (let i = 0; i < attributesLength; ++i) {
+        const attribute = attributes[i];
         if (
           attribute.semantic === semantic &&
           attribute.setIndex === setIndex
@@ -188,17 +189,17 @@ describe(
 
     it("loads BoxInterleaved", function () {
       return loadGltf(boxInterleaved).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var childNode = rootNode.children[0];
-        var primitive = childNode.primitives[0];
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const childNode = rootNode.children[0];
+        const primitive = childNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
-        var normalAttribute = getAttribute(
+        const normalAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.NORMAL
         );
@@ -218,40 +219,40 @@ describe(
 
     function loadsBoxTextured(gltfPath) {
       return loadGltf(gltfPath).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var nodes = components.nodes;
-        var rootNode = scene.nodes[0];
-        var childNode = rootNode.children[0];
-        var primitive = childNode.primitives[0];
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const nodes = components.nodes;
+        const rootNode = scene.nodes[0];
+        const childNode = rootNode.children[0];
+        const primitive = childNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
-        var normalAttribute = getAttribute(
+        const normalAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.NORMAL
         );
-        var texcoordAttribute = getAttribute(
+        const texcoordAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.TEXCOORD,
           0
         );
 
-        var indices = primitive.indices;
-        var material = primitive.material;
-        var metallicRoughness = material.metallicRoughness;
+        const indices = primitive.indices;
+        const material = primitive.material;
+        const metallicRoughness = material.metallicRoughness;
 
         // prettier-ignore
-        var rootMatrix = new Matrix4(
+        const rootMatrix = new Matrix4(
           1.0, 0.0, 0.0, 0.0,
           0.0, 0.0, 1.0, 0.0,
           0.0, -1.0, 0.0, 0.0,
           0.0, 0.0, 0.0, 1.0
         );
 
-        var childMatrix = Matrix4.IDENTITY;
+        const childMatrix = Matrix4.IDENTITY;
 
         expect(rootNode.children.length).toBe(1);
         expect(rootNode.primitives.length).toBe(0);
@@ -346,7 +347,7 @@ describe(
         expect(metallicRoughness.baseColorTexture.texture.height).toBe(256);
         expect(metallicRoughness.baseColorTexture.texCoord).toBe(0);
 
-        var sampler = metallicRoughness.baseColorTexture.texture.sampler;
+        const sampler = metallicRoughness.baseColorTexture.texture.sampler;
         expect(sampler.wrapS).toBe(TextureWrap.REPEAT);
         expect(sampler.wrapT).toBe(TextureWrap.REPEAT);
         expect(sampler.magnificationFilter).toBe(
@@ -381,13 +382,13 @@ describe(
 
       return loadModifiedGltfAndTest(boxTextured, undefined, modifyGltf).then(
         function (gltfLoader) {
-          var components = gltfLoader.components;
-          var scene = components.scene;
-          var rootNode = scene.nodes[0];
-          var childNode = rootNode.children[0];
-          var primitive = childNode.primitives[0];
-          var material = primitive.material;
-          var metallicRoughness = material.metallicRoughness;
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const childNode = rootNode.children[0];
+          const primitive = childNode.primitives[0];
+          const material = primitive.material;
+          const metallicRoughness = material.metallicRoughness;
 
           expect(metallicRoughness.baseColorTexture).toBeUndefined();
         }
@@ -396,16 +397,16 @@ describe(
 
     function loadsBoxTexturedKtx2Basis(gltfPath) {
       return loadGltf(gltfPath).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var childNode = rootNode.children[0];
-        var primitive = childNode.primitives[0];
-        var material = primitive.material;
-        var metallicRoughness = material.metallicRoughness;
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const childNode = rootNode.children[0];
+        const primitive = childNode.primitives[0];
+        const material = primitive.material;
+        const metallicRoughness = material.metallicRoughness;
 
-        var texture = metallicRoughness.baseColorTexture.texture;
-        var sampler = texture.sampler;
+        const texture = metallicRoughness.baseColorTexture.texture;
+        const sampler = texture.sampler;
 
         expect(texture.width).toBe(256);
         expect(texture.height).toBe(256);
@@ -437,26 +438,26 @@ describe(
 
     it("loads BoxVertexColors", function () {
       return loadGltf(boxVertexColors).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var childNode = rootNode.children[1];
-        var primitive = childNode.primitives[0];
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const childNode = rootNode.children[1];
+        const primitive = childNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
-        var normalAttribute = getAttribute(
+        const normalAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.NORMAL
         );
-        var texcoordAttribute = getAttribute(
+        const texcoordAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.TEXCOORD,
           0
         );
-        var colorAttribute = getAttribute(
+        const colorAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.COLOR,
           0
@@ -506,26 +507,26 @@ describe(
         undefined,
         modifyGltf
       ).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var childNode = rootNode.children[1];
-        var primitive = childNode.primitives[0];
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const childNode = rootNode.children[1];
+        const primitive = childNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
-        var normalAttribute = getAttribute(
+        const normalAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.NORMAL
         );
-        var texcoordAttribute = getAttribute(
+        const texcoordAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.TEXCOORD,
           0
         );
-        var colorAttribute = getAttribute(
+        const colorAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.COLOR,
           0
@@ -543,23 +544,23 @@ describe(
 
     it("loads SimpleMorph", function () {
       return loadGltf(simpleMorph).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var primitive = rootNode.primitives[0];
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
-        var morphTargets = primitive.morphTargets;
-        var morphTarget0 = morphTargets[0];
-        var morphTarget1 = morphTargets[1];
-        var morphPositions0 = getAttribute(
+        const morphTargets = primitive.morphTargets;
+        const morphTarget0 = morphTargets[0];
+        const morphTarget1 = morphTargets[1];
+        const morphPositions0 = getAttribute(
           morphTarget0.attributes,
           VertexAttributeSemantic.POSITION
         );
-        var morphPositions1 = getAttribute(
+        const morphPositions1 = getAttribute(
           morphTarget1.attributes,
           VertexAttributeSemantic.POSITION
         );
@@ -613,10 +614,10 @@ describe(
 
       return loadModifiedGltfAndTest(simpleMorph, undefined, modifyGltf).then(
         function (gltfLoader) {
-          var components = gltfLoader.components;
-          var scene = components.scene;
-          var rootNode = scene.nodes[0];
-          var primitive = rootNode.primitives[0];
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const primitive = rootNode.primitives[0];
           expect(primitive.morphWeights).toEqual([0.0, 0.0]);
         }
       );
@@ -624,23 +625,23 @@ describe(
 
     it("loads SimpleSkin", function () {
       return loadGltf(simpleSkin).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var nodes = components.nodes;
-        var skin = rootNode.skin;
-        var primitive = rootNode.primitives[0];
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const nodes = components.nodes;
+        const skin = rootNode.skin;
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
-        var jointsAttribute = getAttribute(
+        const jointsAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.JOINTS,
           0
         );
-        var weightsAttribute = getAttribute(
+        const weightsAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.WEIGHTS,
           0
@@ -717,10 +718,10 @@ describe(
 
       return loadModifiedGltfAndTest(simpleSkin, undefined, modifyGltf).then(
         function (gltfLoader) {
-          var components = gltfLoader.components;
-          var scene = components.scene;
-          var rootNode = scene.nodes[0];
-          var skin = rootNode.skin;
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const skin = rootNode.skin;
           expect(skin.inverseBindMatrices).toEqual([
             Matrix4.IDENTITY,
             Matrix4.IDENTITY,
@@ -731,12 +732,12 @@ describe(
 
     it("loads Triangle", function () {
       return loadGltf(triangle).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var primitive = rootNode.primitives[0];
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
@@ -760,12 +761,12 @@ describe(
 
       return loadModifiedGltfAndTest(triangle, undefined, modifyGltf).then(
         function (gltfLoader) {
-          var components = gltfLoader.components;
-          var scene = components.scene;
-          var rootNode = scene.nodes[0];
-          var primitive = rootNode.primitives[0];
-          var attributes = primitive.attributes;
-          var positionAttribute = getAttribute(
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const primitive = rootNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
             attributes,
             VertexAttributeSemantic.POSITION
           );
@@ -778,12 +779,12 @@ describe(
 
     it("loads TriangleWithoutIndices", function () {
       return loadGltf(triangleWithoutIndices).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var primitive = rootNode.primitives[0];
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
@@ -795,26 +796,26 @@ describe(
 
     it("loads TwoSidedPlane", function () {
       return loadGltf(twoSidedPlane).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var primitive = rootNode.primitives[0];
-        var material = primitive.material;
-        var metallicRoughness = material.metallicRoughness;
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const material = primitive.material;
+        const metallicRoughness = material.metallicRoughness;
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
-        var normalAttribute = getAttribute(
+        const normalAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.NORMAL
         );
-        var tangentAttribute = getAttribute(
+        const tangentAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.TANGENT
         );
-        var texcoordAttribute = getAttribute(
+        const texcoordAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.TEXCOORD,
           0
@@ -836,14 +837,14 @@ describe(
 
     it("loads UnlitTest", function () {
       return loadGltf(unlitTest).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var node0 = scene.nodes[0];
-        var node1 = scene.nodes[1];
-        var primitive0 = node0.primitives[0];
-        var primitive1 = node1.primitives[0];
-        var material0 = primitive0.material;
-        var material1 = primitive1.material;
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const node0 = scene.nodes[0];
+        const node1 = scene.nodes[1];
+        const primitive0 = node0.primitives[0];
+        const primitive1 = node1.primitives[0];
+        const material0 = primitive0.material;
+        const material1 = primitive1.material;
         expect(material0.unlit).toBe(true);
         expect(material1.unlit).toBe(true);
       });
@@ -851,19 +852,19 @@ describe(
 
     it("loads Microcosm", function () {
       return loadGltf(microcosm).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var primitive = rootNode.primitives[0];
-        var material = primitive.material;
-        var baseColorTexture = material.metallicRoughness.baseColorTexture;
-        var featureMetadata = components.featureMetadata;
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const material = primitive.material;
+        const baseColorTexture = material.metallicRoughness.baseColorTexture;
+        const featureMetadata = components.featureMetadata;
 
         expect(baseColorTexture.texCoord).toBe(1);
         expect(primitive.featureIds.length).toBe(1);
         expect(primitive.propertyTextureIds).toEqual([0]);
 
-        var featureIdTexture = primitive.featureIds[0];
+        const featureIdTexture = primitive.featureIds[0];
         expect(featureIdTexture).toBeInstanceOf(
           ModelComponents.FeatureIdTexture
         );
@@ -876,8 +877,8 @@ describe(
           Sampler.NEAREST
         );
 
-        var classDefinition = featureMetadata.schema.classes.landCover;
-        var properties = classDefinition.properties;
+        const classDefinition = featureMetadata.schema.classes.landCover;
+        const properties = classDefinition.properties;
         expect(properties.name.componentType).toBe(
           MetadataComponentType.STRING
         );
@@ -887,7 +888,7 @@ describe(
         );
         expect(properties.color.componentCount).toBe(3);
 
-        var propertyTable = featureMetadata.getPropertyTable(0);
+        const propertyTable = featureMetadata.getPropertyTable(0);
         expect(propertyTable.id).toEqual(0);
         expect(propertyTable.name).toEqual("Land Cover");
         expect(propertyTable.count).toBe(256);
@@ -901,10 +902,10 @@ describe(
           new Cartesian3(194, 194, 194)
         );
 
-        var featureTexture = featureMetadata.getPropertyTexture(0);
+        const featureTexture = featureMetadata.getPropertyTexture(0);
         expect(featureTexture.id).toEqual(0);
         expect(featureTexture.name).toEqual("Vegetation");
-        var vegetationProperty = featureTexture.getProperty(
+        const vegetationProperty = featureTexture.getProperty(
           "vegetationDensity"
         );
 
@@ -915,19 +916,19 @@ describe(
 
     it("loads Microcosm with EXT_feature_metadata", function () {
       return loadGltf(microcosmLegacy).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var primitive = rootNode.primitives[0];
-        var material = primitive.material;
-        var baseColorTexture = material.metallicRoughness.baseColorTexture;
-        var featureMetadata = components.featureMetadata;
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const material = primitive.material;
+        const baseColorTexture = material.metallicRoughness.baseColorTexture;
+        const featureMetadata = components.featureMetadata;
 
         expect(baseColorTexture.texCoord).toBe(1);
         expect(primitive.featureIds.length).toBe(1);
         expect(primitive.propertyTextureIds).toEqual([0]);
 
-        var featureIdTexture = primitive.featureIds[0];
+        const featureIdTexture = primitive.featureIds[0];
         expect(featureIdTexture).toBeInstanceOf(
           ModelComponents.FeatureIdTexture
         );
@@ -940,8 +941,8 @@ describe(
           Sampler.NEAREST
         );
 
-        var classDefinition = featureMetadata.schema.classes.landCover;
-        var properties = classDefinition.properties;
+        const classDefinition = featureMetadata.schema.classes.landCover;
+        const properties = classDefinition.properties;
         expect(properties.name.componentType).toBe(
           MetadataComponentType.STRING
         );
@@ -951,7 +952,7 @@ describe(
         );
         expect(properties.color.componentCount).toBe(3);
 
-        var propertyTable = featureMetadata.getPropertyTable(0);
+        const propertyTable = featureMetadata.getPropertyTable(0);
         expect(propertyTable.id).toEqual("landCoverTable");
         expect(propertyTable.count).toBe(256);
         expect(propertyTable.class).toBe(classDefinition);
@@ -964,9 +965,9 @@ describe(
           194,
         ]);
 
-        var featureTexture = featureMetadata.getPropertyTexture(0);
+        const featureTexture = featureMetadata.getPropertyTexture(0);
         expect(featureTexture.id).toEqual("vegetationTexture");
-        var vegetationProperty = featureTexture.getProperty(
+        const vegetationProperty = featureTexture.getProperty(
           "vegetationDensity"
         );
 
@@ -977,26 +978,26 @@ describe(
 
     it("loads BuildingsMetadata", function () {
       return loadGltf(buildingsMetadata).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var childNode = rootNode.children[0];
-        var primitive = childNode.primitives[0];
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const childNode = rootNode.children[0];
+        const primitive = childNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
-        var normalAttribute = getAttribute(
+        const normalAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.NORMAL
         );
-        var featureIdAttribute = getAttribute(
+        const featureIdAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.FEATURE_ID,
           0
         );
-        var featureMetadata = components.featureMetadata;
+        const featureMetadata = components.featureMetadata;
 
         expect(positionAttribute).toBeDefined();
         expect(normalAttribute).toBeDefined();
@@ -1025,7 +1026,7 @@ describe(
         expect(primitive.propertyTextureIds.length).toBe(0);
 
         // feature ID via accessor
-        var featureIdAccessor = primitive.featureIds[0];
+        const featureIdAccessor = primitive.featureIds[0];
         expect(featureIdAccessor).toBeInstanceOf(
           ModelComponents.FeatureIdAttribute
         );
@@ -1033,7 +1034,7 @@ describe(
         expect(featureIdAccessor.setIndex).toBe(0);
 
         // feature ID via offset + repeat
-        var featureIdImplicit = primitive.featureIds[1];
+        const featureIdImplicit = primitive.featureIds[1];
         expect(featureIdImplicit).toBeInstanceOf(
           ModelComponents.FeatureIdImplicitRange
         );
@@ -1043,7 +1044,7 @@ describe(
         expect(featureIdImplicit.repeat).toBe(2);
 
         // Feature ID via offset only. This one has no corresponding table
-        var featureIdConstant = primitive.featureIds[2];
+        const featureIdConstant = primitive.featureIds[2];
         expect(featureIdConstant).toBeInstanceOf(
           ModelComponents.FeatureIdImplicitRange
         );
@@ -1051,14 +1052,14 @@ describe(
         expect(featureIdConstant.offset).toBe(3);
         expect(featureIdConstant.repeat).not.toBeDefined();
 
-        var classDefinition = featureMetadata.schema.classes.building;
-        var properties = classDefinition.properties;
+        const classDefinition = featureMetadata.schema.classes.building;
+        const properties = classDefinition.properties;
         expect(properties.height.componentType).toBe(
           MetadataComponentType.FLOAT32
         );
         expect(properties.id.componentType).toBe(MetadataComponentType.INT32);
 
-        var propertyTable = featureMetadata.getPropertyTable(0);
+        const propertyTable = featureMetadata.getPropertyTable(0);
         expect(propertyTable.id).toBe(0);
         expect(propertyTable.count).toBe(10);
         expect(propertyTable.class).toBe(classDefinition);
@@ -1071,21 +1072,21 @@ describe(
 
     it("loads Weather", function () {
       return loadGltf(weather).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var primitive = rootNode.primitives[0];
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
-        var featureIdAttribute = getAttribute(
+        const featureIdAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.FEATURE_ID,
           0
         );
-        var featureMetadata = components.featureMetadata;
+        const featureMetadata = components.featureMetadata;
 
         expect(primitive.primitiveType).toBe(PrimitiveType.POINTS);
 
@@ -1095,7 +1096,7 @@ describe(
         expect(primitive.featureIds.length).toBe(2);
         expect(primitive.propertyTextureIds.length).toBe(0);
 
-        var featureIdAttributeMapping0 = primitive.featureIds[0];
+        const featureIdAttributeMapping0 = primitive.featureIds[0];
         expect(featureIdAttributeMapping0).toBeInstanceOf(
           ModelComponents.FeatureIdImplicitRange
         );
@@ -1103,15 +1104,15 @@ describe(
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
 
-        var featureIdAttributeMapping1 = primitive.featureIds[1];
+        const featureIdAttributeMapping1 = primitive.featureIds[1];
         expect(featureIdAttributeMapping1).toBeInstanceOf(
           ModelComponents.FeatureIdAttribute
         );
         expect(featureIdAttributeMapping1.propertyTableId).toBe(0);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
 
-        var weatherClass = featureMetadata.schema.classes.weather;
-        var weatherProperties = weatherClass.properties;
+        const weatherClass = featureMetadata.schema.classes.weather;
+        const weatherProperties = weatherClass.properties;
         expect(weatherProperties.airTemperature.componentType).toBe(
           MetadataComponentType.FLOAT32
         );
@@ -1123,8 +1124,8 @@ describe(
           MetadataComponentType.FLOAT32
         );
 
-        var townClass = featureMetadata.schema.classes.town;
-        var townProperties = townClass.properties;
+        const townClass = featureMetadata.schema.classes.town;
+        const townProperties = townClass.properties;
         expect(townProperties.name.componentType).toBe(
           MetadataComponentType.STRING
         );
@@ -1132,7 +1133,7 @@ describe(
           MetadataComponentType.UINT16
         );
 
-        var weatherTable = featureMetadata.getPropertyTable(1);
+        const weatherTable = featureMetadata.getPropertyTable(1);
         expect(weatherTable.id).toBe(1);
         expect(weatherTable.name).toBe("Weather");
         expect(weatherTable.count).toBe(1000);
@@ -1156,7 +1157,7 @@ describe(
           new Cartesian3(1, 0.07490774989128113, 0.0022833053953945637)
         );
 
-        var townTable = featureMetadata.getPropertyTable(0);
+        const townTable = featureMetadata.getPropertyTable(0);
         expect(townTable.id).toBe(0);
         expect(townTable.name).toBe("Town");
         expect(townTable.count).toBe(3);
@@ -1172,21 +1173,21 @@ describe(
 
     it("loads Weather with EXT_feature_metadata", function () {
       return loadGltf(weatherLegacy).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var primitive = rootNode.primitives[0];
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
-        var featureIdAttribute = getAttribute(
+        const featureIdAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.FEATURE_ID,
           0
         );
-        var featureMetadata = components.featureMetadata;
+        const featureMetadata = components.featureMetadata;
 
         expect(primitive.primitiveType).toBe(PrimitiveType.POINTS);
 
@@ -1196,7 +1197,7 @@ describe(
         expect(primitive.featureIds.length).toBe(2);
         expect(primitive.propertyTextureIds.length).toBe(0);
 
-        var featureIdAttributeMapping0 = primitive.featureIds[0];
+        const featureIdAttributeMapping0 = primitive.featureIds[0];
         expect(featureIdAttributeMapping0).toBeInstanceOf(
           ModelComponents.FeatureIdImplicitRange
         );
@@ -1204,15 +1205,15 @@ describe(
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
 
-        var featureIdAttributeMapping1 = primitive.featureIds[1];
+        const featureIdAttributeMapping1 = primitive.featureIds[1];
         expect(featureIdAttributeMapping1).toBeInstanceOf(
           ModelComponents.FeatureIdAttribute
         );
         expect(featureIdAttributeMapping1.propertyTableId).toBe(0);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
 
-        var weatherClass = featureMetadata.schema.classes.weather;
-        var weatherProperties = weatherClass.properties;
+        const weatherClass = featureMetadata.schema.classes.weather;
+        const weatherProperties = weatherClass.properties;
         expect(weatherProperties.airTemperature.componentType).toBe(
           MetadataComponentType.FLOAT32
         );
@@ -1225,8 +1226,8 @@ describe(
         );
         expect(weatherProperties.windVelocity.componentCount).toBe(3);
 
-        var townClass = featureMetadata.schema.classes.town;
-        var townProperties = townClass.properties;
+        const townClass = featureMetadata.schema.classes.town;
+        const townProperties = townClass.properties;
         expect(townProperties.name.componentType).toBe(
           MetadataComponentType.STRING
         );
@@ -1234,7 +1235,7 @@ describe(
           MetadataComponentType.UINT16
         );
 
-        var weatherTable = featureMetadata.getPropertyTable(1);
+        const weatherTable = featureMetadata.getPropertyTable(1);
         expect(weatherTable.id).toBe("weatherTable");
         expect(weatherTable.count).toBe(1000);
         expect(weatherTable.class).toBe(weatherClass);
@@ -1261,7 +1262,7 @@ describe(
           0.0022833053953945637,
         ]);
 
-        var townTable = featureMetadata.getPropertyTable(0);
+        const townTable = featureMetadata.getPropertyTable(0);
         expect(townTable.id).toBe("townTable");
         expect(townTable.count).toBe(3);
         expect(townTable.class).toBe(townClass);
@@ -1280,35 +1281,35 @@ describe(
       }
 
       return loadGltf(boxInstanced).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var primitive = rootNode.primitives[0];
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
-        var normalAttribute = getAttribute(
+        const normalAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.NORMAL
         );
-        var featureMetadata = components.featureMetadata;
-        var instances = rootNode.instances;
-        var instancedAttributes = instances.attributes;
-        var translationAttribute = getAttribute(
+        const featureMetadata = components.featureMetadata;
+        const instances = rootNode.instances;
+        const instancedAttributes = instances.attributes;
+        const translationAttribute = getAttribute(
           instancedAttributes,
           InstanceAttributeSemantic.TRANSLATION
         );
-        var rotationAttribute = getAttribute(
+        const rotationAttribute = getAttribute(
           instancedAttributes,
           InstanceAttributeSemantic.ROTATION
         );
-        var scaleAttribute = getAttribute(
+        const scaleAttribute = getAttribute(
           instancedAttributes,
           InstanceAttributeSemantic.SCALE
         );
-        var featureIdAttribute = getAttribute(
+        const featureIdAttribute = getAttribute(
           instancedAttributes,
           InstanceAttributeSemantic.FEATURE_ID,
           0
@@ -1403,7 +1404,7 @@ describe(
 
         expect(instances.featureIds.length).toBe(2);
 
-        var featureIdAttributeMapping0 = instances.featureIds[0];
+        const featureIdAttributeMapping0 = instances.featureIds[0];
         expect(featureIdAttributeMapping0).toBeInstanceOf(
           ModelComponents.FeatureIdImplicitRange
         );
@@ -1411,15 +1412,15 @@ describe(
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
 
-        var featureIdAttributeMapping1 = instances.featureIds[1];
+        const featureIdAttributeMapping1 = instances.featureIds[1];
         expect(featureIdAttributeMapping1).toBeInstanceOf(
           ModelComponents.FeatureIdAttribute
         );
         expect(featureIdAttributeMapping1.propertyTableId).toBe(1);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
 
-        var boxClass = featureMetadata.schema.classes.box;
-        var boxProperties = boxClass.properties;
+        const boxClass = featureMetadata.schema.classes.box;
+        const boxProperties = boxClass.properties;
         expect(boxProperties.name.componentType).toBe(
           MetadataComponentType.STRING
         );
@@ -1427,8 +1428,8 @@ describe(
           MetadataComponentType.FLOAT32
         );
 
-        var sectionClass = featureMetadata.schema.classes.section;
-        var sectionProperties = sectionClass.properties;
+        const sectionClass = featureMetadata.schema.classes.section;
+        const sectionProperties = sectionClass.properties;
         expect(sectionProperties.name.componentType).toBe(
           MetadataComponentType.STRING
         );
@@ -1436,7 +1437,7 @@ describe(
           MetadataComponentType.UINT16
         );
 
-        var boxTable = featureMetadata.getPropertyTable(0);
+        const boxTable = featureMetadata.getPropertyTable(0);
         expect(boxTable.id).toBe(0);
         expect(boxTable.name).toBe("Box");
         expect(boxTable.count).toBe(4);
@@ -1450,7 +1451,7 @@ describe(
         expect(boxTable.getProperty(3, "name")).toBe("top right");
         expect(boxTable.getProperty(3, "volume")).toBe(0.4320000112056732);
 
-        var sectionTable = featureMetadata.getPropertyTable(1);
+        const sectionTable = featureMetadata.getPropertyTable(1);
         expect(sectionTable.id).toBe(1);
         expect(sectionTable.name).toBe("Section");
         expect(sectionTable.count).toBe(2);
@@ -1468,35 +1469,35 @@ describe(
       }
 
       return loadGltf(boxInstancedLegacy).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var primitive = rootNode.primitives[0];
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
-        var normalAttribute = getAttribute(
+        const normalAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.NORMAL
         );
-        var featureMetadata = components.featureMetadata;
-        var instances = rootNode.instances;
-        var instancedAttributes = instances.attributes;
-        var translationAttribute = getAttribute(
+        const featureMetadata = components.featureMetadata;
+        const instances = rootNode.instances;
+        const instancedAttributes = instances.attributes;
+        const translationAttribute = getAttribute(
           instancedAttributes,
           InstanceAttributeSemantic.TRANSLATION
         );
-        var rotationAttribute = getAttribute(
+        const rotationAttribute = getAttribute(
           instancedAttributes,
           InstanceAttributeSemantic.ROTATION
         );
-        var scaleAttribute = getAttribute(
+        const scaleAttribute = getAttribute(
           instancedAttributes,
           InstanceAttributeSemantic.SCALE
         );
-        var featureIdAttribute = getAttribute(
+        const featureIdAttribute = getAttribute(
           instancedAttributes,
           InstanceAttributeSemantic.FEATURE_ID,
           0
@@ -1591,7 +1592,7 @@ describe(
 
         expect(instances.featureIds.length).toBe(2);
 
-        var featureIdAttributeMapping0 = instances.featureIds[0];
+        const featureIdAttributeMapping0 = instances.featureIds[0];
         expect(featureIdAttributeMapping0).toBeInstanceOf(
           ModelComponents.FeatureIdImplicitRange
         );
@@ -1599,15 +1600,15 @@ describe(
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
 
-        var featureIdAttributeMapping1 = instances.featureIds[1];
+        const featureIdAttributeMapping1 = instances.featureIds[1];
         expect(featureIdAttributeMapping1).toBeInstanceOf(
           ModelComponents.FeatureIdAttribute
         );
         expect(featureIdAttributeMapping1.propertyTableId).toBe(1);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
 
-        var boxClass = featureMetadata.schema.classes.box;
-        var boxProperties = boxClass.properties;
+        const boxClass = featureMetadata.schema.classes.box;
+        const boxProperties = boxClass.properties;
         expect(boxProperties.name.componentType).toBe(
           MetadataComponentType.STRING
         );
@@ -1615,8 +1616,8 @@ describe(
           MetadataComponentType.FLOAT32
         );
 
-        var sectionClass = featureMetadata.schema.classes.section;
-        var sectionProperties = sectionClass.properties;
+        const sectionClass = featureMetadata.schema.classes.section;
+        const sectionProperties = sectionClass.properties;
         expect(sectionProperties.name.componentType).toBe(
           MetadataComponentType.STRING
         );
@@ -1624,7 +1625,7 @@ describe(
           MetadataComponentType.UINT16
         );
 
-        var boxTable = featureMetadata.getPropertyTable(0);
+        const boxTable = featureMetadata.getPropertyTable(0);
         expect(boxTable.id).toBe("boxTable");
         expect(boxTable.count).toBe(4);
         expect(boxTable.class).toBe(boxClass);
@@ -1637,7 +1638,7 @@ describe(
         expect(boxTable.getProperty(3, "name")).toBe("top right");
         expect(boxTable.getProperty(3, "volume")).toBe(0.4320000112056732);
 
-        var sectionTable = featureMetadata.getPropertyTable(1);
+        const sectionTable = featureMetadata.getPropertyTable(1);
         expect(sectionTable.id).toBe("sectionTable");
         expect(sectionTable.count).toBe(2);
         expect(sectionTable.class).toBe(sectionClass);
@@ -1650,39 +1651,39 @@ describe(
 
     it("loads BoxInstanced when WebGL instancing is disabled", function () {
       // Disable extension
-      var instancedArrays = scene.context._instancedArrays;
+      const instancedArrays = scene.context._instancedArrays;
       scene.context._instancedArrays = undefined;
 
       return loadGltf(boxInstanced)
         .then(function (gltfLoader) {
-          var components = gltfLoader.components;
-          var scene = components.scene;
-          var rootNode = scene.nodes[0];
-          var primitive = rootNode.primitives[0];
-          var attributes = primitive.attributes;
-          var positionAttribute = getAttribute(
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const primitive = rootNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
             attributes,
             VertexAttributeSemantic.POSITION
           );
-          var normalAttribute = getAttribute(
+          const normalAttribute = getAttribute(
             attributes,
             VertexAttributeSemantic.NORMAL
           );
-          var instances = rootNode.instances;
-          var instancedAttributes = instances.attributes;
-          var translationAttribute = getAttribute(
+          const instances = rootNode.instances;
+          const instancedAttributes = instances.attributes;
+          const translationAttribute = getAttribute(
             instancedAttributes,
             InstanceAttributeSemantic.TRANSLATION
           );
-          var rotationAttribute = getAttribute(
+          const rotationAttribute = getAttribute(
             instancedAttributes,
             InstanceAttributeSemantic.ROTATION
           );
-          var scaleAttribute = getAttribute(
+          const scaleAttribute = getAttribute(
             instancedAttributes,
             InstanceAttributeSemantic.SCALE
           );
-          var featureIdAttribute = getAttribute(
+          const featureIdAttribute = getAttribute(
             instancedAttributes,
             InstanceAttributeSemantic.FEATURE_ID_0
           );
@@ -1749,12 +1750,12 @@ describe(
 
       return loadModifiedGltfAndTest(boxInstanced, undefined, modifyGltf).then(
         function (gltfLoader) {
-          var components = gltfLoader.components;
-          var scene = components.scene;
-          var rootNode = scene.nodes[0];
-          var instances = rootNode.instances;
-          var instancedAttributes = instances.attributes;
-          var featureIdAttribute = getAttribute(
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const instances = rootNode.instances;
+          const instancedAttributes = instances.attributes;
+          const featureIdAttribute = getAttribute(
             instancedAttributes,
             InstanceAttributeSemantic.FEATURE_ID,
             0
@@ -1769,39 +1770,39 @@ describe(
 
     it("loads BoxInstancedInterleaved", function () {
       // Disable extension
-      var instancedArrays = scene.context._instancedArrays;
+      const instancedArrays = scene.context._instancedArrays;
       scene.context._instancedArrays = undefined;
 
       return loadGltf(boxInstancedInterleaved)
         .then(function (gltfLoader) {
-          var components = gltfLoader.components;
-          var scene = components.scene;
-          var rootNode = scene.nodes[0];
-          var primitive = rootNode.primitives[0];
-          var attributes = primitive.attributes;
-          var positionAttribute = getAttribute(
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const primitive = rootNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
             attributes,
             VertexAttributeSemantic.POSITION
           );
-          var normalAttribute = getAttribute(
+          const normalAttribute = getAttribute(
             attributes,
             VertexAttributeSemantic.NORMAL
           );
-          var instances = rootNode.instances;
-          var instancedAttributes = instances.attributes;
-          var translationAttribute = getAttribute(
+          const instances = rootNode.instances;
+          const instancedAttributes = instances.attributes;
+          const translationAttribute = getAttribute(
             instancedAttributes,
             InstanceAttributeSemantic.TRANSLATION
           );
-          var rotationAttribute = getAttribute(
+          const rotationAttribute = getAttribute(
             instancedAttributes,
             InstanceAttributeSemantic.ROTATION
           );
-          var scaleAttribute = getAttribute(
+          const scaleAttribute = getAttribute(
             instancedAttributes,
             InstanceAttributeSemantic.SCALE
           );
-          var featureIdAttribute = getAttribute(
+          const featureIdAttribute = getAttribute(
             instancedAttributes,
             InstanceAttributeSemantic.FEATURE_ID_0
           );
@@ -1861,22 +1862,22 @@ describe(
       }
 
       return loadGltf(boxInstancedTranslation).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var primitive = rootNode.primitives[0];
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
-        var normalAttribute = getAttribute(
+        const normalAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.NORMAL
         );
-        var instances = rootNode.instances;
-        var instancedAttributes = instances.attributes;
-        var translationAttribute = getAttribute(
+        const instances = rootNode.instances;
+        const instancedAttributes = instances.attributes;
+        const translationAttribute = getAttribute(
           instancedAttributes,
           InstanceAttributeSemantic.TRANSLATION
         );
@@ -1914,22 +1915,22 @@ describe(
       return loadGltf(boxInstancedTranslationMinMax).then(function (
         gltfLoader
       ) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var primitive = rootNode.primitives[0];
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
-        var normalAttribute = getAttribute(
+        const normalAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.NORMAL
         );
-        var instances = rootNode.instances;
-        var instancedAttributes = instances.attributes;
-        var translationAttribute = getAttribute(
+        const instances = rootNode.instances;
+        const instancedAttributes = instances.attributes;
+        const translationAttribute = getAttribute(
           instancedAttributes,
           InstanceAttributeSemantic.TRANSLATION
         );
@@ -1959,27 +1960,27 @@ describe(
 
     it("loads BoxInstancedTranslation when WebGL instancing is disabled", function () {
       // Disable extension
-      var instancedArrays = scene.context._instancedArrays;
+      const instancedArrays = scene.context._instancedArrays;
       scene.context._instancedArrays = undefined;
 
       return loadGltf(boxInstancedTranslation)
         .then(function (gltfLoader) {
-          var components = gltfLoader.components;
-          var scene = components.scene;
-          var rootNode = scene.nodes[0];
-          var primitive = rootNode.primitives[0];
-          var attributes = primitive.attributes;
-          var positionAttribute = getAttribute(
+          const components = gltfLoader.components;
+          const scene = components.scene;
+          const rootNode = scene.nodes[0];
+          const primitive = rootNode.primitives[0];
+          const attributes = primitive.attributes;
+          const positionAttribute = getAttribute(
             attributes,
             VertexAttributeSemantic.POSITION
           );
-          var normalAttribute = getAttribute(
+          const normalAttribute = getAttribute(
             attributes,
             VertexAttributeSemantic.NORMAL
           );
-          var instances = rootNode.instances;
-          var instancedAttributes = instances.attributes;
-          var translationAttribute = getAttribute(
+          const instances = rootNode.instances;
+          const instancedAttributes = instances.attributes;
+          const translationAttribute = getAttribute(
             instancedAttributes,
             InstanceAttributeSemantic.TRANSLATION
           );
@@ -2002,30 +2003,30 @@ describe(
 
     it("loads Duck", function () {
       return loadGltf(duckDraco).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var childNode = rootNode.children[0];
-        var primitive = childNode.primitives[0];
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const childNode = rootNode.children[0];
+        const primitive = childNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
-        var normalAttribute = getAttribute(
+        const normalAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.NORMAL
         );
-        var texcoordAttribute = getAttribute(
+        const texcoordAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.TEXCOORD,
           0
         );
-        var positionQuantization = positionAttribute.quantization;
-        var normalQuantization = normalAttribute.quantization;
-        var texcoordQuantization = texcoordAttribute.quantization;
+        const positionQuantization = positionAttribute.quantization;
+        const normalQuantization = normalAttribute.quantization;
+        const texcoordQuantization = texcoordAttribute.quantization;
 
-        var indices = primitive.indices;
+        const indices = primitive.indices;
 
         expect(positionAttribute.name).toBe("POSITION");
         expect(positionAttribute.semantic).toBe(
@@ -2167,15 +2168,15 @@ describe(
     });
 
     it("loads Boom Box", function () {
-      var textureCreate = spyOn(Texture, "create").and.callThrough();
+      const textureCreate = spyOn(Texture, "create").and.callThrough();
 
       return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var primitive = rootNode.primitives[0];
-        var material = primitive.material;
-        var specularGlossiness = material.specularGlossiness;
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const material = primitive.material;
+        const specularGlossiness = material.specularGlossiness;
 
         expect(components.upAxis).toBe(Axis.Y);
         expect(components.forwardAxis).toBe(Axis.Z);
@@ -2202,12 +2203,12 @@ describe(
 
     it("loads model from parsed JSON object", function () {
       return loadGltfFromJson(triangle).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var primitive = rootNode.primitives[0];
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
@@ -2223,15 +2224,15 @@ describe(
     });
 
     it("models share the same resources", function () {
-      var textureCreate = spyOn(Texture, "create").and.callThrough();
+      const textureCreate = spyOn(Texture, "create").and.callThrough();
 
       return when
         .all([loadGltf(duckDraco), loadGltf(duckDraco)])
         .then(function (gltfLoaders) {
-          var cacheEntries = ResourceCache.cacheEntries;
-          for (var cacheKey in cacheEntries) {
+          const cacheEntries = ResourceCache.cacheEntries;
+          for (const cacheKey in cacheEntries) {
             if (cacheEntries.hasOwnProperty(cacheKey)) {
-              var cacheEntry = cacheEntries[cacheKey];
+              const cacheEntry = cacheEntries[cacheKey];
               expect(cacheEntry.referenceCount).toBe(2);
             }
           }
@@ -2244,12 +2245,12 @@ describe(
     });
 
     it("releases glTF JSON after parse", function () {
-      var destroyGltfJsonLoader = spyOn(
+      const destroyGltfJsonLoader = spyOn(
         GltfJsonLoader.prototype,
         "destroy"
       ).and.callThrough();
 
-      var options = {
+      const options = {
         releaseGltfJson: true,
       };
 
@@ -2259,12 +2260,12 @@ describe(
     });
 
     it("releases glTF JSON after unload", function () {
-      var destroyGltfJsonLoader = spyOn(
+      const destroyGltfJsonLoader = spyOn(
         GltfJsonLoader.prototype,
         "destroy"
       ).and.callThrough();
 
-      var options = {
+      const options = {
         releaseGltfJson: false,
       };
 
@@ -2276,12 +2277,12 @@ describe(
     });
 
     it("creates GPU resources asynchronously", function () {
-      var jobSchedulerExecute = spyOn(
+      const jobSchedulerExecute = spyOn(
         JobScheduler.prototype,
         "execute"
       ).and.callThrough();
 
-      var options = {
+      const options = {
         asynchronous: true,
       };
 
@@ -2291,12 +2292,12 @@ describe(
     });
 
     it("creates GPU resources synchronously", function () {
-      var jobSchedulerExecute = spyOn(
+      const jobSchedulerExecute = spyOn(
         JobScheduler.prototype,
         "execute"
       ).and.callThrough();
 
-      var options = {
+      const options = {
         asynchronous: false,
       };
 
@@ -2306,18 +2307,18 @@ describe(
     });
 
     it("resolves before textures are loaded when incrementallyLoadTextures is true", function () {
-      var textureCreate = spyOn(Texture, "create").and.callThrough();
+      const textureCreate = spyOn(Texture, "create").and.callThrough();
 
-      var deferredPromise = when.defer();
+      const deferredPromise = when.defer();
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
         deferredPromise.promise
       );
 
-      var image = new Image();
+      const image = new Image();
       image.src =
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
 
-      var options = {
+      const options = {
         incrementallyLoadTextures: true,
       };
 
@@ -2349,22 +2350,22 @@ describe(
     });
 
     it("destroys glTF loader", function () {
-      var destroyFeatureMetadataLoader = spyOn(
+      const destroyFeatureMetadataLoader = spyOn(
         GltfFeatureMetadataLoader.prototype,
         "destroy"
       ).and.callThrough();
 
-      var destroyVertexBufferLoader = spyOn(
+      const destroyVertexBufferLoader = spyOn(
         GltfVertexBufferLoader.prototype,
         "destroy"
       ).and.callThrough();
 
-      var destroyIndexBufferLoader = spyOn(
+      const destroyIndexBufferLoader = spyOn(
         GltfIndexBufferLoader.prototype,
         "destroy"
       ).and.callThrough();
 
-      var destroyTextureLoader = spyOn(
+      const destroyTextureLoader = spyOn(
         GltfTextureLoader.prototype,
         "destroy"
       ).and.callThrough();
@@ -2385,16 +2386,16 @@ describe(
     });
 
     it("rejects promise if glTF JSON fails to load", function () {
-      var error = new Error("404 Not Found");
+      const error = new Error("404 Not Found");
       spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
         when.reject(error)
       );
 
-      var gltfResource = new Resource({
+      const gltfResource = new Resource({
         url: "https://example.com/model.glb",
       });
 
-      var gltfLoader = new GltfLoader({
+      const gltfLoader = new GltfLoader({
         gltfResource: gltfResource,
         releaseGltfJson: true,
       });
@@ -2413,27 +2414,27 @@ describe(
     });
 
     it("rejects promise if resource fails to load", function () {
-      var error = new Error("404 Not Found");
+      const error = new Error("404 Not Found");
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
         when.reject(error)
       );
 
-      var destroyVertexBufferLoader = spyOn(
+      const destroyVertexBufferLoader = spyOn(
         GltfVertexBufferLoader.prototype,
         "destroy"
       ).and.callThrough();
 
-      var destroyIndexBufferLoader = spyOn(
+      const destroyIndexBufferLoader = spyOn(
         GltfIndexBufferLoader.prototype,
         "destroy"
       ).and.callThrough();
 
-      var destroyTextureLoader = spyOn(
+      const destroyTextureLoader = spyOn(
         GltfTextureLoader.prototype,
         "destroy"
       ).and.callThrough();
 
-      var options = {
+      const options = {
         releaseGltfJson: true,
       };
 
@@ -2452,30 +2453,30 @@ describe(
     });
 
     function resolveGltfJsonAfterDestroy(reject) {
-      var gltf = {
+      const gltf = {
         asset: {
           version: "2.0",
         },
       };
-      var arrayBuffer = generateJsonBuffer(gltf).buffer;
+      const arrayBuffer = generateJsonBuffer(gltf).buffer;
 
-      var deferredPromise = when.defer();
+      const deferredPromise = when.defer();
       spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
         deferredPromise.promise
       );
 
-      var gltfUri = "https://example.com/model.glb";
+      const gltfUri = "https://example.com/model.glb";
 
-      var gltfResource = new Resource({
+      const gltfResource = new Resource({
         url: gltfUri,
       });
 
-      var gltfJsonLoaderCopy = ResourceCache.loadGltfJson({
+      const gltfJsonLoaderCopy = ResourceCache.loadGltfJson({
         gltfResource: gltfResource,
         baseResource: gltfResource,
       });
 
-      var gltfLoader = new GltfLoader({
+      const gltfLoader = new GltfLoader({
         gltfResource: gltfResource,
       });
 
@@ -2505,22 +2506,22 @@ describe(
     });
 
     it("loads vertex attributes and indices as typed arrays", function () {
-      var options = {
+      const options = {
         loadAsTypedArray: true,
       };
 
       return loadGltf(boxInterleaved, options).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var childNode = rootNode.children[0];
-        var primitive = childNode.primitives[0];
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const childNode = rootNode.children[0];
+        const primitive = childNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
-        var normalAttribute = getAttribute(
+        const normalAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.NORMAL
         );
@@ -2541,29 +2542,29 @@ describe(
     });
 
     it("loads instanced attributes as typed arrays", function () {
-      var options = {
+      const options = {
         loadAsTypedArray: true,
       };
 
       return loadGltf(boxInstancedTranslationMinMax, options).then(function (
         gltfLoader
       ) {
-        var components = gltfLoader.components;
-        var scene = components.scene;
-        var rootNode = scene.nodes[0];
-        var primitive = rootNode.primitives[0];
-        var attributes = primitive.attributes;
-        var positionAttribute = getAttribute(
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.POSITION
         );
-        var normalAttribute = getAttribute(
+        const normalAttribute = getAttribute(
           attributes,
           VertexAttributeSemantic.NORMAL
         );
-        var instances = rootNode.instances;
-        var instancedAttributes = instances.attributes;
-        var translationAttribute = getAttribute(
+        const instances = rootNode.instances;
+        const instancedAttributes = instances.attributes;
+        const translationAttribute = getAttribute(
           instancedAttributes,
           InstanceAttributeSemantic.TRANSLATION
         );

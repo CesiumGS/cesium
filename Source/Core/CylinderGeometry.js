@@ -16,11 +16,11 @@ import CesiumMath from "./Math.js";
 import PrimitiveType from "./PrimitiveType.js";
 import VertexFormat from "./VertexFormat.js";
 
-var radiusScratch = new Cartesian2();
-var normalScratch = new Cartesian3();
-var bitangentScratch = new Cartesian3();
-var tangentScratch = new Cartesian3();
-var positionScratch = new Cartesian3();
+const radiusScratch = new Cartesian2();
+const normalScratch = new Cartesian3();
+const bitangentScratch = new Cartesian3();
+const tangentScratch = new Cartesian3();
+const positionScratch = new Cartesian3();
 
 /**
  * A description of a cylinder.
@@ -51,11 +51,11 @@ var positionScratch = new Cartesian3();
 function CylinderGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var length = options.length;
-  var topRadius = options.topRadius;
-  var bottomRadius = options.bottomRadius;
-  var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-  var slices = defaultValue(options.slices, 128);
+  const length = options.length;
+  const topRadius = options.topRadius;
+  const bottomRadius = options.bottomRadius;
+  const vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+  const slices = defaultValue(options.slices, 128);
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(length)) {
@@ -130,8 +130,8 @@ CylinderGeometry.pack = function (value, array, startingIndex) {
   return array;
 };
 
-var scratchVertexFormat = new VertexFormat();
-var scratchOptions = {
+const scratchVertexFormat = new VertexFormat();
+const scratchOptions = {
   vertexFormat: scratchVertexFormat,
   length: undefined,
   topRadius: undefined,
@@ -157,18 +157,18 @@ CylinderGeometry.unpack = function (array, startingIndex, result) {
 
   startingIndex = defaultValue(startingIndex, 0);
 
-  var vertexFormat = VertexFormat.unpack(
+  const vertexFormat = VertexFormat.unpack(
     array,
     startingIndex,
     scratchVertexFormat
   );
   startingIndex += VertexFormat.packedLength;
 
-  var length = array[startingIndex++];
-  var topRadius = array[startingIndex++];
-  var bottomRadius = array[startingIndex++];
-  var slices = array[startingIndex++];
-  var offsetAttribute = array[startingIndex];
+  const length = array[startingIndex++];
+  const topRadius = array[startingIndex++];
+  const bottomRadius = array[startingIndex++];
+  const slices = array[startingIndex++];
+  const offsetAttribute = array[startingIndex];
 
   if (!defined(result)) {
     scratchOptions.length = length;
@@ -198,11 +198,11 @@ CylinderGeometry.unpack = function (array, startingIndex, result) {
  * @returns {Geometry|undefined} The computed vertices and indices.
  */
 CylinderGeometry.createGeometry = function (cylinderGeometry) {
-  var length = cylinderGeometry._length;
-  var topRadius = cylinderGeometry._topRadius;
-  var bottomRadius = cylinderGeometry._bottomRadius;
-  var vertexFormat = cylinderGeometry._vertexFormat;
-  var slices = cylinderGeometry._slices;
+  let length = cylinderGeometry._length;
+  const topRadius = cylinderGeometry._topRadius;
+  const bottomRadius = cylinderGeometry._bottomRadius;
+  const vertexFormat = cylinderGeometry._vertexFormat;
+  const slices = cylinderGeometry._slices;
 
   if (
     length <= 0 ||
@@ -213,11 +213,11 @@ CylinderGeometry.createGeometry = function (cylinderGeometry) {
     return;
   }
 
-  var twoSlices = slices + slices;
-  var threeSlices = slices + twoSlices;
-  var numVertices = twoSlices + twoSlices;
+  const twoSlices = slices + slices;
+  const threeSlices = slices + twoSlices;
+  const numVertices = twoSlices + twoSlices;
 
-  var positions = CylinderGeometryLibrary.computePositions(
+  const positions = CylinderGeometryLibrary.computePositions(
     length,
     topRadius,
     bottomRadius,
@@ -225,39 +225,39 @@ CylinderGeometry.createGeometry = function (cylinderGeometry) {
     true
   );
 
-  var st = vertexFormat.st ? new Float32Array(numVertices * 2) : undefined;
-  var normals = vertexFormat.normal
+  const st = vertexFormat.st ? new Float32Array(numVertices * 2) : undefined;
+  const normals = vertexFormat.normal
     ? new Float32Array(numVertices * 3)
     : undefined;
-  var tangents = vertexFormat.tangent
+  const tangents = vertexFormat.tangent
     ? new Float32Array(numVertices * 3)
     : undefined;
-  var bitangents = vertexFormat.bitangent
+  const bitangents = vertexFormat.bitangent
     ? new Float32Array(numVertices * 3)
     : undefined;
 
-  var i;
-  var computeNormal =
+  let i;
+  const computeNormal =
     vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent;
 
   if (computeNormal) {
-    var computeTangent = vertexFormat.tangent || vertexFormat.bitangent;
+    const computeTangent = vertexFormat.tangent || vertexFormat.bitangent;
 
-    var normalIndex = 0;
-    var tangentIndex = 0;
-    var bitangentIndex = 0;
+    let normalIndex = 0;
+    let tangentIndex = 0;
+    let bitangentIndex = 0;
 
-    var theta = Math.atan2(bottomRadius - topRadius, length);
-    var normal = normalScratch;
+    const theta = Math.atan2(bottomRadius - topRadius, length);
+    const normal = normalScratch;
     normal.z = Math.sin(theta);
-    var normalScale = Math.cos(theta);
-    var tangent = tangentScratch;
-    var bitangent = bitangentScratch;
+    const normalScale = Math.cos(theta);
+    let tangent = tangentScratch;
+    let bitangent = bitangentScratch;
 
     for (i = 0; i < slices; i++) {
-      var angle = (i / slices) * CesiumMath.TWO_PI;
-      var x = normalScale * Math.cos(angle);
-      var y = normalScale * Math.sin(angle);
+      const angle = (i / slices) * CesiumMath.TWO_PI;
+      const x = normalScale * Math.cos(angle);
+      const y = normalScale * Math.sin(angle);
       if (computeNormal) {
         normal.x = x;
         normal.y = y;
@@ -339,10 +339,10 @@ CylinderGeometry.createGeometry = function (cylinderGeometry) {
     }
   }
 
-  var numIndices = 12 * slices - 12;
-  var indices = IndexDatatype.createTypedArray(numVertices, numIndices);
-  var index = 0;
-  var j = 0;
+  const numIndices = 12 * slices - 12;
+  const indices = IndexDatatype.createTypedArray(numVertices, numIndices);
+  let index = 0;
+  let j = 0;
   for (i = 0; i < slices - 1; i++) {
     indices[index++] = j;
     indices[index++] = j + 2;
@@ -374,17 +374,17 @@ CylinderGeometry.createGeometry = function (cylinderGeometry) {
     indices[index++] = threeSlices + i + 1;
   }
 
-  var textureCoordIndex = 0;
+  let textureCoordIndex = 0;
   if (vertexFormat.st) {
-    var rad = Math.max(topRadius, bottomRadius);
+    const rad = Math.max(topRadius, bottomRadius);
     for (i = 0; i < numVertices; i++) {
-      var position = Cartesian3.fromArray(positions, i * 3, positionScratch);
+      const position = Cartesian3.fromArray(positions, i * 3, positionScratch);
       st[textureCoordIndex++] = (position.x + rad) / (2.0 * rad);
       st[textureCoordIndex++] = (position.y + rad) / (2.0 * rad);
     }
   }
 
-  var attributes = new GeometryAttributes();
+  const attributes = new GeometryAttributes();
   if (vertexFormat.position) {
     attributes.position = new GeometryAttribute({
       componentDatatype: ComponentDatatype.DOUBLE,
@@ -428,15 +428,15 @@ CylinderGeometry.createGeometry = function (cylinderGeometry) {
   radiusScratch.x = length * 0.5;
   radiusScratch.y = Math.max(bottomRadius, topRadius);
 
-  var boundingSphere = new BoundingSphere(
+  const boundingSphere = new BoundingSphere(
     Cartesian3.ZERO,
     Cartesian2.magnitude(radiusScratch)
   );
 
   if (defined(cylinderGeometry._offsetAttribute)) {
     length = positions.length;
-    var applyOffset = new Uint8Array(length / 3);
-    var offsetValue =
+    const applyOffset = new Uint8Array(length / 3);
+    const offsetValue =
       cylinderGeometry._offsetAttribute === GeometryOffsetAttribute.NONE
         ? 0
         : 1;
@@ -457,7 +457,7 @@ CylinderGeometry.createGeometry = function (cylinderGeometry) {
   });
 };
 
-var unitCylinderGeometry;
+let unitCylinderGeometry;
 
 /**
  * Returns the geometric representation of a unit cylinder, including its vertices, indices, and a bounding sphere.

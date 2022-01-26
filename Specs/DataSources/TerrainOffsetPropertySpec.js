@@ -7,8 +7,8 @@ import createGlobe from "../createGlobe.js";
 import createScene from "../createScene.js";
 
 describe("DataSources/TerrainOffsetProperty", function () {
-  var scene;
-  var time = JulianDate.now();
+  let scene;
+  const time = JulianDate.now();
   beforeAll(function () {
     scene = createScene();
     scene.globe = createGlobe();
@@ -19,10 +19,10 @@ describe("DataSources/TerrainOffsetProperty", function () {
   });
 
   it("can construct and destroy", function () {
-    var position = new CallbackProperty(jasmine.createSpy(), false);
-    var height = new ConstantProperty(30);
-    var extrudedHeight = new ConstantProperty(0);
-    var property = new TerrainOffsetProperty(
+    const position = new CallbackProperty(jasmine.createSpy(), false);
+    const height = new ConstantProperty(30);
+    const extrudedHeight = new ConstantProperty(0);
+    const property = new TerrainOffsetProperty(
       scene,
       position,
       height,
@@ -35,9 +35,9 @@ describe("DataSources/TerrainOffsetProperty", function () {
   });
 
   it("throws without scene", function () {
-    var position = new CallbackProperty(jasmine.createSpy(), false);
-    var height = new ConstantProperty(30);
-    var extrudedHeight = new ConstantProperty(0);
+    const position = new CallbackProperty(jasmine.createSpy(), false);
+    const height = new ConstantProperty(30);
+    const extrudedHeight = new ConstantProperty(0);
     expect(function () {
       return new TerrainOffsetProperty(
         undefined,
@@ -49,8 +49,8 @@ describe("DataSources/TerrainOffsetProperty", function () {
   });
 
   it("throws without position", function () {
-    var height = new ConstantProperty(30);
-    var extrudedHeight = new ConstantProperty(0);
+    const height = new ConstantProperty(30);
+    const extrudedHeight = new ConstantProperty(0);
     expect(function () {
       return new TerrainOffsetProperty(
         scene,

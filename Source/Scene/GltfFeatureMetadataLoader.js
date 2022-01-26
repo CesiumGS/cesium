@@ -34,14 +34,14 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  */
 export default function GltfFeatureMetadataLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var gltf = options.gltf;
-  var extension = options.extension;
-  var extensionLegacy = options.extensionLegacy;
-  var gltfResource = options.gltfResource;
-  var baseResource = options.baseResource;
-  var supportedImageFormats = options.supportedImageFormats;
-  var cacheKey = options.cacheKey;
-  var asynchronous = defaultValue(options.asynchronous, true);
+  const gltf = options.gltf;
+  const extension = options.extension;
+  const extensionLegacy = options.extensionLegacy;
+  const gltfResource = options.gltfResource;
+  const baseResource = options.baseResource;
+  const supportedImageFormats = options.supportedImageFormats;
+  const cacheKey = options.cacheKey;
+  const asynchronous = defaultValue(options.asynchronous, true);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -127,14 +127,14 @@ Object.defineProperties(GltfFeatureMetadataLoader.prototype, {
  * @private
  */
 GltfFeatureMetadataLoader.prototype.load = function () {
-  var bufferViewsPromise = loadBufferViews(this);
-  var texturesPromise = loadTextures(this);
-  var schemaPromise = loadSchema(this);
+  const bufferViewsPromise = loadBufferViews(this);
+  const texturesPromise = loadTextures(this);
+  const schemaPromise = loadSchema(this);
 
   this._gltf = undefined; // No longer need to hold onto the glTF
   this._state = ResourceLoaderState.LOADING;
 
-  var that = this;
+  const that = this;
 
   when
     .all([bufferViewsPromise, texturesPromise, schemaPromise])
@@ -142,9 +142,9 @@ GltfFeatureMetadataLoader.prototype.load = function () {
       if (that.isDestroyed()) {
         return;
       }
-      var bufferViews = results[0];
-      var textures = results[1];
-      var schema = results[2];
+      const bufferViews = results[0];
+      const textures = results[1];
+      const schema = results[2];
 
       if (defined(that._extension)) {
         that._featureMetadata = parseFeatureMetadata({
@@ -170,18 +170,18 @@ GltfFeatureMetadataLoader.prototype.load = function () {
       }
       that.unload();
       that._state = ResourceLoaderState.FAILED;
-      var errorMessage = "Failed to load feature metadata";
+      const errorMessage = "Failed to load feature metadata";
       that._promise.reject(that.getError(errorMessage, error));
     });
 };
 
 function gatherBufferViewIdsFromProperties(properties, bufferViewIdSet) {
-  for (var propertyId in properties) {
+  for (const propertyId in properties) {
     if (properties.hasOwnProperty(propertyId)) {
-      var property = properties[propertyId];
-      var bufferView = property.bufferView;
-      var arrayOffsetBufferView = property.arrayOffsetBufferView;
-      var stringOffsetBufferView = property.stringOffsetBufferView;
+      const property = properties[propertyId];
+      const bufferView = property.bufferView;
+      const arrayOffsetBufferView = property.arrayOffsetBufferView;
+      const stringOffsetBufferView = property.stringOffsetBufferView;
 
       // Using an object like a mathematical set
       if (defined(bufferView)) {
@@ -198,11 +198,11 @@ function gatherBufferViewIdsFromProperties(properties, bufferViewIdSet) {
 }
 
 function gatherUsedBufferViewIds(extension) {
-  var propertyTables = extension.propertyTables;
-  var bufferViewIdSet = {};
+  const propertyTables = extension.propertyTables;
+  const bufferViewIdSet = {};
   if (defined(propertyTables)) {
-    for (var i = 0; i < propertyTables.length; i++) {
-      var propertyTable = propertyTables[i];
+    for (let i = 0; i < propertyTables.length; i++) {
+      const propertyTable = propertyTables[i];
       gatherBufferViewIdsFromProperties(
         propertyTable.properties,
         bufferViewIdSet
@@ -213,14 +213,14 @@ function gatherUsedBufferViewIds(extension) {
 }
 
 function gatherUsedBufferViewIdsLegacy(extensionLegacy) {
-  var featureTables = extensionLegacy.featureTables;
+  const featureTables = extensionLegacy.featureTables;
 
-  var bufferViewIdSet = {};
+  const bufferViewIdSet = {};
   if (defined(featureTables)) {
-    for (var featureTableId in featureTables) {
+    for (const featureTableId in featureTables) {
       if (featureTables.hasOwnProperty(featureTableId)) {
-        var featureTable = featureTables[featureTableId];
-        var properties = featureTable.properties;
+        const featureTable = featureTables[featureTableId];
+        const properties = featureTable.properties;
         if (defined(properties)) {
           gatherBufferViewIdsFromProperties(properties, bufferViewIdSet);
         }
@@ -231,7 +231,7 @@ function gatherUsedBufferViewIdsLegacy(extensionLegacy) {
 }
 
 function loadBufferViews(featureMetadataLoader) {
-  var bufferViewIds;
+  let bufferViewIds;
   if (defined(featureMetadataLoader._extension)) {
     bufferViewIds = gatherUsedBufferViewIds(featureMetadataLoader._extension);
   } else {
@@ -241,11 +241,11 @@ function loadBufferViews(featureMetadataLoader) {
   }
 
   // Load the buffer views
-  var bufferViewPromises = [];
-  var bufferViewLoaders = {};
-  for (var bufferViewId in bufferViewIds) {
+  const bufferViewPromises = [];
+  const bufferViewLoaders = {};
+  for (const bufferViewId in bufferViewIds) {
     if (bufferViewIds.hasOwnProperty(bufferViewId)) {
-      var bufferViewLoader = ResourceCache.loadBufferView({
+      const bufferViewLoader = ResourceCache.loadBufferView({
         gltf: featureMetadataLoader._gltf,
         bufferViewId: parseInt(bufferViewId),
         gltfResource: featureMetadataLoader._gltfResource,
@@ -259,12 +259,14 @@ function loadBufferViews(featureMetadataLoader) {
 
   // Return a promise to a map of buffer view IDs to typed arrays
   return when.all(bufferViewPromises).then(function () {
-    var bufferViews = {};
-    for (var bufferViewId in bufferViewLoaders) {
+    const bufferViews = {};
+    for (const bufferViewId in bufferViewLoaders) {
       if (bufferViewLoaders.hasOwnProperty(bufferViewId)) {
-        var bufferViewLoader = bufferViewLoaders[bufferViewId];
+        const bufferViewLoader = bufferViewLoaders[bufferViewId];
         // Copy the typed array and let the underlying ArrayBuffer be freed
-        var bufferViewTypedArray = new Uint8Array(bufferViewLoader.typedArray);
+        const bufferViewTypedArray = new Uint8Array(
+          bufferViewLoader.typedArray
+        );
         bufferViews[bufferViewId] = bufferViewTypedArray;
       }
     }
@@ -278,11 +280,11 @@ function loadBufferViews(featureMetadataLoader) {
 
 function gatherUsedTextureIds(extension) {
   // Gather the used textures
-  var textureIds = {};
-  var propertyTextures = extension.propertyTextures;
+  const textureIds = {};
+  const propertyTextures = extension.propertyTextures;
   if (defined(propertyTextures)) {
-    for (var i = 0; i < propertyTextures.length; i++) {
-      var propertyTexture = propertyTextures[i];
+    for (let i = 0; i < propertyTextures.length; i++) {
+      const propertyTexture = propertyTextures[i];
       if (defined(propertyTexture.properties)) {
         // The property texture JSON is also a glTF textureInfo
         textureIds[propertyTexture.index] = propertyTexture;
@@ -293,10 +295,10 @@ function gatherUsedTextureIds(extension) {
 }
 
 function gatherTextureIdsFromProperties(properties, textureIds) {
-  for (var propertyId in properties) {
+  for (const propertyId in properties) {
     if (properties.hasOwnProperty(propertyId)) {
-      var property = properties[propertyId];
-      var textureInfo = property.texture;
+      const property = properties[propertyId];
+      const textureInfo = property.texture;
       textureIds[textureInfo.index] = textureInfo;
     }
   }
@@ -304,13 +306,13 @@ function gatherTextureIdsFromProperties(properties, textureIds) {
 
 function gatherUsedTextureIdsLegacy(extensionLegacy) {
   // Gather the used textures
-  var textureIds = {};
-  var featureTextures = extensionLegacy.featureTextures;
+  const textureIds = {};
+  const featureTextures = extensionLegacy.featureTextures;
   if (defined(featureTextures)) {
-    for (var featureTextureId in featureTextures) {
+    for (const featureTextureId in featureTextures) {
       if (featureTextures.hasOwnProperty(featureTextureId)) {
-        var featureTexture = featureTextures[featureTextureId];
-        var properties = featureTexture.properties;
+        const featureTexture = featureTextures[featureTextureId];
+        const properties = featureTexture.properties;
         if (defined(properties)) {
           gatherTextureIdsFromProperties(properties, textureIds);
         }
@@ -322,7 +324,7 @@ function gatherUsedTextureIdsLegacy(extensionLegacy) {
 }
 
 function loadTextures(featureMetadataLoader) {
-  var textureIds;
+  let textureIds;
   if (defined(featureMetadataLoader._extension)) {
     textureIds = gatherUsedTextureIds(featureMetadataLoader._extension);
   } else {
@@ -331,18 +333,18 @@ function loadTextures(featureMetadataLoader) {
     );
   }
 
-  var gltf = featureMetadataLoader._gltf;
-  var gltfResource = featureMetadataLoader._gltfResource;
-  var baseResource = featureMetadataLoader._baseResource;
-  var supportedImageFormats = featureMetadataLoader._supportedImageFormats;
-  var asynchronous = featureMetadataLoader._asynchronous;
+  const gltf = featureMetadataLoader._gltf;
+  const gltfResource = featureMetadataLoader._gltfResource;
+  const baseResource = featureMetadataLoader._baseResource;
+  const supportedImageFormats = featureMetadataLoader._supportedImageFormats;
+  const asynchronous = featureMetadataLoader._asynchronous;
 
   // Load the textures
-  var texturePromises = [];
-  var textureLoaders = {};
-  for (var textureId in textureIds) {
+  const texturePromises = [];
+  const textureLoaders = {};
+  for (const textureId in textureIds) {
     if (textureIds.hasOwnProperty(textureId)) {
-      var textureLoader = ResourceCache.loadTexture({
+      const textureLoader = ResourceCache.loadTexture({
         gltf: gltf,
         textureInfo: textureIds[textureId],
         gltfResource: gltfResource,
@@ -358,10 +360,10 @@ function loadTextures(featureMetadataLoader) {
 
   // Return a promise to a map of texture IDs to Texture objects
   return when.all(texturePromises).then(function () {
-    var textures = {};
-    for (var textureId in textureLoaders) {
+    const textures = {};
+    for (const textureId in textureLoaders) {
       if (textureLoaders.hasOwnProperty(textureId)) {
-        var textureLoader = textureLoaders[textureId];
+        const textureLoader = textureLoaders[textureId];
         textures[textureId] = textureLoader.texture;
       }
     }
@@ -370,14 +372,14 @@ function loadTextures(featureMetadataLoader) {
 }
 
 function loadSchema(featureMetadataLoader) {
-  var extension = defaultValue(
+  const extension = defaultValue(
     featureMetadataLoader._extension,
     featureMetadataLoader._extensionLegacy
   );
 
-  var schemaLoader;
+  let schemaLoader;
   if (defined(extension.schemaUri)) {
-    var resource = featureMetadataLoader._baseResource.getDerivedResource({
+    const resource = featureMetadataLoader._baseResource.getDerivedResource({
       url: extension.schemaUri,
     });
     schemaLoader = ResourceCache.loadSchema({
@@ -411,28 +413,28 @@ GltfFeatureMetadataLoader.prototype.process = function (frameState) {
     return;
   }
 
-  var textureLoaders = this._textureLoaders;
-  var textureLoadersLength = textureLoaders.length;
+  const textureLoaders = this._textureLoaders;
+  const textureLoadersLength = textureLoaders.length;
 
-  for (var i = 0; i < textureLoadersLength; ++i) {
-    var textureLoader = textureLoaders[i];
+  for (let i = 0; i < textureLoadersLength; ++i) {
+    const textureLoader = textureLoaders[i];
     textureLoader.process(frameState);
   }
 };
 
 function unloadBufferViews(featureMetadataLoader) {
-  var bufferViewLoaders = featureMetadataLoader._bufferViewLoaders;
-  var bufferViewLoadersLength = bufferViewLoaders.length;
-  for (var i = 0; i < bufferViewLoadersLength; ++i) {
+  const bufferViewLoaders = featureMetadataLoader._bufferViewLoaders;
+  const bufferViewLoadersLength = bufferViewLoaders.length;
+  for (let i = 0; i < bufferViewLoadersLength; ++i) {
     ResourceCache.unload(bufferViewLoaders[i]);
   }
   featureMetadataLoader._bufferViewLoaders.length = 0;
 }
 
 function unloadTextures(featureMetadataLoader) {
-  var textureLoaders = featureMetadataLoader._textureLoaders;
-  var textureLoadersLength = textureLoaders.length;
-  for (var i = 0; i < textureLoadersLength; ++i) {
+  const textureLoaders = featureMetadataLoader._textureLoaders;
+  const textureLoadersLength = textureLoaders.length;
+  for (let i = 0; i < textureLoadersLength; ++i) {
     ResourceCache.unload(textureLoaders[i]);
   }
   featureMetadataLoader._textureLoaders.length = 0;

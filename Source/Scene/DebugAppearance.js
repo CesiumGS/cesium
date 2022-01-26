@@ -34,8 +34,8 @@ import Appearance from "./Appearance.js";
  */
 function DebugAppearance(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var attributeName = options.attributeName;
-  var perInstanceAttribute = options.perInstanceAttribute;
+  const attributeName = options.attributeName;
+  let perInstanceAttribute = options.perInstanceAttribute;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(attributeName)) {
@@ -47,9 +47,9 @@ function DebugAppearance(options) {
     perInstanceAttribute = false;
   }
 
-  var glslDatatype = defaultValue(options.glslDatatype, "vec3");
-  var varyingName = "v_" + attributeName;
-  var getColor;
+  let glslDatatype = defaultValue(options.glslDatatype, "vec3");
+  const varyingName = "v_" + attributeName;
+  let getColor;
 
   // Well-known normalized vector attributes in VertexFormat
   if (
@@ -92,7 +92,7 @@ function DebugAppearance(options) {
     }
   }
 
-  var vs =
+  const vs =
     "attribute vec3 position3DHigh;\n" +
     "attribute vec3 position3DLow;\n" +
     "attribute float batchId;\n" +
@@ -112,7 +112,7 @@ function DebugAppearance(options) {
       : varyingName + " = " + attributeName + ";\n") +
     "gl_Position = czm_modelViewProjectionRelativeToEye * p;\n" +
     "}";
-  var fs =
+  const fs =
     "varying " +
     glslDatatype +
     " " +

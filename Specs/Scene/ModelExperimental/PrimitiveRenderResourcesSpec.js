@@ -19,12 +19,12 @@ import {
 } from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
-  var mockModel = {
+  const mockModel = {
     modelMatrix: Matrix4.IDENTITY,
     type: ModelExperimentalType.GLTF,
   };
-  var mockNode = {};
-  var mockSceneGraph = {
+  const mockNode = {};
+  const mockSceneGraph = {
     computedModelMatrix: Matrix4.IDENTITY,
     components: {
       upAxis: Axis.Y,
@@ -32,7 +32,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     },
   };
 
-  var runtimeNode = new ModelExperimentalNode({
+  const runtimeNode = new ModelExperimentalNode({
     node: mockNode,
     transform: Matrix4.IDENTITY,
     sceneGraph: mockSceneGraph,
@@ -45,7 +45,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     );
   }
 
-  var primitive = {
+  const primitive = {
     indices: {
       count: 6,
     },
@@ -63,7 +63,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     ],
   };
 
-  var primitiveWithoutIndices = {
+  const primitiveWithoutIndices = {
     primitiveType: PrimitiveType.POINTS,
     featureIds: [],
     featureIdTextures: [],
@@ -80,19 +80,19 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     ],
   };
 
-  var runtimePrimitive = new ModelExperimentalPrimitive({
+  const runtimePrimitive = new ModelExperimentalPrimitive({
     primitive: primitive,
     node: mockNode,
     model: mockModel,
   });
 
-  var runtimePrimitiveWithoutIndices = new ModelExperimentalPrimitive({
+  const runtimePrimitiveWithoutIndices = new ModelExperimentalPrimitive({
     primitive: primitiveWithoutIndices,
     node: mockNode,
     model: mockModel,
   });
 
-  var expectedDepthTest = {
+  const expectedDepthTest = {
     depthTest: {
       enabled: true,
       func: DepthFunction.LESS_OR_EQUAL,
@@ -108,16 +108,19 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
 
   it("throws for undefined runtimePrimitive", function () {
     expect(function () {
-      var modelResources = new ModelRenderResources(mockModel);
-      var nodeResources = new NodeRenderResources(modelResources, runtimeNode);
+      const modelResources = new ModelRenderResources(mockModel);
+      const nodeResources = new NodeRenderResources(
+        modelResources,
+        runtimeNode
+      );
       return new PrimitiveRenderResources(nodeResources, undefined);
     }).toThrowDeveloperError();
   });
 
   it("constructs", function () {
-    var modelResources = new ModelRenderResources(mockModel);
-    var nodeResources = new NodeRenderResources(modelResources, runtimeNode);
-    var primitiveResources = new PrimitiveRenderResources(
+    const modelResources = new ModelRenderResources(mockModel);
+    const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
+    const primitiveResources = new PrimitiveRenderResources(
       nodeResources,
       runtimePrimitive
     );
@@ -145,9 +148,9 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
   });
 
   it("constructs from primitive without indices", function () {
-    var modelResources = new ModelRenderResources(mockModel);
-    var nodeResources = new NodeRenderResources(modelResources, runtimeNode);
-    var primitiveResources = new PrimitiveRenderResources(
+    const modelResources = new ModelRenderResources(mockModel);
+    const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
+    const primitiveResources = new PrimitiveRenderResources(
       nodeResources,
       runtimePrimitiveWithoutIndices
     );
@@ -174,11 +177,11 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
   });
 
   it("inherits from model render resources", function () {
-    var modelResources = new ModelRenderResources(mockModel);
+    const modelResources = new ModelRenderResources(mockModel);
     modelResources.shaderBuilder.addDefine("MODEL");
-    var nodeResources = new NodeRenderResources(modelResources, runtimeNode);
+    const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
     nodeResources.shaderBuilder.addDefine("NODE");
-    var primitiveResources = new PrimitiveRenderResources(
+    const primitiveResources = new PrimitiveRenderResources(
       nodeResources,
       runtimePrimitive
     );
@@ -205,11 +208,11 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
   });
 
   it("inherits from node render resources", function () {
-    var modelResources = new ModelRenderResources(mockModel);
+    const modelResources = new ModelRenderResources(mockModel);
     modelResources.shaderBuilder.addDefine("MODEL");
-    var nodeResources = new NodeRenderResources(modelResources, runtimeNode);
+    const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
     nodeResources.shaderBuilder.addDefine("NODE");
-    var primitiveResources = new PrimitiveRenderResources(
+    const primitiveResources = new PrimitiveRenderResources(
       nodeResources,
       runtimePrimitive
     );

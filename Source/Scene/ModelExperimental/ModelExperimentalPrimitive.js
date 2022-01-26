@@ -111,29 +111,29 @@ export default function ModelExperimentalPrimitive(options) {
  * @private
  */
 ModelExperimentalPrimitive.prototype.configurePipeline = function () {
-  var pipelineStages = this.pipelineStages;
+  const pipelineStages = this.pipelineStages;
   pipelineStages.length = 0;
 
-  var primitive = this.primitive;
-  var node = this.node;
-  var model = this.model;
-  var customShader = model.customShader;
+  const primitive = this.primitive;
+  const node = this.node;
+  const model = this.model;
+  const customShader = model.customShader;
 
-  var hasCustomShader = defined(customShader);
-  var hasCustomFragmentShader =
+  const hasCustomShader = defined(customShader);
+  const hasCustomFragmentShader =
     hasCustomShader && defined(customShader.fragmentShaderText);
-  var materialsEnabled =
+  const materialsEnabled =
     !hasCustomFragmentShader ||
     customShader.mode !== CustomShaderMode.REPLACE_MATERIAL;
-  var hasQuantization = ModelExperimentalUtility.hasQuantizedAttributes(
+  const hasQuantization = ModelExperimentalUtility.hasQuantizedAttributes(
     primitive.attributes
   );
 
-  var pointCloudShading = model.pointCloudShading;
-  var hasAttenuation =
+  const pointCloudShading = model.pointCloudShading;
+  const hasAttenuation =
     defined(pointCloudShading) && pointCloudShading.attenuation;
 
-  var featureIdFlags = inspectFeatureIds(model, node, primitive);
+  const featureIdFlags = inspectFeatureIds(model, node, primitive);
 
   // Start of pipeline -----------------------------------------------------
 
@@ -175,7 +175,7 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
 };
 
 function inspectFeatureIds(model, node, primitive) {
-  var featureIds;
+  let featureIds;
   // Check instances first, as this is the most specific type of
   // feature ID
   if (defined(node.instances)) {

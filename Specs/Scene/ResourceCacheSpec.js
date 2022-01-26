@@ -17,43 +17,52 @@ import waitForLoaderProcess from "../waitForLoaderProcess.js";
 describe(
   "ResourceCache",
   function () {
-    var schemaResource = new Resource({
+    const schemaResource = new Resource({
       url: "https://example.com/schema.json",
     });
-    var schemaJson = {};
+    const schemaJson = {};
 
-    var bufferParentResource = new Resource({
+    const bufferParentResource = new Resource({
       url: "https://example.com/model.glb",
     });
-    var bufferResource = new Resource({
+    const bufferResource = new Resource({
       url: "https://example.com/external.bin",
     });
 
-    var gltfUri = "https://example.com/model.glb";
+    const gltfUri = "https://example.com/model.glb";
 
-    var gltfResource = new Resource({
+    const gltfResource = new Resource({
       url: gltfUri,
     });
 
-    var image = new Image();
+    const image = new Image();
     image.src =
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
 
-    var positions = new Float32Array([-1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0]); // prettier-ignore
-    var normals = new Float32Array([-1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]); // prettier-ignore
-    var indices = new Uint16Array([0, 1, 2]);
+    const positions = new Float32Array([-1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0]); // prettier-ignore
+    const normals = new Float32Array([-1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]); // prettier-ignore
+    const indices = new Uint16Array([0, 1, 2]);
 
-    var bufferTypedArray = concatTypedArrays([positions, normals, indices]);
-    var bufferArrayBuffer = bufferTypedArray.buffer;
+    const bufferTypedArray = concatTypedArrays([positions, normals, indices]);
+    const bufferArrayBuffer = bufferTypedArray.buffer;
 
-    var dracoBufferTypedArray = new Uint8Array([1, 3, 7, 15, 31, 63, 127, 255]);
-    var dracoArrayBuffer = dracoBufferTypedArray.buffer;
+    const dracoBufferTypedArray = new Uint8Array([
+      1,
+      3,
+      7,
+      15,
+      31,
+      63,
+      127,
+      255,
+    ]);
+    const dracoArrayBuffer = dracoBufferTypedArray.buffer;
 
-    var decodedPositions = new Uint16Array([0, 0, 0, 65535, 65535, 65535, 0, 65535, 0]); // prettier-ignore
-    var decodedNormals = new Uint8Array([0, 255, 128, 128, 255, 0]);
-    var decodedIndices = new Uint16Array([0, 1, 2]);
+    const decodedPositions = new Uint16Array([0, 0, 0, 65535, 65535, 65535, 0, 65535, 0]); // prettier-ignore
+    const decodedNormals = new Uint8Array([0, 255, 128, 128, 255, 0]);
+    const decodedIndices = new Uint16Array([0, 1, 2]);
 
-    var decodeDracoResults = {
+    const decodeDracoResults = {
       indexArray: {
         typedArray: decodedIndices,
         numberOfIndices: decodedIndices.length,
@@ -92,7 +101,7 @@ describe(
       },
     };
 
-    var gltfDraco = {
+    const gltfDraco = {
       buffers: [
         {
           uri: "external.bin",
@@ -149,10 +158,10 @@ describe(
       ],
     };
 
-    var dracoExtension =
+    const dracoExtension =
       gltfDraco.meshes[0].primitives[0].extensions.KHR_draco_mesh_compression;
 
-    var gltfUncompressed = {
+    const gltfUncompressed = {
       buffers: [
         {
           uri: "external.bin",
@@ -216,7 +225,7 @@ describe(
       ],
     };
 
-    var gltfWithTextures = {
+    const gltfWithTextures = {
       images: [
         {
           uri: "image.png",
@@ -239,7 +248,7 @@ describe(
       ],
     };
 
-    var scene;
+    let scene;
 
     beforeAll(function () {
       scene = createScene();
@@ -254,14 +263,14 @@ describe(
     });
 
     it("loads resource", function () {
-      var fetchJson = spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      const fetchJson = spyOn(Resource.prototype, "fetchJson").and.returnValue(
         when.resolve(schemaJson)
       );
 
-      var cacheKey = ResourceCacheKey.getSchemaCacheKey({
+      const cacheKey = ResourceCacheKey.getSchemaCacheKey({
         resource: schemaResource,
       });
-      var resourceLoader = new MetadataSchemaLoader({
+      const resourceLoader = new MetadataSchemaLoader({
         resource: schemaResource,
         cacheKey: cacheKey,
       });
@@ -270,14 +279,14 @@ describe(
         resourceLoader: resourceLoader,
       });
 
-      var cacheEntry = ResourceCache.cacheEntries[cacheKey];
+      const cacheEntry = ResourceCache.cacheEntries[cacheKey];
       expect(cacheEntry.referenceCount).toBe(1);
       expect(cacheEntry.resourceLoader).toBe(resourceLoader);
 
       return resourceLoader.promise.then(function (resourceLoader) {
         expect(fetchJson).toHaveBeenCalled();
 
-        var schema = resourceLoader.schema;
+        const schema = resourceLoader.schema;
         expect(schema).toBeDefined();
       });
     });
@@ -291,7 +300,7 @@ describe(
     });
 
     it("load throws if resourceLoader's cacheKey is undefined", function () {
-      var resourceLoader = new MetadataSchemaLoader({
+      const resourceLoader = new MetadataSchemaLoader({
         resource: schemaResource,
       });
 
@@ -303,11 +312,11 @@ describe(
     });
 
     it("load throws if a resource with this cacheKey is already in the cache", function () {
-      var cacheKey = ResourceCacheKey.getSchemaCacheKey({
+      const cacheKey = ResourceCacheKey.getSchemaCacheKey({
         resource: schemaResource,
       });
 
-      var resourceLoader = new MetadataSchemaLoader({
+      const resourceLoader = new MetadataSchemaLoader({
         resource: schemaResource,
         cacheKey: cacheKey,
       });
@@ -328,15 +337,15 @@ describe(
         when.resolve(schemaJson)
       );
 
-      var destroy = spyOn(
+      const destroy = spyOn(
         MetadataSchemaLoader.prototype,
         "destroy"
       ).and.callThrough();
 
-      var cacheKey = ResourceCacheKey.getSchemaCacheKey({
+      const cacheKey = ResourceCacheKey.getSchemaCacheKey({
         resource: schemaResource,
       });
-      var resourceLoader = new MetadataSchemaLoader({
+      const resourceLoader = new MetadataSchemaLoader({
         resource: schemaResource,
         cacheKey: cacheKey,
       });
@@ -347,7 +356,7 @@ describe(
 
       ResourceCache.get(cacheKey);
 
-      var cacheEntry = ResourceCache.cacheEntries[cacheKey];
+      const cacheEntry = ResourceCache.cacheEntries[cacheKey];
       expect(cacheEntry.referenceCount).toBe(2);
 
       ResourceCache.unload(resourceLoader);
@@ -367,10 +376,10 @@ describe(
     });
 
     it("unload throws if resourceLoader is not in the cache", function () {
-      var cacheKey = ResourceCacheKey.getSchemaCacheKey({
+      const cacheKey = ResourceCacheKey.getSchemaCacheKey({
         resource: schemaResource,
       });
-      var resourceLoader = new MetadataSchemaLoader({
+      const resourceLoader = new MetadataSchemaLoader({
         resource: schemaResource,
         cacheKey: cacheKey,
       });
@@ -385,10 +394,10 @@ describe(
         when.resolve(schemaJson)
       );
 
-      var cacheKey = ResourceCacheKey.getSchemaCacheKey({
+      const cacheKey = ResourceCacheKey.getSchemaCacheKey({
         resource: schemaResource,
       });
-      var resourceLoader = new MetadataSchemaLoader({
+      const resourceLoader = new MetadataSchemaLoader({
         resource: schemaResource,
         cacheKey: cacheKey,
       });
@@ -409,10 +418,10 @@ describe(
         when.resolve(schemaJson)
       );
 
-      var cacheKey = ResourceCacheKey.getSchemaCacheKey({
+      const cacheKey = ResourceCacheKey.getSchemaCacheKey({
         resource: schemaResource,
       });
-      var resourceLoader = new MetadataSchemaLoader({
+      const resourceLoader = new MetadataSchemaLoader({
         resource: schemaResource,
         cacheKey: cacheKey,
       });
@@ -421,7 +430,7 @@ describe(
         resourceLoader: resourceLoader,
       });
 
-      var cacheEntry = ResourceCache.cacheEntries[cacheKey];
+      const cacheEntry = ResourceCache.cacheEntries[cacheKey];
 
       ResourceCache.get(cacheKey);
       expect(cacheEntry.referenceCount).toBe(2);
@@ -431,7 +440,7 @@ describe(
     });
 
     it("get returns undefined if there is no resource with this cache key", function () {
-      var cacheKey = ResourceCacheKey.getSchemaCacheKey({
+      const cacheKey = ResourceCacheKey.getSchemaCacheKey({
         resource: schemaResource,
       });
 
@@ -439,13 +448,13 @@ describe(
     });
 
     it("loads schema from JSON", function () {
-      var expectedCacheKey = ResourceCacheKey.getSchemaCacheKey({
+      const expectedCacheKey = ResourceCacheKey.getSchemaCacheKey({
         schema: schemaJson,
       });
-      var schemaLoader = ResourceCache.loadSchema({
+      const schemaLoader = ResourceCache.loadSchema({
         schema: schemaJson,
       });
-      var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
+      const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(schemaLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
 
@@ -459,7 +468,7 @@ describe(
       expect(cacheEntry.referenceCount).toBe(2);
 
       return schemaLoader.promise.then(function (schemaLoader) {
-        var schema = schemaLoader.schema;
+        const schema = schemaLoader.schema;
         expect(schema).toBeDefined();
       });
     });
@@ -469,13 +478,13 @@ describe(
         when.resolve(schemaJson)
       );
 
-      var expectedCacheKey = ResourceCacheKey.getSchemaCacheKey({
+      const expectedCacheKey = ResourceCacheKey.getSchemaCacheKey({
         resource: schemaResource,
       });
-      var schemaLoader = ResourceCache.loadSchema({
+      const schemaLoader = ResourceCache.loadSchema({
         resource: schemaResource,
       });
-      var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
+      const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(schemaLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
 
@@ -489,7 +498,7 @@ describe(
       expect(cacheEntry.referenceCount).toBe(2);
 
       return schemaLoader.promise.then(function (schemaLoader) {
-        var schema = schemaLoader.schema;
+        const schema = schemaLoader.schema;
         expect(schema).toBeDefined();
       });
     });
@@ -513,16 +522,16 @@ describe(
     });
 
     it("loads embedded buffer", function () {
-      var expectedCacheKey = ResourceCacheKey.getEmbeddedBufferCacheKey({
+      const expectedCacheKey = ResourceCacheKey.getEmbeddedBufferCacheKey({
         parentResource: bufferParentResource,
         bufferId: 0,
       });
-      var bufferLoader = ResourceCache.loadEmbeddedBuffer({
+      const bufferLoader = ResourceCache.loadEmbeddedBuffer({
         parentResource: bufferParentResource,
         bufferId: 0,
         typedArray: bufferTypedArray,
       });
-      var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
+      const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(bufferLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
 
@@ -574,13 +583,13 @@ describe(
         when.resolve(bufferArrayBuffer)
       );
 
-      var expectedCacheKey = ResourceCacheKey.getExternalBufferCacheKey({
+      const expectedCacheKey = ResourceCacheKey.getExternalBufferCacheKey({
         resource: bufferResource,
       });
-      var bufferLoader = ResourceCache.loadExternalBuffer({
+      const bufferLoader = ResourceCache.loadExternalBuffer({
         resource: bufferResource,
       });
-      var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
+      const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(bufferLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
 
@@ -607,25 +616,25 @@ describe(
     });
 
     it("loads glTF", function () {
-      var gltf = {
+      const gltf = {
         asset: {
           version: "2.0",
         },
       };
-      var arrayBuffer = generateJsonBuffer(gltf).buffer;
+      const arrayBuffer = generateJsonBuffer(gltf).buffer;
 
       spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
         when.resolve(arrayBuffer)
       );
 
-      var expectedCacheKey = ResourceCacheKey.getGltfCacheKey({
+      const expectedCacheKey = ResourceCacheKey.getGltfCacheKey({
         gltfResource: gltfResource,
       });
-      var gltfJsonLoader = ResourceCache.loadGltfJson({
+      const gltfJsonLoader = ResourceCache.loadGltfJson({
         gltfResource: gltfResource,
         baseResource: gltfResource,
       });
-      var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
+      const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(gltfJsonLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
 
@@ -667,19 +676,19 @@ describe(
         when.resolve(bufferArrayBuffer)
       );
 
-      var expectedCacheKey = ResourceCacheKey.getBufferViewCacheKey({
+      const expectedCacheKey = ResourceCacheKey.getBufferViewCacheKey({
         gltf: gltfUncompressed,
         bufferViewId: 0,
         gltfResource: gltfResource,
         baseResource: gltfResource,
       });
-      var bufferViewLoader = ResourceCache.loadBufferView({
+      const bufferViewLoader = ResourceCache.loadBufferView({
         gltf: gltfUncompressed,
         bufferViewId: 0,
         gltfResource: gltfResource,
         baseResource: gltfResource,
       });
-      var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
+      const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(bufferViewLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
 
@@ -753,20 +762,20 @@ describe(
         when.resolve(decodeDracoResults)
       );
 
-      var expectedCacheKey = ResourceCacheKey.getDracoCacheKey({
+      const expectedCacheKey = ResourceCacheKey.getDracoCacheKey({
         gltf: gltfDraco,
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
       });
-      var dracoLoader = ResourceCache.loadDraco({
+      const dracoLoader = ResourceCache.loadDraco({
         gltf: gltfDraco,
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
       });
 
-      var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
+      const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(dracoLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
 
@@ -838,13 +847,13 @@ describe(
         when.resolve(bufferArrayBuffer)
       );
 
-      var expectedCacheKey = ResourceCacheKey.getVertexBufferCacheKey({
+      const expectedCacheKey = ResourceCacheKey.getVertexBufferCacheKey({
         gltf: gltfUncompressed,
         gltfResource: gltfResource,
         baseResource: gltfResource,
         bufferViewId: 0,
       });
-      var vertexBufferLoader = ResourceCache.loadVertexBuffer({
+      const vertexBufferLoader = ResourceCache.loadVertexBuffer({
         gltf: gltfUncompressed,
         gltfResource: gltfResource,
         baseResource: gltfResource,
@@ -852,7 +861,7 @@ describe(
         accessorId: 0,
       });
 
-      var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
+      const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(vertexBufferLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
 
@@ -884,14 +893,14 @@ describe(
         when.resolve(decodeDracoResults)
       );
 
-      var expectedCacheKey = ResourceCacheKey.getVertexBufferCacheKey({
+      const expectedCacheKey = ResourceCacheKey.getVertexBufferCacheKey({
         gltf: gltfDraco,
         gltfResource: gltfResource,
         baseResource: gltfResource,
         draco: dracoExtension,
         attributeSemantic: "POSITION",
       });
-      var vertexBufferLoader = ResourceCache.loadVertexBuffer({
+      const vertexBufferLoader = ResourceCache.loadVertexBuffer({
         gltf: gltfDraco,
         gltfResource: gltfResource,
         baseResource: gltfResource,
@@ -900,7 +909,7 @@ describe(
         accessorId: 0,
       });
 
-      var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
+      const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(vertexBufferLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
 
@@ -930,14 +939,14 @@ describe(
         when.resolve(bufferArrayBuffer)
       );
 
-      var expectedCacheKey = ResourceCacheKey.getVertexBufferCacheKey({
+      const expectedCacheKey = ResourceCacheKey.getVertexBufferCacheKey({
         gltf: gltfUncompressed,
         gltfResource: gltfResource,
         baseResource: gltfResource,
         bufferViewId: 0,
         loadAsTypedArray: true,
       });
-      var vertexBufferLoader = ResourceCache.loadVertexBuffer({
+      const vertexBufferLoader = ResourceCache.loadVertexBuffer({
         gltf: gltfUncompressed,
         gltfResource: gltfResource,
         baseResource: gltfResource,
@@ -1044,20 +1053,20 @@ describe(
         when.resolve(bufferArrayBuffer)
       );
 
-      var expectedCacheKey = ResourceCacheKey.getIndexBufferCacheKey({
+      const expectedCacheKey = ResourceCacheKey.getIndexBufferCacheKey({
         gltf: gltfUncompressed,
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
       });
-      var indexBufferLoader = ResourceCache.loadIndexBuffer({
+      const indexBufferLoader = ResourceCache.loadIndexBuffer({
         gltf: gltfUncompressed,
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
       });
 
-      var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
+      const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(indexBufferLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
 
@@ -1089,14 +1098,14 @@ describe(
         when.resolve(decodeDracoResults)
       );
 
-      var expectedCacheKey = ResourceCacheKey.getIndexBufferCacheKey({
+      const expectedCacheKey = ResourceCacheKey.getIndexBufferCacheKey({
         gltf: gltfDraco,
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
         draco: dracoExtension,
       });
-      var indexBufferLoader = ResourceCache.loadIndexBuffer({
+      const indexBufferLoader = ResourceCache.loadIndexBuffer({
         gltf: gltfDraco,
         accessorId: 2,
         gltfResource: gltfResource,
@@ -1104,7 +1113,7 @@ describe(
         draco: dracoExtension,
       });
 
-      var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
+      const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(indexBufferLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
 
@@ -1133,14 +1142,14 @@ describe(
         when.resolve(bufferArrayBuffer)
       );
 
-      var expectedCacheKey = ResourceCacheKey.getIndexBufferCacheKey({
+      const expectedCacheKey = ResourceCacheKey.getIndexBufferCacheKey({
         gltf: gltfUncompressed,
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
         loadAsTypedArray: true,
       });
-      var indexBufferLoader = ResourceCache.loadIndexBuffer({
+      const indexBufferLoader = ResourceCache.loadIndexBuffer({
         gltf: gltfUncompressed,
         accessorId: 2,
         gltfResource: gltfResource,
@@ -1207,19 +1216,19 @@ describe(
         when.resolve(image)
       );
 
-      var expectedCacheKey = ResourceCacheKey.getImageCacheKey({
+      const expectedCacheKey = ResourceCacheKey.getImageCacheKey({
         gltf: gltfWithTextures,
         imageId: 0,
         gltfResource: gltfResource,
         baseResource: gltfResource,
       });
-      var imageLoader = ResourceCache.loadImage({
+      const imageLoader = ResourceCache.loadImage({
         gltf: gltfWithTextures,
         imageId: 0,
         gltfResource: gltfResource,
         baseResource: gltfResource,
       });
-      var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
+      const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(imageLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
 
@@ -1289,21 +1298,21 @@ describe(
         when.resolve(image)
       );
 
-      var expectedCacheKey = ResourceCacheKey.getTextureCacheKey({
+      const expectedCacheKey = ResourceCacheKey.getTextureCacheKey({
         gltf: gltfWithTextures,
         textureInfo: gltfWithTextures.materials[0].emissiveTexture,
         gltfResource: gltfResource,
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
       });
-      var textureLoader = ResourceCache.loadTexture({
+      const textureLoader = ResourceCache.loadTexture({
         gltf: gltfWithTextures,
         textureInfo: gltfWithTextures.materials[0].emissiveTexture,
         gltfResource: gltfResource,
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
       });
-      var cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
+      const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
       expect(textureLoader.cacheKey).toBe(expectedCacheKey);
       expect(cacheEntry.referenceCount).toBe(1);
 

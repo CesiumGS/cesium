@@ -20,23 +20,23 @@ import MetadataComponentType from "./MetadataComponentType.js";
  */
 function MetadataEnum(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var id = options.id;
-  var enumDefinition = options.enum;
+  const id = options.id;
+  const enumDefinition = options.enum;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("options.id", id);
   Check.typeOf.object("options.enum", enumDefinition);
   //>>includeEnd('debug');
 
-  var namesByValue = {};
-  var valuesByName = {};
-  var values = enumDefinition.values.map(function (value) {
+  const namesByValue = {};
+  const valuesByName = {};
+  const values = enumDefinition.values.map(function (value) {
     namesByValue[value.value] = value.name;
     valuesByName[value.name] = value.value;
     return new MetadataEnumValue(value);
   });
 
-  var valueType = defaultValue(
+  const valueType = defaultValue(
     MetadataComponentType[enumDefinition.valueType],
     MetadataComponentType.UINT16
   );

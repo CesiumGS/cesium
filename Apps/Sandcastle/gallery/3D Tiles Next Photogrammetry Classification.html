@@ -38,7 +38,7 @@
         // San Francisco Ferry Building photogrammetry model provided by Aerometrex
         Cesium.ExperimentalFeatures.enableModelExperimental = true;
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
           infoBox: false,
           orderIndependentTranslucency: false,
@@ -48,13 +48,13 @@
           "2021-11-09T20:27:37.016064475348684937Z"
         );
 
-        var scene = viewer.scene;
+        const scene = viewer.scene;
 
-        var tileset = new Cesium.Cesium3DTileset({
+        const tileset = new Cesium.Cesium3DTileset({
           url: Cesium.IonResource.fromAssetId(775877),
         });
 
-        var translation = new Cesium.Cartesian3(
+        const translation = new Cesium.Cartesian3(
           -1.398521324920626,
           0.7823052871729486,
           0.7015244410592609
@@ -84,21 +84,21 @@
 
         // Styles =============================================================================
 
-        var classificationStyle = new Cesium.Cesium3DTileStyle({
+        const classificationStyle = new Cesium.Cesium3DTileStyle({
           color: "color(${color})",
         });
 
         // Shaders ============================================================================
 
         // Dummy shader that sets the UNLIT lighting mode. For use with the classification style
-        var emptyFragmentShader =
+        const emptyFragmentShader =
           "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}";
-        var unlitShader = new Cesium.CustomShader({
+        const unlitShader = new Cesium.CustomShader({
           lightingModel: Cesium.LightingModel.UNLIT,
           fragmentShaderText: emptyFragmentShader,
         });
 
-        var translucentWindowsShader = new Cesium.CustomShader({
+        const translucentWindowsShader = new Cesium.CustomShader({
           lightingModel: Cesium.LightingModel.UNLIT,
           isTranslucent: true,
           fragmentShaderText: [
@@ -117,7 +117,7 @@
           ].join("\n"),
         });
 
-        var materialShader = new Cesium.CustomShader({
+        const materialShader = new Cesium.CustomShader({
           lightingModel: Cesium.LightingModel.PBR,
           isTranslucent: true,
           fragmentShaderText: [
@@ -169,8 +169,8 @@
           ].join("\n"),
         });
 
-        var NOTHING_SELECTED = 12;
-        var selectFeatureShader = new Cesium.CustomShader({
+        const NOTHING_SELECTED = 12;
+        const selectFeatureShader = new Cesium.CustomShader({
           uniforms: {
             u_selectedFeature: {
               type: Cesium.UniformType.FLOAT,
@@ -191,7 +191,7 @@
           ].join("\n"),
         });
 
-        var multipleFeatureIdsShader = new Cesium.CustomShader({
+        const multipleFeatureIdsShader = new Cesium.CustomShader({
           uniforms: {
             u_selectedFeature: {
               type: Cesium.UniformType.FLOAT,
@@ -255,7 +255,7 @@
           tileset.featureIdIndex = 0;
         }
 
-        var showPhotogrammetry = defaults;
+        const showPhotogrammetry = defaults;
 
         function showClassification() {
           defaults();
@@ -292,7 +292,7 @@
         // Pick Handlers ======================================================================
 
         // HTML overlay for showing feature name on mouseover
-        var nameOverlay = document.createElement("div");
+        const nameOverlay = document.createElement("div");
         viewer.container.appendChild(nameOverlay);
         nameOverlay.className = "backdrop";
         nameOverlay.style.display = "none";
@@ -305,17 +305,17 @@
         nameOverlay.style.whiteSpace = "pre-line";
         nameOverlay.style.fontSize = "12px";
 
-        var enablePicking = true;
-        var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        let enablePicking = true;
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
         handler.setInputAction(function (movement) {
           if (enablePicking) {
-            var pickedObject = viewer.scene.pick(movement.endPosition);
+            const pickedObject = viewer.scene.pick(movement.endPosition);
             if (pickedObject instanceof Cesium.Cesium3DTileFeature) {
               nameOverlay.style.display = "block";
               nameOverlay.style.bottom =
                 viewer.canvas.clientHeight - movement.endPosition.y + "px";
               nameOverlay.style.left = movement.endPosition.x + "px";
-              var message =
+              const message =
                 "Component: " +
                 pickedObject.getProperty("component") +
                 "\nFeature ID: " +
@@ -329,10 +329,10 @@
           }
         }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-        var clickHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+        const clickHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
         handler.setInputAction(function (movement) {
           if (enablePicking) {
-            var pickedObject = scene.pick(movement.position);
+            const pickedObject = scene.pick(movement.position);
             if (
               Cesium.defined(pickedObject) &&
               Cesium.defined(pickedObject.featureId)
@@ -358,7 +358,7 @@
           enablePicking = checked;
         });
 
-        var demos = [
+        const demos = [
           {
             text: "Photogrammetry",
             onselect: showPhotogrammetry,

@@ -27,10 +27,10 @@ function arraySlice(array, begin, end) {
     return array.slice(begin, end);
   }
 
-  var copy = Array.prototype.slice.call(array, begin, end);
-  var typedArrayTypes = FeatureDetection.typedArrayTypes;
-  var length = typedArrayTypes.length;
-  for (var i = 0; i < length; ++i) {
+  let copy = Array.prototype.slice.call(array, begin, end);
+  const typedArrayTypes = FeatureDetection.typedArrayTypes;
+  const length = typedArrayTypes.length;
+  for (let i = 0; i < length; ++i) {
     if (array instanceof typedArrayTypes[i]) {
       copy = new typedArrayTypes[i](copy);
       break;

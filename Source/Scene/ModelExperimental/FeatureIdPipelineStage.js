@@ -18,7 +18,7 @@ import FeatureIdStageVS from "../../Shaders/ModelExperimental/FeatureIdStageVS.j
  * @namespace FeatureIdPipelineStage
  * @private
  */
-var FeatureIdPipelineStage = {};
+const FeatureIdPipelineStage = {};
 FeatureIdPipelineStage.name = "FeatureIdPipelineStage"; // Helps with debugging
 
 FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS = "FeatureIdsVS";
@@ -53,10 +53,10 @@ FeatureIdPipelineStage.process = function (
   primitive,
   frameState
 ) {
-  var shaderBuilder = renderResources.shaderBuilder;
+  const shaderBuilder = renderResources.shaderBuilder;
   declareStructsAndFunctions(shaderBuilder);
 
-  var instances = renderResources.runtimeNode.node.instances;
+  const instances = renderResources.runtimeNode.node.instances;
   if (defined(instances)) {
     processInstanceFeatureIds(renderResources, instances, frameState);
   }
@@ -103,17 +103,17 @@ function declareStructsAndFunctions(shaderBuilder) {
 }
 
 function processInstanceFeatureIds(renderResources, instances, frameState) {
-  var featureIdsArray = instances.featureIds;
-  var count = instances.attributes[0].count;
+  const featureIdsArray = instances.featureIds;
+  const count = instances.attributes[0].count;
 
-  for (var i = 0; i < featureIdsArray.length; i++) {
-    var featureIds = featureIdsArray[i];
-    var variableName = "instanceFeatureId_" + i;
+  for (let i = 0; i < featureIdsArray.length; i++) {
+    const featureIds = featureIdsArray[i];
+    const variableName = "instanceFeatureId_" + i;
 
     if (featureIds instanceof ModelComponents.FeatureIdAttribute) {
       processInstanceAttribute(renderResources, featureIds, variableName);
     } else {
-      var instanceDivisor = 1;
+      const instanceDivisor = 1;
       processImplicitRange(
         renderResources,
         featureIds,
@@ -127,16 +127,16 @@ function processInstanceFeatureIds(renderResources, instances, frameState) {
 }
 
 function processPrimitiveFeatureIds(renderResources, primitive, frameState) {
-  var featureIdsArray = primitive.featureIds;
-  var positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+  const featureIdsArray = primitive.featureIds;
+  const positionAttribute = ModelExperimentalUtility.getAttributeBySemantic(
     primitive,
     VertexAttributeSemantic.POSITION
   );
-  var count = positionAttribute.count;
+  const count = positionAttribute.count;
 
-  for (var i = 0; i < featureIdsArray.length; i++) {
-    var featureIds = featureIdsArray[i];
-    var variableName = "featureId_" + i;
+  for (let i = 0; i < featureIdsArray.length; i++) {
+    const featureIds = featureIdsArray[i];
+    const variableName = "featureId_" + i;
     if (featureIds instanceof ModelComponents.FeatureIdAttribute) {
       processAttribute(renderResources, featureIds, variableName);
     } else if (featureIds instanceof ModelComponents.FeatureIdImplicitRange) {
@@ -166,7 +166,7 @@ function processInstanceAttribute(
   //   float instanceFeatureId_n;
   //   ...
   // }
-  var shaderBuilder = renderResources.shaderBuilder;
+  const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
     "float",
@@ -180,13 +180,13 @@ function processInstanceAttribute(
 
   // Initialize the field from the corresponding attribute.
   // Example: featureIds.instanceFeatureId_n = attributes.instanceFeatureId_0;
-  var setIndex = featureIdAttribute.setIndex;
-  var prefix = variableName.replace(/_\d+$/, "_");
+  const setIndex = featureIdAttribute.setIndex;
+  const prefix = variableName.replace(/_\d+$/, "_");
 
-  var attributeName = "a_" + prefix + setIndex;
-  var varyingName = "v_" + prefix + setIndex;
-  var vertexLine = "featureIds." + variableName + " = " + attributeName + ";";
-  var fragmentLine = "featureIds." + variableName + " = " + varyingName + ";";
+  const attributeName = "a_" + prefix + setIndex;
+  const varyingName = "v_" + prefix + setIndex;
+  const vertexLine = "featureIds." + variableName + " = " + attributeName + ";";
+  const fragmentLine = "featureIds." + variableName + " = " + varyingName + ";";
 
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_VS,
@@ -217,7 +217,7 @@ function processAttribute(renderResources, featureIdAttribute, variableName) {
   //   float featureId_n;
   //   ...
   // }
-  var shaderBuilder = renderResources.shaderBuilder;
+  const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
     "float",
@@ -233,10 +233,10 @@ function processAttribute(renderResources, featureIdAttribute, variableName) {
   // Example: featureIds.featureId_n = attributes.featureId_0;
   // Since this uses the ProcessedAttributes struct, the line is the same
   // for both vertex and fragment shader.
-  var setIndex = featureIdAttribute.setIndex;
-  var prefix = variableName.replace(/_\d+$/, "_");
+  const setIndex = featureIdAttribute.setIndex;
+  const prefix = variableName.replace(/_\d+$/, "_");
 
-  var initializationLines = [
+  const initializationLines = [
     "featureIds." + variableName + " = attributes." + prefix + setIndex + ";",
   ];
   shaderBuilder.addFunctionLines(
@@ -269,13 +269,13 @@ function processImplicitRange(
 
   // Declare the vertex attribute in the shader
   // Example: attribute float a_implicit_feature_id_n;
-  var shaderBuilder = renderResources.shaderBuilder;
-  var implicitAttributeName = "a_implicit_" + variableName;
+  const shaderBuilder = renderResources.shaderBuilder;
+  const implicitAttributeName = "a_implicit_" + variableName;
   shaderBuilder.addAttribute("float", implicitAttributeName);
 
   // Also declare the corresponding varyings
   // Example: varying float v_implicit_feature_id_n;
-  var implicitVaryingName = "v_implicit_" + variableName;
+  const implicitVaryingName = "v_implicit_" + variableName;
   shaderBuilder.addVarying("float", implicitVaryingName);
 
   // Add a field to the FeatureIds struct.
@@ -327,9 +327,9 @@ function processTexture(
 ) {
   // Create the feature ID texture uniform. The index matches the index from
   // the featureIds array, even if this is not consecutive.
-  var uniformName = "u_featureIdTexture_" + index;
-  var uniformMap = renderResources.uniformMap;
-  var textureReader = featureIdTexture.textureReader;
+  const uniformName = "u_featureIdTexture_" + index;
+  const uniformMap = renderResources.uniformMap;
+  const textureReader = featureIdTexture.textureReader;
   uniformMap[uniformName] = function () {
     return defaultValue(
       textureReader.texture,
@@ -344,7 +344,7 @@ function processTexture(
   //   float featureId_n;
   //   ...
   // }
-  var shaderBuilder = renderResources.shaderBuilder;
+  const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
     "float",
@@ -362,13 +362,13 @@ function processTexture(
   // Example:
   // featureIds.featureId_n = floor(texture2D(u_featureIdTexture_m, attributes.texCoord_p).r * 255.0 + 0.5);
 
-  var texCoord = "v_texCoord_" + textureReader.texCoord;
+  const texCoord = "v_texCoord_" + textureReader.texCoord;
 
   // The current EXT_mesh_features spec requires a single channel.
-  var channel = textureReader.channels;
-  var textureRead =
+  const channel = textureReader.channels;
+  const textureRead =
     "texture2D(" + uniformName + ", " + texCoord + ")." + channel;
-  var rounded = "floor(" + textureRead + " * 255.0 + 0.5)";
+  const rounded = "floor(" + textureRead + " * 255.0 + 0.5)";
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,
     ["featureIds." + variableName + " = " + rounded + ";"]
@@ -382,11 +382,11 @@ function generateImplicitFeatureIdAttribute(
   instanceDivisor,
   frameState
 ) {
-  var model = renderResources.model;
-  var vertexBuffer;
-  var value;
+  const model = renderResources.model;
+  let vertexBuffer;
+  let value;
   if (defined(implicitFeatureIds.repeat)) {
-    var typedArray = generateImplicitFeatureIdTypedArray(
+    const typedArray = generateImplicitFeatureIdTypedArray(
       implicitFeatureIds,
       count
     );
@@ -401,7 +401,7 @@ function generateImplicitFeatureIdAttribute(
     value = [implicitFeatureIds.offset];
   }
 
-  var generatedFeatureIdAttribute = {
+  const generatedFeatureIdAttribute = {
     index: renderResources.attributeIndex++,
     instanceDivisor: instanceDivisor,
     value: value,
@@ -421,11 +421,11 @@ function generateImplicitFeatureIdAttribute(
  * @private
  */
 function generateImplicitFeatureIdTypedArray(implicitFeatureIds, count) {
-  var offset = implicitFeatureIds.offset;
-  var repeat = implicitFeatureIds.repeat;
+  const offset = implicitFeatureIds.offset;
+  const repeat = implicitFeatureIds.repeat;
 
-  var typedArray = new Float32Array(count);
-  for (var i = 0; i < count; i++) {
+  const typedArray = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
     typedArray[i] = offset + Math.floor(i / repeat);
   }
 

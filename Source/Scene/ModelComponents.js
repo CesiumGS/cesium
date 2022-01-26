@@ -11,7 +11,7 @@ import AlphaMode from "./AlphaMode.js";
  *
  * @private
  */
-var ModelComponents = {};
+const ModelComponents = {};
 
 /**
  * Information about the quantized attribute.

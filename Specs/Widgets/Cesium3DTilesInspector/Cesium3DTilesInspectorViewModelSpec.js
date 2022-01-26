@@ -9,11 +9,11 @@ describe(
   "Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel",
   function () {
     // Parent tile with content and four child tiles with content
-    var tilesetUrl = "./Data/Cesium3DTiles/Tilesets/Tileset/tileset.json";
+    const tilesetUrl = "./Data/Cesium3DTiles/Tilesets/Tileset/tileset.json";
 
-    var scene;
-    var viewModel;
-    var performanceContainer = document.createElement("div");
+    let scene;
+    let viewModel;
+    const performanceContainer = document.createElement("div");
 
     beforeAll(function () {
       scene = createScene();
@@ -33,7 +33,7 @@ describe(
     });
 
     it("can create and destroy", function () {
-      var viewModel = new Cesium3DTilesInspectorViewModel(
+      const viewModel = new Cesium3DTilesInspectorViewModel(
         scene,
         performanceContainer
       );
@@ -61,11 +61,11 @@ describe(
           scene,
           performanceContainer
         );
-        var tileset = new Cesium3DTileset({
+        const tileset = new Cesium3DTileset({
           url: tilesetUrl,
         });
         viewModel.tileset = tileset;
-        var done = when.defer();
+        const done = when.defer();
         tileset.readyPromise.then(function () {
           expect(viewModel.properties.indexOf("id") !== -1).toBe(true);
           expect(viewModel.properties.indexOf("Longitude") !== -1).toBe(true);
@@ -84,7 +84,7 @@ describe(
           scene,
           performanceContainer
         );
-        var tileset = new Cesium3DTileset({
+        const tileset = new Cesium3DTileset({
           url: tilesetUrl,
         });
         viewModel.tileset = tileset;
@@ -274,7 +274,7 @@ describe(
     });
 
     describe("style options", function () {
-      var style;
+      let style;
 
       beforeAll(function () {
         style = new Cesium3DTileStyle({
@@ -327,7 +327,7 @@ describe(
         viewModel._style = undefined;
         viewModel.tileset.style = style;
         viewModel._update();
-        var s = JSON.parse(viewModel.styleString);
+        const s = JSON.parse(viewModel.styleString);
         s.color = "color('red')";
         viewModel.styleString = JSON.stringify(s);
         viewModel.compileStyle();

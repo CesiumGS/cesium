@@ -7,7 +7,7 @@ import {
 } from "../../Source/Cesium.js";
 
 describe("Scene/GltfBufferViewLoader", function () {
-  var gltfEmbedded = {
+  const gltfEmbedded = {
     buffers: [
       {
         byteLength: 8,
@@ -22,7 +22,7 @@ describe("Scene/GltfBufferViewLoader", function () {
     ],
   };
 
-  var gltfExternal = {
+  const gltfExternal = {
     buffers: [
       {
         uri: "external.bin",
@@ -38,7 +38,7 @@ describe("Scene/GltfBufferViewLoader", function () {
     ],
   };
 
-  var meshoptGltfEmbedded = {
+  const meshoptGltfEmbedded = {
     buffers: [{ byteLength: 29 }, { byteLength: 360 }],
     bufferViews: [
       {
@@ -87,22 +87,22 @@ describe("Scene/GltfBufferViewLoader", function () {
     });
   }
 
-  var fallbackPositionBufferBase64 =
+  const fallbackPositionBufferBase64 =
     "AAD/P/8/AAD/P/8//z8AAAAA/z8AAAAA/z//PwAAAAD/P/8//z8AAAAA/z//PwAA/z8AAP8/AAAAAAAA/z8AAP8//z8AAAAA/z//P/8/AAD/PwAAAAAAAP8/AAD/PwAAAAD/PwAAAAD/P/8/AAAAAAAAAAAAAAAA/z8AAAAAAAAAAP8//z8AAAAA/z8AAAAAAAAAAP8/AAAAAAAAAAAAAAAAAAD/PwAAAAAAAAAAAAD/PwAA/z8AAP8/AAAAAAAA";
-  var meshoptPositionBufferBase64 =
+  const meshoptPositionBufferBase64 =
     "oAUZJkCZgAQAAAU/P8D/fn1+fX59fn1+fX7ADAAAfX4FAAhISEgAAAAFAAzMzH1+fX59zAAAAH59BQhAmYBmZgAABQzA/8B9fn1+fX59//8AAH59fn1+fX59AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP8//z8AAA==";
-  var meshoptPositionTypedArray = getTypedArrayFromBase64(
+  const meshoptPositionTypedArray = getTypedArrayFromBase64(
     meshoptPositionBufferBase64
   );
 
-  var bufferTypedArray = new Uint8Array([1, 3, 7, 15, 31, 63, 127, 255]);
-  var bufferArrayBuffer = bufferTypedArray.buffer;
+  const bufferTypedArray = new Uint8Array([1, 3, 7, 15, 31, 63, 127, 255]);
+  const bufferArrayBuffer = bufferTypedArray.buffer;
 
-  var gltfUri = "https://example.com/model.glb";
-  var gltfResource = new Resource({
+  const gltfUri = "https://example.com/model.glb";
+  const gltfResource = new Resource({
     url: gltfUri,
   });
-  var bufferResource = new Resource({
+  const bufferResource = new Resource({
     url: "https://example.com/external.bin",
   });
 
@@ -171,12 +171,12 @@ describe("Scene/GltfBufferViewLoader", function () {
   });
 
   it("rejects promise if buffer fails to load", function () {
-    var error = new Error("404 Not Found");
+    const error = new Error("404 Not Found");
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       when.reject(error)
     );
 
-    var bufferViewLoader = new GltfBufferViewLoader({
+    const bufferViewLoader = new GltfBufferViewLoader({
       resourceCache: ResourceCache,
       gltf: gltfExternal,
       bufferViewId: 0,
@@ -204,7 +204,7 @@ describe("Scene/GltfBufferViewLoader", function () {
       typedArray: bufferTypedArray,
     });
 
-    var bufferViewLoader = new GltfBufferViewLoader({
+    const bufferViewLoader = new GltfBufferViewLoader({
       resourceCache: ResourceCache,
       gltf: gltfEmbedded,
       bufferViewId: 0,
@@ -223,7 +223,7 @@ describe("Scene/GltfBufferViewLoader", function () {
       when.resolve(bufferArrayBuffer)
     );
 
-    var bufferViewLoader = new GltfBufferViewLoader({
+    const bufferViewLoader = new GltfBufferViewLoader({
       resourceCache: ResourceCache,
       gltf: gltfExternal,
       bufferViewId: 0,
@@ -242,12 +242,12 @@ describe("Scene/GltfBufferViewLoader", function () {
       when.resolve(bufferArrayBuffer)
     );
 
-    var unloadBuffer = spyOn(
+    const unloadBuffer = spyOn(
       BufferLoader.prototype,
       "unload"
     ).and.callThrough();
 
-    var bufferViewLoader = new GltfBufferViewLoader({
+    const bufferViewLoader = new GltfBufferViewLoader({
       resourceCache: ResourceCache,
       gltf: gltfExternal,
       bufferViewId: 0,
@@ -278,7 +278,7 @@ describe("Scene/GltfBufferViewLoader", function () {
       typedArray: meshoptPositionTypedArray,
     });
 
-    var bufferViewLoader = new GltfBufferViewLoader({
+    const bufferViewLoader = new GltfBufferViewLoader({
       resourceCache: ResourceCache,
       gltf: meshoptGltfEmbedded,
       bufferViewId: 0,
@@ -290,7 +290,7 @@ describe("Scene/GltfBufferViewLoader", function () {
     bufferViewLoader.process({});
 
     return bufferViewLoader.promise.then(function (bufferViewLoader) {
-      var decodedPositionBase64 = getBase64FromTypedArray(
+      const decodedPositionBase64 = getBase64FromTypedArray(
         bufferViewLoader.typedArray
       );
       expect(decodedPositionBase64).toEqual(fallbackPositionBufferBase64);
@@ -298,18 +298,18 @@ describe("Scene/GltfBufferViewLoader", function () {
   });
 
   function resolveAfterDestroy(reject) {
-    var deferredPromise = when.defer();
+    const deferredPromise = when.defer();
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       deferredPromise.promise
     );
 
     // Load a copy of the buffer into the cache so that the buffer promise
     // resolves even if the buffer view loader is destroyed
-    var bufferLoaderCopy = ResourceCache.loadExternalBuffer({
+    const bufferLoaderCopy = ResourceCache.loadExternalBuffer({
       resource: bufferResource,
     });
 
-    var bufferViewLoader = new GltfBufferViewLoader({
+    const bufferViewLoader = new GltfBufferViewLoader({
       resourceCache: ResourceCache,
       gltf: gltfExternal,
       bufferViewId: 0,

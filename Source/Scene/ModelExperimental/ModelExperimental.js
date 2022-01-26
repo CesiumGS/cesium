@@ -106,7 +106,7 @@ export default function ModelExperimental(options) {
 
   this._texturesLoaded = false;
 
-  var color = options.color;
+  const color = options.color;
   this._color = defaultValue(color) ? Color.clone(color) : undefined;
   this._colorBlendMode = defaultValue(
     options.colorBlendMode,
@@ -136,7 +136,7 @@ export default function ModelExperimental(options) {
 
   this._boundingSphere = undefined;
 
-  var pointCloudShading = new PointCloudShading(options.pointCloudShading);
+  const pointCloudShading = new PointCloudShading(options.pointCloudShading);
   this._attenuation = pointCloudShading.attenuation;
   this._pointCloudShading = pointCloudShading;
 
@@ -150,12 +150,12 @@ export default function ModelExperimental(options) {
 }
 
 function createModelFeatureTables(model, featureMetadata) {
-  var featureTables = model._featureTables;
+  const featureTables = model._featureTables;
 
-  var propertyTables = featureMetadata.propertyTables;
-  for (var i = 0; i < propertyTables.length; i++) {
-    var propertyTable = propertyTables[i];
-    var modelFeatureTable = new ModelFeatureTable({
+  const propertyTables = featureMetadata.propertyTables;
+  for (let i = 0; i < propertyTables.length; i++) {
+    const propertyTable = propertyTables[i];
+    const modelFeatureTable = new ModelFeatureTable({
       model: model,
       propertyTable: propertyTable,
     });
@@ -167,13 +167,13 @@ function createModelFeatureTables(model, featureMetadata) {
 }
 
 function selectFeatureTableId(components, model) {
-  var featureIdIndex = model._featureIdIndex;
-  var instanceFeatureIdIndex = model._instanceFeatureIdIndex;
+  const featureIdIndex = model._featureIdIndex;
+  const instanceFeatureIdIndex = model._instanceFeatureIdIndex;
 
-  var i, j;
-  var featureIdAttribute;
+  let i, j;
+  let featureIdAttribute;
 
-  var node;
+  let node;
   // Scan the nodes till we find one with instances, get the feature table ID
   // if the feature ID attribute of the user-selected index is present.
   for (i = 0; i < components.nodes.length; i++) {
@@ -194,8 +194,8 @@ function selectFeatureTableId(components, model) {
   for (i = 0; i < components.nodes.length; i++) {
     node = components.nodes[i];
     for (j = 0; j < node.primitives.length; j++) {
-      var primitive = node.primitives[j];
-      var featureIds = primitive.featureIds[featureIdIndex];
+      const primitive = node.primitives[j];
+      const featureIds = primitive.featureIds[featureIdIndex];
 
       if (defined(featureIds)) {
         return featureIds.propertyTableId;
@@ -205,15 +205,15 @@ function selectFeatureTableId(components, model) {
 }
 
 function initialize(model) {
-  var loader = model._loader;
-  var resource = model._resource;
+  const loader = model._loader;
+  const resource = model._resource;
 
   loader.load();
 
   loader.promise
     .then(function (loader) {
-      var components = loader.components;
-      var featureMetadata = components.featureMetadata;
+      const components = loader.components;
+      const featureMetadata = components.featureMetadata;
 
       if (defined(featureMetadata) && featureMetadata.propertyTableCount > 0) {
         createModelFeatureTables(model, featureMetadata);
@@ -230,7 +230,7 @@ function initialize(model) {
     );
 
   // Transcoded .pnts models do not have textures
-  var texturesLoadedPromise = defaultValue(
+  const texturesLoadedPromise = defaultValue(
     loader.texturesLoadedPromise,
     when.resolve()
   );
@@ -681,8 +681,8 @@ ModelExperimental.prototype.update = function (frameState) {
     this._featureTableIdDirty = false;
   }
 
-  var featureTables = this._featureTables;
-  for (var i = 0; i < featureTables.length; i++) {
+  const featureTables = this._featureTables;
+  for (let i = 0; i < featureTables.length; i++) {
     featureTables[i].update(frameState);
     // Check if the types of style commands needed have changed and trigger a reset of the draw commands
     // to ensure that translucent and opaque features are handled in the correct passes.
@@ -695,7 +695,7 @@ ModelExperimental.prototype.update = function (frameState) {
     this._sceneGraph.buildDrawCommands(frameState);
     this._drawCommandsBuilt = true;
 
-    var model = this;
+    const model = this;
 
     if (!model._ready) {
       // Set the model as ready after the first frame render since the user might set up events subscribed to
@@ -724,14 +724,14 @@ ModelExperimental.prototype.update = function (frameState) {
   // Check for show here because we still want the draw commands to be built so user can instantly see the model
   // when show is set to true.
   if (this._show) {
-    var drawCommands = this._sceneGraph.getDrawCommands();
+    const drawCommands = this._sceneGraph.getDrawCommands();
     frameState.commandList.push.apply(frameState.commandList, drawCommands);
   }
 };
 
 function updateFeatureTableId(model) {
-  var components = model._sceneGraph.components;
-  var featureMetadata = components.featureMetadata;
+  const components = model._sceneGraph.components;
+  const featureMetadata = components.featureMetadata;
 
   if (defined(featureMetadata) && featureMetadata.propertyTableCount > 0) {
     model.featureTableId = selectFeatureTableId(components, model);
@@ -772,14 +772,14 @@ ModelExperimental.prototype.isDestroyed = function () {
  * @see ModelExperimental#isDestroyed
  */
 ModelExperimental.prototype.destroy = function () {
-  var loader = this._loader;
+  const loader = this._loader;
   if (defined(loader)) {
     loader.destroy();
   }
 
-  var featureTables = this._featureTables;
+  const featureTables = this._featureTables;
   if (defined(featureTables)) {
-    for (var i = 0; i < featureTables.length; i++) {
+    for (let i = 0; i < featureTables.length; i++) {
       featureTables[i].destroy();
     }
   }
@@ -794,8 +794,8 @@ ModelExperimental.prototype.destroy = function () {
  * @private
  */
 ModelExperimental.prototype.destroyResources = function () {
-  var resources = this._resources;
-  for (var i = 0; i < resources.length; i++) {
+  const resources = this._resources;
+  for (let i = 0; i < resources.length; i++) {
     resources[i].destroy();
   }
   this._resources = [];
@@ -839,17 +839,17 @@ ModelExperimental.fromGltf = function (options) {
   Check.defined("options.gltf", options.gltf);
   //>>includeEnd('debug');
 
-  var loaderOptions = {
+  const loaderOptions = {
     releaseGltfJson: options.releaseGltfJson,
     incrementallyLoadTextures: options.incrementallyLoadTextures,
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
   };
 
-  var gltf = options.gltf;
+  const gltf = options.gltf;
 
-  var basePath = defaultValue(options.basePath, "");
-  var baseResource = Resource.createIfNeeded(basePath);
+  const basePath = defaultValue(options.basePath, "");
+  const baseResource = Resource.createIfNeeded(basePath);
 
   if (defined(gltf.asset)) {
     loaderOptions.gltfJson = gltf;
@@ -863,14 +863,14 @@ ModelExperimental.fromGltf = function (options) {
     loaderOptions.gltfResource = Resource.createIfNeeded(options.gltf);
   }
 
-  var loader = new GltfLoader(loaderOptions);
+  const loader = new GltfLoader(loaderOptions);
 
-  var is3DTiles = defined(options.content);
-  var type = is3DTiles
+  const is3DTiles = defined(options.content);
+  const type = is3DTiles
     ? ModelExperimentalType.TILE_GLTF
     : ModelExperimentalType.GLTF;
 
-  var modelOptions = {
+  const modelOptions = {
     loader: loader,
     resource: loaderOptions.gltfResource,
     type: type,
@@ -889,7 +889,7 @@ ModelExperimental.fromGltf = function (options) {
     instanceFeatureIdIndex: options.instanceFeatureIdIndex,
     pointCloudShading: options.pointCloudShading,
   };
-  var model = new ModelExperimental(modelOptions);
+  const model = new ModelExperimental(modelOptions);
 
   return model;
 };
@@ -898,7 +898,7 @@ ModelExperimental.fromGltf = function (options) {
  * @private
  */
 ModelExperimental.fromB3dm = function (options) {
-  var loaderOptions = {
+  const loaderOptions = {
     b3dmResource: options.resource,
     arrayBuffer: options.arrayBuffer,
     byteOffset: options.byteOffset,
@@ -908,9 +908,9 @@ ModelExperimental.fromB3dm = function (options) {
     forwardAxis: options.forwardAxis,
   };
 
-  var loader = new B3dmLoader(loaderOptions);
+  const loader = new B3dmLoader(loaderOptions);
 
-  var modelOptions = {
+  const modelOptions = {
     loader: loader,
     resource: loaderOptions.b3dmResource,
     type: ModelExperimentalType.TILE_B3DM,
@@ -929,7 +929,7 @@ ModelExperimental.fromB3dm = function (options) {
     instanceFeatureIdIndex: options.instanceFeatureIdIndex,
   };
 
-  var model = new ModelExperimental(modelOptions);
+  const model = new ModelExperimental(modelOptions);
   return model;
 };
 
@@ -937,13 +937,13 @@ ModelExperimental.fromB3dm = function (options) {
  * @private
  */
 ModelExperimental.fromPnts = function (options) {
-  var loaderOptions = {
+  const loaderOptions = {
     arrayBuffer: options.arrayBuffer,
     byteOffset: options.byteOffset,
   };
-  var loader = new PntsLoader(loaderOptions);
+  const loader = new PntsLoader(loaderOptions);
 
-  var modelOptions = {
+  const modelOptions = {
     loader: loader,
     resource: options.resource,
     type: ModelExperimentalType.TILE_PNTS,
@@ -962,7 +962,7 @@ ModelExperimental.fromPnts = function (options) {
     instanceFeatureIdIndex: options.instanceFeatureIdIndex,
   };
 
-  var model = new ModelExperimental(modelOptions);
+  const model = new ModelExperimental(modelOptions);
   return model;
 };
 
@@ -970,7 +970,7 @@ ModelExperimental.fromPnts = function (options) {
  * @private
  */
 ModelExperimental.fromI3dm = function (options) {
-  var loaderOptions = {
+  const loaderOptions = {
     i3dmResource: options.resource,
     arrayBuffer: options.arrayBuffer,
     byteOffset: options.byteOffset,
@@ -980,9 +980,9 @@ ModelExperimental.fromI3dm = function (options) {
     forwardAxis: options.forwardAxis,
   };
 
-  var loader = new I3dmLoader(loaderOptions);
+  const loader = new I3dmLoader(loaderOptions);
 
-  var modelOptions = {
+  const modelOptions = {
     loader: loader,
     resource: loaderOptions.i3dmResource,
     type: ModelExperimentalType.TILE_I3DM,
@@ -997,13 +997,13 @@ ModelExperimental.fromI3dm = function (options) {
     featureIdAttributeIndex: options.featureIdAttributeIndex,
     featureIdTextureIndex: options.featureIdTextureIndex,
   };
-  var model = new ModelExperimental(modelOptions);
+  const model = new ModelExperimental(modelOptions);
   return model;
 };
 
 function updateShowBoundingVolume(sceneGraph, debugShowBoundingVolume) {
-  var drawCommands = sceneGraph._drawCommands;
-  for (var i = 0; i < drawCommands.length; i++) {
+  const drawCommands = sceneGraph._drawCommands;
+  for (let i = 0; i < drawCommands.length; i++) {
     drawCommands[i].debugShowBoundingVolume = debugShowBoundingVolume;
   }
 }
@@ -1012,8 +1012,8 @@ function updateShowBoundingVolume(sceneGraph, debugShowBoundingVolume) {
  * @private
  */
 ModelExperimental.prototype.applyColorAndShow = function (style) {
-  var hasColorStyle = defined(style) && defined(style.color);
-  var hasShowStyle = defined(style) && defined(style.show);
+  const hasColorStyle = defined(style) && defined(style.color);
+  const hasShowStyle = defined(style) && defined(style.show);
 
   this._color = hasColorStyle
     ? style.color.evaluateColor(undefined, this._color)
@@ -1031,7 +1031,7 @@ ModelExperimental.prototype.applyStyle = function (style) {
     defined(this.featureTableId) &&
     this.featureTables[this.featureTableId].featuresLength > 0
   ) {
-    var featureTable = this.featureTables[this.featureTableId];
+    const featureTable = this.featureTables[this.featureTableId];
     featureTable.applyStyle(style);
   } else {
     this.applyColorAndShow(style);

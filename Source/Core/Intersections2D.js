@@ -9,7 +9,7 @@ import DeveloperError from "./DeveloperError.js";
  *
  * @namespace Intersections2D
  */
-var Intersections2D = {};
+const Intersections2D = {};
 
 /**
  * Splits a 2D triangle at given axis-aligned threshold value and returns the resulting
@@ -69,9 +69,9 @@ Intersections2D.clipTriangleAtAxisAlignedThreshold = function (
     result.length = 0;
   }
 
-  var u0Behind;
-  var u1Behind;
-  var u2Behind;
+  let u0Behind;
+  let u1Behind;
+  let u2Behind;
   if (keepAbove) {
     u0Behind = u0 < threshold;
     u1Behind = u1 < threshold;
@@ -82,14 +82,14 @@ Intersections2D.clipTriangleAtAxisAlignedThreshold = function (
     u2Behind = u2 > threshold;
   }
 
-  var numBehind = u0Behind + u1Behind + u2Behind;
+  const numBehind = u0Behind + u1Behind + u2Behind;
 
-  var u01Ratio;
-  var u02Ratio;
-  var u12Ratio;
-  var u10Ratio;
-  var u20Ratio;
-  var u21Ratio;
+  let u01Ratio;
+  let u02Ratio;
+  let u12Ratio;
+  let u10Ratio;
+  let u20Ratio;
+  let u21Ratio;
 
   if (numBehind === 1) {
     if (u0Behind) {
@@ -271,16 +271,16 @@ Intersections2D.computeBarycentricCoordinates = function (
   }
   //>>includeEnd('debug');
 
-  var x1mx3 = x1 - x3;
-  var x3mx2 = x3 - x2;
-  var y2my3 = y2 - y3;
-  var y1my3 = y1 - y3;
-  var inverseDeterminant = 1.0 / (y2my3 * x1mx3 + x3mx2 * y1my3);
-  var ymy3 = y - y3;
-  var xmx3 = x - x3;
-  var l1 = (y2my3 * xmx3 + x3mx2 * ymy3) * inverseDeterminant;
-  var l2 = (-y1my3 * xmx3 + x1mx3 * ymy3) * inverseDeterminant;
-  var l3 = 1.0 - l1 - l2;
+  const x1mx3 = x1 - x3;
+  const x3mx2 = x3 - x2;
+  const y2my3 = y2 - y3;
+  const y1my3 = y1 - y3;
+  const inverseDeterminant = 1.0 / (y2my3 * x1mx3 + x3mx2 * y1my3);
+  const ymy3 = y - y3;
+  const xmx3 = x - x3;
+  const l1 = (y2my3 * xmx3 + x3mx2 * ymy3) * inverseDeterminant;
+  const l2 = (-y1my3 * xmx3 + x1mx3 * ymy3) * inverseDeterminant;
+  const l3 = 1.0 - l1 - l2;
 
   if (defined(result)) {
     result.x = l1;
@@ -332,17 +332,17 @@ Intersections2D.computeLineSegmentLineSegmentIntersection = function (
   Check.typeOf.number("y11", y11);
   //>>includeEnd('debug');
 
-  var numerator1A = (x11 - x10) * (y00 - y10) - (y11 - y10) * (x00 - x10);
-  var numerator1B = (x01 - x00) * (y00 - y10) - (y01 - y00) * (x00 - x10);
-  var denominator1 = (y11 - y10) * (x01 - x00) - (x11 - x10) * (y01 - y00);
+  const numerator1A = (x11 - x10) * (y00 - y10) - (y11 - y10) * (x00 - x10);
+  const numerator1B = (x01 - x00) * (y00 - y10) - (y01 - y00) * (x00 - x10);
+  const denominator1 = (y11 - y10) * (x01 - x00) - (x11 - x10) * (y01 - y00);
 
   // If denominator = 0, then lines are parallel. If denominator = 0 and both numerators are 0, then coincident
   if (denominator1 === 0) {
     return;
   }
 
-  var ua1 = numerator1A / denominator1;
-  var ub1 = numerator1B / denominator1;
+  const ua1 = numerator1A / denominator1;
+  const ub1 = numerator1B / denominator1;
 
   if (ua1 >= 0 && ua1 <= 1 && ub1 >= 0 && ub1 <= 1) {
     if (!defined(result)) {

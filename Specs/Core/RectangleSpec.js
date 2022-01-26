@@ -6,14 +6,14 @@ import { Rectangle } from "../../Source/Cesium.js";
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/Rectangle", function () {
-  var west = -0.9;
-  var south = 0.5;
-  var east = 1.4;
-  var north = 1.0;
-  var center = new Cartographic((west + east) / 2.0, (south + north) / 2.0);
+  const west = -0.9;
+  const south = 0.5;
+  const east = 1.4;
+  const north = 1.0;
+  const center = new Cartographic((west + east) / 2.0, (south + north) / 2.0);
 
   it("default constructor sets expected values.", function () {
-    var rectangle = new Rectangle();
+    const rectangle = new Rectangle();
     expect(rectangle.west).toEqual(0.0);
     expect(rectangle.south).toEqual(0.0);
     expect(rectangle.north).toEqual(0.0);
@@ -21,7 +21,7 @@ describe("Core/Rectangle", function () {
   });
 
   it("constructor sets expected parameter values.", function () {
-    var rectangle = new Rectangle(west, south, east, north);
+    const rectangle = new Rectangle(west, south, east, north);
     expect(rectangle.west).toEqual(west);
     expect(rectangle.south).toEqual(south);
     expect(rectangle.east).toEqual(east);
@@ -29,8 +29,8 @@ describe("Core/Rectangle", function () {
   });
 
   it("computeWidth", function () {
-    var rectangle = new Rectangle(west, south, east, north);
-    var expected = east - west;
+    let rectangle = new Rectangle(west, south, east, north);
+    let expected = east - west;
     expect(Rectangle.computeWidth(rectangle)).toEqual(expected);
     expect(rectangle.width).toEqual(expected);
 
@@ -40,19 +40,19 @@ describe("Core/Rectangle", function () {
   });
 
   it("computeHeight", function () {
-    var rectangle = new Rectangle(west, south, east, north);
-    var expected = north - south;
+    const rectangle = new Rectangle(west, south, east, north);
+    const expected = north - south;
     expect(Rectangle.computeHeight(rectangle)).toEqual(expected);
     expect(rectangle.height).toEqual(expected);
   });
 
   it("fromDegrees produces expected values.", function () {
-    var west = -10.0;
-    var south = -20.0;
-    var east = 10.0;
-    var north = 20.0;
+    const west = -10.0;
+    const south = -20.0;
+    const east = 10.0;
+    const north = 20.0;
 
-    var rectangle = Rectangle.fromDegrees(west, south, east, north);
+    const rectangle = Rectangle.fromDegrees(west, south, east, north);
     expect(rectangle.west).toEqual(CesiumMath.toRadians(west));
     expect(rectangle.south).toEqual(CesiumMath.toRadians(south));
     expect(rectangle.east).toEqual(CesiumMath.toRadians(east));
@@ -60,13 +60,13 @@ describe("Core/Rectangle", function () {
   });
 
   it("fromDegrees works with a result parameter.", function () {
-    var west = -10.0;
-    var south = -20.0;
-    var east = 10.0;
-    var north = 20.0;
+    const west = -10.0;
+    const south = -20.0;
+    const east = 10.0;
+    const north = 20.0;
 
-    var result = new Rectangle();
-    var rectangle = Rectangle.fromDegrees(west, south, east, north, result);
+    const result = new Rectangle();
+    const rectangle = Rectangle.fromDegrees(west, south, east, north, result);
     expect(result).toBe(rectangle);
     expect(rectangle.west).toEqual(CesiumMath.toRadians(west));
     expect(rectangle.south).toEqual(CesiumMath.toRadians(south));
@@ -75,12 +75,12 @@ describe("Core/Rectangle", function () {
   });
 
   it("fromRadians produces expected values.", function () {
-    var west = -1.0;
-    var south = -2.0;
-    var east = 1.0;
-    var north = 2.0;
+    const west = -1.0;
+    const south = -2.0;
+    const east = 1.0;
+    const north = 2.0;
 
-    var rectangle = Rectangle.fromRadians(west, south, east, north);
+    const rectangle = Rectangle.fromRadians(west, south, east, north);
     expect(rectangle.west).toEqual(west);
     expect(rectangle.south).toEqual(south);
     expect(rectangle.east).toEqual(east);
@@ -88,13 +88,13 @@ describe("Core/Rectangle", function () {
   });
 
   it("fromRadians works with a result parameter.", function () {
-    var west = -1.0;
-    var south = -2.0;
-    var east = 1.0;
-    var north = 2.0;
+    const west = -1.0;
+    const south = -2.0;
+    const east = 1.0;
+    const north = 2.0;
 
-    var result = new Rectangle();
-    var rectangle = Rectangle.fromRadians(west, south, east, north, result);
+    const result = new Rectangle();
+    const rectangle = Rectangle.fromRadians(west, south, east, north, result);
     expect(result).toBe(rectangle);
     expect(rectangle.west).toEqual(west);
     expect(rectangle.south).toEqual(south);
@@ -103,12 +103,12 @@ describe("Core/Rectangle", function () {
   });
 
   it("fromCartographicArray produces expected values.", function () {
-    var minLon = new Cartographic(-0.1, 0.3, 0.0);
-    var minLat = new Cartographic(0.0, -0.2, 0.0);
-    var maxLon = new Cartographic(0.3, -0.1, 0.0);
-    var maxLat = new Cartographic(0.2, 0.4, 0.0);
+    const minLon = new Cartographic(-0.1, 0.3, 0.0);
+    const minLat = new Cartographic(0.0, -0.2, 0.0);
+    const maxLon = new Cartographic(0.3, -0.1, 0.0);
+    const maxLat = new Cartographic(0.2, 0.4, 0.0);
 
-    var rectangle = Rectangle.fromCartographicArray([
+    const rectangle = Rectangle.fromCartographicArray([
       minLat,
       minLon,
       maxLat,
@@ -121,12 +121,12 @@ describe("Core/Rectangle", function () {
   });
 
   it("fromCartographicArray produces rectangle that crosses IDL.", function () {
-    var minLon = Cartographic.fromDegrees(-178, 3);
-    var minLat = Cartographic.fromDegrees(-179, -4);
-    var maxLon = Cartographic.fromDegrees(178, 3);
-    var maxLat = Cartographic.fromDegrees(179, 4);
+    const minLon = Cartographic.fromDegrees(-178, 3);
+    const minLat = Cartographic.fromDegrees(-179, -4);
+    const maxLon = Cartographic.fromDegrees(178, 3);
+    const maxLat = Cartographic.fromDegrees(179, 4);
 
-    var rectangle = Rectangle.fromCartographicArray([
+    const rectangle = Rectangle.fromCartographicArray([
       minLat,
       minLon,
       maxLat,
@@ -139,13 +139,13 @@ describe("Core/Rectangle", function () {
   });
 
   it("fromCartographicArray works with a result parameter.", function () {
-    var minLon = new Cartographic(-0.1, 0.3, 0.0);
-    var minLat = new Cartographic(0.0, -0.2, 0.0);
-    var maxLon = new Cartographic(0.3, -0.1, 0.0);
-    var maxLat = new Cartographic(0.2, 0.4, 0.0);
+    const minLon = new Cartographic(-0.1, 0.3, 0.0);
+    const minLat = new Cartographic(0.0, -0.2, 0.0);
+    const maxLon = new Cartographic(0.3, -0.1, 0.0);
+    const maxLat = new Cartographic(0.2, 0.4, 0.0);
 
-    var result = new Rectangle();
-    var rectangle = Rectangle.fromCartographicArray(
+    const result = new Rectangle();
+    const rectangle = Rectangle.fromCartographicArray(
       [minLat, minLon, maxLat, maxLon],
       result
     );
@@ -157,14 +157,14 @@ describe("Core/Rectangle", function () {
   });
 
   it("fromCartesianArray produces expected values.", function () {
-    var minLon = new Cartographic(-0.1, 0.3, 0.0);
-    var minLat = new Cartographic(0.0, -0.2, 0.0);
-    var maxLon = new Cartographic(0.3, -0.1, 0.0);
-    var maxLat = new Cartographic(0.2, 0.4, 0.0);
+    const minLon = new Cartographic(-0.1, 0.3, 0.0);
+    const minLat = new Cartographic(0.0, -0.2, 0.0);
+    const maxLon = new Cartographic(0.3, -0.1, 0.0);
+    const maxLat = new Cartographic(0.2, 0.4, 0.0);
 
-    var wgs84 = Ellipsoid.WGS84;
+    const wgs84 = Ellipsoid.WGS84;
 
-    var rectangle = Rectangle.fromCartesianArray(
+    const rectangle = Rectangle.fromCartesianArray(
       wgs84.cartographicArrayToCartesianArray([minLat, minLon, maxLat, maxLon]),
       wgs84
     );
@@ -187,14 +187,14 @@ describe("Core/Rectangle", function () {
   });
 
   it("fromCartesianArray produces rectangle that crosses IDL.", function () {
-    var minLon = Cartographic.fromDegrees(-178, 3);
-    var minLat = Cartographic.fromDegrees(-179, -4);
-    var maxLon = Cartographic.fromDegrees(178, 3);
-    var maxLat = Cartographic.fromDegrees(179, 4);
+    const minLon = Cartographic.fromDegrees(-178, 3);
+    const minLat = Cartographic.fromDegrees(-179, -4);
+    const maxLon = Cartographic.fromDegrees(178, 3);
+    const maxLat = Cartographic.fromDegrees(179, 4);
 
-    var wgs84 = Ellipsoid.WGS84;
+    const wgs84 = Ellipsoid.WGS84;
 
-    var rectangle = Rectangle.fromCartesianArray(
+    const rectangle = Rectangle.fromCartesianArray(
       wgs84.cartographicArrayToCartesianArray([minLat, minLon, maxLat, maxLon]),
       wgs84
     );
@@ -205,15 +205,15 @@ describe("Core/Rectangle", function () {
   });
 
   it("fromCartesianArray works with a result parameter.", function () {
-    var minLon = new Cartographic(-0.1, 0.3, 0.0);
-    var minLat = new Cartographic(0.0, -0.2, 0.0);
-    var maxLon = new Cartographic(0.3, -0.1, 0.0);
-    var maxLat = new Cartographic(0.2, 0.4, 0.0);
+    const minLon = new Cartographic(-0.1, 0.3, 0.0);
+    const minLat = new Cartographic(0.0, -0.2, 0.0);
+    const maxLon = new Cartographic(0.3, -0.1, 0.0);
+    const maxLat = new Cartographic(0.2, 0.4, 0.0);
 
-    var wgs84 = Ellipsoid.WGS84;
+    const wgs84 = Ellipsoid.WGS84;
 
-    var result = new Rectangle();
-    var rectangle = Rectangle.fromCartesianArray(
+    const result = new Rectangle();
+    const rectangle = Rectangle.fromCartesianArray(
       wgs84.cartographicArrayToCartesianArray([minLat, minLon, maxLat, maxLon]),
       wgs84,
       result
@@ -238,24 +238,24 @@ describe("Core/Rectangle", function () {
   });
 
   it("clone works without a result parameter.", function () {
-    var rectangle = new Rectangle(west, south, east, north);
-    var returnedResult = rectangle.clone();
+    const rectangle = new Rectangle(west, south, east, north);
+    const returnedResult = rectangle.clone();
     expect(returnedResult).toEqual(rectangle);
     expect(returnedResult).not.toBe(rectangle);
   });
 
   it("clone works with a result parameter.", function () {
-    var rectangle = new Rectangle(west, south, east, north);
-    var result = new Rectangle();
-    var returnedResult = rectangle.clone(result);
+    const rectangle = new Rectangle(west, south, east, north);
+    const result = new Rectangle();
+    const returnedResult = rectangle.clone(result);
     expect(returnedResult).toEqual(rectangle);
     expect(returnedResult).not.toBe(rectangle);
     expect(returnedResult).toBe(result);
   });
 
   it('clone works with "this" result parameter.', function () {
-    var rectangle = new Rectangle(west, south, east, north);
-    var returnedResult = rectangle.clone(rectangle);
+    const rectangle = new Rectangle(west, south, east, north);
+    const returnedResult = rectangle.clone(rectangle);
     expect(returnedResult).toEqual(new Rectangle(west, south, east, north));
     expect(returnedResult).toBe(rectangle);
   });
@@ -265,7 +265,7 @@ describe("Core/Rectangle", function () {
   });
 
   it("Equals works in all cases", function () {
-    var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
+    const rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
     expect(rectangle.equals(new Rectangle(0.1, 0.2, 0.3, 0.4))).toEqual(true);
     expect(rectangle.equals(new Rectangle(0.5, 0.2, 0.3, 0.4))).toEqual(false);
     expect(rectangle.equals(new Rectangle(0.1, 0.5, 0.3, 0.4))).toEqual(false);
@@ -275,7 +275,7 @@ describe("Core/Rectangle", function () {
   });
 
   it("Static equals works in all cases", function () {
-    var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
+    const rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
     expect(
       Rectangle.equals(rectangle, new Rectangle(0.1, 0.2, 0.3, 0.4))
     ).toEqual(true);
@@ -295,7 +295,7 @@ describe("Core/Rectangle", function () {
   });
 
   it("Static equals epsilon works in all cases", function () {
-    var rectangle1 = new Rectangle(0.1, 0.2, 0.3, 0.4);
+    const rectangle1 = new Rectangle(0.1, 0.2, 0.3, 0.4);
     expect(
       Rectangle.equalsEpsilon(
         rectangle1,
@@ -365,7 +365,7 @@ describe("Core/Rectangle", function () {
   });
 
   it("Equals epsilon works in all cases", function () {
-    var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
+    const rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
     expect(
       rectangle.equalsEpsilon(new Rectangle(0.1, 0.2, 0.3, 0.4), 0.0)
     ).toEqual(true);
@@ -415,7 +415,7 @@ describe("Core/Rectangle", function () {
   });
 
   it("validate throws with no west", function () {
-    var rectangle = new Rectangle(west, south, east, north);
+    const rectangle = new Rectangle(west, south, east, north);
     rectangle.west = undefined;
     expect(function () {
       Rectangle.validate(rectangle);
@@ -423,7 +423,7 @@ describe("Core/Rectangle", function () {
   });
 
   it("validate throws with no south", function () {
-    var rectangle = new Rectangle(west, south, east, north);
+    const rectangle = new Rectangle(west, south, east, north);
     rectangle.south = undefined;
     expect(function () {
       Rectangle.validate(rectangle);
@@ -431,7 +431,7 @@ describe("Core/Rectangle", function () {
   });
 
   it("validate throws with no east", function () {
-    var rectangle = new Rectangle(west, south, east, north);
+    const rectangle = new Rectangle(west, south, east, north);
     rectangle.east = undefined;
     expect(function () {
       Rectangle.validate(rectangle);
@@ -439,7 +439,7 @@ describe("Core/Rectangle", function () {
   });
 
   it("validate throws with no north", function () {
-    var rectangle = new Rectangle(west, south, east, north);
+    const rectangle = new Rectangle(west, south, east, north);
     rectangle.north = undefined;
     expect(function () {
       Rectangle.validate(rectangle);
@@ -447,7 +447,7 @@ describe("Core/Rectangle", function () {
   });
 
   it("validate throws with bad west", function () {
-    var rectangle = new Rectangle(west, south, east, north);
+    const rectangle = new Rectangle(west, south, east, north);
     rectangle.west = Math.PI * 2;
     expect(function () {
       Rectangle.validate(rectangle);
@@ -455,7 +455,7 @@ describe("Core/Rectangle", function () {
   });
 
   it("validate throws with bad south", function () {
-    var rectangle = new Rectangle(west, south, east, north);
+    const rectangle = new Rectangle(west, south, east, north);
     rectangle.south = Math.PI * 2;
     expect(function () {
       Rectangle.validate(rectangle);
@@ -463,7 +463,7 @@ describe("Core/Rectangle", function () {
   });
 
   it("validate throws with bad east", function () {
-    var rectangle = new Rectangle(west, south, east, north);
+    const rectangle = new Rectangle(west, south, east, north);
     rectangle.east = Math.PI * 2;
     expect(function () {
       Rectangle.validate(rectangle);
@@ -471,7 +471,7 @@ describe("Core/Rectangle", function () {
   });
 
   it("validate throws with bad north", function () {
-    var rectangle = new Rectangle(west, south, east, north);
+    const rectangle = new Rectangle(west, south, east, north);
     rectangle.north = Math.PI * 2;
     expect(function () {
       Rectangle.validate(rectangle);
@@ -479,16 +479,16 @@ describe("Core/Rectangle", function () {
   });
 
   it("southwest works without a result parameter", function () {
-    var rectangle = new Rectangle(west, south, east, north);
-    var returnedResult = Rectangle.southwest(rectangle);
+    const rectangle = new Rectangle(west, south, east, north);
+    const returnedResult = Rectangle.southwest(rectangle);
     expect(returnedResult.longitude).toEqual(west);
     expect(returnedResult.latitude).toEqual(south);
   });
 
   it("southwest works with a result parameter", function () {
-    var rectangle = new Rectangle(west, south, east, north);
-    var result = new Cartographic();
-    var returnedResult = Rectangle.southwest(rectangle, result);
+    const rectangle = new Rectangle(west, south, east, north);
+    const result = new Cartographic();
+    const returnedResult = Rectangle.southwest(rectangle, result);
     expect(returnedResult).toBe(result);
     expect(returnedResult.longitude).toEqual(west);
     expect(returnedResult.latitude).toEqual(south);
@@ -501,16 +501,16 @@ describe("Core/Rectangle", function () {
   });
 
   it("northwest works without a result parameter", function () {
-    var rectangle = new Rectangle(west, south, east, north);
-    var returnedResult = Rectangle.northwest(rectangle);
+    const rectangle = new Rectangle(west, south, east, north);
+    const returnedResult = Rectangle.northwest(rectangle);
     expect(returnedResult.longitude).toEqual(west);
     expect(returnedResult.latitude).toEqual(north);
   });
 
   it("northwest works with a result parameter", function () {
-    var rectangle = new Rectangle(west, south, east, north);
-    var result = new Cartographic();
-    var returnedResult = Rectangle.northwest(rectangle, result);
+    const rectangle = new Rectangle(west, south, east, north);
+    const result = new Cartographic();
+    const returnedResult = Rectangle.northwest(rectangle, result);
     expect(returnedResult).toBe(result);
     expect(returnedResult.longitude).toEqual(west);
     expect(returnedResult.latitude).toEqual(north);
@@ -523,16 +523,16 @@ describe("Core/Rectangle", function () {
   });
 
   it("northeast works without a result parameter", function () {
-    var rectangle = new Rectangle(west, south, east, north);
-    var returnedResult = Rectangle.northeast(rectangle);
+    const rectangle = new Rectangle(west, south, east, north);
+    const returnedResult = Rectangle.northeast(rectangle);
     expect(returnedResult.longitude).toEqual(east);
     expect(returnedResult.latitude).toEqual(north);
   });
 
   it("northeast works with a result parameter", function () {
-    var rectangle = new Rectangle(west, south, east, north);
-    var result = new Cartographic();
-    var returnedResult = Rectangle.northeast(rectangle, result);
+    const rectangle = new Rectangle(west, south, east, north);
+    const result = new Cartographic();
+    const returnedResult = Rectangle.northeast(rectangle, result);
     expect(returnedResult).toBe(result);
     expect(returnedResult.longitude).toEqual(east);
     expect(returnedResult.latitude).toEqual(north);
@@ -545,16 +545,16 @@ describe("Core/Rectangle", function () {
   });
 
   it("southeast works without a result parameter", function () {
-    var rectangle = new Rectangle(west, south, east, north);
-    var returnedResult = Rectangle.southeast(rectangle);
+    const rectangle = new Rectangle(west, south, east, north);
+    const returnedResult = Rectangle.southeast(rectangle);
     expect(returnedResult.longitude).toEqual(east);
     expect(returnedResult.latitude).toEqual(south);
   });
 
   it("southeast works with a result parameter", function () {
-    var rectangle = new Rectangle(west, south, east, north);
-    var result = new Cartographic();
-    var returnedResult = Rectangle.southeast(rectangle, result);
+    const rectangle = new Rectangle(west, south, east, north);
+    const result = new Cartographic();
+    const returnedResult = Rectangle.southeast(rectangle, result);
     expect(returnedResult).toBe(result);
     expect(returnedResult.longitude).toEqual(east);
     expect(returnedResult.latitude).toEqual(south);
@@ -567,22 +567,22 @@ describe("Core/Rectangle", function () {
   });
 
   it("center works without a result parameter", function () {
-    var rectangle = new Rectangle(west, south, east, north);
-    var returnedResult = Rectangle.center(rectangle);
+    const rectangle = new Rectangle(west, south, east, north);
+    const returnedResult = Rectangle.center(rectangle);
     expect(returnedResult).toEqualEpsilon(center, CesiumMath.EPSILON11);
   });
 
   it("center works with a result parameter", function () {
-    var rectangle = new Rectangle(west, south, east, north);
-    var result = new Cartographic();
-    var returnedResult = Rectangle.center(rectangle, result);
+    const rectangle = new Rectangle(west, south, east, north);
+    const result = new Cartographic();
+    const returnedResult = Rectangle.center(rectangle, result);
     expect(result).toBe(returnedResult);
     expect(returnedResult).toEqualEpsilon(center, CesiumMath.EPSILON11);
   });
 
   it("center works across IDL", function () {
-    var rectangle = Rectangle.fromDegrees(170, 0, -170, 0);
-    var returnedResult = Rectangle.center(rectangle);
+    let rectangle = Rectangle.fromDegrees(170, 0, -170, 0);
+    let returnedResult = Rectangle.center(rectangle);
     expect(returnedResult).toEqualEpsilon(
       Cartographic.fromDegrees(180, 0),
       CesiumMath.EPSILON11
@@ -617,237 +617,241 @@ describe("Core/Rectangle", function () {
   });
 
   it("intersection works without a result parameter", function () {
-    var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
-    var rectangle2 = new Rectangle(0.0, 0.25, 1.0, 0.8);
-    var expected = new Rectangle(0.5, 0.25, 0.75, 0.8);
-    var returnedResult = Rectangle.intersection(rectangle, rectangle2);
+    const rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+    const rectangle2 = new Rectangle(0.0, 0.25, 1.0, 0.8);
+    const expected = new Rectangle(0.5, 0.25, 0.75, 0.8);
+    const returnedResult = Rectangle.intersection(rectangle, rectangle2);
     expect(returnedResult).toEqual(expected);
   });
 
   it("intersection works with a result parameter", function () {
-    var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
-    var rectangle2 = new Rectangle(0.0, 0.25, 1.0, 0.8);
-    var expected = new Rectangle(0.5, 0.25, 0.75, 0.8);
-    var result = new Rectangle();
-    var returnedResult = Rectangle.intersection(rectangle, rectangle2, result);
+    const rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+    const rectangle2 = new Rectangle(0.0, 0.25, 1.0, 0.8);
+    const expected = new Rectangle(0.5, 0.25, 0.75, 0.8);
+    const result = new Rectangle();
+    const returnedResult = Rectangle.intersection(
+      rectangle,
+      rectangle2,
+      result
+    );
     expect(returnedResult).toEqual(expected);
     expect(result).toBe(returnedResult);
   });
 
   it("intersection works across the IDL (1)", function () {
-    var rectangle1 = Rectangle.fromDegrees(170.0, -10.0, -170.0, 10.0);
-    var rectangle2 = Rectangle.fromDegrees(-175.0, 5.0, -160.0, 15.0);
-    var expected = Rectangle.fromDegrees(-175.0, 5.0, -170.0, 10.0);
+    const rectangle1 = Rectangle.fromDegrees(170.0, -10.0, -170.0, 10.0);
+    const rectangle2 = Rectangle.fromDegrees(-175.0, 5.0, -160.0, 15.0);
+    const expected = Rectangle.fromDegrees(-175.0, 5.0, -170.0, 10.0);
     expect(Rectangle.intersection(rectangle1, rectangle2)).toEqual(expected);
     expect(Rectangle.intersection(rectangle2, rectangle1)).toEqual(expected);
   });
 
   it("intersection works across the IDL (2)", function () {
-    var rectangle1 = Rectangle.fromDegrees(170.0, -10.0, -170.0, 10.0);
-    var rectangle2 = Rectangle.fromDegrees(160.0, 5.0, 175.0, 15.0);
-    var expected = Rectangle.fromDegrees(170.0, 5.0, 175.0, 10.0);
+    const rectangle1 = Rectangle.fromDegrees(170.0, -10.0, -170.0, 10.0);
+    const rectangle2 = Rectangle.fromDegrees(160.0, 5.0, 175.0, 15.0);
+    const expected = Rectangle.fromDegrees(170.0, 5.0, 175.0, 10.0);
     expect(Rectangle.intersection(rectangle1, rectangle2)).toEqual(expected);
     expect(Rectangle.intersection(rectangle2, rectangle1)).toEqual(expected);
   });
 
   it("intersection works across the IDL (3)", function () {
-    var rectangle1 = Rectangle.fromDegrees(170.0, -10.0, -170.0, 10.0);
-    var rectangle2 = Rectangle.fromDegrees(175.0, 5.0, -175.0, 15.0);
-    var expected = Rectangle.fromDegrees(175.0, 5.0, -175.0, 10.0);
+    const rectangle1 = Rectangle.fromDegrees(170.0, -10.0, -170.0, 10.0);
+    const rectangle2 = Rectangle.fromDegrees(175.0, 5.0, -175.0, 15.0);
+    const expected = Rectangle.fromDegrees(175.0, 5.0, -175.0, 10.0);
     expect(Rectangle.intersection(rectangle1, rectangle2)).toEqual(expected);
     expect(Rectangle.intersection(rectangle2, rectangle1)).toEqual(expected);
   });
 
   it("intersection returns undefined for a point", function () {
-    var rectangle1 = new Rectangle(west, south, east, north);
-    var rectangle2 = new Rectangle(east, north, east + 0.1, north + 0.1);
+    const rectangle1 = new Rectangle(west, south, east, north);
+    const rectangle2 = new Rectangle(east, north, east + 0.1, north + 0.1);
     expect(Rectangle.intersection(rectangle1, rectangle2)).not.toBeDefined();
     expect(Rectangle.intersection(rectangle2, rectangle1)).not.toBeDefined();
   });
 
   it("intersection returns undefined for a east-west line (1)", function () {
-    var rectangle1 = new Rectangle(west, south, east, north);
-    var rectangle2 = new Rectangle(west, north, east, north + 0.1);
+    const rectangle1 = new Rectangle(west, south, east, north);
+    const rectangle2 = new Rectangle(west, north, east, north + 0.1);
     expect(Rectangle.intersection(rectangle1, rectangle2)).not.toBeDefined();
     expect(Rectangle.intersection(rectangle2, rectangle1)).not.toBeDefined();
   });
 
   it("intersection returns undefined for a east-west line (2)", function () {
-    var rectangle1 = new Rectangle(west, south, east, north);
-    var rectangle2 = new Rectangle(west, south + 0.1, east, south);
+    const rectangle1 = new Rectangle(west, south, east, north);
+    const rectangle2 = new Rectangle(west, south + 0.1, east, south);
     expect(Rectangle.intersection(rectangle1, rectangle2)).not.toBeDefined();
     expect(Rectangle.intersection(rectangle2, rectangle1)).not.toBeDefined();
   });
 
   it("intersection returns undefined for a north-south line (1)", function () {
-    var rectangle1 = new Rectangle(west, south, east, north);
-    var rectangle2 = new Rectangle(east, south, east + 0.1, north);
+    const rectangle1 = new Rectangle(west, south, east, north);
+    const rectangle2 = new Rectangle(east, south, east + 0.1, north);
     expect(Rectangle.intersection(rectangle1, rectangle2)).not.toBeDefined();
     expect(Rectangle.intersection(rectangle2, rectangle1)).not.toBeDefined();
   });
 
   it("intersection returns undefined for a north-south line (2)", function () {
-    var rectangle1 = new Rectangle(west, south, east, north);
-    var rectangle2 = new Rectangle(west - 0.1, south, west, north);
+    const rectangle1 = new Rectangle(west, south, east, north);
+    const rectangle2 = new Rectangle(west - 0.1, south, west, north);
     expect(Rectangle.intersection(rectangle1, rectangle2)).not.toBeDefined();
     expect(Rectangle.intersection(rectangle2, rectangle1)).not.toBeDefined();
   });
 
   it("intersection returns undefined for a north-south line (3)", function () {
-    var west = CesiumMath.toRadians(170.0);
-    var south = CesiumMath.toRadians(-10.0);
-    var east = CesiumMath.toRadians(-170.0);
-    var north = CesiumMath.toRadians(10.0);
+    const west = CesiumMath.toRadians(170.0);
+    const south = CesiumMath.toRadians(-10.0);
+    const east = CesiumMath.toRadians(-170.0);
+    const north = CesiumMath.toRadians(10.0);
 
-    var rectangle1 = new Rectangle(west, south, east, north);
-    var rectangle2 = new Rectangle(east, south, east + 0.1, north);
+    const rectangle1 = new Rectangle(west, south, east, north);
+    const rectangle2 = new Rectangle(east, south, east + 0.1, north);
     expect(Rectangle.intersection(rectangle1, rectangle2)).not.toBeDefined();
     expect(Rectangle.intersection(rectangle2, rectangle1)).not.toBeDefined();
   });
 
   it("intersection returns undefined for a north-south line (4)", function () {
-    var west = CesiumMath.toRadians(170.0);
-    var south = CesiumMath.toRadians(-10.0);
-    var east = CesiumMath.toRadians(-170.0);
-    var north = CesiumMath.toRadians(10.0);
+    const west = CesiumMath.toRadians(170.0);
+    const south = CesiumMath.toRadians(-10.0);
+    const east = CesiumMath.toRadians(-170.0);
+    const north = CesiumMath.toRadians(10.0);
 
-    var rectangle1 = new Rectangle(west, south, east, north);
-    var rectangle2 = new Rectangle(west - 0.1, south, west, north);
+    const rectangle1 = new Rectangle(west, south, east, north);
+    const rectangle2 = new Rectangle(west - 0.1, south, west, north);
     expect(Rectangle.intersection(rectangle1, rectangle2)).not.toBeDefined();
     expect(Rectangle.intersection(rectangle2, rectangle1)).not.toBeDefined();
   });
 
   it("intersection returns undefined if north-south direction is degenerate", function () {
-    var rectangle1 = new Rectangle(west, south, east, north);
-    var rectangle2 = new Rectangle(west, north + 0.1, east, north + 0.2);
+    const rectangle1 = new Rectangle(west, south, east, north);
+    const rectangle2 = new Rectangle(west, north + 0.1, east, north + 0.2);
     expect(Rectangle.intersection(rectangle1, rectangle2)).not.toBeDefined();
     expect(Rectangle.intersection(rectangle2, rectangle1)).not.toBeDefined();
   });
 
   it("intersection returns undefined if east-west direction is degenerate", function () {
-    var rectangle1 = new Rectangle(west, south, east, north);
-    var rectangle2 = new Rectangle(east + 0.1, south, east + 0.2, north);
+    const rectangle1 = new Rectangle(west, south, east, north);
+    const rectangle2 = new Rectangle(east + 0.1, south, east + 0.2, north);
     expect(Rectangle.intersection(rectangle1, rectangle2)).not.toBeDefined();
     expect(Rectangle.intersection(rectangle2, rectangle1)).not.toBeDefined();
   });
 
   it("union works without a result parameter", function () {
-    var rectangle1 = new Rectangle(0.5, 0.1, 0.75, 0.9);
-    var rectangle2 = new Rectangle(0.4, 0.0, 0.85, 0.8);
-    var expected = new Rectangle(0.4, 0.0, 0.85, 0.9);
-    var returnedResult = Rectangle.union(rectangle1, rectangle2);
+    const rectangle1 = new Rectangle(0.5, 0.1, 0.75, 0.9);
+    const rectangle2 = new Rectangle(0.4, 0.0, 0.85, 0.8);
+    const expected = new Rectangle(0.4, 0.0, 0.85, 0.9);
+    const returnedResult = Rectangle.union(rectangle1, rectangle2);
     expect(returnedResult).toEqual(expected);
   });
 
   it("union works with a result parameter", function () {
-    var rectangle1 = new Rectangle(0.5, 0.1, 0.75, 0.9);
-    var rectangle2 = new Rectangle(0.4, 0.0, 0.85, 0.8);
-    var expected = new Rectangle(0.4, 0.0, 0.85, 0.9);
-    var result = new Rectangle(-1.0, -1.0, 10.0, 10.0);
-    var returnedResult = Rectangle.union(rectangle1, rectangle2, result);
+    const rectangle1 = new Rectangle(0.5, 0.1, 0.75, 0.9);
+    const rectangle2 = new Rectangle(0.4, 0.0, 0.85, 0.8);
+    const expected = new Rectangle(0.4, 0.0, 0.85, 0.9);
+    const result = new Rectangle(-1.0, -1.0, 10.0, 10.0);
+    const returnedResult = Rectangle.union(rectangle1, rectangle2, result);
     expect(result).toBe(returnedResult);
     expect(returnedResult).toEqual(expected);
   });
 
   it("union works with first rectangle crossing the IDL", function () {
-    var rectangle1 = new Rectangle(0.5, 0.1, -0.5, 0.9);
-    var rectangle2 = new Rectangle(-0.85, 0.0, -0.4, 0.8);
-    var expected = new Rectangle(0.5, 0.0, -0.4, 0.9);
-    var returnedResult = Rectangle.union(rectangle1, rectangle2);
+    const rectangle1 = new Rectangle(0.5, 0.1, -0.5, 0.9);
+    const rectangle2 = new Rectangle(-0.85, 0.0, -0.4, 0.8);
+    const expected = new Rectangle(0.5, 0.0, -0.4, 0.9);
+    const returnedResult = Rectangle.union(rectangle1, rectangle2);
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
   });
 
   it("union works with second rectangle crossing the IDL", function () {
-    var rectangle1 = new Rectangle(0.5, 0.1, 0.75, 0.9);
-    var rectangle2 = new Rectangle(0.6, 0.0, -0.2, 0.8);
-    var expected = new Rectangle(0.5, 0.0, -0.2, 0.9);
-    var returnedResult = Rectangle.union(rectangle1, rectangle2);
+    const rectangle1 = new Rectangle(0.5, 0.1, 0.75, 0.9);
+    const rectangle2 = new Rectangle(0.6, 0.0, -0.2, 0.8);
+    const expected = new Rectangle(0.5, 0.0, -0.2, 0.9);
+    const returnedResult = Rectangle.union(rectangle1, rectangle2);
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
   });
 
   it("union works with both rectangles crossing the IDL", function () {
-    var rectangle1 = new Rectangle(0.5, 0.1, -0.4, 0.9);
-    var rectangle2 = new Rectangle(0.4, 0.0, -0.5, 0.8);
-    var expected = new Rectangle(0.4, 0.0, -0.4, 0.9);
-    var returnedResult = Rectangle.union(rectangle1, rectangle2);
+    const rectangle1 = new Rectangle(0.5, 0.1, -0.4, 0.9);
+    const rectangle2 = new Rectangle(0.4, 0.0, -0.5, 0.8);
+    const expected = new Rectangle(0.4, 0.0, -0.4, 0.9);
+    const returnedResult = Rectangle.union(rectangle1, rectangle2);
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
   });
 
   it("union works with rectangles that span the entire globe", function () {
-    var rectangle1 = new Rectangle(
+    const rectangle1 = new Rectangle(
       -CesiumMath.PI,
       -CesiumMath.PI_OVER_TWO,
       +CesiumMath.PI,
       0.0
     );
-    var rectangle2 = new Rectangle(
+    const rectangle2 = new Rectangle(
       -CesiumMath.PI,
       0.0,
       +CesiumMath.PI,
       +CesiumMath.PI_OVER_TWO
     );
-    var expected = new Rectangle(
+    const expected = new Rectangle(
       -CesiumMath.PI,
       -CesiumMath.PI_OVER_TWO,
       +CesiumMath.PI,
       +CesiumMath.PI_OVER_TWO
     );
-    var returnedResult = Rectangle.union(rectangle1, rectangle2);
+    const returnedResult = Rectangle.union(rectangle1, rectangle2);
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
   });
 
   it("expand works if rectangle needs to grow right", function () {
-    var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
-    var cartographic = new Cartographic(0.85, 0.5);
-    var expected = new Rectangle(0.5, 0.1, 0.85, 0.9);
-    var result = Rectangle.expand(rectangle, cartographic);
+    const rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+    const cartographic = new Cartographic(0.85, 0.5);
+    const expected = new Rectangle(0.5, 0.1, 0.85, 0.9);
+    const result = Rectangle.expand(rectangle, cartographic);
     expect(result).toEqual(expected);
   });
 
   it("expand works if rectangle needs to grow left", function () {
-    var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
-    var cartographic = new Cartographic(0.4, 0.5);
-    var expected = new Rectangle(0.4, 0.1, 0.75, 0.9);
-    var result = Rectangle.expand(rectangle, cartographic);
+    const rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+    const cartographic = new Cartographic(0.4, 0.5);
+    const expected = new Rectangle(0.4, 0.1, 0.75, 0.9);
+    const result = Rectangle.expand(rectangle, cartographic);
     expect(result).toEqual(expected);
   });
 
   it("expand works if rectangle needs to grow up", function () {
-    var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
-    var cartographic = new Cartographic(0.6, 1.0);
-    var expected = new Rectangle(0.5, 0.1, 0.75, 1.0);
-    var result = Rectangle.expand(rectangle, cartographic);
+    const rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+    const cartographic = new Cartographic(0.6, 1.0);
+    const expected = new Rectangle(0.5, 0.1, 0.75, 1.0);
+    const result = Rectangle.expand(rectangle, cartographic);
     expect(result).toEqual(expected);
   });
 
   it("expand works if rectangle needs to grow down", function () {
-    var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
-    var cartographic = new Cartographic(0.6, 0.0);
-    var expected = new Rectangle(0.5, 0.0, 0.75, 0.9);
-    var result = Rectangle.expand(rectangle, cartographic);
+    const rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+    const cartographic = new Cartographic(0.6, 0.0);
+    const expected = new Rectangle(0.5, 0.0, 0.75, 0.9);
+    const result = Rectangle.expand(rectangle, cartographic);
     expect(result).toEqual(expected);
   });
 
   it("expand works if rectangle does not need to grow", function () {
-    var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
-    var cartographic = new Cartographic(0.6, 0.5);
-    var expected = new Rectangle(0.5, 0.1, 0.75, 0.9);
-    var result = Rectangle.expand(rectangle, cartographic);
+    const rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+    const cartographic = new Cartographic(0.6, 0.5);
+    const expected = new Rectangle(0.5, 0.1, 0.75, 0.9);
+    const result = Rectangle.expand(rectangle, cartographic);
     expect(result).toEqual(expected);
   });
 
   it("expand works with a result parameter", function () {
-    var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
-    var cartographic = new Cartographic(0.85, 1.0);
-    var expected = new Rectangle(0.5, 0.1, 0.85, 1.0);
-    var result = new Rectangle();
-    var returnedResult = Rectangle.expand(rectangle, cartographic, result);
+    const rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+    const cartographic = new Cartographic(0.85, 1.0);
+    const expected = new Rectangle(0.5, 0.1, 0.85, 1.0);
+    const result = new Rectangle();
+    const returnedResult = Rectangle.expand(rectangle, cartographic, result);
     expect(returnedResult).toBe(returnedResult);
     expect(result).toEqual(expected);
   });
 
   it("contains works", function () {
-    var rectangle = new Rectangle(west, south, east, north);
+    const rectangle = new Rectangle(west, south, east, north);
     expect(
       Rectangle.contains(rectangle, new Cartographic(west, south))
     ).toEqual(true);
@@ -878,12 +882,12 @@ describe("Core/Rectangle", function () {
   });
 
   it("contains works with rectangle across the IDL", function () {
-    var west = CesiumMath.toRadians(170.0);
-    var south = CesiumMath.toRadians(-10.0);
-    var east = CesiumMath.toRadians(-170.0);
-    var north = CesiumMath.toRadians(10.0);
+    const west = CesiumMath.toRadians(170.0);
+    const south = CesiumMath.toRadians(-10.0);
+    const east = CesiumMath.toRadians(-170.0);
+    const north = CesiumMath.toRadians(10.0);
 
-    var rectangle = new Rectangle(west, south, east, north);
+    const rectangle = new Rectangle(west, south, east, north);
     expect(
       Rectangle.contains(rectangle, new Cartographic(west, south))
     ).toEqual(true);
@@ -914,12 +918,12 @@ describe("Core/Rectangle", function () {
   });
 
   it("subsample works south of the equator", function () {
-    var west = 0.1;
-    var south = -0.3;
-    var east = 0.2;
-    var north = -0.4;
-    var rectangle = new Rectangle(west, south, east, north);
-    var returnedResult = Rectangle.subsample(rectangle);
+    const west = 0.1;
+    const south = -0.3;
+    const east = 0.2;
+    const north = -0.4;
+    const rectangle = new Rectangle(west, south, east, north);
+    const returnedResult = Rectangle.subsample(rectangle);
     expect(returnedResult).toEqual([
       Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northwest(rectangle)),
       Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northeast(rectangle)),
@@ -929,14 +933,14 @@ describe("Core/Rectangle", function () {
   });
 
   it("subsample works with a result parameter", function () {
-    var west = 0.1;
-    var south = -0.3;
-    var east = 0.2;
-    var north = -0.4;
-    var rectangle = new Rectangle(west, south, east, north);
-    var cartesian0 = new Cartesian3();
-    var results = [cartesian0];
-    var returnedResult = Rectangle.subsample(
+    const west = 0.1;
+    const south = -0.3;
+    const east = 0.2;
+    const north = -0.4;
+    const rectangle = new Rectangle(west, south, east, north);
+    const cartesian0 = new Cartesian3();
+    const results = [cartesian0];
+    const returnedResult = Rectangle.subsample(
       rectangle,
       Ellipsoid.WGS84,
       0.0,
@@ -953,12 +957,12 @@ describe("Core/Rectangle", function () {
   });
 
   it("subsample works north of the equator", function () {
-    var west = 0.1;
-    var south = 0.3;
-    var east = 0.2;
-    var north = 0.4;
-    var rectangle = new Rectangle(west, south, east, north);
-    var returnedResult = Rectangle.subsample(rectangle);
+    const west = 0.1;
+    const south = 0.3;
+    const east = 0.2;
+    const north = 0.4;
+    const rectangle = new Rectangle(west, south, east, north);
+    const returnedResult = Rectangle.subsample(rectangle);
     expect(returnedResult).toEqual([
       Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northwest(rectangle)),
       Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northeast(rectangle)),
@@ -968,12 +972,12 @@ describe("Core/Rectangle", function () {
   });
 
   it("subsample works on the equator", function () {
-    var west = 0.1;
-    var south = -0.1;
-    var east = 0.2;
-    var north = 0.0;
-    var rectangle = new Rectangle(west, south, east, north);
-    var returnedResult = Rectangle.subsample(rectangle);
+    const west = 0.1;
+    const south = -0.1;
+    const east = 0.2;
+    const north = 0.0;
+    const rectangle = new Rectangle(west, south, east, north);
+    const returnedResult = Rectangle.subsample(rectangle);
     expect(returnedResult.length).toEqual(6);
     expect(returnedResult[0]).toEqual(
       Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northwest(rectangle))
@@ -988,13 +992,13 @@ describe("Core/Rectangle", function () {
       Ellipsoid.WGS84.cartographicToCartesian(Rectangle.southwest(rectangle))
     );
 
-    var cartographic4 = Ellipsoid.WGS84.cartesianToCartographic(
+    const cartographic4 = Ellipsoid.WGS84.cartesianToCartographic(
       returnedResult[4]
     );
     expect(cartographic4.latitude).toEqual(0.0);
     expect(cartographic4.longitude).toEqualEpsilon(west, CesiumMath.EPSILON16);
 
-    var cartographic5 = Ellipsoid.WGS84.cartesianToCartographic(
+    const cartographic5 = Ellipsoid.WGS84.cartesianToCartographic(
       returnedResult[5]
     );
     expect(cartographic5.latitude).toEqual(0.0);
@@ -1002,25 +1006,25 @@ describe("Core/Rectangle", function () {
   });
 
   it("subsample works at a height above the ellipsoid", function () {
-    var west = 0.1;
-    var south = -0.3;
-    var east = 0.2;
-    var north = -0.4;
-    var rectangle = new Rectangle(west, south, east, north);
-    var height = 100000.0;
-    var returnedResult = Rectangle.subsample(
+    const west = 0.1;
+    const south = -0.3;
+    const east = 0.2;
+    const north = -0.4;
+    const rectangle = new Rectangle(west, south, east, north);
+    const height = 100000.0;
+    const returnedResult = Rectangle.subsample(
       rectangle,
       Ellipsoid.WGS84,
       height
     );
 
-    var nw = Rectangle.northwest(rectangle);
+    const nw = Rectangle.northwest(rectangle);
     nw.height = height;
-    var ne = Rectangle.northeast(rectangle);
+    const ne = Rectangle.northeast(rectangle);
     ne.height = height;
-    var se = Rectangle.southeast(rectangle);
+    const se = Rectangle.southeast(rectangle);
     se.height = height;
-    var sw = Rectangle.southwest(rectangle);
+    const sw = Rectangle.southwest(rectangle);
     sw.height = height;
 
     expect(returnedResult).toEqual([
@@ -1044,7 +1048,7 @@ describe("Core/Rectangle", function () {
   });
 
   it("intersection throws with no otherRectangle", function () {
-    var rectangle = new Rectangle(west, south, east, north);
+    const rectangle = new Rectangle(west, south, east, north);
     expect(function () {
       Rectangle.intersection(rectangle, undefined);
     }).toThrowDeveloperError();
@@ -1057,7 +1061,7 @@ describe("Core/Rectangle", function () {
   });
 
   it("union throws with no otherRectangle", function () {
-    var rectangle = new Rectangle(west, south, east, north);
+    const rectangle = new Rectangle(west, south, east, north);
     expect(function () {
       Rectangle.intersection(rectangle, undefined);
     }).toThrowDeveloperError();
@@ -1070,20 +1074,20 @@ describe("Core/Rectangle", function () {
   });
 
   it("expand throws with no cartographic", function () {
-    var rectangle = new Rectangle(west, south, east, north);
+    const rectangle = new Rectangle(west, south, east, north);
     expect(function () {
       Rectangle.expand(rectangle, undefined);
     }).toThrowDeveloperError();
   });
 
   it("contains throws with no cartographic", function () {
-    var rectangle = new Rectangle(west, south, east, north);
+    const rectangle = new Rectangle(west, south, east, north);
     expect(function () {
       Rectangle.contains(rectangle, undefined);
     }).toThrowDeveloperError();
   });
 
-  var rectangle = new Rectangle(west, south, east, north);
-  var packedInstance = [west, south, east, north];
+  const rectangle = new Rectangle(west, south, east, north);
+  const packedInstance = [west, south, east, north];
   createPackableSpecs(Rectangle, rectangle, packedInstance);
 });

@@ -35,10 +35,10 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
         // Add a WMS imagery layer
-        var imageryLayers = viewer.imageryLayers;
+        const imageryLayers = viewer.imageryLayers;
         imageryLayers.addImageryProvider(
           new Cesium.WebMapServiceImageryProvider({
             url:

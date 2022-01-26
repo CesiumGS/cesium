@@ -1,7 +1,7 @@
 /**
  * @private
  */
-var ExpressionNodeType = {
+const ExpressionNodeType = {
   VARIABLE: 0,
   UNARY: 1,
   BINARY: 2,

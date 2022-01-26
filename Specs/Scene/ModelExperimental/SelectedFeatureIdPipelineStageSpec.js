@@ -15,14 +15,14 @@ import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 describe(
   "Scene/ModelExperimental/SelectedFeatureIdPipelineStage",
   function () {
-    var buildingsMetadata =
+    const buildingsMetadata =
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
-    var microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
-    var boxInstanced =
+    const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
+    const boxInstanced =
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
 
-    var scene;
-    var gltfLoaders = [];
+    let scene;
+    const gltfLoaders = [];
 
     beforeAll(function () {
       scene = createScene();
@@ -33,9 +33,9 @@ describe(
     });
 
     afterEach(function () {
-      var gltfLoadersLength = gltfLoaders.length;
-      for (var i = 0; i < gltfLoadersLength; ++i) {
-        var gltfLoader = gltfLoaders[i];
+      const gltfLoadersLength = gltfLoaders.length;
+      for (let i = 0; i < gltfLoadersLength; ++i) {
+        const gltfLoader = gltfLoaders[i];
         if (!gltfLoader.isDestroyed()) {
           gltfLoader.destroy();
         }
@@ -45,7 +45,7 @@ describe(
     });
 
     function createDefaultShaderBuilder() {
-      var shaderBuilder = new ShaderBuilder();
+      const shaderBuilder = new ShaderBuilder();
       shaderBuilder.addStruct(
         SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE,
         SelectedFeatureIdPipelineStage.STRUCT_NAME_SELECTED_FEATURE,
@@ -71,7 +71,7 @@ describe(
     }
 
     function getOptions(gltfPath, options) {
-      var resource = new Resource({
+      const resource = new Resource({
         url: gltfPath,
       });
 
@@ -82,7 +82,7 @@ describe(
     }
 
     function loadGltf(gltfPath, options) {
-      var gltfLoader = new GltfLoader(getOptions(gltfPath, options));
+      const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
       gltfLoaders.push(gltfLoader);
       gltfLoader.load();
 
@@ -105,11 +105,11 @@ describe(
 
     it("selects primitive feature IDs", function () {
       return loadGltf(buildingsMetadata).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var node = components.nodes[1];
-        var primitive = node.primitives[0];
-        var frameState = scene.frameState;
-        var renderResources = mockRenderResources(node);
+        const components = gltfLoader.components;
+        const node = components.nodes[1];
+        const primitive = node.primitives[0];
+        const frameState = scene.frameState;
+        const renderResources = mockRenderResources(node);
         renderResources.model.featureIdIndex = 2;
 
         SelectedFeatureIdPipelineStage.process(
@@ -120,7 +120,7 @@ describe(
 
         expect(renderResources.hasPropertyTable).toBe(true);
 
-        var shaderBuilder = renderResources.shaderBuilder;
+        const shaderBuilder = renderResources.shaderBuilder;
         verifyFeatureStruct(shaderBuilder);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_SELECTED_FEATURE_ID",
@@ -143,11 +143,11 @@ describe(
 
     it("selects feature ID texture", function () {
       return loadGltf(microcosm).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var node = components.nodes[0];
-        var primitive = node.primitives[0];
-        var frameState = scene.frameState;
-        var renderResources = mockRenderResources(node);
+        const components = gltfLoader.components;
+        const node = components.nodes[0];
+        const primitive = node.primitives[0];
+        const frameState = scene.frameState;
+        const renderResources = mockRenderResources(node);
         renderResources.model.featureIdIndex = 0;
 
         SelectedFeatureIdPipelineStage.process(
@@ -157,7 +157,7 @@ describe(
         );
         expect(renderResources.hasPropertyTable).toBe(true);
 
-        var shaderBuilder = renderResources.shaderBuilder;
+        const shaderBuilder = renderResources.shaderBuilder;
         verifyFeatureStruct(shaderBuilder);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
@@ -174,11 +174,11 @@ describe(
 
     it("selects instance feature IDs", function () {
       return loadGltf(boxInstanced).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var node = components.nodes[0];
-        var primitive = node.primitives[0];
-        var frameState = scene.frameState;
-        var renderResources = mockRenderResources(node);
+        const components = gltfLoader.components;
+        const node = components.nodes[0];
+        const primitive = node.primitives[0];
+        const frameState = scene.frameState;
+        const renderResources = mockRenderResources(node);
         renderResources.model.instanceFeatureIdIndex = 1;
 
         SelectedFeatureIdPipelineStage.process(
@@ -188,7 +188,7 @@ describe(
         );
         expect(renderResources.hasPropertyTable).toBe(true);
 
-        var shaderBuilder = renderResources.shaderBuilder;
+        const shaderBuilder = renderResources.shaderBuilder;
         verifyFeatureStruct(shaderBuilder);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_SELECTED_FEATURE_ID",

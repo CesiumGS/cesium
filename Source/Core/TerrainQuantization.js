@@ -5,7 +5,7 @@
  *
  * @private
  */
-var TerrainQuantization = {
+const TerrainQuantization = {
   /**
    * The vertices are not compressed.
    *

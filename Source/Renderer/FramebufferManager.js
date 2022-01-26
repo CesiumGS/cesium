@@ -103,8 +103,8 @@ FramebufferManager.prototype.isDirty = function (
   pixelDatatype,
   pixelFormat
 ) {
-  var dimensionChanged = this._width !== width || this._height !== height;
-  var pixelChanged =
+  const dimensionChanged = this._width !== width || this._height !== height;
+  const pixelChanged =
     (defined(pixelDatatype) && this._pixelDatatype !== pixelDatatype) ||
     (defined(pixelFormat) && this._pixelFormat !== pixelFormat);
 
@@ -150,7 +150,7 @@ FramebufferManager.prototype.update = function (
 
     // Create color texture
     if (this._color && this._createColorAttachments) {
-      for (var i = 0; i < this._colorAttachmentsLength; ++i) {
+      for (let i = 0; i < this._colorAttachmentsLength; ++i) {
         this._colorTextures[i] = new Texture({
           context: context,
           width: width,
@@ -317,7 +317,7 @@ FramebufferManager.prototype.clear = function (
   clearCommand,
   passState
 ) {
-  var framebuffer = clearCommand.framebuffer;
+  const framebuffer = clearCommand.framebuffer;
 
   clearCommand.framebuffer = this._framebuffer;
   clearCommand.execute(context, passState);
@@ -331,9 +331,9 @@ FramebufferManager.prototype.destroyFramebuffer = function () {
 
 FramebufferManager.prototype.destroy = function () {
   if (this._color && this._createColorAttachments) {
-    var length = this._colorTextures.length;
-    for (var i = 0; i < length; ++i) {
-      var texture = this._colorTextures[i];
+    const length = this._colorTextures.length;
+    for (let i = 0; i < length; ++i) {
+      const texture = this._colorTextures[i];
       if (defined(texture) && !texture.isDestroyed()) {
         this._colorTextures[i].destroy();
         this._colorTextures[i] = undefined;

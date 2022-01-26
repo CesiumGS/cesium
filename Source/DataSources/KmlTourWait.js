@@ -24,7 +24,7 @@ function KmlTourWait(duration) {
  * @param {KmlTourWait.DoneCallback} done function which will be called when playback ends
  */
 KmlTourWait.prototype.play = function (done) {
-  var self = this;
+  const self = this;
   this.activeCallback = done;
   this.timeout = setTimeout(function () {
     delete self.activeCallback;

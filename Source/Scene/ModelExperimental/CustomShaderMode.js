@@ -6,7 +6,7 @@
  *
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-var CustomShaderMode = {
+const CustomShaderMode = {
   /**
    * The custom shader will be used to modify the results of the material stage
    * before lighting is applied.

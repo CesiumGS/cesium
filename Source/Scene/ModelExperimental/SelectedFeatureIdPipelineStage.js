@@ -10,7 +10,7 @@ import ModelComponents from "../ModelComponents.js";
  * @namespace SelectedFeatureIdPipelineStage
  * @private
  */
-var SelectedFeatureIdPipelineStage = {};
+const SelectedFeatureIdPipelineStage = {};
 SelectedFeatureIdPipelineStage.name = "SelectedFeatureIdPipelineStage"; // Helps with debugging
 
 SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE = "SelectedFeature";
@@ -38,13 +38,13 @@ SelectedFeatureIdPipelineStage.process = function (
   primitive,
   frameState
 ) {
-  var shaderBuilder = renderResources.shaderBuilder;
+  const shaderBuilder = renderResources.shaderBuilder;
 
   renderResources.hasPropertyTable = true;
 
-  var model = renderResources.model;
-  var node = renderResources.runtimeNode.node;
-  var selectedFeatureIds = getSelectedFeatureIds(model, node, primitive);
+  const model = renderResources.model;
+  const node = renderResources.runtimeNode.node;
+  const selectedFeatureIds = getSelectedFeatureIds(model, node, primitive);
 
   shaderBuilder.addDefine(
     "HAS_SELECTED_FEATURE_ID",
@@ -96,8 +96,8 @@ function getShaderDestination(featureIds) {
 }
 
 function getSelectedFeatureIds(model, node, primitive) {
-  var variableName;
-  var featureIds;
+  let variableName;
+  let featureIds;
   // Check instances first, as this is the most specific type of
   // feature ID
   if (defined(node.instances)) {

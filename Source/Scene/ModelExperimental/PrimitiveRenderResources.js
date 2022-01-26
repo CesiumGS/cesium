@@ -159,7 +159,7 @@ export default function PrimitiveRenderResources(
    *
    * @private
    */
-  var primitive = runtimePrimitive.primitive;
+  const primitive = runtimePrimitive.primitive;
 
   // other properties
   /**

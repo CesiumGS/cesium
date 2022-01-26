@@ -8,22 +8,22 @@ import ShaderSource from "../Renderer/ShaderSource.js";
  */
 function DerivedCommand() {}
 
-var fragDepthRegex = /\bgl_FragDepthEXT\b/;
-var discardRegex = /\bdiscard\b/;
+const fragDepthRegex = /\bgl_FragDepthEXT\b/;
+const discardRegex = /\bdiscard\b/;
 
 function getDepthOnlyShaderProgram(context, shaderProgram) {
-  var shader = context.shaderCache.getDerivedShaderProgram(
+  let shader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
     "depthOnly"
   );
   if (!defined(shader)) {
-    var attributeLocations = shaderProgram._attributeLocations;
-    var fs = shaderProgram.fragmentShaderSource;
+    const attributeLocations = shaderProgram._attributeLocations;
+    let fs = shaderProgram.fragmentShaderSource;
 
-    var i;
-    var writesDepthOrDiscards = false;
-    var sources = fs.sources;
-    var length = sources.length;
+    let i;
+    let writesDepthOrDiscards = false;
+    const sources = fs.sources;
+    let length = sources.length;
     for (i = 0; i < length; ++i) {
       if (fragDepthRegex.test(sources[i]) || discardRegex.test(sources[i])) {
         writesDepthOrDiscards = true;
@@ -31,8 +31,8 @@ function getDepthOnlyShaderProgram(context, shaderProgram) {
       }
     }
 
-    var usesLogDepth = false;
-    var defines = fs.defines;
+    let usesLogDepth = false;
+    const defines = fs.defines;
     length = defines.length;
     for (i = 0; i < length; ++i) {
       if (defines[i] === "LOG_DEPTH") {
@@ -41,7 +41,7 @@ function getDepthOnlyShaderProgram(context, shaderProgram) {
       }
     }
 
-    var source;
+    let source;
     if (!writesDepthOrDiscards && !usesLogDepth) {
       source =
         "void main() \n" + "{ \n" + "    gl_FragColor = vec4(1.0); \n" + "} \n";
@@ -79,10 +79,10 @@ function getDepthOnlyShaderProgram(context, shaderProgram) {
 }
 
 function getDepthOnlyRenderState(scene, renderState) {
-  var cache = scene._depthOnlyRenderStateCache;
-  var depthOnlyState = cache[renderState.id];
+  const cache = scene._depthOnlyRenderStateCache;
+  let depthOnlyState = cache[renderState.id];
   if (!defined(depthOnlyState)) {
-    var rs = RenderState.getState(renderState);
+    const rs = RenderState.getState(renderState);
     rs.depthMask = true;
     rs.colorMask = {
       red: false,
@@ -113,8 +113,8 @@ DerivedCommand.createDepthOnlyDerivedCommand = function (
     result = {};
   }
 
-  var shader;
-  var renderState;
+  let shader;
+  let renderState;
   if (defined(result.depthOnlyCommand)) {
     shader = result.depthOnlyCommand.shaderProgram;
     renderState = result.depthOnlyCommand.renderState;
@@ -143,30 +143,30 @@ DerivedCommand.createDepthOnlyDerivedCommand = function (
   return result;
 };
 
-var writeLogDepthRegex = /\s+czm_writeLogDepth\(/;
-var vertexlogDepthRegex = /\s+czm_vertexLogDepth\(/;
-var extensionRegex = /\s*#extension\s+GL_EXT_frag_depth\s*:\s*enable/;
+const writeLogDepthRegex = /\s+czm_writeLogDepth\(/;
+const vertexlogDepthRegex = /\s+czm_vertexLogDepth\(/;
+const extensionRegex = /\s*#extension\s+GL_EXT_frag_depth\s*:\s*enable/;
 
 function getLogDepthShaderProgram(context, shaderProgram) {
-  var shader = context.shaderCache.getDerivedShaderProgram(
+  let shader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
     "logDepth"
   );
   if (!defined(shader)) {
-    var attributeLocations = shaderProgram._attributeLocations;
-    var vs = shaderProgram.vertexShaderSource.clone();
-    var fs = shaderProgram.fragmentShaderSource.clone();
+    const attributeLocations = shaderProgram._attributeLocations;
+    const vs = shaderProgram.vertexShaderSource.clone();
+    const fs = shaderProgram.fragmentShaderSource.clone();
 
     vs.defines = defined(vs.defines) ? vs.defines.slice(0) : [];
     vs.defines.push("LOG_DEPTH");
     fs.defines = defined(fs.defines) ? fs.defines.slice(0) : [];
     fs.defines.push("LOG_DEPTH");
 
-    var i;
-    var logMain;
-    var writesLogDepth = false;
-    var sources = vs.sources;
-    var length = sources.length;
+    let i;
+    let logMain;
+    let writesLogDepth = false;
+    let sources = vs.sources;
+    let length = sources.length;
     for (i = 0; i < length; ++i) {
       if (vertexlogDepthRegex.test(sources[i])) {
         writesLogDepth = true;
@@ -203,14 +203,14 @@ function getLogDepthShaderProgram(context, shaderProgram) {
       writesLogDepth = true;
     }
 
-    var addExtension = true;
+    let addExtension = true;
     for (i = 0; i < length; ++i) {
       if (extensionRegex.test(sources[i])) {
         addExtension = false;
       }
     }
 
-    var logSource = "";
+    let logSource = "";
     if (addExtension) {
       logSource +=
         "#ifdef GL_EXT_frag_depth \n" +
@@ -253,7 +253,7 @@ DerivedCommand.createLogDepthCommand = function (command, context, result) {
     result = {};
   }
 
-  var shader;
+  let shader;
   if (defined(result.command)) {
     shader = result.command.shaderProgram;
   }
@@ -274,18 +274,18 @@ DerivedCommand.createLogDepthCommand = function (command, context, result) {
 };
 
 function getPickShaderProgram(context, shaderProgram, pickId) {
-  var shader = context.shaderCache.getDerivedShaderProgram(
+  let shader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
     "pick"
   );
   if (!defined(shader)) {
-    var attributeLocations = shaderProgram._attributeLocations;
-    var fs = shaderProgram.fragmentShaderSource;
+    const attributeLocations = shaderProgram._attributeLocations;
+    let fs = shaderProgram.fragmentShaderSource;
 
-    var sources = fs.sources;
-    var length = sources.length;
+    const sources = fs.sources;
+    const length = sources.length;
 
-    var newMain =
+    const newMain =
       "void main() \n" +
       "{ \n" +
       "    czm_non_pick_main(); \n" +
@@ -296,8 +296,8 @@ function getPickShaderProgram(context, shaderProgram, pickId) {
       pickId +
       "; \n" +
       "} \n";
-    var newSources = new Array(length + 1);
-    for (var i = 0; i < length; ++i) {
+    const newSources = new Array(length + 1);
+    for (let i = 0; i < length; ++i) {
       newSources[i] = ShaderSource.replaceMain(sources[i], "czm_non_pick_main");
     }
     newSources[length] = newMain;
@@ -320,10 +320,10 @@ function getPickShaderProgram(context, shaderProgram, pickId) {
 }
 
 function getPickRenderState(scene, renderState) {
-  var cache = scene.picking.pickRenderStateCache;
-  var pickState = cache[renderState.id];
+  const cache = scene.picking.pickRenderStateCache;
+  let pickState = cache[renderState.id];
   if (!defined(pickState)) {
-    var rs = RenderState.getState(renderState);
+    const rs = RenderState.getState(renderState);
     rs.blending.enabled = false;
 
     // Turns on depth writing for opaque and translucent passes
@@ -350,8 +350,8 @@ DerivedCommand.createPickDerivedCommand = function (
     result = {};
   }
 
-  var shader;
-  var renderState;
+  let shader;
+  let renderState;
   if (defined(result.pickCommand)) {
     shader = result.pickCommand.shaderProgram;
     renderState = result.pickCommand.renderState;
@@ -379,14 +379,14 @@ DerivedCommand.createPickDerivedCommand = function (
 };
 
 function getHdrShaderProgram(context, shaderProgram) {
-  var shader = context.shaderCache.getDerivedShaderProgram(
+  let shader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
     "HDR"
   );
   if (!defined(shader)) {
-    var attributeLocations = shaderProgram._attributeLocations;
-    var vs = shaderProgram.vertexShaderSource.clone();
-    var fs = shaderProgram.fragmentShaderSource.clone();
+    const attributeLocations = shaderProgram._attributeLocations;
+    const vs = shaderProgram.vertexShaderSource.clone();
+    const fs = shaderProgram.fragmentShaderSource.clone();
 
     vs.defines = defined(vs.defines) ? vs.defines.slice(0) : [];
     vs.defines.push("HDR");
@@ -412,7 +412,7 @@ DerivedCommand.createHdrCommand = function (command, context, result) {
     result = {};
   }
 
-  var shader;
+  let shader;
   if (defined(result.command)) {
     shader = result.command.shaderProgram;
   }

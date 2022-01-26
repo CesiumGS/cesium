@@ -8,13 +8,13 @@ import {
 import createContext from "../createContext.js";
 
 describe("Scene/PropertyTexture", function () {
-  var classDefinition;
-  var context;
-  var texture0;
-  var texture1;
-  var extras;
-  var extensions;
-  var featureTexture;
+  let classDefinition;
+  let context;
+  let texture0;
+  let texture1;
+  let extras;
+  let extensions;
+  let featureTexture;
 
   beforeAll(function () {
     classDefinition = new MetadataClass({
@@ -69,7 +69,7 @@ describe("Scene/PropertyTexture", function () {
       EXT_other_extension: {},
     };
 
-    var featureTextureJson = {
+    const featureTextureJson = {
       class: "map",
       extras: extras,
       extensions: extensions,

@@ -17,18 +17,18 @@ import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 describe(
   "Scene/ModelExperimental/FeatureIdPipelineStage",
   function () {
-    var boxInstanced =
+    const boxInstanced =
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
-    var boxTexturedBinary =
+    const boxTexturedBinary =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
-    var buildingsMetadata =
+    const buildingsMetadata =
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
-    var microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
-    var weather = "./Data/Models/GltfLoader/Weather/glTF/weather.gltf";
+    const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
+    const weather = "./Data/Models/GltfLoader/Weather/glTF/weather.gltf";
 
-    var scene;
-    var gltfLoaders = [];
-    var resources = [];
+    let scene;
+    const gltfLoaders = [];
+    const resources = [];
 
     beforeAll(function () {
       scene = createScene();
@@ -39,8 +39,8 @@ describe(
     });
 
     function cleanup(resourcesArray) {
-      for (var i = 0; i < resourcesArray.length; i++) {
-        var resource = resourcesArray[i];
+      for (let i = 0; i < resourcesArray.length; i++) {
+        const resource = resourcesArray[i];
         if (!resource.isDestroyed()) {
           resource.destroy();
         }
@@ -55,7 +55,7 @@ describe(
     });
 
     function getOptions(gltfPath, options) {
-      var resource = new Resource({
+      const resource = new Resource({
         url: gltfPath,
       });
 
@@ -66,7 +66,7 @@ describe(
     }
 
     function loadGltf(gltfPath, options) {
-      var gltfLoader = new GltfLoader(getOptions(gltfPath, options));
+      const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
       gltfLoaders.push(gltfLoader);
       gltfLoader.load();
 
@@ -96,15 +96,15 @@ describe(
 
     it("handles primitives without feature IDs gracefully", function () {
       return loadGltf(boxTexturedBinary).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var node = components.nodes[1];
-        var primitive = node.primitives[0];
-        var frameState = scene.frameState;
-        var renderResources = mockRenderResources(node);
+        const components = gltfLoader.components;
+        const node = components.nodes[1];
+        const primitive = node.primitives[0];
+        const frameState = scene.frameState;
+        const renderResources = mockRenderResources(node);
 
         FeatureIdPipelineStage.process(renderResources, primitive, frameState);
 
-        var shaderBuilder = renderResources.shaderBuilder;
+        const shaderBuilder = renderResources.shaderBuilder;
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
           FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
@@ -152,22 +152,22 @@ describe(
 
         expect(renderResources.attributes.length).toBe(1);
 
-        var uniformMap = renderResources.uniformMap;
+        const uniformMap = renderResources.uniformMap;
         expect(uniformMap).toEqual({});
       });
     });
 
     it("processes feature ID attributes", function () {
       return loadGltf(weather).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var node = components.nodes[0];
-        var primitive = node.primitives[0];
-        var frameState = scene.frameState;
-        var renderResources = mockRenderResources(node);
+        const components = gltfLoader.components;
+        const node = components.nodes[0];
+        const primitive = node.primitives[0];
+        const frameState = scene.frameState;
+        const renderResources = mockRenderResources(node);
 
         FeatureIdPipelineStage.process(renderResources, primitive, frameState);
 
-        var shaderBuilder = renderResources.shaderBuilder;
+        const shaderBuilder = renderResources.shaderBuilder;
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
           FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
@@ -222,12 +222,12 @@ describe(
         ]);
 
         expect(resources.length).toBe(1);
-        var vertexBuffer = resources[0];
+        const vertexBuffer = resources[0];
         expect(vertexBuffer).toBeDefined();
         expect(vertexBuffer.vertexArrayDestroyable).toBe(false);
 
         expect(renderResources.attributes.length).toBe(2);
-        var implicitAttribute = renderResources.attributes[1];
+        const implicitAttribute = renderResources.attributes[1];
         expect(implicitAttribute.index).toBe(1);
         expect(implicitAttribute.instanceDivisor).toBeUndefined();
         expect(implicitAttribute.value).toBeUndefined();
@@ -240,22 +240,22 @@ describe(
         expect(implicitAttribute.strideInBytes).toBe(4);
         expect(implicitAttribute.offsetInBytes).toBe(0);
 
-        var uniformMap = renderResources.uniformMap;
+        const uniformMap = renderResources.uniformMap;
         expect(uniformMap).toEqual({});
       });
     });
 
     it("processes implicit feature ID attribute with constant feature IDs", function () {
       return loadGltf(buildingsMetadata).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var node = components.nodes[1];
-        var primitive = node.primitives[0];
-        var frameState = scene.frameState;
-        var renderResources = mockRenderResources(node);
+        const components = gltfLoader.components;
+        const node = components.nodes[1];
+        const primitive = node.primitives[0];
+        const frameState = scene.frameState;
+        const renderResources = mockRenderResources(node);
 
         FeatureIdPipelineStage.process(renderResources, primitive, frameState);
 
-        var shaderBuilder = renderResources.shaderBuilder;
+        const shaderBuilder = renderResources.shaderBuilder;
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
           FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
@@ -325,12 +325,12 @@ describe(
         ]);
 
         expect(resources.length).toBe(1);
-        var vertexBuffer = resources[0];
+        const vertexBuffer = resources[0];
         expect(vertexBuffer).toBeDefined();
         expect(vertexBuffer.vertexArrayDestroyable).toBe(false);
 
         expect(renderResources.attributes.length).toBe(3);
-        var implicitAttribute = renderResources.attributes[1];
+        const implicitAttribute = renderResources.attributes[1];
         expect(implicitAttribute.index).toBe(1);
         expect(implicitAttribute.instanceDivisor).toBeUndefined();
         expect(implicitAttribute.value).toBeUndefined();
@@ -343,7 +343,7 @@ describe(
         expect(implicitAttribute.strideInBytes).toBe(4);
         expect(implicitAttribute.offsetInBytes).toBe(0);
 
-        var constantAttribute = renderResources.attributes[2];
+        const constantAttribute = renderResources.attributes[2];
         expect(constantAttribute.index).toBe(2);
         expect(constantAttribute.instanceDivisor).toBeUndefined();
         expect(constantAttribute.value).toEqual([3]);
@@ -356,22 +356,22 @@ describe(
         expect(constantAttribute.strideInBytes).toBe(4);
         expect(constantAttribute.offsetInBytes).toBe(0);
 
-        var uniformMap = renderResources.uniformMap;
+        const uniformMap = renderResources.uniformMap;
         expect(uniformMap).toEqual({});
       });
     });
 
     it("processes feature ID texture", function () {
       return loadGltf(microcosm).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var node = components.nodes[0];
-        var primitive = node.primitives[0];
-        var frameState = scene.frameState;
-        var renderResources = mockRenderResources(node);
+        const components = gltfLoader.components;
+        const node = components.nodes[0];
+        const primitive = node.primitives[0];
+        const frameState = scene.frameState;
+        const renderResources = mockRenderResources(node);
 
         FeatureIdPipelineStage.process(renderResources, primitive, frameState);
 
-        var shaderBuilder = renderResources.shaderBuilder;
+        const shaderBuilder = renderResources.shaderBuilder;
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
           FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
@@ -422,9 +422,9 @@ describe(
         expect(resources).toEqual([]);
         expect(renderResources.attributes.length).toBe(1);
 
-        var uniformMap = renderResources.uniformMap;
+        const uniformMap = renderResources.uniformMap;
         expect(uniformMap.u_featureIdTexture_0).toBeDefined();
-        var featureIdTexture = primitive.featureIds[0];
+        const featureIdTexture = primitive.featureIds[0];
         expect(uniformMap.u_featureIdTexture_0()).toBe(
           featureIdTexture.textureReader.texture
         );
@@ -433,15 +433,15 @@ describe(
 
     it("processes instance feature IDs", function () {
       return loadGltf(boxInstanced).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var node = components.nodes[0];
-        var primitive = node.primitives[0];
-        var frameState = scene.frameState;
-        var renderResources = mockRenderResources(node);
+        const components = gltfLoader.components;
+        const node = components.nodes[0];
+        const primitive = node.primitives[0];
+        const frameState = scene.frameState;
+        const renderResources = mockRenderResources(node);
 
         FeatureIdPipelineStage.process(renderResources, primitive, frameState);
 
-        var shaderBuilder = renderResources.shaderBuilder;
+        const shaderBuilder = renderResources.shaderBuilder;
         ShaderBuilderTester.expectHasVertexStruct(
           shaderBuilder,
           FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
@@ -500,12 +500,12 @@ describe(
         ]);
 
         expect(resources.length).toBe(1);
-        var vertexBuffer = resources[0];
+        const vertexBuffer = resources[0];
         expect(vertexBuffer).toBeDefined();
         expect(vertexBuffer.vertexArrayDestroyable).toBe(false);
 
         expect(renderResources.attributes.length).toBe(2);
-        var implicitAttribute = renderResources.attributes[1];
+        const implicitAttribute = renderResources.attributes[1];
         expect(implicitAttribute.index).toBe(1);
         expect(implicitAttribute.instanceDivisor).toBe(1);
         expect(implicitAttribute.value).toBeUndefined();
@@ -518,7 +518,7 @@ describe(
         expect(implicitAttribute.strideInBytes).toBe(4);
         expect(implicitAttribute.offsetInBytes).toBe(0);
 
-        var uniformMap = renderResources.uniformMap;
+        const uniformMap = renderResources.uniformMap;
         expect(uniformMap).toEqual({});
       });
     });

@@ -14,7 +14,7 @@ import Matrix4 from "../Core/Matrix4.js";
  *
  * @private
  */
-var AttributeType = {
+const AttributeType = {
   /**
    * The attribute is a single component.
    *

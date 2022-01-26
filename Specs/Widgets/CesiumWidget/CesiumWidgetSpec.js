@@ -17,8 +17,8 @@ import { CesiumWidget } from "../../../Source/Cesium.js";
 describe(
   "Widgets/CesiumWidget/CesiumWidget",
   function () {
-    var container;
-    var widget;
+    let container;
+    let widget;
     beforeEach(function () {
       container = document.createElement("div");
       container.id = "container";
@@ -76,7 +76,7 @@ describe(
     });
 
     it("sets expected options clock", function () {
-      var options = {
+      const options = {
         clock: new Clock(),
       };
       widget = createCesiumWidget(container, options);
@@ -92,7 +92,7 @@ describe(
     });
 
     it("can set map projection", function () {
-      var mapProjection = new WebMercatorProjection();
+      const mapProjection = new WebMercatorProjection();
 
       widget = createCesiumWidget(container, {
         mapProjection: mapProjection,
@@ -123,11 +123,11 @@ describe(
     });
 
     it("sets expected options imageryProvider", function () {
-      var options = {
+      const options = {
         imageryProvider: new TileCoordinatesImageryProvider(),
       };
       widget = createCesiumWidget(container, options);
-      var imageryLayers = widget.scene.imageryLayers;
+      const imageryLayers = widget.scene.imageryLayers;
       expect(imageryLayers.length).toEqual(1);
       expect(imageryLayers.get(0).imageryProvider).toBe(
         options.imageryProvider
@@ -138,18 +138,18 @@ describe(
       widget = createCesiumWidget(container, {
         imageryProvider: false,
       });
-      var imageryLayers = widget.scene.imageryLayers;
+      const imageryLayers = widget.scene.imageryLayers;
       expect(imageryLayers.length).toEqual(0);
     });
 
     it("sets expected options terrainProvider", function () {
-      var options = {
+      const options = {
         terrainProvider: new EllipsoidTerrainProvider(),
       };
       widget = createCesiumWidget(container, options);
       expect(widget.terrainProvider).toBe(options.terrainProvider);
 
-      var anotherProvider = new EllipsoidTerrainProvider();
+      const anotherProvider = new EllipsoidTerrainProvider();
       widget.terrainProvider = anotherProvider;
       expect(widget.terrainProvider).toBe(anotherProvider);
     });
@@ -176,7 +176,7 @@ describe(
     });
 
     it("sets expected options skyBox", function () {
-      var options = {
+      const options = {
         skyBox: new SkyBox({
           sources: {
             positiveX: "./Data/Images/Blue.png",
@@ -193,7 +193,7 @@ describe(
     });
 
     it("can set contextOptions", function () {
-      var webglOptions = {
+      const webglOptions = {
         alpha: true,
         depth: true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
         stencil: true,
@@ -202,7 +202,7 @@ describe(
         preserveDrawingBuffer: true,
         powerPreference: "low-power",
       };
-      var contextOptions = {
+      const contextOptions = {
         allowTextureFilterAnisotropic: false,
         webgl: webglOptions,
       };
@@ -211,8 +211,8 @@ describe(
         contextOptions: contextOptions,
       });
 
-      var context = widget.scene.context;
-      var contextAttributes = context._gl.getContextAttributes();
+      const context = widget.scene.context;
+      const contextAttributes = context._gl.getContextAttributes();
 
       expect(context.options.allowTextureFilterAnisotropic).toEqual(false);
       expect(contextAttributes.alpha).toEqual(webglOptions.alpha);
@@ -283,7 +283,7 @@ describe(
     });
 
     it("useBrowserRecommendedResolution ignores devicePixelRatio", function () {
-      var oldDevicePixelRatio = window.devicePixelRatio;
+      const oldDevicePixelRatio = window.devicePixelRatio;
       window.devicePixelRatio = 2.0;
 
       widget = createCesiumWidget(container, {
@@ -316,7 +316,7 @@ describe(
         maximumRenderTimeChange: Number.POSITIVE_INFINITY,
       });
 
-      var scene = widget._scene;
+      const scene = widget._scene;
       spyOn(scene, "requestRender");
 
       widget.resize();
@@ -339,7 +339,7 @@ describe(
       widget = createCesiumWidget(container);
       expect(widget.useDefaultRenderLoop).toEqual(true);
 
-      var error = "foo";
+      const error = "foo";
       widget.scene.primitives.update = function () {
         throw error;
       };
@@ -352,7 +352,7 @@ describe(
     it("shows the error panel when render throws", function () {
       widget = createCesiumWidget(container);
 
-      var error = "foo";
+      const error = "foo";
       widget.scene.primitives.update = function () {
         throw error;
       };
@@ -364,12 +364,12 @@ describe(
           widget._element.querySelector(".cesium-widget-errorPanel")
         ).not.toBeNull();
 
-        var messages = widget._element.querySelectorAll(
+        const messages = widget._element.querySelectorAll(
           ".cesium-widget-errorPanel-message"
         );
 
-        var found = false;
-        for (var i = 0; i < messages.length; ++i) {
+        let found = false;
+        for (let i = 0; i < messages.length; ++i) {
           if (messages[i].textContent.indexOf(error) !== -1) {
             found = true;
           }
@@ -393,7 +393,7 @@ describe(
         showRenderLoopErrors: false,
       });
 
-      var error = "foo";
+      const error = "foo";
       widget.scene.primitives.update = function () {
         throw error;
       };

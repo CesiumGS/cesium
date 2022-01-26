@@ -33,28 +33,28 @@
         "use strict";
         //Sandcastle_Begin
         // Create the viewer.
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         // Draw a the outline of an ellipsoid and position
         // it on the globe surface.
 
-        var radii = new Cesium.Cartesian3(200000.0, 200000.0, 300000.0);
-        var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-102.0, 45.0);
-        var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
+        const radii = new Cesium.Cartesian3(200000.0, 200000.0, 300000.0);
+        const positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-102.0, 45.0);
+        const modelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
           new Cesium.Cartesian3(0.0, 0.0, radii.z),
           new Cesium.Matrix4()
         );
         // Create a ellipsoid geometry.
-        var ellipsoidOutlineGeometry = new Cesium.EllipsoidOutlineGeometry({
+        const ellipsoidOutlineGeometry = new Cesium.EllipsoidOutlineGeometry({
           radii: radii,
           stackPartitions: 16,
           slicePartitions: 8,
         });
         // Create a geometry instance using the geometry
         // and model matrix created above.
-        var ellipseOutlineInstance = new Cesium.GeometryInstance({
+        const ellipseOutlineInstance = new Cesium.GeometryInstance({
           geometry: ellipsoidOutlineGeometry,
           modelMatrix: modelMatrix,
           attributes: {

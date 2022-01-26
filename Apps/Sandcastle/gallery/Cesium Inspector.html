@@ -39,11 +39,11 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
-        var scene = viewer.scene;
+        const scene = viewer.scene;
         scene.globe.depthTestAgainstTerrain = true;
 
         //Add Cesium Inspector
@@ -99,7 +99,9 @@
           })
         );
 
-        var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+        const billboards = scene.primitives.add(
+          new Cesium.BillboardCollection()
+        );
         billboards.add({
           position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 150000),
           image: "../images/Cesium_Logo_overlay.png",

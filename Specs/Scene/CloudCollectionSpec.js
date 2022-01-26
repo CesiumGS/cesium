@@ -15,10 +15,10 @@ import pollToPromise from "../pollToPromise.js";
 describe(
   "Scene/CloudCollection",
   function () {
-    var scene;
-    var context;
-    var camera;
-    var clouds;
+    let scene;
+    let context;
+    let camera;
+    let clouds;
 
     beforeAll(function () {
       scene = createScene();
@@ -54,7 +54,7 @@ describe(
     });
 
     it("constructs a default cloud", function () {
-      var c = clouds.add();
+      const c = clouds.add();
       expect(c.show).toEqual(true);
       expect(c.position).toEqual(Cartesian3.ZERO);
       expect(c.scale).toEqual(new Cartesian2(20.0, 12.0));
@@ -64,7 +64,7 @@ describe(
     });
 
     it("explicitly constructs a cloud", function () {
-      var c = clouds.add({
+      const c = clouds.add({
         cloudType: CloudType.CUMULUS,
         show: false,
         position: new Cartesian3(1.0, 2.0, 3.0),
@@ -82,7 +82,7 @@ describe(
     });
 
     it("constructs cloud with only maximum size", function () {
-      var c = clouds.add({
+      const c = clouds.add({
         maximumSize: new Cartesian3(1.0, 2.0, 3.0),
       });
       expect(c.maximumSize).toEqual(new Cartesian3(1.0, 2.0, 3.0));
@@ -90,7 +90,7 @@ describe(
     });
 
     it("sets cloud properties", function () {
-      var c = clouds.add();
+      const c = clouds.add();
       c.show = false;
       c.position = new Cartesian3(1.0, 2.0, 3.0);
       c.scale = new Cartesian2(2.0, 3.0);
@@ -111,7 +111,7 @@ describe(
     });
 
     it("sets a removed cloud property", function () {
-      var c = clouds.add();
+      const c = clouds.add();
       clouds.remove(c);
       c.show = false;
       expect(c.show).toEqual(false);
@@ -122,7 +122,7 @@ describe(
     });
 
     it("adds a cloud", function () {
-      var c = clouds.add({
+      const c = clouds.add({
         position: new Cartesian3(1.0, 2.0, 3.0),
       });
 
@@ -131,10 +131,10 @@ describe(
     });
 
     it("removes the first cloud", function () {
-      var one = clouds.add({
+      const one = clouds.add({
         position: new Cartesian3(1.0, 2.0, 3.0),
       });
-      var two = clouds.add({
+      const two = clouds.add({
         position: new Cartesian3(4.0, 5.0, 6.0),
       });
 
@@ -147,10 +147,10 @@ describe(
     });
 
     it("removes the last cloud", function () {
-      var one = clouds.add({
+      const one = clouds.add({
         position: new Cartesian3(1.0, 2.0, 3.0),
       });
-      var two = clouds.add({
+      const two = clouds.add({
         position: new Cartesian3(4.0, 5.0, 6.0),
       });
 
@@ -163,7 +163,7 @@ describe(
     });
 
     it("removes the same cloud twice", function () {
-      var b = clouds.add({
+      const b = clouds.add({
         position: new Cartesian3(1.0, 2.0, 3.0),
       });
       expect(clouds.length).toEqual(1);
@@ -186,10 +186,10 @@ describe(
     });
 
     it("adds and removes clouds", function () {
-      var one = clouds.add({
+      const one = clouds.add({
         position: new Cartesian3(1.0, 2.0, 3.0),
       });
-      var two = clouds.add({
+      const two = clouds.add({
         position: new Cartesian3(4.0, 5.0, 6.0),
       });
       expect(clouds.length).toEqual(2);
@@ -199,7 +199,7 @@ describe(
       expect(clouds.remove(two)).toEqual(true);
       expect(clouds.length).toEqual(1);
 
-      var three = clouds.add({
+      const three = clouds.add({
         position: new Cartesian3(7.0, 8.0, 9.0),
       });
       expect(clouds.length).toEqual(2);
@@ -221,13 +221,13 @@ describe(
     });
 
     it("can check if it contains a cloud", function () {
-      var cloud = clouds.add();
+      const cloud = clouds.add();
 
       expect(clouds.contains(cloud)).toEqual(true);
     });
 
     it("returns false when checking if it contains a cloud it does not contain", function () {
-      var cloud = clouds.add();
+      const cloud = clouds.add();
       clouds.remove(cloud);
 
       expect(clouds.contains(cloud)).toEqual(false);
@@ -272,7 +272,7 @@ describe(
     });
 
     it("modifies and removes a cloud, then renders", function () {
-      var c = clouds.add({
+      const c = clouds.add({
         position: Cartesian3.ZERO,
         scale: new Cartesian2(20.0, 12.0),
       });
@@ -288,7 +288,7 @@ describe(
         position: Cartesian3.ZERO,
         scale: new Cartesian2(20.0, 12.0),
       });
-      var cloud = clouds.add({
+      const cloud = clouds.add({
         position: new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
         scale: new Cartesian2(20.0, 12.0),
       });
@@ -336,7 +336,7 @@ describe(
     });
 
     it("renders using cloud show property", function () {
-      var c = clouds.add({
+      const c = clouds.add({
         position: Cartesian3.ZERO,
         scale: new Cartesian3(20.0, 12.0),
       });
@@ -347,7 +347,7 @@ describe(
     });
 
     it("renders using cloud position property", function () {
-      var c = clouds.add({
+      const c = clouds.add({
         position: Cartesian3.ZERO,
         scale: new Cartesian3(20.0, 12.0),
       });
@@ -362,7 +362,7 @@ describe(
     });
 
     it("renders using cloud scale property", function () {
-      var c = clouds.add({
+      const c = clouds.add({
         position: Cartesian3.ZERO,
         scale: new Cartesian3(20.0, 12.0),
       });
@@ -380,7 +380,7 @@ describe(
       clouds.debugBillboards = false;
       clouds.debugEllipsoids = true;
 
-      var c = clouds.add({
+      const c = clouds.add({
         position: Cartesian3.ZERO,
         scale: new Cartesian3(20.0, 12.0),
         maximumSize: new Cartesian3(20.0, 10.0, 8.0),
@@ -399,7 +399,7 @@ describe(
       clouds.debugBillboards = false;
       clouds.debugEllipsoids = true;
 
-      var c = clouds.add({
+      const c = clouds.add({
         position: Cartesian3.ZERO,
         scale: new Cartesian3(20.0, 12.0),
       });
@@ -417,7 +417,7 @@ describe(
       clouds.debugBillboards = false;
       clouds.debugEllipsoids = true;
 
-      var c = clouds.add({
+      const c = clouds.add({
         position: Cartesian3.ZERO,
         scale: new Cartesian3(20.0, 12.0),
       });
@@ -434,12 +434,12 @@ describe(
       clouds.debugBillboards = false;
       clouds.debugEllipsoids = true;
 
-      var c = clouds.add({
+      const c = clouds.add({
         position: Cartesian3.ZERO,
         scale: new Cartesian3(20.0, 12.0),
       });
 
-      var initialRgba;
+      let initialRgba;
 
       expect(scene).toRenderAndCall(function (rgba) {
         initialRgba = rgba;
@@ -453,7 +453,7 @@ describe(
     });
 
     it("updates 10% of clouds", function () {
-      for (var i = 0; i < 10; ++i) {
+      for (let i = 0; i < 10; ++i) {
         clouds.add({
           position: Cartesian3.ZERO,
           scale: new Cartesian2(20.0, 12.0),
@@ -472,18 +472,18 @@ describe(
 
     it("renders clouds when instancing is disabled", function () {
       // disable extension
-      var instancedArrays = context._instancedArrays;
+      const instancedArrays = context._instancedArrays;
       context._instancedArrays = undefined;
 
       expect(scene).toRender([0, 0, 0, 255]);
 
-      var c1 = clouds.add({
+      const c1 = clouds.add({
         position: Cartesian3.ZERO,
         maximumScale: new Cartesian3(10.0, 5.0, 5.0),
       });
       expect(scene).notToRender([0, 0, 0, 255]);
 
-      var c2 = clouds.add({
+      const c2 = clouds.add({
         position: new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
         maximumScale: new Cartesian3(10.0, 5.0, 5.0),
       });
@@ -500,18 +500,18 @@ describe(
 
     it("updates clouds when instancing is disabled", function () {
       // disable extension
-      var instancedArrays = context._instancedArrays;
+      const instancedArrays = context._instancedArrays;
       context._instancedArrays = undefined;
 
       expect(scene).toRender([0, 0, 0, 255]);
 
-      var c1 = clouds.add({
+      const c1 = clouds.add({
         position: Cartesian3.ZERO,
         maximumScale: new Cartesian3(10.0, 5.0, 5.0),
       });
       expect(scene).notToRender([0, 0, 0, 255]);
 
-      var c2 = clouds.add({
+      const c2 = clouds.add({
         position: new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
         maximumScale: new Cartesian3(10.0, 5.0, 5.0),
       });
@@ -535,9 +535,9 @@ describe(
       });
 
       scene.renderForSpecs();
-      var commandList = scene._computeCommandList;
-      var index = commandList.length - 1;
-      var command = commandList[index];
+      const commandList = scene._computeCommandList;
+      const index = commandList.length - 1;
+      const command = commandList[index];
       expect(command instanceof ComputeCommand).toBe(true);
       expect(command.owner).toBe(clouds);
     });
@@ -555,9 +555,9 @@ describe(
         return clouds._ready;
       }).then(function () {
         scene.renderForSpecs();
-        var commandList = scene.frameState.commandList;
-        var index = commandList.length - 1;
-        var command = commandList[index];
+        const commandList = scene.frameState.commandList;
+        const index = commandList.length - 1;
+        const command = commandList[index];
         expect(command instanceof DrawCommand).toEqual(true);
         expect(command.owner).toBe(clouds);
         expect(defined(clouds._noiseTexture)).toEqual(true);
@@ -590,42 +590,42 @@ describe(
 
     it("throws when setting invalid show property of cloud", function () {
       expect(function () {
-        var c = clouds.add();
+        const c = clouds.add();
         c.show = undefined;
       }).toThrowDeveloperError();
     });
 
     it("throws when setting undefined position property of cloud", function () {
       expect(function () {
-        var c = clouds.add();
+        const c = clouds.add();
         c.position = undefined;
       }).toThrowDeveloperError();
     });
 
     it("throws when setting undefined scale property of cloud", function () {
       expect(function () {
-        var c = clouds.add();
+        const c = clouds.add();
         c.scale = undefined;
       }).toThrowDeveloperError();
     });
 
     it("throws when setting undefined maximum size property of cloud", function () {
       expect(function () {
-        var c = clouds.add();
+        const c = clouds.add();
         c.maximumSize = undefined;
       }).toThrowDeveloperError();
     });
 
     it("throws when setting undefined slice property of cloud", function () {
       expect(function () {
-        var c = clouds.add();
+        const c = clouds.add();
         c.slice = undefined;
       }).toThrowDeveloperError();
     });
 
     it("throws when setting undefined brightness property of cloud", function () {
       expect(function () {
-        var c = clouds.add();
+        const c = clouds.add();
         c.brightness = undefined;
       }).toThrowDeveloperError();
     });

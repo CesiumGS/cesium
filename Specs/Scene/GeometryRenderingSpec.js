@@ -44,10 +44,10 @@ import pollToPromise from "../pollToPromise.js";
 describe(
   "Scene/GeometryRenderingSpec",
   function () {
-    var scene;
-    var ellipsoid;
-    var primitive;
-    var geometry;
+    let scene;
+    let ellipsoid;
+    let primitive;
+    let geometry;
 
     beforeAll(function () {
       scene = createScene();
@@ -64,7 +64,7 @@ describe(
     beforeEach(function () {
       scene.morphTo3D(0.0);
 
-      var camera = scene.camera;
+      const camera = scene.camera;
       camera.frustum = new PerspectiveFrustum();
       camera.frustum.aspectRatio =
         scene.drawingBufferWidth / scene.drawingBufferHeight;
@@ -162,7 +162,7 @@ describe(
         });
       }
 
-      var primitive = new Primitive({
+      const primitive = new Primitive({
         geometryInstances: instance,
         appearance: appearance,
         asynchronous: false,
@@ -191,7 +191,7 @@ describe(
         });
       }
 
-      var primitive = new Primitive({
+      const primitive = new Primitive({
         geometryInstances: instance,
         appearance: appearance,
       });
@@ -220,7 +220,7 @@ describe(
     describe(
       "BoxGeometry",
       function () {
-        var instance;
+        let instance;
         beforeAll(function () {
           instance = new GeometryInstance({
             geometry: BoxGeometry.fromDimensions({
@@ -272,7 +272,7 @@ describe(
     describe(
       "PlaneGeometry",
       function () {
-        var instance;
+        let instance;
         beforeAll(function () {
           instance = new GeometryInstance({
             geometry: new PlaneGeometry({
@@ -323,7 +323,7 @@ describe(
     describe(
       "CircleGeometry",
       function () {
-        var instance;
+        let instance;
         beforeAll(function () {
           instance = new GeometryInstance({
             geometry: new CircleGeometry({
@@ -368,7 +368,7 @@ describe(
     );
 
     describe("CoplanarPolygonGeometry", function () {
-      var instance;
+      let instance;
       beforeAll(function () {
         instance = new GeometryInstance({
           geometry: CoplanarPolygonGeometry.fromPositions({
@@ -429,7 +429,7 @@ describe(
     describe(
       "CylinderGeometry",
       function () {
-        var instance;
+        let instance;
         beforeAll(function () {
           instance = new GeometryInstance({
             geometry: new CylinderGeometry({
@@ -492,7 +492,7 @@ describe(
     describe(
       "EllipseGeometry",
       function () {
-        var instance;
+        let instance;
         beforeAll(function () {
           instance = new GeometryInstance({
             geometry: new EllipseGeometry({
@@ -535,7 +535,7 @@ describe(
         });
 
         it("rotated", function () {
-          var rotated = new GeometryInstance({
+          const rotated = new GeometryInstance({
             geometry: new EllipseGeometry({
               vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
               ellipsoid: ellipsoid,
@@ -558,7 +558,7 @@ describe(
         });
 
         it("at height", function () {
-          var atHeight = new GeometryInstance({
+          const atHeight = new GeometryInstance({
             geometry: new EllipseGeometry({
               vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
               ellipsoid: ellipsoid,
@@ -586,9 +586,9 @@ describe(
     describe(
       "Extruded EllipseGeometry",
       function () {
-        var instance;
-        var extrudedHeight;
-        var geometryHeight;
+        let instance;
+        let extrudedHeight;
+        let geometryHeight;
         beforeAll(function () {
           extrudedHeight = 200000.0;
           geometryHeight = 100000.0;
@@ -636,8 +636,8 @@ describe(
 
         it("renders bottom", function () {
           function afterView() {
-            var height = (extrudedHeight - geometryHeight) * 0.5;
-            var transform = Matrix4.multiplyByTranslation(
+            const height = (extrudedHeight - geometryHeight) * 0.5;
+            const transform = Matrix4.multiplyByTranslation(
               Transforms.eastNorthUpToFixedFrame(
                 geometry.boundingSphere.center
               ),
@@ -655,7 +655,7 @@ describe(
 
         it("renders wall", function () {
           function afterView() {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphere.center
             );
             scene.camera.lookAtTransform(
@@ -673,7 +673,7 @@ describe(
     describe(
       "EllipsoidGeometry",
       function () {
-        var instance;
+        let instance;
         beforeAll(function () {
           instance = new GeometryInstance({
             geometry: new EllipsoidGeometry({
@@ -725,7 +725,7 @@ describe(
     describe(
       "SphereGeometry",
       function () {
-        var instance;
+        let instance;
         beforeAll(function () {
           instance = new GeometryInstance({
             geometry: new SphereGeometry({
@@ -777,8 +777,8 @@ describe(
     describe(
       "RectangleGeometry",
       function () {
-        var instance;
-        var rectangle;
+        let instance;
+        let rectangle;
         beforeAll(function () {
           rectangle = Rectangle.fromDegrees(0, 0, 1, 1);
           instance = new GeometryInstance({
@@ -820,7 +820,7 @@ describe(
         });
 
         it("rotated geometry", function () {
-          var rotated = new GeometryInstance({
+          const rotated = new GeometryInstance({
             geometry: new RectangleGeometry({
               vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
               ellipsoid: ellipsoid,
@@ -840,7 +840,7 @@ describe(
         });
 
         it("rotated texture", function () {
-          var rotated = new GeometryInstance({
+          const rotated = new GeometryInstance({
             geometry: new RectangleGeometry({
               vertexFormat: EllipsoidSurfaceAppearance.VERTEX_FORMAT,
               ellipsoid: ellipsoid,
@@ -848,7 +848,7 @@ describe(
               stRotation: CesiumMath.PI_OVER_TWO,
             }),
           });
-          var appearance = new EllipsoidSurfaceAppearance({
+          const appearance = new EllipsoidSurfaceAppearance({
             material: Material.fromType("Stripe"),
           });
           geometry = RectangleGeometry.createGeometry(rotated.geometry);
@@ -860,7 +860,7 @@ describe(
         });
 
         it("at height", function () {
-          var atHeight = new GeometryInstance({
+          const atHeight = new GeometryInstance({
             geometry: new RectangleGeometry({
               vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
               ellipsoid: ellipsoid,
@@ -885,10 +885,10 @@ describe(
     describe(
       "Extruded RectangleGeometry",
       function () {
-        var instance;
-        var rectangle;
-        var extrudedHeight;
-        var geometryHeight;
+        let instance;
+        let rectangle;
+        let extrudedHeight;
+        let geometryHeight;
         beforeAll(function () {
           rectangle = Rectangle.fromDegrees(-1, -1, 1, 1);
           extrudedHeight = 200000.0;
@@ -935,7 +935,7 @@ describe(
 
         it("renders bottom", function () {
           function afterView() {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center
             );
             scene.camera.lookAtTransform(
@@ -949,7 +949,7 @@ describe(
 
         it("renders north wall", function () {
           function afterView() {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center
             );
             scene.camera.lookAtTransform(
@@ -963,7 +963,7 @@ describe(
 
         it("renders south wall", function () {
           function afterView() {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center
             );
             scene.camera.lookAtTransform(
@@ -977,7 +977,7 @@ describe(
 
         it("renders west wall", function () {
           function afterView() {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center
             );
             scene.camera.lookAtTransform(
@@ -991,7 +991,7 @@ describe(
 
         it("renders east wall", function () {
           function afterView() {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center
             );
             scene.camera.lookAtTransform(
@@ -1009,7 +1009,7 @@ describe(
     describe(
       "PolygonGeometry",
       function () {
-        var instance;
+        let instance;
         beforeAll(function () {
           instance = new GeometryInstance({
             geometry: PolygonGeometry.fromPositions({
@@ -1059,7 +1059,7 @@ describe(
         });
 
         it("at height", function () {
-          var atHeight = new GeometryInstance({
+          const atHeight = new GeometryInstance({
             geometry: PolygonGeometry.fromPositions({
               vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
               ellipsoid: ellipsoid,
@@ -1089,7 +1089,7 @@ describe(
         });
 
         it("hierarchy", function () {
-          var hierarchy = new GeometryInstance({
+          const hierarchy = new GeometryInstance({
             geometry: new PolygonGeometry({
               vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
               polygonHierarchy: {
@@ -1152,9 +1152,9 @@ describe(
     describe(
       "Extruded PolygonGeometry",
       function () {
-        var instance;
-        var extrudedHeight;
-        var geometryHeight;
+        let instance;
+        let extrudedHeight;
+        let geometryHeight;
 
         beforeAll(function () {
           extrudedHeight = 200000.0;
@@ -1211,8 +1211,8 @@ describe(
 
         it("renders bottom", function () {
           function afterView() {
-            var height = (extrudedHeight - geometryHeight) * 0.5;
-            var transform = Matrix4.multiplyByTranslation(
+            const height = (extrudedHeight - geometryHeight) * 0.5;
+            const transform = Matrix4.multiplyByTranslation(
               Transforms.eastNorthUpToFixedFrame(
                 geometry.boundingSphere.center
               ),
@@ -1230,7 +1230,7 @@ describe(
 
         it("renders wall 1", function () {
           function afterView() {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphere.center
             );
             scene.camera.lookAtTransform(
@@ -1244,7 +1244,7 @@ describe(
 
         it("renders wall 2", function () {
           function afterView() {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphere.center
             );
             scene.camera.lookAtTransform(
@@ -1258,7 +1258,7 @@ describe(
 
         it("renders wall 3", function () {
           function afterView() {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphere.center
             );
             scene.camera.lookAtTransform(
@@ -1272,7 +1272,7 @@ describe(
 
         it("renders wall 4", function () {
           function afterView() {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphere.center
             );
             scene.camera.lookAtTransform(
@@ -1285,7 +1285,7 @@ describe(
         });
 
         it("renders with correct winding order in southern hemisphere", function () {
-          var instance = new GeometryInstance({
+          const instance = new GeometryInstance({
             geometry: PolygonGeometry.fromPositions({
               vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
               ellipsoid: ellipsoid,
@@ -1318,7 +1318,7 @@ describe(
           );
 
           function afterView() {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center
             );
             scene.camera.lookAtTransform(
@@ -1337,11 +1337,11 @@ describe(
     describe(
       "WallGeometry",
       function () {
-        var instance;
-        var afterViewCV;
-        var afterView3D;
+        let instance;
+        let afterViewCV;
+        let afterView3D;
         beforeAll(function () {
-          var height = 100000.0;
+          const height = 100000.0;
 
           instance = new GeometryInstance({
             geometry: new WallGeometry({
@@ -1368,7 +1368,7 @@ describe(
           );
 
           afterView3D = function () {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center
             );
             scene.camera.lookAtTransform(
@@ -1379,7 +1379,7 @@ describe(
           };
 
           afterViewCV = function () {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center
             );
             Matrix4.clone(transform, scene.camera._transform);
@@ -1413,9 +1413,9 @@ describe(
     describe(
       "CorridorGeometry",
       function () {
-        var instance;
-        var positions;
-        var width;
+        let instance;
+        let positions;
+        let width;
         beforeAll(function () {
           positions = Cartesian3.fromDegreesArray([0.0, -1.0, 0.0, 1.0]);
           width = 100000;
@@ -1460,7 +1460,7 @@ describe(
         });
 
         it("at height", function () {
-          var atHeight = new GeometryInstance({
+          const atHeight = new GeometryInstance({
             geometry: new CorridorGeometry({
               vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
               ellipsoid: ellipsoid,
@@ -1487,11 +1487,11 @@ describe(
     describe(
       "Extruded CorridorGeometry",
       function () {
-        var instance;
-        var extrudedHeight;
-        var geometryHeight;
-        var width = 100000;
-        var positions;
+        let instance;
+        let extrudedHeight;
+        let geometryHeight;
+        const width = 100000;
+        let positions;
         beforeAll(function () {
           positions = Cartesian3.fromDegreesArray([0.0, -1.0, 0.0, 1.0]);
           extrudedHeight = 200000.0;
@@ -1540,8 +1540,8 @@ describe(
 
         it("renders bottom", function () {
           function afterView() {
-            var height = (extrudedHeight - geometryHeight) * 0.5;
-            var transform = Matrix4.multiplyByTranslation(
+            const height = (extrudedHeight - geometryHeight) * 0.5;
+            const transform = Matrix4.multiplyByTranslation(
               Transforms.eastNorthUpToFixedFrame(
                 geometry.boundingSphereWC.center
               ),
@@ -1559,7 +1559,7 @@ describe(
 
         it("renders north wall", function () {
           function afterView() {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center
             );
             scene.camera.lookAtTransform(
@@ -1573,7 +1573,7 @@ describe(
 
         it("renders south wall", function () {
           function afterView() {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center
             );
             scene.camera.lookAtTransform(
@@ -1587,7 +1587,7 @@ describe(
 
         it("renders west wall", function () {
           function afterView() {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center
             );
             scene.camera.lookAtTransform(
@@ -1601,7 +1601,7 @@ describe(
 
         it("renders east wall", function () {
           function afterView() {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center
             );
             scene.camera.lookAtTransform(
@@ -1619,10 +1619,10 @@ describe(
     describe(
       "PolylineVolumeGeometry",
       function () {
-        var instance;
-        var geometryHeight;
-        var positions;
-        var shape;
+        let instance;
+        let geometryHeight;
+        let positions;
+        let shape;
         beforeAll(function () {
           positions = Cartesian3.fromDegreesArray([0.0, -1.0, 0.0, 1.0]);
           shape = [
@@ -1675,8 +1675,8 @@ describe(
 
         it("renders bottom", function () {
           function afterView() {
-            var height = geometryHeight * 0.5;
-            var transform = Matrix4.multiplyByTranslation(
+            const height = geometryHeight * 0.5;
+            const transform = Matrix4.multiplyByTranslation(
               Transforms.eastNorthUpToFixedFrame(
                 geometry.boundingSphereWC.center
               ),
@@ -1694,7 +1694,7 @@ describe(
 
         it("renders north wall", function () {
           function afterView() {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center
             );
             scene.camera.lookAtTransform(
@@ -1708,7 +1708,7 @@ describe(
 
         it("renders south wall", function () {
           function afterView() {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center
             );
             scene.camera.lookAtTransform(
@@ -1722,7 +1722,7 @@ describe(
 
         it("renders west wall", function () {
           function afterView() {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center
             );
             scene.camera.lookAtTransform(
@@ -1736,7 +1736,7 @@ describe(
 
         it("renders east wall", function () {
           function afterView() {
-            var transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = Transforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center
             );
             scene.camera.lookAtTransform(
@@ -1754,7 +1754,7 @@ describe(
     describe(
       "SimplePolylineGeometry",
       function () {
-        var instance;
+        let instance;
         beforeAll(function () {
           instance = new GeometryInstance({
             geometry: new SimplePolylineGeometry({
@@ -1837,8 +1837,8 @@ describe(
     describe(
       "PolylineGeometry",
       function () {
-        var instance;
-        var appearance;
+        let instance;
+        let appearance;
 
         beforeAll(function () {
           instance = new GeometryInstance({
@@ -1932,7 +1932,7 @@ describe(
       describe(
         "with indices",
         function () {
-          var instance;
+          let instance;
           beforeAll(function () {
             instance = new GeometryInstance({
               geometry: new Geometry({
@@ -2003,7 +2003,7 @@ describe(
       describe(
         "without indices",
         function () {
-          var instance;
+          let instance;
           beforeAll(function () {
             instance = new GeometryInstance({
               geometry: new Geometry({
@@ -2079,7 +2079,7 @@ describe(
       describe(
         "with native arrays as attributes and indices",
         function () {
-          var instance;
+          let instance;
           beforeAll(function () {
             instance = new GeometryInstance({
               geometry: new Geometry({

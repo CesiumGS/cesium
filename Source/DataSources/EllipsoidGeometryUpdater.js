@@ -26,14 +26,14 @@ import heightReferenceOnEntityPropertyChanged from "./heightReferenceOnEntityPro
 import MaterialProperty from "./MaterialProperty.js";
 import Property from "./Property.js";
 
-var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
-var defaultOffset = Cartesian3.ZERO;
+const defaultMaterial = new ColorMaterialProperty(Color.WHITE);
+const defaultOffset = Cartesian3.ZERO;
 
-var offsetScratch = new Cartesian3();
-var radiiScratch = new Cartesian3();
-var innerRadiiScratch = new Cartesian3();
-var scratchColor = new Color();
-var unitSphere = new Cartesian3(1, 1, 1);
+const offsetScratch = new Cartesian3();
+const radiiScratch = new Cartesian3();
+const innerRadiiScratch = new Cartesian3();
+const scratchColor = new Color();
+const unitSphere = new Cartesian3(1, 1, 1);
 
 function EllipsoidGeometryOptions(entity) {
   this.id = entity;
@@ -120,24 +120,24 @@ EllipsoidGeometryUpdater.prototype.createFillGeometryInstance = function (
   Check.defined("time", time);
   //>>includeEnd('debug');
 
-  var entity = this._entity;
-  var isAvailable = entity.isAvailable(time);
+  const entity = this._entity;
+  const isAvailable = entity.isAvailable(time);
 
-  var color;
-  var show = new ShowGeometryInstanceAttribute(
+  let color;
+  const show = new ShowGeometryInstanceAttribute(
     isAvailable &&
       entity.isShowing &&
       this._showProperty.getValue(time) &&
       this._fillProperty.getValue(time)
   );
-  var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
+  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
     time
   );
-  var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+  const distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
     distanceDisplayCondition
   );
 
-  var attributes = {
+  const attributes = {
     show: show,
     distanceDisplayCondition: distanceDisplayConditionAttribute,
     color: undefined,
@@ -145,7 +145,7 @@ EllipsoidGeometryUpdater.prototype.createFillGeometryInstance = function (
   };
 
   if (this._materialProperty instanceof ColorMaterialProperty) {
-    var currentColor;
+    let currentColor;
     if (
       defined(this._materialProperty.color) &&
       (this._materialProperty.color.isConstant || isAvailable)
@@ -204,20 +204,20 @@ EllipsoidGeometryUpdater.prototype.createOutlineGeometryInstance = function (
   Check.defined("time", time);
   //>>includeEnd('debug');
 
-  var entity = this._entity;
-  var isAvailable = entity.isAvailable(time);
+  const entity = this._entity;
+  const isAvailable = entity.isAvailable(time);
 
-  var outlineColor = Property.getValueOrDefault(
+  const outlineColor = Property.getValueOrDefault(
     this._outlineColorProperty,
     time,
     Color.BLACK,
     scratchColor
   );
-  var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
+  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
     time
   );
 
-  var attributes = {
+  const attributes = {
     show: new ShowGeometryInstanceAttribute(
       isAvailable &&
         entity.isShowing &&
@@ -290,12 +290,12 @@ EllipsoidGeometryUpdater.prototype._setStaticOptions = function (
   entity,
   ellipsoid
 ) {
-  var heightReference = Property.getValueOrDefault(
+  const heightReference = Property.getValueOrDefault(
     ellipsoid.heightReference,
     Iso8601.MINIMUM_VALUE,
     HeightReference.NONE
   );
-  var options = this._options;
+  const options = this._options;
   options.vertexFormat =
     this._materialProperty instanceof ColorMaterialProperty
       ? PerInstanceColorAppearance.VERTEX_FORMAT
@@ -386,8 +386,8 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
   Check.defined("time", time);
   //>>includeEnd('debug');
 
-  var entity = this._entity;
-  var ellipsoid = entity.ellipsoid;
+  const entity = this._entity;
+  const ellipsoid = entity.ellipsoid;
   if (
     !entity.isShowing ||
     !entity.isAvailable(time) ||
@@ -403,8 +403,12 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
     return;
   }
 
-  var radii = Property.getValueOrUndefined(ellipsoid.radii, time, radiiScratch);
-  var modelMatrix = defined(radii)
+  const radii = Property.getValueOrUndefined(
+    ellipsoid.radii,
+    time,
+    radiiScratch
+  );
+  let modelMatrix = defined(radii)
     ? entity.computeModelMatrixForHeightReference(
         time,
         ellipsoid.heightReference,
@@ -425,71 +429,84 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
   }
 
   //Compute attributes and material.
-  var showFill = Property.getValueOrDefault(ellipsoid.fill, time, true);
-  var showOutline = Property.getValueOrDefault(ellipsoid.outline, time, false);
-  var outlineColor = Property.getValueOrClonedDefault(
+  const showFill = Property.getValueOrDefault(ellipsoid.fill, time, true);
+  const showOutline = Property.getValueOrDefault(
+    ellipsoid.outline,
+    time,
+    false
+  );
+  const outlineColor = Property.getValueOrClonedDefault(
     ellipsoid.outlineColor,
     time,
     Color.BLACK,
     scratchColor
   );
-  var material = MaterialProperty.getValue(
+  const material = MaterialProperty.getValue(
     time,
     defaultValue(ellipsoid.material, defaultMaterial),
     this._material
   );
 
   // Check properties that could trigger a primitive rebuild.
-  var innerRadii = Property.getValueOrUndefined(
+  const innerRadii = Property.getValueOrUndefined(
     ellipsoid.innerRadii,
     time,
     innerRadiiScratch
   );
-  var minimumClock = Property.getValueOrUndefined(ellipsoid.minimumClock, time);
-  var maximumClock = Property.getValueOrUndefined(ellipsoid.maximumClock, time);
-  var minimumCone = Property.getValueOrUndefined(ellipsoid.minimumCone, time);
-  var maximumCone = Property.getValueOrUndefined(ellipsoid.maximumCone, time);
-  var stackPartitions = Property.getValueOrUndefined(
+  const minimumClock = Property.getValueOrUndefined(
+    ellipsoid.minimumClock,
+    time
+  );
+  const maximumClock = Property.getValueOrUndefined(
+    ellipsoid.maximumClock,
+    time
+  );
+  const minimumCone = Property.getValueOrUndefined(ellipsoid.minimumCone, time);
+  const maximumCone = Property.getValueOrUndefined(ellipsoid.maximumCone, time);
+  const stackPartitions = Property.getValueOrUndefined(
     ellipsoid.stackPartitions,
     time
   );
-  var slicePartitions = Property.getValueOrUndefined(
+  const slicePartitions = Property.getValueOrUndefined(
     ellipsoid.slicePartitions,
     time
   );
-  var subdivisions = Property.getValueOrUndefined(ellipsoid.subdivisions, time);
-  var outlineWidth = Property.getValueOrDefault(
+  const subdivisions = Property.getValueOrUndefined(
+    ellipsoid.subdivisions,
+    time
+  );
+  const outlineWidth = Property.getValueOrDefault(
     ellipsoid.outlineWidth,
     time,
     1.0
   );
-  var heightReference = Property.getValueOrDefault(
+  const heightReference = Property.getValueOrDefault(
     ellipsoid.heightReference,
     time,
     HeightReference.NONE
   );
-  var offsetAttribute =
+  const offsetAttribute =
     heightReference !== HeightReference.NONE
       ? GeometryOffsetAttribute.ALL
       : undefined;
 
   //In 3D we use a fast path by modifying Primitive.modelMatrix instead of regenerating the primitive every frame.
   //Also check for height reference because this method doesn't work when the height is relative to terrain.
-  var sceneMode = this._scene.mode;
-  var in3D =
+  const sceneMode = this._scene.mode;
+  const in3D =
     sceneMode === SceneMode.SCENE3D && heightReference === HeightReference.NONE;
 
-  var options = this._options;
+  const options = this._options;
 
-  var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
+  const shadows = this._geometryUpdater.shadowsProperty.getValue(time);
 
-  var distanceDisplayConditionProperty = this._geometryUpdater
+  const distanceDisplayConditionProperty = this._geometryUpdater
     .distanceDisplayConditionProperty;
-  var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(
+  const distanceDisplayCondition = distanceDisplayConditionProperty.getValue(
     time
   );
 
-  var offset = Property.getValueOrDefault(
+  const offset = Property.getValueOrDefault(
     this._geometryUpdater.terrainOffsetProperty,
     time,
     defaultOffset,
@@ -498,7 +515,7 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
 
   //We only rebuild the primitive if something other than the radii has changed
   //For the radii, we use unit sphere and then deform it with a scale matrix.
-  var rebuildPrimitives =
+  const rebuildPrimitives =
     !in3D ||
     this._lastSceneMode !== sceneMode ||
     !defined(this._primitive) || //
@@ -515,7 +532,7 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
     options.offsetAttribute !== offsetAttribute;
 
   if (rebuildPrimitives) {
-    var primitives = this._primitives;
+    const primitives = this._primitives;
     primitives.removeAndDestroy(this._primitive);
     primitives.removeAndDestroy(this._outlinePrimitive);
     this._primitive = undefined;
@@ -530,7 +547,7 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
     options.radii = Cartesian3.clone(in3D ? unitSphere : radii, options.radii);
     if (defined(innerRadii)) {
       if (in3D) {
-        var mag = Cartesian3.magnitude(radii);
+        const mag = Cartesian3.magnitude(radii);
         options.innerRadii = Cartesian3.fromElements(
           innerRadii.x / mag,
           innerRadii.y / mag,
@@ -548,14 +565,14 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
     options.minimumCone = minimumCone;
     options.maximumCone = maximumCone;
 
-    var appearance = new MaterialAppearance({
+    const appearance = new MaterialAppearance({
       material: material,
       translucent: material.isTranslucent(),
       closed: true,
     });
     options.vertexFormat = appearance.vertexFormat;
 
-    var fillInstance = this._geometryUpdater.createFillGeometryInstance(
+    const fillInstance = this._geometryUpdater.createFillGeometryInstance(
       time,
       in3D,
       this._modelMatrix
@@ -570,7 +587,7 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
       })
     );
 
-    var outlineInstance = this._geometryUpdater.createOutlineGeometryInstance(
+    const outlineInstance = this._geometryUpdater.createOutlineGeometryInstance(
       time,
       in3D,
       this._modelMatrix
@@ -599,14 +616,14 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
     this._lastOffset = Cartesian3.clone(offset, this._lastOffset);
   } else if (this._primitive.ready) {
     //Update attributes only.
-    var primitive = this._primitive;
-    var outlinePrimitive = this._outlinePrimitive;
+    const primitive = this._primitive;
+    const outlinePrimitive = this._outlinePrimitive;
 
     primitive.show = true;
     outlinePrimitive.show = true;
     primitive.appearance.material = material;
 
-    var attributes = this._attributes;
+    let attributes = this._attributes;
     if (!defined(attributes)) {
       attributes = primitive.getGeometryInstanceAttributes(entity);
       this._attributes = attributes;
@@ -619,7 +636,7 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
       this._lastShow = showFill;
     }
 
-    var outlineAttributes = this._outlineAttributes;
+    let outlineAttributes = this._outlineAttributes;
 
     if (!defined(outlineAttributes)) {
       outlineAttributes = outlinePrimitive.getGeometryInstanceAttributes(

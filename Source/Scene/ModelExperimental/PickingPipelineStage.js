@@ -13,7 +13,7 @@ import ModelExperimentalType from "./ModelExperimentalType.js";
  * @namespace PickingPipelineStage
  * @private
  */
-var PickingPipelineStage = {};
+const PickingPipelineStage = {};
 PickingPipelineStage.name = "PickingPipelineStage"; // Helps with debugging
 
 /**
@@ -33,11 +33,11 @@ PickingPipelineStage.process = function (
   primitive,
   frameState
 ) {
-  var context = frameState.context;
-  var runtimeNode = renderResources.runtimeNode;
-  var shaderBuilder = renderResources.shaderBuilder;
-  var model = renderResources.model;
-  var instances = runtimeNode.node.instances;
+  const context = frameState.context;
+  const runtimeNode = renderResources.runtimeNode;
+  const shaderBuilder = renderResources.shaderBuilder;
+  const model = renderResources.model;
+  const instances = runtimeNode.node.instances;
 
   if (renderResources.hasPropertyTable) {
     processPickTexture(renderResources, primitive, instances, context);
@@ -46,9 +46,9 @@ PickingPipelineStage.process = function (
     processInstancedPickIds(renderResources, instances, context);
   } else {
     // For non-instanced meshes, a pick color uniform is used.
-    var pickObject = buildPickObject(renderResources);
+    const pickObject = buildPickObject(renderResources);
 
-    var pickId = context.createPickId(pickObject);
+    const pickId = context.createPickId(pickObject);
     model._resources.push(pickId);
     shaderBuilder.addUniform(
       "vec4",
@@ -56,7 +56,7 @@ PickingPipelineStage.process = function (
       ShaderDestination.FRAGMENT
     );
 
-    var uniformMap = renderResources.uniformMap;
+    const uniformMap = renderResources.uniformMap;
     uniformMap.czm_pickColor = function () {
       return pickId.color;
     };
@@ -69,20 +69,20 @@ PickingPipelineStage.process = function (
  * @private
  */
 function buildPickObject(renderResources, instanceId) {
-  var model = renderResources.model;
+  const model = renderResources.model;
 
-  var detailPickObject = {
+  const detailPickObject = {
     model: model,
     node: renderResources.runtimeNode,
     primitive: renderResources.runtimePrimitive,
   };
 
-  var pickObject;
+  let pickObject;
 
   if (ModelExperimentalType.is3DTiles(model.type)) {
     // For 3D Tiles, the pick object's content and primitive are set to the Cesium3DTileContent that owns the model
     // and the tileset it belongs to, respectively. The detail pick object is returned under the detail key.
-    var content = model.content;
+    const content = model.content;
     pickObject = {
       content: content,
       primitive: content.tileset,
@@ -105,11 +105,11 @@ function buildPickObject(renderResources, instanceId) {
 }
 
 function processPickTexture(renderResources, primitive, instances) {
-  var model = renderResources.model;
-  var featureTableId;
-  var featureIdAttribute;
-  var featureIdIndex = model.featureIdIndex;
-  var instanceFeatureIdIndex = model.instanceFeatureIdIndex;
+  const model = renderResources.model;
+  let featureTableId;
+  let featureIdAttribute;
+  const featureIdIndex = model.featureIdIndex;
+  const instanceFeatureIdIndex = model.instanceFeatureIdIndex;
 
   if (defined(model.featureTableId)) {
     // Extract the Feature Table ID from the Cesium3DTileContent.
@@ -124,16 +124,16 @@ function processPickTexture(renderResources, primitive, instances) {
     featureTableId = featureIdAttribute.propertyTableId;
   }
 
-  var featureTable = model.featureTables[featureTableId];
+  const featureTable = model.featureTables[featureTableId];
 
-  var shaderBuilder = renderResources.shaderBuilder;
+  const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addUniform(
     "sampler2D",
     "model_pickTexture",
     ShaderDestination.FRAGMENT
   );
 
-  var batchTexture = featureTable.batchTexture;
+  const batchTexture = featureTable.batchTexture;
   renderResources.uniformMap.model_pickTexture = function () {
     return defaultValue(batchTexture.pickTexture, batchTexture.defaultTexture);
   };
@@ -144,28 +144,28 @@ function processPickTexture(renderResources, primitive, instances) {
 }
 
 function processInstancedPickIds(renderResources, instances, context) {
-  var instanceCount = renderResources.instanceCount;
-  var pickIds = new Array(instanceCount);
-  var pickIdsTypedArray = new Uint8Array(instanceCount * 4);
+  const instanceCount = renderResources.instanceCount;
+  const pickIds = new Array(instanceCount);
+  const pickIdsTypedArray = new Uint8Array(instanceCount * 4);
 
-  var model = renderResources.model;
+  const model = renderResources.model;
 
-  var modelResources = model._resources;
-  for (var i = 0; i < instanceCount; i++) {
-    var pickObject = buildPickObject(renderResources, i);
+  const modelResources = model._resources;
+  for (let i = 0; i < instanceCount; i++) {
+    const pickObject = buildPickObject(renderResources, i);
 
-    var pickId = context.createPickId(pickObject);
+    const pickId = context.createPickId(pickObject);
     modelResources.push(pickId);
     pickIds[i] = pickId;
 
-    var pickColor = pickId.color;
+    const pickColor = pickId.color;
     pickIdsTypedArray[i * 4 + 0] = Color.floatToByte(pickColor.red);
     pickIdsTypedArray[i * 4 + 1] = Color.floatToByte(pickColor.green);
     pickIdsTypedArray[i * 4 + 2] = Color.floatToByte(pickColor.blue);
     pickIdsTypedArray[i * 4 + 3] = Color.floatToByte(pickColor.alpha);
   }
 
-  var pickIdsBuffer = Buffer.createVertexBuffer({
+  const pickIdsBuffer = Buffer.createVertexBuffer({
     context: context,
     typedArray: pickIdsTypedArray,
     usage: BufferUsage.STATIC_DRAW,
@@ -174,7 +174,7 @@ function processInstancedPickIds(renderResources, instances, context) {
   pickIdsBuffer.vertexArrayDestroyable = false;
   modelResources.push(pickIdsBuffer);
 
-  var pickIdsVertexAttribute = {
+  const pickIdsVertexAttribute = {
     index: renderResources.attributeIndex++,
     vertexBuffer: pickIdsBuffer,
     componentsPerAttribute: 4,
@@ -187,7 +187,7 @@ function processInstancedPickIds(renderResources, instances, context) {
 
   renderResources.attributes.push(pickIdsVertexAttribute);
 
-  var shaderBuilder = renderResources.shaderBuilder;
+  const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addDefine("USE_PICKING", undefined, ShaderDestination.BOTH);
   shaderBuilder.addAttribute("vec4", "a_pickColor");
   shaderBuilder.addVarying("vec4", "v_pickColor");

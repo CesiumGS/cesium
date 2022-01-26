@@ -67,7 +67,7 @@ WebMercatorProjection.geodeticLatitudeToMercatorAngle = function (latitude) {
   } else if (latitude < -WebMercatorProjection.MaximumLatitude) {
     latitude = -WebMercatorProjection.MaximumLatitude;
   }
-  var sinLatitude = Math.sin(latitude);
+  const sinLatitude = Math.sin(latitude);
   return 0.5 * Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude));
 };
 
@@ -100,13 +100,13 @@ WebMercatorProjection.MaximumLatitude = WebMercatorProjection.mercatorAngleToGeo
  * @returns {Cartesian3} The equivalent web mercator X, Y, Z coordinates, in meters.
  */
 WebMercatorProjection.prototype.project = function (cartographic, result) {
-  var semimajorAxis = this._semimajorAxis;
-  var x = cartographic.longitude * semimajorAxis;
-  var y =
+  const semimajorAxis = this._semimajorAxis;
+  const x = cartographic.longitude * semimajorAxis;
+  const y =
     WebMercatorProjection.geodeticLatitudeToMercatorAngle(
       cartographic.latitude
     ) * semimajorAxis;
-  var z = cartographic.height;
+  const z = cartographic.height;
 
   if (!defined(result)) {
     return new Cartesian3(x, y, z);
@@ -135,12 +135,12 @@ WebMercatorProjection.prototype.unproject = function (cartesian, result) {
   }
   //>>includeEnd('debug');
 
-  var oneOverEarthSemimajorAxis = this._oneOverSemimajorAxis;
-  var longitude = cartesian.x * oneOverEarthSemimajorAxis;
-  var latitude = WebMercatorProjection.mercatorAngleToGeodeticLatitude(
+  const oneOverEarthSemimajorAxis = this._oneOverSemimajorAxis;
+  const longitude = cartesian.x * oneOverEarthSemimajorAxis;
+  const latitude = WebMercatorProjection.mercatorAngleToGeodeticLatitude(
     cartesian.y * oneOverEarthSemimajorAxis
   );
-  var height = cartesian.z;
+  const height = cartesian.z;
 
   if (!defined(result)) {
     return new Cartographic(longitude, latitude, height);

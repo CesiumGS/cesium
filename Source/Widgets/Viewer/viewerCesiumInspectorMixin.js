@@ -25,10 +25,10 @@ function viewerCesiumInspectorMixin(viewer) {
   }
   //>>includeEnd('debug');
 
-  var cesiumInspectorContainer = document.createElement("div");
+  const cesiumInspectorContainer = document.createElement("div");
   cesiumInspectorContainer.className = "cesium-viewer-cesiumInspectorContainer";
   viewer.container.appendChild(cesiumInspectorContainer);
-  var cesiumInspector = new CesiumInspector(
+  const cesiumInspector = new CesiumInspector(
     cesiumInspectorContainer,
     viewer.scene
   );
