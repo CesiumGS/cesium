@@ -1,6 +1,7 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import PropertyTable from "./PropertyTable.js";
 import PropertyTexture from "./PropertyTexture.js";
 import FeatureMetadata from "./FeatureMetadata.js";
@@ -76,7 +77,7 @@ export default function parseFeatureMetadataLegacy(options) {
       propertyTextures.push(
         new PropertyTexture({
           id: featureTextureId,
-          featureTexture: featureTexture,
+          propertyTexture: reformatPropertyTexture(featureTexture),
           class: schema.classes[featureTexture.class],
           textures: options.textures,
         })
@@ -92,4 +93,66 @@ export default function parseFeatureMetadataLegacy(options) {
     extras: extension.extras,
     extensions: extension.extensions,
   });
+}
+
+/**
+ * The EXT_feature_metadata schema allowed storing properties of a property
+ * texture across multiple textures. This is now disallowed in EXT_mesh_features,
+ * so CesiumJS will not support this capability.
+ * <p>
+ * This method transcodes the feature texture JSON to the newer
+ * EXT_mesh_features format, throwing developer
+ * </p>
+ *
+ * @param {Object} featureTexture The feature texture JSON from the legacy EXT_feature_metadata extension
+ * @return {Object} The corresponding property texture JSON as in EXT_mesh_features.
+ * @private
+ */
+function reformatPropertyTexture(featureTexture) {
+  var propertyTexture = {
+    class: featureTexture.class,
+    index: undefined,
+    texCoord: undefined,
+    properties: {},
+  };
+
+  var textureInfos = [];
+
+  var originalProperties = featureTexture.properties;
+  for (var propertyId in originalProperties) {
+    if (originalProperties.hasOwnProperty(propertyId)) {
+      var originalProperty = originalProperties[propertyId];
+      var channels = reformatChannels(originalProperty.channels);
+      propertyTexture.properties[propertyId] = channels;
+      textureInfos.push(originalProperty.texture);
+    }
+  }
+
+  var index = textureInfos[0].index;
+  var texCoord = textureInfos[0].texCoord;
+  //>>includeStart('debug', pragmas.debug);
+  for (var i = 1; i < textureInfos.length; i++) {
+    var textureInfo = textureInfos[i];
+    if (textureInfo.index !== index || textureInfo.texCoord !== texCoord) {
+      throw new DeveloperError(
+        "feature textures using multiple feature textures are not supported"
+      );
+    }
+  }
+  //>>includeEnd('debug');
+
+  propertyTexture.index = index;
+  propertyTexture.texCoord = texCoord;
+
+  return propertyTexture;
+}
+
+function reformatChannels(channelsString) {
+  var channels = [];
+  for (var i = 0; i < channelsString.length; i++) {
+    var channelCharacter = channelsString.charAt(i);
+    var channelIndex = "rgba".indexOf(channelCharacter);
+    channels.push(channelIndex);
+  }
+  return channels;
 }

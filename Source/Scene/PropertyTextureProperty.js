@@ -26,6 +26,7 @@ function PropertyTextureProperty(options) {
   const property = options.property;
   const classProperty = options.classProperty;
   const textures = options.textures;
+  const channels = options.channels;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.property", property);
@@ -39,6 +40,12 @@ function PropertyTextureProperty(options) {
     channels: property.channels,
     texture: textures[textureInfo.index],
   });
+
+  this._glslChannels = channels
+    .map(function (channelIndex) {
+      return "rgba".charAt(channelIndex);
+    })
+    .join("");
 
   this._textureReader = textureReader;
   this._classProperty = classProperty;
