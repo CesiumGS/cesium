@@ -3351,9 +3351,8 @@ Camera.prototype.flyTo = function (options) {
   }
 
   const that = this;
-  /* eslint-disable prefer-const */
+  /* eslint-disable-next-line prefer-const */
   let flightTween;
-  /* eslint-enable prefer-const */
 
   newOptions.destination = destination;
   newOptions.heading = orientation.heading;

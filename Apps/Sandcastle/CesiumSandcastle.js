@@ -156,9 +156,8 @@ require({
     }
   }
 
-  /* eslint-disable prefer-const */
+  /* eslint-disable-next-line prefer-const */
   let jsEditor;
-  /* eslint-enable prefer-const */
   const suggestButton = registry.byId("buttonSuggest");
   let docTimer;
   const docTabs = {};
