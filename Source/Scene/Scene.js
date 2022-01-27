@@ -2327,7 +2327,7 @@ function executeCommands(scene, passState) {
         commands,
         invertClassification
       ) {
-        view.globeDepth.prepareTextures(context);
+        view.globeDepth.prepareColorTextures(context);
         view.oit.executeCommands(
           scene,
           executeFunction,
@@ -2458,7 +2458,7 @@ function executeCommands(scene, passState) {
 
       if (length > 0) {
         if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-          globeDepth.prepareTextures(context);
+          globeDepth.prepareColorTextures(context);
           globeDepth.executeUpdateDepth(
             context,
             passState,
@@ -2637,7 +2637,7 @@ function executeCommands(scene, passState) {
         renderTranslucentDepthForPick)
     ) {
       if (renderTranslucentDepthForPick) {
-        globeDepth.prepareTextures(context);
+        globeDepth.prepareColorTextures(context);
         if (scene.numberSamples > 1)
           passState.framebuffer = globeDepth._colorFramebuffer._multisampleFramebuffer.getColorFramebuffer();
       }
@@ -3510,7 +3510,7 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   const view = this._view;
   const globeDepth = view.globeDepth;
   if (defined(globeDepth)) {
-    globeDepth.prepareTextures(context);
+    globeDepth.prepareColorTextures(context);
   }
 
   const useOIT = environmentState.useOIT;
@@ -3540,7 +3540,7 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   }
 
   if (usePostProcess) {
-    view.sceneFramebuffer.prepareColorFramebuffer(context);
+    view.sceneFramebuffer.prepareColorTextures(context);
     let inputFramebuffer = sceneFramebuffer;
     if (useGlobeDepthFramebuffer && !useOIT) {
       inputFramebuffer = globeFramebuffer;

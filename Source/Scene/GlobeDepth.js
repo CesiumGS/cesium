@@ -247,15 +247,15 @@ GlobeDepth.prototype.update = function (
   this._clearGlobeDepth = clearGlobeDepth;
 };
 
-GlobeDepth.prototype.prepareTextures = function (context) {
+GlobeDepth.prototype.prepareColorTextures = function (context) {
   if (this._numSamples > 1) {
-    this._colorFramebuffer._multisampleFramebuffer.blitFramebuffers(context);
+    this._colorFramebuffer.prepareTextures(context);
   }
 };
 
 GlobeDepth.prototype.executeCopyDepth = function (context, passState) {
   if (defined(this._copyDepthCommand)) {
-    this.prepareTextures(context);
+    this.prepareColorTextures(context);
     this._copyDepthCommand.execute(context, passState);
     context.uniformState.globeDepthTexture = this._copyDepthFramebuffer.getColorTexture();
   }

@@ -17,7 +17,7 @@ describe(
     let fbm;
 
     beforeAll(function () {
-      context = createContext();
+      context = createContext({ requestWebgl2: true });
     });
 
     afterAll(function () {
@@ -380,6 +380,17 @@ describe(
       spyOn(FramebufferManager.prototype, "destroy").and.callThrough();
       fbm.update(context, 1, 1);
       fbm.update(context, 2, 1);
+      expect(FramebufferManager.prototype.destroy.calls.count()).toEqual(2);
+    });
+
+    it("destroys resources after numSamples changes", function () {
+      if (context.webgl2) {
+        return;
+      }
+      fbm = new FramebufferManager();
+      spyOn(FramebufferManager.prototype, "destroy").and.callThrough();
+      fbm.update(context, 1, 1);
+      fbm.update(context, 1, 1, 2);
       expect(FramebufferManager.prototype.destroy.calls.count()).toEqual(2);
     });
 

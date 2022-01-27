@@ -93,7 +93,7 @@ Object.defineProperties(FramebufferManager.prototype, {
   framebuffer: {
     get: function () {
       if (this._numSamples > 1) {
-        return this._multisampleFramebuffer.getFramebuffer();
+        return this._multisampleFramebuffer.getRenderFramebuffer();
       }
       return this._framebuffer;
     },
@@ -231,16 +231,6 @@ FramebufferManager.prototype.update = function (
           pixelDatatype: PixelDatatype.UNSIGNED_INT,
           sampler: Sampler.NEAREST,
         });
-        if (this._numSamples > 1) {
-          this._depthRenderbuffer = new Renderbuffer({
-            context: context,
-            width: width,
-            height: height,
-            format: RenderbufferFormat.DEPTH_COMPONENT16,
-            numSamples: this._numSamples,
-          });
-        }
-        // TODO@eli create depth RB if numSamples > 1
       } else {
         this._depthRenderbuffer = new Renderbuffer({
           context: context,
@@ -254,6 +244,8 @@ FramebufferManager.prototype.update = function (
     if (this._numSamples > 1) {
       this._multisampleFramebuffer = new MultisampleFramebuffer({
         context: context,
+        width: this._width,
+        height: this._height,
         colorTextures: this._colorTextures,
         colorRenderbuffers: this._colorRenderbuffers,
         depthStencilTexture: this._depthStencilTexture,
@@ -403,7 +395,7 @@ FramebufferManager.prototype.setDepthStencilTexture = function (texture) {
   this._depthStencilTexture = texture;
 };
 
-FramebufferManager.prototype.prepareColorFramebuffer = function (context) {
+FramebufferManager.prototype.prepareTextures = function (context) {
   if (this._numSamples > 1) {
     this._multisampleFramebuffer.blitFramebuffers(context);
   }

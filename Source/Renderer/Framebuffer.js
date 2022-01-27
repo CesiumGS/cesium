@@ -35,7 +35,7 @@ function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
  * Framebuffers are used for render-to-texture effects; they allow us to render to
  * textures in one pass, and read from it in a later pass.
  *
- * @param {Object} options The initial framebuffer attachments as shown in the example below. <code>context</code> is required. The possible properties are <code>colorTextures</code>, <code>colorRenderbuffers</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
+ * @param {Object} options The initial framebuffer attachments as shown in the example below. <code>context</code> is required. The possible properties are <code>colorTextures</code>, <code>colorRenderbuffers</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, <code>depthStencilRenderbuffer</code>, and <code>destroyAttachments</code>.
  *
  * @exception {DeveloperError} Cannot have both color texture and color renderbuffer attachments.
  * @exception {DeveloperError} Cannot have both a depth texture and depth renderbuffer attachment.

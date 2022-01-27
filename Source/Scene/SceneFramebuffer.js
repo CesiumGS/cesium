@@ -89,9 +89,9 @@ SceneFramebuffer.prototype.getIdFramebuffer = function () {
   return this._idFramebuffer.framebuffer;
 };
 
-SceneFramebuffer.prototype.prepareColorFramebuffer = function (context) {
+SceneFramebuffer.prototype.prepareColorTextures = function (context) {
   if (this._numSamples > 1) {
-    this._colorFramebuffer.prepareColorFramebuffer(context);
+    this._colorFramebuffer.prepareTextures(context);
   }
 };
 
