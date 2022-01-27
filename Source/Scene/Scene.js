@@ -2645,7 +2645,7 @@ function executeCommands(scene, passState) {
       const depthStencilTexture = renderTranslucentDepthForPick
         ? passState.framebuffer.depthStencilTexture
         : globeDepth.depthStencilTexture;
-      var pickDepth = scene._picking.getPickDepth(scene, index);
+      const pickDepth = scene._picking.getPickDepth(scene, index);
       pickDepth.update(context, depthStencilTexture);
       pickDepth.executeCopyDepth(context, passState);
       if (renderTranslucentDepthForPick) {
@@ -3505,10 +3505,10 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
  * @private
  */
 Scene.prototype.resolveFramebuffers = function (passState) {
-  var context = this._context;
-  var environmentState = this._environmentState;
-  var view = this._view;
-  var globeDepth = view.globeDepth;
+  const context = this._context;
+  const environmentState = this._environmentState;
+  const view = this._view;
+  const globeDepth = view.globeDepth;
   if (defined(globeDepth)) {
     globeDepth.prepareTextures(context);
   }
@@ -3517,12 +3517,12 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   const useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer;
   const usePostProcess = environmentState.usePostProcess;
 
-  var defaultFramebuffer = environmentState.originalFramebuffer;
-  var globeFramebuffer = useGlobeDepthFramebuffer
+  const defaultFramebuffer = environmentState.originalFramebuffer;
+  const globeFramebuffer = useGlobeDepthFramebuffer
     ? globeDepth._colorFramebuffer
     : undefined;
-  var sceneFramebuffer = view.sceneFramebuffer._colorFramebuffer;
-  var idFramebuffer = view.sceneFramebuffer.idFramebuffer;
+  const sceneFramebuffer = view.sceneFramebuffer._colorFramebuffer;
+  const idFramebuffer = view.sceneFramebuffer.idFramebuffer;
 
   if (useOIT) {
     passState.framebuffer = usePostProcess
@@ -3541,15 +3541,15 @@ Scene.prototype.resolveFramebuffers = function (passState) {
 
   if (usePostProcess) {
     view.sceneFramebuffer.prepareColorFramebuffer(context);
-    var inputFramebuffer = sceneFramebuffer;
+    let inputFramebuffer = sceneFramebuffer;
     if (useGlobeDepthFramebuffer && !useOIT) {
       inputFramebuffer = globeFramebuffer;
     }
 
-    var postProcess = this.postProcessStages;
-    var colorTexture = inputFramebuffer.getColorTexture(0);
-    var idTexture = idFramebuffer.getColorTexture(0);
-    var depthTexture = defaultValue(
+    const postProcess = this.postProcessStages;
+    const colorTexture = inputFramebuffer.getColorTexture(0);
+    const idTexture = idFramebuffer.getColorTexture(0);
+    const depthTexture = defaultValue(
       globeFramebuffer,
       sceneFramebuffer
     ).getDepthStencilTexture();

@@ -228,7 +228,7 @@ OIT.prototype.update = function (
     accumulationTexture.width !== width ||
     accumulationTexture.height !== height ||
     useHDR !== this._useHDR;
-  var samplesChanged = this._numSamples !== numSamples;
+  const samplesChanged = this._numSamples !== numSamples;
   this._numSamples = numSamples;
   if (textureChanged || samplesChanged) {
     updateTextures(this, context, width, height);
@@ -671,7 +671,7 @@ function executeTranslucentCommandsSortedMultipass(
   passState.framebuffer = oit._adjustAlphaFBO.framebuffer;
   oit._adjustAlphaCommand.execute(context, passState);
 
-  var debugFramebuffer = oit._opaqueFBO.framebuffer;
+  const debugFramebuffer = oit._opaqueFBO.framebuffer;
   passState.framebuffer = oit._translucentFBO.framebuffer;
 
   for (j = 0; j < length; ++j) {
@@ -762,7 +762,7 @@ function executeTranslucentCommandsSortedMRT(
   passState.framebuffer = oit._adjustTranslucentFBO.framebuffer;
   oit._adjustTranslucentCommand.execute(context, passState);
 
-  var debugFramebuffer = oit._opaqueFBO.framebuffer;
+  const debugFramebuffer = oit._opaqueFBO.framebuffer;
   passState.framebuffer = oit._translucentFBO.framebuffer;
 
   let command;

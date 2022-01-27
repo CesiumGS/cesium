@@ -34,10 +34,10 @@ const stackScratch = [];
  * @constructor
  */
 function PostProcessStageCollection() {
-  var fxaa = PostProcessStageLibrary.createFXAAStage();
-  var passThrough = PostProcessStageLibrary.createPassThroughStage();
-  var ao = PostProcessStageLibrary.createAmbientOcclusionStage();
-  var bloom = PostProcessStageLibrary.createBloomStage();
+  const fxaa = PostProcessStageLibrary.createFXAAStage();
+  const passThrough = PostProcessStageLibrary.createPassThroughStage();
+  const ao = PostProcessStageLibrary.createAmbientOcclusionStage();
+  const bloom = PostProcessStageLibrary.createBloomStage();
 
   // Auto-exposure is currently disabled because most shaders output a value in [0.0, 1.0].
   // Some shaders, such as the atmosphere and ground atmosphere, output values slightly over 1.0.
@@ -59,8 +59,8 @@ function PostProcessStageCollection() {
 
   const textureCache = new PostProcessStageTextureCache(this);
 
-  var stageNames = {};
-  var stack = stackScratch;
+  const stageNames = {};
+  const stack = stackScratch;
   stack.push(fxaa, passThrough, ao, bloom, tonemapping);
   while (stack.length > 0) {
     const stage = stack.pop();
@@ -123,11 +123,11 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
         readyAndEnabled = readyAndEnabled || (stage.ready && stage.enabled);
       }
 
-      var fxaa = this._fxaa;
-      var passThrough = this._passThrough;
-      var ao = this._ao;
-      var bloom = this._bloom;
-      var tonemapping = this._tonemapping;
+      const fxaa = this._fxaa;
+      const passThrough = this._passThrough;
+      const ao = this._ao;
+      const bloom = this._bloom;
+      const tonemapping = this._tonemapping;
 
       readyAndEnabled = readyAndEnabled || (fxaa.ready && fxaa.enabled);
       readyAndEnabled =
@@ -275,15 +275,15 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
         return this.getOutputTexture(fxaa.name);
       }
 
-      var passThrough = this._passThrough;
+      const passThrough = this._passThrough;
       if (passThrough.enabled && passThrough.ready) {
         return this.getOutputTexture(passThrough.name);
       }
 
-      var stages = this._stages;
-      var length = stages.length;
-      for (var i = length - 1; i >= 0; --i) {
-        var stage = stages[i];
+      const stages = this._stages;
+      const length = stages.length;
+      for (let i = length - 1; i >= 0; --i) {
+        const stage = stages[i];
         if (defined(stage) && stage.ready && stage.enabled) {
           return this.getOutputTexture(stage.name);
         }
@@ -611,12 +611,12 @@ PostProcessStageCollection.prototype.update = function (
     }
   }
 
-  var ao = this._ao;
-  var bloom = this._bloom;
-  var autoexposure = this._autoExposure;
-  var tonemapping = this._tonemapping;
-  var fxaa = this._fxaa;
-  var passThrough = this._passThrough;
+  const ao = this._ao;
+  const bloom = this._bloom;
+  const autoexposure = this._autoExposure;
+  const tonemapping = this._tonemapping;
+  const fxaa = this._fxaa;
+  const passThrough = this._passThrough;
 
   tonemapping.enabled = useHdr;
 
@@ -624,8 +624,8 @@ PostProcessStageCollection.prototype.update = function (
   const bloomEnabled = bloom.enabled && bloom._isSupported(context);
   const tonemappingEnabled =
     tonemapping.enabled && tonemapping._isSupported(context);
-  var fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
-  var passThroughEnabled =
+  const fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
+  const passThroughEnabled =
     passThrough.enabled && passThrough._isSupported(context);
 
   if (
@@ -791,22 +791,22 @@ PostProcessStageCollection.prototype.execute = function (
   depthTexture,
   idTexture
 ) {
-  var activeStages = this._activeStages;
-  var length = activeStages.length;
-  var fxaa = this._fxaa;
-  var passThrough = this._passThrough;
-  var ao = this._ao;
-  var bloom = this._bloom;
-  var autoexposure = this._autoExposure;
-  var tonemapping = this._tonemapping;
+  const activeStages = this._activeStages;
+  const length = activeStages.length;
+  const fxaa = this._fxaa;
+  const passThrough = this._passThrough;
+  const ao = this._ao;
+  const bloom = this._bloom;
+  const autoexposure = this._autoExposure;
+  const tonemapping = this._tonemapping;
 
-  var aoEnabled = ao.enabled && ao._isSupported(context);
-  var bloomEnabled = bloom.enabled && bloom._isSupported(context);
-  var autoExposureEnabled = this._autoExposureEnabled;
-  var tonemappingEnabled =
+  const aoEnabled = ao.enabled && ao._isSupported(context);
+  const bloomEnabled = bloom.enabled && bloom._isSupported(context);
+  const autoExposureEnabled = this._autoExposureEnabled;
+  const tonemappingEnabled =
     tonemapping.enabled && tonemapping._isSupported(context);
-  var fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
-  var passThroughEnabled =
+  const fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
+  const passThroughEnabled =
     passThrough.enabled && passThrough._isSupported(context);
 
   if (

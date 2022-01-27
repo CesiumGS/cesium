@@ -178,11 +178,11 @@ InvertClassification.prototype.update = function (
   numSamples,
   globeFramebuffer
 ) {
-  var texture = this._fbo.getColorTexture();
-  var previousFramebufferChanged =
+  const texture = this._fbo.getColorTexture();
+  const previousFramebufferChanged =
     this.previousFramebuffer !== this._previousFramebuffer;
   this._previousFramebuffer = this.previousFramebuffer;
-  var samplesChanged = this._numSamples !== numSamples;
+  const samplesChanged = this._numSamples !== numSamples;
 
   const width = context.drawingBufferWidth;
   const height = context.drawingBufferHeight;

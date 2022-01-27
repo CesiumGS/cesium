@@ -27,7 +27,7 @@ function Renderbuffer(options) {
   const height = defined(options.height)
     ? options.height
     : gl.drawingBufferHeight;
-  var numSamples = defaultValue(options.numSamples, 1);
+  const numSamples = defaultValue(options.numSamples, 1);
 
   //>>includeStart('debug', pragmas.debug);
   if (!RenderbufferFormat.validate(format)) {

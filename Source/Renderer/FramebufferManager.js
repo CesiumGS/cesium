@@ -113,12 +113,12 @@ FramebufferManager.prototype.isDirty = function (
   pixelFormat
 ) {
   numSamples = defaultValue(numSamples, 1);
-  var dimensionChanged = this._width !== width || this._height !== height;
-  var samplesChanged = this._numSamples !== numSamples;
-  var pixelChanged =
+  const dimensionChanged = this._width !== width || this._height !== height;
+  const samplesChanged = this._numSamples !== numSamples;
+  const pixelChanged =
     (defined(pixelDatatype) && this._pixelDatatype !== pixelDatatype) ||
     (defined(pixelFormat) && this._pixelFormat !== pixelFormat);
-  var framebufferDefined =
+  const framebufferDefined =
     numSamples === 1
       ? defined(this._framebuffer)
       : defined(this._multisampleFramebuffer);
@@ -438,10 +438,10 @@ FramebufferManager.prototype.destroyFramebuffer = function () {
 
 FramebufferManager.prototype.destroy = function () {
   if (this._color) {
-    var i;
-    var length = this._colorTextures.length;
+    let i;
+    const length = this._colorTextures.length;
     for (i = 0; i < length; ++i) {
-      var texture = this._colorTextures[i];
+      const texture = this._colorTextures[i];
       if (this._createColorAttachments) {
         if (defined(texture) && !texture.isDestroyed()) {
           this._colorTextures[i].destroy();
@@ -451,7 +451,7 @@ FramebufferManager.prototype.destroy = function () {
       if (defined(texture) && texture.isDestroyed()) {
         this._colorTextures[i] = undefined;
       }
-      var renderbuffer = this._colorRenderbuffers[i];
+      const renderbuffer = this._colorRenderbuffers[i];
       if (this._createColorAttachments) {
         if (defined(renderbuffer) && !renderbuffer.isDestroyed()) {
           this._colorRenderbuffers[i].destroy();

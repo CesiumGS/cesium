@@ -15,17 +15,17 @@ import Framebuffer from "./Framebuffer.js";
 function MultisampleFramebuffer(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var context = options.context;
-  var colorRenderbuffers = options.colorRenderbuffers;
-  var colorTextures = options.colorTextures;
+  const context = options.context;
+  const colorRenderbuffers = options.colorRenderbuffers;
+  const colorTextures = options.colorTextures;
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", context);
   Check.defined("options.colorRenderbuffers", colorRenderbuffers);
   Check.defined("options.colorTextures", colorTextures);
   //>>includeEnd('debug');
 
-  var depthStencilRenderbuffer = options.depthStencilRenderbuffer;
-  var depthStencilTexture = options.depthStencilTexture;
+  const depthStencilRenderbuffer = options.depthStencilRenderbuffer;
+  const depthStencilTexture = options.depthStencilTexture;
   if (
     (defined(depthStencilRenderbuffer) && !defined(depthStencilTexture)) ||
     (defined(depthStencilTexture) && !defined(depthStencilRenderbuffer))
@@ -69,10 +69,10 @@ MultisampleFramebuffer.prototype.blitFramebuffers = function (context) {
   // clearCommand.execute(context);
   this._renderFramebuffer.bindRead();
   this._colorFramebuffer.bindDraw();
-  var width = context.canvas.clientWidth;
-  var height = context.canvas.clientHeight;
-  var gl = context._gl;
-  var mask = 0;
+  const width = context.canvas.clientWidth;
+  const height = context.canvas.clientHeight;
+  const gl = context._gl;
+  let mask = 0;
   if (this._colorFramebuffer._colorTextures.length > 0) {
     mask |= gl.COLOR_BUFFER_BIT;
   }

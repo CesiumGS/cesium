@@ -144,11 +144,11 @@ function getDependencies(collection, context) {
   const dependencies = {};
 
   if (defined(collection.ambientOcclusion)) {
-    var ao = collection.ambientOcclusion;
-    var bloom = collection.bloom;
-    var tonemapping = collection._tonemapping;
-    var fxaa = collection.fxaa;
-    var passThrough = collection.passThrough;
+    const ao = collection.ambientOcclusion;
+    const bloom = collection.bloom;
+    const tonemapping = collection._tonemapping;
+    const fxaa = collection.fxaa;
+    const passThrough = collection.passThrough;
 
     let previousName = getCompositeDependencies(
       collection,
@@ -275,10 +275,10 @@ function createFramebuffers(cache, context) {
 }
 
 function releaseResources(cache) {
-  var framebuffers = cache._framebuffers;
-  var length = framebuffers.length;
-  for (var i = 0; i < length; ++i) {
-    var framebuffer = framebuffers[i];
+  const framebuffers = cache._framebuffers;
+  const length = framebuffers.length;
+  for (let i = 0; i < length; ++i) {
+    const framebuffer = framebuffers[i];
     framebuffer.buffer = framebuffer.buffer && framebuffer.buffer.destroy();
     framebuffer.buffer = undefined;
   }
@@ -353,11 +353,11 @@ PostProcessStageTextureCache.prototype.update = function (context) {
     defined(collection.fxaa) &&
     collection.fxaa.enabled &&
     collection.fxaa._isSupported(context);
-  var passThroughEnabled =
+  const passThroughEnabled =
     defined(collection.passThrough) &&
     collection.passThrough.enabled &&
     collection.passThrough._isSupported(context);
-  var needsCheckDimensionsUpdate =
+  const needsCheckDimensionsUpdate =
     !defined(collection._activeStages) ||
     collection._activeStages.length > 0 ||
     aoEnabled ||

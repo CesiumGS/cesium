@@ -366,12 +366,12 @@ Framebuffer.prototype._unBind = function () {
 };
 
 Framebuffer.prototype.bindDraw = function () {
-  var gl = this._gl;
+  const gl = this._gl;
   gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._framebuffer);
 };
 
 Framebuffer.prototype.bindRead = function () {
-  var gl = this._gl;
+  const gl = this._gl;
   gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._framebuffer);
 };
 

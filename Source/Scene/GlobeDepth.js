@@ -267,7 +267,7 @@ GlobeDepth.prototype.executeUpdateDepth = function (
   clearGlobeDepth,
   depthTexture
 ) {
-  var depthTextureToCopy = defined(depthTexture)
+  const depthTextureToCopy = defined(depthTexture)
     ? depthTexture
     : passState.framebuffer.depthStencilTexture;
   if (
@@ -291,7 +291,7 @@ GlobeDepth.prototype.executeUpdateDepth = function (
         this._tempCopyDepthFramebuffer.destroy();
         this._tempCopyDepthFramebuffer.update(context, width, height);
 
-        var colorTexture = this._copyDepthFramebuffer.getColorTexture();
+        const colorTexture = this._copyDepthFramebuffer.getColorTexture();
         this._updateDepthFramebuffer.setColorTexture(colorTexture, 0);
         this._updateDepthFramebuffer.setDepthStencilTexture(depthTextureToCopy);
         this._updateDepthFramebuffer.update(context, width, height);
