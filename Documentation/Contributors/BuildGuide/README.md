@@ -31,7 +31,7 @@
    ```
 
 3. Access the site.
-   - Using your favorite browser, navigate to: ` http://localhost:8080`
+   - Using your favorite browser, navigate to: ` http://localhost:8080/`
 
 _For more details, review the rest of this document._
 
