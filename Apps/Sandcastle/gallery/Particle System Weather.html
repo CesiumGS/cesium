@@ -68,10 +68,8 @@
           snowParticleSize * 2.0,
           snowParticleSize * 2.0
         );
-        let snowSystem;
-
-        let snowGravityScratch = new Cesium.Cartesian3();
         const snowUpdate = function (particle, dt) {
+          let snowGravityScratch = new Cesium.Cartesian3();
           snowGravityScratch = Cesium.Cartesian3.normalize(
             particle.position,
             snowGravityScratch
@@ -86,7 +84,6 @@
             snowGravityScratch,
             particle.velocity
           );
-
           const distance = Cesium.Cartesian3.distance(
             scene.camera.position,
             particle.position
@@ -99,7 +96,7 @@
           }
         };
 
-        snowSystem = new Cesium.ParticleSystem({
+        const snowSystem = new Cesium.ParticleSystem({
           modelMatrix: new Cesium.Matrix4.fromTranslation(
             scene.camera.position
           ),
