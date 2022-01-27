@@ -222,8 +222,11 @@ TerrainOffsetProperty.prototype.getValue = function (time, result) {
   );
 
   if (heightReference === HeightReference.CLIP_TO_GROUND) {
-    var ellipsoid = scene.globe.ellipsoid;
-    var clippedCart = ellipsoid.cartesianToCartographic(position, scratchCarto);
+    const ellipsoid = scene.globe.ellipsoid;
+    const clippedCart = ellipsoid.cartesianToCartographic(
+      position,
+      scratchCarto
+    );
     if (this._terrainHeight >= clippedCart.height) {
       return Cartesian3.multiplyByScalar(
         normal,

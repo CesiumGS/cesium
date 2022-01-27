@@ -1117,7 +1117,7 @@ Billboard._updateClamping = function (collection, owner) {
       }
     } else if (owner._heightReference === HeightReference.CLIP_TO_GROUND) {
       if (owner._mode === SceneMode.SCENE3D) {
-        var clippedCart = ellipsoid.cartesianToCartographic(
+        const clippedCart = ellipsoid.cartesianToCartographic(
           clampedPosition,
           scratchCartographic
         );

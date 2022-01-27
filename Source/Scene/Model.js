@@ -5060,7 +5060,7 @@ function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
       clampedCart.height += cartoPosition.height;
       ellipsoid.cartographicToCartesian(clampedCart, clampedPosition);
     } else if (model.heightReference === HeightReference.CLIP_TO_GROUND) {
-      var clippedCart = ellipsoid.cartesianToCartographic(
+      const clippedCart = ellipsoid.cartesianToCartographic(
         clampedPosition,
         scratchCartographic
       );
