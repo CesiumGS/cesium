@@ -67,8 +67,8 @@
           snowParticleSize * 2.0,
           snowParticleSize * 2.0
         );
+        let snowGravityScratch = new Cesium.Cartesian3();
         const snowUpdate = function (particle, dt) {
-          let snowGravityScratch = new Cesium.Cartesian3();
           snowGravityScratch = Cesium.Cartesian3.normalize(
             particle.position,
             snowGravityScratch
@@ -90,9 +90,7 @@
           if (distance > snowRadius) {
             particle.endColor.alpha = 0.0;
           } else {
-            particle.endColor.alpha =
-              1.0 /
-              (distance / snowRadius + 0.1);
+            particle.endColor.alpha = 1.0 / (distance / snowRadius + 0.1);
           }
         };
 
