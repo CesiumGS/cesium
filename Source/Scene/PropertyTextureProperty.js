@@ -11,9 +11,9 @@ import GltfLoaderUtil from "./GltfLoaderUtil.js";
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.property The property JSON object.
+ * @param {Object} options.textureInfo The textureInfo JSON object of the property texture
  * @param {MetadataClassProperty} options.classProperty The class property.
- * @param {Object.<Number, Texture>} options.textures An object mapping texture IDs to {@link Texture} objects.
+ * @param {Texture} options.texture The texture that stores this property
  *
  * @alias PropertyTextureProperty
  * @constructor
@@ -23,34 +23,28 @@ import GltfLoaderUtil from "./GltfLoaderUtil.js";
  */
 function PropertyTextureProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const property = options.property;
   const classProperty = options.classProperty;
-  const textures = options.textures;
   const channels = options.channels;
+  const texture = options.texture;
+  const textureInfo = options.textureInfo;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.property", property);
+  Check.typeOf.object("options.textureInfo", textureInfo);
   Check.typeOf.object("options.classProperty", classProperty);
-  Check.typeOf.object("options.textures", textures);
+  Check.typeOf.object("options.texture", texture);
   //>>includeEnd('debug');
 
-  const textureInfo = property.texture;
+  const glslChannels = getGlslChannels(channels);
   const textureReader = GltfLoaderUtil.createModelTextureReader({
     textureInfo: textureInfo,
-    channels: property.channels,
-    texture: textures[textureInfo.index],
+    channels: glslChannels,
+    texture: texture,
   });
 
-  this._glslChannels = channels
-    .map(function (channelIndex) {
-      return "rgba".charAt(channelIndex);
-    })
-    .join("");
-
+  this._channels = channels;
+  this._glslChannels = glslChannels;
   this._textureReader = textureReader;
   this._classProperty = classProperty;
-  this._extras = property.extras;
-  this._extensions = property.extensions;
 }
 
 Object.defineProperties(PropertyTextureProperty.prototype, {
@@ -128,5 +122,21 @@ PropertyTextureProperty.prototype.getGlslType = function () {
   // ARRAY[FLOAT, 4] -> vec4
   // ARRAY[FLOAT]
 };
+
+/**
+ * Reformat from an array of channel indices like <code>[0, 1]</code> to a
+ * string of channels as would be used in GLSL swizzling (e.g. "rg")
+ *
+ * @param {Number[]} channels the channel indices
+ * @return {String} The channels as a string of "r", "g", "b" or "a" characters.
+ * @private
+ */
+function getGlslChannels(channelIndices) {
+  return channelIndices
+    .map(function (channelIndex) {
+      return "rgba".charAt(channelIndex);
+    })
+    .join("");
+}
 
 export default PropertyTextureProperty;

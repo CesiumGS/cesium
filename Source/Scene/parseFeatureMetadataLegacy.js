@@ -109,30 +109,31 @@ export default function parseFeatureMetadataLegacy(options) {
  * @private
  */
 function reformatPropertyTexture(featureTexture) {
-  var propertyTexture = {
+  const propertyTexture = {
     class: featureTexture.class,
     index: undefined,
     texCoord: undefined,
     properties: {},
+    extras: featureTexture.extras,
+    extensions: featureTexture.extensions,
   };
 
-  var textureInfos = [];
-
-  var originalProperties = featureTexture.properties;
-  for (var propertyId in originalProperties) {
+  const textureInfos = [];
+  const originalProperties = featureTexture.properties;
+  for (const propertyId in originalProperties) {
     if (originalProperties.hasOwnProperty(propertyId)) {
-      var originalProperty = originalProperties[propertyId];
-      var channels = reformatChannels(originalProperty.channels);
+      const originalProperty = originalProperties[propertyId];
+      const channels = reformatChannels(originalProperty.channels);
       propertyTexture.properties[propertyId] = channels;
       textureInfos.push(originalProperty.texture);
     }
   }
 
-  var index = textureInfos[0].index;
-  var texCoord = textureInfos[0].texCoord;
+  const index = textureInfos[0].index;
+  const texCoord = textureInfos[0].texCoord;
   //>>includeStart('debug', pragmas.debug);
-  for (var i = 1; i < textureInfos.length; i++) {
-    var textureInfo = textureInfos[i];
+  for (let i = 1; i < textureInfos.length; i++) {
+    const textureInfo = textureInfos[i];
     if (textureInfo.index !== index || textureInfo.texCoord !== texCoord) {
       throw new DeveloperError(
         "feature textures using multiple feature textures are not supported"
@@ -148,10 +149,10 @@ function reformatPropertyTexture(featureTexture) {
 }
 
 function reformatChannels(channelsString) {
-  var channels = [];
-  for (var i = 0; i < channelsString.length; i++) {
-    var channelCharacter = channelsString.charAt(i);
-    var channelIndex = "rgba".indexOf(channelCharacter);
+  const channels = [];
+  for (let i = 0; i < channelsString.length; i++) {
+    const channelCharacter = channelsString.charAt(i);
+    const channelIndex = "rgba".indexOf(channelCharacter);
     channels.push(channelIndex);
   }
   return channels;

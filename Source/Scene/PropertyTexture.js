@@ -25,27 +25,34 @@ import PropertyTextureProperty from "./PropertyTextureProperty.js";
  */
 function PropertyTexture(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const featureTexture = options.propertyTexture;
+  const propertyTexture = options.propertyTexture;
   const classDefinition = options.class;
   const textures = options.textures;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.featureTexture", featureTexture);
+  Check.typeOf.object("options.propertyTexture", propertyTexture);
   Check.typeOf.object("options.class", classDefinition);
   Check.typeOf.object("options.textures", textures);
   //>>includeEnd('debug');
 
-  const extensions = featureTexture.extensions;
-  const extras = featureTexture.extras;
+  // The property texture schema is a glTF textureInfo plus a few additional
+  // fields
+  const textureInfo = propertyTexture;
+  const texture = textures[textureInfo.index];
 
   const properties = {};
-  if (defined(featureTexture.properties)) {
-    for (const propertyId in featureTexture.properties) {
-      if (featureTexture.properties.hasOwnProperty(propertyId)) {
+  const jsonProperties = propertyTexture.properties;
+  if (defined(jsonProperties)) {
+    for (const propertyId in jsonProperties) {
+      if (jsonProperties.hasOwnProperty(propertyId)) {
+        const channels = jsonProperties[propertyId];
+        const classProperty = classDefinition.properties[propertyId];
+
         properties[propertyId] = new PropertyTextureProperty({
-          property: featureTexture.properties[propertyId],
-          classProperty: classDefinition.properties[propertyId],
-          textures: textures,
+          textureInfo: textureInfo,
+          channels: channels,
+          classProperty: classProperty,
+          texture: texture,
         });
       }
     }
@@ -55,8 +62,9 @@ function PropertyTexture(options) {
   this._id = options.id;
   this._class = classDefinition;
   this._properties = properties;
-  this._extras = extras;
-  this._extensions = extensions;
+  this._texture = texture;
+  this._extras = propertyTexture.extras;
+  this._extensions = propertyTexture.extensions;
 }
 
 Object.defineProperties(PropertyTexture.prototype, {
@@ -128,9 +136,29 @@ Object.defineProperties(PropertyTexture.prototype, {
     },
   },
 
+  /**
+   * Properties in the property texture
+   *
+   * @memberof PropertyTexture.prototype
+   * @type {PropertyTextureProperty[]}
+   * @readonly
+   * @private
+   */
   properties: {
     get: function () {
       return this._properties;
+    },
+  },
+
+  /**
+   * The texture used by all the properties
+   * @type {Texture}
+   * @readonly
+   * @private
+   */
+  texture: {
+    get: function () {
+      return this._texture;
     },
   },
 });

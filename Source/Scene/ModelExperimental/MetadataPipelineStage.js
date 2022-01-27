@@ -3,7 +3,7 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import MetadataStageFS from "../../Shaders/ModelExperimental/MetadataStageFS.js";
 import MetadataStageVS from "../../Shaders/ModelExperimental/MetadataStageVS.js";
 
-var MetadataPipelineStage = {};
+const MetadataPipelineStage = {};
 MetadataPipelineStage.name = "MetadataPipelineStage";
 
 MetadataPipelineStage.STRUCT_ID_METADATA_VS = "MetadataVS";
@@ -24,14 +24,14 @@ MetadataPipelineStage.process = function (
   primitive,
   frameState
 ) {
-  var shaderBuilder = renderResources.shaderBuilder;
+  const shaderBuilder = renderResources.shaderBuilder;
 
   // Always declare structs, even if not used
   declareStructsAndFunctions(shaderBuilder);
   shaderBuilder.addVertexLines([MetadataStageVS]);
   shaderBuilder.addFragmentLines([MetadataStageFS]);
 
-  var featureMetadata = renderResources.model.featureMetadata;
+  const featureMetadata = renderResources.model.featureMetadata;
   if (!defined(featureMetadata)) {
     return;
   }
@@ -77,20 +77,20 @@ function declareStructsAndFunctions(shaderBuilder) {
 }
 
 function processPropertyTextures(renderResources, featureMetadata) {
-  var propertyTextures = featureMetadata.propertyTextures;
-  var shaderBuilder = renderResources.shaderBuilder;
+  const propertyTextures = featureMetadata.propertyTextures;
+  const shaderBuilder = renderResources.shaderBuilder;
 
-  for (var i = 0; i < propertyTextures.length; i++) {
-    var propertyTexture = propertyTextures[i];
+  for (let i = 0; i < propertyTextures.length; i++) {
+    const propertyTexture = propertyTextures[i];
     // example: u_propertyTexture_0
-    var uniformName = "u_propertyTexture_" + i;
+    const uniformName = "u_propertyTexture_" + i;
     addPropertyTextureUniform(renderResources, uniformName, propertyTexture);
 
     // need to add a uniform
-    var properties = propertyTexture.properties;
-    for (var propertyId in properties) {
+    const properties = propertyTexture.properties;
+    for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        var property = properties[propertyId];
+        const property = properties[propertyId];
         addPropertyTextureProperty(
           shaderBuilder,
           uniformName,
@@ -102,31 +102,21 @@ function processPropertyTextures(renderResources, featureMetadata) {
   }
 }
 
-// TODO: This is a temporary hack. PropertyTexture and PropertyTextureProperty
-// need some reworking to avoid property textures spread across multiple
-// textures
-function getFirstProperty(propertyTexture) {
-  var propertyId = Object.keys(propertyTexture.properties)[0];
-  return propertyTexture.properties[propertyId];
-}
-
 function addPropertyTextureUniform(
   renderResources,
   uniformName,
   propertyTexture
 ) {
-  var shaderBuilder = renderResources.shaderBuilder;
+  const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addUniform(
     "sampler2D",
     uniformName,
     ShaderDestination.FRAGMENT
   );
 
-  var firstProperty = getFirstProperty(propertyTexture);
-
-  var uniformMap = renderResources.uniformMap;
+  const uniformMap = renderResources.uniformMap;
   uniformMap[uniformName] = function () {
-    return firstProperty.textureReader.texture;
+    return propertyTexture.texture;
   };
 }
 
@@ -136,11 +126,11 @@ function addPropertyTextureProperty(
   propertyId,
   property
 ) {
-  var glslType = property.getGlslType();
+  const glslType = property.getGlslType();
 
   // for use in the shader, the property ID must be a valid GLSL identifier,
   // so replace invalid characters with _
-  var glslPropertyId = propertyId.replaceAll(/[^_a-zA-Z0-9]+/g, "_");
+  const glslPropertyId = propertyId.replaceAll(/[^_a-zA-Z0-9]+/g, "_");
 
   shaderBuilder.addStructField(
     MetadataPipelineStage.STRUCT_ID_METADATA_FS,
@@ -151,14 +141,14 @@ function addPropertyTextureProperty(
   // Insert the texture read.
   // Example:
   // metadata.<property> = texture2D(u_propertyTexture_<n>, <texCoords>).<channels>;
-  var textureReader = property.textureReader;
-  var texCoord = textureReader.texCoord;
-  var texCoordVariable = "attributes.texCoord_" + texCoord;
-  var channels = textureReader.channels;
+  const textureReader = property.textureReader;
+  const texCoord = textureReader.texCoord;
+  const texCoordVariable = "attributes.texCoord_" + texCoord;
+  const channels = textureReader.channels;
 
   // TODO: Sometimes initialization will be need to be wrapped in an unpacking
   // function (e.g. convert from unsigned to signed)
-  var initializationLine =
+  const initializationLine =
     "metadata." +
     glslPropertyId +
     " = texture2D(" +
