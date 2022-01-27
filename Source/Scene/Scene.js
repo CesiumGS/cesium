@@ -2636,22 +2636,12 @@ function executeCommands(scene, passState) {
       (environmentState.useGlobeDepthFramebuffer ||
         renderTranslucentDepthForPick)
     ) {
-      if (renderTranslucentDepthForPick) {
-        globeDepth.prepareColorTextures(context);
-        if (scene.numberSamples > 1)
-          passState.framebuffer = globeDepth._colorFramebuffer._multisampleFramebuffer.getColorFramebuffer();
-      }
       // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
-      const depthStencilTexture = renderTranslucentDepthForPick
-        ? passState.framebuffer.depthStencilTexture
-        : globeDepth.depthStencilTexture;
+      globeDepth.prepareColorTextures(context);
+      const depthStencilTexture = globeDepth.depthStencilTexture;
       const pickDepth = scene._picking.getPickDepth(scene, index);
       pickDepth.update(context, depthStencilTexture);
       pickDepth.executeCopyDepth(context, passState);
-      if (renderTranslucentDepthForPick) {
-        if (scene.numberSamples > 1)
-          passState.framebuffer = globeDepth._colorFramebuffer._multisampleFramebuffer.getRenderFramebuffer();
-      }
     }
 
     if (picking || !usePostProcessSelected) {
