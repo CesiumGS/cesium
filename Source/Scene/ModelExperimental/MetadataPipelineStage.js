@@ -80,6 +80,10 @@ function processPropertyTextures(renderResources, featureMetadata) {
   const propertyTextures = featureMetadata.propertyTextures;
   const shaderBuilder = renderResources.shaderBuilder;
 
+  if (!defined(propertyTextures)) {
+    return;
+  }
+
   for (let i = 0; i < propertyTextures.length; i++) {
     const propertyTexture = propertyTextures[i];
     // example: u_propertyTexture_0

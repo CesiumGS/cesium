@@ -9,29 +9,29 @@ import {
 import createContext from "../createContext.js";
 
 describe("Scene/PropertyTextureProperty", function () {
-  let classProperty;
-  let context;
-  let texture;
+  let textureInfo;
   let extras;
-  let extensions;
+  let channels;
   let propertyTextureProperty;
 
-  beforeAll(function () {
-    const classDefinition = new MetadataClass({
-      id: "map",
-      class: {
-        properties: {
-          color: {
-            type: "ARRAY",
-            componentType: "UINT8",
-            componentCount: 3,
-          },
+  const classDefinition = new MetadataClass({
+    id: "map",
+    class: {
+      properties: {
+        color: {
+          type: "ARRAY",
+          componentType: "UINT8",
+          componentCount: 3,
         },
       },
-    });
+    },
+  });
 
-    classProperty = classDefinition.properties.color;
+  const classProperty = classDefinition.properties.color;
 
+  let context;
+  let texture;
+  beforeAll(function () {
     context = createContext();
 
     texture = new Texture({
@@ -49,33 +49,26 @@ describe("Scene/PropertyTextureProperty", function () {
       description: "Extra",
     };
 
-    extensions = {
-      EXT_other_extension: {},
-    };
-
-    const property = {
-      channels: "rgb",
-      texture: {
-        index: 0,
-        texCoord: 0,
-        extensions: {
-          KHR_texture_transform: {
-            offset: [0.5, 0.5],
-            scale: [0.1, 0.2],
-            texCoord: 1,
-          },
+    textureInfo = {
+      index: 0,
+      texCoord: 0,
+      extensions: {
+        KHR_texture_transform: {
+          offset: [0.5, 0.5],
+          scale: [0.1, 0.2],
+          texCoord: 1,
         },
       },
       extras: extras,
-      extensions: extensions,
     };
 
+    channels = [0, 1, 2];
+
     propertyTextureProperty = new PropertyTextureProperty({
-      property: property,
+      textureInfo: textureInfo,
       classProperty: classProperty,
-      textures: {
-        0: texture,
-      },
+      channels: channels,
+      texture: texture,
     });
   });
 
@@ -85,9 +78,6 @@ describe("Scene/PropertyTextureProperty", function () {
   });
 
   it("creates feature texture property", function () {
-    expect(propertyTextureProperty.extras).toBe(extras);
-    expect(propertyTextureProperty.extensions).toBe(extensions);
-
     // prettier-ignore
     const expectedTransform = new Matrix3(
       0.1, 0.0, 0.5,
@@ -102,29 +92,46 @@ describe("Scene/PropertyTextureProperty", function () {
     expect(modelTextureReader.channels).toBe("rgb");
   });
 
-  it("constructor throws without property", function () {
+  it("constructor throws without textureInfo", function () {
     expect(function () {
       return new PropertyTextureProperty({
+        textureInfo: undefined,
         classProperty: classProperty,
-        textures: {},
+        channels: channels,
+        texture: texture,
       });
     }).toThrowDeveloperError();
   });
 
-  it("constructor throws without class", function () {
+  it("constructor throws without classProperty", function () {
     expect(function () {
       return new PropertyTextureProperty({
-        property: {},
-        textures: {},
+        textureInfo: textureInfo,
+        classProperty: undefined,
+        channels: channels,
+        texture: texture,
       });
     }).toThrowDeveloperError();
   });
 
-  it("constructor throws without textures", function () {
+  it("constructor throws without channels", function () {
     expect(function () {
       return new PropertyTextureProperty({
-        property: {},
+        textureInfo: textureInfo,
         classProperty: classProperty,
+        channels: undefined,
+        texture: texture,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("constructor throws without texture", function () {
+    expect(function () {
+      return new PropertyTextureProperty({
+        textureInfo: textureInfo,
+        classProperty: classProperty,
+        channels: channels,
+        texture: undefined,
       });
     }).toThrowDeveloperError();
   });

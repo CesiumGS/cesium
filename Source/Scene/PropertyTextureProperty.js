@@ -30,6 +30,7 @@ function PropertyTextureProperty(options) {
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.textureInfo", textureInfo);
+  Check.typeOf.object("options.channels", channels);
   Check.typeOf.object("options.classProperty", classProperty);
   Check.typeOf.object("options.texture", texture);
   //>>includeEnd('debug');
@@ -59,34 +60,6 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
   textureReader: {
     get: function () {
       return this._textureReader;
-    },
-  },
-
-  /**
-   * Extras in the JSON object.
-   *
-   * @memberof PropertyTextureProperty.prototype
-   * @type {*}
-   * @readonly
-   * @private
-   */
-  extras: {
-    get: function () {
-      return this._extras;
-    },
-  },
-
-  /**
-   * Extensions in the JSON object.
-   *
-   * @memberof PropertyTextureProperty.prototype
-   * @type {*}
-   * @readonly
-   * @private
-   */
-  extensions: {
-    get: function () {
-      return this._extensions;
     },
   },
 });

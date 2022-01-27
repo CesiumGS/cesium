@@ -14,7 +14,7 @@ describe("Scene/PropertyTexture", function () {
   let texture1;
   let extras;
   let extensions;
-  let featureTexture;
+  let propertyTexture;
 
   beforeAll(function () {
     classDefinition = new MetadataClass({
@@ -69,37 +69,20 @@ describe("Scene/PropertyTexture", function () {
       EXT_other_extension: {},
     };
 
-    const featureTextureJson = {
+    const propertyTextureJson = {
       class: "map",
       extras: extras,
       extensions: extensions,
+      index: 1,
+      texCoord: 1,
       properties: {
-        color: {
-          channels: "rgb",
-          texture: {
-            index: 0,
-            texCoord: 0,
-          },
-        },
-        intensity: {
-          channels: "a",
-          texture: {
-            index: 0,
-            texCoord: 0,
-          },
-        },
-        ortho: {
-          channels: "r",
-          texture: {
-            index: 1,
-            texCoord: 0,
-          },
-        },
+        color: [0, 1, 2],
+        intensity: [3],
       },
     };
 
-    featureTexture = new PropertyTexture({
-      featureTexture: featureTextureJson,
+    propertyTexture = new PropertyTexture({
+      propertyTexture: propertyTextureJson,
       class: classDefinition,
       textures: {
         0: texture0,
@@ -115,14 +98,15 @@ describe("Scene/PropertyTexture", function () {
   });
 
   it("creates feature texture", function () {
-    expect(featureTexture.class).toBe(classDefinition);
-    expect(featureTexture.extras).toBe(extras);
-    expect(featureTexture.extensions).toBe(extensions);
+    expect(propertyTexture.class).toBe(classDefinition);
+    expect(propertyTexture.extras).toBe(extras);
+    expect(propertyTexture.extensions).toBe(extensions);
   });
 
-  it("constructor throws without featureTexture", function () {
+  it("constructor throws without propertyTexture", function () {
     expect(function () {
       return new PropertyTexture({
+        propertyTexture: undefined,
         class: classDefinition,
         textures: {},
       });
@@ -132,7 +116,8 @@ describe("Scene/PropertyTexture", function () {
   it("constructor throws without class", function () {
     expect(function () {
       return new PropertyTexture({
-        featureTexture: {},
+        propertyTexture: {},
+        class: undefined,
         textures: {},
       });
     }).toThrowDeveloperError();
@@ -141,25 +126,25 @@ describe("Scene/PropertyTexture", function () {
   it("constructor throws without textures", function () {
     expect(function () {
       return new PropertyTexture({
-        featureTexture: {},
+        propertyTexture: {},
         class: classDefinition,
+        textures: undefined,
       });
     }).toThrowDeveloperError();
   });
 
   it("getProperty returns feature texture property", function () {
-    expect(featureTexture.getProperty("color")).toBeDefined();
-    expect(featureTexture.getProperty("intensity")).toBeDefined();
-    expect(featureTexture.getProperty("ortho")).toBeDefined();
+    expect(propertyTexture.getProperty("color")).toBeDefined();
+    expect(propertyTexture.getProperty("intensity")).toBeDefined();
   });
 
   it("getProperty returns undefined if the property doesn't exist", function () {
-    expect(featureTexture.getProperty("other")).toBeUndefined();
+    expect(propertyTexture.getProperty("other")).toBeUndefined();
   });
 
   it("getProperty throws if propertyId is undefined", function () {
     expect(function () {
-      featureTexture.getProperty(undefined);
+      propertyTexture.getProperty(undefined);
     }).toThrowDeveloperError();
   });
 });
