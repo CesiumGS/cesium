@@ -20,8 +20,8 @@ function getTypedArrayFromBinary(
   count,
   byteOffset
 ) {
-  var cachedTypedArrays = featureTable._cachedTypedArrays;
-  var typedArray = cachedTypedArrays[semantic];
+  const cachedTypedArrays = featureTable._cachedTypedArrays;
+  let typedArray = cachedTypedArrays[semantic];
   if (!defined(typedArray)) {
     typedArray = ComponentDatatype.createArrayBufferView(
       componentType,
@@ -35,8 +35,8 @@ function getTypedArrayFromBinary(
 }
 
 function getTypedArrayFromArray(featureTable, semantic, componentType, array) {
-  var cachedTypedArrays = featureTable._cachedTypedArrays;
-  var typedArray = cachedTypedArrays[semantic];
+  const cachedTypedArrays = featureTable._cachedTypedArrays;
+  let typedArray = cachedTypedArrays[semantic];
   if (!defined(typedArray)) {
     typedArray = ComponentDatatype.createTypedArray(componentType, array);
     cachedTypedArrays[semantic] = typedArray;
@@ -49,7 +49,7 @@ Cesium3DTileFeatureTable.prototype.getGlobalProperty = function (
   componentType,
   componentLength
 ) {
-  var jsonValue = this.json[semantic];
+  const jsonValue = this.json[semantic];
   if (!defined(jsonValue)) {
     return undefined;
   }
@@ -79,7 +79,7 @@ Cesium3DTileFeatureTable.prototype.getPropertyArray = function (
   componentType,
   componentLength
 ) {
-  var jsonValue = this.json[semantic];
+  const jsonValue = this.json[semantic];
   if (!defined(jsonValue)) {
     return undefined;
   }
@@ -108,12 +108,12 @@ Cesium3DTileFeatureTable.prototype.getProperty = function (
   featureId,
   result
 ) {
-  var jsonValue = this.json[semantic];
+  const jsonValue = this.json[semantic];
   if (!defined(jsonValue)) {
     return undefined;
   }
 
-  var typedArray = this.getPropertyArray(
+  const typedArray = this.getPropertyArray(
     semantic,
     componentType,
     componentLength
@@ -123,7 +123,7 @@ Cesium3DTileFeatureTable.prototype.getProperty = function (
     return typedArray[featureId];
   }
 
-  for (var i = 0; i < componentLength; ++i) {
+  for (let i = 0; i < componentLength; ++i) {
     result[i] = typedArray[componentLength * featureId + i];
   }
 

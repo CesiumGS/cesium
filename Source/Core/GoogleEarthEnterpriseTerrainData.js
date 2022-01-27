@@ -76,8 +76,8 @@ function GoogleEarthEnterpriseTerrainData(options) {
   // Convert from google layout to layout of other providers
   // 3 2 -> 2 3
   // 0 1 -> 0 1
-  var googleChildTileMask = defaultValue(options.childTileMask, 15);
-  var childTileMask = googleChildTileMask & 3; // Bottom row is identical
+  const googleChildTileMask = defaultValue(options.childTileMask, 15);
+  let childTileMask = googleChildTileMask & 3; // Bottom row is identical
   childTileMask |= googleChildTileMask & 4 ? 8 : 0; // NE
   childTileMask |= googleChildTileMask & 8 ? 4 : 0; // NW
 
@@ -117,15 +117,15 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainData.prototype, {
   },
 });
 
-var createMeshTaskName = "createVerticesFromGoogleEarthEnterpriseBuffer";
-var createMeshTaskProcessorNoThrottle = new TaskProcessor(createMeshTaskName);
-var createMeshTaskProcessorThrottle = new TaskProcessor(
+const createMeshTaskName = "createVerticesFromGoogleEarthEnterpriseBuffer";
+const createMeshTaskProcessorNoThrottle = new TaskProcessor(createMeshTaskName);
+const createMeshTaskProcessorThrottle = new TaskProcessor(
   createMeshTaskName,
   TerrainData.maximumAsynchronousTasks
 );
 
-var nativeRectangleScratch = new Rectangle();
-var rectangleScratch = new Rectangle();
+const nativeRectangleScratch = new Rectangle();
+const rectangleScratch = new Rectangle();
 
 /**
  * Creates a {@link TerrainMesh} from this terrain data.
@@ -154,35 +154,35 @@ GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (options) {
   Check.typeOf.number("options.level", options.level);
   //>>includeEnd('debug');
 
-  var tilingScheme = options.tilingScheme;
-  var x = options.x;
-  var y = options.y;
-  var level = options.level;
-  var exaggeration = defaultValue(options.exaggeration, 1.0);
-  var exaggerationRelativeHeight = defaultValue(
+  const tilingScheme = options.tilingScheme;
+  const x = options.x;
+  const y = options.y;
+  const level = options.level;
+  const exaggeration = defaultValue(options.exaggeration, 1.0);
+  const exaggerationRelativeHeight = defaultValue(
     options.exaggerationRelativeHeight,
     0.0
   );
-  var throttle = defaultValue(options.throttle, true);
+  const throttle = defaultValue(options.throttle, true);
 
-  var ellipsoid = tilingScheme.ellipsoid;
+  const ellipsoid = tilingScheme.ellipsoid;
   tilingScheme.tileXYToNativeRectangle(x, y, level, nativeRectangleScratch);
   tilingScheme.tileXYToRectangle(x, y, level, rectangleScratch);
 
   // Compute the center of the tile for RTC rendering.
-  var center = ellipsoid.cartographicToCartesian(
+  const center = ellipsoid.cartographicToCartesian(
     Rectangle.center(rectangleScratch)
   );
 
-  var levelZeroMaxError = 40075.16; // From Google's Doc
-  var thisLevelMaxError = levelZeroMaxError / (1 << level);
+  const levelZeroMaxError = 40075.16; // From Google's Doc
+  const thisLevelMaxError = levelZeroMaxError / (1 << level);
   this._skirtHeight = Math.min(thisLevelMaxError * 8.0, 1000.0);
 
-  var createMeshTaskProcessor = throttle
+  const createMeshTaskProcessor = throttle
     ? createMeshTaskProcessorThrottle
     : createMeshTaskProcessorNoThrottle;
 
-  var verticesPromise = createMeshTaskProcessor.scheduleTask({
+  const verticesPromise = createMeshTaskProcessor.scheduleTask({
     buffer: this._buffer,
     nativeRectangle: nativeRectangleScratch,
     rectangle: rectangleScratch,
@@ -201,7 +201,7 @@ GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (options) {
     return undefined;
   }
 
-  var that = this;
+  const that = this;
   return verticesPromise.then(function (result) {
     // Clone complex result objects because the transfer from the web worker
     // has stripped them down to JSON-style objects.
@@ -248,12 +248,12 @@ GoogleEarthEnterpriseTerrainData.prototype.interpolateHeight = function (
   longitude,
   latitude
 ) {
-  var u = CesiumMath.clamp(
+  const u = CesiumMath.clamp(
     (longitude - rectangle.west) / rectangle.width,
     0.0,
     1.0
   );
-  var v = CesiumMath.clamp(
+  const v = CesiumMath.clamp(
     (latitude - rectangle.south) / rectangle.height,
     0.0,
     1.0
@@ -266,7 +266,7 @@ GoogleEarthEnterpriseTerrainData.prototype.interpolateHeight = function (
   return interpolateMeshHeight(this, u, v);
 };
 
-var upsampleTaskProcessor = new TaskProcessor(
+const upsampleTaskProcessor = new TaskProcessor(
   "upsampleQuantizedTerrainMesh",
   TerrainData.maximumAsynchronousTasks
 );
@@ -303,7 +303,7 @@ GoogleEarthEnterpriseTerrainData.prototype.upsample = function (
   Check.typeOf.number("descendantX", descendantX);
   Check.typeOf.number("descendantY", descendantY);
   Check.typeOf.number("descendantLevel", descendantLevel);
-  var levelDifference = descendantLevel - thisLevel;
+  const levelDifference = descendantLevel - thisLevel;
   if (levelDifference > 1) {
     throw new DeveloperError(
       "Upsampling through more than one level at a time is not currently supported."
@@ -311,22 +311,22 @@ GoogleEarthEnterpriseTerrainData.prototype.upsample = function (
   }
   //>>includeEnd('debug');
 
-  var mesh = this._mesh;
+  const mesh = this._mesh;
   if (!defined(this._mesh)) {
     return undefined;
   }
 
-  var isEastChild = thisX * 2 !== descendantX;
-  var isNorthChild = thisY * 2 === descendantY;
+  const isEastChild = thisX * 2 !== descendantX;
+  const isNorthChild = thisY * 2 === descendantY;
 
-  var ellipsoid = tilingScheme.ellipsoid;
-  var childRectangle = tilingScheme.tileXYToRectangle(
+  const ellipsoid = tilingScheme.ellipsoid;
+  const childRectangle = tilingScheme.tileXYToRectangle(
     descendantX,
     descendantY,
     descendantLevel
   );
 
-  var upsamplePromise = upsampleTaskProcessor.scheduleTask({
+  const upsamplePromise = upsampleTaskProcessor.scheduleTask({
     vertices: mesh.vertices,
     indices: mesh.indices,
     indexCountWithoutSkirts: mesh.indexCountWithoutSkirts,
@@ -345,15 +345,15 @@ GoogleEarthEnterpriseTerrainData.prototype.upsample = function (
     return undefined;
   }
 
-  var that = this;
+  const that = this;
   return upsamplePromise.then(function (result) {
-    var quantizedVertices = new Uint16Array(result.vertices);
-    var indicesTypedArray = IndexDatatype.createTypedArray(
+    const quantizedVertices = new Uint16Array(result.vertices);
+    const indicesTypedArray = IndexDatatype.createTypedArray(
       quantizedVertices.length / 3,
       result.indices
     );
 
-    var skirtHeight = that._skirtHeight;
+    const skirtHeight = that._skirtHeight;
 
     // Use QuantizedMeshTerrainData since we have what we need already parsed
     return new QuantizedMeshTerrainData({
@@ -406,7 +406,7 @@ GoogleEarthEnterpriseTerrainData.prototype.isChildAvailable = function (
   Check.typeOf.number("childY", childY);
   //>>includeEnd('debug');
 
-  var bitNumber = 2; // northwest child
+  let bitNumber = 2; // northwest child
   if (childX !== thisX * 2) {
     ++bitNumber; // east child
   }
@@ -429,27 +429,39 @@ GoogleEarthEnterpriseTerrainData.prototype.wasCreatedByUpsampling = function () 
   return this._createdByUpsampling;
 };
 
-var texCoordScratch0 = new Cartesian2();
-var texCoordScratch1 = new Cartesian2();
-var texCoordScratch2 = new Cartesian2();
-var barycentricCoordinateScratch = new Cartesian3();
+const texCoordScratch0 = new Cartesian2();
+const texCoordScratch1 = new Cartesian2();
+const texCoordScratch2 = new Cartesian2();
+const barycentricCoordinateScratch = new Cartesian3();
 
 function interpolateMeshHeight(terrainData, u, v) {
-  var mesh = terrainData._mesh;
-  var vertices = mesh.vertices;
-  var encoding = mesh.encoding;
-  var indices = mesh.indices;
+  const mesh = terrainData._mesh;
+  const vertices = mesh.vertices;
+  const encoding = mesh.encoding;
+  const indices = mesh.indices;
 
-  for (var i = 0, len = indices.length; i < len; i += 3) {
-    var i0 = indices[i];
-    var i1 = indices[i + 1];
-    var i2 = indices[i + 2];
+  for (let i = 0, len = indices.length; i < len; i += 3) {
+    const i0 = indices[i];
+    const i1 = indices[i + 1];
+    const i2 = indices[i + 2];
 
-    var uv0 = encoding.decodeTextureCoordinates(vertices, i0, texCoordScratch0);
-    var uv1 = encoding.decodeTextureCoordinates(vertices, i1, texCoordScratch1);
-    var uv2 = encoding.decodeTextureCoordinates(vertices, i2, texCoordScratch2);
+    const uv0 = encoding.decodeTextureCoordinates(
+      vertices,
+      i0,
+      texCoordScratch0
+    );
+    const uv1 = encoding.decodeTextureCoordinates(
+      vertices,
+      i1,
+      texCoordScratch1
+    );
+    const uv2 = encoding.decodeTextureCoordinates(
+      vertices,
+      i2,
+      texCoordScratch2
+    );
 
-    var barycentric = Intersections2D.computeBarycentricCoordinates(
+    const barycentric = Intersections2D.computeBarycentricCoordinates(
       u,
       v,
       uv0.x,
@@ -465,9 +477,9 @@ function interpolateMeshHeight(terrainData, u, v) {
       barycentric.y >= -1e-15 &&
       barycentric.z >= -1e-15
     ) {
-      var h0 = encoding.decodeHeight(vertices, i0);
-      var h1 = encoding.decodeHeight(vertices, i1);
-      var h2 = encoding.decodeHeight(vertices, i2);
+      const h0 = encoding.decodeHeight(vertices, i0);
+      const h1 = encoding.decodeHeight(vertices, i1);
+      const h2 = encoding.decodeHeight(vertices, i2);
       return barycentric.x * h0 + barycentric.y * h1 + barycentric.z * h2;
     }
   }
@@ -476,17 +488,17 @@ function interpolateMeshHeight(terrainData, u, v) {
   return undefined;
 }
 
-var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
-var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
-var sizeOfInt32 = Int32Array.BYTES_PER_ELEMENT;
-var sizeOfFloat = Float32Array.BYTES_PER_ELEMENT;
-var sizeOfDouble = Float64Array.BYTES_PER_ELEMENT;
+const sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
+const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+const sizeOfInt32 = Int32Array.BYTES_PER_ELEMENT;
+const sizeOfFloat = Float32Array.BYTES_PER_ELEMENT;
+const sizeOfDouble = Float64Array.BYTES_PER_ELEMENT;
 
 function interpolateHeight(terrainData, u, v, rectangle) {
-  var buffer = terrainData._buffer;
-  var quad = 0; // SW
-  var uStart = 0.0;
-  var vStart = 0.0;
+  const buffer = terrainData._buffer;
+  let quad = 0; // SW
+  let uStart = 0.0;
+  let vStart = 0.0;
   if (v > 0.5) {
     // Upper row
     if (u > 0.5) {
@@ -504,9 +516,9 @@ function interpolateHeight(terrainData, u, v, rectangle) {
     uStart = 0.5;
   }
 
-  var dv = new DataView(buffer);
-  var offset = 0;
-  for (var q = 0; q < quad; ++q) {
+  const dv = new DataView(buffer);
+  let offset = 0;
+  for (let q = 0; q < quad; ++q) {
     offset += dv.getUint32(offset, true);
     offset += sizeOfUint32;
   }
@@ -514,29 +526,29 @@ function interpolateHeight(terrainData, u, v, rectangle) {
   offset += 2 * sizeOfDouble; // Skip origin
 
   // Read sizes
-  var xSize = CesiumMath.toRadians(dv.getFloat64(offset, true) * 180.0);
+  const xSize = CesiumMath.toRadians(dv.getFloat64(offset, true) * 180.0);
   offset += sizeOfDouble;
-  var ySize = CesiumMath.toRadians(dv.getFloat64(offset, true) * 180.0);
+  const ySize = CesiumMath.toRadians(dv.getFloat64(offset, true) * 180.0);
   offset += sizeOfDouble;
 
   // Samples per quad
-  var xScale = rectangle.width / xSize / 2;
-  var yScale = rectangle.height / ySize / 2;
+  const xScale = rectangle.width / xSize / 2;
+  const yScale = rectangle.height / ySize / 2;
 
   // Number of points
-  var numPoints = dv.getInt32(offset, true);
+  const numPoints = dv.getInt32(offset, true);
   offset += sizeOfInt32;
 
   // Number of faces
-  var numIndices = dv.getInt32(offset, true) * 3;
+  const numIndices = dv.getInt32(offset, true) * 3;
   offset += sizeOfInt32;
 
   offset += sizeOfInt32; // Skip Level
 
-  var uBuffer = new Array(numPoints);
-  var vBuffer = new Array(numPoints);
-  var heights = new Array(numPoints);
-  var i;
+  const uBuffer = new Array(numPoints);
+  const vBuffer = new Array(numPoints);
+  const heights = new Array(numPoints);
+  let i;
   for (i = 0; i < numPoints; ++i) {
     uBuffer[i] = uStart + dv.getUint8(offset++) * xScale;
     vBuffer[i] = vStart + dv.getUint8(offset++) * yScale;
@@ -546,26 +558,26 @@ function interpolateHeight(terrainData, u, v, rectangle) {
     offset += sizeOfFloat;
   }
 
-  var indices = new Array(numIndices);
+  const indices = new Array(numIndices);
   for (i = 0; i < numIndices; ++i) {
     indices[i] = dv.getUint16(offset, true);
     offset += sizeOfUint16;
   }
 
   for (i = 0; i < numIndices; i += 3) {
-    var i0 = indices[i];
-    var i1 = indices[i + 1];
-    var i2 = indices[i + 2];
+    const i0 = indices[i];
+    const i1 = indices[i + 1];
+    const i2 = indices[i + 2];
 
-    var u0 = uBuffer[i0];
-    var u1 = uBuffer[i1];
-    var u2 = uBuffer[i2];
+    const u0 = uBuffer[i0];
+    const u1 = uBuffer[i1];
+    const u2 = uBuffer[i2];
 
-    var v0 = vBuffer[i0];
-    var v1 = vBuffer[i1];
-    var v2 = vBuffer[i2];
+    const v0 = vBuffer[i0];
+    const v1 = vBuffer[i1];
+    const v2 = vBuffer[i2];
 
-    var barycentric = Intersections2D.computeBarycentricCoordinates(
+    const barycentric = Intersections2D.computeBarycentricCoordinates(
       u,
       v,
       u0,

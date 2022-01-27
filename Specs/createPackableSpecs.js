@@ -6,10 +6,10 @@ function createPackableSpecs(packable, instance, packedInstance, namePrefix) {
   namePrefix = defaultValue(namePrefix, "");
 
   it(namePrefix + " can pack", function () {
-    var packedArray = [];
-    var returnArray = packable.pack(instance, packedArray);
+    const packedArray = [];
+    const returnArray = packable.pack(instance, packedArray);
     expect(returnArray).toBe(packedArray);
-    var packedLength = defined(packable.packedLength)
+    const packedLength = defined(packable.packedLength)
       ? packable.packedLength
       : instance.packedLength;
     expect(packedArray.length).toEqual(packedLength);
@@ -17,32 +17,32 @@ function createPackableSpecs(packable, instance, packedInstance, namePrefix) {
   });
 
   it(namePrefix + " can roundtrip", function () {
-    var packedArray = [];
+    const packedArray = [];
     packable.pack(instance, packedArray);
-    var result = packable.unpack(packedArray);
+    const result = packable.unpack(packedArray);
     expect(instance).toEqual(result);
   });
 
   it(namePrefix + " can unpack", function () {
-    var result = packable.unpack(packedInstance);
+    const result = packable.unpack(packedInstance);
     expect(result).toEqual(instance);
   });
 
   it(namePrefix + " can pack with startingIndex", function () {
-    var packedArray = [0];
-    var expected = packedArray.concat(packedInstance);
+    const packedArray = [0];
+    const expected = packedArray.concat(packedInstance);
     packable.pack(instance, packedArray, 1);
     expect(packedArray).toEqualEpsilon(expected, CesiumMath.EPSILON15);
   });
 
   it(namePrefix + " can unpack with startingIndex", function () {
-    var packedArray = [0].concat(packedInstance);
-    var result = packable.unpack(packedArray, 1);
+    const packedArray = [0].concat(packedInstance);
+    const result = packable.unpack(packedArray, 1);
     expect(instance).toEqual(result);
   });
 
   it(namePrefix + " pack throws with undefined value", function () {
-    var array = [];
+    const array = [];
     expect(function () {
       packable.pack(undefined, array);
     }).toThrowDeveloperError();
@@ -62,20 +62,20 @@ function createPackableSpecs(packable, instance, packedInstance, namePrefix) {
 
   if (typeof packable.convertPackedArrayForInterpolation === "function") {
     it(namePrefix + " packs and unpacks for interpolation.", function () {
-      var packedForInterpolation = [];
+      const packedForInterpolation = [];
       packable.convertPackedArrayForInterpolation(
         packedInstance,
         0,
         0,
         packedForInterpolation
       );
-      var value = packable.unpackInterpolationResult(
+      const value = packable.unpackInterpolationResult(
         packedForInterpolation,
         packedInstance,
         0,
         0
       );
-      var result = packable.unpack(packedInstance);
+      const result = packable.unpack(packedInstance);
       expect(value).toEqual(result);
     });
 

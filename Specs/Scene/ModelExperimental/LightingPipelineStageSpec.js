@@ -7,14 +7,14 @@ import {
 } from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/LightingPipelineStage", function () {
-  var mockPrimitive = {};
+  const mockPrimitive = {};
 
-  var optionsUnlit = new ModelLightingOptions();
+  const optionsUnlit = new ModelLightingOptions();
   optionsUnlit.lightingModel = LightingModel.UNLIT;
 
   it("supports unlit lighting", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var renderResources = {
+    const shaderBuilder = new ShaderBuilder();
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       lightingOptions: optionsUnlit,
     };
@@ -27,11 +27,11 @@ describe("Scene/ModelExperimental/LightingPipelineStage", function () {
   });
 
   it("supports PBR lighting", function () {
-    var optionsPbr = new ModelLightingOptions();
+    const optionsPbr = new ModelLightingOptions();
     optionsPbr.lightingModel = LightingModel.PBR;
 
-    var shaderBuilder = new ShaderBuilder();
-    var renderResources = {
+    const shaderBuilder = new ShaderBuilder();
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       lightingOptions: optionsPbr,
     };
@@ -44,8 +44,8 @@ describe("Scene/ModelExperimental/LightingPipelineStage", function () {
   });
 
   it("adds the lighting shader function to the shader", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var renderResources = {
+    const shaderBuilder = new ShaderBuilder();
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       lightingOptions: optionsUnlit,
     };

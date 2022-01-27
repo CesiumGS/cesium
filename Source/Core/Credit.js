@@ -3,8 +3,8 @@ import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 
-var nextCreditId = 0;
-var creditToId = {};
+let nextCreditId = 0;
+const creditToId = {};
 
 /**
  * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
@@ -24,8 +24,8 @@ function Credit(html, showOnScreen) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("html", html);
   //>>includeEnd('debug');
-  var id;
-  var key = html;
+  let id;
+  const key = html;
 
   if (defined(creditToId[key])) {
     id = creditToId[key];
@@ -90,15 +90,15 @@ Object.defineProperties(Credit.prototype, {
   element: {
     get: function () {
       if (!defined(this._element)) {
-        var html = DOMPurify.sanitize(this._html);
+        const html = DOMPurify.sanitize(this._html);
 
-        var div = document.createElement("div");
+        const div = document.createElement("div");
         div._creditId = this._id;
         div.style.display = "inline";
         div.innerHTML = html;
 
-        var links = div.querySelectorAll("a");
-        for (var i = 0; i < links.length; i++) {
+        const links = div.querySelectorAll("a");
+        for (let i = 0; i < links.length; i++) {
           links[i].setAttribute("target", "_blank");
         }
 
@@ -139,9 +139,9 @@ Credit.prototype.equals = function (credit) {
  * @return {Credit}
  */
 Credit.getIonCredit = function (attribution) {
-  var showOnScreen =
+  const showOnScreen =
     defined(attribution.collapsible) && !attribution.collapsible;
-  var credit = new Credit(attribution.html, showOnScreen);
+  const credit = new Credit(attribution.html, showOnScreen);
 
   credit._isIon = credit.html.indexOf("ion-credit.png") !== -1;
   return credit;

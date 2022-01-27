@@ -169,9 +169,9 @@ Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
 });
 
 function initialize(sceneGraph) {
-  var components = sceneGraph._modelComponents;
-  var scene = components.scene;
-  var model = sceneGraph._model;
+  const components = sceneGraph._modelComponents;
+  const scene = components.scene;
+  const model = sceneGraph._model;
 
   sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
     model.modelMatrix,
@@ -185,11 +185,13 @@ function initialize(sceneGraph) {
     components.forwardAxis
   );
 
-  var rootNodes = scene.nodes;
-  for (var i = 0; i < rootNodes.length; i++) {
-    var rootNode = scene.nodes[i];
-    var rootNodeTransform = ModelExperimentalUtility.getNodeTransform(rootNode);
-    var rootNodeIndex = traverseSceneGraph(
+  const rootNodes = scene.nodes;
+  for (let i = 0; i < rootNodes.length; i++) {
+    const rootNode = scene.nodes[i];
+    const rootNodeTransform = ModelExperimentalUtility.getNodeTransform(
+      rootNode
+    );
+    const rootNodeIndex = traverseSceneGraph(
       sceneGraph,
       rootNode,
       rootNodeTransform
@@ -213,20 +215,20 @@ function initialize(sceneGraph) {
  */
 function traverseSceneGraph(sceneGraph, node, transform) {
   // The indices of the children of this node in the runtimeNodes array.
-  var childrenIndices = [];
+  const childrenIndices = [];
 
   // Traverse through scene graph.
-  var i;
+  let i;
   if (defined(node.children)) {
     for (i = 0; i < node.children.length; i++) {
-      var childNode = node.children[i];
-      var childNodeTransform = Matrix4.multiply(
+      const childNode = node.children[i];
+      const childNodeTransform = Matrix4.multiply(
         transform,
         ModelExperimentalUtility.getNodeTransform(childNode),
         new Matrix4()
       );
 
-      var childIndex = traverseSceneGraph(
+      const childIndex = traverseSceneGraph(
         sceneGraph,
         childNode,
         childNodeTransform
@@ -236,7 +238,7 @@ function traverseSceneGraph(sceneGraph, node, transform) {
   }
 
   // Process node and mesh primitives.
-  var runtimeNode = new ModelExperimentalNode({
+  const runtimeNode = new ModelExperimentalNode({
     node: node,
     transform: transform,
     children: childrenIndices,
@@ -272,30 +274,30 @@ function traverseSceneGraph(sceneGraph, node, transform) {
 ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   frameState
 ) {
-  var modelRenderResources = new ModelRenderResources(this._model);
+  const modelRenderResources = new ModelRenderResources(this._model);
 
   this.configurePipeline();
-  var modelPipelineStages = this.modelPipelineStages;
+  const modelPipelineStages = this.modelPipelineStages;
 
-  var model = this.model;
-  var i, j, k;
+  const model = this.model;
+  let i, j, k;
   for (i = 0; i < modelPipelineStages.length; i++) {
-    var modelPipelineStage = modelPipelineStages[i];
+    const modelPipelineStage = modelPipelineStages[i];
     modelPipelineStage.process(modelRenderResources, model, frameState);
   }
 
   for (i = 0; i < this._runtimeNodes.length; i++) {
-    var runtimeNode = this._runtimeNodes[i];
+    const runtimeNode = this._runtimeNodes[i];
     runtimeNode.configurePipeline();
-    var nodePipelineStages = runtimeNode.pipelineStages;
+    const nodePipelineStages = runtimeNode.pipelineStages;
 
-    var nodeRenderResources = new NodeRenderResources(
+    const nodeRenderResources = new NodeRenderResources(
       modelRenderResources,
       runtimeNode
     );
 
     for (j = 0; j < nodePipelineStages.length; j++) {
-      var nodePipelineStage = nodePipelineStages[j];
+      const nodePipelineStage = nodePipelineStages[j];
 
       nodePipelineStage.process(
         nodeRenderResources,
@@ -305,18 +307,18 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     }
 
     for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
-      var runtimePrimitive = runtimeNode.runtimePrimitives[j];
+      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
 
       runtimePrimitive.configurePipeline();
-      var primitivePipelineStages = runtimePrimitive.pipelineStages;
+      const primitivePipelineStages = runtimePrimitive.pipelineStages;
 
-      var primitiveRenderResources = new PrimitiveRenderResources(
+      const primitiveRenderResources = new PrimitiveRenderResources(
         nodeRenderResources,
         runtimePrimitive
       );
 
       for (k = 0; k < primitivePipelineStages.length; k++) {
-        var primitivePipelineStage = primitivePipelineStages[k];
+        const primitivePipelineStage = primitivePipelineStages[k];
 
         primitivePipelineStage.process(
           primitiveRenderResources,
@@ -330,7 +332,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       );
       this._boundingSpheres.push(primitiveRenderResources.boundingSphere);
 
-      var drawCommands = buildDrawCommands(
+      const drawCommands = buildDrawCommands(
         primitiveRenderResources,
         frameState
       );
@@ -351,30 +353,30 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
  * @private
  */
 ModelExperimentalSceneGraph.prototype.configurePipeline = function () {
-  var modelPipelineStages = this.modelPipelineStages;
+  const modelPipelineStages = this.modelPipelineStages;
   modelPipelineStages.length = 0;
 
-  var model = this._model;
+  const model = this._model;
   if (defined(model.color)) {
     modelPipelineStages.push(ModelColorPipelineStage);
   }
 };
 
 ModelExperimentalSceneGraph.prototype.update = function (frameState) {
-  var i, j, k;
+  let i, j, k;
 
   for (i = 0; i < this._runtimeNodes.length; i++) {
-    var runtimeNode = this._runtimeNodes[i];
+    const runtimeNode = this._runtimeNodes[i];
 
     for (j = 0; j < runtimeNode.updateStages.length; j++) {
-      var nodeUpdateStage = runtimeNode.updateStages[j];
+      const nodeUpdateStage = runtimeNode.updateStages[j];
       nodeUpdateStage.update(runtimeNode, this, frameState);
     }
 
     for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
-      var runtimePrimitive = runtimeNode.runtimePrimitives[j];
+      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
       for (k = 0; k < runtimePrimitive.updateStages.length; k++) {
-        var stage = runtimePrimitive.updateStages[k];
+        const stage = runtimePrimitive.updateStages[k];
         stage.update(runtimePrimitive);
       }
     }
@@ -395,9 +397,9 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
     this._modelComponents.forwardAxis
   );
 
-  var rootNodes = this._rootNodes;
-  for (var i = 0; i < rootNodes.length; i++) {
-    var node = this._runtimeNodes[rootNodes[i]];
+  const rootNodes = this._rootNodes;
+  for (let i = 0; i < rootNodes.length; i++) {
+    const node = this._runtimeNodes[rootNodes[i]];
     node.updateModelMatrix();
   }
 };
@@ -409,11 +411,11 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
  * @private
  */
 ModelExperimentalSceneGraph.prototype.getDrawCommands = function () {
-  var drawCommands = [];
-  for (var i = 0; i < this._runtimeNodes.length; i++) {
-    var runtimeNode = this._runtimeNodes[i];
-    for (var j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
-      var runtimePrimitive = runtimeNode.runtimePrimitives[j];
+  const drawCommands = [];
+  for (let i = 0; i < this._runtimeNodes.length; i++) {
+    const runtimeNode = this._runtimeNodes[i];
+    for (let j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
+      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
       drawCommands.push.apply(drawCommands, runtimePrimitive.drawCommands);
     }
   }

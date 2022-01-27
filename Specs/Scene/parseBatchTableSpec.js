@@ -9,9 +9,9 @@ import {
 } from "../../Source/Cesium.js";
 
 describe("Scene/parseBatchTable", function () {
-  var batchTableJson = {};
-  var count = 3;
-  var className = MetadataClass.BATCH_TABLE_CLASS_NAME;
+  const batchTableJson = {};
+  const count = 3;
+  const className = MetadataClass.BATCH_TABLE_CLASS_NAME;
 
   it("throws without count", function () {
     expect(function () {
@@ -32,7 +32,7 @@ describe("Scene/parseBatchTable", function () {
   });
 
   it("parses batch table with no properties", function () {
-    var metadata = parseBatchTable({
+    const metadata = parseBatchTable({
       count: count,
       batchTable: {},
     });
@@ -41,7 +41,7 @@ describe("Scene/parseBatchTable", function () {
   });
 
   it("parses batch table with binary properties", function () {
-    var binaryBatchTable = {
+    const binaryBatchTable = {
       height: {
         byteOffset: 0,
         componentType: "FLOAT",
@@ -49,15 +49,15 @@ describe("Scene/parseBatchTable", function () {
       },
     };
 
-    var heightValues = new Float32Array([10.0, 15.0, 25.0]);
-    var binaryBody = new Uint8Array(heightValues.buffer);
+    const heightValues = new Float32Array([10.0, 15.0, 25.0]);
+    const binaryBody = new Uint8Array(heightValues.buffer);
 
-    var metadata = parseBatchTable({
+    const metadata = parseBatchTable({
       count: 3,
       batchTable: binaryBatchTable,
       binaryBody: binaryBody,
     });
-    var propertyTable = metadata.getPropertyTable(0);
+    const propertyTable = metadata.getPropertyTable(0);
     expect(propertyTable.id).toBe(0);
     expect(propertyTable.name).toBe("Batch Table");
 
@@ -69,7 +69,7 @@ describe("Scene/parseBatchTable", function () {
   it("transcodes scalars to correct types", function () {
     // making use of the fact that 0 is represented as NUL bytes
     // in all of the above types
-    var binaryBatchTable = {
+    const binaryBatchTable = {
       uint8Property: {
         byteOffset: 0,
         componentType: "UNSIGNED_BYTE",
@@ -113,14 +113,14 @@ describe("Scene/parseBatchTable", function () {
     };
 
     // largest type is a double
-    var binaryBody = new Uint8Array(8);
+    const binaryBody = new Uint8Array(8);
 
-    var metadata = parseBatchTable({
+    const metadata = parseBatchTable({
       count: 1,
       batchTable: binaryBatchTable,
       binaryBody: binaryBody,
     });
-    var properties = metadata.schema.classes[className].properties;
+    const properties = metadata.schema.classes[className].properties;
 
     expect(properties.uint8Property.componentType).toBe(
       MetadataComponentType.UINT8
@@ -147,7 +147,7 @@ describe("Scene/parseBatchTable", function () {
       MetadataComponentType.FLOAT64
     );
 
-    var propertyTable = metadata.getPropertyTable(0);
+    const propertyTable = metadata.getPropertyTable(0);
     expect(propertyTable.getProperty(0, "uint8Property")).toBe(0);
     expect(propertyTable.getProperty(0, "uint16Property")).toBe(0);
     expect(propertyTable.getProperty(0, "uint32Property")).toBe(0);
@@ -159,7 +159,7 @@ describe("Scene/parseBatchTable", function () {
   });
 
   it("transcodes binary vectors to array types", function () {
-    var vectorBatchTable = {
+    const vectorBatchTable = {
       vec2Property: {
         byteOffset: 0,
         componentType: "FLOAT",
@@ -177,14 +177,14 @@ describe("Scene/parseBatchTable", function () {
       },
     };
     // largest type is a vec4 of doubles
-    var binaryBody = new Uint8Array(8 * 4);
+    const binaryBody = new Uint8Array(8 * 4);
 
-    var metadata = parseBatchTable({
+    const metadata = parseBatchTable({
       count: 1,
       batchTable: vectorBatchTable,
       binaryBody: binaryBody,
     });
-    var properties = metadata.schema.classes[className].properties;
+    const properties = metadata.schema.classes[className].properties;
 
     expect(properties.vec2Property.type).toBe(MetadataType.VEC2);
     expect(properties.uvec3Property.type).toBe(MetadataType.VEC3);
@@ -202,7 +202,7 @@ describe("Scene/parseBatchTable", function () {
     expect(properties.uvec3Property.componentCount).toBe(3);
     expect(properties.dvec4Property.componentCount).toBe(4);
 
-    var propertyTable = metadata.getPropertyTable(0);
+    const propertyTable = metadata.getPropertyTable(0);
     expect(propertyTable.getProperty(0, "vec2Property")).toEqual(
       new Cartesian2(0.0, 0.0)
     );
@@ -215,7 +215,7 @@ describe("Scene/parseBatchTable", function () {
   });
 
   it("parses batch table with JSON properties", function () {
-    var jsonBatchTable = {
+    const jsonBatchTable = {
       location: [
         [0, 0],
         [1, 0],
@@ -234,15 +234,15 @@ describe("Scene/parseBatchTable", function () {
       ],
     };
 
-    var metadata = parseBatchTable({
+    const metadata = parseBatchTable({
       count: 2,
       batchTable: jsonBatchTable,
     });
 
-    var properties = metadata.schema.classes[className].properties;
+    const properties = metadata.schema.classes[className].properties;
     expect(properties).toEqual({});
 
-    var propertyTable = metadata.getPropertyTable(0);
+    const propertyTable = metadata.getPropertyTable(0);
     expect(propertyTable.getProperty(0, "location")).toEqual(
       jsonBatchTable.location[0]
     );
@@ -257,7 +257,7 @@ describe("Scene/parseBatchTable", function () {
     );
   });
 
-  var hierarchy = {
+  const hierarchy = {
     classes: [
       {
         name: "Wheels",
@@ -292,22 +292,22 @@ describe("Scene/parseBatchTable", function () {
   };
 
   it("warns for deprecated HIERARCHY extension", function () {
-    var warn = spyOn(parseBatchTable, "_deprecationWarning");
-    var oldHierarchyBatchTable = {
+    const warn = spyOn(parseBatchTable, "_deprecationWarning");
+    const oldHierarchyBatchTable = {
       HIERARCHY: hierarchy,
     };
 
-    var metadata = parseBatchTable({
+    const metadata = parseBatchTable({
       count: 10,
       batchTable: oldHierarchyBatchTable,
     });
 
     expect(warn).toHaveBeenCalled();
 
-    var properties = metadata.schema.classes[className].properties;
+    const properties = metadata.schema.classes[className].properties;
     expect(properties).toEqual({});
 
-    var propertyTable = metadata.getPropertyTable(0);
+    const propertyTable = metadata.getPropertyTable(0);
     expect(propertyTable.getProperty(0, "tire_location")).toBe("front_left");
     expect(propertyTable.getProperty(0, "color")).toBe("blue");
     expect(propertyTable.getProperty(0, "type")).toBe("sedan");
@@ -330,21 +330,21 @@ describe("Scene/parseBatchTable", function () {
   });
 
   it("parses batch table with hierarchy", function () {
-    var oldHierarchyBatchTable = {
+    const oldHierarchyBatchTable = {
       extensions: {
         "3DTILES_batch_table_hierarchy": hierarchy,
       },
     };
 
-    var metadata = parseBatchTable({
+    const metadata = parseBatchTable({
       count: 10,
       batchTable: oldHierarchyBatchTable,
     });
 
-    var properties = metadata.schema.classes[className].properties;
+    const properties = metadata.schema.classes[className].properties;
     expect(properties).toEqual({});
 
-    var propertyTable = metadata.getPropertyTable(0);
+    const propertyTable = metadata.getPropertyTable(0);
     expect(propertyTable.getProperty(0, "tire_location")).toBe("front_left");
     expect(propertyTable.getProperty(0, "color")).toBe("blue");
     expect(propertyTable.getProperty(0, "type")).toBe("sedan");
@@ -367,7 +367,7 @@ describe("Scene/parseBatchTable", function () {
   });
 
   it("stores extras and extensions in the transcoded FeatureMetadata", function () {
-    var batchTable = {
+    const batchTable = {
       extras: {
         author: "Cesium",
         date: "2021-04-15",
@@ -377,7 +377,7 @@ describe("Scene/parseBatchTable", function () {
       },
     };
 
-    var metadata = parseBatchTable({
+    const metadata = parseBatchTable({
       count: 1,
       batchTable: batchTable,
     });
@@ -387,7 +387,7 @@ describe("Scene/parseBatchTable", function () {
   });
 
   it("throws if binaryBody is needed and not provided", function () {
-    var binaryBatchTable = {
+    const binaryBatchTable = {
       height: {
         byteOffset: 0,
         componentType: "FLOAT",

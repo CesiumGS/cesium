@@ -187,14 +187,14 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
         //Set the random number seed for consistent results.
         Cesium.Math.setRandomNumberSeed(3);
 
         //Set bounds of our simulation time
-        var start = Cesium.JulianDate.fromDate(new Date(2015, 2, 25, 16));
-        var stop = Cesium.JulianDate.addSeconds(
+        const start = Cesium.JulianDate.fromDate(new Date(2015, 2, 25, 16));
+        const stop = Cesium.JulianDate.addSeconds(
           start,
           120,
           new Cesium.JulianDate()
@@ -211,7 +211,7 @@
         //Set timeline to simulation bounds
         viewer.timeline.zoomTo(start, stop);
 
-        var viewModel = {
+        const viewModel = {
           emissionRate: 5.0,
           gravity: 0.0,
           minimumParticleLife: 1.2,
@@ -224,23 +224,23 @@
         };
 
         Cesium.knockout.track(viewModel);
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
-        var entityPosition = new Cesium.Cartesian3();
-        var entityOrientation = new Cesium.Quaternion();
-        var rotationMatrix = new Cesium.Matrix3();
-        var modelMatrix = new Cesium.Matrix4();
+        const entityPosition = new Cesium.Cartesian3();
+        const entityOrientation = new Cesium.Quaternion();
+        const rotationMatrix = new Cesium.Matrix3();
+        const modelMatrix = new Cesium.Matrix4();
 
         function computeModelMatrix(entity, time) {
           return entity.computeModelMatrix(time, new Cesium.Matrix4());
         }
 
-        var emitterModelMatrix = new Cesium.Matrix4();
-        var translation = new Cesium.Cartesian3();
-        var rotation = new Cesium.Quaternion();
-        var hpr = new Cesium.HeadingPitchRoll();
-        var trs = new Cesium.TranslationRotationScale();
+        const emitterModelMatrix = new Cesium.Matrix4();
+        const translation = new Cesium.Cartesian3();
+        const rotation = new Cesium.Quaternion();
+        let hpr = new Cesium.HeadingPitchRoll();
+        const trs = new Cesium.TranslationRotationScale();
 
         function computeEmitterModelMatrix() {
           hpr = Cesium.HeadingPitchRoll.fromDegrees(0.0, 0.0, 0.0, hpr);
@@ -258,20 +258,20 @@
           );
         }
 
-        var pos1 = Cesium.Cartesian3.fromDegrees(
+        const pos1 = Cesium.Cartesian3.fromDegrees(
           -75.15787310614596,
           39.97862668312678
         );
-        var pos2 = Cesium.Cartesian3.fromDegrees(
+        const pos2 = Cesium.Cartesian3.fromDegrees(
           -75.1633691390455,
           39.95355089912078
         );
-        var position = new Cesium.SampledPositionProperty();
+        const position = new Cesium.SampledPositionProperty();
 
         position.addSample(start, pos1);
         position.addSample(stop, pos2);
 
-        var entity = viewer.entities.add({
+        const entity = viewer.entities.add({
           availability: new Cesium.TimeIntervalCollection([
             new Cesium.TimeInterval({
               start: start,
@@ -288,8 +288,8 @@
         });
         viewer.trackedEntity = entity;
 
-        var scene = viewer.scene;
-        var particleSystem = scene.primitives.add(
+        const scene = viewer.scene;
+        const particleSystem = scene.primitives.add(
           new Cesium.ParticleSystem({
             image: "../../SampleData/smoke.png",
 
@@ -341,11 +341,11 @@
           })
         );
 
-        var gravityScratch = new Cesium.Cartesian3();
+        const gravityScratch = new Cesium.Cartesian3();
 
         function applyGravity(p, dt) {
           // We need to compute a local up vector for each particle in geocentric space.
-          var position = p.position;
+          const position = p.position;
 
           Cesium.Cartesian3.normalize(position, gravityScratch);
           Cesium.Cartesian3.multiplyByScalar(
@@ -384,7 +384,7 @@
         Cesium.knockout
           .getObservable(viewModel, "particleSize")
           .subscribe(function (newValue) {
-            var particleSize = parseFloat(newValue);
+            const particleSize = parseFloat(newValue);
             particleSystem.minimumImageSize.x = particleSize;
             particleSystem.minimumImageSize.y = particleSize;
             particleSystem.maximumImageSize.x = particleSize;
@@ -427,7 +427,7 @@
             particleSystem.endScale = parseFloat(newValue);
           });
 
-        var options = [
+        const options = [
           {
             text: "Circle Emitter",
             onselect: function () {

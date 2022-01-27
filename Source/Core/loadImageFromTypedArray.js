@@ -8,11 +8,11 @@ import Resource from "./Resource.js";
  * @private
  */
 function loadImageFromTypedArray(options) {
-  var uint8Array = options.uint8Array;
-  var format = options.format;
-  var request = options.request;
-  var flipY = defaultValue(options.flipY, false);
-  var skipColorSpaceConversion = defaultValue(
+  const uint8Array = options.uint8Array;
+  const format = options.format;
+  const request = options.request;
+  const flipY = defaultValue(options.flipY, false);
+  const skipColorSpaceConversion = defaultValue(
     options.skipColorSpaceConversion,
     false
   );
@@ -21,11 +21,11 @@ function loadImageFromTypedArray(options) {
   Check.typeOf.string("format", format);
   //>>includeEnd('debug');
 
-  var blob = new Blob([uint8Array], {
+  const blob = new Blob([uint8Array], {
     type: format,
   });
 
-  var blobUrl;
+  let blobUrl;
   return Resource.supportsImageBitmapOptions()
     .then(function (result) {
       if (result) {
@@ -39,7 +39,7 @@ function loadImageFromTypedArray(options) {
       }
 
       blobUrl = window.URL.createObjectURL(blob);
-      var resource = new Resource({
+      const resource = new Resource({
         url: blobUrl,
         request: request,
       });

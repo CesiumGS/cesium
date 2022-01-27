@@ -22,19 +22,19 @@ import MetadataClassProperty from "./MetadataClassProperty.js";
  */
 function MetadataClass(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var id = options.id;
-  var classDefinition = options.class;
+  const id = options.id;
+  const classDefinition = options.class;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("options.id", id);
   Check.typeOf.object("options.class", classDefinition);
   //>>includeEnd('debug');
 
-  var properties = {};
-  var propertiesBySemantic = {};
-  for (var propertyId in classDefinition.properties) {
+  const properties = {};
+  const propertiesBySemantic = {};
+  for (const propertyId in classDefinition.properties) {
     if (classDefinition.properties.hasOwnProperty(propertyId)) {
-      var property = new MetadataClassProperty({
+      const property = new MetadataClassProperty({
         id: propertyId,
         property: classDefinition.properties[propertyId],
         enums: options.enums,

@@ -11,7 +11,7 @@ import createContext from "../createContext.js";
 describe(
   "Renderer/loadCubeMap",
   function () {
-    var context;
+    let context;
 
     beforeAll(function () {
       context = createContext();
@@ -33,13 +33,13 @@ describe(
         expect(cm.width).toEqual(1);
         expect(cm.height).toEqual(1);
 
-        var vs =
+        const vs =
           "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-        var fs =
+        const fs =
           "uniform samplerCube u_texture;" +
           "uniform mediump vec3 u_direction;" +
           "void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }";
-        var sp = ShaderProgram.fromCache({
+        const sp = ShaderProgram.fromCache({
           context: context,
           vertexShaderSource: vs,
           fragmentShaderSource: fs,
@@ -47,7 +47,7 @@ describe(
             position: 0,
           },
         });
-        var uniformMap = {
+        const uniformMap = {
           direction: undefined,
 
           u_texture: function () {
@@ -58,7 +58,7 @@ describe(
           },
         };
 
-        var va = new VertexArray({
+        const va = new VertexArray({
           context: context,
           attributes: [
             {
@@ -72,7 +72,7 @@ describe(
           ],
         });
 
-        var command = new DrawCommand({
+        const command = new DrawCommand({
           primitiveType: PrimitiveType.POINTS,
           shaderProgram: sp,
           vertexArray: va,

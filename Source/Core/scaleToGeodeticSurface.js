@@ -3,8 +3,8 @@ import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 
-var scaleToGeodeticSurfaceIntersection = new Cartesian3();
-var scaleToGeodeticSurfaceGradient = new Cartesian3();
+const scaleToGeodeticSurfaceIntersection = new Cartesian3();
+const scaleToGeodeticSurfaceGradient = new Cartesian3();
 
 /**
  * Scales the provided Cartesian position along the geodetic surface normal
@@ -44,24 +44,24 @@ function scaleToGeodeticSurface(
   }
   //>>includeEnd('debug');
 
-  var positionX = cartesian.x;
-  var positionY = cartesian.y;
-  var positionZ = cartesian.z;
+  const positionX = cartesian.x;
+  const positionY = cartesian.y;
+  const positionZ = cartesian.z;
 
-  var oneOverRadiiX = oneOverRadii.x;
-  var oneOverRadiiY = oneOverRadii.y;
-  var oneOverRadiiZ = oneOverRadii.z;
+  const oneOverRadiiX = oneOverRadii.x;
+  const oneOverRadiiY = oneOverRadii.y;
+  const oneOverRadiiZ = oneOverRadii.z;
 
-  var x2 = positionX * positionX * oneOverRadiiX * oneOverRadiiX;
-  var y2 = positionY * positionY * oneOverRadiiY * oneOverRadiiY;
-  var z2 = positionZ * positionZ * oneOverRadiiZ * oneOverRadiiZ;
+  const x2 = positionX * positionX * oneOverRadiiX * oneOverRadiiX;
+  const y2 = positionY * positionY * oneOverRadiiY * oneOverRadiiY;
+  const z2 = positionZ * positionZ * oneOverRadiiZ * oneOverRadiiZ;
 
   // Compute the squared ellipsoid norm.
-  var squaredNorm = x2 + y2 + z2;
-  var ratio = Math.sqrt(1.0 / squaredNorm);
+  const squaredNorm = x2 + y2 + z2;
+  const ratio = Math.sqrt(1.0 / squaredNorm);
 
   // As an initial approximation, assume that the radial intersection is the projection point.
-  var intersection = Cartesian3.multiplyByScalar(
+  const intersection = Cartesian3.multiplyByScalar(
     cartesian,
     ratio,
     scaleToGeodeticSurfaceIntersection
@@ -74,34 +74,34 @@ function scaleToGeodeticSurface(
       : Cartesian3.clone(intersection, result);
   }
 
-  var oneOverRadiiSquaredX = oneOverRadiiSquared.x;
-  var oneOverRadiiSquaredY = oneOverRadiiSquared.y;
-  var oneOverRadiiSquaredZ = oneOverRadiiSquared.z;
+  const oneOverRadiiSquaredX = oneOverRadiiSquared.x;
+  const oneOverRadiiSquaredY = oneOverRadiiSquared.y;
+  const oneOverRadiiSquaredZ = oneOverRadiiSquared.z;
 
   // Use the gradient at the intersection point in place of the true unit normal.
   // The difference in magnitude will be absorbed in the multiplier.
-  var gradient = scaleToGeodeticSurfaceGradient;
+  const gradient = scaleToGeodeticSurfaceGradient;
   gradient.x = intersection.x * oneOverRadiiSquaredX * 2.0;
   gradient.y = intersection.y * oneOverRadiiSquaredY * 2.0;
   gradient.z = intersection.z * oneOverRadiiSquaredZ * 2.0;
 
   // Compute the initial guess at the normal vector multiplier, lambda.
-  var lambda =
+  let lambda =
     ((1.0 - ratio) * Cartesian3.magnitude(cartesian)) /
     (0.5 * Cartesian3.magnitude(gradient));
-  var correction = 0.0;
+  let correction = 0.0;
 
-  var func;
-  var denominator;
-  var xMultiplier;
-  var yMultiplier;
-  var zMultiplier;
-  var xMultiplier2;
-  var yMultiplier2;
-  var zMultiplier2;
-  var xMultiplier3;
-  var yMultiplier3;
-  var zMultiplier3;
+  let func;
+  let denominator;
+  let xMultiplier;
+  let yMultiplier;
+  let zMultiplier;
+  let xMultiplier2;
+  let yMultiplier2;
+  let zMultiplier2;
+  let xMultiplier3;
+  let yMultiplier3;
+  let zMultiplier3;
 
   do {
     lambda -= correction;
@@ -127,7 +127,7 @@ function scaleToGeodeticSurface(
       y2 * yMultiplier3 * oneOverRadiiSquaredY +
       z2 * zMultiplier3 * oneOverRadiiSquaredZ;
 
-    var derivative = -2.0 * denominator;
+    const derivative = -2.0 * denominator;
 
     correction = func / derivative;
   } while (Math.abs(func) > CesiumMath.EPSILON12);

@@ -26,9 +26,9 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  */
 export default function BufferLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var typedArray = options.typedArray;
-  var resource = options.resource;
-  var cacheKey = options.cacheKey;
+  const typedArray = options.typedArray;
+  const resource = options.resource;
+  const cacheKey = options.cacheKey;
 
   //>>includeStart('debug', pragmas.debug);
   if (defined(typedArray) === defined(resource)) {
@@ -106,7 +106,7 @@ BufferLoader.prototype.load = function () {
 };
 
 function loadExternalBuffer(bufferLoader) {
-  var resource = bufferLoader._resource;
+  const resource = bufferLoader._resource;
   bufferLoader._state = ResourceLoaderState.LOADING;
   BufferLoader._fetchArrayBuffer(resource)
     .then(function (arrayBuffer) {
@@ -122,7 +122,7 @@ function loadExternalBuffer(bufferLoader) {
         return;
       }
       bufferLoader._state = ResourceLoaderState.FAILED;
-      var errorMessage = "Failed to load external buffer: " + resource.url;
+      const errorMessage = "Failed to load external buffer: " + resource.url;
       bufferLoader._promise.reject(bufferLoader.getError(errorMessage, error));
     });
 }

@@ -7,50 +7,50 @@ import Ellipsoid from "./Ellipsoid.js";
 import CesiumMath from "./Math.js";
 
 function setConstants(ellipsoidGeodesic) {
-  var uSquared = ellipsoidGeodesic._uSquared;
-  var a = ellipsoidGeodesic._ellipsoid.maximumRadius;
-  var b = ellipsoidGeodesic._ellipsoid.minimumRadius;
-  var f = (a - b) / a;
+  const uSquared = ellipsoidGeodesic._uSquared;
+  const a = ellipsoidGeodesic._ellipsoid.maximumRadius;
+  const b = ellipsoidGeodesic._ellipsoid.minimumRadius;
+  const f = (a - b) / a;
 
-  var cosineHeading = Math.cos(ellipsoidGeodesic._startHeading);
-  var sineHeading = Math.sin(ellipsoidGeodesic._startHeading);
+  const cosineHeading = Math.cos(ellipsoidGeodesic._startHeading);
+  const sineHeading = Math.sin(ellipsoidGeodesic._startHeading);
 
-  var tanU = (1 - f) * Math.tan(ellipsoidGeodesic._start.latitude);
+  const tanU = (1 - f) * Math.tan(ellipsoidGeodesic._start.latitude);
 
-  var cosineU = 1.0 / Math.sqrt(1.0 + tanU * tanU);
-  var sineU = cosineU * tanU;
+  const cosineU = 1.0 / Math.sqrt(1.0 + tanU * tanU);
+  const sineU = cosineU * tanU;
 
-  var sigma = Math.atan2(tanU, cosineHeading);
+  const sigma = Math.atan2(tanU, cosineHeading);
 
-  var sineAlpha = cosineU * sineHeading;
-  var sineSquaredAlpha = sineAlpha * sineAlpha;
+  const sineAlpha = cosineU * sineHeading;
+  const sineSquaredAlpha = sineAlpha * sineAlpha;
 
-  var cosineSquaredAlpha = 1.0 - sineSquaredAlpha;
-  var cosineAlpha = Math.sqrt(cosineSquaredAlpha);
+  const cosineSquaredAlpha = 1.0 - sineSquaredAlpha;
+  const cosineAlpha = Math.sqrt(cosineSquaredAlpha);
 
-  var u2Over4 = uSquared / 4.0;
-  var u4Over16 = u2Over4 * u2Over4;
-  var u6Over64 = u4Over16 * u2Over4;
-  var u8Over256 = u4Over16 * u4Over16;
+  const u2Over4 = uSquared / 4.0;
+  const u4Over16 = u2Over4 * u2Over4;
+  const u6Over64 = u4Over16 * u2Over4;
+  const u8Over256 = u4Over16 * u4Over16;
 
-  var a0 =
+  const a0 =
     1.0 +
     u2Over4 -
     (3.0 * u4Over16) / 4.0 +
     (5.0 * u6Over64) / 4.0 -
     (175.0 * u8Over256) / 64.0;
-  var a1 = 1.0 - u2Over4 + (15.0 * u4Over16) / 8.0 - (35.0 * u6Over64) / 8.0;
-  var a2 = 1.0 - 3.0 * u2Over4 + (35.0 * u4Over16) / 4.0;
-  var a3 = 1.0 - 5.0 * u2Over4;
+  const a1 = 1.0 - u2Over4 + (15.0 * u4Over16) / 8.0 - (35.0 * u6Over64) / 8.0;
+  const a2 = 1.0 - 3.0 * u2Over4 + (35.0 * u4Over16) / 4.0;
+  const a3 = 1.0 - 5.0 * u2Over4;
 
-  var distanceRatio =
+  const distanceRatio =
     a0 * sigma -
     (a1 * Math.sin(2.0 * sigma) * u2Over4) / 2.0 -
     (a2 * Math.sin(4.0 * sigma) * u4Over16) / 16.0 -
     (a3 * Math.sin(6.0 * sigma) * u6Over64) / 48.0 -
     (Math.sin(8.0 * sigma) * 5.0 * u8Over256) / 512;
 
-  var constants = ellipsoidGeodesic._constants;
+  const constants = ellipsoidGeodesic._constants;
 
   constants.a = a;
   constants.b = b;
@@ -92,7 +92,7 @@ function computeDeltaLambda(
   cosineSigma,
   cosineTwiceSigmaMidpoint
 ) {
-  var C = computeC(f, cosineSquaredAlpha);
+  const C = computeC(f, cosineSquaredAlpha);
 
   return (
     (1.0 - C) *
@@ -117,39 +117,39 @@ function vincentyInverseFormula(
   secondLongitude,
   secondLatitude
 ) {
-  var eff = (major - minor) / major;
-  var l = secondLongitude - firstLongitude;
+  const eff = (major - minor) / major;
+  const l = secondLongitude - firstLongitude;
 
-  var u1 = Math.atan((1 - eff) * Math.tan(firstLatitude));
-  var u2 = Math.atan((1 - eff) * Math.tan(secondLatitude));
+  const u1 = Math.atan((1 - eff) * Math.tan(firstLatitude));
+  const u2 = Math.atan((1 - eff) * Math.tan(secondLatitude));
 
-  var cosineU1 = Math.cos(u1);
-  var sineU1 = Math.sin(u1);
-  var cosineU2 = Math.cos(u2);
-  var sineU2 = Math.sin(u2);
+  const cosineU1 = Math.cos(u1);
+  const sineU1 = Math.sin(u1);
+  const cosineU2 = Math.cos(u2);
+  const sineU2 = Math.sin(u2);
 
-  var cc = cosineU1 * cosineU2;
-  var cs = cosineU1 * sineU2;
-  var ss = sineU1 * sineU2;
-  var sc = sineU1 * cosineU2;
+  const cc = cosineU1 * cosineU2;
+  const cs = cosineU1 * sineU2;
+  const ss = sineU1 * sineU2;
+  const sc = sineU1 * cosineU2;
 
-  var lambda = l;
-  var lambdaDot = CesiumMath.TWO_PI;
+  let lambda = l;
+  let lambdaDot = CesiumMath.TWO_PI;
 
-  var cosineLambda = Math.cos(lambda);
-  var sineLambda = Math.sin(lambda);
+  let cosineLambda = Math.cos(lambda);
+  let sineLambda = Math.sin(lambda);
 
-  var sigma;
-  var cosineSigma;
-  var sineSigma;
-  var cosineSquaredAlpha;
-  var cosineTwiceSigmaMidpoint;
+  let sigma;
+  let cosineSigma;
+  let sineSigma;
+  let cosineSquaredAlpha;
+  let cosineTwiceSigmaMidpoint;
 
   do {
     cosineLambda = Math.cos(lambda);
     sineLambda = Math.sin(lambda);
 
-    var temp = cs - sc * cosineLambda;
+    const temp = cs - sc * cosineLambda;
     sineSigma = Math.sqrt(
       cosineU2 * cosineU2 * sineLambda * sineLambda + temp * temp
     );
@@ -157,7 +157,7 @@ function vincentyInverseFormula(
 
     sigma = Math.atan2(sineSigma, cosineSigma);
 
-    var sineAlpha;
+    let sineAlpha;
 
     if (sineSigma === 0.0) {
       sineAlpha = 0.0;
@@ -188,21 +188,21 @@ function vincentyInverseFormula(
       );
   } while (Math.abs(lambda - lambdaDot) > CesiumMath.EPSILON12);
 
-  var uSquared =
+  const uSquared =
     (cosineSquaredAlpha * (major * major - minor * minor)) / (minor * minor);
-  var A =
+  const A =
     1.0 +
     (uSquared *
       (4096.0 + uSquared * (uSquared * (320.0 - 175.0 * uSquared) - 768.0))) /
       16384.0;
-  var B =
+  const B =
     (uSquared *
       (256.0 + uSquared * (uSquared * (74.0 - 47.0 * uSquared) - 128.0))) /
     1024.0;
 
-  var cosineSquaredTwiceSigmaMidpoint =
+  const cosineSquaredTwiceSigmaMidpoint =
     cosineTwiceSigmaMidpoint * cosineTwiceSigmaMidpoint;
-  var deltaSigma =
+  const deltaSigma =
     B *
     sineSigma *
     (cosineTwiceSigmaMidpoint +
@@ -215,10 +215,13 @@ function vincentyInverseFormula(
             6.0)) /
         4.0);
 
-  var distance = minor * A * (sigma - deltaSigma);
+  const distance = minor * A * (sigma - deltaSigma);
 
-  var startHeading = Math.atan2(cosineU2 * sineLambda, cs - sc * cosineLambda);
-  var endHeading = Math.atan2(cosineU1 * sineLambda, cs * cosineLambda - sc);
+  const startHeading = Math.atan2(
+    cosineU2 * sineLambda,
+    cs - sc * cosineLambda
+  );
+  const endHeading = Math.atan2(cosineU1 * sineLambda, cs * cosineLambda - sc);
 
   ellipsoidGeodesic._distance = distance;
   ellipsoidGeodesic._startHeading = startHeading;
@@ -226,14 +229,14 @@ function vincentyInverseFormula(
   ellipsoidGeodesic._uSquared = uSquared;
 }
 
-var scratchCart1 = new Cartesian3();
-var scratchCart2 = new Cartesian3();
+const scratchCart1 = new Cartesian3();
+const scratchCart2 = new Cartesian3();
 function computeProperties(ellipsoidGeodesic, start, end, ellipsoid) {
-  var firstCartesian = Cartesian3.normalize(
+  const firstCartesian = Cartesian3.normalize(
     ellipsoid.cartographicToCartesian(start, scratchCart2),
     scratchCart1
   );
-  var lastCartesian = Cartesian3.normalize(
+  const lastCartesian = Cartesian3.normalize(
     ellipsoid.cartographicToCartesian(end, scratchCart2),
     scratchCart2
   );
@@ -280,7 +283,7 @@ function computeProperties(ellipsoidGeodesic, start, end, ellipsoid) {
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the geodesic lies.
  */
 function EllipsoidGeodesic(start, end, ellipsoid) {
-  var e = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  const e = defaultValue(ellipsoid, Ellipsoid.WGS84);
   this._ellipsoid = e;
   this._start = new Cartographic();
   this._end = new Cartographic();
@@ -431,26 +434,26 @@ EllipsoidGeodesic.prototype.interpolateUsingSurfaceDistance = function (
   Check.defined("distance", this._distance);
   //>>includeEnd('debug');
 
-  var constants = this._constants;
+  const constants = this._constants;
 
-  var s = constants.distanceRatio + distance / constants.b;
+  const s = constants.distanceRatio + distance / constants.b;
 
-  var cosine2S = Math.cos(2.0 * s);
-  var cosine4S = Math.cos(4.0 * s);
-  var cosine6S = Math.cos(6.0 * s);
-  var sine2S = Math.sin(2.0 * s);
-  var sine4S = Math.sin(4.0 * s);
-  var sine6S = Math.sin(6.0 * s);
-  var sine8S = Math.sin(8.0 * s);
+  const cosine2S = Math.cos(2.0 * s);
+  const cosine4S = Math.cos(4.0 * s);
+  const cosine6S = Math.cos(6.0 * s);
+  const sine2S = Math.sin(2.0 * s);
+  const sine4S = Math.sin(4.0 * s);
+  const sine6S = Math.sin(6.0 * s);
+  const sine8S = Math.sin(8.0 * s);
 
-  var s2 = s * s;
-  var s3 = s * s2;
+  const s2 = s * s;
+  const s3 = s * s2;
 
-  var u8Over256 = constants.u8Over256;
-  var u2Over4 = constants.u2Over4;
-  var u6Over64 = constants.u6Over64;
-  var u4Over16 = constants.u4Over16;
-  var sigma =
+  const u8Over256 = constants.u8Over256;
+  const u2Over4 = constants.u2Over4;
+  const u6Over64 = constants.u6Over64;
+  const u4Over16 = constants.u4Over16;
+  let sigma =
     (2.0 * s3 * u8Over256 * cosine2S) / 3.0 +
     s *
       (1.0 -
@@ -477,26 +480,26 @@ EllipsoidGeodesic.prototype.interpolateUsingSurfaceDistance = function (
     ((29.0 * u6Over64) / 96.0 - (29.0 * u8Over256) / 16.0) * sine6S +
     (539.0 * u8Over256 * sine8S) / 1536.0;
 
-  var theta = Math.asin(Math.sin(sigma) * constants.cosineAlpha);
-  var latitude = Math.atan((constants.a / constants.b) * Math.tan(theta));
+  const theta = Math.asin(Math.sin(sigma) * constants.cosineAlpha);
+  const latitude = Math.atan((constants.a / constants.b) * Math.tan(theta));
 
   // Redefine in terms of relative argument of latitude.
   sigma = sigma - constants.sigma;
 
-  var cosineTwiceSigmaMidpoint = Math.cos(2.0 * constants.sigma + sigma);
+  const cosineTwiceSigmaMidpoint = Math.cos(2.0 * constants.sigma + sigma);
 
-  var sineSigma = Math.sin(sigma);
-  var cosineSigma = Math.cos(sigma);
+  const sineSigma = Math.sin(sigma);
+  const cosineSigma = Math.cos(sigma);
 
-  var cc = constants.cosineU * cosineSigma;
-  var ss = constants.sineU * sineSigma;
+  const cc = constants.cosineU * cosineSigma;
+  const ss = constants.sineU * sineSigma;
 
-  var lambda = Math.atan2(
+  const lambda = Math.atan2(
     sineSigma * constants.sineHeading,
     cc - ss * constants.cosineHeading
   );
 
-  var l =
+  const l =
     lambda -
     computeDeltaLambda(
       constants.f,

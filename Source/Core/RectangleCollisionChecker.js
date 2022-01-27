@@ -39,7 +39,7 @@ RectangleCollisionChecker.prototype.insert = function (id, rectangle) {
   Check.typeOf.object("rectangle", rectangle);
   //>>includeEnd('debug');
 
-  var withId = RectangleWithId.fromRectangleAndId(
+  const withId = RectangleWithId.fromRectangleAndId(
     id,
     rectangle,
     new RectangleWithId()
@@ -51,7 +51,7 @@ function idCompare(a, b) {
   return a.id === b.id;
 }
 
-var removalScratch = new RectangleWithId();
+const removalScratch = new RectangleWithId();
 /**
  * Remove a rectangle from the collision checker.
  *
@@ -65,7 +65,7 @@ RectangleCollisionChecker.prototype.remove = function (id, rectangle) {
   Check.typeOf.object("rectangle", rectangle);
   //>>includeEnd('debug');
 
-  var withId = RectangleWithId.fromRectangleAndId(
+  const withId = RectangleWithId.fromRectangleAndId(
     id,
     rectangle,
     removalScratch
@@ -73,7 +73,7 @@ RectangleCollisionChecker.prototype.remove = function (id, rectangle) {
   this._tree.remove(withId, idCompare);
 };
 
-var collisionScratch = new RectangleWithId();
+const collisionScratch = new RectangleWithId();
 /**
  * Checks if a given rectangle collides with any of the rectangles in the collection.
  *
@@ -85,7 +85,7 @@ RectangleCollisionChecker.prototype.collides = function (rectangle) {
   Check.typeOf.object("rectangle", rectangle);
   //>>includeEnd('debug');
 
-  var withId = RectangleWithId.fromRectangleAndId(
+  const withId = RectangleWithId.fromRectangleAndId(
     "",
     rectangle,
     collisionScratch

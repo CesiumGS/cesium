@@ -31,8 +31,8 @@ import TextureWrap from "../../Renderer/TextureWrap.js";
 export default function TextureUniform(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   //>>includeStart('debug', pragmas.debug);
-  var hasTypedArray = defined(options.typedArray);
-  var hasUrl = defined(options.url);
+  const hasTypedArray = defined(options.typedArray);
+  const hasUrl = defined(options.url);
   if (hasTypedArray === hasUrl) {
     throw new DeveloperError(
       "exactly one of options.typedArray, options.url must be defined"
@@ -54,14 +54,14 @@ export default function TextureUniform(options) {
     PixelDatatype.UNSIGNED_BYTE
   );
 
-  var resource = options.url;
+  let resource = options.url;
   if (typeof resource === "string") {
     resource = Resource.createIfNeeded(resource);
   }
   this.resource = resource;
 
-  var repeat = defaultValue(options.repeat, true);
-  var wrap = repeat ? TextureWrap.REPEAT : TextureWrap.CLAMP_TO_EDGE;
+  const repeat = defaultValue(options.repeat, true);
+  const wrap = repeat ? TextureWrap.REPEAT : TextureWrap.CLAMP_TO_EDGE;
   this.sampler = new Sampler({
     wrapS: wrap,
     wrapT: wrap,

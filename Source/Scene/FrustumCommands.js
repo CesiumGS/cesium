@@ -15,11 +15,11 @@ function FrustumCommands(near, far) {
   this.near = defaultValue(near, 0.0);
   this.far = defaultValue(far, 0.0);
 
-  var numPasses = Pass.NUMBER_OF_PASSES;
-  var commands = new Array(numPasses);
-  var indices = new Array(numPasses);
+  const numPasses = Pass.NUMBER_OF_PASSES;
+  const commands = new Array(numPasses);
+  const indices = new Array(numPasses);
 
-  for (var i = 0; i < numPasses; ++i) {
+  for (let i = 0; i < numPasses; ++i) {
     commands[i] = [];
     indices[i] = 0;
   }

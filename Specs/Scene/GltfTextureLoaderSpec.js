@@ -18,20 +18,20 @@ import waitForLoaderProcess from "../waitForLoaderProcess.js";
 describe(
   "Scene/GltfTextureLoader",
   function () {
-    var image = new Image();
+    const image = new Image();
     image.src =
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
 
-    var imageNpot = new Image();
+    const imageNpot = new Image();
     imageNpot.src =
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAACAQMAAACnuvRZAAAAA3NCSVQICAjb4U/gAAAABlBMVEUAAAD///+l2Z/dAAAAAnRSTlP/AOW3MEoAAAAJcEhZcwAACxIAAAsSAdLdfvwAAAAcdEVYdFNvZnR3YXJlAEFkb2JlIEZpcmV3b3JrcyBDUzQGstOgAAAAFnRFWHRDcmVhdGlvbiBUaW1lADAxLzA0LzE0Kb6O2wAAAAxJREFUCJljeMDwAAADhAHBgGgjpQAAAABJRU5ErkJggg==";
 
-    var gltfUri = "https://example.com/model.glb";
-    var gltfResource = new Resource({
+    const gltfUri = "https://example.com/model.glb";
+    const gltfResource = new Resource({
       url: gltfUri,
     });
 
-    var gltf = {
+    const gltf = {
       images: [
         {
           uri: "image.png",
@@ -79,11 +79,11 @@ describe(
       ],
     };
 
-    var gltfKtx2BaseResource = new Resource({
+    const gltfKtx2BaseResource = new Resource({
       url: "./Data/Images/",
     });
 
-    var gltfKtx2 = {
+    const gltfKtx2 = {
       images: [
         {
           uri: "image.png",
@@ -141,7 +141,7 @@ describe(
       ],
     };
 
-    var scene;
+    let scene;
 
     beforeAll(function () {
       scene = createScene();
@@ -234,12 +234,12 @@ describe(
     });
 
     it("rejects promise if image fails to load", function () {
-      var error = new Error("404 Not Found");
+      const error = new Error("404 Not Found");
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
         when.reject(error)
       );
 
-      var textureLoader = new GltfTextureLoader({
+      const textureLoader = new GltfTextureLoader({
         resourceCache: ResourceCache,
         gltf: gltf,
         textureInfo: gltf.materials[0].emissiveTexture,
@@ -267,10 +267,10 @@ describe(
       );
 
       // Simulate JobScheduler not being ready for a few frames
-      var processCallsTotal = 3;
-      var processCallsCount = 0;
-      var jobScheduler = scene.frameState.jobScheduler;
-      var originalJobSchedulerExecute = jobScheduler.execute;
+      const processCallsTotal = 3;
+      let processCallsCount = 0;
+      const jobScheduler = scene.frameState.jobScheduler;
+      const originalJobSchedulerExecute = jobScheduler.execute;
       spyOn(JobScheduler.prototype, "execute").and.callFake(function (
         job,
         jobType
@@ -281,7 +281,7 @@ describe(
         return false;
       });
 
-      var textureLoader = new GltfTextureLoader({
+      const textureLoader = new GltfTextureLoader({
         resourceCache: ResourceCache,
         gltf: gltf,
         textureInfo: gltf.materials[0].emissiveTexture,
@@ -308,7 +308,7 @@ describe(
         when.resolve(image)
       );
 
-      var textureLoader = new GltfTextureLoader({
+      const textureLoader = new GltfTextureLoader({
         resourceCache: ResourceCache,
         gltf: gltf,
         textureInfo: gltf.materials[0].emissiveTexture,
@@ -334,10 +334,10 @@ describe(
         return;
       }
 
-      var gl = scene.context._gl;
+      const gl = scene.context._gl;
       spyOn(gl, "compressedTexImage2D").and.callThrough();
 
-      var textureLoader = new GltfTextureLoader({
+      const textureLoader = new GltfTextureLoader({
         resourceCache: ResourceCache,
         gltf: gltfKtx2,
         textureInfo: gltf.materials[0].emissiveTexture,
@@ -364,10 +364,10 @@ describe(
         return;
       }
 
-      var gl = scene.context._gl;
+      const gl = scene.context._gl;
       spyOn(gl, "compressedTexImage2D").and.callThrough();
 
-      var textureLoader = new GltfTextureLoader({
+      const textureLoader = new GltfTextureLoader({
         resourceCache: ResourceCache,
         gltf: gltfKtx2,
         textureInfo: gltf.materials[0].occlusionTexture,
@@ -396,11 +396,11 @@ describe(
 
       spyOn(GltfLoaderUtil, "createSampler").and.callThrough();
 
-      var gltfKtx2MissingMipmap = clone(gltfKtx2, true);
+      const gltfKtx2MissingMipmap = clone(gltfKtx2, true);
       gltfKtx2MissingMipmap.samplers[0].minFilter =
         TextureMinificationFilter.NEAREST_MIPMAP_NEAREST;
 
-      var textureLoader = new GltfTextureLoader({
+      const textureLoader = new GltfTextureLoader({
         resourceCache: ResourceCache,
         gltf: gltfKtx2MissingMipmap,
         textureInfo: gltfKtx2MissingMipmap.materials[0].emissiveTexture,
@@ -433,12 +433,12 @@ describe(
         when.resolve(image)
       );
 
-      var generateMipmap = spyOn(
+      const generateMipmap = spyOn(
         Texture.prototype,
         "generateMipmap"
       ).and.callThrough();
 
-      var textureLoader = new GltfTextureLoader({
+      const textureLoader = new GltfTextureLoader({
         resourceCache: ResourceCache,
         gltf: gltf,
         textureInfo: gltf.materials[0].occlusionTexture, // This texture has a sampler that require a mipmap
@@ -463,7 +463,7 @@ describe(
         when.resolve(imageNpot)
       );
 
-      var textureLoader = new GltfTextureLoader({
+      const textureLoader = new GltfTextureLoader({
         resourceCache: ResourceCache,
         gltf: gltf,
         textureInfo: gltf.materials[0].occlusionTexture, // This texture has a sampler that require power-of-two texture
@@ -487,7 +487,7 @@ describe(
         when.resolve(imageNpot)
       );
 
-      var textureLoader = new GltfTextureLoader({
+      const textureLoader = new GltfTextureLoader({
         resourceCache: ResourceCache,
         gltf: gltf,
         textureInfo: gltf.materials[0].normalTexture, // This texture has a sampler that does not require power-of-two texture
@@ -511,17 +511,17 @@ describe(
         when.resolve(image)
       );
 
-      var unloadImage = spyOn(
+      const unloadImage = spyOn(
         GltfImageLoader.prototype,
         "unload"
       ).and.callThrough();
 
-      var destroyTexture = spyOn(
+      const destroyTexture = spyOn(
         Texture.prototype,
         "destroy"
       ).and.callThrough();
 
-      var textureLoader = new GltfTextureLoader({
+      const textureLoader = new GltfTextureLoader({
         resourceCache: ResourceCache,
         gltf: gltf,
         textureInfo: gltf.materials[0].emissiveTexture,
@@ -550,21 +550,21 @@ describe(
     });
 
     function resolveImageAfterDestroy(reject) {
-      var deferredPromise = when.defer();
+      const deferredPromise = when.defer();
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
         deferredPromise.promise
       );
 
       // Load a copy of the image into the cache so that the image
       // promise resolves even if the texture loader is destroyed
-      var imageLoaderCopy = ResourceCache.loadImage({
+      const imageLoaderCopy = ResourceCache.loadImage({
         gltf: gltf,
         imageId: 0,
         gltfResource: gltfResource,
         baseResource: gltfResource,
       });
 
-      var textureLoader = new GltfTextureLoader({
+      const textureLoader = new GltfTextureLoader({
         resourceCache: ResourceCache,
         gltf: gltf,
         textureInfo: gltf.materials[0].emissiveTexture,

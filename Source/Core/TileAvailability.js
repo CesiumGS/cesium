@@ -19,12 +19,12 @@ function TileAvailability(tilingScheme, maximumLevel) {
   this._rootNodes = [];
 }
 
-var rectangleScratch = new Rectangle();
+const rectangleScratch = new Rectangle();
 
 function findNode(level, x, y, nodes) {
-  var count = nodes.length;
-  for (var i = 0; i < count; ++i) {
-    var node = nodes[i];
+  const count = nodes.length;
+  for (let i = 0; i < count; ++i) {
+    const node = nodes[i];
     if (node.x === x && node.y === y && node.level === level) {
       return true;
     }
@@ -50,12 +50,12 @@ TileAvailability.prototype.addAvailableTileRange = function (
   endX,
   endY
 ) {
-  var tilingScheme = this._tilingScheme;
+  const tilingScheme = this._tilingScheme;
 
-  var rootNodes = this._rootNodes;
+  const rootNodes = this._rootNodes;
   if (level === 0) {
-    for (var y = startY; y <= endY; ++y) {
-      for (var x = startX; x <= endX; ++x) {
+    for (let y = startY; y <= endY; ++y) {
+      for (let x = startX; x <= endX; ++x) {
         if (!findNode(level, x, y, rootNodes)) {
           rootNodes.push(new QuadtreeNode(tilingScheme, undefined, 0, x, y));
         }
@@ -64,14 +64,14 @@ TileAvailability.prototype.addAvailableTileRange = function (
   }
 
   tilingScheme.tileXYToRectangle(startX, startY, level, rectangleScratch);
-  var west = rectangleScratch.west;
-  var north = rectangleScratch.north;
+  const west = rectangleScratch.west;
+  const north = rectangleScratch.north;
 
   tilingScheme.tileXYToRectangle(endX, endY, level, rectangleScratch);
-  var east = rectangleScratch.east;
-  var south = rectangleScratch.south;
+  const east = rectangleScratch.east;
+  const south = rectangleScratch.south;
 
-  var rectangleWithLevel = new RectangleWithLevel(
+  const rectangleWithLevel = new RectangleWithLevel(
     level,
     west,
     south,
@@ -79,8 +79,8 @@ TileAvailability.prototype.addAvailableTileRange = function (
     north
   );
 
-  for (var i = 0; i < rootNodes.length; ++i) {
-    var rootNode = rootNodes[i];
+  for (let i = 0; i < rootNodes.length; ++i) {
+    const rootNode = rootNodes[i];
     if (rectanglesOverlap(rootNode.extent, rectangleWithLevel)) {
       putRectangleInQuadtree(this._maximumLevel, rootNode, rectangleWithLevel);
     }
@@ -98,9 +98,9 @@ TileAvailability.prototype.addAvailableTileRange = function (
  */
 TileAvailability.prototype.computeMaximumLevelAtPosition = function (position) {
   // Find the root node that contains this position.
-  var node;
-  for (var nodeIndex = 0; nodeIndex < this._rootNodes.length; ++nodeIndex) {
-    var rootNode = this._rootNodes[nodeIndex];
+  let node;
+  for (let nodeIndex = 0; nodeIndex < this._rootNodes.length; ++nodeIndex) {
+    const rootNode = this._rootNodes[nodeIndex];
     if (rectangleContainsPosition(rootNode.extent, position)) {
       node = rootNode;
       break;
@@ -114,10 +114,10 @@ TileAvailability.prototype.computeMaximumLevelAtPosition = function (position) {
   return findMaxLevelFromNode(undefined, node, position);
 };
 
-var rectanglesScratch = [];
-var remainingToCoverByLevelScratch = [];
-var westScratch = new Rectangle();
-var eastScratch = new Rectangle();
+const rectanglesScratch = [];
+const remainingToCoverByLevelScratch = [];
+const westScratch = new Rectangle();
+const eastScratch = new Rectangle();
 
 /**
  * Finds the most detailed level that is available _everywhere_ within a given rectangle.  More detailed
@@ -132,7 +132,7 @@ var eastScratch = new Rectangle();
 TileAvailability.prototype.computeBestAvailableLevelOverRectangle = function (
   rectangle
 ) {
-  var rectangles = rectanglesScratch;
+  const rectangles = rectanglesScratch;
   rectangles.length = 0;
 
   if (rectangle.east < rectangle.west) {
@@ -159,10 +159,10 @@ TileAvailability.prototype.computeBestAvailableLevelOverRectangle = function (
     rectangles.push(rectangle);
   }
 
-  var remainingToCoverByLevel = remainingToCoverByLevelScratch;
+  const remainingToCoverByLevel = remainingToCoverByLevelScratch;
   remainingToCoverByLevel.length = 0;
 
-  var i;
+  let i;
   for (i = 0; i < this._rootNodes.length; ++i) {
     updateCoverageWithNode(
       remainingToCoverByLevel,
@@ -183,7 +183,7 @@ TileAvailability.prototype.computeBestAvailableLevelOverRectangle = function (
   return 0;
 };
 
-var cartographicScratch = new Cartographic();
+const cartographicScratch = new Cartographic();
 
 /**
  * Determines if a particular tile is available.
@@ -198,7 +198,7 @@ TileAvailability.prototype.isTileAvailable = function (level, x, y) {
   // is sure to be available for the whole tile.  We assume that if a tile at level n exists,
   // then all its parent tiles back to level 0 exist too.  This isn't really enforced
   // anywhere, but Cesium would never load a tile for which this is not true.
-  var rectangle = this._tilingScheme.tileXYToRectangle(
+  const rectangle = this._tilingScheme.tileXYToRectangle(
     x,
     y,
     level,
@@ -226,12 +226,12 @@ TileAvailability.prototype.isTileAvailable = function (level, x, y) {
  * @return {Number} The bit mask indicating child availability.
  */
 TileAvailability.prototype.computeChildMaskForTile = function (level, x, y) {
-  var childLevel = level + 1;
+  const childLevel = level + 1;
   if (childLevel >= this._maximumLevel) {
     return 0;
   }
 
-  var mask = 0;
+  let mask = 0;
 
   mask |= this.isTileAvailable(childLevel, 2 * x, 2 * y + 1) ? 1 : 0;
   mask |= this.isTileAvailable(childLevel, 2 * x + 1, 2 * y + 1) ? 2 : 0;
@@ -327,10 +327,10 @@ function RectangleWithLevel(level, west, south, east, north) {
 }
 
 function rectanglesOverlap(rectangle1, rectangle2) {
-  var west = Math.max(rectangle1.west, rectangle2.west);
-  var south = Math.max(rectangle1.south, rectangle2.south);
-  var east = Math.min(rectangle1.east, rectangle2.east);
-  var north = Math.min(rectangle1.north, rectangle2.north);
+  const west = Math.max(rectangle1.west, rectangle2.west);
+  const south = Math.max(rectangle1.south, rectangle2.south);
+  const east = Math.min(rectangle1.east, rectangle2.east);
+  const north = Math.min(rectangle1.north, rectangle2.north);
   return south < north && west < east;
 }
 
@@ -356,7 +356,7 @@ function putRectangleInQuadtree(maxDepth, node, rectangle) {
     node.rectangles.push(rectangle);
   } else {
     // Maintain ordering by level when inserting.
-    var index = binarySearch(
+    let index = binarySearch(
       node.rectangles,
       rectangle.level,
       rectangleLevelComparator
@@ -391,15 +391,15 @@ function rectangleContainsPosition(potentialContainer, positionToTest) {
 }
 
 function findMaxLevelFromNode(stopNode, node, position) {
-  var maxLevel = 0;
+  let maxLevel = 0;
 
   // Find the deepest quadtree node containing this point.
-  var found = false;
+  let found = false;
   while (!found) {
-    var nw = node._nw && rectangleContainsPosition(node._nw.extent, position);
-    var ne = node._ne && rectangleContainsPosition(node._ne.extent, position);
-    var sw = node._sw && rectangleContainsPosition(node._sw.extent, position);
-    var se = node._se && rectangleContainsPosition(node._se.extent, position);
+    const nw = node._nw && rectangleContainsPosition(node._nw.extent, position);
+    const ne = node._ne && rectangleContainsPosition(node._ne.extent, position);
+    const sw = node._sw && rectangleContainsPosition(node._sw.extent, position);
+    const se = node._se && rectangleContainsPosition(node._se.extent, position);
 
     // The common scenario is that the point is in only one quadrant and we can simply
     // iterate down the tree.  But if the point is on a boundary between tiles, it is
@@ -445,15 +445,15 @@ function findMaxLevelFromNode(stopNode, node, position) {
 
   // Work up the tree until we find a rectangle that contains this point.
   while (node !== stopNode) {
-    var rectangles = node.rectangles;
+    const rectangles = node.rectangles;
 
     // Rectangles are sorted by level, lowest first.
     for (
-      var i = rectangles.length - 1;
+      let i = rectangles.length - 1;
       i >= 0 && rectangles[i].level > maxLevel;
       --i
     ) {
-      var rectangle = rectangles[i];
+      const rectangle = rectangles[i];
       if (rectangleContainsPosition(rectangle, position)) {
         maxLevel = rectangle.level;
       }
@@ -474,8 +474,8 @@ function updateCoverageWithNode(
     return;
   }
 
-  var i;
-  var anyOverlap = false;
+  let i;
+  let anyOverlap = false;
   for (i = 0; i < rectanglesToCover.length; ++i) {
     anyOverlap =
       anyOverlap || rectanglesOverlap(node.extent, rectanglesToCover[i]);
@@ -486,9 +486,9 @@ function updateCoverageWithNode(
     return;
   }
 
-  var rectangles = node.rectangles;
+  const rectangles = node.rectangles;
   for (i = 0; i < rectangles.length; ++i) {
-    var rectangle = rectangles[i];
+    const rectangle = rectangles[i];
 
     if (!remainingToCoverByLevel[rectangle.level]) {
       remainingToCoverByLevel[rectangle.level] = rectanglesToCover;
@@ -508,9 +508,9 @@ function updateCoverageWithNode(
 }
 
 function subtractRectangle(rectangleList, rectangleToSubtract) {
-  var result = [];
-  for (var i = 0; i < rectangleList.length; ++i) {
-    var rectangle = rectangleList[i];
+  const result = [];
+  for (let i = 0; i < rectangleList.length; ++i) {
+    const rectangle = rectangleList[i];
     if (!rectanglesOverlap(rectangle, rectangleToSubtract)) {
       // Disjoint rectangles.  Original rectangle is unmodified.
       result.push(rectangle);

@@ -82,7 +82,7 @@ MaterialProperty.prototype.equals = DeveloperError.throwInstantiationError;
  * @private
  */
 MaterialProperty.getValue = function (time, materialProperty, material) {
-  var type;
+  let type;
 
   if (defined(materialProperty)) {
     type = materialProperty.getType(time);

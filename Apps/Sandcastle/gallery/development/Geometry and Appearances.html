@@ -36,24 +36,24 @@
         "use strict";
         //Sandcastle_Begin
         Cesium.Math.setRandomNumberSeed(1234);
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
-        var primitives = scene.primitives;
-        var solidWhite = Cesium.ColorGeometryInstanceAttribute.fromColor(
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
+        const primitives = scene.primitives;
+        const solidWhite = Cesium.ColorGeometryInstanceAttribute.fromColor(
           Cesium.Color.WHITE
         );
 
         // Combine instances for a rectangle, polygon, ellipse, and circle into a single primitive.
 
-        var rectangle = Cesium.Rectangle.fromDegrees(-92.0, 20.0, -86.0, 27.0);
-        var rectangleInstance = new Cesium.GeometryInstance({
+        let rectangle = Cesium.Rectangle.fromDegrees(-92.0, 20.0, -86.0, 27.0);
+        let rectangleInstance = new Cesium.GeometryInstance({
           geometry: new Cesium.RectangleGeometry({
             rectangle: rectangle,
             vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
             stRotation: Cesium.Math.toRadians(45),
           }),
         });
-        var rectangleOutlineInstance = new Cesium.GeometryInstance({
+        const rectangleOutlineInstance = new Cesium.GeometryInstance({
           geometry: new Cesium.RectangleOutlineGeometry({
             rectangle: rectangle,
           }),
@@ -62,7 +62,7 @@
           },
         });
 
-        var positions = Cesium.Cartesian3.fromDegreesArray([
+        let positions = Cesium.Cartesian3.fromDegreesArray([
           -107.0,
           27.0,
           -107.0,
@@ -75,13 +75,13 @@
           25.0,
         ]);
 
-        var polygonInstance = new Cesium.GeometryInstance({
+        let polygonInstance = new Cesium.GeometryInstance({
           geometry: Cesium.PolygonGeometry.fromPositions({
             positions: positions,
             vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
           }),
         });
-        var polygonOutlineInstance = new Cesium.GeometryInstance({
+        const polygonOutlineInstance = new Cesium.GeometryInstance({
           geometry: Cesium.PolygonOutlineGeometry.fromPositions({
             positions: positions,
           }),
@@ -90,11 +90,11 @@
           },
         });
 
-        var center = Cesium.Cartesian3.fromDegrees(-80.0, 25.0);
-        var semiMinorAxis = 300000.0;
-        var semiMajorAxis = 500000.0;
-        var rotation = Cesium.Math.toRadians(-40.0);
-        var ellipseInstance = new Cesium.GeometryInstance({
+        let center = Cesium.Cartesian3.fromDegrees(-80.0, 25.0);
+        let semiMinorAxis = 300000.0;
+        let semiMajorAxis = 500000.0;
+        let rotation = Cesium.Math.toRadians(-40.0);
+        let ellipseInstance = new Cesium.GeometryInstance({
           geometry: new Cesium.EllipseGeometry({
             center: center,
             semiMinorAxis: semiMinorAxis,
@@ -104,7 +104,7 @@
             vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
           }),
         });
-        var ellipseOutlineInstance = new Cesium.GeometryInstance({
+        const ellipseOutlineInstance = new Cesium.GeometryInstance({
           geometry: new Cesium.EllipseOutlineGeometry({
             center: center,
             semiMinorAxis: semiMinorAxis,
@@ -117,8 +117,8 @@
         });
 
         center = Cesium.Cartesian3.fromDegrees(-72.0, 25.0);
-        var radius = 250000.0;
-        var circleInstance = new Cesium.GeometryInstance({
+        let radius = 250000.0;
+        let circleInstance = new Cesium.GeometryInstance({
           geometry: new Cesium.CircleGeometry({
             center: center,
             radius: radius,
@@ -126,7 +126,7 @@
             vertexFormat: Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
           }),
         });
-        var circleOutlineInstance = new Cesium.GeometryInstance({
+        const circleOutlineInstance = new Cesium.GeometryInstance({
           geometry: new Cesium.CircleOutlineGeometry({
             center: center,
             radius: radius,
@@ -169,8 +169,8 @@
 
         // Create extruded rectangle
         rectangle = Cesium.Rectangle.fromDegrees(-118.0, 38.0, -116.0, 40.0);
-        var extrudedHeight = 500000.0;
-        var extrudedRectangle = new Cesium.GeometryInstance({
+        let extrudedHeight = 500000.0;
+        let extrudedRectangle = new Cesium.GeometryInstance({
           geometry: new Cesium.RectangleGeometry({
             rectangle: rectangle,
             vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -183,7 +183,7 @@
           },
         });
 
-        var extrudedOutlineRectangle = new Cesium.GeometryInstance({
+        const extrudedOutlineRectangle = new Cesium.GeometryInstance({
           geometry: new Cesium.RectangleOutlineGeometry({
             rectangle: rectangle,
             extrudedHeight: extrudedHeight,
@@ -198,9 +198,9 @@
         semiMinorAxis = 100000.0;
         semiMajorAxis = 200000.0;
         rotation = Cesium.Math.toRadians(90);
-        var height = 100000.0;
+        let height = 100000.0;
         extrudedHeight = 200000.0;
-        var extrudedEllipse = new Cesium.GeometryInstance({
+        let extrudedEllipse = new Cesium.GeometryInstance({
           geometry: new Cesium.EllipseGeometry({
             center: center,
             semiMinorAxis: semiMinorAxis,
@@ -216,7 +216,7 @@
             ),
           },
         });
-        var extrudedOutlineEllipse = new Cesium.GeometryInstance({
+        const extrudedOutlineEllipse = new Cesium.GeometryInstance({
           geometry: new Cesium.EllipseOutlineGeometry({
             center: center,
             semiMinorAxis: semiMinorAxis,
@@ -231,7 +231,7 @@
         });
 
         // Create extruded polygon
-        var polygonHierarchy = {
+        let polygonHierarchy = {
           positions: Cesium.Cartesian3.fromDegreesArray([
             -118.0,
             30.0,
@@ -245,7 +245,7 @@
         };
         height = 300000.0;
         extrudedHeight = 700000.0;
-        var extrudedPolygon = new Cesium.GeometryInstance({
+        let extrudedPolygon = new Cesium.GeometryInstance({
           geometry: new Cesium.PolygonGeometry({
             polygonHierarchy: polygonHierarchy,
             vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -258,7 +258,7 @@
             ),
           },
         });
-        var extrudedOutlinePolygon = new Cesium.GeometryInstance({
+        const extrudedOutlinePolygon = new Cesium.GeometryInstance({
           geometry: new Cesium.PolygonOutlineGeometry({
             polygonHierarchy: polygonHierarchy,
             extrudedHeight: extrudedHeight,
@@ -270,17 +270,17 @@
         });
 
         // cylinder
-        var length = 200000.0;
-        var topRadius = 150000.0;
-        var bottomRadius = 150000.0;
-        var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
+        let length = 200000.0;
+        let topRadius = 150000.0;
+        let bottomRadius = 150000.0;
+        let modelMatrix = Cesium.Matrix4.multiplyByTranslation(
           Cesium.Transforms.eastNorthUpToFixedFrame(
             Cesium.Cartesian3.fromDegrees(-70.0, 45.0)
           ),
           new Cesium.Cartesian3(0.0, 0.0, 100000.0),
           new Cesium.Matrix4()
         );
-        var cylinderInstance = new Cesium.GeometryInstance({
+        let cylinderInstance = new Cesium.GeometryInstance({
           geometry: new Cesium.CylinderGeometry({
             length: length,
             topRadius: topRadius,
@@ -294,7 +294,7 @@
             ),
           },
         });
-        var cylinderOutlineInstance = new Cesium.GeometryInstance({
+        const cylinderOutlineInstance = new Cesium.GeometryInstance({
           geometry: new Cesium.CylinderOutlineGeometry({
             length: length,
             topRadius: topRadius,
@@ -340,43 +340,43 @@
 
         // Create box and ellipsoid boxes, and use the instance's
         // modelMatrix to scale and position them.
-        var dimensions = new Cesium.Cartesian3(1.0, 1.0, 1.0);
-        var boxGeometry = Cesium.BoxGeometry.fromDimensions({
+        let dimensions = new Cesium.Cartesian3(1.0, 1.0, 1.0);
+        let boxGeometry = Cesium.BoxGeometry.fromDimensions({
           vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
           dimensions: dimensions,
         });
-        var boxOutlineGeometry = Cesium.BoxOutlineGeometry.fromDimensions({
+        const boxOutlineGeometry = Cesium.BoxOutlineGeometry.fromDimensions({
           dimensions: dimensions,
         });
 
-        var radii = new Cesium.Cartesian3(0.5, 0.5, 1.0);
-        var ellipsoidGeometry = new Cesium.EllipsoidGeometry({
+        let radii = new Cesium.Cartesian3(0.5, 0.5, 1.0);
+        let ellipsoidGeometry = new Cesium.EllipsoidGeometry({
           vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
           radii: radii,
         });
 
-        var ellipsoidOutlineGeometry = new Cesium.EllipsoidOutlineGeometry({
+        const ellipsoidOutlineGeometry = new Cesium.EllipsoidOutlineGeometry({
           radii: radii,
           stackPartitions: 6,
           slicePartitions: 5,
         });
 
         radius = 0.75;
-        var sphereGeometry = new Cesium.SphereGeometry({
+        let sphereGeometry = new Cesium.SphereGeometry({
           vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
           radius: radius,
         });
 
-        var sphereOutlineGeometry = new Cesium.SphereOutlineGeometry({
+        const sphereOutlineGeometry = new Cesium.SphereOutlineGeometry({
           radius: radius,
           stackPartitions: 6,
           slicePartitions: 5,
         });
 
-        var instances = [];
-        var outlineInstances = [];
-        var i;
-        var boxModelMatrix, ellipsoidModelMatrix, sphereModelMatrix;
+        let instances = [];
+        let outlineInstances = [];
+        let i;
+        let boxModelMatrix, ellipsoidModelMatrix, sphereModelMatrix;
         for (i = 0; i < 5; ++i) {
           height = 100000.0 + 200000.0 * i;
           boxModelMatrix = Cesium.Matrix4.multiplyByUniformScale(
@@ -508,10 +508,10 @@
           -75.0,
           50.0,
         ]);
-        var maximumHeights = [500000, 1000000, 500000];
-        var minimumHeights = [0, 500000, 0];
+        const maximumHeights = [500000, 1000000, 500000];
+        const minimumHeights = [0, 500000, 0];
 
-        var wallInstance = new Cesium.GeometryInstance({
+        let wallInstance = new Cesium.GeometryInstance({
           geometry: new Cesium.WallGeometry({
             positions: positions,
             maximumHeights: maximumHeights,
@@ -525,7 +525,7 @@
           },
         });
 
-        var wallOutlineInstance = new Cesium.GeometryInstance({
+        const wallOutlineInstance = new Cesium.GeometryInstance({
           geometry: new Cesium.WallOutlineGeometry({
             positions: positions,
             maximumHeights: maximumHeights,
@@ -936,7 +936,7 @@
         );
 
         positions = [];
-        var colors = [];
+        let colors = [];
         for (i = 0; i < 40; ++i) {
           positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 48.0));
           colors.push(Cesium.Color.fromRandom({ alpha: 1.0 }));
@@ -1073,9 +1073,9 @@
           -125.0,
           55.0,
         ]);
-        var width = 100000;
+        const width = 100000;
 
-        var corridor = new Cesium.GeometryInstance({
+        const corridor = new Cesium.GeometryInstance({
           geometry: new Cesium.CorridorGeometry({
             positions: positions,
             width: width,
@@ -1088,7 +1088,7 @@
           },
         });
 
-        var extrudedCorridor = new Cesium.GeometryInstance({
+        const extrudedCorridor = new Cesium.GeometryInstance({
           geometry: new Cesium.CorridorGeometry({
             positions: positions,
             width: width,
@@ -1103,7 +1103,7 @@
           },
         });
 
-        var corridorOutline = new Cesium.GeometryInstance({
+        const corridorOutline = new Cesium.GeometryInstance({
           geometry: new Cesium.CorridorOutlineGeometry({
             positions: positions,
             width: width,
@@ -1114,7 +1114,7 @@
           },
         });
 
-        var corridorFill = new Cesium.GeometryInstance({
+        const corridorFill = new Cesium.GeometryInstance({
           geometry: new Cesium.CorridorGeometry({
             positions: positions,
             width: width,
@@ -1152,11 +1152,11 @@
         );
 
         function starPositions(arms, rOuter, rInner) {
-          var angle = Math.PI / arms;
-          var pos = [];
-          for (var i = 0; i < 2 * arms; i++) {
-            var r = i % 2 === 0 ? rOuter : rInner;
-            var p = new Cesium.Cartesian2(
+          const angle = Math.PI / arms;
+          const pos = [];
+          for (let i = 0; i < 2 * arms; i++) {
+            const r = i % 2 === 0 ? rOuter : rInner;
+            const p = new Cesium.Cartesian2(
               Math.cos(i * angle) * r,
               Math.sin(i * angle) * r
             );
@@ -1176,7 +1176,7 @@
           20.0,
           100000.0,
         ]);
-        var polylineVolumeFill = new Cesium.GeometryInstance({
+        const polylineVolumeFill = new Cesium.GeometryInstance({
           geometry: new Cesium.PolylineVolumeGeometry({
             polylinePositions: positions,
             vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -1189,7 +1189,7 @@
           },
         });
 
-        var polylineVolumeOutline = new Cesium.GeometryInstance({
+        const polylineVolumeOutline = new Cesium.GeometryInstance({
           geometry: new Cesium.PolylineVolumeOutlineGeometry({
             polylinePositions: positions,
             shapePositions: starPositions(7, 30000.0, 20000.0),
@@ -1199,7 +1199,7 @@
           },
         });
 
-        var polylineVolume = new Cesium.GeometryInstance({
+        const polylineVolume = new Cesium.GeometryInstance({
           geometry: new Cesium.PolylineVolumeGeometry({
             polylinePositions: Cesium.Cartesian3.fromDegreesArray([
               -102.0,
@@ -1220,9 +1220,9 @@
         });
 
         function computeCircle(radius) {
-          var positions = [];
-          for (var i = 0; i < 360; i++) {
-            var radians = Cesium.Math.toRadians(i);
+          const positions = [];
+          for (let i = 0; i < 360; i++) {
+            const radians = Cesium.Math.toRadians(i);
             positions.push(
               new Cesium.Cartesian2(
                 radius * Math.cos(radians),
@@ -1233,7 +1233,7 @@
           return positions;
         }
 
-        var tubeGeometry = new Cesium.GeometryInstance({
+        const tubeGeometry = new Cesium.GeometryInstance({
           geometry: new Cesium.PolylineVolumeGeometry({
             polylinePositions: Cesium.Cartesian3.fromDegreesArray([
               -104.0,

@@ -6,7 +6,7 @@ import { Matrix4 } from "../../Source/Cesium.js";
 import { OrthographicOffCenterFrustum } from "../../Source/Cesium.js";
 
 describe("Core/OrthographicOffCenterFrustum", function () {
-  var frustum, planes;
+  let frustum, planes;
 
   beforeEach(function () {
     frustum = new OrthographicOffCenterFrustum();
@@ -24,7 +24,7 @@ describe("Core/OrthographicOffCenterFrustum", function () {
   });
 
   it("constructs", function () {
-    var options = {
+    const options = {
       left: -1.0,
       right: 2.0,
       top: 5.0,
@@ -32,7 +32,7 @@ describe("Core/OrthographicOffCenterFrustum", function () {
       near: 3.0,
       far: 4.0,
     };
-    var f = new OrthographicOffCenterFrustum(options);
+    const f = new OrthographicOffCenterFrustum(options);
     expect(f.width).toEqual(options.width);
     expect(f.aspectRatio).toEqual(options.aspectRatio);
     expect(f.near).toEqual(options.near);
@@ -40,7 +40,7 @@ describe("Core/OrthographicOffCenterFrustum", function () {
   });
 
   it("default constructs", function () {
-    var f = new OrthographicOffCenterFrustum();
+    const f = new OrthographicOffCenterFrustum();
     expect(f.left).toBeUndefined();
     expect(f.right).toBeUndefined();
     expect(f.top).toBeUndefined();
@@ -101,44 +101,44 @@ describe("Core/OrthographicOffCenterFrustum", function () {
   });
 
   it("get frustum left plane", function () {
-    var leftPlane = planes[0];
-    var expectedResult = new Cartesian4(1.0, 0.0, 0.0, 1.0);
+    const leftPlane = planes[0];
+    const expectedResult = new Cartesian4(1.0, 0.0, 0.0, 1.0);
     expect(leftPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON4);
   });
 
   it("get frustum right plane", function () {
-    var rightPlane = planes[1];
-    var expectedResult = new Cartesian4(-1.0, 0.0, 0.0, 1.0);
+    const rightPlane = planes[1];
+    const expectedResult = new Cartesian4(-1.0, 0.0, 0.0, 1.0);
     expect(rightPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON4);
   });
 
   it("get frustum bottom plane", function () {
-    var bottomPlane = planes[2];
-    var expectedResult = new Cartesian4(0.0, 1.0, 0.0, 1.0);
+    const bottomPlane = planes[2];
+    const expectedResult = new Cartesian4(0.0, 1.0, 0.0, 1.0);
     expect(bottomPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON4);
   });
 
   it("get frustum top plane", function () {
-    var topPlane = planes[3];
-    var expectedResult = new Cartesian4(0.0, -1.0, 0.0, 1.0);
+    const topPlane = planes[3];
+    const expectedResult = new Cartesian4(0.0, -1.0, 0.0, 1.0);
     expect(topPlane).toEqual(expectedResult, CesiumMath.EPSILON4);
   });
 
   it("get frustum near plane", function () {
-    var nearPlane = planes[4];
-    var expectedResult = new Cartesian4(0.0, 0.0, -1.0, -1.0);
+    const nearPlane = planes[4];
+    const expectedResult = new Cartesian4(0.0, 0.0, -1.0, -1.0);
     expect(nearPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON4);
   });
 
   it("get frustum far plane", function () {
-    var farPlane = planes[5];
-    var expectedResult = new Cartesian4(0.0, 0.0, 1.0, 3.0);
+    const farPlane = planes[5];
+    const expectedResult = new Cartesian4(0.0, 0.0, 1.0, 3.0);
     expect(farPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON4);
   });
 
   it("get orthographic projection matrix", function () {
-    var projectionMatrix = frustum.projectionMatrix;
-    var expected = Matrix4.computeOrthographicOffCenter(
+    const projectionMatrix = frustum.projectionMatrix;
+    const expected = Matrix4.computeOrthographicOffCenter(
       frustum.left,
       frustum.right,
       frustum.bottom,
@@ -205,7 +205,7 @@ describe("Core/OrthographicOffCenterFrustum", function () {
   });
 
   it("get pixel dimensions", function () {
-    var pixelSize = frustum.getPixelDimensions(
+    const pixelSize = frustum.getPixelDimensions(
       1.0,
       1.0,
       0.0,
@@ -217,7 +217,7 @@ describe("Core/OrthographicOffCenterFrustum", function () {
   });
 
   it("get pixel dimensions with pixel ratio", function () {
-    var pixelSize = frustum.getPixelDimensions(
+    const pixelSize = frustum.getPixelDimensions(
       1.0,
       1.0,
       0.0,
@@ -229,7 +229,7 @@ describe("Core/OrthographicOffCenterFrustum", function () {
   });
 
   it("equals", function () {
-    var frustum2 = new OrthographicOffCenterFrustum();
+    const frustum2 = new OrthographicOffCenterFrustum();
     frustum2.near = 1.0;
     frustum2.far = 3.0;
     frustum2.right = 1.0;
@@ -241,7 +241,7 @@ describe("Core/OrthographicOffCenterFrustum", function () {
   });
 
   it("equals epsilon", function () {
-    var frustum2 = new OrthographicOffCenterFrustum();
+    const frustum2 = new OrthographicOffCenterFrustum();
     frustum2.near = 1.0;
     frustum2.far = 3.0;
     frustum2.right = 1.0;
@@ -250,7 +250,7 @@ describe("Core/OrthographicOffCenterFrustum", function () {
     frustum2.bottom = -1.0;
     expect(frustum.equalsEpsilon(frustum2, CesiumMath.EPSILON7)).toEqual(true);
 
-    var frustum3 = new OrthographicOffCenterFrustum();
+    const frustum3 = new OrthographicOffCenterFrustum();
     frustum3.near = 1.01;
     frustum3.far = 2.98;
     frustum3.right = 1.02;
@@ -259,7 +259,7 @@ describe("Core/OrthographicOffCenterFrustum", function () {
     frustum3.bottom = -1.05;
     expect(frustum.equalsEpsilon(frustum3, CesiumMath.EPSILON1)).toEqual(true);
 
-    var frustum4 = new OrthographicOffCenterFrustum();
+    const frustum4 = new OrthographicOffCenterFrustum();
     frustum4.near = 1.1;
     frustum4.far = 2.9;
     frustum4.right = 0.0;
@@ -274,20 +274,20 @@ describe("Core/OrthographicOffCenterFrustum", function () {
   });
 
   it("throws with undefined frustum parameters", function () {
-    var frustum = new OrthographicOffCenterFrustum();
+    const frustum = new OrthographicOffCenterFrustum();
     expect(function () {
       return frustum.projectionMatrix;
     }).toThrowDeveloperError();
   });
 
   it("clone", function () {
-    var frustum2 = frustum.clone();
+    const frustum2 = frustum.clone();
     expect(frustum).toEqual(frustum2);
   });
 
   it("clone with result parameter", function () {
-    var result = new OrthographicOffCenterFrustum();
-    var frustum2 = frustum.clone(result);
+    const result = new OrthographicOffCenterFrustum();
+    const frustum2 = frustum.clone(result);
     expect(frustum2).toBe(result);
     expect(frustum).toEqual(frustum2);
   });

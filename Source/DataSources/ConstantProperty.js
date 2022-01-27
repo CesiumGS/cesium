@@ -64,13 +64,13 @@ ConstantProperty.prototype.getValue = function (time, result) {
  * @param {*} value The property value.
  */
 ConstantProperty.prototype.setValue = function (value) {
-  var oldValue = this._value;
+  const oldValue = this._value;
   if (oldValue !== value) {
-    var isDefined = defined(value);
-    var hasClone = isDefined && typeof value.clone === "function";
-    var hasEquals = isDefined && typeof value.equals === "function";
+    const isDefined = defined(value);
+    const hasClone = isDefined && typeof value.clone === "function";
+    const hasEquals = isDefined && typeof value.equals === "function";
 
-    var changed = !hasEquals || !value.equals(oldValue);
+    const changed = !hasEquals || !value.equals(oldValue);
     if (changed) {
       this._hasClone = hasClone;
       this._hasEquals = hasEquals;

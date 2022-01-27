@@ -9,16 +9,16 @@ import { ScreenSpaceEventType } from "../../Source/Cesium.js";
 import DomEventSimulator from "../DomEventSimulator.js";
 
 describe("Core/ScreenSpaceEventHandler", function () {
-  var usePointerEvents;
-  var element;
-  var handler;
+  let usePointerEvents;
+  let element;
+  let handler;
 
   function createCloningSpy(name) {
-    var spy = jasmine.createSpy(name);
+    const spy = jasmine.createSpy(name);
 
-    var cloningSpy = function () {
+    const cloningSpy = function () {
       // deep clone arguments so they are captured correctly by the spy
-      var args = [].slice.apply(arguments).map(function (arg) {
+      const args = [].slice.apply(arguments).map(function (arg) {
         return clone(arg, true);
       });
 
@@ -36,7 +36,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
       };
     }
 
-    for (var prop in spy) {
+    for (const prop in spy) {
       if (spy.hasOwnProperty(prop)) {
         Object.defineProperty(cloningSpy, prop, createPropertyDescriptor(prop));
       }
@@ -45,7 +45,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
     return cloningSpy;
   }
 
-  var eventsToStop = "pointerdown pointerup pointermove pointercancel mousedown mouseup mousemove touchstart touchend touchmove touchcancel dblclick wheel mousewheel DOMMouseScroll".split(
+  const eventsToStop = "pointerdown pointerup pointermove pointercancel mousedown mouseup mousemove touchstart touchend touchmove touchcancel dblclick wheel mousewheel DOMMouseScroll".split(
     " "
   );
 
@@ -118,14 +118,14 @@ describe("Core/ScreenSpaceEventHandler", function () {
     });
   });
 
-  var MouseButton = {
+  const MouseButton = {
     LEFT: 0,
     MIDDLE: 1,
     RIGHT: 2,
   };
 
   function keyForValue(obj, val) {
-    for (var key in obj) {
+    for (const key in obj) {
       if (obj[key] === val) {
         return key;
       }
@@ -133,13 +133,13 @@ describe("Core/ScreenSpaceEventHandler", function () {
   }
 
   function createMouseSpec(specFunction, eventType, button, modifier) {
-    var specName = keyForValue(ScreenSpaceEventType, eventType) + " action";
+    let specName = keyForValue(ScreenSpaceEventType, eventType) + " action";
     if (defined(modifier)) {
       specName +=
         " with " + keyForValue(KeyboardEventModifier, modifier) + " modifier";
     }
     it(specName, function () {
-      var eventOptions = {
+      const eventOptions = {
         button: button,
         ctrlKey: modifier === KeyboardEventModifier.CTRL,
         altKey: modifier === KeyboardEventModifier.ALT,
@@ -155,11 +155,11 @@ describe("Core/ScreenSpaceEventHandler", function () {
     possibleModifiers,
     possibleEventTypes
   ) {
-    for (var i = 0; i < possibleButtons.length; ++i) {
-      var eventType = possibleEventTypes[i];
-      var button = possibleButtons[i];
-      for (var j = 0; j < possibleModifiers.length; ++j) {
-        var modifier = possibleModifiers[j];
+    for (let i = 0; i < possibleButtons.length; ++i) {
+      const eventType = possibleEventTypes[i];
+      const button = possibleButtons[i];
+      for (let j = 0; j < possibleModifiers.length; ++j) {
+        const modifier = possibleModifiers[j];
         createMouseSpec(specFunction, eventType, button, modifier);
       }
     }
@@ -206,7 +206,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
 
   describe("handles mouse down", function () {
     function testMouseDownEvent(eventType, modifier, eventOptions) {
-      var action = createCloningSpy("action");
+      const action = createCloningSpy("action");
       handler.setInputAction(action, eventType, modifier);
 
       expect(handler.getInputAction(eventType, modifier)).toEqual(action);
@@ -241,18 +241,18 @@ describe("Core/ScreenSpaceEventHandler", function () {
       expect(action).not.toHaveBeenCalled();
     }
 
-    var possibleButtons = [
+    const possibleButtons = [
       MouseButton.LEFT,
       MouseButton.MIDDLE,
       MouseButton.RIGHT,
     ];
-    var possibleModifiers = [
+    const possibleModifiers = [
       undefined,
       KeyboardEventModifier.SHIFT,
       KeyboardEventModifier.CTRL,
       KeyboardEventModifier.ALT,
     ];
-    var possibleEventTypes = [
+    const possibleEventTypes = [
       ScreenSpaceEventType.LEFT_DOWN,
       ScreenSpaceEventType.MIDDLE_DOWN,
       ScreenSpaceEventType.RIGHT_DOWN,
@@ -267,7 +267,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
 
   describe("handles mouse up", function () {
     function testMouseUpEvent(eventType, modifier, eventOptions) {
-      var action = createCloningSpy("action");
+      const action = createCloningSpy("action");
       handler.setInputAction(action, eventType, modifier);
 
       expect(handler.getInputAction(eventType, modifier)).toEqual(action);
@@ -357,18 +357,18 @@ describe("Core/ScreenSpaceEventHandler", function () {
       expect(action).not.toHaveBeenCalled();
     }
 
-    var possibleButtons = [
+    const possibleButtons = [
       MouseButton.LEFT,
       MouseButton.MIDDLE,
       MouseButton.RIGHT,
     ];
-    var possibleModifiers = [
+    const possibleModifiers = [
       undefined,
       KeyboardEventModifier.SHIFT,
       KeyboardEventModifier.CTRL,
       KeyboardEventModifier.ALT,
     ];
-    var possibleEventTypes = [
+    const possibleEventTypes = [
       ScreenSpaceEventType.LEFT_UP,
       ScreenSpaceEventType.MIDDLE_UP,
       ScreenSpaceEventType.RIGHT_UP,
@@ -383,7 +383,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
 
   describe("handles mouse click", function () {
     function testMouseClickEvent(eventType, modifier, eventOptions) {
-      var action = createCloningSpy("action");
+      const action = createCloningSpy("action");
       handler.setInputAction(action, eventType, modifier);
 
       expect(handler.getInputAction(eventType, modifier)).toEqual(action);
@@ -454,18 +454,18 @@ describe("Core/ScreenSpaceEventHandler", function () {
       expect(action).not.toHaveBeenCalled();
     }
 
-    var possibleButtons = [
+    const possibleButtons = [
       MouseButton.LEFT,
       MouseButton.MIDDLE,
       MouseButton.RIGHT,
     ];
-    var possibleModifiers = [
+    const possibleModifiers = [
       undefined,
       KeyboardEventModifier.SHIFT,
       KeyboardEventModifier.CTRL,
       KeyboardEventModifier.ALT,
     ];
-    var possibleEventTypes = [
+    const possibleEventTypes = [
       ScreenSpaceEventType.LEFT_CLICK,
       ScreenSpaceEventType.MIDDLE_CLICK,
       ScreenSpaceEventType.RIGHT_CLICK,
@@ -480,7 +480,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
 
   describe("handles mouse double click", function () {
     function testMouseDoubleClickEvent(eventType, modifier, eventOptions) {
-      var action = createCloningSpy("action");
+      const action = createCloningSpy("action");
       handler.setInputAction(action, eventType, modifier);
 
       expect(handler.getInputAction(eventType, modifier)).toEqual(action);
@@ -515,14 +515,14 @@ describe("Core/ScreenSpaceEventHandler", function () {
       expect(action).not.toHaveBeenCalled();
     }
 
-    var possibleButtons = [MouseButton.LEFT];
-    var possibleModifiers = [
+    const possibleButtons = [MouseButton.LEFT];
+    const possibleModifiers = [
       undefined,
       KeyboardEventModifier.SHIFT,
       KeyboardEventModifier.CTRL,
       KeyboardEventModifier.ALT,
     ];
-    var possibleEventTypes = [ScreenSpaceEventType.LEFT_DOUBLE_CLICK];
+    const possibleEventTypes = [ScreenSpaceEventType.LEFT_DOUBLE_CLICK];
     createAllMouseSpecCombinations(
       testMouseDoubleClickEvent,
       possibleButtons,
@@ -533,7 +533,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
 
   describe("handles mouse move", function () {
     function testMouseMoveEvent(eventType, modifier, eventOptions) {
-      var action = createCloningSpy("action");
+      const action = createCloningSpy("action");
       handler.setInputAction(action, eventType, modifier);
 
       expect(handler.getInputAction(eventType, modifier)).toEqual(action);
@@ -579,14 +579,14 @@ describe("Core/ScreenSpaceEventHandler", function () {
       expect(action).not.toHaveBeenCalled();
     }
 
-    var possibleButtons = [undefined];
-    var possibleModifiers = [
+    const possibleButtons = [undefined];
+    const possibleModifiers = [
       undefined,
       KeyboardEventModifier.SHIFT,
       KeyboardEventModifier.CTRL,
       KeyboardEventModifier.ALT,
     ];
-    var possibleEventTypes = [ScreenSpaceEventType.MOUSE_MOVE];
+    const possibleEventTypes = [ScreenSpaceEventType.MOUSE_MOVE];
     createAllMouseSpecCombinations(
       testMouseMoveEvent,
       possibleButtons,
@@ -599,7 +599,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
     if ("onwheel" in document) {
       describe("using standard wheel event", function () {
         function testWheelEvent(eventType, modifier, eventOptions) {
-          var action = createCloningSpy("action");
+          const action = createCloningSpy("action");
           handler.setInputAction(action, eventType, modifier);
 
           expect(handler.getInputAction(eventType, modifier)).toEqual(action);
@@ -633,14 +633,14 @@ describe("Core/ScreenSpaceEventHandler", function () {
           expect(action).not.toHaveBeenCalled();
         }
 
-        var possibleButtons = [undefined];
-        var possibleModifiers = [
+        const possibleButtons = [undefined];
+        const possibleModifiers = [
           undefined,
           KeyboardEventModifier.SHIFT,
           KeyboardEventModifier.CTRL,
           KeyboardEventModifier.ALT,
         ];
-        var possibleEventTypes = [ScreenSpaceEventType.WHEEL];
+        const possibleEventTypes = [ScreenSpaceEventType.WHEEL];
         createAllMouseSpecCombinations(
           testWheelEvent,
           possibleButtons,
@@ -651,7 +651,7 @@ describe("Core/ScreenSpaceEventHandler", function () {
     } else if (document.onmousewheel !== undefined) {
       describe("using legacy mousewheel event", function () {
         function testMouseWheelEvent(eventType, modifier, eventOptions) {
-          var action = createCloningSpy("action");
+          const action = createCloningSpy("action");
           handler.setInputAction(action, eventType, modifier);
 
           expect(handler.getInputAction(eventType, modifier)).toEqual(action);
@@ -683,14 +683,14 @@ describe("Core/ScreenSpaceEventHandler", function () {
           expect(action).not.toHaveBeenCalled();
         }
 
-        var possibleButtons = [undefined];
-        var possibleModifiers = [
+        const possibleButtons = [undefined];
+        const possibleModifiers = [
           undefined,
           KeyboardEventModifier.SHIFT,
           KeyboardEventModifier.CTRL,
           KeyboardEventModifier.ALT,
         ];
-        var possibleEventTypes = [ScreenSpaceEventType.WHEEL];
+        const possibleEventTypes = [ScreenSpaceEventType.WHEEL];
         createAllMouseSpecCombinations(
           testMouseWheelEvent,
           possibleButtons,
@@ -702,15 +702,15 @@ describe("Core/ScreenSpaceEventHandler", function () {
   });
 
   it("handles touch start", function () {
-    var eventType = ScreenSpaceEventType.LEFT_DOWN;
+    const eventType = ScreenSpaceEventType.LEFT_DOWN;
 
-    var action = createCloningSpy("action");
+    const action = createCloningSpy("action");
     handler.setInputAction(action, eventType);
 
     expect(handler.getInputAction(eventType)).toEqual(action);
 
     function simulateInput() {
-      var touchStartPosition = {
+      const touchStartPosition = {
         clientX: 1,
         clientY: 2,
       };
@@ -758,20 +758,20 @@ describe("Core/ScreenSpaceEventHandler", function () {
   });
 
   it("handles touch move", function () {
-    var eventType = ScreenSpaceEventType.MOUSE_MOVE;
+    const eventType = ScreenSpaceEventType.MOUSE_MOVE;
 
-    var action = createCloningSpy("action");
+    const action = createCloningSpy("action");
     handler.setInputAction(action, eventType);
 
     expect(handler.getInputAction(eventType)).toEqual(action);
 
     // start, then move
     function simulateInput() {
-      var touchStartPosition = {
+      const touchStartPosition = {
         clientX: 1,
         clientY: 2,
       };
-      var touchMovePosition = {
+      const touchMovePosition = {
         clientX: 10,
         clientY: 11,
       };
@@ -840,20 +840,20 @@ describe("Core/ScreenSpaceEventHandler", function () {
   });
 
   it("handles touch end", function () {
-    var eventType = ScreenSpaceEventType.LEFT_UP;
+    const eventType = ScreenSpaceEventType.LEFT_UP;
 
-    var action = createCloningSpy("action");
+    const action = createCloningSpy("action");
     handler.setInputAction(action, eventType);
 
     expect(handler.getInputAction(eventType)).toEqual(action);
 
     // start, then end
     function simulateInput() {
-      var touchStartPosition = {
+      const touchStartPosition = {
         clientX: 1,
         clientY: 2,
       };
-      var touchEndPosition = {
+      const touchEndPosition = {
         clientX: 1,
         clientY: 2,
       };
@@ -914,15 +914,15 @@ describe("Core/ScreenSpaceEventHandler", function () {
 
     // start, move, then end
     function simulateInput2() {
-      var touchStartPosition = {
+      const touchStartPosition = {
         clientX: 1,
         clientY: 2,
       };
-      var touchMovePosition = {
+      const touchMovePosition = {
         clientX: 10,
         clientY: 11,
       };
-      var touchEndPosition = {
+      const touchEndPosition = {
         clientX: 10,
         clientY: 11,
       };
@@ -1011,20 +1011,20 @@ describe("Core/ScreenSpaceEventHandler", function () {
   });
 
   it("treats touch end as touch cancel", function () {
-    var eventType = ScreenSpaceEventType.LEFT_UP;
+    const eventType = ScreenSpaceEventType.LEFT_UP;
 
-    var action = createCloningSpy("action");
+    const action = createCloningSpy("action");
     handler.setInputAction(action, eventType);
 
     expect(handler.getInputAction(eventType)).toEqual(action);
 
     // start, then end
     function simulateInput() {
-      var touchStartPosition = {
+      const touchStartPosition = {
         clientX: 1,
         clientY: 2,
       };
-      var touchEndPosition = {
+      const touchEndPosition = {
         clientX: 1,
         clientY: 2,
       };
@@ -1085,15 +1085,15 @@ describe("Core/ScreenSpaceEventHandler", function () {
 
     // start, move, then end
     function simulateInput2() {
-      var touchStartPosition = {
+      const touchStartPosition = {
         clientX: 1,
         clientY: 2,
       };
-      var touchMovePosition = {
+      const touchMovePosition = {
         clientX: 10,
         clientY: 11,
       };
-      var touchEndPosition = {
+      const touchEndPosition = {
         clientX: 10,
         clientY: 11,
       };
@@ -1182,20 +1182,20 @@ describe("Core/ScreenSpaceEventHandler", function () {
   });
 
   it("handles touch pinch start", function () {
-    var eventType = ScreenSpaceEventType.PINCH_START;
+    const eventType = ScreenSpaceEventType.PINCH_START;
 
-    var action = createCloningSpy("action");
+    const action = createCloningSpy("action");
     handler.setInputAction(action, eventType);
 
     expect(handler.getInputAction(eventType)).toEqual(action);
 
     // touch 1, then touch 2
     function simulateInput() {
-      var touch1StartPosition = {
+      const touch1StartPosition = {
         clientX: 1,
         clientY: 2,
       };
-      var touch2StartPosition = {
+      const touch2StartPosition = {
         clientX: 3,
         clientY: 4,
       };
@@ -1270,28 +1270,28 @@ describe("Core/ScreenSpaceEventHandler", function () {
   });
 
   it("handles touch pinch move", function () {
-    var eventType = ScreenSpaceEventType.PINCH_MOVE;
+    const eventType = ScreenSpaceEventType.PINCH_MOVE;
 
-    var action = createCloningSpy("action");
+    const action = createCloningSpy("action");
     handler.setInputAction(action, eventType);
 
     expect(handler.getInputAction(eventType)).toEqual(action);
 
     // touch 1, then touch 2, then move
     function simulateInput() {
-      var touch1StartPosition = {
+      const touch1StartPosition = {
         clientX: 1,
         clientY: 2,
       };
-      var touch2StartPosition = {
+      const touch2StartPosition = {
         clientX: 4,
         clientY: 3,
       };
-      var touch1MovePosition = {
+      const touch1MovePosition = {
         clientX: 10,
         clientY: 11,
       };
-      var touch2MovePosition = {
+      const touch2MovePosition = {
         clientX: 21,
         clientY: 20,
       };
@@ -1442,23 +1442,23 @@ describe("Core/ScreenSpaceEventHandler", function () {
   });
 
   it("handles touch pinch release", function () {
-    var leftDownEventType = ScreenSpaceEventType.LEFT_DOWN;
-    var leftDownAction = createCloningSpy("LEFT_DOWN");
+    const leftDownEventType = ScreenSpaceEventType.LEFT_DOWN;
+    const leftDownAction = createCloningSpy("LEFT_DOWN");
     handler.setInputAction(leftDownAction, leftDownEventType);
 
-    var pinchStartEventType = ScreenSpaceEventType.PINCH_START;
-    var pinchStartAction = createCloningSpy("PINCH_START");
+    const pinchStartEventType = ScreenSpaceEventType.PINCH_START;
+    const pinchStartAction = createCloningSpy("PINCH_START");
     handler.setInputAction(pinchStartAction, pinchStartEventType);
 
-    var pinchEndEventType = ScreenSpaceEventType.PINCH_END;
-    var pinchEndAction = createCloningSpy("PINCH_END");
+    const pinchEndEventType = ScreenSpaceEventType.PINCH_END;
+    const pinchEndAction = createCloningSpy("PINCH_END");
     handler.setInputAction(pinchEndAction, pinchEndEventType);
 
-    var touch1Position = {
+    const touch1Position = {
       clientX: 1,
       clientY: 2,
     };
-    var touch2Position = {
+    const touch2Position = {
       clientX: 4,
       clientY: 3,
     };
@@ -1566,20 +1566,20 @@ describe("Core/ScreenSpaceEventHandler", function () {
   });
 
   it("handles touch click", function () {
-    var eventType = ScreenSpaceEventType.LEFT_CLICK;
+    const eventType = ScreenSpaceEventType.LEFT_CLICK;
 
-    var action = createCloningSpy("action");
+    const action = createCloningSpy("action");
     handler.setInputAction(action, eventType);
 
     expect(handler.getInputAction(eventType)).toEqual(action);
 
     // start, then end
     function simulateInput() {
-      var touchStartPosition = {
+      const touchStartPosition = {
         clientX: 1,
         clientY: 2,
       };
-      var touchEndPosition = {
+      const touchEndPosition = {
         clientX: 1,
         clientY: 2,
       };
@@ -1649,22 +1649,22 @@ describe("Core/ScreenSpaceEventHandler", function () {
   it("handles touch and hold gesture", function () {
     jasmine.clock().install();
 
-    var delay = ScreenSpaceEventHandler.touchHoldDelayMilliseconds;
+    const delay = ScreenSpaceEventHandler.touchHoldDelayMilliseconds;
 
-    var eventType = ScreenSpaceEventType.RIGHT_CLICK;
+    let eventType = ScreenSpaceEventType.RIGHT_CLICK;
 
-    var action = createCloningSpy("action");
+    const action = createCloningSpy("action");
     handler.setInputAction(action, eventType);
 
     expect(handler.getInputAction(eventType)).toEqual(action);
 
     // start, then end
     function simulateInput(timeout) {
-      var touchStartPosition = {
+      const touchStartPosition = {
         clientX: 1,
         clientY: 2,
       };
-      var touchEndPosition = {
+      const touchEndPosition = {
         clientX: 1,
         clientY: 2,
       };
@@ -1752,20 +1752,20 @@ describe("Core/ScreenSpaceEventHandler", function () {
   });
 
   it("treats touch cancel as touch end for touch clicks", function () {
-    var eventType = ScreenSpaceEventType.LEFT_CLICK;
+    const eventType = ScreenSpaceEventType.LEFT_CLICK;
 
-    var action = createCloningSpy("action");
+    const action = createCloningSpy("action");
     handler.setInputAction(action, eventType);
 
     expect(handler.getInputAction(eventType)).toEqual(action);
 
     // start, then end
     function simulateInput() {
-      var touchStartPosition = {
+      const touchStartPosition = {
         clientX: 1,
         clientY: 2,
       };
-      var touchEndPosition = {
+      const touchEndPosition = {
         clientX: 1,
         clientY: 2,
       };

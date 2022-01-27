@@ -28,12 +28,12 @@ function destroyResources(pickDepth) {
 }
 
 function createResources(pickDepth, context) {
-  var width = context.drawingBufferWidth;
-  var height = context.drawingBufferHeight;
+  const width = context.drawingBufferWidth;
+  const height = context.drawingBufferHeight;
 
   pickDepth._framebuffer.update(context, width, height);
 
-  var passState = new PassState(context);
+  const passState = new PassState(context);
   passState.blendingEnabled = false;
   passState.scissorTest = {
     enabled: true,
@@ -48,15 +48,15 @@ PickDepthFramebuffer.prototype.update = function (
   drawingBufferPosition,
   viewport
 ) {
-  var width = viewport.width;
-  var height = viewport.height;
+  const width = viewport.width;
+  const height = viewport.height;
 
   if (this._framebuffer.isDirty(width, height)) {
     createResources(this, context);
   }
 
-  var framebuffer = this.framebuffer;
-  var passState = this._passState;
+  const framebuffer = this.framebuffer;
+  const passState = this._passState;
   passState.framebuffer = framebuffer;
   passState.viewport.width = width;
   passState.viewport.height = height;

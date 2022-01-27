@@ -9,15 +9,15 @@ import {
 import generateJsonBuffer from "../generateJsonBuffer.js";
 
 describe("Scene/GltfJsonLoader", function () {
-  var gltfUri = "https://example.com/model.glb";
-  var gltfResource = new Resource({
+  const gltfUri = "https://example.com/model.glb";
+  const gltfResource = new Resource({
     url: gltfUri,
   });
-  var bufferResource = new Resource({
+  const bufferResource = new Resource({
     url: "https://example.com/external.bin",
   });
 
-  var gltf1 = {
+  const gltf1 = {
     asset: {
       version: "1.0",
     },
@@ -65,7 +65,7 @@ describe("Scene/GltfJsonLoader", function () {
     },
   };
 
-  var gltf1Updated = {
+  const gltf1Updated = {
     asset: {
       version: "2.0",
     },
@@ -137,7 +137,7 @@ describe("Scene/GltfJsonLoader", function () {
     ],
   };
 
-  var gltf2 = {
+  const gltf2 = {
     asset: {
       version: "2.0",
     },
@@ -190,7 +190,7 @@ describe("Scene/GltfJsonLoader", function () {
     ],
   };
 
-  var gltf2Updated = {
+  const gltf2Updated = {
     asset: {
       version: "2.0",
     },
@@ -257,15 +257,15 @@ describe("Scene/GltfJsonLoader", function () {
   };
 
   function createGlb1(json) {
-    var jsonBuffer = generateJsonBuffer(json, 12, 4);
-    var positionBuffer = new Float32Array([0.0, 0.0, 0.0]);
-    var binaryBuffer = new Uint8Array(positionBuffer.buffer);
-    var glbLength = 20 + jsonBuffer.byteLength + binaryBuffer.byteLength;
-    var glb = new Uint8Array(glbLength);
-    var dataView = new DataView(glb.buffer, glb.byteOffset, glb.byteLength);
+    const jsonBuffer = generateJsonBuffer(json, 12, 4);
+    const positionBuffer = new Float32Array([0.0, 0.0, 0.0]);
+    const binaryBuffer = new Uint8Array(positionBuffer.buffer);
+    const glbLength = 20 + jsonBuffer.byteLength + binaryBuffer.byteLength;
+    const glb = new Uint8Array(glbLength);
+    const dataView = new DataView(glb.buffer, glb.byteOffset, glb.byteLength);
 
     // Write binary glTF header (magic, version, length)
-    var byteOffset = 0;
+    let byteOffset = 0;
     dataView.setUint32(byteOffset, 0x46546c67, true);
     byteOffset += 4;
     dataView.setUint32(byteOffset, 1, true);
@@ -288,16 +288,16 @@ describe("Scene/GltfJsonLoader", function () {
   }
 
   function createGlb2(json) {
-    var jsonBuffer = generateJsonBuffer(json, 12, 4);
-    var positionBuffer = new Float32Array([0.0, 0.0, 0.0]);
-    var binaryBuffer = new Uint8Array(positionBuffer.buffer);
-    var glbLength =
+    const jsonBuffer = generateJsonBuffer(json, 12, 4);
+    const positionBuffer = new Float32Array([0.0, 0.0, 0.0]);
+    const binaryBuffer = new Uint8Array(positionBuffer.buffer);
+    const glbLength =
       12 + 8 + jsonBuffer.byteLength + 8 + binaryBuffer.byteLength;
-    var glb = new Uint8Array(glbLength);
-    var dataView = new DataView(glb.buffer, glb.byteOffset, glb.byteLength);
+    const glb = new Uint8Array(glbLength);
+    const dataView = new DataView(glb.buffer, glb.byteOffset, glb.byteLength);
 
     // Write binary glTF header (magic, version, length)
-    var byteOffset = 0;
+    let byteOffset = 0;
     dataView.setUint32(byteOffset, 0x46546c67, true);
     byteOffset += 4;
     dataView.setUint32(byteOffset, 2, true);
@@ -362,12 +362,12 @@ describe("Scene/GltfJsonLoader", function () {
   });
 
   it("rejects promise if resource fails to load", function () {
-    var error = new Error("404 Not Found");
+    const error = new Error("404 Not Found");
     spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
       when.reject(error)
     );
 
-    var gltfJsonLoader = new GltfJsonLoader({
+    const gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
       gltfResource: gltfResource,
       baseResource: gltfResource,
@@ -387,18 +387,18 @@ describe("Scene/GltfJsonLoader", function () {
   });
 
   it("rejects promise if glTF fails to process", function () {
-    var arrayBuffer = generateJsonBuffer(gltf1).buffer;
+    const arrayBuffer = generateJsonBuffer(gltf1).buffer;
 
     spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
       when.resolve(arrayBuffer)
     );
 
-    var error = new Error("404 Not Found");
+    const error = new Error("404 Not Found");
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       when.reject(error)
     );
 
-    var gltfJsonLoader = new GltfJsonLoader({
+    const gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
       gltfResource: gltfResource,
       baseResource: gltfResource,
@@ -418,14 +418,14 @@ describe("Scene/GltfJsonLoader", function () {
   });
 
   it("rejects promise if glTF fails to process from typed array", function () {
-    var typedArray = createGlb1(gltf1);
+    const typedArray = createGlb1(gltf1);
 
-    var error = new Error("404 Not Found");
+    const error = new Error("404 Not Found");
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       when.reject(error)
     );
 
-    var gltfJsonLoader = new GltfJsonLoader({
+    const gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
       gltfResource: gltfResource,
       baseResource: gltfResource,
@@ -446,7 +446,7 @@ describe("Scene/GltfJsonLoader", function () {
   });
 
   it("loads glTF 1.0", function () {
-    var arrayBuffer = generateJsonBuffer(gltf1).buffer;
+    const arrayBuffer = generateJsonBuffer(gltf1).buffer;
 
     spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
       when.resolve(arrayBuffer)
@@ -456,7 +456,7 @@ describe("Scene/GltfJsonLoader", function () {
       when.resolve(new Float32Array([0.0, 0.0, 0.0]).buffer)
     );
 
-    var gltfJsonLoader = new GltfJsonLoader({
+    const gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
       gltfResource: gltfResource,
       baseResource: gltfResource,
@@ -465,13 +465,13 @@ describe("Scene/GltfJsonLoader", function () {
     gltfJsonLoader.load();
 
     return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
-      var gltf = gltfJsonLoader.gltf;
+      const gltf = gltfJsonLoader.gltf;
       expect(gltf).toEqual(gltf1Updated);
     });
   });
 
   it("loads glTF 1.0 binary", function () {
-    var gltf1Binary = clone(gltf1, true);
+    const gltf1Binary = clone(gltf1, true);
     gltf1Binary.buffers = {
       binary_glTF: {
         type: "arraybuffer",
@@ -482,17 +482,17 @@ describe("Scene/GltfJsonLoader", function () {
     gltf1Binary.extensionsUsed = ["KHR_binary_glTF"];
     gltf1Binary.bufferViews.bufferView.buffer = "binary_glTF";
 
-    var gltf1BinaryUpdated = clone(gltf1Updated, true);
+    const gltf1BinaryUpdated = clone(gltf1Updated, true);
     gltf1BinaryUpdated.buffers[0].name = "binary_glTF";
     delete gltf1BinaryUpdated.buffers[0].uri;
 
-    var arrayBuffer = createGlb1(gltf1Binary).buffer;
+    const arrayBuffer = createGlb1(gltf1Binary).buffer;
 
     spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
       when.resolve(arrayBuffer)
     );
 
-    var gltfJsonLoader = new GltfJsonLoader({
+    const gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
       gltfResource: gltfResource,
       baseResource: gltfResource,
@@ -501,27 +501,27 @@ describe("Scene/GltfJsonLoader", function () {
     gltfJsonLoader.load();
 
     return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
-      var gltf = gltfJsonLoader.gltf;
+      const gltf = gltfJsonLoader.gltf;
       expect(gltf).toEqual(gltf1BinaryUpdated);
     });
   });
 
   it("loads glTF 1.0 with data uri", function () {
-    var gltf1DataUri = clone(gltf1, true);
+    const gltf1DataUri = clone(gltf1, true);
     gltf1DataUri.buffers.buffer = {
       uri: "data:application/octet-stream;base64,AAAAAAAAAAAAAAAA",
     };
 
-    var gltf1DataUriUpdated = clone(gltf1Updated, true);
+    const gltf1DataUriUpdated = clone(gltf1Updated, true);
     delete gltf1DataUriUpdated.buffers[0].uri;
 
-    var arrayBuffer = generateJsonBuffer(gltf1DataUri).buffer;
+    const arrayBuffer = generateJsonBuffer(gltf1DataUri).buffer;
 
     spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
       when.resolve(arrayBuffer)
     );
 
-    var gltfJsonLoader = new GltfJsonLoader({
+    const gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
       gltfResource: gltfResource,
       baseResource: gltfResource,
@@ -530,13 +530,13 @@ describe("Scene/GltfJsonLoader", function () {
     gltfJsonLoader.load();
 
     return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
-      var gltf = gltfJsonLoader.gltf;
+      const gltf = gltfJsonLoader.gltf;
       expect(gltf).toEqual(gltf1DataUriUpdated);
     });
   });
 
   it("loads glTF 2.0", function () {
-    var arrayBuffer = generateJsonBuffer(gltf2).buffer;
+    const arrayBuffer = generateJsonBuffer(gltf2).buffer;
 
     spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
       when.resolve(arrayBuffer)
@@ -546,7 +546,7 @@ describe("Scene/GltfJsonLoader", function () {
       when.resolve(new Float32Array([0.0, 0.0, 0.0]).buffer)
     );
 
-    var gltfJsonLoader = new GltfJsonLoader({
+    const gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
       gltfResource: gltfResource,
       baseResource: gltfResource,
@@ -555,25 +555,25 @@ describe("Scene/GltfJsonLoader", function () {
     gltfJsonLoader.load();
 
     return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
-      var gltf = gltfJsonLoader.gltf;
+      const gltf = gltfJsonLoader.gltf;
       expect(gltf).toEqual(gltf2Updated);
     });
   });
 
   it("loads glTF 2.0 binary", function () {
-    var gltf2Binary = clone(gltf2, true);
+    const gltf2Binary = clone(gltf2, true);
     delete gltf2Binary.buffers[0].uri;
 
-    var gltf2BinaryUpdated = clone(gltf2Updated, true);
+    const gltf2BinaryUpdated = clone(gltf2Updated, true);
     delete gltf2BinaryUpdated.buffers[0].uri;
 
-    var arrayBuffer = createGlb2(gltf2Binary).buffer;
+    const arrayBuffer = createGlb2(gltf2Binary).buffer;
 
     spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
       when.resolve(arrayBuffer)
     );
 
-    var gltfJsonLoader = new GltfJsonLoader({
+    const gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
       gltfResource: gltfResource,
       baseResource: gltfResource,
@@ -582,26 +582,26 @@ describe("Scene/GltfJsonLoader", function () {
     gltfJsonLoader.load();
 
     return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
-      var gltf = gltfJsonLoader.gltf;
+      const gltf = gltfJsonLoader.gltf;
       expect(gltf).toEqual(gltf2BinaryUpdated);
     });
   });
 
   it("loads glTF 2.0 with data uri", function () {
-    var gltf2DataUri = clone(gltf2, true);
+    const gltf2DataUri = clone(gltf2, true);
     gltf2DataUri.buffers[0].uri =
       "data:application/octet-stream;base64,AAAAAAAAAAAAAAAA";
 
-    var gltf2DataUriUpdated = clone(gltf2Updated, true);
+    const gltf2DataUriUpdated = clone(gltf2Updated, true);
     delete gltf2DataUriUpdated.buffers[0].uri;
 
-    var arrayBuffer = generateJsonBuffer(gltf2DataUri).buffer;
+    const arrayBuffer = generateJsonBuffer(gltf2DataUri).buffer;
 
     spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
       when.resolve(arrayBuffer)
     );
 
-    var gltfJsonLoader = new GltfJsonLoader({
+    const gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
       gltfResource: gltfResource,
       baseResource: gltfResource,
@@ -610,21 +610,21 @@ describe("Scene/GltfJsonLoader", function () {
     gltfJsonLoader.load();
 
     return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
-      var gltf = gltfJsonLoader.gltf;
+      const gltf = gltfJsonLoader.gltf;
       expect(gltf).toEqual(gltf2DataUriUpdated);
     });
   });
 
   it("loads typed array", function () {
-    var gltf2Binary = clone(gltf2, true);
+    const gltf2Binary = clone(gltf2, true);
     delete gltf2Binary.buffers[0].uri;
 
-    var gltf2BinaryUpdated = clone(gltf2Updated, true);
+    const gltf2BinaryUpdated = clone(gltf2Updated, true);
     delete gltf2BinaryUpdated.buffers[0].uri;
 
-    var typedArray = createGlb2(gltf2Binary);
+    const typedArray = createGlb2(gltf2Binary);
 
-    var gltfJsonLoader = new GltfJsonLoader({
+    const gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
       gltfResource: gltfResource,
       baseResource: gltfResource,
@@ -634,19 +634,19 @@ describe("Scene/GltfJsonLoader", function () {
     gltfJsonLoader.load();
 
     return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
-      var gltf = gltfJsonLoader.gltf;
+      const gltf = gltfJsonLoader.gltf;
       expect(gltf).toEqual(gltf2BinaryUpdated);
     });
   });
 
   it("loads JSON directly", function () {
-    var gltf = clone(gltf2, true);
+    const gltf = clone(gltf2, true);
 
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       when.resolve(new Float32Array([0.0, 0.0, 0.0]).buffer)
     );
 
-    var gltfJsonLoader = new GltfJsonLoader({
+    const gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
       gltfResource: gltfResource,
       baseResource: gltfResource,
@@ -656,27 +656,27 @@ describe("Scene/GltfJsonLoader", function () {
     gltfJsonLoader.load();
 
     return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
-      var gltf = gltfJsonLoader.gltf;
+      const gltf = gltfJsonLoader.gltf;
       expect(gltf).toEqual(gltf2Updated);
     });
   });
 
   it("destroys", function () {
-    var gltf2Binary = clone(gltf2, true);
+    const gltf2Binary = clone(gltf2, true);
     delete gltf2Binary.buffers[0].uri;
 
-    var arrayBuffer = createGlb2(gltf2Binary).buffer;
+    const arrayBuffer = createGlb2(gltf2Binary).buffer;
 
     spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
       when.resolve(arrayBuffer)
     );
 
-    var unloadBuffer = spyOn(
+    const unloadBuffer = spyOn(
       BufferLoader.prototype,
       "unload"
     ).and.callThrough();
 
-    var gltfJsonLoader = new GltfJsonLoader({
+    const gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
       gltfResource: gltfResource,
       baseResource: gltfResource,
@@ -697,14 +697,14 @@ describe("Scene/GltfJsonLoader", function () {
   });
 
   function resolvesGltfAfterDestroy(reject) {
-    var deferredPromise = when.defer();
+    const deferredPromise = when.defer();
     spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
       deferredPromise.promise
     );
 
-    var arrayBuffer = generateJsonBuffer(gltf2).buffer;
+    const arrayBuffer = generateJsonBuffer(gltf2).buffer;
 
-    var gltfJsonLoader = new GltfJsonLoader({
+    const gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
       gltfResource: gltfResource,
       baseResource: gltfResource,
@@ -738,13 +738,13 @@ describe("Scene/GltfJsonLoader", function () {
       when.resolve(generateJsonBuffer(gltf2).buffer)
     );
 
-    var buffer = new Float32Array([0.0, 0.0, 0.0]).buffer;
-    var deferredPromise = when.defer();
+    const buffer = new Float32Array([0.0, 0.0, 0.0]).buffer;
+    const deferredPromise = when.defer();
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       deferredPromise.promise
     );
 
-    var gltfJsonLoader = new GltfJsonLoader({
+    const gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
       gltfResource: gltfResource,
       baseResource: gltfResource,
@@ -770,21 +770,21 @@ describe("Scene/GltfJsonLoader", function () {
   });
 
   function resolvesTypedArrayAfterDestroy(reject) {
-    var typedArray = generateJsonBuffer(gltf1);
+    const typedArray = generateJsonBuffer(gltf1);
 
-    var buffer = new Float32Array([0.0, 0.0, 0.0]).buffer;
-    var deferredPromise = when.defer();
+    const buffer = new Float32Array([0.0, 0.0, 0.0]).buffer;
+    const deferredPromise = when.defer();
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       deferredPromise.promise
     );
 
     // Load a copy of the buffer into the cache so that the buffer loader
     // promise resolves even if the glTF loader is destroyed
-    var bufferLoaderCopy = ResourceCache.loadExternalBuffer({
+    const bufferLoaderCopy = ResourceCache.loadExternalBuffer({
       resource: bufferResource,
     });
 
-    var gltfJsonLoader = new GltfJsonLoader({
+    const gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
       gltfResource: gltfResource,
       baseResource: gltfResource,

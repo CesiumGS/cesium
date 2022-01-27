@@ -25,9 +25,9 @@ import PropertyTextureProperty from "./PropertyTextureProperty.js";
  */
 function PropertyTexture(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var featureTexture = options.featureTexture;
-  var classDefinition = options.class;
-  var textures = options.textures;
+  const featureTexture = options.featureTexture;
+  const classDefinition = options.class;
+  const textures = options.textures;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.featureTexture", featureTexture);
@@ -35,12 +35,12 @@ function PropertyTexture(options) {
   Check.typeOf.object("options.textures", textures);
   //>>includeEnd('debug');
 
-  var extensions = featureTexture.extensions;
-  var extras = featureTexture.extras;
+  const extensions = featureTexture.extensions;
+  const extras = featureTexture.extras;
 
-  var properties = {};
+  const properties = {};
   if (defined(featureTexture.properties)) {
-    for (var propertyId in featureTexture.properties) {
+    for (const propertyId in featureTexture.properties) {
       if (featureTexture.properties.hasOwnProperty(propertyId)) {
         properties[propertyId] = new PropertyTextureProperty({
           property: featureTexture.properties[propertyId],

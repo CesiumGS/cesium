@@ -184,15 +184,15 @@ Geometry.computeNumberOfVertices = function (geometry) {
   Check.typeOf.object("geometry", geometry);
   //>>includeEnd('debug');
 
-  var numberOfVertices = -1;
-  for (var property in geometry.attributes) {
+  let numberOfVertices = -1;
+  for (const property in geometry.attributes) {
     if (
       geometry.attributes.hasOwnProperty(property) &&
       defined(geometry.attributes[property]) &&
       defined(geometry.attributes[property].values)
     ) {
-      var attribute = geometry.attributes[property];
-      var num = attribute.values.length / attribute.componentsPerAttribute;
+      const attribute = geometry.attributes[property];
+      const num = attribute.values.length / attribute.componentsPerAttribute;
       //>>includeStart('debug', pragmas.debug);
       if (numberOfVertices !== num && numberOfVertices !== -1) {
         throw new DeveloperError(
@@ -207,24 +207,24 @@ Geometry.computeNumberOfVertices = function (geometry) {
   return numberOfVertices;
 };
 
-var rectangleCenterScratch = new Cartographic();
-var enuCenterScratch = new Cartesian3();
-var fixedFrameToEnuScratch = new Matrix4();
-var boundingRectanglePointsCartographicScratch = [
+const rectangleCenterScratch = new Cartographic();
+const enuCenterScratch = new Cartesian3();
+const fixedFrameToEnuScratch = new Matrix4();
+const boundingRectanglePointsCartographicScratch = [
   new Cartographic(),
   new Cartographic(),
   new Cartographic(),
 ];
-var boundingRectanglePointsEnuScratch = [
+const boundingRectanglePointsEnuScratch = [
   new Cartesian2(),
   new Cartesian2(),
   new Cartesian2(),
 ];
-var points2DScratch = [new Cartesian2(), new Cartesian2(), new Cartesian2()];
-var pointEnuScratch = new Cartesian3();
-var enuRotationScratch = new Quaternion();
-var enuRotationMatrixScratch = new Matrix4();
-var rotation2DScratch = new Matrix2();
+const points2DScratch = [new Cartesian2(), new Cartesian2(), new Cartesian2()];
+const pointEnuScratch = new Cartesian3();
+const enuRotationScratch = new Quaternion();
+const enuRotationMatrixScratch = new Matrix4();
+const rotation2DScratch = new Matrix2();
 
 /**
  * For remapping texture coordinates when rendering GroundPrimitives with materials.
@@ -256,33 +256,33 @@ Geometry._textureCoordinateRotationPoints = function (
   ellipsoid,
   boundingRectangle
 ) {
-  var i;
+  let i;
 
   // Create a local east-north-up coordinate system centered on the polygon's bounding rectangle.
   // Project the southwest, northwest, and southeast corners of the bounding rectangle into the plane of ENU as 2D points.
   // These are the equivalents of (0,0), (0,1), and (1,0) in the texture coordiante system computed in ShadowVolumeAppearanceFS,
   // aka "ENU texture space."
-  var rectangleCenter = Rectangle.center(
+  const rectangleCenter = Rectangle.center(
     boundingRectangle,
     rectangleCenterScratch
   );
-  var enuCenter = Cartographic.toCartesian(
+  const enuCenter = Cartographic.toCartesian(
     rectangleCenter,
     ellipsoid,
     enuCenterScratch
   );
-  var enuToFixedFrame = Transforms.eastNorthUpToFixedFrame(
+  const enuToFixedFrame = Transforms.eastNorthUpToFixedFrame(
     enuCenter,
     ellipsoid,
     fixedFrameToEnuScratch
   );
-  var fixedFrameToEnu = Matrix4.inverse(
+  const fixedFrameToEnu = Matrix4.inverse(
     enuToFixedFrame,
     fixedFrameToEnuScratch
   );
 
-  var boundingPointsEnu = boundingRectanglePointsEnuScratch;
-  var boundingPointsCarto = boundingRectanglePointsCartographicScratch;
+  const boundingPointsEnu = boundingRectanglePointsEnuScratch;
+  const boundingPointsCarto = boundingRectanglePointsCartographicScratch;
 
   boundingPointsCarto[0].longitude = boundingRectangle.west;
   boundingPointsCarto[0].latitude = boundingRectangle.south;
@@ -293,7 +293,7 @@ Geometry._textureCoordinateRotationPoints = function (
   boundingPointsCarto[2].longitude = boundingRectangle.east;
   boundingPointsCarto[2].latitude = boundingRectangle.south;
 
-  var posEnu = pointEnuScratch;
+  let posEnu = pointEnuScratch;
 
   for (i = 0; i < 3; i++) {
     Cartographic.toCartesian(boundingPointsCarto[i], ellipsoid, posEnu);
@@ -305,21 +305,21 @@ Geometry._textureCoordinateRotationPoints = function (
   // Rotate each point in the polygon around the up vector in the ENU by -stRotation and project into ENU as 2D.
   // Compute the bounding box of these rotated points in the 2D ENU plane.
   // Rotate the corners back by stRotation, then compute their equivalents in the ENU texture space using the corners computed earlier.
-  var rotation = Quaternion.fromAxisAngle(
+  const rotation = Quaternion.fromAxisAngle(
     Cartesian3.UNIT_Z,
     -stRotation,
     enuRotationScratch
   );
-  var textureMatrix = Matrix3.fromQuaternion(
+  const textureMatrix = Matrix3.fromQuaternion(
     rotation,
     enuRotationMatrixScratch
   );
 
-  var positionsLength = positions.length;
-  var enuMinX = Number.POSITIVE_INFINITY;
-  var enuMinY = Number.POSITIVE_INFINITY;
-  var enuMaxX = Number.NEGATIVE_INFINITY;
-  var enuMaxY = Number.NEGATIVE_INFINITY;
+  const positionsLength = positions.length;
+  let enuMinX = Number.POSITIVE_INFINITY;
+  let enuMinY = Number.POSITIVE_INFINITY;
+  let enuMaxX = Number.NEGATIVE_INFINITY;
+  let enuMaxY = Number.NEGATIVE_INFINITY;
   for (i = 0; i < positionsLength; i++) {
     posEnu = Matrix4.multiplyByPointAsVector(
       fixedFrameToEnu,
@@ -334,9 +334,12 @@ Geometry._textureCoordinateRotationPoints = function (
     enuMaxY = Math.max(enuMaxY, posEnu.y);
   }
 
-  var toDesiredInComputed = Matrix2.fromRotation(stRotation, rotation2DScratch);
+  const toDesiredInComputed = Matrix2.fromRotation(
+    stRotation,
+    rotation2DScratch
+  );
 
-  var points2D = points2DScratch;
+  const points2D = points2DScratch;
   points2D[0].x = enuMinX;
   points2D[0].y = enuMinY;
 
@@ -346,12 +349,12 @@ Geometry._textureCoordinateRotationPoints = function (
   points2D[2].x = enuMaxX;
   points2D[2].y = enuMinY;
 
-  var boundingEnuMin = boundingPointsEnu[0];
-  var boundingPointsWidth = boundingPointsEnu[2].x - boundingEnuMin.x;
-  var boundingPointsHeight = boundingPointsEnu[1].y - boundingEnuMin.y;
+  const boundingEnuMin = boundingPointsEnu[0];
+  const boundingPointsWidth = boundingPointsEnu[2].x - boundingEnuMin.x;
+  const boundingPointsHeight = boundingPointsEnu[1].y - boundingEnuMin.y;
 
   for (i = 0; i < 3; i++) {
-    var point2D = points2D[i];
+    const point2D = points2D[i];
     // rotate back
     Matrix2.multiplyByVector(toDesiredInComputed, point2D, point2D);
 
@@ -360,10 +363,10 @@ Geometry._textureCoordinateRotationPoints = function (
     point2D.y = (point2D.y - boundingEnuMin.y) / boundingPointsHeight;
   }
 
-  var minXYCorner = points2D[0];
-  var maxYCorner = points2D[1];
-  var maxXCorner = points2D[2];
-  var result = new Array(6);
+  const minXYCorner = points2D[0];
+  const maxYCorner = points2D[1];
+  const maxXCorner = points2D[2];
+  const result = new Array(6);
   Cartesian2.pack(minXYCorner, result);
   Cartesian2.pack(maxYCorner, result, 2);
   Cartesian2.pack(maxXCorner, result, 4);

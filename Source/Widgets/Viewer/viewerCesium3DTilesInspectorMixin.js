@@ -18,10 +18,10 @@ function viewerCesium3DTilesInspectorMixin(viewer) {
   Check.typeOf.object("viewer", viewer);
   //>>includeEnd('debug');
 
-  var container = document.createElement("div");
+  const container = document.createElement("div");
   container.className = "cesium-viewer-cesium3DTilesInspectorContainer";
   viewer.container.appendChild(container);
-  var cesium3DTilesInspector = new Cesium3DTilesInspector(
+  const cesium3DTilesInspector = new Cesium3DTilesInspector(
     container,
     viewer.scene
   );

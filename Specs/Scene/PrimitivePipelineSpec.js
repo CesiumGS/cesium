@@ -12,25 +12,25 @@ describe(
   "Scene/PrimitivePipeline",
   function () {
     it("can pack and unpack geometry", function () {
-      var boxGeometry = BoxGeometry.createGeometry(
+      const boxGeometry = BoxGeometry.createGeometry(
         BoxGeometry.fromDimensions({
           dimensions: new Cartesian3(1, 2, 3),
         })
       );
 
-      var boxGeometry2 = BoxGeometry.createGeometry(
+      const boxGeometry2 = BoxGeometry.createGeometry(
         BoxGeometry.fromDimensions({
           dimensions: new Cartesian3(3, 4, 7),
         })
       );
 
-      var geometryToPack = [boxGeometry, boxGeometry2];
-      var transferableObjects = [];
-      var results = PrimitivePipeline.packCreateGeometryResults(
+      const geometryToPack = [boxGeometry, boxGeometry2];
+      const transferableObjects = [];
+      const results = PrimitivePipeline.packCreateGeometryResults(
         geometryToPack,
         transferableObjects
       );
-      var unpackedGeometry = PrimitivePipeline.unpackCreateGeometryResults(
+      const unpackedGeometry = PrimitivePipeline.unpackCreateGeometryResults(
         results
       );
 
@@ -39,27 +39,27 @@ describe(
     });
 
     it("can pack and unpack geometry without indices", function () {
-      var attributes = new GeometryAttributes();
+      const attributes = new GeometryAttributes();
       attributes.position = new GeometryAttribute({
         componentDatatype: ComponentDatatype.FLOAT,
         componentsPerAttribute: 3,
         values: new Float32Array([1, 2, 3, 4, 5, 6]),
       });
 
-      var geometry = new Geometry({
+      const geometry = new Geometry({
         attributes: attributes,
         indices: undefined,
         primitiveType: PrimitiveType.POINTS,
         boundingSphere: BoundingSphere.fromVertices(attributes.position.values),
       });
 
-      var geometryToPack = [geometry];
-      var transferableObjects = [];
-      var results = PrimitivePipeline.packCreateGeometryResults(
+      const geometryToPack = [geometry];
+      const transferableObjects = [];
+      const results = PrimitivePipeline.packCreateGeometryResults(
         geometryToPack,
         transferableObjects
       );
-      var unpackedGeometry = PrimitivePipeline.unpackCreateGeometryResults(
+      const unpackedGeometry = PrimitivePipeline.unpackCreateGeometryResults(
         results
       );
 

@@ -33,7 +33,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var czml = [
+        const czml = [
           {
             id: "document",
             version: "1.0",
@@ -48,11 +48,11 @@
           },
         ];
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
         });
 
-        var dataSourcePromise = viewer.dataSources.add(
+        const dataSourcePromise = viewer.dataSources.add(
           Cesium.CzmlDataSource.load(czml)
         );
 

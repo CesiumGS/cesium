@@ -3,7 +3,7 @@
  *
  * @enum {Number}
  */
-var ClassificationType = {
+const ClassificationType = {
   /**
    * Only terrain will be classified.
    *

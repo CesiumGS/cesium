@@ -73,7 +73,7 @@ CompositeMaterialProperty.prototype.getType = function (time) {
   }
   //>>includeEnd('debug');
 
-  var innerProperty = this._composite._intervals.findDataForIntervalContainingDate(
+  const innerProperty = this._composite._intervals.findDataForIntervalContainingDate(
     time
   );
   if (defined(innerProperty)) {
@@ -96,7 +96,7 @@ CompositeMaterialProperty.prototype.getValue = function (time, result) {
   }
   //>>includeEnd('debug');
 
-  var innerProperty = this._composite._intervals.findDataForIntervalContainingDate(
+  const innerProperty = this._composite._intervals.findDataForIntervalContainingDate(
     time
   );
   if (defined(innerProperty)) {

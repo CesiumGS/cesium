@@ -21,9 +21,9 @@ function MetadataSchema(schema) {
   Check.typeOf.object("schema", schema);
   //>>includeEnd('debug');
 
-  var enums = {};
+  const enums = {};
   if (defined(schema.enums)) {
-    for (var enumId in schema.enums) {
+    for (const enumId in schema.enums) {
       if (schema.enums.hasOwnProperty(enumId)) {
         enums[enumId] = new MetadataEnum({
           id: enumId,
@@ -33,9 +33,9 @@ function MetadataSchema(schema) {
     }
   }
 
-  var classes = {};
+  const classes = {};
   if (defined(schema.classes)) {
-    for (var classId in schema.classes) {
+    for (const classId in schema.classes) {
       if (schema.classes.hasOwnProperty(classId)) {
         classes[classId] = new MetadataClass({
           id: classId,

@@ -33,7 +33,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var czml = [
+        const czml = [
           {
             id: "document",
             name: "CZML Geometries: Rectangle",
@@ -120,8 +120,8 @@
           },
         ];
 
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var dataSourcePromise = Cesium.CzmlDataSource.load(czml);
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const dataSourcePromise = Cesium.CzmlDataSource.load(czml);
         viewer.dataSources.add(dataSourcePromise);
         viewer.zoomTo(dataSourcePromise);
 
