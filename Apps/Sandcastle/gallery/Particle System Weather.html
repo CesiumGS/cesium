@@ -124,10 +124,8 @@
           rainParticleSize * 2.0
         );
 
-        let rainSystem;
-
-        let rainGravityScratch = new Cesium.Cartesian3();
         const rainUpdate = function (particle, dt) {
+          let rainGravityScratch = new Cesium.Cartesian3();
           rainGravityScratch = Cesium.Cartesian3.normalize(
             particle.position,
             rainGravityScratch
@@ -156,7 +154,7 @@
           }
         };
 
-        rainSystem = new Cesium.ParticleSystem({
+        const rainSystem = new Cesium.ParticleSystem({
           modelMatrix: new Cesium.Matrix4.fromTranslation(
             scene.camera.position
           ),
