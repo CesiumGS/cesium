@@ -3,7 +3,7 @@
  *
  * @enum {Number}
  */
-var CameraEventType = {
+const CameraEventType = {
   /**
    * A left mouse button press followed by moving the mouse and releasing the button.
    *

@@ -5,16 +5,16 @@ import { when } from "../Source/Cesium.js";
 function pollToPromise(f, options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var pollInterval = defaultValue(options.pollInterval, 1);
-  var timeout = defaultValue(options.timeout, 5000);
+  const pollInterval = defaultValue(options.pollInterval, 1);
+  const timeout = defaultValue(options.timeout, 5000);
 
-  var deferred = when.defer();
+  const deferred = when.defer();
 
-  var startTimestamp = getTimestamp();
-  var endTimestamp = startTimestamp + timeout;
+  const startTimestamp = getTimestamp();
+  const endTimestamp = startTimestamp + timeout;
 
   function poller() {
-    var result = false;
+    let result = false;
     try {
       result = f();
     } catch (e) {

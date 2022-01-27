@@ -6,9 +6,9 @@ import Event from "../Core/Event.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import Property from "./Property.js";
 
-var defaultRepeat = new Cartesian2(1, 1);
-var defaultTransparent = false;
-var defaultColor = Color.WHITE;
+const defaultRepeat = new Cartesian2(1, 1);
+const defaultTransparent = false;
+const defaultColor = Color.WHITE;
 
 /**
  * A {@link MaterialProperty} that maps to image {@link Material} uniforms.

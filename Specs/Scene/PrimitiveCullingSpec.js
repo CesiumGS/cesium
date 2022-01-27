@@ -24,10 +24,10 @@ import createScene from "../createScene.js";
 describe(
   "Scene/PrimitiveCulling",
   function () {
-    var scene;
-    var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -93.0, 37.0);
-    var primitive;
-    var greenImage;
+    let scene;
+    const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -93.0, 37.0);
+    let primitive;
+    let greenImage;
 
     beforeAll(function () {
       scene = createScene();
@@ -47,7 +47,7 @@ describe(
     beforeEach(function () {
       scene.morphTo3D(0.0);
 
-      var camera = scene.camera;
+      const camera = scene.camera;
       camera.frustum = new PerspectiveFrustum();
       camera.frustum.aspectRatio =
         scene.drawingBufferWidth / scene.drawingBufferHeight;
@@ -112,7 +112,7 @@ describe(
 
     function createPrimitive(height) {
       height = defaultValue(height, 0);
-      var primitive = new Primitive({
+      const primitive = new Primitive({
         geometryInstances: new GeometryInstance({
           geometry: new RectangleGeometry({
             rectangle: rectangle,
@@ -151,8 +151,8 @@ describe(
 
     function createLabels(height) {
       height = defaultValue(height, 0);
-      var labels = new LabelCollection();
-      var center = Cartesian3.fromDegrees(-96.5, 33.5, height);
+      const labels = new LabelCollection();
+      const center = Cartesian3.fromDegrees(-96.5, 33.5, height);
       labels.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
       labels.add({
         position: Cartesian3.ZERO,
@@ -185,7 +185,7 @@ describe(
 
     function createBillboard(height) {
       height = defaultValue(height, 0);
-      var billboards = new BillboardCollection();
+      const billboards = new BillboardCollection();
       billboards.add({
         position: Cartesian3.fromDegrees(-96.5, 33.5, height),
         image: greenImage,
@@ -215,10 +215,10 @@ describe(
 
     function createPolylines(height) {
       height = defaultValue(height, 0);
-      var material = Material.fromType("Color");
+      const material = Material.fromType("Color");
       material.translucent = false;
 
-      var polylines = new PolylineCollection();
+      const polylines = new PolylineCollection();
       polylines.add({
         positions: Cartesian3.fromDegreesArrayHeights([
           -100.0,

@@ -12,10 +12,10 @@ describe("Core/PeliasGeocoderService", function () {
   });
 
   it("returns geocoder results", function () {
-    var service = new PeliasGeocoderService("http://test.invalid/v1/");
+    const service = new PeliasGeocoderService("http://test.invalid/v1/");
 
-    var query = "some query";
-    var data = {
+    const query = "some query";
+    const data = {
       features: [
         {
           type: "Feature",
@@ -39,10 +39,10 @@ describe("Core/PeliasGeocoderService", function () {
   });
 
   it("returns no geocoder results if Pelias has no results", function () {
-    var service = new PeliasGeocoderService("http://test.invalid/v1/");
+    const service = new PeliasGeocoderService("http://test.invalid/v1/");
 
-    var query = "some query";
-    var data = { features: [] };
+    const query = "some query";
+    const data = { features: [] };
     spyOn(Resource.prototype, "fetchJson").and.returnValue(when.resolve(data));
 
     return service.geocode(query).then(function (results) {
@@ -51,12 +51,12 @@ describe("Core/PeliasGeocoderService", function () {
   });
 
   it("calls search endpoint if specified", function () {
-    var service = new PeliasGeocoderService("http://test.invalid/v1/");
+    const service = new PeliasGeocoderService("http://test.invalid/v1/");
 
-    var query = "some query";
-    var data = { features: [] };
+    const query = "some query";
+    const data = { features: [] };
     spyOn(Resource.prototype, "fetchJson").and.returnValue(when.resolve(data));
-    var getDerivedResource = spyOn(
+    const getDerivedResource = spyOn(
       service._url,
       "getDerivedResource"
     ).and.callThrough();
@@ -71,12 +71,12 @@ describe("Core/PeliasGeocoderService", function () {
   });
 
   it("calls autocomplete endpoint if specified", function () {
-    var service = new PeliasGeocoderService("http://test.invalid/v1/");
+    const service = new PeliasGeocoderService("http://test.invalid/v1/");
 
-    var query = "some query";
-    var data = { features: [] };
+    const query = "some query";
+    const data = { features: [] };
     spyOn(Resource.prototype, "fetchJson").and.returnValue(when.resolve(data));
-    var getDerivedResource = spyOn(
+    const getDerivedResource = spyOn(
       service._url,
       "getDerivedResource"
     ).and.callThrough();

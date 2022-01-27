@@ -5,7 +5,7 @@ import WebGLConstants from "./WebGLConstants.js";
  *
  * @enum {Number}
  */
-var PrimitiveType = {
+const PrimitiveType = {
   /**
    * Points primitive where each vertex (or index) is a separate point.
    *

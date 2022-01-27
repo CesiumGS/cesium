@@ -16,8 +16,8 @@ import PrimitiveType from "./PrimitiveType.js";
 import Quaternion from "./Quaternion.js";
 import VertexFormat from "./VertexFormat.js";
 
-var PERSPECTIVE = 0;
-var ORTHOGRAPHIC = 1;
+const PERSPECTIVE = 0;
+const ORTHOGRAPHIC = 1;
 
 /**
  * Describes a frustum at the given the origin and orientation.
@@ -39,18 +39,18 @@ function FrustumGeometry(options) {
   Check.typeOf.object("options.orientation", options.orientation);
   //>>includeEnd('debug');
 
-  var frustum = options.frustum;
-  var orientation = options.orientation;
-  var origin = options.origin;
-  var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+  const frustum = options.frustum;
+  const orientation = options.orientation;
+  const origin = options.origin;
+  const vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
   // This is private because it is used by DebugCameraPrimitive to draw a multi-frustum by
   // creating multiple FrustumGeometrys. This way the near plane of one frustum doesn't overlap
   // the far plane of another.
-  var drawNearPlane = defaultValue(options._drawNearPlane, true);
+  const drawNearPlane = defaultValue(options._drawNearPlane, true);
 
-  var frustumType;
-  var frustumPackedLength;
+  let frustumType;
+  let frustumPackedLength;
   if (frustum instanceof PerspectiveFrustum) {
     frustumType = PERSPECTIVE;
     frustumPackedLength = PerspectiveFrustum.packedLength;
@@ -96,8 +96,8 @@ FrustumGeometry.pack = function (value, array, startingIndex) {
 
   startingIndex = defaultValue(startingIndex, 0);
 
-  var frustumType = value._frustumType;
-  var frustum = value._frustum;
+  const frustumType = value._frustumType;
+  const frustum = value._frustum;
 
   array[startingIndex++] = frustumType;
 
@@ -120,11 +120,11 @@ FrustumGeometry.pack = function (value, array, startingIndex) {
   return array;
 };
 
-var scratchPackPerspective = new PerspectiveFrustum();
-var scratchPackOrthographic = new OrthographicFrustum();
-var scratchPackQuaternion = new Quaternion();
-var scratchPackorigin = new Cartesian3();
-var scratchVertexFormat = new VertexFormat();
+const scratchPackPerspective = new PerspectiveFrustum();
+const scratchPackOrthographic = new OrthographicFrustum();
+const scratchPackQuaternion = new Quaternion();
+const scratchPackorigin = new Cartesian3();
+const scratchVertexFormat = new VertexFormat();
 
 /**
  * Retrieves an instance from a packed array.
@@ -140,9 +140,9 @@ FrustumGeometry.unpack = function (array, startingIndex, result) {
 
   startingIndex = defaultValue(startingIndex, 0);
 
-  var frustumType = array[startingIndex++];
+  const frustumType = array[startingIndex++];
 
-  var frustum;
+  let frustum;
   if (frustumType === PERSPECTIVE) {
     frustum = PerspectiveFrustum.unpack(
       array,
@@ -159,21 +159,21 @@ FrustumGeometry.unpack = function (array, startingIndex, result) {
     startingIndex += OrthographicFrustum.packedLength;
   }
 
-  var origin = Cartesian3.unpack(array, startingIndex, scratchPackorigin);
+  const origin = Cartesian3.unpack(array, startingIndex, scratchPackorigin);
   startingIndex += Cartesian3.packedLength;
-  var orientation = Quaternion.unpack(
+  const orientation = Quaternion.unpack(
     array,
     startingIndex,
     scratchPackQuaternion
   );
   startingIndex += Quaternion.packedLength;
-  var vertexFormat = VertexFormat.unpack(
+  const vertexFormat = VertexFormat.unpack(
     array,
     startingIndex,
     scratchVertexFormat
   );
   startingIndex += VertexFormat.packedLength;
-  var drawNearPlane = array[startingIndex] === 1.0;
+  const drawNearPlane = array[startingIndex] === 1.0;
 
   if (!defined(result)) {
     return new FrustumGeometry({
@@ -185,7 +185,7 @@ FrustumGeometry.unpack = function (array, startingIndex, result) {
     });
   }
 
-  var frustumResult =
+  const frustumResult =
     frustumType === result._frustumType ? result._frustum : undefined;
   result._frustum = frustum.clone(frustumResult);
 
@@ -208,9 +208,9 @@ function getAttributes(
   tangent,
   bitangent
 ) {
-  var stOffset = (offset / 3) * 2;
+  const stOffset = (offset / 3) * 2;
 
-  for (var i = 0; i < 4; ++i) {
+  for (let i = 0; i < 4; ++i) {
     if (defined(normals)) {
       normals[offset] = normal.x;
       normals[offset + 1] = normal.y;
@@ -239,27 +239,27 @@ function getAttributes(
   st[stOffset + 7] = 1.0;
 }
 
-var scratchRotationMatrix = new Matrix3();
-var scratchViewMatrix = new Matrix4();
-var scratchInverseMatrix = new Matrix4();
+const scratchRotationMatrix = new Matrix3();
+const scratchViewMatrix = new Matrix4();
+const scratchInverseMatrix = new Matrix4();
 
-var scratchXDirection = new Cartesian3();
-var scratchYDirection = new Cartesian3();
-var scratchZDirection = new Cartesian3();
-var scratchNegativeX = new Cartesian3();
-var scratchNegativeY = new Cartesian3();
-var scratchNegativeZ = new Cartesian3();
+const scratchXDirection = new Cartesian3();
+const scratchYDirection = new Cartesian3();
+const scratchZDirection = new Cartesian3();
+const scratchNegativeX = new Cartesian3();
+const scratchNegativeY = new Cartesian3();
+const scratchNegativeZ = new Cartesian3();
 
-var frustumSplits = new Array(3);
+const frustumSplits = new Array(3);
 
-var frustumCornersNDC = new Array(4);
+const frustumCornersNDC = new Array(4);
 frustumCornersNDC[0] = new Cartesian4(-1.0, -1.0, 1.0, 1.0);
 frustumCornersNDC[1] = new Cartesian4(1.0, -1.0, 1.0, 1.0);
 frustumCornersNDC[2] = new Cartesian4(1.0, 1.0, 1.0, 1.0);
 frustumCornersNDC[3] = new Cartesian4(-1.0, 1.0, 1.0, 1.0);
 
-var scratchFrustumCorners = new Array(4);
-for (var i = 0; i < 4; ++i) {
+const scratchFrustumCorners = new Array(4);
+for (let i = 0; i < 4; ++i) {
   scratchFrustumCorners[i] = new Cartesian4();
 }
 
@@ -273,13 +273,13 @@ FrustumGeometry._computeNearFarPlanes = function (
   yDirection,
   zDirection
 ) {
-  var rotationMatrix = Matrix3.fromQuaternion(
+  const rotationMatrix = Matrix3.fromQuaternion(
     orientation,
     scratchRotationMatrix
   );
-  var x = defaultValue(xDirection, scratchXDirection);
-  var y = defaultValue(yDirection, scratchYDirection);
-  var z = defaultValue(zDirection, scratchZDirection);
+  let x = defaultValue(xDirection, scratchXDirection);
+  let y = defaultValue(yDirection, scratchYDirection);
+  let z = defaultValue(zDirection, scratchZDirection);
 
   x = Matrix3.getColumn(rotationMatrix, 0, x);
   y = Matrix3.getColumn(rotationMatrix, 1, y);
@@ -291,13 +291,13 @@ FrustumGeometry._computeNearFarPlanes = function (
 
   Cartesian3.negate(x, x);
 
-  var view = Matrix4.computeView(origin, z, y, x, scratchViewMatrix);
+  const view = Matrix4.computeView(origin, z, y, x, scratchViewMatrix);
 
-  var inverseView;
-  var inverseViewProjection;
+  let inverseView;
+  let inverseViewProjection;
   if (frustumType === PERSPECTIVE) {
-    var projection = frustum.projectionMatrix;
-    var viewProjection = Matrix4.multiply(
+    const projection = frustum.projectionMatrix;
+    const viewProjection = Matrix4.multiply(
       projection,
       view,
       scratchInverseMatrix
@@ -319,9 +319,9 @@ FrustumGeometry._computeNearFarPlanes = function (
     frustumSplits[2] = frustum.far;
   }
 
-  for (var i = 0; i < 2; ++i) {
-    for (var j = 0; j < 4; ++j) {
-      var corner = Cartesian4.clone(
+  for (let i = 0; i < 2; ++i) {
+    for (let j = 0; j < 4; ++j) {
+      let corner = Cartesian4.clone(
         frustumCornersNDC[j],
         scratchFrustumCorners[j]
       );
@@ -331,8 +331,8 @@ FrustumGeometry._computeNearFarPlanes = function (
           frustum = frustum._offCenterFrustum;
         }
 
-        var near = frustumSplits[i];
-        var far = frustumSplits[i + 1];
+        const near = frustumSplits[i];
+        const far = frustumSplits[i + 1];
 
         corner.x =
           (corner.x * (frustum.right - frustum.left) +
@@ -356,13 +356,13 @@ FrustumGeometry._computeNearFarPlanes = function (
         );
 
         // Reverse perspective divide
-        var w = 1.0 / corner.w;
+        const w = 1.0 / corner.w;
         Cartesian3.multiplyByScalar(corner, w, corner);
 
         Cartesian3.subtract(corner, origin, corner);
         Cartesian3.normalize(corner, corner);
 
-        var fac = Cartesian3.dot(z, corner);
+        const fac = Cartesian3.dot(z, corner);
         Cartesian3.multiplyByScalar(corner, frustumSplits[i] / fac, corner);
         Cartesian3.add(corner, origin, corner);
       }
@@ -381,15 +381,15 @@ FrustumGeometry._computeNearFarPlanes = function (
  * @returns {Geometry|undefined} The computed vertices and indices.
  */
 FrustumGeometry.createGeometry = function (frustumGeometry) {
-  var frustumType = frustumGeometry._frustumType;
-  var frustum = frustumGeometry._frustum;
-  var origin = frustumGeometry._origin;
-  var orientation = frustumGeometry._orientation;
-  var drawNearPlane = frustumGeometry._drawNearPlane;
-  var vertexFormat = frustumGeometry._vertexFormat;
+  const frustumType = frustumGeometry._frustumType;
+  const frustum = frustumGeometry._frustum;
+  const origin = frustumGeometry._origin;
+  const orientation = frustumGeometry._orientation;
+  const drawNearPlane = frustumGeometry._drawNearPlane;
+  const vertexFormat = frustumGeometry._vertexFormat;
 
-  var numberOfPlanes = drawNearPlane ? 6 : 5;
-  var positions = new Float64Array(3 * 4 * 6);
+  const numberOfPlanes = drawNearPlane ? 6 : 5;
+  let positions = new Float64Array(3 * 4 * 6);
   FrustumGeometry._computeNearFarPlanes(
     origin,
     orientation,
@@ -399,7 +399,7 @@ FrustumGeometry.createGeometry = function (frustumGeometry) {
   );
 
   // -x plane
-  var offset = 3 * 4 * 2;
+  let offset = 3 * 4 * 2;
   positions[offset] = positions[3 * 4];
   positions[offset + 1] = positions[3 * 4 + 1];
   positions[offset + 2] = positions[3 * 4 + 2];
@@ -462,7 +462,7 @@ FrustumGeometry.createGeometry = function (frustumGeometry) {
     positions = positions.subarray(3 * 4);
   }
 
-  var attributes = new GeometryAttributes({
+  const attributes = new GeometryAttributes({
     position: new GeometryAttribute({
       componentDatatype: ComponentDatatype.DOUBLE,
       componentsPerAttribute: 3,
@@ -476,26 +476,26 @@ FrustumGeometry.createGeometry = function (frustumGeometry) {
     defined(vertexFormat.bitangent) ||
     defined(vertexFormat.st)
   ) {
-    var normals = defined(vertexFormat.normal)
+    const normals = defined(vertexFormat.normal)
       ? new Float32Array(3 * 4 * numberOfPlanes)
       : undefined;
-    var tangents = defined(vertexFormat.tangent)
+    const tangents = defined(vertexFormat.tangent)
       ? new Float32Array(3 * 4 * numberOfPlanes)
       : undefined;
-    var bitangents = defined(vertexFormat.bitangent)
+    const bitangents = defined(vertexFormat.bitangent)
       ? new Float32Array(3 * 4 * numberOfPlanes)
       : undefined;
-    var st = defined(vertexFormat.st)
+    const st = defined(vertexFormat.st)
       ? new Float32Array(2 * 4 * numberOfPlanes)
       : undefined;
 
-    var x = scratchXDirection;
-    var y = scratchYDirection;
-    var z = scratchZDirection;
+    const x = scratchXDirection;
+    const y = scratchYDirection;
+    const z = scratchZDirection;
 
-    var negativeX = Cartesian3.negate(x, scratchNegativeX);
-    var negativeY = Cartesian3.negate(y, scratchNegativeY);
-    var negativeZ = Cartesian3.negate(z, scratchNegativeZ);
+    const negativeX = Cartesian3.negate(x, scratchNegativeX);
+    const negativeY = Cartesian3.negate(y, scratchNegativeY);
+    const negativeZ = Cartesian3.negate(z, scratchNegativeZ);
 
     offset = 0;
     if (drawNearPlane) {
@@ -560,10 +560,10 @@ FrustumGeometry.createGeometry = function (frustumGeometry) {
     }
   }
 
-  var indices = new Uint16Array(6 * numberOfPlanes);
-  for (var i = 0; i < numberOfPlanes; ++i) {
-    var indexOffset = i * 6;
-    var index = i * 4;
+  const indices = new Uint16Array(6 * numberOfPlanes);
+  for (let i = 0; i < numberOfPlanes; ++i) {
+    const indexOffset = i * 6;
+    const index = i * 4;
 
     indices[indexOffset] = index;
     indices[indexOffset + 1] = index + 1;

@@ -120,7 +120,7 @@ TileProviderError.handleError = function (
   retryFunction,
   errorDetails
 ) {
-  var error = previousError;
+  let error = previousError;
   if (!defined(previousError)) {
     error = new TileProviderError(
       provider,

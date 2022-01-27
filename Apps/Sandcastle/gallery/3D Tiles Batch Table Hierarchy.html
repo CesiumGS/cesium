@@ -92,10 +92,10 @@
         //     * doorknob_size
         //     * doorknob_name
 
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
         viewer.clock.currentTime = new Cesium.JulianDate(2457522.154792);
 
-        var tileset = new Cesium.Cesium3DTileset({
+        const tileset = new Cesium.Cesium3DTileset({
           url:
             "../../SampleData/Cesium3DTiles/Hierarchy/BatchTableHierarchy/tileset.json",
         });
@@ -103,7 +103,7 @@
         viewer.scene.primitives.add(tileset);
         viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.0, -0.3, 0.0));
 
-        var styles = [];
+        const styles = [];
         function addStyle(name, style) {
           styles.push({
             name: name,
@@ -173,9 +173,9 @@
           };
         }
 
-        var styleOptions = [];
-        for (var i = 0; i < styles.length; ++i) {
-          var style = styles[i];
+        const styleOptions = [];
+        for (let i = 0; i < styles.length; ++i) {
+          const style = styles[i];
           styleOptions.push({
             text: style.name,
             onselect: setStyle(style.style),
@@ -184,28 +184,28 @@
 
         Sandcastle.addToolbarMenu(styleOptions);
 
-        var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 
         // When a feature is left clicked, print its class name and properties
         handler.setInputAction(function (movement) {
-          var feature = viewer.scene.pick(movement.position);
+          const feature = viewer.scene.pick(movement.position);
           if (!Cesium.defined(feature)) {
             return;
           }
           console.log("Class: " + feature.getExactClassName());
           console.log("Properties:");
-          var propertyNames = feature.getPropertyNames();
-          var length = propertyNames.length;
-          for (var i = 0; i < length; ++i) {
-            var name = propertyNames[i];
-            var value = feature.getProperty(name);
+          const propertyNames = feature.getPropertyNames();
+          const length = propertyNames.length;
+          for (let i = 0; i < length; ++i) {
+            const name = propertyNames[i];
+            const value = feature.getProperty(name);
             console.log("  " + name + ": " + value);
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         // When a feature is middle clicked, hide it
         handler.setInputAction(function (movement) {
-          var feature = viewer.scene.pick(movement.position);
+          const feature = viewer.scene.pick(movement.position);
           if (!Cesium.defined(feature)) {
             return;
           }

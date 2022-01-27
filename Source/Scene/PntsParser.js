@@ -18,9 +18,9 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
  * @namespace PntsParser
  * @private
  */
-var PntsParser = {};
+const PntsParser = {};
 
-var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
 /**
  * Parses the contents of a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/PointCloud|Point Cloud}.
@@ -37,11 +37,11 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
   Check.defined("arrayBuffer", arrayBuffer);
   //>>includeEnd('debug');
 
-  var uint8Array = new Uint8Array(arrayBuffer);
-  var view = new DataView(arrayBuffer);
+  const uint8Array = new Uint8Array(arrayBuffer);
+  const view = new DataView(arrayBuffer);
   byteOffset += sizeOfUint32; // Skip magic
 
-  var version = view.getUint32(byteOffset, true);
+  const version = view.getUint32(byteOffset, true);
   if (version !== 1) {
     throw new RuntimeError(
       "Only Point Cloud tile version 1 is supported.  Version " +
@@ -54,7 +54,7 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
   // Skip byteLength
   byteOffset += sizeOfUint32;
 
-  var featureTableJsonByteLength = view.getUint32(byteOffset, true);
+  const featureTableJsonByteLength = view.getUint32(byteOffset, true);
   if (featureTableJsonByteLength === 0) {
     throw new RuntimeError(
       "Feature table must have a byte length greater than zero"
@@ -62,22 +62,22 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
   }
   byteOffset += sizeOfUint32;
 
-  var featureTableBinaryByteLength = view.getUint32(byteOffset, true);
+  const featureTableBinaryByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var batchTableJsonByteLength = view.getUint32(byteOffset, true);
+  const batchTableJsonByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
-  var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
+  const batchTableBinaryByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var featureTableJson = getJsonFromTypedArray(
+  const featureTableJson = getJsonFromTypedArray(
     uint8Array,
     byteOffset,
     featureTableJsonByteLength
   );
   byteOffset += featureTableJsonByteLength;
 
-  var featureTableBinary = new Uint8Array(
+  const featureTableBinary = new Uint8Array(
     arrayBuffer,
     byteOffset,
     featureTableBinaryByteLength
@@ -85,8 +85,8 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
   byteOffset += featureTableBinaryByteLength;
 
   // Get the batch table JSON and binary
-  var batchTableJson;
-  var batchTableBinary;
+  let batchTableJson;
+  let batchTableBinary;
   if (batchTableJsonByteLength > 0) {
     // Has a batch table JSON
     batchTableJson = getJsonFromTypedArray(
@@ -107,12 +107,12 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
     }
   }
 
-  var featureTable = new Cesium3DTileFeatureTable(
+  const featureTable = new Cesium3DTileFeatureTable(
     featureTableJson,
     featureTableBinary
   );
 
-  var pointsLength = featureTable.getGlobalProperty("POINTS_LENGTH");
+  const pointsLength = featureTable.getGlobalProperty("POINTS_LENGTH");
   featureTable.featuresLength = pointsLength;
 
   if (!defined(pointsLength)) {
@@ -121,7 +121,7 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
     );
   }
 
-  var rtcCenter = featureTable.getGlobalProperty(
+  let rtcCenter = featureTable.getGlobalProperty(
     "RTC_CENTER",
     ComponentDatatype.FLOAT,
     3
@@ -132,12 +132,12 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
 
   // Start with the draco compressed properties and add in uncompressed
   // properties.
-  var parsedContent = parseDracoProperties(featureTable, batchTableJson);
+  const parsedContent = parseDracoProperties(featureTable, batchTableJson);
   parsedContent.rtcCenter = rtcCenter;
   parsedContent.pointsLength = pointsLength;
 
   if (!parsedContent.hasPositions) {
-    var positions = parsePositions(featureTable);
+    const positions = parsePositions(featureTable);
     parsedContent.positions = positions;
     parsedContent.hasPositions =
       parsedContent.hasPositions || defined(positions);
@@ -150,13 +150,13 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
   }
 
   if (!parsedContent.hasNormals) {
-    var normals = parseNormals(featureTable);
+    const normals = parseNormals(featureTable);
     parsedContent.normals = normals;
     parsedContent.hasNormals = parsedContent.hasNormals || defined(normals);
   }
 
   if (!parsedContent.hasColors) {
-    var colors = parseColors(featureTable);
+    const colors = parseColors(featureTable);
     parsedContent.colors = colors;
     parsedContent.hasColors = parsedContent.hasColors || defined(colors);
     parsedContent.hasConstantColor = defined(parsedContent.constantColor);
@@ -164,13 +164,13 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
   }
 
   if (!parsedContent.hasBatchIds) {
-    var batchIds = parseBatchIds(featureTable);
+    const batchIds = parseBatchIds(featureTable);
     parsedContent.batchIds = batchIds;
     parsedContent.hasBatchIds = parsedContent.hasBatchIds || defined(batchIds);
   }
 
   if (parsedContent.hasBatchIds) {
-    var batchLength = featureTable.getGlobalProperty("BATCH_LENGTH");
+    const batchLength = featureTable.getGlobalProperty("BATCH_LENGTH");
     if (!defined(batchLength)) {
       throw new RuntimeError(
         "Global property: BATCH_LENGTH must be defined when BATCH_ID is defined."
@@ -190,15 +190,15 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
 };
 
 function parseDracoProperties(featureTable, batchTableJson) {
-  var featureTableJson = featureTable.json;
-  var dracoBuffer;
-  var dracoFeatureTableProperties;
-  var dracoBatchTableProperties;
+  const featureTableJson = featureTable.json;
+  let dracoBuffer;
+  let dracoFeatureTableProperties;
+  let dracoBatchTableProperties;
 
-  var featureTableDraco = defined(featureTableJson.extensions)
+  const featureTableDraco = defined(featureTableJson.extensions)
     ? featureTableJson.extensions["3DTILES_draco_point_compression"]
     : undefined;
-  var batchTableDraco =
+  const batchTableDraco =
     defined(batchTableJson) && defined(batchTableJson.extensions)
       ? batchTableJson.extensions["3DTILES_draco_point_compression"]
       : undefined;
@@ -207,15 +207,15 @@ function parseDracoProperties(featureTable, batchTableJson) {
     dracoBatchTableProperties = batchTableDraco.properties;
   }
 
-  var hasPositions;
-  var hasColors;
-  var hasNormals;
-  var hasBatchIds;
-  var isTranslucent;
+  let hasPositions;
+  let hasColors;
+  let hasNormals;
+  let hasBatchIds;
+  let isTranslucent;
   if (defined(featureTableDraco)) {
     dracoFeatureTableProperties = featureTableDraco.properties;
-    var dracoByteOffset = featureTableDraco.byteOffset;
-    var dracoByteLength = featureTableDraco.byteLength;
+    const dracoByteOffset = featureTableDraco.byteOffset;
+    const dracoByteLength = featureTableDraco.byteLength;
     if (
       !defined(dracoFeatureTableProperties) ||
       !defined(dracoByteOffset) ||
@@ -239,7 +239,7 @@ function parseDracoProperties(featureTable, batchTableJson) {
     isTranslucent = defined(dracoFeatureTableProperties.RGBA);
   }
 
-  var draco;
+  let draco;
   if (defined(dracoBuffer)) {
     draco = {
       buffer: dracoBuffer,
@@ -264,9 +264,9 @@ function parseDracoProperties(featureTable, batchTableJson) {
 }
 
 function parsePositions(featureTable) {
-  var featureTableJson = featureTable.json;
+  const featureTableJson = featureTable.json;
 
-  var positions;
+  let positions;
   if (defined(featureTableJson.POSITION)) {
     positions = featureTable.getPropertyArray(
       "POSITION",
@@ -289,7 +289,7 @@ function parsePositions(featureTable) {
       3
     );
 
-    var quantizedVolumeScale = featureTable.getGlobalProperty(
+    const quantizedVolumeScale = featureTable.getGlobalProperty(
       "QUANTIZED_VOLUME_SCALE",
       ComponentDatatype.FLOAT,
       3
@@ -299,9 +299,9 @@ function parsePositions(featureTable) {
         "Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions."
       );
     }
-    var quantizedRange = (1 << 16) - 1;
+    const quantizedRange = (1 << 16) - 1;
 
-    var quantizedVolumeOffset = featureTable.getGlobalProperty(
+    const quantizedVolumeOffset = featureTable.getGlobalProperty(
       "QUANTIZED_VOLUME_OFFSET",
       ComponentDatatype.FLOAT,
       3
@@ -329,9 +329,9 @@ function parsePositions(featureTable) {
 }
 
 function parseColors(featureTable) {
-  var featureTableJson = featureTable.json;
+  const featureTableJson = featureTable.json;
 
-  var colors;
+  let colors;
   if (defined(featureTableJson.RGBA)) {
     colors = featureTable.getPropertyArray(
       "RGBA",
@@ -388,21 +388,21 @@ function parseColors(featureTable) {
       isTranslucent: false,
     };
   } else if (defined(featureTableJson.CONSTANT_RGBA)) {
-    var constantRGBA = featureTable.getGlobalProperty(
+    const constantRGBA = featureTable.getGlobalProperty(
       "CONSTANT_RGBA",
       ComponentDatatype.UNSIGNED_BYTE,
       4
     );
 
-    var alpha = constantRGBA[3];
-    var constantColor = Color.fromBytes(
+    const alpha = constantRGBA[3];
+    const constantColor = Color.fromBytes(
       constantRGBA[0],
       constantRGBA[1],
       constantRGBA[2],
       alpha
     );
 
-    var isTranslucent = alpha < 255;
+    const isTranslucent = alpha < 255;
     return {
       name: VertexAttributeSemantic.COLOR,
       semantic: VertexAttributeSemantic.COLOR,
@@ -419,8 +419,8 @@ function parseColors(featureTable) {
 }
 
 function parseNormals(featureTable) {
-  var featureTableJson = featureTable.json;
-  var normals;
+  const featureTableJson = featureTable.json;
+  let normals;
   if (defined(featureTableJson.NORMAL)) {
     normals = featureTable.getPropertyArray(
       "NORMAL",
@@ -442,7 +442,7 @@ function parseNormals(featureTable) {
       ComponentDatatype.UNSIGNED_BYTE,
       2
     );
-    var quantizationBits = 8;
+    const quantizationBits = 8;
     return {
       name: VertexAttributeSemantic.NORMAL,
       semantic: VertexAttributeSemantic.NORMAL,
@@ -461,9 +461,9 @@ function parseNormals(featureTable) {
 }
 
 function parseBatchIds(featureTable) {
-  var featureTableJson = featureTable.json;
+  const featureTableJson = featureTable.json;
   if (defined(featureTableJson.BATCH_ID)) {
-    var batchIds = featureTable.getPropertyArray(
+    const batchIds = featureTable.getPropertyArray(
       "BATCH_ID",
       ComponentDatatype.UNSIGNED_SHORT,
       1

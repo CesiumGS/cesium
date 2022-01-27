@@ -38,14 +38,17 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
         });
-        var scene = viewer.scene;
+        const scene = viewer.scene;
 
-        var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706);
-        var url = "../../SampleData/models/CesiumMan/Cesium_Man.glb";
-        var entity = (viewer.trackedEntity = viewer.entities.add({
+        const position = Cesium.Cartesian3.fromDegrees(
+          -123.0744619,
+          44.0503706
+        );
+        const url = "../../SampleData/models/CesiumMan/Cesium_Man.glb";
+        const entity = (viewer.trackedEntity = viewer.entities.add({
           name: url,
           position: position,
           model: {
@@ -54,7 +57,7 @@
         }));
 
         // Shade selected model with highlight.
-        var fragmentShaderSource =
+        const fragmentShaderSource =
           "uniform sampler2D colorTexture;\n" +
           "varying vec2 v_textureCoordinates;\n" +
           "uniform vec4 highlight;\n" +
@@ -67,7 +70,7 @@
           "        gl_FragColor = color;\n" +
           "    }\n" +
           "}\n";
-        var stage = scene.postProcessStages.add(
+        const stage = scene.postProcessStages.add(
           new Cesium.PostProcessStage({
             fragmentShader: fragmentShaderSource,
             uniforms: {
@@ -79,9 +82,9 @@
         );
         stage.selected = [];
 
-        var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
         handler.setInputAction(function (movement) {
-          var pickedObject = viewer.scene.pick(movement.endPosition);
+          const pickedObject = viewer.scene.pick(movement.endPosition);
           if (Cesium.defined(pickedObject)) {
             stage.selected = [pickedObject.primitive];
           } else {

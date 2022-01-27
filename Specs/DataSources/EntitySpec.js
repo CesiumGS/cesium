@@ -28,7 +28,7 @@ import { WallGraphics } from "../../Source/Cesium.js";
 
 describe("DataSources/Entity", function () {
   it("constructor sets expected properties.", function () {
-    var entity = new Entity();
+    let entity = new Entity();
     expect(entity.id).toBeDefined();
     expect(entity.name).toBeUndefined();
     expect(entity.billboard).toBeUndefined();
@@ -53,7 +53,7 @@ describe("DataSources/Entity", function () {
     expect(entity.wall).toBeUndefined();
     expect(entity.entityCollection).toBeUndefined();
 
-    var options = {
+    const options = {
       id: "someId",
       name: "bob",
       show: false,
@@ -115,30 +115,30 @@ describe("DataSources/Entity", function () {
   });
 
   it("isAvailable is always true if no availability defined.", function () {
-    var entity = new Entity();
+    const entity = new Entity();
     expect(entity.isAvailable(JulianDate.now())).toEqual(true);
   });
 
   it("isAvailable throw if no time specified.", function () {
-    var entity = new Entity();
+    const entity = new Entity();
     expect(function () {
       entity.isAvailable();
     }).toThrowDeveloperError();
   });
 
   it("constructor creates a unique id if one is not provided.", function () {
-    var object = new Entity();
-    var object2 = new Entity();
+    const object = new Entity();
+    const object2 = new Entity();
     expect(object.id).toBeDefined();
     expect(object.id).not.toEqual(object2.id);
   });
 
   it("isAvailable works.", function () {
-    var entity = new Entity();
-    var interval = TimeInterval.fromIso8601({
+    const entity = new Entity();
+    const interval = TimeInterval.fromIso8601({
       iso8601: "2000-01-01/2001-01-01",
     });
-    var intervals = new TimeIntervalCollection();
+    const intervals = new TimeIntervalCollection();
     intervals.addInterval(interval);
     entity.availability = intervals;
     expect(
@@ -156,19 +156,19 @@ describe("DataSources/Entity", function () {
   });
 
   it("definitionChanged works for all properties", function () {
-    var entity = new Entity();
-    var propertyNames = entity.propertyNames;
-    var propertyNamesLength = propertyNames.length;
+    const entity = new Entity();
+    const propertyNames = entity.propertyNames;
+    const propertyNamesLength = propertyNames.length;
 
-    var listener = jasmine.createSpy("listener");
+    const listener = jasmine.createSpy("listener");
     entity.definitionChanged.addEventListener(listener);
 
-    var i;
-    var name;
-    var newValue;
-    var oldValue;
+    let i;
+    let name;
+    let newValue;
+    let oldValue;
     //We loop through twice to ensure that oldValue is properly passed in.
-    for (var x = 0; x < 2; x++) {
+    for (let x = 0; x < 2; x++) {
       for (i = 0; i < propertyNamesLength; i++) {
         name = propertyNames[i];
         newValue = new ConstantProperty(1);
@@ -180,7 +180,7 @@ describe("DataSources/Entity", function () {
   });
 
   it("merge ignores reserved property names when called with a plain object.", function () {
-    var entity = new Entity();
+    const entity = new Entity();
 
     //Technically merge requires passing an Entity instance, but we call it internally
     //with a plain object during construction to set up custom properties.
@@ -195,14 +195,14 @@ describe("DataSources/Entity", function () {
   });
 
   it("merge does not overwrite availability", function () {
-    var entity = new Entity();
-    var interval = TimeInterval.fromIso8601({
+    const entity = new Entity();
+    const interval = TimeInterval.fromIso8601({
       iso8601: "2000-01-01/2001-01-01",
     });
     entity.availability = interval;
 
-    var entity2 = new Entity();
-    var interval2 = TimeInterval.fromIso8601({
+    const entity2 = new Entity();
+    const interval2 = TimeInterval.fromIso8601({
       iso8601: "2000-01-01/2001-01-01",
     });
     entity2.availability = interval2;
@@ -212,16 +212,16 @@ describe("DataSources/Entity", function () {
   });
 
   it("merge works with custom properties.", function () {
-    var propertyName = "customProperty";
-    var value = "fizzbuzz";
+    const propertyName = "customProperty";
+    const value = "fizzbuzz";
 
-    var source = new Entity({
+    const source = new Entity({
       id: "source",
     });
     source.addProperty(propertyName);
     source[propertyName] = value;
 
-    var target = new Entity({
+    const target = new Entity({
       id: "target",
     });
 
@@ -234,37 +234,37 @@ describe("DataSources/Entity", function () {
   });
 
   it("merge throws with undefined source", function () {
-    var entity = new Entity();
+    const entity = new Entity();
     expect(function () {
       entity.merge(undefined);
     }).toThrowDeveloperError();
   });
 
   it("computeModelMatrix throws if no time specified.", function () {
-    var entity = new Entity();
+    const entity = new Entity();
     expect(function () {
       entity.computeModelMatrix();
     }).toThrowDeveloperError();
   });
 
   it("computeModelMatrix returns undefined when position is undefined.", function () {
-    var entity = new Entity();
+    const entity = new Entity();
     entity.orientation = new ConstantProperty(Quaternion.IDENTITY);
     expect(entity.computeModelMatrix(new JulianDate())).toBeUndefined();
   });
 
   it("computeModelMatrix returns correct value.", function () {
-    var entity = new Entity();
+    const entity = new Entity();
 
-    var position = new Cartesian3(123456, 654321, 123456);
-    var orientation = new Quaternion(1, 2, 3, 4);
+    const position = new Cartesian3(123456, 654321, 123456);
+    const orientation = new Quaternion(1, 2, 3, 4);
     Quaternion.normalize(orientation, orientation);
 
     entity.position = new ConstantProperty(position);
     entity.orientation = new ConstantProperty(orientation);
 
-    var modelMatrix = entity.computeModelMatrix(new JulianDate());
-    var expected = Matrix4.fromRotationTranslation(
+    const modelMatrix = entity.computeModelMatrix(new JulianDate());
+    const expected = Matrix4.fromRotationTranslation(
       Matrix3.fromQuaternion(orientation),
       position
     );
@@ -272,29 +272,29 @@ describe("DataSources/Entity", function () {
   });
 
   it("computeModelMatrix returns ENU when quaternion is undefined.", function () {
-    var entity = new Entity();
-    var position = new Cartesian3(123456, 654321, 123456);
+    const entity = new Entity();
+    const position = new Cartesian3(123456, 654321, 123456);
     entity.position = new ConstantProperty(position);
 
-    var modelMatrix = entity.computeModelMatrix(new JulianDate());
-    var expected = Transforms.eastNorthUpToFixedFrame(position);
+    const modelMatrix = entity.computeModelMatrix(new JulianDate());
+    const expected = Transforms.eastNorthUpToFixedFrame(position);
     expect(modelMatrix).toEqual(expected);
   });
 
   it("computeModelMatrix works with result parameter.", function () {
-    var entity = new Entity();
-    var position = new Cartesian3(123456, 654321, 123456);
+    const entity = new Entity();
+    const position = new Cartesian3(123456, 654321, 123456);
     entity.position = new ConstantProperty(position);
 
-    var result = new Matrix4();
-    var modelMatrix = entity.computeModelMatrix(new JulianDate(), result);
-    var expected = Transforms.eastNorthUpToFixedFrame(position);
+    const result = new Matrix4();
+    const modelMatrix = entity.computeModelMatrix(new JulianDate(), result);
+    const expected = Transforms.eastNorthUpToFixedFrame(position);
     expect(modelMatrix).toBe(result);
     expect(modelMatrix).toEqual(expected);
   });
 
   it("can add and remove custom properties.", function () {
-    var entity = new Entity();
+    const entity = new Entity();
     expect(entity.hasOwnProperty("bob")).toBe(false);
     expect(entity.propertyNames).not.toContain("bob");
 
@@ -308,7 +308,7 @@ describe("DataSources/Entity", function () {
   });
 
   it("can re-add removed properties", function () {
-    var entity = new Entity();
+    const entity = new Entity();
     entity.addProperty("bob");
     entity.removeProperty("bob");
     entity.addProperty("bob");
@@ -317,28 +317,28 @@ describe("DataSources/Entity", function () {
   });
 
   it("addProperty throws with no property specified.", function () {
-    var entity = new Entity();
+    const entity = new Entity();
     expect(function () {
       entity.addProperty(undefined);
     }).toThrowDeveloperError();
   });
 
   it("addProperty throws with no property specified.", function () {
-    var entity = new Entity();
+    const entity = new Entity();
     expect(function () {
       entity.addProperty(undefined);
     }).toThrowDeveloperError();
   });
 
   it("removeProperty throws with no property specified.", function () {
-    var entity = new Entity();
+    const entity = new Entity();
     expect(function () {
       entity.removeProperty(undefined);
     }).toThrowDeveloperError();
   });
 
   it("addProperty throws when adding an existing property.", function () {
-    var entity = new Entity();
+    const entity = new Entity();
     entity.addProperty("bob");
     expect(function () {
       entity.addProperty("bob");
@@ -346,28 +346,28 @@ describe("DataSources/Entity", function () {
   });
 
   it("removeProperty throws when non-existent property.", function () {
-    var entity = new Entity();
+    const entity = new Entity();
     expect(function () {
       entity.removeProperty("bob");
     }).toThrowDeveloperError();
   });
 
   it("addProperty throws with defined reserved property name.", function () {
-    var entity = new Entity();
+    const entity = new Entity();
     expect(function () {
       entity.addProperty("merge");
     }).toThrowDeveloperError();
   });
 
   it("removeProperty throws with defined reserved property name.", function () {
-    var entity = new Entity();
+    const entity = new Entity();
     expect(function () {
       entity.removeProperty("merge");
     }).toThrowDeveloperError();
   });
 
   it("addProperty throws with undefined reserved property name.", function () {
-    var entity = new Entity();
+    const entity = new Entity();
     expect(entity.name).toBeUndefined();
     expect(function () {
       entity.addProperty("name");
@@ -375,7 +375,7 @@ describe("DataSources/Entity", function () {
   });
 
   it("removeProperty throws with undefined reserved property name.", function () {
-    var entity = new Entity();
+    const entity = new Entity();
     expect(entity.name).toBeUndefined();
     expect(function () {
       entity.removeProperty("name");
@@ -383,12 +383,12 @@ describe("DataSources/Entity", function () {
   });
 
   it("isShowing works without parent.", function () {
-    var entity = new Entity({
+    const entity = new Entity({
       show: false,
     });
     expect(entity.isShowing).toBe(false);
 
-    var listener = jasmine.createSpy("listener");
+    const listener = jasmine.createSpy("listener");
     entity.definitionChanged.addEventListener(listener);
 
     entity.show = true;
@@ -417,7 +417,7 @@ describe("DataSources/Entity", function () {
   });
 
   function ancestorShowTest(entity, ancestor) {
-    var listener = jasmine.createSpy("listener");
+    const listener = jasmine.createSpy("listener");
     entity.definitionChanged.addEventListener(listener);
 
     ancestor.show = false;
@@ -470,26 +470,26 @@ describe("DataSources/Entity", function () {
   }
 
   it("isShowing works with parent.", function () {
-    var parent = new Entity();
-    var entity = new Entity();
+    const parent = new Entity();
+    const entity = new Entity();
     entity.parent = parent;
     ancestorShowTest(entity, parent);
   });
 
   it("isShowing works with grandparent.", function () {
-    var grandparent = new Entity();
-    var parent = new Entity();
+    const grandparent = new Entity();
+    const parent = new Entity();
     parent.parent = grandparent;
-    var entity = new Entity();
+    const entity = new Entity();
     entity.parent = parent;
     ancestorShowTest(entity, grandparent);
   });
 
   it("isShowing works when replacing parent.", function () {
-    var entity = new Entity();
+    const entity = new Entity();
     entity.parent = new Entity();
 
-    var listener = jasmine.createSpy("listener");
+    const listener = jasmine.createSpy("listener");
     entity.definitionChanged.addEventListener(listener);
 
     entity.parent = new Entity({
@@ -508,13 +508,13 @@ describe("DataSources/Entity", function () {
   });
 
   it("isShowing works when removing parent.", function () {
-    var entity = new Entity();
+    const entity = new Entity();
     entity.parent = new Entity({
       show: false,
     });
     expect(entity.isShowing).toBe(false);
 
-    var listener = jasmine.createSpy("listener");
+    const listener = jasmine.createSpy("listener");
     entity.definitionChanged.addEventListener(listener);
 
     entity.parent = undefined;

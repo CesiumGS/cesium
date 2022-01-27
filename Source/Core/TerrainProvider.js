@@ -114,7 +114,7 @@ Object.defineProperties(TerrainProvider.prototype, {
   },
 });
 
-var regularGridIndicesCache = [];
+const regularGridIndicesCache = [];
 
 /**
  * Gets a list of indices for a triangle mesh representing a regular grid.  Calling
@@ -135,12 +135,12 @@ TerrainProvider.getRegularGridIndices = function (width, height) {
   }
   //>>includeEnd('debug');
 
-  var byWidth = regularGridIndicesCache[width];
+  let byWidth = regularGridIndicesCache[width];
   if (!defined(byWidth)) {
     regularGridIndicesCache[width] = byWidth = [];
   }
 
-  var indices = byWidth[height];
+  let indices = byWidth[height];
   if (!defined(indices)) {
     if (width * height < CesiumMath.SIXTY_FOUR_KILOBYTES) {
       indices = byWidth[height] = new Uint16Array(
@@ -157,7 +157,7 @@ TerrainProvider.getRegularGridIndices = function (width, height) {
   return indices;
 };
 
-var regularGridAndEdgeIndicesCache = [];
+const regularGridAndEdgeIndicesCache = [];
 
 /**
  * @private
@@ -171,20 +171,20 @@ TerrainProvider.getRegularGridIndicesAndEdgeIndices = function (width, height) {
   }
   //>>includeEnd('debug');
 
-  var byWidth = regularGridAndEdgeIndicesCache[width];
+  let byWidth = regularGridAndEdgeIndicesCache[width];
   if (!defined(byWidth)) {
     regularGridAndEdgeIndicesCache[width] = byWidth = [];
   }
 
-  var indicesAndEdges = byWidth[height];
+  let indicesAndEdges = byWidth[height];
   if (!defined(indicesAndEdges)) {
-    var indices = TerrainProvider.getRegularGridIndices(width, height);
+    const indices = TerrainProvider.getRegularGridIndices(width, height);
 
-    var edgeIndices = getEdgeIndices(width, height);
-    var westIndicesSouthToNorth = edgeIndices.westIndicesSouthToNorth;
-    var southIndicesEastToWest = edgeIndices.southIndicesEastToWest;
-    var eastIndicesNorthToSouth = edgeIndices.eastIndicesNorthToSouth;
-    var northIndicesWestToEast = edgeIndices.northIndicesWestToEast;
+    const edgeIndices = getEdgeIndices(width, height);
+    const westIndicesSouthToNorth = edgeIndices.westIndicesSouthToNorth;
+    const southIndicesEastToWest = edgeIndices.southIndicesEastToWest;
+    const eastIndicesNorthToSouth = edgeIndices.eastIndicesNorthToSouth;
+    const northIndicesWestToEast = edgeIndices.northIndicesWestToEast;
 
     indicesAndEdges = byWidth[height] = {
       indices: indices,
@@ -198,7 +198,7 @@ TerrainProvider.getRegularGridIndicesAndEdgeIndices = function (width, height) {
   return indicesAndEdges;
 };
 
-var regularGridAndSkirtAndEdgeIndicesCache = [];
+const regularGridAndSkirtAndEdgeIndicesCache = [];
 
 /**
  * @private
@@ -215,27 +215,27 @@ TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices = function (
   }
   //>>includeEnd('debug');
 
-  var byWidth = regularGridAndSkirtAndEdgeIndicesCache[width];
+  let byWidth = regularGridAndSkirtAndEdgeIndicesCache[width];
   if (!defined(byWidth)) {
     regularGridAndSkirtAndEdgeIndicesCache[width] = byWidth = [];
   }
 
-  var indicesAndEdges = byWidth[height];
+  let indicesAndEdges = byWidth[height];
   if (!defined(indicesAndEdges)) {
-    var gridVertexCount = width * height;
-    var gridIndexCount = (width - 1) * (height - 1) * 6;
-    var edgeVertexCount = width * 2 + height * 2;
-    var edgeIndexCount = Math.max(0, edgeVertexCount - 4) * 6;
-    var vertexCount = gridVertexCount + edgeVertexCount;
-    var indexCount = gridIndexCount + edgeIndexCount;
+    const gridVertexCount = width * height;
+    const gridIndexCount = (width - 1) * (height - 1) * 6;
+    const edgeVertexCount = width * 2 + height * 2;
+    const edgeIndexCount = Math.max(0, edgeVertexCount - 4) * 6;
+    const vertexCount = gridVertexCount + edgeVertexCount;
+    const indexCount = gridIndexCount + edgeIndexCount;
 
-    var edgeIndices = getEdgeIndices(width, height);
-    var westIndicesSouthToNorth = edgeIndices.westIndicesSouthToNorth;
-    var southIndicesEastToWest = edgeIndices.southIndicesEastToWest;
-    var eastIndicesNorthToSouth = edgeIndices.eastIndicesNorthToSouth;
-    var northIndicesWestToEast = edgeIndices.northIndicesWestToEast;
+    const edgeIndices = getEdgeIndices(width, height);
+    const westIndicesSouthToNorth = edgeIndices.westIndicesSouthToNorth;
+    const southIndicesEastToWest = edgeIndices.southIndicesEastToWest;
+    const eastIndicesNorthToSouth = edgeIndices.eastIndicesNorthToSouth;
+    const northIndicesWestToEast = edgeIndices.northIndicesWestToEast;
 
-    var indices = IndexDatatype.createTypedArray(vertexCount, indexCount);
+    const indices = IndexDatatype.createTypedArray(vertexCount, indexCount);
     addRegularGridIndices(width, height, indices, 0);
     TerrainProvider.addSkirtIndices(
       westIndicesSouthToNorth,
@@ -272,7 +272,7 @@ TerrainProvider.addSkirtIndices = function (
   indices,
   offset
 ) {
-  var vertexIndex = vertexCount;
+  let vertexIndex = vertexCount;
   offset = addSkirtIndices(
     westIndicesSouthToNorth,
     vertexIndex,
@@ -298,12 +298,12 @@ TerrainProvider.addSkirtIndices = function (
 };
 
 function getEdgeIndices(width, height) {
-  var westIndicesSouthToNorth = new Array(height);
-  var southIndicesEastToWest = new Array(width);
-  var eastIndicesNorthToSouth = new Array(height);
-  var northIndicesWestToEast = new Array(width);
+  const westIndicesSouthToNorth = new Array(height);
+  const southIndicesEastToWest = new Array(width);
+  const eastIndicesNorthToSouth = new Array(height);
+  const northIndicesWestToEast = new Array(width);
 
-  var i;
+  let i;
   for (i = 0; i < width; ++i) {
     northIndicesWestToEast[i] = i;
     southIndicesEastToWest[i] = width * height - 1 - i;
@@ -323,13 +323,13 @@ function getEdgeIndices(width, height) {
 }
 
 function addRegularGridIndices(width, height, indices, offset) {
-  var index = 0;
-  for (var j = 0; j < height - 1; ++j) {
-    for (var i = 0; i < width - 1; ++i) {
-      var upperLeft = index;
-      var lowerLeft = upperLeft + width;
-      var lowerRight = lowerLeft + 1;
-      var upperRight = upperLeft + 1;
+  let index = 0;
+  for (let j = 0; j < height - 1; ++j) {
+    for (let i = 0; i < width - 1; ++i) {
+      const upperLeft = index;
+      const lowerLeft = upperLeft + width;
+      const lowerRight = lowerLeft + 1;
+      const upperRight = upperLeft + 1;
 
       indices[offset++] = upperLeft;
       indices[offset++] = lowerLeft;
@@ -345,11 +345,11 @@ function addRegularGridIndices(width, height, indices, offset) {
 }
 
 function addSkirtIndices(edgeIndices, vertexIndex, indices, offset) {
-  var previousIndex = edgeIndices[0];
+  let previousIndex = edgeIndices[0];
 
-  var length = edgeIndices.length;
-  for (var i = 1; i < length; ++i) {
-    var index = edgeIndices[i];
+  const length = edgeIndices.length;
+  for (let i = 1; i < length; ++i) {
+    const index = edgeIndices[i];
 
     indices[offset++] = previousIndex;
     indices[offset++] = index;

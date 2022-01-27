@@ -33,39 +33,39 @@ export default function parseBatchTable(options) {
   Check.typeOf.object("options.batchTable", options.batchTable);
   //>>includeEnd('debug');
 
-  var featureCount = options.count;
-  var batchTable = options.batchTable;
-  var binaryBody = options.binaryBody;
+  const featureCount = options.count;
+  const batchTable = options.batchTable;
+  const binaryBody = options.binaryBody;
 
   // divide properties into binary, json and hierarchy
-  var partitionResults = partitionProperties(batchTable);
+  const partitionResults = partitionProperties(batchTable);
 
-  var jsonMetadataTable = new JsonMetadataTable({
+  const jsonMetadataTable = new JsonMetadataTable({
     count: featureCount,
     properties: partitionResults.jsonProperties,
   });
 
-  var hierarchy = initializeHierarchy(partitionResults.hierarchy, binaryBody);
+  const hierarchy = initializeHierarchy(partitionResults.hierarchy, binaryBody);
 
-  var className = MetadataClass.BATCH_TABLE_CLASS_NAME;
+  const className = MetadataClass.BATCH_TABLE_CLASS_NAME;
 
-  var binaryResults = transcodeBinaryProperties(
+  const binaryResults = transcodeBinaryProperties(
     featureCount,
     className,
     partitionResults.binaryProperties,
     binaryBody
   );
 
-  var featureTableJson = binaryResults.featureTableJson;
+  const featureTableJson = binaryResults.featureTableJson;
 
-  var metadataTable = new MetadataTable({
+  const metadataTable = new MetadataTable({
     count: featureTableJson.count,
     properties: featureTableJson.properties,
     class: binaryResults.transcodedClass,
     bufferViews: binaryResults.bufferViewsU8,
   });
 
-  var propertyTable = new PropertyTable({
+  const propertyTable = new PropertyTable({
     id: 0,
     name: "Batch Table",
     count: featureTableJson.count,
@@ -92,11 +92,11 @@ export default function parseBatchTable(options) {
  * @private
  */
 function partitionProperties(batchTable) {
-  var legacyHierarchy = batchTable.HIERARCHY;
-  var extras = batchTable.extras;
-  var extensions = batchTable.extensions;
+  const legacyHierarchy = batchTable.HIERARCHY;
+  const extras = batchTable.extras;
+  const extensions = batchTable.extensions;
 
-  var hierarchyExtension;
+  let hierarchyExtension;
   if (defined(legacyHierarchy)) {
     parseBatchTable._deprecationWarning(
       "batchTableHierarchyExtension",
@@ -107,9 +107,9 @@ function partitionProperties(batchTable) {
     hierarchyExtension = extensions["3DTILES_batch_table_hierarchy"];
   }
 
-  var jsonProperties = {};
-  var binaryProperties = {};
-  for (var propertyId in batchTable) {
+  const jsonProperties = {};
+  const binaryProperties = {};
+  for (const propertyId in batchTable) {
     if (
       !batchTable.hasOwnProperty(propertyId) ||
       // these cases were handled above;
@@ -120,7 +120,7 @@ function partitionProperties(batchTable) {
       continue;
     }
 
-    var property = batchTable[propertyId];
+    const property = batchTable[propertyId];
     if (Array.isArray(property)) {
       jsonProperties[propertyId] = property;
     } else {
@@ -155,11 +155,11 @@ function transcodeBinaryProperties(
   binaryProperties,
   binaryBody
 ) {
-  var classProperties = {};
-  var featureTableProperties = {};
-  var bufferViewsU8 = {};
-  var bufferViewCount = 0;
-  for (var propertyId in binaryProperties) {
+  const classProperties = {};
+  const featureTableProperties = {};
+  const bufferViewsU8 = {};
+  let bufferViewCount = 0;
+  for (const propertyId in binaryProperties) {
     if (!binaryProperties.hasOwnProperty(propertyId)) {
       continue;
     }
@@ -170,8 +170,8 @@ function transcodeBinaryProperties(
       );
     }
 
-    var property = binaryProperties[propertyId];
-    var binaryAccessor = getBinaryAccessor(property);
+    const property = binaryProperties[propertyId];
+    const binaryAccessor = getBinaryAccessor(property);
 
     featureTableProperties[propertyId] = {
       bufferView: bufferViewCount,
@@ -188,16 +188,16 @@ function transcodeBinaryProperties(
     bufferViewCount++;
   }
 
-  var schemaJson = {
+  const schemaJson = {
     classes: {},
   };
   schemaJson.classes[className] = {
     properties: classProperties,
   };
 
-  var transcodedSchema = new MetadataSchema(schemaJson);
+  const transcodedSchema = new MetadataSchema(schemaJson);
 
-  var featureTableJson = {
+  const featureTableJson = {
     class: className,
     count: featureCount,
     properties: featureTableProperties,
@@ -220,9 +220,9 @@ function transcodeBinaryProperties(
  * @private
  */
 function transcodePropertyType(property) {
-  var componentType = transcodeComponentType(property.componentType);
+  const componentType = transcodeComponentType(property.componentType);
 
-  var type = property.type;
+  const type = property.type;
   if (type === "SCALAR") {
     return {
       type: "SINGLE",

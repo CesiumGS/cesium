@@ -162,7 +162,7 @@ Object.defineProperties(ClockViewModel.prototype, {
  * clock has changed and <code>Clock.tick</code> has not yet been called.
  */
 ClockViewModel.prototype.synchronize = function () {
-  var clock = this._clock;
+  const clock = this._clock;
 
   this.systemTime = JulianDate.now();
   this.startTime = clock.startTime;

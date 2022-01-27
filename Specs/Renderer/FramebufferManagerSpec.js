@@ -13,8 +13,8 @@ import createContext from "../createContext.js";
 describe(
   "Renderer/FramebufferManager",
   function () {
-    var context;
-    var fbm;
+    let context;
+    let fbm;
 
     beforeAll(function () {
       context = createContext();
@@ -92,13 +92,13 @@ describe(
         colorAttachmentsLength: 2,
         createColorAttachments: false,
       });
-      var texture0 = new Texture({
+      const texture0 = new Texture({
         context: context,
         width: 1,
         height: 1,
         pixelFormat: PixelFormat.RGB,
       });
-      var texture1 = new Texture({
+      const texture1 = new Texture({
         context: context,
         width: 1,
         height: 1,
@@ -127,7 +127,7 @@ describe(
       fbm = new FramebufferManager({
         createDepthAttachments: false,
       });
-      var texture = new Texture({
+      const texture = new Texture({
         context: context,
         width: 1,
         height: 1,
@@ -137,7 +137,7 @@ describe(
       expect(fbm.getDepthTexture()).toEqual(texture);
       texture.destroy();
 
-      var renderbuffer = new Renderbuffer({
+      const renderbuffer = new Renderbuffer({
         context: context,
         width: 1,
         height: 1,
@@ -162,7 +162,7 @@ describe(
       fbm = new FramebufferManager({
         createDepthAttachments: false,
       });
-      var texture = new Texture({
+      const texture = new Texture({
         context: context,
         width: 1,
         height: 1,
@@ -172,7 +172,7 @@ describe(
       expect(fbm.getDepthStencilTexture()).toEqual(texture);
       texture.destroy();
 
-      var renderbuffer = new Renderbuffer({
+      const renderbuffer = new Renderbuffer({
         context: context,
         width: 1,
         height: 1,
@@ -187,7 +187,7 @@ describe(
       fbm = new FramebufferManager();
       expect(fbm.framebuffer).toBeUndefined();
       fbm.update(context, 1, 1);
-      var framebuffer = fbm.framebuffer;
+      const framebuffer = fbm.framebuffer;
       expect(framebuffer).toBeDefined();
       expect(framebuffer.numberOfColorAttachments).toEqual(1);
     });
@@ -205,7 +205,7 @@ describe(
     it("creates single color attachment", function () {
       fbm = new FramebufferManager();
       fbm.update(context, 1, 1);
-      var texture = fbm.getColorTexture();
+      const texture = fbm.getColorTexture();
       expect(texture).toBeDefined();
       expect(texture.width).toEqual(1);
       expect(texture.height).toEqual(1);
@@ -218,13 +218,13 @@ describe(
         return;
       }
 
-      var length = 2;
+      const length = 2;
       fbm = new FramebufferManager({
         colorAttachmentsLength: length,
       });
       fbm.update(context, 1, 1);
-      for (var i = 0; i < length; ++i) {
-        var texture = fbm.getColorTexture(i);
+      for (let i = 0; i < length; ++i) {
+        const texture = fbm.getColorTexture(i);
         expect(texture).toBeDefined();
         expect(texture.width).toEqual(1);
         expect(texture.height).toEqual(1);
@@ -241,14 +241,14 @@ describe(
       });
       fbm.update(context, 1, 1);
       if (context.depthTexture) {
-        var texture = fbm.getDepthTexture();
+        const texture = fbm.getDepthTexture();
         expect(texture).toBeDefined();
         expect(texture.width).toEqual(1);
         expect(texture.height).toEqual(1);
         expect(texture.pixelFormat).toEqual(PixelFormat.DEPTH_COMPONENT);
         expect(texture.pixelDatatype).toEqual(PixelDatatype.UNSIGNED_INT);
       } else {
-        var renderbuffer = fbm.getDepthRenderbuffer();
+        const renderbuffer = fbm.getDepthRenderbuffer();
         expect(renderbuffer).toBeDefined();
         expect(renderbuffer.width).toEqual(1);
         expect(renderbuffer.height).toEqual(1);
@@ -266,14 +266,14 @@ describe(
       });
       fbm.update(context, 1, 1);
       if (context.depthTexture) {
-        var texture = fbm.getDepthStencilTexture();
+        const texture = fbm.getDepthStencilTexture();
         expect(texture).toBeDefined();
         expect(texture.width).toEqual(1);
         expect(texture.height).toEqual(1);
         expect(texture.pixelFormat).toEqual(PixelFormat.DEPTH_STENCIL);
         expect(texture.pixelDatatype).toEqual(PixelDatatype.UNSIGNED_INT_24_8);
       } else {
-        var renderbuffer = fbm.getDepthStencilRenderbuffer();
+        const renderbuffer = fbm.getDepthStencilRenderbuffer();
         expect(renderbuffer).toBeDefined();
         expect(renderbuffer.width).toEqual(1);
         expect(renderbuffer.height).toEqual(1);
@@ -296,7 +296,7 @@ describe(
         supportsDepthTexture: true,
       });
       // Disable extension
-      var depthTexture = context._depthTexture;
+      const depthTexture = context._depthTexture;
       context._depthTexture = false;
 
       fbm.update(context, 1, 1);
@@ -342,7 +342,7 @@ describe(
         createDepthAttachments: false,
       });
 
-      var colorTexture = new Texture({
+      const colorTexture = new Texture({
         context: context,
         width: 1,
         height: 1,
@@ -350,7 +350,7 @@ describe(
       });
       fbm.setColorTexture(colorTexture, 0);
 
-      var depthRenderbuffer = new Renderbuffer({
+      const depthRenderbuffer = new Renderbuffer({
         context: context,
         width: 1,
         height: 1,
@@ -407,7 +407,7 @@ describe(
       fbm = new FramebufferManager({
         createColorAttachments: false,
       });
-      var texture = new Texture({
+      const texture = new Texture({
         context: context,
         width: 1,
         height: 1,
@@ -427,14 +427,14 @@ describe(
       fbm = new FramebufferManager();
       fbm.update(context, 1, 1);
 
-      var clearCommand = new ClearCommand({
+      const clearCommand = new ClearCommand({
         color: new Color(1.0, 0.0, 0.0, 1.0),
       });
       fbm.clear(context, clearCommand);
 
-      var fs =
+      const fs =
         "uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }";
-      var uniformMap = {
+      const uniformMap = {
         u_texture: function () {
           return fbm.getColorTexture();
         },
@@ -454,10 +454,10 @@ describe(
       fbm = new FramebufferManager();
       fbm.update(context, 1, 1);
 
-      var fb = new Framebuffer({
+      const fb = new Framebuffer({
         context: context,
       });
-      var clearCommand = new ClearCommand({
+      const clearCommand = new ClearCommand({
         color: new Color(1.0, 0.0, 0.0, 1.0),
         framebuffer: fb,
       });
@@ -465,9 +465,9 @@ describe(
       fbm.clear(context, clearCommand);
       expect(clearCommand.framebuffer).toBe(fb);
 
-      var fs =
+      const fs =
         "uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }";
-      var uniformMap = {
+      const uniformMap = {
         u_texture: function () {
           return fbm.getColorTexture();
         },

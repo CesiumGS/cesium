@@ -9,7 +9,7 @@ describe("Scene/PntsParser", function () {
   });
 
   it("throws with invalid version", function () {
-    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+    const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
       version: 2,
     });
     expect(function () {
@@ -18,7 +18,7 @@ describe("Scene/PntsParser", function () {
   });
 
   it("throws if featureTableJsonByteLength is 0", function () {
-    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+    const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
       featureTableJsonByteLength: 0,
     });
     expect(function () {
@@ -27,7 +27,7 @@ describe("Scene/PntsParser", function () {
   });
 
   it("throws if the feature table does not contain POINTS_LENGTH", function () {
-    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+    const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
       featureTableJson: {
         POSITION: {
           byteOffset: 0,
@@ -40,7 +40,7 @@ describe("Scene/PntsParser", function () {
   });
 
   it("throws if the feature table does not contain POSITION or POSITION_QUANTIZED", function () {
-    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+    const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
       featureTableJson: {
         POINTS_LENGTH: 1,
       },
@@ -51,7 +51,7 @@ describe("Scene/PntsParser", function () {
   });
 
   it("throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_SCALE", function () {
-    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+    const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
       featureTableJson: {
         POINTS_LENGTH: 1,
         POSITION_QUANTIZED: {
@@ -66,7 +66,7 @@ describe("Scene/PntsParser", function () {
   });
 
   it("throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_OFFSET", function () {
-    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+    const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
       featureTableJson: {
         POINTS_LENGTH: 1,
         POSITION_QUANTIZED: {
@@ -81,7 +81,7 @@ describe("Scene/PntsParser", function () {
   });
 
   it("throws if the BATCH_ID semantic is defined but BATCH_LENGTH is not", function () {
-    var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
+    const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
       featureTableJson: {
         POINTS_LENGTH: 2,
         POSITION: [0.0, 0.0, 0.0, 1.0, 1.0, 1.0],

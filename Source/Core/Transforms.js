@@ -25,9 +25,9 @@ import TimeConstants from "./TimeConstants.js";
  *
  * @namespace Transforms
  */
-var Transforms = {};
+const Transforms = {};
 
-var vectorProductLocalFrame = {
+const vectorProductLocalFrame = {
   up: {
     south: "east",
     north: "west",
@@ -66,7 +66,7 @@ var vectorProductLocalFrame = {
   },
 };
 
-var degeneratePositionLocalFrame = {
+const degeneratePositionLocalFrame = {
   north: [-1, 0, 0],
   east: [0, 1, 0],
   up: [0, 0, 1],
@@ -75,9 +75,9 @@ var degeneratePositionLocalFrame = {
   down: [0, 0, -1],
 };
 
-var localFrameToFixedFrameCache = {};
+const localFrameToFixedFrameCache = {};
 
-var scratchCalculateCartesian = {
+const scratchCalculateCartesian = {
   east: new Cartesian3(),
   north: new Cartesian3(),
   up: new Cartesian3(),
@@ -85,9 +85,9 @@ var scratchCalculateCartesian = {
   south: new Cartesian3(),
   down: new Cartesian3(),
 };
-var scratchFirstCartesian = new Cartesian3();
-var scratchSecondCartesian = new Cartesian3();
-var scratchThirdCartesian = new Cartesian3();
+let scratchFirstCartesian = new Cartesian3();
+let scratchSecondCartesian = new Cartesian3();
+let scratchThirdCartesian = new Cartesian3();
 /**
  * Generates a function that computes a 4x4 transformation matrix from a reference frame
  * centered at the provided origin to the provided ellipsoid's fixed reference frame.
@@ -107,7 +107,7 @@ Transforms.localFrameToFixedFrameGenerator = function (firstAxis, secondAxis) {
       "firstAxis and secondAxis must be east, north, up, west, south or down."
     );
   }
-  var thirdAxis = vectorProductLocalFrame[firstAxis][secondAxis];
+  const thirdAxis = vectorProductLocalFrame[firstAxis][secondAxis];
 
   /**
    * Computes a 4x4 transformation matrix from a reference frame
@@ -118,8 +118,8 @@ Transforms.localFrameToFixedFrameGenerator = function (firstAxis, secondAxis) {
    * @param {Matrix4} [result] The object onto which to store the result.
    * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
    */
-  var resultat;
-  var hashAxis = firstAxis + secondAxis;
+  let resultat;
+  const hashAxis = firstAxis + secondAxis;
   if (defined(localFrameToFixedFrameCache[hashAxis])) {
     resultat = localFrameToFixedFrameCache[hashAxis];
   } else {
@@ -156,7 +156,7 @@ Transforms.localFrameToFixedFrameGenerator = function (firstAxis, secondAxis) {
         CesiumMath.equalsEpsilon(origin.y, 0.0, CesiumMath.EPSILON14)
       ) {
         // If x and y are zero, assume origin is at a pole, which is a special case.
-        var sign = CesiumMath.sign(origin.z);
+        const sign = CesiumMath.sign(origin.z);
 
         Cartesian3.unpack(
           degeneratePositionLocalFrame[firstAxis],
@@ -200,8 +200,8 @@ Transforms.localFrameToFixedFrameGenerator = function (firstAxis, secondAxis) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         ellipsoid.geodeticSurfaceNormal(origin, scratchCalculateCartesian.up);
 
-        var up = scratchCalculateCartesian.up;
-        var east = scratchCalculateCartesian.east;
+        const up = scratchCalculateCartesian.up;
+        const east = scratchCalculateCartesian.east;
         east.x = -origin.y;
         east.y = origin.x;
         east.z = 0.0;
@@ -355,9 +355,9 @@ Transforms.northWestUpToFixedFrame = Transforms.localFrameToFixedFrameGenerator(
   "west"
 );
 
-var scratchHPRQuaternion = new Quaternion();
-var scratchScale = new Cartesian3(1.0, 1.0, 1.0);
-var scratchHPRMatrix4 = new Matrix4();
+const scratchHPRQuaternion = new Quaternion();
+const scratchScale = new Cartesian3(1.0, 1.0, 1.0);
+const scratchHPRMatrix4 = new Matrix4();
 
 /**
  * Computes a 4x4 transformation matrix from a reference frame with axes computed from the heading-pitch-roll angles
@@ -397,11 +397,11 @@ Transforms.headingPitchRollToFixedFrame = function (
     fixedFrameTransform,
     Transforms.eastNorthUpToFixedFrame
   );
-  var hprQuaternion = Quaternion.fromHeadingPitchRoll(
+  const hprQuaternion = Quaternion.fromHeadingPitchRoll(
     headingPitchRoll,
     scratchHPRQuaternion
   );
-  var hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(
+  const hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(
     Cartesian3.ZERO,
     hprQuaternion,
     scratchScale,
@@ -411,8 +411,8 @@ Transforms.headingPitchRollToFixedFrame = function (
   return Matrix4.multiply(result, hprMatrix, result);
 };
 
-var scratchENUMatrix4 = new Matrix4();
-var scratchHPRMatrix3 = new Matrix3();
+const scratchENUMatrix4 = new Matrix4();
+const scratchHPRMatrix3 = new Matrix3();
 
 /**
  * Computes a quaternion from a reference frame with axes computed from the heading-pitch-roll angles
@@ -448,23 +448,23 @@ Transforms.headingPitchRollQuaternion = function (
   Check.typeOf.object("HeadingPitchRoll", headingPitchRoll);
   //>>includeEnd('debug');
 
-  var transform = Transforms.headingPitchRollToFixedFrame(
+  const transform = Transforms.headingPitchRollToFixedFrame(
     origin,
     headingPitchRoll,
     ellipsoid,
     fixedFrameTransform,
     scratchENUMatrix4
   );
-  var rotation = Matrix4.getMatrix3(transform, scratchHPRMatrix3);
+  const rotation = Matrix4.getMatrix3(transform, scratchHPRMatrix3);
   return Quaternion.fromRotationMatrix(rotation, result);
 };
 
-var noScale = new Cartesian3(1.0, 1.0, 1.0);
-var hprCenterScratch = new Cartesian3();
-var ffScratch = new Matrix4();
-var hprTransformScratch = new Matrix4();
-var hprRotationScratch = new Matrix3();
-var hprQuaternionScratch = new Quaternion();
+const noScale = new Cartesian3(1.0, 1.0, 1.0);
+const hprCenterScratch = new Cartesian3();
+const ffScratch = new Matrix4();
+const hprTransformScratch = new Matrix4();
+const hprRotationScratch = new Matrix3();
+const hprQuaternionScratch = new Quaternion();
 /**
  * Computes heading-pitch-roll angles from a transform in a particular reference frame. Heading is the rotation from the local north
  * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
@@ -496,18 +496,18 @@ Transforms.fixedFrameToHeadingPitchRoll = function (
     result = new HeadingPitchRoll();
   }
 
-  var center = Matrix4.getTranslation(transform, hprCenterScratch);
+  const center = Matrix4.getTranslation(transform, hprCenterScratch);
   if (Cartesian3.equals(center, Cartesian3.ZERO)) {
     result.heading = 0;
     result.pitch = 0;
     result.roll = 0;
     return result;
   }
-  var toFixedFrame = Matrix4.inverseTransformation(
+  let toFixedFrame = Matrix4.inverseTransformation(
     fixedFrameTransform(center, ellipsoid, ffScratch),
     ffScratch
   );
-  var transformCopy = Matrix4.setScale(transform, noScale, hprTransformScratch);
+  let transformCopy = Matrix4.setScale(transform, noScale, hprTransformScratch);
   transformCopy = Matrix4.setTranslation(
     transformCopy,
     Cartesian3.ZERO,
@@ -515,7 +515,7 @@ Transforms.fixedFrameToHeadingPitchRoll = function (
   );
 
   toFixedFrame = Matrix4.multiply(toFixedFrame, transformCopy, toFixedFrame);
-  var quaternionRotation = Quaternion.fromRotationMatrix(
+  let quaternionRotation = Quaternion.fromRotationMatrix(
     Matrix4.getMatrix3(toFixedFrame, hprRotationScratch),
     hprQuaternionScratch
   );
@@ -527,14 +527,14 @@ Transforms.fixedFrameToHeadingPitchRoll = function (
   return HeadingPitchRoll.fromQuaternion(quaternionRotation, result);
 };
 
-var gmstConstant0 = 6 * 3600 + 41 * 60 + 50.54841;
-var gmstConstant1 = 8640184.812866;
-var gmstConstant2 = 0.093104;
-var gmstConstant3 = -6.2e-6;
-var rateCoef = 1.1772758384668e-19;
-var wgs84WRPrecessing = 7.2921158553e-5;
-var twoPiOverSecondsInDay = CesiumMath.TWO_PI / 86400.0;
-var dateInUtc = new JulianDate();
+const gmstConstant0 = 6 * 3600 + 41 * 60 + 50.54841;
+const gmstConstant1 = 8640184.812866;
+const gmstConstant2 = 0.093104;
+const gmstConstant3 = -6.2e-6;
+const rateCoef = 1.1772758384668e-19;
+const wgs84WRPrecessing = 7.2921158553e-5;
+const twoPiOverSecondsInDay = CesiumMath.TWO_PI / 86400.0;
+let dateInUtc = new JulianDate();
 
 /**
  * Computes a rotation matrix to transform a point or vector from True Equator Mean Equinox (TEME) axes to the
@@ -571,28 +571,28 @@ Transforms.computeTemeToPseudoFixedMatrix = function (date, result) {
     -JulianDate.computeTaiMinusUtc(date),
     dateInUtc
   );
-  var utcDayNumber = dateInUtc.dayNumber;
-  var utcSecondsIntoDay = dateInUtc.secondsOfDay;
+  const utcDayNumber = dateInUtc.dayNumber;
+  const utcSecondsIntoDay = dateInUtc.secondsOfDay;
 
-  var t;
-  var diffDays = utcDayNumber - 2451545;
+  let t;
+  const diffDays = utcDayNumber - 2451545;
   if (utcSecondsIntoDay >= 43200.0) {
     t = (diffDays + 0.5) / TimeConstants.DAYS_PER_JULIAN_CENTURY;
   } else {
     t = (diffDays - 0.5) / TimeConstants.DAYS_PER_JULIAN_CENTURY;
   }
 
-  var gmst0 =
+  const gmst0 =
     gmstConstant0 +
     t * (gmstConstant1 + t * (gmstConstant2 + t * gmstConstant3));
-  var angle = (gmst0 * twoPiOverSecondsInDay) % CesiumMath.TWO_PI;
-  var ratio = wgs84WRPrecessing + rateCoef * (utcDayNumber - 2451545.5);
-  var secondsSinceMidnight =
+  const angle = (gmst0 * twoPiOverSecondsInDay) % CesiumMath.TWO_PI;
+  const ratio = wgs84WRPrecessing + rateCoef * (utcDayNumber - 2451545.5);
+  const secondsSinceMidnight =
     (utcSecondsIntoDay + TimeConstants.SECONDS_PER_DAY * 0.5) %
     TimeConstants.SECONDS_PER_DAY;
-  var gha = angle + ratio * secondsSinceMidnight;
-  var cosGha = Math.cos(gha);
-  var sinGha = Math.sin(gha);
+  const gha = angle + ratio * secondsSinceMidnight;
+  const cosGha = Math.cos(gha);
+  const sinGha = Math.sin(gha);
 
   if (!defined(result)) {
     return new Matrix3(
@@ -644,8 +644,8 @@ Transforms.iau2006XysData = new Iau2006XysData();
  */
 Transforms.earthOrientationParameters = EarthOrientationParameters.NONE;
 
-var ttMinusTai = 32.184;
-var j2000ttDays = 2451545.0;
+const ttMinusTai = 32.184;
+const j2000ttDays = 2451545.0;
 
 /**
  * Preloads the data necessary to transform between the ICRF and Fixed axes, in either
@@ -669,18 +669,18 @@ var j2000ttDays = 2451545.0;
  * @see when
  */
 Transforms.preloadIcrfFixed = function (timeInterval) {
-  var startDayTT = timeInterval.start.dayNumber;
-  var startSecondTT = timeInterval.start.secondsOfDay + ttMinusTai;
-  var stopDayTT = timeInterval.stop.dayNumber;
-  var stopSecondTT = timeInterval.stop.secondsOfDay + ttMinusTai;
+  const startDayTT = timeInterval.start.dayNumber;
+  const startSecondTT = timeInterval.start.secondsOfDay + ttMinusTai;
+  const stopDayTT = timeInterval.stop.dayNumber;
+  const stopSecondTT = timeInterval.stop.secondsOfDay + ttMinusTai;
 
-  var xysPromise = Transforms.iau2006XysData.preload(
+  const xysPromise = Transforms.iau2006XysData.preload(
     startDayTT,
     startSecondTT,
     stopDayTT,
     stopSecondTT
   );
-  var eopPromise = Transforms.earthOrientationParameters.getPromiseToLoad();
+  const eopPromise = Transforms.earthOrientationParameters.getPromiseToLoad();
 
   return when.all([xysPromise, eopPromise]);
 };
@@ -721,7 +721,7 @@ Transforms.computeIcrfToFixedMatrix = function (date, result) {
     result = new Matrix3();
   }
 
-  var fixedToIcrfMtx = Transforms.computeFixedToIcrfMatrix(date, result);
+  const fixedToIcrfMtx = Transforms.computeFixedToIcrfMatrix(date, result);
   if (!defined(fixedToIcrfMtx)) {
     return undefined;
   }
@@ -729,8 +729,8 @@ Transforms.computeIcrfToFixedMatrix = function (date, result) {
   return Matrix3.transpose(fixedToIcrfMtx, result);
 };
 
-var xysScratch = new Iau2006XysSample(0.0, 0.0, 0.0);
-var eopScratch = new EarthOrientationParametersSample(
+const xysScratch = new Iau2006XysSample(0.0, 0.0, 0.0);
+const eopScratch = new EarthOrientationParametersSample(
   0.0,
   0.0,
   0.0,
@@ -738,8 +738,8 @@ var eopScratch = new EarthOrientationParametersSample(
   0.0,
   0.0
 );
-var rotation1Scratch = new Matrix3();
-var rotation2Scratch = new Matrix3();
+const rotation1Scratch = new Matrix3();
+const rotation2Scratch = new Matrix3();
 
 /**
  * Computes a rotation matrix to transform a point or vector from the Earth-Fixed frame axes (ITRF)
@@ -778,7 +778,7 @@ Transforms.computeFixedToIcrfMatrix = function (date, result) {
   }
 
   // Compute pole wander
-  var eop = Transforms.earthOrientationParameters.compute(date, eopScratch);
+  const eop = Transforms.earthOrientationParameters.compute(date, eopScratch);
   if (!defined(eop)) {
     return undefined;
   }
@@ -786,12 +786,12 @@ Transforms.computeFixedToIcrfMatrix = function (date, result) {
   // There is no external conversion to Terrestrial Time (TT).
   // So use International Atomic Time (TAI) and convert using offsets.
   // Here we are assuming that dayTT and secondTT are positive
-  var dayTT = date.dayNumber;
+  const dayTT = date.dayNumber;
   // It's possible here that secondTT could roll over 86400
   // This does not seem to affect the precision (unit tests check for this)
-  var secondTT = date.secondsOfDay + ttMinusTai;
+  const secondTT = date.secondsOfDay + ttMinusTai;
 
-  var xys = Transforms.iau2006XysData.computeXysRadians(
+  const xys = Transforms.iau2006XysData.computeXysRadians(
     dayTT,
     secondTT,
     xysScratch
@@ -800,13 +800,13 @@ Transforms.computeFixedToIcrfMatrix = function (date, result) {
     return undefined;
   }
 
-  var x = xys.x + eop.xPoleOffset;
-  var y = xys.y + eop.yPoleOffset;
+  const x = xys.x + eop.xPoleOffset;
+  const y = xys.y + eop.yPoleOffset;
 
   // Compute XYS rotation
-  var a = 1.0 / (1.0 + Math.sqrt(1.0 - x * x - y * y));
+  const a = 1.0 / (1.0 + Math.sqrt(1.0 - x * x - y * y));
 
-  var rotation1 = rotation1Scratch;
+  const rotation1 = rotation1Scratch;
   rotation1[0] = 1.0 - a * x * x;
   rotation1[3] = -a * x * y;
   rotation1[6] = x;
@@ -817,14 +817,14 @@ Transforms.computeFixedToIcrfMatrix = function (date, result) {
   rotation1[5] = -y;
   rotation1[8] = 1 - a * (x * x + y * y);
 
-  var rotation2 = Matrix3.fromRotationZ(-xys.s, rotation2Scratch);
-  var matrixQ = Matrix3.multiply(rotation1, rotation2, rotation1Scratch);
+  const rotation2 = Matrix3.fromRotationZ(-xys.s, rotation2Scratch);
+  const matrixQ = Matrix3.multiply(rotation1, rotation2, rotation1Scratch);
 
   // Similar to TT conversions above
   // It's possible here that secondTT could roll over 86400
   // This does not seem to affect the precision (unit tests check for this)
-  var dateUt1day = date.dayNumber;
-  var dateUt1sec =
+  const dateUt1day = date.dayNumber;
+  const dateUt1sec =
     date.secondsOfDay - JulianDate.computeTaiMinusUtc(date) + eop.ut1MinusUtc;
 
   // Compute Earth rotation angle
@@ -837,34 +837,34 @@ Transforms.computeFixedToIcrfMatrix = function (date, result) {
   //    era = a + (JulianDayNumber - 2451545) + FractionOfDay + b (JulianDayNumber - 2451545 + FractionOfDay)
   //    era = a + FractionOfDay + b (JulianDayNumber - 2451545 + FractionOfDay)
   // since (JulianDayNumber - 2451545) represents an integer number of revolutions which will be discarded anyway.
-  var daysSinceJ2000 = dateUt1day - 2451545;
-  var fractionOfDay = dateUt1sec / TimeConstants.SECONDS_PER_DAY;
-  var era =
+  const daysSinceJ2000 = dateUt1day - 2451545;
+  const fractionOfDay = dateUt1sec / TimeConstants.SECONDS_PER_DAY;
+  let era =
     0.779057273264 +
     fractionOfDay +
     0.00273781191135448 * (daysSinceJ2000 + fractionOfDay);
   era = (era % 1.0) * CesiumMath.TWO_PI;
 
-  var earthRotation = Matrix3.fromRotationZ(era, rotation2Scratch);
+  const earthRotation = Matrix3.fromRotationZ(era, rotation2Scratch);
 
   // pseudoFixed to ICRF
-  var pfToIcrf = Matrix3.multiply(matrixQ, earthRotation, rotation1Scratch);
+  const pfToIcrf = Matrix3.multiply(matrixQ, earthRotation, rotation1Scratch);
 
   // Compute pole wander matrix
-  var cosxp = Math.cos(eop.xPoleWander);
-  var cosyp = Math.cos(eop.yPoleWander);
-  var sinxp = Math.sin(eop.xPoleWander);
-  var sinyp = Math.sin(eop.yPoleWander);
+  const cosxp = Math.cos(eop.xPoleWander);
+  const cosyp = Math.cos(eop.yPoleWander);
+  const sinxp = Math.sin(eop.xPoleWander);
+  const sinyp = Math.sin(eop.yPoleWander);
 
-  var ttt = dayTT - j2000ttDays + secondTT / TimeConstants.SECONDS_PER_DAY;
+  let ttt = dayTT - j2000ttDays + secondTT / TimeConstants.SECONDS_PER_DAY;
   ttt /= 36525.0;
 
   // approximate sp value in rad
-  var sp = (-47.0e-6 * ttt * CesiumMath.RADIANS_PER_DEGREE) / 3600.0;
-  var cossp = Math.cos(sp);
-  var sinsp = Math.sin(sp);
+  const sp = (-47.0e-6 * ttt * CesiumMath.RADIANS_PER_DEGREE) / 3600.0;
+  const cossp = Math.cos(sp);
+  const sinsp = Math.sin(sp);
 
-  var fToPfMtx = rotation2Scratch;
+  const fToPfMtx = rotation2Scratch;
   fToPfMtx[0] = cosxp * cossp;
   fToPfMtx[1] = cosxp * sinsp;
   fToPfMtx[2] = sinxp;
@@ -878,7 +878,7 @@ Transforms.computeFixedToIcrfMatrix = function (date, result) {
   return Matrix3.multiply(pfToIcrf, fToPfMtx, result);
 };
 
-var pointToWindowCoordinatesTemp = new Cartesian4();
+const pointToWindowCoordinatesTemp = new Cartesian4();
 
 /**
  * Transform a point from model coordinates to window coordinates.
@@ -932,7 +932,7 @@ Transforms.pointToGLWindowCoordinates = function (
     result = new Cartesian2();
   }
 
-  var tmp = pointToWindowCoordinatesTemp;
+  const tmp = pointToWindowCoordinatesTemp;
 
   Matrix4.multiplyByVector(
     modelViewProjectionMatrix,
@@ -944,9 +944,9 @@ Transforms.pointToGLWindowCoordinates = function (
   return Cartesian2.fromCartesian4(tmp, result);
 };
 
-var normalScratch = new Cartesian3();
-var rightScratch = new Cartesian3();
-var upScratch = new Cartesian3();
+const normalScratch = new Cartesian3();
+const rightScratch = new Cartesian3();
+const upScratch = new Cartesian3();
 
 /**
  * Transform a position and velocity to a rotation matrix.
@@ -973,17 +973,17 @@ Transforms.rotationMatrixFromPositionVelocity = function (
   }
   //>>includeEnd('debug');
 
-  var normal = defaultValue(ellipsoid, Ellipsoid.WGS84).geodeticSurfaceNormal(
+  const normal = defaultValue(ellipsoid, Ellipsoid.WGS84).geodeticSurfaceNormal(
     position,
     normalScratch
   );
-  var right = Cartesian3.cross(velocity, normal, rightScratch);
+  let right = Cartesian3.cross(velocity, normal, rightScratch);
 
   if (Cartesian3.equalsEpsilon(right, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
     right = Cartesian3.clone(Cartesian3.UNIT_X, right);
   }
 
-  var up = Cartesian3.cross(right, velocity, upScratch);
+  const up = Cartesian3.cross(right, velocity, upScratch);
   Cartesian3.normalize(up, up);
   Cartesian3.cross(velocity, up, right);
   Cartesian3.negate(right, right);
@@ -1006,7 +1006,7 @@ Transforms.rotationMatrixFromPositionVelocity = function (
   return result;
 };
 
-var swizzleMatrix = new Matrix4(
+const swizzleMatrix = new Matrix4(
   0.0,
   0.0,
   1.0,
@@ -1025,12 +1025,12 @@ var swizzleMatrix = new Matrix4(
   1.0
 );
 
-var scratchCartographic = new Cartographic();
-var scratchCartesian3Projection = new Cartesian3();
-var scratchCenter = new Cartesian3();
-var scratchRotation = new Matrix3();
-var scratchFromENU = new Matrix4();
-var scratchToENU = new Matrix4();
+const scratchCartographic = new Cartographic();
+const scratchCartesian3Projection = new Cartesian3();
+const scratchCenter = new Cartesian3();
+const scratchRotation = new Matrix3();
+const scratchFromENU = new Matrix4();
+const scratchToENU = new Matrix4();
 
 /**
  * @private
@@ -1048,15 +1048,15 @@ Transforms.basisTo2D = function (projection, matrix, result) {
   }
   //>>includeEnd('debug');
 
-  var rtcCenter = Matrix4.getTranslation(matrix, scratchCenter);
-  var ellipsoid = projection.ellipsoid;
+  const rtcCenter = Matrix4.getTranslation(matrix, scratchCenter);
+  const ellipsoid = projection.ellipsoid;
 
   // Get the 2D Center
-  var cartographic = ellipsoid.cartesianToCartographic(
+  const cartographic = ellipsoid.cartesianToCartographic(
     rtcCenter,
     scratchCartographic
   );
-  var projectedPosition = projection.project(
+  const projectedPosition = projection.project(
     cartographic,
     scratchCartesian3Projection
   );
@@ -1068,14 +1068,14 @@ Transforms.basisTo2D = function (projection, matrix, result) {
   );
 
   // Assuming the instance are positioned in WGS84, invert the WGS84 transform to get the local transform and then convert to 2D
-  var fromENU = Transforms.eastNorthUpToFixedFrame(
+  const fromENU = Transforms.eastNorthUpToFixedFrame(
     rtcCenter,
     ellipsoid,
     scratchFromENU
   );
-  var toENU = Matrix4.inverseTransformation(fromENU, scratchToENU);
-  var rotation = Matrix4.getMatrix3(matrix, scratchRotation);
-  var local = Matrix4.multiplyByMatrix3(toENU, rotation, result);
+  const toENU = Matrix4.inverseTransformation(fromENU, scratchToENU);
+  const rotation = Matrix4.getMatrix3(matrix, scratchRotation);
+  const local = Matrix4.multiplyByMatrix3(toENU, rotation, result);
   Matrix4.multiply(swizzleMatrix, local, result); // Swap x, y, z for 2D
   Matrix4.setTranslation(result, projectedPosition, result); // Use the projected center
 
@@ -1098,20 +1098,20 @@ Transforms.wgs84To2DModelMatrix = function (projection, center, result) {
   }
   //>>includeEnd('debug');
 
-  var ellipsoid = projection.ellipsoid;
+  const ellipsoid = projection.ellipsoid;
 
-  var fromENU = Transforms.eastNorthUpToFixedFrame(
+  const fromENU = Transforms.eastNorthUpToFixedFrame(
     center,
     ellipsoid,
     scratchFromENU
   );
-  var toENU = Matrix4.inverseTransformation(fromENU, scratchToENU);
+  const toENU = Matrix4.inverseTransformation(fromENU, scratchToENU);
 
-  var cartographic = ellipsoid.cartesianToCartographic(
+  const cartographic = ellipsoid.cartesianToCartographic(
     center,
     scratchCartographic
   );
-  var projectedPosition = projection.project(
+  const projectedPosition = projection.project(
     cartographic,
     scratchCartesian3Projection
   );
@@ -1122,7 +1122,10 @@ Transforms.wgs84To2DModelMatrix = function (projection, center, result) {
     projectedPosition
   );
 
-  var translation = Matrix4.fromTranslation(projectedPosition, scratchFromENU);
+  const translation = Matrix4.fromTranslation(
+    projectedPosition,
+    scratchFromENU
+  );
   Matrix4.multiply(swizzleMatrix, toENU, result);
   Matrix4.multiply(translation, result, result);
 

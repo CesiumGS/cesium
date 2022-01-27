@@ -8,7 +8,7 @@ import { TranslationRotationScale } from "../../Source/Cesium.js";
 
 describe("Core/Matrix4", function () {
   it("default constructor creates values array with all zeros.", function () {
-    var matrix = new Matrix4();
+    const matrix = new Matrix4();
     expect(matrix[Matrix4.COLUMN0ROW0]).toEqual(0.0);
     expect(matrix[Matrix4.COLUMN1ROW0]).toEqual(0.0);
     expect(matrix[Matrix4.COLUMN2ROW0]).toEqual(0.0);
@@ -28,7 +28,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("constructor sets properties from parameters.", function () {
-    var matrix = new Matrix4(
+    const matrix = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -65,8 +65,8 @@ describe("Core/Matrix4", function () {
   });
 
   it("can pack and unpack", function () {
-    var array = [];
-    var matrix4 = new Matrix4(
+    const array = [];
+    const matrix4 = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -90,9 +90,9 @@ describe("Core/Matrix4", function () {
   });
 
   it("can pack and unpack with offset", function () {
-    var packed = new Array(3);
-    var offset = 3;
-    var matrix4 = new Matrix4(
+    const packed = new Array(3);
+    const offset = 3;
+    const matrix4 = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -114,21 +114,21 @@ describe("Core/Matrix4", function () {
     Matrix4.pack(matrix4, packed, offset);
     expect(packed.length).toEqual(offset + Matrix4.packedLength);
 
-    var result = new Matrix4();
-    var returnedResult = Matrix4.unpack(packed, offset, result);
+    const result = new Matrix4();
+    const returnedResult = Matrix4.unpack(packed, offset, result);
     expect(returnedResult).toBe(result);
     expect(result).toEqual(matrix4);
   });
 
   it("pack throws with undefined matrix4", function () {
-    var array = [];
+    const array = [];
     expect(function () {
       Matrix4.pack(undefined, array);
     }).toThrowDeveloperError();
   });
 
   it("pack throws with undefined array", function () {
-    var matrix4 = new Matrix4();
+    const matrix4 = new Matrix4();
     expect(function () {
       Matrix4.pack(matrix4, undefined);
     }).toThrowDeveloperError();
@@ -141,7 +141,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("fromArray works without a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -159,7 +159,7 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var matrix = Matrix4.fromArray([
+    const matrix = Matrix4.fromArray([
       1.0,
       5.0,
       9.0,
@@ -181,7 +181,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("fromArray works with a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -199,8 +199,8 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var result = new Matrix4();
-    var matrix = Matrix4.fromArray(
+    const result = new Matrix4();
+    const matrix = Matrix4.fromArray(
       [
         1.0,
         5.0,
@@ -227,7 +227,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("fromArray works with a starting index", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -245,8 +245,8 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var result = new Matrix4();
-    var matrix = Matrix4.fromArray(
+    const result = new Matrix4();
+    const matrix = Matrix4.fromArray(
       [
         0.0,
         0.0,
@@ -276,7 +276,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("fromRowMajorArray works without a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -294,7 +294,7 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var matrix = Matrix4.fromRowMajorArray([
+    const matrix = Matrix4.fromRowMajorArray([
       1.0,
       2.0,
       3.0,
@@ -316,7 +316,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("fromRowMajorArray works with a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -334,8 +334,8 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var result = new Matrix4();
-    var matrix = Matrix4.fromRowMajorArray(
+    const result = new Matrix4();
+    const matrix = Matrix4.fromRowMajorArray(
       [
         1.0,
         2.0,
@@ -361,7 +361,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("fromColumnMajorArray works without a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -379,7 +379,7 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var matrix = Matrix4.fromColumnMajorArray([
+    const matrix = Matrix4.fromColumnMajorArray([
       1.0,
       5.0,
       9.0,
@@ -401,7 +401,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("fromColumnMajorArray works with a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -419,8 +419,8 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var result = new Matrix4();
-    var matrix = Matrix4.fromColumnMajorArray(
+    const result = new Matrix4();
+    const matrix = Matrix4.fromColumnMajorArray(
       [
         1.0,
         5.0,
@@ -446,7 +446,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("clone works without a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -464,13 +464,13 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var returnedResult = expected.clone();
+    const returnedResult = expected.clone();
     expect(returnedResult).not.toBe(expected);
     expect(returnedResult).toEqual(expected);
   });
 
   it("clone works with a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -488,15 +488,15 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var result = new Matrix4();
-    var returnedResult = expected.clone(result);
+    const result = new Matrix4();
+    const returnedResult = expected.clone(result);
     expect(returnedResult).toBe(result);
     expect(returnedResult).not.toBe(expected);
     expect(returnedResult).toEqual(expected);
   });
 
   it("fromRotationTranslation works without a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -514,7 +514,7 @@ describe("Core/Matrix4", function () {
       0.0,
       1.0
     );
-    var returnedResult = Matrix4.fromRotationTranslation(
+    const returnedResult = Matrix4.fromRotationTranslation(
       new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0),
       new Cartesian3(10.0, 11.0, 12.0)
     );
@@ -523,7 +523,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("fromRotationTranslation works with a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -541,8 +541,8 @@ describe("Core/Matrix4", function () {
       0.0,
       1.0
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.fromRotationTranslation(
+    const result = new Matrix4();
+    const returnedResult = Matrix4.fromRotationTranslation(
       new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0),
       new Cartesian3(10.0, 11.0, 12.0),
       result
@@ -553,7 +553,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("fromTranslation works without a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1.0,
       0.0,
       0.0,
@@ -571,7 +571,7 @@ describe("Core/Matrix4", function () {
       0.0,
       1.0
     );
-    var returnedResult = Matrix4.fromTranslation(
+    const returnedResult = Matrix4.fromTranslation(
       new Cartesian3(10.0, 11.0, 12.0)
     );
     expect(returnedResult).not.toBe(expected);
@@ -579,7 +579,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("fromTranslationQuaternionRotationScale works without a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       7.0,
       0.0,
       0.0,
@@ -597,7 +597,7 @@ describe("Core/Matrix4", function () {
       0.0,
       1.0
     );
-    var returnedResult = Matrix4.fromTranslationQuaternionRotationScale(
+    const returnedResult = Matrix4.fromTranslationQuaternionRotationScale(
       new Cartesian3(1.0, 2.0, 3.0), // translation
       Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(-90.0)), // rotation
       new Cartesian3(7.0, 8.0, 9.0)
@@ -607,7 +607,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("fromTranslationQuaternionRotationScale works with a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       7.0,
       0.0,
       0.0,
@@ -625,8 +625,8 @@ describe("Core/Matrix4", function () {
       0.0,
       1.0
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.fromTranslationQuaternionRotationScale(
+    const result = new Matrix4();
+    const returnedResult = Matrix4.fromTranslationQuaternionRotationScale(
       new Cartesian3(1.0, 2.0, 3.0), // translation
       Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(-90.0)), // rotation
       new Cartesian3(7.0, 8.0, 9.0), // scale
@@ -638,7 +638,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("fromTranslationRotationScale works without a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       7.0,
       0.0,
       0.0,
@@ -657,19 +657,19 @@ describe("Core/Matrix4", function () {
       1.0
     );
 
-    var trs = new TranslationRotationScale(
+    const trs = new TranslationRotationScale(
       new Cartesian3(1.0, 2.0, 3.0),
       Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(-90.0)),
       new Cartesian3(7.0, 8.0, 9.0)
     );
 
-    var returnedResult = Matrix4.fromTranslationRotationScale(trs);
+    const returnedResult = Matrix4.fromTranslationRotationScale(trs);
     expect(returnedResult).not.toBe(expected);
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON14);
   });
 
   it("fromTranslationRotationScale works with a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       7.0,
       0.0,
       0.0,
@@ -688,21 +688,21 @@ describe("Core/Matrix4", function () {
       1.0
     );
 
-    var trs = new TranslationRotationScale(
+    const trs = new TranslationRotationScale(
       new Cartesian3(1.0, 2.0, 3.0),
       Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(-90.0)),
       new Cartesian3(7.0, 8.0, 9.0)
     );
 
-    var result = new Matrix4();
-    var returnedResult = Matrix4.fromTranslationRotationScale(trs, result);
+    const result = new Matrix4();
+    const returnedResult = Matrix4.fromTranslationRotationScale(trs, result);
     expect(returnedResult).toBe(result);
     expect(returnedResult).not.toBe(expected);
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON14);
   });
 
   it("fromTranslation works with a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1.0,
       0.0,
       0.0,
@@ -720,8 +720,8 @@ describe("Core/Matrix4", function () {
       0.0,
       1.0
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.fromTranslation(
+    const result = new Matrix4();
+    const returnedResult = Matrix4.fromTranslation(
       new Cartesian3(10.0, 11.0, 12.0),
       result
     );
@@ -731,7 +731,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("fromScale works without a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       7.0,
       0.0,
       0.0,
@@ -749,13 +749,13 @@ describe("Core/Matrix4", function () {
       0.0,
       1.0
     );
-    var returnedResult = Matrix4.fromScale(new Cartesian3(7.0, 8.0, 9.0));
+    const returnedResult = Matrix4.fromScale(new Cartesian3(7.0, 8.0, 9.0));
     expect(returnedResult).not.toBe(expected);
     expect(returnedResult).toEqual(expected);
   });
 
   it("fromScale works with a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       7.0,
       0.0,
       0.0,
@@ -773,8 +773,8 @@ describe("Core/Matrix4", function () {
       0.0,
       1.0
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.fromScale(
+    const result = new Matrix4();
+    const returnedResult = Matrix4.fromScale(
       new Cartesian3(7.0, 8.0, 9.0),
       result
     );
@@ -784,7 +784,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("fromUniformScale works without a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       2.0,
       0.0,
       0.0,
@@ -802,12 +802,12 @@ describe("Core/Matrix4", function () {
       0.0,
       1.0
     );
-    var returnedResult = Matrix4.fromUniformScale(2.0);
+    const returnedResult = Matrix4.fromUniformScale(2.0);
     expect(returnedResult).toEqual(expected);
   });
 
   it("fromUniformScale works with a result parameter", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       2.0,
       0.0,
       0.0,
@@ -825,14 +825,14 @@ describe("Core/Matrix4", function () {
       0.0,
       1.0
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.fromUniformScale(2.0, result);
+    const result = new Matrix4();
+    const returnedResult = Matrix4.fromUniformScale(2.0, result);
     expect(returnedResult).toBe(result);
     expect(returnedResult).toEqual(expected);
   });
 
   it("computePerspectiveFieldOfView works", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1,
       0,
       0,
@@ -850,8 +850,8 @@ describe("Core/Matrix4", function () {
       -1,
       0
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.computePerspectiveFieldOfView(
+    const result = new Matrix4();
+    const returnedResult = Matrix4.computePerspectiveFieldOfView(
       CesiumMath.PI_OVER_TWO,
       1,
       1,
@@ -862,8 +862,8 @@ describe("Core/Matrix4", function () {
   });
 
   it("fromCamera works without a result parameter", function () {
-    var expected = Matrix4.IDENTITY;
-    var returnedResult = Matrix4.fromCamera({
+    const expected = Matrix4.IDENTITY;
+    const returnedResult = Matrix4.fromCamera({
       position: Cartesian3.ZERO,
       direction: Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
       up: Cartesian3.UNIT_Y,
@@ -872,9 +872,9 @@ describe("Core/Matrix4", function () {
   });
 
   it("fromCamera works with a result parameter", function () {
-    var expected = Matrix4.IDENTITY;
-    var result = new Matrix4();
-    var returnedResult = Matrix4.fromCamera(
+    const expected = Matrix4.IDENTITY;
+    const result = new Matrix4();
+    const returnedResult = Matrix4.fromCamera(
       {
         position: Cartesian3.ZERO,
         direction: Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
@@ -887,7 +887,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("computeOrthographicOffCenter works", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       2,
       0,
       0,
@@ -905,8 +905,8 @@ describe("Core/Matrix4", function () {
       0,
       1
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.computeOrthographicOffCenter(
+    const result = new Matrix4();
+    const returnedResult = Matrix4.computeOrthographicOffCenter(
       0,
       1,
       2,
@@ -920,7 +920,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("computeViewportTransformation  works", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       2.0,
       0.0,
       0.0,
@@ -938,8 +938,8 @@ describe("Core/Matrix4", function () {
       0.0,
       1.0
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.computeViewportTransformation(
+    const result = new Matrix4();
+    const returnedResult = Matrix4.computeViewportTransformation(
       {
         x: 0,
         y: 0,
@@ -955,7 +955,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("computePerspectiveOffCenter works", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       2,
       0,
       3,
@@ -973,8 +973,8 @@ describe("Core/Matrix4", function () {
       -1,
       0
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.computePerspectiveOffCenter(
+    const result = new Matrix4();
+    const returnedResult = Matrix4.computePerspectiveOffCenter(
       1,
       2,
       2,
@@ -988,7 +988,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("computeInfinitePerspectiveOffCenter  works", function () {
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       2,
       0,
       3,
@@ -1006,8 +1006,8 @@ describe("Core/Matrix4", function () {
       -1,
       0
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.computeInfinitePerspectiveOffCenter(
+    const result = new Matrix4();
+    const returnedResult = Matrix4.computeInfinitePerspectiveOffCenter(
       1,
       2,
       2,
@@ -1019,7 +1019,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("toArray works without a result parameter", function () {
-    var expected = [
+    const expected = [
       1.0,
       2.0,
       3.0,
@@ -1037,7 +1037,7 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0,
     ];
-    var returnedResult = Matrix4.toArray(
+    const returnedResult = Matrix4.toArray(
       Matrix4.fromColumnMajorArray(expected)
     );
     expect(returnedResult).not.toBe(expected);
@@ -1045,7 +1045,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("toArray works with a result parameter", function () {
-    var expected = [
+    const expected = [
       1.0,
       2.0,
       3.0,
@@ -1063,8 +1063,8 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0,
     ];
-    var result = [];
-    var returnedResult = Matrix4.toArray(
+    const result = [];
+    const returnedResult = Matrix4.toArray(
       Matrix4.fromColumnMajorArray(expected),
       result
     );
@@ -1074,10 +1074,10 @@ describe("Core/Matrix4", function () {
   });
 
   it("getElementIndex works", function () {
-    var i = 0;
-    for (var col = 0; col < 4; col++) {
-      for (var row = 0; row < 4; row++) {
-        var index = Matrix4.getElementIndex(col, row);
+    let i = 0;
+    for (let col = 0; col < 4; col++) {
+      for (let row = 0; row < 4; row++) {
+        const index = Matrix4.getElementIndex(col, row);
         expect(index).toEqual(i);
         i++;
       }
@@ -1085,7 +1085,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("getColumn works for each column", function () {
-    var matrix = new Matrix4(
+    const matrix = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -1103,19 +1103,19 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var expectedColumn0 = new Cartesian4(1.0, 5.0, 9.0, 13.0);
-    var expectedColumn1 = new Cartesian4(2.0, 6.0, 10.0, 14.0);
-    var expectedColumn2 = new Cartesian4(3.0, 7.0, 11.0, 15.0);
-    var expectedColumn3 = new Cartesian4(4.0, 8.0, 12.0, 16.0);
+    const expectedColumn0 = new Cartesian4(1.0, 5.0, 9.0, 13.0);
+    const expectedColumn1 = new Cartesian4(2.0, 6.0, 10.0, 14.0);
+    const expectedColumn2 = new Cartesian4(3.0, 7.0, 11.0, 15.0);
+    const expectedColumn3 = new Cartesian4(4.0, 8.0, 12.0, 16.0);
 
-    var resultColumn0 = new Cartesian4();
-    var resultColumn1 = new Cartesian4();
-    var resultColumn2 = new Cartesian4();
-    var resultColumn3 = new Cartesian4();
-    var returnedResultColumn0 = Matrix4.getColumn(matrix, 0, resultColumn0);
-    var returnedResultColumn1 = Matrix4.getColumn(matrix, 1, resultColumn1);
-    var returnedResultColumn2 = Matrix4.getColumn(matrix, 2, resultColumn2);
-    var returnedResultColumn3 = Matrix4.getColumn(matrix, 3, resultColumn3);
+    const resultColumn0 = new Cartesian4();
+    const resultColumn1 = new Cartesian4();
+    const resultColumn2 = new Cartesian4();
+    const resultColumn3 = new Cartesian4();
+    const returnedResultColumn0 = Matrix4.getColumn(matrix, 0, resultColumn0);
+    const returnedResultColumn1 = Matrix4.getColumn(matrix, 1, resultColumn1);
+    const returnedResultColumn2 = Matrix4.getColumn(matrix, 2, resultColumn2);
+    const returnedResultColumn3 = Matrix4.getColumn(matrix, 3, resultColumn3);
 
     expect(resultColumn0).toBe(returnedResultColumn0);
     expect(resultColumn0).toEqual(expectedColumn0);
@@ -1128,7 +1128,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("setColumn works for each column", function () {
-    var matrix = new Matrix4(
+    const matrix = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -1147,9 +1147,9 @@ describe("Core/Matrix4", function () {
       16.0
     );
 
-    var result = new Matrix4();
+    const result = new Matrix4();
 
-    var expected = new Matrix4(
+    let expected = new Matrix4(
       17.0,
       2.0,
       3.0,
@@ -1167,7 +1167,7 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var returnedResult = Matrix4.setColumn(
+    let returnedResult = Matrix4.setColumn(
       matrix,
       0,
       new Cartesian4(17.0, 18.0, 19.0, 20.0),
@@ -1259,7 +1259,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("setTranslation works", function () {
-    var matrix = new Matrix4(
+    const matrix = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -1277,10 +1277,10 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var translation = new Cartesian3(-1.0, -2.0, -3.0);
-    var result = new Matrix4();
+    const translation = new Cartesian3(-1.0, -2.0, -3.0);
+    const result = new Matrix4();
 
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -1298,21 +1298,21 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var returnedResult = Matrix4.setTranslation(matrix, translation, result);
+    const returnedResult = Matrix4.setTranslation(matrix, translation, result);
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
   });
 
   it("setScale works", function () {
-    var matrix = Matrix4.clone(Matrix4.IDENTITY);
-    var result = new Matrix4();
-    var newScale = new Cartesian3(1.0, 2.0, 3.0);
+    const matrix = Matrix4.clone(Matrix4.IDENTITY);
+    const result = new Matrix4();
+    const newScale = new Cartesian3(1.0, 2.0, 3.0);
 
     expect(Matrix4.getScale(matrix, new Cartesian3())).toEqual(
       new Cartesian3(1.0, 1.0, 1.0)
     );
 
-    var returnedResult = Matrix4.setScale(matrix, newScale, result);
+    const returnedResult = Matrix4.setScale(matrix, newScale, result);
 
     expect(Matrix4.getScale(returnedResult, new Cartesian3())).toEqual(
       newScale
@@ -1321,7 +1321,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("getRow works for each row", function () {
-    var matrix = new Matrix4(
+    const matrix = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -1339,19 +1339,19 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var expectedRow0 = new Cartesian4(1.0, 2.0, 3.0, 4.0);
-    var expectedRow1 = new Cartesian4(5.0, 6.0, 7.0, 8.0);
-    var expectedRow2 = new Cartesian4(9.0, 10.0, 11.0, 12.0);
-    var expectedRow3 = new Cartesian4(13.0, 14.0, 15.0, 16.0);
+    const expectedRow0 = new Cartesian4(1.0, 2.0, 3.0, 4.0);
+    const expectedRow1 = new Cartesian4(5.0, 6.0, 7.0, 8.0);
+    const expectedRow2 = new Cartesian4(9.0, 10.0, 11.0, 12.0);
+    const expectedRow3 = new Cartesian4(13.0, 14.0, 15.0, 16.0);
 
-    var resultRow0 = new Cartesian4();
-    var resultRow1 = new Cartesian4();
-    var resultRow2 = new Cartesian4();
-    var resultRow3 = new Cartesian4();
-    var returnedResultRow0 = Matrix4.getRow(matrix, 0, resultRow0);
-    var returnedResultRow1 = Matrix4.getRow(matrix, 1, resultRow1);
-    var returnedResultRow2 = Matrix4.getRow(matrix, 2, resultRow2);
-    var returnedResultRow3 = Matrix4.getRow(matrix, 3, resultRow3);
+    const resultRow0 = new Cartesian4();
+    const resultRow1 = new Cartesian4();
+    const resultRow2 = new Cartesian4();
+    const resultRow3 = new Cartesian4();
+    const returnedResultRow0 = Matrix4.getRow(matrix, 0, resultRow0);
+    const returnedResultRow1 = Matrix4.getRow(matrix, 1, resultRow1);
+    const returnedResultRow2 = Matrix4.getRow(matrix, 2, resultRow2);
+    const returnedResultRow3 = Matrix4.getRow(matrix, 3, resultRow3);
 
     expect(resultRow0).toBe(returnedResultRow0);
     expect(resultRow0).toEqual(expectedRow0);
@@ -1364,7 +1364,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("setRow works for each row", function () {
-    var matrix = new Matrix4(
+    const matrix = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -1382,9 +1382,9 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var result = new Matrix4();
+    const result = new Matrix4();
 
-    var expected = new Matrix4(
+    let expected = new Matrix4(
       91.0,
       92.0,
       93.0,
@@ -1402,7 +1402,7 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var returnedResult = Matrix4.setRow(
+    let returnedResult = Matrix4.setRow(
       matrix,
       0,
       new Cartesian4(91.0, 92.0, 93.0, 94.0),
@@ -1494,9 +1494,9 @@ describe("Core/Matrix4", function () {
   });
 
   it("getScale works", function () {
-    var scale = new Cartesian3(1.0, 2.0, 3.0);
-    var result = new Cartesian3();
-    var computedScale = Matrix4.getScale(Matrix4.fromScale(scale), result);
+    const scale = new Cartesian3(1.0, 2.0, 3.0);
+    const result = new Cartesian3();
+    const computedScale = Matrix4.getScale(Matrix4.fromScale(scale), result);
 
     expect(computedScale).toBe(result);
     expect(computedScale).toEqualEpsilon(scale, CesiumMath.EPSILON14);
@@ -1509,7 +1509,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("getMaximumScale works", function () {
-    var m = Matrix4.fromScale(new Cartesian3(1.0, 2.0, 3.0));
+    const m = Matrix4.fromScale(new Cartesian3(1.0, 2.0, 3.0));
     expect(Matrix4.getMaximumScale(m)).toEqualEpsilon(
       3.0,
       CesiumMath.EPSILON14
@@ -1523,7 +1523,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("multiply works", function () {
-    var left = new Matrix4(
+    const left = new Matrix4(
       1,
       2,
       3,
@@ -1541,7 +1541,7 @@ describe("Core/Matrix4", function () {
       15,
       16
     );
-    var right = new Matrix4(
+    const right = new Matrix4(
       17,
       18,
       19,
@@ -1559,7 +1559,7 @@ describe("Core/Matrix4", function () {
       31,
       32
     );
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       250,
       260,
       270,
@@ -1577,14 +1577,14 @@ describe("Core/Matrix4", function () {
       1470,
       1528
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.multiply(left, right, result);
+    const result = new Matrix4();
+    const returnedResult = Matrix4.multiply(left, right, result);
     expect(returnedResult).toBe(result);
     expect(result).toEqual(expected);
   });
 
   it("multiply works with a result parameter that is an input result parameter", function () {
-    var left = new Matrix4(
+    const left = new Matrix4(
       1,
       2,
       3,
@@ -1602,7 +1602,7 @@ describe("Core/Matrix4", function () {
       15,
       16
     );
-    var right = new Matrix4(
+    const right = new Matrix4(
       17,
       18,
       19,
@@ -1620,7 +1620,7 @@ describe("Core/Matrix4", function () {
       31,
       32
     );
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       250,
       260,
       270,
@@ -1638,13 +1638,13 @@ describe("Core/Matrix4", function () {
       1470,
       1528
     );
-    var returnedResult = Matrix4.multiply(left, right, left);
+    const returnedResult = Matrix4.multiply(left, right, left);
     expect(returnedResult).toBe(left);
     expect(left).toEqual(expected);
   });
 
   it("add works", function () {
-    var left = new Matrix4(
+    const left = new Matrix4(
       1,
       2,
       3,
@@ -1662,7 +1662,7 @@ describe("Core/Matrix4", function () {
       15,
       16
     );
-    var right = new Matrix4(
+    const right = new Matrix4(
       17,
       18,
       19,
@@ -1680,7 +1680,7 @@ describe("Core/Matrix4", function () {
       31,
       32
     );
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       18,
       20,
       22,
@@ -1698,14 +1698,14 @@ describe("Core/Matrix4", function () {
       46,
       48
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.add(left, right, result);
+    const result = new Matrix4();
+    const returnedResult = Matrix4.add(left, right, result);
     expect(returnedResult).toBe(result);
     expect(result).toEqual(expected);
   });
 
   it("add works with a result parameter that is an input result parameter", function () {
-    var left = new Matrix4(
+    const left = new Matrix4(
       1,
       2,
       3,
@@ -1723,7 +1723,7 @@ describe("Core/Matrix4", function () {
       15,
       16
     );
-    var right = new Matrix4(
+    const right = new Matrix4(
       17,
       18,
       19,
@@ -1741,7 +1741,7 @@ describe("Core/Matrix4", function () {
       31,
       32
     );
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       18,
       20,
       22,
@@ -1759,13 +1759,13 @@ describe("Core/Matrix4", function () {
       46,
       48
     );
-    var returnedResult = Matrix4.add(left, right, left);
+    const returnedResult = Matrix4.add(left, right, left);
     expect(returnedResult).toBe(left);
     expect(left).toEqual(expected);
   });
 
   it("subtract works", function () {
-    var left = new Matrix4(
+    const left = new Matrix4(
       18,
       20,
       22,
@@ -1783,7 +1783,7 @@ describe("Core/Matrix4", function () {
       46,
       48
     );
-    var right = new Matrix4(
+    const right = new Matrix4(
       17,
       18,
       19,
@@ -1801,7 +1801,7 @@ describe("Core/Matrix4", function () {
       31,
       32
     );
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1,
       2,
       3,
@@ -1819,14 +1819,14 @@ describe("Core/Matrix4", function () {
       15,
       16
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.subtract(left, right, result);
+    const result = new Matrix4();
+    const returnedResult = Matrix4.subtract(left, right, result);
     expect(returnedResult).toBe(result);
     expect(result).toEqual(expected);
   });
 
   it("subtract works with a result parameter that is an input result parameter", function () {
-    var left = new Matrix4(
+    const left = new Matrix4(
       18,
       20,
       22,
@@ -1844,7 +1844,7 @@ describe("Core/Matrix4", function () {
       46,
       48
     );
-    var right = new Matrix4(
+    const right = new Matrix4(
       17,
       18,
       19,
@@ -1862,7 +1862,7 @@ describe("Core/Matrix4", function () {
       31,
       32
     );
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1,
       2,
       3,
@@ -1880,14 +1880,14 @@ describe("Core/Matrix4", function () {
       15,
       16
     );
-    var returnedResult = Matrix4.subtract(left, right, left);
+    const returnedResult = Matrix4.subtract(left, right, left);
     expect(returnedResult).toBe(left);
     expect(left).toEqual(expected);
   });
 
   it("multiplyTransformation works", function () {
-    var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
-    var right = new Matrix4(
+    const left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+    const right = new Matrix4(
       17,
       18,
       19,
@@ -1905,7 +1905,7 @@ describe("Core/Matrix4", function () {
       0,
       1
     );
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       134,
       140,
       146,
@@ -1923,15 +1923,15 @@ describe("Core/Matrix4", function () {
       0,
       1
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.multiplyTransformation(left, right, result);
+    const result = new Matrix4();
+    const returnedResult = Matrix4.multiplyTransformation(left, right, result);
     expect(returnedResult).toBe(result);
     expect(result).toEqual(expected);
   });
 
   it("multiplyTransformation works with a result parameter that is an input result parameter", function () {
-    var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
-    var right = new Matrix4(
+    const left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+    const right = new Matrix4(
       17,
       18,
       19,
@@ -1949,7 +1949,7 @@ describe("Core/Matrix4", function () {
       0,
       1
     );
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       134,
       140,
       146,
@@ -1967,106 +1967,114 @@ describe("Core/Matrix4", function () {
       0,
       1
     );
-    var returnedResult = Matrix4.multiplyTransformation(left, right, left);
+    const returnedResult = Matrix4.multiplyTransformation(left, right, left);
     expect(returnedResult).toBe(left);
     expect(left).toEqual(expected);
   });
 
   it("multiplyByMatrix3 works", function () {
-    var left = Matrix4.fromRotationTranslation(
+    const left = Matrix4.fromRotationTranslation(
       Matrix3.fromRotationZ(CesiumMath.toRadians(45.0)),
       new Cartesian3(1.0, 2.0, 3.0)
     );
-    var rightRotation = Matrix3.fromRotationX(CesiumMath.toRadians(30.0));
-    var right = Matrix4.fromRotationTranslation(rightRotation);
-    var expected = new Matrix4.multiplyTransformation(
+    const rightRotation = Matrix3.fromRotationX(CesiumMath.toRadians(30.0));
+    const right = Matrix4.fromRotationTranslation(rightRotation);
+    const expected = new Matrix4.multiplyTransformation(
       left,
       right,
       new Matrix4()
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.multiplyByMatrix3(left, rightRotation, result);
+    const result = new Matrix4();
+    const returnedResult = Matrix4.multiplyByMatrix3(
+      left,
+      rightRotation,
+      result
+    );
     expect(returnedResult).toBe(result);
     expect(result).toEqual(expected);
   });
 
   it("multiplyByMatrix3 works with a result parameter that is an input result parameter", function () {
-    var left = Matrix4.fromRotationTranslation(
+    const left = Matrix4.fromRotationTranslation(
       Matrix3.fromRotationZ(CesiumMath.toRadians(45.0)),
       new Cartesian3(1.0, 2.0, 3.0)
     );
-    var rightRotation = Matrix3.fromRotationX(CesiumMath.toRadians(30.0));
-    var right = Matrix4.fromRotationTranslation(rightRotation);
-    var expected = new Matrix4.multiplyTransformation(
+    const rightRotation = Matrix3.fromRotationX(CesiumMath.toRadians(30.0));
+    const right = Matrix4.fromRotationTranslation(rightRotation);
+    const expected = new Matrix4.multiplyTransformation(
       left,
       right,
       new Matrix4()
     );
-    var returnedResult = Matrix4.multiplyByMatrix3(left, rightRotation, left);
+    const returnedResult = Matrix4.multiplyByMatrix3(left, rightRotation, left);
     expect(returnedResult).toBe(left);
     expect(left).toEqual(expected);
   });
 
   it("multiplyByTranslation works", function () {
-    var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
-    var translation = new Cartesian3(17, 18, 19);
-    var expected = Matrix4.multiply(
+    const m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+    const translation = new Cartesian3(17, 18, 19);
+    const expected = Matrix4.multiply(
       m,
       Matrix4.fromTranslation(translation),
       new Matrix4()
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.multiplyByTranslation(m, translation, result);
+    const result = new Matrix4();
+    const returnedResult = Matrix4.multiplyByTranslation(
+      m,
+      translation,
+      result
+    );
     expect(returnedResult).toBe(result);
     expect(result).toEqual(expected);
   });
 
   it("multiplyByTranslation works with a result parameter that is an input result parameter", function () {
-    var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
-    var translation = new Cartesian3(17, 18, 19);
-    var expected = Matrix4.multiply(
+    const m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+    const translation = new Cartesian3(17, 18, 19);
+    const expected = Matrix4.multiply(
       m,
       Matrix4.fromTranslation(translation),
       new Matrix4()
     );
-    var returnedResult = Matrix4.multiplyByTranslation(m, translation, m);
+    const returnedResult = Matrix4.multiplyByTranslation(m, translation, m);
     expect(returnedResult).toBe(m);
     expect(m).toEqual(expected);
   });
 
   it("multiplyByUniformScale works", function () {
-    var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
-    var scale = 1.0;
-    var expected = Matrix4.multiply(
+    const m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+    const scale = 1.0;
+    const expected = Matrix4.multiply(
       m,
       Matrix4.fromUniformScale(scale),
       new Matrix4()
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.multiplyByUniformScale(m, scale, result);
+    const result = new Matrix4();
+    const returnedResult = Matrix4.multiplyByUniformScale(m, scale, result);
     expect(returnedResult).toBe(result);
     expect(result).toEqual(expected);
   });
 
   it("multiplyByUniformScale works with a result parameter that is an input result parameter", function () {
-    var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
-    var scale = 2.0;
-    var expected = Matrix4.multiply(
+    const m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+    const scale = 2.0;
+    const expected = Matrix4.multiply(
       m,
       Matrix4.fromUniformScale(scale),
       new Matrix4()
     );
-    var returnedResult = Matrix4.multiplyByUniformScale(m, scale, m);
+    const returnedResult = Matrix4.multiplyByUniformScale(m, scale, m);
     expect(returnedResult).toBe(m);
     expect(m).toEqual(expected);
   });
 
   it("multiplyByScale works", function () {
-    var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
-    var scale = new Cartesian3(1.0, 1.0, 1.0);
-    var expected = Matrix4.multiply(m, Matrix4.fromScale(scale), new Matrix4());
-    var result = new Matrix4();
-    var returnedResult = Matrix4.multiplyByScale(m, scale, result);
+    let m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+    let scale = new Cartesian3(1.0, 1.0, 1.0);
+    let expected = Matrix4.multiply(m, Matrix4.fromScale(scale), new Matrix4());
+    let result = new Matrix4();
+    let returnedResult = Matrix4.multiplyByScale(m, scale, result);
     expect(returnedResult).toBe(result);
     expect(result).toEqual(expected);
 
@@ -2080,16 +2088,20 @@ describe("Core/Matrix4", function () {
   });
 
   it('multiplyByScale works with "this" result parameter', function () {
-    var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
-    var scale = new Cartesian3(1.0, 2.0, 3.0);
-    var expected = Matrix4.multiply(m, Matrix4.fromScale(scale), new Matrix4());
-    var returnedResult = Matrix4.multiplyByScale(m, scale, m);
+    const m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+    const scale = new Cartesian3(1.0, 2.0, 3.0);
+    const expected = Matrix4.multiply(
+      m,
+      Matrix4.fromScale(scale),
+      new Matrix4()
+    );
+    const returnedResult = Matrix4.multiplyByScale(m, scale, m);
     expect(returnedResult).toBe(m);
     expect(m).toEqual(expected);
   });
 
   it("multiplyByVector works", function () {
-    var left = new Matrix4(
+    const left = new Matrix4(
       1,
       2,
       3,
@@ -2107,16 +2119,16 @@ describe("Core/Matrix4", function () {
       15,
       16
     );
-    var right = new Cartesian4(17, 18, 19, 20);
-    var expected = new Cartesian4(190, 486, 782, 1078);
-    var result = new Cartesian4();
-    var returnedResult = Matrix4.multiplyByVector(left, right, result);
+    const right = new Cartesian4(17, 18, 19, 20);
+    const expected = new Cartesian4(190, 486, 782, 1078);
+    const result = new Cartesian4();
+    const returnedResult = Matrix4.multiplyByVector(left, right, result);
     expect(returnedResult).toBe(result);
     expect(result).toEqual(expected);
   });
 
   it("multiplyByPoint works", function () {
-    var left = new Matrix4(
+    const left = new Matrix4(
       1,
       2,
       3,
@@ -2134,16 +2146,16 @@ describe("Core/Matrix4", function () {
       15,
       16
     );
-    var right = new Cartesian3(17, 18, 19);
-    var expected = new Cartesian3(114, 334, 554);
-    var result = new Cartesian3();
-    var returnedResult = Matrix4.multiplyByPoint(left, right, result);
+    const right = new Cartesian3(17, 18, 19);
+    const expected = new Cartesian3(114, 334, 554);
+    const result = new Cartesian3();
+    const returnedResult = Matrix4.multiplyByPoint(left, right, result);
     expect(returnedResult).toBe(result);
     expect(result).toEqual(expected);
   });
 
   it("multiplyByPointAsVector works", function () {
-    var left = new Matrix4(
+    const left = new Matrix4(
       1,
       2,
       3,
@@ -2161,16 +2173,16 @@ describe("Core/Matrix4", function () {
       15,
       16
     );
-    var right = new Cartesian3(17, 18, 19);
-    var expected = new Cartesian3(110, 326, 542);
-    var result = new Cartesian3();
-    var returnedResult = Matrix4.multiplyByPointAsVector(left, right, result);
+    const right = new Cartesian3(17, 18, 19);
+    const expected = new Cartesian3(110, 326, 542);
+    const result = new Cartesian3();
+    const returnedResult = Matrix4.multiplyByPointAsVector(left, right, result);
     expect(returnedResult).toBe(result);
     expect(result).toEqual(expected);
   });
 
   it("multiplyByScalar works", function () {
-    var left = new Matrix4(
+    const left = new Matrix4(
       1,
       2,
       3,
@@ -2188,8 +2200,8 @@ describe("Core/Matrix4", function () {
       15,
       16
     );
-    var right = 2;
-    var expected = new Matrix4(
+    const right = 2;
+    const expected = new Matrix4(
       2,
       4,
       6,
@@ -2207,14 +2219,14 @@ describe("Core/Matrix4", function () {
       30,
       32
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.multiplyByScalar(left, right, result);
+    const result = new Matrix4();
+    const returnedResult = Matrix4.multiplyByScalar(left, right, result);
     expect(returnedResult).toBe(result);
     expect(result).toEqual(expected);
   });
 
   it("negate works", function () {
-    var matrix = new Matrix4(
+    const matrix = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -2232,7 +2244,7 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       -1.0,
       -2.0,
       -3.0,
@@ -2250,14 +2262,14 @@ describe("Core/Matrix4", function () {
       -15.0,
       -16.0
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.negate(matrix, result);
+    const result = new Matrix4();
+    const returnedResult = Matrix4.negate(matrix, result);
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
   });
 
   it("negate works with a result parameter that is an input result parameter", function () {
-    var matrix = new Matrix4(
+    const matrix = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -2275,7 +2287,7 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       -1.0,
       -2.0,
       -3.0,
@@ -2293,13 +2305,13 @@ describe("Core/Matrix4", function () {
       -15.0,
       -16.0
     );
-    var returnedResult = Matrix4.negate(matrix, matrix);
+    const returnedResult = Matrix4.negate(matrix, matrix);
     expect(matrix).toBe(returnedResult);
     expect(matrix).toEqual(expected);
   });
 
   it("transpose works", function () {
-    var matrix = new Matrix4(
+    const matrix = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -2317,7 +2329,7 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1.0,
       5.0,
       9.0,
@@ -2335,14 +2347,14 @@ describe("Core/Matrix4", function () {
       12.0,
       16.0
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.transpose(matrix, result);
+    const result = new Matrix4();
+    const returnedResult = Matrix4.transpose(matrix, result);
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expected);
   });
 
   it("inverseTranspose works", function () {
-    var matrix = new Matrix4(
+    const matrix = new Matrix4(
       1.0,
       2.0,
       6.0,
@@ -2360,17 +2372,17 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var expectedInverse = Matrix4.inverse(matrix, new Matrix4());
-    var expectedInverseTranspose = Matrix4.transpose(
+    const expectedInverse = Matrix4.inverse(matrix, new Matrix4());
+    const expectedInverseTranspose = Matrix4.transpose(
       expectedInverse,
       new Matrix4()
     );
-    var result = Matrix4.inverseTranspose(matrix, new Matrix4());
+    const result = Matrix4.inverseTranspose(matrix, new Matrix4());
     expect(result).toEqual(expectedInverseTranspose);
   });
 
   it("transpose works with a result parameter that is an input result parameter", function () {
-    var matrix = new Matrix4(
+    const matrix = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -2388,7 +2400,7 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1.0,
       5.0,
       9.0,
@@ -2406,13 +2418,13 @@ describe("Core/Matrix4", function () {
       12.0,
       16.0
     );
-    var returnedResult = Matrix4.transpose(matrix, matrix);
+    const returnedResult = Matrix4.transpose(matrix, matrix);
     expect(matrix).toBe(returnedResult);
     expect(matrix).toEqual(expected);
   });
 
   it("equals works in all cases", function () {
-    var left = new Matrix4(
+    let left = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -2430,7 +2442,7 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var right = new Matrix4(
+    let right = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -2647,7 +2659,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("equalsEpsilon works in all cases", function () {
-    var left = new Matrix4(
+    let left = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -2665,7 +2677,7 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var right = new Matrix4(
+    let right = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -3317,7 +3329,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("toString", function () {
-    var matrix = new Matrix4(
+    const matrix = new Matrix4(
       1,
       2,
       3,
@@ -3341,7 +3353,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("getTranslation works", function () {
-    var matrix = new Matrix4(
+    const matrix = new Matrix4(
       1,
       2,
       3,
@@ -3359,15 +3371,15 @@ describe("Core/Matrix4", function () {
       15,
       16
     );
-    var expected = new Cartesian3(4, 8, 12);
-    var result = new Cartesian3();
-    var returnedResult = Matrix4.getTranslation(matrix, result);
+    const expected = new Cartesian3(4, 8, 12);
+    const result = new Cartesian3();
+    const returnedResult = Matrix4.getTranslation(matrix, result);
     expect(returnedResult).toBe(result);
     expect(expected).toEqual(returnedResult);
   });
 
   it("getMatrix3 works", function () {
-    var matrix = new Matrix4(
+    const matrix = new Matrix4(
       1,
       2,
       3,
@@ -3385,15 +3397,15 @@ describe("Core/Matrix4", function () {
       15,
       16
     );
-    var expected = new Matrix3(1, 2, 3, 5, 6, 7, 9, 10, 11);
-    var result = new Matrix3();
-    var returnedResult = Matrix4.getMatrix3(matrix, result);
+    const expected = new Matrix3(1, 2, 3, 5, 6, 7, 9, 10, 11);
+    const result = new Matrix3();
+    const returnedResult = Matrix4.getMatrix3(matrix, result);
     expect(returnedResult).toBe(result);
     expect(expected).toEqual(returnedResult);
   });
 
   it("inverse works", function () {
-    var matrix = new Matrix4(
+    const matrix = new Matrix4(
       0.72,
       0.7,
       0.0,
@@ -3412,7 +3424,7 @@ describe("Core/Matrix4", function () {
       1.0
     );
 
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       0.7150830193944467,
       -0.3976559229803265,
       0.5720664155155574,
@@ -3431,8 +3443,8 @@ describe("Core/Matrix4", function () {
       1.0
     );
 
-    var result = new Matrix4();
-    var returnedResult = Matrix4.inverse(matrix, result);
+    const result = new Matrix4();
+    const returnedResult = Matrix4.inverse(matrix, result);
     expect(returnedResult).toBe(result);
     expect(expected).toEqualEpsilon(returnedResult, CesiumMath.EPSILON20);
     expect(
@@ -3441,25 +3453,25 @@ describe("Core/Matrix4", function () {
   });
 
   it("inverse translates zero scale matrix", function () {
-    var matrix = Matrix4.fromTranslation(new Cartesian3(1.0, 2.0, 3.0));
+    let matrix = Matrix4.fromTranslation(new Cartesian3(1.0, 2.0, 3.0));
     matrix = Matrix4.multiplyByUniformScale(matrix, 0.0, matrix);
-    var expected = Matrix4.fromTranslation(new Cartesian3(-1.0, -2.0, -3.0));
+    let expected = Matrix4.fromTranslation(new Cartesian3(-1.0, -2.0, -3.0));
     expected = Matrix4.multiplyByUniformScale(expected, 0.0, expected);
 
-    var result = Matrix4.inverse(matrix, new Matrix4());
+    const result = Matrix4.inverse(matrix, new Matrix4());
     expect(expected).toEqualEpsilon(result, CesiumMath.EPSILON20);
   });
 
   it("inverse behaves acceptably with near single precision zero scale matrix", function () {
-    var trs = new TranslationRotationScale(
+    const trs = new TranslationRotationScale(
       new Cartesian3(0.0, 0.0, 0.0),
       Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0),
       new Cartesian3(1.0e-7, 1.0e-7, 1.1e-7)
     );
 
-    var matrix = Matrix4.fromTranslationRotationScale(trs);
+    const matrix = Matrix4.fromTranslationRotationScale(trs);
 
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1e7,
       0,
       0,
@@ -3478,20 +3490,20 @@ describe("Core/Matrix4", function () {
       1
     );
 
-    var result = Matrix4.inverse(matrix, new Matrix4());
+    const result = Matrix4.inverse(matrix, new Matrix4());
     expect(expected).toEqualEpsilon(result, CesiumMath.EPSILON15);
   });
 
   it("inverse behaves acceptably with single precision zero scale matrix", function () {
-    var trs = new TranslationRotationScale(
+    const trs = new TranslationRotationScale(
       new Cartesian3(0.0, 0.0, 0.0),
       Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0),
       new Cartesian3(1.8e-8, 1.2e-8, 1.2e-8)
     );
 
-    var matrix = Matrix4.fromTranslationRotationScale(trs);
+    const matrix = Matrix4.fromTranslationRotationScale(trs);
 
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       0,
       0,
       0,
@@ -3510,14 +3522,31 @@ describe("Core/Matrix4", function () {
       1
     );
 
-    var result = Matrix4.inverse(matrix, new Matrix4());
+    const result = Matrix4.inverse(matrix, new Matrix4());
     expect(expected).toEqualEpsilon(result, CesiumMath.EPSILON20);
   });
 
   it("inverseTransformation works", function () {
-    var matrix = new Matrix4(1, 0, 0, 10, 0, 0, 1, 20, 0, 1, 0, 30, 0, 0, 0, 1);
+    const matrix = new Matrix4(
+      1,
+      0,
+      0,
+      10,
+      0,
+      0,
+      1,
+      20,
+      0,
+      1,
+      0,
+      30,
+      0,
+      0,
+      0,
+      1
+    );
 
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1,
       0,
       0,
@@ -3536,8 +3565,8 @@ describe("Core/Matrix4", function () {
       1
     );
 
-    var result = new Matrix4();
-    var returnedResult = Matrix4.inverseTransformation(matrix, result);
+    const result = new Matrix4();
+    const returnedResult = Matrix4.inverseTransformation(matrix, result);
     expect(returnedResult).toBe(result);
     expect(expected).toEqual(returnedResult);
     expect(Matrix4.multiply(returnedResult, matrix, new Matrix4())).toEqual(
@@ -3552,7 +3581,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("abs works", function () {
-    var matrix = new Matrix4(
+    let matrix = new Matrix4(
       -1.0,
       -2.0,
       -3.0,
@@ -3570,7 +3599,7 @@ describe("Core/Matrix4", function () {
       -15.0,
       -16.0
     );
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -3588,8 +3617,8 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var result = new Matrix4();
-    var returnedResult = Matrix4.abs(matrix, result);
+    const result = new Matrix4();
+    let returnedResult = Matrix4.abs(matrix, result);
     expect(returnedResult).toEqual(expected);
 
     matrix = new Matrix4(
@@ -3636,7 +3665,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("abs works with a result parameter that is an input result parameter", function () {
-    var matrix = new Matrix4(
+    const matrix = new Matrix4(
       -1.0,
       -2.0,
       -3.0,
@@ -3654,7 +3683,7 @@ describe("Core/Matrix4", function () {
       -15.0,
       -16.0
     );
-    var expected = new Matrix4(
+    const expected = new Matrix4(
       1.0,
       2.0,
       3.0,
@@ -3672,7 +3701,7 @@ describe("Core/Matrix4", function () {
       15.0,
       16.0
     );
-    var returnedResult = Matrix4.abs(matrix, matrix);
+    const returnedResult = Matrix4.abs(matrix, matrix);
     expect(matrix).toBe(returnedResult);
     expect(matrix).toEqual(expected);
   });
@@ -3784,7 +3813,7 @@ describe("Core/Matrix4", function () {
 
   it("computeOrthographicOffCenter throws without left", function () {
     expect(function () {
-      var right = 0,
+      const right = 0,
         bottom = 0,
         top = 0,
         near = 0,
@@ -3802,7 +3831,7 @@ describe("Core/Matrix4", function () {
 
   it("computeOrthographicOffCenter throws without right", function () {
     expect(function () {
-      var left = 0,
+      const left = 0,
         bottom = 0,
         top = 0,
         near = 0,
@@ -3820,7 +3849,7 @@ describe("Core/Matrix4", function () {
 
   it("computeOrthographicOffCenter throws without bottom", function () {
     expect(function () {
-      var left = 0,
+      const left = 0,
         right = 0,
         top = 0,
         near = 0,
@@ -3838,7 +3867,7 @@ describe("Core/Matrix4", function () {
 
   it("computeOrthographicOffCenter throws without top", function () {
     expect(function () {
-      var left = 0,
+      const left = 0,
         right = 0,
         bottom = 0,
         near = 0,
@@ -3856,7 +3885,7 @@ describe("Core/Matrix4", function () {
 
   it("computeOrthographicOffCenter throws without near", function () {
     expect(function () {
-      var left = 0,
+      const left = 0,
         right = 0,
         bottom = 0,
         top = 0,
@@ -3874,7 +3903,7 @@ describe("Core/Matrix4", function () {
 
   it("computeOrthographicOffCenter throws without far", function () {
     expect(function () {
-      var left = 0,
+      const left = 0,
         right = 0,
         bottom = 0,
         top = 0,
@@ -3892,7 +3921,7 @@ describe("Core/Matrix4", function () {
 
   it("computePerspectiveOffCenter throws without left", function () {
     expect(function () {
-      var right = 0,
+      const right = 0,
         bottom = 0,
         top = 0,
         near = 0,
@@ -3910,7 +3939,7 @@ describe("Core/Matrix4", function () {
 
   it("computePerspectiveOffCenter throws without right", function () {
     expect(function () {
-      var left = 0,
+      const left = 0,
         bottom = 0,
         top = 0,
         near = 0,
@@ -3928,7 +3957,7 @@ describe("Core/Matrix4", function () {
 
   it("computePerspectiveOffCenter throws without bottom", function () {
     expect(function () {
-      var left = 0,
+      const left = 0,
         right = 0,
         top = 0,
         near = 0,
@@ -3946,7 +3975,7 @@ describe("Core/Matrix4", function () {
 
   it("computePerspectiveOffCenter throws without top", function () {
     expect(function () {
-      var left = 0,
+      const left = 0,
         right = 0,
         bottom = 0,
         near = 0,
@@ -3964,7 +3993,7 @@ describe("Core/Matrix4", function () {
 
   it("computePerspectiveOffCenter throws without near", function () {
     expect(function () {
-      var left = 0,
+      const left = 0,
         right = 0,
         bottom = 0,
         top = 0,
@@ -3982,7 +4011,7 @@ describe("Core/Matrix4", function () {
 
   it("computePerspectiveOffCenter throws without far", function () {
     expect(function () {
-      var left = 0,
+      const left = 0,
         right = 0,
         bottom = 0,
         top = 0,
@@ -4000,7 +4029,7 @@ describe("Core/Matrix4", function () {
 
   it("computeInfinitePerspectiveOffCenter  throws without left", function () {
     expect(function () {
-      var right = 0,
+      const right = 0,
         bottom = 0,
         top = 0,
         near = 0,
@@ -4018,7 +4047,7 @@ describe("Core/Matrix4", function () {
 
   it("computeInfinitePerspectiveOffCenter  throws without right", function () {
     expect(function () {
-      var left = 0,
+      const left = 0,
         bottom = 0,
         top = 0,
         near = 0,
@@ -4036,7 +4065,7 @@ describe("Core/Matrix4", function () {
 
   it("computeInfinitePerspectiveOffCenter  throws without bottom", function () {
     expect(function () {
-      var left = 0,
+      const left = 0,
         right = 0,
         top = 0,
         near = 0,
@@ -4054,7 +4083,7 @@ describe("Core/Matrix4", function () {
 
   it("computeInfinitePerspectiveOffCenter  throws without top", function () {
     expect(function () {
-      var left = 0,
+      const left = 0,
         right = 0,
         bottom = 0,
         near = 0,
@@ -4072,7 +4101,7 @@ describe("Core/Matrix4", function () {
 
   it("computeInfinitePerspectiveOffCenter  throws without near", function () {
     expect(function () {
-      var left = 0,
+      const left = 0,
         right = 0,
         bottom = 0,
         top = 0,
@@ -4123,16 +4152,16 @@ describe("Core/Matrix4", function () {
   });
 
   it("getElement throws without row parameter", function () {
-    var row;
-    var col = 0.0;
+    let row;
+    const col = 0.0;
     expect(function () {
       Matrix4.getElementIndex(col, row);
     }).toThrowDeveloperError();
   });
 
   it("getElement throws without column parameter", function () {
-    var row = 0.0;
-    var col;
+    const row = 0.0;
+    let col;
     expect(function () {
       Matrix4.getElementIndex(col, row);
     }).toThrowDeveloperError();
@@ -4145,36 +4174,36 @@ describe("Core/Matrix4", function () {
   });
 
   it("getColumn throws without of range index parameter", function () {
-    var matrix = new Matrix4();
+    const matrix = new Matrix4();
     expect(function () {
       Matrix4.getColumn(matrix, 4);
     }).toThrowDeveloperError();
   });
 
   it("setColumn throws without matrix parameter", function () {
-    var cartesian = new Cartesian4();
+    const cartesian = new Cartesian4();
     expect(function () {
       Matrix4.setColumn(undefined, 2, cartesian);
     }).toThrowDeveloperError();
   });
 
   it("setColumn throws without cartesian parameter", function () {
-    var matrix = new Matrix4();
+    const matrix = new Matrix4();
     expect(function () {
       Matrix4.setColumn(matrix, 1, undefined);
     }).toThrowDeveloperError();
   });
 
   it("setColumn throws without of range index parameter", function () {
-    var matrix = new Matrix4();
-    var cartesian = new Cartesian4();
+    const matrix = new Matrix4();
+    const cartesian = new Cartesian4();
     expect(function () {
       Matrix4.setColumn(matrix, 4, cartesian);
     }).toThrowDeveloperError();
   });
 
   it("setColumn throws without matrix parameter", function () {
-    var cartesian = new Cartesian4();
+    const cartesian = new Cartesian4();
     expect(function () {
       Matrix4.setColumn(undefined, 2, cartesian);
     }).toThrowDeveloperError();
@@ -4199,57 +4228,57 @@ describe("Core/Matrix4", function () {
   });
 
   it("getRow throws without of range index parameter", function () {
-    var matrix = new Matrix4();
+    const matrix = new Matrix4();
     expect(function () {
       Matrix4.getRow(matrix, 4);
     }).toThrowDeveloperError();
   });
 
   it("setRow throws without matrix parameter", function () {
-    var cartesian = new Cartesian4();
+    const cartesian = new Cartesian4();
     expect(function () {
       Matrix4.setRow(undefined, 2, cartesian);
     }).toThrowDeveloperError();
   });
 
   it("setRow throws without cartesian parameter", function () {
-    var matrix = new Matrix4();
+    const matrix = new Matrix4();
     expect(function () {
       Matrix4.setRow(matrix, 1, undefined);
     }).toThrowDeveloperError();
   });
 
   it("setRow throws without of range index parameter", function () {
-    var matrix = new Matrix4();
-    var cartesian = new Cartesian4();
+    const matrix = new Matrix4();
+    const cartesian = new Cartesian4();
     expect(function () {
       Matrix4.setRow(matrix, 4, cartesian);
     }).toThrowDeveloperError();
   });
 
   it("multiply throws with no left parameter", function () {
-    var right = new Matrix4();
+    const right = new Matrix4();
     expect(function () {
       Matrix4.multiply(undefined, right);
     }).toThrowDeveloperError();
   });
 
   it("multiply throws with no right parameter", function () {
-    var left = new Matrix4();
+    const left = new Matrix4();
     expect(function () {
       Matrix4.multiply(left, undefined);
     }).toThrowDeveloperError();
   });
 
   it("multiplyByTranslation throws with no matrix parameter", function () {
-    var translation = new Cartesian3();
+    const translation = new Cartesian3();
     expect(function () {
       Matrix4.multiplyByTranslation(undefined, translation);
     }).toThrowDeveloperError();
   });
 
   it("multiplyByTranslation throws with no translation parameter", function () {
-    var m = new Matrix4();
+    const m = new Matrix4();
     expect(function () {
       Matrix4.multiplyByTranslation(m, undefined);
     }).toThrowDeveloperError();
@@ -4262,7 +4291,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("multiplyByUniformScale throws with no scale parameter", function () {
-    var m = new Matrix4();
+    const m = new Matrix4();
     expect(function () {
       Matrix4.multiplyByUniformScale(m, undefined);
     }).toThrowDeveloperError();
@@ -4275,35 +4304,35 @@ describe("Core/Matrix4", function () {
   });
 
   it("multiplyByScale throws with no scale parameter", function () {
-    var m = new Matrix4();
+    const m = new Matrix4();
     expect(function () {
       Matrix4.multiplyByScale(m, undefined);
     }).toThrowDeveloperError();
   });
 
   it("multiplyByVector throws with no matrix parameter", function () {
-    var cartesian = new Cartesian4();
+    const cartesian = new Cartesian4();
     expect(function () {
       Matrix4.multiplyByVector(undefined, cartesian);
     }).toThrowDeveloperError();
   });
 
   it("multiplyByVector throws with no cartesian parameter", function () {
-    var matrix = new Matrix4();
+    const matrix = new Matrix4();
     expect(function () {
       Matrix4.multiplyByVector(matrix, undefined);
     }).toThrowDeveloperError();
   });
 
   it("multiplyByPoint throws with no matrix parameter", function () {
-    var cartesian = new Cartesian4();
+    const cartesian = new Cartesian4();
     expect(function () {
       Matrix4.multiplyByPoint(undefined, cartesian);
     }).toThrowDeveloperError();
   });
 
   it("multiplyByPoint throws with no cartesian parameter", function () {
-    var matrix = new Matrix4();
+    const matrix = new Matrix4();
     expect(function () {
       Matrix4.multiplyByPoint(matrix, undefined);
     }).toThrowDeveloperError();
@@ -4316,7 +4345,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("multiplyByScalar throws with non-numeric scalar parameter", function () {
-    var matrix = new Matrix4();
+    const matrix = new Matrix4();
     expect(function () {
       Matrix4.multiplyByScalar(matrix, {});
     }).toThrowDeveloperError();
@@ -4353,7 +4382,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("inverse throws with non-inversable matrix", function () {
-    var matrix = new Matrix4(
+    const matrix = new Matrix4(
       1,
       2,
       3,
@@ -4558,7 +4587,7 @@ describe("Core/Matrix4", function () {
 
   it("computeOrthographicOffCenter throws without result parameter", function () {
     expect(function () {
-      var left = 0,
+      const left = 0,
         right = 0,
         bottom = 0,
         top = 0,
@@ -4569,7 +4598,7 @@ describe("Core/Matrix4", function () {
 
   it("computePerspectiveOffCenter throws without result parameter", function () {
     expect(function () {
-      var left = 0,
+      const left = 0,
         right = 0,
         bottom = 0,
         top = 0,
@@ -4580,7 +4609,7 @@ describe("Core/Matrix4", function () {
 
   it("computeInfinitePerspectiveOffCenter throws without near", function () {
     expect(function () {
-      var left = 0,
+      const left = 0,
         right = 0,
         bottom = 0,
         top = 0;
@@ -4589,7 +4618,7 @@ describe("Core/Matrix4", function () {
   });
 
   it("Matrix4 objects can be used as array like objects", function () {
-    var matrix = new Matrix4(
+    const matrix = new Matrix4(
       1,
       5,
       9,
@@ -4608,9 +4637,9 @@ describe("Core/Matrix4", function () {
       16
     );
     expect(matrix.length).toEqual(16);
-    var intArray = new Uint32Array(matrix.length);
+    const intArray = new Uint32Array(matrix.length);
     intArray.set(matrix);
-    for (var index = 0; index < matrix.length; index++) {
+    for (let index = 0; index < matrix.length; index++) {
       expect(intArray[index]).toEqual(index + 1);
     }
   });

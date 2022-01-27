@@ -2,7 +2,7 @@ import { destroyObject } from "../../Source/Cesium.js";
 import { OrderedGroundPrimitiveCollection } from "../../Source/Cesium.js";
 
 describe("Scene/OrderedGroundPrimitiveCollection", function () {
-  var updateCallOrder;
+  let updateCallOrder;
 
   beforeEach(function () {
     updateCallOrder = [];
@@ -22,40 +22,40 @@ describe("Scene/OrderedGroundPrimitiveCollection", function () {
   };
 
   it("constructs", function () {
-    var collection = new OrderedGroundPrimitiveCollection();
+    const collection = new OrderedGroundPrimitiveCollection();
     expect(collection.length).toBe(0);
     expect(collection.show).toBe(true);
   });
 
   it("add throws without primitive", function () {
     expect(function () {
-      var collection = new OrderedGroundPrimitiveCollection();
+      const collection = new OrderedGroundPrimitiveCollection();
       collection.add();
     }).toThrowDeveloperError();
   });
 
   it("add throws if zIndex is not a number", function () {
     expect(function () {
-      var collection = new OrderedGroundPrimitiveCollection();
+      const collection = new OrderedGroundPrimitiveCollection();
       collection.add(new MockPrimitive(), "3");
     }).toThrowDeveloperError();
   });
 
   it("adds a primitive", function () {
-    var collection = new OrderedGroundPrimitiveCollection();
+    const collection = new OrderedGroundPrimitiveCollection();
     collection.add(new MockPrimitive());
     expect(collection.length).toBe(1);
   });
 
   it("add handles multiple zIndexes", function () {
-    var collection = new OrderedGroundPrimitiveCollection();
-    var p1 = collection.add(new MockPrimitive());
-    var p2 = collection.add(new MockPrimitive(), 0);
-    var p3 = collection.add(new MockPrimitive(), 2);
-    var p4 = collection.add(new MockPrimitive(), 1);
+    const collection = new OrderedGroundPrimitiveCollection();
+    const p1 = collection.add(new MockPrimitive());
+    const p2 = collection.add(new MockPrimitive(), 0);
+    const p3 = collection.add(new MockPrimitive(), 2);
+    const p4 = collection.add(new MockPrimitive(), 1);
     expect(collection.length).toBe(4);
 
-    var array = collection._collectionsArray;
+    const array = collection._collectionsArray;
     expect(array.length).toBe(3);
     expect(array[0].length).toBe(2);
     expect(array[0].get(0)).toBe(p1);
@@ -67,14 +67,14 @@ describe("Scene/OrderedGroundPrimitiveCollection", function () {
   });
 
   it("add works with negative zIndexes", function () {
-    var collection = new OrderedGroundPrimitiveCollection();
-    var p1 = collection.add(new MockPrimitive(), 0);
-    var p2 = collection.add(new MockPrimitive(), -3);
-    var p3 = collection.add(new MockPrimitive(), -1);
-    var p4 = collection.add(new MockPrimitive(), -3);
+    const collection = new OrderedGroundPrimitiveCollection();
+    const p1 = collection.add(new MockPrimitive(), 0);
+    const p2 = collection.add(new MockPrimitive(), -3);
+    const p3 = collection.add(new MockPrimitive(), -1);
+    const p4 = collection.add(new MockPrimitive(), -3);
     expect(collection.length).toBe(4);
 
-    var array = collection._collectionsArray;
+    const array = collection._collectionsArray;
     expect(array.length).toBe(3);
     expect(array[0].length).toBe(2);
     expect(array[0].get(0)).toBe(p2);
@@ -87,44 +87,44 @@ describe("Scene/OrderedGroundPrimitiveCollection", function () {
 
   it("set throws without primitive", function () {
     expect(function () {
-      var collection = new OrderedGroundPrimitiveCollection();
+      const collection = new OrderedGroundPrimitiveCollection();
       collection.set(undefined, 3);
     }).toThrowDeveloperError();
   });
 
   it("set throws without zIndex", function () {
     expect(function () {
-      var collection = new OrderedGroundPrimitiveCollection();
+      const collection = new OrderedGroundPrimitiveCollection();
       collection.set(new MockPrimitive(), undefined);
     }).toThrowDeveloperError();
   });
 
   it("set throws if zIndex is not a number", function () {
     expect(function () {
-      var collection = new OrderedGroundPrimitiveCollection();
+      const collection = new OrderedGroundPrimitiveCollection();
       collection.set(new MockPrimitive(), "3");
     }).toThrowDeveloperError();
   });
 
   it("set adds primitive if it is not in the collection", function () {
-    var collection = new OrderedGroundPrimitiveCollection();
+    const collection = new OrderedGroundPrimitiveCollection();
     collection.set(new MockPrimitive(), 3);
     expect(collection.length).toBe(1);
   });
 
   it("set changes a primitives index", function () {
-    var collection = new OrderedGroundPrimitiveCollection();
-    var p1 = collection.add(new MockPrimitive(), 0);
-    var p2 = collection.add(new MockPrimitive(), 0);
-    var p3 = collection.add(new MockPrimitive(), 2);
-    var p4 = collection.add(new MockPrimitive(), 1);
+    const collection = new OrderedGroundPrimitiveCollection();
+    const p1 = collection.add(new MockPrimitive(), 0);
+    const p2 = collection.add(new MockPrimitive(), 0);
+    const p3 = collection.add(new MockPrimitive(), 2);
+    const p4 = collection.add(new MockPrimitive(), 1);
     expect(collection.length).toBe(4);
 
     collection.set(p4, 2);
 
     expect(collection.length).toBe(4);
 
-    var array = collection._collectionsArray;
+    const array = collection._collectionsArray;
     expect(array.length).toBe(2);
     expect(array[0].length).toBe(2);
     expect(array[0].get(0)).toBe(p1);
@@ -135,14 +135,14 @@ describe("Scene/OrderedGroundPrimitiveCollection", function () {
   });
 
   it("set works with negative indexes", function () {
-    var collection = new OrderedGroundPrimitiveCollection();
-    var p1 = collection.add(new MockPrimitive(), 0);
-    var p2 = collection.add(new MockPrimitive(), 0);
+    const collection = new OrderedGroundPrimitiveCollection();
+    const p1 = collection.add(new MockPrimitive(), 0);
+    const p2 = collection.add(new MockPrimitive(), 0);
     expect(collection.length).toBe(2);
 
     collection.set(p2, -1);
 
-    var array = collection._collectionsArray;
+    const array = collection._collectionsArray;
     expect(array.length).toBe(2);
     expect(array[0].length).toBe(1);
     expect(array[0].get(0)).toBe(p2);
@@ -152,15 +152,15 @@ describe("Scene/OrderedGroundPrimitiveCollection", function () {
 
   it("set throws without primitive", function () {
     expect(function () {
-      var collection = new OrderedGroundPrimitiveCollection();
+      const collection = new OrderedGroundPrimitiveCollection();
       collection.set(undefined, 3);
     }).toThrowDeveloperError();
   });
 
   it("removes a primitive", function () {
-    var collection = new OrderedGroundPrimitiveCollection();
-    var p = collection.add(new MockPrimitive());
-    var result = collection.remove(p);
+    const collection = new OrderedGroundPrimitiveCollection();
+    const p = collection.add(new MockPrimitive());
+    const result = collection.remove(p);
     expect(result).toBe(true);
     expect(collection.length).toBe(0);
     expect(collection._collectionsArray.length).toBe(0);
@@ -168,14 +168,14 @@ describe("Scene/OrderedGroundPrimitiveCollection", function () {
   });
 
   it("removes handles multiple zIndexes", function () {
-    var collection = new OrderedGroundPrimitiveCollection();
-    var p1 = collection.add(new MockPrimitive(), 0);
-    var p2 = collection.add(new MockPrimitive(), 2);
-    var p3 = collection.add(new MockPrimitive(), 2);
-    var p4 = collection.add(new MockPrimitive(), 1);
+    const collection = new OrderedGroundPrimitiveCollection();
+    const p1 = collection.add(new MockPrimitive(), 0);
+    const p2 = collection.add(new MockPrimitive(), 2);
+    const p3 = collection.add(new MockPrimitive(), 2);
+    const p4 = collection.add(new MockPrimitive(), 1);
     expect(collection.length).toBe(4);
 
-    var array = collection._collectionsArray;
+    const array = collection._collectionsArray;
     expect(array.length).toBe(3);
     collection.remove(p3);
     expect(array.length).toBe(3);
@@ -186,16 +186,16 @@ describe("Scene/OrderedGroundPrimitiveCollection", function () {
   });
 
   it("removes null", function () {
-    var collection = new OrderedGroundPrimitiveCollection();
+    const collection = new OrderedGroundPrimitiveCollection();
     expect(collection.remove()).toEqual(false);
   });
 
   it("removeAll removes and destroys all primitives", function () {
-    var collection = new OrderedGroundPrimitiveCollection();
-    var p1 = collection.add(new MockPrimitive(), 0);
-    var p2 = collection.add(new MockPrimitive(), 0);
-    var p3 = collection.add(new MockPrimitive(), 2);
-    var p4 = collection.add(new MockPrimitive(), 1);
+    const collection = new OrderedGroundPrimitiveCollection();
+    const p1 = collection.add(new MockPrimitive(), 0);
+    const p2 = collection.add(new MockPrimitive(), 0);
+    const p3 = collection.add(new MockPrimitive(), 2);
+    const p4 = collection.add(new MockPrimitive(), 1);
     expect(collection.length).toBe(4);
     collection.removeAll();
     expect(collection.length).toBe(0);
@@ -206,30 +206,30 @@ describe("Scene/OrderedGroundPrimitiveCollection", function () {
   });
 
   it("contains primitive", function () {
-    var collection = new OrderedGroundPrimitiveCollection();
-    var p1 = collection.add(new MockPrimitive());
+    const collection = new OrderedGroundPrimitiveCollection();
+    const p1 = collection.add(new MockPrimitive());
 
     expect(collection.contains(p1)).toBe(true);
   });
 
   it("does not contain primitive", function () {
-    var collection = new OrderedGroundPrimitiveCollection();
-    var p1 = new MockPrimitive();
+    const collection = new OrderedGroundPrimitiveCollection();
+    const p1 = new MockPrimitive();
 
     expect(collection.contains(p1)).toBe(false);
   });
 
   it("does not contain undefined", function () {
-    var collection = new OrderedGroundPrimitiveCollection();
+    const collection = new OrderedGroundPrimitiveCollection();
     expect(collection.contains()).toEqual(false);
   });
 
   it("update is called in the correct order", function () {
-    var collection = new OrderedGroundPrimitiveCollection();
-    var p1 = collection.add(new MockPrimitive(), 0);
-    var p2 = collection.add(new MockPrimitive(), 3);
-    var p3 = collection.add(new MockPrimitive(), 1);
-    var p4 = collection.add(new MockPrimitive(), 2);
+    const collection = new OrderedGroundPrimitiveCollection();
+    const p1 = collection.add(new MockPrimitive(), 0);
+    const p2 = collection.add(new MockPrimitive(), 3);
+    const p3 = collection.add(new MockPrimitive(), 1);
+    const p4 = collection.add(new MockPrimitive(), 2);
     collection.update();
     expect(updateCallOrder).toEqual([p1, p3, p4, p2]);
 
@@ -250,7 +250,7 @@ describe("Scene/OrderedGroundPrimitiveCollection", function () {
   });
 
   it("update is not called when show is false", function () {
-    var collection = new OrderedGroundPrimitiveCollection();
+    const collection = new OrderedGroundPrimitiveCollection();
     collection.add(new MockPrimitive(), 0);
     collection.add(new MockPrimitive(), 3);
     collection.show = false;
@@ -259,7 +259,7 @@ describe("Scene/OrderedGroundPrimitiveCollection", function () {
   });
 
   it("destroys", function () {
-    var collection = new OrderedGroundPrimitiveCollection();
+    const collection = new OrderedGroundPrimitiveCollection();
     expect(collection.isDestroyed()).toBe(false);
     collection.destroy();
     expect(collection.isDestroyed()).toBe(true);

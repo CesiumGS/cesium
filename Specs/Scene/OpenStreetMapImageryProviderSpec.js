@@ -22,12 +22,12 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
   });
 
   it("return a UrlTemplateImageryProvider", function () {
-    var provider = new OpenStreetMapImageryProvider();
+    const provider = new OpenStreetMapImageryProvider();
     expect(provider).toBeInstanceOf(UrlTemplateImageryProvider);
   });
 
   it("returns valid value for hasAlphaChannel", function () {
-    var provider = new OpenStreetMapImageryProvider({
+    const provider = new OpenStreetMapImageryProvider({
       url: "made/up/osm/server/",
     });
 
@@ -39,11 +39,11 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
   });
 
   it("supports a Resource for the url", function () {
-    var resource = new Resource({
+    const resource = new Resource({
       url: "made/up/osm/server/",
     });
 
-    var provider = new OpenStreetMapImageryProvider({
+    const provider = new OpenStreetMapImageryProvider({
       url: resource,
     });
 
@@ -73,7 +73,7 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
   });
 
   it("supports a slash at the end of the URL", function () {
-    var provider = new OpenStreetMapImageryProvider({
+    const provider = new OpenStreetMapImageryProvider({
       url: "made/up/osm/server/",
     });
 
@@ -103,7 +103,7 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
   });
 
   it("supports no slash at the endof the URL", function () {
-    var provider = new OpenStreetMapImageryProvider({
+    const provider = new OpenStreetMapImageryProvider({
       url: "made/up/osm/server",
     });
 
@@ -133,7 +133,7 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
   });
 
   it("requestImage returns a promise for an image and loads it for cross-origin use", function () {
-    var provider = new OpenStreetMapImageryProvider({
+    const provider = new OpenStreetMapImageryProvider({
       url: "made/up/osm/server/",
     });
 
@@ -171,14 +171,14 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
   });
 
   it("when no credit is supplied, a default one is used", function () {
-    var provider = new OpenStreetMapImageryProvider({
+    const provider = new OpenStreetMapImageryProvider({
       url: "made/up/osm/server",
     });
     expect(provider.credit).toBeDefined();
   });
 
   it("turns the supplied credit into a logo", function () {
-    var providerWithCredit = new OpenStreetMapImageryProvider({
+    const providerWithCredit = new OpenStreetMapImageryProvider({
       url: "made/up/osm/server",
       credit: "Thanks to our awesome made up source of this imagery!",
     });
@@ -186,8 +186,8 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
   });
 
   it("rectangle passed to constructor does not affect tile numbering", function () {
-    var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
-    var provider = new OpenStreetMapImageryProvider({
+    const rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
+    const provider = new OpenStreetMapImageryProvider({
       url: "made/up/osm/server",
       rectangle: rectangle,
     });
@@ -240,7 +240,7 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
   });
 
   it("uses maximumLevel passed to constructor", function () {
-    var provider = new OpenStreetMapImageryProvider({
+    const provider = new OpenStreetMapImageryProvider({
       url: "made/up/osm/server",
       maximumLevel: 5,
     });
@@ -248,7 +248,7 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
   });
 
   it("uses minimumLevel passed to constructor", function () {
-    var provider = new OpenStreetMapImageryProvider({
+    const provider = new OpenStreetMapImageryProvider({
       url: "made/up/osm/server",
       minimumLevel: 1,
     });
@@ -256,13 +256,13 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
   });
 
   it("raises error event when image cannot be loaded", function () {
-    var provider = new OpenStreetMapImageryProvider({
+    const provider = new OpenStreetMapImageryProvider({
       url: "made/up/osm/server",
     });
 
-    var layer = new ImageryLayer(provider);
+    const layer = new ImageryLayer(provider);
 
-    var tries = 0;
+    let tries = 0;
     provider.errorEvent.addEventListener(function (error) {
       expect(error.timesRetried).toEqual(tries);
       ++tries;
@@ -297,7 +297,7 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
     return pollToPromise(function () {
       return provider.ready;
     }).then(function () {
-      var imagery = new Imagery(layer, 0, 0, 0);
+      const imagery = new Imagery(layer, 0, 0, 0);
       imagery.addReference();
       layer._requestImagery(imagery);
       RequestScheduler.update();
@@ -313,7 +313,7 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
   });
 
   it("throws with more than four tiles at the minimum", function () {
-    var rectangle = new Rectangle(
+    const rectangle = new Rectangle(
       0.0,
       0.0,
       CesiumMath.toRadians(1.0),

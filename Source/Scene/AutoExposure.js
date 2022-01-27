@@ -99,7 +99,7 @@ Object.defineProperties(AutoExposure.prototype, {
    */
   outputTexture: {
     get: function () {
-      var framebuffers = this._framebuffers;
+      const framebuffers = this._framebuffers;
       if (!defined(framebuffers)) {
         return undefined;
       }
@@ -109,13 +109,13 @@ Object.defineProperties(AutoExposure.prototype, {
 });
 
 function destroyFramebuffers(autoexposure) {
-  var framebuffers = autoexposure._framebuffers;
+  const framebuffers = autoexposure._framebuffers;
   if (!defined(framebuffers)) {
     return;
   }
 
-  var length = framebuffers.length;
-  for (var i = 0; i < length; ++i) {
+  const length = framebuffers.length;
+  for (let i = 0; i < length; ++i) {
     framebuffers[i].destroy();
   }
   autoexposure._framebuffers = undefined;
@@ -127,23 +127,23 @@ function destroyFramebuffers(autoexposure) {
 function createFramebuffers(autoexposure, context) {
   destroyFramebuffers(autoexposure);
 
-  var width = autoexposure._width;
-  var height = autoexposure._height;
+  let width = autoexposure._width;
+  let height = autoexposure._height;
 
-  var pixelDatatype = context.halfFloatingPointTexture
+  const pixelDatatype = context.halfFloatingPointTexture
     ? PixelDatatype.HALF_FLOAT
     : PixelDatatype.FLOAT;
 
-  var length = Math.ceil(Math.log(Math.max(width, height)) / Math.log(3.0));
-  var framebuffers = new Array(length);
-  for (var i = 0; i < length; ++i) {
+  const length = Math.ceil(Math.log(Math.max(width, height)) / Math.log(3.0));
+  const framebuffers = new Array(length);
+  for (let i = 0; i < length; ++i) {
     width = Math.max(Math.ceil(width / 3.0), 1.0);
     height = Math.max(Math.ceil(height / 3.0), 1.0);
     framebuffers[i] = new FramebufferManager();
     framebuffers[i].update(context, width, height, 1, pixelDatatype);
   }
 
-  var lastTexture = framebuffers[length - 1].getColorTexture(0);
+  const lastTexture = framebuffers[length - 1].getColorTexture(0);
   autoexposure._previousLuminance.update(
     context,
     lastTexture.width,
@@ -155,20 +155,20 @@ function createFramebuffers(autoexposure, context) {
 }
 
 function destroyCommands(autoexposure) {
-  var commands = autoexposure._commands;
+  const commands = autoexposure._commands;
   if (!defined(commands)) {
     return;
   }
 
-  var length = commands.length;
-  for (var i = 0; i < length; ++i) {
+  const length = commands.length;
+  for (let i = 0; i < length; ++i) {
     commands[i].shaderProgram.destroy();
   }
   autoexposure._commands = undefined;
 }
 
 function createUniformMap(autoexposure, index) {
-  var uniforms;
+  let uniforms;
   if (index === 0) {
     uniforms = {
       colorTexture: function () {
@@ -179,7 +179,7 @@ function createUniformMap(autoexposure, index) {
       },
     };
   } else {
-    var texture = autoexposure._framebuffers[index - 1].getColorTexture(0);
+    const texture = autoexposure._framebuffers[index - 1].getColorTexture(0);
     uniforms = {
       colorTexture: function () {
         return texture;
@@ -201,7 +201,7 @@ function createUniformMap(autoexposure, index) {
 }
 
 function getShaderSource(index, length) {
-  var source =
+  let source =
     "uniform sampler2D colorTexture; \n" +
     "varying vec2 v_textureCoordinates; \n" +
     "float sampleTexture(vec2 offset) { \n";
@@ -256,12 +256,12 @@ function getShaderSource(index, length) {
 
 function createCommands(autoexposure, context) {
   destroyCommands(autoexposure);
-  var framebuffers = autoexposure._framebuffers;
-  var length = framebuffers.length;
+  const framebuffers = autoexposure._framebuffers;
+  const length = framebuffers.length;
 
-  var commands = new Array(length);
+  const commands = new Array(length);
 
-  for (var i = 0; i < length; ++i) {
+  for (let i = 0; i < length; ++i) {
     commands[i] = context.createViewportQuadCommand(
       getShaderSource(i, length),
       {
@@ -279,12 +279,12 @@ function createCommands(autoexposure, context) {
  * @private
  */
 AutoExposure.prototype.clear = function (context) {
-  var framebuffers = this._framebuffers;
+  const framebuffers = this._framebuffers;
   if (!defined(framebuffers)) {
     return;
   }
 
-  var clearCommand = this._clearCommand;
+  let clearCommand = this._clearCommand;
   if (!defined(clearCommand)) {
     clearCommand = this._clearCommand = new ClearCommand({
       color: new Color(0.0, 0.0, 0.0, 0.0),
@@ -292,8 +292,8 @@ AutoExposure.prototype.clear = function (context) {
     });
   }
 
-  var length = framebuffers.length;
-  for (var i = 0; i < length; ++i) {
+  const length = framebuffers.length;
+  for (let i = 0; i < length; ++i) {
     framebuffers[i].clear(context, clearCommand);
   }
 };
@@ -304,8 +304,8 @@ AutoExposure.prototype.clear = function (context) {
  * @private
  */
 AutoExposure.prototype.update = function (context) {
-  var width = context.drawingBufferWidth;
-  var height = context.drawingBufferHeight;
+  const width = context.drawingBufferWidth;
+  const height = context.drawingBufferHeight;
 
   if (width !== this._width || height !== this._height) {
     this._width = width;
@@ -322,8 +322,8 @@ AutoExposure.prototype.update = function (context) {
   this._minMaxLuminance.x = this.minimumLuminance;
   this._minMaxLuminance.y = this.maximumLuminance;
 
-  var framebuffers = this._framebuffers;
-  var temp = framebuffers[framebuffers.length - 1];
+  const framebuffers = this._framebuffers;
+  const temp = framebuffers[framebuffers.length - 1];
   framebuffers[framebuffers.length - 1] = this._previousLuminance;
   this._commands[
     this._commands.length - 1
@@ -340,13 +340,13 @@ AutoExposure.prototype.update = function (context) {
 AutoExposure.prototype.execute = function (context, colorTexture) {
   this._colorTexture = colorTexture;
 
-  var commands = this._commands;
+  const commands = this._commands;
   if (!defined(commands)) {
     return;
   }
 
-  var length = commands.length;
-  for (var i = 0; i < length; ++i) {
+  const length = commands.length;
+  for (let i = 0; i < length; ++i) {
     commands[i].execute(context);
   }
 };

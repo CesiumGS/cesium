@@ -18,13 +18,13 @@ function Renderbuffer(options) {
   Check.defined("options.context", options.context);
   //>>includeEnd('debug');
 
-  var context = options.context;
-  var gl = context._gl;
-  var maximumRenderbufferSize = ContextLimits.maximumRenderbufferSize;
+  const context = options.context;
+  const gl = context._gl;
+  const maximumRenderbufferSize = ContextLimits.maximumRenderbufferSize;
 
-  var format = defaultValue(options.format, RenderbufferFormat.RGBA4);
-  var width = defined(options.width) ? options.width : gl.drawingBufferWidth;
-  var height = defined(options.height)
+  const format = defaultValue(options.format, RenderbufferFormat.RGBA4);
+  const width = defined(options.width) ? options.width : gl.drawingBufferWidth;
+  const height = defined(options.height)
     ? options.height
     : gl.drawingBufferHeight;
   var numSamples = defaultValue(options.numSamples, 1);

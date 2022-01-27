@@ -86,14 +86,14 @@ OpenCageGeocoderService.prototype.geocode = function (query) {
   Check.typeOf.string("query", query);
   //>>includeEnd('debug');
 
-  var resource = this._url.getDerivedResource({
+  const resource = this._url.getDerivedResource({
     url: "json",
     queryParameters: combine(this._params, { q: query }),
   });
   return resource.fetchJson().then(function (response) {
     return response.results.map(function (resultObject) {
-      var destination;
-      var bounds = resultObject.bounds;
+      let destination;
+      const bounds = resultObject.bounds;
 
       if (defined(bounds)) {
         destination = Rectangle.fromDegrees(
@@ -103,8 +103,8 @@ OpenCageGeocoderService.prototype.geocode = function (query) {
           bounds.northeast.lat
         );
       } else {
-        var lon = resultObject.geometry.lat;
-        var lat = resultObject.geometry.lng;
+        const lon = resultObject.geometry.lat;
+        const lat = resultObject.geometry.lng;
         destination = Cartesian3.fromDegrees(lon, lat);
       }
 

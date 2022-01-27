@@ -11,17 +11,20 @@ import { Rectangle } from "../../Source/Cesium.js";
 
 describe("Core/Geometry", function () {
   it("constructor", function () {
-    var attributes = {
+    const attributes = {
       position: new GeometryAttribute({
         componentDatatype: ComponentDatatype.DOUBLE,
         componentsPerAttribute: 3,
         values: new Float64Array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]),
       }),
     };
-    var indices = new Uint16Array([0, 1, 2]);
-    var boundingSphere = new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0);
+    const indices = new Uint16Array([0, 1, 2]);
+    const boundingSphere = new BoundingSphere(
+      new Cartesian3(0.5, 0.5, 0.0),
+      1.0
+    );
 
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: attributes,
       indices: indices,
       primitiveType: PrimitiveType.TRIANGLES,
@@ -45,7 +48,7 @@ describe("Core/Geometry", function () {
   });
 
   it("computeNumberOfVertices", function () {
-    var attributes = {
+    const attributes = {
       position: new GeometryAttribute({
         componentDatatype: ComponentDatatype.DOUBLE,
         componentsPerAttribute: 3,
@@ -57,10 +60,13 @@ describe("Core/Geometry", function () {
         values: new Float32Array([0.0, 0.0, 1.0, 0.0, 0.0, 1.0]),
       }),
     };
-    var indices = new Uint16Array([0, 1, 2]);
-    var boundingSphere = new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0);
+    const indices = new Uint16Array([0, 1, 2]);
+    const boundingSphere = new BoundingSphere(
+      new Cartesian3(0.5, 0.5, 0.0),
+      1.0
+    );
 
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: attributes,
       indices: indices,
       primitiveType: PrimitiveType.TRIANGLES,
@@ -71,7 +77,7 @@ describe("Core/Geometry", function () {
   });
 
   it("computeNumberOfVertices throws when attributes have different number of vertices", function () {
-    var attributes = {
+    const attributes = {
       position: new GeometryAttribute({
         componentDatatype: ComponentDatatype.DOUBLE,
         componentsPerAttribute: 3,
@@ -83,10 +89,13 @@ describe("Core/Geometry", function () {
         values: new Float32Array([0.0, 0.0, 1.0, 0.0]),
       }),
     };
-    var indices = new Uint16Array([0, 1, 2]);
-    var boundingSphere = new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0);
+    const indices = new Uint16Array([0, 1, 2]);
+    const boundingSphere = new BoundingSphere(
+      new Cartesian3(0.5, 0.5, 0.0),
+      1.0
+    );
 
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: attributes,
       indices: indices,
       primitiveType: PrimitiveType.TRIANGLES,
@@ -105,7 +114,7 @@ describe("Core/Geometry", function () {
   });
 
   it("computes textureCoordinateRotationPoints for collections of points", function () {
-    var positions = Cartesian3.fromDegreesArrayHeights([
+    const positions = Cartesian3.fromDegreesArrayHeights([
       -10.0,
       -10.0,
       0,
@@ -119,8 +128,8 @@ describe("Core/Geometry", function () {
       10.0,
       0,
     ]);
-    var boundingRectangle = Rectangle.fromCartesianArray(positions);
-    var textureCoordinateRotationPoints = Geometry._textureCoordinateRotationPoints(
+    const boundingRectangle = Rectangle.fromCartesianArray(positions);
+    const textureCoordinateRotationPoints = Geometry._textureCoordinateRotationPoints(
       positions,
       0.0,
       Ellipsoid.WGS84,

@@ -52,7 +52,7 @@ function InvertClassification() {
     stencil: 0,
   });
 
-  var that = this;
+  const that = this;
   this._uniformMap = {
     colorTexture: function () {
       return that._fbo.getColorTexture();
@@ -78,7 +78,7 @@ InvertClassification.isTranslucencySupported = function (context) {
   return context.depthTexture && context.fragmentDepth;
 };
 
-var rsUnclassified = {
+const rsUnclassified = {
   depthMask: false,
   stencilTest: {
     enabled: true,
@@ -95,7 +95,7 @@ var rsUnclassified = {
   blending: BlendingState.ALPHA_BLEND,
 };
 
-var rsClassified = {
+const rsClassified = {
   depthMask: false,
   stencilTest: {
     enabled: true,
@@ -115,7 +115,7 @@ var rsClassified = {
 // Set the 3D Tiles bit when rendering back into the scene's framebuffer. This is only needed if
 // invert classification does not use the scene's depth-stencil texture, which is the case if the invert
 // classification color is translucent.
-var rsDefault = {
+const rsDefault = {
   depthMask: true,
   depthTest: {
     enabled: true,
@@ -125,7 +125,7 @@ var rsDefault = {
   blending: BlendingState.ALPHA_BLEND,
 };
 
-var translucentFS =
+const translucentFS =
   "#extension GL_EXT_frag_depth : enable\n" +
   "uniform sampler2D colorTexture;\n" +
   "uniform sampler2D depthTexture;\n" +
@@ -156,7 +156,7 @@ var translucentFS =
   "    gl_FragDepthEXT = texture2D(depthTexture, v_textureCoordinates).r;\n" +
   "}\n";
 
-var opaqueFS =
+const opaqueFS =
   "uniform sampler2D colorTexture;\n" +
   "varying vec2 v_textureCoordinates;\n" +
   "void main()\n" +
@@ -184,9 +184,9 @@ InvertClassification.prototype.update = function (
   this._previousFramebuffer = this.previousFramebuffer;
   var samplesChanged = this._numSamples !== numSamples;
 
-  var width = context.drawingBufferWidth;
-  var height = context.drawingBufferHeight;
-  var textureChanged =
+  const width = context.drawingBufferWidth;
+  const height = context.drawingBufferHeight;
+  const textureChanged =
     !defined(texture) || texture.width !== width || texture.height !== height;
 
   if (textureChanged || previousFramebufferChanged || samplesChanged) {
@@ -226,8 +226,8 @@ InvertClassification.prototype.update = function (
     this._fbo.destroy();
     this._fboClassified.destroy();
 
-    var depthStencilTexture;
-    var depthStencilRenderbuffer;
+    let depthStencilTexture;
+    let depthStencilRenderbuffer;
     if (defined(this._previousFramebuffer)) {
       depthStencilTexture = globeFramebuffer.getDepthStencilTexture();
       depthStencilRenderbuffer = globeFramebuffer.getDepthStencilRenderbuffer();
@@ -268,12 +268,12 @@ InvertClassification.prototype.update = function (
         this._classifiedCommand.shaderProgram.destroy();
     }
 
-    var fs = defined(this._previousFramebuffer) ? opaqueFS : translucentFS;
-    var unclassifiedFSSource = new ShaderSource({
+    const fs = defined(this._previousFramebuffer) ? opaqueFS : translucentFS;
+    const unclassifiedFSSource = new ShaderSource({
       defines: ["UNCLASSIFIED"],
       sources: [fs],
     });
-    var classifiedFSSource = new ShaderSource({
+    const classifiedFSSource = new ShaderSource({
       sources: [fs],
     });
     this._unclassifiedCommand = context.createViewportQuadCommand(
@@ -335,7 +335,7 @@ InvertClassification.prototype.executeClassified = function (
   passState
 ) {
   if (!defined(this._previousFramebuffer)) {
-    var framebuffer = passState.framebuffer;
+    const framebuffer = passState.framebuffer;
 
     this.prepareTextures(context);
     passState.framebuffer = this._fboClassified.framebuffer;

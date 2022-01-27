@@ -10,7 +10,7 @@ import PixelDatatype from "./PixelDatatype.js";
 import createGuid from "../Core/createGuid.js";
 
 function attachTexture(framebuffer, attachment, texture) {
-  var gl = framebuffer._gl;
+  const gl = framebuffer._gl;
   gl.framebufferTexture2D(
     gl.FRAMEBUFFER,
     attachment,
@@ -21,7 +21,7 @@ function attachTexture(framebuffer, attachment, texture) {
 }
 
 function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
-  var gl = framebuffer._gl;
+  const gl = framebuffer._gl;
   gl.framebufferRenderbuffer(
     gl.FRAMEBUFFER,
     attachment,
@@ -78,13 +78,13 @@ function Framebuffer(options) {
   this._id = createGuid();
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var context = options.context;
+  const context = options.context;
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.context", context);
   //>>includeEnd('debug');
 
-  var gl = context._gl;
-  var maximumColorAttachments = ContextLimits.maximumColorAttachments;
+  const gl = context._gl;
+  const maximumColorAttachments = ContextLimits.maximumColorAttachments;
 
   this._gl = gl;
   this._framebuffer = gl.createFramebuffer();
@@ -136,9 +136,9 @@ function Framebuffer(options) {
   //>>includeEnd('debug');
 
   // Avoid errors defined in Section 6.5 of the WebGL spec
-  var depthAttachment =
+  const depthAttachment =
     defined(options.depthTexture) || defined(options.depthRenderbuffer);
-  var depthStencilAttachment =
+  const depthStencilAttachment =
     defined(options.depthStencilTexture) ||
     defined(options.depthStencilRenderbuffer);
 
@@ -164,14 +164,14 @@ function Framebuffer(options) {
 
   this._bind();
 
-  var texture;
-  var renderbuffer;
-  var i;
-  var length;
-  var attachmentEnum;
+  let texture;
+  let renderbuffer;
+  let i;
+  let length;
+  let attachmentEnum;
 
   if (defined(options.colorTextures)) {
-    var textures = options.colorTextures;
+    const textures = options.colorTextures;
     length = this._colorTextures.length = this._activeColorAttachments.length =
       textures.length;
 
@@ -218,7 +218,7 @@ function Framebuffer(options) {
   }
 
   if (defined(options.colorRenderbuffers)) {
-    var renderbuffers = options.colorRenderbuffers;
+    const renderbuffers = options.colorRenderbuffers;
     length = this._colorRenderbuffers.length = this._activeColorAttachments.length =
       renderbuffers.length;
 
@@ -300,7 +300,7 @@ Object.defineProperties(Framebuffer.prototype, {
   status: {
     get: function () {
       this._bind();
-      var status = this._gl.checkFramebufferStatus(this._gl.FRAMEBUFFER);
+      const status = this._gl.checkFramebufferStatus(this._gl.FRAMEBUFFER);
       this._unBind();
       return status;
     },
@@ -356,12 +356,12 @@ Object.defineProperties(Framebuffer.prototype, {
 });
 
 Framebuffer.prototype._bind = function () {
-  var gl = this._gl;
+  const gl = this._gl;
   gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
 };
 
 Framebuffer.prototype._unBind = function () {
-  var gl = this._gl;
+  const gl = this._gl;
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 };
 
@@ -414,20 +414,20 @@ Framebuffer.prototype.isDestroyed = function () {
 Framebuffer.prototype.destroy = function () {
   if (this.destroyAttachments) {
     // If the color texture is a cube map face, it is owned by the cube map, and will not be destroyed.
-    var i = 0;
-    var textures = this._colorTextures;
-    var length = textures.length;
+    let i = 0;
+    const textures = this._colorTextures;
+    let length = textures.length;
     for (; i < length; ++i) {
-      var texture = textures[i];
+      const texture = textures[i];
       if (defined(texture)) {
         texture.destroy();
       }
     }
 
-    var renderbuffers = this._colorRenderbuffers;
+    const renderbuffers = this._colorRenderbuffers;
     length = renderbuffers.length;
     for (i = 0; i < length; ++i) {
-      var renderbuffer = renderbuffers[i];
+      const renderbuffer = renderbuffers[i];
       if (defined(renderbuffer)) {
         renderbuffer.destroy();
       }

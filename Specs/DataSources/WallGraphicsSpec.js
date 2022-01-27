@@ -9,7 +9,7 @@ import testMaterialDefinitionChanged from "../testMaterialDefinitionChanged.js";
 
 describe("DataSources/WallGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {
-    var options = {
+    const options = {
       material: Color.BLUE,
       positions: [],
       show: true,
@@ -24,7 +24,7 @@ describe("DataSources/WallGraphics", function () {
       distanceDisplayCondition: new DistanceDisplayCondition(),
     };
 
-    var wall = new WallGraphics(options);
+    const wall = new WallGraphics(options);
     expect(wall.material).toBeInstanceOf(ColorMaterialProperty);
     expect(wall.positions).toBeInstanceOf(ConstantProperty);
     expect(wall.show).toBeInstanceOf(ConstantProperty);
@@ -57,7 +57,7 @@ describe("DataSources/WallGraphics", function () {
   });
 
   it("merge assigns unassigned properties", function () {
-    var source = new WallGraphics();
+    const source = new WallGraphics();
     source.material = new ColorMaterialProperty();
     source.positions = new ConstantProperty();
     source.show = new ConstantProperty();
@@ -71,7 +71,7 @@ describe("DataSources/WallGraphics", function () {
     source.shadows = new ConstantProperty(ShadowMode.ENABLED);
     source.distanceDisplayCondition = new ConstantProperty();
 
-    var target = new WallGraphics();
+    const target = new WallGraphics();
     target.merge(source);
 
     expect(target.material).toBe(source.material);
@@ -91,22 +91,22 @@ describe("DataSources/WallGraphics", function () {
   });
 
   it("merge does not assign assigned properties", function () {
-    var source = new WallGraphics();
+    const source = new WallGraphics();
 
-    var material = new ColorMaterialProperty();
-    var positions = new ColorMaterialProperty();
-    var show = new ConstantProperty();
-    var granularity = new ConstantProperty();
-    var fill = new ConstantProperty();
-    var outline = new ConstantProperty();
-    var outlineColor = new ConstantProperty();
-    var outlineWidth = new ConstantProperty();
-    var minimumHeights = new ConstantProperty();
-    var maximumHeights = new ConstantProperty();
-    var shadows = new ConstantProperty();
-    var distanceDisplayCondition = new ConstantProperty();
+    const material = new ColorMaterialProperty();
+    const positions = new ColorMaterialProperty();
+    const show = new ConstantProperty();
+    const granularity = new ConstantProperty();
+    const fill = new ConstantProperty();
+    const outline = new ConstantProperty();
+    const outlineColor = new ConstantProperty();
+    const outlineWidth = new ConstantProperty();
+    const minimumHeights = new ConstantProperty();
+    const maximumHeights = new ConstantProperty();
+    const shadows = new ConstantProperty();
+    const distanceDisplayCondition = new ConstantProperty();
 
-    var target = new WallGraphics();
+    const target = new WallGraphics();
     target.material = material;
     target.positions = positions;
     target.show = show;
@@ -137,7 +137,7 @@ describe("DataSources/WallGraphics", function () {
   });
 
   it("clone works", function () {
-    var source = new WallGraphics();
+    const source = new WallGraphics();
     source.material = new ColorMaterialProperty();
     source.positions = new ConstantProperty();
     source.show = new ConstantProperty();
@@ -151,7 +151,7 @@ describe("DataSources/WallGraphics", function () {
     source.shadows = new ConstantProperty();
     source.distanceDisplayCondition = new ConstantProperty();
 
-    var result = source.clone();
+    const result = source.clone();
     expect(result.material).toBe(source.material);
     expect(result.positions).toBe(source.positions);
     expect(result.show).toBe(source.show);
@@ -169,14 +169,14 @@ describe("DataSources/WallGraphics", function () {
   });
 
   it("merge throws if source undefined", function () {
-    var target = new WallGraphics();
+    const target = new WallGraphics();
     expect(function () {
       target.merge(undefined);
     }).toThrowDeveloperError();
   });
 
   it("raises definitionChanged when a property is assigned or modified", function () {
-    var property = new WallGraphics();
+    const property = new WallGraphics();
     testMaterialDefinitionChanged(property, "material", Color.RED, Color.BLUE);
     testDefinitionChanged(property, "show", true, false);
     testDefinitionChanged(property, "positions", [], []);

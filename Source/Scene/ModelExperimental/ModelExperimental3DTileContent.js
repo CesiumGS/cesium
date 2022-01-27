@@ -31,9 +31,9 @@ export default function ModelExperimental3DTileContent(
 Object.defineProperties(ModelExperimental3DTileContent.prototype, {
   featuresLength: {
     get: function () {
-      var model = this._model;
-      var featureTables = model.featureTables;
-      var featureTableId = model.featureTableId;
+      const model = this._model;
+      const featureTables = model.featureTables;
+      const featureTableId = model.featureTableId;
 
       if (defined(featureTables) && defined(featureTables[featureTableId])) {
         return featureTables[featureTableId].featuresLength;
@@ -105,9 +105,9 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
 
   batchTable: {
     get: function () {
-      var model = this._model;
-      var featureTables = model.featureTables;
-      var featureTableId = model.featureTableId;
+      const model = this._model;
+      const featureTables = model.featureTables;
+      const featureTableId = model.featureTableId;
 
       if (defined(featureTables) && defined(featureTables[featureTableId])) {
         return featureTables[featureTableId];
@@ -128,13 +128,13 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
 });
 
 ModelExperimental3DTileContent.prototype.getFeature = function (featureId) {
-  var model = this._model;
-  var featureTableId = model.featureTableId;
+  const model = this._model;
+  const featureTableId = model.featureTableId;
   if (!defined(featureTableId)) {
     return undefined;
   }
 
-  var featureTable = model.featureTables[featureTableId];
+  const featureTable = model.featureTables[featureTableId];
   return featureTable.getFeature(featureId);
 };
 
@@ -142,13 +142,13 @@ ModelExperimental3DTileContent.prototype.hasProperty = function (
   featureId,
   name
 ) {
-  var model = this._model;
-  var featureTableId = model.featureTableId;
+  const model = this._model;
+  const featureTableId = model.featureTableId;
   if (!defined(featureTableId)) {
     return false;
   }
 
-  var featureTable = model.featureTables[featureTableId];
+  const featureTable = model.featureTables[featureTableId];
   return featureTable.hasProperty(featureId, name);
 };
 
@@ -167,8 +167,8 @@ ModelExperimental3DTileContent.prototype.update = function (
   tileset,
   frameState
 ) {
-  var model = this._model;
-  var tile = this._tile;
+  const model = this._model;
+  const tile = this._tile;
 
   model.colorBlendAmount = tileset.colorBlendAmount;
   model.colorBlendMode = tileset.colorBlendMode;
@@ -194,9 +194,9 @@ ModelExperimental3DTileContent.fromGltf = function (
   resource,
   gltf
 ) {
-  var content = new ModelExperimental3DTileContent(tileset, tile, resource);
+  const content = new ModelExperimental3DTileContent(tileset, tile, resource);
 
-  var modelOptions = {
+  const modelOptions = {
     gltf: gltf,
     cull: false, // The model is already culled by 3D Tiles
     releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
@@ -222,9 +222,9 @@ ModelExperimental3DTileContent.fromB3dm = function (
   arrayBuffer,
   byteOffset
 ) {
-  var content = new ModelExperimental3DTileContent(tileset, tile, resource);
+  const content = new ModelExperimental3DTileContent(tileset, tile, resource);
 
-  var modelOptions = {
+  const modelOptions = {
     arrayBuffer: arrayBuffer,
     byteOffset: byteOffset,
     resource: resource,
@@ -251,9 +251,9 @@ ModelExperimental3DTileContent.fromI3dm = function (
   arrayBuffer,
   byteOffset
 ) {
-  var content = new ModelExperimental3DTileContent(tileset, tile, resource);
+  const content = new ModelExperimental3DTileContent(tileset, tile, resource);
 
-  var modelOptions = {
+  const modelOptions = {
     arrayBuffer: arrayBuffer,
     byteOffset: byteOffset,
     resource: resource,
@@ -280,9 +280,9 @@ ModelExperimental3DTileContent.fromPnts = function (
   arrayBuffer,
   byteOffset
 ) {
-  var content = new ModelExperimental3DTileContent(tileset, tile, resource);
+  const content = new ModelExperimental3DTileContent(tileset, tile, resource);
 
-  var modelOptions = {
+  const modelOptions = {
     arrayBuffer: arrayBuffer,
     byteOffset: byteOffset,
     resource: resource,

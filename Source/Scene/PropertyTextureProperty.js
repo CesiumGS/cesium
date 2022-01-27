@@ -23,9 +23,9 @@ import GltfLoaderUtil from "./GltfLoaderUtil.js";
  */
 function PropertyTextureProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var property = options.property;
-  var classProperty = options.classProperty;
-  var textures = options.textures;
+  const property = options.property;
+  const classProperty = options.classProperty;
+  const textures = options.textures;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.property", property);
@@ -33,8 +33,8 @@ function PropertyTextureProperty(options) {
   Check.typeOf.object("options.textures", textures);
   //>>includeEnd('debug');
 
-  var textureInfo = property.texture;
-  var textureReader = GltfLoaderUtil.createModelTextureReader({
+  const textureInfo = property.texture;
+  const textureReader = GltfLoaderUtil.createModelTextureReader({
     textureInfo: textureInfo,
     channels: property.channels,
     texture: textures[textureInfo.index],

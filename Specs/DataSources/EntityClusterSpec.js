@@ -14,10 +14,10 @@ import createScene from "../createScene.js";
 describe(
   "DataSources/EntityCluster",
   function () {
-    var scene;
-    var cluster;
-    var depth;
-    var farDepth;
+    let scene;
+    let cluster;
+    let depth;
+    let farDepth;
 
     beforeAll(function () {
       scene = createScene({
@@ -61,7 +61,7 @@ describe(
         },
       });
 
-      var camera = scene.camera;
+      const camera = scene.camera;
       camera.setView({
         destination: Cartesian3.fromDegrees(0.0, 0.0, 10000.0),
       });
@@ -106,7 +106,7 @@ describe(
     });
 
     it("constructor sets expected properties", function () {
-      var options = {
+      const options = {
         enabled: true,
         show: false,
         pixelRange: 30,
@@ -126,10 +126,10 @@ describe(
     });
 
     function createBillboardImage() {
-      var canvas = document.createElement("canvas");
+      const canvas = document.createElement("canvas");
       canvas.height = canvas.width = 1;
 
-      var context2D = canvas.getContext("2d");
+      const context2D = canvas.getContext("2d");
       context2D.clearRect(0, 0, length, length);
       context2D.fillStyle = "#FF0000";
       context2D.fillRect(0, 0, length, length);
@@ -141,8 +141,8 @@ describe(
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
-      var entity = new Entity();
-      var billboard = cluster.getBillboard(entity);
+      let entity = new Entity();
+      let billboard = cluster.getBillboard(entity);
       billboard.id = entity;
       billboard.image = createBillboardImage();
       billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(
@@ -161,7 +161,7 @@ describe(
         depth
       );
 
-      var frameState = scene.frameState;
+      const frameState = scene.frameState;
       cluster.update(frameState);
 
       expect(cluster._clusterLabelCollection).not.toBeDefined();
@@ -182,8 +182,8 @@ describe(
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
-      var entity = new Entity();
-      var billboard = cluster.getBillboard(entity);
+      let entity = new Entity();
+      let billboard = cluster.getBillboard(entity);
       billboard.id = entity;
       billboard.image = createBillboardImage();
       billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(
@@ -213,8 +213,8 @@ describe(
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
-      var entity = new Entity();
-      var label = cluster.getLabel(entity);
+      let entity = new Entity();
+      let label = cluster.getLabel(entity);
       label.id = entity;
       label.text = "a";
       label.position = SceneTransforms.drawingBufferToWgs84Coordinates(
@@ -233,7 +233,7 @@ describe(
         depth
       );
 
-      var frameState = scene.frameState;
+      const frameState = scene.frameState;
       cluster.update(frameState);
 
       expect(cluster._clusterLabelCollection).not.toBeDefined();
@@ -254,8 +254,8 @@ describe(
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
-      var entity = new Entity();
-      var label = cluster.getLabel(entity);
+      let entity = new Entity();
+      let label = cluster.getLabel(entity);
       label.id = entity;
       label.text = "a";
       label.position = SceneTransforms.drawingBufferToWgs84Coordinates(
@@ -285,8 +285,8 @@ describe(
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
-      var entity = new Entity();
-      var point = cluster.getPoint(entity);
+      let entity = new Entity();
+      let point = cluster.getPoint(entity);
       point.id = entity;
       point.pixelSize = 1;
       point.position = SceneTransforms.drawingBufferToWgs84Coordinates(
@@ -305,7 +305,7 @@ describe(
         depth
       );
 
-      var frameState = scene.frameState;
+      const frameState = scene.frameState;
       cluster.update(frameState);
 
       expect(cluster._clusterLabelCollection).not.toBeDefined();
@@ -326,8 +326,8 @@ describe(
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
-      var entity = new Entity();
-      var point = cluster.getPoint(entity);
+      let entity = new Entity();
+      let point = cluster.getPoint(entity);
       point.id = entity;
       point.pixelSize = 1;
       point.position = SceneTransforms.drawingBufferToWgs84Coordinates(
@@ -357,8 +357,8 @@ describe(
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
-      var entity = new Entity();
-      var point = cluster.getPoint(entity);
+      let entity = new Entity();
+      let point = cluster.getPoint(entity);
       point.id = entity;
       point.pixelSize = 1;
       point.position = SceneTransforms.drawingBufferToWgs84Coordinates(
@@ -377,7 +377,7 @@ describe(
         depth
       );
 
-      var frameState = scene.frameState;
+      const frameState = scene.frameState;
       cluster.update(frameState);
 
       expect(cluster._clusterLabelCollection).not.toBeDefined();
@@ -400,7 +400,7 @@ describe(
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
-      var entity = new Entity();
+      const entity = new Entity();
       cluster.getBillboard(entity);
       cluster.getLabel(entity);
       cluster.getPoint(entity);
@@ -420,7 +420,7 @@ describe(
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
-      var entity = new Entity();
+      const entity = new Entity();
       cluster.getBillboard(entity);
       cluster.getLabel(entity);
       cluster.getPoint(entity);
@@ -436,16 +436,16 @@ describe(
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
-      var entity1 = new Entity();
-      var billboard = cluster.getBillboard(entity1);
+      const entity1 = new Entity();
+      const billboard = cluster.getBillboard(entity1);
       billboard.id = entity1;
 
-      var entity2 = new Entity();
-      var label = cluster.getLabel(entity2);
+      const entity2 = new Entity();
+      const label = cluster.getLabel(entity2);
       label.id = entity2;
 
-      var entity3 = new Entity();
-      var point = cluster.getPoint(entity3);
+      const entity3 = new Entity();
+      const point = cluster.getPoint(entity3);
       point.id = entity3;
 
       cluster.destroy();
@@ -465,7 +465,7 @@ describe(
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
-      var entity = new Entity();
+      const entity = new Entity();
       cluster.getBillboard(entity);
       cluster.getLabel(entity);
       cluster.getPoint(entity);
@@ -480,8 +480,8 @@ describe(
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
-      var entity = new Entity();
-      var billboard = cluster.getBillboard(entity);
+      let entity = new Entity();
+      let billboard = cluster.getBillboard(entity);
       billboard.id = entity;
       billboard.image = createBillboardImage();
       billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(
@@ -500,7 +500,7 @@ describe(
         depth
       );
 
-      var frameState = scene.frameState;
+      const frameState = scene.frameState;
       cluster.update(frameState);
 
       expect(cluster._clusterLabelCollection).not.toBeDefined();
@@ -521,8 +521,8 @@ describe(
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
-      var entity = new Entity();
-      var billboard = cluster.getBillboard(entity);
+      let entity = new Entity();
+      let billboard = cluster.getBillboard(entity);
       billboard.id = entity;
       billboard.image = createBillboardImage();
       billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(
@@ -561,7 +561,7 @@ describe(
         depth
       );
 
-      var frameState = scene.frameState;
+      const frameState = scene.frameState;
       cluster.update(frameState);
 
       expect(cluster._clusterLabelCollection).not.toBeDefined();
@@ -582,8 +582,8 @@ describe(
       cluster = new EntityCluster();
       cluster._initialize(scene);
 
-      var entity = new Entity();
-      var billboard = cluster.getBillboard(entity);
+      let entity = new Entity();
+      let billboard = cluster.getBillboard(entity);
       billboard.id = entity;
       billboard.image = createBillboardImage();
       billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(
@@ -602,7 +602,7 @@ describe(
         farDepth
       );
 
-      var frameState = scene.frameState;
+      const frameState = scene.frameState;
       cluster.update(frameState);
 
       expect(cluster._clusterLabelCollection).not.toBeDefined();
@@ -613,7 +613,7 @@ describe(
       expect(cluster._clusterLabelCollection).toBeDefined();
       expect(cluster._clusterLabelCollection.length).toEqual(1);
 
-      var position = Cartesian3.clone(
+      const position = Cartesian3.clone(
         cluster._clusterLabelCollection.get(0).position
       );
 
@@ -639,8 +639,8 @@ describe(
         cluster.label.text = "cluster";
       });
 
-      var entity = new Entity();
-      var point = cluster.getPoint(entity);
+      let entity = new Entity();
+      let point = cluster.getPoint(entity);
       point.id = entity;
       point.pixelSize = 1;
       point.position = SceneTransforms.drawingBufferToWgs84Coordinates(
@@ -659,7 +659,7 @@ describe(
         farDepth
       );
 
-      var frameState = scene.frameState;
+      const frameState = scene.frameState;
       cluster.update(frameState);
 
       expect(cluster._clusterBillboardCollection).not.toBeDefined();
@@ -681,7 +681,7 @@ describe(
       cluster._initialize(scene);
       cluster.minimumClusterSize = 3;
 
-      var dataSource = new CustomDataSource("test");
+      const dataSource = new CustomDataSource("test");
       dataSource.clustering = cluster;
       dataSource._visualizers = DataSourceDisplay.defaultVisualizersCallback(
         scene,
@@ -689,7 +689,7 @@ describe(
         dataSource
       );
 
-      var entityCollection = dataSource.entities;
+      const entityCollection = dataSource.entities;
 
       entityCollection.add({
         position: SceneTransforms.drawingBufferToWgs84Coordinates(
@@ -719,13 +719,13 @@ describe(
         },
       });
 
-      var visualizers = dataSource._visualizers;
-      var length = visualizers.length;
-      for (var i = 0; i < length; i++) {
+      const visualizers = dataSource._visualizers;
+      const length = visualizers.length;
+      for (let i = 0; i < length; i++) {
         visualizers[i].update(JulianDate.now());
       }
 
-      var frameState = scene.frameState;
+      const frameState = scene.frameState;
       cluster.update(frameState);
 
       expect(cluster._clusterBillboardCollection).not.toBeDefined();

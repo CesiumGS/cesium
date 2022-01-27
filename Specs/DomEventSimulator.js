@@ -3,22 +3,22 @@ import { FeatureDetection } from "../Source/Cesium.js";
 
 function createMouseEvent(type, options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var canBubble = defaultValue(options.canBubble, true);
-  var cancelable = defaultValue(options.cancelable, true);
-  var view = defaultValue(options.view, window);
-  var detail = defaultValue(options.detail, 0);
-  var screenX = defaultValue(options.screenX, 0);
-  var screenY = defaultValue(options.screenY, 0);
-  var clientX = defaultValue(options.clientX, 0);
-  var clientY = defaultValue(options.clientY, 0);
-  var ctrlKey = defaultValue(options.ctrlKey, false);
-  var altKey = defaultValue(options.altKey, false);
-  var shiftKey = defaultValue(options.shiftKey, false);
-  var metaKey = defaultValue(options.metaKey, false);
-  var button = defaultValue(options.button, 0);
-  var relatedTarget = defaultValue(options.relatedTarget, null);
+  const canBubble = defaultValue(options.canBubble, true);
+  const cancelable = defaultValue(options.cancelable, true);
+  const view = defaultValue(options.view, window);
+  const detail = defaultValue(options.detail, 0);
+  const screenX = defaultValue(options.screenX, 0);
+  const screenY = defaultValue(options.screenY, 0);
+  const clientX = defaultValue(options.clientX, 0);
+  const clientY = defaultValue(options.clientY, 0);
+  const ctrlKey = defaultValue(options.ctrlKey, false);
+  const altKey = defaultValue(options.altKey, false);
+  const shiftKey = defaultValue(options.shiftKey, false);
+  const metaKey = defaultValue(options.metaKey, false);
+  const button = defaultValue(options.button, 0);
+  const relatedTarget = defaultValue(options.relatedTarget, null);
 
-  var event = document.createEvent("MouseEvent");
+  const event = document.createEvent("MouseEvent");
   event.initMouseEvent(
     type,
     canBubble,
@@ -40,7 +40,7 @@ function createMouseEvent(type, options) {
 }
 
 function createModifiersList(ctrlKey, altKey, shiftKey, metaKey) {
-  var modifiers = [];
+  const modifiers = [];
   if (ctrlKey) {
     modifiers.push("Control");
   }
@@ -59,24 +59,24 @@ function createModifiersList(ctrlKey, altKey, shiftKey, metaKey) {
 // MouseWheelEvent is legacy
 function createMouseWheelEvent(type, options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var canBubble = defaultValue(options.canBubble, true);
-  var cancelable = defaultValue(options.cancelable, true);
-  var view = defaultValue(options.view, window);
-  var detail = defaultValue(options.detail, 0);
-  var screenX = defaultValue(options.screenX, 0);
-  var screenY = defaultValue(options.screenY, 0);
-  var clientX = defaultValue(options.clientX, 0);
-  var clientY = defaultValue(options.clientY, 0);
-  var button = defaultValue(options.button, 0);
-  var relatedTarget = defaultValue(options.relatedTarget, null);
-  var ctrlKey = defaultValue(options.ctrlKey, false);
-  var altKey = defaultValue(options.altKey, false);
-  var shiftKey = defaultValue(options.shiftKey, false);
-  var metaKey = defaultValue(options.metaKey, false);
-  var wheelDelta = defaultValue(options.wheelDelta, 0);
+  const canBubble = defaultValue(options.canBubble, true);
+  const cancelable = defaultValue(options.cancelable, true);
+  const view = defaultValue(options.view, window);
+  const detail = defaultValue(options.detail, 0);
+  const screenX = defaultValue(options.screenX, 0);
+  const screenY = defaultValue(options.screenY, 0);
+  const clientX = defaultValue(options.clientX, 0);
+  const clientY = defaultValue(options.clientY, 0);
+  const button = defaultValue(options.button, 0);
+  const relatedTarget = defaultValue(options.relatedTarget, null);
+  const ctrlKey = defaultValue(options.ctrlKey, false);
+  const altKey = defaultValue(options.altKey, false);
+  const shiftKey = defaultValue(options.shiftKey, false);
+  const metaKey = defaultValue(options.metaKey, false);
+  const wheelDelta = defaultValue(options.wheelDelta, 0);
 
-  var event = document.createEvent("MouseWheelEvent");
-  var modifiersList = createModifiersList(ctrlKey, altKey, shiftKey, metaKey);
+  const event = document.createEvent("MouseWheelEvent");
+  const modifiersList = createModifiersList(ctrlKey, altKey, shiftKey, metaKey);
   event.initMouseWheelEvent(
     type,
     canBubble,
@@ -97,24 +97,24 @@ function createMouseWheelEvent(type, options) {
 
 function createWheelEvent(type, options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var canBubble = defaultValue(options.canBubble, true);
-  var cancelable = defaultValue(options.cancelable, true);
-  var view = defaultValue(options.view, window);
-  var detail = defaultValue(options.detail, 0);
-  var screenX = defaultValue(options.screenX, 0);
-  var screenY = defaultValue(options.screenY, 0);
-  var clientX = defaultValue(options.clientX, 0);
-  var clientY = defaultValue(options.clientY, 0);
-  var button = defaultValue(options.button, 0);
-  var relatedTarget = defaultValue(options.relatedTarget, null);
-  var ctrlKey = defaultValue(options.ctrlKey, false);
-  var altKey = defaultValue(options.altKey, false);
-  var shiftKey = defaultValue(options.shiftKey, false);
-  var metaKey = defaultValue(options.metaKey, false);
-  var deltaX = defaultValue(options.deltaX, 0);
-  var deltaY = defaultValue(options.deltaY, 0);
-  var deltaZ = defaultValue(options.deltaZ, 0);
-  var deltaMode = defaultValue(options.deltaMode, 0);
+  const canBubble = defaultValue(options.canBubble, true);
+  const cancelable = defaultValue(options.cancelable, true);
+  const view = defaultValue(options.view, window);
+  const detail = defaultValue(options.detail, 0);
+  const screenX = defaultValue(options.screenX, 0);
+  const screenY = defaultValue(options.screenY, 0);
+  const clientX = defaultValue(options.clientX, 0);
+  const clientY = defaultValue(options.clientY, 0);
+  const button = defaultValue(options.button, 0);
+  const relatedTarget = defaultValue(options.relatedTarget, null);
+  const ctrlKey = defaultValue(options.ctrlKey, false);
+  const altKey = defaultValue(options.altKey, false);
+  const shiftKey = defaultValue(options.shiftKey, false);
+  const metaKey = defaultValue(options.metaKey, false);
+  const deltaX = defaultValue(options.deltaX, 0);
+  const deltaY = defaultValue(options.deltaY, 0);
+  const deltaZ = defaultValue(options.deltaZ, 0);
+  const deltaMode = defaultValue(options.deltaMode, 0);
 
   try {
     return new WheelEvent(type, {
@@ -136,8 +136,13 @@ function createWheelEvent(type, options) {
       deltaMode: deltaMode,
     });
   } catch (e) {
-    var event = document.createEvent("WheelEvent");
-    var modifiersList = createModifiersList(ctrlKey, altKey, shiftKey, metaKey);
+    const event = document.createEvent("WheelEvent");
+    const modifiersList = createModifiersList(
+      ctrlKey,
+      altKey,
+      shiftKey,
+      metaKey
+    );
     event.initWheelEvent(
       type,
       canBubble,
@@ -162,12 +167,12 @@ function createWheelEvent(type, options) {
 
 function createTouchEvent(type, options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var canBubble = defaultValue(options.canBubble, true);
-  var cancelable = defaultValue(options.cancelable, true);
-  var view = defaultValue(options.view, window);
-  var detail = defaultValue(options.detail, 0);
+  const canBubble = defaultValue(options.canBubble, true);
+  const cancelable = defaultValue(options.cancelable, true);
+  const view = defaultValue(options.view, window);
+  const detail = defaultValue(options.detail, 0);
 
-  var event = document.createEvent("UIEvent");
+  const event = document.createEvent("UIEvent");
   event.initUIEvent(type, canBubble, cancelable, view, detail);
 
   event.touches = defaultValue(options.touches, []);
@@ -179,35 +184,35 @@ function createTouchEvent(type, options) {
 
 function createPointerEvent(type, options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var event;
+  let event;
 
   if (FeatureDetection.isInternetExplorer()) {
-    var canBubble = defaultValue(options.canBubble, true);
-    var cancelable = defaultValue(options.cancelable, true);
-    var view = defaultValue(options.view, window);
-    var detail = defaultValue(options.detail, 0);
-    var screenX = defaultValue(options.screenX, 0);
-    var screenY = defaultValue(options.screenY, 0);
-    var clientX = defaultValue(options.clientX, 0);
-    var clientY = defaultValue(options.clientY, 0);
-    var ctrlKey = defaultValue(options.ctrlKey, false);
-    var altKey = defaultValue(options.altKey, false);
-    var shiftKey = defaultValue(options.shiftKey, false);
-    var metaKey = defaultValue(options.metaKey, false);
-    var button = defaultValue(options.button, 0);
-    var relatedTarget = defaultValue(options.relatedTarget, null);
-    var offsetX = defaultValue(options.offsetX, 0);
-    var offsetY = defaultValue(options.offsetY, 0);
-    var width = defaultValue(options.width, 0);
-    var height = defaultValue(options.height, 0);
-    var pressure = defaultValue(options.pressure, 0);
-    var rotation = defaultValue(options.rotation, 0);
-    var tiltX = defaultValue(options.tiltX, 0);
-    var tiltY = defaultValue(options.tiltY, 0);
-    var pointerId = defaultValue(options.pointerId, 1);
-    var pointerType = defaultValue(options.pointerType, 0);
-    var hwTimestamp = defaultValue(options.hwTimestamp, 0);
-    var isPrimary = defaultValue(options.isPrimary, 0);
+    const canBubble = defaultValue(options.canBubble, true);
+    const cancelable = defaultValue(options.cancelable, true);
+    const view = defaultValue(options.view, window);
+    const detail = defaultValue(options.detail, 0);
+    const screenX = defaultValue(options.screenX, 0);
+    const screenY = defaultValue(options.screenY, 0);
+    const clientX = defaultValue(options.clientX, 0);
+    const clientY = defaultValue(options.clientY, 0);
+    const ctrlKey = defaultValue(options.ctrlKey, false);
+    const altKey = defaultValue(options.altKey, false);
+    const shiftKey = defaultValue(options.shiftKey, false);
+    const metaKey = defaultValue(options.metaKey, false);
+    const button = defaultValue(options.button, 0);
+    const relatedTarget = defaultValue(options.relatedTarget, null);
+    const offsetX = defaultValue(options.offsetX, 0);
+    const offsetY = defaultValue(options.offsetY, 0);
+    const width = defaultValue(options.width, 0);
+    const height = defaultValue(options.height, 0);
+    const pressure = defaultValue(options.pressure, 0);
+    const rotation = defaultValue(options.rotation, 0);
+    const tiltX = defaultValue(options.tiltX, 0);
+    const tiltY = defaultValue(options.tiltY, 0);
+    const pointerId = defaultValue(options.pointerId, 1);
+    const pointerType = defaultValue(options.pointerType, 0);
+    const hwTimestamp = defaultValue(options.hwTimestamp, 0);
+    const isPrimary = defaultValue(options.isPrimary, 0);
 
     event = document.createEvent("PointerEvent");
     event.initPointerEvent(
@@ -274,14 +279,14 @@ function createPointerEvent(type, options) {
 
 function createDeviceOrientationEvent(type, options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var canBubble = defaultValue(options.canBubble, true);
-  var cancelable = defaultValue(options.cancelable, true);
-  var alpha = defaultValue(options.alpha, 0.0);
-  var beta = defaultValue(options.beta, 0.0);
-  var gamma = defaultValue(options.gamma, 0.0);
-  var absolute = defaultValue(options.absolute, false);
+  const canBubble = defaultValue(options.canBubble, true);
+  const cancelable = defaultValue(options.cancelable, true);
+  const alpha = defaultValue(options.alpha, 0.0);
+  const beta = defaultValue(options.beta, 0.0);
+  const gamma = defaultValue(options.gamma, 0.0);
+  const absolute = defaultValue(options.absolute, false);
 
-  var event;
+  let event;
   event = document.createEvent("DeviceOrientationEvent");
   if (typeof event.initDeviceOrientationEvent === "function") {
     event.initDeviceOrientationEvent(
@@ -304,7 +309,7 @@ function createDeviceOrientationEvent(type, options) {
   return event;
 }
 
-var DomEventSimulator = {
+const DomEventSimulator = {
   fireMouseDown: function (element, options) {
     element.dispatchEvent(createMouseEvent("mousedown", options));
   },

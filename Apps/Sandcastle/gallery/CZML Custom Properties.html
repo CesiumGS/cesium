@@ -35,7 +35,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var czml = [
+        const czml = [
           {
             id: "document",
             name: "CZML Custom Properties",
@@ -118,11 +118,11 @@
           },
         ];
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
         });
 
-        var dataSource = new Cesium.CzmlDataSource();
+        const dataSource = new Cesium.CzmlDataSource();
 
         function scaleProperty(property, scalingFactor) {
           // returns a property that scales another property by a constant factor.
@@ -134,11 +134,11 @@
         }
 
         function setExtrudedHeight(propertyName) {
-          var customPropertyObject = dataSource.entities.getById(
+          const customPropertyObject = dataSource.entities.getById(
             "custom_property_object"
           );
-          var property = customPropertyObject.properties[propertyName];
-          var colorado = dataSource.entities.getById("colorado");
+          const property = customPropertyObject.properties[propertyName];
+          const colorado = dataSource.entities.getById("colorado");
 
           // Because the population values are so large, we scale them down
           // by 50 so they fit on the screen.

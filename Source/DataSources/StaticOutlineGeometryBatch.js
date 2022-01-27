@@ -12,11 +12,11 @@ import Primitive from "../Scene/Primitive.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 import Property from "./Property.js";
 
-var colorScratch = new Color();
-var distanceDisplayConditionScratch = new DistanceDisplayCondition();
-var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
-var defaultOffset = Cartesian3.ZERO;
-var offsetScratch = new Cartesian3();
+const colorScratch = new Color();
+const distanceDisplayConditionScratch = new DistanceDisplayCondition();
+const defaultDistanceDisplayCondition = new DistanceDisplayCondition();
+const defaultOffset = Cartesian3.ZERO;
+const offsetScratch = new Cartesian3();
 
 function Batch(primitives, translucent, width, shadows) {
   this.translucent = translucent;
@@ -36,7 +36,7 @@ function Batch(primitives, translucent, width, shadows) {
   this.showsUpdated = new AssociativeArray();
 }
 Batch.prototype.add = function (updater, instance) {
-  var id = updater.id;
+  const id = updater.id;
   this.createPrimitive = true;
   this.geometry.set(id, instance);
   this.updaters.set(id, updater);
@@ -48,7 +48,7 @@ Batch.prototype.add = function (updater, instance) {
   ) {
     this.updatersWithAttributes.set(id, updater);
   } else {
-    var that = this;
+    const that = this;
     this.subscriptions.set(
       id,
       updater.entity.definitionChanged.addEventListener(function (
@@ -66,11 +66,11 @@ Batch.prototype.add = function (updater, instance) {
 };
 
 Batch.prototype.remove = function (updater) {
-  var id = updater.id;
+  const id = updater.id;
   this.createPrimitive = this.geometry.remove(id) || this.createPrimitive;
   if (this.updaters.remove(id)) {
     this.updatersWithAttributes.remove(id);
-    var unsubscribe = this.subscriptions.get(id);
+    const unsubscribe = this.subscriptions.get(id);
     if (defined(unsubscribe)) {
       unsubscribe();
       this.subscriptions.remove(id);
@@ -82,15 +82,15 @@ Batch.prototype.remove = function (updater) {
 };
 
 Batch.prototype.update = function (time) {
-  var isUpdated = true;
-  var removedCount = 0;
-  var primitive = this.primitive;
-  var primitives = this.primitives;
-  var i;
+  let isUpdated = true;
+  let removedCount = 0;
+  let primitive = this.primitive;
+  const primitives = this.primitives;
+  let i;
 
   if (this.createPrimitive) {
-    var geometries = this.geometry.values;
-    var geometriesLength = geometries.length;
+    const geometries = this.geometry.values;
+    const geometriesLength = geometries.length;
     if (geometriesLength > 0) {
       if (defined(primitive)) {
         if (!defined(this.oldPrimitive)) {
@@ -121,7 +121,7 @@ Batch.prototype.update = function (time) {
         primitives.remove(primitive);
         primitive = undefined;
       }
-      var oldPrimitive = this.oldPrimitive;
+      const oldPrimitive = this.oldPrimitive;
       if (defined(oldPrimitive)) {
         primitives.remove(oldPrimitive);
         this.oldPrimitive = undefined;
@@ -139,22 +139,22 @@ Batch.prototype.update = function (time) {
       this.oldPrimitive = undefined;
     }
 
-    var updatersWithAttributes = this.updatersWithAttributes.values;
-    var length = updatersWithAttributes.length;
-    var waitingOnCreate = this.waitingOnCreate;
+    const updatersWithAttributes = this.updatersWithAttributes.values;
+    const length = updatersWithAttributes.length;
+    const waitingOnCreate = this.waitingOnCreate;
     for (i = 0; i < length; i++) {
-      var updater = updatersWithAttributes[i];
-      var instance = this.geometry.get(updater.id);
+      const updater = updatersWithAttributes[i];
+      const instance = this.geometry.get(updater.id);
 
-      var attributes = this.attributes.get(instance.id.id);
+      let attributes = this.attributes.get(instance.id.id);
       if (!defined(attributes)) {
         attributes = primitive.getGeometryInstanceAttributes(instance.id);
         this.attributes.set(instance.id.id, attributes);
       }
 
       if (!updater.outlineColorProperty.isConstant || waitingOnCreate) {
-        var outlineColorProperty = updater.outlineColorProperty;
-        var outlineColor = Property.getValueOrDefault(
+        const outlineColorProperty = updater.outlineColorProperty;
+        const outlineColor = Property.getValueOrDefault(
           outlineColorProperty,
           time,
           Color.WHITE,
@@ -178,10 +178,10 @@ Batch.prototype.update = function (time) {
         }
       }
 
-      var show =
+      const show =
         updater.entity.isShowing &&
         (updater.hasConstantOutline || updater.isOutlineVisible(time));
-      var currentShow = attributes.show[0] === 1;
+      const currentShow = attributes.show[0] === 1;
       if (show !== currentShow) {
         attributes.show = ShowGeometryInstanceAttribute.toValue(
           show,
@@ -189,10 +189,10 @@ Batch.prototype.update = function (time) {
         );
       }
 
-      var distanceDisplayConditionProperty =
+      const distanceDisplayConditionProperty =
         updater.distanceDisplayConditionProperty;
       if (!Property.isConstant(distanceDisplayConditionProperty)) {
-        var distanceDisplayCondition = Property.getValueOrDefault(
+        const distanceDisplayCondition = Property.getValueOrDefault(
           distanceDisplayConditionProperty,
           time,
           defaultDistanceDisplayCondition,
@@ -215,9 +215,9 @@ Batch.prototype.update = function (time) {
         }
       }
 
-      var offsetProperty = updater.terrainOffsetProperty;
+      const offsetProperty = updater.terrainOffsetProperty;
       if (!Property.isConstant(offsetProperty)) {
-        var offset = Property.getValueOrDefault(
+        const offset = Property.getValueOrDefault(
           offsetProperty,
           time,
           defaultOffset,
@@ -247,20 +247,20 @@ Batch.prototype.update = function (time) {
 };
 
 Batch.prototype.updateShows = function (primitive) {
-  var showsUpdated = this.showsUpdated.values;
-  var length = showsUpdated.length;
-  for (var i = 0; i < length; i++) {
-    var updater = showsUpdated[i];
-    var instance = this.geometry.get(updater.id);
+  const showsUpdated = this.showsUpdated.values;
+  const length = showsUpdated.length;
+  for (let i = 0; i < length; i++) {
+    const updater = showsUpdated[i];
+    const instance = this.geometry.get(updater.id);
 
-    var attributes = this.attributes.get(instance.id.id);
+    let attributes = this.attributes.get(instance.id.id);
     if (!defined(attributes)) {
       attributes = primitive.getGeometryInstanceAttributes(instance.id);
       this.attributes.set(instance.id.id, attributes);
     }
 
-    var show = updater.entity.isShowing;
-    var currentShow = attributes.show[0] === 1;
+    const show = updater.entity.isShowing;
+    const currentShow = attributes.show[0] === 1;
     if (show !== currentShow) {
       attributes.show = ShowGeometryInstanceAttribute.toValue(
         show,
@@ -277,11 +277,11 @@ Batch.prototype.contains = function (updater) {
 };
 
 Batch.prototype.getBoundingSphere = function (updater, result) {
-  var primitive = this.primitive;
+  const primitive = this.primitive;
   if (!primitive.ready) {
     return BoundingSphereState.PENDING;
   }
-  var attributes = primitive.getGeometryInstanceAttributes(updater.entity);
+  const attributes = primitive.getGeometryInstanceAttributes(updater.entity);
   if (
     !defined(attributes) ||
     !defined(attributes.boundingSphere) || //
@@ -294,9 +294,9 @@ Batch.prototype.getBoundingSphere = function (updater, result) {
 };
 
 Batch.prototype.removeAllPrimitives = function () {
-  var primitives = this.primitives;
+  const primitives = this.primitives;
 
-  var primitive = this.primitive;
+  const primitive = this.primitive;
   if (defined(primitive)) {
     primitives.remove(primitive);
     this.primitive = undefined;
@@ -304,7 +304,7 @@ Batch.prototype.removeAllPrimitives = function () {
     this.updaters.removeAll();
   }
 
-  var oldPrimitive = this.oldPrimitive;
+  const oldPrimitive = this.oldPrimitive;
   if (defined(oldPrimitive)) {
     primitives.remove(oldPrimitive);
     this.oldPrimitive = undefined;
@@ -322,10 +322,10 @@ function StaticOutlineGeometryBatch(primitives, scene, shadows) {
   this._translucentBatches = new AssociativeArray();
 }
 StaticOutlineGeometryBatch.prototype.add = function (time, updater) {
-  var instance = updater.createOutlineGeometryInstance(time);
-  var width = this._scene.clampLineWidth(updater.outlineWidth);
-  var batches;
-  var batch;
+  const instance = updater.createOutlineGeometryInstance(time);
+  const width = this._scene.clampLineWidth(updater.outlineWidth);
+  let batches;
+  let batch;
   if (instance.attributes.color.value[3] === 255) {
     batches = this._solidBatches;
     batch = batches.get(width);
@@ -346,18 +346,18 @@ StaticOutlineGeometryBatch.prototype.add = function (time, updater) {
 };
 
 StaticOutlineGeometryBatch.prototype.remove = function (updater) {
-  var i;
+  let i;
 
-  var solidBatches = this._solidBatches.values;
-  var solidBatchesLength = solidBatches.length;
+  const solidBatches = this._solidBatches.values;
+  const solidBatchesLength = solidBatches.length;
   for (i = 0; i < solidBatchesLength; i++) {
     if (solidBatches[i].remove(updater)) {
       return;
     }
   }
 
-  var translucentBatches = this._translucentBatches.values;
-  var translucentBatchesLength = translucentBatches.length;
+  const translucentBatches = this._translucentBatches.values;
+  const translucentBatchesLength = translucentBatches.length;
   for (i = 0; i < translucentBatchesLength; i++) {
     if (translucentBatches[i].remove(updater)) {
       return;
@@ -366,17 +366,17 @@ StaticOutlineGeometryBatch.prototype.remove = function (updater) {
 };
 
 StaticOutlineGeometryBatch.prototype.update = function (time) {
-  var i;
-  var x;
-  var updater;
-  var batch;
-  var solidBatches = this._solidBatches.values;
-  var solidBatchesLength = solidBatches.length;
-  var translucentBatches = this._translucentBatches.values;
-  var translucentBatchesLength = translucentBatches.length;
-  var itemsToRemove;
-  var isUpdated = true;
-  var needUpdate = false;
+  let i;
+  let x;
+  let updater;
+  let batch;
+  const solidBatches = this._solidBatches.values;
+  const solidBatchesLength = solidBatches.length;
+  const translucentBatches = this._translucentBatches.values;
+  const translucentBatchesLength = translucentBatches.length;
+  let itemsToRemove;
+  let isUpdated = true;
+  let needUpdate = false;
 
   do {
     needUpdate = false;
@@ -388,7 +388,7 @@ StaticOutlineGeometryBatch.prototype.update = function (time) {
       //If any items swapped between solid/translucent, we need to
       //move them between batches
       itemsToRemove = batch.itemsToRemove;
-      var solidsToMoveLength = itemsToRemove.length;
+      const solidsToMoveLength = itemsToRemove.length;
       if (solidsToMoveLength > 0) {
         needUpdate = true;
         for (i = 0; i < solidsToMoveLength; i++) {
@@ -406,7 +406,7 @@ StaticOutlineGeometryBatch.prototype.update = function (time) {
       //If any items swapped between solid/translucent, we need to
       //move them between batches
       itemsToRemove = batch.itemsToRemove;
-      var translucentToMoveLength = itemsToRemove.length;
+      const translucentToMoveLength = itemsToRemove.length;
       if (translucentToMoveLength > 0) {
         needUpdate = true;
         for (i = 0; i < translucentToMoveLength; i++) {
@@ -425,21 +425,21 @@ StaticOutlineGeometryBatch.prototype.getBoundingSphere = function (
   updater,
   result
 ) {
-  var i;
+  let i;
 
-  var solidBatches = this._solidBatches.values;
-  var solidBatchesLength = solidBatches.length;
+  const solidBatches = this._solidBatches.values;
+  const solidBatchesLength = solidBatches.length;
   for (i = 0; i < solidBatchesLength; i++) {
-    var solidBatch = solidBatches[i];
+    const solidBatch = solidBatches[i];
     if (solidBatch.contains(updater)) {
       return solidBatch.getBoundingSphere(updater, result);
     }
   }
 
-  var translucentBatches = this._translucentBatches.values;
-  var translucentBatchesLength = translucentBatches.length;
+  const translucentBatches = this._translucentBatches.values;
+  const translucentBatchesLength = translucentBatches.length;
   for (i = 0; i < translucentBatchesLength; i++) {
-    var translucentBatch = translucentBatches[i];
+    const translucentBatch = translucentBatches[i];
     if (translucentBatch.contains(updater)) {
       return translucentBatch.getBoundingSphere(updater, result);
     }
@@ -449,16 +449,16 @@ StaticOutlineGeometryBatch.prototype.getBoundingSphere = function (
 };
 
 StaticOutlineGeometryBatch.prototype.removeAllPrimitives = function () {
-  var i;
+  let i;
 
-  var solidBatches = this._solidBatches.values;
-  var solidBatchesLength = solidBatches.length;
+  const solidBatches = this._solidBatches.values;
+  const solidBatchesLength = solidBatches.length;
   for (i = 0; i < solidBatchesLength; i++) {
     solidBatches[i].removeAllPrimitives();
   }
 
-  var translucentBatches = this._translucentBatches.values;
-  var translucentBatchesLength = translucentBatches.length;
+  const translucentBatches = this._translucentBatches.values;
+  const translucentBatchesLength = translucentBatches.length;
   for (i = 0; i < translucentBatchesLength; i++) {
     translucentBatches[i].removeAllPrimitives();
   }

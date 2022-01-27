@@ -13,7 +13,7 @@ function createDynamicGeometryUpdaterSpecs(
   createDynamicEntity,
   getScene
 ) {
-  var time = JulianDate.now();
+  const time = JulianDate.now();
 
   it("dynamic updater sets properties", function () {
     if (Updater === EllipsoidGeometryUpdater) {
@@ -21,17 +21,17 @@ function createDynamicGeometryUpdaterSpecs(
       // This is covered in EllipsoidGeometryUpdaterSpecs instead
       return;
     }
-    var entity = createDynamicEntity();
-    var geometry = entity[geometryPropertyName];
+    const entity = createDynamicEntity();
+    const geometry = entity[geometryPropertyName];
 
     geometry.show = createDynamicProperty(true);
     geometry.outline = createDynamicProperty(true);
     geometry.fill = createDynamicProperty(true);
 
-    var updater = new Updater(entity, getScene());
-    var primitives = new PrimitiveCollection();
-    var groundPrimitives = new PrimitiveCollection();
-    var dynamicUpdater = updater.createDynamicUpdater(
+    const updater = new Updater(entity, getScene());
+    const primitives = new PrimitiveCollection();
+    const groundPrimitives = new PrimitiveCollection();
+    const dynamicUpdater = updater.createDynamicUpdater(
       primitives,
       groundPrimitives
     );
@@ -75,21 +75,21 @@ function createDynamicGeometryUpdaterSpecs(
   });
 
   it("Computes dynamic geometry bounding sphere for fill.", function () {
-    var scene = getScene();
-    var entity = createDynamicEntity();
-    var geometry = entity[geometryPropertyName];
-    var updater = new Updater(entity, scene);
+    const scene = getScene();
+    const entity = createDynamicEntity();
+    const geometry = entity[geometryPropertyName];
+    const updater = new Updater(entity, scene);
     geometry.fill = true;
     geometry.outline = false;
     updater._onEntityPropertyChanged(entity, updater._geometryPropertyName);
-    var dynamicUpdater = updater.createDynamicUpdater(
+    const dynamicUpdater = updater.createDynamicUpdater(
       scene.primitives,
       scene.groundPrimitives
     );
     dynamicUpdater.update(time);
 
-    var state;
-    var result = new BoundingSphere();
+    let state;
+    const result = new BoundingSphere();
 
     return pollToPromise(function () {
       scene.initializeFrame();
@@ -97,9 +97,9 @@ function createDynamicGeometryUpdaterSpecs(
       state = dynamicUpdater.getBoundingSphere(result);
       return state !== BoundingSphereState.PENDING;
     }).then(function () {
-      var primitive = scene.primitives.get(0);
+      const primitive = scene.primitives.get(0);
       expect(state).toBe(BoundingSphereState.DONE);
-      var attributes = primitive.getGeometryInstanceAttributes(entity);
+      const attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(result).toEqualEpsilon(
         attributes.boundingSphere,
         CesiumMath.EPSILON6
@@ -111,31 +111,31 @@ function createDynamicGeometryUpdaterSpecs(
   });
 
   it("Computes dynamic geometry bounding sphere for outline.", function () {
-    var scene = getScene();
-    var entity = createDynamicEntity();
-    var geometry = entity[geometryPropertyName];
-    var updater = new Updater(entity, scene);
+    const scene = getScene();
+    const entity = createDynamicEntity();
+    const geometry = entity[geometryPropertyName];
+    const updater = new Updater(entity, scene);
     geometry.fill = false;
     geometry.outline = true;
     updater._onEntityPropertyChanged(entity, updater._geometryPropertyName);
 
-    var dynamicUpdater = updater.createDynamicUpdater(
+    const dynamicUpdater = updater.createDynamicUpdater(
       scene.primitives,
       scene.groundPrimitives
     );
     dynamicUpdater.update(time);
 
-    var state;
-    var result = new BoundingSphere();
+    let state;
+    const result = new BoundingSphere();
     return pollToPromise(function () {
       scene.initializeFrame();
       scene.render();
       state = dynamicUpdater.getBoundingSphere(result);
       return state !== BoundingSphereState.PENDING;
     }).then(function () {
-      var primitive = scene.primitives.get(0);
+      const primitive = scene.primitives.get(0);
       expect(state).toBe(BoundingSphereState.DONE);
-      var attributes = primitive.getGeometryInstanceAttributes(entity);
+      const attributes = primitive.getGeometryInstanceAttributes(entity);
       expect(result).toEqualEpsilon(
         attributes.boundingSphere,
         CesiumMath.EPSILON6
@@ -147,10 +147,10 @@ function createDynamicGeometryUpdaterSpecs(
   });
 
   it("Compute dynamic geometry bounding sphere throws without result.", function () {
-    var scene = getScene();
-    var entity = createDynamicEntity();
-    var updater = new Updater(entity, scene);
-    var dynamicUpdater = updater.createDynamicUpdater(
+    const scene = getScene();
+    const entity = createDynamicEntity();
+    const updater = new Updater(entity, scene);
+    const dynamicUpdater = updater.createDynamicUpdater(
       scene.primitives,
       scene.groundPrimitives
     );

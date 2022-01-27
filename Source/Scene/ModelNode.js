@@ -103,7 +103,7 @@ Object.defineProperties(ModelNode.prototype, {
       this._matrix = Matrix4.clone(value, this._matrix);
       this.useMatrix = true;
 
-      var model = this._model;
+      const model = this._model;
       model._cesiumAnimationsDirty = true;
       this._runtimeNode.dirtyNumber = model._maxDirtyNumber;
     },

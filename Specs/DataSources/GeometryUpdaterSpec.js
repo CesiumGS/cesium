@@ -4,7 +4,7 @@ import { PrimitiveCollection } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 
 describe("DataSources/GeometryUpdater", function () {
-  var scene;
+  let scene;
 
   beforeAll(function () {
     scene = createScene();
@@ -75,7 +75,7 @@ describe("DataSources/GeometryUpdater", function () {
   });
 
   it("createDynamicUpdater throws if not dynamic", function () {
-    var updater = new GeometryUpdater({
+    const updater = new GeometryUpdater({
       entity: new Entity(),
       scene: scene,
       geometryOptions: {},
@@ -91,7 +91,7 @@ describe("DataSources/GeometryUpdater", function () {
   });
 
   it("createDynamicUpdater throws if primitives undefined", function () {
-    var updater = new GeometryUpdater({
+    const updater = new GeometryUpdater({
       entity: new Entity(),
       scene: scene,
       geometryOptions: {},
@@ -105,7 +105,7 @@ describe("DataSources/GeometryUpdater", function () {
   });
 
   it("createDynamicUpdater throws if groundPrimitives undefined", function () {
-    var updater = new GeometryUpdater({
+    const updater = new GeometryUpdater({
       entity: new Entity(),
       scene: scene,
       geometryOptions: {},

@@ -7,7 +7,7 @@ import { VertexFormat } from "../../Source/Cesium.js";
 import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/PolylineVolumeGeometry", function () {
-  var shape;
+  let shape;
 
   beforeAll(function () {
     shape = [
@@ -33,7 +33,7 @@ describe("Core/PolylineVolumeGeometry", function () {
   });
 
   it("createGeometry returnes undefined without 2 unique polyline positions", function () {
-    var geometry = PolylineVolumeGeometry.createGeometry(
+    const geometry = PolylineVolumeGeometry.createGeometry(
       new PolylineVolumeGeometry({
         polylinePositions: [new Cartesian3()],
         shapePositions: shape,
@@ -43,7 +43,7 @@ describe("Core/PolylineVolumeGeometry", function () {
   });
 
   it("createGeometry returnes undefined without 3 unique shape positions", function () {
-    var geometry = PolylineVolumeGeometry.createGeometry(
+    const geometry = PolylineVolumeGeometry.createGeometry(
       new PolylineVolumeGeometry({
         polylinePositions: [Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
         shapePositions: [
@@ -57,7 +57,7 @@ describe("Core/PolylineVolumeGeometry", function () {
   });
 
   it("computes positions", function () {
-    var m = PolylineVolumeGeometry.createGeometry(
+    const m = PolylineVolumeGeometry.createGeometry(
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         polylinePositions: Cartesian3.fromDegreesArray([
@@ -78,7 +78,7 @@ describe("Core/PolylineVolumeGeometry", function () {
   });
 
   it("computes positions, clockwise shape", function () {
-    var m = PolylineVolumeGeometry.createGeometry(
+    const m = PolylineVolumeGeometry.createGeometry(
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         polylinePositions: Cartesian3.fromDegreesArray([
@@ -97,7 +97,7 @@ describe("Core/PolylineVolumeGeometry", function () {
   });
 
   it("computes most vertex attributes", function () {
-    var m = PolylineVolumeGeometry.createGeometry(
+    const m = PolylineVolumeGeometry.createGeometry(
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.POSITION_NORMAL_AND_ST,
         polylinePositions: Cartesian3.fromDegreesArray([
@@ -111,8 +111,8 @@ describe("Core/PolylineVolumeGeometry", function () {
       })
     );
 
-    var numVertices = 56;
-    var numTriangles = 44;
+    const numVertices = 56;
+    const numTriangles = 44;
     expect(m.attributes.position.values.length).toEqual(numVertices * 3);
     expect(m.attributes.st.values.length).toEqual(numVertices * 2);
     expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
@@ -121,7 +121,7 @@ describe("Core/PolylineVolumeGeometry", function () {
 
   //https://github.com/CesiumGS/cesium/issues/3609
   xit("compute all vertex attributes", function () {
-    var m = PolylineVolumeGeometry.createGeometry(
+    const m = PolylineVolumeGeometry.createGeometry(
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.ALL,
         polylinePositions: Cartesian3.fromDegreesArray([
@@ -135,8 +135,8 @@ describe("Core/PolylineVolumeGeometry", function () {
       })
     );
 
-    var numVertices = 56;
-    var numTriangles = 44;
+    const numVertices = 56;
+    const numTriangles = 44;
     expect(m.attributes.position.values.length).toEqual(numVertices * 3);
     expect(m.attributes.st.values.length).toEqual(numVertices * 2);
     expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
@@ -146,7 +146,7 @@ describe("Core/PolylineVolumeGeometry", function () {
   });
 
   it("computes right turn", function () {
-    var m = PolylineVolumeGeometry.createGeometry(
+    const m = PolylineVolumeGeometry.createGeometry(
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         polylinePositions: Cartesian3.fromDegreesArray([
@@ -169,7 +169,7 @@ describe("Core/PolylineVolumeGeometry", function () {
   });
 
   it("computes left turn", function () {
-    var m = PolylineVolumeGeometry.createGeometry(
+    const m = PolylineVolumeGeometry.createGeometry(
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         polylinePositions: Cartesian3.fromDegreesArray([
@@ -190,7 +190,7 @@ describe("Core/PolylineVolumeGeometry", function () {
   });
 
   it("computes with rounded corners", function () {
-    var m = PolylineVolumeGeometry.createGeometry(
+    const m = PolylineVolumeGeometry.createGeometry(
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         polylinePositions: Cartesian3.fromDegreesArray([
@@ -208,15 +208,15 @@ describe("Core/PolylineVolumeGeometry", function () {
       })
     );
 
-    var corners = 36 * 4 * 4; // positions * 4 for shape * 4 for normal duplication
-    var numVertices = corners + 72; // corners + 9 positions * 2 for normal duplication * 4 for shape
-    var numTriangles = corners + 60; // corners + 8 triangles * 7 segments + 2 on each end
+    const corners = 36 * 4 * 4; // positions * 4 for shape * 4 for normal duplication
+    const numVertices = corners + 72; // corners + 9 positions * 2 for normal duplication * 4 for shape
+    const numTriangles = corners + 60; // corners + 8 triangles * 7 segments + 2 on each end
     expect(m.attributes.position.values.length).toEqual(numVertices * 3);
     expect(m.indices.length).toEqual(numTriangles * 3);
   });
 
   it("computes with beveled corners", function () {
-    var m = PolylineVolumeGeometry.createGeometry(
+    const m = PolylineVolumeGeometry.createGeometry(
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         polylinePositions: Cartesian3.fromDegreesArray([
@@ -234,15 +234,15 @@ describe("Core/PolylineVolumeGeometry", function () {
       })
     );
 
-    var corners = 4 * 4; // 4 for shape * 4 for normal duplication
-    var numVertices = corners + 72; // corners + 9 positions * 2 for normal duplication * 4 for shape
-    var numTriangles = corners + 60; // corners + 8 triangles * 7 segments + 2 on each end
+    const corners = 4 * 4; // 4 for shape * 4 for normal duplication
+    const numVertices = corners + 72; // corners + 9 positions * 2 for normal duplication * 4 for shape
+    const numTriangles = corners + 60; // corners + 8 triangles * 7 segments + 2 on each end
     expect(m.attributes.position.values.length).toEqual(numVertices * 3);
     expect(m.indices.length).toEqual(3 * numTriangles);
   });
 
   it("computes sharp turns", function () {
-    var m = PolylineVolumeGeometry.createGeometry(
+    const m = PolylineVolumeGeometry.createGeometry(
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         polylinePositions: Cartesian3.fromDegreesArrayHeights([
@@ -274,7 +274,7 @@ describe("Core/PolylineVolumeGeometry", function () {
   });
 
   it("computes straight volume", function () {
-    var m = PolylineVolumeGeometry.createGeometry(
+    const m = PolylineVolumeGeometry.createGeometry(
       new PolylineVolumeGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
         polylinePositions: Cartesian3.fromDegreesArray([
@@ -295,17 +295,17 @@ describe("Core/PolylineVolumeGeometry", function () {
     expect(m.indices.length).toEqual(20 * 3); // 2 segments * 8 triangles per segment + 2 * 2 ends
   });
 
-  var positions = [
+  const positions = [
     new Cartesian3(1.0, 0.0, 0.0),
     new Cartesian3(0.0, 1.0, 0.0),
     new Cartesian3(0.0, 0.0, 1.0),
   ];
-  var volumeShape = [
+  const volumeShape = [
     new Cartesian2(0.0, 0.0),
     new Cartesian2(1.0, 0.0),
     new Cartesian2(0.0, 1.0),
   ];
-  var volume = new PolylineVolumeGeometry({
+  const volume = new PolylineVolumeGeometry({
     vertexFormat: VertexFormat.POSITION_ONLY,
     polylinePositions: positions,
     cornerType: CornerType.BEVELED,
@@ -313,7 +313,7 @@ describe("Core/PolylineVolumeGeometry", function () {
     ellipsoid: Ellipsoid.UNIT_SPHERE,
     granularity: 0.1,
   });
-  var packedInstance = [
+  const packedInstance = [
     3.0,
     1.0,
     0.0,

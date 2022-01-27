@@ -8,7 +8,7 @@ import { GridMaterialProperty } from "../../Source/Cesium.js";
 
 describe("DataSources/CompositeMaterialProperty", function () {
   it("default constructor has expected values", function () {
-    var property = new CompositeMaterialProperty();
+    const property = new CompositeMaterialProperty();
     expect(property.intervals).toBeInstanceOf(TimeIntervalCollection);
     expect(property.isConstant).toBe(true);
     expect(property.getType(JulianDate.now())).toBeUndefined();
@@ -16,80 +16,80 @@ describe("DataSources/CompositeMaterialProperty", function () {
   });
 
   it("works without a result parameter", function () {
-    var interval1 = new TimeInterval({
+    const interval1 = new TimeInterval({
       start: new JulianDate(10, 0),
       stop: new JulianDate(12, 0),
       data: new ColorMaterialProperty(),
     });
-    var interval2 = new TimeInterval({
+    const interval2 = new TimeInterval({
       start: new JulianDate(12, 0),
       stop: new JulianDate(14, 0),
       isStartIncluded: false,
       data: new GridMaterialProperty(),
     });
 
-    var property = new CompositeMaterialProperty();
+    const property = new CompositeMaterialProperty();
     property.intervals.addInterval(interval1);
     property.intervals.addInterval(interval2);
     expect(property.isConstant).toBe(false);
 
-    var result1 = property.getValue(interval1.start);
+    const result1 = property.getValue(interval1.start);
     expect(property.getType(interval1.start)).toEqual("Color");
     expect(result1).not.toBe(interval1.data.getValue(interval1.start));
     expect(result1).toEqual(interval1.data.getValue(interval1.start));
 
-    var result2 = property.getValue(interval2.stop);
+    const result2 = property.getValue(interval2.stop);
     expect(property.getType(interval2.stop)).toEqual("Grid");
     expect(result2).not.toBe(interval2.data.getValue(interval2.stop));
     expect(result2).toEqual(interval2.data.getValue(interval2.stop));
   });
 
   it("works with a result parameter", function () {
-    var interval1 = new TimeInterval({
+    const interval1 = new TimeInterval({
       start: new JulianDate(10, 0),
       stop: new JulianDate(12, 0),
       data: new ColorMaterialProperty(),
     });
-    var interval2 = new TimeInterval({
+    const interval2 = new TimeInterval({
       start: new JulianDate(12, 0),
       stop: new JulianDate(14, 0),
       isStartIncluded: false,
       data: new GridMaterialProperty(),
     });
 
-    var property = new CompositeMaterialProperty();
+    const property = new CompositeMaterialProperty();
     property.intervals.addInterval(interval1);
     property.intervals.addInterval(interval2);
     expect(property.isConstant).toBe(false);
 
-    var expected = {};
-    var result1 = property.getValue(interval1.start, expected);
+    const expected = {};
+    const result1 = property.getValue(interval1.start, expected);
     expect(result1).toBe(expected);
     expect(result1).toEqual(interval1.data.getValue(interval1.start));
 
-    var result2 = property.getValue(interval2.stop, expected);
+    const result2 = property.getValue(interval2.stop, expected);
     expect(result2).toBe(expected);
     expect(result2).toEqual(interval2.data.getValue(interval2.stop));
   });
 
   it("equals works", function () {
-    var interval1 = new TimeInterval({
+    const interval1 = new TimeInterval({
       start: new JulianDate(10, 0),
       stop: new JulianDate(12, 0),
       data: new ColorMaterialProperty(),
     });
-    var interval2 = new TimeInterval({
+    const interval2 = new TimeInterval({
       start: new JulianDate(12, 0),
       stop: new JulianDate(14, 0),
       isStartIncluded: false,
       data: new GridMaterialProperty(),
     });
 
-    var left = new CompositeMaterialProperty();
+    const left = new CompositeMaterialProperty();
     left.intervals.addInterval(interval1);
     left.intervals.addInterval(interval2);
 
-    var right = new CompositeMaterialProperty();
+    const right = new CompositeMaterialProperty();
     right.intervals.addInterval(interval1);
 
     expect(left.equals(right)).toEqual(false);
@@ -99,20 +99,20 @@ describe("DataSources/CompositeMaterialProperty", function () {
   });
 
   it("raises definitionChanged event in all cases", function () {
-    var interval1 = new TimeInterval({
+    const interval1 = new TimeInterval({
       start: new JulianDate(10, 0),
       stop: new JulianDate(12, 0),
       data: new ColorMaterialProperty(Color.RED),
     });
-    var interval2 = new TimeInterval({
+    const interval2 = new TimeInterval({
       start: new JulianDate(12, 0),
       stop: new JulianDate(14, 0),
       isStartIncluded: false,
       data: new ColorMaterialProperty(Color.YELLOW),
     });
 
-    var property = new CompositeMaterialProperty();
-    var listener = jasmine.createSpy("listener");
+    const property = new CompositeMaterialProperty();
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
     property.intervals.addInterval(interval1);
@@ -137,20 +137,20 @@ describe("DataSources/CompositeMaterialProperty", function () {
   });
 
   it("does not raise definitionChanged for an overwritten interval", function () {
-    var interval1 = new TimeInterval({
+    const interval1 = new TimeInterval({
       start: new JulianDate(11, 0),
       stop: new JulianDate(13, 0),
       data: new ColorMaterialProperty(Color.RED),
     });
-    var interval2 = new TimeInterval({
+    const interval2 = new TimeInterval({
       start: new JulianDate(10, 0),
       stop: new JulianDate(14, 0),
       isStartIncluded: false,
       data: new ColorMaterialProperty(Color.YELLOW),
     });
 
-    var property = new CompositeMaterialProperty();
-    var listener = jasmine.createSpy("listener");
+    const property = new CompositeMaterialProperty();
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
     property.intervals.addInterval(interval1);
@@ -163,14 +163,14 @@ describe("DataSources/CompositeMaterialProperty", function () {
   });
 
   it("getValue throws with no time parameter", function () {
-    var property = new CompositeMaterialProperty();
+    const property = new CompositeMaterialProperty();
     expect(function () {
       property.getValue(undefined);
     }).toThrowDeveloperError();
   });
 
   it("getType throws with no time parameter", function () {
-    var property = new CompositeMaterialProperty();
+    const property = new CompositeMaterialProperty();
     expect(function () {
       property.getType(undefined);
     }).toThrowDeveloperError();

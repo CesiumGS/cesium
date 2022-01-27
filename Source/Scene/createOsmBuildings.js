@@ -52,12 +52,12 @@ function createOsmBuildings(options) {
     url: IonResource.fromAssetId(96188),
   });
 
-  var tileset = new Cesium3DTileset(options);
+  const tileset = new Cesium3DTileset(options);
 
-  var style = options.style;
+  let style = options.style;
 
   if (!defined(style)) {
-    var color = defaultValue(
+    const color = defaultValue(
       options.defaultColor,
       Color.WHITE
     ).toCssColorString();

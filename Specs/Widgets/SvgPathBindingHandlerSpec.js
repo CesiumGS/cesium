@@ -2,7 +2,7 @@ import { knockout } from "../../Source/Cesium.js";
 
 describe("ThirdParty/knockout", function () {
   it("check binding with constants", function () {
-    var div = document.createElement("div");
+    const div = document.createElement("div");
     div.setAttribute(
       "data-bind",
       '\
@@ -13,13 +13,13 @@ cesiumSvgPath: { path: "M 100 100 L 300 100 L 200 300 Z", width: 28, height: 40,
 
     knockout.applyBindings({}, div);
 
-    var svg = div.querySelector("svg.cesium-svgPath-svg");
+    const svg = div.querySelector("svg.cesium-svgPath-svg");
     expect(svg).not.toBeNull();
     expect(svg.getAttribute("width")).toEqual("28");
     expect(svg.getAttribute("height")).toEqual("40");
     expect(svg.getAttribute("class").split(/\s/)).toContain("someClass");
 
-    var path = div.querySelector("svg > path");
+    const path = div.querySelector("svg > path");
     expect(path).not.toBeNull();
     expect(path.getAttribute("d")).toEqual("M 100 100 L 300 100 L 200 300 Z");
 
@@ -28,7 +28,7 @@ cesiumSvgPath: { path: "M 100 100 L 300 100 L 200 300 Z", width: 28, height: 40,
   });
 
   it("check binding with observables", function () {
-    var div = document.createElement("div");
+    const div = document.createElement("div");
     div.setAttribute(
       "data-bind",
       "\
@@ -47,13 +47,13 @@ cesiumSvgPath: { path: p, width: w, height: h, css: c }"
       div
     );
 
-    var svg = div.querySelector("svg.cesium-svgPath-svg");
+    const svg = div.querySelector("svg.cesium-svgPath-svg");
     expect(svg).not.toBeNull();
     expect(svg.getAttribute("width")).toEqual("28");
     expect(svg.getAttribute("height")).toEqual("40");
     expect(svg.getAttribute("class").split(/\s/)).toContain("someClass");
 
-    var path = div.querySelector("svg > path");
+    const path = div.querySelector("svg > path");
     expect(path).not.toBeNull();
     expect(path.getAttribute("d")).toEqual("M 100 100 L 300 100 L 200 300 Z");
 
@@ -62,13 +62,13 @@ cesiumSvgPath: { path: p, width: w, height: h, css: c }"
   });
 
   it("check binding with observable parameter object", function () {
-    var div = document.createElement("div");
+    const div = document.createElement("div");
     div.setAttribute("data-bind", "\
 cesiumSvgPath: svgPath");
 
     document.body.appendChild(div);
 
-    var viewModel = {
+    const viewModel = {
       svgPath: knockout.observable({
         path: knockout.observable("M 100 100 L 300 100 L 200 300 Z"),
         width: knockout.observable(28),
@@ -78,13 +78,13 @@ cesiumSvgPath: svgPath");
     };
     knockout.applyBindings(viewModel, div);
 
-    var svg = div.querySelector("svg.cesium-svgPath-svg");
+    const svg = div.querySelector("svg.cesium-svgPath-svg");
     expect(svg).not.toBeNull();
     expect(svg.getAttribute("width")).toEqual("28");
     expect(svg.getAttribute("height")).toEqual("40");
     expect(svg.getAttribute("class").split(/\s/)).toContain("someClass");
 
-    var path = div.querySelector("svg > path");
+    const path = div.querySelector("svg > path");
     expect(path).not.toBeNull();
     expect(path.getAttribute("d")).toEqual("M 100 100 L 300 100 L 200 300 Z");
 

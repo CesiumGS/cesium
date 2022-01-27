@@ -1,7 +1,7 @@
 import defined from "./defined.js";
 
-var _supportsFullscreen;
-var _names = {
+let _supportsFullscreen;
+const _names = {
   requestFullscreen: undefined,
   exitFullscreen: undefined,
   fullscreenEnabled: undefined,
@@ -17,7 +17,7 @@ var _names = {
  *
  * @see {@link http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html|W3C Fullscreen Living Specification}
  */
-var Fullscreen = {};
+const Fullscreen = {};
 
 Object.defineProperties(Fullscreen, {
   /**
@@ -121,7 +121,7 @@ Fullscreen.supportsFullscreen = function () {
 
   _supportsFullscreen = false;
 
-  var body = document.body;
+  const body = document.body;
   if (typeof body.requestFullscreen === "function") {
     // go with the unprefixed, standard set of names
     _names.requestFullscreen = "requestFullscreen";
@@ -135,10 +135,10 @@ Fullscreen.supportsFullscreen = function () {
   }
 
   //check for the correct combination of prefix plus the various names that browsers use
-  var prefixes = ["webkit", "moz", "o", "ms", "khtml"];
-  var name;
-  for (var i = 0, len = prefixes.length; i < len; ++i) {
-    var prefix = prefixes[i];
+  const prefixes = ["webkit", "moz", "o", "ms", "khtml"];
+  let name;
+  for (let i = 0, len = prefixes.length; i < len; ++i) {
+    const prefix = prefixes[i];
 
     // casing of Fullscreen differs across browsers
     name = prefix + "RequestFullscreen";

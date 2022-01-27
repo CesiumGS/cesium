@@ -41,12 +41,12 @@ function Buffer(options) {
   }
   //>>includeEnd('debug');
 
-  var gl = options.context._gl;
-  var bufferTarget = options.bufferTarget;
-  var typedArray = options.typedArray;
-  var sizeInBytes = options.sizeInBytes;
-  var usage = options.usage;
-  var hasArray = defined(typedArray);
+  const gl = options.context._gl;
+  const bufferTarget = options.bufferTarget;
+  const typedArray = options.typedArray;
+  let sizeInBytes = options.sizeInBytes;
+  const usage = options.usage;
+  const hasArray = defined(typedArray);
 
   if (hasArray) {
     sizeInBytes = typedArray.byteLength;
@@ -56,7 +56,7 @@ function Buffer(options) {
   Check.typeOf.number.greaterThan("sizeInBytes", sizeInBytes, 0);
   //>>includeEnd('debug');
 
-  var buffer = gl.createBuffer();
+  const buffer = gl.createBuffer();
   gl.bindBuffer(bufferTarget, buffer);
   gl.bufferData(bufferTarget, hasArray ? typedArray : sizeInBytes, usage);
   gl.bindBuffer(bufferTarget, null);
@@ -187,11 +187,11 @@ Buffer.createIndexBuffer = function (options) {
   }
   //>>includeEnd('debug');
 
-  var context = options.context;
-  var indexDatatype = options.indexDatatype;
+  const context = options.context;
+  const indexDatatype = options.indexDatatype;
 
-  var bytesPerIndex = IndexDatatype.getSizeInBytes(indexDatatype);
-  var buffer = new Buffer({
+  const bytesPerIndex = IndexDatatype.getSizeInBytes(indexDatatype);
+  const buffer = new Buffer({
     context: context,
     bufferTarget: WebGLConstants.ELEMENT_ARRAY_BUFFER,
     typedArray: options.typedArray,
@@ -199,7 +199,7 @@ Buffer.createIndexBuffer = function (options) {
     usage: options.usage,
   });
 
-  var numberOfIndices = buffer.sizeInBytes / bytesPerIndex;
+  const numberOfIndices = buffer.sizeInBytes / bytesPerIndex;
 
   Object.defineProperties(buffer, {
     indexDatatype: {
@@ -252,8 +252,8 @@ Buffer.prototype.copyFromArrayView = function (arrayView, offsetInBytes) {
   );
   //>>includeEnd('debug');
 
-  var gl = this._gl;
-  var target = this._bufferTarget;
+  const gl = this._gl;
+  const target = this._bufferTarget;
   gl.bindBuffer(target, this._buffer);
   gl.bufferSubData(target, offsetInBytes, arrayView);
   gl.bindBuffer(target, null);
@@ -316,10 +316,10 @@ Buffer.prototype.copyFromBuffer = function (
   }
   //>>includeEnd('debug');
 
-  var readTarget = WebGLConstants.COPY_READ_BUFFER;
-  var writeTarget = WebGLConstants.COPY_WRITE_BUFFER;
+  const readTarget = WebGLConstants.COPY_READ_BUFFER;
+  const writeTarget = WebGLConstants.COPY_WRITE_BUFFER;
 
-  var gl = this._gl;
+  const gl = this._gl;
   gl.bindBuffer(writeTarget, this._buffer);
   gl.bindBuffer(readTarget, readBuffer._buffer);
   gl.copyBufferSubData(
@@ -350,9 +350,9 @@ Buffer.prototype.getBufferData = function (
     throw new DeveloperError("arrayView is required.");
   }
 
-  var copyLength;
-  var elementSize;
-  var arrayLength = arrayView.byteLength;
+  let copyLength;
+  let elementSize;
+  let arrayLength = arrayView.byteLength;
   if (!defined(length)) {
     if (defined(arrayLength)) {
       copyLength = arrayLength - destinationOffset;
@@ -394,8 +394,8 @@ Buffer.prototype.getBufferData = function (
   }
   //>>includeEnd('debug');
 
-  var gl = this._gl;
-  var target = WebGLConstants.COPY_READ_BUFFER;
+  const gl = this._gl;
+  const target = WebGLConstants.COPY_READ_BUFFER;
   gl.bindBuffer(target, this._buffer);
   gl.getBufferSubData(
     target,

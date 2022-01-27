@@ -169,7 +169,7 @@ FramebufferManager.prototype.update = function (
 
     // Create color texture
     if (this._color && this._createColorAttachments) {
-      for (var i = 0; i < this._colorAttachmentsLength; ++i) {
+      for (let i = 0; i < this._colorAttachmentsLength; ++i) {
         this._colorTextures[i] = new Texture({
           context: context,
           width: width,
@@ -414,7 +414,7 @@ FramebufferManager.prototype.clear = function (
   clearCommand,
   passState
 ) {
-  var framebuffer = clearCommand.framebuffer;
+  const framebuffer = clearCommand.framebuffer;
 
   if (this._numSamples > 1) {
     clearCommand.framebuffer = this._multisampleFramebuffer.getRenderFramebuffer();

@@ -48,7 +48,7 @@ describe("Core/ComponentDatatype", function () {
   });
 
   it("createTypedArray works with size", function () {
-    var typedArray = ComponentDatatype.createTypedArray(
+    let typedArray = ComponentDatatype.createTypedArray(
       ComponentDatatype.BYTE,
       0
     );
@@ -97,8 +97,8 @@ describe("Core/ComponentDatatype", function () {
   });
 
   it("createTypedArray works with values", function () {
-    var values = [34, 12, 4, 1];
-    var typedArray = ComponentDatatype.createTypedArray(
+    const values = [34, 12, 4, 1];
+    let typedArray = ComponentDatatype.createTypedArray(
       ComponentDatatype.BYTE,
       values
     );
@@ -164,7 +164,7 @@ describe("Core/ComponentDatatype", function () {
   });
 
   it("createArrayBufferView works", function () {
-    var buffer = new ArrayBuffer(100);
+    const buffer = new ArrayBuffer(100);
     expect(
       ComponentDatatype.createArrayBufferView(
         ComponentDatatype.BYTE,
@@ -244,14 +244,14 @@ describe("Core/ComponentDatatype", function () {
   });
 
   it("createArrayBufferView throws without type", function () {
-    var buffer = new ArrayBuffer(100);
+    const buffer = new ArrayBuffer(100);
     expect(function () {
       ComponentDatatype.createTypedArray(undefined, buffer, 0, 1);
     }).toThrowDeveloperError();
   });
 
   it("createArrayBufferView throws with invalid type", function () {
-    var buffer = new ArrayBuffer(100);
+    const buffer = new ArrayBuffer(100);
     expect(function () {
       ComponentDatatype.createTypedArray({}, buffer, 0, 1);
     }).toThrowDeveloperError();

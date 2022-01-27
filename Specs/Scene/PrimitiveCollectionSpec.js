@@ -15,10 +15,10 @@ import createScene from "../createScene.js";
 describe(
   "Scene/PrimitiveCollection",
   function () {
-    var scene;
-    var context;
-    var rectangle;
-    var primitives;
+    let scene;
+    let context;
+    let rectangle;
+    let primitives;
 
     beforeAll(function () {
       scene = createScene();
@@ -47,7 +47,7 @@ describe(
         y: 0.0,
         z: 0.0,
       });
-      var labels = new LabelCollection();
+      const labels = new LabelCollection();
       labels.add({
         position: position,
         text: "x",
@@ -89,7 +89,7 @@ describe(
     }
 
     it("constructs with options", function () {
-      var collection = new PrimitiveCollection({
+      const collection = new PrimitiveCollection({
         show: false,
         destroyPrimitives: false,
       });
@@ -113,14 +113,14 @@ describe(
     });
 
     it("adds a primitive with add()", function () {
-      var p = createLabels();
+      const p = createLabels();
       expect(primitives.add(p)).toBe(p);
       expect(primitives.length).toEqual(1);
     });
 
     it("add works with an index", function () {
-      var p0 = createLabels();
-      var p1 = createLabels();
+      const p0 = createLabels();
+      const p1 = createLabels();
 
       expect(function () {
         primitives.add(p0, 1);
@@ -146,8 +146,8 @@ describe(
     });
 
     it("removes the first primitive", function () {
-      var p0 = createLabels();
-      var p1 = createLabels();
+      const p0 = createLabels();
+      const p1 = createLabels();
 
       primitives.add(p0);
       primitives.add(p1);
@@ -163,8 +163,8 @@ describe(
     });
 
     it("removes the last primitive", function () {
-      var p0 = createLabels();
-      var p1 = createLabels();
+      const p0 = createLabels();
+      const p1 = createLabels();
 
       primitives.add(p0);
       primitives.add(p1);
@@ -180,7 +180,7 @@ describe(
     });
 
     it("removes a primitive twice", function () {
-      var p0 = createLabels();
+      const p0 = createLabels();
       primitives.add(p0);
 
       expect(primitives.remove(p0)).toEqual(true);
@@ -203,22 +203,22 @@ describe(
     });
 
     it("contains a primitive", function () {
-      var labels = createLabels();
+      const labels = createLabels();
       primitives.add(labels);
 
       expect(primitives.contains(labels)).toEqual(true);
     });
 
     it("does not contain a primitive", function () {
-      var labels0 = createLabels();
-      var labels1 = createLabels();
+      const labels0 = createLabels();
+      const labels1 = createLabels();
       primitives.add(labels0);
 
       expect(primitives.contains(labels1)).toEqual(false);
     });
 
     it("does not contain removed primitive", function () {
-      var labels0 = createLabels();
+      const labels0 = createLabels();
       primitives.add(labels0);
       primitives.remove(labels0);
 
@@ -226,7 +226,7 @@ describe(
     });
 
     it("does not contain all removed primitives", function () {
-      var labels0 = createLabels();
+      const labels0 = createLabels();
       primitives.add(labels0);
       primitives.removeAll();
 
@@ -238,12 +238,12 @@ describe(
     });
 
     it("adds and removes a primitive in two composites", function () {
-      var p = createLabels();
+      const p = createLabels();
 
       primitives.add(p);
       primitives.destroyPrimitives = false;
 
-      var otherPrimitives = new PrimitiveCollection();
+      const otherPrimitives = new PrimitiveCollection();
       otherPrimitives.add(p);
       otherPrimitives.destroyPrimitives = false;
 
@@ -268,10 +268,10 @@ describe(
     });
 
     it("does not remove from a second composite", function () {
-      var p = createLabels();
+      const p = createLabels();
       primitives.add(p);
 
-      var otherPrimitives = new PrimitiveCollection();
+      const otherPrimitives = new PrimitiveCollection();
 
       expect(otherPrimitives.contains(p)).toEqual(false);
       expect(otherPrimitives.remove(p)).toEqual(false);
@@ -295,10 +295,10 @@ describe(
     });
 
     it("renders a primitive in more than one composite", function () {
-      var p = createLabels();
+      const p = createLabels();
       primitives.add(p);
 
-      var otherPrimitives = new PrimitiveCollection();
+      const otherPrimitives = new PrimitiveCollection();
       otherPrimitives.destroyPrimitives = false;
       otherPrimitives.add(p);
 
@@ -309,7 +309,7 @@ describe(
     });
 
     it("renders child composites", function () {
-      var children = new PrimitiveCollection();
+      const children = new PrimitiveCollection();
       children.add(createLabels());
       primitives.add(children);
 
@@ -317,8 +317,8 @@ describe(
     });
 
     it("picks a primitive added with add()", function () {
-      var labels = createLabels();
-      var l = labels.get(0);
+      const labels = createLabels();
+      const l = labels.get(0);
       primitives.add(labels);
 
       verifyPrimitivesRender(primitives);
@@ -327,7 +327,7 @@ describe(
     });
 
     it("does not pick", function () {
-      var labels = createLabels();
+      const labels = createLabels();
 
       primitives.show = false;
       primitives.add(labels);
@@ -338,10 +338,10 @@ describe(
     });
 
     it("picks child composites", function () {
-      var labels = createLabels();
-      var l = labels.get(0);
+      const labels = createLabels();
+      const l = labels.get(0);
 
-      var children = new PrimitiveCollection();
+      const children = new PrimitiveCollection();
       children.add(labels);
       primitives.add(children);
 
@@ -351,8 +351,8 @@ describe(
     });
 
     it("picks a primitive added with render order (0)", function () {
-      var p0 = createRectangle();
-      var p1 = createRectangle();
+      const p0 = createRectangle();
+      const p1 = createRectangle();
 
       primitives.add(p0);
       primitives.add(p1);
@@ -363,8 +363,8 @@ describe(
     });
 
     it("picks a primitive added with render order (1)", function () {
-      var p0 = createRectangle();
-      var p1 = createRectangle();
+      const p0 = createRectangle();
+      const p1 = createRectangle();
 
       primitives.add(p1);
       primitives.add(p0);
@@ -375,8 +375,8 @@ describe(
     });
 
     it("picks a primitive added with raise (0)", function () {
-      var p0 = createRectangle();
-      var p1 = createRectangle();
+      const p0 = createRectangle();
+      const p1 = createRectangle();
 
       primitives.add(p0);
       primitives.add(p1);
@@ -388,8 +388,8 @@ describe(
     });
 
     it("picks a primitive added with raise (1)", function () {
-      var p0 = createRectangle();
-      var p1 = createRectangle();
+      const p0 = createRectangle();
+      const p1 = createRectangle();
 
       primitives.add(p0);
       primitives.add(p1);
@@ -401,8 +401,8 @@ describe(
     });
 
     it("picks a primitive added with raiseToTop (0)", function () {
-      var p0 = createRectangle();
-      var p1 = createRectangle();
+      const p0 = createRectangle();
+      const p1 = createRectangle();
 
       primitives.add(p0);
       primitives.add(p1);
@@ -414,8 +414,8 @@ describe(
     });
 
     it("picks a primitive added with raiseToTop (1)", function () {
-      var p0 = createRectangle();
-      var p1 = createRectangle();
+      const p0 = createRectangle();
+      const p1 = createRectangle();
 
       primitives.add(p0);
       primitives.add(p1);
@@ -427,8 +427,8 @@ describe(
     });
 
     it("picks a primitive added with lower (0)", function () {
-      var p0 = createRectangle();
-      var p1 = createRectangle();
+      const p0 = createRectangle();
+      const p1 = createRectangle();
 
       primitives.add(p0);
       primitives.add(p1);
@@ -440,8 +440,8 @@ describe(
     });
 
     it("picks a primitive added with lower (1)", function () {
-      var p0 = createRectangle();
-      var p1 = createRectangle();
+      const p0 = createRectangle();
+      const p1 = createRectangle();
 
       primitives.add(p0);
       primitives.add(p1);
@@ -453,8 +453,8 @@ describe(
     });
 
     it("picks a primitive added with lowerToBottom (0)", function () {
-      var p0 = createRectangle();
-      var p1 = createRectangle();
+      const p0 = createRectangle();
+      const p1 = createRectangle();
 
       primitives.add(p0);
       primitives.add(p1);
@@ -466,8 +466,8 @@ describe(
     });
 
     it("picks a primitive added with lowerToBottom (1)", function () {
-      var p0 = createRectangle();
-      var p1 = createRectangle();
+      const p0 = createRectangle();
+      const p1 = createRectangle();
 
       primitives.add(p0);
       primitives.add(p1);
@@ -488,7 +488,7 @@ describe(
     });
 
     it("destroys its primitives", function () {
-      var labels = new LabelCollection(context);
+      const labels = new LabelCollection(context);
 
       primitives.add(labels);
       expect(labels.isDestroyed()).toEqual(false);
@@ -498,9 +498,9 @@ describe(
     });
 
     it("destroys children", function () {
-      var labels = new LabelCollection(context);
+      const labels = new LabelCollection(context);
 
-      var children = new PrimitiveCollection();
+      const children = new PrimitiveCollection();
       children.add(labels);
 
       primitives.add(children);
@@ -513,7 +513,7 @@ describe(
     });
 
     it("destroys primitive on remove", function () {
-      var labels = new LabelCollection(context);
+      const labels = new LabelCollection(context);
 
       primitives.add(labels);
       expect(labels.isDestroyed()).toEqual(false);
@@ -523,7 +523,7 @@ describe(
     });
 
     it("destroys primitive on removeAll", function () {
-      var labels = new LabelCollection(context);
+      const labels = new LabelCollection(context);
 
       primitives.add(labels);
       expect(labels.isDestroyed()).toEqual(false);
@@ -533,7 +533,7 @@ describe(
     });
 
     it("does not destroy its primitives", function () {
-      var labels = new LabelCollection(context);
+      const labels = new LabelCollection(context);
 
       primitives.destroyPrimitives = false;
       primitives.add(labels);
@@ -547,7 +547,7 @@ describe(
     });
 
     it("does not destroy primitive on remove", function () {
-      var labels = new LabelCollection(context);
+      const labels = new LabelCollection(context);
 
       primitives.destroyPrimitives = false;
       primitives.add(labels);
@@ -561,7 +561,7 @@ describe(
     });
 
     it("does not destroy primitive on removeAll", function () {
-      var labels = new LabelCollection(context);
+      const labels = new LabelCollection(context);
 
       primitives.destroyPrimitives = false;
       primitives.add(labels);
@@ -581,7 +581,7 @@ describe(
     });
 
     it("raise throws when primitive is not in composite", function () {
-      var p = createLabels();
+      const p = createLabels();
 
       expect(function () {
         primitives.raise(p);
@@ -589,7 +589,7 @@ describe(
     });
 
     it("raiseToTop throws when primitive is not in composite", function () {
-      var p = createLabels();
+      const p = createLabels();
 
       expect(function () {
         primitives.raiseToTop(p);
@@ -597,7 +597,7 @@ describe(
     });
 
     it("lower throws when primitive is not in composite", function () {
-      var p = createLabels();
+      const p = createLabels();
 
       expect(function () {
         primitives.lower(p);
@@ -605,7 +605,7 @@ describe(
     });
 
     it("lowerToBottom throws when primitive is not in composite", function () {
-      var p = createLabels();
+      const p = createLabels();
 
       expect(function () {
         primitives.lowerToBottom(p);

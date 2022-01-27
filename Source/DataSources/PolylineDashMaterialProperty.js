@@ -5,10 +5,10 @@ import Event from "../Core/Event.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import Property from "./Property.js";
 
-var defaultColor = Color.WHITE;
-var defaultGapColor = Color.TRANSPARENT;
-var defaultDashLength = 16.0;
-var defaultDashPattern = 255.0;
+const defaultColor = Color.WHITE;
+const defaultGapColor = Color.TRANSPARENT;
+const defaultDashLength = 16.0;
+const defaultDashPattern = 255.0;
 
 /**
  * A {@link MaterialProperty} that maps to polyline dash {@link Material} uniforms.
