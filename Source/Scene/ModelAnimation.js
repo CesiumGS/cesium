@@ -38,6 +38,7 @@ function ModelAnimation(options, model, runtimeAnimation) {
   this._multiplier = defaultValue(options.multiplier, 1.0);
   this._reverse = defaultValue(options.reverse, false);
   this._loop = defaultValue(options.loop, ModelAnimationLoop.NONE);
+  this._startOffset = defaultValue(options.startOffset, 0.0);
 
   /**
    * The event fired when this animation is started.  This can be used, for
@@ -227,6 +228,32 @@ Object.defineProperties(ModelAnimation.prototype, {
   loop: {
     get: function () {
       return this._loop;
+    },
+  },
+
+  /**
+   * Fractional offset [0..1] in to animations timeline, to start playing
+   * animation at.
+   * When used with {@link ModelAnimation#startTime} and
+   * {@link ModelAnimation#stopTime}, this allows an animation to effectively be
+   * paused and then resumed.
+   * When {@link ModelAnimation#reverse} is <code>false</code>, a value of 0
+   * will start the animaton at the beginning, whereas a value of 0.25 will
+   * start the animation 25% of the way through.
+   * When {@link ModelAnimation#reverse} is <code>true</code>, 0 corresponds to
+   * the end of the animation. So if you wish to play the first 25% of the
+   * animation in reverse, this should be set to 0.75.
+   *
+   * @memberof ModelAnimation.prototype
+   *
+   * @type {Number}
+   * @readonly
+   *
+   * @default 0
+   */
+  startOffset: {
+    get: function () {
+      return this._startOffset;
     },
   },
 });

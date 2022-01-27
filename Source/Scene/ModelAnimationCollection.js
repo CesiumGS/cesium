@@ -92,6 +92,7 @@ function add(collection, index, options) {
  * @param {Boolean} [options.removeOnStop=false] When <code>true</code>, the animation is removed after it stops playing.
  * @param {Number} [options.multiplier=1.0] Values greater than <code>1.0</code> increase the speed that the animation is played relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
  * @param {Boolean} [options.reverse=false] When <code>true</code>, the animation is played in reverse.
+ * @param {Number} [options.startOffset=0.0] Fractional offset in to animations timeline, to start playing animation at.
  * @param {ModelAnimationLoop} [options.loop=ModelAnimationLoop.NONE] Determines if and how the animation is looped.
  * @returns {ModelAnimation} The animation that was added to the collection.
  *
@@ -450,11 +451,14 @@ ModelAnimationCollection.prototype.update = function (frameState) {
         delta = floor % 2 === 1.0 ? 1.0 - fract : fract;
       }
 
+      let startDelta = scheduledAnimation.startOffset;
       if (scheduledAnimation.reverse) {
         delta = 1.0 - delta;
+        startDelta = -startDelta;
       }
 
-      let localAnimationTime = delta * duration * scheduledAnimation.multiplier;
+      let localAnimationTime =
+        delta * duration * scheduledAnimation.multiplier + startDelta;
       // Clamp in case floating-point roundoff goes outside the animation's first or last keyframe
       localAnimationTime = CesiumMath.clamp(
         localAnimationTime,
