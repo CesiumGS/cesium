@@ -150,9 +150,7 @@ function addPropertyTextureProperty(
   const texCoordVariable = "attributes.texCoord_" + texCoord;
   const channels = textureReader.channels;
 
-  // TODO: Sometimes initialization will be need to be wrapped in an unpacking
-  // function (e.g. convert from unsigned to signed)
-  const initializationLine =
+  let initializationLine =
     "metadata." +
     glslPropertyId +
     " = texture2D(" +
@@ -162,6 +160,13 @@ function addPropertyTextureProperty(
     ")." +
     channels +
     ";";
+
+  // Sometimes initialization will be need to be wrapped in an unpacking
+  // function (e.g. convert from unsigned to signed)
+  const unpackingSteps = property.getUnpackingSteps();
+  for (let i = 0; i < unpackingSteps.length; i++) {
+    initializationLine = unpackingSteps[i](initializationLine);
+  }
 
   shaderBuilder.addFunctionLines(
     MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,

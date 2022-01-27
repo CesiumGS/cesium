@@ -1,5 +1,7 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
+import MetadataUnpackingStep from "./MetadataUnpackingStep.js";
+import MetadataComponentType from "./MetadataComponentType.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 
 /**
@@ -64,36 +66,33 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
   },
 });
 
-// uint8, normalized:
-// float property = texture2D(...).r;
-// vec2 property = texture2D(...).rg;
-// vec3 property = texture2D(...).rgb;
-// vec4 property = texture2D(...).rgba;
+/**
+ * Get a list of steps to apply in the shader after performing the texture read.
+ * @private
+ */
+PropertyTextureProperty.prototype.getUnpackingSteps = function () {
+  const classProperty = this._classProperty;
+  const valueType = classProperty.valueType;
 
-// int8, normalized:
-// float property = 1.0 + 2.0 * (texture2D(...).r)
+  // int8 values need to be converted from [0, 1] -> [-1, 1]
+  if (valueType === MetadataComponentType.INT8) {
+    return [MetadataUnpackingStep.unsignedToSigned];
+  }
 
+  // Otherwise, use the value from the texture read directly.
+  return [];
+};
+
+const vectorTypes = ["float", "vec2", "vec3", "vec4"];
+
+/**
+ * @private
+ */
 PropertyTextureProperty.prototype.getGlslType = function () {
-  // TODO: fill this out
-  return "float";
-  //var classProperty = this._classProperty;
+  const classProperty = this._classProperty;
 
-  // Supported types:
-  // UINT8, normalized -> float
-  // FLOAT -> float
-
-  //var componentCount = classProperty.componentCount;
-
-  //var normalized = classProperty.normalized;
-
-  //if (classProperty.isFloat)
-  // FLOAT -> float
-  // VECn -> vecn
-  // ARRAY[FLOAT, 1] -> float
-  // ARRAY[FLOAT, 2] -> vec2
-  // ARRAY[FLOAT, 3] -> vec3
-  // ARRAY[FLOAT, 4] -> vec4
-  // ARRAY[FLOAT]
+  // get float or a vector type
+  return vectorTypes[classProperty.componentCount - 1];
 };
 
 /**
