@@ -309,4 +309,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [lyqh-ctx](https://github.com/lyqh-ctx)
 - [David Tryse](https://github.com/dtryse)
 - [Martin Chan](https://github.com/martin-bom)
+- [Jon Beniston](https://github.com/srcejon)
 - [Ugnius Malukas](https://github.com/ugnelis)

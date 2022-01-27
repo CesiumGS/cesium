@@ -1,4 +1,3 @@
-import arraySlice from "../Core/arraySlice.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
@@ -10,7 +9,6 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
@@ -25,13 +23,14 @@ import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import VertexArray from "../Renderer/VertexArray.js";
+import MersenneTwister from "../ThirdParty/mersenne-twister.js";
 import when from "../ThirdParty/when.js";
 import BlendingState from "./BlendingState.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
-import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
 import DracoLoader from "./DracoLoader.js";
 import getClipAndStyleCode from "./getClipAndStyleCode.js";
 import getClippingFunction from "./getClippingFunction.js";
+import PntsParser from "./PntsParser.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
 import StencilConstants from "./StencilConstants.js";
@@ -196,366 +195,98 @@ Object.defineProperties(PointCloud.prototype, {
   },
 });
 
-var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
-
 function initialize(pointCloud, options) {
-  var arrayBuffer = options.arrayBuffer;
-  var byteOffset = defaultValue(options.byteOffset, 0);
+  var parsedContent = PntsParser.parse(options.arrayBuffer, options.byteOffset);
+  pointCloud._parsedContent = parsedContent;
+  pointCloud._rtcCenter = parsedContent.rtcCenter;
+  pointCloud._hasNormals = parsedContent.hasNormals;
+  pointCloud._hasColors = parsedContent.hasColors;
+  pointCloud._hasBatchIds = parsedContent.hasBatchIds;
+  pointCloud._isTranslucent = parsedContent.isTranslucent;
 
-  var uint8Array = new Uint8Array(arrayBuffer);
-  var view = new DataView(arrayBuffer);
-  byteOffset += sizeOfUint32; // Skip magic
-
-  var version = view.getUint32(byteOffset, true);
-  if (version !== 1) {
-    throw new RuntimeError(
-      "Only Point Cloud tile version 1 is supported.  Version " +
-        version +
-        " is not."
-    );
-  }
-  byteOffset += sizeOfUint32;
-
-  // Skip byteLength
-  byteOffset += sizeOfUint32;
-
-  var featureTableJsonByteLength = view.getUint32(byteOffset, true);
-  if (featureTableJsonByteLength === 0) {
-    throw new RuntimeError(
-      "Feature table must have a byte length greater than zero"
-    );
-  }
-  byteOffset += sizeOfUint32;
-
-  var featureTableBinaryByteLength = view.getUint32(byteOffset, true);
-  byteOffset += sizeOfUint32;
-
-  var batchTableJsonByteLength = view.getUint32(byteOffset, true);
-  byteOffset += sizeOfUint32;
-  var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
-  byteOffset += sizeOfUint32;
-
-  var featureTableJson = getJsonFromTypedArray(
-    uint8Array,
-    byteOffset,
-    featureTableJsonByteLength
-  );
-  byteOffset += featureTableJsonByteLength;
-
-  var featureTableBinary = new Uint8Array(
-    arrayBuffer,
-    byteOffset,
-    featureTableBinaryByteLength
-  );
-  byteOffset += featureTableBinaryByteLength;
-
-  // Get the batch table JSON and binary
-  var batchTableJson;
-  var batchTableBinary;
-  if (batchTableJsonByteLength > 0) {
-    // Has a batch table JSON
-    batchTableJson = getJsonFromTypedArray(
-      uint8Array,
-      byteOffset,
-      batchTableJsonByteLength
-    );
-    byteOffset += batchTableJsonByteLength;
-
-    if (batchTableBinaryByteLength > 0) {
-      // Has a batch table binary
-      batchTableBinary = new Uint8Array(
-        arrayBuffer,
-        byteOffset,
-        batchTableBinaryByteLength
-      );
-      byteOffset += batchTableBinaryByteLength;
-    }
-  }
-
-  var featureTable = new Cesium3DTileFeatureTable(
-    featureTableJson,
-    featureTableBinary
-  );
-
-  var pointsLength = featureTable.getGlobalProperty("POINTS_LENGTH");
-  featureTable.featuresLength = pointsLength;
-
-  if (!defined(pointsLength)) {
-    throw new RuntimeError(
-      "Feature table global property: POINTS_LENGTH must be defined"
+  // If points are not batched and there are per-point properties, use the
+  // properties as metadata for styling purposes.
+  if (!parsedContent.hasBatchIds && defined(parsedContent.batchTableBinary)) {
+    parsedContent.styleableProperties = Cesium3DTileBatchTable.getBinaryProperties(
+      parsedContent.pointsLength,
+      parsedContent.batchTableJson,
+      parsedContent.batchTableBinary
     );
   }
 
-  var rtcCenter = featureTable.getGlobalProperty(
-    "RTC_CENTER",
-    ComponentDatatype.FLOAT,
-    3
-  );
-  if (defined(rtcCenter)) {
-    pointCloud._rtcCenter = Cartesian3.unpack(rtcCenter);
-  }
-
-  var positions;
-  var colors;
-  var normals;
-  var batchIds;
-
-  var hasPositions = false;
-  var hasColors = false;
-  var hasNormals = false;
-  var hasBatchIds = false;
-
-  var isQuantized = false;
-  var isTranslucent = false;
-  var isRGB565 = false;
-  var isOctEncoded16P = false;
-
-  var dracoBuffer;
-  var dracoFeatureTableProperties;
-  var dracoBatchTableProperties;
-
-  var featureTableDraco = defined(featureTableJson.extensions)
-    ? featureTableJson.extensions["3DTILES_draco_point_compression"]
-    : undefined;
-  var batchTableDraco =
-    defined(batchTableJson) && defined(batchTableJson.extensions)
-      ? batchTableJson.extensions["3DTILES_draco_point_compression"]
-      : undefined;
-
-  if (defined(batchTableDraco)) {
-    dracoBatchTableProperties = batchTableDraco.properties;
-  }
-
-  if (defined(featureTableDraco)) {
-    dracoFeatureTableProperties = featureTableDraco.properties;
-    var dracoByteOffset = featureTableDraco.byteOffset;
-    var dracoByteLength = featureTableDraco.byteLength;
-    if (
-      !defined(dracoFeatureTableProperties) ||
-      !defined(dracoByteOffset) ||
-      !defined(dracoByteLength)
-    ) {
-      throw new RuntimeError(
-        "Draco properties, byteOffset, and byteLength must be defined"
-      );
-    }
-    dracoBuffer = arraySlice(
-      featureTableBinary,
-      dracoByteOffset,
-      dracoByteOffset + dracoByteLength
-    );
-    hasPositions = defined(dracoFeatureTableProperties.POSITION);
-    hasColors =
-      defined(dracoFeatureTableProperties.RGB) ||
-      defined(dracoFeatureTableProperties.RGBA);
-    hasNormals = defined(dracoFeatureTableProperties.NORMAL);
-    hasBatchIds = defined(dracoFeatureTableProperties.BATCH_ID);
-    isTranslucent = defined(dracoFeatureTableProperties.RGBA);
+  if (defined(parsedContent.draco)) {
+    var draco = parsedContent.draco;
     pointCloud._decodingState = DecodingState.NEEDS_DECODE;
+    draco.dequantizeInShader = pointCloud._dequantizeInShader;
   }
 
-  var draco;
-  if (defined(dracoBuffer)) {
-    draco = {
-      buffer: dracoBuffer,
-      featureTableProperties: dracoFeatureTableProperties,
-      batchTableProperties: dracoBatchTableProperties,
-      properties: combine(
-        dracoFeatureTableProperties,
-        dracoBatchTableProperties
-      ),
-      dequantizeInShader: pointCloud._dequantizeInShader,
-    };
+  var positions = parsedContent.positions;
+  if (defined(positions)) {
+    pointCloud._isQuantized = positions.isQuantized;
+    pointCloud._quantizedVolumeScale = positions.quantizedVolumeScale;
+    pointCloud._quantizedVolumeOffset = positions.quantizedVolumeOffset;
+    pointCloud._quantizedRange = positions.quantizedRange;
   }
 
-  if (!hasPositions) {
-    if (defined(featureTableJson.POSITION)) {
-      positions = featureTable.getPropertyArray(
-        "POSITION",
-        ComponentDatatype.FLOAT,
-        3
-      );
-      hasPositions = true;
-    } else if (defined(featureTableJson.POSITION_QUANTIZED)) {
-      positions = featureTable.getPropertyArray(
-        "POSITION_QUANTIZED",
-        ComponentDatatype.UNSIGNED_SHORT,
-        3
-      );
-      isQuantized = true;
-      hasPositions = true;
+  var normals = parsedContent.normals;
+  if (defined(normals)) {
+    pointCloud._isOctEncoded16P = normals.octEncoded;
+  }
 
-      var quantizedVolumeScale = featureTable.getGlobalProperty(
-        "QUANTIZED_VOLUME_SCALE",
-        ComponentDatatype.FLOAT,
-        3
+  var colors = parsedContent.colors;
+  if (defined(colors)) {
+    if (defined(colors.constantColor)) {
+      pointCloud._constantColor = Color.clone(
+        colors.constantColor,
+        pointCloud._constantColor
       );
-      if (!defined(quantizedVolumeScale)) {
-        throw new RuntimeError(
-          "Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions."
-        );
-      }
-      pointCloud._quantizedVolumeScale = Cartesian3.unpack(
-        quantizedVolumeScale
-      );
-      pointCloud._quantizedRange = (1 << 16) - 1;
 
-      var quantizedVolumeOffset = featureTable.getGlobalProperty(
-        "QUANTIZED_VOLUME_OFFSET",
-        ComponentDatatype.FLOAT,
-        3
-      );
-      if (!defined(quantizedVolumeOffset)) {
-        throw new RuntimeError(
-          "Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions."
-        );
-      }
-      pointCloud._quantizedVolumeOffset = Cartesian3.unpack(
-        quantizedVolumeOffset
-      );
+      // Constant colors are handled as a uniform rather than a vertex
+      // attribute.
+      pointCloud._hasColors = false;
     }
+    pointCloud._isRGB565 = colors.isRGB565;
   }
 
-  if (!hasColors) {
-    if (defined(featureTableJson.RGBA)) {
-      colors = featureTable.getPropertyArray(
-        "RGBA",
-        ComponentDatatype.UNSIGNED_BYTE,
-        4
-      );
-      isTranslucent = true;
-      hasColors = true;
-    } else if (defined(featureTableJson.RGB)) {
-      colors = featureTable.getPropertyArray(
-        "RGB",
-        ComponentDatatype.UNSIGNED_BYTE,
-        3
-      );
-      hasColors = true;
-    } else if (defined(featureTableJson.RGB565)) {
-      colors = featureTable.getPropertyArray(
-        "RGB565",
-        ComponentDatatype.UNSIGNED_SHORT,
-        1
-      );
-      isRGB565 = true;
-      hasColors = true;
-    }
+  // PntsParser parses BATCH_ID as FEATURE_ID for EXT_mesh_features.
+  // These properties aren't used but rename them to BATCH_ID to avoid
+  // confusion when debugging.
+  var batchIds = parsedContent.batchIds;
+  if (defined(parsedContent.batchIds)) {
+    batchIds.name = "BATCH_ID";
+    batchIds.semantic = "BATCH_ID";
+    batchIds.setIndex = undefined;
   }
 
-  if (!hasNormals) {
-    if (defined(featureTableJson.NORMAL)) {
-      normals = featureTable.getPropertyArray(
-        "NORMAL",
-        ComponentDatatype.FLOAT,
-        3
-      );
-      hasNormals = true;
-    } else if (defined(featureTableJson.NORMAL_OCT16P)) {
-      normals = featureTable.getPropertyArray(
-        "NORMAL_OCT16P",
-        ComponentDatatype.UNSIGNED_BYTE,
-        2
-      );
-      isOctEncoded16P = true;
-      hasNormals = true;
-    }
-  }
-
-  if (!hasBatchIds) {
-    if (defined(featureTableJson.BATCH_ID)) {
-      batchIds = featureTable.getPropertyArray(
-        "BATCH_ID",
-        ComponentDatatype.UNSIGNED_SHORT,
-        1
-      );
-      hasBatchIds = true;
-    }
-  }
-
-  if (!hasPositions) {
-    throw new RuntimeError(
-      "Either POSITION or POSITION_QUANTIZED must be defined."
+  if (parsedContent.hasBatchIds) {
+    pointCloud._batchTableLoaded(
+      parsedContent.batchLength,
+      parsedContent.batchTableJson,
+      parsedContent.batchTableBinary
     );
   }
 
-  if (defined(featureTableJson.CONSTANT_RGBA)) {
-    var constantRGBA = featureTable.getGlobalProperty(
-      "CONSTANT_RGBA",
-      ComponentDatatype.UNSIGNED_BYTE,
-      4
-    );
-    pointCloud._constantColor = Color.fromBytes(
-      constantRGBA[0],
-      constantRGBA[1],
-      constantRGBA[2],
-      constantRGBA[3],
-      pointCloud._constantColor
-    );
-  }
-
-  if (hasBatchIds) {
-    var batchLength = featureTable.getGlobalProperty("BATCH_LENGTH");
-    if (!defined(batchLength)) {
-      throw new RuntimeError(
-        "Global property: BATCH_LENGTH must be defined when BATCH_ID is defined."
-      );
-    }
-
-    if (defined(batchTableBinary)) {
-      // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
-      batchTableBinary = new Uint8Array(batchTableBinary);
-    }
-
-    if (defined(pointCloud._batchTableLoaded)) {
-      pointCloud._batchTableLoaded(
-        batchLength,
-        batchTableJson,
-        batchTableBinary
-      );
-    }
-  }
-
-  // If points are not batched and there are per-point properties, use these properties for styling purposes
-  var styleableProperties;
-  if (!hasBatchIds && defined(batchTableBinary)) {
-    styleableProperties = Cesium3DTileBatchTable.getBinaryProperties(
-      pointsLength,
-      batchTableJson,
-      batchTableBinary
-    );
-  }
-
-  pointCloud._parsedContent = {
-    positions: positions,
-    colors: colors,
-    normals: normals,
-    batchIds: batchIds,
-    styleableProperties: styleableProperties,
-    draco: draco,
-  };
-  pointCloud._pointsLength = pointsLength;
-  pointCloud._isQuantized = isQuantized;
-  pointCloud._isOctEncoded16P = isOctEncoded16P;
-  pointCloud._isRGB565 = isRGB565;
-  pointCloud._isTranslucent = isTranslucent;
-  pointCloud._hasColors = hasColors;
-  pointCloud._hasNormals = hasNormals;
-  pointCloud._hasBatchIds = hasBatchIds;
+  pointCloud._pointsLength = parsedContent.pointsLength;
 }
 
 var scratchMin = new Cartesian3();
 var scratchMax = new Cartesian3();
 var scratchPosition = new Cartesian3();
+
+// Use MersenneTwister directly to avoid interfering with CesiumMath.nextRandomNumber()
+// See https://github.com/CesiumGS/cesium/issues/9730
+var randomNumberGenerator;
 var randomValues;
 
 function getRandomValues(samplesLength) {
   // Use same random values across all runs
   if (!defined(randomValues)) {
-    CesiumMath.setRandomNumberSeed(0);
+    // Use MersenneTwister directly to avoid interfering with CesiumMath.nextRandomNumber()
+    // See https://github.com/CesiumGS/cesium/issues/9730
+    randomNumberGenerator = new MersenneTwister(0);
     randomValues = new Array(samplesLength);
     for (var i = 0; i < samplesLength; ++i) {
-      randomValues[i] = CesiumMath.nextRandomNumber();
+      randomValues[i] = randomNumberGenerator.random();
     }
   }
   return randomValues;
@@ -683,7 +414,7 @@ function createResources(pointCloud, frameState) {
 
   var positionsVertexBuffer = Buffer.createVertexBuffer({
     context: context,
-    typedArray: positions,
+    typedArray: positions.typedArray,
     usage: BufferUsage.STATIC_DRAW,
   });
   pointCloud._geometryByteLength += positionsVertexBuffer.sizeInBytes;
@@ -692,7 +423,7 @@ function createResources(pointCloud, frameState) {
   if (hasColors) {
     colorsVertexBuffer = Buffer.createVertexBuffer({
       context: context,
-      typedArray: colors,
+      typedArray: colors.typedArray,
       usage: BufferUsage.STATIC_DRAW,
     });
     pointCloud._geometryByteLength += colorsVertexBuffer.sizeInBytes;
@@ -702,7 +433,7 @@ function createResources(pointCloud, frameState) {
   if (hasNormals) {
     normalsVertexBuffer = Buffer.createVertexBuffer({
       context: context,
-      typedArray: normals,
+      typedArray: normals.typedArray,
       usage: BufferUsage.STATIC_DRAW,
     });
     pointCloud._geometryByteLength += normalsVertexBuffer.sizeInBytes;
@@ -713,7 +444,7 @@ function createResources(pointCloud, frameState) {
     batchIds = prepareVertexAttribute(batchIds, "batchIds");
     batchIdsVertexBuffer = Buffer.createVertexBuffer({
       context: context,
-      typedArray: batchIds,
+      typedArray: batchIds.typedArray,
       usage: BufferUsage.STATIC_DRAW,
     });
     pointCloud._geometryByteLength += batchIdsVertexBuffer.sizeInBytes;
@@ -750,7 +481,7 @@ function createResources(pointCloud, frameState) {
       );
     } else {
       pointCloud._boundingSphere = computeApproximateBoundingSphereFromPositions(
-        positions
+        positions.typedArray
       );
     }
   }
@@ -810,7 +541,7 @@ function createResources(pointCloud, frameState) {
       index: batchIdLocation,
       vertexBuffer: batchIdsVertexBuffer,
       componentsPerAttribute: 1,
-      componentDatatype: ComponentDatatype.fromTypedArray(batchIds),
+      componentDatatype: ComponentDatatype.fromTypedArray(batchIds.typedArray),
       normalize: false,
       offsetInBytes: 0,
       strideInBytes: 0,
@@ -1479,22 +1210,32 @@ function decodeDraco(pointCloud, context) {
               };
             }
           }
-          parsedContent.positions = defaultValue(
-            decodedPositions,
-            parsedContent.positions
-          );
-          parsedContent.colors = defaultValue(
-            defaultValue(decodedRgba, decodedRgb),
-            parsedContent.colors
-          );
-          parsedContent.normals = defaultValue(
-            decodedNormals,
-            parsedContent.normals
-          );
-          parsedContent.batchIds = defaultValue(
-            decodedBatchIds,
-            parsedContent.batchIds
-          );
+
+          if (defined(decodedPositions)) {
+            parsedContent.positions = {
+              typedArray: decodedPositions,
+            };
+          }
+
+          var decodedColors = defaultValue(decodedRgba, decodedRgb);
+          if (defined(decodedColors)) {
+            parsedContent.colors = {
+              typedArray: decodedColors,
+            };
+          }
+
+          if (defined(decodedNormals)) {
+            parsedContent.normals = {
+              typedArray: decodedNormals,
+            };
+          }
+
+          if (defined(decodedBatchIds)) {
+            parsedContent.batchIds = {
+              typedArray: decodedBatchIds,
+            };
+          }
+
           parsedContent.styleableProperties = styleableProperties;
         })
         .otherwise(function (error) {

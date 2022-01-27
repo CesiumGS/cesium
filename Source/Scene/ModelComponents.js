@@ -69,7 +69,7 @@ function Quantization() {
 
   /**
    * The step size of the quantization volume, equal to
-   * quantizedVolumeDimensions / quantizedVolumeOffset (component-wise).
+   * quantizedVolumeDimensions / normalizationRange (component-wise).
    * Not applicable for oct encoded attributes.
    * The type should match the attribute type - e.g. if the attribute type
    * is AttributeType.VEC4 the dimensions should be a Cartesian4.
@@ -522,6 +522,16 @@ function Instances() {
    * @private
    */
   this.featureIdAttributes = [];
+
+  /**
+   * Whether the instancing transforms are applied in world space. For glTF models that
+   * use EXT_mesh_gpu_instancing, the transform is applied in object space. For i3dm files,
+   * the instance transform is in world space.
+   *
+   * @type {Boolean}
+   * @private
+   */
+  this.transformInWorldSpace = false;
 }
 
 /**

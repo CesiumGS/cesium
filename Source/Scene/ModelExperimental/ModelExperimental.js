@@ -13,8 +13,11 @@ import when from "../../ThirdParty/when.js";
 import destroyObject from "../../Core/destroyObject.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
+import PointCloudShading from "../PointCloudShading.js";
 import B3dmLoader from "./B3dmLoader.js";
+import PntsLoader from "./PntsLoader.js";
 import Color from "../../Core/Color.js";
+import I3dmLoader from "./I3dmLoader.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
@@ -41,6 +44,7 @@ import Color from "../../Core/Color.js";
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
  * @param {Number} [options.featureIdAttributeIndex=0] The index of the feature ID attribute to use for picking features per-instance or per-primitive.
  * @param {Number} [options.featureIdTextureIndex=0] The index of the feature ID texture to use for picking features per-primitive.
+ * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  *
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -73,9 +77,24 @@ export default function ModelExperimental(options) {
    */
   this.type = defaultValue(options.type, ModelExperimentalType.GLTF);
 
-  this._modelMatrix = Matrix4.clone(
+  /**
+   * The 4x4 transformation matrix that transforms the model from model to world coordinates.
+   * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's Cartesian WGS84 coordinates.
+   * Local reference frames can be used by providing a different transformation matrix, like that returned
+   * by {@link Transforms.eastNorthUpToFixedFrame}.
+   *
+   * @type {Matrix4}
+
+   * @default {@link Matrix4.IDENTITY}
+   *
+   * @example
+   * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+   * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
+   */
+  this.modelMatrix = Matrix4.clone(
     defaultValue(options.modelMatrix, Matrix4.IDENTITY)
   );
+  this._modelMatrix = Matrix4.clone(this.modelMatrix);
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -112,6 +131,10 @@ export default function ModelExperimental(options) {
   this._resources = [];
 
   this._boundingSphere = undefined;
+
+  var pointCloudShading = new PointCloudShading(options.pointCloudShading);
+  this._attenuation = pointCloudShading.attenuation;
+  this._pointCloudShading = pointCloudShading;
 
   this._debugShowBoundingVolumeDirty = false;
   this._debugShowBoundingVolume = defaultValue(
@@ -190,12 +213,6 @@ function initialize(model) {
 
   loader.promise
     .then(function (loader) {
-      Matrix4.multiply(
-        model._modelMatrix,
-        loader.components.transform,
-        model._modelMatrix
-      );
-
       var components = loader.components;
       var featureMetadata = components.featureMetadata;
 
@@ -216,7 +233,12 @@ function initialize(model) {
       ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
     );
 
-  loader.texturesLoadedPromise
+  // Transcoded .pnts models do not have textures
+  var texturesLoadedPromise = defaultValue(
+    loader.texturesLoadedPromise,
+    when.resolve()
+  );
+  texturesLoadedPromise
     .then(function () {
       model._texturesLoaded = true;
     })
@@ -263,6 +285,15 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * @private
+   */
+  loader: {
+    get: function () {
+      return this._loader;
+    },
+  },
+
+  /**
    * Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property
    * will always be false, since the 3D Tiles culling system is used.
    *
@@ -292,6 +323,30 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * Point cloud shading settings for controlling point cloud attenuation
+   * and lighting. For 3D Tiles, this is inherited from the
+   * {@link Cesium3DTileset}.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {PointCloudShading}
+   */
+  pointCloudShading: {
+    get: function () {
+      return this._pointCloudShading;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.defined("pointCloudShading", value);
+      //>>includeEnd('debug');
+      if (value !== this._pointCloudShading) {
+        this.resetDrawCommands();
+      }
+      this._pointCloudShading = value;
+    },
+  },
+
+  /**
    * The model's custom shader, if it exists. Using custom shaders with a {@link Cesium3DTileStyle}
    * may lead to undefined behavior.
    *
@@ -308,6 +363,20 @@ Object.defineProperties(ModelExperimental.prototype, {
         this.resetDrawCommands();
       }
       this._customShader = value;
+    },
+  },
+
+  /**
+   * The scene graph of this model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {ModelExperimentalSceneGraph}
+   * @private
+   */
+  sceneGraph: {
+    get: function () {
+      return this._sceneGraph;
     },
   },
 
@@ -410,7 +479,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       if (!Color.equals(this._color, value)) {
         this.resetDrawCommands();
       }
-      this._color = value;
+      this._color = Color.clone(value, this._color);
     },
   },
 
@@ -466,30 +535,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       }
       //>>includeEnd('debug');
 
-      return this._sceneGraph._boundingSphere;
-    },
-  },
-
-  /**
-   * The 4x4 transformation matrix that transforms the model from model to world coordinates.
-   * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's Cartesian WGS84 coordinates.
-   * Local reference frames can be used by providing a different transformation matrix, like that returned
-   * by {@link Transforms.eastNorthUpToFixedFrame}.
-   *
-   * @type {Matrix4}
-
-   * @default {@link Matrix4.IDENTITY}
-   *
-   * @example
-   * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-   * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
-   */
-  modelMatrix: {
-    get: function () {
-      return this._modelMatrix;
-    },
-    set: function (value) {
-      this._modelMatrix = value;
+      return this._sceneGraph.boundingSphere;
     },
   },
 
@@ -577,7 +623,6 @@ ModelExperimental.prototype.resetDrawCommands = function () {
   }
   this.destroyResources();
   this._drawCommandsBuilt = false;
-  this._sceneGraph._drawCommands = [];
 };
 
 /**
@@ -601,6 +646,13 @@ ModelExperimental.prototype.update = function (frameState) {
   // A custom shader may have to load texture uniforms.
   if (defined(this._customShader)) {
     this._customShader.update(frameState);
+  }
+
+  // Check if the shader needs to be updated for point cloud attenuation
+  // settings.
+  if (this.pointCloudShading.attenuation !== this._attenuation) {
+    this.resetDrawCommands();
+    this._attenuation = this.pointCloudShading.attenuation;
   }
 
   // short-circuit if the model resources aren't ready.
@@ -644,13 +696,17 @@ ModelExperimental.prototype.update = function (frameState) {
     this._debugShowBoundingVolumeDirty = false;
   }
 
+  if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
+    this._sceneGraph.updateModelMatrix(this);
+  }
+
+  this._sceneGraph.update(frameState);
+
   // Check for show here because we still want the draw commands to be built so user can instantly see the model
   // when show is set to true.
   if (this._show) {
-    frameState.commandList.push.apply(
-      frameState.commandList,
-      this._sceneGraph._drawCommands
-    );
+    var drawCommands = this._sceneGraph.getDrawCommands();
+    frameState.commandList.push.apply(frameState.commandList, drawCommands);
   }
 };
 
@@ -742,6 +798,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
  * @param {Number} [options.featureIdAttributeIndex=0] The index of the feature ID attribute to use for picking features per-instance or per-primitive.
  * @param {Number} [options.featureIdTextureIndex=0] The index of the feature ID texture to use for picking features per-primitive.
+ * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
  *
  * @returns {ModelExperimental} The newly created model.
  */
@@ -799,6 +856,7 @@ ModelExperimental.fromGltf = function (options) {
     colorBlendMode: options.colorBlendMode,
     featureIdAttributeIndex: options.featureIdAttributeIndex,
     featureIdTextureIndex: options.featureIdTextureIndex,
+    pointCloudShading: options.pointCloudShading,
   };
   var model = new ModelExperimental(modelOptions);
 
@@ -825,6 +883,78 @@ ModelExperimental.fromB3dm = function (options) {
     loader: loader,
     resource: loaderOptions.b3dmResource,
     type: ModelExperimentalType.TILE_B3DM,
+    modelMatrix: options.modelMatrix,
+    debugShowBoundingVolume: options.debugShowBoundingVolume,
+    cull: options.cull,
+    opaquePass: options.opaquePass,
+    allowPicking: options.allowPicking,
+    customShader: options.customShader,
+    content: options.content,
+    show: options.show,
+    color: options.color,
+    colorBlendAmount: options.colorBlendAmount,
+    colorBlendMode: options.colorBlendMode,
+    featureIdAttributeIndex: options.featureIdAttributeIndex,
+    featureIdTextureIndex: options.featureIdTextureIndex,
+  };
+
+  var model = new ModelExperimental(modelOptions);
+  return model;
+};
+
+/**
+ * @private
+ */
+ModelExperimental.fromPnts = function (options) {
+  var loaderOptions = {
+    arrayBuffer: options.arrayBuffer,
+    byteOffset: options.byteOffset,
+  };
+  var loader = new PntsLoader(loaderOptions);
+
+  var modelOptions = {
+    loader: loader,
+    resource: options.resource,
+    type: ModelExperimentalType.TILE_PNTS,
+    modelMatrix: options.modelMatrix,
+    debugShowBoundingVolume: options.debugShowBoundingVolume,
+    cull: options.cull,
+    opaquePass: options.opaquePass,
+    allowPicking: options.allowPicking,
+    customShader: options.customShader,
+    content: options.content,
+    show: options.show,
+    color: options.color,
+    colorBlendAmount: options.colorBlendAmount,
+    colorBlendMode: options.colorBlendMode,
+    featureIdAttributeIndex: options.featureIdAttributeIndex,
+    featureIdTextureIndex: options.featureIdTextureIndex,
+  };
+
+  var model = new ModelExperimental(modelOptions);
+  return model;
+};
+
+/*
+ * @private
+ */
+ModelExperimental.fromI3dm = function (options) {
+  var loaderOptions = {
+    i3dmResource: options.resource,
+    arrayBuffer: options.arrayBuffer,
+    byteOffset: options.byteOffset,
+    releaseGltfJson: options.releaseGltfJson,
+    incrementallyLoadTextures: options.incrementallyLoadTextures,
+    upAxis: options.upAxis,
+    forwardAxis: options.forwardAxis,
+  };
+
+  var loader = new I3dmLoader(loaderOptions);
+
+  var modelOptions = {
+    loader: loader,
+    resource: loaderOptions.i3dmResource,
+    type: ModelExperimentalType.TILE_I3DM,
     modelMatrix: options.modelMatrix,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
     cull: options.cull,

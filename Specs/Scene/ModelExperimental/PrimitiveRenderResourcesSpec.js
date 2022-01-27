@@ -1,5 +1,6 @@
 import {
   AttributeType,
+  Axis,
   BlendingState,
   Cartesian3,
   ComponentDatatype,
@@ -9,6 +10,7 @@ import {
   Matrix4,
   ModelExperimentalNode,
   ModelExperimentalPrimitive,
+  ModelExperimentalType,
   PrimitiveType,
   ModelRenderResources,
   NodeRenderResources,
@@ -17,11 +19,24 @@ import {
 } from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
-  var mockModel = {};
+  var mockModel = {
+    modelMatrix: Matrix4.IDENTITY,
+    type: ModelExperimentalType.GLTF,
+  };
   var mockNode = {};
+  var mockSceneGraph = {
+    computedModelMatrix: Matrix4.IDENTITY,
+    components: {
+      upAxis: Axis.Y,
+      forwardAxis: Axis.Z,
+    },
+  };
+
   var runtimeNode = new ModelExperimentalNode({
     node: mockNode,
-    modelMatrix: Matrix4.IDENTITY,
+    transform: Matrix4.IDENTITY,
+    sceneGraph: mockSceneGraph,
+    children: [],
   });
 
   function checkShaderDefines(shaderBuilder, expectedDefines) {

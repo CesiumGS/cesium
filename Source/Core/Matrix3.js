@@ -648,8 +648,8 @@ Matrix3.toArray = function (matrix, result) {
 /**
  * Computes the array index of the element at the provided row and column.
  *
- * @param {Number} row The zero-based index of the row.
  * @param {Number} column The zero-based index of the column.
+ * @param {Number} row The zero-based index of the row.
  * @returns {Number} The index of the element at the provided row and column.
  *
  * @exception {DeveloperError} row must be 0, 1, or 2.
