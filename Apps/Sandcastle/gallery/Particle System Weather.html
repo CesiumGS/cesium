@@ -101,8 +101,8 @@
           rainParticleSize,
           rainParticleSize * 2.0
         );
+        let rainGravityScratch = new Cesium.Cartesian3();
         const rainUpdate = function (particle, dt) {
-          let rainGravityScratch = new Cesium.Cartesian3();
           rainGravityScratch = Cesium.Cartesian3.normalize(
             particle.position,
             rainGravityScratch
