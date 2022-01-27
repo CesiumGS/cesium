@@ -1,9 +1,41 @@
 # Build Guide
 
+- [Quickstart](#quickstart)
 - [Get the Code](#get-the-code)
 - [Build the Code](#build-the-code)
 - [Build Scripts](#build-scripts)
 - [Travis and Continuous Integration](#travis-and-continuous-integration)
+
+## Quickstart
+
+1. Get the code.
+   - Use git to [clone](#get-the-code) the source code onto your local machine.
+2. Build the code.
+
+   - Console to the Cesium directory.
+
+     _EXAMPLE: `cd C:\path\to\your\directory`_
+
+   - Use NPM to install packages, build the application, and start the server.
+
+   ```
+   npm install
+   ```
+
+   ```
+   npm run build
+   ```
+
+   ```
+   npm start
+   ```
+
+3. Access the site.
+   - Using your favorite browser, navigate to: ` http://localhost:8080`
+
+_For more details, review the rest of this document._
+
+---
 
 ## Get the Code
 
