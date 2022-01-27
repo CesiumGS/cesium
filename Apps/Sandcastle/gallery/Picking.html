@@ -35,22 +35,22 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           selectionIndicator: false,
           infoBox: false,
         });
 
-        var scene = viewer.scene;
+        const scene = viewer.scene;
         if (!scene.pickPositionSupported) {
           window.alert("This browser does not support pickPosition.");
         }
 
-        var handler;
+        let handler;
 
         Sandcastle.addDefaultToolbarButton(
           "Show Cartographic Position on Mouse Over",
           function () {
-            var entity = viewer.entities.add({
+            const entity = viewer.entities.add({
               label: {
                 show: false,
                 showBackground: true,
@@ -64,16 +64,18 @@
             // Mouse over the globe to see the cartographic position
             handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
             handler.setInputAction(function (movement) {
-              var cartesian = viewer.camera.pickEllipsoid(
+              const cartesian = viewer.camera.pickEllipsoid(
                 movement.endPosition,
                 scene.globe.ellipsoid
               );
               if (cartesian) {
-                var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-                var longitudeString = Cesium.Math.toDegrees(
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                  cartesian
+                );
+                const longitudeString = Cesium.Math.toDegrees(
                   cartographic.longitude
                 ).toFixed(2);
-                var latitudeString = Cesium.Math.toDegrees(
+                const latitudeString = Cesium.Math.toDegrees(
                   cartographic.latitude
                 ).toFixed(2);
 
@@ -94,7 +96,7 @@
         );
 
         Sandcastle.addToolbarButton("Pick Entity", function () {
-          var entity = viewer.entities.add({
+          const entity = viewer.entities.add({
             position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
             billboard: {
               image: "../images/Cesium_Logo_overlay.png",
@@ -104,7 +106,7 @@
           // If the mouse is over the billboard, change its scale and color
           handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
           handler.setInputAction(function (movement) {
-            var pickedObject = scene.pick(movement.endPosition);
+            const pickedObject = scene.pick(movement.endPosition);
             if (Cesium.defined(pickedObject) && pickedObject.id === entity) {
               entity.billboard.scale = 2.0;
               entity.billboard.color = Cesium.Color.YELLOW;
@@ -116,10 +118,10 @@
         });
 
         Sandcastle.addToolbarButton("Drill-Down Picking", function () {
-          var pickedEntities = new Cesium.EntityCollection();
-          var pickColor = Cesium.Color.YELLOW.withAlpha(0.5);
+          const pickedEntities = new Cesium.EntityCollection();
+          const pickColor = Cesium.Color.YELLOW.withAlpha(0.5);
           function makeProperty(entity, color) {
-            var colorProperty = new Cesium.CallbackProperty(function (
+            const colorProperty = new Cesium.CallbackProperty(function (
               time,
               result
             ) {
@@ -135,7 +137,7 @@
             );
           }
 
-          var red = viewer.entities.add({
+          const red = viewer.entities.add({
             polygon: {
               hierarchy: Cesium.Cartesian3.fromDegreesArray([
                 -70.0,
@@ -152,7 +154,7 @@
           });
           makeProperty(red, Cesium.Color.RED.withAlpha(0.5));
 
-          var blue = viewer.entities.add({
+          const blue = viewer.entities.add({
             polygon: {
               hierarchy: Cesium.Cartesian3.fromDegreesArray([
                 -75.0,
@@ -169,7 +171,7 @@
           });
           makeProperty(blue, Cesium.Color.BLUE.withAlpha(0.5));
 
-          var green = viewer.entities.add({
+          const green = viewer.entities.add({
             polygon: {
               hierarchy: Cesium.Cartesian3.fromDegreesArray([
                 -67.0,
@@ -190,12 +192,12 @@
           handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
           handler.setInputAction(function (movement) {
             // get an array of all primitives at the mouse position
-            var pickedObjects = scene.drillPick(movement.endPosition);
+            const pickedObjects = scene.drillPick(movement.endPosition);
             if (Cesium.defined(pickedObjects)) {
               //Update the collection of picked entities.
               pickedEntities.removeAll();
-              for (var i = 0; i < pickedObjects.length; ++i) {
-                var entity = pickedObjects[i].id;
+              for (let i = 0; i < pickedObjects.length; ++i) {
+                const entity = pickedObjects[i].id;
                 pickedEntities.add(entity);
               }
             }
@@ -203,7 +205,7 @@
         });
 
         Sandcastle.addToolbarButton("Pick position", function () {
-          var modelEntity = viewer.entities.add({
+          const modelEntity = viewer.entities.add({
             name: "milktruck",
             position: Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706),
             model: {
@@ -213,7 +215,7 @@
           });
           viewer.zoomTo(modelEntity);
 
-          var labelEntity = viewer.entities.add({
+          const labelEntity = viewer.entities.add({
             label: {
               show: false,
               showBackground: true,
@@ -227,29 +229,31 @@
           // Mouse over the globe to see the cartographic position
           handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
           handler.setInputAction(function (movement) {
-            var foundPosition = false;
+            let foundPosition = false;
 
-            var scene = viewer.scene;
+            const scene = viewer.scene;
             if (scene.mode !== Cesium.SceneMode.MORPHING) {
-              var pickedObject = scene.pick(movement.endPosition);
+              const pickedObject = scene.pick(movement.endPosition);
               if (
                 scene.pickPositionSupported &&
                 Cesium.defined(pickedObject) &&
                 pickedObject.id === modelEntity
               ) {
-                var cartesian = viewer.scene.pickPosition(movement.endPosition);
+                const cartesian = viewer.scene.pickPosition(
+                  movement.endPosition
+                );
 
                 if (Cesium.defined(cartesian)) {
-                  var cartographic = Cesium.Cartographic.fromCartesian(
+                  const cartographic = Cesium.Cartographic.fromCartesian(
                     cartesian
                   );
-                  var longitudeString = Cesium.Math.toDegrees(
+                  const longitudeString = Cesium.Math.toDegrees(
                     cartographic.longitude
                   ).toFixed(2);
-                  var latitudeString = Cesium.Math.toDegrees(
+                  const latitudeString = Cesium.Math.toDegrees(
                     cartographic.latitude
                   ).toFixed(2);
-                  var heightString = cartographic.height.toFixed(2);
+                  const heightString = cartographic.height.toFixed(2);
 
                   labelEntity.position = cartesian;
                   labelEntity.label.show = true;

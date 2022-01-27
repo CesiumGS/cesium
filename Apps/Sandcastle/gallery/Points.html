@@ -32,7 +32,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
         function addPoint() {
           Sandcastle.declare(addPoint);
@@ -64,7 +64,7 @@
         function changePointProperties() {
           Sandcastle.declare(changePointProperties);
 
-          var entity = viewer.entities.add({
+          const entity = viewer.entities.add({
             position: Cesium.Cartesian3.fromDegrees(
               -75.59777,
               40.03883,
@@ -75,7 +75,7 @@
             },
           });
 
-          var point = entity.point;
+          const point = entity.point;
           point.pixelSize = 20.0;
           point.color = Cesium.Color.YELLOW.withAlpha(0.33);
         }

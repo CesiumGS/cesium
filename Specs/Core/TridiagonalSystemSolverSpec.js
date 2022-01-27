@@ -46,21 +46,21 @@ describe("Core/TridiagonalSystemSolver", function () {
   });
 
   it("solve three unknowns", function () {
-    var l = [1.0, 1.0];
-    var d = [-2.175, -2.15, -2.125];
-    var u = [1.0, 1.0];
-    var r = [
+    const l = [1.0, 1.0];
+    const d = [-2.175, -2.15, -2.125];
+    const u = [1.0, 1.0];
+    const r = [
       new Cartesian3(-1.625),
       new Cartesian3(0.5),
       new Cartesian3(1.625),
     ];
 
-    var expected = [
+    const expected = [
       new Cartesian3(0.552),
       new Cartesian3(-0.4244),
       new Cartesian3(-0.9644),
     ];
-    var actual = TridiagonalSystemSolver.solve(l, d, u, r);
+    const actual = TridiagonalSystemSolver.solve(l, d, u, r);
 
     expect(actual.length).toEqual(expected.length);
     expect(actual[0]).toEqualEpsilon(expected[0], CesiumMath.EPSILON4);
@@ -69,8 +69,8 @@ describe("Core/TridiagonalSystemSolver", function () {
   });
 
   it("solve nine unknowns", function () {
-    var l = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
-    var d = [
+    const l = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
+    const d = [
       -2.0304,
       -2.0288,
       -2.0272,
@@ -81,8 +81,8 @@ describe("Core/TridiagonalSystemSolver", function () {
       -2.0192,
       -2.0176,
     ];
-    var u = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
-    var r = [
+    const u = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
+    const r = [
       new Cartesian3(-1.952),
       new Cartesian3(0.056),
       new Cartesian3(0.064),
@@ -94,7 +94,7 @@ describe("Core/TridiagonalSystemSolver", function () {
       new Cartesian3(1.112),
     ];
 
-    var expected = [
+    const expected = [
       new Cartesian3(1.3513),
       new Cartesian3(0.7918),
       new Cartesian3(0.311),
@@ -105,7 +105,7 @@ describe("Core/TridiagonalSystemSolver", function () {
       new Cartesian3(-1.0224),
       new Cartesian3(-1.0579),
     ];
-    var actual = TridiagonalSystemSolver.solve(l, d, u, r);
+    const actual = TridiagonalSystemSolver.solve(l, d, u, r);
 
     expect(actual.length).toEqual(expected.length);
     expect(actual[0]).toEqualEpsilon(expected[0], CesiumMath.EPSILON4);

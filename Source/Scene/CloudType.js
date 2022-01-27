@@ -4,7 +4,7 @@
  * @enum {Number}
  */
 
-var CloudType = {
+const CloudType = {
   /**
    * Cumulus cloud.
    *

@@ -73,7 +73,7 @@ Object.defineProperties(VelocityVectorProperty.prototype, {
       return this._position;
     },
     set: function (value) {
-      var oldValue = this._position;
+      const oldValue = this._position;
       if (oldValue !== value) {
         if (defined(oldValue)) {
           this._subscription();
@@ -116,10 +116,10 @@ Object.defineProperties(VelocityVectorProperty.prototype, {
   },
 });
 
-var position1Scratch = new Cartesian3();
-var position2Scratch = new Cartesian3();
-var timeScratch = new JulianDate();
-var step = 1.0 / 60.0;
+const position1Scratch = new Cartesian3();
+const position2Scratch = new Cartesian3();
+const timeScratch = new JulianDate();
+const step = 1.0 / 60.0;
 
 /**
  * Gets the value of the property at the provided time.
@@ -150,15 +150,15 @@ VelocityVectorProperty.prototype._getValue = function (
     velocityResult = new Cartesian3();
   }
 
-  var property = this._position;
+  const property = this._position;
   if (Property.isConstant(property)) {
     return this._normalize
       ? undefined
       : Cartesian3.clone(Cartesian3.ZERO, velocityResult);
   }
 
-  var position1 = property.getValue(time, position1Scratch);
-  var position2 = property.getValue(
+  let position1 = property.getValue(time, position1Scratch);
+  let position2 = property.getValue(
     JulianDate.addSeconds(time, step, timeScratch),
     position2Scratch
   );
@@ -191,7 +191,7 @@ VelocityVectorProperty.prototype._getValue = function (
     position1.clone(positionResult);
   }
 
-  var velocity = Cartesian3.subtract(position2, position1, velocityResult);
+  const velocity = Cartesian3.subtract(position2, position1, velocityResult);
   if (this._normalize) {
     return Cartesian3.normalize(velocity, velocityResult);
   }

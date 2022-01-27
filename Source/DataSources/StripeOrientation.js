@@ -3,7 +3,7 @@
  *
  * @enum {Number}
  */
-var StripeOrientation = {
+const StripeOrientation = {
   /**
    * Horizontal orientation.
    * @type {Number}

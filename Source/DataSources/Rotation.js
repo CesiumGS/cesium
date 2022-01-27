@@ -29,7 +29,7 @@ import CesiumMath from "../Core/Math.js";
  *
  * @see PackableForInterpolation
  */
-var Rotation = {
+const Rotation = {
   /**
    * The number of elements used to pack the object into an array.
    * @type {Number}
@@ -108,9 +108,9 @@ var Rotation = {
     startingIndex = defaultValue(startingIndex, 0);
     lastIndex = defaultValue(lastIndex, packedArray.length);
 
-    var previousValue;
-    for (var i = 0, len = lastIndex - startingIndex + 1; i < len; i++) {
-      var value = packedArray[startingIndex + i];
+    let previousValue;
+    for (let i = 0, len = lastIndex - startingIndex + 1; i < len; i++) {
+      const value = packedArray[startingIndex + i];
       if (i === 0 || Math.abs(previousValue - value) < Math.PI) {
         result[i] = value;
       } else {

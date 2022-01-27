@@ -8,11 +8,11 @@ import CesiumMath from "../Core/Math.js";
 import Rectangle from "../Core/Rectangle.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
-var MAX_SHORT = 32767;
-var MITER_BREAK = Math.cos(CesiumMath.toRadians(150.0));
+const MAX_SHORT = 32767;
+const MITER_BREAK = Math.cos(CesiumMath.toRadians(150.0));
 
-var scratchBVCartographic = new Cartographic();
-var scratchEncodedPosition = new Cartesian3();
+const scratchBVCartographic = new Cartographic();
+const scratchEncodedPosition = new Cartesian3();
 
 function decodePositions(
   uBuffer,
@@ -23,24 +23,28 @@ function decodePositions(
   maximumHeight,
   ellipsoid
 ) {
-  var positionsLength = uBuffer.length;
-  var decodedPositions = new Float64Array(positionsLength * 3);
-  for (var i = 0; i < positionsLength; ++i) {
-    var u = uBuffer[i];
-    var v = vBuffer[i];
-    var h = heightBuffer[i];
+  const positionsLength = uBuffer.length;
+  const decodedPositions = new Float64Array(positionsLength * 3);
+  for (let i = 0; i < positionsLength; ++i) {
+    const u = uBuffer[i];
+    const v = vBuffer[i];
+    const h = heightBuffer[i];
 
-    var lon = CesiumMath.lerp(rectangle.west, rectangle.east, u / MAX_SHORT);
-    var lat = CesiumMath.lerp(rectangle.south, rectangle.north, v / MAX_SHORT);
-    var alt = CesiumMath.lerp(minimumHeight, maximumHeight, h / MAX_SHORT);
+    const lon = CesiumMath.lerp(rectangle.west, rectangle.east, u / MAX_SHORT);
+    const lat = CesiumMath.lerp(
+      rectangle.south,
+      rectangle.north,
+      v / MAX_SHORT
+    );
+    const alt = CesiumMath.lerp(minimumHeight, maximumHeight, h / MAX_SHORT);
 
-    var cartographic = Cartographic.fromRadians(
+    const cartographic = Cartographic.fromRadians(
       lon,
       lat,
       alt,
       scratchBVCartographic
     );
-    var decodedPosition = ellipsoid.cartographicToCartesian(
+    const decodedPosition = ellipsoid.cartographicToCartesian(
       cartographic,
       scratchEncodedPosition
     );
@@ -50,10 +54,10 @@ function decodePositions(
 }
 
 function getPositionOffsets(counts) {
-  var countsLength = counts.length;
-  var positionOffsets = new Uint32Array(countsLength + 1);
-  var offset = 0;
-  for (var i = 0; i < countsLength; ++i) {
+  const countsLength = counts.length;
+  const positionOffsets = new Uint32Array(countsLength + 1);
+  let offset = 0;
+  for (let i = 0; i < countsLength; ++i) {
     positionOffsets[i] = offset;
     offset += counts[i];
   }
@@ -61,21 +65,21 @@ function getPositionOffsets(counts) {
   return positionOffsets;
 }
 
-var previousCompressedCartographicScratch = new Cartographic();
-var currentCompressedCartographicScratch = new Cartographic();
+const previousCompressedCartographicScratch = new Cartographic();
+const currentCompressedCartographicScratch = new Cartographic();
 function removeDuplicates(uBuffer, vBuffer, heightBuffer, counts) {
-  var countsLength = counts.length;
-  var positionsLength = uBuffer.length;
-  var markRemoval = new Uint8Array(positionsLength);
-  var previous = previousCompressedCartographicScratch;
-  var current = currentCompressedCartographicScratch;
-  var offset = 0;
-  for (var i = 0; i < countsLength; i++) {
-    var count = counts[i];
-    var updatedCount = count;
-    for (var j = 1; j < count; j++) {
-      var index = offset + j;
-      var previousIndex = index - 1;
+  const countsLength = counts.length;
+  const positionsLength = uBuffer.length;
+  const markRemoval = new Uint8Array(positionsLength);
+  const previous = previousCompressedCartographicScratch;
+  const current = currentCompressedCartographicScratch;
+  let offset = 0;
+  for (let i = 0; i < countsLength; i++) {
+    const count = counts[i];
+    let updatedCount = count;
+    for (let j = 1; j < count; j++) {
+      const index = offset + j;
+      const previousIndex = index - 1;
       current.longitude = uBuffer[index];
       current.latitude = vBuffer[index];
       previous.longitude = uBuffer[previousIndex];
@@ -90,8 +94,8 @@ function removeDuplicates(uBuffer, vBuffer, heightBuffer, counts) {
     offset += count;
   }
 
-  var nextAvailableIndex = 0;
-  for (var k = 0; k < positionsLength; k++) {
+  let nextAvailableIndex = 0;
+  for (let k = 0; k < positionsLength; k++) {
     if (markRemoval[k] !== 1) {
       uBuffer[nextAvailableIndex] = uBuffer[k];
       vBuffer[nextAvailableIndex] = vBuffer[k];
@@ -102,9 +106,9 @@ function removeDuplicates(uBuffer, vBuffer, heightBuffer, counts) {
 }
 
 function VertexAttributesAndIndices(volumesCount) {
-  var vertexCount = volumesCount * 8;
-  var vec3Floats = vertexCount * 3;
-  var vec4Floats = vertexCount * 4;
+  const vertexCount = volumesCount * 8;
+  const vec3Floats = vertexCount * 3;
+  const vec4Floats = vertexCount * 4;
   this.startEllipsoidNormals = new Float32Array(vec3Floats);
   this.endEllipsoidNormals = new Float32Array(vec3Floats);
   this.startPositionAndHeights = new Float32Array(vec4Floats);
@@ -123,8 +127,8 @@ function VertexAttributesAndIndices(volumesCount) {
   this.volumeStartIndex = 0;
 }
 
-var towardCurrScratch = new Cartesian3();
-var towardNextScratch = new Cartesian3();
+const towardCurrScratch = new Cartesian3();
+const towardNextScratch = new Cartesian3();
 function computeMiteredNormal(
   previousPosition,
   position,
@@ -132,12 +136,12 @@ function computeMiteredNormal(
   ellipsoidSurfaceNormal,
   result
 ) {
-  var towardNext = Cartesian3.subtract(
+  const towardNext = Cartesian3.subtract(
     nextPosition,
     position,
     towardNextScratch
   );
-  var towardCurr = Cartesian3.subtract(
+  let towardCurr = Cartesian3.subtract(
     position,
     previousPosition,
     towardCurrScratch
@@ -174,7 +178,7 @@ function computeMiteredNormal(
 // start |/  right   |/
 //       0-----------4
 //
-var REFERENCE_INDICES = [
+const REFERENCE_INDICES = [
   0,
   2,
   6,
@@ -212,13 +216,13 @@ var REFERENCE_INDICES = [
   2,
   3, // top
 ];
-var REFERENCE_INDICES_LENGTH = REFERENCE_INDICES.length;
+const REFERENCE_INDICES_LENGTH = REFERENCE_INDICES.length;
 
-var positionScratch = new Cartesian3();
-var scratchStartEllipsoidNormal = new Cartesian3();
-var scratchStartFaceNormal = new Cartesian3();
-var scratchEndEllipsoidNormal = new Cartesian3();
-var scratchEndFaceNormal = new Cartesian3();
+const positionScratch = new Cartesian3();
+const scratchStartEllipsoidNormal = new Cartesian3();
+const scratchStartFaceNormal = new Cartesian3();
+const scratchEndEllipsoidNormal = new Cartesian3();
+const scratchEndFaceNormal = new Cartesian3();
 VertexAttributesAndIndices.prototype.addVolume = function (
   preStartRTC,
   startRTC,
@@ -231,25 +235,25 @@ VertexAttributesAndIndices.prototype.addVolume = function (
   center,
   ellipsoid
 ) {
-  var position = Cartesian3.add(startRTC, center, positionScratch);
-  var startEllipsoidNormal = ellipsoid.geodeticSurfaceNormal(
+  let position = Cartesian3.add(startRTC, center, positionScratch);
+  const startEllipsoidNormal = ellipsoid.geodeticSurfaceNormal(
     position,
     scratchStartEllipsoidNormal
   );
   position = Cartesian3.add(endRTC, center, positionScratch);
-  var endEllipsoidNormal = ellipsoid.geodeticSurfaceNormal(
+  const endEllipsoidNormal = ellipsoid.geodeticSurfaceNormal(
     position,
     scratchEndEllipsoidNormal
   );
 
-  var startFaceNormal = computeMiteredNormal(
+  const startFaceNormal = computeMiteredNormal(
     preStartRTC,
     startRTC,
     endRTC,
     startEllipsoidNormal,
     scratchStartFaceNormal
   );
-  var endFaceNormal = computeMiteredNormal(
+  const endFaceNormal = computeMiteredNormal(
     postEndRTC,
     endRTC,
     startRTC,
@@ -257,20 +261,20 @@ VertexAttributesAndIndices.prototype.addVolume = function (
     scratchEndFaceNormal
   );
 
-  var startEllipsoidNormals = this.startEllipsoidNormals;
-  var endEllipsoidNormals = this.endEllipsoidNormals;
-  var startPositionAndHeights = this.startPositionAndHeights;
-  var startFaceNormalAndVertexCornerIds = this
+  const startEllipsoidNormals = this.startEllipsoidNormals;
+  const endEllipsoidNormals = this.endEllipsoidNormals;
+  const startPositionAndHeights = this.startPositionAndHeights;
+  const startFaceNormalAndVertexCornerIds = this
     .startFaceNormalAndVertexCornerIds;
-  var endPositionAndHeights = this.endPositionAndHeights;
-  var endFaceNormalAndHalfWidths = this.endFaceNormalAndHalfWidths;
-  var vertexBatchIds = this.vertexBatchIds;
+  const endPositionAndHeights = this.endPositionAndHeights;
+  const endFaceNormalAndHalfWidths = this.endFaceNormalAndHalfWidths;
+  const vertexBatchIds = this.vertexBatchIds;
 
-  var batchIdOffset = this.batchIdOffset;
-  var vec3Offset = this.vec3Offset;
-  var vec4Offset = this.vec4Offset;
+  let batchIdOffset = this.batchIdOffset;
+  let vec3Offset = this.vec3Offset;
+  let vec4Offset = this.vec4Offset;
 
-  var i;
+  let i;
   for (i = 0; i < 8; i++) {
     Cartesian3.pack(startEllipsoidNormal, startEllipsoidNormals, vec3Offset);
     Cartesian3.pack(endEllipsoidNormal, endEllipsoidNormals, vec3Offset);
@@ -300,10 +304,10 @@ VertexAttributesAndIndices.prototype.addVolume = function (
   this.batchIdOffset = batchIdOffset;
   this.vec3Offset = vec3Offset;
   this.vec4Offset = vec4Offset;
-  var indices = this.indices;
-  var volumeStartIndex = this.volumeStartIndex;
+  const indices = this.indices;
+  const volumeStartIndex = this.volumeStartIndex;
 
-  var indexOffset = this.indexOffset;
+  const indexOffset = this.indexOffset;
   for (i = 0; i < REFERENCE_INDICES_LENGTH; i++) {
     indices[indexOffset + i] = REFERENCE_INDICES[i] + volumeStartIndex;
   }
@@ -312,29 +316,29 @@ VertexAttributesAndIndices.prototype.addVolume = function (
   this.indexOffset += REFERENCE_INDICES_LENGTH;
 };
 
-var scratchRectangle = new Rectangle();
-var scratchEllipsoid = new Ellipsoid();
-var scratchCenter = new Cartesian3();
+const scratchRectangle = new Rectangle();
+const scratchEllipsoid = new Ellipsoid();
+const scratchCenter = new Cartesian3();
 
-var scratchPrev = new Cartesian3();
-var scratchP0 = new Cartesian3();
-var scratchP1 = new Cartesian3();
-var scratchNext = new Cartesian3();
+const scratchPrev = new Cartesian3();
+const scratchP0 = new Cartesian3();
+const scratchP1 = new Cartesian3();
+const scratchNext = new Cartesian3();
 function createVectorTileClampedPolylines(parameters, transferableObjects) {
-  var encodedPositions = new Uint16Array(parameters.positions);
-  var widths = new Uint16Array(parameters.widths);
-  var counts = new Uint32Array(parameters.counts);
-  var batchIds = new Uint16Array(parameters.batchIds);
+  const encodedPositions = new Uint16Array(parameters.positions);
+  const widths = new Uint16Array(parameters.widths);
+  const counts = new Uint32Array(parameters.counts);
+  const batchIds = new Uint16Array(parameters.batchIds);
 
   // Unpack tile decoding parameters
-  var rectangle = scratchRectangle;
-  var ellipsoid = scratchEllipsoid;
-  var center = scratchCenter;
-  var packedBuffer = new Float64Array(parameters.packedBuffer);
+  const rectangle = scratchRectangle;
+  const ellipsoid = scratchEllipsoid;
+  const center = scratchCenter;
+  const packedBuffer = new Float64Array(parameters.packedBuffer);
 
-  var offset = 0;
-  var minimumHeight = packedBuffer[offset++];
-  var maximumHeight = packedBuffer[offset++];
+  let offset = 0;
+  const minimumHeight = packedBuffer[offset++];
+  const maximumHeight = packedBuffer[offset++];
 
   Rectangle.unpack(packedBuffer, offset, rectangle);
   offset += Rectangle.packedLength;
@@ -344,13 +348,16 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
 
   Cartesian3.unpack(packedBuffer, offset, center);
 
-  var i;
+  let i;
 
   // Unpack positions and generate volumes
-  var positionsLength = encodedPositions.length / 3;
-  var uBuffer = encodedPositions.subarray(0, positionsLength);
-  var vBuffer = encodedPositions.subarray(positionsLength, 2 * positionsLength);
-  var heightBuffer = encodedPositions.subarray(
+  let positionsLength = encodedPositions.length / 3;
+  const uBuffer = encodedPositions.subarray(0, positionsLength);
+  const vBuffer = encodedPositions.subarray(
+    positionsLength,
+    2 * positionsLength
+  );
+  const heightBuffer = encodedPositions.subarray(
     2 * positionsLength,
     3 * positionsLength
   );
@@ -359,16 +366,16 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
   removeDuplicates(uBuffer, vBuffer, heightBuffer, counts);
 
   // Figure out how many volumes and how many vertices there will be.
-  var countsLength = counts.length;
-  var volumesCount = 0;
+  const countsLength = counts.length;
+  let volumesCount = 0;
   for (i = 0; i < countsLength; i++) {
-    var polylinePositionCount = counts[i];
+    const polylinePositionCount = counts[i];
     volumesCount += polylinePositionCount - 1;
   }
 
-  var attribsAndIndices = new VertexAttributesAndIndices(volumesCount);
+  const attribsAndIndices = new VertexAttributesAndIndices(volumesCount);
 
-  var positions = decodePositions(
+  const positions = decodePositions(
     uBuffer,
     vBuffer,
     heightBuffer,
@@ -380,34 +387,34 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
   );
 
   positionsLength = uBuffer.length;
-  var positionsRTC = new Float32Array(positionsLength * 3);
+  const positionsRTC = new Float32Array(positionsLength * 3);
   for (i = 0; i < positionsLength; ++i) {
     positionsRTC[i * 3] = positions[i * 3] - center.x;
     positionsRTC[i * 3 + 1] = positions[i * 3 + 1] - center.y;
     positionsRTC[i * 3 + 2] = positions[i * 3 + 2] - center.z;
   }
 
-  var currentPositionIndex = 0;
-  var currentHeightIndex = 0;
+  let currentPositionIndex = 0;
+  let currentHeightIndex = 0;
   for (i = 0; i < countsLength; i++) {
-    var polylineVolumeCount = counts[i] - 1;
-    var halfWidth = widths[i] * 0.5;
-    var batchId = batchIds[i];
-    var volumeFirstPositionIndex = currentPositionIndex;
-    for (var j = 0; j < polylineVolumeCount; j++) {
-      var volumeStart = Cartesian3.unpack(
+    const polylineVolumeCount = counts[i] - 1;
+    const halfWidth = widths[i] * 0.5;
+    const batchId = batchIds[i];
+    const volumeFirstPositionIndex = currentPositionIndex;
+    for (let j = 0; j < polylineVolumeCount; j++) {
+      const volumeStart = Cartesian3.unpack(
         positionsRTC,
         currentPositionIndex,
         scratchP0
       );
-      var volumeEnd = Cartesian3.unpack(
+      const volumeEnd = Cartesian3.unpack(
         positionsRTC,
         currentPositionIndex + 3,
         scratchP1
       );
 
-      var startHeight = heightBuffer[currentHeightIndex];
-      var endHeight = heightBuffer[currentHeightIndex + 1];
+      let startHeight = heightBuffer[currentHeightIndex];
+      let endHeight = heightBuffer[currentHeightIndex + 1];
       startHeight = CesiumMath.lerp(
         minimumHeight,
         maximumHeight,
@@ -421,13 +428,13 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
 
       currentHeightIndex++;
 
-      var preStart = scratchPrev;
-      var postEnd = scratchNext;
+      let preStart = scratchPrev;
+      let postEnd = scratchNext;
       if (j === 0) {
         // Check if this volume is like a loop
-        var finalPositionIndex =
+        const finalPositionIndex =
           volumeFirstPositionIndex + polylineVolumeCount * 3;
-        var finalPosition = Cartesian3.unpack(
+        const finalPosition = Cartesian3.unpack(
           positionsRTC,
           finalPositionIndex,
           scratchPrev
@@ -435,7 +442,7 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
         if (Cartesian3.equals(finalPosition, volumeStart)) {
           Cartesian3.unpack(positionsRTC, finalPositionIndex - 3, preStart);
         } else {
-          var offsetPastStart = Cartesian3.subtract(
+          const offsetPastStart = Cartesian3.subtract(
             volumeStart,
             volumeEnd,
             scratchPrev
@@ -448,7 +455,7 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
 
       if (j === polylineVolumeCount - 1) {
         // Check if this volume is like a loop
-        var firstPosition = Cartesian3.unpack(
+        const firstPosition = Cartesian3.unpack(
           positionsRTC,
           volumeFirstPositionIndex,
           scratchNext
@@ -460,7 +467,7 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
             postEnd
           );
         } else {
-          var offsetPastEnd = Cartesian3.subtract(
+          const offsetPastEnd = Cartesian3.subtract(
             volumeEnd,
             volumeStart,
             scratchNext
@@ -490,7 +497,7 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
     currentHeightIndex++;
   }
 
-  var indices = attribsAndIndices.indices;
+  const indices = attribsAndIndices.indices;
 
   transferableObjects.push(attribsAndIndices.startEllipsoidNormals.buffer);
   transferableObjects.push(attribsAndIndices.endEllipsoidNormals.buffer);
@@ -503,7 +510,7 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
   transferableObjects.push(attribsAndIndices.vertexBatchIds.buffer);
   transferableObjects.push(indices.buffer);
 
-  var results = {
+  let results = {
     indexDatatype:
       indices.BYTES_PER_ELEMENT === 2
         ? IndexDatatype.UNSIGNED_SHORT
@@ -521,7 +528,7 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
   };
 
   if (parameters.keepDecodedPositions) {
-    var positionOffsets = getPositionOffsets(counts);
+    const positionOffsets = getPositionOffsets(counts);
     transferableObjects.push(positions.buffer, positionOffsets.buffer);
     results = combine(results, {
       decodedPositions: positions.buffer,

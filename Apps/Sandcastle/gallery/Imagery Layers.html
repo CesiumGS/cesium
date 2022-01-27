@@ -38,15 +38,15 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           imageryProvider: Cesium.createWorldImagery({
             style: Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS,
           }),
           baseLayerPicker: false,
         });
 
-        var layers = viewer.scene.imageryLayers;
-        var blackMarble = layers.addImageryProvider(
+        const layers = viewer.scene.imageryLayers;
+        const blackMarble = layers.addImageryProvider(
           new Cesium.IonImageryProvider({ assetId: 3812 })
         );
 

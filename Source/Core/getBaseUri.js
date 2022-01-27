@@ -24,8 +24,8 @@ function getBaseUri(uri, includeQuery) {
   }
   //>>includeEnd('debug');
 
-  var basePath = "";
-  var i = uri.lastIndexOf("/");
+  let basePath = "";
+  const i = uri.lastIndexOf("/");
   if (i !== -1) {
     basePath = uri.substring(0, i + 1);
   }

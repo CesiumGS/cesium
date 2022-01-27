@@ -11,7 +11,7 @@ import MetadataTester from "../MetadataTester.js";
 describe(
   "Scene/parseFeatureMetadataLegacy",
   function () {
-    var featureTablesSchema = {
+    const featureTablesSchema = {
       classes: {
         building: {
           properties: {
@@ -33,7 +33,7 @@ describe(
       },
     };
 
-    var featureTexturesSchema = {
+    const featureTexturesSchema = {
       classes: {
         map: {
           properties: {
@@ -77,7 +77,7 @@ describe(
     });
 
     it("parses extension with default values", function () {
-      var metadata = parseFeatureMetadataLegacy({
+      const metadata = parseFeatureMetadataLegacy({
         extension: {},
         schema: new MetadataSchema(featureTablesSchema),
       });
@@ -93,7 +93,7 @@ describe(
         return;
       }
 
-      var featureTableResults = MetadataTester.createFeatureTables({
+      const featureTableResults = MetadataTester.createFeatureTables({
         schema: featureTablesSchema,
         featureTables: {
           buildings: {
@@ -112,25 +112,25 @@ describe(
         },
       });
 
-      var extension = {
+      const extension = {
         schema: featureTablesSchema,
         featureTables: featureTableResults.featureTables,
       };
 
-      var metadata = parseFeatureMetadataLegacy({
+      const metadata = parseFeatureMetadataLegacy({
         extension: extension,
         schema: new MetadataSchema(featureTablesSchema),
         bufferViews: featureTableResults.bufferViews,
       });
 
-      var buildingClass = metadata.schema.classes.building;
-      var treeClass = metadata.schema.classes.tree;
+      const buildingClass = metadata.schema.classes.building;
+      const treeClass = metadata.schema.classes.tree;
 
       expect(buildingClass.id).toBe("building");
       expect(treeClass.id).toBe("tree");
 
-      var buildingsTable = metadata.getPropertyTable(0);
-      var treesTable = metadata.getPropertyTable(1);
+      const buildingsTable = metadata.getPropertyTable(0);
+      const treesTable = metadata.getPropertyTable(1);
 
       expect(buildingsTable.id).toBe("buildings");
       expect(buildingsTable.name).not.toBeDefined();
@@ -154,8 +154,8 @@ describe(
     });
 
     it("parses extension with feature textures", function () {
-      var context = createContext();
-      var texture0 = new Texture({
+      const context = createContext();
+      const texture0 = new Texture({
         context: context,
         pixelFormat: PixelFormat.RGBA,
         pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
@@ -165,7 +165,7 @@ describe(
           height: 1,
         },
       });
-      var texture1 = new Texture({
+      const texture1 = new Texture({
         context: context,
         pixelFormat: PixelFormat.LUMINANCE,
         pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
@@ -176,12 +176,12 @@ describe(
         },
       });
 
-      var textures = {
+      const textures = {
         0: texture0,
         1: texture1,
       };
 
-      var extension = {
+      const extension = {
         schema: featureTexturesSchema,
         featureTextures: {
           mapTexture: {
@@ -218,20 +218,20 @@ describe(
         },
       };
 
-      var metadata = parseFeatureMetadataLegacy({
+      const metadata = parseFeatureMetadataLegacy({
         extension: extension,
         schema: new MetadataSchema(featureTexturesSchema),
         textures: textures,
       });
 
-      var mapClass = metadata.schema.classes.map;
-      var orthoClass = metadata.schema.classes.ortho;
+      const mapClass = metadata.schema.classes.map;
+      const orthoClass = metadata.schema.classes.ortho;
 
       expect(mapClass.id).toBe("map");
       expect(orthoClass.id).toBe("ortho");
 
-      var mapTexture = metadata.getPropertyTexture(0);
-      var orthoTexture = metadata.getPropertyTexture(1);
+      const mapTexture = metadata.getPropertyTexture(0);
+      const orthoTexture = metadata.getPropertyTexture(1);
 
       expect(mapTexture.class).toBe(mapClass);
       expect(mapTexture.id).toBe("mapTexture");
@@ -246,7 +246,7 @@ describe(
     });
 
     it("parses extension with statistics", function () {
-      var statistics = {
+      const statistics = {
         classes: {
           tree: {
             count: 100,
@@ -259,10 +259,10 @@ describe(
           },
         },
       };
-      var extension = {
+      const extension = {
         statistics: statistics,
       };
-      var metadata = parseFeatureMetadataLegacy({
+      const metadata = parseFeatureMetadataLegacy({
         extension: extension,
         schema: new MetadataSchema(featureTexturesSchema),
       });
@@ -270,13 +270,13 @@ describe(
     });
 
     it("parses extension with extras", function () {
-      var extras = {
+      const extras = {
         description: "Extra",
       };
-      var extension = {
+      const extension = {
         extras: extras,
       };
-      var metadata = parseFeatureMetadataLegacy({
+      const metadata = parseFeatureMetadataLegacy({
         extension: extension,
         schema: new MetadataSchema(featureTexturesSchema),
       });
@@ -284,13 +284,13 @@ describe(
     });
 
     it("parses extension with extensions", function () {
-      var extensions = {
+      const extensions = {
         EXT_other_extension: {},
       };
-      var extension = {
+      const extension = {
         extensions: extensions,
       };
-      var metadata = parseFeatureMetadataLegacy({
+      const metadata = parseFeatureMetadataLegacy({
         extension: extension,
         schema: new MetadataSchema(featureTexturesSchema),
       });

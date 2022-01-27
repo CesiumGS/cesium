@@ -36,18 +36,18 @@
         "use strict";
         //Sandcastle_Begin
         // The Earth at Night, also known as Black Marble 2017 and Night Lights
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           imageryProvider: new Cesium.IonImageryProvider({ assetId: 3812 }),
         });
 
         // The rest of the code is for dynamic lighting
-        var dynamicLighting = false;
+        const dynamicLighting = false;
 
         viewer.clock.multiplier = 4000;
 
-        var imageryLayers = viewer.imageryLayers;
-        var nightLayer = imageryLayers.get(0);
-        var dayLayer = imageryLayers.addImageryProvider(
+        const imageryLayers = viewer.imageryLayers;
+        const nightLayer = imageryLayers.get(0);
+        const dayLayer = imageryLayers.addImageryProvider(
           new Cesium.IonImageryProvider({
             assetId: 3845,
           })

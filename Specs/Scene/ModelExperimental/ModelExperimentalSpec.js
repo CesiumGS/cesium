@@ -25,19 +25,19 @@ import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js"
 describe(
   "Scene/ModelExperimental/ModelExperimental",
   function () {
-    var webglStub = !!window.webglStub;
+    const webglStub = !!window.webglStub;
 
-    var boxTexturedGlbUrl =
+    const boxTexturedGlbUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
-    var buildingsMetadata =
+    const buildingsMetadata =
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
-    var boxTexturedGltfUrl =
+    const boxTexturedGltfUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
-    var microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
-    var boxInstanced =
+    const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
+    const boxInstanced =
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
 
-    var scene;
+    let scene;
 
     beforeAll(function () {
       scene = createScene();
@@ -55,13 +55,14 @@ describe(
     function zoomTo(model, zoom) {
       zoom = defaultValue(zoom, 4.0);
 
-      var camera = scene.camera;
-      var center = Matrix4.multiplyByPoint(
+      const camera = scene.camera;
+      const center = Matrix4.multiplyByPoint(
         model.modelMatrix,
         model.boundingSphere.center,
         new Cartesian3()
       );
-      var r = zoom * Math.max(model.boundingSphere.radius, camera.frustum.near);
+      const r =
+        zoom * Math.max(model.boundingSphere.radius, camera.frustum.near);
       camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
     }
 
@@ -81,8 +82,8 @@ describe(
     }
 
     it("initializes and renders from Uint8Array", function () {
-      var resource = Resource.createIfNeeded(boxTexturedGlbUrl);
-      var loadPromise = resource.fetchArrayBuffer();
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
       return loadPromise.then(function (buffer) {
         return loadAndZoomToModelExperimental(
           { gltf: new Uint8Array(buffer) },
@@ -104,16 +105,16 @@ describe(
         expect(model.ready).toEqual(true);
         expect(model.featureTables).toBeDefined();
 
-        var featureTable = model.featureTables[0];
+        const featureTable = model.featureTables[0];
         expect(featureTable).toBeDefined();
 
-        var featuresLength = featureTable.featuresLength;
+        const featuresLength = featureTable.featuresLength;
         expect(featuresLength).toEqual(10);
         expect(featureTable.batchTexture).toBeDefined();
         expect(featureTable.batchTexture._featuresLength).toEqual(10);
 
-        for (var i = 0; i < featuresLength; i++) {
-          var modelFeature = featureTable.getFeature(i);
+        for (let i = 0; i < featuresLength; i++) {
+          const modelFeature = featureTable.getFeature(i);
           expect(modelFeature instanceof ModelFeature).toEqual(true);
           expect(modelFeature._featureId).toEqual(i);
           expect(modelFeature.primitive).toEqual(model);
@@ -125,7 +126,7 @@ describe(
     });
 
     it("initializes and renders from JSON object", function () {
-      var resource = Resource.createIfNeeded(boxTexturedGltfUrl);
+      const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
       return resource.fetchJson().then(function (gltf) {
         return loadAndZoomToModelExperimental(
           {
@@ -143,7 +144,7 @@ describe(
     });
 
     it("initializes and renders from JSON object with external buffers", function () {
-      var resource = Resource.createIfNeeded(microcosm);
+      const resource = Resource.createIfNeeded(microcosm);
       return resource.fetchJson().then(function (gltf) {
         return loadAndZoomToModelExperimental(
           {
@@ -161,7 +162,7 @@ describe(
     });
 
     it("rejects ready promise when texture fails to load", function () {
-      var resource = Resource.createIfNeeded(boxTexturedGltfUrl);
+      const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
       return resource.fetchJson().then(function (gltf) {
         gltf.images[0].uri = "non-existent-path.png";
         return loadAndZoomToModelExperimental(
@@ -182,7 +183,7 @@ describe(
     });
 
     it("rejects ready promise when external buffer fails to load", function () {
-      var resource = Resource.createIfNeeded(boxTexturedGltfUrl);
+      const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
       return resource.fetchJson().then(function (gltf) {
         gltf.buffers[0].uri = "non-existent-path.bin";
         return loadAndZoomToModelExperimental(
@@ -202,8 +203,8 @@ describe(
     });
 
     it("show works", function () {
-      var resource = Resource.createIfNeeded(boxTexturedGlbUrl);
-      var loadPromise = resource.fetchArrayBuffer();
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
       return loadPromise.then(function (buffer) {
         return loadAndZoomToModelExperimental(
           { gltf: new Uint8Array(buffer), show: false },
@@ -220,16 +221,16 @@ describe(
     });
 
     it("debugShowBoundingVolume works", function () {
-      var resource = Resource.createIfNeeded(boxTexturedGlbUrl);
-      var loadPromise = resource.fetchArrayBuffer();
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
       return loadPromise.then(function (buffer) {
         return loadAndZoomToModelExperimental(
           { gltf: new Uint8Array(buffer), debugShowBoundingVolume: true },
           scene
         ).then(function (model) {
-          var i;
+          let i;
           scene.renderForSpecs();
-          var commandList = scene.frameState;
+          const commandList = scene.frameState;
           for (i = 0; i < commandList.length; i++) {
             expect(commandList[i].debugShowBoundingVolume).toBe(true);
           }
@@ -244,14 +245,14 @@ describe(
     });
 
     it("boundingSphere works", function () {
-      var resource = Resource.createIfNeeded(boxTexturedGlbUrl);
-      var loadPromise = resource.fetchArrayBuffer();
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
       return loadPromise.then(function (buffer) {
         return loadAndZoomToModelExperimental(
           { gltf: new Uint8Array(buffer), debugShowBoundingVolume: true },
           scene
         ).then(function (model) {
-          var boundingSphere = model.boundingSphere;
+          const boundingSphere = model.boundingSphere;
           expect(boundingSphere).toBeDefined();
           expect(boundingSphere.center).toEqual(new Cartesian3());
           expect(boundingSphere.radius).toEqualEpsilon(
@@ -320,7 +321,7 @@ describe(
 
       // This model gets clipped if log depth is disabled, so zoom out
       // the camera just a little
-      var offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
+      const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
 
       return loadAndZoomToModelExperimental(
         {
@@ -360,7 +361,7 @@ describe(
       opaqueFeaturesLength,
       translucentFeaturesLength
     ) {
-      var i, feature;
+      let i, feature;
       for (i = 0; i < opaqueFeaturesLength; i++) {
         feature = featureTable.getFeature(i);
         feature.color = Color.RED;
@@ -382,7 +383,7 @@ describe(
         },
         scene
       ).then(function (model) {
-        var featureTable = model.featureTables[model.featureTableId];
+        const featureTable = model.featureTables[model.featureTableId];
 
         // Set all features to opaque.
         setFeaturesWithOpacity(featureTable, 10, 0);
@@ -456,7 +457,7 @@ describe(
     });
 
     it("changing model matrix works", function () {
-      var updateModelMatrix = spyOn(
+      const updateModelMatrix = spyOn(
         ModelExperimentalSceneGraph.prototype,
         "updateModelMatrix"
       ).and.callThrough();
@@ -464,9 +465,9 @@ describe(
         { gltf: boxTexturedGlbUrl, upAxis: Axis.Z, forwardAxis: Axis.X },
         scene
       ).then(function (model) {
-        var sceneGraph = model.sceneGraph;
+        const sceneGraph = model.sceneGraph;
 
-        var transform = Matrix4.fromTranslation(new Cartesian3(10, 0, 0));
+        const transform = Matrix4.fromTranslation(new Cartesian3(10, 0, 0));
 
         Matrix4.multiplyTransformation(
           model.modelMatrix,
@@ -488,11 +489,11 @@ describe(
         { gltf: boxTexturedGlbUrl },
         scene
       ).then(function (model) {
-        var resources = model._resources;
-        var loader = model._loader;
-        var resource;
+        const resources = model._resources;
+        const loader = model._loader;
+        let resource;
 
-        var i;
+        let i;
         for (i = 0; i < resources.length; i++) {
           resource = resources[i];
           if (defined(resource.isDestroyed)) {
@@ -523,9 +524,9 @@ describe(
           loadAndZoomToModelExperimental({ gltf: boxTexturedGlbUrl }, scene),
         ])
         .then(function (models) {
-          var cacheEntries = ResourceCache.cacheEntries;
-          var cacheKey;
-          var cacheEntry;
+          const cacheEntries = ResourceCache.cacheEntries;
+          let cacheKey;
+          let cacheEntry;
 
           scene.primitives.remove(models[0]);
 

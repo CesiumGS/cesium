@@ -45,9 +45,9 @@ Object.defineProperties(SceneFramebuffer.prototype, {
 });
 
 SceneFramebuffer.prototype.update = function (context, viewport, hdr) {
-  var width = viewport.width;
-  var height = viewport.height;
-  var pixelDatatype = hdr
+  const width = viewport.width;
+  const height = viewport.height;
+  const pixelDatatype = hdr
     ? context.halfFloatingPointTexture
       ? PixelDatatype.HALF_FLOAT
       : PixelDatatype.FLOAT

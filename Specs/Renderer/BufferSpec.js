@@ -7,7 +7,7 @@ describe(
   "Renderer/Buffer",
   function () {
     createBufferSpecs({});
-    var c = createContext({ requestWebgl2: true });
+    const c = createContext({ requestWebgl2: true });
     // Don't repeat WebGL 1 tests when WebGL 2 is not supported
     if (c.webgl2) {
       createBufferSpecs({ requestWebgl2: true });
@@ -15,10 +15,10 @@ describe(
     c.destroyForSpecs();
 
     function createBufferSpecs(contextOptions) {
-      var context;
-      var buffer;
-      var buffer2;
-      var webglMessage = contextOptions.requestWebgl2 ? ": WebGL 2" : "";
+      let context;
+      let buffer;
+      let buffer2;
+      const webglMessage = contextOptions.requestWebgl2 ? ": WebGL 2" : "";
 
       beforeAll(function () {
         context = createContext(contextOptions);
@@ -130,9 +130,9 @@ describe(
       });
 
       it("copies array to a vertex buffer" + webglMessage, function () {
-        var sizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
-        var vertices = new ArrayBuffer(sizeInBytes);
-        var positions = new Float32Array(vertices);
+        const sizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
+        const vertices = new ArrayBuffer(sizeInBytes);
+        const positions = new Float32Array(vertices);
         positions[0] = 1.0;
         positions[1] = 2.0;
         positions[2] = 3.0;
@@ -148,7 +148,7 @@ describe(
       it(
         "can create a vertex buffer from a typed array" + webglMessage,
         function () {
-          var typedArray = new Float32Array(3);
+          const typedArray = new Float32Array(3);
           typedArray[0] = 1.0;
           typedArray[1] = 2.0;
           typedArray[2] = 3.0;
@@ -295,9 +295,9 @@ describe(
       });
 
       it("copies array to an index buffer" + webglMessage, function () {
-        var sizeInBytes = 3 * Uint16Array.BYTES_PER_ELEMENT;
-        var elements = new ArrayBuffer(sizeInBytes);
-        var indices = new Uint16Array(elements);
+        const sizeInBytes = 3 * Uint16Array.BYTES_PER_ELEMENT;
+        const elements = new ArrayBuffer(sizeInBytes);
+        const indices = new Uint16Array(elements);
         indices[0] = 1;
         indices[1] = 2;
         indices[2] = 3;
@@ -314,7 +314,7 @@ describe(
       it(
         "can create an index buffer from a typed array" + webglMessage,
         function () {
-          var typedArray = new Uint16Array(3);
+          const typedArray = new Uint16Array(3);
           typedArray[0] = 1;
           typedArray[1] = 2;
           typedArray[2] = 3;
@@ -356,7 +356,7 @@ describe(
           sizeInBytes: 4,
           usage: BufferUsage.STATIC_DRAW,
         });
-        var array = new Uint8Array(4);
+        const array = new Uint8Array(4);
 
         expect(function () {
           buffer.getBufferData(array);
@@ -391,7 +391,7 @@ describe(
             sizeInBytes: 4,
             usage: BufferUsage.STATIC_DRAW,
           });
-          var array = new Uint8Array(4);
+          const array = new Uint8Array(4);
 
           expect(function () {
             buffer.getBufferData(array, -1);
@@ -414,7 +414,7 @@ describe(
             sizeInBytes: 4,
             usage: BufferUsage.STATIC_DRAW,
           });
-          var array = new Uint8Array(4);
+          const array = new Uint8Array(4);
 
           expect(function () {
             buffer.getBufferData(array, 0, -1);
@@ -437,7 +437,7 @@ describe(
             sizeInBytes: 4,
             usage: BufferUsage.STATIC_DRAW,
           });
-          var array = new Uint8Array(4);
+          const array = new Uint8Array(4);
 
           expect(function () {
             buffer.getBufferData(array, 2, 0, 4);
@@ -453,7 +453,7 @@ describe(
           return;
         }
 
-        var typedArray = new Uint8Array(4);
+        const typedArray = new Uint8Array(4);
         typedArray[0] = 1;
         typedArray[1] = 2;
         typedArray[2] = 3;
@@ -465,7 +465,7 @@ describe(
           usage: BufferUsage.STATIC_DRAW,
         });
 
-        var destArray = new Uint8Array(4);
+        const destArray = new Uint8Array(4);
         buffer.getBufferData(destArray);
 
         expect(destArray).toEqual(typedArray);
@@ -475,7 +475,7 @@ describe(
         if (!context.webgl2) {
           return;
         }
-        var typedArray = new Uint16Array(3);
+        const typedArray = new Uint16Array(3);
         typedArray[0] = 1;
         typedArray[1] = 2;
         typedArray[2] = 3;
@@ -487,7 +487,7 @@ describe(
           indexDatatype: IndexDatatype.UNSIGNED_SHORT,
         });
 
-        var destArray = new Uint16Array(3);
+        const destArray = new Uint16Array(3);
         buffer.getBufferData(destArray);
 
         expect(destArray).toEqual(typedArray);
@@ -634,14 +634,14 @@ describe(
             return;
           }
 
-          var typedArray = new Uint16Array([0, 1, 2, 3, 4]);
+          const typedArray = new Uint16Array([0, 1, 2, 3, 4]);
           buffer = Buffer.createIndexBuffer({
             context: context,
             typedArray: typedArray,
             usage: BufferUsage.STATIC_DRAW,
             indexDatatype: IndexDatatype.UNSIGNED_SHORT,
           });
-          var typedArray2 = new Float32Array([5.0, 6.0, 7.0, 8.0, 9.0]);
+          const typedArray2 = new Float32Array([5.0, 6.0, 7.0, 8.0, 9.0]);
           buffer2 = Buffer.createVertexBuffer({
             context: context,
             typedArray: typedArray2,
@@ -682,20 +682,20 @@ describe(
           return;
         }
 
-        var typedArray = new Float32Array([0.0, 1.0, 2.0, 3.0, 4.0]);
+        const typedArray = new Float32Array([0.0, 1.0, 2.0, 3.0, 4.0]);
         buffer = Buffer.createVertexBuffer({
           context: context,
           typedArray: typedArray,
           usage: BufferUsage.STATIC_DRAW,
         });
-        var typedArray2 = new Float32Array([5.0, 6.0, 7.0, 8.0, 9.0]);
+        const typedArray2 = new Float32Array([5.0, 6.0, 7.0, 8.0, 9.0]);
         buffer2 = Buffer.createVertexBuffer({
           context: context,
           typedArray: typedArray2,
           usage: BufferUsage.STATIC_DRAW,
         });
 
-        var destArray = new Float32Array(5);
+        const destArray = new Float32Array(5);
         buffer.getBufferData(destArray);
         expect(destArray).toEqual(typedArray);
         buffer2.getBufferData(destArray);
@@ -711,14 +711,14 @@ describe(
           return;
         }
 
-        var typedArray = new Uint16Array([0, 1, 2, 3, 4]);
+        const typedArray = new Uint16Array([0, 1, 2, 3, 4]);
         buffer = Buffer.createIndexBuffer({
           context: context,
           typedArray: typedArray,
           usage: BufferUsage.STATIC_DRAW,
           indexDatatype: IndexDatatype.UNSIGNED_SHORT,
         });
-        var typedArray2 = new Uint16Array([5, 6, 7, 8, 9]);
+        const typedArray2 = new Uint16Array([5, 6, 7, 8, 9]);
         buffer2 = Buffer.createIndexBuffer({
           context: context,
           typedArray: typedArray2,
@@ -726,7 +726,7 @@ describe(
           indexDatatype: IndexDatatype.UNSIGNED_SHORT,
         });
 
-        var destArray = new Uint16Array(5);
+        const destArray = new Uint16Array(5);
         buffer.getBufferData(destArray);
         expect(destArray).toEqual(typedArray);
         buffer2.getBufferData(destArray);
@@ -738,7 +738,7 @@ describe(
       });
 
       it("destroys" + webglMessage, function () {
-        var b = Buffer.createIndexBuffer({
+        const b = Buffer.createIndexBuffer({
           context: context,
           sizeInBytes: 3,
           usage: BufferUsage.STATIC_DRAW,
@@ -766,7 +766,7 @@ describe(
           sizeInBytes: 3,
           usage: BufferUsage.STATIC_DRAW,
         });
-        var elements = new ArrayBuffer(3);
+        const elements = new ArrayBuffer(3);
 
         expect(function () {
           buffer.copyFromArrayView(elements, 1);
@@ -774,7 +774,7 @@ describe(
       });
 
       it("fails to destroy" + webglMessage, function () {
-        var b = Buffer.createIndexBuffer({
+        const b = Buffer.createIndexBuffer({
           context: context,
           sizeInBytes: 3,
           usage: BufferUsage.STATIC_DRAW,

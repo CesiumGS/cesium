@@ -25,8 +25,8 @@ import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
  * @private
  */
 export default function preprocess3DTileContent(arrayBuffer) {
-  var uint8Array = new Uint8Array(arrayBuffer);
-  var contentType = getMagic(uint8Array);
+  const uint8Array = new Uint8Array(arrayBuffer);
+  let contentType = getMagic(uint8Array);
 
   // We use glTF for JSON glTF files. For binary glTF, we rename this
   // to glb to disambiguate
@@ -42,7 +42,7 @@ export default function preprocess3DTileContent(arrayBuffer) {
     };
   }
 
-  var json = getJsonContent(uint8Array);
+  const json = getJsonContent(uint8Array);
   if (defined(json.root)) {
     // Most likely a tileset JSON
     return {
@@ -64,7 +64,7 @@ export default function preprocess3DTileContent(arrayBuffer) {
 }
 
 function getJsonContent(uint8Array) {
-  var json;
+  let json;
 
   try {
     json = getJsonFromTypedArray(uint8Array);

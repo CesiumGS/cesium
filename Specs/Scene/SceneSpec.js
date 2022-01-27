@@ -52,9 +52,9 @@ import render from "../render.js";
 describe(
   "Scene/Scene",
   function () {
-    var scene;
-    var simpleShaderProgram;
-    var simpleRenderState;
+    let scene;
+    let simpleShaderProgram;
+    let simpleRenderState;
 
     beforeAll(function () {
       scene = createScene();
@@ -79,7 +79,7 @@ describe(
       scene.primitives.removeAll();
       scene.morphTo3D(0.0);
 
-      var camera = scene.camera;
+      const camera = scene.camera;
       camera.frustum = new PerspectiveFrustum();
       camera.frustum.aspectRatio =
         scene.drawingBufferWidth / scene.drawingBufferHeight;
@@ -117,7 +117,7 @@ describe(
       expect(scene.frameState).toBeInstanceOf(FrameState);
       expect(scene.tweens).toBeInstanceOf(TweenCollection);
 
-      var contextAttributes = scene.context._gl.getContextAttributes();
+      const contextAttributes = scene.context._gl.getContextAttributes();
       // Do not check depth and antialias since they are requests not requirements
       expect(contextAttributes.alpha).toEqual(false);
       expect(contextAttributes.stencil).toEqual(true);
@@ -126,7 +126,7 @@ describe(
     });
 
     it("constructor sets options", function () {
-      var webglOptions = {
+      const webglOptions = {
         alpha: true,
         depth: true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
         stencil: true,
@@ -134,16 +134,16 @@ describe(
         premultipliedAlpha: true, // Workaround IE 11.0.8, which does not honor false.
         preserveDrawingBuffer: true,
       };
-      var mapProjection = new WebMercatorProjection();
+      const mapProjection = new WebMercatorProjection();
 
-      var s = createScene({
+      const s = createScene({
         contextOptions: {
           webgl: webglOptions,
         },
         mapProjection: mapProjection,
       });
 
-      var contextAttributes = s.context._gl.getContextAttributes();
+      const contextAttributes = s.context._gl.getContextAttributes();
       expect(contextAttributes.alpha).toEqual(webglOptions.alpha);
       expect(contextAttributes.depth).toEqual(webglOptions.depth);
       expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
@@ -179,9 +179,9 @@ describe(
     });
 
     it("calls afterRender functions", function () {
-      var spyListener = jasmine.createSpy("listener");
+      const spyListener = jasmine.createSpy("listener");
 
-      var primitive = {
+      const primitive = {
         update: function (frameState) {
           frameState.afterRender.push(spyListener);
         },
@@ -201,7 +201,7 @@ describe(
     }
 
     it("debugCommandFilter filters commands", function () {
-      var c = new DrawCommand({
+      const c = new DrawCommand({
         shaderProgram: simpleShaderProgram,
         renderState: simpleRenderState,
         pass: Pass.OPAQUE,
@@ -220,10 +220,10 @@ describe(
     });
 
     it("debugCommandFilter does not filter commands", function () {
-      var originalLogDepth = scene.logarithmicDepthBuffer;
+      const originalLogDepth = scene.logarithmicDepthBuffer;
       scene.logarithmicDepthBuffer = false;
 
-      var c = new DrawCommand({
+      const c = new DrawCommand({
         shaderProgram: simpleShaderProgram,
         renderState: simpleRenderState,
         pass: Pass.OPAQUE,
@@ -241,17 +241,17 @@ describe(
     });
 
     it("debugShowBoundingVolume draws a bounding sphere", function () {
-      var originalLogDepth = scene.logarithmicDepthBuffer;
+      const originalLogDepth = scene.logarithmicDepthBuffer;
       scene.logarithmicDepthBuffer = false;
 
-      var radius = 10.0;
-      var center = Cartesian3.add(
+      const radius = 10.0;
+      const center = Cartesian3.add(
         scene.camera.position,
         scene.camera.direction,
         new Cartesian3()
       );
 
-      var c = new DrawCommand({
+      const c = new DrawCommand({
         shaderProgram: simpleShaderProgram,
         renderState: simpleRenderState,
         pass: Pass.OPAQUE,
@@ -271,17 +271,17 @@ describe(
     });
 
     it("debugShowCommands tints commands", function () {
-      var originalLogDepth = scene.logarithmicDepthBuffer;
+      const originalLogDepth = scene.logarithmicDepthBuffer;
       scene.logarithmicDepthBuffer = false;
 
-      var c = new DrawCommand({
+      const c = new DrawCommand({
         shaderProgram: simpleShaderProgram,
         renderState: simpleRenderState,
         pass: Pass.OPAQUE,
       });
       c.execute = function () {};
 
-      var originalShallowClone = DrawCommand.shallowClone;
+      const originalShallowClone = DrawCommand.shallowClone;
       spyOn(DrawCommand, "shallowClone").and.callFake(function (
         command,
         result
@@ -311,9 +311,9 @@ describe(
     });
 
     it("opaque/translucent render order (1)", function () {
-      var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+      const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-      var rectanglePrimitive1 = createRectangle(rectangle);
+      const rectanglePrimitive1 = createRectangle(rectangle);
       rectanglePrimitive1.appearance.material.uniforms.color = new Color(
         1.0,
         0.0,
@@ -321,7 +321,7 @@ describe(
         1.0
       );
 
-      var rectanglePrimitive2 = createRectangle(rectangle, 1000.0);
+      const rectanglePrimitive2 = createRectangle(rectangle, 1000.0);
       rectanglePrimitive2.appearance.material.uniforms.color = new Color(
         0.0,
         1.0,
@@ -329,7 +329,7 @@ describe(
         0.5
       );
 
-      var primitives = scene.primitives;
+      const primitives = scene.primitives;
       primitives.add(rectanglePrimitive1);
       primitives.add(rectanglePrimitive2);
 
@@ -349,9 +349,9 @@ describe(
     });
 
     it("opaque/translucent render order (2)", function () {
-      var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+      const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-      var rectanglePrimitive1 = createRectangle(rectangle, 1000.0);
+      const rectanglePrimitive1 = createRectangle(rectangle, 1000.0);
       rectanglePrimitive1.appearance.material.uniforms.color = new Color(
         1.0,
         0.0,
@@ -359,7 +359,7 @@ describe(
         1.0
       );
 
-      var rectanglePrimitive2 = createRectangle(rectangle);
+      const rectanglePrimitive2 = createRectangle(rectangle);
       rectanglePrimitive2.appearance.material.uniforms.color = new Color(
         0.0,
         1.0,
@@ -367,7 +367,7 @@ describe(
         0.5
       );
 
-      var primitives = scene.primitives;
+      const primitives = scene.primitives;
       primitives.add(rectanglePrimitive1);
       primitives.add(rectanglePrimitive2);
 
@@ -387,9 +387,9 @@ describe(
     });
 
     it("renders with OIT and without FXAA", function () {
-      var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+      const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-      var rectanglePrimitive = createRectangle(rectangle, 1000.0);
+      const rectanglePrimitive = createRectangle(rectangle, 1000.0);
       rectanglePrimitive.appearance.material.uniforms.color = new Color(
         1.0,
         0.0,
@@ -397,7 +397,7 @@ describe(
         0.5
       );
 
-      var primitives = scene.primitives;
+      const primitives = scene.primitives;
       primitives.add(rectanglePrimitive);
 
       scene.camera.setView({ destination: rectangle });
@@ -410,12 +410,12 @@ describe(
     });
 
     it("renders with forced FXAA", function () {
-      var context = scene.context;
+      const context = scene.context;
 
       // Workaround for Firefox on Mac, which does not support RGBA + depth texture
       // attachments, which is allowed by the spec.
       if (context.depthTexture) {
-        var framebuffer = new Framebuffer({
+        const framebuffer = new Framebuffer({
           context: context,
           colorTextures: [
             new Texture({
@@ -435,7 +435,7 @@ describe(
           }),
         });
 
-        var status = framebuffer.status;
+        const status = framebuffer.status;
         framebuffer.destroy();
 
         if (status !== WebGLConstants.FRAMEBUFFER_COMPLETE) {
@@ -443,7 +443,7 @@ describe(
         }
       }
 
-      var s = createScene();
+      const s = createScene();
 
       if (defined(s._oit)) {
         s._oit._translucentMRTSupport = false;
@@ -452,9 +452,9 @@ describe(
 
       s.postProcessStages.fxaa.enabled = false;
 
-      var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+      const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-      var rectanglePrimitive = createRectangle(rectangle, 1000.0);
+      const rectanglePrimitive = createRectangle(rectangle, 1000.0);
       rectanglePrimitive.appearance.material.uniforms.color = new Color(
         1.0,
         0.0,
@@ -462,7 +462,7 @@ describe(
         1.0
       );
 
-      var primitives = s.primitives;
+      const primitives = s.primitives;
       primitives.add(rectanglePrimitive);
 
       s.camera.setView({ destination: rectangle });
@@ -477,9 +477,9 @@ describe(
     });
 
     it("setting a globe", function () {
-      var scene = createScene();
-      var ellipsoid = Ellipsoid.UNIT_SPHERE;
-      var globe = new Globe(ellipsoid);
+      const scene = createScene();
+      const ellipsoid = Ellipsoid.UNIT_SPHERE;
+      const globe = new Globe(ellipsoid);
       scene.globe = globe;
 
       expect(scene.globe).toBe(globe);
@@ -488,8 +488,8 @@ describe(
     });
 
     it("destroys primitive on set globe", function () {
-      var scene = createScene();
-      var globe = new Globe(Ellipsoid.UNIT_SPHERE);
+      const scene = createScene();
+      const globe = new Globe(Ellipsoid.UNIT_SPHERE);
 
       scene.globe = globe;
       expect(globe.isDestroyed()).toEqual(false);
@@ -501,7 +501,7 @@ describe(
     });
 
     describe("render tests", function () {
-      var s;
+      let s;
 
       beforeEach(function () {
         s = createScene();
@@ -669,14 +669,14 @@ describe(
 
     it("renders with multipass OIT if MRT is available", function () {
       if (scene.context.drawBuffers) {
-        var s = createScene();
+        const s = createScene();
         if (defined(s._oit)) {
           s._oit._translucentMRTSupport = false;
           s._oit._translucentMultipassSupport = true;
 
-          var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+          const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-          var rectanglePrimitive = createRectangle(rectangle, 1000.0);
+          const rectanglePrimitive = createRectangle(rectangle, 1000.0);
           rectanglePrimitive.appearance.material.uniforms.color = new Color(
             1.0,
             0.0,
@@ -684,7 +684,7 @@ describe(
             0.5
           );
 
-          var primitives = s.primitives;
+          const primitives = s.primitives;
           primitives.add(rectanglePrimitive);
 
           s.camera.setView({ destination: rectangle });
@@ -704,14 +704,14 @@ describe(
       if (!scene.context.floatingPointTexture) {
         return;
       }
-      var s = createScene();
+      const s = createScene();
       if (defined(s._oit)) {
         s._oit._translucentMRTSupport = false;
         s._oit._translucentMultipassSupport = false;
 
-        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-        var rectanglePrimitive = createRectangle(rectangle, 1000.0);
+        const rectanglePrimitive = createRectangle(rectangle, 1000.0);
         rectanglePrimitive.appearance.material.uniforms.color = new Color(
           1.0,
           0.0,
@@ -719,7 +719,7 @@ describe(
           0.5
         );
 
-        var primitives = s.primitives;
+        const primitives = s.primitives;
         primitives.add(rectanglePrimitive);
 
         s.camera.setView({ destination: rectangle });
@@ -736,9 +736,9 @@ describe(
     it("renders map twice when in 2D", function () {
       scene.morphTo2D(0.0);
 
-      var rectangle = Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0);
+      const rectangle = Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0);
 
-      var rectanglePrimitive1 = createRectangle(rectangle, 0.0);
+      const rectanglePrimitive1 = createRectangle(rectangle, 0.0);
       rectanglePrimitive1.appearance.material.uniforms.color = new Color(
         1.0,
         0.0,
@@ -746,7 +746,7 @@ describe(
         1.0
       );
 
-      var primitives = scene.primitives;
+      const primitives = scene.primitives;
       primitives.add(rectanglePrimitive1);
 
       scene.camera.setView({
@@ -766,14 +766,14 @@ describe(
     });
 
     it("renders map when the camera is on the IDL in 2D", function () {
-      var s = createScene({
+      const s = createScene({
         canvas: createCanvas(5, 5),
       });
       s.morphTo2D(0.0);
 
-      var rectangle = Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0);
+      const rectangle = Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0);
 
-      var rectanglePrimitive1 = createRectangle(rectangle, 0.0);
+      const rectanglePrimitive1 = createRectangle(rectangle, 0.0);
       rectanglePrimitive1.appearance.material.uniforms.color = new Color(
         1.0,
         0.0,
@@ -781,7 +781,7 @@ describe(
         1.0
       );
 
-      var primitives = s.primitives;
+      const primitives = s.primitives;
       primitives.add(rectanglePrimitive1);
 
       s.camera.setView({
@@ -807,12 +807,12 @@ describe(
         return;
       }
 
-      var s = createScene();
+      const s = createScene();
       s.highDynamicRange = true;
 
-      var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+      const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-      var rectanglePrimitive = createRectangle(rectangle, 1000.0);
+      const rectanglePrimitive = createRectangle(rectangle, 1000.0);
       rectanglePrimitive.appearance.material.uniforms.color = new Color(
         10.0,
         0.0,
@@ -820,7 +820,7 @@ describe(
         1.0
       );
 
-      var primitives = s.primitives;
+      const primitives = s.primitives;
       primitives.add(rectanglePrimitive);
 
       s.camera.setView({ destination: rectangle });
@@ -836,11 +836,11 @@ describe(
     });
 
     it("copies the globe depth", function () {
-      var scene = createScene();
+      const scene = createScene();
       if (scene.context.depthTexture) {
-        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-        var rectanglePrimitive = createRectangle(rectangle, 1000.0);
+        const rectanglePrimitive = createRectangle(rectangle, 1000.0);
         rectanglePrimitive.appearance.material.uniforms.color = new Color(
           1.0,
           0.0,
@@ -848,12 +848,12 @@ describe(
           0.5
         );
 
-        var primitives = scene.primitives;
+        const primitives = scene.primitives;
         primitives.add(rectanglePrimitive);
 
         scene.camera.setView({ destination: rectangle });
 
-        var uniformState = scene.context.uniformState;
+        const uniformState = scene.context.uniformState;
 
         expect(scene).toRenderAndCall(function (rgba) {
           expect(uniformState.globeDepthTexture).toBeDefined();
@@ -868,20 +868,20 @@ describe(
         return;
       }
 
-      var rectangle = Rectangle.fromDegrees(-0.0001, -0.0001, 0.0001, 0.0001);
+      const rectangle = Rectangle.fromDegrees(-0.0001, -0.0001, 0.0001, 0.0001);
       scene.camera.setView({ destination: rectangle });
 
-      var canvas = scene.canvas;
-      var windowPosition = new Cartesian2(
+      const canvas = scene.canvas;
+      const windowPosition = new Cartesian2(
         canvas.clientWidth / 2,
         canvas.clientHeight / 2
       );
 
       expect(scene).toRenderAndCall(function () {
-        var position = scene.pickPosition(windowPosition);
+        const position = scene.pickPosition(windowPosition);
         expect(position).not.toBeDefined();
 
-        var rectanglePrimitive = createRectangle(rectangle);
+        const rectanglePrimitive = createRectangle(rectangle);
         rectanglePrimitive.appearance.material.uniforms.color = new Color(
           1.0,
           0.0,
@@ -889,12 +889,12 @@ describe(
           1.0
         );
 
-        var primitives = scene.primitives;
+        const primitives = scene.primitives;
         primitives.add(rectanglePrimitive);
       });
 
       expect(scene).toRenderAndCall(function () {
-        var position = scene.pickPosition(windowPosition);
+        const position = scene.pickPosition(windowPosition);
         expect(position.x).toBeGreaterThan(Ellipsoid.WGS84.minimumRadius);
         expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
         expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
@@ -908,20 +908,20 @@ describe(
 
       scene.morphToColumbusView(0.0);
 
-      var rectangle = Rectangle.fromDegrees(-0.0001, -0.0001, 0.0001, 0.0001);
+      const rectangle = Rectangle.fromDegrees(-0.0001, -0.0001, 0.0001, 0.0001);
       scene.camera.setView({ destination: rectangle });
 
-      var canvas = scene.canvas;
-      var windowPosition = new Cartesian2(
+      const canvas = scene.canvas;
+      const windowPosition = new Cartesian2(
         canvas.clientWidth / 2,
         canvas.clientHeight / 2
       );
 
       expect(scene).toRenderAndCall(function () {
-        var position = scene.pickPosition(windowPosition);
+        const position = scene.pickPosition(windowPosition);
         expect(position).not.toBeDefined();
 
-        var rectanglePrimitive = createRectangle(rectangle);
+        const rectanglePrimitive = createRectangle(rectangle);
         rectanglePrimitive.appearance.material.uniforms.color = new Color(
           1.0,
           0.0,
@@ -929,12 +929,12 @@ describe(
           1.0
         );
 
-        var primitives = scene.primitives;
+        const primitives = scene.primitives;
         primitives.add(rectanglePrimitive);
       });
 
       expect(scene).toRenderAndCall(function () {
-        var position = scene.pickPosition(windowPosition);
+        const position = scene.pickPosition(windowPosition);
         expect(position.x).toBeGreaterThan(Ellipsoid.WGS84.minimumRadius);
         expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
         expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
@@ -948,20 +948,20 @@ describe(
 
       scene.morphTo2D(0.0);
 
-      var rectangle = Rectangle.fromDegrees(-0.0001, -0.0001, 0.0001, 0.0001);
+      const rectangle = Rectangle.fromDegrees(-0.0001, -0.0001, 0.0001, 0.0001);
       scene.camera.setView({ destination: rectangle });
 
-      var canvas = scene.canvas;
-      var windowPosition = new Cartesian2(
+      const canvas = scene.canvas;
+      const windowPosition = new Cartesian2(
         canvas.clientWidth / 2,
         canvas.clientHeight / 2
       );
 
       expect(scene).toRenderAndCall(function () {
-        var position = scene.pickPosition(windowPosition);
+        const position = scene.pickPosition(windowPosition);
         expect(position).not.toBeDefined();
 
-        var rectanglePrimitive = createRectangle(rectangle);
+        const rectanglePrimitive = createRectangle(rectangle);
         rectanglePrimitive.appearance.material.uniforms.color = new Color(
           1.0,
           0.0,
@@ -969,12 +969,12 @@ describe(
           1.0
         );
 
-        var primitives = scene.primitives;
+        const primitives = scene.primitives;
         primitives.add(rectanglePrimitive);
       });
 
       expect(scene).toRenderAndCall(function () {
-        var position = scene.pickPosition(windowPosition);
+        const position = scene.pickPosition(windowPosition);
         expect(position.x).toBeGreaterThan(Ellipsoid.WGS84.minimumRadius);
         expect(position.y).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
         expect(position.z).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
@@ -986,18 +986,18 @@ describe(
         return;
       }
 
-      var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+      const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
       scene.camera.setView({
         destination: rectangle,
       });
 
-      var canvas = scene.canvas;
-      var windowPosition = new Cartesian2(
+      const canvas = scene.canvas;
+      const windowPosition = new Cartesian2(
         canvas.clientWidth / 2,
         canvas.clientHeight / 2
       );
 
-      var rectanglePrimitive = createRectangle(rectangle);
+      const rectanglePrimitive = createRectangle(rectangle);
       rectanglePrimitive.appearance.material.uniforms.color = new Color(
         1.0,
         0.0,
@@ -1005,18 +1005,18 @@ describe(
         1.0
       );
 
-      var primitives = scene.primitives;
+      const primitives = scene.primitives;
       primitives.add(rectanglePrimitive);
 
       scene.useDepthPicking = false;
       expect(scene).toRenderAndCall(function () {
-        var position = scene.pickPosition(windowPosition);
+        const position = scene.pickPosition(windowPosition);
         expect(position).not.toBeDefined();
       });
 
       scene.useDepthPicking = true;
       expect(scene).toRenderAndCall(function () {
-        var position = scene.pickPosition(windowPosition);
+        const position = scene.pickPosition(windowPosition);
         expect(position).toBeDefined();
       });
     });
@@ -1026,18 +1026,20 @@ describe(
         return;
       }
 
-      var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+      const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
       scene.camera.setView({
         destination: rectangle,
       });
 
-      var canvas = scene.canvas;
-      var windowPosition = new Cartesian2(
+      const canvas = scene.canvas;
+      const windowPosition = new Cartesian2(
         canvas.clientWidth / 2,
         canvas.clientHeight / 2
       );
 
-      var rectanglePrimitive = scene.primitives.add(createRectangle(rectangle));
+      const rectanglePrimitive = scene.primitives.add(
+        createRectangle(rectangle)
+      );
       rectanglePrimitive.appearance.material.uniforms.color = new Color(
         1.0,
         0.0,
@@ -1048,13 +1050,13 @@ describe(
       scene.useDepthPicking = true;
       scene.pickTranslucentDepth = false;
       expect(scene).toRenderAndCall(function () {
-        var position = scene.pickPosition(windowPosition);
+        const position = scene.pickPosition(windowPosition);
         expect(position).not.toBeDefined();
       });
 
       scene.pickTranslucentDepth = true;
       expect(scene).toRenderAndCall(function () {
-        var position = scene.pickPosition(windowPosition);
+        const position = scene.pickPosition(windowPosition);
         expect(position).toBeDefined();
       });
     });
@@ -1064,11 +1066,11 @@ describe(
         return;
       }
 
-      var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+      const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
       scene.camera.setView({ destination: rectangle });
 
-      var canvas = scene.canvas;
-      var windowPosition = new Cartesian2(
+      const canvas = scene.canvas;
+      const windowPosition = new Cartesian2(
         canvas.clientWidth / 2,
         canvas.clientHeight / 2
       );
@@ -1088,7 +1090,7 @@ describe(
           SceneTransforms.transformWindowToDrawingBuffer.calls.count()
         ).toEqual(1);
 
-        var rectanglePrimitive = createRectangle(rectangle);
+        const rectanglePrimitive = createRectangle(rectangle);
         rectanglePrimitive.appearance.material.uniforms.color = new Color(
           1.0,
           0.0,
@@ -1096,7 +1098,7 @@ describe(
           1.0
         );
 
-        var primitives = scene.primitives;
+        const primitives = scene.primitives;
         primitives.add(rectanglePrimitive);
       });
 
@@ -1120,21 +1122,21 @@ describe(
     });
 
     it("isDestroyed", function () {
-      var s = createScene();
+      const s = createScene();
       expect(s.isDestroyed()).toEqual(false);
       s.destroyForSpecs();
       expect(s.isDestroyed()).toEqual(true);
     });
 
     it("raises renderError when render throws", function () {
-      var s = createScene({
+      const s = createScene({
         rethrowRenderErrors: false,
       });
 
-      var spyListener = jasmine.createSpy("listener");
+      const spyListener = jasmine.createSpy("listener");
       s.renderError.addEventListener(spyListener);
 
-      var error = "foo";
+      const error = "foo";
       s.primitives.update = function () {
         throw error;
       };
@@ -1147,13 +1149,13 @@ describe(
     });
 
     it("a render error is rethrown if rethrowRenderErrors is true", function () {
-      var s = createScene();
+      const s = createScene();
       s.rethrowRenderErrors = true;
 
-      var spyListener = jasmine.createSpy("listener");
+      const spyListener = jasmine.createSpy("listener");
       s.renderError.addEventListener(spyListener);
 
-      var error = new RuntimeError("error");
+      const error = new RuntimeError("error");
       s.primitives.update = function () {
         throw error;
       };
@@ -1168,9 +1170,9 @@ describe(
     });
 
     it("alwayas raises preUpdate event prior to updating", function () {
-      var s = createScene();
+      const s = createScene();
 
-      var spyListener = jasmine.createSpy("listener");
+      const spyListener = jasmine.createSpy("listener");
       s.preUpdate.addEventListener(spyListener);
 
       s.render();
@@ -1188,9 +1190,9 @@ describe(
     });
 
     it("always raises preUpdate event after updating", function () {
-      var s = createScene();
+      const s = createScene();
 
-      var spyListener = jasmine.createSpy("listener");
+      const spyListener = jasmine.createSpy("listener");
       s.preUpdate.addEventListener(spyListener);
 
       s.render();
@@ -1208,9 +1210,9 @@ describe(
     });
 
     it("raises the preRender event prior to rendering only if the scene renders", function () {
-      var s = createScene();
+      const s = createScene();
 
-      var spyListener = jasmine.createSpy("listener");
+      const spyListener = jasmine.createSpy("listener");
       s.preRender.addEventListener(spyListener);
 
       s.render();
@@ -1228,9 +1230,9 @@ describe(
     });
 
     it("raises the postRender event after rendering if the scene rendered", function () {
-      var s = createScene();
+      const s = createScene();
 
-      var spyListener = jasmine.createSpy("listener");
+      const spyListener = jasmine.createSpy("listener");
       s.postRender.addEventListener(spyListener);
 
       s.render();
@@ -1248,10 +1250,10 @@ describe(
     });
 
     it("raises the cameraMoveStart event after moving the camera", function () {
-      var s = createScene();
+      const s = createScene();
       s.render();
 
-      var spyListener = jasmine.createSpy("listener");
+      const spyListener = jasmine.createSpy("listener");
       s.camera.moveStart.addEventListener(spyListener);
       s._cameraStartFired = false; // reset this value after camera changes for initial render trigger the event
 
@@ -1264,10 +1266,10 @@ describe(
     });
 
     it("raises the cameraMoveEvent event when the camera stops moving", function () {
-      var s = createScene();
+      const s = createScene();
       s.render();
 
-      var spyListener = jasmine.createSpy("listener");
+      const spyListener = jasmine.createSpy("listener");
       s.camera.moveEnd.addEventListener(spyListener);
 
       // We use negative time here to ensure the event runs on the next frame.
@@ -1284,9 +1286,9 @@ describe(
     });
 
     it("raises the camera changed event on direction changed", function () {
-      var s = createScene();
+      const s = createScene();
 
-      var spyListener = jasmine.createSpy("listener");
+      const spyListener = jasmine.createSpy("listener");
       s.camera.changed.addEventListener(spyListener);
 
       s.initializeFrame();
@@ -1301,7 +1303,7 @@ describe(
 
       expect(spyListener.calls.count()).toBe(1);
 
-      var args = spyListener.calls.allArgs();
+      const args = spyListener.calls.allArgs();
       expect(args.length).toEqual(1);
       expect(args[0].length).toEqual(1);
       expect(args[0][0]).toBeGreaterThan(s.camera.percentageChanged);
@@ -1310,9 +1312,9 @@ describe(
     });
 
     it("raises the camera changed event on heading changed", function () {
-      var s = createScene();
+      const s = createScene();
 
-      var spyListener = jasmine.createSpy("listener");
+      const spyListener = jasmine.createSpy("listener");
       s.camera.changed.addEventListener(spyListener);
 
       s.initializeFrame();
@@ -1325,7 +1327,7 @@ describe(
 
       expect(spyListener.calls.count()).toBe(1);
 
-      var args = spyListener.calls.allArgs();
+      const args = spyListener.calls.allArgs();
       expect(args.length).toEqual(1);
       expect(args[0].length).toEqual(1);
       expect(args[0][0]).toBeGreaterThan(s.camera.percentageChanged);
@@ -1334,9 +1336,9 @@ describe(
     });
 
     it("raises the camera changed event on position changed", function () {
-      var s = createScene();
+      const s = createScene();
 
-      var spyListener = jasmine.createSpy("listener");
+      const spyListener = jasmine.createSpy("listener");
       s.camera.changed.addEventListener(spyListener);
 
       s.initializeFrame();
@@ -1352,7 +1354,7 @@ describe(
 
       expect(spyListener.calls.count()).toBe(1);
 
-      var args = spyListener.calls.allArgs();
+      const args = spyListener.calls.allArgs();
       expect(args.length).toEqual(1);
       expect(args[0].length).toEqual(1);
       expect(args[0][0]).toBeGreaterThan(s.camera.percentageChanged);
@@ -1361,10 +1363,10 @@ describe(
     });
 
     it("raises the camera changed event in 2D", function () {
-      var s = createScene();
+      const s = createScene();
       s.morphTo2D(0);
 
-      var spyListener = jasmine.createSpy("listener");
+      const spyListener = jasmine.createSpy("listener");
       s.camera.changed.addEventListener(spyListener);
 
       s.initializeFrame();
@@ -1380,7 +1382,7 @@ describe(
 
       expect(spyListener.calls.count()).toBe(1);
 
-      var args = spyListener.calls.allArgs();
+      const args = spyListener.calls.allArgs();
       expect(args.length).toEqual(1);
       expect(args[0].length).toEqual(1);
       expect(args[0][0]).toBeGreaterThan(s.camera.percentageChanged);
@@ -1389,25 +1391,25 @@ describe(
     });
 
     it("get maximumAliasedLineWidth", function () {
-      var s = createScene();
+      const s = createScene();
       expect(s.maximumAliasedLineWidth).toBeGreaterThanOrEqualTo(1);
       s.destroyForSpecs();
     });
 
     it("get maximumCubeMapSize", function () {
-      var s = createScene();
+      const s = createScene();
       expect(s.maximumCubeMapSize).toBeGreaterThanOrEqualTo(16);
       s.destroyForSpecs();
     });
 
     it("does not throw with debugShowCommands", function () {
-      var s = createScene();
+      const s = createScene();
       if (s.context.drawBuffers) {
         s.debugShowCommands = true;
 
-        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-        var rectanglePrimitive = createRectangle(rectangle, 1000.0);
+        const rectanglePrimitive = createRectangle(rectangle, 1000.0);
         rectanglePrimitive.appearance.material.uniforms.color = new Color(
           1.0,
           0.0,
@@ -1415,7 +1417,7 @@ describe(
           0.5
         );
 
-        var primitives = s.primitives;
+        const primitives = s.primitives;
         primitives.add(rectanglePrimitive);
 
         s.camera.setView({ destination: rectangle });
@@ -1428,13 +1430,13 @@ describe(
     });
 
     it("does not throw with debugShowFrustums", function () {
-      var s = createScene();
+      const s = createScene();
       if (s.context.drawBuffers) {
         s.debugShowFrustums = true;
 
-        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-        var rectanglePrimitive = createRectangle(rectangle, 1000.0);
+        const rectanglePrimitive = createRectangle(rectangle, 1000.0);
         rectanglePrimitive.appearance.material.uniforms.color = new Color(
           1.0,
           0.0,
@@ -1442,7 +1444,7 @@ describe(
           0.5
         );
 
-        var primitives = s.primitives;
+        const primitives = s.primitives;
         primitives.add(rectanglePrimitive);
 
         s.camera.setView({ destination: rectangle });
@@ -1461,7 +1463,7 @@ describe(
     });
 
     it("converts to canvas coordinates", function () {
-      var mockPosition = new Cartesian3();
+      const mockPosition = new Cartesian3();
       spyOn(SceneTransforms, "wgs84ToWindowCoordinates");
       scene.cartesianToCanvasCoordinates(mockPosition);
 
@@ -1473,8 +1475,8 @@ describe(
     });
 
     it("converts to canvas coordinates and return it in a variable", function () {
-      var result = new Cartesian2();
-      var mockPosition = new Cartesian3();
+      const result = new Cartesian2();
+      const mockPosition = new Cartesian3();
       spyOn(SceneTransforms, "wgs84ToWindowCoordinates");
       scene.cartesianToCanvasCoordinates(mockPosition, result);
 
@@ -1486,8 +1488,8 @@ describe(
     });
 
     it("Gets imageryLayers", function () {
-      var scene = createScene();
-      var globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
+      const scene = createScene();
+      const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
       expect(scene.imageryLayers).toBe(globe.imageryLayers);
 
       scene.globe = undefined;
@@ -1497,8 +1499,8 @@ describe(
     });
 
     it("Gets terrainProvider", function () {
-      var scene = createScene();
-      var globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
+      const scene = createScene();
+      const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
       expect(scene.terrainProvider).toBe(globe.terrainProvider);
 
       scene.globe = undefined;
@@ -1508,8 +1510,8 @@ describe(
     });
 
     it("Sets terrainProvider", function () {
-      var scene = createScene();
-      var globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
+      const scene = createScene();
+      const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
       scene.terrainProvider = new CesiumTerrainProvider({
         url: "//terrain/tiles",
       });
@@ -1527,8 +1529,8 @@ describe(
     });
 
     it("Gets terrainProviderChanged", function () {
-      var scene = createScene();
-      var globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
+      const scene = createScene();
+      const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
       expect(scene.terrainProviderChanged).toBe(globe.terrainProviderChanged);
 
       scene.globe = undefined;
@@ -1538,9 +1540,9 @@ describe(
     });
 
     it("Sets material", function () {
-      var scene = createScene();
-      var globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
-      var material = Material.fromType("ElevationContour");
+      const scene = createScene();
+      const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
+      const material = Material.fromType("ElevationContour");
       globe.material = material;
       expect(globe.material).toBe(material);
 
@@ -1550,14 +1552,14 @@ describe(
       scene.destroyForSpecs();
     });
 
-    var scratchTime = new JulianDate();
+    const scratchTime = new JulianDate();
 
     it("doesn't render scene if requestRenderMode is enabled", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       scene.renderForSpecs();
 
-      var lastFrameNumber = scene.frameState.frameNumber;
+      const lastFrameNumber = scene.frameState.frameNumber;
 
       scene.requestRenderMode = true;
       scene.maximumRenderTimeChange = undefined;
@@ -1568,11 +1570,11 @@ describe(
     });
 
     it("requestRender causes a new frame to be rendered in requestRenderMode", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       scene.renderForSpecs();
 
-      var lastFrameNumber = scene.frameState.frameNumber;
+      const lastFrameNumber = scene.frameState.frameNumber;
       expect(scene._renderRequested).toBe(false);
 
       scene.requestRenderMode = true;
@@ -1588,11 +1590,11 @@ describe(
     });
 
     it("moving the camera causes a new frame to be rendered in requestRenderMode", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       scene.renderForSpecs();
 
-      var lastFrameNumber = scene.frameState.frameNumber;
+      const lastFrameNumber = scene.frameState.frameNumber;
       expect(scene._renderRequested).toBe(false);
 
       scene.requestRenderMode = true;
@@ -1607,11 +1609,11 @@ describe(
     });
 
     it("changing the camera frustum does not cause continuous rendering in requestRenderMode", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       scene.renderForSpecs();
 
-      var lastFrameNumber = scene.frameState.frameNumber;
+      let lastFrameNumber = scene.frameState.frameNumber;
       expect(scene._renderRequested).toBe(false);
 
       scene.requestRenderMode = true;
@@ -1632,11 +1634,11 @@ describe(
     });
 
     it("successful completed requests causes a new frame to be rendered in requestRenderMode", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       scene.renderForSpecs();
 
-      var lastFrameNumber = scene.frameState.frameNumber;
+      const lastFrameNumber = scene.frameState.frameNumber;
       expect(scene._renderRequested).toBe(false);
 
       scene.requestRenderMode = true;
@@ -1655,11 +1657,11 @@ describe(
     });
 
     it("data returning from a web worker causes a new frame to be rendered in requestRenderMode", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       scene.renderForSpecs();
 
-      var lastFrameNumber = scene.frameState.frameNumber;
+      const lastFrameNumber = scene.frameState.frameNumber;
       expect(scene._renderRequested).toBe(false);
 
       scene.requestRenderMode = true;
@@ -1678,17 +1680,17 @@ describe(
     });
 
     it("Executing an after render function causes a new frame to be rendered in requestRenderMode", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       scene.renderForSpecs();
 
-      var lastFrameNumber = scene.frameState.frameNumber;
+      const lastFrameNumber = scene.frameState.frameNumber;
       expect(scene._renderRequested).toBe(false);
 
       scene.requestRenderMode = true;
       scene.maximumRenderTimeChange = undefined;
 
-      var functionCalled = false;
+      let functionCalled = false;
       scene._frameState.afterRender.push(function () {
         functionCalled = true;
       });
@@ -1705,18 +1707,18 @@ describe(
     });
 
     it("Globe tile loading triggers a new frame to be rendered in requestRenderMode", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       scene.renderForSpecs();
 
-      var lastFrameNumber = scene.frameState.frameNumber;
+      let lastFrameNumber = scene.frameState.frameNumber;
       expect(scene._renderRequested).toBe(false);
 
       scene.requestRenderMode = true;
       scene.maximumRenderTimeChange = undefined;
 
-      var ellipsoid = Ellipsoid.UNIT_SPHERE;
-      var globe = new Globe(ellipsoid);
+      const ellipsoid = Ellipsoid.UNIT_SPHERE;
+      const globe = new Globe(ellipsoid);
       scene.globe = globe;
 
       scene.requestRender();
@@ -1732,18 +1734,18 @@ describe(
     });
 
     it("Globe imagery updates triggers a new frame to be rendered in requestRenderMode", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       scene.renderForSpecs();
 
-      var lastFrameNumber = scene.frameState.frameNumber;
+      const lastFrameNumber = scene.frameState.frameNumber;
       expect(scene._renderRequested).toBe(false);
 
       scene.requestRenderMode = true;
       scene.maximumRenderTimeChange = undefined;
 
-      var ellipsoid = Ellipsoid.UNIT_SPHERE;
-      var globe = new Globe(ellipsoid);
+      const ellipsoid = Ellipsoid.UNIT_SPHERE;
+      const globe = new Globe(ellipsoid);
       scene.globe = globe;
       globe.imageryLayersUpdatedEvent.raiseEvent();
 
@@ -1758,18 +1760,18 @@ describe(
     });
 
     it("Globe changing terrain providers triggers a new frame to be rendered in requestRenderMode", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       scene.renderForSpecs();
 
-      var lastFrameNumber = scene.frameState.frameNumber;
+      const lastFrameNumber = scene.frameState.frameNumber;
       expect(scene._renderRequested).toBe(false);
 
       scene.requestRenderMode = true;
       scene.maximumRenderTimeChange = undefined;
 
-      var ellipsoid = Ellipsoid.UNIT_SPHERE;
-      var globe = new Globe(ellipsoid);
+      const ellipsoid = Ellipsoid.UNIT_SPHERE;
+      const globe = new Globe(ellipsoid);
       scene.globe = globe;
       globe.terrainProviderChanged.raiseEvent();
 
@@ -1784,11 +1786,11 @@ describe(
     });
 
     it("scene morphing causes a new frame to be rendered in requestRenderMode", function () {
-      var scene = createScene();
+      const scene = createScene();
       scene.renderForSpecs();
 
-      var lastFrameNumber = scene.frameState.frameNumber;
-      var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+      let lastFrameNumber = scene.frameState.frameNumber;
+      let lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
       expect(lastRenderTime).toBeDefined();
       expect(scene._renderRequested).toBe(false);
 
@@ -1842,12 +1844,15 @@ describe(
     });
 
     it("time change exceeding maximumRenderTimeChange causes a new frame to be rendered in requestRenderMode", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       scene.renderForSpecs();
 
-      var lastFrameNumber = scene.frameState.frameNumber;
-      var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+      const lastFrameNumber = scene.frameState.frameNumber;
+      const lastRenderTime = JulianDate.clone(
+        scene.lastRenderTime,
+        scratchTime
+      );
       expect(lastRenderTime).toBeDefined();
       expect(scene._renderRequested).toBe(false);
 
@@ -1872,19 +1877,22 @@ describe(
     });
 
     it("undefined maximumRenderTimeChange will not cause a new frame to be rendered in requestRenderMode", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       scene.renderForSpecs();
 
-      var lastFrameNumber = scene.frameState.frameNumber;
-      var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+      const lastFrameNumber = scene.frameState.frameNumber;
+      const lastRenderTime = JulianDate.clone(
+        scene.lastRenderTime,
+        scratchTime
+      );
       expect(lastRenderTime).toBeDefined();
       expect(scene._renderRequested).toBe(false);
 
       scene.requestRenderMode = true;
       scene.maximumRenderTimeChange = undefined;
 
-      var farFuture = JulianDate.addDays(
+      const farFuture = JulianDate.addDays(
         lastRenderTime,
         10000,
         new JulianDate()
@@ -1899,11 +1907,11 @@ describe(
     });
 
     it("forceRender renders a scene regardless of whether a render was requested", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       scene.renderForSpecs();
 
-      var lastFrameNumber = scene.frameState.frameNumber;
+      const lastFrameNumber = scene.frameState.frameNumber;
       expect(scene._renderRequested).toBe(false);
 
       scene.requestRenderMode = true;
@@ -1916,12 +1924,12 @@ describe(
     });
 
     function getFrustumCommandsLength(scene, pass) {
-      var commandsLength = 0;
-      var frustumCommandsList = scene.frustumCommandsList;
-      var frustumsLength = frustumCommandsList.length;
-      for (var i = 0; i < frustumsLength; ++i) {
-        var frustumCommands = frustumCommandsList[i];
-        for (var j = 0; j < Pass.NUMBER_OF_PASSES; ++j) {
+      let commandsLength = 0;
+      const frustumCommandsList = scene.frustumCommandsList;
+      const frustumsLength = frustumCommandsList.length;
+      for (let i = 0; i < frustumsLength; ++i) {
+        const frustumCommands = frustumCommandsList[i];
+        for (let j = 0; j < Pass.NUMBER_OF_PASSES; ++j) {
           if (!defined(pass) || j === pass) {
             commandsLength += frustumCommands.indices[j];
           }
@@ -1931,11 +1939,11 @@ describe(
     }
 
     it("occludes primitive", function () {
-      var scene = createScene();
+      const scene = createScene();
       scene.globe = new Globe(Ellipsoid.WGS84);
 
-      var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
-      var rectanglePrimitive = createRectangle(rectangle, 10);
+      const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+      const rectanglePrimitive = createRectangle(rectangle, 10);
       scene.primitives.add(rectanglePrimitive);
 
       scene.camera.setView({
@@ -1977,11 +1985,11 @@ describe(
     });
 
     it("does not occlude if DrawCommand.occlude is false", function () {
-      var scene = createScene();
+      const scene = createScene();
       scene.globe = new Globe(Ellipsoid.WGS84);
 
-      var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
-      var rectanglePrimitive = createRectangle(rectangle, 10);
+      const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+      const rectanglePrimitive = createRectangle(rectangle, 10);
       scene.primitives.add(rectanglePrimitive);
 
       scene.renderForSpecs();
@@ -2006,12 +2014,12 @@ describe(
     });
 
     it("sets light", function () {
-      var scene = createScene();
-      var uniformState = scene.context.uniformState;
-      var lightDirectionWC = uniformState._lightDirectionWC;
-      var sunDirectionWC = uniformState._sunDirectionWC;
-      var lightColor = uniformState._lightColor;
-      var lightColorHdr = uniformState._lightColorHdr;
+      const scene = createScene();
+      const uniformState = scene.context.uniformState;
+      const lightDirectionWC = uniformState._lightDirectionWC;
+      const sunDirectionWC = uniformState._sunDirectionWC;
+      const lightColor = uniformState._lightColor;
+      const lightColorHdr = uniformState._lightColorHdr;
 
       // Default light is a sun light
       scene.renderForSpecs();
@@ -2058,8 +2066,8 @@ describe(
     }
 
     it("detects when camera is underground", function () {
-      var scene = createScene();
-      var globe = new Globe();
+      const scene = createScene();
+      const globe = new Globe();
       scene.globe = globe;
 
       scene.camera.setView({
@@ -2092,15 +2100,15 @@ describe(
     });
 
     it("detects that camera is above ground if globe is undefined", function () {
-      var scene = createScene();
+      const scene = createScene();
       scene.renderForSpecs();
       expect(scene.cameraUnderground).toBe(false);
       scene.destroyForSpecs();
     });
 
     it("detects that camera is above ground if scene mode is 2D", function () {
-      var scene = createScene();
-      var globe = new Globe();
+      const scene = createScene();
+      const globe = new Globe();
       scene.globe = globe;
       scene.morphTo2D(0.0);
       expect(scene.cameraUnderground).toBe(false);
@@ -2108,8 +2116,8 @@ describe(
     });
 
     it("detects that camera is above ground if scene mode is morphing", function () {
-      var scene = createScene();
-      var globe = new Globe();
+      const scene = createScene();
+      const globe = new Globe();
       scene.globe = globe;
       scene.morphTo2D(1.0);
       expect(scene.cameraUnderground).toBe(false);
@@ -2117,8 +2125,8 @@ describe(
     });
 
     it("detects that camera is underground in Columbus View", function () {
-      var scene = createScene();
-      var globe = new Globe();
+      const scene = createScene();
+      const globe = new Globe();
       scene.globe = globe;
 
       // Look underground
@@ -2143,20 +2151,20 @@ describe(
     });
 
     it("does not occlude primitives when camera is underground", function () {
-      var scene = createScene();
-      var globe = new Globe();
+      const scene = createScene();
+      const globe = new Globe();
       scene.globe = globe;
 
       // A primitive at height -25000.0 is less than the minor axis for WGS84 and will get culled unless the camera is underground
-      var center = Cartesian3.fromRadians(
+      const center = Cartesian3.fromRadians(
         2.3929070618374535,
         -0.07149851443375346,
         -25000.0,
         globe.ellipsoid
       );
-      var radius = 10.0;
+      const radius = 10.0;
 
-      var command = new DrawCommand({
+      const command = new DrawCommand({
         shaderProgram: simpleShaderProgram,
         renderState: simpleRenderState,
         pass: Pass.OPAQUE,
@@ -2193,20 +2201,20 @@ describe(
     });
 
     it("does not occlude primitives when the globe is translucent", function () {
-      var scene = createScene();
-      var globe = new Globe();
+      const scene = createScene();
+      const globe = new Globe();
       scene.globe = globe;
 
       // A primitive at height -25000.0 is less than the minor axis for WGS84 and will get culled unless the globe is translucent
-      var center = Cartesian3.fromRadians(
+      const center = Cartesian3.fromRadians(
         2.3929070618374535,
         -0.07149851443375346,
         -25000.0,
         globe.ellipsoid
       );
-      var radius = 10.0;
+      const radius = 10.0;
 
-      var command = new DrawCommand({
+      const command = new DrawCommand({
         shaderProgram: simpleShaderProgram,
         renderState: simpleRenderState,
         pass: Pass.OPAQUE,
@@ -2230,8 +2238,8 @@ describe(
     });
 
     it("does not render environment when camera is underground and translucency is disabled", function () {
-      var scene = createScene();
-      var globe = new Globe();
+      const scene = createScene();
+      const globe = new Globe();
       scene.globe = globe;
       scene.sun = new Sun();
 
@@ -2250,7 +2258,7 @@ describe(
       });
 
       return updateGlobeUntilDone(scene).then(function () {
-        var time = JulianDate.fromIso8601(
+        const time = JulianDate.fromIso8601(
           "2020-04-25T03:07:26.04924034334544558Z"
         );
         globe.translucency.enabled = true;
@@ -2266,8 +2274,8 @@ describe(
     });
 
     it("renders globe with translucency", function () {
-      var scene = createScene();
-      var globe = new Globe();
+      const scene = createScene();
+      const globe = new Globe();
       scene.globe = globe;
 
       scene.camera.setView({
@@ -2284,7 +2292,7 @@ describe(
       });
 
       return updateGlobeUntilDone(scene).then(function () {
-        var opaqueColor;
+        let opaqueColor;
         expect(scene).toRenderAndCall(function (rgba) {
           opaqueColor = rgba;
         });
@@ -2300,8 +2308,8 @@ describe(
     });
 
     it("renders ground primitive on translucent globe", function () {
-      var scene = createScene();
-      var globe = new Globe();
+      const scene = createScene();
+      const globe = new Globe();
       scene.globe = globe;
       globe.baseColor = Color.BLACK;
       globe.translucency.enabled = true;
@@ -2320,7 +2328,7 @@ describe(
         ),
       });
 
-      var redRectangleInstance = new GeometryInstance({
+      const redRectangleInstance = new GeometryInstance({
         geometry: new RectangleGeometry({
           rectangle: Rectangle.fromDegrees(-110.0, 20.0, -80.0, 25.0),
           vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -2351,8 +2359,8 @@ describe(
     });
 
     it("picks ground primitive on translucent globe", function () {
-      var scene = createScene();
-      var globe = new Globe();
+      const scene = createScene();
+      const globe = new Globe();
       scene.globe = globe;
       globe.baseColor = Color.BLACK;
       globe.translucency.enabled = true;
@@ -2371,7 +2379,7 @@ describe(
         ),
       });
 
-      var redRectangleInstance = new GeometryInstance({
+      const redRectangleInstance = new GeometryInstance({
         geometry: new RectangleGeometry({
           rectangle: Rectangle.fromDegrees(-110.0, 20.0, -80.0, 25.0),
           vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -2383,7 +2391,7 @@ describe(
         },
       });
 
-      var primitive = scene.primitives.add(
+      const primitive = scene.primitives.add(
         new GroundPrimitive({
           geometryInstances: [redRectangleInstance],
           appearance: new PerInstanceColorAppearance({

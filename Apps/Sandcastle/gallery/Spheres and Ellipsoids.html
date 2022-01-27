@@ -32,9 +32,9 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
-        var blueEllipsoid = viewer.entities.add({
+        const blueEllipsoid = viewer.entities.add({
           name: "Blue ellipsoid",
           position: Cesium.Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
           ellipsoid: {
@@ -43,7 +43,7 @@
           },
         });
 
-        var redSphere = viewer.entities.add({
+        const redSphere = viewer.entities.add({
           name: "Red sphere with black outline",
           position: Cesium.Cartesian3.fromDegrees(-107.0, 40.0, 300000.0),
           ellipsoid: {
@@ -54,7 +54,7 @@
           },
         });
 
-        var outlineOnly = viewer.entities.add({
+        const outlineOnly = viewer.entities.add({
           name: "Yellow ellipsoid outline",
           position: Cesium.Cartesian3.fromDegrees(-100.0, 40.0, 300000.0),
           ellipsoid: {

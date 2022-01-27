@@ -45,8 +45,8 @@ function DataSourceDisplay(options) {
   GroundPrimitive.initializeTerrainHeights();
   GroundPolylinePrimitive.initializeTerrainHeights();
 
-  var scene = options.scene;
-  var dataSourceCollection = options.dataSourceCollection;
+  const scene = options.scene;
+  const dataSourceCollection = options.dataSourceCollection;
 
   this._eventHelper = new EventHelper();
   this._eventHelper.add(
@@ -73,9 +73,9 @@ function DataSourceDisplay(options) {
     DataSourceDisplay.defaultVisualizersCallback
   );
 
-  var primitivesAdded = false;
-  var primitives = new PrimitiveCollection();
-  var groundPrimitives = new PrimitiveCollection();
+  let primitivesAdded = false;
+  const primitives = new PrimitiveCollection();
+  const groundPrimitives = new PrimitiveCollection();
 
   if (dataSourceCollection.length > 0) {
     scene.primitives.add(primitives);
@@ -86,19 +86,19 @@ function DataSourceDisplay(options) {
   this._primitives = primitives;
   this._groundPrimitives = groundPrimitives;
 
-  for (var i = 0, len = dataSourceCollection.length; i < len; i++) {
+  for (let i = 0, len = dataSourceCollection.length; i < len; i++) {
     this._onDataSourceAdded(dataSourceCollection, dataSourceCollection.get(i));
   }
 
-  var defaultDataSource = new CustomDataSource();
+  const defaultDataSource = new CustomDataSource();
   this._onDataSourceAdded(undefined, defaultDataSource);
   this._defaultDataSource = defaultDataSource;
 
-  var removeDefaultDataSourceListener;
-  var removeDataSourceCollectionListener;
+  let removeDefaultDataSourceListener;
+  let removeDataSourceCollectionListener;
   if (!primitivesAdded) {
-    var that = this;
-    var addPrimitives = function () {
+    const that = this;
+    const addPrimitives = function () {
       scene.primitives.add(primitives);
       scene.groundPrimitives.add(groundPrimitives);
       removeDefaultDataSourceListener();
@@ -131,7 +131,7 @@ DataSourceDisplay.defaultVisualizersCallback = function (
   entityCluster,
   dataSource
 ) {
-  var entities = dataSource.entities;
+  const entities = dataSource.entities;
   return [
     new BillboardVisualizer(entityCluster, entities),
     new GeometryVisualizer(
@@ -235,8 +235,8 @@ DataSourceDisplay.prototype.isDestroyed = function () {
 DataSourceDisplay.prototype.destroy = function () {
   this._eventHelper.removeAll();
 
-  var dataSourceCollection = this._dataSourceCollection;
-  for (var i = 0, length = dataSourceCollection.length; i < length; ++i) {
+  const dataSourceCollection = this._dataSourceCollection;
+  for (let i = 0, length = dataSourceCollection.length; i < length; ++i) {
     this._onDataSourceRemoved(
       this._dataSourceCollection,
       dataSourceCollection.get(i)
@@ -271,16 +271,16 @@ DataSourceDisplay.prototype.update = function (time) {
     return false;
   }
 
-  var result = true;
+  let result = true;
 
-  var i;
-  var x;
-  var visualizers;
-  var vLength;
-  var dataSources = this._dataSourceCollection;
-  var length = dataSources.length;
+  let i;
+  let x;
+  let visualizers;
+  let vLength;
+  const dataSources = this._dataSourceCollection;
+  const length = dataSources.length;
   for (i = 0; i < length; i++) {
-    var dataSource = dataSources.get(i);
+    const dataSource = dataSources.get(i);
     if (defined(dataSource.update)) {
       result = dataSource.update(time) && result;
     }
@@ -305,30 +305,30 @@ DataSourceDisplay.prototype.update = function (time) {
 
 DataSourceDisplay.prototype._postRender = function () {
   // Adds credits for all datasources
-  var frameState = this._scene.frameState;
-  var dataSources = this._dataSourceCollection;
-  var length = dataSources.length;
-  for (var i = 0; i < length; i++) {
-    var dataSource = dataSources.get(i);
+  const frameState = this._scene.frameState;
+  const dataSources = this._dataSourceCollection;
+  const length = dataSources.length;
+  for (let i = 0; i < length; i++) {
+    const dataSource = dataSources.get(i);
 
-    var credit = dataSource.credit;
+    const credit = dataSource.credit;
     if (defined(credit)) {
       frameState.creditDisplay.addCredit(credit);
     }
 
     // Credits from the resource that the user can't remove
-    var credits = dataSource._resourceCredits;
+    const credits = dataSource._resourceCredits;
     if (defined(credits)) {
-      var creditCount = credits.length;
-      for (var c = 0; c < creditCount; c++) {
+      const creditCount = credits.length;
+      for (let c = 0; c < creditCount; c++) {
         frameState.creditDisplay.addCredit(credits[c]);
       }
     }
   }
 };
 
-var getBoundingSphereArrayScratch = [];
-var getBoundingSphereBoundingSphereScratch = new BoundingSphere();
+const getBoundingSphereArrayScratch = [];
+const getBoundingSphereBoundingSphereScratch = new BoundingSphere();
 
 /**
  * Computes a bounding sphere which encloses the visualization produced for the specified entity.
@@ -358,16 +358,16 @@ DataSourceDisplay.prototype.getBoundingSphere = function (
     return BoundingSphereState.PENDING;
   }
 
-  var i;
-  var length;
-  var dataSource = this._defaultDataSource;
+  let i;
+  let length;
+  let dataSource = this._defaultDataSource;
   if (!dataSource.entities.contains(entity)) {
     dataSource = undefined;
 
-    var dataSources = this._dataSourceCollection;
+    const dataSources = this._dataSourceCollection;
     length = dataSources.length;
     for (i = 0; i < length; i++) {
-      var d = dataSources.get(i);
+      const d = dataSources.get(i);
       if (d.entities.contains(entity)) {
         dataSource = d;
         break;
@@ -379,16 +379,16 @@ DataSourceDisplay.prototype.getBoundingSphere = function (
     return BoundingSphereState.FAILED;
   }
 
-  var boundingSpheres = getBoundingSphereArrayScratch;
-  var tmp = getBoundingSphereBoundingSphereScratch;
+  const boundingSpheres = getBoundingSphereArrayScratch;
+  const tmp = getBoundingSphereBoundingSphereScratch;
 
-  var count = 0;
-  var state = BoundingSphereState.DONE;
-  var visualizers = dataSource._visualizers;
-  var visualizersLength = visualizers.length;
+  let count = 0;
+  let state = BoundingSphereState.DONE;
+  const visualizers = dataSource._visualizers;
+  const visualizersLength = visualizers.length;
 
   for (i = 0; i < visualizersLength; i++) {
-    var visualizer = visualizers[i];
+    const visualizer = visualizers[i];
     if (defined(visualizer.getBoundingSphere)) {
       state = visualizers[i].getBoundingSphere(entity, tmp);
       if (!allowPartial && state === BoundingSphereState.PENDING) {
@@ -416,20 +416,20 @@ DataSourceDisplay.prototype._onDataSourceAdded = function (
   dataSourceCollection,
   dataSource
 ) {
-  var scene = this._scene;
+  const scene = this._scene;
 
-  var displayPrimitives = this._primitives;
-  var displayGroundPrimitives = this._groundPrimitives;
+  const displayPrimitives = this._primitives;
+  const displayGroundPrimitives = this._groundPrimitives;
 
-  var primitives = displayPrimitives.add(new PrimitiveCollection());
-  var groundPrimitives = displayGroundPrimitives.add(
+  const primitives = displayPrimitives.add(new PrimitiveCollection());
+  const groundPrimitives = displayGroundPrimitives.add(
     new OrderedGroundPrimitiveCollection()
   );
 
   dataSource._primitives = primitives;
   dataSource._groundPrimitives = groundPrimitives;
 
-  var entityCluster = dataSource.clustering;
+  const entityCluster = dataSource.clustering;
   entityCluster._initialize(scene);
 
   primitives.add(entityCluster);
@@ -445,18 +445,18 @@ DataSourceDisplay.prototype._onDataSourceRemoved = function (
   dataSourceCollection,
   dataSource
 ) {
-  var displayPrimitives = this._primitives;
-  var displayGroundPrimitives = this._groundPrimitives;
+  const displayPrimitives = this._primitives;
+  const displayGroundPrimitives = this._groundPrimitives;
 
-  var primitives = dataSource._primitives;
-  var groundPrimitives = dataSource._groundPrimitives;
+  const primitives = dataSource._primitives;
+  const groundPrimitives = dataSource._groundPrimitives;
 
-  var entityCluster = dataSource.clustering;
+  const entityCluster = dataSource.clustering;
   primitives.remove(entityCluster);
 
-  var visualizers = dataSource._visualizers;
-  var length = visualizers.length;
-  for (var i = 0; i < length; i++) {
+  const visualizers = dataSource._visualizers;
+  const length = visualizers.length;
+  for (let i = 0; i < length; i++) {
     visualizers[i].destroy();
   }
 
@@ -471,11 +471,11 @@ DataSourceDisplay.prototype._onDataSourceMoved = function (
   newIndex,
   oldIndex
 ) {
-  var displayPrimitives = this._primitives;
-  var displayGroundPrimitives = this._groundPrimitives;
+  const displayPrimitives = this._primitives;
+  const displayGroundPrimitives = this._groundPrimitives;
 
-  var primitives = dataSource._primitives;
-  var groundPrimitives = dataSource._groundPrimitives;
+  const primitives = dataSource._primitives;
+  const groundPrimitives = dataSource._groundPrimitives;
 
   if (newIndex === oldIndex + 1) {
     displayPrimitives.raise(primitives);

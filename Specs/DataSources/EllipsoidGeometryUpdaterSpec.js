@@ -24,8 +24,8 @@ import createScene from "../createScene.js";
 describe(
   "DataSources/EllipsoidGeometryUpdater",
   function () {
-    var time = JulianDate.now();
-    var scene;
+    const time = JulianDate.now();
+    let scene;
 
     beforeEach(function () {
       scene = createScene();
@@ -36,10 +36,10 @@ describe(
     });
 
     function createBasicEllipsoid() {
-      var ellipsoid = new EllipsoidGraphics();
+      const ellipsoid = new EllipsoidGraphics();
       ellipsoid.radii = new ConstantProperty(new Cartesian3(1, 2, 3));
 
-      var entity = new Entity();
+      const entity = new Entity();
       entity.position = new ConstantPositionProperty(
         Cartesian3.fromDegrees(0, 0, 0)
       );
@@ -48,14 +48,14 @@ describe(
     }
 
     function createDynamicEllipsoid() {
-      var entity = createBasicEllipsoid();
+      const entity = createBasicEllipsoid();
       entity.ellipsoid.radii = createDynamicProperty(new Cartesian3(1, 2, 3));
       return entity;
     }
 
     it("No geometry available when radii is undefined", function () {
-      var entity = createBasicEllipsoid();
-      var updater = new EllipsoidGeometryUpdater(entity, scene);
+      const entity = createBasicEllipsoid();
+      const updater = new EllipsoidGeometryUpdater(entity, scene);
       entity.ellipsoid.radii = undefined;
       updater._onEntityPropertyChanged(entity, "ellipsoid");
 
@@ -65,8 +65,8 @@ describe(
     });
 
     it("A time-varying position causes geometry to be dynamic", function () {
-      var entity = createBasicEllipsoid();
-      var updater = new EllipsoidGeometryUpdater(entity, scene);
+      const entity = createBasicEllipsoid();
+      const updater = new EllipsoidGeometryUpdater(entity, scene);
       entity.position = new SampledPositionProperty();
       entity.position.addSample(time, Cartesian3.ZERO);
       updater._onEntityPropertyChanged(entity, "position");
@@ -75,8 +75,8 @@ describe(
     });
 
     it("A time-varying radii causes geometry to be dynamic", function () {
-      var entity = createBasicEllipsoid();
-      var updater = new EllipsoidGeometryUpdater(entity, scene);
+      const entity = createBasicEllipsoid();
+      const updater = new EllipsoidGeometryUpdater(entity, scene);
       entity.ellipsoid.radii = new SampledProperty(Cartesian3);
       entity.ellipsoid.radii.addSample(time, new Cartesian3(1, 2, 3));
       updater._onEntityPropertyChanged(entity, "ellipsoid");
@@ -85,8 +85,8 @@ describe(
     });
 
     it("A time-varying stackPartitions causes geometry to be dynamic", function () {
-      var entity = createBasicEllipsoid();
-      var updater = new EllipsoidGeometryUpdater(entity, scene);
+      const entity = createBasicEllipsoid();
+      const updater = new EllipsoidGeometryUpdater(entity, scene);
       entity.ellipsoid.stackPartitions = new SampledProperty(Number);
       entity.ellipsoid.stackPartitions.addSample(time, 1);
       updater._onEntityPropertyChanged(entity, "ellipsoid");
@@ -95,8 +95,8 @@ describe(
     });
 
     it("A time-varying slicePartitions causes geometry to be dynamic", function () {
-      var entity = createBasicEllipsoid();
-      var updater = new EllipsoidGeometryUpdater(entity, scene);
+      const entity = createBasicEllipsoid();
+      const updater = new EllipsoidGeometryUpdater(entity, scene);
       entity.ellipsoid.slicePartitions = new SampledProperty(Number);
       entity.ellipsoid.slicePartitions.addSample(time, 1);
       updater._onEntityPropertyChanged(entity, "ellipsoid");
@@ -105,8 +105,8 @@ describe(
     });
 
     it("A time-varying subdivisions causes geometry to be dynamic", function () {
-      var entity = createBasicEllipsoid();
-      var updater = new EllipsoidGeometryUpdater(entity, scene);
+      const entity = createBasicEllipsoid();
+      const updater = new EllipsoidGeometryUpdater(entity, scene);
       entity.ellipsoid.subdivisions = new SampledProperty(Number);
       entity.ellipsoid.subdivisions.addSample(time, 1);
       updater._onEntityPropertyChanged(entity, "ellipsoid");
@@ -115,8 +115,8 @@ describe(
     });
 
     it("A time-varying innerRadii causes geometry to be dynamic", function () {
-      var entity = createBasicEllipsoid();
-      var updater = new EllipsoidGeometryUpdater(entity, scene);
+      const entity = createBasicEllipsoid();
+      const updater = new EllipsoidGeometryUpdater(entity, scene);
       entity.ellipsoid.innerRadii = new SampledProperty(Cartesian3);
       entity.ellipsoid.innerRadii.addSample(time, new Cartesian3(1, 2, 3));
       updater._onEntityPropertyChanged(entity, "ellipsoid");
@@ -125,8 +125,8 @@ describe(
     });
 
     it("A time-varying minimumClock causes geometry to be dynamic", function () {
-      var entity = createBasicEllipsoid();
-      var updater = new EllipsoidGeometryUpdater(entity, scene);
+      const entity = createBasicEllipsoid();
+      const updater = new EllipsoidGeometryUpdater(entity, scene);
       entity.ellipsoid.minimumClock = new SampledProperty(Number);
       entity.ellipsoid.minimumClock.addSample(time, 1);
       updater._onEntityPropertyChanged(entity, "ellipsoid");
@@ -135,8 +135,8 @@ describe(
     });
 
     it("A time-varying maximumClock causes geometry to be dynamic", function () {
-      var entity = createBasicEllipsoid();
-      var updater = new EllipsoidGeometryUpdater(entity, scene);
+      const entity = createBasicEllipsoid();
+      const updater = new EllipsoidGeometryUpdater(entity, scene);
       entity.ellipsoid.maximumClock = new SampledProperty(Number);
       entity.ellipsoid.maximumClock.addSample(time, 1);
       updater._onEntityPropertyChanged(entity, "ellipsoid");
@@ -145,8 +145,8 @@ describe(
     });
 
     it("A time-varying minimumCone causes geometry to be dynamic", function () {
-      var entity = createBasicEllipsoid();
-      var updater = new EllipsoidGeometryUpdater(entity, scene);
+      const entity = createBasicEllipsoid();
+      const updater = new EllipsoidGeometryUpdater(entity, scene);
       entity.ellipsoid.minimumCone = new SampledProperty(Number);
       entity.ellipsoid.minimumCone.addSample(time, 1);
       updater._onEntityPropertyChanged(entity, "ellipsoid");
@@ -155,8 +155,8 @@ describe(
     });
 
     it("A time-varying maximumCone causes geometry to be dynamic", function () {
-      var entity = createBasicEllipsoid();
-      var updater = new EllipsoidGeometryUpdater(entity, scene);
+      const entity = createBasicEllipsoid();
+      const updater = new EllipsoidGeometryUpdater(entity, scene);
       entity.ellipsoid.maximumCone = new SampledProperty(Number);
       entity.ellipsoid.maximumCone.addSample(time, 1);
       updater._onEntityPropertyChanged(entity, "ellipsoid");
@@ -165,7 +165,7 @@ describe(
     });
 
     it("Creates geometry with expected properties", function () {
-      var options = {
+      const options = {
         radii: new Cartesian3(1, 2, 3),
         innerRadii: new Cartesian3(0.5, 1, 1.5),
         minimumClock: CesiumMath.toRadians(90.0),
@@ -177,11 +177,11 @@ describe(
         subdivisions: 15,
       };
 
-      var entity = new Entity();
+      const entity = new Entity();
       entity.position = new ConstantPositionProperty(new Cartesian3(4, 5, 6));
       entity.orientation = new ConstantProperty(Quaternion.IDENTITY);
 
-      var ellipsoid = new EllipsoidGraphics();
+      const ellipsoid = new EllipsoidGraphics();
       ellipsoid.outline = true;
       ellipsoid.radii = new ConstantProperty(options.radii);
       ellipsoid.stackPartitions = new ConstantProperty(options.stackPartitions);
@@ -194,10 +194,10 @@ describe(
       ellipsoid.subdivisions = new ConstantProperty(options.subdivisions);
       entity.ellipsoid = ellipsoid;
 
-      var updater = new EllipsoidGeometryUpdater(entity, scene);
+      const updater = new EllipsoidGeometryUpdater(entity, scene);
 
-      var instance;
-      var geometry;
+      let instance;
+      let geometry;
       instance = updater.createFillGeometryInstance(time);
       geometry = instance.geometry;
       expect(geometry._center).toEqual(options.center);
@@ -227,15 +227,15 @@ describe(
     });
 
     it("Creates geometry with expected offsetAttribute", function () {
-      var entity = createBasicEllipsoid();
-      var graphics = entity.ellipsoid;
+      const entity = createBasicEllipsoid();
+      const graphics = entity.ellipsoid;
       graphics.outline = true;
       graphics.outlineColor = Color.BLACK;
       graphics.height = new ConstantProperty(20.0);
       graphics.extrudedHeight = new ConstantProperty(0.0);
-      var updater = new EllipsoidGeometryUpdater(entity, getScene());
+      const updater = new EllipsoidGeometryUpdater(entity, getScene());
 
-      var instance;
+      let instance;
 
       updater._onEntityPropertyChanged(entity, "ellipsoid");
       instance = updater.createFillGeometryInstance(time);
@@ -278,8 +278,8 @@ describe(
     });
 
     it("computes center", function () {
-      var entity = createBasicEllipsoid();
-      var updater = new EllipsoidGeometryUpdater(entity, scene);
+      const entity = createBasicEllipsoid();
+      const updater = new EllipsoidGeometryUpdater(entity, scene);
 
       expect(updater._computeCenter(time)).toEqual(
         entity.position.getValue(time)
@@ -287,21 +287,21 @@ describe(
     });
 
     it("dynamic ellipsoid creates and updates", function () {
-      var ellipsoid = new EllipsoidGraphics();
+      const ellipsoid = new EllipsoidGraphics();
       ellipsoid.show = createDynamicProperty(true);
       ellipsoid.radii = createDynamicProperty(new Cartesian3(1, 2, 3));
       ellipsoid.outline = createDynamicProperty(true);
       ellipsoid.fill = createDynamicProperty(true);
 
-      var entity = new Entity();
+      const entity = new Entity();
       entity.position = createDynamicProperty(Cartesian3.fromDegrees(0, 0, 0));
       entity.orientation = createDynamicProperty(Quaternion.IDENTITY);
       entity.ellipsoid = ellipsoid;
 
-      var updater = new EllipsoidGeometryUpdater(entity, scene);
-      var primitives = new PrimitiveCollection();
+      const updater = new EllipsoidGeometryUpdater(entity, scene);
+      const primitives = new PrimitiveCollection();
 
-      var dynamicUpdater = updater.createDynamicUpdater(
+      const dynamicUpdater = updater.createDynamicUpdater(
         primitives,
         new PrimitiveCollection()
       );
@@ -326,20 +326,20 @@ describe(
     });
 
     it("dynamic ellipsoid is hidden if missing required values", function () {
-      var ellipsoid = new EllipsoidGraphics();
+      const ellipsoid = new EllipsoidGraphics();
       ellipsoid.show = createDynamicProperty(true);
       ellipsoid.radii = createDynamicProperty(new Cartesian3(1, 2, 3));
       ellipsoid.outline = createDynamicProperty(true);
       ellipsoid.fill = createDynamicProperty(true);
 
-      var entity = new Entity();
+      const entity = new Entity();
       entity.position = createDynamicProperty(Cartesian3.fromDegrees(0, 0, 0));
       entity.ellipsoid = ellipsoid;
 
-      var updater = new EllipsoidGeometryUpdater(entity, scene);
-      var primitives = scene.primitives;
+      const updater = new EllipsoidGeometryUpdater(entity, scene);
+      const primitives = scene.primitives;
 
-      var dynamicUpdater = updater.createDynamicUpdater(
+      const dynamicUpdater = updater.createDynamicUpdater(
         primitives,
         new PrimitiveCollection()
       );
@@ -381,7 +381,7 @@ describe(
     });
 
     it("Inner radii should be set when not in 3D mode", function () {
-      var ellipsoid = new EllipsoidGraphics();
+      const ellipsoid = new EllipsoidGraphics();
       ellipsoid.radii = createDynamicProperty(new Cartesian3(1, 2, 3));
       ellipsoid.innerRadii = createDynamicProperty(new Cartesian3(0.5, 1, 1.5));
       // Turns 3d mode path off
@@ -390,15 +390,15 @@ describe(
       );
       ellipsoid.material = new ColorMaterialProperty(Color.RED);
 
-      var entity = new Entity();
+      const entity = new Entity();
       entity.position = createDynamicProperty(Cartesian3.fromDegrees(0, 0, 0));
       entity.orientation = createDynamicProperty(Quaternion.IDENTITY);
       entity.ellipsoid = ellipsoid;
 
-      var updater = new EllipsoidGeometryUpdater(entity, scene);
-      var primitives = scene.primitives;
+      const updater = new EllipsoidGeometryUpdater(entity, scene);
+      const primitives = scene.primitives;
 
-      var dynamicUpdater = updater.createDynamicUpdater(
+      const dynamicUpdater = updater.createDynamicUpdater(
         primitives,
         new PrimitiveCollection()
       );
@@ -413,7 +413,7 @@ describe(
     });
 
     it("dynamic ellipsoid fast path updates attributes", function () {
-      var ellipsoid = new EllipsoidGraphics();
+      const ellipsoid = new EllipsoidGraphics();
       ellipsoid.show = createDynamicProperty(true);
       ellipsoid.radii = createDynamicProperty(new Cartesian3(1, 2, 3));
       ellipsoid.outline = createDynamicProperty(true);
@@ -421,15 +421,15 @@ describe(
       ellipsoid.outlineColor = createDynamicProperty(Color.BLUE);
       ellipsoid.material = new ColorMaterialProperty(Color.RED);
 
-      var entity = new Entity();
+      const entity = new Entity();
       entity.position = createDynamicProperty(Cartesian3.fromDegrees(0, 0, 0));
       entity.orientation = createDynamicProperty(Quaternion.IDENTITY);
       entity.ellipsoid = ellipsoid;
 
-      var updater = new EllipsoidGeometryUpdater(entity, scene);
-      var primitives = scene.primitives;
+      const updater = new EllipsoidGeometryUpdater(entity, scene);
+      const primitives = scene.primitives;
 
-      var dynamicUpdater = updater.createDynamicUpdater(
+      const dynamicUpdater = updater.createDynamicUpdater(
         primitives,
         new PrimitiveCollection()
       );
@@ -446,7 +446,7 @@ describe(
       updater._onEntityPropertyChanged(entity, "ellipsoid");
       dynamicUpdater.update(time);
 
-      var attributes = primitives.get(0).getGeometryInstanceAttributes(entity);
+      let attributes = primitives.get(0).getGeometryInstanceAttributes(entity);
       expect(attributes.show[0]).toEqual(0);
       expect(primitives.get(0).appearance.material.uniforms.color).toEqual(
         ellipsoid.material.color.getValue()
@@ -462,10 +462,10 @@ describe(
     });
 
     it("geometryChanged event is raised when expected", function () {
-      var entity = createBasicEllipsoid();
-      var updater = new EllipsoidGeometryUpdater(entity, scene);
+      const entity = createBasicEllipsoid();
+      const updater = new EllipsoidGeometryUpdater(entity, scene);
 
-      var listener = jasmine.createSpy("listener");
+      const listener = jasmine.createSpy("listener");
       updater.geometryChanged.addEventListener(listener);
 
       entity.position = new ConstantPositionProperty(Cartesian3.UNIT_Z);

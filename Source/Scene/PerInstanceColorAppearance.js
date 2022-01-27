@@ -70,16 +70,16 @@ import Appearance from "./Appearance.js";
 function PerInstanceColorAppearance(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var translucent = defaultValue(options.translucent, true);
-  var closed = defaultValue(options.closed, false);
-  var flat = defaultValue(options.flat, false);
-  var vs = flat
+  const translucent = defaultValue(options.translucent, true);
+  const closed = defaultValue(options.closed, false);
+  const flat = defaultValue(options.flat, false);
+  const vs = flat
     ? PerInstanceFlatColorAppearanceVS
     : PerInstanceColorAppearanceVS;
-  var fs = flat
+  const fs = flat
     ? PerInstanceFlatColorAppearanceFS
     : PerInstanceColorAppearanceFS;
-  var vertexFormat = flat
+  const vertexFormat = flat
     ? PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
     : PerInstanceColorAppearance.VERTEX_FORMAT;
 

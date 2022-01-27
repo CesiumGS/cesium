@@ -178,7 +178,7 @@ Ellipsoid.clone = function (ellipsoid, result) {
   if (!defined(ellipsoid)) {
     return undefined;
   }
-  var radii = ellipsoid._radii;
+  const radii = ellipsoid._radii;
 
   if (!defined(result)) {
     return new Ellipsoid(radii.x, radii.y, radii.z);
@@ -308,7 +308,7 @@ Ellipsoid.unpack = function (array, startingIndex, result) {
 
   startingIndex = defaultValue(startingIndex, 0);
 
-  var radii = Cartesian3.unpack(array, startingIndex);
+  const radii = Cartesian3.unpack(array, startingIndex);
   return Ellipsoid.fromCartesian3(radii, result);
 };
 
@@ -337,13 +337,13 @@ Ellipsoid.prototype.geodeticSurfaceNormalCartographic = function (
   Check.typeOf.object("cartographic", cartographic);
   //>>includeEnd('debug');
 
-  var longitude = cartographic.longitude;
-  var latitude = cartographic.latitude;
-  var cosLatitude = Math.cos(latitude);
+  const longitude = cartographic.longitude;
+  const latitude = cartographic.latitude;
+  const cosLatitude = Math.cos(latitude);
 
-  var x = cosLatitude * Math.cos(longitude);
-  var y = cosLatitude * Math.sin(longitude);
-  var z = Math.sin(latitude);
+  const x = cosLatitude * Math.cos(longitude);
+  const y = cosLatitude * Math.sin(longitude);
+  const z = Math.sin(latitude);
 
   if (!defined(result)) {
     result = new Cartesian3();
@@ -378,8 +378,8 @@ Ellipsoid.prototype.geodeticSurfaceNormal = function (cartesian, result) {
   return Cartesian3.normalize(result, result);
 };
 
-var cartographicToCartesianNormal = new Cartesian3();
-var cartographicToCartesianK = new Cartesian3();
+const cartographicToCartesianNormal = new Cartesian3();
+const cartographicToCartesianK = new Cartesian3();
 
 /**
  * Converts the provided cartographic to Cartesian representation.
@@ -395,11 +395,11 @@ var cartographicToCartesianK = new Cartesian3();
  */
 Ellipsoid.prototype.cartographicToCartesian = function (cartographic, result) {
   //`cartographic is required` is thrown from geodeticSurfaceNormalCartographic.
-  var n = cartographicToCartesianNormal;
-  var k = cartographicToCartesianK;
+  const n = cartographicToCartesianNormal;
+  const k = cartographicToCartesianK;
   this.geodeticSurfaceNormalCartographic(cartographic, n);
   Cartesian3.multiplyComponents(this._radiiSquared, n, k);
-  var gamma = Math.sqrt(Cartesian3.dot(n, k));
+  const gamma = Math.sqrt(Cartesian3.dot(n, k));
   Cartesian3.divideByScalar(k, gamma, k);
   Cartesian3.multiplyByScalar(n, cartographic.height, n);
 
@@ -431,21 +431,21 @@ Ellipsoid.prototype.cartographicArrayToCartesianArray = function (
   Check.defined("cartographics", cartographics);
   //>>includeEnd('debug')
 
-  var length = cartographics.length;
+  const length = cartographics.length;
   if (!defined(result)) {
     result = new Array(length);
   } else {
     result.length = length;
   }
-  for (var i = 0; i < length; i++) {
+  for (let i = 0; i < length; i++) {
     result[i] = this.cartographicToCartesian(cartographics[i], result[i]);
   }
   return result;
 };
 
-var cartesianToCartographicN = new Cartesian3();
-var cartesianToCartographicP = new Cartesian3();
-var cartesianToCartographicH = new Cartesian3();
+const cartesianToCartographicN = new Cartesian3();
+const cartesianToCartographicP = new Cartesian3();
+const cartesianToCartographicH = new Cartesian3();
 
 /**
  * Converts the provided cartesian to cartographic representation.
@@ -462,18 +462,18 @@ var cartesianToCartographicH = new Cartesian3();
  */
 Ellipsoid.prototype.cartesianToCartographic = function (cartesian, result) {
   //`cartesian is required.` is thrown from scaleToGeodeticSurface
-  var p = this.scaleToGeodeticSurface(cartesian, cartesianToCartographicP);
+  const p = this.scaleToGeodeticSurface(cartesian, cartesianToCartographicP);
 
   if (!defined(p)) {
     return undefined;
   }
 
-  var n = this.geodeticSurfaceNormal(p, cartesianToCartographicN);
-  var h = Cartesian3.subtract(cartesian, p, cartesianToCartographicH);
+  const n = this.geodeticSurfaceNormal(p, cartesianToCartographicN);
+  const h = Cartesian3.subtract(cartesian, p, cartesianToCartographicH);
 
-  var longitude = Math.atan2(n.y, n.x);
-  var latitude = Math.asin(n.z);
-  var height =
+  const longitude = Math.atan2(n.y, n.x);
+  const latitude = Math.asin(n.z);
+  const height =
     CesiumMath.sign(Cartesian3.dot(h, cartesian)) * Cartesian3.magnitude(h);
 
   if (!defined(result)) {
@@ -507,13 +507,13 @@ Ellipsoid.prototype.cartesianArrayToCartographicArray = function (
   Check.defined("cartesians", cartesians);
   //>>includeEnd('debug');
 
-  var length = cartesians.length;
+  const length = cartesians.length;
   if (!defined(result)) {
     result = new Array(length);
   } else {
     result.length = length;
   }
-  for (var i = 0; i < length; ++i) {
+  for (let i = 0; i < length; ++i) {
     result[i] = this.cartesianToCartographic(cartesians[i], result[i]);
   }
   return result;
@@ -555,12 +555,12 @@ Ellipsoid.prototype.scaleToGeocentricSurface = function (cartesian, result) {
     result = new Cartesian3();
   }
 
-  var positionX = cartesian.x;
-  var positionY = cartesian.y;
-  var positionZ = cartesian.z;
-  var oneOverRadiiSquared = this._oneOverRadiiSquared;
+  const positionX = cartesian.x;
+  const positionY = cartesian.y;
+  const positionZ = cartesian.z;
+  const oneOverRadiiSquared = this._oneOverRadiiSquared;
 
-  var beta =
+  const beta =
     1.0 /
     Math.sqrt(
       positionX * positionX * oneOverRadiiSquared.x +
@@ -677,7 +677,7 @@ Ellipsoid.prototype.getSurfaceNormalIntersectionWithZAxis = function (
 
   buffer = defaultValue(buffer, 0.0);
 
-  var squaredXOverSquaredZ = this._squaredXOverSquaredZ;
+  const squaredXOverSquaredZ = this._squaredXOverSquaredZ;
 
   if (!defined(result)) {
     result = new Cartesian3();
@@ -694,7 +694,7 @@ Ellipsoid.prototype.getSurfaceNormalIntersectionWithZAxis = function (
   return result;
 };
 
-var abscissas = [
+const abscissas = [
   0.14887433898163,
   0.43339539412925,
   0.67940956829902,
@@ -702,7 +702,7 @@ var abscissas = [
   0.97390652851717,
   0.0,
 ];
-var weights = [
+const weights = [
   0.29552422471475,
   0.26926671930999,
   0.21908636251598,
@@ -730,12 +730,12 @@ function gaussLegendreQuadrature(a, b, func) {
 
   // The range is half of the normal range since the five weights add to one (ten weights add to two).
   // The values of the abscissas are multiplied by two to account for this.
-  var xMean = 0.5 * (b + a);
-  var xRange = 0.5 * (b - a);
+  const xMean = 0.5 * (b + a);
+  const xRange = 0.5 * (b - a);
 
-  var sum = 0.0;
-  for (var i = 0; i < 5; i++) {
-    var dx = xRange * abscissas[i];
+  let sum = 0.0;
+  for (let i = 0; i < 5; i++) {
+    const dx = xRange * abscissas[i];
     sum += weights[i] * (func(xMean + dx) + func(xMean - dx));
   }
 
@@ -765,30 +765,30 @@ Ellipsoid.prototype.surfaceArea = function (rectangle) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("rectangle", rectangle);
   //>>includeEnd('debug');
-  var minLongitude = rectangle.west;
-  var maxLongitude = rectangle.east;
-  var minLatitude = rectangle.south;
-  var maxLatitude = rectangle.north;
+  const minLongitude = rectangle.west;
+  let maxLongitude = rectangle.east;
+  const minLatitude = rectangle.south;
+  const maxLatitude = rectangle.north;
 
   while (maxLongitude < minLongitude) {
     maxLongitude += CesiumMath.TWO_PI;
   }
 
-  var radiiSquared = this._radiiSquared;
-  var a2 = radiiSquared.x;
-  var b2 = radiiSquared.y;
-  var c2 = radiiSquared.z;
-  var a2b2 = a2 * b2;
+  const radiiSquared = this._radiiSquared;
+  const a2 = radiiSquared.x;
+  const b2 = radiiSquared.y;
+  const c2 = radiiSquared.z;
+  const a2b2 = a2 * b2;
   return gaussLegendreQuadrature(minLatitude, maxLatitude, function (lat) {
     // phi represents the angle measured from the north pole
     // sin(phi) = sin(pi / 2 - lat) = cos(lat), cos(phi) is similar
-    var sinPhi = Math.cos(lat);
-    var cosPhi = Math.sin(lat);
+    const sinPhi = Math.cos(lat);
+    const cosPhi = Math.sin(lat);
     return (
       Math.cos(lat) *
       gaussLegendreQuadrature(minLongitude, maxLongitude, function (lon) {
-        var cosTheta = Math.cos(lon);
-        var sinTheta = Math.sin(lon);
+        const cosTheta = Math.cos(lon);
+        const sinTheta = Math.sin(lon);
         return Math.sqrt(
           a2b2 * cosPhi * cosPhi +
             c2 *

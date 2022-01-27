@@ -22,7 +22,7 @@ import WebMercatorProjection from "./WebMercatorProjection.js";
  *
  * @private
  */
-var HeightmapTessellator = {};
+const HeightmapTessellator = {};
 
 /**
  * The default structure of a heightmap, as given to {@link HeightmapTessellator.computeVertices}.
@@ -38,10 +38,10 @@ HeightmapTessellator.DEFAULT_STRUCTURE = Object.freeze({
   isBigEndian: false,
 });
 
-var cartesian3Scratch = new Cartesian3();
-var matrix4Scratch = new Matrix4();
-var minimumScratch = new Cartesian3();
-var maximumScratch = new Cartesian3();
+const cartesian3Scratch = new Cartesian3();
+const matrix4Scratch = new Matrix4();
+const minimumScratch = new Cartesian3();
+const maximumScratch = new Cartesian3();
 
 /**
  * Fills an array of vertices from a heightmap image.
@@ -134,32 +134,32 @@ HeightmapTessellator.computeVertices = function (options) {
   // In particular, the functionality of Ellipsoid.cartographicToCartesian
   // is inlined.
 
-  var cos = Math.cos;
-  var sin = Math.sin;
-  var sqrt = Math.sqrt;
-  var atan = Math.atan;
-  var exp = Math.exp;
-  var piOverTwo = CesiumMath.PI_OVER_TWO;
-  var toRadians = CesiumMath.toRadians;
+  const cos = Math.cos;
+  const sin = Math.sin;
+  const sqrt = Math.sqrt;
+  const atan = Math.atan;
+  const exp = Math.exp;
+  const piOverTwo = CesiumMath.PI_OVER_TWO;
+  const toRadians = CesiumMath.toRadians;
 
-  var heightmap = options.heightmap;
-  var width = options.width;
-  var height = options.height;
-  var skirtHeight = options.skirtHeight;
-  var hasSkirts = skirtHeight > 0.0;
+  const heightmap = options.heightmap;
+  const width = options.width;
+  const height = options.height;
+  const skirtHeight = options.skirtHeight;
+  const hasSkirts = skirtHeight > 0.0;
 
-  var isGeographic = defaultValue(options.isGeographic, true);
-  var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const isGeographic = defaultValue(options.isGeographic, true);
+  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
-  var oneOverGlobeSemimajorAxis = 1.0 / ellipsoid.maximumRadius;
+  const oneOverGlobeSemimajorAxis = 1.0 / ellipsoid.maximumRadius;
 
-  var nativeRectangle = Rectangle.clone(options.nativeRectangle);
-  var rectangle = Rectangle.clone(options.rectangle);
+  const nativeRectangle = Rectangle.clone(options.nativeRectangle);
+  const rectangle = Rectangle.clone(options.rectangle);
 
-  var geographicWest;
-  var geographicSouth;
-  var geographicEast;
-  var geographicNorth;
+  let geographicWest;
+  let geographicSouth;
+  let geographicEast;
+  let geographicNorth;
 
   if (!defined(rectangle)) {
     if (isGeographic) {
@@ -184,72 +184,75 @@ HeightmapTessellator.computeVertices = function (options) {
     geographicNorth = rectangle.north;
   }
 
-  var relativeToCenter = options.relativeToCenter;
-  var hasRelativeToCenter = defined(relativeToCenter);
+  let relativeToCenter = options.relativeToCenter;
+  const hasRelativeToCenter = defined(relativeToCenter);
   relativeToCenter = hasRelativeToCenter ? relativeToCenter : Cartesian3.ZERO;
-  var includeWebMercatorT = defaultValue(options.includeWebMercatorT, false);
+  const includeWebMercatorT = defaultValue(options.includeWebMercatorT, false);
 
-  var exaggeration = defaultValue(options.exaggeration, 1.0);
-  var exaggerationRelativeHeight = defaultValue(
+  const exaggeration = defaultValue(options.exaggeration, 1.0);
+  const exaggerationRelativeHeight = defaultValue(
     options.exaggerationRelativeHeight,
     0.0
   );
-  var hasExaggeration = exaggeration !== 1.0;
-  var includeGeodeticSurfaceNormals = hasExaggeration;
+  const hasExaggeration = exaggeration !== 1.0;
+  const includeGeodeticSurfaceNormals = hasExaggeration;
 
-  var structure = defaultValue(
+  const structure = defaultValue(
     options.structure,
     HeightmapTessellator.DEFAULT_STRUCTURE
   );
-  var heightScale = defaultValue(
+  const heightScale = defaultValue(
     structure.heightScale,
     HeightmapTessellator.DEFAULT_STRUCTURE.heightScale
   );
-  var heightOffset = defaultValue(
+  const heightOffset = defaultValue(
     structure.heightOffset,
     HeightmapTessellator.DEFAULT_STRUCTURE.heightOffset
   );
-  var elementsPerHeight = defaultValue(
+  const elementsPerHeight = defaultValue(
     structure.elementsPerHeight,
     HeightmapTessellator.DEFAULT_STRUCTURE.elementsPerHeight
   );
-  var stride = defaultValue(
+  const stride = defaultValue(
     structure.stride,
     HeightmapTessellator.DEFAULT_STRUCTURE.stride
   );
-  var elementMultiplier = defaultValue(
+  const elementMultiplier = defaultValue(
     structure.elementMultiplier,
     HeightmapTessellator.DEFAULT_STRUCTURE.elementMultiplier
   );
-  var isBigEndian = defaultValue(
+  const isBigEndian = defaultValue(
     structure.isBigEndian,
     HeightmapTessellator.DEFAULT_STRUCTURE.isBigEndian
   );
 
-  var rectangleWidth = Rectangle.computeWidth(nativeRectangle);
-  var rectangleHeight = Rectangle.computeHeight(nativeRectangle);
+  let rectangleWidth = Rectangle.computeWidth(nativeRectangle);
+  let rectangleHeight = Rectangle.computeHeight(nativeRectangle);
 
-  var granularityX = rectangleWidth / (width - 1);
-  var granularityY = rectangleHeight / (height - 1);
+  const granularityX = rectangleWidth / (width - 1);
+  const granularityY = rectangleHeight / (height - 1);
 
   if (!isGeographic) {
     rectangleWidth *= oneOverGlobeSemimajorAxis;
     rectangleHeight *= oneOverGlobeSemimajorAxis;
   }
 
-  var radiiSquared = ellipsoid.radiiSquared;
-  var radiiSquaredX = radiiSquared.x;
-  var radiiSquaredY = radiiSquared.y;
-  var radiiSquaredZ = radiiSquared.z;
+  const radiiSquared = ellipsoid.radiiSquared;
+  const radiiSquaredX = radiiSquared.x;
+  const radiiSquaredY = radiiSquared.y;
+  const radiiSquaredZ = radiiSquared.z;
 
-  var minimumHeight = 65536.0;
-  var maximumHeight = -65536.0;
+  let minimumHeight = 65536.0;
+  let maximumHeight = -65536.0;
 
-  var fromENU = Transforms.eastNorthUpToFixedFrame(relativeToCenter, ellipsoid);
-  var toENU = Matrix4.inverseTransformation(fromENU, matrix4Scratch);
+  const fromENU = Transforms.eastNorthUpToFixedFrame(
+    relativeToCenter,
+    ellipsoid
+  );
+  const toENU = Matrix4.inverseTransformation(fromENU, matrix4Scratch);
 
-  var southMercatorY;
-  var oneOverMercatorHeight;
+  let southMercatorY;
+  let oneOverMercatorHeight;
   if (includeWebMercatorT) {
     southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(
       geographicSouth
@@ -260,34 +263,34 @@ HeightmapTessellator.computeVertices = function (options) {
         southMercatorY);
   }
 
-  var minimum = minimumScratch;
+  const minimum = minimumScratch;
   minimum.x = Number.POSITIVE_INFINITY;
   minimum.y = Number.POSITIVE_INFINITY;
   minimum.z = Number.POSITIVE_INFINITY;
 
-  var maximum = maximumScratch;
+  const maximum = maximumScratch;
   maximum.x = Number.NEGATIVE_INFINITY;
   maximum.y = Number.NEGATIVE_INFINITY;
   maximum.z = Number.NEGATIVE_INFINITY;
 
-  var hMin = Number.POSITIVE_INFINITY;
+  let hMin = Number.POSITIVE_INFINITY;
 
-  var gridVertexCount = width * height;
-  var edgeVertexCount = skirtHeight > 0.0 ? width * 2 + height * 2 : 0;
-  var vertexCount = gridVertexCount + edgeVertexCount;
+  const gridVertexCount = width * height;
+  const edgeVertexCount = skirtHeight > 0.0 ? width * 2 + height * 2 : 0;
+  const vertexCount = gridVertexCount + edgeVertexCount;
 
-  var positions = new Array(vertexCount);
-  var heights = new Array(vertexCount);
-  var uvs = new Array(vertexCount);
-  var webMercatorTs = includeWebMercatorT ? new Array(vertexCount) : [];
-  var geodeticSurfaceNormals = includeGeodeticSurfaceNormals
+  const positions = new Array(vertexCount);
+  const heights = new Array(vertexCount);
+  const uvs = new Array(vertexCount);
+  const webMercatorTs = includeWebMercatorT ? new Array(vertexCount) : [];
+  const geodeticSurfaceNormals = includeGeodeticSurfaceNormals
     ? new Array(vertexCount)
     : [];
 
-  var startRow = 0;
-  var endRow = height;
-  var startCol = 0;
-  var endCol = width;
+  let startRow = 0;
+  let endRow = height;
+  let startCol = 0;
+  let endCol = width;
 
   if (hasSkirts) {
     --startRow;
@@ -296,10 +299,10 @@ HeightmapTessellator.computeVertices = function (options) {
     ++endCol;
   }
 
-  var skirtOffsetPercentage = 0.00001;
+  const skirtOffsetPercentage = 0.00001;
 
-  for (var rowIndex = startRow; rowIndex < endRow; ++rowIndex) {
-    var row = rowIndex;
+  for (let rowIndex = startRow; rowIndex < endRow; ++rowIndex) {
+    let row = rowIndex;
     if (row < 0) {
       row = 0;
     }
@@ -307,7 +310,7 @@ HeightmapTessellator.computeVertices = function (options) {
       row = height - 1;
     }
 
-    var latitude = nativeRectangle.north - granularityY * row;
+    let latitude = nativeRectangle.north - granularityY * row;
 
     if (!isGeographic) {
       latitude =
@@ -316,11 +319,11 @@ HeightmapTessellator.computeVertices = function (options) {
       latitude = toRadians(latitude);
     }
 
-    var v = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
+    let v = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
     v = CesiumMath.clamp(v, 0.0, 1.0);
 
-    var isNorthEdge = rowIndex === startRow;
-    var isSouthEdge = rowIndex === endRow - 1;
+    const isNorthEdge = rowIndex === startRow;
+    const isSouthEdge = rowIndex === endRow - 1;
     if (skirtHeight > 0.0) {
       if (isNorthEdge) {
         latitude += skirtOffsetPercentage * rectangleHeight;
@@ -329,11 +332,11 @@ HeightmapTessellator.computeVertices = function (options) {
       }
     }
 
-    var cosLatitude = cos(latitude);
-    var nZ = sin(latitude);
-    var kZ = radiiSquaredZ * nZ;
+    const cosLatitude = cos(latitude);
+    const nZ = sin(latitude);
+    const kZ = radiiSquaredZ * nZ;
 
-    var webMercatorT;
+    let webMercatorT;
     if (includeWebMercatorT) {
       webMercatorT =
         (WebMercatorProjection.geodeticLatitudeToMercatorAngle(latitude) -
@@ -341,8 +344,8 @@ HeightmapTessellator.computeVertices = function (options) {
         oneOverMercatorHeight;
     }
 
-    for (var colIndex = startCol; colIndex < endCol; ++colIndex) {
-      var col = colIndex;
+    for (let colIndex = startCol; colIndex < endCol; ++colIndex) {
+      let col = colIndex;
       if (col < 0) {
         col = 0;
       }
@@ -350,15 +353,15 @@ HeightmapTessellator.computeVertices = function (options) {
         col = width - 1;
       }
 
-      var terrainOffset = row * (width * stride) + col * stride;
+      const terrainOffset = row * (width * stride) + col * stride;
 
-      var heightSample;
+      let heightSample;
       if (elementsPerHeight === 1) {
         heightSample = heightmap[terrainOffset];
       } else {
         heightSample = 0;
 
-        var elementOffset;
+        let elementOffset;
         if (isBigEndian) {
           for (
             elementOffset = 0;
@@ -387,7 +390,7 @@ HeightmapTessellator.computeVertices = function (options) {
       maximumHeight = Math.max(maximumHeight, heightSample);
       minimumHeight = Math.min(minimumHeight, heightSample);
 
-      var longitude = nativeRectangle.west + granularityX * col;
+      let longitude = nativeRectangle.west + granularityX * col;
 
       if (!isGeographic) {
         longitude = longitude * oneOverGlobeSemimajorAxis;
@@ -395,16 +398,16 @@ HeightmapTessellator.computeVertices = function (options) {
         longitude = toRadians(longitude);
       }
 
-      var u = (longitude - geographicWest) / (geographicEast - geographicWest);
+      let u = (longitude - geographicWest) / (geographicEast - geographicWest);
       u = CesiumMath.clamp(u, 0.0, 1.0);
 
-      var index = row * width + col;
+      let index = row * width + col;
 
       if (skirtHeight > 0.0) {
-        var isWestEdge = colIndex === startCol;
-        var isEastEdge = colIndex === endCol - 1;
-        var isEdge = isNorthEdge || isSouthEdge || isWestEdge || isEastEdge;
-        var isCorner =
+        const isWestEdge = colIndex === startCol;
+        const isEastEdge = colIndex === endCol - 1;
+        const isEdge = isNorthEdge || isSouthEdge || isWestEdge || isEastEdge;
+        const isCorner =
           (isNorthEdge || isSouthEdge) && (isWestEdge || isEastEdge);
         if (isCorner) {
           // Don't generate skirts on the corners.
@@ -430,20 +433,20 @@ HeightmapTessellator.computeVertices = function (options) {
         }
       }
 
-      var nX = cosLatitude * cos(longitude);
-      var nY = cosLatitude * sin(longitude);
+      const nX = cosLatitude * cos(longitude);
+      const nY = cosLatitude * sin(longitude);
 
-      var kX = radiiSquaredX * nX;
-      var kY = radiiSquaredY * nY;
+      const kX = radiiSquaredX * nX;
+      const kY = radiiSquaredY * nY;
 
-      var gamma = sqrt(kX * nX + kY * nY + kZ * nZ);
-      var oneOverGamma = 1.0 / gamma;
+      const gamma = sqrt(kX * nX + kY * nY + kZ * nZ);
+      const oneOverGamma = 1.0 / gamma;
 
-      var rSurfaceX = kX * oneOverGamma;
-      var rSurfaceY = kY * oneOverGamma;
-      var rSurfaceZ = kZ * oneOverGamma;
+      const rSurfaceX = kX * oneOverGamma;
+      const rSurfaceY = kY * oneOverGamma;
+      const rSurfaceZ = kZ * oneOverGamma;
 
-      var position = new Cartesian3();
+      const position = new Cartesian3();
       position.x = rSurfaceX + nX * heightSample;
       position.y = rSurfaceY + nY * heightSample;
       position.z = rSurfaceZ + nZ * heightSample;
@@ -469,8 +472,8 @@ HeightmapTessellator.computeVertices = function (options) {
     }
   }
 
-  var boundingSphere3D = BoundingSphere.fromPoints(positions);
-  var orientedBoundingBox;
+  const boundingSphere3D = BoundingSphere.fromPoints(positions);
+  let orientedBoundingBox;
   if (defined(rectangle)) {
     orientedBoundingBox = OrientedBoundingBox.fromRectangle(
       rectangle,
@@ -480,9 +483,9 @@ HeightmapTessellator.computeVertices = function (options) {
     );
   }
 
-  var occludeePointInScaledSpace;
+  let occludeePointInScaledSpace;
   if (hasRelativeToCenter) {
-    var occluder = new EllipsoidalOccluder(ellipsoid);
+    const occluder = new EllipsoidalOccluder(ellipsoid);
     occludeePointInScaledSpace = occluder.computeHorizonCullingPointPossiblyUnderEllipsoid(
       relativeToCenter,
       positions,
@@ -490,8 +493,8 @@ HeightmapTessellator.computeVertices = function (options) {
     );
   }
 
-  var aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
-  var encoding = new TerrainEncoding(
+  const aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
+  const encoding = new TerrainEncoding(
     relativeToCenter,
     aaBox,
     hMin,
@@ -503,10 +506,10 @@ HeightmapTessellator.computeVertices = function (options) {
     exaggeration,
     exaggerationRelativeHeight
   );
-  var vertices = new Float32Array(vertexCount * encoding.stride);
+  const vertices = new Float32Array(vertexCount * encoding.stride);
 
-  var bufferIndex = 0;
-  for (var j = 0; j < vertexCount; ++j) {
+  let bufferIndex = 0;
+  for (let j = 0; j < vertexCount; ++j) {
     bufferIndex = encoding.encode(
       vertices,
       bufferIndex,

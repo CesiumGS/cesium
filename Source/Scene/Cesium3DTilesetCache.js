@@ -22,7 +22,7 @@ Cesium3DTilesetCache.prototype.reset = function () {
 };
 
 Cesium3DTilesetCache.prototype.touch = function (tile) {
-  var node = tile.cacheNode;
+  const node = tile.cacheNode;
   if (defined(node)) {
     this._list.splice(this._sentinel, node);
   }
@@ -39,7 +39,7 @@ Cesium3DTilesetCache.prototype.unloadTile = function (
   tile,
   unloadCallback
 ) {
-  var node = tile.cacheNode;
+  const node = tile.cacheNode;
   if (!defined(node)) {
     return;
   }
@@ -53,24 +53,24 @@ Cesium3DTilesetCache.prototype.unloadTiles = function (
   tileset,
   unloadCallback
 ) {
-  var trimTiles = this._trimTiles;
+  const trimTiles = this._trimTiles;
   this._trimTiles = false;
 
-  var list = this._list;
+  const list = this._list;
 
-  var maximumMemoryUsageInBytes = tileset.maximumMemoryUsage * 1024 * 1024;
+  const maximumMemoryUsageInBytes = tileset.maximumMemoryUsage * 1024 * 1024;
 
   // Traverse the list only to the sentinel since tiles/nodes to the
   // right of the sentinel were used this frame.
   //
   // The sub-list to the left of the sentinel is ordered from LRU to MRU.
-  var sentinel = this._sentinel;
-  var node = list.head;
+  const sentinel = this._sentinel;
+  let node = list.head;
   while (
     node !== sentinel &&
     (tileset.totalMemoryUsageInBytes > maximumMemoryUsageInBytes || trimTiles)
   ) {
-    var tile = node.item;
+    const tile = node.item;
     node = node.next;
     this.unloadTile(tileset, tile, unloadCallback);
   }

@@ -61,7 +61,7 @@ EncodedCartesian3.encode = function (value, result) {
     };
   }
 
-  var doubleHigh;
+  let doubleHigh;
   if (value >= 0.0) {
     doubleHigh = Math.floor(value / 65536.0) * 65536.0;
     result.high = doubleHigh;
@@ -75,7 +75,7 @@ EncodedCartesian3.encode = function (value, result) {
   return result;
 };
 
-var scratchEncode = {
+const scratchEncode = {
   high: 0.0,
   low: 0.0,
 };
@@ -104,8 +104,8 @@ EncodedCartesian3.fromCartesian = function (cartesian, result) {
     result = new EncodedCartesian3();
   }
 
-  var high = result.high;
-  var low = result.low;
+  const high = result.high;
+  const low = result.low;
 
   EncodedCartesian3.encode(cartesian.x, scratchEncode);
   high.x = scratchEncode.high;
@@ -122,7 +122,7 @@ EncodedCartesian3.fromCartesian = function (cartesian, result) {
   return result;
 };
 
-var encodedP = new EncodedCartesian3();
+const encodedP = new EncodedCartesian3();
 
 /**
  * Encodes the provided <code>cartesian</code>, and writes it to an array with <code>high</code>
@@ -157,8 +157,8 @@ EncodedCartesian3.writeElements = function (cartesian, cartesianArray, index) {
   //>>includeEnd('debug');
 
   EncodedCartesian3.fromCartesian(cartesian, encodedP);
-  var high = encodedP.high;
-  var low = encodedP.low;
+  const high = encodedP.high;
+  const low = encodedP.low;
 
   cartesianArray[index] = high.x;
   cartesianArray[index + 1] = high.y;

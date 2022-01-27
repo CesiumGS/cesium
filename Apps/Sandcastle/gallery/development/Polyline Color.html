@@ -36,13 +36,13 @@
         "use strict";
         //Sandcastle_Begin
         // Create the viewer.
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         // Example 1: Draw a polyline with per segment colors
-        var positions = [];
-        var colors = [];
-        var i;
+        let positions = [];
+        let colors = [];
+        let i;
         for (i = 0; i < 12; ++i) {
           positions.push(Cesium.Cartesian3.fromDegrees(-124.0 + 5 * i, 40.0));
           colors.push(Cesium.Color.fromRandom({ alpha: 1.0 }));

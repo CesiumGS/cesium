@@ -35,10 +35,10 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
-        var polygonOutline1 = new Cesium.GeometryInstance({
+        const polygonOutline1 = new Cesium.GeometryInstance({
           geometry: Cesium.CoplanarPolygonOutlineGeometry.fromPositions({
             positions: Cesium.Cartesian3.fromDegreesArrayHeights([
               -94.0,
@@ -62,7 +62,7 @@
           },
         });
 
-        var polygonOutline2 = new Cesium.GeometryInstance({
+        const polygonOutline2 = new Cesium.GeometryInstance({
           geometry: new Cesium.CoplanarPolygonOutlineGeometry({
             polygonHierarchy: {
               positions: Cesium.Cartesian3.fromDegreesArrayHeights([

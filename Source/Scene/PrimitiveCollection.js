@@ -99,7 +99,7 @@ Object.defineProperties(PrimitiveCollection.prototype, {
  * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
  */
 PrimitiveCollection.prototype.add = function (primitive, index) {
-  var hasIndex = defined(index);
+  const hasIndex = defined(index);
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(primitive)) {
@@ -116,8 +116,8 @@ PrimitiveCollection.prototype.add = function (primitive, index) {
   }
   //>>includeEnd('debug');
 
-  var external = (primitive._external = primitive._external || {});
-  var composites = (external._composites = external._composites || {});
+  const external = (primitive._external = primitive._external || {});
+  const composites = (external._composites = external._composites || {});
   composites[this._guid] = {
     collection: this,
   };
@@ -149,7 +149,7 @@ PrimitiveCollection.prototype.add = function (primitive, index) {
 PrimitiveCollection.prototype.remove = function (primitive) {
   // PERFORMANCE_IDEA:  We can obviously make this a lot faster.
   if (this.contains(primitive)) {
-    var index = this._primitives.indexOf(primitive);
+    const index = this._primitives.indexOf(primitive);
     if (index !== -1) {
       this._primitives.splice(index, 1);
 
@@ -172,7 +172,7 @@ PrimitiveCollection.prototype.remove = function (primitive) {
  * @private
  */
 PrimitiveCollection.prototype.removeAndDestroy = function (primitive) {
-  var removed = this.remove(primitive);
+  const removed = this.remove(primitive);
   if (removed && !this.destroyPrimitives) {
     primitive.destroy();
   }
@@ -187,9 +187,9 @@ PrimitiveCollection.prototype.removeAndDestroy = function (primitive) {
  * @see PrimitiveCollection#destroyPrimitives
  */
 PrimitiveCollection.prototype.removeAll = function () {
-  var primitives = this._primitives;
-  var length = primitives.length;
-  for (var i = 0; i < length; ++i) {
+  const primitives = this._primitives;
+  const length = primitives.length;
+  for (let i = 0; i < length; ++i) {
     delete primitives[i]._external._composites[this._guid];
     if (this.destroyPrimitives) {
       primitives[i].destroy();
@@ -242,11 +242,11 @@ function getPrimitiveIndex(compositePrimitive, primitive) {
  */
 PrimitiveCollection.prototype.raise = function (primitive) {
   if (defined(primitive)) {
-    var index = getPrimitiveIndex(this, primitive);
-    var primitives = this._primitives;
+    const index = getPrimitiveIndex(this, primitive);
+    const primitives = this._primitives;
 
     if (index !== primitives.length - 1) {
-      var p = primitives[index];
+      const p = primitives[index];
       primitives[index] = primitives[index + 1];
       primitives[index + 1] = p;
     }
@@ -268,8 +268,8 @@ PrimitiveCollection.prototype.raise = function (primitive) {
  */
 PrimitiveCollection.prototype.raiseToTop = function (primitive) {
   if (defined(primitive)) {
-    var index = getPrimitiveIndex(this, primitive);
-    var primitives = this._primitives;
+    const index = getPrimitiveIndex(this, primitive);
+    const primitives = this._primitives;
 
     if (index !== primitives.length - 1) {
       // PERFORMANCE_IDEA:  Could be faster
@@ -294,11 +294,11 @@ PrimitiveCollection.prototype.raiseToTop = function (primitive) {
  */
 PrimitiveCollection.prototype.lower = function (primitive) {
   if (defined(primitive)) {
-    var index = getPrimitiveIndex(this, primitive);
-    var primitives = this._primitives;
+    const index = getPrimitiveIndex(this, primitive);
+    const primitives = this._primitives;
 
     if (index !== 0) {
-      var p = primitives[index];
+      const p = primitives[index];
       primitives[index] = primitives[index - 1];
       primitives[index - 1] = p;
     }
@@ -320,8 +320,8 @@ PrimitiveCollection.prototype.lower = function (primitive) {
  */
 PrimitiveCollection.prototype.lowerToBottom = function (primitive) {
   if (defined(primitive)) {
-    var index = getPrimitiveIndex(this, primitive);
-    var primitives = this._primitives;
+    const index = getPrimitiveIndex(this, primitive);
+    const primitives = this._primitives;
 
     if (index !== 0) {
       // PERFORMANCE_IDEA:  Could be faster
@@ -369,11 +369,11 @@ PrimitiveCollection.prototype.update = function (frameState) {
     return;
   }
 
-  var primitives = this._primitives;
+  const primitives = this._primitives;
   // Using primitives.length in the loop is a temporary workaround
   // to allow quadtree updates to add and remove primitives in
   // update().  This will be changed to manage added and removed lists.
-  for (var i = 0; i < primitives.length; ++i) {
+  for (let i = 0; i < primitives.length; ++i) {
     primitives[i].update(frameState);
   }
 };
@@ -382,12 +382,12 @@ PrimitiveCollection.prototype.update = function (frameState) {
  * @private
  */
 PrimitiveCollection.prototype.prePassesUpdate = function (frameState) {
-  var primitives = this._primitives;
+  const primitives = this._primitives;
   // Using primitives.length in the loop is a temporary workaround
   // to allow quadtree updates to add and remove primitives in
   // update().  This will be changed to manage added and removed lists.
-  for (var i = 0; i < primitives.length; ++i) {
-    var primitive = primitives[i];
+  for (let i = 0; i < primitives.length; ++i) {
+    const primitive = primitives[i];
     if (defined(primitive.prePassesUpdate)) {
       primitive.prePassesUpdate(frameState);
     }
@@ -398,12 +398,12 @@ PrimitiveCollection.prototype.prePassesUpdate = function (frameState) {
  * @private
  */
 PrimitiveCollection.prototype.updateForPass = function (frameState, passState) {
-  var primitives = this._primitives;
+  const primitives = this._primitives;
   // Using primitives.length in the loop is a temporary workaround
   // to allow quadtree updates to add and remove primitives in
   // update().  This will be changed to manage added and removed lists.
-  for (var i = 0; i < primitives.length; ++i) {
-    var primitive = primitives[i];
+  for (let i = 0; i < primitives.length; ++i) {
+    const primitive = primitives[i];
     if (defined(primitive.updateForPass)) {
       primitive.updateForPass(frameState, passState);
     }
@@ -414,12 +414,12 @@ PrimitiveCollection.prototype.updateForPass = function (frameState, passState) {
  * @private
  */
 PrimitiveCollection.prototype.postPassesUpdate = function (frameState) {
-  var primitives = this._primitives;
+  const primitives = this._primitives;
   // Using primitives.length in the loop is a temporary workaround
   // to allow quadtree updates to add and remove primitives in
   // update().  This will be changed to manage added and removed lists.
-  for (var i = 0; i < primitives.length; ++i) {
-    var primitive = primitives[i];
+  for (let i = 0; i < primitives.length; ++i) {
+    const primitive = primitives[i];
     if (defined(primitive.postPassesUpdate)) {
       primitive.postPassesUpdate(frameState);
     }

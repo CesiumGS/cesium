@@ -33,41 +33,41 @@
         "use strict";
         //Sandcastle_Begin
         // Create the viewer.
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
-        var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(
+        const positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(
           -105.0,
           45.0,
           20.0
         );
 
-        var enu = Cesium.Transforms.eastNorthUpToFixedFrame(
+        const enu = Cesium.Transforms.eastNorthUpToFixedFrame(
           positionOnEllipsoid
         );
-        var rotation = Cesium.Matrix4.getMatrix3(enu, new Cesium.Matrix3());
+        const rotation = Cesium.Matrix4.getMatrix3(enu, new Cesium.Matrix3());
         Cesium.Matrix3.multiply(
           rotation,
           Cesium.Matrix3.fromRotationX(-Cesium.Math.PI_OVER_TWO),
           rotation
         );
-        var orientation = Cesium.Quaternion.fromRotationMatrix(rotation);
+        const orientation = Cesium.Quaternion.fromRotationMatrix(rotation);
 
-        var frustum = new Cesium.PerspectiveFrustum({
+        const frustum = new Cesium.PerspectiveFrustum({
           fov: Cesium.Math.toRadians(60.0),
           aspectRatio: scene.canvas.clientWidth / scene.canvas.clientHeight,
           near: 10.0,
           far: 50.0,
         });
 
-        var frustumGeometry = new Cesium.FrustumGeometry({
+        const frustumGeometry = new Cesium.FrustumGeometry({
           frustum: frustum,
           origin: positionOnEllipsoid,
           orientation: orientation,
           vertexFormat: Cesium.VertexFormat.POSITION_ONLY,
         });
 
-        var frustumGeometryInstance = new Cesium.GeometryInstance({
+        const frustumGeometryInstance = new Cesium.GeometryInstance({
           geometry: frustumGeometry,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(
@@ -77,7 +77,7 @@
           id: "frustum",
         });
 
-        var frustumPrimitive = scene.primitives.add(
+        const frustumPrimitive = scene.primitives.add(
           new Cesium.Primitive({
             geometryInstances: frustumGeometryInstance,
             appearance: new Cesium.PerInstanceColorAppearance({
@@ -107,7 +107,7 @@
         );
 
         frustumPrimitive.readyPromise.then(function (primitive) {
-          var bs = primitive.getGeometryInstanceAttributes("frustum")
+          const bs = primitive.getGeometryInstanceAttributes("frustum")
             .boundingSphere;
           scene.camera.viewBoundingSphere(bs);
           scene.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);

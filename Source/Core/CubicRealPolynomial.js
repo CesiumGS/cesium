@@ -6,7 +6,7 @@ import QuadraticRealPolynomial from "./QuadraticRealPolynomial.js";
  *
  * @namespace CubicRealPolynomial
  */
-var CubicRealPolynomial = {};
+const CubicRealPolynomial = {};
 
 /**
  * Provides the discriminant of the cubic equation from the supplied coefficients.
@@ -33,12 +33,12 @@ CubicRealPolynomial.computeDiscriminant = function (a, b, c, d) {
   }
   //>>includeEnd('debug');
 
-  var a2 = a * a;
-  var b2 = b * b;
-  var c2 = c * c;
-  var d2 = d * d;
+  const a2 = a * a;
+  const b2 = b * b;
+  const c2 = c * c;
+  const d2 = d * d;
 
-  var discriminant =
+  const discriminant =
     18.0 * a * b * c * d +
     b2 * c2 -
     27.0 * a2 * d2 -
@@ -47,27 +47,27 @@ CubicRealPolynomial.computeDiscriminant = function (a, b, c, d) {
 };
 
 function computeRealRoots(a, b, c, d) {
-  var A = a;
-  var B = b / 3.0;
-  var C = c / 3.0;
-  var D = d;
+  const A = a;
+  const B = b / 3.0;
+  const C = c / 3.0;
+  const D = d;
 
-  var AC = A * C;
-  var BD = B * D;
-  var B2 = B * B;
-  var C2 = C * C;
-  var delta1 = A * C - B2;
-  var delta2 = A * D - B * C;
-  var delta3 = B * D - C2;
+  const AC = A * C;
+  const BD = B * D;
+  const B2 = B * B;
+  const C2 = C * C;
+  const delta1 = A * C - B2;
+  const delta2 = A * D - B * C;
+  const delta3 = B * D - C2;
 
-  var discriminant = 4.0 * delta1 * delta3 - delta2 * delta2;
-  var temp;
-  var temp1;
+  const discriminant = 4.0 * delta1 * delta3 - delta2 * delta2;
+  let temp;
+  let temp1;
 
   if (discriminant < 0.0) {
-    var ABar;
-    var CBar;
-    var DBar;
+    let ABar;
+    let CBar;
+    let DBar;
 
     if (B2 * BD >= AC * C2) {
       ABar = A;
@@ -79,13 +79,13 @@ function computeRealRoots(a, b, c, d) {
       DBar = -D * delta2 + 2.0 * C * delta3;
     }
 
-    var s = DBar < 0.0 ? -1.0 : 1.0; // This is not Math.Sign()!
-    var temp0 = -s * Math.abs(ABar) * Math.sqrt(-discriminant);
+    const s = DBar < 0.0 ? -1.0 : 1.0; // This is not Math.Sign()!
+    const temp0 = -s * Math.abs(ABar) * Math.sqrt(-discriminant);
     temp1 = -DBar + temp0;
 
-    var x = temp1 / 2.0;
-    var p = x < 0.0 ? -Math.pow(-x, 1.0 / 3.0) : Math.pow(x, 1.0 / 3.0);
-    var q = temp1 === temp0 ? -p : -CBar / p;
+    const x = temp1 / 2.0;
+    const p = x < 0.0 ? -Math.pow(-x, 1.0 / 3.0) : Math.pow(x, 1.0 / 3.0);
+    const q = temp1 === temp0 ? -p : -CBar / p;
 
     temp = CBar <= 0.0 ? p + q : -DBar / (p * p + q * q + CBar);
 
@@ -96,25 +96,25 @@ function computeRealRoots(a, b, c, d) {
     return [-D / (temp + C)];
   }
 
-  var CBarA = delta1;
-  var DBarA = -2.0 * B * delta1 + A * delta2;
+  const CBarA = delta1;
+  const DBarA = -2.0 * B * delta1 + A * delta2;
 
-  var CBarD = delta3;
-  var DBarD = -D * delta2 + 2.0 * C * delta3;
+  const CBarD = delta3;
+  const DBarD = -D * delta2 + 2.0 * C * delta3;
 
-  var squareRootOfDiscriminant = Math.sqrt(discriminant);
-  var halfSquareRootOf3 = Math.sqrt(3.0) / 2.0;
+  const squareRootOfDiscriminant = Math.sqrt(discriminant);
+  const halfSquareRootOf3 = Math.sqrt(3.0) / 2.0;
 
-  var theta = Math.abs(Math.atan2(A * squareRootOfDiscriminant, -DBarA) / 3.0);
+  let theta = Math.abs(Math.atan2(A * squareRootOfDiscriminant, -DBarA) / 3.0);
   temp = 2.0 * Math.sqrt(-CBarA);
-  var cosine = Math.cos(theta);
+  let cosine = Math.cos(theta);
   temp1 = temp * cosine;
-  var temp3 = temp * (-cosine / 2.0 - halfSquareRootOf3 * Math.sin(theta));
+  let temp3 = temp * (-cosine / 2.0 - halfSquareRootOf3 * Math.sin(theta));
 
-  var numeratorLarge = temp1 + temp3 > 2.0 * B ? temp1 - B : temp3 - B;
-  var denominatorLarge = A;
+  const numeratorLarge = temp1 + temp3 > 2.0 * B ? temp1 - B : temp3 - B;
+  const denominatorLarge = A;
 
-  var root1 = numeratorLarge / denominatorLarge;
+  const root1 = numeratorLarge / denominatorLarge;
 
   theta = Math.abs(Math.atan2(D * squareRootOfDiscriminant, -DBarD) / 3.0);
   temp = 2.0 * Math.sqrt(-CBarD);
@@ -122,17 +122,17 @@ function computeRealRoots(a, b, c, d) {
   temp1 = temp * cosine;
   temp3 = temp * (-cosine / 2.0 - halfSquareRootOf3 * Math.sin(theta));
 
-  var numeratorSmall = -D;
-  var denominatorSmall = temp1 + temp3 < 2.0 * C ? temp1 + C : temp3 + C;
+  const numeratorSmall = -D;
+  const denominatorSmall = temp1 + temp3 < 2.0 * C ? temp1 + C : temp3 + C;
 
-  var root3 = numeratorSmall / denominatorSmall;
+  const root3 = numeratorSmall / denominatorSmall;
 
-  var E = denominatorLarge * denominatorSmall;
-  var F =
+  const E = denominatorLarge * denominatorSmall;
+  const F =
     -numeratorLarge * denominatorSmall - denominatorLarge * numeratorSmall;
-  var G = numeratorLarge * numeratorSmall;
+  const G = numeratorLarge * numeratorSmall;
 
-  var root2 = (C * F - B * G) / (-B * F + C * E);
+  const root2 = (C * F - B * G) / (-B * F + C * E);
 
   if (root1 <= root2) {
     if (root1 <= root3) {
@@ -177,8 +177,8 @@ CubicRealPolynomial.computeRealRoots = function (a, b, c, d) {
   }
   //>>includeEnd('debug');
 
-  var roots;
-  var ratio;
+  let roots;
+  let ratio;
   if (a === 0.0) {
     // Quadratic function: b * x^2 + c * x + d = 0.
     return QuadraticRealPolynomial.computeRealRoots(b, c, d);
@@ -191,7 +191,7 @@ CubicRealPolynomial.computeRealRoots = function (a, b, c, d) {
 
       // a * x^3 + d = 0
       ratio = -d / a;
-      var root =
+      const root =
         ratio < 0.0 ? -Math.pow(-ratio, 1.0 / 3.0) : Math.pow(ratio, 1.0 / 3.0);
       return [root, root, root];
     } else if (d === 0.0) {

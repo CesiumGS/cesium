@@ -8,12 +8,12 @@ import {
 } from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
-  var mockNode = {};
-  var mockChildNode = {
+  const mockNode = {};
+  const mockChildNode = {
     transform: Matrix4.IDENTITY,
   };
-  var transform = Matrix4.clone(Matrix4.IDENTITY);
-  var mockSceneGraph = {
+  const transform = Matrix4.clone(Matrix4.IDENTITY);
+  const mockSceneGraph = {
     computedModelMatrix: Matrix4.clone(Matrix4.IDENTITY),
     runtimeNodes: [mockChildNode, mockNode],
     components: {
@@ -67,7 +67,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
   });
 
   it("constructs", function () {
-    var node = new ModelExperimentalNode({
+    const node = new ModelExperimentalNode({
       node: mockNode,
       transform: transform,
       sceneGraph: mockSceneGraph,
@@ -86,12 +86,12 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
   });
 
   it("adds instancing pipeline stage if node is instanced", function () {
-    var instancedMockNode = {
+    const instancedMockNode = {
       instances: {
         attributes: [],
       },
     };
-    var node = new ModelExperimentalNode({
+    const node = new ModelExperimentalNode({
       node: instancedMockNode,
       transform: transform,
       sceneGraph: mockSceneGraph,
@@ -114,7 +114,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     expect(Matrix4.equals(runtimeNode.transform, transform)).toBe(true);
     expect(Matrix4.equals(runtimeNode.originalTransform, transform)).toBe(true);
 
-    var expectedComputedTransform = Matrix4.multiplyTransformation(
+    const expectedComputedTransform = Matrix4.multiplyTransformation(
       sceneGraph.computedModelMatrix,
       transform,
       new Matrix4()
@@ -125,7 +125,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
   }
 
   it("getChild throws for undefined index", function () {
-    var node = new ModelExperimentalNode({
+    const node = new ModelExperimentalNode({
       node: mockNode,
       transform: transform,
       sceneGraph: mockSceneGraph,
@@ -138,7 +138,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
   });
 
   it("getChild throws for invalid index", function () {
-    var node = new ModelExperimentalNode({
+    const node = new ModelExperimentalNode({
       node: mockNode,
       transform: transform,
       sceneGraph: mockSceneGraph,
@@ -151,7 +151,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
   });
 
   it("getChild throws for out of range index", function () {
-    var node = new ModelExperimentalNode({
+    const node = new ModelExperimentalNode({
       node: mockNode,
       transform: transform,
       sceneGraph: mockSceneGraph,
@@ -167,27 +167,27 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
   });
 
   it("getChild works", function () {
-    var node = new ModelExperimentalNode({
+    const node = new ModelExperimentalNode({
       node: mockNode,
       transform: transform,
       sceneGraph: mockSceneGraph,
       children: [0],
     });
 
-    var child = node.getChild(0);
+    const child = node.getChild(0);
     expect(child).toBeDefined();
     expect(child.transform).toBeDefined();
   });
 
   it("updateModelMatrix works", function () {
-    var node = new ModelExperimentalNode({
+    const node = new ModelExperimentalNode({
       node: mockNode,
       transform: transform,
       sceneGraph: mockSceneGraph,
       children: [0],
     });
 
-    var expectedNodeTransform = Matrix4.multiplyByTranslation(
+    const expectedNodeTransform = Matrix4.multiplyByTranslation(
       mockSceneGraph.computedModelMatrix,
       new Cartesian3(10, 0, 0),
       mockSceneGraph.computedModelMatrix

@@ -48,8 +48,8 @@ TileImagery.prototype.processStateMachine = function (
   frameState,
   skipLoading
 ) {
-  var loadingImagery = this.loadingImagery;
-  var imageryLayer = loadingImagery.imageryLayer;
+  const loadingImagery = this.loadingImagery;
+  const imageryLayer = loadingImagery.imageryLayer;
 
   loadingImagery.processStateMachine(
     frameState,
@@ -71,8 +71,8 @@ TileImagery.prototype.processStateMachine = function (
   }
 
   // Find some ancestor imagery we can use while this imagery is still loading.
-  var ancestor = loadingImagery.parent;
-  var closestAncestorThatNeedsLoading;
+  let ancestor = loadingImagery.parent;
+  let closestAncestorThatNeedsLoading;
   while (
     defined(ancestor) &&
     (ancestor.state !== ImageryState.READY ||

@@ -32,7 +32,7 @@ export default function ShaderFunction(signature) {
  * @param {String} lines Line of GLSL code to add to the function body. Do not include any preceding whitespace, but do include the semicolon for each line.
  */
 ShaderFunction.prototype.addLines = function (lines) {
-  var paddedLines = lines.map(function (line) {
+  const paddedLines = lines.map(function (line) {
     return "    " + line;
   });
   Array.prototype.push.apply(this.body, paddedLines);

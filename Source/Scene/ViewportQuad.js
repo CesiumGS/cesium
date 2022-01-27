@@ -102,7 +102,7 @@ ViewportQuad.prototype.update = function (frameState) {
   }
   //>>includeEnd('debug');
 
-  var rs = this._rs;
+  const rs = this._rs;
   if (!defined(rs) || !BoundingRectangle.equals(rs.viewport, this.rectangle)) {
     this._rs = RenderState.fromCache({
       blending: BlendingState.ALPHA_BLEND,
@@ -110,9 +110,9 @@ ViewportQuad.prototype.update = function (frameState) {
     });
   }
 
-  var pass = frameState.passes;
+  const pass = frameState.passes;
   if (pass.render) {
-    var context = frameState.context;
+    const context = frameState.context;
 
     if (this._material !== this.material || !defined(this._overlayCommand)) {
       // Recompile shader when material changes
@@ -122,7 +122,7 @@ ViewportQuad.prototype.update = function (frameState) {
         this._overlayCommand.shaderProgram.destroy();
       }
 
-      var fs = new ShaderSource({
+      const fs = new ShaderSource({
         sources: [this._material.shaderSource, ViewportQuadFS],
       });
       this._overlayCommand = context.createViewportQuadCommand(fs, {

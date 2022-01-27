@@ -108,10 +108,10 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
         function createModel(url, x, y, height) {
-          var position = Cesium.Cartesian3.fromDegrees(x, y, height);
+          const position = Cesium.Cartesian3.fromDegrees(x, y, height);
           viewer.entities.add({
             name: url,
             position: position,
@@ -121,20 +121,20 @@
           });
         }
 
-        var numberOfBalloons = 13;
-        var lonIncrement = 0.00025;
-        var initialLon = -122.99875;
-        var lat = 44.0503706;
-        var height = 100.0;
+        const numberOfBalloons = 13;
+        const lonIncrement = 0.00025;
+        const initialLon = -122.99875;
+        const lat = 44.0503706;
+        const height = 100.0;
 
-        var url = "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb";
+        const url = "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb";
 
-        for (var i = 0; i < numberOfBalloons; ++i) {
-          var lon = initialLon + i * lonIncrement;
+        for (let i = 0; i < numberOfBalloons; ++i) {
+          const lon = initialLon + i * lonIncrement;
           createModel(url, lon, lat, height);
         }
 
-        var viewModel = {
+        const viewModel = {
           show: true,
           glowOnly: false,
           contrast: 128,
@@ -145,9 +145,9 @@
         };
 
         Cesium.knockout.track(viewModel);
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
-        for (var name in viewModel) {
+        for (const name in viewModel) {
           if (viewModel.hasOwnProperty(name)) {
             Cesium.knockout
               .getObservable(viewModel, name)
@@ -156,7 +156,7 @@
         }
 
         function updatePostProcess() {
-          var bloom = viewer.scene.postProcessStages.bloom;
+          const bloom = viewer.scene.postProcessStages.bloom;
           bloom.enabled = Boolean(viewModel.show);
           bloom.uniforms.glowOnly = Boolean(viewModel.glowOnly);
           bloom.uniforms.contrast = Number(viewModel.contrast);
@@ -167,12 +167,12 @@
         }
         updatePostProcess();
 
-        var target = Cesium.Cartesian3.fromDegrees(
+        const target = Cesium.Cartesian3.fromDegrees(
           initialLon + lonIncrement,
           lat,
           height + 7.5
         );
-        var offset = new Cesium.Cartesian3(
+        const offset = new Cesium.Cartesian3(
           -37.048378684557974,
           -24.852967044804245,
           4.352023653686047

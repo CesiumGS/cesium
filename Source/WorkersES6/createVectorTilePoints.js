@@ -6,14 +6,14 @@ import CesiumMath from "../Core/Math.js";
 import Rectangle from "../Core/Rectangle.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
-var maxShort = 32767;
+const maxShort = 32767;
 
-var scratchBVCartographic = new Cartographic();
-var scratchEncodedPosition = new Cartesian3();
+const scratchBVCartographic = new Cartographic();
+const scratchEncodedPosition = new Cartesian3();
 
-var scratchRectangle = new Rectangle();
-var scratchEllipsoid = new Ellipsoid();
-var scratchMinMaxHeights = {
+const scratchRectangle = new Rectangle();
+const scratchEllipsoid = new Ellipsoid();
+const scratchMinMaxHeights = {
   min: undefined,
   max: undefined,
 };
@@ -21,7 +21,7 @@ var scratchMinMaxHeights = {
 function unpackBuffer(packedBuffer) {
   packedBuffer = new Float64Array(packedBuffer);
 
-  var offset = 0;
+  let offset = 0;
   scratchMinMaxHeights.min = packedBuffer[offset++];
   scratchMinMaxHeights.max = packedBuffer[offset++];
 
@@ -32,40 +32,40 @@ function unpackBuffer(packedBuffer) {
 }
 
 function createVectorTilePoints(parameters, transferableObjects) {
-  var positions = new Uint16Array(parameters.positions);
+  const positions = new Uint16Array(parameters.positions);
 
   unpackBuffer(parameters.packedBuffer);
-  var rectangle = scratchRectangle;
-  var ellipsoid = scratchEllipsoid;
-  var minimumHeight = scratchMinMaxHeights.min;
-  var maximumHeight = scratchMinMaxHeights.max;
+  const rectangle = scratchRectangle;
+  const ellipsoid = scratchEllipsoid;
+  const minimumHeight = scratchMinMaxHeights.min;
+  const maximumHeight = scratchMinMaxHeights.max;
 
-  var positionsLength = positions.length / 3;
-  var uBuffer = positions.subarray(0, positionsLength);
-  var vBuffer = positions.subarray(positionsLength, 2 * positionsLength);
-  var heightBuffer = positions.subarray(
+  const positionsLength = positions.length / 3;
+  const uBuffer = positions.subarray(0, positionsLength);
+  const vBuffer = positions.subarray(positionsLength, 2 * positionsLength);
+  const heightBuffer = positions.subarray(
     2 * positionsLength,
     3 * positionsLength
   );
   AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer, heightBuffer);
 
-  var decoded = new Float64Array(positions.length);
-  for (var i = 0; i < positionsLength; ++i) {
-    var u = uBuffer[i];
-    var v = vBuffer[i];
-    var h = heightBuffer[i];
+  const decoded = new Float64Array(positions.length);
+  for (let i = 0; i < positionsLength; ++i) {
+    const u = uBuffer[i];
+    const v = vBuffer[i];
+    const h = heightBuffer[i];
 
-    var lon = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
-    var lat = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
-    var alt = CesiumMath.lerp(minimumHeight, maximumHeight, h / maxShort);
+    const lon = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
+    const lat = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
+    const alt = CesiumMath.lerp(minimumHeight, maximumHeight, h / maxShort);
 
-    var cartographic = Cartographic.fromRadians(
+    const cartographic = Cartographic.fromRadians(
       lon,
       lat,
       alt,
       scratchBVCartographic
     );
-    var decodedPosition = ellipsoid.cartographicToCartesian(
+    const decodedPosition = ellipsoid.cartographicToCartesian(
       cartographic,
       scratchEncodedPosition
     );

@@ -11,9 +11,9 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  *
  * @private
  */
-var Cesium3DTileOptimizations = {};
+const Cesium3DTileOptimizations = {};
 
-var scratchAxis = new Cartesian3();
+const scratchAxis = new Cartesian3();
 
 /**
  * Evaluates support for the childrenWithinParent optimization. This is used to more tightly cull tilesets if
@@ -32,23 +32,23 @@ Cesium3DTileOptimizations.checkChildrenWithinParent = function (tile) {
   Check.typeOf.object("tile", tile);
   //>>includeEnd('debug');
 
-  var children = tile.children;
-  var length = children.length;
+  const children = tile.children;
+  const length = children.length;
 
   // Check if the parent has an oriented bounding box.
-  var boundingVolume = tile.boundingVolume;
+  const boundingVolume = tile.boundingVolume;
   if (
     boundingVolume instanceof TileOrientedBoundingBox ||
     boundingVolume instanceof TileBoundingRegion
   ) {
-    var orientedBoundingBox = boundingVolume._orientedBoundingBox;
+    const orientedBoundingBox = boundingVolume._orientedBoundingBox;
     tile._optimChildrenWithinParent =
       Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
-    for (var i = 0; i < length; ++i) {
-      var child = children[i];
+    for (let i = 0; i < length; ++i) {
+      const child = children[i];
 
       // Check if the child has an oriented bounding box.
-      var childBoundingVolume = child.boundingVolume;
+      const childBoundingVolume = child.boundingVolume;
       if (
         !(
           childBoundingVolume instanceof TileOrientedBoundingBox ||
@@ -61,20 +61,20 @@ Cesium3DTileOptimizations.checkChildrenWithinParent = function (tile) {
         break;
       }
 
-      var childOrientedBoundingBox = childBoundingVolume._orientedBoundingBox;
+      const childOrientedBoundingBox = childBoundingVolume._orientedBoundingBox;
 
       // Compute the axis from the parent to the child.
-      var axis = Cartesian3.subtract(
+      const axis = Cartesian3.subtract(
         childOrientedBoundingBox.center,
         orientedBoundingBox.center,
         scratchAxis
       );
-      var axisLength = Cartesian3.magnitude(axis);
+      const axisLength = Cartesian3.magnitude(axis);
       Cartesian3.divideByScalar(axis, axisLength, axis);
 
       // Project the bounding box of the parent onto the axis. Because the axis is a ray from the parent
       // to the child, the projection parameterized along the ray will be (+/- proj1).
-      var proj1 =
+      const proj1 =
         Math.abs(orientedBoundingBox.halfAxes[0] * axis.x) +
         Math.abs(orientedBoundingBox.halfAxes[1] * axis.y) +
         Math.abs(orientedBoundingBox.halfAxes[2] * axis.z) +
@@ -87,7 +87,7 @@ Cesium3DTileOptimizations.checkChildrenWithinParent = function (tile) {
 
       // Project the bounding box of the child onto the axis. Because the axis is a ray from the parent
       // to the child, the projection parameterized along the ray will be (+/- proj2) + axis.length.
-      var proj2 =
+      const proj2 =
         Math.abs(childOrientedBoundingBox.halfAxes[0] * axis.x) +
         Math.abs(childOrientedBoundingBox.halfAxes[1] * axis.y) +
         Math.abs(childOrientedBoundingBox.halfAxes[2] * axis.z) +

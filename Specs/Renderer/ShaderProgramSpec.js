@@ -6,11 +6,11 @@ import createContext from "../createContext.js";
 describe(
   "Renderer/ShaderProgram",
   function () {
-    var webglStub = !!window.webglStub;
-    var context;
-    var sp;
+    const webglStub = !!window.webglStub;
+    let context;
+    let sp;
 
-    var injectedTestFunctions = {
+    const injectedTestFunctions = {
       czm_circularDependency1:
         "void czm_circularDependency1() { czm_circularDependency2(); }",
       czm_circularDependency2:
@@ -42,7 +42,7 @@ describe(
     beforeAll(function () {
       context = createContext();
 
-      for (var functionName in injectedTestFunctions) {
+      for (const functionName in injectedTestFunctions) {
         if (injectedTestFunctions.hasOwnProperty(functionName)) {
           ShaderSource._czmBuiltinsAndUniforms[functionName] =
             injectedTestFunctions[functionName];
@@ -53,7 +53,7 @@ describe(
     afterAll(function () {
       context.destroyForSpecs();
 
-      for (var functionName in injectedTestFunctions) {
+      for (const functionName in injectedTestFunctions) {
         if (injectedTestFunctions.hasOwnProperty(functionName)) {
           delete ShaderSource._czmBuiltinsAndUniforms[functionName];
         }
@@ -65,21 +65,21 @@ describe(
     });
 
     it("has vertex and fragment shader source", function () {
-      var vs = "void main() { gl_Position = vec4(1.0); }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const vs = "void main() { gl_Position = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
         fragmentShaderSource: fs,
       });
 
-      var expectedVSText = new ShaderSource({
+      const expectedVSText = new ShaderSource({
         sources: [vs],
       }).createCombinedVertexShader(context);
 
       expect(sp._vertexShaderText).toEqual(expectedVSText);
 
-      var expectedFSText = new ShaderSource({
+      const expectedFSText = new ShaderSource({
         sources: [fs],
       }).createCombinedFragmentShader(context);
 
@@ -87,9 +87,9 @@ describe(
     });
 
     it("has a position vertex attribute", function () {
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -105,14 +105,14 @@ describe(
     });
 
     it("sets attribute indices", function () {
-      var vs =
+      const vs =
         "attribute vec4 position;" +
         "attribute vec3 normal;" +
         "attribute float heat;" +
         "void main() { gl_Position = position + vec4(normal, 0.0) + vec4(heat); }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
 
-      var attributes = {
+      const attributes = {
         position: 3,
         normal: 2,
         heat: 1,
@@ -139,8 +139,8 @@ describe(
     });
 
     it("has an automatic uniform", function () {
-      var vs = "uniform vec4 u_vec4; void main() { gl_Position = u_vec4; }";
-      var fs =
+      const vs = "uniform vec4 u_vec4; void main() { gl_Position = u_vec4; }";
+      const fs =
         "void main() { gl_FragColor = vec4((czm_viewport.x == 0.0) && (czm_viewport.y == 0.0) && (czm_viewport.z == 1.0) && (czm_viewport.w == 1.0)); }";
       sp = ShaderProgram.fromCache({
         context: context,
@@ -157,8 +157,8 @@ describe(
     });
 
     it("has uniforms of every datatype", function () {
-      var d = context;
-      var vs =
+      const d = context;
+      const vs =
         "uniform float u_float;" +
         "uniform vec2 u_vec2;" +
         "uniform vec3 u_vec3;" +
@@ -175,7 +175,7 @@ describe(
         "uniform mat3 u_mat3;" +
         "uniform mat4 u_mat4;" +
         "void main() { gl_Position = vec4(u_float) * vec4((u_mat2 * u_vec2), 0.0, 0.0) * vec4((u_mat3 * u_vec3), 0.0) * (u_mat4 * u_vec4) * vec4(u_int) * vec4(u_ivec2, 0.0, 0.0) * vec4(u_ivec3, 0.0) * vec4(u_ivec4) * vec4(u_bool) * vec4(u_bvec2, 0.0, 0.0) * vec4(u_bvec3, 0.0) * vec4(u_bvec4); }";
-      var fs =
+      const fs =
         "uniform sampler2D u_sampler2D;" +
         "uniform samplerCube u_samplerCube;" +
         "void main() { gl_FragColor = texture2D(u_sampler2D, vec2(0.0)) + textureCube(u_samplerCube, vec3(1.0)); }";
@@ -209,9 +209,9 @@ describe(
     });
 
     it("has a struct uniform", function () {
-      var vs =
+      const vs =
         "uniform struct { float f; vec4 v; } u_struct; void main() { gl_Position = u_struct.f * u_struct.v; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -227,8 +227,8 @@ describe(
     });
 
     it("has uniform arrays of every datatype", function () {
-      var d = context;
-      var vs =
+      const d = context;
+      const vs =
         "uniform float u_float[2];" +
         "uniform vec2 u_vec2[2];" +
         "uniform vec3 u_vec3[2];" +
@@ -245,7 +245,7 @@ describe(
         "uniform mat3 u_mat3[2];" +
         "uniform mat4 u_mat4[2];" +
         "void main() { gl_Position = vec4(u_float[0]) * vec4(u_float[1]) * vec4((u_mat2[0] * u_vec2[0]), 0.0, 0.0) * vec4((u_mat2[1] * u_vec2[1]), 0.0, 0.0) * vec4((u_mat3[0] * u_vec3[0]), 0.0) * vec4((u_mat3[1] * u_vec3[1]), 0.0) * (u_mat4[0] * u_vec4[0]) * (u_mat4[1] * u_vec4[1]) * vec4(u_int[0]) * vec4(u_int[1]) * vec4(u_ivec2[0], 0.0, 0.0) * vec4(u_ivec2[1], 0.0, 0.0) * vec4(u_ivec3[0], 0.0) * vec4(u_ivec3[1], 0.0) * vec4(u_ivec4[0]) * vec4(u_ivec4[1]) * vec4(u_bool[0]) * vec4(u_bool[1]) * vec4(u_bvec2[0], 0.0, 0.0) * vec4(u_bvec2[1], 0.0, 0.0) * vec4(u_bvec3[0], 0.0) * vec4(u_bvec3[1], 0.0) * vec4(u_bvec4[0]) * vec4(u_bvec4[1]); }";
-      var fs =
+      const fs =
         "uniform sampler2D u_sampler2D[2];" +
         "uniform samplerCube u_samplerCube[2];" +
         "void main() { gl_FragColor = texture2D(u_sampler2D[0], vec2(0.0)) + texture2D(u_sampler2D[1], vec2(0.0)) + textureCube(u_samplerCube[0], vec3(1.0)) + textureCube(u_samplerCube[1], vec3(1.0)); }";
@@ -297,7 +297,7 @@ describe(
     });
 
     it("has predefined constants", function () {
-      var fs =
+      const fs =
         "void main() { " +
         "  float f = ((czm_pi > 0.0) && \n" +
         "    (czm_oneOverPi > 0.0) && \n" +
@@ -320,7 +320,7 @@ describe(
     });
 
     it("has built-in constant, structs, and functions", function () {
-      var fs =
+      const fs =
         "void main() { \n" +
         "  czm_materialInput materialInput; \n" +
         "  czm_material material = czm_getDefaultMaterial(materialInput); \n" +
@@ -337,13 +337,13 @@ describe(
     });
 
     it("creates duplicate uniforms if precision of uniforms in vertex and fragment shader do not match", function () {
-      var highpFloatSupported = ContextLimits.highpFloatSupported;
+      const highpFloatSupported = ContextLimits.highpFloatSupported;
       ContextLimits._highpFloatSupported = false;
-      var vs =
+      const vs =
         "attribute vec4 position; uniform float u_value; varying float v_value; void main() { gl_PointSize = 1.0; v_value = u_value * czm_viewport.z; gl_Position = position; }";
-      var fs =
+      const fs =
         "uniform float u_value; varying float v_value; void main() { gl_FragColor = vec4(u_value * v_value * czm_viewport.z); }";
-      var uniformMap = {
+      const uniformMap = {
         u_value: function () {
           return 1.0;
         },
@@ -372,7 +372,8 @@ describe(
     });
 
     it("1 level function dependency", function () {
-      var fs = "void main() { \n" + "  czm_testFunction1(vec4(1.0)); \n" + "}";
+      const fs =
+        "void main() { \n" + "  czm_testFunction1(vec4(1.0)); \n" + "}";
 
       expect({
         context: context,
@@ -381,7 +382,8 @@ describe(
     });
 
     it("2 level function dependency", function () {
-      var fs = "void main() { \n" + "  czm_testFunction2(vec4(1.0)); \n" + "}";
+      const fs =
+        "void main() { \n" + "  czm_testFunction2(vec4(1.0)); \n" + "}";
 
       expect({
         context: context,
@@ -390,7 +392,8 @@ describe(
     });
 
     it("3 level function dependency", function () {
-      var fs = "void main() { \n" + "  czm_testFunction3(vec4(1.0)); \n" + "}";
+      const fs =
+        "void main() { \n" + "  czm_testFunction3(vec4(1.0)); \n" + "}";
 
       expect({
         context: context,
@@ -399,7 +402,7 @@ describe(
     });
 
     it("diamond dependency", function () {
-      var fs =
+      const fs =
         "void main() { \n" +
         "  vec4 color = vec4(1.0, 1.0, 1.0, 0.8); \n" +
         "  color = czm_testDiamondDependency1(color); \n" +
@@ -414,7 +417,7 @@ describe(
     });
 
     it("diamond plus 3 level function dependency", function () {
-      var fs =
+      const fs =
         "void main() { \n" +
         "  vec4 color = vec4(1.0, 1.0, 1.0, 0.8); \n" +
         "  color = czm_testDiamondDependency1(color); \n" +
@@ -429,7 +432,7 @@ describe(
     });
 
     it("big mess of function dependencies", function () {
-      var fs =
+      const fs =
         "void main() { \n" +
         "  vec4 color = vec4(0.9, 0.9, 1.0, 0.6); \n" +
         "  color = czm_testDiamondDependency1(color); \n" +
@@ -444,7 +447,7 @@ describe(
     });
 
     it("doc comment with reference to another function", function () {
-      var fs =
+      const fs =
         "void main() { \n" +
         "  vec4 color = vec4(1.0, 1.0, 1.0, 1.0); \n" +
         "  czm_testFunctionWithComment(color); \n" +
@@ -457,10 +460,11 @@ describe(
     });
 
     it("compiles with #version at the top", function () {
-      var vs =
+      const vs =
         "#version 100 \n" +
         "attribute vec4 position; void main() { gl_Position = position; }";
-      var fs = "#version 100 \n" + "void main() { gl_FragColor = vec4(1.0); }";
+      const fs =
+        "#version 100 \n" + "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -469,11 +473,11 @@ describe(
     });
 
     it("compiles with #version after whitespace and comments", function () {
-      var vs =
+      const vs =
         "// comment before version directive. \n" +
         "#version 100 \n" +
         "attribute vec4 position; void main() { gl_Position = position; }";
-      var fs =
+      const fs =
         "\n" + "#version 100 \n" + "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
@@ -487,8 +491,8 @@ describe(
         return; // WebGL Stub does not actually try to compile the shader
       }
 
-      var vs = "does not compile.";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const vs = "does not compile.";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -505,8 +509,8 @@ describe(
         return; // WebGL Stub does not actually try to compile the shader
       }
 
-      var vs = "void main() { gl_Position = vec4(0.0); }";
-      var fs = "does not compile.";
+      const vs = "void main() { gl_Position = vec4(0.0); }";
+      const fs = "does not compile.";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -523,8 +527,8 @@ describe(
         return; // WebGL Stub does not actually try to compile and link the shader
       }
 
-      var vs = "void nomain() { }";
-      var fs = "void nomain() { }";
+      const vs = "void nomain() { }";
+      const fs = "void nomain() { }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -537,8 +541,8 @@ describe(
     });
 
     it("fails with built-in function circular dependency", function () {
-      var vs = "void main() { gl_Position = vec4(0.0); }";
-      var fs =
+      const vs = "void main() { gl_Position = vec4(0.0); }";
+      const fs =
         "void main() { czm_circularDependency1(); gl_FragColor = vec4(1.0); }";
       expect(function () {
         sp = ShaderProgram.fromCache({

@@ -4,10 +4,10 @@ import Event from "../Core/Event.js";
 import Property from "./Property.js";
 
 function resolve(that) {
-  var targetProperty = that._targetProperty;
+  let targetProperty = that._targetProperty;
 
   if (!defined(targetProperty)) {
-    var targetEntity = that._targetEntity;
+    let targetEntity = that._targetEntity;
 
     if (!defined(targetEntity)) {
       targetEntity = that._targetCollection.getById(that._targetId);
@@ -27,10 +27,10 @@ function resolve(that) {
     }
 
     // walk the list of property names and resolve properties
-    var targetPropertyNames = that._targetPropertyNames;
+    const targetPropertyNames = that._targetPropertyNames;
     targetProperty = that._targetEntity;
     for (
-      var i = 0, len = targetPropertyNames.length;
+      let i = 0, len = targetPropertyNames.length;
       i < len && defined(targetProperty);
       ++i
     ) {
@@ -97,8 +97,8 @@ function ReferenceProperty(targetCollection, targetId, targetPropertyNames) {
   if (!defined(targetPropertyNames) || targetPropertyNames.length === 0) {
     throw new DeveloperError("targetPropertyNames is required.");
   }
-  for (var i = 0; i < targetPropertyNames.length; i++) {
-    var item = targetPropertyNames[i];
+  for (let i = 0; i < targetPropertyNames.length; i++) {
+    const item = targetPropertyNames[i];
     if (!defined(item) || item === "") {
       throw new DeveloperError("reference contains invalid properties.");
     }
@@ -151,7 +151,7 @@ Object.defineProperties(ReferenceProperty.prototype, {
    */
   referenceFrame: {
     get: function () {
-      var target = resolve(this);
+      const target = resolve(this);
       return defined(target) ? target.referenceFrame : undefined;
     },
   },
@@ -224,14 +224,14 @@ ReferenceProperty.fromString = function (targetCollection, referenceString) {
   }
   //>>includeEnd('debug');
 
-  var identifier;
-  var values = [];
+  let identifier;
+  const values = [];
 
-  var inIdentifier = true;
-  var isEscaped = false;
-  var token = "";
-  for (var i = 0; i < referenceString.length; ++i) {
-    var c = referenceString.charAt(i);
+  let inIdentifier = true;
+  let isEscaped = false;
+  let token = "";
+  for (let i = 0; i < referenceString.length; ++i) {
+    const c = referenceString.charAt(i);
 
     if (isEscaped) {
       token += c;
@@ -262,7 +262,7 @@ ReferenceProperty.fromString = function (targetCollection, referenceString) {
  * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 ReferenceProperty.prototype.getValue = function (time, result) {
-  var target = resolve(this);
+  const target = resolve(this);
   return defined(target) ? target.getValue(time, result) : undefined;
 };
 
@@ -280,7 +280,7 @@ ReferenceProperty.prototype.getValueInReferenceFrame = function (
   referenceFrame,
   result
 ) {
-  var target = resolve(this);
+  const target = resolve(this);
   return defined(target)
     ? target.getValueInReferenceFrame(time, referenceFrame, result)
     : undefined;
@@ -294,7 +294,7 @@ ReferenceProperty.prototype.getValueInReferenceFrame = function (
  * @returns {String} The type of material.
  */
 ReferenceProperty.prototype.getType = function (time) {
-  var target = resolve(this);
+  const target = resolve(this);
   return defined(target) ? target.getType(time) : undefined;
 };
 
@@ -310,8 +310,8 @@ ReferenceProperty.prototype.equals = function (other) {
     return true;
   }
 
-  var names = this._targetPropertyNames;
-  var otherNames = other._targetPropertyNames;
+  const names = this._targetPropertyNames;
+  const otherNames = other._targetPropertyNames;
 
   if (
     this._targetCollection !== other._targetCollection || //
@@ -321,8 +321,8 @@ ReferenceProperty.prototype.equals = function (other) {
     return false;
   }
 
-  var length = this._targetPropertyNames.length;
-  for (var i = 0; i < length; i++) {
+  const length = this._targetPropertyNames.length;
+  for (let i = 0; i < length; i++) {
     if (names[i] !== otherNames[i]) {
       return false;
     }
@@ -348,7 +348,7 @@ ReferenceProperty.prototype._onCollectionChanged = function (
   added,
   removed
 ) {
-  var targetEntity = this._targetEntity;
+  let targetEntity = this._targetEntity;
   if (defined(targetEntity) && removed.indexOf(targetEntity) !== -1) {
     targetEntity.definitionChanged.removeEventListener(
       ReferenceProperty.prototype._onTargetEntityDefinitionChanged,

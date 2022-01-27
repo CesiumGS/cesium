@@ -11,9 +11,9 @@ import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js"
 describe(
   "Scene/ModelExperimental/ModelMatrixUpdateStage",
   function () {
-    var airplane = "./Data/Models/CesiumAir/Cesium_Air.gltf";
+    const airplane = "./Data/Models/CesiumAir/Cesium_Air.gltf";
 
-    var scene;
+    let scene;
 
     beforeAll(function () {
       scene = createScene();
@@ -35,21 +35,21 @@ describe(
         },
         scene
       ).then(function (model) {
-        var sceneGraph = model._sceneGraph;
-        var node = sceneGraph._runtimeNodes[0];
-        var primitive = node.runtimePrimitives[0];
-        var drawCommand = primitive.drawCommands[0];
+        const sceneGraph = model._sceneGraph;
+        const node = sceneGraph._runtimeNodes[0];
+        const primitive = node.runtimePrimitives[0];
+        const drawCommand = primitive.drawCommands[0];
 
-        var expectedOriginalTransform = Matrix4.clone(node.originalTransform);
+        const expectedOriginalTransform = Matrix4.clone(node.originalTransform);
         expect(node._transformDirty).toEqual(false);
-        var translation = new Cartesian3(0, 5, 0);
+        const translation = new Cartesian3(0, 5, 0);
         node.transform = Matrix4.multiplyByTranslation(
           node.transform,
           translation,
           new Matrix4()
         );
         expect(node._transformDirty).toEqual(true);
-        var expectedComputedTransform = Matrix4.multiplyTransformation(
+        const expectedComputedTransform = Matrix4.multiplyTransformation(
           sceneGraph.computedModelMatrix,
           node.transform,
           new Matrix4()
@@ -61,13 +61,13 @@ describe(
           Matrix4.equals(node.originalTransform, expectedOriginalTransform)
         ).toBe(true);
 
-        var expectedModelMatrix = Matrix4.multiplyByTranslation(
+        const expectedModelMatrix = Matrix4.multiplyByTranslation(
           drawCommand.modelMatrix,
           translation,
           new Matrix4()
         );
 
-        var expectedBoundingSphere = BoundingSphere.transform(
+        const expectedBoundingSphere = BoundingSphere.transform(
           primitive.boundingSphere,
           expectedComputedTransform,
           new BoundingSphere()
@@ -92,7 +92,7 @@ describe(
     });
 
     function applyTransform(sceneGraph, node, transform) {
-      var expectedOriginalTransform = Matrix4.clone(node.originalTransform);
+      const expectedOriginalTransform = Matrix4.clone(node.originalTransform);
       expect(node._transformDirty).toEqual(false);
 
       node.transform = Matrix4.multiplyTransformation(
@@ -102,7 +102,7 @@ describe(
       );
       expect(node._transformDirty).toEqual(true);
 
-      var expectedComputedTransform = Matrix4.multiplyTransformation(
+      const expectedComputedTransform = Matrix4.multiplyTransformation(
         sceneGraph.computedModelMatrix,
         node.transform,
         new Matrix4()
@@ -122,46 +122,46 @@ describe(
         },
         scene
       ).then(function (model) {
-        var sceneGraph = model._sceneGraph;
+        const sceneGraph = model._sceneGraph;
 
         // The root node is transformed.
-        var rootNode = sceneGraph._runtimeNodes[2];
+        const rootNode = sceneGraph._runtimeNodes[2];
         // The static child node is not transformed relative to the parent.
-        var staticChildNode = sceneGraph._runtimeNodes[0];
+        const staticChildNode = sceneGraph._runtimeNodes[0];
         // The transformed child node is transformed relative to the parent.
-        var transformedChildNode = sceneGraph._runtimeNodes[1];
+        const transformedChildNode = sceneGraph._runtimeNodes[1];
 
-        var childTransformation = Matrix4.fromTranslation(
+        const childTransformation = Matrix4.fromTranslation(
           new Cartesian3(0, 5, 0)
         );
         applyTransform(sceneGraph, transformedChildNode, childTransformation);
 
-        var rootTransformation = Matrix4.fromTranslation(
+        const rootTransformation = Matrix4.fromTranslation(
           new Cartesian3(12, 5, 0)
         );
         applyTransform(sceneGraph, rootNode, rootTransformation);
 
-        var rootPrimitive = rootNode.runtimePrimitives[0];
-        var staticChildPrimitive = staticChildNode.runtimePrimitives[0];
-        var transformedChildPrimitive =
+        const rootPrimitive = rootNode.runtimePrimitives[0];
+        const staticChildPrimitive = staticChildNode.runtimePrimitives[0];
+        const transformedChildPrimitive =
           transformedChildNode.runtimePrimitives[0];
 
-        var rootDrawCommand = rootPrimitive.drawCommands[0];
-        var staticChildDrawCommand = staticChildPrimitive.drawCommands[0];
-        var transformedChildDrawCommand =
+        const rootDrawCommand = rootPrimitive.drawCommands[0];
+        const staticChildDrawCommand = staticChildPrimitive.drawCommands[0];
+        const transformedChildDrawCommand =
           transformedChildPrimitive.drawCommands[0];
 
-        var expectedRootModelMatrix = Matrix4.multiplyTransformation(
+        const expectedRootModelMatrix = Matrix4.multiplyTransformation(
           rootDrawCommand.modelMatrix,
           rootTransformation,
           new Matrix4()
         );
-        var expectedStaticChildModelMatrix = Matrix4.multiplyTransformation(
+        const expectedStaticChildModelMatrix = Matrix4.multiplyTransformation(
           expectedRootModelMatrix,
           staticChildNode.transform,
           new Matrix4()
         );
-        var expectedTransformedChildModelMatrix = Matrix4.multiplyTransformation(
+        const expectedTransformedChildModelMatrix = Matrix4.multiplyTransformation(
           expectedRootModelMatrix,
           transformedChildNode.transform,
           new Matrix4()

@@ -30,7 +30,7 @@ function FeatureMetadata(options) {
   //>>includeEnd('debug');
 
   this._schema = options.schema;
-  var propertyTables = options.propertyTables;
+  const propertyTables = options.propertyTables;
   this._propertyTableCount = defined(propertyTables)
     ? propertyTables.length
     : 0;

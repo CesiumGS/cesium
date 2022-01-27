@@ -2,8 +2,8 @@ import { subdivideArray } from "../../Source/Cesium.js";
 
 describe("Core/subdivideArray", function () {
   it("Splits evenly divided arrays", function () {
-    var values = [1, 2, 3, 4];
-    var splitValues = subdivideArray(values, 4);
+    const values = [1, 2, 3, 4];
+    const splitValues = subdivideArray(values, 4);
     expect(splitValues.length).toEqual(4);
     expect(splitValues[0]).toEqual([1]);
     expect(splitValues[1]).toEqual([2]);
@@ -12,8 +12,8 @@ describe("Core/subdivideArray", function () {
   });
 
   it("Splits unevenly divided arrays", function () {
-    var values = [1, 2, 3, 4, 5, 6];
-    var splitValues = subdivideArray(values, 4);
+    const values = [1, 2, 3, 4, 5, 6];
+    const splitValues = subdivideArray(values, 4);
     expect(splitValues.length).toEqual(4);
     expect(splitValues[0]).toEqual([1, 2]);
     expect(splitValues[1]).toEqual([3, 4]);
@@ -22,7 +22,7 @@ describe("Core/subdivideArray", function () {
   });
 
   it("Works with empty arrays", function () {
-    var splitValues = subdivideArray([], 4);
+    const splitValues = subdivideArray([], 4);
     expect(splitValues.length).toEqual(0);
   });
 

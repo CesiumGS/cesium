@@ -259,8 +259,8 @@ Matrix2.fromRotation = function (angle, result) {
   Check.typeOf.number("angle", angle);
   //>>includeEnd('debug');
 
-  var cosAngle = Math.cos(angle);
-  var sinAngle = Math.sin(angle);
+  const cosAngle = Math.cos(angle);
+  const sinAngle = Math.sin(angle);
 
   if (!defined(result)) {
     return new Matrix2(cosAngle, -sinAngle, sinAngle, cosAngle);
@@ -343,9 +343,9 @@ Matrix2.getColumn = function (matrix, index, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var startIndex = index * 2;
-  var x = matrix[startIndex];
-  var y = matrix[startIndex + 1];
+  const startIndex = index * 2;
+  const x = matrix[startIndex];
+  const y = matrix[startIndex + 1];
 
   result.x = x;
   result.y = y;
@@ -375,7 +375,7 @@ Matrix2.setColumn = function (matrix, index, cartesian, result) {
   //>>includeEnd('debug');
 
   result = Matrix2.clone(matrix, result);
-  var startIndex = index * 2;
+  const startIndex = index * 2;
   result[startIndex] = cartesian.x;
   result[startIndex + 1] = cartesian.y;
   return result;
@@ -401,8 +401,8 @@ Matrix2.getRow = function (matrix, index, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var x = matrix[index];
-  var y = matrix[index + 2];
+  const x = matrix[index];
+  const y = matrix[index + 2];
 
   result.x = x;
   result.y = y;
@@ -437,7 +437,7 @@ Matrix2.setRow = function (matrix, index, cartesian, result) {
   return result;
 };
 
-var scratchColumn = new Cartesian2();
+const scratchColumn = new Cartesian2();
 
 /**
  * Extracts the non-uniform scale assuming the matrix is an affine transformation.
@@ -461,7 +461,7 @@ Matrix2.getScale = function (matrix, result) {
   return result;
 };
 
-var scratchScale = new Cartesian2();
+const scratchScale = new Cartesian2();
 
 /**
  * Computes the maximum scale assuming the matrix is an affine transformation.
@@ -490,10 +490,10 @@ Matrix2.multiply = function (left, right, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var column0Row0 = left[0] * right[0] + left[2] * right[1];
-  var column1Row0 = left[0] * right[2] + left[2] * right[3];
-  var column0Row1 = left[1] * right[0] + left[3] * right[1];
-  var column1Row1 = left[1] * right[2] + left[3] * right[3];
+  const column0Row0 = left[0] * right[0] + left[2] * right[1];
+  const column1Row0 = left[0] * right[2] + left[2] * right[3];
+  const column0Row1 = left[1] * right[0] + left[3] * right[1];
+  const column1Row1 = left[1] * right[2] + left[3] * right[3];
 
   result[0] = column0Row0;
   result[1] = column0Row1;
@@ -561,8 +561,8 @@ Matrix2.multiplyByVector = function (matrix, cartesian, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var x = matrix[0] * cartesian.x + matrix[2] * cartesian.y;
-  var y = matrix[1] * cartesian.x + matrix[3] * cartesian.y;
+  const x = matrix[0] * cartesian.x + matrix[2] * cartesian.y;
+  const y = matrix[1] * cartesian.x + matrix[3] * cartesian.y;
 
   result.x = x;
   result.y = y;
@@ -654,10 +654,10 @@ Matrix2.transpose = function (matrix, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var column0Row0 = matrix[0];
-  var column0Row1 = matrix[2];
-  var column1Row0 = matrix[1];
-  var column1Row1 = matrix[3];
+  const column0Row0 = matrix[0];
+  const column0Row1 = matrix[2];
+  const column1Row0 = matrix[1];
+  const column1Row1 = matrix[3];
 
   result[0] = column0Row0;
   result[1] = column0Row1;

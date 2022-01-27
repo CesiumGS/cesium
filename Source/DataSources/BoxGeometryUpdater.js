@@ -21,11 +21,11 @@ import GeometryUpdater from "./GeometryUpdater.js";
 import heightReferenceOnEntityPropertyChanged from "./heightReferenceOnEntityPropertyChanged.js";
 import Property from "./Property.js";
 
-var defaultOffset = Cartesian3.ZERO;
+const defaultOffset = Cartesian3.ZERO;
 
-var offsetScratch = new Cartesian3();
-var positionScratch = new Cartesian3();
-var scratchColor = new Color();
+const offsetScratch = new Cartesian3();
+const positionScratch = new Cartesian3();
+const scratchColor = new Color();
 
 function BoxGeometryOptions(entity) {
   this.id = entity;
@@ -94,30 +94,30 @@ BoxGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
   }
   //>>includeEnd('debug');
 
-  var entity = this._entity;
-  var isAvailable = entity.isAvailable(time);
+  const entity = this._entity;
+  const isAvailable = entity.isAvailable(time);
 
-  var show = new ShowGeometryInstanceAttribute(
+  const show = new ShowGeometryInstanceAttribute(
     isAvailable &&
       entity.isShowing &&
       this._showProperty.getValue(time) &&
       this._fillProperty.getValue(time)
   );
-  var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
+  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
     time
   );
-  var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+  const distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
     distanceDisplayCondition
   );
 
-  var attributes = {
+  const attributes = {
     show: show,
     distanceDisplayCondition: distanceDisplayConditionAttribute,
     color: undefined,
     offset: undefined,
   };
   if (this._materialProperty instanceof ColorMaterialProperty) {
-    var currentColor;
+    let currentColor;
     if (
       defined(this._materialProperty.color) &&
       (this._materialProperty.color.isConstant || isAvailable)
@@ -172,19 +172,19 @@ BoxGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
   }
   //>>includeEnd('debug');
 
-  var entity = this._entity;
-  var isAvailable = entity.isAvailable(time);
-  var outlineColor = Property.getValueOrDefault(
+  const entity = this._entity;
+  const isAvailable = entity.isAvailable(time);
+  const outlineColor = Property.getValueOrDefault(
     this._outlineColorProperty,
     time,
     Color.BLACK,
     scratchColor
   );
-  var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
+  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
     time
   );
 
-  var attributes = {
+  const attributes = {
     show: new ShowGeometryInstanceAttribute(
       isAvailable &&
         entity.isShowing &&
@@ -243,13 +243,13 @@ BoxGeometryUpdater.prototype._isDynamic = function (entity, box) {
 };
 
 BoxGeometryUpdater.prototype._setStaticOptions = function (entity, box) {
-  var heightReference = Property.getValueOrDefault(
+  const heightReference = Property.getValueOrDefault(
     box.heightReference,
     Iso8601.MINIMUM_VALUE,
     HeightReference.NONE
   );
 
-  var options = this._options;
+  const options = this._options;
   options.vertexFormat =
     this._materialProperty instanceof ColorMaterialProperty
       ? PerInstanceColorAppearance.VERTEX_FORMAT
@@ -292,12 +292,12 @@ if (defined(Object.create)) {
 }
 
 DynamicBoxGeometryUpdater.prototype._isHidden = function (entity, box, time) {
-  var position = Property.getValueOrUndefined(
+  const position = Property.getValueOrUndefined(
     entity.position,
     time,
     positionScratch
   );
-  var dimensions = this._options.dimensions;
+  const dimensions = this._options.dimensions;
   return (
     !defined(position) ||
     !defined(dimensions) ||
@@ -306,12 +306,12 @@ DynamicBoxGeometryUpdater.prototype._isHidden = function (entity, box, time) {
 };
 
 DynamicBoxGeometryUpdater.prototype._setOptions = function (entity, box, time) {
-  var heightReference = Property.getValueOrDefault(
+  const heightReference = Property.getValueOrDefault(
     box.heightReference,
     time,
     HeightReference.NONE
   );
-  var options = this._options;
+  const options = this._options;
   options.dimensions = Property.getValueOrUndefined(
     box.dimensions,
     time,

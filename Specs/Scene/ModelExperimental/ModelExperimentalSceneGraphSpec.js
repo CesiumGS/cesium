@@ -17,13 +17,13 @@ import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js"
 describe(
   "Scene/ModelExperimental/ModelExperimentalSceneGraph",
   function () {
-    var parentGltfUrl = "./Data/Cesium3DTiles/GltfContent/glTF/parent.gltf";
-    var vertexColorGltfUrl =
+    const parentGltfUrl = "./Data/Cesium3DTiles/GltfContent/glTF/parent.gltf";
+    const vertexColorGltfUrl =
       "./Data/Models/PBR/VertexColorTest/VertexColorTest.gltf";
-    var buildingsMetadata =
+    const buildingsMetadata =
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
 
-    var scene;
+    let scene;
 
     beforeAll(function () {
       scene = createScene();
@@ -43,12 +43,12 @@ describe(
         { gltf: vertexColorGltfUrl },
         scene
       ).then(function (model) {
-        var sceneGraph = model._sceneGraph;
-        var modelComponents = sceneGraph._modelComponents;
+        const sceneGraph = model._sceneGraph;
+        const modelComponents = sceneGraph._modelComponents;
 
         expect(sceneGraph).toBeDefined();
 
-        var runtimeNodes = sceneGraph._runtimeNodes;
+        const runtimeNodes = sceneGraph._runtimeNodes;
         expect(runtimeNodes.length).toEqual(modelComponents.nodes.length);
 
         expect(runtimeNodes[0].runtimePrimitives.length).toEqual(1);
@@ -68,14 +68,14 @@ describe(
             conditions: [["${height} > 1", "color('red')"]],
           },
         });
-        var frameState = scene.frameState;
-        var sceneGraph = model._sceneGraph;
+        const frameState = scene.frameState;
+        const sceneGraph = model._sceneGraph;
         // Reset the draw commands so we can inspect the draw command generation.
         model._drawCommandsBuilt = false;
         frameState.commandList = [];
         scene.renderForSpecs();
 
-        var drawCommands = sceneGraph.getDrawCommands();
+        const drawCommands = sceneGraph.getDrawCommands();
 
         expect(drawCommands.length).toEqual(1);
         expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
@@ -95,14 +95,14 @@ describe(
             conditions: [["${height} > 1", "color('red', 0.1)"]],
           },
         });
-        var frameState = scene.frameState;
-        var sceneGraph = model._sceneGraph;
+        const frameState = scene.frameState;
+        const sceneGraph = model._sceneGraph;
         // Reset the draw commands so we can inspect the draw command generation.
         model._drawCommandsBuilt = false;
         frameState.commandList = [];
         scene.renderForSpecs();
 
-        var drawCommands = sceneGraph.getDrawCommands();
+        const drawCommands = sceneGraph.getDrawCommands();
 
         expect(drawCommands.length).toEqual(1);
         expect(drawCommands[0].pass).toEqual(Pass.TRANSLUCENT);
@@ -125,14 +125,14 @@ describe(
             ],
           },
         });
-        var frameState = scene.frameState;
-        var sceneGraph = model._sceneGraph;
+        const frameState = scene.frameState;
+        const sceneGraph = model._sceneGraph;
         // Reset the draw commands so we can inspect the draw command generation.
         model._drawCommandsBuilt = false;
         frameState.commandList = [];
         scene.renderForSpecs();
 
-        var drawCommands = sceneGraph.getDrawCommands();
+        const drawCommands = sceneGraph.getDrawCommands();
         expect(drawCommands.length).toEqual(2);
         expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
         expect(drawCommands[1].pass).toEqual(Pass.TRANSLUCENT);
@@ -153,15 +153,15 @@ describe(
         { gltf: parentGltfUrl },
         scene
       ).then(function (model) {
-        var sceneGraph = model._sceneGraph;
-        var runtimeNodes = sceneGraph._runtimeNodes;
+        const sceneGraph = model._sceneGraph;
+        const runtimeNodes = sceneGraph._runtimeNodes;
 
-        var primitivesCount = 0;
-        for (var i = 0; i < runtimeNodes.length; i++) {
+        let primitivesCount = 0;
+        for (let i = 0; i < runtimeNodes.length; i++) {
           primitivesCount += runtimeNodes[i].runtimePrimitives.length;
         }
 
-        var frameState = scene.frameState;
+        const frameState = scene.frameState;
         frameState.commandList = [];
         scene.renderForSpecs();
         expect(
@@ -193,9 +193,9 @@ describe(
         { gltf: parentGltfUrl },
         scene
       ).then(function (model) {
-        var sceneGraph = model._sceneGraph;
-        var modelComponents = sceneGraph._modelComponents;
-        var runtimeNodes = sceneGraph._runtimeNodes;
+        const sceneGraph = model._sceneGraph;
+        const modelComponents = sceneGraph._modelComponents;
+        const runtimeNodes = sceneGraph._runtimeNodes;
 
         expect(runtimeNodes[1].node).toEqual(modelComponents.nodes[0]);
         expect(runtimeNodes[0].node).toEqual(modelComponents.nodes[1]);
@@ -211,9 +211,9 @@ describe(
         },
         scene
       ).then(function (model) {
-        var sceneGraph = model._sceneGraph;
-        var modelComponents = sceneGraph._modelComponents;
-        var runtimeNodes = sceneGraph._runtimeNodes;
+        const sceneGraph = model._sceneGraph;
+        const modelComponents = sceneGraph._modelComponents;
+        const runtimeNodes = sceneGraph._runtimeNodes;
 
         expect(modelComponents.upAxis).toEqual(Axis.Z);
         expect(modelComponents.forwardAxis).toEqual(Axis.X);

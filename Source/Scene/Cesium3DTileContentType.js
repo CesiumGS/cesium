@@ -9,7 +9,7 @@
  *
  * @private
  */
-var Cesium3DTileContentType = {
+const Cesium3DTileContentType = {
   /**
    * A Batched 3D Model. This is a binary format with
    * magic number <code>b3dm</code>

@@ -11,7 +11,7 @@ import testMaterialDefinitionChanged from "../testMaterialDefinitionChanged.js";
 
 describe("DataSources/CorridorGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {
-    var options = {
+    const options = {
       material: Color.BLUE,
       positions: [],
       show: true,
@@ -30,7 +30,7 @@ describe("DataSources/CorridorGraphics", function () {
       zIndex: 3,
     };
 
-    var corridor = new CorridorGraphics(options);
+    const corridor = new CorridorGraphics(options);
     expect(corridor.material).toBeInstanceOf(ColorMaterialProperty);
     expect(corridor.positions).toBeInstanceOf(ConstantProperty);
     expect(corridor.show).toBeInstanceOf(ConstantProperty);
@@ -71,7 +71,7 @@ describe("DataSources/CorridorGraphics", function () {
   });
 
   it("merge assigns unassigned properties", function () {
-    var source = new CorridorGraphics();
+    const source = new CorridorGraphics();
     source.material = new ColorMaterialProperty();
     source.positions = new ConstantProperty();
     source.show = new ConstantProperty();
@@ -93,7 +93,7 @@ describe("DataSources/CorridorGraphics", function () {
     );
     source.zIndex = new ConstantProperty(3);
 
-    var target = new CorridorGraphics();
+    const target = new CorridorGraphics();
     target.merge(source);
 
     expect(target.material).toBe(source.material);
@@ -117,26 +117,26 @@ describe("DataSources/CorridorGraphics", function () {
   });
 
   it("merge does not assign assigned properties", function () {
-    var source = new CorridorGraphics();
+    const source = new CorridorGraphics();
 
-    var material = new ColorMaterialProperty();
-    var positions = new ConstantProperty();
-    var show = new ConstantProperty();
-    var height = new ConstantProperty();
-    var extrudedHeight = new ConstantProperty();
-    var granularity = new ConstantProperty();
-    var width = new ConstantProperty();
-    var fill = new ConstantProperty();
-    var outline = new ConstantProperty();
-    var outlineColor = new ConstantProperty();
-    var outlineWidth = new ConstantProperty();
-    var cornerType = new ConstantProperty();
-    var shadows = new ConstantProperty();
-    var distanceDisplayCondition = new ConstantProperty();
-    var classificationType = new ConstantProperty();
-    var zIndex = new ConstantProperty();
+    const material = new ColorMaterialProperty();
+    const positions = new ConstantProperty();
+    const show = new ConstantProperty();
+    const height = new ConstantProperty();
+    const extrudedHeight = new ConstantProperty();
+    const granularity = new ConstantProperty();
+    const width = new ConstantProperty();
+    const fill = new ConstantProperty();
+    const outline = new ConstantProperty();
+    const outlineColor = new ConstantProperty();
+    const outlineWidth = new ConstantProperty();
+    const cornerType = new ConstantProperty();
+    const shadows = new ConstantProperty();
+    const distanceDisplayCondition = new ConstantProperty();
+    const classificationType = new ConstantProperty();
+    const zIndex = new ConstantProperty();
 
-    var target = new CorridorGraphics();
+    const target = new CorridorGraphics();
     target.material = material;
     target.positions = positions;
     target.show = show;
@@ -175,7 +175,7 @@ describe("DataSources/CorridorGraphics", function () {
   });
 
   it("clone works", function () {
-    var source = new CorridorGraphics();
+    const source = new CorridorGraphics();
     source.material = new ColorMaterialProperty();
     source.positions = new ConstantProperty();
     source.show = new ConstantProperty();
@@ -193,7 +193,7 @@ describe("DataSources/CorridorGraphics", function () {
     source.classificationType = new ConstantProperty();
     source.zIndex = new ConstantProperty();
 
-    var result = source.clone();
+    const result = source.clone();
     expect(result.material).toBe(source.material);
     expect(result.positions).toBe(source.positions);
     expect(result.show).toBe(source.show);
@@ -215,14 +215,14 @@ describe("DataSources/CorridorGraphics", function () {
   });
 
   it("merge throws if source undefined", function () {
-    var target = new CorridorGraphics();
+    const target = new CorridorGraphics();
     expect(function () {
       target.merge(undefined);
     }).toThrowDeveloperError();
   });
 
   it("raises definitionChanged when a property is assigned or modified", function () {
-    var property = new CorridorGraphics();
+    const property = new CorridorGraphics();
     testMaterialDefinitionChanged(property, "material", Color.RED, Color.BLUE);
     testDefinitionChanged(property, "positions", [], []);
     testDefinitionChanged(property, "show", true, false);

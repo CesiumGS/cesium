@@ -94,7 +94,7 @@ TileBoundingSphere.prototype.distanceToCamera = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("frameState", frameState);
   //>>includeEnd('debug');
-  var boundingSphere = this._boundingSphere;
+  const boundingSphere = this._boundingSphere;
   return Math.max(
     0.0,
     Cartesian3.distance(boundingSphere.center, frameState.camera.positionWC) -
@@ -139,14 +139,14 @@ TileBoundingSphere.prototype.createDebugVolume = function (color) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("color", color);
   //>>includeEnd('debug');
-  var geometry = new SphereOutlineGeometry({
+  const geometry = new SphereOutlineGeometry({
     radius: this.radius,
   });
-  var modelMatrix = Matrix4.fromTranslation(
+  const modelMatrix = Matrix4.fromTranslation(
     this.center,
     new Matrix4.clone(Matrix4.IDENTITY)
   );
-  var instance = new GeometryInstance({
+  const instance = new GeometryInstance({
     geometry: geometry,
     id: "outline",
     modelMatrix: modelMatrix,

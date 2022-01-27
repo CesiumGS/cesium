@@ -16,10 +16,10 @@ function clone(object, deep) {
 
   deep = defaultValue(deep, false);
 
-  var result = new object.constructor();
-  for (var propertyName in object) {
+  const result = new object.constructor();
+  for (const propertyName in object) {
     if (object.hasOwnProperty(propertyName)) {
-      var value = object[propertyName];
+      let value = object[propertyName];
       if (deep) {
         value = clone(value, deep);
       }

@@ -71,7 +71,7 @@ function destroyResources(globeTranslucency) {
 }
 
 function updateResources(globeTranslucency, context, width, height, hdr) {
-  var pixelDatatype = hdr
+  const pixelDatatype = hdr
     ? context.halfFloatingPointTexture
       ? PixelDatatype.HALF_FLOAT
       : PixelDatatype.FLOAT
@@ -84,11 +84,11 @@ function updateCommands(globeTranslucency, context, width, height, passState) {
   globeTranslucency._viewport.width = width;
   globeTranslucency._viewport.height = height;
 
-  var useScissorTest = !BoundingRectangle.equals(
+  const useScissorTest = !BoundingRectangle.equals(
     globeTranslucency._viewport,
     passState.viewport
   );
-  var updateScissor = useScissorTest !== globeTranslucency._useScissorTest;
+  let updateScissor = useScissorTest !== globeTranslucency._useScissorTest;
   globeTranslucency._useScissorTest = useScissorTest;
 
   if (
@@ -159,8 +159,8 @@ GlobeTranslucencyFramebuffer.prototype.updateAndClear = function (
   context,
   passState
 ) {
-  var width = viewport.width;
-  var height = viewport.height;
+  const width = viewport.width;
+  const height = viewport.height;
 
   updateResources(this, context, width, height, hdr);
   updateCommands(this, context, width, height, passState);

@@ -38,11 +38,11 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
         });
 
-        var modelCzml = [
+        const modelCzml = [
           {
             id: "document",
             name: "CZML Model",
@@ -65,7 +65,7 @@
           if (window.navigator.msSaveOrOpenBlob) {
             window.navigator.msSaveBlob(blob, filename);
           } else {
-            var elem = window.document.createElement("a");
+            const elem = window.document.createElement("a");
             elem.href = window.URL.createObjectURL(blob);
             elem.download = filename;
             document.body.appendChild(elem);
@@ -80,11 +80,11 @@
         }
 
         // We fetch the resources that will be embedded in the KMZ file.
-        var daeModelPromise = Cesium.Resource.fetchBlob({
+        const daeModelPromise = Cesium.Resource.fetchBlob({
           url: "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.dae",
         });
 
-        var texturePromise = Cesium.Resource.fetchBlob({
+        const texturePromise = Cesium.Resource.fetchBlob({
           url: "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.jpg",
         });
 
@@ -92,7 +92,7 @@
         // a COLLADA version of the model instead of the glTF version.
         // It also lets us specify the files that will be embedded in the exported KMZ.
         function modelCallback(modelGraphics, time, externalFiles) {
-          var resource = modelGraphics.uri.getValue(time);
+          const resource = modelGraphics.uri.getValue(time);
 
           if (resource.url.indexOf("CesiumMilkTruck") !== -1) {
             externalFiles["model/CesiumMilkTruck.dae"] = daeModelPromise;
@@ -104,8 +104,8 @@
           throw Cesium.RuntimeError("Unknown Model");
         }
 
-        var filenameToSave = "";
-        var dataSourcePromise;
+        let filenameToSave = "";
+        let dataSourcePromise;
 
         Sandcastle.addToolbarMenu(
           [

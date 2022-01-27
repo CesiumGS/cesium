@@ -37,17 +37,17 @@ import Material from "./Material.js";
 import Polyline from "./Polyline.js";
 import SceneMode from "./SceneMode.js";
 
-var SHOW_INDEX = Polyline.SHOW_INDEX;
-var WIDTH_INDEX = Polyline.WIDTH_INDEX;
-var POSITION_INDEX = Polyline.POSITION_INDEX;
-var MATERIAL_INDEX = Polyline.MATERIAL_INDEX;
+const SHOW_INDEX = Polyline.SHOW_INDEX;
+const WIDTH_INDEX = Polyline.WIDTH_INDEX;
+const POSITION_INDEX = Polyline.POSITION_INDEX;
+const MATERIAL_INDEX = Polyline.MATERIAL_INDEX;
 //POSITION_SIZE_INDEX is needed for when the polyline's position array changes size.
 //When it does, we need to recreate the indicesBuffer.
-var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX;
-var DISTANCE_DISPLAY_CONDITION = Polyline.DISTANCE_DISPLAY_CONDITION;
-var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES;
+const POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX;
+const DISTANCE_DISPLAY_CONDITION = Polyline.DISTANCE_DISPLAY_CONDITION;
+const NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES;
 
-var attributeLocations = {
+const attributeLocations = {
   texCoordExpandAndBatchIndex: 0,
   position3DHigh: 1,
   position3DLow: 2,
@@ -186,7 +186,7 @@ function PolylineCollection(options) {
   this._useHighlightColor = false;
   this._highlightColor = Color.clone(Color.WHITE);
 
-  var that = this;
+  const that = this;
   this._uniformMap = {
     u_highlightColor: function () {
       return that._highlightColor;
@@ -239,7 +239,7 @@ Object.defineProperties(PolylineCollection.prototype, {
      * @see PolylineCollection#update
      */
 PolylineCollection.prototype.add = function (options) {
-  var p = new Polyline(options, this);
+  const p = new Polyline(options, this);
   p._index = this._polylines.length;
   this._polylines.push(p);
   this._createVertexArray = true;
@@ -277,7 +277,7 @@ PolylineCollection.prototype.remove = function (polyline) {
     this._createVertexArray = true;
     this._createBatchTable = true;
     if (defined(polyline._bucket)) {
-      var bucket = polyline._bucket;
+      const bucket = polyline._bucket;
       bucket.shaderProgram =
         bucket.shaderProgram && bucket.shaderProgram.destroy();
     }
@@ -370,7 +370,7 @@ function createBatchTable(collection, context) {
     collection._batchTable.destroy();
   }
 
-  var attributes = [
+  const attributes = [
     {
       functionName: "batchTable_getWidthAndShow",
       componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
@@ -406,9 +406,9 @@ function createBatchTable(collection, context) {
   );
 }
 
-var scratchUpdatePolylineEncodedCartesian = new EncodedCartesian3();
-var scratchUpdatePolylineCartesian4 = new Cartesian4();
-var scratchNearFarCartesian2 = new Cartesian2();
+const scratchUpdatePolylineEncodedCartesian = new EncodedCartesian3();
+const scratchUpdatePolylineCartesian4 = new Cartesian4();
+const scratchNearFarCartesian2 = new Cartesian2();
 
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -429,10 +429,10 @@ PolylineCollection.prototype.update = function (frameState) {
 
   updateMode(this, frameState);
 
-  var context = frameState.context;
-  var projection = frameState.mapProjection;
-  var polyline;
-  var properties = this._propertiesChanged;
+  const context = frameState.context;
+  const projection = frameState.mapProjection;
+  let polyline;
+  let properties = this._propertiesChanged;
 
   if (this._createBatchTable) {
     if (ContextLimits.maximumVertexTextureImageUnits === 0) {
@@ -448,10 +448,10 @@ PolylineCollection.prototype.update = function (frameState) {
     createVertexArrays(this, context, projection);
   } else if (this._polylinesUpdated) {
     // Polylines were modified, but no polylines were added or removed.
-    var polylinesToUpdate = this._polylinesToUpdate;
+    const polylinesToUpdate = this._polylinesToUpdate;
     if (this._mode !== SceneMode.SCENE3D) {
-      var updateLength = polylinesToUpdate.length;
-      for (var i = 0; i < updateLength; ++i) {
+      const updateLength = polylinesToUpdate.length;
+      for (let i = 0; i < updateLength; ++i) {
         polyline = polylinesToUpdate[i];
         polyline.update();
       }
@@ -462,14 +462,14 @@ PolylineCollection.prototype.update = function (frameState) {
     if (properties[POSITION_SIZE_INDEX] || properties[MATERIAL_INDEX]) {
       createVertexArrays(this, context, projection);
     } else {
-      var length = polylinesToUpdate.length;
-      var polylineBuckets = this._polylineBuckets;
-      for (var ii = 0; ii < length; ++ii) {
+      const length = polylinesToUpdate.length;
+      const polylineBuckets = this._polylineBuckets;
+      for (let ii = 0; ii < length; ++ii) {
         polyline = polylinesToUpdate[ii];
         properties = polyline._propertiesChanged;
-        var bucket = polyline._bucket;
-        var index = 0;
-        for (var x in polylineBuckets) {
+        const bucket = polyline._bucket;
+        let index = 0;
+        for (const x in polylineBuckets) {
           if (polylineBuckets.hasOwnProperty(x)) {
             if (polylineBuckets[x] === bucket) {
               if (properties[POSITION_INDEX]) {
@@ -496,15 +496,15 @@ PolylineCollection.prototype.update = function (frameState) {
 
         if (this._batchTable.attributes.length > 2) {
           if (properties[POSITION_INDEX] || properties[POSITION_SIZE_INDEX]) {
-            var boundingSphere =
+            const boundingSphere =
               frameState.mode === SceneMode.SCENE2D
                 ? polyline._boundingVolume2D
                 : polyline._boundingVolumeWC;
-            var encodedCenter = EncodedCartesian3.fromCartesian(
+            const encodedCenter = EncodedCartesian3.fromCartesian(
               boundingSphere.center,
               scratchUpdatePolylineEncodedCartesian
             );
-            var low = Cartesian4.fromElements(
+            const low = Cartesian4.fromElements(
               encodedCenter.low.x,
               encodedCenter.low.y,
               encodedCenter.low.z,
@@ -520,11 +520,11 @@ PolylineCollection.prototype.update = function (frameState) {
           }
 
           if (properties[DISTANCE_DISPLAY_CONDITION]) {
-            var nearFarCartesian = scratchNearFarCartesian2;
+            const nearFarCartesian = scratchNearFarCartesian2;
             nearFarCartesian.x = 0.0;
             nearFarCartesian.y = Number.MAX_VALUE;
 
-            var distanceDisplayCondition = polyline.distanceDisplayCondition;
+            const distanceDisplayCondition = polyline.distanceDisplayCondition;
             if (defined(distanceDisplayCondition)) {
               nearFarCartesian.x = distanceDisplayCondition.near;
               nearFarCartesian.y = distanceDisplayCondition.far;
@@ -546,17 +546,17 @@ PolylineCollection.prototype.update = function (frameState) {
   }
 
   properties = this._propertiesChanged;
-  for (var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
+  for (let k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
     properties[k] = 0;
   }
 
-  var modelMatrix = Matrix4.IDENTITY;
+  let modelMatrix = Matrix4.IDENTITY;
   if (frameState.mode === SceneMode.SCENE3D) {
     modelMatrix = this.modelMatrix;
   }
 
-  var pass = frameState.passes;
-  var useDepthTest = frameState.morphTime !== 0.0;
+  const pass = frameState.passes;
+  const useDepthTest = frameState.morphTime !== 0.0;
 
   if (
     !defined(this._opaqueRS) ||
@@ -586,13 +586,13 @@ PolylineCollection.prototype.update = function (frameState) {
   this._batchTable.update(frameState);
 
   if (pass.render || pass.pick) {
-    var colorList = this._colorCommands;
+    const colorList = this._colorCommands;
     createCommandLists(this, frameState, colorList, modelMatrix);
   }
 };
 
-var boundingSphereScratch = new BoundingSphere();
-var boundingSphereScratch2 = new BoundingSphere();
+const boundingSphereScratch = new BoundingSphere();
+const boundingSphereScratch2 = new BoundingSphere();
 
 function createCommandLists(
   polylineCollection,
@@ -600,45 +600,45 @@ function createCommandLists(
   commands,
   modelMatrix
 ) {
-  var context = frameState.context;
-  var commandList = frameState.commandList;
+  const context = frameState.context;
+  const commandList = frameState.commandList;
 
-  var commandsLength = commands.length;
-  var commandIndex = 0;
-  var cloneBoundingSphere = true;
+  const commandsLength = commands.length;
+  let commandIndex = 0;
+  let cloneBoundingSphere = true;
 
-  var vertexArrays = polylineCollection._vertexArrays;
-  var debugShowBoundingVolume = polylineCollection.debugShowBoundingVolume;
+  const vertexArrays = polylineCollection._vertexArrays;
+  const debugShowBoundingVolume = polylineCollection.debugShowBoundingVolume;
 
-  var batchTable = polylineCollection._batchTable;
-  var uniformCallback = batchTable.getUniformMapCallback();
+  const batchTable = polylineCollection._batchTable;
+  const uniformCallback = batchTable.getUniformMapCallback();
 
-  var length = vertexArrays.length;
-  for (var m = 0; m < length; ++m) {
-    var va = vertexArrays[m];
-    var buckets = va.buckets;
-    var bucketLength = buckets.length;
+  const length = vertexArrays.length;
+  for (let m = 0; m < length; ++m) {
+    const va = vertexArrays[m];
+    const buckets = va.buckets;
+    const bucketLength = buckets.length;
 
-    for (var n = 0; n < bucketLength; ++n) {
-      var bucketLocator = buckets[n];
+    for (let n = 0; n < bucketLength; ++n) {
+      const bucketLocator = buckets[n];
 
-      var offset = bucketLocator.offset;
-      var sp = bucketLocator.bucket.shaderProgram;
+      let offset = bucketLocator.offset;
+      const sp = bucketLocator.bucket.shaderProgram;
 
-      var polylines = bucketLocator.bucket.polylines;
-      var polylineLength = polylines.length;
-      var currentId;
-      var currentMaterial;
-      var count = 0;
-      var command;
-      var uniformMap;
+      const polylines = bucketLocator.bucket.polylines;
+      const polylineLength = polylines.length;
+      let currentId;
+      let currentMaterial;
+      let count = 0;
+      let command;
+      let uniformMap;
 
-      for (var s = 0; s < polylineLength; ++s) {
-        var polyline = polylines[s];
-        var mId = createMaterialId(polyline._material);
+      for (let s = 0; s < polylineLength; ++s) {
+        const polyline = polylines[s];
+        const mId = createMaterialId(polyline._material);
         if (mId !== currentId) {
           if (defined(currentId) && count > 0) {
-            var translucent = currentMaterial.isTranslucent();
+            const translucent = currentMaterial.isTranslucent();
 
             if (commandIndex >= commandsLength) {
               command = new DrawCommand({
@@ -686,16 +686,16 @@ function createCommandLists(
           currentId = mId;
         }
 
-        var locators = polyline._locatorBuckets;
-        var locatorLength = locators.length;
-        for (var t = 0; t < locatorLength; ++t) {
-          var locator = locators[t];
+        const locators = polyline._locatorBuckets;
+        const locatorLength = locators.length;
+        for (let t = 0; t < locatorLength; ++t) {
+          const locator = locators[t];
           if (locator.locator === bucketLocator) {
             count += locator.count;
           }
         }
 
-        var boundingVolume;
+        let boundingVolume;
         if (frameState.mode === SceneMode.SCENE3D) {
           boundingVolume = polyline._boundingVolumeWC;
         } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
@@ -819,9 +819,9 @@ PolylineCollection.prototype.destroy = function () {
 };
 
 function computeNewBuffersUsage(collection) {
-  var usageChanged = false;
-  var properties = collection._propertiesChanged;
-  var bufferUsage = collection._positionBufferUsage;
+  let usageChanged = false;
+  const properties = collection._propertiesChanged;
+  const bufferUsage = collection._positionBufferUsage;
   if (properties[POSITION_INDEX]) {
     if (bufferUsage.bufferUsage !== BufferUsage.STREAM_DRAW) {
       usageChanged = true;
@@ -842,7 +842,7 @@ function computeNewBuffersUsage(collection) {
   return usageChanged;
 }
 
-var emptyVertexBuffer = [0.0, 0.0, 0.0];
+const emptyVertexBuffer = [0.0, 0.0, 0.0];
 
 function createVertexArrays(collection, context, projection) {
   collection._createVertexArray = false;
@@ -851,23 +851,23 @@ function createVertexArrays(collection, context, projection) {
   sortPolylinesIntoBuckets(collection);
 
   //stores all of the individual indices arrays.
-  var totalIndices = [[]];
-  var indices = totalIndices[0];
+  const totalIndices = [[]];
+  let indices = totalIndices[0];
 
-  var batchTable = collection._batchTable;
-  var useHighlightColor = collection._useHighlightColor;
+  const batchTable = collection._batchTable;
+  const useHighlightColor = collection._useHighlightColor;
 
   //used to determine the vertexBuffer offset if the indicesArray goes over 64k.
   //if it's the same polyline while it goes over 64k, the offset needs to backtrack componentsPerAttribute * componentDatatype bytes
   //so that the polyline looks contiguous.
   //if the polyline ends at the 64k mark, then the offset is just 64k * componentsPerAttribute * componentDatatype
-  var vertexBufferOffset = [0];
-  var offset = 0;
-  var vertexArrayBuckets = [[]];
-  var totalLength = 0;
-  var polylineBuckets = collection._polylineBuckets;
-  var x;
-  var bucket;
+  const vertexBufferOffset = [0];
+  let offset = 0;
+  const vertexArrayBuckets = [[]];
+  let totalLength = 0;
+  const polylineBuckets = collection._polylineBuckets;
+  let x;
+  let bucket;
   for (x in polylineBuckets) {
     if (polylineBuckets.hasOwnProperty(x)) {
       bucket = polylineBuckets[x];
@@ -877,15 +877,15 @@ function createVertexArrays(collection, context, projection) {
   }
 
   if (totalLength > 0) {
-    var mode = collection._mode;
+    const mode = collection._mode;
 
-    var positionArray = new Float32Array(6 * totalLength * 3);
-    var texCoordExpandAndBatchIndexArray = new Float32Array(totalLength * 4);
-    var position3DArray;
+    const positionArray = new Float32Array(6 * totalLength * 3);
+    const texCoordExpandAndBatchIndexArray = new Float32Array(totalLength * 4);
+    let position3DArray;
 
-    var positionIndex = 0;
-    var colorIndex = 0;
-    var texCoordExpandAndBatchIndexIndex = 0;
+    let positionIndex = 0;
+    let colorIndex = 0;
+    let texCoordExpandAndBatchIndexIndex = 0;
     for (x in polylineBuckets) {
       if (polylineBuckets.hasOwnProperty(x)) {
         bucket = polylineBuckets[x];
@@ -907,7 +907,7 @@ function createVertexArrays(collection, context, projection) {
           bucket.writeForMorph(position3DArray, positionIndex);
         }
 
-        var bucketLength = bucket.lengthOfPositions;
+        const bucketLength = bucket.lengthOfPositions;
         positionIndex += 6 * bucketLength * 3;
         colorIndex += bucketLength * 4;
         texCoordExpandAndBatchIndexIndex += bucketLength * 4;
@@ -920,15 +920,15 @@ function createVertexArrays(collection, context, projection) {
       }
     }
 
-    var positionBufferUsage = collection._positionBufferUsage.bufferUsage;
-    var texCoordExpandAndBatchIndexBufferUsage = BufferUsage.STATIC_DRAW;
+    const positionBufferUsage = collection._positionBufferUsage.bufferUsage;
+    const texCoordExpandAndBatchIndexBufferUsage = BufferUsage.STATIC_DRAW;
 
     collection._positionBuffer = Buffer.createVertexBuffer({
       context: context,
       typedArray: positionArray,
       usage: positionBufferUsage,
     });
-    var position3DBuffer;
+    let position3DBuffer;
     if (defined(position3DArray)) {
       position3DBuffer = Buffer.createVertexBuffer({
         context: context,
@@ -942,18 +942,18 @@ function createVertexArrays(collection, context, projection) {
       usage: texCoordExpandAndBatchIndexBufferUsage,
     });
 
-    var positionSizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
-    var texCoordExpandAndBatchIndexSizeInBytes =
+    const positionSizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
+    const texCoordExpandAndBatchIndexSizeInBytes =
       4 * Float32Array.BYTES_PER_ELEMENT;
 
-    var vbo = 0;
-    var numberOfIndicesArrays = totalIndices.length;
-    for (var k = 0; k < numberOfIndicesArrays; ++k) {
+    let vbo = 0;
+    const numberOfIndicesArrays = totalIndices.length;
+    for (let k = 0; k < numberOfIndicesArrays; ++k) {
       indices = totalIndices[k];
 
       if (indices.length > 0) {
-        var indicesArray = new Uint16Array(indices);
-        var indexBuffer = Buffer.createIndexBuffer({
+        const indicesArray = new Uint16Array(indices);
+        const indexBuffer = Buffer.createIndexBuffer({
           context: context,
           typedArray: indicesArray,
           usage: BufferUsage.STATIC_DRAW,
@@ -962,25 +962,25 @@ function createVertexArrays(collection, context, projection) {
 
         vbo += vertexBufferOffset[k];
 
-        var positionHighOffset =
+        const positionHighOffset =
           6 *
           (k * (positionSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES) -
             vbo * positionSizeInBytes); //componentsPerAttribute(3) * componentDatatype(4)
-        var positionLowOffset = positionSizeInBytes + positionHighOffset;
-        var prevPositionHighOffset = positionSizeInBytes + positionLowOffset;
-        var prevPositionLowOffset =
+        const positionLowOffset = positionSizeInBytes + positionHighOffset;
+        const prevPositionHighOffset = positionSizeInBytes + positionLowOffset;
+        const prevPositionLowOffset =
           positionSizeInBytes + prevPositionHighOffset;
-        var nextPositionHighOffset =
+        const nextPositionHighOffset =
           positionSizeInBytes + prevPositionLowOffset;
-        var nextPositionLowOffset =
+        const nextPositionLowOffset =
           positionSizeInBytes + nextPositionHighOffset;
-        var vertexTexCoordExpandAndBatchIndexBufferOffset =
+        const vertexTexCoordExpandAndBatchIndexBufferOffset =
           k *
             (texCoordExpandAndBatchIndexSizeInBytes *
               CesiumMath.SIXTY_FOUR_KILOBYTES) -
           vbo * texCoordExpandAndBatchIndexSizeInBytes;
 
-        var attributes = [
+        const attributes = [
           {
             index: attributeLocations.position3DHigh,
             componentsPerAttribute: 3,
@@ -1074,10 +1074,10 @@ function createVertexArrays(collection, context, projection) {
           },
         ];
 
-        var buffer3D;
-        var bufferProperty3D;
-        var buffer2D;
-        var bufferProperty2D;
+        let bufferProperty3D;
+        let buffer3D;
+        let buffer2D;
+        let bufferProperty2D;
 
         if (mode === SceneMode.SCENE3D) {
           buffer3D = collection._positionBuffer;
@@ -1112,7 +1112,7 @@ function createVertexArrays(collection, context, projection) {
         attributes[10][bufferProperty2D] = buffer2D;
         attributes[11][bufferProperty2D] = buffer2D;
 
-        var va = new VertexArray({
+        const va = new VertexArray({
           context: context,
           attributes: attributes,
           indexBuffer: indexBuffer,
@@ -1134,15 +1134,15 @@ function replacer(key, value) {
   return value;
 }
 
-var scratchUniformArray = [];
+const scratchUniformArray = [];
 function createMaterialId(material) {
-  var uniforms = Material._uniformList[material.type];
-  var length = uniforms.length;
+  const uniforms = Material._uniformList[material.type];
+  const length = uniforms.length;
   scratchUniformArray.length = 2.0 * length;
 
-  var index = 0;
-  for (var i = 0; i < length; ++i) {
-    var uniform = uniforms[i];
+  let index = 0;
+  for (let i = 0; i < length; ++i) {
+    const uniform = uniforms[i];
     scratchUniformArray[index] = uniform;
     scratchUniformArray[index + 1] = material._uniforms[uniform]();
     index += 2;
@@ -1152,18 +1152,18 @@ function createMaterialId(material) {
 }
 
 function sortPolylinesIntoBuckets(collection) {
-  var mode = collection._mode;
-  var modelMatrix = collection._modelMatrix;
+  const mode = collection._mode;
+  const modelMatrix = collection._modelMatrix;
 
-  var polylineBuckets = (collection._polylineBuckets = {});
-  var polylines = collection._polylines;
-  var length = polylines.length;
-  for (var i = 0; i < length; ++i) {
-    var p = polylines[i];
+  const polylineBuckets = (collection._polylineBuckets = {});
+  const polylines = collection._polylines;
+  const length = polylines.length;
+  for (let i = 0; i < length; ++i) {
+    const p = polylines[i];
     if (p._actualPositions.length > 1) {
       p.update();
-      var material = p.material;
-      var value = polylineBuckets[material.type];
+      const material = p.material;
+      let value = polylineBuckets[material.type];
       if (!defined(value)) {
         value = polylineBuckets[material.type] = new PolylineBucket(
           material,
@@ -1177,7 +1177,7 @@ function sortPolylinesIntoBuckets(collection) {
 }
 
 function updateMode(collection, frameState) {
-  var mode = frameState.mode;
+  const mode = frameState.mode;
 
   if (
     collection._mode !== mode ||
@@ -1192,13 +1192,13 @@ function updateMode(collection, frameState) {
 function removePolylines(collection) {
   if (collection._polylinesRemoved) {
     collection._polylinesRemoved = false;
-    var definedPolylines = [];
-    var definedPolylinesToUpdate = [];
-    var polyIndex = 0;
-    var polyline;
+    const definedPolylines = [];
+    const definedPolylinesToUpdate = [];
+    let polyIndex = 0;
+    let polyline;
 
-    var length = collection._polylines.length;
-    for (var i = 0; i < length; ++i) {
+    const length = collection._polylines.length;
+    for (let i = 0; i < length; ++i) {
       polyline = collection._polylines[i];
       if (!polyline.isDestroyed) {
         polyline._index = polyIndex++;
@@ -1213,11 +1213,11 @@ function removePolylines(collection) {
 }
 
 function releaseShaders(collection) {
-  var polylines = collection._polylines;
-  var length = polylines.length;
-  for (var i = 0; i < length; ++i) {
+  const polylines = collection._polylines;
+  const length = polylines.length;
+  for (let i = 0; i < length; ++i) {
     if (!polylines[i].isDestroyed) {
-      var bucket = polylines[i]._bucket;
+      const bucket = polylines[i]._bucket;
       if (defined(bucket)) {
         bucket.shaderProgram =
           bucket.shaderProgram && bucket.shaderProgram.destroy();
@@ -1227,8 +1227,8 @@ function releaseShaders(collection) {
 }
 
 function destroyVertexArrays(collection) {
-  var length = collection._vertexArrays.length;
-  for (var t = 0; t < length; ++t) {
+  const length = collection._vertexArrays.length;
+  for (let t = 0; t < length; ++t) {
     collection._vertexArrays[t].va.destroy();
   }
   collection._vertexArrays.length = 0;
@@ -1246,9 +1246,9 @@ PolylineCollection.prototype._updatePolyline = function (
 };
 
 function destroyPolylines(collection) {
-  var polylines = collection._polylines;
-  var length = polylines.length;
-  for (var i = 0; i < length; ++i) {
+  const polylines = collection._polylines;
+  const length = polylines.length;
+  for (let i = 0; i < length; ++i) {
     if (!polylines[i].isDestroyed) {
       polylines[i]._destroy();
     }
@@ -1271,7 +1271,7 @@ function PolylineBucket(material, mode, modelMatrix) {
 }
 
 PolylineBucket.prototype.addPolyline = function (p) {
-  var polylines = this.polylines;
+  const polylines = this.polylines;
   polylines.push(p);
   p._actualLength = this.getPolylinePositionsLength(p);
   this.lengthOfPositions += p._actualLength;
@@ -1287,7 +1287,7 @@ PolylineBucket.prototype.updateShader = function (
     return;
   }
 
-  var defines = ["DISTANCE_DISPLAY_CONDITION"];
+  const defines = ["DISTANCE_DISPLAY_CONDITION"];
   if (useHighlightColor) {
     defines.push("VECTOR_TILE");
   }
@@ -1304,7 +1304,7 @@ PolylineBucket.prototype.updateShader = function (
     defines.push("CLIP_POLYLINE");
   }
 
-  var fs = new ShaderSource({
+  const fs = new ShaderSource({
     defines: defines,
     sources: [
       "varying vec4 v_pickColor;\n",
@@ -1313,8 +1313,8 @@ PolylineBucket.prototype.updateShader = function (
     ],
   });
 
-  var vsSource = batchTable.getVertexShaderCallback()(PolylineVS);
-  var vs = new ShaderSource({
+  const vsSource = batchTable.getVertexShaderCallback()(PolylineVS);
+  const vs = new ShaderSource({
     defines: defines,
     sources: [PolylineCommon, vsSource],
   });
@@ -1336,28 +1336,28 @@ function intersectsIDL(polyline) {
 }
 
 PolylineBucket.prototype.getPolylinePositionsLength = function (polyline) {
-  var length;
+  let length;
   if (this.mode === SceneMode.SCENE3D || !intersectsIDL(polyline)) {
     length = polyline._actualPositions.length;
     return length * 4.0 - 4.0;
   }
 
-  var count = 0;
-  var segmentLengths = polyline._segments.lengths;
+  let count = 0;
+  const segmentLengths = polyline._segments.lengths;
   length = segmentLengths.length;
-  for (var i = 0; i < length; ++i) {
+  for (let i = 0; i < length; ++i) {
     count += segmentLengths[i] * 4.0 - 4.0;
   }
 
   return count;
 };
 
-var scratchWritePosition = new Cartesian3();
-var scratchWritePrevPosition = new Cartesian3();
-var scratchWriteNextPosition = new Cartesian3();
-var scratchWriteVector = new Cartesian3();
-var scratchPickColorCartesian = new Cartesian4();
-var scratchWidthShowCartesian = new Cartesian2();
+const scratchWritePosition = new Cartesian3();
+const scratchWritePrevPosition = new Cartesian3();
+const scratchWriteNextPosition = new Cartesian3();
+const scratchWriteVector = new Cartesian3();
+const scratchPickColorCartesian = new Cartesian4();
+const scratchWidthShowCartesian = new Cartesian2();
 
 PolylineBucket.prototype.write = function (
   positionArray,
@@ -1369,28 +1369,28 @@ PolylineBucket.prototype.write = function (
   context,
   projection
 ) {
-  var mode = this.mode;
-  var maxLon = projection.ellipsoid.maximumRadius * CesiumMath.PI;
+  const mode = this.mode;
+  const maxLon = projection.ellipsoid.maximumRadius * CesiumMath.PI;
 
-  var polylines = this.polylines;
-  var length = polylines.length;
-  for (var i = 0; i < length; ++i) {
-    var polyline = polylines[i];
-    var width = polyline.width;
-    var show = polyline.show && width > 0.0;
-    var polylineBatchIndex = polyline._index;
-    var segments = this.getSegments(polyline, projection);
-    var positions = segments.positions;
-    var lengths = segments.lengths;
-    var positionsLength = positions.length;
+  const polylines = this.polylines;
+  const length = polylines.length;
+  for (let i = 0; i < length; ++i) {
+    const polyline = polylines[i];
+    const width = polyline.width;
+    const show = polyline.show && width > 0.0;
+    const polylineBatchIndex = polyline._index;
+    const segments = this.getSegments(polyline, projection);
+    const positions = segments.positions;
+    const lengths = segments.lengths;
+    const positionsLength = positions.length;
 
-    var pickColor = polyline.getPickId(context).color;
+    const pickColor = polyline.getPickId(context).color;
 
-    var segmentIndex = 0;
-    var count = 0;
-    var position;
+    let segmentIndex = 0;
+    let count = 0;
+    let position;
 
-    for (var j = 0; j < positionsLength; ++j) {
+    for (let j = 0; j < positionsLength; ++j) {
       if (j === 0) {
         if (polyline._loop) {
           position = positions[positionsLength - 2];
@@ -1424,14 +1424,14 @@ PolylineBucket.prototype.write = function (
 
       Cartesian3.clone(position, scratchWriteNextPosition);
 
-      var segmentLength = lengths[segmentIndex];
+      const segmentLength = lengths[segmentIndex];
       if (j === count + segmentLength) {
         count += segmentLength;
         ++segmentIndex;
       }
 
-      var segmentStart = j - count === 0;
-      var segmentEnd = j === count + lengths[segmentIndex] - 1;
+      const segmentStart = j - count === 0;
+      const segmentEnd = j === count + lengths[segmentIndex] - 1;
 
       if (mode === SceneMode.SCENE2D) {
         scratchWritePrevPosition.z = 0.0;
@@ -1462,10 +1462,10 @@ PolylineBucket.prototype.write = function (
         }
       }
 
-      var startK = segmentStart ? 2 : 0;
-      var endK = segmentEnd ? 2 : 4;
+      const startK = segmentStart ? 2 : 0;
+      const endK = segmentEnd ? 2 : 4;
 
-      for (var k = startK; k < endK; ++k) {
+      for (let k = startK; k < endK; ++k) {
         EncodedCartesian3.writeElements(
           scratchWritePosition,
           positionArray,
@@ -1482,7 +1482,7 @@ PolylineBucket.prototype.write = function (
           positionIndex + 12
         );
 
-        var direction = k - 2 < 0 ? -1.0 : 1.0;
+        const direction = k - 2 < 0 ? -1.0 : 1.0;
         texCoordExpandAndBatchIndexArray[texCoordExpandAndBatchIndexIndex] =
           j / (positionsLength - 1); // s tex coord
         texCoordExpandAndBatchIndexArray[texCoordExpandAndBatchIndexIndex + 1] =
@@ -1499,26 +1499,26 @@ PolylineBucket.prototype.write = function (
       }
     }
 
-    var colorCartesian = scratchPickColorCartesian;
+    const colorCartesian = scratchPickColorCartesian;
     colorCartesian.x = Color.floatToByte(pickColor.red);
     colorCartesian.y = Color.floatToByte(pickColor.green);
     colorCartesian.z = Color.floatToByte(pickColor.blue);
     colorCartesian.w = Color.floatToByte(pickColor.alpha);
 
-    var widthShowCartesian = scratchWidthShowCartesian;
+    const widthShowCartesian = scratchWidthShowCartesian;
     widthShowCartesian.x = width;
     widthShowCartesian.y = show ? 1.0 : 0.0;
 
-    var boundingSphere =
+    const boundingSphere =
       mode === SceneMode.SCENE2D
         ? polyline._boundingVolume2D
         : polyline._boundingVolumeWC;
-    var encodedCenter = EncodedCartesian3.fromCartesian(
+    const encodedCenter = EncodedCartesian3.fromCartesian(
       boundingSphere.center,
       scratchUpdatePolylineEncodedCartesian
     );
-    var high = encodedCenter.high;
-    var low = Cartesian4.fromElements(
+    const high = encodedCenter.high;
+    const low = Cartesian4.fromElements(
       encodedCenter.low.x,
       encodedCenter.low.y,
       encodedCenter.low.z,
@@ -1526,11 +1526,11 @@ PolylineBucket.prototype.write = function (
       scratchUpdatePolylineCartesian4
     );
 
-    var nearFarCartesian = scratchNearFarCartesian2;
+    const nearFarCartesian = scratchNearFarCartesian2;
     nearFarCartesian.x = 0.0;
     nearFarCartesian.y = Number.MAX_VALUE;
 
-    var distanceDisplayCondition = polyline.distanceDisplayCondition;
+    const distanceDisplayCondition = polyline.distanceDisplayCondition;
     if (defined(distanceDisplayCondition)) {
       nearFarCartesian.x = distanceDisplayCondition.near;
       nearFarCartesian.y = distanceDisplayCondition.far;
@@ -1547,29 +1547,29 @@ PolylineBucket.prototype.write = function (
   }
 };
 
-var morphPositionScratch = new Cartesian3();
-var morphPrevPositionScratch = new Cartesian3();
-var morphNextPositionScratch = new Cartesian3();
-var morphVectorScratch = new Cartesian3();
+const morphPositionScratch = new Cartesian3();
+const morphPrevPositionScratch = new Cartesian3();
+const morphNextPositionScratch = new Cartesian3();
+const morphVectorScratch = new Cartesian3();
 
 PolylineBucket.prototype.writeForMorph = function (
   positionArray,
   positionIndex
 ) {
-  var modelMatrix = this.modelMatrix;
-  var polylines = this.polylines;
-  var length = polylines.length;
-  for (var i = 0; i < length; ++i) {
-    var polyline = polylines[i];
-    var positions = polyline._segments.positions;
-    var lengths = polyline._segments.lengths;
-    var positionsLength = positions.length;
+  const modelMatrix = this.modelMatrix;
+  const polylines = this.polylines;
+  const length = polylines.length;
+  for (let i = 0; i < length; ++i) {
+    const polyline = polylines[i];
+    const positions = polyline._segments.positions;
+    const lengths = polyline._segments.lengths;
+    const positionsLength = positions.length;
 
-    var segmentIndex = 0;
-    var count = 0;
+    let segmentIndex = 0;
+    let count = 0;
 
-    for (var j = 0; j < positionsLength; ++j) {
-      var prevPosition;
+    for (let j = 0; j < positionsLength; ++j) {
+      let prevPosition;
       if (j === 0) {
         if (polyline._loop) {
           prevPosition = positions[positionsLength - 2];
@@ -1588,13 +1588,13 @@ PolylineBucket.prototype.writeForMorph = function (
         morphPrevPositionScratch
       );
 
-      var position = Matrix4.multiplyByPoint(
+      const position = Matrix4.multiplyByPoint(
         modelMatrix,
         positions[j],
         morphPositionScratch
       );
 
-      var nextPosition;
+      let nextPosition;
       if (j === positionsLength - 1) {
         if (polyline._loop) {
           nextPosition = positions[1];
@@ -1621,19 +1621,19 @@ PolylineBucket.prototype.writeForMorph = function (
         morphNextPositionScratch
       );
 
-      var segmentLength = lengths[segmentIndex];
+      const segmentLength = lengths[segmentIndex];
       if (j === count + segmentLength) {
         count += segmentLength;
         ++segmentIndex;
       }
 
-      var segmentStart = j - count === 0;
-      var segmentEnd = j === count + lengths[segmentIndex] - 1;
+      const segmentStart = j - count === 0;
+      const segmentEnd = j === count + lengths[segmentIndex] - 1;
 
-      var startK = segmentStart ? 2 : 0;
-      var endK = segmentEnd ? 2 : 4;
+      const startK = segmentStart ? 2 : 0;
+      const endK = segmentEnd ? 2 : 4;
 
-      for (var k = startK; k < endK; ++k) {
+      for (let k = startK; k < endK; ++k) {
         EncodedCartesian3.writeElements(position, positionArray, positionIndex);
         EncodedCartesian3.writeElements(
           prevPosition,
@@ -1652,7 +1652,7 @@ PolylineBucket.prototype.writeForMorph = function (
   }
 };
 
-var scratchSegmentLengths = new Array(1);
+const scratchSegmentLengths = new Array(1);
 
 PolylineBucket.prototype.updateIndices = function (
   totalIndices,
@@ -1660,25 +1660,25 @@ PolylineBucket.prototype.updateIndices = function (
   vertexArrayBuckets,
   offset
 ) {
-  var vaCount = vertexArrayBuckets.length - 1;
-  var bucketLocator = new VertexArrayBucketLocator(0, offset, this);
+  let vaCount = vertexArrayBuckets.length - 1;
+  let bucketLocator = new VertexArrayBucketLocator(0, offset, this);
   vertexArrayBuckets[vaCount].push(bucketLocator);
-  var count = 0;
-  var indices = totalIndices[totalIndices.length - 1];
-  var indicesCount = 0;
+  let count = 0;
+  let indices = totalIndices[totalIndices.length - 1];
+  let indicesCount = 0;
   if (indices.length > 0) {
     indicesCount = indices[indices.length - 1] + 1;
   }
-  var polylines = this.polylines;
-  var length = polylines.length;
-  for (var i = 0; i < length; ++i) {
-    var polyline = polylines[i];
+  const polylines = this.polylines;
+  const length = polylines.length;
+  for (let i = 0; i < length; ++i) {
+    const polyline = polylines[i];
     polyline._locatorBuckets = [];
 
-    var segments;
+    let segments;
     if (this.mode === SceneMode.SCENE3D) {
       segments = scratchSegmentLengths;
-      var positionsLength = polyline._actualPositions.length;
+      const positionsLength = polyline._actualPositions.length;
       if (positionsLength > 0) {
         segments[0] = positionsLength;
       } else {
@@ -1688,12 +1688,12 @@ PolylineBucket.prototype.updateIndices = function (
       segments = polyline._segments.lengths;
     }
 
-    var numberOfSegments = segments.length;
+    const numberOfSegments = segments.length;
     if (numberOfSegments > 0) {
-      var segmentIndexCount = 0;
-      for (var j = 0; j < numberOfSegments; ++j) {
-        var segmentLength = segments[j] - 1.0;
-        for (var k = 0; k < segmentLength; ++k) {
+      let segmentIndexCount = 0;
+      for (let j = 0; j < numberOfSegments; ++j) {
+        const segmentLength = segments[j] - 1.0;
+        for (let k = 0; k < segmentLength; ++k) {
           if (indicesCount + 4 > CesiumMath.SIXTY_FOUR_KILOBYTES) {
             polyline._locatorBuckets.push({
               locator: bucketLocator,
@@ -1745,11 +1745,11 @@ PolylineBucket.prototype.updateIndices = function (
 };
 
 PolylineBucket.prototype.getPolylineStartIndex = function (polyline) {
-  var polylines = this.polylines;
-  var positionIndex = 0;
-  var length = polylines.length;
-  for (var i = 0; i < length; ++i) {
-    var p = polylines[i];
+  const polylines = this.polylines;
+  let positionIndex = 0;
+  const length = polylines.length;
+  for (let i = 0; i < length; ++i) {
+    const p = polylines[i];
     if (p === polyline) {
       break;
     }
@@ -1758,16 +1758,16 @@ PolylineBucket.prototype.getPolylineStartIndex = function (polyline) {
   return positionIndex;
 };
 
-var scratchSegments = {
+const scratchSegments = {
   positions: undefined,
   lengths: undefined,
 };
-var scratchLengths = new Array(1);
-var pscratch = new Cartesian3();
-var scratchCartographic = new Cartographic();
+const scratchLengths = new Array(1);
+const pscratch = new Cartesian3();
+const scratchCartographic = new Cartographic();
 
 PolylineBucket.prototype.getSegments = function (polyline, projection) {
-  var positions = polyline._actualPositions;
+  let positions = polyline._actualPositions;
 
   if (this.mode === SceneMode.SCENE3D) {
     scratchLengths[0] = positions.length;
@@ -1780,14 +1780,14 @@ PolylineBucket.prototype.getSegments = function (polyline, projection) {
     positions = polyline._segments.positions;
   }
 
-  var ellipsoid = projection.ellipsoid;
-  var newPositions = [];
-  var modelMatrix = this.modelMatrix;
-  var length = positions.length;
-  var position;
-  var p = pscratch;
+  const ellipsoid = projection.ellipsoid;
+  const newPositions = [];
+  const modelMatrix = this.modelMatrix;
+  const length = positions.length;
+  let position;
+  let p = pscratch;
 
-  for (var n = 0; n < length; ++n) {
+  for (let n = 0; n < length; ++n) {
     position = positions[n];
     p = Matrix4.multiplyByPoint(modelMatrix, position, p);
     newPositions.push(
@@ -1802,7 +1802,7 @@ PolylineBucket.prototype.getSegments = function (polyline, projection) {
       newPositions,
       polyline._boundingVolume2D
     );
-    var center2D = polyline._boundingVolume2D.center;
+    const center2D = polyline._boundingVolume2D.center;
     polyline._boundingVolume2D.center = new Cartesian3(
       center2D.z,
       center2D.x,
@@ -1815,7 +1815,7 @@ PolylineBucket.prototype.getSegments = function (polyline, projection) {
   return scratchSegments;
 };
 
-var scratchPositionsArray;
+let scratchPositionsArray;
 
 PolylineBucket.prototype.writeUpdate = function (
   index,
@@ -1823,15 +1823,15 @@ PolylineBucket.prototype.writeUpdate = function (
   positionBuffer,
   projection
 ) {
-  var mode = this.mode;
-  var maxLon = projection.ellipsoid.maximumRadius * CesiumMath.PI;
+  const mode = this.mode;
+  const maxLon = projection.ellipsoid.maximumRadius * CesiumMath.PI;
 
-  var positionsLength = polyline._actualLength;
+  let positionsLength = polyline._actualLength;
   if (positionsLength) {
     index += this.getPolylineStartIndex(polyline);
 
-    var positionArray = scratchPositionsArray;
-    var positionsArrayLength = 6 * positionsLength * 3;
+    let positionArray = scratchPositionsArray;
+    const positionsArrayLength = 6 * positionsLength * 3;
 
     if (
       !defined(positionArray) ||
@@ -1848,17 +1848,17 @@ PolylineBucket.prototype.writeUpdate = function (
       );
     }
 
-    var segments = this.getSegments(polyline, projection);
-    var positions = segments.positions;
-    var lengths = segments.lengths;
+    const segments = this.getSegments(polyline, projection);
+    const positions = segments.positions;
+    const lengths = segments.lengths;
 
-    var positionIndex = 0;
-    var segmentIndex = 0;
-    var count = 0;
-    var position;
+    let positionIndex = 0;
+    let segmentIndex = 0;
+    let count = 0;
+    let position;
 
     positionsLength = positions.length;
-    for (var i = 0; i < positionsLength; ++i) {
+    for (let i = 0; i < positionsLength; ++i) {
       if (i === 0) {
         if (polyline._loop) {
           position = positions[positionsLength - 2];
@@ -1892,14 +1892,14 @@ PolylineBucket.prototype.writeUpdate = function (
 
       Cartesian3.clone(position, scratchWriteNextPosition);
 
-      var segmentLength = lengths[segmentIndex];
+      const segmentLength = lengths[segmentIndex];
       if (i === count + segmentLength) {
         count += segmentLength;
         ++segmentIndex;
       }
 
-      var segmentStart = i - count === 0;
-      var segmentEnd = i === count + lengths[segmentIndex] - 1;
+      const segmentStart = i - count === 0;
+      const segmentEnd = i === count + lengths[segmentIndex] - 1;
 
       if (mode === SceneMode.SCENE2D) {
         scratchWritePrevPosition.z = 0.0;
@@ -1930,10 +1930,10 @@ PolylineBucket.prototype.writeUpdate = function (
         }
       }
 
-      var startJ = segmentStart ? 2 : 0;
-      var endJ = segmentEnd ? 2 : 4;
+      const startJ = segmentStart ? 2 : 0;
+      const endJ = segmentEnd ? 2 : 4;
 
-      for (var j = startJ; j < endJ; ++j) {
+      for (let j = startJ; j < endJ; ++j) {
         EncodedCartesian3.writeElements(
           scratchWritePosition,
           positionArray,

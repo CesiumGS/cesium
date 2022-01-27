@@ -83,15 +83,15 @@ function Cesium3DTileStyle(style) {
 
   this._colorShaderTranslucent = false;
 
-  var promise;
+  let promise;
   if (typeof style === "string" || style instanceof Resource) {
-    var resource = Resource.createIfNeeded(style);
+    const resource = Resource.createIfNeeded(style);
     promise = resource.fetchJson(style);
   } else {
     promise = when.resolve(style);
   }
 
-  var that = this;
+  const that = this;
   this._readyPromise = promise.then(function (styleJson) {
     setup(that, styleJson);
     return that;
@@ -129,11 +129,11 @@ function setup(that, styleJson) {
   that.labelHorizontalOrigin = styleJson.labelHorizontalOrigin;
   that.labelVerticalOrigin = styleJson.labelVerticalOrigin;
 
-  var meta = {};
+  const meta = {};
   if (defined(styleJson.meta)) {
-    var defines = styleJson.defines;
-    var metaJson = defaultValue(styleJson.meta, defaultValue.EMPTY_OBJECT);
-    for (var property in metaJson) {
+    const defines = styleJson.defines;
+    const metaJson = defaultValue(styleJson.meta, defaultValue.EMPTY_OBJECT);
+    for (const property in metaJson) {
       if (metaJson.hasOwnProperty(property)) {
         meta[property] = new Expression(metaJson[property], defines);
       }
@@ -146,7 +146,7 @@ function setup(that, styleJson) {
 }
 
 function getExpression(tileStyle, value) {
-  var defines = defaultValue(tileStyle._style, defaultValue.EMPTY_OBJECT)
+  const defines = defaultValue(tileStyle._style, defaultValue.EMPTY_OBJECT)
     .defines;
 
   if (!defined(value)) {
@@ -1752,7 +1752,7 @@ Cesium3DTileStyle.prototype.getPointSizeShaderFunction = function (
  * @private
  */
 Cesium3DTileStyle.prototype.getVariables = function () {
-  var variables = [];
+  let variables = [];
 
   if (defined(this.color) && defined(this.color.getVariables)) {
     variables.push.apply(variables, this.color.getVariables());

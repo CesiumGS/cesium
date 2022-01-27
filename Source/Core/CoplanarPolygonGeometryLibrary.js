@@ -7,31 +7,31 @@ import OrientedBoundingBox from "./OrientedBoundingBox.js";
 /**
  * @private
  */
-var CoplanarPolygonGeometryLibrary = {};
+const CoplanarPolygonGeometryLibrary = {};
 
-var scratchIntersectionPoint = new Cartesian3();
-var scratchXAxis = new Cartesian3();
-var scratchYAxis = new Cartesian3();
-var scratchZAxis = new Cartesian3();
-var obbScratch = new OrientedBoundingBox();
+const scratchIntersectionPoint = new Cartesian3();
+const scratchXAxis = new Cartesian3();
+const scratchYAxis = new Cartesian3();
+const scratchZAxis = new Cartesian3();
+const obbScratch = new OrientedBoundingBox();
 
 CoplanarPolygonGeometryLibrary.validOutline = function (positions) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("positions", positions);
   //>>includeEnd('debug');
 
-  var orientedBoundingBox = OrientedBoundingBox.fromPoints(
+  const orientedBoundingBox = OrientedBoundingBox.fromPoints(
     positions,
     obbScratch
   );
-  var halfAxes = orientedBoundingBox.halfAxes;
-  var xAxis = Matrix3.getColumn(halfAxes, 0, scratchXAxis);
-  var yAxis = Matrix3.getColumn(halfAxes, 1, scratchYAxis);
-  var zAxis = Matrix3.getColumn(halfAxes, 2, scratchZAxis);
+  const halfAxes = orientedBoundingBox.halfAxes;
+  const xAxis = Matrix3.getColumn(halfAxes, 0, scratchXAxis);
+  const yAxis = Matrix3.getColumn(halfAxes, 1, scratchYAxis);
+  const zAxis = Matrix3.getColumn(halfAxes, 2, scratchZAxis);
 
-  var xMag = Cartesian3.magnitude(xAxis);
-  var yMag = Cartesian3.magnitude(yAxis);
-  var zMag = Cartesian3.magnitude(zAxis);
+  const xMag = Cartesian3.magnitude(xAxis);
+  const yMag = Cartesian3.magnitude(yAxis);
+  const zMag = Cartesian3.magnitude(zAxis);
 
   // If all the points are on a line return undefined because we can't draw a polygon
   return !(
@@ -54,19 +54,19 @@ CoplanarPolygonGeometryLibrary.computeProjectTo2DArguments = function (
   Check.defined("planeAxis2Result", planeAxis2Result);
   //>>includeEnd('debug');
 
-  var orientedBoundingBox = OrientedBoundingBox.fromPoints(
+  const orientedBoundingBox = OrientedBoundingBox.fromPoints(
     positions,
     obbScratch
   );
-  var halfAxes = orientedBoundingBox.halfAxes;
-  var xAxis = Matrix3.getColumn(halfAxes, 0, scratchXAxis);
-  var yAxis = Matrix3.getColumn(halfAxes, 1, scratchYAxis);
-  var zAxis = Matrix3.getColumn(halfAxes, 2, scratchZAxis);
+  const halfAxes = orientedBoundingBox.halfAxes;
+  const xAxis = Matrix3.getColumn(halfAxes, 0, scratchXAxis);
+  const yAxis = Matrix3.getColumn(halfAxes, 1, scratchYAxis);
+  const zAxis = Matrix3.getColumn(halfAxes, 2, scratchZAxis);
 
-  var xMag = Cartesian3.magnitude(xAxis);
-  var yMag = Cartesian3.magnitude(yAxis);
-  var zMag = Cartesian3.magnitude(zAxis);
-  var min = Math.min(xMag, yMag, zMag);
+  const xMag = Cartesian3.magnitude(xAxis);
+  const yMag = Cartesian3.magnitude(yAxis);
+  const zMag = Cartesian3.magnitude(zAxis);
+  const min = Math.min(xMag, yMag, zMag);
 
   // If all the points are on a line return undefined because we can't draw a polygon
   if (
@@ -76,8 +76,8 @@ CoplanarPolygonGeometryLibrary.computeProjectTo2DArguments = function (
     return false;
   }
 
-  var planeAxis1;
-  var planeAxis2;
+  let planeAxis1;
+  let planeAxis2;
 
   if (min === yMag || min === zMag) {
     planeAxis1 = xAxis;
@@ -98,9 +98,9 @@ CoplanarPolygonGeometryLibrary.computeProjectTo2DArguments = function (
 };
 
 function projectTo2D(position, center, axis1, axis2, result) {
-  var v = Cartesian3.subtract(position, center, scratchIntersectionPoint);
-  var x = Cartesian3.dot(axis1, v);
-  var y = Cartesian3.dot(axis2, v);
+  const v = Cartesian3.subtract(position, center, scratchIntersectionPoint);
+  const x = Cartesian3.dot(axis1, v);
+  const y = Cartesian3.dot(axis2, v);
 
   return Cartesian2.fromElements(x, y, result);
 }
@@ -111,8 +111,8 @@ CoplanarPolygonGeometryLibrary.createProjectPointsTo2DFunction = function (
   axis2
 ) {
   return function (positions) {
-    var positionResults = new Array(positions.length);
-    for (var i = 0; i < positions.length; i++) {
+    const positionResults = new Array(positions.length);
+    for (let i = 0; i < positions.length; i++) {
       positionResults[i] = projectTo2D(positions[i], center, axis1, axis2);
     }
 

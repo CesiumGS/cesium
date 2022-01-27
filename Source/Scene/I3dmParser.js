@@ -10,10 +10,10 @@ import RuntimeError from "../Core/RuntimeError.js";
  * @namespace I3dmParser
  * @private
  */
-var I3dmParser = {};
+const I3dmParser = {};
 I3dmParser._deprecationWarning = deprecationWarning;
 
-var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
 /**
  * Parses the contents of a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Instanced3DModel|Instanced 3D Model}.
@@ -29,14 +29,14 @@ I3dmParser.parse = function (arrayBuffer, byteOffset) {
   Check.defined("arrayBuffer", arrayBuffer);
   //>>includeEnd('debug');
 
-  var byteStart = defaultValue(byteOffset, 0);
+  const byteStart = defaultValue(byteOffset, 0);
   byteOffset = byteStart;
 
-  var uint8Array = new Uint8Array(arrayBuffer);
-  var view = new DataView(arrayBuffer);
+  const uint8Array = new Uint8Array(arrayBuffer);
+  const view = new DataView(arrayBuffer);
   byteOffset += sizeOfUint32; // Skip magic
 
-  var version = view.getUint32(byteOffset, true);
+  const version = view.getUint32(byteOffset, true);
   if (version !== 1) {
     throw new RuntimeError(
       "Only Instanced 3D Model version 1 is supported. Version " +
@@ -46,10 +46,10 @@ I3dmParser.parse = function (arrayBuffer, byteOffset) {
   }
   byteOffset += sizeOfUint32;
 
-  var byteLength = view.getUint32(byteOffset, true);
+  const byteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var featureTableJsonByteLength = view.getUint32(byteOffset, true);
+  const featureTableJsonByteLength = view.getUint32(byteOffset, true);
   if (featureTableJsonByteLength === 0) {
     throw new RuntimeError(
       "featureTableJsonByteLength is zero, the feature table must be defined."
@@ -57,16 +57,16 @@ I3dmParser.parse = function (arrayBuffer, byteOffset) {
   }
   byteOffset += sizeOfUint32;
 
-  var featureTableBinaryByteLength = view.getUint32(byteOffset, true);
+  const featureTableBinaryByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var batchTableJsonByteLength = view.getUint32(byteOffset, true);
+  const batchTableJsonByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
+  const batchTableBinaryByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var gltfFormat = view.getUint32(byteOffset, true);
+  const gltfFormat = view.getUint32(byteOffset, true);
   if (gltfFormat !== 1 && gltfFormat !== 0) {
     throw new RuntimeError(
       "Only glTF format 0 (uri) or 1 (embedded) are supported. Format " +
@@ -76,22 +76,22 @@ I3dmParser.parse = function (arrayBuffer, byteOffset) {
   }
   byteOffset += sizeOfUint32;
 
-  var featureTableJson = getJsonFromTypedArray(
+  const featureTableJson = getJsonFromTypedArray(
     uint8Array,
     byteOffset,
     featureTableJsonByteLength
   );
   byteOffset += featureTableJsonByteLength;
 
-  var featureTableBinary = new Uint8Array(
+  const featureTableBinary = new Uint8Array(
     arrayBuffer,
     byteOffset,
     featureTableBinaryByteLength
   );
   byteOffset += featureTableBinaryByteLength;
 
-  var batchTableJson;
-  var batchTableBinary;
+  let batchTableJson;
+  let batchTableBinary;
   if (batchTableJsonByteLength > 0) {
     batchTableJson = getJsonFromTypedArray(
       uint8Array,
@@ -113,12 +113,12 @@ I3dmParser.parse = function (arrayBuffer, byteOffset) {
     }
   }
 
-  var gltfByteLength = byteStart + byteLength - byteOffset;
+  const gltfByteLength = byteStart + byteLength - byteOffset;
   if (gltfByteLength === 0) {
     throw new RuntimeError("glTF byte length must be greater than 0.");
   }
 
-  var gltfView;
+  let gltfView;
   if (byteOffset % 4 === 0) {
     gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
   } else {

@@ -36,11 +36,11 @@
         "use strict";
         //Sandcastle_Begin
         // Create the viewer.
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         // Example 1: Draw a yellow polyline on the globe surface.
-        var yellowPolyline = new Cesium.GeometryInstance({
+        const yellowPolyline = new Cesium.GeometryInstance({
           geometry: new Cesium.SimplePolylineGeometry({
             positions: Cesium.Cartesian3.fromDegreesArray([-127, 70, -80, 20]),
           }),
@@ -52,9 +52,9 @@
         });
 
         // Example 2: Create a polyline with per segment coloring.
-        var positions = [];
-        var colors = [];
-        for (var j = 0; j <= 50; j += 5) {
+        const positions = [];
+        const colors = [];
+        for (let j = 0; j <= 50; j += 5) {
           positions.push(
             Cesium.Cartesian3.fromDegrees(-124.0 + j, 40, 50000.0 * (j % 10))
           );
@@ -64,7 +64,7 @@
         // array of colors where the length is equal to the number of positions.
         // Setting arcType to ArcType.NONE will draw straight lines.
         // Otherwise, the polyline curves to the surface of the globe.
-        var perSegmentPolyline = new Cesium.GeometryInstance({
+        const perSegmentPolyline = new Cesium.GeometryInstance({
           geometry: new Cesium.SimplePolylineGeometry({
             positions: positions,
             colors: colors,
@@ -77,7 +77,7 @@
         // For per vertex coloring, set the colorsPerVertex option
         // to true, and provide the colors options with an array of
         // colors where the length is equal to the number of positions.
-        var perVertexPolyline = new Cesium.GeometryInstance({
+        const perVertexPolyline = new Cesium.GeometryInstance({
           geometry: new Cesium.SimplePolylineGeometry({
             positions: Cesium.Cartesian3.fromDegreesArray([-100, 40, -80, 30]),
             colors: [Cesium.Color.RED, Cesium.Color.BLUE],

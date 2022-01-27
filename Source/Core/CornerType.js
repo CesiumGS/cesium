@@ -6,7 +6,7 @@
  *
  * @enum {Number}
  */
-var CornerType = {
+const CornerType = {
   /**
    * <img src="Images/CornerTypeRounded.png" style="vertical-align: middle;" width="186" height="189" />
    *

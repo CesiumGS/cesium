@@ -9,7 +9,7 @@ import WebGLConstants from "./WebGLConstants.js";
  *
  * @enum {Number}
  */
-var ComponentDatatype = {
+const ComponentDatatype = {
   /**
    * 8-bit signed byte corresponding to <code>gl.BYTE</code> and the type
    * of an element in <code>Int8Array</code>.
