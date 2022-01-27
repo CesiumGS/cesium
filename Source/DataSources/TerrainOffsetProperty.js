@@ -180,7 +180,10 @@ TerrainOffsetProperty.prototype.getValue = function (time, result) {
     return Cartesian3.clone(Cartesian3.ZERO, result);
   }
 
-  if (this._positionProperty.isConstant) {
+  if (
+    this._positionProperty.isConstant &&
+    heightReference !== HeightReference.CLIP_TO_GROUND
+  ) {
     return Cartesian3.multiplyByScalar(
       this._normal,
       this._terrainHeight,
@@ -199,7 +202,8 @@ TerrainOffsetProperty.prototype.getValue = function (time, result) {
   }
 
   if (
-    Cartesian3.equalsEpsilon(this._position, position, CesiumMath.EPSILON10)
+    Cartesian3.equalsEpsilon(this._position, position, CesiumMath.EPSILON10) &&
+    heightReference !== HeightReference.CLIP_TO_GROUND
   ) {
     return Cartesian3.multiplyByScalar(
       this._normal,
@@ -216,6 +220,19 @@ TerrainOffsetProperty.prototype.getValue = function (time, result) {
     position,
     this._normal
   );
+
+  if (heightReference === HeightReference.CLIP_TO_GROUND) {
+    var ellipsoid = scene.globe.ellipsoid;
+    var clippedCart = ellipsoid.cartesianToCartographic(position, scratchCarto);
+    if (this._terrainHeight >= clippedCart.height) {
+      return Cartesian3.multiplyByScalar(
+        normal,
+        this._terrainHeight - clippedCart.height,
+        result
+      );
+    }
+    return Cartesian3.clone(Cartesian3.ZERO, result);
+  }
   return Cartesian3.multiplyByScalar(normal, this._terrainHeight, result);
 };
 
