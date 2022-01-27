@@ -14,76 +14,76 @@ import Rectangle from "../Core/Rectangle.js";
 import TerrainEncoding from "../Core/TerrainEncoding.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
-var maxShort = 32767;
-var halfMaxShort = (maxShort / 2) | 0;
+const maxShort = 32767;
+const halfMaxShort = (maxShort / 2) | 0;
 
-var clipScratch = [];
-var clipScratch2 = [];
-var verticesScratch = [];
-var cartographicScratch = new Cartographic();
-var cartesian3Scratch = new Cartesian3();
-var uScratch = [];
-var vScratch = [];
-var heightScratch = [];
-var indicesScratch = [];
-var normalsScratch = [];
-var horizonOcclusionPointScratch = new Cartesian3();
-var boundingSphereScratch = new BoundingSphere();
-var orientedBoundingBoxScratch = new OrientedBoundingBox();
-var decodeTexCoordsScratch = new Cartesian2();
-var octEncodedNormalScratch = new Cartesian3();
+const clipScratch = [];
+const clipScratch2 = [];
+const verticesScratch = [];
+const cartographicScratch = new Cartographic();
+let cartesian3Scratch = new Cartesian3();
+const uScratch = [];
+const vScratch = [];
+const heightScratch = [];
+const indicesScratch = [];
+const normalsScratch = [];
+const horizonOcclusionPointScratch = new Cartesian3();
+const boundingSphereScratch = new BoundingSphere();
+const orientedBoundingBoxScratch = new OrientedBoundingBox();
+const decodeTexCoordsScratch = new Cartesian2();
+const octEncodedNormalScratch = new Cartesian3();
 
 function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
-  var isEastChild = parameters.isEastChild;
-  var isNorthChild = parameters.isNorthChild;
+  const isEastChild = parameters.isEastChild;
+  const isNorthChild = parameters.isNorthChild;
 
-  var minU = isEastChild ? halfMaxShort : 0;
-  var maxU = isEastChild ? maxShort : halfMaxShort;
-  var minV = isNorthChild ? halfMaxShort : 0;
-  var maxV = isNorthChild ? maxShort : halfMaxShort;
+  const minU = isEastChild ? halfMaxShort : 0;
+  const maxU = isEastChild ? maxShort : halfMaxShort;
+  const minV = isNorthChild ? halfMaxShort : 0;
+  const maxV = isNorthChild ? maxShort : halfMaxShort;
 
-  var uBuffer = uScratch;
-  var vBuffer = vScratch;
-  var heightBuffer = heightScratch;
-  var normalBuffer = normalsScratch;
+  const uBuffer = uScratch;
+  const vBuffer = vScratch;
+  const heightBuffer = heightScratch;
+  const normalBuffer = normalsScratch;
 
   uBuffer.length = 0;
   vBuffer.length = 0;
   heightBuffer.length = 0;
   normalBuffer.length = 0;
 
-  var indices = indicesScratch;
+  const indices = indicesScratch;
   indices.length = 0;
 
-  var vertexMap = {};
+  const vertexMap = {};
 
-  var parentVertices = parameters.vertices;
-  var parentIndices = parameters.indices;
+  const parentVertices = parameters.vertices;
+  let parentIndices = parameters.indices;
   parentIndices = parentIndices.subarray(0, parameters.indexCountWithoutSkirts);
 
-  var encoding = TerrainEncoding.clone(parameters.encoding);
-  var hasVertexNormals = encoding.hasVertexNormals;
+  const encoding = TerrainEncoding.clone(parameters.encoding);
+  const hasVertexNormals = encoding.hasVertexNormals;
 
-  var vertexCount = 0;
-  var quantizedVertexCount = parameters.vertexCountWithoutSkirts;
+  let vertexCount = 0;
+  const quantizedVertexCount = parameters.vertexCountWithoutSkirts;
 
-  var parentMinimumHeight = parameters.minimumHeight;
-  var parentMaximumHeight = parameters.maximumHeight;
+  const parentMinimumHeight = parameters.minimumHeight;
+  const parentMaximumHeight = parameters.maximumHeight;
 
-  var parentUBuffer = new Array(quantizedVertexCount);
-  var parentVBuffer = new Array(quantizedVertexCount);
-  var parentHeightBuffer = new Array(quantizedVertexCount);
-  var parentNormalBuffer = hasVertexNormals
+  const parentUBuffer = new Array(quantizedVertexCount);
+  const parentVBuffer = new Array(quantizedVertexCount);
+  const parentHeightBuffer = new Array(quantizedVertexCount);
+  const parentNormalBuffer = hasVertexNormals
     ? new Array(quantizedVertexCount * 2)
     : undefined;
 
-  var threshold = 20;
-  var height;
+  const threshold = 20;
+  let height;
 
-  var i, n;
-  var u, v;
+  let i, n;
+  let u, v;
   for (i = 0, n = 0; i < quantizedVertexCount; ++i, n += 2) {
-    var texCoords = encoding.decodeTextureCoordinates(
+    const texCoords = encoding.decodeTextureCoordinates(
       parentVertices,
       i,
       decodeTexCoordsScratch
@@ -121,7 +121,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
     parentVBuffer[i] = v;
 
     if (hasVertexNormals) {
-      var encodedNormal = encoding.getOctEncodedNormal(
+      const encodedNormal = encoding.getOctEncodedNormal(
         parentVertices,
         i,
         octEncodedNormalScratch
@@ -149,27 +149,27 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
     }
   }
 
-  var triangleVertices = [];
+  const triangleVertices = [];
   triangleVertices.push(new Vertex());
   triangleVertices.push(new Vertex());
   triangleVertices.push(new Vertex());
 
-  var clippedTriangleVertices = [];
+  const clippedTriangleVertices = [];
   clippedTriangleVertices.push(new Vertex());
   clippedTriangleVertices.push(new Vertex());
   clippedTriangleVertices.push(new Vertex());
 
-  var clippedIndex;
-  var clipped2;
+  let clippedIndex;
+  let clipped2;
 
   for (i = 0; i < parentIndices.length; i += 3) {
-    var i0 = parentIndices[i];
-    var i1 = parentIndices[i + 1];
-    var i2 = parentIndices[i + 2];
+    const i0 = parentIndices[i];
+    const i1 = parentIndices[i + 1];
+    const i2 = parentIndices[i + 2];
 
-    var u0 = parentUBuffer[i0];
-    var u1 = parentUBuffer[i1];
-    var u2 = parentUBuffer[i2];
+    const u0 = parentUBuffer[i0];
+    const u1 = parentUBuffer[i1];
+    const u2 = parentUBuffer[i2];
 
     triangleVertices[0].initializeIndexed(
       parentUBuffer,
@@ -194,7 +194,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
     );
 
     // Clip triangle on the east-west boundary.
-    var clipped = Intersections2D.clipTriangleAtAxisAlignedThreshold(
+    const clipped = Intersections2D.clipTriangleAtAxisAlignedThreshold(
       halfMaxShort,
       isEastChild,
       u0,
@@ -286,27 +286,27 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
     }
   }
 
-  var uOffset = isEastChild ? -maxShort : 0;
-  var vOffset = isNorthChild ? -maxShort : 0;
+  const uOffset = isEastChild ? -maxShort : 0;
+  const vOffset = isNorthChild ? -maxShort : 0;
 
-  var westIndices = [];
-  var southIndices = [];
-  var eastIndices = [];
-  var northIndices = [];
+  const westIndices = [];
+  const southIndices = [];
+  const eastIndices = [];
+  const northIndices = [];
 
-  var minimumHeight = Number.MAX_VALUE;
-  var maximumHeight = -minimumHeight;
+  let minimumHeight = Number.MAX_VALUE;
+  let maximumHeight = -minimumHeight;
 
-  var cartesianVertices = verticesScratch;
+  const cartesianVertices = verticesScratch;
   cartesianVertices.length = 0;
 
-  var ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
-  var rectangle = Rectangle.clone(parameters.childRectangle);
+  const ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
+  const rectangle = Rectangle.clone(parameters.childRectangle);
 
-  var north = rectangle.north;
-  var south = rectangle.south;
-  var east = rectangle.east;
-  var west = rectangle.west;
+  const north = rectangle.north;
+  const south = rectangle.south;
+  let east = rectangle.east;
+  const west = rectangle.west;
 
   if (east < west) {
     east += CesiumMath.TWO_PI;
@@ -364,13 +364,13 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
     cartesianVertices.push(cartesian3Scratch.z);
   }
 
-  var boundingSphere = BoundingSphere.fromVertices(
+  const boundingSphere = BoundingSphere.fromVertices(
     cartesianVertices,
     Cartesian3.ZERO,
     3,
     boundingSphereScratch
   );
-  var orientedBoundingBox = OrientedBoundingBox.fromRectangle(
+  const orientedBoundingBox = OrientedBoundingBox.fromRectangle(
     rectangle,
     minimumHeight,
     maximumHeight,
@@ -378,8 +378,8 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
     orientedBoundingBoxScratch
   );
 
-  var occluder = new EllipsoidalOccluder(ellipsoid);
-  var horizonOcclusionPoint = occluder.computeHorizonCullingPointFromVerticesPossiblyUnderEllipsoid(
+  const occluder = new EllipsoidalOccluder(ellipsoid);
+  const horizonOcclusionPoint = occluder.computeHorizonCullingPointFromVerticesPossiblyUnderEllipsoid(
     boundingSphere.center,
     cartesianVertices,
     3,
@@ -388,9 +388,9 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
     horizonOcclusionPointScratch
   );
 
-  var heightRange = maximumHeight - minimumHeight;
+  const heightRange = maximumHeight - minimumHeight;
 
-  var vertices = new Uint16Array(
+  const vertices = new Uint16Array(
     uBuffer.length + vBuffer.length + heightBuffer.length
   );
 
@@ -398,7 +398,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
     vertices[i] = uBuffer[i];
   }
 
-  var start = uBuffer.length;
+  let start = uBuffer.length;
 
   for (i = 0; i < vBuffer.length; ++i) {
     vertices[start + i] = vBuffer[i];
@@ -411,14 +411,14 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
       (maxShort * (heightBuffer[i] - minimumHeight)) / heightRange;
   }
 
-  var indicesTypedArray = IndexDatatype.createTypedArray(
+  const indicesTypedArray = IndexDatatype.createTypedArray(
     uBuffer.length,
     indices
   );
 
-  var encodedNormals;
+  let encodedNormals;
   if (hasVertexNormals) {
-    var normalArray = new Uint8Array(normalBuffer);
+    const normalArray = new Uint8Array(normalBuffer);
     transferableObjects.push(
       vertices.buffer,
       indicesTypedArray.buffer,
@@ -492,7 +492,7 @@ Vertex.prototype.initializeFromClipResult = function (
   index,
   vertices
 ) {
-  var nextIndex = index + 1;
+  let nextIndex = index + 1;
 
   if (clipResult[index] !== -1) {
     vertices[clipResult[index]].clone(this);
@@ -546,17 +546,17 @@ Vertex.prototype.getV = function () {
   return CesiumMath.lerp(this.first.getV(), this.second.getV(), this.ratio);
 };
 
-var encodedScratch = new Cartesian2();
+let encodedScratch = new Cartesian2();
 // An upsampled triangle may be clipped twice before it is assigned an index
 // In this case, we need a buffer to handle the recursion of getNormalX() and getNormalY().
-var depth = -1;
-var cartesianScratch1 = [new Cartesian3(), new Cartesian3()];
-var cartesianScratch2 = [new Cartesian3(), new Cartesian3()];
+let depth = -1;
+const cartesianScratch1 = [new Cartesian3(), new Cartesian3()];
+const cartesianScratch2 = [new Cartesian3(), new Cartesian3()];
 function lerpOctEncodedNormal(vertex, result) {
   ++depth;
 
-  var first = cartesianScratch1[depth];
-  var second = cartesianScratch2[depth];
+  let first = cartesianScratch1[depth];
+  let second = cartesianScratch2[depth];
 
   first = AttributeCompression.octDecode(
     vertex.first.getNormalX(),
@@ -601,7 +601,7 @@ Vertex.prototype.getNormalY = function () {
   return encodedScratch.y;
 };
 
-var polygonVertices = [];
+const polygonVertices = [];
 polygonVertices.push(new Vertex());
 polygonVertices.push(new Vertex());
 polygonVertices.push(new Vertex());
@@ -622,8 +622,8 @@ function addClippedPolygon(
     return;
   }
 
-  var numVertices = 0;
-  var clippedIndex = 0;
+  let numVertices = 0;
+  let clippedIndex = 0;
   while (clippedIndex < clipped.length) {
     clippedIndex = polygonVertices[numVertices++].initializeFromClipResult(
       clipped,
@@ -632,14 +632,14 @@ function addClippedPolygon(
     );
   }
 
-  for (var i = 0; i < numVertices; ++i) {
-    var polygonVertex = polygonVertices[i];
+  for (let i = 0; i < numVertices; ++i) {
+    const polygonVertex = polygonVertices[i];
     if (!polygonVertex.isIndexed()) {
-      var key = polygonVertex.getKey();
+      const key = polygonVertex.getKey();
       if (defined(vertexMap[key])) {
         polygonVertex.newIndex = vertexMap[key];
       } else {
-        var newIndex = uBuffer.length;
+        const newIndex = uBuffer.length;
         uBuffer.push(polygonVertex.getU());
         vBuffer.push(polygonVertex.getV());
         heightBuffer.push(polygonVertex.getH());

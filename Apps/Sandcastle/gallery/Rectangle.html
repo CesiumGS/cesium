@@ -35,9 +35,9 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
-        var redRectangle = viewer.entities.add({
+        const redRectangle = viewer.entities.add({
           name: "Red translucent rectangle",
           rectangle: {
             coordinates: Cesium.Rectangle.fromDegrees(
@@ -50,7 +50,7 @@
           },
         });
 
-        var greenRectangle = viewer.entities.add({
+        const greenRectangle = viewer.entities.add({
           name:
             "Green translucent, rotated, and extruded rectangle at height with outline",
           rectangle: {
@@ -69,7 +69,7 @@
           },
         });
 
-        var rotation = Cesium.Math.toRadians(30);
+        let rotation = Cesium.Math.toRadians(30);
 
         function getRotationValue() {
           rotation += 0.005;

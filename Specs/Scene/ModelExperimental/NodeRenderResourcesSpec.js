@@ -7,9 +7,9 @@ import {
 } from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/NodeRenderResources", function () {
-  var mockModel = {};
-  var mockNode = {};
-  var mockSceneGraph = {
+  const mockModel = {};
+  const mockNode = {};
+  const mockSceneGraph = {
     computedModelMatrix: Matrix4.IDENTITY,
     components: {
       upAxis: Axis.Y,
@@ -17,7 +17,7 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
     },
   };
 
-  var runtimeNode = new ModelExperimentalNode({
+  const runtimeNode = new ModelExperimentalNode({
     node: mockNode,
     transform: Matrix4.IDENTITY,
     sceneGraph: mockSceneGraph,
@@ -37,14 +37,14 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
 
   it("throws for undefined runtimeNode", function () {
     expect(function () {
-      var modelResources = new ModelRenderResources(mockModel);
+      const modelResources = new ModelRenderResources(mockModel);
       return new NodeRenderResources(modelResources, undefined);
     }).toThrowDeveloperError();
   });
 
   it("constructs", function () {
-    var modelResources = new ModelRenderResources(mockModel);
-    var nodeResources = new NodeRenderResources(modelResources, runtimeNode);
+    const modelResources = new ModelRenderResources(mockModel);
+    const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
 
     expect(nodeResources.runtimeNode).toBe(runtimeNode);
     expect(nodeResources.modelMatrix).toBe(runtimeNode.transform);
@@ -52,9 +52,9 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
   });
 
   it("inherits from model render resources", function () {
-    var modelResources = new ModelRenderResources(mockModel);
+    const modelResources = new ModelRenderResources(mockModel);
     modelResources.shaderBuilder.addDefine("MODEL");
-    var nodeResources = new NodeRenderResources(modelResources, runtimeNode);
+    const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
     nodeResources.shaderBuilder.addDefine("NODE");
 
     expect(nodeResources.model).toBe(mockModel);

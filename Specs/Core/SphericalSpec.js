@@ -19,23 +19,23 @@ describe("Core/Spherical", function () {
   };
 
   it("Default constructing sets properties to their expected values.", function () {
-    var v = new Spherical();
+    const v = new Spherical();
     expect(v.clock).toEqual(0);
     expect(v.cone).toEqual(0);
     expect(v.magnitude).toEqual(1.0);
   });
 
   it("Construtor parameters are assigned to the appropriate properties", function () {
-    var v = new Spherical(1, 2, 3);
+    const v = new Spherical(1, 2, 3);
     expect(v.clock).toEqual(1);
     expect(v.cone).toEqual(2);
     expect(v.magnitude).toEqual(3);
   });
 
-  var fortyFiveDegrees = Math.PI / 4.0;
-  var sixtyDegrees = Math.PI / 3.0;
-  var cartesian = new Cartesian3(1.0, Math.sqrt(3.0), -2.0);
-  var spherical = new Spherical(
+  const fortyFiveDegrees = Math.PI / 4.0;
+  const sixtyDegrees = Math.PI / 3.0;
+  const cartesian = new Cartesian3(1.0, Math.sqrt(3.0), -2.0);
+  const spherical = new Spherical(
     sixtyDegrees,
     fortyFiveDegrees + Math.PI / 2.0,
     Math.sqrt(8.0)
@@ -49,7 +49,7 @@ describe("Core/Spherical", function () {
   });
 
   it("Can convert Cartesian3 to an existing spherical instance", function () {
-    var existing = new Spherical();
+    const existing = new Spherical();
     expect(spherical).toEqualEpsilon(
       Spherical.fromCartesian3(cartesian, existing),
       CesiumMath.EPSILON15
@@ -58,26 +58,26 @@ describe("Core/Spherical", function () {
   });
 
   it("Cloning with no result parameter returns a new instance.", function () {
-    var v = new Spherical(1, 2, 3);
-    var clone = v.clone();
+    const v = new Spherical(1, 2, 3);
+    const clone = v.clone();
     expect(clone).not.toBe(v);
     expect(clone).toBeInstanceOf(Spherical);
     expect(clone).toEqual(v);
   });
 
   it("Cloning with result modifies existing instance and returns it.", function () {
-    var v = new Spherical(1, 2, 3);
-    var w = new NotSpherical();
+    const v = new Spherical(1, 2, 3);
+    const w = new NotSpherical();
     expect(NotSpherical.areEqual(v, w)).toEqual(false);
-    var clone = v.clone(w);
+    const clone = v.clone(w);
     expect(clone).not.toBe(v);
     expect(clone).toBe(w);
     expect(NotSpherical.areEqual(v, w)).toEqual(true);
   });
 
   it("Normalizing with no result parameter creates new instance and sets magnitude to 1.0", function () {
-    var v = new Spherical(0, 2, 3);
-    var w = Spherical.normalize(v);
+    const v = new Spherical(0, 2, 3);
+    const w = Spherical.normalize(v);
     expect(w).not.toEqual(v);
     expect(w.clock).toEqual(0);
     expect(w.cone).toEqual(2);
@@ -85,9 +85,9 @@ describe("Core/Spherical", function () {
   });
 
   it("Normalizing with result parameter modifies instance and sets magnitude to 1.0", function () {
-    var v = new Spherical(0, 2, 3);
-    var w = new NotSpherical();
-    var q = Spherical.normalize(v, w);
+    const v = new Spherical(0, 2, 3);
+    const w = new NotSpherical();
+    const q = Spherical.normalize(v, w);
     expect(q).not.toEqual(v);
     expect(q).toBe(w);
     expect(q.clock).toEqual(0);
@@ -96,8 +96,8 @@ describe("Core/Spherical", function () {
   });
 
   it("Normalizing with this as result parameter modifies instance and sets magnitude to 1.0", function () {
-    var v = new Spherical(0, 2, 3);
-    var q = Spherical.normalize(v, v);
+    const v = new Spherical(0, 2, 3);
+    const q = Spherical.normalize(v, v);
     expect(q).toBe(v);
     expect(q.clock).toEqual(0);
     expect(q.cone).toEqual(2);
@@ -117,7 +117,7 @@ describe("Core/Spherical", function () {
   });
 
   it("toString returns the expected format.", function () {
-    var v = new Spherical(1, 2, 3);
+    const v = new Spherical(1, 2, 3);
     expect(v.toString()).toEqual("(1, 2, 3)");
   });
 });

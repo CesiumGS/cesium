@@ -6,7 +6,7 @@
  *
  * @see SampledProperty
  */
-var ExtrapolationType = {
+const ExtrapolationType = {
   /**
    * No extrapolation occurs.
    *

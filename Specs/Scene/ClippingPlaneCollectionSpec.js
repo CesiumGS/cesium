@@ -17,24 +17,24 @@ import { ClippingPlaneCollection } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 
 describe("Scene/ClippingPlaneCollection", function () {
-  var clippingPlanes;
-  var planes = [
+  let clippingPlanes;
+  const planes = [
     new ClippingPlane(Cartesian3.UNIT_X, 1.0),
     new ClippingPlane(Cartesian3.UNIT_Y, 2.0),
   ];
 
-  var transform = new Matrix4.fromTranslation(new Cartesian3(1.0, 3.0, 2.0));
-  var boundingVolume = new BoundingSphere(Cartesian3.ZERO, 1.0);
+  const transform = new Matrix4.fromTranslation(new Cartesian3(1.0, 3.0, 2.0));
+  const boundingVolume = new BoundingSphere(Cartesian3.ZERO, 1.0);
 
   function decodeUint8Plane(pixel1, pixel2) {
     // expect pixel1 to be the normal
-    var normal = AttributeCompression.octDecodeFromCartesian4(
+    const normal = AttributeCompression.octDecodeFromCartesian4(
       pixel1,
       new Cartesian3()
     );
 
     // expect pixel2 to be the distance
-    var distance = Cartesian4.unpackFloat(pixel2);
+    const distance = Cartesian4.unpackFloat(pixel2);
     return new Plane(normal, distance);
   }
 
@@ -79,7 +79,7 @@ describe("Scene/ClippingPlaneCollection", function () {
 
   it("fires the planeAdded event when a plane is added", function () {
     clippingPlanes = new ClippingPlaneCollection();
-    var spy = jasmine.createSpy();
+    const spy = jasmine.createSpy();
     clippingPlanes.planeAdded.addEventListener(spy);
     clippingPlanes.add(planes[0]);
     expect(spy).toHaveBeenCalled();
@@ -90,7 +90,7 @@ describe("Scene/ClippingPlaneCollection", function () {
       planes: planes,
     });
 
-    var plane = clippingPlanes.get(0);
+    let plane = clippingPlanes.get(0);
     expect(plane).toBe(planes[0]);
 
     plane = clippingPlanes.get(1);
@@ -121,7 +121,7 @@ describe("Scene/ClippingPlaneCollection", function () {
 
     expect(clippingPlanes.contains(planes[0])).toBe(true);
 
-    var result = clippingPlanes.remove(planes[0]);
+    let result = clippingPlanes.remove(planes[0]);
 
     expect(clippingPlanes.contains(planes[0])).toBe(false);
     expect(clippingPlanes.length).toBe(1);
@@ -137,7 +137,7 @@ describe("Scene/ClippingPlaneCollection", function () {
       planes: planes,
     });
 
-    var spy = jasmine.createSpy();
+    const spy = jasmine.createSpy();
     clippingPlanes.planeRemoved.addEventListener(spy);
 
     clippingPlanes.remove(planes[0]);
@@ -161,7 +161,7 @@ describe("Scene/ClippingPlaneCollection", function () {
       planes: planes,
     });
 
-    var spy = jasmine.createSpy();
+    const spy = jasmine.createSpy();
     clippingPlanes.planeRemoved.addEventListener(spy);
 
     clippingPlanes.removeAll();
@@ -175,7 +175,7 @@ describe("Scene/ClippingPlaneCollection", function () {
     });
 
     it("update creates a RGBA ubyte texture with no filtering or wrapping to house packed clipping planes", function () {
-      var scene = createScene();
+      const scene = createScene();
       clippingPlanes = new ClippingPlaneCollection({
         planes: planes,
         enabled: false,
@@ -185,7 +185,7 @@ describe("Scene/ClippingPlaneCollection", function () {
 
       clippingPlanes.update(scene.frameState);
 
-      var packedTexture = clippingPlanes.texture;
+      const packedTexture = clippingPlanes.texture;
       expect(packedTexture).toBeDefined();
 
       // Two RGBA uint8 clipping planes consume 4 pixels of texture, allocation to be double that
@@ -195,7 +195,7 @@ describe("Scene/ClippingPlaneCollection", function () {
       expect(packedTexture.pixelFormat).toEqual(PixelFormat.RGBA);
       expect(packedTexture.pixelDatatype).toEqual(PixelDatatype.UNSIGNED_BYTE);
 
-      var sampler = packedTexture.sampler;
+      const sampler = packedTexture.sampler;
       expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
       expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
       expect(sampler.minificationFilter).toEqual(
@@ -210,7 +210,7 @@ describe("Scene/ClippingPlaneCollection", function () {
     });
 
     it("only creates texture when planes are added", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       clippingPlanes = new ClippingPlaneCollection();
       clippingPlanes.update(scene.frameState);
@@ -227,7 +227,7 @@ describe("Scene/ClippingPlaneCollection", function () {
     });
 
     it("update fills the clipping plane texture with packed planes", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       clippingPlanes = new ClippingPlaneCollection({
         planes: planes,
@@ -236,8 +236,8 @@ describe("Scene/ClippingPlaneCollection", function () {
         modelMatrix: transform,
       });
 
-      var rgba;
-      var gl = scene.frameState.context._gl;
+      let rgba;
+      const gl = scene.frameState.context._gl;
       spyOn(gl, "texImage2D").and.callFake(function (
         target,
         level,
@@ -257,16 +257,16 @@ describe("Scene/ClippingPlaneCollection", function () {
       expect(rgba.length).toEqual(32);
 
       // Expect two clipping planes to use 4 pixels in the texture, so the first 16 bytes
-      for (var i = 16; i < rgba.length; i++) {
+      for (let i = 16; i < rgba.length; i++) {
         expect(rgba[i]).toEqual(0);
       }
-      var pixel1 = Cartesian4.fromArray(rgba, 0);
-      var pixel2 = Cartesian4.fromArray(rgba, 4);
-      var pixel3 = Cartesian4.fromArray(rgba, 8);
-      var pixel4 = Cartesian4.fromArray(rgba, 12);
+      const pixel1 = Cartesian4.fromArray(rgba, 0);
+      const pixel2 = Cartesian4.fromArray(rgba, 4);
+      const pixel3 = Cartesian4.fromArray(rgba, 8);
+      const pixel4 = Cartesian4.fromArray(rgba, 12);
 
-      var plane1 = decodeUint8Plane(pixel1, pixel2);
-      var plane2 = decodeUint8Plane(pixel3, pixel4);
+      const plane1 = decodeUint8Plane(pixel1, pixel2);
+      const plane2 = decodeUint8Plane(pixel3, pixel4);
 
       expect(
         Cartesian3.equalsEpsilon(
@@ -302,7 +302,7 @@ describe("Scene/ClippingPlaneCollection", function () {
     });
 
     it("reallocates textures when above capacity or below 1/4 capacity", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       clippingPlanes = new ClippingPlaneCollection({
         planes: planes,
@@ -313,7 +313,7 @@ describe("Scene/ClippingPlaneCollection", function () {
 
       clippingPlanes.update(scene.frameState);
 
-      var packedTexture = clippingPlanes.texture;
+      let packedTexture = clippingPlanes.texture;
 
       // Two RGBA uint8 clipping planes consume 4 pixels of texture, allocation to be double that
       expect(packedTexture.width).toEqual(4);
@@ -354,10 +354,10 @@ describe("Scene/ClippingPlaneCollection", function () {
     });
 
     it("performs partial updates when only a single plane has changed and full texture updates otherwise", function () {
-      var scene = createScene();
-      var gl = scene.frameState.context._gl;
-      var copyWidth;
-      var copyHeight;
+      const scene = createScene();
+      const gl = scene.frameState.context._gl;
+      let copyWidth;
+      let copyHeight;
       spyOn(gl, "texSubImage2D").and.callFake(function (
         target,
         level,
@@ -383,11 +383,11 @@ describe("Scene/ClippingPlaneCollection", function () {
       clippingPlanes.update(scene.frameState);
 
       // Two RGBA uint8 clipping planes consume 4 pixels of texture, allocation to be double that
-      var packedTexture = clippingPlanes.texture;
+      const packedTexture = clippingPlanes.texture;
       expect(packedTexture.width).toEqual(4);
       expect(packedTexture.height).toEqual(2);
 
-      var targetPlane = new ClippingPlane(Cartesian3.UNIT_X, 1.0);
+      const targetPlane = new ClippingPlane(Cartesian3.UNIT_X, 1.0);
       clippingPlanes.add(targetPlane);
       clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, 1.0));
       clippingPlanes.update(scene.frameState);
@@ -416,7 +416,7 @@ describe("Scene/ClippingPlaneCollection", function () {
 
   describe("float texture mode", function () {
     it("update creates a float texture with no filtering or wrapping to house packed clipping planes", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
         // Don't fail just because float textures aren't supported
@@ -433,14 +433,14 @@ describe("Scene/ClippingPlaneCollection", function () {
 
       clippingPlanes.update(scene.frameState);
 
-      var packedTexture = clippingPlanes.texture;
+      const packedTexture = clippingPlanes.texture;
       expect(packedTexture).toBeDefined();
       expect(packedTexture.width).toEqual(2);
       expect(packedTexture.height).toEqual(2);
       expect(packedTexture.pixelFormat).toEqual(PixelFormat.RGBA);
       expect(packedTexture.pixelDatatype).toEqual(PixelDatatype.FLOAT);
 
-      var sampler = packedTexture.sampler;
+      const sampler = packedTexture.sampler;
       expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
       expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
       expect(sampler.minificationFilter).toEqual(
@@ -455,7 +455,7 @@ describe("Scene/ClippingPlaneCollection", function () {
     });
 
     it("only creates texture when planes are added", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
         // Don't fail just because float textures aren't supported
@@ -479,7 +479,7 @@ describe("Scene/ClippingPlaneCollection", function () {
     });
 
     it("update fills the clipping plane texture with packed planes", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
         // Don't fail just because float textures aren't supported
@@ -494,8 +494,8 @@ describe("Scene/ClippingPlaneCollection", function () {
         modelMatrix: transform,
       });
 
-      var rgba;
-      var gl = scene.frameState.context._gl;
+      let rgba;
+      const gl = scene.frameState.context._gl;
       spyOn(gl, "texImage2D").and.callFake(function (
         target,
         level,
@@ -515,11 +515,11 @@ describe("Scene/ClippingPlaneCollection", function () {
       expect(rgba.length).toEqual(16);
 
       // Expect two clipping planes to use 2 pixels in the texture, so the first 8 floats.
-      for (var i = 8; i < rgba.length; i++) {
+      for (let i = 8; i < rgba.length; i++) {
         expect(rgba[i]).toEqual(0);
       }
-      var plane1 = Plane.fromCartesian4(Cartesian4.fromArray(rgba, 0));
-      var plane2 = Plane.fromCartesian4(Cartesian4.fromArray(rgba, 4));
+      const plane1 = Plane.fromCartesian4(Cartesian4.fromArray(rgba, 0));
+      const plane2 = Plane.fromCartesian4(Cartesian4.fromArray(rgba, 4));
 
       expect(
         Cartesian3.equalsEpsilon(
@@ -555,7 +555,7 @@ describe("Scene/ClippingPlaneCollection", function () {
     });
 
     it("reallocates textures when above capacity or below 1/4 capacity", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
         // Don't fail just because float textures aren't supported
@@ -572,7 +572,7 @@ describe("Scene/ClippingPlaneCollection", function () {
 
       clippingPlanes.update(scene.frameState);
 
-      var packedTexture = clippingPlanes.texture;
+      let packedTexture = clippingPlanes.texture;
 
       // Two RGBA float clipping planes consume 2 pixels of texture, allocation to be double that
       expect(packedTexture.width).toEqual(2);
@@ -613,7 +613,7 @@ describe("Scene/ClippingPlaneCollection", function () {
     });
 
     it("performs partial updates when only a single plane has changed and full texture updates otherwise", function () {
-      var scene = createScene();
+      const scene = createScene();
 
       if (!ClippingPlaneCollection.useFloatTexture(scene.context)) {
         // Don't fail just because float textures aren't supported
@@ -621,9 +621,9 @@ describe("Scene/ClippingPlaneCollection", function () {
         return;
       }
 
-      var gl = scene.frameState.context._gl;
-      var copyWidth;
-      var copyHeight;
+      const gl = scene.frameState.context._gl;
+      let copyWidth;
+      let copyHeight;
       spyOn(gl, "texSubImage2D").and.callFake(function (
         target,
         level,
@@ -649,11 +649,11 @@ describe("Scene/ClippingPlaneCollection", function () {
       clippingPlanes.update(scene.frameState);
 
       // Two RGBA Float clipping planes consume 2 pixels of texture, allocation to be double that
-      var packedTexture = clippingPlanes.texture;
+      const packedTexture = clippingPlanes.texture;
       expect(packedTexture.width).toEqual(2);
       expect(packedTexture.height).toEqual(2);
 
-      var targetPlane = new ClippingPlane(Cartesian3.UNIT_X, 1.0);
+      const targetPlane = new ClippingPlane(Cartesian3.UNIT_X, 1.0);
       clippingPlanes.add(targetPlane);
       clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, 1.0));
       clippingPlanes.update(scene.frameState);
@@ -681,9 +681,9 @@ describe("Scene/ClippingPlaneCollection", function () {
   });
 
   it("does not perform texture updates if the planes are unchanged", function () {
-    var scene = createScene();
+    const scene = createScene();
 
-    var gl = scene.frameState.context._gl;
+    const gl = scene.frameState.context._gl;
     spyOn(gl, "texImage2D").and.callThrough();
 
     clippingPlanes = new ClippingPlaneCollection({
@@ -705,14 +705,14 @@ describe("Scene/ClippingPlaneCollection", function () {
   });
 
   it("provides a function for attaching the ClippingPlaneCollection to objects", function () {
-    var clippedObject1 = {
+    const clippedObject1 = {
       clippingPlanes: undefined,
     };
-    var clippedObject2 = {
+    const clippedObject2 = {
       clippingPlanes: undefined,
     };
 
-    var clippingPlanes1 = new ClippingPlaneCollection({
+    const clippingPlanes1 = new ClippingPlaneCollection({
       planes: planes,
       enabled: false,
       edgeColor: Color.RED,
@@ -727,7 +727,7 @@ describe("Scene/ClippingPlaneCollection", function () {
     expect(clippedObject1.clippingPlanes).toBe(clippingPlanes1);
     expect(clippingPlanes1._owner).toBe(clippedObject1);
 
-    var clippingPlanes2 = new ClippingPlaneCollection({
+    const clippingPlanes2 = new ClippingPlaneCollection({
       planes: planes,
       enabled: false,
       edgeColor: Color.RED,
@@ -762,7 +762,7 @@ describe("Scene/ClippingPlaneCollection", function () {
 
   it("setting unionClippingRegions updates testIntersection function", function () {
     clippingPlanes = new ClippingPlaneCollection();
-    var originalIntersectFunction = clippingPlanes._testIntersection;
+    const originalIntersectFunction = clippingPlanes._testIntersection;
 
     expect(clippingPlanes._testIntersection).not.toBeUndefined();
 
@@ -776,7 +776,7 @@ describe("Scene/ClippingPlaneCollection", function () {
   it("computes intersections with bounding volumes when clipping regions are combined with an intersect operation", function () {
     clippingPlanes = new ClippingPlaneCollection();
 
-    var intersect = clippingPlanes.computeIntersectionWithBoundingVolume(
+    let intersect = clippingPlanes.computeIntersectionWithBoundingVolume(
       boundingVolume
     );
     expect(intersect).toEqual(Intersect.INSIDE);
@@ -811,7 +811,7 @@ describe("Scene/ClippingPlaneCollection", function () {
       unionClippingRegions: true,
     });
 
-    var intersect = clippingPlanes.computeIntersectionWithBoundingVolume(
+    let intersect = clippingPlanes.computeIntersectionWithBoundingVolume(
       boundingVolume
     );
     expect(intersect).toEqual(Intersect.INSIDE);
@@ -822,7 +822,7 @@ describe("Scene/ClippingPlaneCollection", function () {
     );
     expect(intersect).toEqual(Intersect.INSIDE);
 
-    var temp = new ClippingPlane(Cartesian3.UNIT_Y, -2.0);
+    const temp = new ClippingPlane(Cartesian3.UNIT_Y, -2.0);
     clippingPlanes.add(temp);
     intersect = clippingPlanes.computeIntersectionWithBoundingVolume(
       boundingVolume
@@ -845,7 +845,7 @@ describe("Scene/ClippingPlaneCollection", function () {
   it("compute intersections applies optional transform to planes", function () {
     clippingPlanes = new ClippingPlaneCollection();
 
-    var intersect = clippingPlanes.computeIntersectionWithBoundingVolume(
+    let intersect = clippingPlanes.computeIntersectionWithBoundingVolume(
       boundingVolume,
       transform
     );
@@ -865,7 +865,7 @@ describe("Scene/ClippingPlaneCollection", function () {
 
     expect(clippingPlanes.clippingPlanesState).toEqual(-1);
 
-    var holdThisPlane = new ClippingPlane(Cartesian3.UNIT_X, -1.0);
+    const holdThisPlane = new ClippingPlane(Cartesian3.UNIT_X, -1.0);
     clippingPlanes.add(holdThisPlane);
     expect(clippingPlanes.clippingPlanesState).toEqual(-2);
 
@@ -879,7 +879,7 @@ describe("Scene/ClippingPlaneCollection", function () {
   it("provides a function for checking the texture resolution", function () {
     spyOn(ClippingPlaneCollection, "useFloatTexture").and.returnValue(false);
 
-    var scene = createScene();
+    const scene = createScene();
     clippingPlanes = new ClippingPlaneCollection({
       planes: planes,
       enabled: false,
@@ -888,7 +888,7 @@ describe("Scene/ClippingPlaneCollection", function () {
     });
 
     // Predicted resolution before texture has been allocated
-    var predictedResolution = ClippingPlaneCollection.getTextureResolution(
+    const predictedResolution = ClippingPlaneCollection.getTextureResolution(
       clippingPlanes,
       scene.frameState.context,
       new Cartesian2()
@@ -898,7 +898,7 @@ describe("Scene/ClippingPlaneCollection", function () {
     expect(predictedResolution.y).toEqual(2);
 
     clippingPlanes.update(scene.frameState);
-    var actualResolution = ClippingPlaneCollection.getTextureResolution(
+    const actualResolution = ClippingPlaneCollection.getTextureResolution(
       clippingPlanes,
       scene.frameState.context,
       new Cartesian2()

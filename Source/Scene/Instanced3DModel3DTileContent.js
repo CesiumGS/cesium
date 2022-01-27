@@ -75,7 +75,7 @@ Object.defineProperties(Instanced3DModel3DTileContent.prototype, {
 
   trianglesLength: {
     get: function () {
-      var model = this._modelInstanceCollection._model;
+      const model = this._modelInstanceCollection._model;
       if (defined(model)) {
         return model.trianglesLength;
       }
@@ -85,7 +85,7 @@ Object.defineProperties(Instanced3DModel3DTileContent.prototype, {
 
   geometryByteLength: {
     get: function () {
-      var model = this._modelInstanceCollection._model;
+      const model = this._modelInstanceCollection._model;
       if (defined(model)) {
         return model.geometryByteLength;
       }
@@ -95,7 +95,7 @@ Object.defineProperties(Instanced3DModel3DTileContent.prototype, {
 
   texturesByteLength: {
     get: function () {
-      var model = this._modelInstanceCollection._model;
+      const model = this._modelInstanceCollection._model;
       if (defined(model)) {
         return model.texturesByteLength;
       }
@@ -161,24 +161,24 @@ function getPickIdCallback(content) {
   };
 }
 
-var propertyScratch1 = new Array(4);
-var propertyScratch2 = new Array(4);
+const propertyScratch1 = new Array(4);
+const propertyScratch2 = new Array(4);
 
 function initialize(content, arrayBuffer, byteOffset) {
-  var i3dm = I3dmParser.parse(arrayBuffer, byteOffset);
+  const i3dm = I3dmParser.parse(arrayBuffer, byteOffset);
 
-  var gltfFormat = i3dm.gltfFormat;
-  var gltfView = i3dm.gltf;
-  var featureTableJson = i3dm.featureTableJson;
-  var featureTableBinary = i3dm.featureTableBinary;
-  var batchTableJson = i3dm.batchTableJson;
-  var batchTableBinary = i3dm.batchTableBinary;
+  const gltfFormat = i3dm.gltfFormat;
+  const gltfView = i3dm.gltf;
+  const featureTableJson = i3dm.featureTableJson;
+  const featureTableBinary = i3dm.featureTableBinary;
+  const batchTableJson = i3dm.batchTableJson;
+  const batchTableBinary = i3dm.batchTableBinary;
 
-  var featureTable = new Cesium3DTileFeatureTable(
+  const featureTable = new Cesium3DTileFeatureTable(
     featureTableJson,
     featureTableBinary
   );
-  var instancesLength = featureTable.getGlobalProperty("INSTANCES_LENGTH");
+  const instancesLength = featureTable.getGlobalProperty("INSTANCES_LENGTH");
   featureTable.featuresLength = instancesLength;
 
   if (!defined(instancesLength)) {
@@ -194,10 +194,10 @@ function initialize(content, arrayBuffer, byteOffset) {
     batchTableBinary
   );
 
-  var tileset = content._tileset;
+  const tileset = content._tileset;
 
   // Create model instance collection
-  var collectionOptions = {
+  const collectionOptions = {
     instances: new Array(instancesLength),
     batchTable: content._batchTable,
     cull: false, // Already culled by 3D Tiles
@@ -220,7 +220,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   };
 
   if (gltfFormat === 0) {
-    var gltfUrl = getStringFromTypedArray(gltfView);
+    let gltfUrl = getStringFromTypedArray(gltfView);
 
     // We need to remove padding from the end of the model URL in case this tile was part of a composite tile.
     // This removes all white space and null characters from the end of the string.
@@ -233,10 +233,10 @@ function initialize(content, arrayBuffer, byteOffset) {
     collectionOptions.basePath = content._resource.clone();
   }
 
-  var eastNorthUp = featureTable.getGlobalProperty("EAST_NORTH_UP");
+  const eastNorthUp = featureTable.getGlobalProperty("EAST_NORTH_UP");
 
-  var rtcCenter;
-  var rtcCenterArray = featureTable.getGlobalProperty(
+  let rtcCenter;
+  const rtcCenterArray = featureTable.getGlobalProperty(
     "RTC_CENTER",
     ComponentDatatype.FLOAT,
     3
@@ -245,20 +245,20 @@ function initialize(content, arrayBuffer, byteOffset) {
     rtcCenter = Cartesian3.unpack(rtcCenterArray);
   }
 
-  var instances = collectionOptions.instances;
-  var instancePosition = new Cartesian3();
-  var instancePositionArray = new Array(3);
-  var instanceNormalRight = new Cartesian3();
-  var instanceNormalUp = new Cartesian3();
-  var instanceNormalForward = new Cartesian3();
-  var instanceRotation = new Matrix3();
-  var instanceQuaternion = new Quaternion();
-  var instanceScale = new Cartesian3();
-  var instanceTranslationRotationScale = new TranslationRotationScale();
-  var instanceTransform = new Matrix4();
-  for (var i = 0; i < instancesLength; i++) {
+  const instances = collectionOptions.instances;
+  const instancePosition = new Cartesian3();
+  const instancePositionArray = new Array(3);
+  const instanceNormalRight = new Cartesian3();
+  const instanceNormalUp = new Cartesian3();
+  const instanceNormalForward = new Cartesian3();
+  const instanceRotation = new Matrix3();
+  const instanceQuaternion = new Quaternion();
+  let instanceScale = new Cartesian3();
+  const instanceTranslationRotationScale = new TranslationRotationScale();
+  const instanceTransform = new Matrix4();
+  for (let i = 0; i < instancesLength; i++) {
     // Get the instance position
-    var position = featureTable.getProperty(
+    let position = featureTable.getProperty(
       "POSITION",
       ComponentDatatype.FLOAT,
       3,
@@ -267,7 +267,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     );
     if (!defined(position)) {
       position = instancePositionArray;
-      var positionQuantized = featureTable.getProperty(
+      const positionQuantized = featureTable.getProperty(
         "POSITION_QUANTIZED",
         ComponentDatatype.UNSIGNED_SHORT,
         3,
@@ -279,7 +279,7 @@ function initialize(content, arrayBuffer, byteOffset) {
           "Either POSITION or POSITION_QUANTIZED must be defined for each instance."
         );
       }
-      var quantizedVolumeOffset = featureTable.getGlobalProperty(
+      const quantizedVolumeOffset = featureTable.getGlobalProperty(
         "QUANTIZED_VOLUME_OFFSET",
         ComponentDatatype.FLOAT,
         3
@@ -289,7 +289,7 @@ function initialize(content, arrayBuffer, byteOffset) {
           "Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions."
         );
       }
-      var quantizedVolumeScale = featureTable.getGlobalProperty(
+      const quantizedVolumeScale = featureTable.getGlobalProperty(
         "QUANTIZED_VOLUME_SCALE",
         ComponentDatatype.FLOAT,
         3
@@ -299,7 +299,7 @@ function initialize(content, arrayBuffer, byteOffset) {
           "Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions."
         );
       }
-      for (var j = 0; j < 3; j++) {
+      for (let j = 0; j < 3; j++) {
         position[j] =
           (positionQuantized[j] / 65535.0) * quantizedVolumeScale[j] +
           quantizedVolumeOffset[j];
@@ -312,21 +312,21 @@ function initialize(content, arrayBuffer, byteOffset) {
     instanceTranslationRotationScale.translation = instancePosition;
 
     // Get the instance rotation
-    var normalUp = featureTable.getProperty(
+    const normalUp = featureTable.getProperty(
       "NORMAL_UP",
       ComponentDatatype.FLOAT,
       3,
       i,
       propertyScratch1
     );
-    var normalRight = featureTable.getProperty(
+    const normalRight = featureTable.getProperty(
       "NORMAL_RIGHT",
       ComponentDatatype.FLOAT,
       3,
       i,
       propertyScratch2
     );
-    var hasCustomOrientation = false;
+    let hasCustomOrientation = false;
     if (defined(normalUp)) {
       if (!defined(normalRight)) {
         throw new RuntimeError(
@@ -337,14 +337,14 @@ function initialize(content, arrayBuffer, byteOffset) {
       Cartesian3.unpack(normalRight, 0, instanceNormalRight);
       hasCustomOrientation = true;
     } else {
-      var octNormalUp = featureTable.getProperty(
+      const octNormalUp = featureTable.getProperty(
         "NORMAL_UP_OCT32P",
         ComponentDatatype.UNSIGNED_SHORT,
         2,
         i,
         propertyScratch1
       );
-      var octNormalRight = featureTable.getProperty(
+      const octNormalRight = featureTable.getProperty(
         "NORMAL_RIGHT_OCT32P",
         ComponentDatatype.UNSIGNED_SHORT,
         2,
@@ -412,7 +412,7 @@ function initialize(content, arrayBuffer, byteOffset) {
 
     // Get the instance scale
     instanceScale = Cartesian3.fromElements(1.0, 1.0, 1.0, instanceScale);
-    var scale = featureTable.getProperty(
+    const scale = featureTable.getProperty(
       "SCALE",
       ComponentDatatype.FLOAT,
       1,
@@ -421,7 +421,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     if (defined(scale)) {
       Cartesian3.multiplyByScalar(instanceScale, scale, instanceScale);
     }
-    var nonUniformScale = featureTable.getProperty(
+    const nonUniformScale = featureTable.getProperty(
       "SCALE_NON_UNIFORM",
       ComponentDatatype.FLOAT,
       3,
@@ -436,7 +436,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     instanceTranslationRotationScale.scale = instanceScale;
 
     // Get the batchId
-    var batchId = featureTable.getProperty(
+    let batchId = featureTable.getProperty(
       "BATCH_ID",
       ComponentDatatype.UNSIGNED_SHORT,
       1,
@@ -452,7 +452,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       instanceTranslationRotationScale,
       instanceTransform
     );
-    var modelMatrix = instanceTransform.clone();
+    const modelMatrix = instanceTransform.clone();
     instances[i] = {
       modelMatrix: modelMatrix,
       batchId: batchId,
@@ -470,10 +470,10 @@ function initialize(content, arrayBuffer, byteOffset) {
 }
 
 function createFeatures(content) {
-  var featuresLength = content.featuresLength;
+  const featuresLength = content.featuresLength;
   if (!defined(content._features) && featuresLength > 0) {
-    var features = new Array(featuresLength);
-    for (var i = 0; i < featuresLength; ++i) {
+    const features = new Array(featuresLength);
+    for (let i = 0; i < featuresLength; ++i) {
       features[i] = new Cesium3DTileFeature(content, i);
     }
     content._features = features;
@@ -485,7 +485,7 @@ Instanced3DModel3DTileContent.prototype.hasProperty = function (batchId, name) {
 };
 
 Instanced3DModel3DTileContent.prototype.getFeature = function (batchId) {
-  var featuresLength = this.featuresLength;
+  const featuresLength = this.featuresLength;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
     throw new DeveloperError(
@@ -516,7 +516,7 @@ Instanced3DModel3DTileContent.prototype.update = function (
   tileset,
   frameState
 ) {
-  var commandStart = frameState.commandList.length;
+  const commandStart = frameState.commandList.length;
 
   // In the PROCESSING state we may be calling update() to move forward
   // the content's resource loading.  In the READY state, it will
@@ -532,11 +532,11 @@ Instanced3DModel3DTileContent.prototype.update = function (
   this._modelInstanceCollection.backFaceCulling = this._tileset.backFaceCulling;
   this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
 
-  var model = this._modelInstanceCollection._model;
+  const model = this._modelInstanceCollection._model;
 
   if (defined(model)) {
     // Update for clipping planes
-    var tilesetClippingPlanes = this._tileset.clippingPlanes;
+    const tilesetClippingPlanes = this._tileset.clippingPlanes;
     model.referenceMatrix = this._tileset.clippingPlanesOriginMatrix;
     if (defined(tilesetClippingPlanes) && this._tile.clippingPlanesDirty) {
       // Dereference the clipping planes from the model if they are irrelevant - saves on shading
@@ -561,7 +561,7 @@ Instanced3DModel3DTileContent.prototype.update = function (
   this._modelInstanceCollection.update(frameState);
 
   // If any commands were pushed, add derived commands
-  var commandEnd = frameState.commandList.length;
+  const commandEnd = frameState.commandList.length;
   if (
     commandStart < commandEnd &&
     (frameState.passes.render || frameState.passes.pick)

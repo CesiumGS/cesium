@@ -86,28 +86,28 @@ function BatchTable(context, attributes, numberOfInstances) {
   // Packing floats into unsigned byte textures makes the problem worse. A single component float attribute
   // will be packed into a single texel leaving 3 texels unused. 4 texels are reserved for each float attribute
   // regardless of how many components it has.
-  var pixelDatatype = getDatatype(attributes);
-  var textureFloatSupported = context.floatingPointTexture;
-  var packFloats =
+  const pixelDatatype = getDatatype(attributes);
+  const textureFloatSupported = context.floatingPointTexture;
+  const packFloats =
     pixelDatatype === PixelDatatype.FLOAT && !textureFloatSupported;
-  var offsets = createOffsets(attributes, packFloats);
+  const offsets = createOffsets(attributes, packFloats);
 
-  var stride = getStride(offsets, attributes, packFloats);
-  var maxNumberOfInstancesPerRow = Math.floor(
+  const stride = getStride(offsets, attributes, packFloats);
+  const maxNumberOfInstancesPerRow = Math.floor(
     ContextLimits.maximumTextureSize / stride
   );
 
-  var instancesPerWidth = Math.min(
+  const instancesPerWidth = Math.min(
     numberOfInstances,
     maxNumberOfInstancesPerRow
   );
-  var width = stride * instancesPerWidth;
-  var height = Math.ceil(numberOfInstances / instancesPerWidth);
+  const width = stride * instancesPerWidth;
+  const height = Math.ceil(numberOfInstances / instancesPerWidth);
 
-  var stepX = 1.0 / width;
-  var centerX = stepX * 0.5;
-  var stepY = 1.0 / height;
-  var centerY = stepY * 0.5;
+  const stepX = 1.0 / width;
+  const centerX = stepX * 0.5;
+  const stepY = 1.0 / height;
+  const centerY = stepY * 0.5;
 
   this._textureDimensions = new Cartesian2(width, height);
   this._textureStep = new Cartesian4(stepX, centerX, stepY, centerY);
@@ -119,7 +119,7 @@ function BatchTable(context, attributes, numberOfInstances) {
   this._stride = stride;
   this._texture = undefined;
 
-  var batchLength = 4 * width * height;
+  const batchLength = 4 * width * height;
   this._batchValues =
     pixelDatatype === PixelDatatype.FLOAT && !packFloats
       ? new Float32Array(batchLength)
@@ -153,9 +153,9 @@ Object.defineProperties(BatchTable.prototype, {
 });
 
 function getDatatype(attributes) {
-  var foundFloatDatatype = false;
-  var length = attributes.length;
-  for (var i = 0; i < length; ++i) {
+  let foundFloatDatatype = false;
+  const length = attributes.length;
+  for (let i = 0; i < length; ++i) {
     if (attributes[i].componentDatatype !== ComponentDatatype.UNSIGNED_BYTE) {
       foundFloatDatatype = true;
       break;
@@ -165,7 +165,7 @@ function getDatatype(attributes) {
 }
 
 function getAttributeType(attributes, attributeIndex) {
-  var componentsPerAttribute =
+  const componentsPerAttribute =
     attributes[attributeIndex].componentsPerAttribute;
   if (componentsPerAttribute === 2) {
     return Cartesian2;
@@ -178,13 +178,13 @@ function getAttributeType(attributes, attributeIndex) {
 }
 
 function createOffsets(attributes, packFloats) {
-  var offsets = new Array(attributes.length);
+  const offsets = new Array(attributes.length);
 
-  var currentOffset = 0;
-  var attributesLength = attributes.length;
-  for (var i = 0; i < attributesLength; ++i) {
-    var attribute = attributes[i];
-    var componentDatatype = attribute.componentDatatype;
+  let currentOffset = 0;
+  const attributesLength = attributes.length;
+  for (let i = 0; i < attributesLength; ++i) {
+    const attribute = attributes[i];
+    const componentDatatype = attribute.componentDatatype;
 
     offsets[i] = currentOffset;
 
@@ -199,10 +199,10 @@ function createOffsets(attributes, packFloats) {
 }
 
 function getStride(offsets, attributes, packFloats) {
-  var length = offsets.length;
-  var lastOffset = offsets[length - 1];
-  var lastAttribute = attributes[length - 1];
-  var componentDatatype = lastAttribute.componentDatatype;
+  const length = offsets.length;
+  const lastOffset = offsets[length - 1];
+  const lastAttribute = attributes[length - 1];
+  const componentDatatype = lastAttribute.componentDatatype;
 
   if (componentDatatype !== ComponentDatatype.UNSIGNED_BYTE && packFloats) {
     return lastOffset + 4;
@@ -210,26 +210,26 @@ function getStride(offsets, attributes, packFloats) {
   return lastOffset + 1;
 }
 
-var scratchPackedFloatCartesian4 = new Cartesian4();
+const scratchPackedFloatCartesian4 = new Cartesian4();
 
 function getPackedFloat(array, index, result) {
-  var packed = Cartesian4.unpack(array, index, scratchPackedFloatCartesian4);
-  var x = Cartesian4.unpackFloat(packed);
+  let packed = Cartesian4.unpack(array, index, scratchPackedFloatCartesian4);
+  const x = Cartesian4.unpackFloat(packed);
 
   packed = Cartesian4.unpack(array, index + 4, scratchPackedFloatCartesian4);
-  var y = Cartesian4.unpackFloat(packed);
+  const y = Cartesian4.unpackFloat(packed);
 
   packed = Cartesian4.unpack(array, index + 8, scratchPackedFloatCartesian4);
-  var z = Cartesian4.unpackFloat(packed);
+  const z = Cartesian4.unpackFloat(packed);
 
   packed = Cartesian4.unpack(array, index + 12, scratchPackedFloatCartesian4);
-  var w = Cartesian4.unpackFloat(packed);
+  const w = Cartesian4.unpackFloat(packed);
 
   return Cartesian4.fromElements(x, y, z, w, result);
 }
 
 function setPackedAttribute(value, array, index) {
-  var packed = Cartesian4.packFloat(value.x, scratchPackedFloatCartesian4);
+  let packed = Cartesian4.packFloat(value.x, scratchPackedFloatCartesian4);
   Cartesian4.pack(packed, array, index);
 
   packed = Cartesian4.packFloat(value.y, packed);
@@ -242,7 +242,7 @@ function setPackedAttribute(value, array, index) {
   Cartesian4.pack(packed, array, index + 12);
 }
 
-var scratchGetAttributeCartesian4 = new Cartesian4();
+const scratchGetAttributeCartesian4 = new Cartesian4();
 
 /**
  * Gets the value of an attribute in the table.
@@ -269,12 +269,12 @@ BatchTable.prototype.getBatchedAttribute = function (
   }
   //>>includeEnd('debug');
 
-  var attributes = this._attributes;
-  var offset = this._offsets[attributeIndex];
-  var stride = this._stride;
+  const attributes = this._attributes;
+  const offset = this._offsets[attributeIndex];
+  const stride = this._stride;
 
-  var index = 4 * stride * instanceIndex + 4 * offset;
-  var value;
+  const index = 4 * stride * instanceIndex + 4 * offset;
+  let value;
 
   if (
     this._packFloats &&
@@ -293,7 +293,7 @@ BatchTable.prototype.getBatchedAttribute = function (
     );
   }
 
-  var attributeType = getAttributeType(attributes, attributeIndex);
+  const attributeType = getAttributeType(attributes, attributeIndex);
   if (defined(attributeType.fromCartesian4)) {
     return attributeType.fromCartesian4(value, result);
   } else if (defined(attributeType.clone)) {
@@ -303,14 +303,14 @@ BatchTable.prototype.getBatchedAttribute = function (
   return value.x;
 };
 
-var setAttributeScratchValues = [
+const setAttributeScratchValues = [
   undefined,
   undefined,
   new Cartesian2(),
   new Cartesian3(),
   new Cartesian4(),
 ];
-var setAttributeScratchCartesian4 = new Cartesian4();
+const setAttributeScratchCartesian4 = new Cartesian4();
 
 /**
  * Sets the value of an attribute in the table.
@@ -339,33 +339,33 @@ BatchTable.prototype.setBatchedAttribute = function (
   }
   //>>includeEnd('debug');
 
-  var attributes = this._attributes;
-  var result =
+  const attributes = this._attributes;
+  const result =
     setAttributeScratchValues[
       attributes[attributeIndex].componentsPerAttribute
     ];
-  var currentAttribute = this.getBatchedAttribute(
+  const currentAttribute = this.getBatchedAttribute(
     instanceIndex,
     attributeIndex,
     result
   );
-  var attributeType = getAttributeType(this._attributes, attributeIndex);
-  var entriesEqual = defined(attributeType.equals)
+  const attributeType = getAttributeType(this._attributes, attributeIndex);
+  const entriesEqual = defined(attributeType.equals)
     ? attributeType.equals(currentAttribute, value)
     : currentAttribute === value;
   if (entriesEqual) {
     return;
   }
 
-  var attributeValue = setAttributeScratchCartesian4;
+  const attributeValue = setAttributeScratchCartesian4;
   attributeValue.x = defined(value.x) ? value.x : value;
   attributeValue.y = defined(value.y) ? value.y : 0.0;
   attributeValue.z = defined(value.z) ? value.z : 0.0;
   attributeValue.w = defined(value.w) ? value.w : 0.0;
 
-  var offset = this._offsets[attributeIndex];
-  var stride = this._stride;
-  var index = 4 * stride * instanceIndex + 4 * offset;
+  const offset = this._offsets[attributeIndex];
+  const stride = this._stride;
+  const index = 4 * stride * instanceIndex + 4 * offset;
 
   if (
     this._packFloats &&
@@ -380,7 +380,7 @@ BatchTable.prototype.setBatchedAttribute = function (
 };
 
 function createTexture(batchTable, context) {
-  var dimensions = batchTable._textureDimensions;
+  const dimensions = batchTable._textureDimensions;
   batchTable._texture = new Texture({
     context: context,
     pixelFormat: PixelFormat.RGBA,
@@ -393,7 +393,7 @@ function createTexture(batchTable, context) {
 }
 
 function updateTexture(batchTable) {
-  var dimensions = batchTable._textureDimensions;
+  const dimensions = batchTable._textureDimensions;
   batchTable._texture.copyFrom({
     source: {
       width: dimensions.x,
@@ -431,13 +431,13 @@ BatchTable.prototype.update = function (frameState) {
  * @returns {BatchTable.updateUniformMapCallback} A callback for updating uniform maps.
  */
 BatchTable.prototype.getUniformMapCallback = function () {
-  var that = this;
+  const that = this;
   return function (uniformMap) {
     if (that._attributes.length === 0) {
       return uniformMap;
     }
 
-    var batchUniformMap = {
+    const batchUniformMap = {
       batchTexture: function () {
         return that._texture;
       },
@@ -453,7 +453,7 @@ BatchTable.prototype.getUniformMapCallback = function () {
 };
 
 function getGlslComputeSt(batchTable) {
-  var stride = batchTable._stride;
+  const stride = batchTable._stride;
 
   // GLSL batchId is zero-based: [0, numberOfInstances - 1]
   if (batchTable._textureDimensions.y === 1) {
@@ -509,16 +509,16 @@ function getComponentSwizzle(componentsPerAttribute) {
 }
 
 function getGlslAttributeFunction(batchTable, attributeIndex) {
-  var attributes = batchTable._attributes;
-  var attribute = attributes[attributeIndex];
-  var componentsPerAttribute = attribute.componentsPerAttribute;
-  var functionName = attribute.functionName;
-  var functionReturnType = getComponentType(componentsPerAttribute);
-  var functionReturnValue = getComponentSwizzle(componentsPerAttribute);
+  const attributes = batchTable._attributes;
+  const attribute = attributes[attributeIndex];
+  const componentsPerAttribute = attribute.componentsPerAttribute;
+  const functionName = attribute.functionName;
+  const functionReturnType = getComponentType(componentsPerAttribute);
+  const functionReturnValue = getComponentSwizzle(componentsPerAttribute);
 
-  var offset = batchTable._offsets[attributeIndex];
+  const offset = batchTable._offsets[attributeIndex];
 
-  var glslFunction =
+  let glslFunction =
     functionReturnType +
     " " +
     functionName +
@@ -574,25 +574,25 @@ function getGlslAttributeFunction(batchTable, attributeIndex) {
  * @returns {BatchTable.updateVertexShaderSourceCallback} A callback for updating a vertex shader source.
  */
 BatchTable.prototype.getVertexShaderCallback = function () {
-  var attributes = this._attributes;
+  const attributes = this._attributes;
   if (attributes.length === 0) {
     return function (source) {
       return source;
     };
   }
 
-  var batchTableShader = "uniform highp sampler2D batchTexture; \n";
+  let batchTableShader = "uniform highp sampler2D batchTexture; \n";
   batchTableShader += getGlslComputeSt(this) + "\n";
 
-  var length = attributes.length;
-  for (var i = 0; i < length; ++i) {
+  const length = attributes.length;
+  for (let i = 0; i < length; ++i) {
     batchTableShader += getGlslAttributeFunction(this, i);
   }
 
   return function (source) {
-    var mainIndex = source.indexOf("void main");
-    var beforeMain = source.substring(0, mainIndex);
-    var afterMain = source.substring(mainIndex);
+    const mainIndex = source.indexOf("void main");
+    const beforeMain = source.substring(0, mainIndex);
+    const afterMain = source.substring(mainIndex);
     return beforeMain + "\n" + batchTableShader + "\n" + afterMain;
   };
 };

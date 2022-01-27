@@ -14,7 +14,7 @@ import when from "../ThirdParty/when.js";
  * @param {Boolean} bc7 Whether or not BC7 is supported
  * @private
  */
-var supportedTranscoderFormats;
+let supportedTranscoderFormats;
 
 loadKTX2.setKTX2SupportedFormats = function (
   s3tc,
@@ -85,14 +85,14 @@ function loadKTX2(resourceOrUrlOrBuffer) {
   Check.defined("resourceOrUrlOrBuffer", resourceOrUrlOrBuffer);
   //>>includeEnd('debug');
 
-  var loadPromise;
+  let loadPromise;
   if (
     resourceOrUrlOrBuffer instanceof ArrayBuffer ||
     ArrayBuffer.isView(resourceOrUrlOrBuffer)
   ) {
     loadPromise = when.resolve(resourceOrUrlOrBuffer);
   } else {
-    var resource = Resource.createIfNeeded(resourceOrUrlOrBuffer);
+    const resource = Resource.createIfNeeded(resourceOrUrlOrBuffer);
     loadPromise = resource.fetchArrayBuffer();
   }
 

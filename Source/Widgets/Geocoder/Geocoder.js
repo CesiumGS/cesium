@@ -6,9 +6,9 @@ import knockout from "../../ThirdParty/knockout.js";
 import getElement from "../getElement.js";
 import GeocoderViewModel from "./GeocoderViewModel.js";
 
-var startSearchPath =
+const startSearchPath =
   "M29.772,26.433l-7.126-7.126c0.96-1.583,1.523-3.435,1.524-5.421C24.169,8.093,19.478,3.401,13.688,3.399C7.897,3.401,3.204,8.093,3.204,13.885c0,5.789,4.693,10.481,10.484,10.481c1.987,0,3.839-0.563,5.422-1.523l7.128,7.127L29.772,26.433zM7.203,13.885c0.006-3.582,2.903-6.478,6.484-6.486c3.579,0.008,6.478,2.904,6.484,6.486c-0.007,3.58-2.905,6.476-6.484,6.484C10.106,20.361,7.209,17.465,7.203,13.885z";
-var stopSearchPath =
+const stopSearchPath =
   "M24.778,21.419 19.276,15.917 24.777,10.415 21.949,7.585 16.447,13.087 10.945,7.585 8.117,10.415 13.618,15.917 8.116,21.419 10.946,24.248 16.447,18.746 21.948,24.248z";
 
 /**
@@ -36,16 +36,16 @@ function Geocoder(options) {
   }
   //>>includeEnd('debug');
 
-  var container = getElement(options.container);
-  var viewModel = new GeocoderViewModel(options);
+  const container = getElement(options.container);
+  const viewModel = new GeocoderViewModel(options);
 
   viewModel._startSearchPath = startSearchPath;
   viewModel._stopSearchPath = stopSearchPath;
 
-  var form = document.createElement("form");
+  const form = document.createElement("form");
   form.setAttribute("data-bind", "submit: search");
 
-  var textBox = document.createElement("input");
+  const textBox = document.createElement("input");
   textBox.type = "search";
   textBox.className = "cesium-geocoder-input";
   textBox.setAttribute("placeholder", "Enter an address or landmark...");
@@ -71,7 +71,7 @@ hasFocus: _focusTextbox'
   form.appendChild(textBox);
   this._textBox = textBox;
 
-  var searchButton = document.createElement("span");
+  const searchButton = document.createElement("span");
   searchButton.className = "cesium-geocoder-searchButton";
   searchButton.setAttribute(
     "data-bind",
@@ -83,16 +83,16 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
 
   container.appendChild(form);
 
-  var searchSuggestionsContainer = document.createElement("div");
+  const searchSuggestionsContainer = document.createElement("div");
   searchSuggestionsContainer.className = "search-results";
   searchSuggestionsContainer.setAttribute(
     "data-bind",
     "visible: _suggestionsVisible"
   );
 
-  var suggestionsList = document.createElement("ul");
+  const suggestionsList = document.createElement("ul");
   suggestionsList.setAttribute("data-bind", "foreach: _suggestions");
-  var suggestions = document.createElement("li");
+  const suggestions = document.createElement("li");
   suggestionsList.appendChild(suggestions);
   suggestions.setAttribute(
     "data-bind",
@@ -120,7 +120,7 @@ css: { active: $data === $parent._selectedSuggestion }"
     // This allows us to use shadow DOM if it exists and fall
     // back to legacy behavior if its not being used.
 
-    var target = e.target;
+    let target = e.target;
     if (typeof e.composedPath === "function") {
       target = e.composedPath()[0];
     }
@@ -202,7 +202,7 @@ Geocoder.prototype.isDestroyed = function () {
  * removing the widget from layout.
  */
 Geocoder.prototype.destroy = function () {
-  var container = this._container;
+  const container = this._container;
   if (FeatureDetection.supportsPointerEvents()) {
     document.removeEventListener("pointerdown", this._onInputBegin, true);
     container.removeEventListener("pointerup", this._onInputEnd, true);

@@ -26,7 +26,7 @@ import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
 import AttributeType from "../AttributeType.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 
-var I3dmLoaderState = {
+const I3dmLoaderState = {
   UNLOADED: 0,
   LOADING: 1,
   PROCESSING: 2,
@@ -34,9 +34,9 @@ var I3dmLoaderState = {
   FAILED: 4,
 };
 
-var Attribute = ModelComponents.Attribute;
-var FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
-var Instances = ModelComponents.Instances;
+const Attribute = ModelComponents.Attribute;
+const FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
+const Instances = ModelComponents.Instances;
 
 /**
  * Loads an Instanced 3D Model.
@@ -64,19 +64,19 @@ var Instances = ModelComponents.Instances;
 function I3dmLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var i3dmResource = options.i3dmResource;
-  var arrayBuffer = options.arrayBuffer;
-  var baseResource = options.baseResource;
-  var byteOffset = defaultValue(options.byteOffset, 0);
-  var releaseGltfJson = defaultValue(options.releaseGltfJson, false);
-  var asynchronous = defaultValue(options.asynchronous, true);
-  var incrementallyLoadTextures = defaultValue(
+  const i3dmResource = options.i3dmResource;
+  const arrayBuffer = options.arrayBuffer;
+  let baseResource = options.baseResource;
+  const byteOffset = defaultValue(options.byteOffset, 0);
+  const releaseGltfJson = defaultValue(options.releaseGltfJson, false);
+  const asynchronous = defaultValue(options.asynchronous, true);
+  const incrementallyLoadTextures = defaultValue(
     options.incrementallyLoadTextures,
     true
   );
-  var upAxis = defaultValue(options.upAxis, Axis.Y);
-  var forwardAxis = defaultValue(options.forwardAxis, Axis.X);
-  var loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
+  const upAxis = defaultValue(options.upAxis, Axis.Y);
+  const forwardAxis = defaultValue(options.forwardAxis, Axis.X);
+  const loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.i3dmResource", i3dmResource);
@@ -182,23 +182,23 @@ Object.defineProperties(I3dmLoader.prototype, {
  */
 I3dmLoader.prototype.load = function () {
   // Parse the I3DM into its various sections.
-  var i3dm = I3dmParser.parse(this._arrayBuffer, this._byteOffset);
+  const i3dm = I3dmParser.parse(this._arrayBuffer, this._byteOffset);
 
-  var featureTableJson = i3dm.featureTableJson;
-  var featureTableBinary = i3dm.featureTableBinary;
-  var batchTableJson = i3dm.batchTableJson;
-  var batchTableBinary = i3dm.batchTableBinary;
-  var gltfFormat = i3dm.gltfFormat;
+  const featureTableJson = i3dm.featureTableJson;
+  const featureTableBinary = i3dm.featureTableBinary;
+  const batchTableJson = i3dm.batchTableJson;
+  const batchTableBinary = i3dm.batchTableBinary;
+  const gltfFormat = i3dm.gltfFormat;
 
   // Generate the feature table.
-  var featureTable = new Cesium3DTileFeatureTable(
+  const featureTable = new Cesium3DTileFeatureTable(
     featureTableJson,
     featureTableBinary
   );
   this._featureTable = featureTable;
 
   // Get the number of instances in the I3DM.
-  var instancesLength = featureTable.getGlobalProperty("INSTANCES_LENGTH");
+  const instancesLength = featureTable.getGlobalProperty("INSTANCES_LENGTH");
   featureTable.featuresLength = instancesLength;
   if (!defined(instancesLength)) {
     throw new RuntimeError(
@@ -208,7 +208,7 @@ I3dmLoader.prototype.load = function () {
   this._instancesLength = instancesLength;
 
   // Get the RTC center, if available, and set the loader's transform.
-  var rtcCenter = featureTable.getGlobalProperty(
+  const rtcCenter = featureTable.getGlobalProperty(
     "RTC_CENTER",
     ComponentDatatype.FLOAT,
     3
@@ -223,7 +223,7 @@ I3dmLoader.prototype.load = function () {
     binary: batchTableBinary,
   };
 
-  var loaderOptions = {
+  const loaderOptions = {
     upAxis: this._upAxis,
     forwardAxis: this._forwardAxis,
     releaseGltfJson: this._releaseGltfJson,
@@ -232,12 +232,12 @@ I3dmLoader.prototype.load = function () {
   };
 
   if (gltfFormat === 0) {
-    var gltfUrl = getStringFromTypedArray(i3dm.gltf);
+    let gltfUrl = getStringFromTypedArray(i3dm.gltf);
 
     // We need to remove padding from the end of the model URL in case this tile was part of a composite tile.
     // This removes all white space and null characters from the end of the string.
     gltfUrl = gltfUrl.replace(/[\s\0]+$/, "");
-    var gltfResource = this._baseResource.getDerivedResource({
+    const gltfResource = this._baseResource.getDerivedResource({
       url: gltfUrl,
     });
     loaderOptions.gltfResource = gltfResource;
@@ -248,12 +248,12 @@ I3dmLoader.prototype.load = function () {
   }
 
   // Create the GltfLoader, update the state and load the glTF.
-  var gltfLoader = new GltfLoader(loaderOptions);
+  const gltfLoader = new GltfLoader(loaderOptions);
 
   this._gltfLoader = gltfLoader;
   this._state = I3dmLoaderState.LOADING;
 
-  var that = this;
+  const that = this;
   gltfLoader.load();
   gltfLoader.promise
     .then(function () {
@@ -261,7 +261,7 @@ I3dmLoader.prototype.load = function () {
         return;
       }
 
-      var components = gltfLoader.components;
+      const components = gltfLoader.components;
       components.transform = that._transform;
       createInstances(that, components);
       createFeatureMetadata(that, components);
@@ -281,7 +281,7 @@ I3dmLoader.prototype.load = function () {
 function handleError(i3dmLoader, error) {
   i3dmLoader.unload();
   i3dmLoader._state = I3dmLoaderState.FAILED;
-  var errorMessage = "Failed to load I3DM";
+  const errorMessage = "Failed to load I3DM";
   error = i3dmLoader.getError(errorMessage, error);
   i3dmLoader._promise.reject(error);
 }
@@ -301,14 +301,14 @@ I3dmLoader.prototype.process = function (frameState) {
 };
 
 function createFeatureMetadata(loader, components) {
-  var batchTable = loader._batchTable;
-  var instancesLength = loader._instancesLength;
+  const batchTable = loader._batchTable;
+  const instancesLength = loader._instancesLength;
 
   if (instancesLength === 0) {
     return;
   }
 
-  var featureMetadata;
+  let featureMetadata;
   if (defined(batchTable.json)) {
     // Add the feature metadata from the batch table to the model components.
     featureMetadata = parseBatchTable({
@@ -318,7 +318,7 @@ function createFeatureMetadata(loader, components) {
     });
   } else {
     // If batch table is not defined, create a property table without any properties.
-    var emptyPropertyTable = new PropertyTable({
+    const emptyPropertyTable = new PropertyTable({
       name: MetadataClass.BATCH_TABLE_CLASS_NAME,
       count: instancesLength,
     });
@@ -331,64 +331,64 @@ function createFeatureMetadata(loader, components) {
   components.featureMetadata = featureMetadata;
 }
 
-var positionScratch = new Cartesian3();
-var propertyScratch1 = new Array(4);
+const positionScratch = new Cartesian3();
+const propertyScratch1 = new Array(4);
 function createInstances(loader, components) {
-  var i;
-  var featureTable = loader._featureTable;
-  var instancesLength = loader._instancesLength;
+  let i;
+  const featureTable = loader._featureTable;
+  const instancesLength = loader._instancesLength;
 
   if (instancesLength === 0) {
     return;
   }
 
-  var rtcCenter = featureTable.getGlobalProperty(
+  const rtcCenter = featureTable.getGlobalProperty(
     "RTC_CENTER",
     ComponentDatatype.FLOAT,
     3
   );
 
-  var eastNorthUp = featureTable.getGlobalProperty("EAST_NORTH_UP");
-  var hasRotation =
+  const eastNorthUp = featureTable.getGlobalProperty("EAST_NORTH_UP");
+  const hasRotation =
     featureTable.hasProperty("NORMAL_UP") ||
     featureTable.hasProperty("NORMAL_UP_OCT32P") ||
     eastNorthUp;
 
-  var hasScale =
+  const hasScale =
     featureTable.hasProperty("SCALE") ||
     featureTable.hasProperty("SCALE_NON_UNIFORM");
 
-  var translationTypedArray = getPositions(featureTable, instancesLength);
-  var rotationTypedArray;
+  const translationTypedArray = getPositions(featureTable, instancesLength);
+  let rotationTypedArray;
   if (hasRotation) {
     rotationTypedArray = new Float32Array(4 * instancesLength);
   }
-  var scaleTypedArray;
+  let scaleTypedArray;
   if (hasScale) {
     scaleTypedArray = new Float32Array(3 * instancesLength);
   }
-  var featureIdArray = new Float32Array(instancesLength);
+  const featureIdArray = new Float32Array(instancesLength);
 
-  var instancePositions = Cartesian3.unpackArray(translationTypedArray);
-  var instancePosition = new Cartesian3();
+  const instancePositions = Cartesian3.unpackArray(translationTypedArray);
+  let instancePosition = new Cartesian3();
 
-  var instanceNormalRight = new Cartesian3();
-  var instanceNormalUp = new Cartesian3();
-  var instanceNormalForward = new Cartesian3();
-  var instanceRotation = new Matrix3();
-  var instanceQuaternion = new Quaternion();
-  var instanceQuaternionArray = new Array(4);
+  const instanceNormalRight = new Cartesian3();
+  const instanceNormalUp = new Cartesian3();
+  const instanceNormalForward = new Cartesian3();
+  const instanceRotation = new Matrix3();
+  const instanceQuaternion = new Quaternion();
+  const instanceQuaternionArray = new Array(4);
 
-  var instanceScale = new Cartesian3();
-  var instanceScaleArray = new Array(3);
+  const instanceScale = new Cartesian3();
+  const instanceScaleArray = new Array(3);
 
-  var instanceTransform = new Matrix4();
+  const instanceTransform = new Matrix4();
 
   // For I3DMs that do not define an RTC center, we manually compute a BoundingSphere and store
   // positions relative to the center, to be uploaded to the GPU. This avoids jittering at higher
   // precisions.
   if (!defined(rtcCenter)) {
-    var positionBoundingSphere = BoundingSphere.fromPoints(instancePositions);
+    const positionBoundingSphere = BoundingSphere.fromPoints(instancePositions);
 
     for (i = 0; i < instancePositions.length; i++) {
       Cartesian3.subtract(
@@ -451,7 +451,7 @@ function createInstances(loader, components) {
     }
 
     // Get the batchId
-    var batchId = featureTable.getProperty(
+    let batchId = featureTable.getProperty(
       "BATCH_ID",
       ComponentDatatype.UNSIGNED_SHORT,
       1,
@@ -465,11 +465,11 @@ function createInstances(loader, components) {
   }
 
   // Create instances.
-  var instances = new Instances();
+  const instances = new Instances();
   instances.transformInWorldSpace = true;
 
   // Create translation vertex attribute.
-  var translationAttribute = new Attribute();
+  const translationAttribute = new Attribute();
   translationAttribute.name = "Instance Translation";
   translationAttribute.semantic = InstanceAttributeSemantic.TRANSLATION;
   translationAttribute.componentDatatype = ComponentDatatype.FLOAT;
@@ -480,7 +480,7 @@ function createInstances(loader, components) {
 
   // Create rotation vertex attribute.
   if (hasRotation) {
-    var rotationAttribute = new Attribute();
+    const rotationAttribute = new Attribute();
     rotationAttribute.name = "Instance Rotation";
     rotationAttribute.semantic = InstanceAttributeSemantic.ROTATION;
     rotationAttribute.componentDatatype = ComponentDatatype.FLOAT;
@@ -492,7 +492,7 @@ function createInstances(loader, components) {
 
   // Create scale vertex attribute.
   if (hasScale) {
-    var scaleAttribute = new Attribute();
+    const scaleAttribute = new Attribute();
     scaleAttribute.name = "Instance Scale";
     scaleAttribute.semantic = InstanceAttributeSemantic.SCALE;
     scaleAttribute.componentDatatype = ComponentDatatype.FLOAT;
@@ -503,7 +503,7 @@ function createInstances(loader, components) {
   }
 
   // Create feature ID vertex attribute.
-  var featureIdAttribute = new Attribute();
+  const featureIdAttribute = new Attribute();
   featureIdAttribute.name = "Instance Feature ID";
   featureIdAttribute.setIndex = 0;
   featureIdAttribute.semantic = InstanceAttributeSemantic.FEATURE_ID;
@@ -514,14 +514,14 @@ function createInstances(loader, components) {
   instances.attributes.push(featureIdAttribute);
 
   // Create feature ID attribute.
-  var featureIdInstanceAttribute = new FeatureIdAttribute();
+  const featureIdInstanceAttribute = new FeatureIdAttribute();
   featureIdInstanceAttribute.propertyTableId = 0;
   featureIdInstanceAttribute.setIndex = 0;
   instances.featureIdAttributes.push(featureIdInstanceAttribute);
 
   // Apply instancing to every node that has at least one primitive.
   for (i = 0; i < components.nodes.length; i++) {
-    var node = components.nodes[i];
+    const node = components.nodes[i];
     if (node.primitives.length > 0) {
       node.instances = instances;
     }
@@ -544,13 +544,13 @@ function getPositions(featureTable, instancesLength) {
     );
   } else if (featureTable.hasProperty("POSITION_QUANTIZED")) {
     // Handle quantized positions.
-    var quantizedPositions = featureTable.getPropertyArray(
+    const quantizedPositions = featureTable.getPropertyArray(
       "POSITION_QUANTIZED",
       ComponentDatatype.UNSIGNED_SHORT,
       3
     );
 
-    var quantizedVolumeOffset = featureTable.getGlobalProperty(
+    const quantizedVolumeOffset = featureTable.getGlobalProperty(
       "QUANTIZED_VOLUME_OFFSET",
       ComponentDatatype.FLOAT,
       3
@@ -561,7 +561,7 @@ function getPositions(featureTable, instancesLength) {
       );
     }
 
-    var quantizedVolumeScale = featureTable.getGlobalProperty(
+    const quantizedVolumeScale = featureTable.getGlobalProperty(
       "QUANTIZED_VOLUME_SCALE",
       ComponentDatatype.FLOAT,
       3
@@ -572,9 +572,9 @@ function getPositions(featureTable, instancesLength) {
       );
     }
 
-    for (var i = 0; i < quantizedPositions.length / 3; i++) {
-      var quantizedPosition = quantizedPositions[i];
-      for (var j = 0; j < 3; j++) {
+    for (let i = 0; i < quantizedPositions.length / 3; i++) {
+      const quantizedPosition = quantizedPositions[i];
+      for (let j = 0; j < 3; j++) {
         quantizedPositions[3 * i + j] =
           (quantizedPosition[j] / 65535.0) * quantizedVolumeScale[j] +
           quantizedVolumeOffset[j];
@@ -591,7 +591,7 @@ function getPositions(featureTable, instancesLength) {
   }
 }
 
-var propertyScratch2 = new Array(4);
+const propertyScratch2 = new Array(4);
 function processRotation(
   featureTable,
   eastNorthUp,
@@ -605,21 +605,21 @@ function processRotation(
   instanceTransform
 ) {
   // Get the instance rotation
-  var normalUp = featureTable.getProperty(
+  const normalUp = featureTable.getProperty(
     "NORMAL_UP",
     ComponentDatatype.FLOAT,
     3,
     i,
     propertyScratch1
   );
-  var normalRight = featureTable.getProperty(
+  const normalRight = featureTable.getProperty(
     "NORMAL_RIGHT",
     ComponentDatatype.FLOAT,
     3,
     i,
     propertyScratch2
   );
-  var hasCustomOrientation = false;
+  let hasCustomOrientation = false;
   if (defined(normalUp)) {
     if (!defined(normalRight)) {
       throw new RuntimeError(
@@ -630,14 +630,14 @@ function processRotation(
     Cartesian3.unpack(normalRight, 0, instanceNormalRight);
     hasCustomOrientation = true;
   } else {
-    var octNormalUp = featureTable.getProperty(
+    const octNormalUp = featureTable.getProperty(
       "NORMAL_UP_OCT32P",
       ComponentDatatype.UNSIGNED_SHORT,
       2,
       i,
       propertyScratch1
     );
-    var octNormalRight = featureTable.getProperty(
+    const octNormalRight = featureTable.getProperty(
       "NORMAL_RIGHT_OCT32P",
       ComponentDatatype.UNSIGNED_SHORT,
       2,
@@ -700,11 +700,16 @@ function processRotation(
 
 function processScale(featureTable, i, instanceScale) {
   instanceScale = Cartesian3.fromElements(1.0, 1.0, 1.0, instanceScale);
-  var scale = featureTable.getProperty("SCALE", ComponentDatatype.FLOAT, 1, i);
+  const scale = featureTable.getProperty(
+    "SCALE",
+    ComponentDatatype.FLOAT,
+    1,
+    i
+  );
   if (defined(scale)) {
     Cartesian3.multiplyByScalar(instanceScale, scale, instanceScale);
   }
-  var nonUniformScale = featureTable.getProperty(
+  const nonUniformScale = featureTable.getProperty(
     "SCALE_NON_UNIFORM",
     ComponentDatatype.FLOAT,
     3,

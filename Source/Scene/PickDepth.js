@@ -23,14 +23,14 @@ Object.defineProperties(PickDepth.prototype, {
 });
 
 function updateFramebuffers(pickDepth, context, depthTexture) {
-  var width = depthTexture.width;
-  var height = depthTexture.height;
+  const width = depthTexture.width;
+  const height = depthTexture.height;
   pickDepth._framebuffer.update(context, width, height);
 }
 
 function updateCopyCommands(pickDepth, context, depthTexture) {
   if (!defined(pickDepth._copyDepthCommand)) {
-    var fs =
+    const fs =
       "uniform highp sampler2D u_texture;\n" +
       "varying vec2 v_textureCoordinates;\n" +
       "void main()\n" +
@@ -57,8 +57,8 @@ PickDepth.prototype.update = function (context, depthTexture) {
   updateCopyCommands(this, context, depthTexture);
 };
 
-var scratchPackedDepth = new Cartesian4();
-var packedDepthScale = new Cartesian4(
+const scratchPackedDepth = new Cartesian4();
+const packedDepthScale = new Cartesian4(
   1.0,
   1.0 / 255.0,
   1.0 / 65025.0,
@@ -71,7 +71,7 @@ PickDepth.prototype.getDepth = function (context, x, y) {
     return undefined;
   }
 
-  var pixels = context.readPixels({
+  const pixels = context.readPixels({
     x: x,
     y: y,
     width: 1,
@@ -79,7 +79,7 @@ PickDepth.prototype.getDepth = function (context, x, y) {
     framebuffer: this.framebuffer,
   });
 
-  var packedDepth = Cartesian4.unpack(pixels, 0, scratchPackedDepth);
+  const packedDepth = Cartesian4.unpack(pixels, 0, scratchPackedDepth);
   Cartesian4.divideByScalar(packedDepth, 255.0, packedDepth);
   return Cartesian4.dot(packedDepth, packedDepthScale);
 };

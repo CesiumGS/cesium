@@ -4,8 +4,8 @@ import { Quaternion } from "../../Source/Cesium.js";
 import { QuaternionSpline } from "../../Source/Cesium.js";
 
 describe("Core/QuaternionSpline", function () {
-  var points;
-  var times;
+  let points;
+  let times;
 
   beforeEach(function () {
     points = [
@@ -41,7 +41,7 @@ describe("Core/QuaternionSpline", function () {
   });
 
   it("evaluate throws without time", function () {
-    var qs = new QuaternionSpline({
+    const qs = new QuaternionSpline({
       points: points,
       times: times,
     });
@@ -52,7 +52,7 @@ describe("Core/QuaternionSpline", function () {
   });
 
   it("evaluate throws when time is out of range", function () {
-    var qs = new QuaternionSpline({
+    const qs = new QuaternionSpline({
       points: points,
       times: times,
     });
@@ -63,29 +63,34 @@ describe("Core/QuaternionSpline", function () {
   });
 
   it("evaluate without result parameter", function () {
-    var qs = new QuaternionSpline({
+    const qs = new QuaternionSpline({
       points: points,
       times: times,
     });
 
     expect(qs.evaluate(times[0])).toEqual(points[0]);
 
-    var time = (times[2] + times[1]) * 0.5;
-    var t = (time - times[1]) / (times[2] - times[1]);
+    const time = (times[2] + times[1]) * 0.5;
+    const t = (time - times[1]) / (times[2] - times[1]);
 
-    var actual = qs.evaluate(time);
-    var expected = Quaternion.slerp(points[1], points[2], t, new Quaternion());
+    const actual = qs.evaluate(time);
+    const expected = Quaternion.slerp(
+      points[1],
+      points[2],
+      t,
+      new Quaternion()
+    );
     expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
   });
 
   it("evaluate with result parameter", function () {
-    var qs = new QuaternionSpline({
+    const qs = new QuaternionSpline({
       points: points,
       times: times,
     });
-    var result = new Quaternion();
+    const result = new Quaternion();
 
-    var point = qs.evaluate(times[0], result);
+    const point = qs.evaluate(times[0], result);
     expect(point).toBe(result);
     expect(result).toEqual(points[0]);
   });
@@ -94,14 +99,19 @@ describe("Core/QuaternionSpline", function () {
     points = points.slice(0, 2);
     times = times.slice(0, 2);
 
-    var qs = new QuaternionSpline({
+    const qs = new QuaternionSpline({
       points: points,
       times: times,
     });
 
-    var t = (times[0] + times[1]) * 0.5;
-    var actual = qs.evaluate(t);
-    var expected = Quaternion.slerp(points[0], points[1], t, new Quaternion());
+    const t = (times[0] + times[1]) * 0.5;
+    const actual = qs.evaluate(t);
+    const expected = Quaternion.slerp(
+      points[0],
+      points[1],
+      t,
+      new Quaternion()
+    );
     expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
   });
 
@@ -109,15 +119,20 @@ describe("Core/QuaternionSpline", function () {
     points = points.slice(0, 2);
     times = times.slice(0, 2);
 
-    var qs = new QuaternionSpline({
+    const qs = new QuaternionSpline({
       points: points,
       times: times,
     });
 
-    var t = (times[0] + times[1]) * 0.5;
-    var result = new Cartesian3();
-    var actual = qs.evaluate(t, result);
-    var expected = Quaternion.slerp(points[0], points[1], t, new Quaternion());
+    const t = (times[0] + times[1]) * 0.5;
+    const result = new Cartesian3();
+    const actual = qs.evaluate(t, result);
+    const expected = Quaternion.slerp(
+      points[0],
+      points[1],
+      t,
+      new Quaternion()
+    );
     expect(actual).toBe(result);
     expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
   });

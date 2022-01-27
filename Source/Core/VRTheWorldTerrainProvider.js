@@ -49,7 +49,7 @@ function VRTheWorldTerrainProvider(options) {
   }
   //>>includeEnd('debug');
 
-  var resource = Resource.createIfNeeded(options.url);
+  const resource = Resource.createIfNeeded(options.url);
 
   this._resource = resource;
 
@@ -68,7 +68,7 @@ function VRTheWorldTerrainProvider(options) {
     highestEncodedHeight: 256 * 256 * 256 - 1,
   };
 
-  var credit = options.credit;
+  let credit = options.credit;
   if (typeof credit === "string") {
     credit = new Credit(credit);
   }
@@ -77,12 +77,12 @@ function VRTheWorldTerrainProvider(options) {
   this._tilingScheme = undefined;
   this._rectangles = [];
 
-  var that = this;
-  var metadataError;
-  var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const that = this;
+  let metadataError;
+  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
   function metadataSuccess(xml) {
-    var srs = xml.getElementsByTagName("SRS")[0].textContent;
+    const srs = xml.getElementsByTagName("SRS")[0].textContent;
     if (srs === "EPSG:4326") {
       that._tilingScheme = new GeographicTilingScheme({ ellipsoid: ellipsoid });
     } else {
@@ -90,7 +90,7 @@ function VRTheWorldTerrainProvider(options) {
       return;
     }
 
-    var tileFormat = xml.getElementsByTagName("TileFormat")[0];
+    const tileFormat = xml.getElementsByTagName("TileFormat")[0];
     that._heightmapWidth = parseInt(tileFormat.getAttribute("width"), 10);
     that._heightmapHeight = parseInt(tileFormat.getAttribute("height"), 10);
     that._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
@@ -99,24 +99,24 @@ function VRTheWorldTerrainProvider(options) {
       that._tilingScheme.getNumberOfXTilesAtLevel(0)
     );
 
-    var dataRectangles = xml.getElementsByTagName("DataExtent");
+    const dataRectangles = xml.getElementsByTagName("DataExtent");
 
-    for (var i = 0; i < dataRectangles.length; ++i) {
-      var dataRectangle = dataRectangles[i];
+    for (let i = 0; i < dataRectangles.length; ++i) {
+      const dataRectangle = dataRectangles[i];
 
-      var west = CesiumMath.toRadians(
+      const west = CesiumMath.toRadians(
         parseFloat(dataRectangle.getAttribute("minx"))
       );
-      var south = CesiumMath.toRadians(
+      const south = CesiumMath.toRadians(
         parseFloat(dataRectangle.getAttribute("miny"))
       );
-      var east = CesiumMath.toRadians(
+      const east = CesiumMath.toRadians(
         parseFloat(dataRectangle.getAttribute("maxx"))
       );
-      var north = CesiumMath.toRadians(
+      const north = CesiumMath.toRadians(
         parseFloat(dataRectangle.getAttribute("maxy"))
       );
-      var maxLevel = parseInt(dataRectangle.getAttribute("maxlevel"), 10);
+      const maxLevel = parseInt(dataRectangle.getAttribute("maxlevel"), 10);
 
       that._rectangles.push(
         new DataRectangle(new Rectangle(west, south, east, north), maxLevel)
@@ -128,7 +128,7 @@ function VRTheWorldTerrainProvider(options) {
   }
 
   function metadataFailure(e) {
-    var message = defaultValue(
+    const message = defaultValue(
       e,
       "An error occurred while accessing " + that._resource.url + "."
     );
@@ -294,22 +294,22 @@ VRTheWorldTerrainProvider.prototype.requestTileGeometry = function (
   }
   //>>includeEnd('debug');
 
-  var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
-  var resource = this._resource.getDerivedResource({
+  const yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
+  const resource = this._resource.getDerivedResource({
     url: level + "/" + x + "/" + (yTiles - y - 1) + ".tif",
     queryParameters: {
       cesium: true,
     },
     request: request,
   });
-  var promise = resource.fetchImage({
+  const promise = resource.fetchImage({
     preferImageBitmap: true,
   });
   if (!defined(promise)) {
     return undefined;
   }
 
-  var that = this;
+  const that = this;
   return when(promise).then(function (image) {
     return new HeightmapTerrainData({
       buffer: getImagePixels(image),
@@ -340,24 +340,24 @@ VRTheWorldTerrainProvider.prototype.getLevelMaximumGeometricError = function (
   return this._levelZeroMaximumGeometricError / (1 << level);
 };
 
-var rectangleScratch = new Rectangle();
+const rectangleScratch = new Rectangle();
 
 function getChildMask(provider, x, y, level) {
-  var tilingScheme = provider._tilingScheme;
-  var rectangles = provider._rectangles;
-  var parentRectangle = tilingScheme.tileXYToRectangle(x, y, level);
+  const tilingScheme = provider._tilingScheme;
+  const rectangles = provider._rectangles;
+  const parentRectangle = tilingScheme.tileXYToRectangle(x, y, level);
 
-  var childMask = 0;
+  let childMask = 0;
 
-  for (var i = 0; i < rectangles.length && childMask !== 15; ++i) {
-    var rectangle = rectangles[i];
+  for (let i = 0; i < rectangles.length && childMask !== 15; ++i) {
+    const rectangle = rectangles[i];
     if (rectangle.maxLevel <= level) {
       continue;
     }
 
-    var testRectangle = rectangle.rectangle;
+    const testRectangle = rectangle.rectangle;
 
-    var intersection = Rectangle.intersection(
+    const intersection = Rectangle.intersection(
       testRectangle,
       parentRectangle,
       rectangleScratch
@@ -409,7 +409,7 @@ function getChildMask(provider, x, y, level) {
 }
 
 function isTileInRectangle(tilingScheme, rectangle, x, y, level) {
-  var tileRectangle = tilingScheme.tileXYToRectangle(x, y, level);
+  const tileRectangle = tilingScheme.tileXYToRectangle(x, y, level);
   return defined(
     Rectangle.intersection(tileRectangle, rectangle, rectangleScratch)
   );

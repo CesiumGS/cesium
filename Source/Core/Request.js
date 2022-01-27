@@ -22,8 +22,8 @@ import RequestType from "./RequestType.js";
 function Request(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var throttleByServer = defaultValue(options.throttleByServer, false);
-  var throttle = defaultValue(options.throttle, false);
+  const throttleByServer = defaultValue(options.throttleByServer, false);
+  const throttle = defaultValue(options.throttle, false);
 
   /**
    * The URL to request.

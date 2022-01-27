@@ -336,7 +336,7 @@ ImageryProvider.prototype.pickFeatures = function (
   DeveloperError.throwInstantiationError();
 };
 
-var ktx2Regex = /\.ktx2$/i;
+const ktx2Regex = /\.ktx2$/i;
 
 /**
  * Loads an image from a given URL.  If the server referenced by the URL already has
@@ -355,7 +355,7 @@ ImageryProvider.loadImage = function (imageryProvider, url) {
   Check.defined("url", url);
   //>>includeEnd('debug');
 
-  var resource = Resource.createIfNeeded(url);
+  const resource = Resource.createIfNeeded(url);
 
   if (ktx2Regex.test(resource.url)) {
     return loadKTX2(resource);

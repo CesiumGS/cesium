@@ -34,10 +34,10 @@ import VertexArray from "../Renderer/VertexArray.js";
 import VertexArrayFacade from "../Renderer/VertexArrayFacade.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 
-var attributeLocations;
-var scratchTextureDimensions = new Cartesian3();
+let attributeLocations;
+const scratchTextureDimensions = new Cartesian3();
 
-var attributeLocationsBatched = {
+const attributeLocationsBatched = {
   positionHighAndScaleX: 0,
   positionLowAndScaleY: 1,
   packedAttribute0: 2, // show, brightness, direction
@@ -45,7 +45,7 @@ var attributeLocationsBatched = {
   color: 4,
 };
 
-var attributeLocationsInstanced = {
+const attributeLocationsInstanced = {
   direction: 0,
   positionHighAndScaleX: 1,
   positionLowAndScaleY: 2,
@@ -54,14 +54,14 @@ var attributeLocationsInstanced = {
   color: 5,
 };
 
-var SHOW_INDEX = CumulusCloud.SHOW_INDEX;
-var POSITION_INDEX = CumulusCloud.POSITION_INDEX;
-var SCALE_INDEX = CumulusCloud.SCALE_INDEX;
-var MAXIMUM_SIZE_INDEX = CumulusCloud.MAXIMUM_SIZE_INDEX;
-var SLICE_INDEX = CumulusCloud.SLICE_INDEX;
-var BRIGHTNESS_INDEX = CumulusCloud.BRIGHTNESS_INDEX;
-var NUMBER_OF_PROPERTIES = CumulusCloud.NUMBER_OF_PROPERTIES;
-var COLOR_INDEX = CumulusCloud.COLOR_INDEX;
+const SHOW_INDEX = CumulusCloud.SHOW_INDEX;
+const POSITION_INDEX = CumulusCloud.POSITION_INDEX;
+const SCALE_INDEX = CumulusCloud.SCALE_INDEX;
+const MAXIMUM_SIZE_INDEX = CumulusCloud.MAXIMUM_SIZE_INDEX;
+const SLICE_INDEX = CumulusCloud.SLICE_INDEX;
+const BRIGHTNESS_INDEX = CumulusCloud.BRIGHTNESS_INDEX;
+const NUMBER_OF_PROPERTIES = CumulusCloud.NUMBER_OF_PROPERTIES;
+const COLOR_INDEX = CumulusCloud.COLOR_INDEX;
 
 /**
  * A renderable collection of clouds in the 3D scene.
@@ -174,7 +174,7 @@ function CloudCollection(options) {
   this._loading = false;
   this._ready = false;
 
-  var that = this;
+  const that = this;
   this._uniforms = {
     u_noiseTexture: function () {
       return that._noiseTexture;
@@ -255,8 +255,8 @@ Object.defineProperties(CloudCollection.prototype, {
 });
 
 function destroyClouds(clouds) {
-  var length = clouds.length;
-  for (var i = 0; i < length; ++i) {
+  const length = clouds.length;
+  for (let i = 0; i < length; ++i) {
     if (clouds[i]) {
       clouds[i]._destroy();
     }
@@ -299,14 +299,14 @@ function destroyClouds(clouds) {
  */
 CloudCollection.prototype.add = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var cloudType = defaultValue(options.cloudType, CloudType.CUMULUS);
+  const cloudType = defaultValue(options.cloudType, CloudType.CUMULUS);
   //>>includeStart('debug', pragmas.debug);
   if (!CloudType.validate(cloudType)) {
     throw new DeveloperError("invalid cloud type");
   }
   //>>includeEnd('debug');
 
-  var cloud;
+  let cloud;
   if (cloudType === CloudType.CUMULUS) {
     cloud = new CumulusCloud(options, this);
     cloud._index = this._clouds.length;
@@ -376,11 +376,11 @@ function removeClouds(cloudCollection) {
   if (cloudCollection._cloudsRemoved) {
     cloudCollection._cloudsRemoved = false;
 
-    var newClouds = [];
-    var clouds = cloudCollection._clouds;
-    var length = clouds.length;
-    for (var i = 0, j = 0; i < length; ++i) {
-      var cloud = clouds[i];
+    const newClouds = [];
+    const clouds = cloudCollection._clouds;
+    const length = clouds.length;
+    for (let i = 0, j = 0; i < length; ++i) {
+      const cloud = clouds[i];
       if (defined(cloud)) {
         clouds._index = j++;
         newClouds.push(cloud);
@@ -446,7 +446,7 @@ CloudCollection.prototype.get = function (index) {
   return this._clouds[index];
 };
 
-var texturePositions = new Float32Array([
+const texturePositions = new Float32Array([
   -1.0,
   -1.0,
   1.0,
@@ -457,22 +457,22 @@ var texturePositions = new Float32Array([
   1.0,
 ]);
 
-var textureIndices = new Uint16Array([0, 1, 2, 0, 2, 3]);
+const textureIndices = new Uint16Array([0, 1, 2, 0, 2, 3]);
 
 function createTextureVA(context) {
-  var positionBuffer = Buffer.createVertexBuffer({
+  const positionBuffer = Buffer.createVertexBuffer({
     context: context,
     typedArray: texturePositions,
     usage: BufferUsage.STATIC_DRAW,
   });
-  var indexBuffer = Buffer.createIndexBuffer({
+  const indexBuffer = Buffer.createIndexBuffer({
     context: context,
     typedArray: textureIndices,
     usage: BufferUsage.STATIC_DRAW,
     indexDatatype: IndexDatatype.UNSIGNED_SHORT,
   });
 
-  var attributes = [
+  const attributes = [
     {
       index: 0,
       vertexBuffer: positionBuffer,
@@ -488,21 +488,21 @@ function createTextureVA(context) {
   });
 }
 
-var getIndexBuffer;
+let getIndexBuffer;
 
 function getIndexBufferBatched(context) {
-  var sixteenK = 16 * 1024;
+  const sixteenK = 16 * 1024;
 
-  var indexBuffer = context.cache.cloudCollection_indexBufferBatched;
+  let indexBuffer = context.cache.cloudCollection_indexBufferBatched;
   if (defined(indexBuffer)) {
     return indexBuffer;
   }
 
   // Subtract 6 because the last index is reserved for primitive restart.
   // https://www.khronos.org/registry/webgl/specs/latest/2.0/#5.18
-  var length = sixteenK * 6 - 6;
-  var indices = new Uint16Array(length);
-  for (var i = 0, j = 0; i < length; i += 6, j += 4) {
+  const length = sixteenK * 6 - 6;
+  const indices = new Uint16Array(length);
+  for (let i = 0, j = 0; i < length; i += 6, j += 4) {
     indices[i] = j;
     indices[i + 1] = j + 1;
     indices[i + 2] = j + 2;
@@ -524,7 +524,7 @@ function getIndexBufferBatched(context) {
 }
 
 function getIndexBufferInstanced(context) {
-  var indexBuffer = context.cache.cloudCollection_indexBufferInstanced;
+  let indexBuffer = context.cache.cloudCollection_indexBufferInstanced;
   if (defined(indexBuffer)) {
     return indexBuffer;
   }
@@ -542,7 +542,7 @@ function getIndexBufferInstanced(context) {
 }
 
 function getVertexBufferInstanced(context) {
-  var vertexBuffer = context.cache.cloudCollection_vertexBufferInstanced;
+  let vertexBuffer = context.cache.cloudCollection_vertexBufferInstanced;
   if (defined(vertexBuffer)) {
     return vertexBuffer;
   }
@@ -559,7 +559,7 @@ function getVertexBufferInstanced(context) {
 }
 
 function createVAF(context, numberOfClouds, instanced) {
-  var attributes = [
+  const attributes = [
     {
       index: attributeLocations.positionHighAndScaleX,
       componentsPerAttribute: 4,
@@ -602,23 +602,24 @@ function createVAF(context, numberOfClouds, instanced) {
     });
   }
 
-  var sizeInVertices = instanced ? numberOfClouds : 4 * numberOfClouds;
+  const sizeInVertices = instanced ? numberOfClouds : 4 * numberOfClouds;
   return new VertexArrayFacade(context, attributes, sizeInVertices, instanced);
 }
 
-var writePositionScratch = new EncodedCartesian3();
+const writePositionScratch = new EncodedCartesian3();
 
 function writePositionAndScale(cloudCollection, frameState, vafWriters, cloud) {
-  var i;
-  var positionHighWriter = vafWriters[attributeLocations.positionHighAndScaleX];
-  var positionLowWriter = vafWriters[attributeLocations.positionLowAndScaleY];
-  var position = cloud.position;
+  let i;
+  const positionHighWriter =
+    vafWriters[attributeLocations.positionHighAndScaleX];
+  const positionLowWriter = vafWriters[attributeLocations.positionLowAndScaleY];
+  const position = cloud.position;
 
   EncodedCartesian3.fromCartesian(position, writePositionScratch);
-  var scale = cloud.scale;
+  const scale = cloud.scale;
 
-  var high = writePositionScratch.high;
-  var low = writePositionScratch.low;
+  const high = writePositionScratch.high;
+  const low = writePositionScratch.low;
 
   if (cloudCollection._instanced) {
     i = cloud._index;
@@ -639,10 +640,10 @@ function writePositionAndScale(cloudCollection, frameState, vafWriters, cloud) {
 }
 
 function writePackedAttribute0(cloudCollection, frameState, vafWriters, cloud) {
-  var i;
-  var writer = vafWriters[attributeLocations.packedAttribute0];
-  var show = cloud.show;
-  var brightness = cloud.brightness;
+  let i;
+  const writer = vafWriters[attributeLocations.packedAttribute0];
+  const show = cloud.show;
+  const brightness = cloud.brightness;
 
   if (cloudCollection._instanced) {
     i = cloud._index;
@@ -657,10 +658,10 @@ function writePackedAttribute0(cloudCollection, frameState, vafWriters, cloud) {
 }
 
 function writePackedAttribute1(cloudCollection, frameState, vafWriters, cloud) {
-  var i;
-  var writer = vafWriters[attributeLocations.packedAttribute1];
-  var maximumSize = cloud.maximumSize;
-  var slice = cloud.slice;
+  let i;
+  const writer = vafWriters[attributeLocations.packedAttribute1];
+  const maximumSize = cloud.maximumSize;
+  const slice = cloud.slice;
 
   if (cloudCollection._instanced) {
     i = cloud._index;
@@ -675,13 +676,13 @@ function writePackedAttribute1(cloudCollection, frameState, vafWriters, cloud) {
 }
 
 function writeColor(cloudCollection, frameState, vafWriters, cloud) {
-  var i;
-  var writer = vafWriters[attributeLocations.color];
-  var color = cloud.color;
-  var red = Color.floatToByte(color.red);
-  var green = Color.floatToByte(color.green);
-  var blue = Color.floatToByte(color.blue);
-  var alpha = Color.floatToByte(color.alpha);
+  let i;
+  const writer = vafWriters[attributeLocations.color];
+  const color = cloud.color;
+  const red = Color.floatToByte(color.red);
+  const green = Color.floatToByte(color.green);
+  const blue = Color.floatToByte(color.blue);
+  const alpha = Color.floatToByte(color.alpha);
 
   if (cloudCollection._instanced) {
     i = cloud._index;
@@ -702,10 +703,10 @@ function writeCloud(cloudCollection, frameState, vafWriters, cloud) {
 }
 
 function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
-  var that = cloudCollection;
+  const that = cloudCollection;
 
-  var textureSliceWidth = that._textureSliceWidth;
-  var noiseTextureRows = that._noiseTextureRows;
+  const textureSliceWidth = that._textureSliceWidth;
+  const noiseTextureRows = that._noiseTextureRows;
   //>>includeStart('debug', pragmas.debug);
   if (
     textureSliceWidth / noiseTextureRows < 1 ||
@@ -717,7 +718,7 @@ function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
   }
   //>>includeEnd('debug');
 
-  var context = frameState.context;
+  const context = frameState.context;
   that._vaNoise = createTextureVA(context);
   that._spNoise = ShaderProgram.fromCache({
     context: context,
@@ -728,8 +729,8 @@ function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
     },
   });
 
-  var noiseDetail = that.noiseDetail;
-  var noiseOffset = that.noiseOffset;
+  const noiseDetail = that.noiseDetail;
+  const noiseOffset = that.noiseOffset;
 
   that._noiseTexture = new Texture({
     context: context,
@@ -745,7 +746,7 @@ function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
     }),
   });
 
-  var textureCommand = new ComputeCommand({
+  const textureCommand = new ComputeCommand({
     vertexArray: that._vaNoise,
     shaderProgram: that._spNoise,
     outputTexture: that._noiseTexture,
@@ -771,21 +772,21 @@ function createNoiseTexture(cloudCollection, frameState, vsSource, fsSource) {
 }
 
 function createVertexArray(cloudCollection, frameState) {
-  var that = cloudCollection;
-  var context = frameState.context;
+  const that = cloudCollection;
+  const context = frameState.context;
   that._createVertexArray = false;
   that._vaf = that._vaf && that._vaf.destroy();
 
-  var clouds = cloudCollection._clouds;
-  var cloudsLength = clouds.length;
+  const clouds = cloudCollection._clouds;
+  const cloudsLength = clouds.length;
   if (cloudsLength > 0) {
     that._vaf = createVAF(context, cloudsLength, that._instanced);
-    var vafWriters = that._vaf.writers;
+    const vafWriters = that._vaf.writers;
 
-    var i;
+    let i;
     // Rewrite entire buffer if clouds were added or removed.
     for (i = 0; i < cloudsLength; ++i) {
-      var cloud = clouds[i];
+      const cloud = clouds[i];
       writeCloud(cloudCollection, frameState, vafWriters, cloud);
     }
 
@@ -794,19 +795,19 @@ function createVertexArray(cloudCollection, frameState) {
   }
 }
 
-var scratchWriterArray = [];
+const scratchWriterArray = [];
 
 function updateClouds(cloudCollection, frameState) {
-  var context = frameState.context;
-  var that = cloudCollection;
-  var clouds = that._clouds;
-  var cloudsLength = clouds.length;
-  var cloudsToUpdate = that._cloudsToUpdate;
-  var cloudsToUpdateLength = that._cloudsToUpdateIndex;
+  const context = frameState.context;
+  const that = cloudCollection;
+  const clouds = that._clouds;
+  const cloudsLength = clouds.length;
+  const cloudsToUpdate = that._cloudsToUpdate;
+  const cloudsToUpdateLength = that._cloudsToUpdateIndex;
 
-  var properties = that._propertiesChanged;
+  const properties = that._propertiesChanged;
 
-  var writers = scratchWriterArray;
+  const writers = scratchWriterArray;
   writers.length = 0;
 
   if (properties[POSITION_INDEX] || properties[SCALE_INDEX]) {
@@ -825,10 +826,10 @@ function updateClouds(cloudCollection, frameState) {
     writers.push(writeColor);
   }
 
-  var numWriters = writers.length;
-  var vafWriters = that._vaf.writers;
+  const numWriters = writers.length;
+  const vafWriters = that._vaf.writers;
 
-  var i, c, w;
+  let i, c, w;
   if (cloudsToUpdateLength / cloudsLength > 0.1) {
     // Like BillboardCollection, if more than 10% of clouds change,
     // rewrite the entire buffer.
@@ -865,9 +866,9 @@ function updateClouds(cloudCollection, frameState) {
 }
 
 function createShaderProgram(cloudCollection, frameState, vsSource, fsSource) {
-  var context = frameState.context;
-  var that = cloudCollection;
-  var vs = new ShaderSource({
+  const context = frameState.context;
+  const that = cloudCollection;
+  const vs = new ShaderSource({
     defines: [],
     sources: [vsSource],
   });
@@ -876,7 +877,7 @@ function createShaderProgram(cloudCollection, frameState, vsSource, fsSource) {
     vs.defines.push("INSTANCED");
   }
 
-  var fs = new ShaderSource({
+  const fs = new ShaderSource({
     defines: [],
     sources: [fsSource],
   });
@@ -912,18 +913,18 @@ function createShaderProgram(cloudCollection, frameState, vsSource, fsSource) {
 }
 
 function createDrawCommands(cloudCollection, frameState) {
-  var that = cloudCollection;
-  var pass = frameState.passes;
-  var uniforms = that._uniforms;
-  var commandList = frameState.commandList;
+  const that = cloudCollection;
+  const pass = frameState.passes;
+  const uniforms = that._uniforms;
+  const commandList = frameState.commandList;
   if (pass.render) {
-    var colorList = that._colorCommands;
+    const colorList = that._colorCommands;
 
-    var va = that._vaf.va;
-    var vaLength = va.length;
+    const va = that._vaf.va;
+    const vaLength = va.length;
     colorList.length = vaLength;
-    for (var i = 0; i < vaLength; i++) {
-      var command = colorList[i];
+    for (let i = 0; i < vaLength; i++) {
+      let command = colorList[i];
       if (!defined(command)) {
         command = colorList[i] = new DrawCommand();
       }
@@ -953,7 +954,7 @@ CloudCollection.prototype.update = function (frameState) {
     return;
   }
 
-  var debugging = this.debugBillboards || this.debugEllipsoids;
+  const debugging = this.debugBillboards || this.debugEllipsoids;
   this._ready = debugging ? true : defined(this._noiseTexture);
 
   if (!this._ready && !this._loading && !debugging) {
@@ -968,10 +969,10 @@ CloudCollection.prototype.update = function (frameState) {
     ? getIndexBufferInstanced
     : getIndexBufferBatched;
 
-  var clouds = this._clouds;
-  var cloudsLength = clouds.length;
-  var cloudsToUpdate = this._cloudsToUpdate;
-  var cloudsToUpdateLength = this._cloudsToUpdateIndex;
+  const clouds = this._clouds;
+  const cloudsLength = clouds.length;
+  const cloudsToUpdate = this._cloudsToUpdate;
+  const cloudsToUpdateLength = this._cloudsToUpdateIndex;
 
   if (this._createVertexArray) {
     createVertexArray(this, frameState);

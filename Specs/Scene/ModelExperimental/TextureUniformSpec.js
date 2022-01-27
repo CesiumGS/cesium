@@ -10,9 +10,9 @@ import {
 } from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/TextureUniform", function () {
-  var exampleUrl = "https://example.com/url";
-  var greenTexture = new Uint8Array([0, 255, 0, 255]);
-  var defaultSampler = new Sampler({
+  const exampleUrl = "https://example.com/url";
+  const greenTexture = new Uint8Array([0, 255, 0, 255]);
+  const defaultSampler = new Sampler({
     wrapS: TextureWrap.REPEAT,
     wrapT: TextureWrap.REPEAT,
     minificationFilter: TextureMinificationFilter.LINEAR,
@@ -38,7 +38,7 @@ describe("Scene/ModelExperimental/TextureUniform", function () {
   });
 
   it("constructs with a URL", function () {
-    var textureUniform = new TextureUniform({
+    const textureUniform = new TextureUniform({
       url: exampleUrl,
     });
 
@@ -61,7 +61,7 @@ describe("Scene/ModelExperimental/TextureUniform", function () {
   });
 
   it("constructs with a typed array", function () {
-    var textureUniform = new TextureUniform({
+    const textureUniform = new TextureUniform({
       typedArray: greenTexture,
       width: 1,
       height: 1,
@@ -77,10 +77,10 @@ describe("Scene/ModelExperimental/TextureUniform", function () {
   });
 
   it("constructs with a resource", function () {
-    var resource = new Resource({
+    const resource = new Resource({
       url: exampleUrl,
     });
-    var textureUniform = new TextureUniform({
+    const textureUniform = new TextureUniform({
       url: resource,
     });
 
@@ -94,7 +94,7 @@ describe("Scene/ModelExperimental/TextureUniform", function () {
   });
 
   it("sets sampler settings", function () {
-    var textureUniform = new TextureUniform({
+    const textureUniform = new TextureUniform({
       url: exampleUrl,
       repeat: false,
       minificationFilter: TextureMinificationFilter.NEAREST,
@@ -113,7 +113,7 @@ describe("Scene/ModelExperimental/TextureUniform", function () {
   });
 
   it("sets texture settings for typed arrays", function () {
-    var textureUniform = new TextureUniform({
+    const textureUniform = new TextureUniform({
       typedArray: new Uint8Array([255, 0, 0, 0, 255, 0]),
       width: 1,
       height: 1,

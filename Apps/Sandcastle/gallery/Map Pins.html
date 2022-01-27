@@ -32,14 +32,14 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           timeline: false,
           animation: false,
         });
 
-        var pinBuilder = new Cesium.PinBuilder();
+        const pinBuilder = new Cesium.PinBuilder();
 
-        var bluePin = viewer.entities.add({
+        const bluePin = viewer.entities.add({
           name: "Blank blue pin",
           position: Cesium.Cartesian3.fromDegrees(-75.170726, 39.9208667),
           billboard: {
@@ -48,7 +48,7 @@
           },
         });
 
-        var questionPin = viewer.entities.add({
+        const questionPin = viewer.entities.add({
           name: "Question mark",
           position: Cesium.Cartesian3.fromDegrees(-75.1698529, 39.9220071),
           billboard: {
@@ -57,8 +57,8 @@
           },
         });
 
-        var url = Cesium.buildModuleUrl("Assets/Textures/maki/grocery.png");
-        var groceryPin = Cesium.when(
+        const url = Cesium.buildModuleUrl("Assets/Textures/maki/grocery.png");
+        const groceryPin = Cesium.when(
           pinBuilder.fromUrl(url, Cesium.Color.GREEN, 48),
           function (canvas) {
             return viewer.entities.add({
@@ -73,7 +73,7 @@
         );
 
         //Create a red pin representing a hospital from the maki icon set.
-        var hospitalPin = Cesium.when(
+        const hospitalPin = Cesium.when(
           pinBuilder.fromMakiIconId("hospital", Cesium.Color.RED, 48),
           function (canvas) {
             return viewer.entities.add({

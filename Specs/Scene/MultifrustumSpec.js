@@ -26,16 +26,16 @@ import { when } from "../../Source/Cesium.js";
 describe(
   "Scene/Multifrustum",
   function () {
-    var scene;
-    var context;
-    var primitives;
-    var atlas;
+    let scene;
+    let context;
+    let primitives;
+    let atlas;
 
-    var greenImage;
-    var blueImage;
-    var whiteImage;
+    let greenImage;
+    let blueImage;
+    let whiteImage;
 
-    var logDepth;
+    let logDepth;
 
     beforeAll(function () {
       scene = createScene();
@@ -62,7 +62,7 @@ describe(
 
       scene.logarithmicDepthBuffer = false;
 
-      var camera = scene.camera;
+      const camera = scene.camera;
       camera.position = new Cartesian3();
       camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
       camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
@@ -79,9 +79,9 @@ describe(
       scene.destroyForSpecs();
     });
 
-    var billboard0;
-    var billboard1;
-    var billboard2;
+    let billboard0;
+    let billboard1;
+    let billboard2;
 
     function createBillboards() {
       atlas = new TextureAtlas({
@@ -93,7 +93,7 @@ describe(
       // ANGLE Workaround
       atlas.texture.sampler = Sampler.NEAREST;
 
-      var billboards = new BillboardCollection();
+      let billboards = new BillboardCollection();
       billboards.textureAtlas = atlas;
       billboards.destroyTextureAtlas = false;
       billboard0 = billboards.add({
@@ -151,7 +151,7 @@ describe(
 
     it("renders primitive in last frustum", function () {
       createBillboards();
-      var color = new Color(1.0, 1.0, 1.0, 0.0);
+      const color = new Color(1.0, 1.0, 1.0, 0.0);
       billboard0.color = color;
       billboard1.color = color;
 
@@ -161,7 +161,7 @@ describe(
 
     it("renders primitive in last frustum with debugShowFrustums", function () {
       createBillboards();
-      var color = new Color(1.0, 1.0, 1.0, 1.0);
+      const color = new Color(1.0, 1.0, 1.0, 1.0);
       billboard0.color = color;
       billboard1.color = color;
 
@@ -172,9 +172,9 @@ describe(
 
       expect(DrawCommand.prototype.execute).toHaveBeenCalled();
 
-      var calls = DrawCommand.prototype.execute.calls.all();
-      var billboardCall;
-      var i;
+      const calls = DrawCommand.prototype.execute.calls.all();
+      let billboardCall;
+      let i;
       for (i = 0; i < calls.length; ++i) {
         if (calls[i].object.owner instanceof BillboardCollection) {
           billboardCall = calls[i];
@@ -185,10 +185,10 @@ describe(
       expect(billboardCall).toBeDefined();
       expect(billboardCall.args.length).toEqual(2);
 
-      var found = false;
-      var sources =
+      let found = false;
+      const sources =
         billboardCall.object.shaderProgram.fragmentShaderSource.sources;
-      for (var j = 0; j < sources.length; ++j) {
+      for (let j = 0; j < sources.length; ++j) {
         if (sources[j].indexOf("czm_Debug_main") !== -1) {
           found = true;
           break;
@@ -212,7 +212,7 @@ describe(
 
         this.color = new Color(1.0, 1.0, 0.0, 1.0);
 
-        var that = this;
+        const that = this;
         this._um = {
           u_color: function () {
             return that.color;
@@ -224,7 +224,7 @@ describe(
       }
       Primitive.prototype.update = function (frameState) {
         if (!defined(this._sp)) {
-          var vs = "";
+          let vs = "";
           vs += "attribute vec4 position;";
           vs += "void main()";
           vs += "{";
@@ -233,27 +233,27 @@ describe(
             ? "    gl_Position.z = clamp(gl_Position.z, gl_DepthRange.near, gl_DepthRange.far);"
             : "";
           vs += "}";
-          var fs = "";
+          let fs = "";
           fs += "uniform vec4 u_color;";
           fs += "void main()";
           fs += "{";
           fs += "    gl_FragColor = u_color;";
           fs += "}";
 
-          var dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
-          var maximum = Cartesian3.multiplyByScalar(
+          const dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
+          const maximum = Cartesian3.multiplyByScalar(
             dimensions,
             0.5,
             new Cartesian3()
           );
-          var minimum = Cartesian3.negate(maximum, new Cartesian3());
-          var geometry = BoxGeometry.createGeometry(
+          const minimum = Cartesian3.negate(maximum, new Cartesian3());
+          const geometry = BoxGeometry.createGeometry(
             new BoxGeometry({
               minimum: minimum,
               maximum: maximum,
             })
           );
-          var attributeLocations = GeometryPipeline.createAttributeLocations(
+          const attributeLocations = GeometryPipeline.createAttributeLocations(
             geometry
           );
           this._va = VertexArray.fromGeometry({
@@ -301,7 +301,7 @@ describe(
     }
 
     it("renders primitive with undefined bounding volume", function () {
-      var primitive = createPrimitive(false);
+      const primitive = createPrimitive(false);
       primitives.add(primitive);
 
       expect(scene).toRender([255, 255, 0, 255]);
@@ -310,12 +310,12 @@ describe(
 
     it("renders only in the closest frustum", function () {
       createBillboards();
-      var color = new Color(1.0, 1.0, 1.0, 0.0);
+      const color = new Color(1.0, 1.0, 1.0, 0.0);
       billboard0.color = color;
       billboard1.color = color;
       billboard2.color = color;
 
-      var primitive = createPrimitive(true, true);
+      const primitive = createPrimitive(true, true);
       primitive.color = new Color(1.0, 1.0, 0.0, 0.5);
       primitives.add(primitive);
 
@@ -339,7 +339,7 @@ describe(
     });
 
     it("does not crash when near plane is greater than or equal to the far plane", function () {
-      var camera = scene.camera;
+      const camera = scene.camera;
       camera.frustum.far = 1000.0;
       camera.position = new Cartesian3(0.0, 0.0, 1e12);
 

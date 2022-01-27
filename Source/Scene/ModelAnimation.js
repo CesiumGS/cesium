@@ -100,7 +100,7 @@ function ModelAnimation(options, model, runtimeAnimation) {
   this._duration = undefined;
 
   // To avoid allocations in ModelAnimationCollection.update
-  var that = this;
+  const that = this;
   this._raiseStartEvent = function () {
     that.start.raiseEvent(model, that);
   };

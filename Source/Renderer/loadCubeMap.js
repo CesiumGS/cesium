@@ -62,13 +62,13 @@ function loadCubeMap(context, urls, skipColorSpaceConversion) {
   //
   // Also, it is perhaps acceptable to use the context here in the callbacks, but
   // ideally, we would do it in the primitive's update function.
-  var flipOptions = {
+  const flipOptions = {
     flipY: true,
     skipColorSpaceConversion: skipColorSpaceConversion,
     preferImageBitmap: true,
   };
 
-  var facePromises = [
+  const facePromises = [
     Resource.createIfNeeded(urls.positiveX).fetchImage(flipOptions),
     Resource.createIfNeeded(urls.negativeX).fetchImage(flipOptions),
     Resource.createIfNeeded(urls.positiveY).fetchImage(flipOptions),

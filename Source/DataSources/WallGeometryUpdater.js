@@ -16,7 +16,7 @@ import DynamicGeometryUpdater from "./DynamicGeometryUpdater.js";
 import GeometryUpdater from "./GeometryUpdater.js";
 import Property from "./Property.js";
 
-var scratchColor = new Color();
+const scratchColor = new Color();
 
 function WallGeometryOptions(entity) {
   this.id = entity;
@@ -72,26 +72,26 @@ WallGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
   }
   //>>includeEnd('debug');
 
-  var entity = this._entity;
-  var isAvailable = entity.isAvailable(time);
+  const entity = this._entity;
+  const isAvailable = entity.isAvailable(time);
 
-  var attributes;
+  let attributes;
 
-  var color;
-  var show = new ShowGeometryInstanceAttribute(
+  let color;
+  const show = new ShowGeometryInstanceAttribute(
     isAvailable &&
       entity.isShowing &&
       this._showProperty.getValue(time) &&
       this._fillProperty.getValue(time)
   );
-  var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
+  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
     time
   );
-  var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
+  const distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(
     distanceDisplayCondition
   );
   if (this._materialProperty instanceof ColorMaterialProperty) {
-    var currentColor;
+    let currentColor;
     if (
       defined(this._materialProperty.color) &&
       (this._materialProperty.color.isConstant || isAvailable)
@@ -140,15 +140,15 @@ WallGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
   }
   //>>includeEnd('debug');
 
-  var entity = this._entity;
-  var isAvailable = entity.isAvailable(time);
-  var outlineColor = Property.getValueOrDefault(
+  const entity = this._entity;
+  const isAvailable = entity.isAvailable(time);
+  const outlineColor = Property.getValueOrDefault(
     this._outlineColorProperty,
     time,
     Color.BLACK,
     scratchColor
   );
-  var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
+  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
     time
   );
 
@@ -192,12 +192,13 @@ WallGeometryUpdater.prototype._isDynamic = function (entity, wall) {
 };
 
 WallGeometryUpdater.prototype._setStaticOptions = function (entity, wall) {
-  var minimumHeights = wall.minimumHeights;
-  var maximumHeights = wall.maximumHeights;
-  var granularity = wall.granularity;
-  var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
+  const minimumHeights = wall.minimumHeights;
+  const maximumHeights = wall.maximumHeights;
+  const granularity = wall.granularity;
+  const isColorMaterial =
+    this._materialProperty instanceof ColorMaterialProperty;
 
-  var options = this._options;
+  const options = this._options;
   options.vertexFormat = isColorMaterial
     ? PerInstanceColorAppearance.VERTEX_FORMAT
     : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
@@ -253,7 +254,7 @@ DynamicWallGeometryUpdater.prototype._setOptions = function (
   wall,
   time
 ) {
-  var options = this._options;
+  const options = this._options;
   options.positions = Property.getValueOrUndefined(
     wall.positions,
     time,

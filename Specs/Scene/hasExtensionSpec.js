@@ -2,7 +2,7 @@ import { hasExtension } from "../../Source/Cesium.js";
 
 describe("Scene/hasExtension", function () {
   it("detects the presence of an extension", function () {
-    var tile = {
+    const tile = {
       extensions: {
         "3DTILES_extension": {},
       },
@@ -11,7 +11,7 @@ describe("Scene/hasExtension", function () {
   });
 
   it("detects the absence of an extension", function () {
-    var tile = {};
+    let tile = {};
     expect(hasExtension(tile, "3DTILES_extension")).toEqual(false);
     tile = {
       extensions: {},

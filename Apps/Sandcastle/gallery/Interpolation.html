@@ -37,7 +37,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           infoBox: false, //Disable InfoBox widget
           selectionIndicator: false, //Disable selection indicator
           shouldAnimate: true, // Enable animations
@@ -54,8 +54,8 @@
         Cesium.Math.setRandomNumberSeed(3);
 
         //Set bounds of our simulation time
-        var start = Cesium.JulianDate.fromDate(new Date(2015, 2, 25, 16));
-        var stop = Cesium.JulianDate.addSeconds(
+        const start = Cesium.JulianDate.fromDate(new Date(2015, 2, 25, 16));
+        const stop = Cesium.JulianDate.addSeconds(
           start,
           360,
           new Cesium.JulianDate()
@@ -73,15 +73,15 @@
 
         //Generate a random circular pattern with varying heights.
         function computeCirclularFlight(lon, lat, radius) {
-          var property = new Cesium.SampledPositionProperty();
-          for (var i = 0; i <= 360; i += 45) {
-            var radians = Cesium.Math.toRadians(i);
-            var time = Cesium.JulianDate.addSeconds(
+          const property = new Cesium.SampledPositionProperty();
+          for (let i = 0; i <= 360; i += 45) {
+            const radians = Cesium.Math.toRadians(i);
+            const time = Cesium.JulianDate.addSeconds(
               start,
               i,
               new Cesium.JulianDate()
             );
-            var position = Cesium.Cartesian3.fromDegrees(
+            const position = Cesium.Cartesian3.fromDegrees(
               lon + radius * 1.5 * Math.cos(radians),
               lat + radius * Math.sin(radians),
               Cesium.Math.nextRandomNumber() * 500 + 1750
@@ -103,10 +103,10 @@
         }
 
         //Compute the entity position property.
-        var position = computeCirclularFlight(-112.110693, 36.0994841, 0.03);
+        const position = computeCirclularFlight(-112.110693, 36.0994841, 0.03);
 
         //Actually create the entity
-        var entity = viewer.entities.add({
+        const entity = viewer.entities.add({
           //Set the entity availability to the same interval as the simulation time.
           availability: new Cesium.TimeIntervalCollection([
             new Cesium.TimeInterval({

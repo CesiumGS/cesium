@@ -6,7 +6,7 @@ import createContext from "../createContext.js";
 describe(
   "Renderer/VertexArrayFacade",
   function () {
-    var context;
+    let context;
 
     beforeAll(function () {
       context = createContext();
@@ -17,8 +17,8 @@ describe(
     });
 
     it("creates a vertex array with static floats", function () {
-      var positionIndex = 0;
-      var vaf = new VertexArrayFacade(
+      const positionIndex = 0;
+      const vaf = new VertexArrayFacade(
         context,
         [
           {
@@ -31,7 +31,7 @@ describe(
         1
       );
 
-      var writer = vaf.writers[positionIndex];
+      const writer = vaf.writers[positionIndex];
       expect(writer).toBeDefined();
 
       writer(0, 1.0, 2.0, 3.0); // Write [1.0, 2.0, 3.0] at index zero.
@@ -53,8 +53,8 @@ describe(
     });
 
     it("resizes a vertex array with static floats", function () {
-      var positionIndex = 0;
-      var vaf = new VertexArrayFacade(
+      const positionIndex = 0;
+      const vaf = new VertexArrayFacade(
         context,
         [
           {
@@ -67,7 +67,7 @@ describe(
         1
       );
 
-      var writer = vaf.writers[positionIndex];
+      const writer = vaf.writers[positionIndex];
       expect(writer).toBeDefined();
 
       writer(0, 1.0, 2.0, 3.0); // Write [1.0, 2.0, 3.0] at index zero.
@@ -92,9 +92,9 @@ describe(
     });
 
     it("creates a vertex array with static floats and unsigned bytes", function () {
-      var positionIndex = 0;
-      var colorIndex = 2;
-      var vaf = new VertexArrayFacade(
+      const positionIndex = 0;
+      const colorIndex = 2;
+      const vaf = new VertexArrayFacade(
         context,
         [
           {
@@ -113,8 +113,8 @@ describe(
         1
       );
 
-      var positionWriter = vaf.writers[positionIndex];
-      var colorWriter = vaf.writers[colorIndex];
+      const positionWriter = vaf.writers[positionIndex];
+      const colorWriter = vaf.writers[colorIndex];
 
       expect(positionWriter).toBeDefined();
       expect(colorWriter).toBeDefined();
@@ -153,9 +153,9 @@ describe(
     });
 
     it("creates a vertex array with static and dynamic attributes", function () {
-      var positionIndex = 0;
-      var txCoordIndex = 2;
-      var vaf = new VertexArrayFacade(
+      const positionIndex = 0;
+      const txCoordIndex = 2;
+      const vaf = new VertexArrayFacade(
         context,
         [
           {
@@ -175,8 +175,8 @@ describe(
         1
       );
 
-      var positionWriter = vaf.writers[positionIndex];
-      var txCoordWriter = vaf.writers[txCoordIndex];
+      const positionWriter = vaf.writers[positionIndex];
+      const txCoordWriter = vaf.writers[txCoordIndex];
 
       expect(positionWriter).toBeDefined();
       expect(txCoordWriter).toBeDefined();
@@ -217,9 +217,9 @@ describe(
     });
 
     it("sub-commits", function () {
-      var positionIndex = 0;
-      var temperatureIndex = 2;
-      var vaf = new VertexArrayFacade(
+      const positionIndex = 0;
+      const temperatureIndex = 2;
+      const vaf = new VertexArrayFacade(
         context,
         [
           {
@@ -238,8 +238,8 @@ describe(
         2
       );
 
-      var positionWriter = vaf.writers[positionIndex];
-      var temperatureWriter = vaf.writers[temperatureIndex];
+      const positionWriter = vaf.writers[positionIndex];
+      const temperatureWriter = vaf.writers[temperatureIndex];
 
       expect(positionWriter).toBeDefined();
       expect(temperatureWriter).toBeDefined();
@@ -294,8 +294,8 @@ describe(
     });
 
     it("destroys previous vertex buffers when number of vertices grows", function () {
-      var positionIndex = 0;
-      var vaf = new VertexArrayFacade(
+      const positionIndex = 0;
+      const vaf = new VertexArrayFacade(
         context,
         [
           {
@@ -308,14 +308,14 @@ describe(
         1
       );
 
-      var writer = vaf.writers[positionIndex];
+      const writer = vaf.writers[positionIndex];
       expect(writer).toBeDefined();
 
       writer(0, 1.0, 2.0, 3.0); // Write [1.0, 2.0, 3.0] at index zero.
       vaf.commit(); // Commit writes
 
       // Grab the vertex buffer
-      var vbBeforeResize = vaf.va[0].va.getAttribute(0).vertexBuffer;
+      const vbBeforeResize = vaf.va[0].va.getAttribute(0).vertexBuffer;
 
       vaf.resize(2); // Two vertices
       writer(1, 1.0, 2.0, 3.0); // Write [4.0, 5.0, 6.0] at index one.
@@ -328,8 +328,8 @@ describe(
     });
 
     it("is not initially destroyed", function () {
-      var positionIndex = 0;
-      var vaf = new VertexArrayFacade(
+      const positionIndex = 0;
+      const vaf = new VertexArrayFacade(
         context,
         [
           {
@@ -406,8 +406,8 @@ describe(
     });
 
     it("subCommit throws when passed an invalid offsetInVertices", function () {
-      var positionIndex = 0;
-      var vaf = new VertexArrayFacade(
+      const positionIndex = 0;
+      const vaf = new VertexArrayFacade(
         context,
         [
           {

@@ -69,7 +69,7 @@ JsonMetadataTable.prototype.getProperty = function (index, propertyId) {
   }
   //>>includeEnd('debug');
 
-  var property = this._properties[propertyId];
+  const property = this._properties[propertyId];
   if (defined(property)) {
     return clone(property[index], true);
   }
@@ -100,7 +100,7 @@ JsonMetadataTable.prototype.setProperty = function (index, propertyId, value) {
   }
   //>>includeEnd('debug');
 
-  var property = this._properties[propertyId];
+  const property = this._properties[propertyId];
   if (defined(property)) {
     property[index] = clone(value, true);
     return true;

@@ -6,9 +6,9 @@ import { HomeButtonViewModel } from "../../../Source/Cesium.js";
 describe(
   "Widgets/HomeButton/HomeButtonViewModel",
   function () {
-    var scene;
-    var ellipsoid = Ellipsoid.WGS84;
-    var globe = new Globe(ellipsoid);
+    let scene;
+    const ellipsoid = Ellipsoid.WGS84;
+    const globe = new Globe(ellipsoid);
     beforeAll(function () {
       scene = createScene();
       scene.globe = globe;
@@ -19,7 +19,7 @@ describe(
     });
 
     it("constructor sets default values", function () {
-      var viewModel = new HomeButtonViewModel(scene);
+      const viewModel = new HomeButtonViewModel(scene);
       expect(viewModel.scene).toBe(scene);
     });
 
@@ -34,27 +34,27 @@ describe(
     //tied to the implementation of various camera features.
     it("works in 3D", function () {
       scene.render();
-      var viewModel = new HomeButtonViewModel(scene);
+      const viewModel = new HomeButtonViewModel(scene);
       viewModel.command();
     });
 
     it("works in 2D", function () {
       scene.render();
-      var viewModel = new HomeButtonViewModel(scene);
+      const viewModel = new HomeButtonViewModel(scene);
       scene.morphTo2D();
       viewModel.command();
     });
 
     it("works in Columbus View", function () {
       scene.render();
-      var viewModel = new HomeButtonViewModel(scene);
+      const viewModel = new HomeButtonViewModel(scene);
       scene.morphToColumbusView();
       viewModel.command();
     });
 
     it("works while morphing", function () {
       scene.render();
-      var viewModel = new HomeButtonViewModel(scene);
+      const viewModel = new HomeButtonViewModel(scene);
       scene.morphToColumbusView(2000);
       viewModel.command();
     });

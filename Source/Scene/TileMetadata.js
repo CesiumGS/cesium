@@ -27,7 +27,7 @@ export default function TileMetadata(options) {
 
   this._class = options.class;
 
-  var tileMetadata = options.tile;
+  const tileMetadata = options.tile;
   this._properties = tileMetadata.properties;
   this._extensions = tileMetadata.extensions;
   this._extras = tileMetadata.extras;

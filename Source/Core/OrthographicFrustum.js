@@ -137,7 +137,7 @@ function update(frustum) {
   }
   //>>includeEnd('debug');
 
-  var f = frustum._offCenterFrustum;
+  const f = frustum._offCenterFrustum;
 
   if (
     frustum.width !== frustum._width ||
@@ -161,7 +161,7 @@ function update(frustum) {
     frustum._near = frustum.near;
     frustum._far = frustum.far;
 
-    var ratio = 1.0 / frustum.aspectRatio;
+    const ratio = 1.0 / frustum.aspectRatio;
     f.right = frustum.width * 0.5;
     f.left = -f.right;
     f.top = ratio * f.right;

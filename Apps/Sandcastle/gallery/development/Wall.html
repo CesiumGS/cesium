@@ -33,14 +33,14 @@
         "use strict";
         //Sandcastle_Begin
         // Create the viewer.
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         // Example 1: Draw a red wall with constant min and max heights
 
         // Use the maximumHeight and minumumHeight options to specify
         // the heights of the top and bottom of the wall.
-        var redWallInstance = new Cesium.GeometryInstance({
+        const redWallInstance = new Cesium.GeometryInstance({
           geometry: Cesium.WallGeometry.fromConstantHeights({
             positions: Cesium.Cartesian3.fromDegreesArray([
               -115.0,
@@ -63,7 +63,7 @@
 
         // If minumumHeight is not specified, the wall will be
         // drawn on the globe surface.
-        var greenWallInstance = new Cesium.GeometryInstance({
+        const greenWallInstance = new Cesium.GeometryInstance({
           geometry: Cesium.WallGeometry.fromConstantHeights({
             positions: Cesium.Cartesian3.fromDegreesArray([
               -107.0,
@@ -91,7 +91,7 @@
         // To use per position heights, create an array of heights
         // for maximumHeights (and optionally minumumHeights)
         // with a length equal to the number of positions.
-        var positions = Cesium.Cartesian3.fromDegreesArray([
+        const positions = Cesium.Cartesian3.fromDegreesArray([
           -115.0,
           50.0,
           -112.5,
@@ -115,7 +115,7 @@
           -90.0,
           50.0,
         ]);
-        var maximumHeights = [
+        const maximumHeights = [
           100000,
           200000,
           100000,
@@ -128,7 +128,7 @@
           200000,
           100000,
         ];
-        var minimumHeights = [
+        const minimumHeights = [
           0,
           100000,
           0,
@@ -142,7 +142,7 @@
           0,
         ];
 
-        var blueWallInstance = new Cesium.GeometryInstance({
+        const blueWallInstance = new Cesium.GeometryInstance({
           geometry: new Cesium.WallGeometry({
             positions: positions,
             maximumHeights: maximumHeights,

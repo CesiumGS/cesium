@@ -79,7 +79,7 @@ Object.defineProperties(ImageryLayerCollection.prototype, {
  * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of the layers.
  */
 ImageryLayerCollection.prototype.add = function (layer, index) {
-  var hasIndex = defined(index);
+  const hasIndex = defined(index);
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(layer)) {
@@ -125,7 +125,7 @@ ImageryLayerCollection.prototype.addImageryProvider = function (
   }
   //>>includeEnd('debug');
 
-  var layer = new ImageryLayer(imageryProvider);
+  const layer = new ImageryLayer(imageryProvider);
   this.add(layer, index);
   return layer;
 };
@@ -141,7 +141,7 @@ ImageryLayerCollection.prototype.addImageryProvider = function (
 ImageryLayerCollection.prototype.remove = function (layer, destroy) {
   destroy = defaultValue(destroy, true);
 
-  var index = this._layers.indexOf(layer);
+  const index = this._layers.indexOf(layer);
   if (index !== -1) {
     this._layers.splice(index, 1);
 
@@ -167,9 +167,9 @@ ImageryLayerCollection.prototype.remove = function (layer, destroy) {
 ImageryLayerCollection.prototype.removeAll = function (destroy) {
   destroy = defaultValue(destroy, true);
 
-  var layers = this._layers;
-  for (var i = 0, len = layers.length; i < len; i++) {
-    var layer = layers[i];
+  const layers = this._layers;
+  for (let i = 0, len = layers.length; i < len; i++) {
+    const layer = layers[i];
     this.layerRemoved.raiseEvent(layer, i);
 
     if (destroy) {
@@ -226,7 +226,7 @@ function getLayerIndex(layers, layer) {
   }
   //>>includeEnd('debug');
 
-  var index = layers.indexOf(layer);
+  const index = layers.indexOf(layer);
 
   //>>includeStart('debug', pragmas.debug);
   if (index === -1) {
@@ -238,7 +238,7 @@ function getLayerIndex(layers, layer) {
 }
 
 function swapLayers(collection, i, j) {
-  var arr = collection._layers;
+  const arr = collection._layers;
   i = CesiumMath.clamp(i, 0, arr.length - 1);
   j = CesiumMath.clamp(j, 0, arr.length - 1);
 
@@ -246,7 +246,7 @@ function swapLayers(collection, i, j) {
     return;
   }
 
-  var temp = arr[i];
+  const temp = arr[i];
   arr[i] = arr[j];
   arr[j] = temp;
 
@@ -264,7 +264,7 @@ function swapLayers(collection, i, j) {
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 ImageryLayerCollection.prototype.raise = function (layer) {
-  var index = getLayerIndex(this._layers, layer);
+  const index = getLayerIndex(this._layers, layer);
   swapLayers(this, index, index + 1);
 };
 
@@ -277,7 +277,7 @@ ImageryLayerCollection.prototype.raise = function (layer) {
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 ImageryLayerCollection.prototype.lower = function (layer) {
-  var index = getLayerIndex(this._layers, layer);
+  const index = getLayerIndex(this._layers, layer);
   swapLayers(this, index, index - 1);
 };
 
@@ -290,7 +290,7 @@ ImageryLayerCollection.prototype.lower = function (layer) {
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 ImageryLayerCollection.prototype.raiseToTop = function (layer) {
-  var index = getLayerIndex(this._layers, layer);
+  const index = getLayerIndex(this._layers, layer);
   if (index === this._layers.length - 1) {
     return;
   }
@@ -311,7 +311,7 @@ ImageryLayerCollection.prototype.raiseToTop = function (layer) {
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 ImageryLayerCollection.prototype.lowerToBottom = function (layer) {
-  var index = getLayerIndex(this._layers, layer);
+  const index = getLayerIndex(this._layers, layer);
   if (index === 0) {
     return;
   }
@@ -323,19 +323,19 @@ ImageryLayerCollection.prototype.lowerToBottom = function (layer) {
   this.layerMoved.raiseEvent(layer, 0, index);
 };
 
-var applicableRectangleScratch = new Rectangle();
+const applicableRectangleScratch = new Rectangle();
 
 function pickImageryHelper(scene, pickedLocation, pickFeatures, callback) {
   // Find the terrain tile containing the picked location.
-  var tilesToRender = scene.globe._surface._tilesToRender;
-  var pickedTile;
+  const tilesToRender = scene.globe._surface._tilesToRender;
+  let pickedTile;
 
   for (
-    var textureIndex = 0;
+    let textureIndex = 0;
     !defined(pickedTile) && textureIndex < tilesToRender.length;
     ++textureIndex
   ) {
-    var tile = tilesToRender[textureIndex];
+    const tile = tilesToRender[textureIndex];
     if (Rectangle.contains(tile.rectangle, pickedLocation)) {
       pickedTile = tile;
     }
@@ -346,15 +346,15 @@ function pickImageryHelper(scene, pickedLocation, pickFeatures, callback) {
   }
 
   // Pick against all attached imagery tiles containing the pickedLocation.
-  var imageryTiles = pickedTile.data.imagery;
+  const imageryTiles = pickedTile.data.imagery;
 
-  for (var i = imageryTiles.length - 1; i >= 0; --i) {
-    var terrainImagery = imageryTiles[i];
-    var imagery = terrainImagery.readyImagery;
+  for (let i = imageryTiles.length - 1; i >= 0; --i) {
+    const terrainImagery = imageryTiles[i];
+    const imagery = terrainImagery.readyImagery;
     if (!defined(imagery)) {
       continue;
     }
-    var provider = imagery.imageryLayer.imageryProvider;
+    const provider = imagery.imageryLayer.imageryProvider;
     if (pickFeatures && !defined(provider.pickFeatures)) {
       continue;
     }
@@ -365,9 +365,9 @@ function pickImageryHelper(scene, pickedLocation, pickFeatures, callback) {
 
     // If this imagery came from a parent, it may not be applicable to its entire rectangle.
     // Check the textureCoordinateRectangle.
-    var applicableRectangle = applicableRectangleScratch;
+    const applicableRectangle = applicableRectangleScratch;
 
-    var epsilon = 1 / 1024; // 1/4 of a pixel in a typical 256x256 tile.
+    const epsilon = 1 / 1024; // 1/4 of a pixel in a typical 256x256 tile.
     applicableRectangle.west = CesiumMath.lerp(
       pickedTile.rectangle.west,
       pickedTile.rectangle.east,
@@ -409,16 +409,16 @@ function pickImageryHelper(scene, pickedLocation, pickFeatures, callback) {
  */
 ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
   // Find the picked location on the globe.
-  var pickedPosition = scene.globe.pick(ray, scene);
+  const pickedPosition = scene.globe.pick(ray, scene);
   if (!defined(pickedPosition)) {
     return;
   }
 
-  var pickedLocation = scene.globe.ellipsoid.cartesianToCartographic(
+  const pickedLocation = scene.globe.ellipsoid.cartesianToCartographic(
     pickedPosition
   );
 
-  var imageryLayers = [];
+  const imageryLayers = [];
 
   pickImageryHelper(scene, pickedLocation, false, function (imagery) {
     imageryLayers.push(imagery.imageryLayer);
@@ -464,21 +464,21 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
   scene
 ) {
   // Find the picked location on the globe.
-  var pickedPosition = scene.globe.pick(ray, scene);
+  const pickedPosition = scene.globe.pick(ray, scene);
   if (!defined(pickedPosition)) {
     return;
   }
 
-  var pickedLocation = scene.globe.ellipsoid.cartesianToCartographic(
+  const pickedLocation = scene.globe.ellipsoid.cartesianToCartographic(
     pickedPosition
   );
 
-  var promises = [];
-  var imageryLayers = [];
+  const promises = [];
+  const imageryLayers = [];
 
   pickImageryHelper(scene, pickedLocation, true, function (imagery) {
-    var provider = imagery.imageryLayer.imageryProvider;
-    var promise = provider.pickFeatures(
+    const provider = imagery.imageryLayer.imageryProvider;
+    const promise = provider.pickFeatures(
       imagery.x,
       imagery.y,
       imagery.level,
@@ -495,17 +495,17 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
     return undefined;
   }
   return when.all(promises, function (results) {
-    var features = [];
-    for (var resultIndex = 0; resultIndex < results.length; ++resultIndex) {
-      var result = results[resultIndex];
-      var image = imageryLayers[resultIndex];
+    const features = [];
+    for (let resultIndex = 0; resultIndex < results.length; ++resultIndex) {
+      const result = results[resultIndex];
+      const image = imageryLayers[resultIndex];
       if (defined(result) && result.length > 0) {
         for (
-          var featureIndex = 0;
+          let featureIndex = 0;
           featureIndex < result.length;
           ++featureIndex
         ) {
-          var feature = result[featureIndex];
+          const feature = result[featureIndex];
           feature.imageryLayer = image;
           // For features without a position, use the picked location.
           if (!defined(feature.position)) {
@@ -529,8 +529,8 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
 ImageryLayerCollection.prototype.queueReprojectionCommands = function (
   frameState
 ) {
-  var layers = this._layers;
-  for (var i = 0, len = layers.length; i < len; ++i) {
+  const layers = this._layers;
+  for (let i = 0, len = layers.length; i < len; ++i) {
     layers[i].queueReprojectionCommands(frameState);
   }
 };
@@ -541,8 +541,8 @@ ImageryLayerCollection.prototype.queueReprojectionCommands = function (
  * @private
  */
 ImageryLayerCollection.prototype.cancelReprojections = function () {
-  var layers = this._layers;
-  for (var i = 0, len = layers.length; i < len; ++i) {
+  const layers = this._layers;
+  for (let i = 0, len = layers.length; i < len; ++i) {
     layers[i].cancelReprojections();
   }
 };
@@ -584,11 +584,11 @@ ImageryLayerCollection.prototype.destroy = function () {
 };
 
 ImageryLayerCollection.prototype._update = function () {
-  var isBaseLayer = true;
-  var layers = this._layers;
-  var layersShownOrHidden;
-  var layer;
-  var i, len;
+  let isBaseLayer = true;
+  const layers = this._layers;
+  let layersShownOrHidden;
+  let layer;
+  let i, len;
   for (i = 0, len = layers.length; i < len; ++i) {
     layer = layers[i];
 

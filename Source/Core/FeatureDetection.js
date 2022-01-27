@@ -4,7 +4,7 @@ import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Fullscreen from "./Fullscreen.js";
 
-var theNavigator;
+let theNavigator;
 if (typeof navigator !== "undefined") {
   theNavigator = navigator;
 } else {
@@ -12,21 +12,21 @@ if (typeof navigator !== "undefined") {
 }
 
 function extractVersion(versionString) {
-  var parts = versionString.split(".");
-  for (var i = 0, len = parts.length; i < len; ++i) {
+  const parts = versionString.split(".");
+  for (let i = 0, len = parts.length; i < len; ++i) {
     parts[i] = parseInt(parts[i], 10);
   }
   return parts;
 }
 
-var isChromeResult;
-var chromeVersionResult;
+let isChromeResult;
+let chromeVersionResult;
 function isChrome() {
   if (!defined(isChromeResult)) {
     isChromeResult = false;
     // Edge contains Chrome in the user agent too
     if (!isEdge()) {
-      var fields = / Chrome\/([\.0-9]+)/.exec(theNavigator.userAgent);
+      const fields = / Chrome\/([\.0-9]+)/.exec(theNavigator.userAgent);
       if (fields !== null) {
         isChromeResult = true;
         chromeVersionResult = extractVersion(fields[1]);
@@ -41,8 +41,8 @@ function chromeVersion() {
   return isChrome() && chromeVersionResult;
 }
 
-var isSafariResult;
-var safariVersionResult;
+let isSafariResult;
+let safariVersionResult;
 function isSafari() {
   if (!defined(isSafariResult)) {
     isSafariResult = false;
@@ -53,7 +53,7 @@ function isSafari() {
       !isEdge() &&
       / Safari\/[\.0-9]+/.test(theNavigator.userAgent)
     ) {
-      var fields = / Version\/([\.0-9]+)/.exec(theNavigator.userAgent);
+      const fields = / Version\/([\.0-9]+)/.exec(theNavigator.userAgent);
       if (fields !== null) {
         isSafariResult = true;
         safariVersionResult = extractVersion(fields[1]);
@@ -68,13 +68,13 @@ function safariVersion() {
   return isSafari() && safariVersionResult;
 }
 
-var isWebkitResult;
-var webkitVersionResult;
+let isWebkitResult;
+let webkitVersionResult;
 function isWebkit() {
   if (!defined(isWebkitResult)) {
     isWebkitResult = false;
 
-    var fields = / AppleWebKit\/([\.0-9]+)(\+?)/.exec(theNavigator.userAgent);
+    const fields = / AppleWebKit\/([\.0-9]+)(\+?)/.exec(theNavigator.userAgent);
     if (fields !== null) {
       isWebkitResult = true;
       webkitVersionResult = extractVersion(fields[1]);
@@ -89,13 +89,13 @@ function webkitVersion() {
   return isWebkit() && webkitVersionResult;
 }
 
-var isInternetExplorerResult;
-var internetExplorerVersionResult;
+let isInternetExplorerResult;
+let internetExplorerVersionResult;
 function isInternetExplorer() {
   if (!defined(isInternetExplorerResult)) {
     isInternetExplorerResult = false;
 
-    var fields;
+    let fields;
     if (theNavigator.appName === "Microsoft Internet Explorer") {
       fields = /MSIE ([0-9]{1,}[\.0-9]{0,})/.exec(theNavigator.userAgent);
       if (fields !== null) {
@@ -119,12 +119,12 @@ function internetExplorerVersion() {
   return isInternetExplorer() && internetExplorerVersionResult;
 }
 
-var isEdgeResult;
-var edgeVersionResult;
+let isEdgeResult;
+let edgeVersionResult;
 function isEdge() {
   if (!defined(isEdgeResult)) {
     isEdgeResult = false;
-    var fields = / Edge\/([\.0-9]+)/.exec(theNavigator.userAgent);
+    const fields = / Edge\/([\.0-9]+)/.exec(theNavigator.userAgent);
     if (fields !== null) {
       isEdgeResult = true;
       edgeVersionResult = extractVersion(fields[1]);
@@ -137,13 +137,13 @@ function edgeVersion() {
   return isEdge() && edgeVersionResult;
 }
 
-var isFirefoxResult;
-var firefoxVersionResult;
+let isFirefoxResult;
+let firefoxVersionResult;
 function isFirefox() {
   if (!defined(isFirefoxResult)) {
     isFirefoxResult = false;
 
-    var fields = /Firefox\/([\.0-9]+)/.exec(theNavigator.userAgent);
+    const fields = /Firefox\/([\.0-9]+)/.exec(theNavigator.userAgent);
     if (fields !== null) {
       isFirefoxResult = true;
       firefoxVersionResult = extractVersion(fields[1]);
@@ -152,7 +152,7 @@ function isFirefox() {
   return isFirefoxResult;
 }
 
-var isWindowsResult;
+let isWindowsResult;
 function isWindows() {
   if (!defined(isWindowsResult)) {
     isWindowsResult = /Windows/i.test(theNavigator.appVersion);
@@ -164,7 +164,7 @@ function firefoxVersion() {
   return isFirefox() && firefoxVersionResult;
 }
 
-var hasPointerEvents;
+let hasPointerEvents;
 function supportsPointerEvents() {
   if (!defined(hasPointerEvents)) {
     //While navigator.pointerEnabled is deprecated in the W3C specification
@@ -181,17 +181,17 @@ function supportsPointerEvents() {
   return hasPointerEvents;
 }
 
-var imageRenderingValueResult;
-var supportsImageRenderingPixelatedResult;
+let imageRenderingValueResult;
+let supportsImageRenderingPixelatedResult;
 function supportsImageRenderingPixelated() {
   if (!defined(supportsImageRenderingPixelatedResult)) {
-    var canvas = document.createElement("canvas");
+    const canvas = document.createElement("canvas");
     canvas.setAttribute(
       "style",
       "image-rendering: -moz-crisp-edges;" + "image-rendering: pixelated;"
     );
     //canvas.style.imageRendering will be undefined, null or an empty string on unsupported browsers.
-    var tmp = canvas.style.imageRendering;
+    const tmp = canvas.style.imageRendering;
     supportsImageRenderingPixelatedResult = defined(tmp) && tmp !== "";
     if (supportsImageRenderingPixelatedResult) {
       imageRenderingValueResult = tmp;
@@ -224,7 +224,7 @@ supportsWebP.initialize = function () {
     return supportsWebP._promise;
   }
 
-  var supportsWebPDeferred = when.defer();
+  const supportsWebPDeferred = when.defer();
   supportsWebP._promise = supportsWebPDeferred.promise;
   if (isEdge()) {
     // Edge's WebP support with WebGL is incomplete.
@@ -234,7 +234,7 @@ supportsWebP.initialize = function () {
     return supportsWebPDeferred.promise;
   }
 
-  var image = new Image();
+  const image = new Image();
   image.onload = function () {
     supportsWebP._result = image.width > 0 && image.height > 0;
     supportsWebPDeferred.resolve(supportsWebP._result);
@@ -258,7 +258,7 @@ Object.defineProperties(supportsWebP, {
   },
 });
 
-var typedArrayTypes = [];
+const typedArrayTypes = [];
 if (typeof ArrayBuffer !== "undefined") {
   typedArrayTypes.push(
     Int8Array,
@@ -296,7 +296,7 @@ if (typeof ArrayBuffer !== "undefined") {
  *
  * @namespace FeatureDetection
  */
-var FeatureDetection = {
+const FeatureDetection = {
   isChrome: isChrome,
   chromeVersion: chromeVersion,
   isSafari: isSafari,

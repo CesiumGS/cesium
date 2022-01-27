@@ -108,12 +108,12 @@ function update(frustum) {
   }
   //>>includeEnd('debug');
 
-  var t = frustum.top;
-  var b = frustum.bottom;
-  var r = frustum.right;
-  var l = frustum.left;
-  var n = frustum.near;
-  var f = frustum.far;
+  const t = frustum.top;
+  const b = frustum.bottom;
+  const r = frustum.right;
+  const l = frustum.left;
+  const n = frustum.near;
+  const f = frustum.far;
 
   if (
     t !== frustum._top ||
@@ -189,10 +189,10 @@ Object.defineProperties(PerspectiveOffCenterFrustum.prototype, {
   },
 });
 
-var getPlanesRight = new Cartesian3();
-var getPlanesNearCenter = new Cartesian3();
-var getPlanesFarCenter = new Cartesian3();
-var getPlanesNormal = new Cartesian3();
+const getPlanesRight = new Cartesian3();
+const getPlanesNearCenter = new Cartesian3();
+const getPlanesFarCenter = new Cartesian3();
+const getPlanesNormal = new Cartesian3();
 /**
  * Creates a culling volume for this frustum.
  *
@@ -225,26 +225,26 @@ PerspectiveOffCenterFrustum.prototype.computeCullingVolume = function (
   }
   //>>includeEnd('debug');
 
-  var planes = this._cullingVolume.planes;
+  const planes = this._cullingVolume.planes;
 
-  var t = this.top;
-  var b = this.bottom;
-  var r = this.right;
-  var l = this.left;
-  var n = this.near;
-  var f = this.far;
+  const t = this.top;
+  const b = this.bottom;
+  const r = this.right;
+  const l = this.left;
+  const n = this.near;
+  const f = this.far;
 
-  var right = Cartesian3.cross(direction, up, getPlanesRight);
+  const right = Cartesian3.cross(direction, up, getPlanesRight);
 
-  var nearCenter = getPlanesNearCenter;
+  const nearCenter = getPlanesNearCenter;
   Cartesian3.multiplyByScalar(direction, n, nearCenter);
   Cartesian3.add(position, nearCenter, nearCenter);
 
-  var farCenter = getPlanesFarCenter;
+  const farCenter = getPlanesFarCenter;
   Cartesian3.multiplyByScalar(direction, f, farCenter);
   Cartesian3.add(position, farCenter, farCenter);
 
-  var normal = getPlanesNormal;
+  const normal = getPlanesNormal;
 
   //Left plane computation
   Cartesian3.multiplyByScalar(right, l, normal);
@@ -254,7 +254,7 @@ PerspectiveOffCenterFrustum.prototype.computeCullingVolume = function (
   Cartesian3.cross(normal, up, normal);
   Cartesian3.normalize(normal, normal);
 
-  var plane = planes[0];
+  let plane = planes[0];
   if (!defined(plane)) {
     plane = planes[0] = new Cartesian4();
   }
@@ -401,12 +401,12 @@ PerspectiveOffCenterFrustum.prototype.getPixelDimensions = function (
   }
   //>>includeEnd('debug');
 
-  var inverseNear = 1.0 / this.near;
-  var tanTheta = this.top * inverseNear;
-  var pixelHeight =
+  const inverseNear = 1.0 / this.near;
+  let tanTheta = this.top * inverseNear;
+  const pixelHeight =
     (2.0 * pixelRatio * distance * tanTheta) / drawingBufferHeight;
   tanTheta = this.right * inverseNear;
-  var pixelWidth =
+  const pixelWidth =
     (2.0 * pixelRatio * distance * tanTheta) / drawingBufferWidth;
 
   result.x = pixelWidth;

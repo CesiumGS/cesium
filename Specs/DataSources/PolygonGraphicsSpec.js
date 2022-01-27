@@ -13,7 +13,7 @@ import testMaterialDefinitionChanged from "../testMaterialDefinitionChanged.js";
 
 describe("DataSources/PolygonGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {
-    var options = {
+    const options = {
       material: Color.BLUE,
       show: true,
       hierarchy: new PolygonHierarchy(),
@@ -35,7 +35,7 @@ describe("DataSources/PolygonGraphics", function () {
       zIndex: 22,
     };
 
-    var polygon = new PolygonGraphics(options);
+    const polygon = new PolygonGraphics(options);
     expect(polygon.material).toBeInstanceOf(ColorMaterialProperty);
     expect(polygon.show).toBeInstanceOf(ConstantProperty);
     expect(polygon.hierarchy).toBeInstanceOf(ConstantProperty);
@@ -84,7 +84,7 @@ describe("DataSources/PolygonGraphics", function () {
   });
 
   it("merge assigns unassigned properties", function () {
-    var source = new PolygonGraphics();
+    const source = new PolygonGraphics();
     source.material = new ColorMaterialProperty();
     source.hierarchy = new ConstantProperty();
     source.show = new ConstantProperty();
@@ -109,7 +109,7 @@ describe("DataSources/PolygonGraphics", function () {
     source.arcType = new ConstantProperty(ArcType.RHUMB);
     source.zIndex = new ConstantProperty(30);
 
-    var target = new PolygonGraphics();
+    const target = new PolygonGraphics();
     target.merge(source);
 
     expect(target.material).toBe(source.material);
@@ -136,29 +136,29 @@ describe("DataSources/PolygonGraphics", function () {
   });
 
   it("merge does not assign assigned properties", function () {
-    var source = new PolygonGraphics();
+    const source = new PolygonGraphics();
 
-    var material = new ColorMaterialProperty();
-    var positions = new ConstantProperty();
-    var show = new ConstantProperty();
-    var height = new ConstantProperty();
-    var extrudedHeight = new ConstantProperty();
-    var granularity = new ConstantProperty();
-    var stRotation = new ConstantProperty();
-    var fill = new ConstantProperty();
-    var outline = new ConstantProperty();
-    var outlineColor = new ConstantProperty();
-    var outlineWidth = new ConstantProperty();
-    var perPositionHeight = new ConstantProperty();
-    var closeTop = new ConstantProperty();
-    var closeBottom = new ConstantProperty();
-    var shadows = new ConstantProperty();
-    var distanceDisplayCondition = new ConstantProperty();
-    var classificationType = new ConstantProperty();
-    var arcType = new ConstantProperty();
-    var zIndex = new ConstantProperty();
+    const material = new ColorMaterialProperty();
+    const positions = new ConstantProperty();
+    const show = new ConstantProperty();
+    const height = new ConstantProperty();
+    const extrudedHeight = new ConstantProperty();
+    const granularity = new ConstantProperty();
+    const stRotation = new ConstantProperty();
+    const fill = new ConstantProperty();
+    const outline = new ConstantProperty();
+    const outlineColor = new ConstantProperty();
+    const outlineWidth = new ConstantProperty();
+    const perPositionHeight = new ConstantProperty();
+    const closeTop = new ConstantProperty();
+    const closeBottom = new ConstantProperty();
+    const shadows = new ConstantProperty();
+    const distanceDisplayCondition = new ConstantProperty();
+    const classificationType = new ConstantProperty();
+    const arcType = new ConstantProperty();
+    const zIndex = new ConstantProperty();
 
-    var target = new PolygonGraphics();
+    const target = new PolygonGraphics();
     target.material = material;
     target.hierarchy = positions;
     target.show = show;
@@ -203,7 +203,7 @@ describe("DataSources/PolygonGraphics", function () {
   });
 
   it("clone works", function () {
-    var source = new PolygonGraphics();
+    const source = new PolygonGraphics();
     source.material = new ColorMaterialProperty();
     source.hierarchy = new ConstantProperty();
     source.show = new ConstantProperty();
@@ -224,7 +224,7 @@ describe("DataSources/PolygonGraphics", function () {
     source.arcType = new ConstantProperty();
     source.zIndex = new ConstantProperty();
 
-    var result = source.clone();
+    const result = source.clone();
     expect(result.material).toBe(source.material);
     expect(result.hierarchy).toBe(source.hierarchy);
     expect(result.show).toBe(source.show);
@@ -249,14 +249,14 @@ describe("DataSources/PolygonGraphics", function () {
   });
 
   it("merge throws if source undefined", function () {
-    var target = new PolygonGraphics();
+    const target = new PolygonGraphics();
     expect(function () {
       target.merge(undefined);
     }).toThrowDeveloperError();
   });
 
   it("raises definitionChanged when a property is assigned or modified", function () {
-    var property = new PolygonGraphics();
+    const property = new PolygonGraphics();
     testMaterialDefinitionChanged(property, "material", Color.RED, Color.BLUE);
     testDefinitionChanged(property, "hierarchy", [], []);
     testDefinitionChanged(property, "show", true, false);
@@ -294,18 +294,18 @@ describe("DataSources/PolygonGraphics", function () {
   });
 
   it("converts an array of positions to a PolygonHierarchy", function () {
-    var positions = [
+    const positions = [
       new Cartesian3(1, 2, 3),
       new Cartesian3(4, 5, 6),
       new Cartesian3(7, 8, 9),
     ];
 
-    var graphics = new PolygonGraphics({
+    let graphics = new PolygonGraphics({
       hierarchy: positions,
     });
 
     expect(graphics.hierarchy).toBeInstanceOf(ConstantProperty);
-    var hierarchy = graphics.hierarchy.getValue();
+    let hierarchy = graphics.hierarchy.getValue();
     expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
     expect(hierarchy.positions).toEqual(positions);
 

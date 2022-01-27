@@ -11,18 +11,18 @@ import HeightReference from "../Scene/HeightReference.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 import Property from "./Property.js";
 
-var defaultColor = Color.WHITE;
-var defaultOutlineColor = Color.BLACK;
-var defaultOutlineWidth = 0.0;
-var defaultPixelSize = 1.0;
-var defaultDisableDepthTestDistance = 0.0;
+const defaultColor = Color.WHITE;
+const defaultOutlineColor = Color.BLACK;
+const defaultOutlineWidth = 0.0;
+const defaultPixelSize = 1.0;
+const defaultDisableDepthTestDistance = 0.0;
 
-var colorScratch = new Color();
-var positionScratch = new Cartesian3();
-var outlineColorScratch = new Color();
-var scaleByDistanceScratch = new NearFarScalar();
-var translucencyByDistanceScratch = new NearFarScalar();
-var distanceDisplayConditionScratch = new DistanceDisplayCondition();
+const colorScratch = new Color();
+const positionScratch = new Cartesian3();
+const outlineColorScratch = new Color();
+const scaleByDistanceScratch = new NearFarScalar();
+const translucencyByDistanceScratch = new NearFarScalar();
+const distanceDisplayConditionScratch = new DistanceDisplayCondition();
 
 function EntityData(entity) {
   this.entity = entity;
@@ -77,24 +77,24 @@ PointVisualizer.prototype.update = function (time) {
   }
   //>>includeEnd('debug');
 
-  var items = this._items.values;
-  var cluster = this._cluster;
-  for (var i = 0, len = items.length; i < len; i++) {
-    var item = items[i];
-    var entity = item.entity;
-    var pointGraphics = entity._point;
-    var pointPrimitive = item.pointPrimitive;
-    var billboard = item.billboard;
-    var heightReference = Property.getValueOrDefault(
+  const items = this._items.values;
+  const cluster = this._cluster;
+  for (let i = 0, len = items.length; i < len; i++) {
+    const item = items[i];
+    const entity = item.entity;
+    const pointGraphics = entity._point;
+    let pointPrimitive = item.pointPrimitive;
+    let billboard = item.billboard;
+    const heightReference = Property.getValueOrDefault(
       pointGraphics._heightReference,
       time,
       HeightReference.NONE
     );
-    var show =
+    let show =
       entity.isShowing &&
       entity.isAvailable(time) &&
       Property.getValueOrDefault(pointGraphics._show, time, true);
-    var position;
+    let position;
     if (show) {
       position = Property.getValueOrUndefined(
         entity._position,
@@ -112,8 +112,8 @@ PointVisualizer.prototype.update = function (time) {
       cluster._clusterDirty = true;
     }
 
-    var needsRedraw = false;
-    var updateClamping = false;
+    let needsRedraw = false;
+    let updateClamping = false;
     if (heightReference !== HeightReference.NONE && !defined(billboard)) {
       if (defined(pointPrimitive)) {
         returnPrimitive(item, entity, cluster);
@@ -217,26 +217,26 @@ PointVisualizer.prototype.update = function (time) {
       );
       billboard.heightReference = heightReference;
 
-      var newColor = Property.getValueOrDefault(
+      const newColor = Property.getValueOrDefault(
         pointGraphics._color,
         time,
         defaultColor,
         colorScratch
       );
-      var newOutlineColor = Property.getValueOrDefault(
+      const newOutlineColor = Property.getValueOrDefault(
         pointGraphics._outlineColor,
         time,
         defaultOutlineColor,
         outlineColorScratch
       );
-      var newOutlineWidth = Math.round(
+      const newOutlineWidth = Math.round(
         Property.getValueOrDefault(
           pointGraphics._outlineWidth,
           time,
           defaultOutlineWidth
         )
       );
-      var newPixelSize = Math.max(
+      let newPixelSize = Math.max(
         1,
         Math.round(
           Property.getValueOrDefault(
@@ -271,10 +271,10 @@ PointVisualizer.prototype.update = function (time) {
         item.pixelSize = newPixelSize;
         item.outlineWidth = newOutlineWidth;
 
-        var centerAlpha = newColor.alpha;
-        var cssColor = newColor.toCssColorString();
-        var cssOutlineColor = newOutlineColor.toCssColorString();
-        var textureId = JSON.stringify([
+        const centerAlpha = newColor.alpha;
+        const cssColor = newColor.toCssColorString();
+        const cssOutlineColor = newOutlineColor.toCssColorString();
+        const textureId = JSON.stringify([
           cssColor,
           newPixelSize,
           cssOutlineColor,
@@ -322,7 +322,7 @@ PointVisualizer.prototype.getBoundingSphere = function (entity, result) {
   }
   //>>includeEnd('debug');
 
-  var item = this._items.get(entity.id);
+  const item = this._items.get(entity.id);
   if (
     !defined(item) ||
     !(defined(item.pointPrimitive) || defined(item.billboard))
@@ -336,7 +336,7 @@ PointVisualizer.prototype.getBoundingSphere = function (entity, result) {
       result.center
     );
   } else {
-    var billboard = item.billboard;
+    const billboard = item.billboard;
     if (!defined(billboard._clampedPosition)) {
       return BoundingSphereState.PENDING;
     }
@@ -364,8 +364,8 @@ PointVisualizer.prototype.destroy = function () {
     PointVisualizer.prototype._onCollectionChanged,
     this
   );
-  var entities = this._entityCollection.values;
-  for (var i = 0; i < entities.length; i++) {
+  const entities = this._entityCollection.values;
+  for (let i = 0; i < entities.length; i++) {
     this._cluster.removePoint(entities[i]);
   }
   return destroyObject(this);
@@ -377,10 +377,10 @@ PointVisualizer.prototype._onCollectionChanged = function (
   removed,
   changed
 ) {
-  var i;
-  var entity;
-  var items = this._items;
-  var cluster = this._cluster;
+  let i;
+  let entity;
+  const items = this._items;
+  const cluster = this._cluster;
 
   for (i = added.length - 1; i > -1; i--) {
     entity = added[i];
@@ -410,13 +410,13 @@ PointVisualizer.prototype._onCollectionChanged = function (
 
 function returnPrimitive(item, entity, cluster) {
   if (defined(item)) {
-    var pointPrimitive = item.pointPrimitive;
+    const pointPrimitive = item.pointPrimitive;
     if (defined(pointPrimitive)) {
       item.pointPrimitive = undefined;
       cluster.removePoint(entity);
       return;
     }
-    var billboard = item.billboard;
+    const billboard = item.billboard;
     if (defined(billboard)) {
       item.billboard = undefined;
       cluster.removeBillboard(entity);

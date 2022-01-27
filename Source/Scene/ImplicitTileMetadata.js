@@ -35,11 +35,11 @@ export default function ImplicitTileMetadata(options) {
 
   this._class = options.class;
 
-  var subtree = options.implicitSubtree;
+  const subtree = options.implicitSubtree;
   this._metadataTable = subtree.metadataTable;
   this._entityId = subtree.getEntityId(options.implicitCoordinates);
 
-  var subtreeExtension = subtree.metadataExtension;
+  const subtreeExtension = subtree.metadataExtension;
   this._extensions = subtreeExtension.extensions;
   this._extras = subtreeExtension.extras;
 }
