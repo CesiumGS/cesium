@@ -76,6 +76,10 @@ describe(
     });
 
     it("creates read and draw framebuffers", function () {
+      if (!context.depthTexture) {
+        return;
+      }
+
       framebuffer = new MultisampleFramebuffer({
         context: context,
         width: 1,
@@ -323,9 +327,10 @@ describe(
         }),
       });
 
-      expect(
-        renderAndBlitDepthAttachment(framebuffer)
-      ).toEqualEpsilon([128, 128, 128, 255], 1);
+      expect(renderAndBlitDepthAttachment(framebuffer)).toEqualEpsilon(
+        [128, 128, 128, 255],
+        1
+      );
     });
 
     it("destroys", function () {

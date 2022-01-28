@@ -384,9 +384,10 @@ describe(
     });
 
     it("destroys resources after numSamples changes", function () {
-      if (context.webgl2) {
+      if (!context.webgl2) {
         return;
       }
+
       fbm = new FramebufferManager();
       spyOn(FramebufferManager.prototype, "destroy").and.callThrough();
       fbm.update(context, 1, 1);

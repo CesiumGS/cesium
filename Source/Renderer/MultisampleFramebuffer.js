@@ -40,7 +40,9 @@ function MultisampleFramebuffer(options) {
     (defined(colorRenderbuffers) && !defined(colorTextures)) ||
     (defined(colorTextures) && !defined(colorRenderbuffers))
   ) {
-    throw new DeveloperError("Both color renderbuffer and texture attachments must be provided.")
+    throw new DeveloperError(
+      "Both color renderbuffer and texture attachments must be provided."
+    );
   }
 
   const depthStencilRenderbuffer = options.depthStencilRenderbuffer;
@@ -49,7 +51,9 @@ function MultisampleFramebuffer(options) {
     (defined(depthStencilRenderbuffer) && !defined(depthStencilTexture)) ||
     (defined(depthStencilTexture) && !defined(depthStencilRenderbuffer))
   ) {
-    throw new DeveloperError("Both depth-stencil renderbuffer and texture attachments must be provided.")
+    throw new DeveloperError(
+      "Both depth-stencil renderbuffer and texture attachments must be provided."
+    );
   }
 
   this._renderFramebuffer = new Framebuffer({
