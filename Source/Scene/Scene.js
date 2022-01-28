@@ -3357,7 +3357,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
   const originalSamples = scene.numberSamples;
   if (picking) {
     scene.numberSamples = 1;
-    scene.samplesDirty = view.oit.numSamples !== scene.numberSamples;
+    scene.samplesDirty = defined(view.oit) && view.oit.numSamples !== scene.numberSamples;
   }
 
   // Preserve the reference to the original framebuffer.
