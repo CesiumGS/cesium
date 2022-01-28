@@ -751,8 +751,8 @@ const cartoScratch = new Cartographic();
  *
  * @example
  * // find intersection of ray through a pixel and the globe
- * var ray = viewer.camera.getPickRay(windowCoordinates);
- * var intersection = globe.pick(ray, scene);
+ * const ray = viewer.camera.getPickRay(windowCoordinates);
+ * const intersection = globe.pick(ray, scene);
  */
 Globe.prototype.pick = function (ray, scene, result) {
   result = this.pickWorldCoordinates(ray, scene, true, result);

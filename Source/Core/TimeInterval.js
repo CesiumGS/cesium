@@ -21,7 +21,7 @@ import JulianDate from "./JulianDate.js";
  * @example
  * // Create an instance that spans August 1st, 1980 and is associated
  * // with a Cartesian position.
- * var timeInterval = new Cesium.TimeInterval({
+ * const timeInterval = new Cesium.TimeInterval({
  *     start : Cesium.JulianDate.fromIso8601('1980-08-01T00:00:00Z'),
  *     stop : Cesium.JulianDate.fromIso8601('1980-08-02T00:00:00Z'),
  *     isStartIncluded : true,
@@ -32,30 +32,30 @@ import JulianDate from "./JulianDate.js";
  * @example
  * // Create two instances from ISO 8601 intervals with associated numeric data
  * // then compute their intersection, summing the data they contain.
- * var left = Cesium.TimeInterval.fromIso8601({
+ * const left = Cesium.TimeInterval.fromIso8601({
  *     iso8601 : '2000/2010',
  *     data : 2
  * });
  *
- * var right = Cesium.TimeInterval.fromIso8601({
+ * const right = Cesium.TimeInterval.fromIso8601({
  *     iso8601 : '1995/2005',
  *     data : 3
  * });
  *
  * //The result of the below intersection will be an interval equivalent to
- * //var intersection = Cesium.TimeInterval.fromIso8601({
+ * //const intersection = Cesium.TimeInterval.fromIso8601({
  * //  iso8601 : '2000/2005',
  * //  data : 5
  * //});
- * var intersection = new Cesium.TimeInterval();
+ * const intersection = new Cesium.TimeInterval();
  * Cesium.TimeInterval.intersect(left, right, intersection, function(leftData, rightData) {
  *     return leftData + rightData;
  * });
  *
  * @example
  * // Check if an interval contains a specific time.
- * var dateToCheck = Cesium.JulianDate.fromIso8601('1982-09-08T11:30:00Z');
- * var containsDate = Cesium.TimeInterval.contains(timeInterval, dateToCheck);
+ * const dateToCheck = Cesium.JulianDate.fromIso8601('1982-09-08T11:30:00Z');
+ * const containsDate = Cesium.TimeInterval.contains(timeInterval, dateToCheck);
  */
 function TimeInterval(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

@@ -30,11 +30,11 @@ import VertexFormat from "./VertexFormat.js";
  *
  * @example
  * // Create a circle.
- * var circle = new Cesium.CircleGeometry({
+ * const circle = new Cesium.CircleGeometry({
  *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
  *   radius : 100000.0
  * });
- * var geometry = Cesium.CircleGeometry.createGeometry(circle);
+ * const geometry = Cesium.CircleGeometry.createGeometry(circle);
  */
 function CircleGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

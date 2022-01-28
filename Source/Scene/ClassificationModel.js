@@ -146,7 +146,7 @@ function ClassificationModel(options) {
    * @default {@link Matrix4.IDENTITY}
    *
    * @example
-   * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+   * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
    * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
    */
   this.modelMatrix = Matrix4.clone(
@@ -262,7 +262,7 @@ Object.defineProperties(ClassificationModel.prototype, {
    *
    * @example
    * // Center in WGS84 coordinates
-   * var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
+   * const center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
    */
   boundingSphere: {
     get: function () {

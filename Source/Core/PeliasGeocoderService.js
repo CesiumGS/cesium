@@ -14,7 +14,7 @@ import Resource from "./Resource.js";
  *
  * @example
  * // Configure a Viewer to use the Pelias server hosted by https://geocode.earth/
- * var viewer = new Cesium.Viewer('cesiumContainer', {
+ * const viewer = new Cesium.Viewer('cesiumContainer', {
  *   geocoder: new Cesium.PeliasGeocoderService(new Cesium.Resource({
  *     url: 'https://api.geocode.earth/v1/',
  *       queryParameters: {

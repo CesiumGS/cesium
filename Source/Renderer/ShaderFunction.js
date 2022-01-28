@@ -14,11 +14,11 @@
  * //    v_positionEC = (czm_modelView * vec4(a_position, 1.0)).xyz;
  * //    v_texCoord = a_texCoord;
  * // }
- * var signature = "void assignVaryings(vec3 position)";
- * var func = new ShaderFunction(signature);
+ * const signature = "void assignVaryings(vec3 position)";
+ * const func = new ShaderFunction(signature);
  * func.addLine("v_positionEC = (czm_modelView * vec4(a_position, 1.0)).xyz;");
  * func.addLine("v_texCoord = a_texCoord;");
- * var generatedLines = func.generateGlslLines();
+ * const generatedLines = func.generateGlslLines();
  *
  * @private
  */

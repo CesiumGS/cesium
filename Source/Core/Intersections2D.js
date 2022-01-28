@@ -34,7 +34,7 @@ const Intersections2D = {};
  *                     vertex to the second one.
  *
  * @example
- * var result = Cesium.Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, false, 0.2, 0.6, 0.4);
+ * const result = Cesium.Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, false, 0.2, 0.6, 0.4);
  * // result === [2, 0, -1, 1, 0, 0.25, -1, 1, 2, 0.5]
  */
 Intersections2D.clipTriangleAtAxisAlignedThreshold = function (
@@ -230,7 +230,7 @@ Intersections2D.clipTriangleAtAxisAlignedThreshold = function (
  * @returns {Cartesian3} The barycentric coordinates of the position within the triangle.
  *
  * @example
- * var result = Cesium.Intersections2D.computeBarycentricCoordinates(0.0, 0.0, 0.0, 1.0, -1, -0.5, 1, -0.5);
+ * const result = Cesium.Intersections2D.computeBarycentricCoordinates(0.0, 0.0, 0.0, 1.0, -1, -0.5, 1, -0.5);
  * // result === new Cesium.Cartesian3(1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0);
  */
 Intersections2D.computeBarycentricCoordinates = function (
@@ -307,7 +307,7 @@ Intersections2D.computeBarycentricCoordinates = function (
  * @returns {Cartesian2} The intersection point, undefined if there is no intersection point or lines are coincident.
  *
  * @example
- * var result = Cesium.Intersections2D.computeLineSegmentLineSegmentIntersection(0.0, 0.0, 0.0, 2.0, -1, 1, 1, 1);
+ * const result = Cesium.Intersections2D.computeLineSegmentLineSegmentIntersection(0.0, 0.0, 0.0, 2.0, -1, 1, 1, 1);
  * // result === new Cesium.Cartesian2(0.0, 1.0);
  */
 Intersections2D.computeLineSegmentLineSegmentIntersection = function (

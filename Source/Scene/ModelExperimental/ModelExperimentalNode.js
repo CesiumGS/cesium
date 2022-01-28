@@ -211,9 +211,9 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
  *
  * @example
  * // Iterate through all children of a runtime node.
- * for (var i = 0; i < runtimeNode.children.length; i++)
+ * for (let i = 0; i < runtimeNode.children.length; i++)
  * {
- *   var childNode = runtimeNode.getChild(i);
+ *   const childNode = runtimeNode.getChild(i);
  * }
  */
 ModelExperimentalNode.prototype.getChild = function (index) {

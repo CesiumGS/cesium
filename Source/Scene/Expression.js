@@ -27,11 +27,11 @@ import ExpressionNodeType from "./ExpressionNodeType.js";
  * @param {Object} [defines] Defines in the style.
  *
  * @example
- * var expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');
+ * const expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');
  * expression.evaluate(feature); // returns true or false depending on the feature's properties
  *
  * @example
- * var expression = new Cesium.Expression('(${Temperature} > 90) ? color("red") : color("white")');
+ * const expression = new Cesium.Expression('(${Temperature} > 90) ? color("red") : color("white")');
  * expression.evaluateColor(feature, result); // returns a Cesium.Color object
  */
 function Expression(expression, defines) {

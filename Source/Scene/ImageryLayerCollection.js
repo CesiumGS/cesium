@@ -445,8 +445,8 @@ ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
  *                                             return undefined.
  *
  * @example
- * var pickRay = viewer.camera.getPickRay(windowPosition);
- * var featuresPromise = viewer.imageryLayers.pickImageryLayerFeatures(pickRay, viewer.scene);
+ * const pickRay = viewer.camera.getPickRay(windowPosition);
+ * const featuresPromise = viewer.imageryLayers.pickImageryLayerFeatures(pickRay, viewer.scene);
  * if (!Cesium.defined(featuresPromise)) {
  *     console.log('No features picked.');
  * } else {

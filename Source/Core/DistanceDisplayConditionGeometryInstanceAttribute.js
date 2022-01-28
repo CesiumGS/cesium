@@ -15,7 +15,7 @@ import DeveloperError from "./DeveloperError.js";
  * @exception {DeveloperError} far must be greater than near.
  *
  * @example
- * var instance = new Cesium.GeometryInstance({
+ * const instance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.BoxGeometry({
  *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
  *     minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0),
@@ -119,8 +119,8 @@ Object.defineProperties(
  * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
  *
  * @example
- * var distanceDisplayCondition = new Cesium.DistanceDisplayCondition(100.0, 10000.0);
- * var instance = new Cesium.GeometryInstance({
+ * const distanceDisplayCondition = new Cesium.DistanceDisplayCondition(100.0, 10000.0);
+ * const instance = new Cesium.GeometryInstance({
  *   geometry : geometry,
  *   attributes : {
  *     distanceDisplayCondition : Cesium.DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition)
@@ -155,7 +155,7 @@ DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition =
  * @returns {Float32Array} The modified result parameter or a new instance if result was undefined.
  *
  * @example
- * var attributes = primitive.getGeometryInstanceAttributes('an id');
+ * const attributes = primitive.getGeometryInstanceAttributes('an id');
  * attributes.distanceDisplayCondition = Cesium.DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);
  */
 DistanceDisplayConditionGeometryInstanceAttribute.toValue = function (

@@ -25,7 +25,7 @@ import NavigationHelpButtonViewModel from "./NavigationHelpButtonViewModel.js";
  * // In HTML head, include a link to the NavigationHelpButton.css stylesheet,
  * // and in the body, include: <div id="navigationHelpButtonContainer"></div>
  *
- * var navigationHelpButton = new Cesium.NavigationHelpButton({
+ * const navigationHelpButton = new Cesium.NavigationHelpButton({
  *     container : 'navigationHelpButtonContainer'
  * });
  */

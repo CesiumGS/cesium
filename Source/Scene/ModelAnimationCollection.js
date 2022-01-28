@@ -114,9 +114,9 @@ function add(collection, index, options) {
  *
  * @example
  * // Example 3. Add an animation and provide all properties and events
- * var startTime = Cesium.JulianDate.now();
+ * const startTime = Cesium.JulianDate.now();
  *
- * var animation = model.activeAnimations.add({
+ * const animation = model.activeAnimations.add({
  *   name : 'another animation name',
  *   startTime : startTime,
  *   delay : 0.0,                          // Play at startTime (default)
@@ -254,7 +254,7 @@ ModelAnimationCollection.prototype.addAll = function (options) {
  * @returns {Boolean} <code>true</code> if the animation was removed; <code>false</code> if the animation was not found in the collection.
  *
  * @example
- * var a = model.activeAnimations.add({
+ * const a = model.activeAnimations.add({
  *   name : 'animation name'
  * });
  * model.activeAnimations.remove(a); // Returns true
@@ -317,9 +317,9 @@ ModelAnimationCollection.prototype.contains = function (animation) {
  *
  * @example
  * // Output the names of all the animations in the collection.
- * var animations = model.activeAnimations;
- * var length = animations.length;
- * for (var i = 0; i < length; ++i) {
+ * const animations = model.activeAnimations;
+ * const length = animations.length;
+ * for (let i = 0; i < length; ++i) {
  *   console.log(animations.get(i).name);
  * }
  */

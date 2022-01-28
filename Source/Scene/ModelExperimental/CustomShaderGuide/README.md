@@ -7,7 +7,7 @@ this is an experimental feature. In the future, this may move to the
 ## Constructor
 
 ```js
-var customShader = new Cesium.CustomShader({
+const customShader = new Cesium.CustomShader({
   // Any custom uniforms the user wants to add to the shader.
   // these can be changed at runtime via customShader.setUniform()
   uniforms: {
@@ -67,16 +67,16 @@ Custom shaders can be applied to either 3D Tiles or `ModelExperimental` as
 follows:
 
 ```js
-var customShader = new Cesium.CustomShader(/* ... */);
+const customShader = new Cesium.CustomShader(/* ... */);
 
 // Applying to all tiles in a tileset.
-var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+const tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
   url: "http://example.com/tileset.json",
   customShader: customShader
 }));
 
 // Applying to a model directly
-var model = Cesium.ModelExperimental.fromGltf({,
+const model = Cesium.ModelExperimental.fromGltf({,
   gltf: "http://example.com/model.gltf",
   customShader: customShader
 });
@@ -116,11 +116,11 @@ Texture uniforms have more options, which have been encapsulated in the
 typed array. Here are some examples:
 
 ```js
-var textureFromUrl = new Cesium.TextureUniform({
+const textureFromUrl = new Cesium.TextureUniform({
   url: "https://example.com/image.png",
 });
 
-var textureFromTypedArray = new Cesium.TextureUniform({
+const textureFromTypedArray = new Cesium.TextureUniform({
   typedArray: new Uint8Array([255, 0, 0, 255]),
   width: 1,
   height: 1,
@@ -129,7 +129,7 @@ var textureFromTypedArray = new Cesium.TextureUniform({
 });
 
 // TextureUniform also provides options for controlling the sampler
-var textureWithSampler = new Cesium.TextureUniform({
+const textureWithSampler = new Cesium.TextureUniform({
   url: "https://example.com/image.png",
   repeat: false,
   minificationFilter: Cesium.TextureMinificationFilter.NEAREST,
@@ -147,7 +147,7 @@ The user is responsible for assigning a value to this varying in
 `vertexShaderText` and using it in `fragmentShaderText`. For example:
 
 ```js
-var customShader = new Cesium.CustomShader({
+const customShader = new Cesium.CustomShader({
   // Varying is declared here
   varyings: {
     v_selectedColor: VaryingType.VEC3,

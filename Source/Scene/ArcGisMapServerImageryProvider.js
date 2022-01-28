@@ -81,7 +81,7 @@ import ImageryProvider from "./ImageryProvider.js";
  *
  *
  * @example
- * var esri = new Cesium.ArcGisMapServerImageryProvider({
+ * const esri = new Cesium.ArcGisMapServerImageryProvider({
  *     url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
  * });
  *

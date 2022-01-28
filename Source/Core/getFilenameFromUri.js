@@ -11,7 +11,7 @@ import DeveloperError from "./DeveloperError.js";
  *
  * @example
  * //fileName will be"simple.czml";
- * var fileName = Cesium.getFilenameFromUri('/Gallery/simple.czml?value=true&example=false');
+ * const fileName = Cesium.getFilenameFromUri('/Gallery/simple.czml?value=true&example=false');
  */
 function getFilenameFromUri(uri) {
   //>>includeStart('debug', pragmas.debug);

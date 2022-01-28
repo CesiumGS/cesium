@@ -83,8 +83,8 @@ TerrainCache.prototype.tidy = function () {
  * @see CesiumTerrainProvider
  *
  * @example
- * var geeMetadata = new GoogleEarthEnterpriseMetadata('http://www.earthenterprise.org/3d');
- * var gee = new Cesium.GoogleEarthEnterpriseTerrainProvider({
+ * const geeMetadata = new GoogleEarthEnterpriseMetadata('http://www.earthenterprise.org/3d');
+ * const gee = new Cesium.GoogleEarthEnterpriseTerrainProvider({
  *     metadata : geeMetadata
  * });
  *

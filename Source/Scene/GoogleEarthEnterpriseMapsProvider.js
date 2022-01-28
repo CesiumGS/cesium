@@ -82,7 +82,7 @@ import ImageryProvider from "./ImageryProvider.js";
  *
  *
  * @example
- * var google = new Cesium.GoogleEarthEnterpriseMapsProvider({
+ * const google = new Cesium.GoogleEarthEnterpriseMapsProvider({
  *     url : 'https://earth.localdomain',
  *     channel : 1008
  * });

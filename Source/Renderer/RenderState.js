@@ -408,7 +408,7 @@ let renderStateCache = {};
  *
  *
  * @example
- * var defaults = {
+ * const defaults = {
  *     frontFace : WindingOrder.COUNTER_CLOCKWISE,
  *     cull : {
  *         enabled : false,
@@ -484,7 +484,7 @@ let renderStateCache = {};
  *      }
  * };
  *
- * var rs = RenderState.fromCache(defaults);
+ * const rs = RenderState.fromCache(defaults);
  *
  * @see DrawCommand
  * @see ClearCommand

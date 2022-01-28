@@ -1380,7 +1380,7 @@ Label.prototype.isDestroyed = function () {
  * // Example 1.
  * // Set a label's rightToLeft before init
  * Cesium.Label.enableRightToLeftDetection = true;
- * var myLabelEntity = viewer.entities.add({
+ * const myLabelEntity = viewer.entities.add({
  *   label: {
  *     id: 'my label',
  *     text: 'זה טקסט בעברית \n ועכשיו יורדים שורה',
@@ -1389,7 +1389,7 @@ Label.prototype.isDestroyed = function () {
  *
  * @example
  * // Example 2.
- * var myLabelEntity = viewer.entities.add({
+ * const myLabelEntity = viewer.entities.add({
  *   label: {
  *     id: 'my label',
  *     text: 'English text'

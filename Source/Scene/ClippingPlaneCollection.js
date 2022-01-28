@@ -48,13 +48,13 @@ import ClippingPlane from "./ClippingPlane.js";
  * // This clipping plane's distance is positive, which means its normal
  * // is facing the origin. This will clip everything that is behind
  * // the plane, which is anything with y coordinate < -5.
- * var clippingPlanes = new Cesium.ClippingPlaneCollection({
+ * const clippingPlanes = new Cesium.ClippingPlaneCollection({
  *     planes : [
  *         new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 1.0, 0.0), 5.0)
  *     ],
  * });
  * // Create an entity and attach the ClippingPlaneCollection to the model.
- * var entity = viewer.entities.add({
+ * const entity = viewer.entities.add({
  *     position : Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 10000),
  *     model : {
  *         uri : 'model.gltf',

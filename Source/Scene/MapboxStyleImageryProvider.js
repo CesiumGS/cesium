@@ -40,7 +40,7 @@ const defaultCredit = new Credit(
  *
  * @example
  * // Mapbox style provider
- * var mapbox = new Cesium.MapboxStyleImageryProvider({
+ * const mapbox = new Cesium.MapboxStyleImageryProvider({
  *     styleId: 'streets-v11',
  *     accessToken: 'thisIsMyAccessToken'
  * });

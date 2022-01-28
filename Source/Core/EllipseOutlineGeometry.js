@@ -203,13 +203,13 @@ function computeExtrudedEllipse(options) {
  * @see EllipseOutlineGeometry.createGeometry
  *
  * @example
- * var ellipse = new Cesium.EllipseOutlineGeometry({
+ * const ellipse = new Cesium.EllipseOutlineGeometry({
  *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
  *   semiMajorAxis : 500000.0,
  *   semiMinorAxis : 300000.0,
  *   rotation : Cesium.Math.toRadians(60.0)
  * });
- * var geometry = Cesium.EllipseOutlineGeometry.createGeometry(ellipse);
+ * const geometry = Cesium.EllipseOutlineGeometry.createGeometry(ellipse);
  */
 function EllipseOutlineGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

@@ -12,7 +12,7 @@ import DeveloperError from "./DeveloperError.js";
  *
  *
  * @example
- * var obj = Cesium.queryToObject('key1=some%20value&key2=a%2Fb&key3=x&key3=y');
+ * const obj = Cesium.queryToObject('key1=some%20value&key2=a%2Fb&key3=x&key3=y');
  * // obj will be:
  * // {
  * //   key1 : 'some value',

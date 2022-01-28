@@ -141,15 +141,15 @@ function checkAndResetRequest(request) {
  * @returns {Object} The combined map of query parameters.
  *
  * @example
- * var q1 = {
+ * const q1 = {
  *   a: 1,
  *   b: 2
  * };
- * var q2 = {
+ * const q2 = {
  *   a: 3,
  *   c: 4
  * };
- * var q3 = {
+ * const q3 = {
  *   b: [5, 6],
  *   d: 7
  * }
@@ -246,7 +246,7 @@ function combineQueryParameters(q1, q2, preserveQueryParameters) {
  *   return false;
  * }
  *
- * var resource = new Resource({
+ * const resource = new Resource({
  *    url: 'http://server.com/path/to/resource.json',
  *    proxy: new DefaultProxy('/proxy/'),
  *    headers: {
@@ -1089,7 +1089,7 @@ Resource.fetchImage = function (options) {
  *
  * @example
  * // load text from a URL, setting a custom header
- * var resource = new Resource({
+ * const resource = new Resource({
  *   url: 'http://someUrl.com/someJson.txt',
  *   headers: {
  *     'X-Custom-Header' : 'some value'
