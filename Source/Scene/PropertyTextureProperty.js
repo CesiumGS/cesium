@@ -73,10 +73,27 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
 PropertyTextureProperty.prototype.getUnpackingSteps = function () {
   const classProperty = this._classProperty;
   const valueType = classProperty.valueType;
+  const normalized = classProperty.normalized;
+  const glslType = this.getGlslType();
 
-  // int8 values need to be converted from [0, 1] -> [-1, 1]
-  if (valueType === MetadataComponentType.INT8) {
+  const isInt8 = valueType === MetadataComponentType.INT8;
+  const isUint8 = valueType === MetadataComponentType.UINT8;
+
+  if (isInt8 && normalized) {
     return [MetadataUnpackingStep.unsignedToSigned];
+  } else if (isInt8 && !normalized) {
+    return [
+      MetadataUnpackingStep.unnormalizeI8,
+      MetadataUnpackingStep.cast(glslType),
+    ];
+  } else if (isUint8 && normalized) {
+    // no unpacking needed
+    return [];
+  } else if (isUint8 && !normalized) {
+    return [
+      MetadataUnpackingStep.unnormalizeU8,
+      MetadataUnpackingStep.cast(glslType),
+    ];
   }
 
   // Otherwise, use the value from the texture read directly.
