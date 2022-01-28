@@ -295,16 +295,19 @@ describe(
         depth: true,
         supportsDepthTexture: true,
       });
-      // Disable extension
+      // Disable extensions
       const depthTexture = context._depthTexture;
       context._depthTexture = false;
+      const webgl2 = context._webgl2;
+      context._webgl2 = false;
 
       fbm.update(context, 1, 1);
       expect(fbm.getDepthTexture()).toBeUndefined();
       expect(fbm.getDepthRenderbuffer()).toBeDefined();
 
-      // Re-enable extension
+      // Re-enable extensions
       context._depthTexture = depthTexture;
+      context._webgl2 = webgl2;
     });
 
     it("destroys attachments and framebuffer", function () {
