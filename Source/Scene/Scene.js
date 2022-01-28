@@ -3353,6 +3353,11 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
   const picking = passes.pick;
   const useWebVR = environmentState.useWebVR;
 
+  const originalSamples = scene.numberSamples;
+  if (picking) {
+    scene.numberSamples = 1;
+  }
+
   // Preserve the reference to the original framebuffer.
   environmentState.originalFramebuffer = passState.framebuffer;
 
@@ -3489,6 +3494,8 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
       passState
     );
   }
+
+  scene.numberSamples = originalSamples;
 }
 
 /**
