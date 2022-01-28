@@ -47,7 +47,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  *
  * @example
  * // Simple stage to change the color
- * var fs =
+ * const fs =
  *     'uniform sampler2D colorTexture;\n' +
  *     'varying vec2 v_textureCoordinates;\n' +
  *     'uniform float scale;\n' +
@@ -69,7 +69,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  * @example
  * // Simple stage to change the color of what is selected.
  * // If czm_selected returns true, the current fragment belongs to geometry in the selected array.
- * var fs =
+ * const fs =
  *     'uniform sampler2D colorTexture;\n' +
  *     'varying vec2 v_textureCoordinates;\n' +
  *     'uniform vec4 highlight;\n' +
@@ -82,7 +82,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  *     '        gl_FragColor = color;\n' +
  *     '    }\n' +
  *     '}\n';
- * var stage = scene.postProcessStages.add(new Cesium.PostProcessStage({
+ * const stage = scene.postProcessStages.add(new Cesium.PostProcessStage({
  *     fragmentShader : fs,
  *     uniforms : {
  *         highlight : function() {

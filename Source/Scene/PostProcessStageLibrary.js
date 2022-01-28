@@ -15,7 +15,6 @@ import DepthView from "../Shaders/PostProcessStages/DepthView.js";
 import EdgeDetection from "../Shaders/PostProcessStages/EdgeDetection.js";
 import FilmicTonemapping from "../Shaders/PostProcessStages/FilmicTonemapping.js";
 import FXAA from "../Shaders/PostProcessStages/FXAA.js";
-import PassThrough from "../Shaders/PostProcessStages/PassThrough.js";
 import GaussianBlur1D from "../Shaders/PostProcessStages/GaussianBlur1D.js";
 import LensFlare from "../Shaders/PostProcessStages/LensFlare.js";
 import ModifiedReinhardTonemapping from "../Shaders/PostProcessStages/ModifiedReinhardTonemapping.js";
@@ -227,11 +226,11 @@ PostProcessStageLibrary.isDepthOfFieldSupported = function (scene) {
  *
  * @example
  * // multiple silhouette effects
- * var yellowEdge = Cesium.PostProcessLibrary.createEdgeDetectionStage();
+ * const yellowEdge = Cesium.PostProcessLibrary.createEdgeDetectionStage();
  * yellowEdge.uniforms.color = Cesium.Color.YELLOW;
  * yellowEdge.selected = [feature0];
  *
- * var greenEdge = Cesium.PostProcessLibrary.createEdgeDetectionStage();
+ * const greenEdge = Cesium.PostProcessLibrary.createEdgeDetectionStage();
  * greenEdge.uniforms.color = Cesium.Color.LIME;
  * greenEdge.selected = [feature1];
  *
@@ -664,13 +663,6 @@ PostProcessStageLibrary.createFXAAStage = function () {
     name: "czm_FXAA",
     fragmentShader: fxaaFS,
     sampleMode: PostProcessStageSampleMode.LINEAR,
-  });
-};
-
-PostProcessStageLibrary.createPassThroughStage = function () {
-  return new PostProcessStage({
-    name: "czm_PassThrough",
-    fragmentShader: PassThrough,
   });
 };
 

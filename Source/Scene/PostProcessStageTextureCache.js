@@ -3,8 +3,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import CesiumMath from "../Core/Math.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
-import Framebuffer from "../Renderer/Framebuffer.js";
-import Texture from "../Renderer/Texture.js";
+import FramebufferManager from "../Renderer/FramebufferManager.js";
 
 /**
  * Creates a minimal amount of textures and framebuffers.
@@ -148,7 +147,6 @@ function getDependencies(collection, context) {
     const bloom = collection.bloom;
     const tonemapping = collection._tonemapping;
     const fxaa = collection.fxaa;
-    const passThrough = collection.passThrough;
 
     let previousName = getCompositeDependencies(
       collection,
@@ -176,13 +174,6 @@ function getDependencies(collection, context) {
       context,
       dependencies,
       collection,
-      previousName
-    );
-    previousName = getStageDependencies(
-      collection,
-      context,
-      dependencies,
-      passThrough,
       previousName
     );
     getStageDependencies(collection, context, dependencies, fxaa, previousName);
@@ -253,7 +244,10 @@ function getFramebuffer(cache, stageName, dependencies) {
     pixelDatatype: pixelDatatype,
     clearColor: clearColor,
     stages: [stageName],
-    buffer: undefined,
+    buffer: new FramebufferManager({
+      pixelFormat: pixelFormat,
+      pixelDatatype: pixelDatatype,
+    }),
     clear: undefined,
   };
 
@@ -279,8 +273,7 @@ function releaseResources(cache) {
   const length = framebuffers.length;
   for (let i = 0; i < length; ++i) {
     const framebuffer = framebuffers[i];
-    framebuffer.buffer = framebuffer.buffer && framebuffer.buffer.destroy();
-    framebuffer.buffer = undefined;
+    framebuffer.buffer.destroy();
   }
 }
 
@@ -306,21 +299,10 @@ function updateFramebuffers(cache, context) {
       textureHeight = size;
     }
 
-    framebuffer.buffer = new Framebuffer({
-      context: context,
-      colorTextures: [
-        new Texture({
-          context: context,
-          width: textureWidth,
-          height: textureHeight,
-          pixelFormat: framebuffer.pixelFormat,
-          pixelDatatype: framebuffer.pixelDatatype,
-        }),
-      ],
-    });
+    framebuffer.buffer.update(context, textureWidth, textureHeight);
     framebuffer.clear = new ClearCommand({
       color: framebuffer.clearColor,
-      framebuffer: framebuffer.buffer,
+      framebuffer: framebuffer.buffer.framebuffer,
     });
   }
 }
@@ -353,18 +335,13 @@ PostProcessStageTextureCache.prototype.update = function (context) {
     defined(collection.fxaa) &&
     collection.fxaa.enabled &&
     collection.fxaa._isSupported(context);
-  const passThroughEnabled =
-    defined(collection.passThrough) &&
-    collection.passThrough.enabled &&
-    collection.passThrough._isSupported(context);
   const needsCheckDimensionsUpdate =
     !defined(collection._activeStages) ||
     collection._activeStages.length > 0 ||
     aoEnabled ||
     bloomEnabled ||
     tonemappingEnabled ||
-    fxaaEnabled ||
-    passThroughEnabled;
+    fxaaEnabled;
   if (
     updateDependencies ||
     (!needsCheckDimensionsUpdate && this._framebuffers.length > 0)
@@ -439,7 +416,7 @@ PostProcessStageTextureCache.prototype.getFramebuffer = function (name) {
   if (!defined(framebuffer)) {
     return undefined;
   }
-  return framebuffer.buffer;
+  return framebuffer.buffer.framebuffer;
 };
 
 /**
