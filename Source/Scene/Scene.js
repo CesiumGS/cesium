@@ -3420,7 +3420,6 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
       postProcess.length > 0 ||
       postProcess.ambientOcclusion.enabled ||
       postProcess.fxaa.enabled ||
-      postProcess.passThrough.enabled ||
       postProcess.bloom.enabled));
   environmentState.usePostProcessSelected = false;
   if (usePostProcess) {
