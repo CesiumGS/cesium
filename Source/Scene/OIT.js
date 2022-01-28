@@ -20,7 +20,6 @@ import BlendFunction from "./BlendFunction.js";
  * @private
  */
 function OIT(context) {
-  this._numSamples = 1;
   // We support multipass for the Chrome D3D9 backend and ES 2.0 on mobile.
   this._translucentMultipassSupport = false;
   this._translucentMRTSupport = false;
@@ -88,6 +87,14 @@ function OIT(context) {
 
   this._useHDR = false;
 }
+
+Object.defineProperties(OIT.prototype, {
+  numSamples: {
+    get: function () {
+      return defined(this._opaqueFBO) ? this._opaqueFBO._numSamples : 1;
+    },
+  },
+});
 
 function destroyTextures(oit) {
   oit._accumulationTexture =
@@ -209,7 +216,7 @@ OIT.prototype.update = function (
   passState,
   framebuffer,
   useHDR,
-  numSamples
+  samplesDirty
 ) {
   if (!this.isSupported()) {
     return;
@@ -228,16 +235,14 @@ OIT.prototype.update = function (
     accumulationTexture.width !== width ||
     accumulationTexture.height !== height ||
     useHDR !== this._useHDR;
-  const samplesChanged = this._numSamples !== numSamples;
-  this._numSamples = numSamples;
-  if (textureChanged || samplesChanged) {
+  if (textureChanged || samplesDirty) {
     updateTextures(this, context, width, height);
   }
 
   if (
     !defined(this._translucentFBO.framebuffer) ||
     textureChanged ||
-    samplesChanged
+    samplesDirty
   ) {
     if (!updateFramebuffers(this, context)) {
       // framebuffer creation failed

@@ -150,6 +150,7 @@ const requestRenderAfterFrame = function (scene) {
  * });
  */
 function Scene(options) {
+  this._samplesDirty = false;
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const canvas = options.canvas;
   let creditContainer = options.creditContainer;
@@ -3356,6 +3357,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
   const originalSamples = scene.numberSamples;
   if (picking) {
     scene.numberSamples = 1;
+    scene.samplesDirty = view.oit.numSamples !== scene.numberSamples;
   }
 
   // Preserve the reference to the original framebuffer.
@@ -3407,7 +3409,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
       passState,
       view.globeDepth._colorFramebuffer,
       scene._hdr,
-      scene.numberSamples
+      scene.samplesDirty
     );
     oit.clear(context, passState, clearColor);
     environmentState.useOIT = oit.isSupported();
