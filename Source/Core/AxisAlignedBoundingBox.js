@@ -55,7 +55,7 @@ function AxisAlignedBoundingBox(minimum, maximum, center) {
  *
  * @example
  * // Compute an axis aligned bounding box enclosing two points.
- * var box = Cesium.AxisAlignedBoundingBox.fromPoints([new Cesium.Cartesian3(2, 0, 0), new Cesium.Cartesian3(-2, 0, 0)]);
+ * const box = Cesium.AxisAlignedBoundingBox.fromPoints([new Cesium.Cartesian3(2, 0, 0), new Cesium.Cartesian3(-2, 0, 0)]);
  */
 AxisAlignedBoundingBox.fromPoints = function (positions, result) {
   if (!defined(result)) {

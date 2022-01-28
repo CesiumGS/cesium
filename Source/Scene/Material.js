@@ -357,7 +357,7 @@ Material._uniformList = {};
  * @exception {DeveloperError} material with that type does not exist.
  *
  * @example
- * var material = Cesium.Material.fromType('Color', {
+ * const material = Cesium.Material.fromType('Color', {
  *     color : new Cesium.Color(1.0, 0.0, 0.0, 1.0)
  * });
  */

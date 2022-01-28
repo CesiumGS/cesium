@@ -1484,7 +1484,7 @@ Context.prototype.createViewportQuadCommand = function (
  * @returns {Object} The object associated with the pick color, or undefined if no object is associated with that color.
  *
  * @example
- * var object = context.getObjectByPickColor(pickColor);
+ * const object = context.getObjectByPickColor(pickColor);
  *
  * @see Context#createPickId
  */

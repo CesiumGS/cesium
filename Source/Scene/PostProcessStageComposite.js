@@ -57,7 +57,7 @@ import destroyObject from "../Core/destroyObject.js";
  *
  * @example
  * // Example 3: create a uniform alias
- * var uniforms = {};
+ * const uniforms = {};
  * Cesium.defineProperties(uniforms, {
  *     filterSize : {
  *         get : function() {

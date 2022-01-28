@@ -20,7 +20,7 @@ import Material from "./Material.js";
  * @param {Material} [material] The {@link Material} defining the surface appearance of the viewport quad.
  *
  * @example
- * var viewportQuad = new Cesium.ViewportQuad(new Cesium.BoundingRectangle(0, 0, 80, 40));
+ * const viewportQuad = new Cesium.ViewportQuad(new Cesium.BoundingRectangle(0, 0, 80, 40));
  * viewportQuad.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 1.0);
  */
 function ViewportQuad(rectangle, material) {

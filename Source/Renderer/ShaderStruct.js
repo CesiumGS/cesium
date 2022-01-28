@@ -15,11 +15,11 @@
  * //     vec3 normal;
  * //     vec2 texCoord;
  * // };
- * var struct = new ShaderStruct("Attributes");
+ * const struct = new ShaderStruct("Attributes");
  * struct.addField("vec3", "position");
  * struct.addField("vec3", "normal");
  * struct.addField("vec2", "texCoord");
- * var generatedLines = struct.generateGlslLines();
+ * const generatedLines = struct.generateGlslLines();
  *
  * @private
  */

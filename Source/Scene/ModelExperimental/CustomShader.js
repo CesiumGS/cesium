@@ -84,7 +84,7 @@ import TextureManager from "./TextureManager.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @example
- * var customShader = new CustomShader({
+ * const customShader = new CustomShader({
  *   uniforms: {
  *     u_colorIndex: {
  *       type: Cesium.UniformType.FLOAT,

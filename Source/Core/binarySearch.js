@@ -18,8 +18,8 @@ import Check from "./Check.js";
  * function comparator(a, b) {
  *     return a - b;
  * };
- * var numbers = [0, 2, 4, 6, 8];
- * var index = Cesium.binarySearch(numbers, 6, comparator); // 3
+ * const numbers = [0, 2, 4, 6, 8];
+ * const index = Cesium.binarySearch(numbers, 6, comparator); // 3
  */
 function binarySearch(array, itemToFind, comparator) {
   //>>includeStart('debug', pragmas.debug);

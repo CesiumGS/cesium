@@ -68,7 +68,7 @@ Object.defineProperties(CubeMapFace.prototype, {
  *
  * @example
  * // Create a cubemap with 1x1 faces, and make the +x face red.
- * var cubeMap = new CubeMap({
+ * const cubeMap = new CubeMap({
  *   context : context
  *   width : 1,
  *   height : 1

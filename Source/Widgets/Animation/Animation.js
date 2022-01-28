@@ -417,10 +417,10 @@ SvgButton.prototype.setTooltip = function (tooltip) {
  * // In HTML head, include a link to Animation.css stylesheet,
  * // and in the body, include: <div id="animationContainer"></div>
  *
- * var clock = new Cesium.Clock();
- * var clockViewModel = new Cesium.ClockViewModel(clock);
- * var viewModel = new Cesium.AnimationViewModel(clockViewModel);
- * var widget = new Cesium.Animation('animationContainer', viewModel);
+ * const clock = new Cesium.Clock();
+ * const clockViewModel = new Cesium.ClockViewModel(clock);
+ * const viewModel = new Cesium.AnimationViewModel(clockViewModel);
+ * const widget = new Cesium.Animation('animationContainer', viewModel);
  *
  * function tick() {
  *     clock.tick();

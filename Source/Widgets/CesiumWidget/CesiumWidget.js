@@ -158,10 +158,10 @@ function configureCameraFrustum(widget) {
  * // and in the body, include: <div id="cesiumContainer"></div>
  *
  * //Widget with no terrain and default Bing Maps imagery provider.
- * var widget = new Cesium.CesiumWidget('cesiumContainer');
+ * const widget = new Cesium.CesiumWidget('cesiumContainer');
  *
  * //Widget with ion imagery and Cesium World Terrain.
- * var widget = new Cesium.CesiumWidget('cesiumContainer', {
+ * const widget2 = new Cesium.CesiumWidget('cesiumContainer', {
  *     imageryProvider : Cesium.createWorldImagery(),
  *     terrainProvider : Cesium.createWorldTerrain(),
  *     skyBox : new Cesium.SkyBox({

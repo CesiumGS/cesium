@@ -29,7 +29,7 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
  *
  * @example
  * // Create Cesium OSM Buildings with default styling
- * var viewer = new Cesium.Viewer('cesiumContainer');
+ * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.scene.primitives.add(Cesium.createOsmBuildings());
  *
  * @example

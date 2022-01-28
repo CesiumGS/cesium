@@ -124,18 +124,18 @@ function mergeNewSamples(epoch, times, values, newData, packedLength) {
  *
  * @example
  * //Create a linearly interpolated Cartesian2
- * var property = new Cesium.SampledProperty(Cesium.Cartesian2);
+ * const property = new Cesium.SampledProperty(Cesium.Cartesian2);
  *
  * //Populate it with data
  * property.addSample(Cesium.JulianDate.fromIso8601('2012-08-01T00:00:00.00Z'), new Cesium.Cartesian2(0, 0));
  * property.addSample(Cesium.JulianDate.fromIso8601('2012-08-02T00:00:00.00Z'), new Cesium.Cartesian2(4, 7));
  *
  * //Retrieve an interpolated value
- * var result = property.getValue(Cesium.JulianDate.fromIso8601('2012-08-01T12:00:00.00Z'));
+ * const result = property.getValue(Cesium.JulianDate.fromIso8601('2012-08-01T12:00:00.00Z'));
  *
  * @example
  * //Create a simple numeric SampledProperty that uses third degree Hermite Polynomial Approximation
- * var property = new Cesium.SampledProperty(Number);
+ * const property = new Cesium.SampledProperty(Number);
  * property.setInterpolationOptions({
  *     interpolationDegree : 3,
  *     interpolationAlgorithm : Cesium.HermitePolynomialApproximation
@@ -152,7 +152,7 @@ function mergeNewSamples(epoch, times, values, newData, packedLength) {
  * property.addSample(Cesium.JulianDate.fromIso8601('2012-08-01T00:00:30.00Z'), 6.2);
  *
  * //Retrieve an interpolated value
- * var result = property.getValue(Cesium.JulianDate.fromIso8601('2012-08-01T00:02:34.00Z'));
+ * const result = property.getValue(Cesium.JulianDate.fromIso8601('2012-08-01T00:02:34.00Z'));
  *
  * @see SampledPositionProperty
  */

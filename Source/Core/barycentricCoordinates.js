@@ -22,8 +22,8 @@ const scratchCartesian3 = new Cartesian3();
  *
  * @example
  * // Returns Cartesian3.UNIT_X
- * var p = new Cesium.Cartesian3(-1.0, 0.0, 0.0);
- * var b = Cesium.barycentricCoordinates(p,
+ * const p = new Cesium.Cartesian3(-1.0, 0.0, 0.0);
+ * const b = Cesium.barycentricCoordinates(p,
  *   new Cesium.Cartesian3(-1.0, 0.0, 0.0),
  *   new Cesium.Cartesian3( 1.0, 0.0, 0.0),
  *   new Cesium.Cartesian3( 0.0, 1.0, 1.0));

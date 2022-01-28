@@ -245,7 +245,7 @@ function processBuffer(
     const numFaces = dv.getInt32(offset, true);
     offset += sizeOfInt32;
 
-    //var level = dv.getInt32(offset, true);
+    //const level = dv.getInt32(offset, true);
     offset += sizeOfInt32;
 
     // Keep track of quad indices to overall tile indices

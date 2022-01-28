@@ -266,8 +266,8 @@ IdManager.prototype.get = function (id) {
  *   .then(function(result) {
  *     // The XML string is in result.kml
  *
- *     var externalFiles = result.externalFiles
- *     for(var file in externalFiles) {
+ *     const externalFiles = result.externalFiles
+ *     for(const file in externalFiles) {
  *       // file is the name of the file used in the KML document as the href
  *       // externalFiles[file] is a blob with the contents of the file
  *     }

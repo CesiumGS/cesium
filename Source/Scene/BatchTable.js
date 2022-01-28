@@ -26,7 +26,7 @@ import Texture from "../Renderer/Texture.js";
  *
  * @example
  * // create the batch table
- * var attributes = [{
+ * const attributes = [{
  *     functionName : 'getShow',
  *     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
  *     componentsPerAttribute : 1
@@ -36,11 +36,11 @@ import Texture from "../Renderer/Texture.js";
  *     componentsPerAttribute : 4,
  *     normalize : true
  * }];
- * var batchTable = new BatchTable(context, attributes, 5);
+ * const batchTable = new BatchTable(context, attributes, 5);
  *
  * // when creating the draw commands, update the uniform map and the vertex shader
  * vertexShaderSource = batchTable.getVertexShaderCallback()(vertexShaderSource);
- * var shaderProgram = ShaderProgram.fromCache({
+ * const shaderProgram = ShaderProgram.fromCache({
  *    // ...
  *    vertexShaderSource : vertexShaderSource,
  * });

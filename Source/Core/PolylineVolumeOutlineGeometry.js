@@ -91,15 +91,15 @@ function computeAttributes(positions, shape) {
  *
  * @example
  * function computeCircle(radius) {
- *   var positions = [];
- *   for (var i = 0; i < 360; i++) {
- *     var radians = Cesium.Math.toRadians(i);
+ *   const positions = [];
+ *   for (let i = 0; i < 360; i++) {
+ *     const radians = Cesium.Math.toRadians(i);
  *     positions.push(new Cesium.Cartesian2(radius * Math.cos(radians), radius * Math.sin(radians)));
  *   }
  *   return positions;
  * }
  *
- * var volumeOutline = new Cesium.PolylineVolumeOutlineGeometry({
+ * const volumeOutline = new Cesium.PolylineVolumeOutlineGeometry({
  *   polylinePositions : Cesium.Cartesian3.fromDegreesArray([
  *     -72.0, 40.0,
  *     -70.0, 35.0

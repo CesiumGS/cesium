@@ -46,8 +46,8 @@ function EncodedCartesian3() {
  * @returns {Object} The modified result parameter or a new instance if one was not provided.
  *
  * @example
- * var value = 1234567.1234567;
- * var splitValue = Cesium.EncodedCartesian3.encode(value);
+ * const value = 1234567.1234567;
+ * const splitValue = Cesium.EncodedCartesian3.encode(value);
  */
 EncodedCartesian3.encode = function (value, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -92,8 +92,8 @@ const scratchEncode = {
  * @returns {EncodedCartesian3} The modified result parameter or a new EncodedCartesian3 instance if one was not provided.
  *
  * @example
- * var cart = new Cesium.Cartesian3(-10000000.0, 0.0, 10000000.0);
- * var encoded = Cesium.EncodedCartesian3.fromCartesian(cart);
+ * const cart = new Cesium.Cartesian3(-10000000.0, 0.0, 10000000.0);
+ * const encoded = Cesium.EncodedCartesian3.fromCartesian(cart);
  */
 EncodedCartesian3.fromCartesian = function (cartesian, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -138,13 +138,13 @@ const encodedP = new EncodedCartesian3();
  * @exception {DeveloperError} index must be a number greater than or equal to 0.
  *
  * @example
- * var positions = [
+ * const positions = [
  *    new Cesium.Cartesian3(),
  *    // ...
  * ];
- * var encodedPositions = new Float32Array(2 * 3 * positions.length);
- * var j = 0;
- * for (var i = 0; i < positions.length; ++i) {
+ * const encodedPositions = new Float32Array(2 * 3 * positions.length);
+ * let j = 0;
+ * for (let i = 0; i < positions.length; ++i) {
  *   Cesium.EncodedCartesian3.writeElement(positions[i], encodedPositions, j);
  *   j += 6;
  * }

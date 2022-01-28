@@ -58,7 +58,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  * @see UrlTemplateImageryProvider
  *
  * @example
- * var tms = new Cesium.TileMapServiceImageryProvider({
+ * const tms = new Cesium.TileMapServiceImageryProvider({
  *    url : '../images/cesium_maptiler/Cesium_Logo_Color',
  *    fileExtension: 'png',
  *    maximumLevel: 4,

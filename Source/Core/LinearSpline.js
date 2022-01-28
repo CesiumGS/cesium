@@ -20,8 +20,8 @@ import Spline from "./Spline.js";
  *
  *
  * @example
- * var times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
- * var spline = new Cesium.LinearSpline({
+ * const times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
+ * const spline = new Cesium.LinearSpline({
  *     times : times,
  *     points : [
  *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
@@ -32,7 +32,7 @@ import Spline from "./Spline.js";
  *     ]
  * });
  *
- * var p0 = spline.evaluate(times[0]);
+ * const p0 = spline.evaluate(times[0]);
  *
  * @see HermiteSpline
  * @see CatmullRomSpline

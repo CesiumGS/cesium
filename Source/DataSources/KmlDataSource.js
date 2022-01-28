@@ -2298,7 +2298,7 @@ function processFeature(dataSource, featureNode, processingData) {
     namespaces.kml
   );
   entity.show = ancestryIsVisible(parent) && defaultValue(visibility, true);
-  //var open = queryBooleanValue(featureNode, 'open', namespaces.kml);
+  //const open = queryBooleanValue(featureNode, 'open', namespaces.kml);
 
   const authorNode = queryFirstNode(featureNode, "author", namespaces.atom);
   const author = kmlData.author;
@@ -3584,7 +3584,7 @@ function load(dataSource, entityCollection, data, options) {
  * @demo {@link https://sandcastle.cesium.com/index.html?src=KML.html|Cesium Sandcastle KML Demo}
  *
  * @example
- * var viewer = new Cesium.Viewer('cesiumContainer');
+ * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz',
  *      {
  *           camera: viewer.scene.camera,

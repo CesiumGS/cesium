@@ -25,10 +25,10 @@ const TridiagonalSystemSolver = {};
  * @performance Linear time.
  *
  * @example
- * var lowerDiagonal = [1.0, 1.0, 1.0, 1.0];
- * var diagonal = [2.0, 4.0, 4.0, 4.0, 2.0];
- * var upperDiagonal = [1.0, 1.0, 1.0, 1.0];
- * var rightHandSide = [
+ * const lowerDiagonal = [1.0, 1.0, 1.0, 1.0];
+ * const diagonal = [2.0, 4.0, 4.0, 4.0, 2.0];
+ * const upperDiagonal = [1.0, 1.0, 1.0, 1.0];
+ * const rightHandSide = [
  *     new Cesium.Cartesian3(410757.0, -1595711.0, 1375302.0),
  *     new Cesium.Cartesian3(-5986705.0, -2190640.0, 1099600.0),
  *     new Cesium.Cartesian3(-12593180.0, 288588.0, -1755549.0),
@@ -36,7 +36,7 @@ const TridiagonalSystemSolver = {};
  *     new Cesium.Cartesian3(845820.0, 1573488.0, -1205591.0)
  * ];
  *
- * var solution = Cesium.TridiagonalSystemSolver.solve(lowerDiagonal, diagonal, upperDiagonal, rightHandSide);
+ * const solution = Cesium.TridiagonalSystemSolver.solve(lowerDiagonal, diagonal, upperDiagonal, rightHandSide);
  *
  * @returns {Cartesian3[]} An array of Cartesians with length <code>n</code> that is the solution to the tridiagonal system of equations.
  */

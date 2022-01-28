@@ -244,12 +244,12 @@ Cartesian4.unpackArray = function (array, result) {
  *
  * @example
  * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0)
- * var v = [1.0, 2.0, 3.0, 4.0];
- * var p = Cesium.Cartesian4.fromArray(v);
+ * const v = [1.0, 2.0, 3.0, 4.0];
+ * const p = Cesium.Cartesian4.fromArray(v);
  *
  * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0) using an offset into an array
- * var v2 = [0.0, 0.0, 1.0, 2.0, 3.0, 4.0];
- * var p2 = Cesium.Cartesian4.fromArray(v2, 2);
+ * const v2 = [0.0, 0.0, 1.0, 2.0, 3.0, 4.0];
+ * const p2 = Cesium.Cartesian4.fromArray(v2, 2);
  */
 Cartesian4.fromArray = Cartesian4.unpack;
 
@@ -367,7 +367,7 @@ const distanceScratch = new Cartesian4();
  *
  * @example
  * // Returns 1.0
- * var d = Cesium.Cartesian4.distance(
+ * const d = Cesium.Cartesian4.distance(
  *   new Cesium.Cartesian4(1.0, 0.0, 0.0, 0.0),
  *   new Cesium.Cartesian4(2.0, 0.0, 0.0, 0.0));
  */
@@ -391,7 +391,7 @@ Cartesian4.distance = function (left, right) {
  *
  * @example
  * // Returns 4.0, not 2.0
- * var d = Cesium.Cartesian4.distance(
+ * const d = Cesium.Cartesian4.distance(
  *   new Cesium.Cartesian4(1.0, 0.0, 0.0, 0.0),
  *   new Cesium.Cartesian4(3.0, 0.0, 0.0, 0.0));
  */

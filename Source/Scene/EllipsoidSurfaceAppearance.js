@@ -29,7 +29,7 @@ import Material from "./Material.js";
  * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
  *
  * @example
- * var primitive = new Cesium.Primitive({
+ * const primitive = new Cesium.Primitive({
  *   geometryInstances : new Cesium.GeometryInstance({
  *     geometry : new Cesium.PolygonGeometry({
  *       vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,

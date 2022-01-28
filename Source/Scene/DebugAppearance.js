@@ -25,7 +25,7 @@ import Appearance from "./Appearance.js";
  * @exception {DeveloperError} options.glslDatatype must be float, vec2, vec3, or vec4.
  *
  * @example
- * var primitive = new Cesium.Primitive({
+ * const primitive = new Cesium.Primitive({
  *   geometryInstances : // ...
  *   appearance : new Cesium.DebugAppearance({
  *     attributeName : 'normal'

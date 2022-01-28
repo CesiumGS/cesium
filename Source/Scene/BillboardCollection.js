@@ -129,7 +129,7 @@ const attributeLocationsInstanced = {
  *
  * @example
  * // Create a billboard collection with two billboards
- * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+ * const billboards = scene.primitives.add(new Cesium.BillboardCollection());
  * billboards.add({
  *   position : new Cesium.Cartesian3(1.0, 2.0, 3.0),
  *   image : 'url/to/image'
@@ -221,7 +221,7 @@ function BillboardCollection(options) {
    *
    *
    * @example
-   * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+   * const center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
    * billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
    * billboards.add({
    *   image : 'url/to/image',
@@ -394,7 +394,7 @@ Object.defineProperties(BillboardCollection.prototype, {
    * // Set destroyTextureAtlas
    * // Destroy a billboard collection but not its texture atlas.
    *
-   * var atlas = new TextureAtlas({
+   * const atlas = new TextureAtlas({
    *   scene : scene,
    *   images : images
    * });
@@ -438,7 +438,7 @@ function destroyBillboards(billboards) {
  *
  * @example
  * // Example 1:  Add a billboard, specifying all the default values.
- * var b = billboards.add({
+ * const b = billboards.add({
  *   show : true,
  *   position : Cesium.Cartesian3.ZERO,
  *   pixelOffset : Cesium.Cartesian2.ZERO,
@@ -464,7 +464,7 @@ function destroyBillboards(billboards) {
  *
  * @example
  * // Example 2:  Specify only the billboard's cartographic position.
- * var b = billboards.add({
+ * const b = billboards.add({
  *   position : Cesium.Cartesian3.fromDegrees(longitude, latitude, height)
  * });
  *
@@ -497,7 +497,7 @@ BillboardCollection.prototype.add = function (options) {
  *
  *
  * @example
- * var b = billboards.add(...);
+ * const b = billboards.add(...);
  * billboards.remove(b);  // Returns true
  *
  * @see BillboardCollection#add
@@ -604,9 +604,9 @@ BillboardCollection.prototype.contains = function (billboard) {
  *
  * @example
  * // Toggle the show property of every billboard in the collection
- * var len = billboards.length;
- * for (var i = 0; i < len; ++i) {
- *   var b = billboards.get(i);
+ * const len = billboards.length;
+ * for (let i = 0; i < len; ++i) {
+ *   const b = billboards.get(i);
  *   b.show = !b.show;
  * }
  *

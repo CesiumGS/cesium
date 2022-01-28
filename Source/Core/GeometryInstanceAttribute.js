@@ -18,7 +18,7 @@ import DeveloperError from "./DeveloperError.js";
  *
  *
  * @example
- * var instance = new Cesium.GeometryInstance({
+ * const instance = new Cesium.GeometryInstance({
  *   geometry : Cesium.BoxGeometry.fromDimensions({
  *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
  *   }),

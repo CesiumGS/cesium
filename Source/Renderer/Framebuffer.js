@@ -50,9 +50,9 @@ function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
  *
  * @example
  * // Create a framebuffer with color and depth texture attachments.
- * var width = context.canvas.clientWidth;
- * var height = context.canvas.clientHeight;
- * var framebuffer = new Framebuffer({
+ * const width = context.canvas.clientWidth;
+ * const height = context.canvas.clientHeight;
+ * const framebuffer = new Framebuffer({
  *   context : context,
  *   colorTextures : [new Texture({
  *     context : context,

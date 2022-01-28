@@ -52,7 +52,7 @@ import SceneMode from "./SceneMode.js";
  * @example
  * // Create a camera looking down the negative z-axis, positioned at the origin,
  * // with a field of view of 60 degrees, and 1:1 aspect ratio.
- * var camera = new Cesium.Camera(scene);
+ * const camera = new Cesium.Camera(scene);
  * camera.position = new Cesium.Cartesian3();
  * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z, new Cesium.Cartesian3());
  * camera.up = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_Y);
@@ -2260,14 +2260,14 @@ const scratchLookAtMatrix4 = new Matrix4();
  *
  * @example
  * // 1. Using a cartesian offset
- * var center = Cesium.Cartesian3.fromDegrees(-98.0, 40.0);
+ * const center = Cesium.Cartesian3.fromDegrees(-98.0, 40.0);
  * viewer.camera.lookAt(center, new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
  *
  * // 2. Using a HeadingPitchRange offset
- * var center = Cesium.Cartesian3.fromDegrees(-72.0, 40.0);
- * var heading = Cesium.Math.toRadians(50.0);
- * var pitch = Cesium.Math.toRadians(-20.0);
- * var range = 5000.0;
+ * const center = Cesium.Cartesian3.fromDegrees(-72.0, 40.0);
+ * const heading = Cesium.Math.toRadians(50.0);
+ * const pitch = Cesium.Math.toRadians(-20.0);
+ * const range = 5000.0;
  * viewer.camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, range));
  */
 Camera.prototype.lookAt = function (target, offset) {
@@ -2348,14 +2348,14 @@ function offsetFromHeadingPitchRange(heading, pitch, range) {
  *
  * @example
  * // 1. Using a cartesian offset
- * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-98.0, 40.0));
+ * const transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-98.0, 40.0));
  * viewer.camera.lookAtTransform(transform, new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
  *
  * // 2. Using a HeadingPitchRange offset
- * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-72.0, 40.0));
- * var heading = Cesium.Math.toRadians(50.0);
- * var pitch = Cesium.Math.toRadians(-20.0);
- * var range = 5000.0;
+ * const transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-72.0, 40.0));
+ * const heading = Cesium.Math.toRadians(50.0);
+ * const pitch = Cesium.Math.toRadians(-20.0);
+ * const range = 5000.0;
  * viewer.camera.lookAtTransform(transform, new Cesium.HeadingPitchRange(heading, pitch, range));
  */
 Camera.prototype.lookAtTransform = function (transform, offset) {
@@ -2841,10 +2841,10 @@ function pickMapColumbusView(camera, windowPosition, projection, result) {
  * coordinates. If the ellipsoid or map was not picked, returns undefined.
  *
  * @example
- * var canvas = viewer.scene.canvas;
- * var center = new Cesium.Cartesian2(canvas.clientWidth / 2.0, canvas.clientHeight / 2.0);
- * var ellipsoid = viewer.scene.globe.ellipsoid;
- * var result = viewer.camera.pickEllipsoid(center, ellipsoid);
+ * const canvas = viewer.scene.canvas;
+ * const center = new Cesium.Cartesian2(canvas.clientWidth / 2.0, canvas.clientHeight / 2.0);
+ * const ellipsoid = viewer.scene.globe.ellipsoid;
+ * const result = viewer.camera.pickEllipsoid(center, ellipsoid);
  */
 Camera.prototype.pickEllipsoid = function (windowPosition, ellipsoid, result) {
   //>>includeStart('debug', pragmas.debug);

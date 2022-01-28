@@ -55,33 +55,33 @@ function resolve(that) {
  * @param {String[]} targetPropertyNames The names of the property on the target entity which we will use.
  *
  * @example
- * var collection = new Cesium.EntityCollection();
+ * const collection = new Cesium.EntityCollection();
  *
  * //Create a new entity and assign a billboard scale.
- * var object1 = new Cesium.Entity({id:'object1'});
+ * const object1 = new Cesium.Entity({id:'object1'});
  * object1.billboard = new Cesium.BillboardGraphics();
  * object1.billboard.scale = new Cesium.ConstantProperty(2.0);
  * collection.add(object1);
  *
  * //Create a second entity and reference the scale from the first one.
- * var object2 = new Cesium.Entity({id:'object2'});
+ * const object2 = new Cesium.Entity({id:'object2'});
  * object2.model = new Cesium.ModelGraphics();
  * object2.model.scale = new Cesium.ReferenceProperty(collection, 'object1', ['billboard', 'scale']);
  * collection.add(object2);
  *
  * //Create a third object, but use the fromString helper function.
- * var object3 = new Cesium.Entity({id:'object3'});
+ * const object3 = new Cesium.Entity({id:'object3'});
  * object3.billboard = new Cesium.BillboardGraphics();
  * object3.billboard.scale = Cesium.ReferenceProperty.fromString(collection, 'object1#billboard.scale');
  * collection.add(object3);
  *
  * //You can refer to an entity with a # or . in id and property names by escaping them.
- * var object4 = new Cesium.Entity({id:'#object.4'});
+ * const object4 = new Cesium.Entity({id:'#object.4'});
  * object4.billboard = new Cesium.BillboardGraphics();
  * object4.billboard.scale = new Cesium.ConstantProperty(2.0);
  * collection.add(object4);
  *
- * var object5 = new Cesium.Entity({id:'object5'});
+ * const object5 = new Cesium.Entity({id:'object5'});
  * object5.billboard = new Cesium.BillboardGraphics();
  * object5.billboard.scale = Cesium.ReferenceProperty.fromString(collection, '\\#object\\.4#billboard.scale');
  * collection.add(object5);

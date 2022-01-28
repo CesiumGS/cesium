@@ -1063,7 +1063,7 @@ function computeRectangle(positions, ellipsoid, width, cornerType, result) {
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
  *
  * @example
- * var corridor = new Cesium.CorridorGeometry({
+ * const corridor = new Cesium.CorridorGeometry({
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
  *   positions : Cesium.Cartesian3.fromDegreesArray([-72.0, 40.0, -70.0, 35.0]),
  *   width : 100000
