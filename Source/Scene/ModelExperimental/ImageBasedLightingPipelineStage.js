@@ -3,7 +3,7 @@ import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import OctahedralProjectedCubeMap from "../OctahedralProjectedCubeMap.js";
 
-var ImageBasedLightingPipelineStage = {};
+const ImageBasedLightingPipelineStage = {};
 
 ImageBasedLightingPipelineStage.name = "ImageBasedLightingPipelineStage"; // Helps with debugging
 
@@ -12,8 +12,8 @@ ImageBasedLightingPipelineStage.process = function (
   model,
   frameState
 ) {
-  var iblParameters = model.imageBasedLightingParameters;
-  var shaderBuilder = renderResources.shaderBuilder;
+  const iblParameters = model.imageBasedLightingParameters;
+  const shaderBuilder = renderResources.shaderBuilder;
 
   // TODO: should we short circuit if this is false?
   if (iblParameters.isEnabled) {
@@ -44,14 +44,14 @@ ImageBasedLightingPipelineStage.process = function (
 
   if (OctahedralProjectedCubeMap.isSupported(frameState.context)) {
     // TODO: This should check iblParameters
-    var usesSH =
+    const usesSH =
       defined(iblParameters.sphericalHarmonicCoefficients) ||
       model._useDefaultSphericalHarmonics;
-    var usesSM =
+    const usesSM =
       (defined(model._specularEnvironmentMapAtlas) &&
         model._specularEnvironmentMapAtlas.ready) ||
       model._useDefaultSpecularMaps;
-    var addMatrix = usesSH || usesSM || iblParameters.isEnabled;
+    const addMatrix = usesSH || usesSM || iblParameters.isEnabled;
     if (addMatrix) {
       shaderBuilder.addUniform(
         "mat3",
@@ -136,7 +136,7 @@ ImageBasedLightingPipelineStage.process = function (
     );
   }
 
-  var uniformMap = {
+  const uniformMap = {
     model_iblFactor: function () {
       return iblParameters.imageBasedLightingFactor;
     },

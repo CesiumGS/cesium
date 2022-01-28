@@ -9,8 +9,8 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import OctahedralProjectedCubeMap from "./OctahedralProjectedCubeMap.js";
 
-var scratchIBLReferenceFrameMatrix4 = new Matrix4();
-var scratchIBLReferenceFrameMatrix3 = new Matrix3();
+const scratchIBLReferenceFrameMatrix4 = new Matrix4();
+const scratchIBLReferenceFrameMatrix3 = new Matrix3();
 
 /**
  * Object to manage image based lighting parameters including textures.
@@ -26,7 +26,7 @@ var scratchIBLReferenceFrameMatrix3 = new Matrix3();
 export default function ImageBasedLightingParameters(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var iblFactor = new Cartesian2(1.0, 1.0);
+  const iblFactor = new Cartesian2(1.0, 1.0);
   Cartesian2.clone(options.imageBasedLightingFactor, iblFactor);
   this._imageBasedLightingFactor = iblFactor;
 
@@ -71,7 +71,7 @@ Object.defineProperties(ImageBasedLightingParameters.prototype, {
       return this._lightColor;
     },
     set: function (value) {
-      var lightColor = this._lightColor;
+      const lightColor = this._lightColor;
       if (value === lightColor || Cartesian3.equals(value, lightColor)) {
         return;
       }
@@ -110,7 +110,7 @@ Object.defineProperties(ImageBasedLightingParameters.prototype, {
         1.0
       );
       //>>includeEnd('debug');
-      var imageBasedLightingFactor = this._imageBasedLightingFactor;
+      const imageBasedLightingFactor = this._imageBasedLightingFactor;
       if (
         value === imageBasedLightingFactor ||
         Cartesian2.equals(value, imageBasedLightingFactor)
@@ -171,7 +171,7 @@ Object.defineProperties(ImageBasedLightingParameters.prototype, {
       return this._luminanceAtZenith;
     },
     set: function (value) {
-      var lum = this._luminanceAtZenith;
+      const lum = this._luminanceAtZenith;
       if (value === lum) {
         return;
       }
@@ -203,7 +203,7 @@ function createSpecularMapAtlas(iblParameters, context) {
     iblParameters._specularEnvironmentMapAtlas.destroy();
 
   if (defined(iblParameters._specularEnvironmentMaps)) {
-    var atlas = new OctahedralProjectedCubeMap(
+    const atlas = new OctahedralProjectedCubeMap(
       iblParameters._specularEnvironmentMaps
     );
     iblParameters._specularEnvironmentMapAtlas = atlas;
@@ -223,7 +223,7 @@ function createSpecularMapAtlas(iblParameters, context) {
 ImageBasedLightingParameters.prototype.update = function (frameState) {
   frameState.brdfLutGenerator.update(frameState);
 
-  var context = frameState.context;
+  const context = frameState.context;
 
   if (this._specularMapAtlasDirty) {
     createSpecularMapAtlas(this, context);
@@ -234,19 +234,19 @@ ImageBasedLightingParameters.prototype.update = function (frameState) {
     this._specularEnvironmentMapAtlas.update(frameState);
   }
 
-  var recompileWithDefaultAtlas =
+  const recompileWithDefaultAtlas =
     !defined(this._specularEnvironmentMapAtlas) &&
     defined(frameState.specularEnvironmentMaps) &&
     !this._useDefaultSpecularMaps;
-  var recompileWithoutDefaultAtlas =
+  const recompileWithoutDefaultAtlas =
     !defined(frameState.specularEnvironmentMaps) &&
     this._useDefaultSpecularMaps;
 
-  var recompileWithDefaultSHCoeffs =
+  const recompileWithDefaultSHCoeffs =
     !defined(this._sphericalHarmonicCoefficients) &&
     defined(frameState.sphericalHarmonicCoefficients) &&
     !this._useDefaultSphericalHarmonics;
-  var recompileWithoutDefaultSHCoeffs =
+  const recompileWithoutDefaultSHCoeffs =
     !defined(frameState.sphericalHarmonicCoefficients) &&
     this._useDefaultSphericalHarmonics;
 
@@ -264,17 +264,17 @@ ImageBasedLightingParameters.prototype.update = function (frameState) {
     !defined(this._sphericalHarmonicCoefficients) &&
     defined(frameState.sphericalHarmonicCoefficients);
 
-  var usesSH =
+  const usesSH =
     defined(this._sphericalHarmonicCoefficients) ||
     this._useDefaultSphericalHarmonics;
-  var usesSM =
+  const usesSM =
     (defined(this._specularEnvironmentMapAtlas) &&
       this._specularEnvironmentMapAtlas.ready) ||
     this._useDefaultSpecularMaps;
 
   if (usesSH || usesSM) {
-    var iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
-    var iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
+    let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
+    let iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
 
     iblReferenceFrameMatrix4 = Matrix4.multiply(
       context.uniformState.view3D,
