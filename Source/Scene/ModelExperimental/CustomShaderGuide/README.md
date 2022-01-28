@@ -204,6 +204,8 @@ An automatically-generated GLSL struct that contains attributes.
 struct VertexInput {
     // Processed attributes. See the Attributes Struct section below.
     Attributes attributes;
+    // Feature IDs/Batch IDs. See the FeatureIds Struct section below.
+    FeatureIds featureIds;
     // In the future, metadata will be added here.
 };
 ```
@@ -217,6 +219,8 @@ variables for positions in various coordinate spaces.
 struct FragmentInput {
     // Processed attribute values. See the Attributes Struct section below.
     Attributes attributes;
+    // Feature IDs/Batch IDs. See the FeatureIds Struct section below.
+    FeatureIds featureIds;
     // In the future, metadata will be added here.
 };
 ```
@@ -258,6 +262,274 @@ with an `N`.
 Custom attributes are also available, though they are renamed to use lowercase
 letters and underscores. For example, an attribute called `_SURFACE_TEMPERATURE`
 in the model would become `fsInput.attributes.surface_temperature` in the shader.
+
+## `FeatureIds` struct
+
+This struct is dynamically generated to gather all the various feature IDs into
+a single collection, regardless of whether the value came from an attribute,
+texture or varying.
+
+### 3D Tiles 1.0 Batch IDs
+
+In 3D Tiles 1.0, the same concept of identifying features within a primitive
+was called `BATCH_ID` or the legacy `_BATCHID`. These batch IDs are renamed
+to a single feature ID, always with index 0:
+
+- `vsInput.featureIds.featureId_0` (Vertex shader)
+- `fsInput.featureIds.featureId_0` (Fragment shader)
+
+### `EXT_mesh_features` Feature IDs
+
+When the glTF extension `EXT_mesh_features` is used, feature IDs appear in
+two places:
+
+1. Any glTF primitive can have a `featureIds` array. The `featureIds` array may
+   contain feature ID attributes, implicit feature ID attributes, and/or feature
+   ID textures. Regardless of the type of feature IDs, they all appear in the
+   custom shader as `(vsInput|fsInput).featureIds.featureId_N` where `N` is the
+   index of the feature IDs in the `featureIds` array.
+2. Any glTF node with the `EXT_mesh_gpu_instancing` and `EXT_mesh_features` may
+   define feature IDs. These may be feature ID attributes or implicit feature ID
+   attributes, but not feature ID textures. These will appear in the custom
+   shader as `(vsInput|fsInput).featureIds.instanceFeatureId_N` where `N` is the
+   index of the feature IDs in the `featureIds` array.
+
+Furthermore, note that feature ID textures are only supported in the fragment
+shader.
+
+For example, suppose we had a glTF primitive with the following feature IDs:
+
+```jsonc
+"nodes": [
+  {
+    "mesh": 0
+    "extensions": {
+      "EXT_mesh_gpu_instancing": {
+        "attributes": {
+          "TRANSLATION": 3,
+          "FEATURE_ID_0": 4
+        }
+      },
+      "EXT_mesh_features": {
+        "propertyTables": [0, 1],
+        "featureIds": [
+          {
+            // Feature ID attribute from implicit range
+            //
+            // Vertex Shader: vsInput.featureIds.instanceFeatureId_0
+            // Fragment Shader: fsInput.featureIds.instanceFeatureId_0
+            "offset": 0,
+            "repeat": 1
+          },
+          {
+            // Feature ID attribute. This corresponds to FEATURE_ID_0 from the
+            // instancing extension above. Note that this is
+            // labeled as instanceFeatureId_1 since it is the second feature ID
+            // set in the featureIds array
+            //
+            // Vertex Shader: vsInput.featureIds.instanceFeatureId_1
+            // Fragment Shader: fsInput.featureIds.instanceFeatureId_1
+            "attribute": 0
+          }
+        ]
+      }
+    }
+  }
+],
+"meshes": [
+  {
+    "primitives": [
+      {
+        "attributes": {
+          "POSITION": 0,
+          "FEATURE_ID_0": 1,
+          "FEATURE_ID_1": 2
+        },
+        "extensions": {
+          "EXT_mesh_features": {
+            "propertyTables": [2, 3, 4, 5],
+            "featureIds": [
+              {
+                // Feature ID Texture
+                //
+                // Vertex Shader: (Not supported)
+                // Fragment Shader: fsInput.featureIds.featureId_0
+                "index": 0,
+                "texCoord": 0,
+                "channel": 0
+              },
+              {
+                // Implicit Feature ID attribute
+                //
+                // Vertex Shader: vsInput.featureIds.featureId_1
+                // Fragment Shader: fsInput.featureIds.featureId_1
+                "offset": 0,
+                "repeat": 3
+              },
+              {
+                // Feature ID Attribute (FEATURE_ID_0). Note that this
+                // is labeled featureId_2 for its index in the featureIds
+                // array
+                //
+                // Vertex Shader: vsInput.featureIds.featureId_2
+                // Fragment Shader: fsInput.featureIds.featureId_2
+                "attribute": 0
+              },
+              {
+                // Feature ID Attribute (FEATURE_ID_1). Note that this
+                // is labeled featureId_3 for its index in the featureIds
+                // array
+                //
+                // Vertex Shader: vsInput.featureIds.featureId_3
+                // Fragment Shader: fsInput.featureIds.featureId_3
+                "attribute": 1
+              }
+            ]
+          }
+        }
+      },
+    ]
+  }
+]
+```
+
+### Legacy `EXT_feature_metadata` Feature IDs
+
+`EXT_feature_metadata` was an earlier draft of `EXT_mesh_features`. Though
+the feature ID concepts have not changed much, the JSON structure is a little
+different. In the older extension, `featureIdAttributes` and `featureIdTextures`
+were stored separately. In this CesiumJS implementation, the feature attributes
+and feature textures are concatenated into one list, essentially
+`featureIds = featureIdAttributes.concat(featureIdTextures)`. Besides this
+difference in the extension JSON, the feature ID sets are labeled the same
+way as `EXT_mesh_features`, i.e.
+
+- `(vsInput|fsInput).featureIds.featureId_N` corresponds to the `N`-th feature
+  ID set from the combined `featureIds` array from each primitive.
+- `(vsInput|fsInput).featureIds.instanceFeatureId_N` corresponds to the `N`-th
+  feature ID set from the `featureIds` array from the node with the
+  `EXT_mesh_gpu_instancing` extension.
+
+For comparison, here is the same example as in the previous section, translated
+to the `EXT_feature_metadata` extension:
+
+```jsonc
+"nodes": [
+  {
+    "mesh": 0,
+    "extensions": {
+      "EXT_mesh_gpu_instancing": {
+        "attributes": {
+          "TRANSLATION": 3,
+          "_FEATURE_ID_0": 4
+        },
+        "extensions": {
+          "EXT_feature_metadata": {
+            "featureIdAttributes": [
+              {
+                // Feature ID attribute from implicit range
+                //
+                // Vertex Shader: vsInput.featureIds.instanceFeatureId_0
+                // Fragment Shader: fsInput.featureIds.instanceFeatureId_0
+                "featureTable": "perInstanceTable",
+                "featureIds": {
+                  "constant": 0,
+                  "divisor": 1
+                }
+              },
+              {
+                // Feature ID attribute. This corresponds to FEATURE_ID_0 from the
+                // instancing extension above. Note that this is
+                // labeled as instanceFeatureId_1 since it is the second feature ID
+                // set in the featureIds array
+                //
+                // Vertex Shader: vsInput.featureIds.instanceFeatureId_1
+                // Fragment Shader: fsInput.featureIds.instanceFeatureId_1
+                "featureTable": "perInstanceGroupTable",
+                "featureIds": {
+                  "attribute": "_FEATURE_ID_0"
+                }
+              }
+            ],
+          }
+        }
+      }
+    }
+  }
+],
+"meshes": [
+  {
+    "primitives": [
+      {
+        "attributes": {
+          "POSITION": 0,
+          "_FEATURE_ID_0": 1,
+          "_FEATURE_ID_1": 2
+        },
+        "extensions": {
+          "EXT_feature_metadata": {
+            "featureIdAttributes": [
+              {
+                // Implicit Feature ID attribute
+                //
+                // Vertex Shader: vsInput.featureIds.featureId_0
+                // Fragment Shader: fsInput.featureIds.featureId_0
+                "featureTable": "perFaceTable",
+                "featureIds": {
+                  "constant": 0,
+                  "divisor": 3
+                }
+              },
+              {
+                // Feature ID Attribute (FEATURE_ID_0). Note that this
+                // is labeled featureId_1 for its index in the featureIds
+                // array
+                //
+                // Vertex Shader: vsInput.featureIds.featureId_1
+                // Fragment Shader: fsInput.featureIds.featureId_1
+                "featureTable": "perFeatureTable",
+                "featureIds": {
+                  "attribute": "_FEATURE_ID_0"
+                }
+              },
+              {
+                // Feature ID Attribute (FEATURE_ID_1). Note that this
+                // is labeled featureId_2 for its index in the featureIds
+                // array
+                //
+                // Vertex Shader: vsInput.featureIds.featureId_2
+                // Fragment Shader: fsInput.featureIds.featureId_2
+                "featureTable": "otherFeatureTable",
+                "featureIds": {
+                  "attribute": "_FEATURE_ID_1"
+                }
+              }
+            ],
+            "featureIdTextures": [
+              {
+                // Feature ID Texture. Note that this is labeled featureId_3
+                // since the list of feature ID textures is concatenated to the
+                // list of feature ID attributes
+                //
+                // Vertex Shader: (Not supported)
+                // Fragment Shader: fsInput.featureIds.featureId_3
+                "featureTable": "perTexelTable",
+                "featureIds": {
+                  "texture": {
+                    "texCoord": 0,
+                    "index": 0
+                  },
+                  "channels": "r"
+                }
+              }
+            ]
+          }
+        }
+      },
+    ]
+  }
+]
+```
 
 ## `czm_modelVertexOutput` struct
 

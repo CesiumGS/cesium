@@ -42,8 +42,8 @@ import I3dmLoader from "./I3dmLoader.js";
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
- * @param {Number} [options.featureIdAttributeIndex=0] The index of the feature ID attribute to use for picking features per-instance or per-primitive.
- * @param {Number} [options.featureIdTextureIndex=0] The index of the feature ID texture to use for picking features per-primitive.
+ * @param {Number} [options.featureIdIndex=0] The index into the list of primitive feature IDs used for picking and styling. For EXT_feature_metadata, feature ID attributes are listed before feature ID textures. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {Number} [options.instanceFeatureIdIndex=0] The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  *
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -119,13 +119,17 @@ export default function ModelExperimental(options) {
   this._allowPicking = defaultValue(options.allowPicking, true);
   this._show = defaultValue(options.show, true);
 
-  this._featureIdAttributeIndex = defaultValue(
-    options.featureIdAttributeIndex,
+  this._style = undefined;
+
+  this._featureIdIndex = defaultValue(options.featureIdIndex, 0);
+  this._instanceFeatureIdIndex = defaultValue(
+    options.instanceFeatureIdIndex,
     0
   );
-  this._featureIdTextureIndex = defaultValue(options.featureIdTextureIndex, 0);
-  this._featureTables = undefined;
+
+  this._featureTables = [];
   this._featureTableId = undefined;
+  this._featureTableIdDirty = true;
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._resources = [];
@@ -146,7 +150,7 @@ export default function ModelExperimental(options) {
 }
 
 function createModelFeatureTables(model, featureMetadata) {
-  const modelFeatureTables = [];
+  const featureTables = model._featureTables;
 
   const propertyTables = featureMetadata.propertyTables;
   for (let i = 0; i < propertyTables.length; i++) {
@@ -156,21 +160,18 @@ function createModelFeatureTables(model, featureMetadata) {
       propertyTable: propertyTable,
     });
 
-    if (modelFeatureTable.featuresLength > 0) {
-      modelFeatureTables.push(modelFeatureTable);
-    }
+    featureTables.push(modelFeatureTable);
   }
 
-  return modelFeatureTables;
+  return featureTables;
 }
 
 function selectFeatureTableId(components, model) {
-  const featureIdAttributeIndex = model._featureIdAttributeIndex;
-  const featureIdTextureIndex = model._featureIdTextureIndex;
+  const featureIdIndex = model._featureIdIndex;
+  const instanceFeatureIdIndex = model._instanceFeatureIdIndex;
 
   let i, j;
   let featureIdAttribute;
-  let featureIdTexture;
 
   let node;
   // Scan the nodes till we find one with instances, get the feature table ID
@@ -178,9 +179,11 @@ function selectFeatureTableId(components, model) {
   for (i = 0; i < components.nodes.length; i++) {
     node = components.nodes[i];
     if (defined(node.instances)) {
-      featureIdAttribute =
-        node.instances.featureIdAttributes[featureIdAttributeIndex];
-      if (defined(featureIdAttribute)) {
+      featureIdAttribute = node.instances.featureIds[instanceFeatureIdIndex];
+      if (
+        defined(featureIdAttribute) &&
+        defined(featureIdAttribute.propertyTableId)
+      ) {
         return featureIdAttribute.propertyTableId;
       }
     }
@@ -192,14 +195,10 @@ function selectFeatureTableId(components, model) {
     node = components.nodes[i];
     for (j = 0; j < node.primitives.length; j++) {
       const primitive = node.primitives[j];
-      featureIdTexture = primitive.featureIdTextures[featureIdTextureIndex];
-      featureIdAttribute =
-        primitive.featureIdAttributes[featureIdAttributeIndex];
+      const featureIds = primitive.featureIds[featureIdIndex];
 
-      if (defined(featureIdTexture)) {
-        return featureIdTexture.propertyTableId;
-      } else if (defined(featureIdAttribute)) {
-        return featureIdAttribute.propertyTableId;
+      if (defined(featureIds)) {
+        return featureIds.propertyTableId;
       }
     }
   }
@@ -217,10 +216,7 @@ function initialize(model) {
       const featureMetadata = components.featureMetadata;
 
       if (defined(featureMetadata) && featureMetadata.propertyTableCount > 0) {
-        const featureTableId = selectFeatureTableId(components, model);
-        const featureTables = createModelFeatureTables(model, featureMetadata);
-        model.featureTables = featureTables;
-        model.featureTableId = featureTableId;
+        createModelFeatureTables(model, featureMetadata);
       }
 
       model._sceneGraph = new ModelExperimentalSceneGraph({
@@ -582,22 +578,35 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * The index of the feature ID attribute to use for picking features per-instance or per-primitive.
+   * The index into the list of primitive feature IDs used for picking and
+   * styling. For EXT_feature_metadata, feature ID attributes are listed before
+   * feature ID textures. If both per-primitive and per-instance feature IDs are
+   * present, the instance feature IDs take priority.
    *
    * @memberof ModelExperimental.prototype
    *
    * @type {Number}
+   * @readonly
    *
    * @default 0
    */
-  featureIdAttributeIndex: {
+  featureIdIndex: {
     get: function () {
-      return this._featureIdAttributeIndex;
+      return this._featureIdIndex;
+    },
+    set: function (value) {
+      if (value !== this._featureIdIndex) {
+        this._featureTableIdDirty = true;
+      }
+
+      this._featureIdIndex = value;
     },
   },
 
   /**
-   * The index of the feature ID texture to use for picking features per-primitive.
+   * The index into the list of instance feature IDs used for picking and
+   * styling. If both per-primitive and per-instance feature IDs are present,
+   * the instance feature IDs take priority.
    *
    * @memberof ModelExperimental.prototype
    *
@@ -605,9 +614,16 @@ Object.defineProperties(ModelExperimental.prototype, {
    *
    * @default 0
    */
-  featureIdTextureIndex: {
+  instanceFeatureIdIndex: {
     get: function () {
-      return this._featureIdTextureIndex;
+      return this._instanceFeatureIdIndex;
+    },
+    set: function (value) {
+      if (value !== this._instanceFeatureIdIndex) {
+        this._featureTableIdDirty = true;
+      }
+
+      this._instanceFeatureIdIndex = value;
     },
   },
 });
@@ -660,15 +676,18 @@ ModelExperimental.prototype.update = function (frameState) {
     return;
   }
 
+  if (this._featureTableIdDirty) {
+    updateFeatureTableId(this);
+    this._featureTableIdDirty = false;
+  }
+
   const featureTables = this._featureTables;
-  if (defined(featureTables)) {
-    for (let i = 0; i < featureTables.length; i++) {
-      featureTables[i].update(frameState);
-      // Check if the types of style commands needed have changed and trigger a reset of the draw commands
-      // to ensure that translucent and opaque features are handled in the correct passes.
-      if (featureTables[i].styleCommandsNeededDirty) {
-        this.resetDrawCommands();
-      }
+  for (let i = 0; i < featureTables.length; i++) {
+    featureTables[i].update(frameState);
+    // Check if the types of style commands needed have changed and trigger a reset of the draw commands
+    // to ensure that translucent and opaque features are handled in the correct passes.
+    if (featureTables[i].styleCommandsNeededDirty) {
+      this.resetDrawCommands();
     }
   }
 
@@ -709,6 +728,18 @@ ModelExperimental.prototype.update = function (frameState) {
     frameState.commandList.push.apply(frameState.commandList, drawCommands);
   }
 };
+
+function updateFeatureTableId(model) {
+  const components = model._sceneGraph.components;
+  const featureMetadata = components.featureMetadata;
+
+  if (defined(featureMetadata) && featureMetadata.propertyTableCount > 0) {
+    model.featureTableId = selectFeatureTableId(components, model);
+    // Re-apply the style to reflect the new feature ID table.
+    // This in turn triggers a rebuild of the draw commands.
+    model.applyStyle(model._style);
+  }
+}
 
 /**
  * Returns true if this object was destroyed; otherwise, false.
@@ -796,8 +827,8 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
- * @param {Number} [options.featureIdAttributeIndex=0] The index of the feature ID attribute to use for picking features per-instance or per-primitive.
- * @param {Number} [options.featureIdTextureIndex=0] The index of the feature ID texture to use for picking features per-primitive.
+ * @param {Number} [options.featureIdIndex=0] The index into the list of primitive feature IDs used for picking and styling. For EXT_feature_metadata, feature ID attributes are listed before feature ID textures. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {Number} [options.instanceFeatureIdIndex=0] The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
  *
  * @returns {ModelExperimental} The newly created model.
@@ -854,8 +885,8 @@ ModelExperimental.fromGltf = function (options) {
     color: options.color,
     colorBlendAmount: options.colorBlendAmount,
     colorBlendMode: options.colorBlendMode,
-    featureIdAttributeIndex: options.featureIdAttributeIndex,
-    featureIdTextureIndex: options.featureIdTextureIndex,
+    featureIdIndex: options.featureIdIndex,
+    instanceFeatureIdIndex: options.instanceFeatureIdIndex,
     pointCloudShading: options.pointCloudShading,
   };
   const model = new ModelExperimental(modelOptions);
@@ -894,8 +925,8 @@ ModelExperimental.fromB3dm = function (options) {
     color: options.color,
     colorBlendAmount: options.colorBlendAmount,
     colorBlendMode: options.colorBlendMode,
-    featureIdAttributeIndex: options.featureIdAttributeIndex,
-    featureIdTextureIndex: options.featureIdTextureIndex,
+    featureIdIndex: options.featureIdIndex,
+    instanceFeatureIdIndex: options.instanceFeatureIdIndex,
   };
 
   const model = new ModelExperimental(modelOptions);
@@ -927,8 +958,8 @@ ModelExperimental.fromPnts = function (options) {
     color: options.color,
     colorBlendAmount: options.colorBlendAmount,
     colorBlendMode: options.colorBlendMode,
-    featureIdAttributeIndex: options.featureIdAttributeIndex,
-    featureIdTextureIndex: options.featureIdTextureIndex,
+    featureIdIndex: options.featureIdIndex,
+    instanceFeatureIdIndex: options.instanceFeatureIdIndex,
   };
 
   const model = new ModelExperimental(modelOptions);
