@@ -8,32 +8,24 @@
 
 ## Quickstart
 
-1. Get the code.
-   - Use git to [clone](#get-the-code) the source code onto your local machine.
-2. Build the code.
+1. [Clone the Reop](#get-the-code)
 
-   - Console to the Cesium directory.
-
-     _EXAMPLE: `cd C:\path\to\your\directory`_
-
-   - Use NPM to install packages, build the application, and start the server.
+2. [Build](#build-the-code)
 
    ```
-   npm install
+    npm install \
+    npm run build
    ```
 
-   ```
-   npm run build
-   ```
+3. Start the Server
 
    ```
    npm start
    ```
 
-3. Access the site.
-   - Using your favorite browser, navigate to: ` http://localhost:8080/`
+4. Navigate to : [` http://localhost:8080/`](http://localhost:8080)
 
-_For more details, review the rest of this document._
+_NOTE: If you change branchs, you might have to rebuild._
 
 ---
 
