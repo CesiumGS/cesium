@@ -33,10 +33,10 @@ const Tipsify = {};
  * @exception {DeveloperError} cacheSize must be greater than two.
  *
  * @example
- * var indices = [0, 1, 2, 3, 4, 5];
- * var maxIndex = 5;
- * var cacheSize = 3;
- * var acmr = Cesium.Tipsify.calculateACMR({indices : indices, maxIndex : maxIndex, cacheSize : cacheSize});
+ * const indices = [0, 1, 2, 3, 4, 5];
+ * const maxIndex = 5;
+ * const cacheSize = 3;
+ * const acmr = Cesium.Tipsify.calculateACMR({indices : indices, maxIndex : maxIndex, cacheSize : cacheSize});
  */
 Tipsify.calculateACMR = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -111,10 +111,10 @@ Tipsify.calculateACMR = function (options) {
  * @exception {DeveloperError} cacheSize must be greater than two.
  *
  * @example
- * var indices = [0, 1, 2, 3, 4, 5];
- * var maxIndex = 5;
- * var cacheSize = 3;
- * var reorderedIndices = Cesium.Tipsify.tipsify({indices : indices, maxIndex : maxIndex, cacheSize : cacheSize});
+ * const indices = [0, 1, 2, 3, 4, 5];
+ * const maxIndex = 5;
+ * const cacheSize = 3;
+ * const reorderedIndices = Cesium.Tipsify.tipsify({indices : indices, maxIndex : maxIndex, cacheSize : cacheSize});
  */
 Tipsify.tipsify = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

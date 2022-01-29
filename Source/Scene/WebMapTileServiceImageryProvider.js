@@ -57,7 +57,7 @@ const defaultParameters = Object.freeze({
  *
  * @example
  * // Example 1. USGS shaded relief tiles (KVP)
- * var shadedRelief1 = new Cesium.WebMapTileServiceImageryProvider({
+ * const shadedRelief1 = new Cesium.WebMapTileServiceImageryProvider({
  *     url : 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS',
  *     layer : 'USGSShadedReliefOnly',
  *     style : 'default',
@@ -71,7 +71,7 @@ const defaultParameters = Object.freeze({
  *
  * @example
  * // Example 2. USGS shaded relief tiles (RESTful)
- * var shadedRelief2 = new Cesium.WebMapTileServiceImageryProvider({
+ * const shadedRelief2 = new Cesium.WebMapTileServiceImageryProvider({
  *     url : 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS/tile/1.0.0/USGSShadedReliefOnly/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg',
  *     layer : 'USGSShadedReliefOnly',
  *     style : 'default',
@@ -84,7 +84,7 @@ const defaultParameters = Object.freeze({
  *
  * @example
  * // Example 3. NASA time dynamic weather data (RESTful)
- * var times = Cesium.TimeIntervalCollection.fromIso8601({
+ * const times = Cesium.TimeIntervalCollection.fromIso8601({
  *     iso8601: '2015-07-30/2017-06-16/P1D',
  *     dataCallback: function dataCallback(interval, index) {
  *         return {
@@ -92,7 +92,7 @@ const defaultParameters = Object.freeze({
  *         };
  *     }
  * });
- * var weather = new Cesium.WebMapTileServiceImageryProvider({
+ * const weather = new Cesium.WebMapTileServiceImageryProvider({
  *     url : 'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/AMSR2_Snow_Water_Equivalent/default/{Time}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png',
  *     layer : 'AMSR2_Snow_Water_Equivalent',
  *     style : 'default',

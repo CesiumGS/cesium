@@ -269,8 +269,8 @@ Transforms.localFrameToFixedFrameGenerator = function (firstAxis, secondAxis) {
  *
  * @example
  * // Get the transform from local east-north-up at cartographic (0.0, 0.0) to Earth's fixed frame.
- * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
- * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+ * const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+ * const transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
  */
 Transforms.eastNorthUpToFixedFrame = Transforms.localFrameToFixedFrameGenerator(
   "east",
@@ -295,8 +295,8 @@ Transforms.eastNorthUpToFixedFrame = Transforms.localFrameToFixedFrameGenerator(
  *
  * @example
  * // Get the transform from local north-east-down at cartographic (0.0, 0.0) to Earth's fixed frame.
- * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
- * var transform = Cesium.Transforms.northEastDownToFixedFrame(center);
+ * const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+ * const transform = Cesium.Transforms.northEastDownToFixedFrame(center);
  */
 Transforms.northEastDownToFixedFrame = Transforms.localFrameToFixedFrameGenerator(
   "north",
@@ -321,8 +321,8 @@ Transforms.northEastDownToFixedFrame = Transforms.localFrameToFixedFrameGenerato
  *
  * @example
  * // Get the transform from local north-up-east at cartographic (0.0, 0.0) to Earth's fixed frame.
- * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
- * var transform = Cesium.Transforms.northUpEastToFixedFrame(center);
+ * const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+ * const transform = Cesium.Transforms.northUpEastToFixedFrame(center);
  */
 Transforms.northUpEastToFixedFrame = Transforms.localFrameToFixedFrameGenerator(
   "north",
@@ -347,8 +347,8 @@ Transforms.northUpEastToFixedFrame = Transforms.localFrameToFixedFrameGenerator(
  *
  * @example
  * // Get the transform from local north-West-Up at cartographic (0.0, 0.0) to Earth's fixed frame.
- * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
- * var transform = Cesium.Transforms.northWestUpToFixedFrame(center);
+ * const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+ * const transform = Cesium.Transforms.northWestUpToFixedFrame(center);
  */
 Transforms.northWestUpToFixedFrame = Transforms.localFrameToFixedFrameGenerator(
   "north",
@@ -375,12 +375,12 @@ const scratchHPRMatrix4 = new Matrix4();
  *
  * @example
  * // Get the transform from local heading-pitch-roll at cartographic (0.0, 0.0) to Earth's fixed frame.
- * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
- * var heading = -Cesium.Math.PI_OVER_TWO;
- * var pitch = Cesium.Math.PI_OVER_FOUR;
- * var roll = 0.0;
- * var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
- * var transform = Cesium.Transforms.headingPitchRollToFixedFrame(center, hpr);
+ * const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+ * const heading = -Cesium.Math.PI_OVER_TWO;
+ * const pitch = Cesium.Math.PI_OVER_FOUR;
+ * const roll = 0.0;
+ * const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+ * const transform = Cesium.Transforms.headingPitchRollToFixedFrame(center, hpr);
  */
 Transforms.headingPitchRollToFixedFrame = function (
   origin,
@@ -430,12 +430,12 @@ const scratchHPRMatrix3 = new Matrix3();
  *
  * @example
  * // Get the quaternion from local heading-pitch-roll at cartographic (0.0, 0.0) to Earth's fixed frame.
- * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
- * var heading = -Cesium.Math.PI_OVER_TWO;
- * var pitch = Cesium.Math.PI_OVER_FOUR;
- * var roll = 0.0;
- * var hpr = new HeadingPitchRoll(heading, pitch, roll);
- * var quaternion = Cesium.Transforms.headingPitchRollQuaternion(center, hpr);
+ * const center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+ * const heading = -Cesium.Math.PI_OVER_TWO;
+ * const pitch = Cesium.Math.PI_OVER_FOUR;
+ * const roll = 0.0;
+ * const hpr = new HeadingPitchRoll(heading, pitch, roll);
+ * const quaternion = Cesium.Transforms.headingPitchRollQuaternion(center, hpr);
  */
 Transforms.headingPitchRollQuaternion = function (
   origin,
@@ -547,10 +547,10 @@ let dateInUtc = new JulianDate();
  * @example
  * //Set the view to the inertial frame.
  * scene.postUpdate.addEventListener(function(scene, time) {
- *    var now = Cesium.JulianDate.now();
- *    var offset = Cesium.Matrix4.multiplyByPoint(camera.transform, camera.position, new Cesium.Cartesian3());
- *    var transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(now));
- *    var inverseTransform = Cesium.Matrix4.inverseTransformation(transform, new Cesium.Matrix4());
+ *    const now = Cesium.JulianDate.now();
+ *    const offset = Cesium.Matrix4.multiplyByPoint(camera.transform, camera.position, new Cesium.Cartesian3());
+ *    const transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(now));
+ *    const inverseTransform = Cesium.Matrix4.inverseTransformation(transform, new Cesium.Matrix4());
  *    Cesium.Matrix4.multiplyByPoint(inverseTransform, offset, offset);
  *    camera.lookAtTransform(transform, offset);
  * });
@@ -659,7 +659,7 @@ const j2000ttDays = 2451545.0;
  *
  *
  * @example
- * var interval = new Cesium.TimeInterval(...);
+ * const interval = new Cesium.TimeInterval(...);
  * when(Cesium.Transforms.preloadIcrfFixed(interval), function() {
  *     // the data is now loaded
  * });
@@ -701,10 +701,10 @@ Transforms.preloadIcrfFixed = function (timeInterval) {
  * @example
  * scene.postUpdate.addEventListener(function(scene, time) {
  *   // View in ICRF.
- *   var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
+ *   const icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
  *   if (Cesium.defined(icrfToFixed)) {
- *     var offset = Cesium.Cartesian3.clone(camera.position);
- *     var transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed);
+ *     const offset = Cesium.Cartesian3.clone(camera.position);
+ *     const transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed);
  *     camera.lookAtTransform(transform, offset);
  *   }
  * });
@@ -756,10 +756,10 @@ const rotation2Scratch = new Matrix3();
  *
  * @example
  * // Transform a point from the ICRF axes to the Fixed axes.
- * var now = Cesium.JulianDate.now();
- * var pointInFixed = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
- * var fixedToIcrf = Cesium.Transforms.computeIcrfToFixedMatrix(now);
- * var pointInInertial = new Cesium.Cartesian3();
+ * const now = Cesium.JulianDate.now();
+ * const pointInFixed = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+ * const fixedToIcrf = Cesium.Transforms.computeIcrfToFixedMatrix(now);
+ * let pointInInertial = new Cesium.Cartesian3();
  * if (Cesium.defined(fixedToIcrf)) {
  *     pointInInertial = Cesium.Matrix3.multiplyByVector(fixedToIcrf, pointInFixed, pointInInertial);
  * }

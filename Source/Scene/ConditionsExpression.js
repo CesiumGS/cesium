@@ -19,7 +19,7 @@ import Expression from "./Expression.js";
  * @param {Object} [defines] Defines in the style.
  *
  * @example
- * var expression = new Cesium.ConditionsExpression({
+ * const expression = new Cesium.ConditionsExpression({
  *     conditions : [
  *         ['${Area} > 10, 'color("#FF0000")'],
  *         ['${id} !== "1"', 'color("#00FF00")'],

@@ -20,7 +20,7 @@ import DeveloperError from "./DeveloperError.js";
  *
  *
  * @example
- * var geometry = new Cesium.Geometry({
+ * const geometry = new Cesium.Geometry({
  *   attributes : {
  *     position : new Cesium.GeometryAttribute({
  *       componentDatatype : Cesium.ComponentDatatype.FLOAT,

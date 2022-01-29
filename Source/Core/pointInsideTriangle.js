@@ -17,8 +17,8 @@ const scratchBarycentricCoords = new Cartesian3();
  *
  * @example
  * // Returns true
- * var p = new Cesium.Cartesian2(0.25, 0.25);
- * var b = Cesium.pointInsideTriangle(p,
+ * const p = new Cesium.Cartesian2(0.25, 0.25);
+ * const b = Cesium.pointInsideTriangle(p,
  *   new Cesium.Cartesian2(0.0, 0.0),
  *   new Cesium.Cartesian2(1.0, 0.0),
  *   new Cesium.Cartesian2(0.0, 1.0));

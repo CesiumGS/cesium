@@ -590,7 +590,7 @@ function processTopology(dataSource, geoJson, geometry, crsFunction, options) {
  * @demo {@link https://sandcastle.cesium.com/index.html?src=GeoJSON%20simplestyle.html|Cesium Sandcastle GeoJSON simplestyle Demo}
  *
  * @example
- * var viewer = new Cesium.Viewer('cesiumContainer');
+ * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.dataSources.add(Cesium.GeoJsonDataSource.load('../../SampleData/ne_10m_us_states.topojson', {
  *   stroke: Cesium.Color.HOTPINK,
  *   fill: Cesium.Color.PINK,

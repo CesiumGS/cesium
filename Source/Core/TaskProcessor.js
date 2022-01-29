@@ -231,8 +231,8 @@ const emptyTransferableObjectArray = [];
  *                    if there are too many active tasks,
  *
  * @example
- * var taskProcessor = new Cesium.TaskProcessor('myWorkerPath');
- * var promise = taskProcessor.scheduleTask({
+ * const taskProcessor = new Cesium.TaskProcessor('myWorkerPath');
+ * const promise = taskProcessor.scheduleTask({
  *     someParameter : true,
  *     another : 'hello'
  * });

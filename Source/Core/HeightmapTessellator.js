@@ -95,9 +95,9 @@ const maximumScratch = new Cartesian3();
  *                  low-order element.  If it is true, the first element is the high-order element.
  *
  * @example
- * var width = 5;
- * var height = 5;
- * var statistics = Cesium.HeightmapTessellator.computeVertices({
+ * const width = 5;
+ * const height = 5;
+ * const statistics = Cesium.HeightmapTessellator.computeVertices({
  *     heightmap : [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
  *     width : width,
  *     height : height,
@@ -110,8 +110,8 @@ const maximumScratch = new Cartesian3();
  *     }
  * });
  *
- * var encoding = statistics.encoding;
- * var position = encoding.decodePosition(statistics.vertices, index);
+ * const encoding = statistics.encoding;
+ * const position = encoding.decodePosition(statistics.vertices, index);
  */
 HeightmapTessellator.computeVertices = function (options) {
   //>>includeStart('debug', pragmas.debug);

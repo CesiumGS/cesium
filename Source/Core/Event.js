@@ -14,8 +14,8 @@ import defined from "./defined.js";
  *     this.myArg2Copy = arg2;
  * }
  *
- * var myObjectInstance = new MyObject();
- * var evt = new Cesium.Event();
+ * const myObjectInstance = new MyObject();
+ * const evt = new Cesium.Event();
  * evt.addEventListener(MyObject.prototype.myListener, myObjectInstance);
  * evt.raiseEvent('1', '2');
  * evt.removeEventListener(MyObject.prototype.myListener);

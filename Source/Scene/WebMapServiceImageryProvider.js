@@ -92,7 +92,7 @@ const excludesReverseAxis = [
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  *
  * @example
- * var provider = new Cesium.WebMapServiceImageryProvider({
+ * const provider = new Cesium.WebMapServiceImageryProvider({
  *     url : 'https://sampleserver1.arcgisonline.com/ArcGIS/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/WMSServer',
  *     layers : '0',
  *     proxy: new Cesium.DefaultProxy('/proxy/')

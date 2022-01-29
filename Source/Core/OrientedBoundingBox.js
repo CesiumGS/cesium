@@ -29,10 +29,10 @@ import Rectangle from "./Rectangle.js";
  *
  * @example
  * // Create an OrientedBoundingBox using a transformation matrix, a position where the box will be translated, and a scale.
- * var center = new Cesium.Cartesian3(1.0, 0.0, 0.0);
- * var halfAxes = Cesium.Matrix3.fromScale(new Cesium.Cartesian3(1.0, 3.0, 2.0), new Cesium.Matrix3());
+ * const center = new Cesium.Cartesian3(1.0, 0.0, 0.0);
+ * const halfAxes = Cesium.Matrix3.fromScale(new Cesium.Cartesian3(1.0, 3.0, 2.0), new Cesium.Matrix3());
  *
- * var obb = new Cesium.OrientedBoundingBox(center, halfAxes);
+ * const obb = new Cesium.OrientedBoundingBox(center, halfAxes);
  *
  * @see BoundingSphere
  * @see BoundingRectangle
@@ -133,7 +133,7 @@ const scratchEigenResult = {
  *
  * @example
  * // Compute an object oriented bounding box enclosing two points.
- * var box = Cesium.OrientedBoundingBox.fromPoints([new Cesium.Cartesian3(2, 0, 0), new Cesium.Cartesian3(-2, 0, 0)]);
+ * const box = Cesium.OrientedBoundingBox.fromPoints([new Cesium.Cartesian3(2, 0, 0), new Cesium.Cartesian3(-2, 0, 0)]);
  */
 OrientedBoundingBox.fromPoints = function (positions, result) {
   if (!defined(result)) {

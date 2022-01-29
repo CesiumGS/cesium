@@ -591,7 +591,7 @@ function quadraticVectorExpression(A, b, c, x, w) {
     const sineSquared = Math.max(1.0 - cosineSquared, 0.0);
     const sine = Math.sqrt(sineSquared);
 
-    //var left = l2 * cosineSquared + l1 * cosine + l0;
+    //const left = l2 * cosineSquared + l1 * cosine + l0;
     let left;
     if (CesiumMath.sign(l2) === CesiumMath.sign(l0)) {
       left = addWithCancellationCheck(
@@ -802,15 +802,15 @@ const lineSegmentPlaneDifference = new Cartesian3();
  * @returns {Cartesian3} The intersection point or undefined if there is no intersection.
  *
  * @example
- * var origin = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
- * var normal = ellipsoid.geodeticSurfaceNormal(origin);
- * var plane = Cesium.Plane.fromPointNormal(origin, normal);
+ * const origin = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+ * const normal = ellipsoid.geodeticSurfaceNormal(origin);
+ * const plane = Cesium.Plane.fromPointNormal(origin, normal);
  *
- * var p0 = new Cesium.Cartesian3(...);
- * var p1 = new Cesium.Cartesian3(...);
+ * const p0 = new Cesium.Cartesian3(...);
+ * const p1 = new Cesium.Cartesian3(...);
  *
  * // find the intersection of the line segment from p0 to p1 and the tangent plane at origin.
- * var intersection = Cesium.IntersectionTests.lineSegmentPlane(p0, p1, plane);
+ * const intersection = Cesium.IntersectionTests.lineSegmentPlane(p0, p1, plane);
  */
 IntersectionTests.lineSegmentPlane = function (
   endPoint0,
@@ -871,16 +871,16 @@ IntersectionTests.lineSegmentPlane = function (
  * @returns {Object} An object with properties <code>positions</code> and <code>indices</code>, which are arrays that represent three triangles that do not cross the plane. (Undefined if no intersection exists)
  *
  * @example
- * var origin = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
- * var normal = ellipsoid.geodeticSurfaceNormal(origin);
- * var plane = Cesium.Plane.fromPointNormal(origin, normal);
+ * const origin = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+ * const normal = ellipsoid.geodeticSurfaceNormal(origin);
+ * const plane = Cesium.Plane.fromPointNormal(origin, normal);
  *
- * var p0 = new Cesium.Cartesian3(...);
- * var p1 = new Cesium.Cartesian3(...);
- * var p2 = new Cesium.Cartesian3(...);
+ * const p0 = new Cesium.Cartesian3(...);
+ * const p1 = new Cesium.Cartesian3(...);
+ * const p2 = new Cesium.Cartesian3(...);
  *
  * // convert the triangle composed of points (p0, p1, p2) to three triangles that don't cross the plane
- * var triangles = Cesium.IntersectionTests.trianglePlaneIntersection(p0, p1, p2, plane);
+ * const triangles = Cesium.IntersectionTests.trianglePlaneIntersection(p0, p1, p2, plane);
  */
 IntersectionTests.trianglePlaneIntersection = function (p0, p1, p2, plane) {
   //>>includeStart('debug', pragmas.debug);

@@ -77,14 +77,14 @@ function interpolateColors(p0, p1, color0, color1, minDistance, array, offset) {
  *
  * @example
  * // A polyline with two connected line segments
- * var polyline = new Cesium.SimplePolylineGeometry({
+ * const polyline = new Cesium.SimplePolylineGeometry({
  *   positions : Cesium.Cartesian3.fromDegreesArray([
  *     0.0, 0.0,
  *     5.0, 0.0,
  *     5.0, 5.0
  *   ])
  * });
- * var geometry = Cesium.SimplePolylineGeometry.createGeometry(polyline);
+ * const geometry = Cesium.SimplePolylineGeometry.createGeometry(polyline);
  */
 function SimplePolylineGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

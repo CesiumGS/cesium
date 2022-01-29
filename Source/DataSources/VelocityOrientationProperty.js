@@ -21,9 +21,9 @@ import VelocityVectorProperty from "./VelocityVectorProperty.js";
  *
  * @example
  * //Create an entity with position and orientation.
- * var position = new Cesium.SampledProperty();
+ * const position = new Cesium.SampledProperty();
  * position.addSamples(...);
- * var entity = viewer.entities.add({
+ * const entity = viewer.entities.add({
  *   position : position,
  *   orientation : new Cesium.VelocityOrientationProperty(position)
  * }));

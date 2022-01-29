@@ -54,7 +54,7 @@ function LayerInformation(layer) {
  *
  * @example
  * // Create Arctic DEM terrain with normals.
- * var viewer = new Cesium.Viewer('cesiumContainer', {
+ * const viewer = new Cesium.Viewer('cesiumContainer', {
  *     terrainProvider : new Cesium.CesiumTerrainProvider({
  *         url : Cesium.IonResource.fromAssetId(3956),
  *         requestVertexNormals : true

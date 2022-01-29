@@ -283,7 +283,7 @@ function createGeometryFromPositionsExtruded(
  *
  * @example
  * // 1. create a polygon outline from points
- * var polygon = new Cesium.PolygonOutlineGeometry({
+ * const polygon = new Cesium.PolygonOutlineGeometry({
  *   polygonHierarchy : new Cesium.PolygonHierarchy(
  *     Cesium.Cartesian3.fromDegreesArray([
  *       -72.0, 40.0,
@@ -294,10 +294,10 @@ function createGeometryFromPositionsExtruded(
  *     ])
  *   )
  * });
- * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygon);
+ * const geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygon);
  *
  * // 2. create a nested polygon with holes outline
- * var polygonWithHole = new Cesium.PolygonOutlineGeometry({
+ * const polygonWithHole = new Cesium.PolygonOutlineGeometry({
  *   polygonHierarchy : new Cesium.PolygonHierarchy(
  *     Cesium.Cartesian3.fromDegreesArray([
  *       -109.0, 30.0,
@@ -331,10 +331,10 @@ function createGeometryFromPositionsExtruded(
  *     )]
  *   )
  * });
- * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygonWithHole);
+ * const geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygonWithHole);
  *
  * // 3. create extruded polygon outline
- * var extrudedPolygon = new Cesium.PolygonOutlineGeometry({
+ * const extrudedPolygon = new Cesium.PolygonOutlineGeometry({
  *   polygonHierarchy : new Cesium.PolygonHierarchy(
  *     Cesium.Cartesian3.fromDegreesArray([
  *       -72.0, 40.0,
@@ -346,7 +346,7 @@ function createGeometryFromPositionsExtruded(
  *   ),
  *   extrudedHeight: 300000
  * });
- * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(extrudedPolygon);
+ * const geometry = Cesium.PolygonOutlineGeometry.createGeometry(extrudedPolygon);
  */
 function PolygonOutlineGeometry(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -522,7 +522,7 @@ PolygonOutlineGeometry.unpack = function (array, startingIndex, result) {
  *
  * @example
  * // create a polygon from points
- * var polygon = Cesium.PolygonOutlineGeometry.fromPositions({
+ * const polygon = Cesium.PolygonOutlineGeometry.fromPositions({
  *   positions : Cesium.Cartesian3.fromDegreesArray([
  *     -72.0, 40.0,
  *     -70.0, 35.0,
@@ -531,7 +531,7 @@ PolygonOutlineGeometry.unpack = function (array, startingIndex, result) {
  *     -68.0, 40.0
  *   ])
  * });
- * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygon);
+ * const geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygon);
  *
  * @see PolygonOutlineGeometry#createGeometry
  */

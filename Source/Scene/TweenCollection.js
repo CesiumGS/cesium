@@ -526,9 +526,9 @@ TweenCollection.prototype.contains = function (tween) {
  *
  * @example
  * // Output the duration of all the tweens in the collection.
- * var tweens = scene.tweens;
- * var length = tweens.length;
- * for (var i = 0; i < length; ++i) {
+ * const tweens = scene.tweens;
+ * const length = tweens.length;
+ * for (let i = 0; i < length; ++i) {
  *   console.log(tweens.get(i).duration);
  * }
  */

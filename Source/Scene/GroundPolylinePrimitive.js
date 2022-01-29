@@ -52,7 +52,7 @@ import StencilOperation from "./StencilOperation.js";
  * @example
  * // 1. Draw a polyline on terrain with a basic color material
  *
- * var instance = new Cesium.GeometryInstance({
+ * const instance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.GroundPolylineGeometry({
  *      positions : Cesium.Cartesian3.fromDegreesArray([
  *          -112.1340164450331, 36.05494287836128,
@@ -72,7 +72,7 @@ import StencilOperation from "./StencilOperation.js";
  * // Distance display conditions for polylines on terrain are based on an approximate terrain height
  * // instead of true terrain height.
  *
- * var instance = new Cesium.GeometryInstance({
+ * const instance2 = new Cesium.GeometryInstance({
  *   geometry : new Cesium.GroundPolylineGeometry({
  *      positions : Cesium.Cartesian3.fromDegreesArray([
  *          -112.1340164450331, 36.05494287836128,
@@ -90,7 +90,7 @@ import StencilOperation from "./StencilOperation.js";
  * });
  *
  * scene.groundPrimitives.add(new Cesium.GroundPolylinePrimitive({
- *   geometryInstances : instance,
+ *   geometryInstances : instance2,
  *   appearance : new Cesium.PolylineColorAppearance()
  * }));
  */
@@ -850,7 +850,7 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
  * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
  *
  * @example
- * var attributes = primitive.getGeometryInstanceAttributes('an id');
+ * const attributes = primitive.getGeometryInstanceAttributes('an id');
  * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
  * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
  */

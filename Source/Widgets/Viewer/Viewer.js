@@ -369,7 +369,7 @@ function enableVRUI(viewer, enabled) {
  *
  * @example
  * //Initialize the viewer widget with several custom options and mixins.
- * var viewer = new Cesium.Viewer('cesiumContainer', {
+ * const viewer = new Cesium.Viewer('cesiumContainer', {
  *     //Start in Columbus Viewer
  *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
  *     //Use Cesium World Terrain

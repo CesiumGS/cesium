@@ -48,7 +48,7 @@ const defaultCredit = new Credit(
  * @see UrlTemplateImageryProvider
  *
  * @example
- * var osm = new Cesium.OpenStreetMapImageryProvider({
+ * const osm = new Cesium.OpenStreetMapImageryProvider({
  *     url : 'https://a.tile.openstreetmap.org/'
  * });
  *

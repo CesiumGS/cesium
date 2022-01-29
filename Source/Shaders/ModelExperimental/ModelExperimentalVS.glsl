@@ -21,11 +21,13 @@ void main()
     #endif
 
 
-    #if defined(HAS_FEATURES) && defined(FEATURE_ID_ATTRIBUTE)
-    Feature feature;
-    featureStage(feature);
+    FeatureIds featureIds;
+    featureIdStage(featureIds, attributes);
+
+    #ifdef HAS_SELECTED_FEATURE_ID
+    SelectedFeature feature;
+    selectedFeatureIdStage(feature, featureIds);
     cpuStylingStage(attributes.positionMC, feature);
-    updateFeatureStruct(feature);
     #endif
 
     mat4 modelView = czm_modelView;
@@ -58,7 +60,7 @@ void main()
 
     #ifdef HAS_CUSTOM_VERTEX_SHADER
     czm_modelVertexOutput vsOutput = defaultVertexOutput(attributes.positionMC);
-    customShaderStage(vsOutput, attributes);
+    customShaderStage(vsOutput, attributes, featureIds);
     #endif
 
     // Compute the final position in each coordinate system needed.

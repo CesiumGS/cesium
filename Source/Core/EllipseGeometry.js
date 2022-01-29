@@ -908,13 +908,13 @@ function computeRectangle(
  *
  * @example
  * // Create an ellipse.
- * var ellipse = new Cesium.EllipseGeometry({
+ * const ellipse = new Cesium.EllipseGeometry({
  *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
  *   semiMajorAxis : 500000.0,
  *   semiMinorAxis : 300000.0,
  *   rotation : Cesium.Math.toRadians(60.0)
  * });
- * var geometry = Cesium.EllipseGeometry.createGeometry(ellipse);
+ * const geometry = Cesium.EllipseGeometry.createGeometry(ellipse);
  *
  * @see EllipseGeometry.createGeometry
  */

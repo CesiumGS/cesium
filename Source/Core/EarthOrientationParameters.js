@@ -46,7 +46,7 @@ import TimeStandard from "./TimeStandard.js";
  *
  * @example
  * // Loading the EOP data
- * var eop = new Cesium.EarthOrientationParameters({ url : 'Data/EOP.json' });
+ * const eop = new Cesium.EarthOrientationParameters({ url : 'Data/EOP.json' });
  * Cesium.Transforms.earthOrientationParameters = eop;
  *
  * @private

@@ -1,8 +1,24 @@
-// This stage is only applied for Feature ID vertex attributes.
-// If Feature ID textures are present, those are used in the fragment shader.
-void featureStage(inout Feature feature)
+vec2 computeSt(float featureId)
 {
-    float featureId = FEATURE_ID_ATTRIBUTE;
+    float stepX = model_textureStep.x;
+    float centerX = model_textureStep.y;
+
+    #ifdef MULTILINE_BATCH_TEXTURE
+    float stepY = model_textureStep.z;
+    float centerY = model_textureStep.w;
+
+    float xId = mod(featureId, model_textureDimensions.x); 
+    float yId = floor(featureId / model_textureDimensions.x);
+    
+    return vec2(centerX + (xId * stepX), centerY + (yId * stepY));
+    #else
+    return vec2(centerX + (featureId * stepX), 0.5);
+    #endif
+}
+
+void selectedFeatureIdStage(out SelectedFeature feature, FeatureIds featureIds)
+{   
+    float featureId = featureIds.SELECTED_FEATURE_ID;
 
     if (featureId < model_featuresLength)
     {

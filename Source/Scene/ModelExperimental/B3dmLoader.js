@@ -327,7 +327,7 @@ function processNode(node) {
         const featureIdAttribute = new FeatureIdAttribute();
         featureIdAttribute.propertyTableId = 0;
         featureIdAttribute.setIndex = 0;
-        primitive.featureIdAttributes.push(featureIdAttribute);
+        primitive.featureIds.push(featureIdAttribute);
       }
     }
   }

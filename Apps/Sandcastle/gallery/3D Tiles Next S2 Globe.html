@@ -105,8 +105,7 @@
           fragmentShaderText: [
             "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
             "{",
-            "  // NOTE: this is exposing internal details of the shader.",
-            "  float featureId = floor(texture2D(FEATURE_ID_TEXTURE, FEATURE_ID_TEXCOORD).FEATURE_ID_CHANNEL * 255.0 + 0.5);",
+            "  float featureId = fsInput.featureIds.featureId_0;",
             "  // Use cartesian coordinates but scale to be roughly [-1, 1]",
             "  vec3 positionWC = fsInput.attributes.positionWC / 6.3e6;",
             "  if (featureId == 60.0)",

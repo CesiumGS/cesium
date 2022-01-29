@@ -67,7 +67,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     return Cesium3DTilesTester.resolvesReadyPromise(scene, withBatchTableUrl);
   });
 
-  it("resolves readyPromise with I3DM", function () {
+  it("resolves readyPromise with i3dm", function () {
     if (!scene.context.instancedArrays) {
       return;
     }

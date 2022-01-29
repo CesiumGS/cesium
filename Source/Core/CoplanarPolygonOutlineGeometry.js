@@ -60,7 +60,7 @@ function createGeometryFromPositions(positions) {
  * @see CoplanarPolygonOutlineGeometry.createGeometry
  *
  * @example
- * var polygonOutline = new Cesium.CoplanarPolygonOutlineGeometry({
+ * const polygonOutline = new Cesium.CoplanarPolygonOutlineGeometry({
  *   positions : Cesium.Cartesian3.fromDegreesArrayHeights([
  *      -90.0, 30.0, 0.0,
  *      -90.0, 30.0, 1000.0,
@@ -68,7 +68,7 @@ function createGeometryFromPositions(positions) {
  *      -80.0, 30.0, 0.0
  *   ])
  * });
- * var geometry = Cesium.CoplanarPolygonOutlineGeometry.createGeometry(polygonOutline);
+ * const geometry = Cesium.CoplanarPolygonOutlineGeometry.createGeometry(polygonOutline);
  */
 function CoplanarPolygonOutlineGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

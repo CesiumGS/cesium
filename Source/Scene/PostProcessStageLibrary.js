@@ -226,11 +226,11 @@ PostProcessStageLibrary.isDepthOfFieldSupported = function (scene) {
  *
  * @example
  * // multiple silhouette effects
- * var yellowEdge = Cesium.PostProcessLibrary.createEdgeDetectionStage();
+ * const yellowEdge = Cesium.PostProcessLibrary.createEdgeDetectionStage();
  * yellowEdge.uniforms.color = Cesium.Color.YELLOW;
  * yellowEdge.selected = [feature0];
  *
- * var greenEdge = Cesium.PostProcessLibrary.createEdgeDetectionStage();
+ * const greenEdge = Cesium.PostProcessLibrary.createEdgeDetectionStage();
  * greenEdge.uniforms.color = Cesium.Color.LIME;
  * greenEdge.selected = [feature1];
  *

@@ -25,9 +25,9 @@ import Matrix4 from "./Matrix4.js";
  * @param {Number} [options.far=500000000.0] The far clipping plane distance.
  *
  * @example
- * var maxRadii = ellipsoid.maximumRadius;
+ * const maxRadii = ellipsoid.maximumRadius;
  *
- * var frustum = new Cesium.OrthographicOffCenterFrustum();
+ * const frustum = new Cesium.OrthographicOffCenterFrustum();
  * frustum.right = maxRadii * Cesium.Math.PI;
  * frustum.left = -c.frustum.right;
  * frustum.top = c.frustum.right * (canvas.clientHeight / canvas.clientWidth);
@@ -176,8 +176,8 @@ const negateScratch = new Cartesian3();
  *
  * @example
  * // Check if a bounding volume intersects the frustum.
- * var cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
- * var intersect = cullingVolume.computeVisibility(boundingVolume);
+ * const cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
+ * const intersect = cullingVolume.computeVisibility(boundingVolume);
  */
 OrthographicOffCenterFrustum.prototype.computeCullingVolume = function (
   position,
@@ -307,7 +307,7 @@ OrthographicOffCenterFrustum.prototype.computeCullingVolume = function (
  * @example
  * // Example 1
  * // Get the width and height of a pixel.
- * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, scene.pixelRatio, new Cesium.Cartesian2());
+ * const pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, scene.pixelRatio, new Cesium.Cartesian2());
  */
 OrthographicOffCenterFrustum.prototype.getPixelDimensions = function (
   drawingBufferWidth,

@@ -160,7 +160,8 @@ ModelExperimental3DTileContent.prototype.applyDebugSettings = function (
 };
 
 ModelExperimental3DTileContent.prototype.applyStyle = function (style) {
-  this._model.applyStyle(style);
+  // the setter will call model.applyStyle()
+  this._model.style = style;
 };
 
 ModelExperimental3DTileContent.prototype.update = function (
@@ -175,6 +176,8 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.modelMatrix = tile.computedTransform;
   model.customShader = tileset.customShader;
   model.pointCloudShading = tileset.pointCloudShading;
+  model.featureIdIndex = tileset.featureIdIndex;
+  model.instanceFeatureIdIndex = tileset.instanceFeatureIdIndex;
 
   model.update(frameState);
 };

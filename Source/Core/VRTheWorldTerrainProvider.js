@@ -34,7 +34,7 @@ function DataRectangle(rectangle, maxLevel) {
  *
  *
  * @example
- * var terrainProvider = new Cesium.VRTheWorldTerrainProvider({
+ * const terrainProvider = new Cesium.VRTheWorldTerrainProvider({
  *   url : 'https://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/'
  * });
  * viewer.terrainProvider = terrainProvider;

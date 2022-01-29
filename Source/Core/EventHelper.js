@@ -11,7 +11,7 @@ import DeveloperError from "./DeveloperError.js";
  *
  *
  * @example
- * var helper = new Cesium.EventHelper();
+ * const helper = new Cesium.EventHelper();
  *
  * helper.add(someObject.event, listener1, this);
  * helper.add(otherObject.event, listener2, this);

@@ -13,7 +13,7 @@ import DeveloperError from "./DeveloperError.js";
  *
  * @example
  * //absolute Uri will be "https://test.com/awesome.png";
- * var absoluteUri = Cesium.getAbsoluteUri('awesome.png', 'https://test.com');
+ * const absoluteUri = Cesium.getAbsoluteUri('awesome.png', 'https://test.com');
  */
 function getAbsoluteUri(relative, base) {
   let documentObject;

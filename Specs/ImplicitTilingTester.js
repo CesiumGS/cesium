@@ -51,7 +51,7 @@ export default function ImplicitTilingTester() {}
  * @return {GeneratedSubtree} The procedurally generated subtree and an external buffer.
  *
  * @example
- *  var subtreeDescription = {
+ *  const subtreeDescription = {
  *    tileAvailability: {
  *      descriptor: 1,
  *      lengthBits: 5,
@@ -73,7 +73,7 @@ export default function ImplicitTilingTester() {}
  *      isInternal: false,
  *    },
  *  };
- *  var results = ImplicitTilingTester.generateSubtreeBuffers(
+ *  const results = ImplicitTilingTester.generateSubtreeBuffers(
  *    subtreeDescription
  *  );
  *

@@ -265,7 +265,7 @@ function appendCss() {
  * @constructor
  *
  * @example
- * var creditDisplay = new Cesium.CreditDisplay(creditContainer);
+ * const creditDisplay = new Cesium.CreditDisplay(creditContainer);
  */
 function CreditDisplay(container, delimiter, viewport) {
   //>>includeStart('debug', pragmas.debug);

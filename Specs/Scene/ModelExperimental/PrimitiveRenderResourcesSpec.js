@@ -50,8 +50,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
       count: 6,
     },
     primitiveType: PrimitiveType.TRIANGLES,
-    featureIdAttributes: [],
-    featureIdTextures: [],
+    featureIds: [],
     attributes: [
       {
         semantic: VertexAttributeSemantic.POSITION,
@@ -66,7 +65,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
 
   const primitiveWithoutIndices = {
     primitiveType: PrimitiveType.POINTS,
-    featureIdAttributes: [],
+    featureIds: [],
     featureIdTextures: [],
     attributes: [
       {

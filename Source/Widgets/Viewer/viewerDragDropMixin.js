@@ -30,7 +30,7 @@ import getElement from "../getElement.js";
  *
  * @example
  * // Add basic drag and drop support and pop up an alert window on error.
- * var viewer = new Cesium.Viewer('cesiumContainer');
+ * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.extend(Cesium.viewerDragDropMixin);
  * viewer.dropError.addEventListener(function(viewerArg, source, error) {
  *     window.alert('Error processing ' + source + ':' + error);
