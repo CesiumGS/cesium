@@ -225,7 +225,7 @@ function Scene(options) {
   this._useOIT = defaultValue(options.orderIndependentTranslucency, true);
   this._executeOITFunction = undefined;
 
-  this._depthPlane = new DepthPlane();
+  this._depthPlane = new DepthPlane(options.depthPlaneEllipsoidOffset);
 
   this._clearColorCommand = new ClearCommand({
     color: new Color(),

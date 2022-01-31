@@ -504,6 +504,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     mapMode2D: options.mapMode2D,
     requestRenderMode: options.requestRenderMode,
     maximumRenderTimeChange: options.maximumRenderTimeChange,
+    depthPlaneEllipsoidOffset: options.depthPlaneEllipsoidOffset,
   });
 
   let dataSourceCollection = options.dataSources;
