@@ -3,7 +3,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 /**
  * @private
  */
-var RenderbufferFormat = {
+const RenderbufferFormat = {
   RGBA4: WebGLConstants.RGBA4,
   RGB5_A1: WebGLConstants.RGB5_A1,
   RGB565: WebGLConstants.RGB565,

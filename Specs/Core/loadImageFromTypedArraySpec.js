@@ -3,7 +3,7 @@ import { Resource } from "../../Source/Cesium.js";
 import { when } from "../../Source/Cesium.js";
 
 describe("Core/loadImageFromTypedArray", function () {
-  var supportsImageBitmapOptions;
+  let supportsImageBitmapOptions;
 
   beforeAll(function () {
     return Resource.supportsImageBitmapOptions().then(function (result) {
@@ -14,7 +14,7 @@ describe("Core/loadImageFromTypedArray", function () {
   it("can load an image", function () {
     return Resource.fetchArrayBuffer("./Data/Images/Blue10x10.png").then(
       function (arrayBuffer) {
-        var options = {
+        const options = {
           uint8Array: new Uint8Array(arrayBuffer),
           format: "image/png",
         };
@@ -32,13 +32,13 @@ describe("Core/loadImageFromTypedArray", function () {
       return;
     }
 
-    var options = {
+    const options = {
       uint8Array: new Uint8Array([67, 101, 115, 105, 117, 109]), // This is an invalid PNG.
       format: "image/png",
       flipY: true,
     };
     spyOn(window, "createImageBitmap").and.returnValue(when.resolve({}));
-    var blob = new Blob([options.uint8Array], {
+    const blob = new Blob([options.uint8Array], {
       type: options.format,
     });
 
@@ -52,6 +52,7 @@ describe("Core/loadImageFromTypedArray", function () {
           expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
             imageOrientation: "flipY",
             premultiplyAlpha: "none",
+            colorSpaceConversion: "default",
           });
 
           window.createImageBitmap.calls.reset();
@@ -62,6 +63,50 @@ describe("Core/loadImageFromTypedArray", function () {
           expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
             imageOrientation: "none",
             premultiplyAlpha: "none",
+            colorSpaceConversion: "default",
+          });
+        });
+    });
+  });
+
+  it("stores colorSpaceConversion correctly", function () {
+    if (!supportsImageBitmapOptions) {
+      return;
+    }
+
+    const options = {
+      uint8Array: new Uint8Array([67, 101, 115, 105, 117, 109]), // This is an invalid PNG.
+      format: "image/png",
+      flipY: false,
+      skipColorSpaceConversion: true,
+    };
+    spyOn(window, "createImageBitmap").and.returnValue(when.resolve({}));
+    const blob = new Blob([options.uint8Array], {
+      type: options.format,
+    });
+
+    return Resource.supportsImageBitmapOptions().then(function (result) {
+      if (!result) {
+        return;
+      }
+
+      return loadImageFromTypedArray(options)
+        .then(function () {
+          expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
+            imageOrientation: "none",
+            premultiplyAlpha: "none",
+            colorSpaceConversion: "none",
+          });
+
+          window.createImageBitmap.calls.reset();
+          options.skipColorSpaceConversion = false;
+          return loadImageFromTypedArray(options);
+        })
+        .then(function () {
+          expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
+            imageOrientation: "none",
+            premultiplyAlpha: "none",
+            colorSpaceConversion: "default",
           });
         });
     });
@@ -78,7 +123,7 @@ describe("Core/loadImageFromTypedArray", function () {
     spyOn(window, "createImageBitmap").and.callThrough();
     return Resource.fetchArrayBuffer("./Data/Images/Blue10x10.png").then(
       function (arrayBuffer) {
-        var options = {
+        const options = {
           uint8Array: new Uint8Array(arrayBuffer),
           format: "image/png",
         };
@@ -93,7 +138,7 @@ describe("Core/loadImageFromTypedArray", function () {
   });
 
   it("can not load an invalid image", function () {
-    var options = {
+    const options = {
       uint8Array: new Uint8Array([67, 101, 115, 105, 117, 109]), // This is an invalid PNG.
       format: "image/png",
     };

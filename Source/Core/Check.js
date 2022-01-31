@@ -6,7 +6,7 @@ import DeveloperError from "./DeveloperError.js";
  * or meet specified conditions
  * @private
  */
-var Check = {};
+const Check = {};
 
 /**
  * Contains type checking functions, all using the typeof operator
@@ -166,7 +166,7 @@ Check.typeOf.number.greaterThanOrEquals = function (name, test, limit) {
     throw new DeveloperError(
       "Expected " +
         name +
-        " to be greater than or equal to" +
+        " to be greater than or equal to " +
         limit +
         ", actual value was " +
         test
@@ -200,6 +200,21 @@ Check.typeOf.bool = function (name, test) {
   if (typeof test !== "boolean") {
     throw new DeveloperError(
       getFailedTypeErrorMessage(typeof test, "boolean", name)
+    );
+  }
+};
+
+/**
+ * Throws if test is not typeof 'bigint'
+ *
+ * @param {String} name The name of the variable being tested
+ * @param {*} test The value to test
+ * @exception {DeveloperError} test must be typeof 'bigint'
+ */
+Check.typeOf.bigint = function (name, test) {
+  if (typeof test !== "bigint") {
+    throw new DeveloperError(
+      getFailedTypeErrorMessage(typeof test, "bigint", name)
     );
   }
 };

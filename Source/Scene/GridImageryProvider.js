@@ -5,27 +5,27 @@ import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 import when from "../ThirdParty/when.js";
 
-var defaultColor = new Color(1.0, 1.0, 1.0, 0.4);
-var defaultGlowColor = new Color(0.0, 1.0, 0.0, 0.05);
-var defaultBackgroundColor = new Color(0.0, 0.5, 0.0, 0.2);
+const defaultColor = new Color(1.0, 1.0, 1.0, 0.4);
+const defaultGlowColor = new Color(0.0, 1.0, 0.0, 0.05);
+const defaultBackgroundColor = new Color(0.0, 0.5, 0.0, 0.2);
 
 /**
  * @typedef {Object} GridImageryProvider.ConstructorOptions
  *
  * Initialization options for the GridImageryProvider constructor
  *
- * @param {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
- * @param {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+ * @property {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
  *                    parameter is specified, the WGS84 ellipsoid is used.
- * @param {Number} [cells=8] The number of grids cells.
- * @param {Color} [color=Color(1.0, 1.0, 1.0, 0.4)] The color to draw grid lines.
- * @param {Color} [glowColor=Color(0.0, 1.0, 0.0, 0.05)] The color to draw glow for grid lines.
- * @param {Number} [glowWidth=6] The width of lines used for rendering the line glow effect.
- * @param {Color} [backgroundColor=Color(0.0, 0.5, 0.0, 0.2)] Background fill color.
- * @param {Number} [tileWidth=256] The width of the tile for level-of-detail selection purposes.
- * @param {Number} [tileHeight=256] The height of the tile for level-of-detail selection purposes.
- * @param {Number} [canvasSize=256] The size of the canvas used for rendering.
+ * @property {Number} [cells=8] The number of grids cells.
+ * @property {Color} [color=Color(1.0, 1.0, 1.0, 0.4)] The color to draw grid lines.
+ * @property {Color} [glowColor=Color(0.0, 1.0, 0.0, 0.05)] The color to draw glow for grid lines.
+ * @property {Number} [glowWidth=6] The width of lines used for rendering the line glow effect.
+ * @property {Color} [backgroundColor=Color(0.0, 0.5, 0.0, 0.2)] Background fill color.
+ * @property {Number} [tileWidth=256] The width of the tile for level-of-detail selection purposes.
+ * @property {Number} [tileHeight=256] The height of the tile for level-of-detail selection purposes.
+ * @property {Number} [canvasSize=256] The size of the canvas used for rendering.
  */
 
 /**
@@ -330,11 +330,11 @@ Object.defineProperties(GridImageryProvider.prototype, {
  * Draws a grid of lines into a canvas.
  */
 GridImageryProvider.prototype._drawGrid = function (context) {
-  var minPixel = 0;
-  var maxPixel = this._canvasSize;
-  for (var x = 0; x <= this._cells; ++x) {
-    var nx = x / this._cells;
-    var val = 1 + nx * (maxPixel - 1);
+  const minPixel = 0;
+  const maxPixel = this._canvasSize;
+  for (let x = 0; x <= this._cells; ++x) {
+    const nx = x / this._cells;
+    const val = 1 + nx * (maxPixel - 1);
 
     context.moveTo(val, minPixel);
     context.lineTo(val, maxPixel);
@@ -348,21 +348,21 @@ GridImageryProvider.prototype._drawGrid = function (context) {
  * Render a grid into a canvas with background and glow
  */
 GridImageryProvider.prototype._createGridCanvas = function () {
-  var canvas = document.createElement("canvas");
+  const canvas = document.createElement("canvas");
   canvas.width = this._canvasSize;
   canvas.height = this._canvasSize;
-  var minPixel = 0;
-  var maxPixel = this._canvasSize;
+  const minPixel = 0;
+  const maxPixel = this._canvasSize;
 
-  var context = canvas.getContext("2d");
+  const context = canvas.getContext("2d");
 
   // Fill the background
-  var cssBackgroundColor = this._backgroundColor.toCssColorString();
+  const cssBackgroundColor = this._backgroundColor.toCssColorString();
   context.fillStyle = cssBackgroundColor;
   context.fillRect(minPixel, minPixel, maxPixel, maxPixel);
 
   // Glow for grid lines
-  var cssGlowColor = this._glowColor.toCssColorString();
+  const cssGlowColor = this._glowColor.toCssColorString();
   context.strokeStyle = cssGlowColor;
   // Wide
   context.lineWidth = this._glowWidth;
@@ -374,7 +374,7 @@ GridImageryProvider.prototype._createGridCanvas = function () {
   this._drawGrid(context);
 
   // Grid lines
-  var cssColor = this._color.toCssColorString();
+  const cssColor = this._color.toCssColorString();
   // Border
   context.strokeStyle = cssColor;
   context.lineWidth = 2;

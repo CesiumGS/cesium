@@ -93,13 +93,13 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
           shadows: true,
         });
 
-        var scene = viewer.scene;
-        var model;
+        const scene = viewer.scene;
+        let model;
 
         function getColorBlendMode(colorBlendMode) {
           return Cesium.ColorBlendMode[colorBlendMode.toUpperCase()];
@@ -110,7 +110,7 @@
         }
 
         // The viewModel tracks the state of our mini application.
-        var viewModel = {
+        const viewModel = {
           color: "White",
           colors: ["White", "Red", "Green", "Blue", "Yellow", "Gray"],
           alpha: 1.0,
@@ -124,7 +124,7 @@
         Cesium.knockout.track(viewModel);
 
         // Bind the viewModel to the DOM elements of the UI that call for it.
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
         Cesium.knockout
@@ -148,7 +148,7 @@
         Cesium.knockout
           .getObservable(viewModel, "colorBlendMode")
           .subscribe(function (newValue) {
-            var colorBlendMode = getColorBlendMode(newValue);
+            const colorBlendMode = getColorBlendMode(newValue);
             model.colorBlendMode = colorBlendMode;
             viewModel.colorBlendAmountEnabled =
               colorBlendMode === Cesium.ColorBlendMode.MIX;
@@ -165,14 +165,14 @@
           heading = Cesium.defaultValue(heading, 0.0);
           pitch = Cesium.defaultValue(pitch, 0.0);
           roll = Cesium.defaultValue(roll, 0.0);
-          var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+          const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
 
-          var origin = Cesium.Cartesian3.fromDegrees(
+          const origin = Cesium.Cartesian3.fromDegrees(
             -123.0744619,
             44.0503706,
             height
           );
-          var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+          const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
             origin,
             hpr
           );
@@ -202,22 +202,22 @@
                 loop: Cesium.ModelAnimationLoop.REPEAT,
               });
 
-              var camera = viewer.camera;
+              const camera = viewer.camera;
 
               // Zoom to model
-              var controller = scene.screenSpaceCameraController;
-              var r =
+              const controller = scene.screenSpaceCameraController;
+              const r =
                 2.0 *
                 Math.max(model.boundingSphere.radius, camera.frustum.near);
               controller.minimumZoomDistance = r * 0.5;
 
-              var center = Cesium.Matrix4.multiplyByPoint(
+              const center = Cesium.Matrix4.multiplyByPoint(
                 model.modelMatrix,
                 model.boundingSphere.center,
                 new Cesium.Cartesian3()
               );
-              var heading = Cesium.Math.toRadians(230.0);
-              var pitch = Cesium.Math.toRadians(-20.0);
+              const heading = Cesium.Math.toRadians(230.0);
+              const pitch = Cesium.Math.toRadians(-20.0);
               camera.lookAt(
                 center,
                 new Cesium.HeadingPitchRange(heading, pitch, r * 2.0)
@@ -228,9 +228,9 @@
             });
         }
 
-        var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+        const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
         handler.setInputAction(function (movement) {
-          var pick = scene.pick(movement.endPosition);
+          const pick = scene.pick(movement.endPosition);
           if (
             Cesium.defined(pick) &&
             Cesium.defined(pick.node) &&
@@ -245,16 +245,32 @@
 
         ///////////////////////////////////////////////////////////////////////////
 
-        var options = [
+        const options = [
           {
             text: "Aircraft",
             onselect: function () {
-              var height = 5000.0;
-              var heading = 0.0;
-              var pitch = Cesium.Math.toRadians(10.0);
-              var roll = Cesium.Math.toRadians(-20.0);
+              const height = 5000.0;
+              const heading = 0.0;
+              const pitch = Cesium.Math.toRadians(10.0);
+              const roll = Cesium.Math.toRadians(-20.0);
               createModel(
                 "../../SampleData/models/CesiumAir/Cesium_Air.glb",
+                height,
+                heading,
+                pitch,
+                roll
+              );
+            },
+          },
+          {
+            text: "Drone",
+            onselect: function () {
+              const height = 150.0;
+              const heading = 0.0;
+              const pitch = Cesium.Math.toRadians(10.0);
+              const roll = Cesium.Math.toRadians(-20.0);
+              createModel(
+                "../../SampleData/models/CesiumDrone/CesiumDrone.glb",
                 height,
                 heading,
                 pitch,

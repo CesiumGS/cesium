@@ -1,7 +1,7 @@
 /**
  * @private
  */
-var ImageryState = {
+const ImageryState = {
   UNLOADED: 0,
   TRANSITIONING: 1,
   RECEIVED: 2,

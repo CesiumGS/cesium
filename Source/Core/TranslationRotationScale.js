@@ -3,9 +3,9 @@ import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Quaternion from "./Quaternion.js";
 
-var defaultScale = new Cartesian3(1.0, 1.0, 1.0);
-var defaultTranslation = Cartesian3.ZERO;
-var defaultRotation = Quaternion.IDENTITY;
+const defaultScale = new Cartesian3(1.0, 1.0, 1.0);
+const defaultTranslation = Cartesian3.ZERO;
+const defaultRotation = Quaternion.IDENTITY;
 
 /**
  * An affine transformation defined by a translation, rotation, and scale.

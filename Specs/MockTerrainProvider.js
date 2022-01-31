@@ -33,14 +33,14 @@ MockTerrainProvider.prototype.requestTileGeometry = function (
   level,
   request
 ) {
-  var willSucceed = this._requestTileGeometryWillSucceed[
+  const willSucceed = this._requestTileGeometryWillSucceed[
     createTileKey(x, y, level)
   ];
   if (willSucceed === undefined) {
     return undefined; // defer by default
   }
 
-  var that = this;
+  const that = this;
   return runLater(function () {
     if (willSucceed === true) {
       return createTerrainData(that, x, y, level, false);
@@ -215,20 +215,20 @@ MockTerrainProvider.prototype.willBeUnknownAvailability = function (
 };
 
 function createTerrainData(terrainProvider, x, y, level, upsampled) {
-  var terrainData =
+  let terrainData =
     terrainProvider._requestTileGeometryWillSucceedWith[
       createTileKey(x, y, level)
     ];
 
   if (!defined(terrainData)) {
-    var options = {
+    const options = {
       width: 5,
       height: 5,
       buffer: new Float32Array(25),
       createdByUpsampling: upsampled,
     };
 
-    var willHaveWaterMask =
+    const willHaveWaterMask =
       terrainProvider._willHaveWaterMask[createTileKey(x, y, level)];
     if (defined(willHaveWaterMask)) {
       if (willHaveWaterMask.includeLand && willHaveWaterMask.includeWater) {
@@ -249,7 +249,7 @@ function createTerrainData(terrainProvider, x, y, level, upsampled) {
     terrainData = new HeightmapTerrainData(options);
   }
 
-  var originalUpsample = terrainData.upsample;
+  const originalUpsample = terrainData.upsample;
   terrainData.upsample = function (
     tilingScheme,
     thisX,
@@ -258,7 +258,7 @@ function createTerrainData(terrainProvider, x, y, level, upsampled) {
     descendantX,
     descendantY
   ) {
-    var willSucceed =
+    const willSucceed =
       terrainProvider._upsampleWillSucceed[
         createTileKey(descendantX, descendantY, thisLevel + 1)
       ];
@@ -275,9 +275,13 @@ function createTerrainData(terrainProvider, x, y, level, upsampled) {
     });
   };
 
-  var originalCreateMesh = terrainData.createMesh;
-  terrainData.createMesh = function (tilingScheme, x, y, level) {
-    var willSucceed =
+  const originalCreateMesh = terrainData.createMesh;
+  terrainData.createMesh = function (options) {
+    const x = options.x;
+    const y = options.y;
+    const level = options.level;
+
+    const willSucceed =
       terrainProvider._createMeshWillSucceed[createTileKey(x, y, level)];
     if (willSucceed === undefined) {
       return undefined; // defer by default
@@ -291,7 +295,7 @@ function createTerrainData(terrainProvider, x, y, level, upsampled) {
       });
     }
 
-    var args = arguments;
+    const args = arguments;
 
     return runLater(function () {
       return when(willSucceed).then(function () {

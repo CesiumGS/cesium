@@ -35,17 +35,17 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
-        var tileset = new Cesium.Cesium3DTileset({
+        const tileset = new Cesium.Cesium3DTileset({
           url: Cesium.IonResource.fromAssetId(40866),
         });
         viewer.scene.primitives.add(tileset);
 
         tileset.readyPromise.then(function () {
-          var boundingSphere = tileset.boundingSphere;
+          const boundingSphere = tileset.boundingSphere;
           viewer.camera.viewBoundingSphere(
             boundingSphere,
             new Cesium.HeadingPitchRange(
@@ -57,7 +57,7 @@
           viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         });
 
-        var polygon = viewer.entities.add({
+        const polygon = viewer.entities.add({
           polygon: {
             hierarchy: new Cesium.PolygonHierarchy(
               Cesium.Cartesian3.fromRadiansArray([
@@ -76,7 +76,7 @@
           },
         });
 
-        var polyline = viewer.entities.add({
+        const polyline = viewer.entities.add({
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArray([
               -75.60217330403601,
@@ -112,7 +112,7 @@
           },
         });
 
-        var classificationOptions = [
+        const classificationOptions = [
           {
             text: "Classify Both",
             onselect: function () {
@@ -142,7 +142,7 @@
           },
         ];
 
-        var materialOptions = [
+        const materialOptions = [
           {
             text: "Red Material",
             onselect: function () {
@@ -152,6 +152,15 @@
           {
             text: "Textured Material",
             onselect: function () {
+              if (
+                !Cesium.Entity.supportsMaterialsforEntitiesOnTerrain(
+                  viewer.scene
+                )
+              ) {
+                window.alert(
+                  "Terrain Entity materials are not supported on this platform"
+                );
+              }
               polygon.polygon.material = "../images/Cesium_Logo_Color.jpg";
             },
           },

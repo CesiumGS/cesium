@@ -185,8 +185,8 @@ Cartesian4.packArray = function (array, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  var length = array.length;
-  var resultLength = length * 4;
+  const length = array.length;
+  const resultLength = length * 4;
   if (!defined(result)) {
     result = new Array(resultLength);
   } else if (!Array.isArray(result) && result.length !== resultLength) {
@@ -197,7 +197,7 @@ Cartesian4.packArray = function (array, result) {
     result.length = resultLength;
   }
 
-  for (var i = 0; i < length; ++i) {
+  for (let i = 0; i < length; ++i) {
     Cartesian4.pack(array[i], result, i * 4);
   }
   return result;
@@ -219,15 +219,15 @@ Cartesian4.unpackArray = function (array, result) {
   }
   //>>includeEnd('debug');
 
-  var length = array.length;
+  const length = array.length;
   if (!defined(result)) {
     result = new Array(length / 4);
   } else {
     result.length = length / 4;
   }
 
-  for (var i = 0; i < length; i += 4) {
-    var index = i / 4;
+  for (let i = 0; i < length; i += 4) {
+    const index = i / 4;
     result[index] = Cartesian4.unpack(array, i, result[index]);
   }
   return result;
@@ -244,12 +244,12 @@ Cartesian4.unpackArray = function (array, result) {
  *
  * @example
  * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0)
- * var v = [1.0, 2.0, 3.0, 4.0];
- * var p = Cesium.Cartesian4.fromArray(v);
+ * const v = [1.0, 2.0, 3.0, 4.0];
+ * const p = Cesium.Cartesian4.fromArray(v);
  *
  * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0) using an offset into an array
- * var v2 = [0.0, 0.0, 1.0, 2.0, 3.0, 4.0];
- * var p2 = Cesium.Cartesian4.fromArray(v2, 2);
+ * const v2 = [0.0, 0.0, 1.0, 2.0, 3.0, 4.0];
+ * const p2 = Cesium.Cartesian4.fromArray(v2, 2);
  */
 Cartesian4.fromArray = Cartesian4.unpack;
 
@@ -356,7 +356,7 @@ Cartesian4.magnitude = function (cartesian) {
   return Math.sqrt(Cartesian4.magnitudeSquared(cartesian));
 };
 
-var distanceScratch = new Cartesian4();
+const distanceScratch = new Cartesian4();
 
 /**
  * Computes the 4-space distance between two points.
@@ -367,7 +367,7 @@ var distanceScratch = new Cartesian4();
  *
  * @example
  * // Returns 1.0
- * var d = Cesium.Cartesian4.distance(
+ * const d = Cesium.Cartesian4.distance(
  *   new Cesium.Cartesian4(1.0, 0.0, 0.0, 0.0),
  *   new Cesium.Cartesian4(2.0, 0.0, 0.0, 0.0));
  */
@@ -391,7 +391,7 @@ Cartesian4.distance = function (left, right) {
  *
  * @example
  * // Returns 4.0, not 2.0
- * var d = Cesium.Cartesian4.distance(
+ * const d = Cesium.Cartesian4.distance(
  *   new Cesium.Cartesian4(1.0, 0.0, 0.0, 0.0),
  *   new Cesium.Cartesian4(3.0, 0.0, 0.0, 0.0));
  */
@@ -418,7 +418,7 @@ Cartesian4.normalize = function (cartesian, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var magnitude = Cartesian4.magnitude(cartesian);
+  const magnitude = Cartesian4.magnitude(cartesian);
 
   result.x = cartesian.x / magnitude;
   result.y = cartesian.y / magnitude;
@@ -629,7 +629,7 @@ Cartesian4.abs = function (cartesian, result) {
   return result;
 };
 
-var lerpScratch = new Cartesian4();
+const lerpScratch = new Cartesian4();
 /**
  * Computes the linear interpolation or extrapolation at t using the provided cartesians.
  *
@@ -652,7 +652,7 @@ Cartesian4.lerp = function (start, end, t, result) {
   return Cartesian4.add(lerpScratch, result, result);
 };
 
-var mostOrthogonalAxisScratch = new Cartesian4();
+const mostOrthogonalAxisScratch = new Cartesian4();
 /**
  * Returns the axis that is most orthogonal to the provided Cartesian.
  *
@@ -666,7 +666,7 @@ Cartesian4.mostOrthogonalAxis = function (cartesian, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var f = Cartesian4.normalize(cartesian, mostOrthogonalAxisScratch);
+  const f = Cartesian4.normalize(cartesian, mostOrthogonalAxisScratch);
   Cartesian4.abs(f, f);
 
   if (f.x <= f.y) {
@@ -785,6 +785,14 @@ Cartesian4.equalsEpsilon = function (
 Cartesian4.ZERO = Object.freeze(new Cartesian4(0.0, 0.0, 0.0, 0.0));
 
 /**
+ * An immutable Cartesian4 instance initialized to (1.0, 1.0, 1.0, 1.0).
+ *
+ * @type {Cartesian4}
+ * @constant
+ */
+Cartesian4.ONE = Object.freeze(new Cartesian4(1.0, 1.0, 1.0, 1.0));
+
+/**
  * An immutable Cartesian4 instance initialized to (1.0, 0.0, 0.0, 0.0).
  *
  * @type {Cartesian4}
@@ -869,21 +877,18 @@ Cartesian4.prototype.toString = function () {
   return "(" + this.x + ", " + this.y + ", " + this.z + ", " + this.w + ")";
 };
 
-var scratchFloatArray = new Float32Array(1);
-var SHIFT_LEFT_8 = 256.0;
-var SHIFT_LEFT_16 = 65536.0;
-var SHIFT_LEFT_24 = 16777216.0;
+// scratchU8Array and scratchF32Array are views into the same buffer
+const scratchF32Array = new Float32Array(1);
+const scratchU8Array = new Uint8Array(scratchF32Array.buffer);
 
-var SHIFT_RIGHT_8 = 1.0 / SHIFT_LEFT_8;
-var SHIFT_RIGHT_16 = 1.0 / SHIFT_LEFT_16;
-var SHIFT_RIGHT_24 = 1.0 / SHIFT_LEFT_24;
-
-var BIAS = 38.0;
+const testU32 = new Uint32Array([0x11223344]);
+const testU8 = new Uint8Array(testU32.buffer);
+const littleEndian = testU8[0] === 0x44;
 
 /**
  * Packs an arbitrary floating point value to 4 values representable using uint8.
  *
- * @param {Number} value A floating point number
+ * @param {Number} value A floating point number.
  * @param {Cartesian4} [result] The Cartesian4 that will contain the packed float.
  * @returns {Cartesian4} A Cartesian4 representing the float packed to values in x, y, z, and w.
  */
@@ -896,34 +901,21 @@ Cartesian4.packFloat = function (value, result) {
     result = new Cartesian4();
   }
 
-  // Force the value to 32 bit precision
-  scratchFloatArray[0] = value;
-  value = scratchFloatArray[0];
+  // scratchU8Array and scratchF32Array are views into the same buffer
+  scratchF32Array[0] = value;
 
-  if (value === 0.0) {
-    return Cartesian4.clone(Cartesian4.ZERO, result);
-  }
-
-  var sign = value < 0.0 ? 1.0 : 0.0;
-  var exponent;
-
-  if (!isFinite(value)) {
-    value = 0.1;
-    exponent = BIAS;
+  if (littleEndian) {
+    result.x = scratchU8Array[0];
+    result.y = scratchU8Array[1];
+    result.z = scratchU8Array[2];
+    result.w = scratchU8Array[3];
   } else {
-    value = Math.abs(value);
-    exponent = Math.floor(CesiumMath.logBase(value, 10)) + 1.0;
-    value = value / Math.pow(10.0, exponent);
+    // convert from big-endian to little-endian
+    result.x = scratchU8Array[3];
+    result.y = scratchU8Array[2];
+    result.z = scratchU8Array[1];
+    result.w = scratchU8Array[0];
   }
-
-  var temp = value * SHIFT_LEFT_8;
-  result.x = Math.floor(temp);
-  temp = (temp - result.x) * SHIFT_LEFT_8;
-  result.y = Math.floor(temp);
-  temp = (temp - result.y) * SHIFT_LEFT_8;
-  result.z = Math.floor(temp);
-  result.w = (exponent + BIAS) * 2.0 + sign;
-
   return result;
 };
 
@@ -939,22 +931,19 @@ Cartesian4.unpackFloat = function (packedFloat) {
   Check.typeOf.object("packedFloat", packedFloat);
   //>>includeEnd('debug');
 
-  var temp = packedFloat.w / 2.0;
-  var exponent = Math.floor(temp);
-  var sign = (temp - exponent) * 2.0;
-  exponent = exponent - BIAS;
-
-  sign = sign * 2.0 - 1.0;
-  sign = -sign;
-
-  if (exponent >= BIAS) {
-    return sign < 0.0 ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+  // scratchU8Array and scratchF32Array are views into the same buffer
+  if (littleEndian) {
+    scratchU8Array[0] = packedFloat.x;
+    scratchU8Array[1] = packedFloat.y;
+    scratchU8Array[2] = packedFloat.z;
+    scratchU8Array[3] = packedFloat.w;
+  } else {
+    // convert from little-endian to big-endian
+    scratchU8Array[0] = packedFloat.w;
+    scratchU8Array[1] = packedFloat.z;
+    scratchU8Array[2] = packedFloat.y;
+    scratchU8Array[3] = packedFloat.x;
   }
-
-  var unpacked = sign * packedFloat.x * SHIFT_RIGHT_8;
-  unpacked += sign * packedFloat.y * SHIFT_RIGHT_16;
-  unpacked += sign * packedFloat.z * SHIFT_RIGHT_24;
-
-  return unpacked * Math.pow(10.0, exponent);
+  return scratchF32Array[0];
 };
 export default Cartesian4;

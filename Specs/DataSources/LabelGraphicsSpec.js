@@ -11,7 +11,7 @@ import { VerticalOrigin } from "../../Source/Cesium.js";
 
 describe("DataSources/LabelGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {
-    var options = {
+    const options = {
       text: "0",
       font: "1",
       style: LabelStyle.FILL,
@@ -31,7 +31,7 @@ describe("DataSources/LabelGraphics", function () {
       disableDepthTestDistance: 10.0,
     };
 
-    var label = new LabelGraphics(options);
+    const label = new LabelGraphics(options);
     expect(label.text).toBeInstanceOf(ConstantProperty);
     expect(label.font).toBeInstanceOf(ConstantProperty);
     expect(label.style).toBeInstanceOf(ConstantProperty);
@@ -76,7 +76,7 @@ describe("DataSources/LabelGraphics", function () {
   });
 
   it("merge assigns unassigned properties", function () {
-    var source = new LabelGraphics();
+    const source = new LabelGraphics();
     source.text = new ConstantProperty("not it");
     source.font = new ConstantProperty("arial");
     source.style = new ConstantProperty(LabelStyle.FILL);
@@ -101,7 +101,7 @@ describe("DataSources/LabelGraphics", function () {
     );
     source.disableDepthTestDistance = new ConstantProperty(10.0);
 
-    var target = new LabelGraphics();
+    const target = new LabelGraphics();
     target.merge(source);
 
     expect(target.text).toBe(source.text);
@@ -130,7 +130,7 @@ describe("DataSources/LabelGraphics", function () {
   });
 
   it("merge does not assign assigned properties", function () {
-    var source = new LabelGraphics();
+    const source = new LabelGraphics();
     source.text = new ConstantProperty("not it");
     source.font = new ConstantProperty("arial");
     source.style = new ConstantProperty(LabelStyle.FILL);
@@ -155,27 +155,29 @@ describe("DataSources/LabelGraphics", function () {
     );
     source.disableDepthTestDistance = new ConstantProperty(10.0);
 
-    var text = new ConstantProperty("my text");
-    var font = new ConstantProperty("10px serif");
-    var style = new ConstantProperty(LabelStyle.OUTLINE);
-    var fillColor = new ConstantProperty(Color.RED);
-    var outlineColor = new ConstantProperty(Color.WHITE);
-    var outlineWidth = new ConstantProperty(4);
-    var horizontalOrigin = new ConstantProperty(HorizontalOrigin.RIGHT);
-    var verticalOrigin = new ConstantProperty(VerticalOrigin.TOP);
-    var eyeOffset = new ConstantProperty(Cartesian3.UNIT_Z);
-    var pixelOffset = new ConstantProperty(Cartesian2.UNIT_Y);
-    var scale = new ConstantProperty(2);
-    var show = new ConstantProperty(true);
-    var translucencyByDistance = new ConstantProperty(new NearFarScalar());
-    var pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar());
-    var scaleByDistance = new ConstantProperty(new NearFarScalar());
-    var distanceDisplayCondition = new ConstantProperty(
+    const text = new ConstantProperty("my text");
+    const font = new ConstantProperty("10px serif");
+    const style = new ConstantProperty(LabelStyle.OUTLINE);
+    const fillColor = new ConstantProperty(Color.RED);
+    const outlineColor = new ConstantProperty(Color.WHITE);
+    const outlineWidth = new ConstantProperty(4);
+    const horizontalOrigin = new ConstantProperty(HorizontalOrigin.RIGHT);
+    const verticalOrigin = new ConstantProperty(VerticalOrigin.TOP);
+    const eyeOffset = new ConstantProperty(Cartesian3.UNIT_Z);
+    const pixelOffset = new ConstantProperty(Cartesian2.UNIT_Y);
+    const scale = new ConstantProperty(2);
+    const show = new ConstantProperty(true);
+    const translucencyByDistance = new ConstantProperty(new NearFarScalar());
+    const pixelOffsetScaleByDistance = new ConstantProperty(
+      new NearFarScalar()
+    );
+    const scaleByDistance = new ConstantProperty(new NearFarScalar());
+    const distanceDisplayCondition = new ConstantProperty(
       new DistanceDisplayCondition()
     );
-    var disableDepthTestDistance = new ConstantProperty(20.0);
+    const disableDepthTestDistance = new ConstantProperty(20.0);
 
-    var target = new LabelGraphics();
+    const target = new LabelGraphics();
     target.text = text;
     target.font = font;
     target.style = style;
@@ -216,7 +218,7 @@ describe("DataSources/LabelGraphics", function () {
   });
 
   it("clone works", function () {
-    var source = new LabelGraphics();
+    const source = new LabelGraphics();
     source.text = new ConstantProperty("not it");
     source.font = new ConstantProperty("arial");
     source.style = new ConstantProperty(LabelStyle.FILL);
@@ -241,7 +243,7 @@ describe("DataSources/LabelGraphics", function () {
     );
     source.disableDepthTestDistance = new ConstantProperty(10.0);
 
-    var result = source.clone();
+    const result = source.clone();
     expect(result.text).toBe(source.text);
     expect(result.font).toBe(source.font);
     expect(result.style).toBe(source.style);
@@ -268,7 +270,7 @@ describe("DataSources/LabelGraphics", function () {
   });
 
   it("merge throws if source undefined", function () {
-    var target = new LabelGraphics();
+    const target = new LabelGraphics();
     expect(function () {
       target.merge(undefined);
     }).toThrowDeveloperError();

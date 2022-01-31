@@ -1,10 +1,10 @@
 {
-    "extends": "../../.eslintrc.json",
+    "extends": "../.eslintrc.json",
     "env": {
         "amd": true
     },
     "parserOptions": {
-        "ecmaVersion": 5,
+        "ecmaVersion": 2015,
         "sourceType": "script"
     }
 }

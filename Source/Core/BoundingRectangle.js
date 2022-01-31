@@ -127,18 +127,18 @@ BoundingRectangle.fromPoints = function (positions, result) {
     return result;
   }
 
-  var length = positions.length;
+  const length = positions.length;
 
-  var minimumX = positions[0].x;
-  var minimumY = positions[0].y;
+  let minimumX = positions[0].x;
+  let minimumY = positions[0].y;
 
-  var maximumX = positions[0].x;
-  var maximumY = positions[0].y;
+  let maximumX = positions[0].x;
+  let maximumY = positions[0].y;
 
-  for (var i = 1; i < length; i++) {
-    var p = positions[i];
-    var x = p.x;
-    var y = p.y;
+  for (let i = 1; i < length; i++) {
+    const p = positions[i];
+    const x = p.x;
+    const y = p.y;
 
     minimumX = Math.min(x, minimumX);
     maximumX = Math.max(x, maximumX);
@@ -153,9 +153,9 @@ BoundingRectangle.fromPoints = function (positions, result) {
   return result;
 };
 
-var defaultProjection = new GeographicProjection();
-var fromRectangleLowerLeft = new Cartographic();
-var fromRectangleUpperRight = new Cartographic();
+const defaultProjection = new GeographicProjection();
+const fromRectangleLowerLeft = new Cartographic();
+const fromRectangleUpperRight = new Cartographic();
 /**
  * Computes a bounding rectangle from a rectangle.
  *
@@ -179,10 +179,10 @@ BoundingRectangle.fromRectangle = function (rectangle, projection, result) {
 
   projection = defaultValue(projection, defaultProjection);
 
-  var lowerLeft = projection.project(
+  const lowerLeft = projection.project(
     Rectangle.southwest(rectangle, fromRectangleLowerLeft)
   );
-  var upperRight = projection.project(
+  const upperRight = projection.project(
     Rectangle.northeast(rectangle, fromRectangleUpperRight)
   );
 
@@ -241,10 +241,10 @@ BoundingRectangle.union = function (left, right, result) {
     result = new BoundingRectangle();
   }
 
-  var lowerLeftX = Math.min(left.x, right.x);
-  var lowerLeftY = Math.min(left.y, right.y);
-  var upperRightX = Math.max(left.x + left.width, right.x + right.width);
-  var upperRightY = Math.max(left.y + left.height, right.y + right.height);
+  const lowerLeftX = Math.min(left.x, right.x);
+  const lowerLeftY = Math.min(left.y, right.y);
+  const upperRightX = Math.max(left.x + left.width, right.x + right.width);
+  const upperRightY = Math.max(left.y + left.height, right.y + right.height);
 
   result.x = lowerLeftX;
   result.y = lowerLeftY;
@@ -269,8 +269,8 @@ BoundingRectangle.expand = function (rectangle, point, result) {
 
   result = BoundingRectangle.clone(rectangle, result);
 
-  var width = point.x - result.x;
-  var height = point.y - result.y;
+  const width = point.x - result.x;
+  const height = point.y - result.y;
 
   if (width > result.width) {
     result.width = width;
@@ -294,7 +294,7 @@ BoundingRectangle.expand = function (rectangle, point, result) {
  *
  * @param {BoundingRectangle} left A rectangle to check for intersection.
  * @param {BoundingRectangle} right The other rectangle to check for intersection.
- * @returns {Intersect} <code>Intersect.INTESECTING</code> if the rectangles intersect, <code>Intersect.OUTSIDE</code> otherwise.
+ * @returns {Intersect} <code>Intersect.INTERSECTING</code> if the rectangles intersect, <code>Intersect.OUTSIDE</code> otherwise.
  */
 BoundingRectangle.intersect = function (left, right) {
   //>>includeStart('debug', pragmas.debug);
@@ -302,10 +302,10 @@ BoundingRectangle.intersect = function (left, right) {
   Check.typeOf.object("right", right);
   //>>includeEnd('debug');
 
-  var leftX = left.x;
-  var leftY = left.y;
-  var rightX = right.x;
-  var rightY = right.y;
+  const leftX = left.x;
+  const leftY = left.y;
+  const rightX = right.x;
+  const rightY = right.y;
   if (
     !(
       leftX > rightX + right.width ||
@@ -354,7 +354,7 @@ BoundingRectangle.prototype.clone = function (result) {
  * Determines if this rectangle intersects with another.
  *
  * @param {BoundingRectangle} right A rectangle to check for intersection.
- * @returns {Intersect} <code>Intersect.INTESECTING</code> if the rectangles intersect, <code>Intersect.OUTSIDE</code> otherwise.
+ * @returns {Intersect} <code>Intersect.INTERSECTING</code> if the rectangles intersect, <code>Intersect.OUTSIDE</code> otherwise.
  */
 BoundingRectangle.prototype.intersect = function (right) {
   return BoundingRectangle.intersect(this, right);

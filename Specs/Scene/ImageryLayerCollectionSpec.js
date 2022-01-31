@@ -19,17 +19,17 @@ import { when } from "../../Source/Cesium.js";
 describe(
   "Scene/ImageryLayerCollection",
   function () {
-    var fakeProvider = {
+    const fakeProvider = {
       isReady: function () {
         return false;
       },
     };
 
     it("tracks the base layer on add", function () {
-      var layer1 = new ImageryLayer(fakeProvider);
-      var layer2 = new ImageryLayer(fakeProvider);
-      var layer3 = new ImageryLayer(fakeProvider);
-      var collection = new ImageryLayerCollection();
+      const layer1 = new ImageryLayer(fakeProvider);
+      const layer2 = new ImageryLayer(fakeProvider);
+      const layer3 = new ImageryLayer(fakeProvider);
+      const collection = new ImageryLayerCollection();
 
       expect(layer1.isBaseLayer()).toEqual(false);
 
@@ -47,10 +47,10 @@ describe(
     });
 
     it("tracks the base layer on remove", function () {
-      var layer1 = new ImageryLayer(fakeProvider);
-      var layer2 = new ImageryLayer(fakeProvider);
-      var layer3 = new ImageryLayer(fakeProvider);
-      var collection = new ImageryLayerCollection();
+      const layer1 = new ImageryLayer(fakeProvider);
+      const layer2 = new ImageryLayer(fakeProvider);
+      const layer3 = new ImageryLayer(fakeProvider);
+      const collection = new ImageryLayerCollection();
 
       collection.add(layer1);
       collection.add(layer2);
@@ -69,9 +69,9 @@ describe(
     });
 
     it("updates isBaseLayer on re-add", function () {
-      var layer1 = new ImageryLayer(fakeProvider);
-      var layer2 = new ImageryLayer(fakeProvider);
-      var collection = new ImageryLayerCollection();
+      const layer1 = new ImageryLayer(fakeProvider);
+      const layer2 = new ImageryLayer(fakeProvider);
+      const collection = new ImageryLayerCollection();
 
       layer1._isBaseLayer = true;
       layer2._isBaseLayer = true;
@@ -84,8 +84,8 @@ describe(
     });
 
     it("does not crash when raising and lowering a single layer.", function () {
-      var layer1 = new ImageryLayer(fakeProvider);
-      var collection = new ImageryLayerCollection();
+      const layer1 = new ImageryLayer(fakeProvider);
+      const collection = new ImageryLayerCollection();
       collection.add(layer1);
 
       collection.raise(layer1);
@@ -96,10 +96,10 @@ describe(
     });
 
     it("tracks the base layer on raise and lower", function () {
-      var layer1 = new ImageryLayer(fakeProvider);
-      var layer2 = new ImageryLayer(fakeProvider);
-      var layer3 = new ImageryLayer(fakeProvider);
-      var collection = new ImageryLayerCollection();
+      const layer1 = new ImageryLayer(fakeProvider);
+      const layer2 = new ImageryLayer(fakeProvider);
+      const layer3 = new ImageryLayer(fakeProvider);
+      const collection = new ImageryLayerCollection();
 
       collection.add(layer1);
       collection.add(layer2);
@@ -126,10 +126,10 @@ describe(
     });
 
     it("tracks the base layer on raiseToTop to lowerToBottom", function () {
-      var layer1 = new ImageryLayer(fakeProvider);
-      var layer2 = new ImageryLayer(fakeProvider);
-      var layer3 = new ImageryLayer(fakeProvider);
-      var collection = new ImageryLayerCollection();
+      const layer1 = new ImageryLayer(fakeProvider);
+      const layer2 = new ImageryLayer(fakeProvider);
+      const layer3 = new ImageryLayer(fakeProvider);
+      const collection = new ImageryLayerCollection();
 
       collection.add(layer1);
       collection.add(layer2);
@@ -151,7 +151,7 @@ describe(
     });
 
     it("add throws when layer is undefined", function () {
-      var collection = new ImageryLayerCollection();
+      const collection = new ImageryLayerCollection();
 
       expect(function () {
         collection.add(undefined);
@@ -159,7 +159,7 @@ describe(
     });
 
     it("addImageryProvider throws when imageryProvider is undefined", function () {
-      var collection = new ImageryLayerCollection();
+      const collection = new ImageryLayerCollection();
 
       expect(function () {
         collection.addImageryProvider(undefined);
@@ -167,9 +167,9 @@ describe(
     });
 
     it("add throws when index is outside valid range", function () {
-      var collection = new ImageryLayerCollection();
-      var layer1 = new ImageryLayer(fakeProvider);
-      var layer2 = new ImageryLayer(fakeProvider);
+      const collection = new ImageryLayerCollection();
+      const layer1 = new ImageryLayer(fakeProvider);
+      const layer2 = new ImageryLayer(fakeProvider);
 
       expect(function () {
         collection.add(layer1, 1);
@@ -193,15 +193,15 @@ describe(
     });
 
     it("remove ignores request to remove a layer that does not exist in the collection", function () {
-      var collection = new ImageryLayerCollection();
-      var layer1 = new ImageryLayer(fakeProvider);
+      const collection = new ImageryLayerCollection();
+      const layer1 = new ImageryLayer(fakeProvider);
       expect(collection.remove(layer1)).toBe(false);
     });
 
     it("contains works as expected", function () {
-      var collection = new ImageryLayerCollection();
-      var layer1 = new ImageryLayer(fakeProvider);
-      var layer2 = new ImageryLayer(fakeProvider);
+      const collection = new ImageryLayerCollection();
+      const layer1 = new ImageryLayer(fakeProvider);
+      const layer2 = new ImageryLayer(fakeProvider);
 
       expect(collection.contains(layer1)).toEqual(false);
       expect(collection.contains(layer2)).toEqual(false);
@@ -228,14 +228,14 @@ describe(
     });
 
     it("get throws if index is not provided", function () {
-      var collection = new ImageryLayerCollection();
+      const collection = new ImageryLayerCollection();
       expect(function () {
         collection.get();
       }).toThrowDeveloperError();
     });
 
     it("throws when raising an undefined layer", function () {
-      var collection = new ImageryLayerCollection();
+      const collection = new ImageryLayerCollection();
 
       expect(function () {
         collection.raise(undefined);
@@ -243,8 +243,8 @@ describe(
     });
 
     it("throws when raising a layer not in the collection", function () {
-      var collection = new ImageryLayerCollection();
-      var layer1 = new ImageryLayer(fakeProvider);
+      const collection = new ImageryLayerCollection();
+      const layer1 = new ImageryLayer(fakeProvider);
 
       expect(function () {
         collection.raise(layer1);
@@ -252,16 +252,42 @@ describe(
     });
 
     it("reports whether or not it is destroyed", function () {
-      var collection = new ImageryLayerCollection();
+      const collection = new ImageryLayerCollection();
       expect(collection.isDestroyed()).toEqual(false);
       collection.destroy();
       expect(collection.isDestroyed()).toEqual(true);
     });
 
-    describe("pickImageryLayerFeatures", function () {
-      var scene;
-      var globe;
-      var camera;
+    /**
+     * Repeatedly calls update until the load queue is empty.  Returns a promise that resolves
+     * once the load queue is empty.
+     *
+     * @param {Ray} ray The ray to test for intersection.
+     * @param {Scene} scene The scene.
+     * @return {Promise.<Boolean>}
+     *
+     * @private
+     *
+     */
+    function updateUntilDone(globe, scene) {
+      // update until the load queue is empty.
+      return pollToPromise(function () {
+        globe._surface._debug.enableDebugOutput = true;
+        scene.render();
+        return (
+          globe._surface.tileProvider.ready &&
+          globe._surface._tileLoadQueueHigh.length === 0 &&
+          globe._surface._tileLoadQueueMedium.length === 0 &&
+          globe._surface._tileLoadQueueLow.length === 0 &&
+          globe._surface._debug.tilesWaitingForChildren === 0
+        );
+      });
+    }
+
+    describe("pickImageryLayers", function () {
+      let scene;
+      let globe;
+      let camera;
 
       beforeAll(function () {
         scene = createScene();
@@ -279,37 +305,167 @@ describe(
         globe.imageryLayers.removeAll();
       });
 
-      /**
-       * Repeatedly calls update until the load queue is empty.  Returns a promise that resolves
-       * once the load queue is empty.
-       */
-      function updateUntilDone(globe) {
-        // update until the load queue is empty.
-        return pollToPromise(function () {
-          globe._surface._debug.enableDebugOutput = true;
-          scene.render();
-          return (
-            globe._surface.tileProvider.ready &&
-            globe._surface._tileLoadQueueHigh.length === 0 &&
-            globe._surface._tileLoadQueueMedium.length === 0 &&
-            globe._surface._tileLoadQueueLow.length === 0 &&
-            globe._surface._debug.tilesWaitingForChildren === 0
-          );
-        });
-      }
-
       it("returns undefined when pick ray does not intersect surface", function () {
-        var ellipsoid = Ellipsoid.WGS84;
+        const ellipsoid = Ellipsoid.WGS84;
         camera.lookAt(
           new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
           new Cartesian3(0.0, 0.0, 100.0)
         );
 
-        var ray = new Ray(
+        const ray = new Ray(
           camera.position,
           Cartesian3.negate(camera.direction, new Cartesian3())
         );
-        var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
+        const imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
+        expect(imagery).toBeUndefined();
+      });
+
+      it("returns undefined when globe has no pickable layers", function () {
+        const ellipsoid = Ellipsoid.WGS84;
+        camera.lookAt(
+          new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
+          new Cartesian3(0.0, 0.0, 100.0)
+        );
+
+        const ray = new Ray(camera.position, camera.direction);
+        const imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
+        expect(imagery).toBeUndefined();
+      });
+
+      it("returns undefined if there are zero imagery layers", function () {
+        const ellipsoid = Ellipsoid.WGS84;
+        camera.lookAt(
+          new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
+          new Cartesian3(0.0, 0.0, 100.0)
+        );
+        camera.lookAtTransform(Matrix4.IDENTITY);
+        return updateUntilDone(globe, scene).then(function () {
+          const ray = new Ray(camera.position, camera.direction);
+          const imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
+
+          expect(imagery).toBeUndefined();
+        });
+      });
+
+      it("returns imagery from one layer", function () {
+        const provider = {
+          ready: true,
+          rectangle: Rectangle.MAX_VALUE,
+          tileWidth: 256,
+          tileHeight: 256,
+          maximumLevel: 0,
+          minimumLevel: 0,
+          tilingScheme: new GeographicTilingScheme(),
+          errorEvent: new Event(),
+          hasAlphaChannel: true,
+          requestImage: function (x, y, level) {
+            return ImageryProvider.loadImage(this, "Data/Images/Blue.png");
+          },
+        };
+
+        const currentLayer = globe.imageryLayers.addImageryProvider(provider);
+
+        const ellipsoid = Ellipsoid.WGS84;
+        camera.lookAt(
+          new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
+          new Cartesian3(0.0, 0.0, 100.0)
+        );
+        camera.lookAtTransform(Matrix4.IDENTITY);
+        return updateUntilDone(globe, scene).then(function () {
+          const ray = new Ray(camera.position, camera.direction);
+          const imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
+
+          expect(imagery).toBeDefined();
+          expect(imagery.length).toBe(1);
+          expect(imagery[0]).toBe(currentLayer);
+        });
+      });
+
+      it("returns imagery from two layers", function () {
+        const provider1 = {
+          ready: true,
+          rectangle: Rectangle.MAX_VALUE,
+          tileWidth: 256,
+          tileHeight: 256,
+          maximumLevel: 0,
+          minimumLevel: 0,
+          tilingScheme: new GeographicTilingScheme(),
+          errorEvent: new Event(),
+          hasAlphaChannel: true,
+          requestImage: function (x, y, level) {
+            return ImageryProvider.loadImage(this, "Data/Images/Blue.png");
+          },
+        };
+
+        const currentLayer1 = globe.imageryLayers.addImageryProvider(provider1);
+
+        const provider2 = {
+          ready: true,
+          rectangle: Rectangle.MAX_VALUE,
+          tileWidth: 256,
+          tileHeight: 256,
+          maximumLevel: 0,
+          minimumLevel: 0,
+          tilingScheme: new GeographicTilingScheme(),
+          errorEvent: new Event(),
+          hasAlphaChannel: true,
+          requestImage: function (x, y, level) {
+            return ImageryProvider.loadImage(this, "Data/Images/Green.png");
+          },
+        };
+
+        const currentLayer2 = globe.imageryLayers.addImageryProvider(provider2);
+        const ellipsoid = Ellipsoid.WGS84;
+        camera.lookAt(
+          new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
+          new Cartesian3(0.0, 0.0, 100.0)
+        );
+        camera.lookAtTransform(Matrix4.IDENTITY);
+        return updateUntilDone(globe, scene).then(function () {
+          const ray = new Ray(camera.position, camera.direction);
+          const imagery = scene.imageryLayers.pickImageryLayers(ray, scene);
+
+          expect(imagery).toBeDefined();
+          expect(imagery.length).toBe(2);
+          expect(imagery[0]).toBe(currentLayer2);
+          expect(imagery[1]).toBe(currentLayer1);
+        });
+      });
+    });
+
+    describe("pickImageryLayerFeatures", function () {
+      let scene;
+      let globe;
+      let camera;
+
+      beforeAll(function () {
+        scene = createScene();
+        globe = scene.globe = new Globe();
+        camera = scene.camera;
+
+        scene.frameState.passes.render = true;
+      });
+
+      afterAll(function () {
+        scene.destroyForSpecs();
+      });
+
+      beforeEach(function () {
+        globe.imageryLayers.removeAll();
+      });
+
+      it("returns undefined when pick ray does not intersect surface", function () {
+        const ellipsoid = Ellipsoid.WGS84;
+        camera.lookAt(
+          new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
+          new Cartesian3(0.0, 0.0, 100.0)
+        );
+
+        const ray = new Ray(
+          camera.position,
+          Cartesian3.negate(camera.direction, new Cartesian3())
+        );
+        const featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
           ray,
           scene
         );
@@ -317,14 +473,14 @@ describe(
       });
 
       it("returns undefined when globe has no pickable layers", function () {
-        var ellipsoid = Ellipsoid.WGS84;
+        const ellipsoid = Ellipsoid.WGS84;
         camera.lookAt(
           new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
           new Cartesian3(0.0, 0.0, 100.0)
         );
 
-        var ray = new Ray(camera.position, camera.direction);
-        var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
+        const ray = new Ray(camera.position, camera.direction);
+        const featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
           ray,
           scene
         );
@@ -332,7 +488,7 @@ describe(
       });
 
       it("returns undefined when ImageryProvider does not implement pickFeatures", function () {
-        var provider = {
+        const provider = {
           ready: true,
           rectangle: Rectangle.MAX_VALUE,
           tileWidth: 256,
@@ -350,15 +506,15 @@ describe(
 
         globe.imageryLayers.addImageryProvider(provider);
 
-        return updateUntilDone(globe).then(function () {
-          var ellipsoid = Ellipsoid.WGS84;
+        return updateUntilDone(globe, scene).then(function () {
+          const ellipsoid = Ellipsoid.WGS84;
           camera.lookAt(
             new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
             new Cartesian3(0.0, 0.0, 100.0)
           );
 
-          var ray = new Ray(camera.position, camera.direction);
-          var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
+          const ray = new Ray(camera.position, camera.direction);
+          const featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
             ray,
             scene
           );
@@ -367,7 +523,7 @@ describe(
       });
 
       it("returns undefined when ImageryProvider.pickFeatures returns undefined", function () {
-        var provider = {
+        const provider = {
           ready: true,
           rectangle: Rectangle.MAX_VALUE,
           tileWidth: 256,
@@ -389,15 +545,15 @@ describe(
 
         globe.imageryLayers.addImageryProvider(provider);
 
-        return updateUntilDone(globe).then(function () {
-          var ellipsoid = Ellipsoid.WGS84;
+        return updateUntilDone(globe, scene).then(function () {
+          const ellipsoid = Ellipsoid.WGS84;
           camera.lookAt(
             new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
             new Cartesian3(0.0, 0.0, 100.0)
           );
 
-          var ray = new Ray(camera.position, camera.direction);
-          var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
+          const ray = new Ray(camera.position, camera.direction);
+          const featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
             ray,
             scene
           );
@@ -406,7 +562,7 @@ describe(
       });
 
       it("returns features from one layer", function () {
-        var provider = {
+        const provider = {
           ready: true,
           rectangle: Rectangle.MAX_VALUE,
           tileWidth: 256,
@@ -418,9 +574,9 @@ describe(
           hasAlphaChannel: true,
 
           pickFeatures: function (x, y, level, longitude, latitude) {
-            var deferred = when.defer();
+            const deferred = when.defer();
             setTimeout(function () {
-              var featureInfo = new ImageryLayerFeatureInfo();
+              const featureInfo = new ImageryLayerFeatureInfo();
               featureInfo.name = "Foo";
               featureInfo.description = "<strong>Foo!</strong>";
               deferred.resolve([featureInfo]);
@@ -433,18 +589,18 @@ describe(
           },
         };
 
-        var currentLayer = globe.imageryLayers.addImageryProvider(provider);
+        const currentLayer = globe.imageryLayers.addImageryProvider(provider);
 
-        return updateUntilDone(globe).then(function () {
-          var ellipsoid = Ellipsoid.WGS84;
+        return updateUntilDone(globe, scene).then(function () {
+          const ellipsoid = Ellipsoid.WGS84;
           camera.lookAt(
             new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
             new Cartesian3(0.0, 0.0, 100.0)
           );
           camera.lookAtTransform(Matrix4.IDENTITY);
 
-          var ray = new Ray(camera.position, camera.direction);
-          var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
+          const ray = new Ray(camera.position, camera.direction);
+          const featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
             ray,
             scene
           );
@@ -461,7 +617,7 @@ describe(
       });
 
       it("returns features from two layers", function () {
-        var provider1 = {
+        const provider1 = {
           ready: true,
           rectangle: Rectangle.MAX_VALUE,
           tileWidth: 256,
@@ -473,9 +629,9 @@ describe(
           hasAlphaChannel: true,
 
           pickFeatures: function (x, y, level, longitude, latitude) {
-            var deferred = when.defer();
+            const deferred = when.defer();
             setTimeout(function () {
-              var featureInfo = new ImageryLayerFeatureInfo();
+              const featureInfo = new ImageryLayerFeatureInfo();
               featureInfo.name = "Foo";
               featureInfo.description = "<strong>Foo!</strong>";
               deferred.resolve([featureInfo]);
@@ -488,9 +644,9 @@ describe(
           },
         };
 
-        var currentLayer1 = globe.imageryLayers.addImageryProvider(provider1);
+        const currentLayer1 = globe.imageryLayers.addImageryProvider(provider1);
 
-        var provider2 = {
+        const provider2 = {
           ready: true,
           rectangle: Rectangle.MAX_VALUE,
           tileWidth: 256,
@@ -502,9 +658,9 @@ describe(
           hasAlphaChannel: true,
 
           pickFeatures: function (x, y, level, longitude, latitude) {
-            var deferred = when.defer();
+            const deferred = when.defer();
             setTimeout(function () {
-              var featureInfo = new ImageryLayerFeatureInfo();
+              const featureInfo = new ImageryLayerFeatureInfo();
               featureInfo.name = "Bar";
               featureInfo.description = "<strong>Bar!</strong>";
               deferred.resolve([featureInfo]);
@@ -517,18 +673,18 @@ describe(
           },
         };
 
-        var currentLayer2 = globe.imageryLayers.addImageryProvider(provider2);
+        const currentLayer2 = globe.imageryLayers.addImageryProvider(provider2);
 
-        return updateUntilDone(globe).then(function () {
-          var ellipsoid = Ellipsoid.WGS84;
+        return updateUntilDone(globe, scene).then(function () {
+          const ellipsoid = Ellipsoid.WGS84;
           camera.lookAt(
             new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0),
             new Cartesian3(0.0, 0.0, 100.0)
           );
           camera.lookAtTransform(Matrix4.IDENTITY);
 
-          var ray = new Ray(camera.position, camera.direction);
-          var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
+          const ray = new Ray(camera.position, camera.direction);
+          const featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
             ray,
             scene
           );
@@ -548,7 +704,7 @@ describe(
       });
 
       it("correctly picks from a terrain tile that is partially covered by correct-level imagery and partially covered by imagery from an ancestor level", function () {
-        var provider = {
+        const provider = {
           ready: true,
           rectangle: new Rectangle(
             -Math.PI,
@@ -565,9 +721,9 @@ describe(
           hasAlphaChannel: true,
 
           pickFeatures: function (x, y, level, longitude, latitude) {
-            var deferred = when.defer();
+            const deferred = when.defer();
             setTimeout(function () {
-              var featureInfo = new ImageryLayerFeatureInfo();
+              const featureInfo = new ImageryLayerFeatureInfo();
               featureInfo.name = "L" + level + "X" + x + "Y" + y;
               deferred.resolve([featureInfo]);
             }, 1);
@@ -589,9 +745,9 @@ describe(
           destination: Rectangle.fromDegrees(-180.0, 0, 0, 90),
         });
 
-        return updateUntilDone(globe).then(function () {
-          var ray = new Ray(camera.position, camera.direction);
-          var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
+        return updateUntilDone(globe, scene).then(function () {
+          const ray = new Ray(camera.position, camera.direction);
+          const featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(
             ray,
             scene
           );

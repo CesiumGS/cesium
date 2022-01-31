@@ -5,17 +5,17 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
-var draco;
+let draco;
 
 function decodeIndexArray(dracoGeometry, dracoDecoder) {
-  var numPoints = dracoGeometry.num_points();
-  var numFaces = dracoGeometry.num_faces();
-  var faceIndices = new draco.DracoInt32Array();
-  var numIndices = numFaces * 3;
-  var indexArray = IndexDatatype.createTypedArray(numPoints, numIndices);
+  const numPoints = dracoGeometry.num_points();
+  const numFaces = dracoGeometry.num_faces();
+  const faceIndices = new draco.DracoInt32Array();
+  const numIndices = numFaces * 3;
+  const indexArray = IndexDatatype.createTypedArray(numPoints, numIndices);
 
-  var offset = 0;
-  for (var i = 0; i < numFaces; ++i) {
+  let offset = 0;
+  for (let i = 0; i < numFaces; ++i) {
     dracoDecoder.GetFaceFromMesh(dracoGeometry, i, faceIndices);
 
     indexArray[offset + 0] = faceIndices.GetValue(0);
@@ -39,8 +39,8 @@ function decodeQuantizedDracoTypedArray(
   quantization,
   vertexArrayLength
 ) {
-  var vertexArray;
-  var attributeData;
+  let vertexArray;
+  let attributeData;
   if (quantization.quantizationBits <= 8) {
     attributeData = new draco.DracoUInt8Array();
     vertexArray = new Uint8Array(vertexArrayLength);
@@ -59,7 +59,7 @@ function decodeQuantizedDracoTypedArray(
     );
   }
 
-  for (var i = 0; i < vertexArrayLength; ++i) {
+  for (let i = 0; i < vertexArrayLength; ++i) {
     vertexArray[i] = attributeData.GetValue(i);
   }
 
@@ -73,8 +73,8 @@ function decodeDracoTypedArray(
   dracoAttribute,
   vertexArrayLength
 ) {
-  var vertexArray;
-  var attributeData;
+  let vertexArray;
+  let attributeData;
 
   // Some attribute types are casted down to 32 bit since Draco only returns 32 bit values
   switch (dracoAttribute.data_type()) {
@@ -147,7 +147,7 @@ function decodeDracoTypedArray(
       break;
   }
 
-  for (var i = 0; i < vertexArrayLength; ++i) {
+  for (let i = 0; i < vertexArrayLength; ++i) {
     vertexArray[i] = attributeData.GetValue(i);
   }
 
@@ -156,14 +156,14 @@ function decodeDracoTypedArray(
 }
 
 function decodeAttribute(dracoGeometry, dracoDecoder, dracoAttribute) {
-  var numPoints = dracoGeometry.num_points();
-  var numComponents = dracoAttribute.num_components();
+  const numPoints = dracoGeometry.num_points();
+  const numComponents = dracoAttribute.num_components();
 
-  var quantization;
-  var transform = new draco.AttributeQuantizationTransform();
+  let quantization;
+  let transform = new draco.AttributeQuantizationTransform();
   if (transform.InitFromAttribute(dracoAttribute)) {
-    var minValues = new Array(numComponents);
-    for (var i = 0; i < numComponents; ++i) {
+    const minValues = new Array(numComponents);
+    for (let i = 0; i < numComponents; ++i) {
       minValues[i] = transform.min_value(i);
     }
     quantization = {
@@ -184,8 +184,8 @@ function decodeAttribute(dracoGeometry, dracoDecoder, dracoAttribute) {
   }
   draco.destroy(transform);
 
-  var vertexArrayLength = numPoints * numComponents;
-  var vertexArray;
+  const vertexArrayLength = numPoints * numComponents;
+  let vertexArray;
   if (defined(quantization)) {
     vertexArray = decodeQuantizedDracoTypedArray(
       dracoGeometry,
@@ -203,7 +203,7 @@ function decodeAttribute(dracoGeometry, dracoDecoder, dracoAttribute) {
     );
   }
 
-  var componentDatatype = ComponentDatatype.fromTypedArray(vertexArray);
+  const componentDatatype = ComponentDatatype.fromTypedArray(vertexArray);
 
   return {
     array: vertexArray,
@@ -220,23 +220,23 @@ function decodeAttribute(dracoGeometry, dracoDecoder, dracoAttribute) {
 }
 
 function decodePointCloud(parameters) {
-  var dracoDecoder = new draco.Decoder();
+  const dracoDecoder = new draco.Decoder();
 
   if (parameters.dequantizeInShader) {
     dracoDecoder.SkipAttributeTransform(draco.POSITION);
     dracoDecoder.SkipAttributeTransform(draco.NORMAL);
   }
 
-  var buffer = new draco.DecoderBuffer();
+  const buffer = new draco.DecoderBuffer();
   buffer.Init(parameters.buffer, parameters.buffer.length);
 
-  var geometryType = dracoDecoder.GetEncodedGeometryType(buffer);
+  const geometryType = dracoDecoder.GetEncodedGeometryType(buffer);
   if (geometryType !== draco.POINT_CLOUD) {
     throw new RuntimeError("Draco geometry type must be POINT_CLOUD.");
   }
 
-  var dracoPointCloud = new draco.PointCloud();
-  var decodingStatus = dracoDecoder.DecodeBufferToPointCloud(
+  const dracoPointCloud = new draco.PointCloud();
+  const decodingStatus = dracoDecoder.DecodeBufferToPointCloud(
     buffer,
     dracoPointCloud
   );
@@ -248,16 +248,28 @@ function decodePointCloud(parameters) {
 
   draco.destroy(buffer);
 
-  var result = {};
+  const result = {};
 
-  var properties = parameters.properties;
-  for (var propertyName in properties) {
+  const properties = parameters.properties;
+  for (const propertyName in properties) {
     if (properties.hasOwnProperty(propertyName)) {
-      var attributeId = properties[propertyName];
-      var dracoAttribute = dracoDecoder.GetAttributeByUniqueId(
-        dracoPointCloud,
-        attributeId
-      );
+      let dracoAttribute;
+      if (propertyName === "POSITION" || propertyName === "NORMAL") {
+        const dracoAttributeId = dracoDecoder.GetAttributeId(
+          dracoPointCloud,
+          draco[propertyName]
+        );
+        dracoAttribute = dracoDecoder.GetAttribute(
+          dracoPointCloud,
+          dracoAttributeId
+        );
+      } else {
+        const attributeId = properties[propertyName];
+        dracoAttribute = dracoDecoder.GetAttributeByUniqueId(
+          dracoPointCloud,
+          attributeId
+        );
+      }
       result[propertyName] = decodeAttribute(
         dracoPointCloud,
         dracoDecoder,
@@ -273,27 +285,37 @@ function decodePointCloud(parameters) {
 }
 
 function decodePrimitive(parameters) {
-  var dracoDecoder = new draco.Decoder();
+  const dracoDecoder = new draco.Decoder();
 
   // Skip all parameter types except generic
-  var attributesToSkip = ["POSITION", "NORMAL", "COLOR", "TEX_COORD"];
+  // Note: As a temporary work-around until GetAttributeByUniqueId() works after
+  // calling SkipAttributeTransform(), we will not skip attributes with multiple
+  // sets of data in the glTF.
+  const attributesToSkip = ["POSITION", "NORMAL"];
+  const compressedAttributes = parameters.compressedAttributes;
+  if (!defined(compressedAttributes["COLOR_1"])) {
+    attributesToSkip.push("COLOR");
+  }
+  if (!defined(compressedAttributes["TEXCOORD_1"])) {
+    attributesToSkip.push("TEX_COORD");
+  }
   if (parameters.dequantizeInShader) {
-    for (var i = 0; i < attributesToSkip.length; ++i) {
+    for (let i = 0; i < attributesToSkip.length; ++i) {
       dracoDecoder.SkipAttributeTransform(draco[attributesToSkip[i]]);
     }
   }
 
-  var bufferView = parameters.bufferView;
-  var buffer = new draco.DecoderBuffer();
+  const bufferView = parameters.bufferView;
+  const buffer = new draco.DecoderBuffer();
   buffer.Init(parameters.array, bufferView.byteLength);
 
-  var geometryType = dracoDecoder.GetEncodedGeometryType(buffer);
+  const geometryType = dracoDecoder.GetEncodedGeometryType(buffer);
   if (geometryType !== draco.TRIANGULAR_MESH) {
     throw new RuntimeError("Unsupported draco mesh geometry type.");
   }
 
-  var dracoGeometry = new draco.Mesh();
-  var decodingStatus = dracoDecoder.DecodeBufferToMesh(buffer, dracoGeometry);
+  const dracoGeometry = new draco.Mesh();
+  const decodingStatus = dracoDecoder.DecodeBufferToMesh(buffer, dracoGeometry);
   if (!decodingStatus.ok() || dracoGeometry.ptr === 0) {
     throw new RuntimeError(
       "Error decoding draco mesh geometry: " + decodingStatus.error_msg()
@@ -302,16 +324,38 @@ function decodePrimitive(parameters) {
 
   draco.destroy(buffer);
 
-  var attributeData = {};
-
-  var compressedAttributes = parameters.compressedAttributes;
-  for (var attributeName in compressedAttributes) {
+  const attributeData = {};
+  for (const attributeName in compressedAttributes) {
     if (compressedAttributes.hasOwnProperty(attributeName)) {
-      var compressedAttribute = compressedAttributes[attributeName];
-      var dracoAttribute = dracoDecoder.GetAttributeByUniqueId(
-        dracoGeometry,
-        compressedAttribute
-      );
+      // Since GetAttributeByUniqueId() only works on attributes that we have not called
+      // SkipAttributeTransform() on, we must first store a `dracoAttributeName` in case
+      // we call GetAttributeId() instead.
+      let dracoAttributeName = attributeName;
+      if (attributeName === "TEXCOORD_0") {
+        dracoAttributeName = "TEX_COORD";
+      }
+      if (attributeName === "COLOR_0") {
+        dracoAttributeName = "COLOR";
+      }
+
+      let dracoAttribute;
+      if (attributesToSkip.includes(dracoAttributeName)) {
+        const dracoAttributeId = dracoDecoder.GetAttributeId(
+          dracoGeometry,
+          draco[dracoAttributeName]
+        );
+        dracoAttribute = dracoDecoder.GetAttribute(
+          dracoGeometry,
+          dracoAttributeId
+        );
+      } else {
+        const compressedAttribute = compressedAttributes[attributeName];
+        dracoAttribute = dracoDecoder.GetAttributeByUniqueId(
+          dracoGeometry,
+          compressedAttribute
+        );
+      }
+
       attributeData[attributeName] = decodeAttribute(
         dracoGeometry,
         dracoDecoder,
@@ -320,7 +364,7 @@ function decodePrimitive(parameters) {
     }
   }
 
-  var result = {
+  const result = {
     indexArray: decodeIndexArray(dracoGeometry, dracoDecoder),
     attributeData: attributeData,
   };
@@ -332,7 +376,7 @@ function decodePrimitive(parameters) {
 }
 
 function decode(parameters) {
-  if (defined(parameters.primitive)) {
+  if (defined(parameters.bufferView)) {
     return decodePrimitive(parameters);
   }
   return decodePointCloud(parameters);
@@ -345,10 +389,10 @@ function initWorker(dracoModule) {
 }
 
 function decodeDraco(event) {
-  var data = event.data;
+  const data = event.data;
 
   // Expect the first message to be to load a web assembly module
-  var wasmConfig = data.webAssemblyConfig;
+  const wasmConfig = data.webAssemblyConfig;
   if (defined(wasmConfig)) {
     // Require and compile WebAssembly module, or use fallback if not supported
     return require([wasmConfig.modulePath], function (dracoModule) {

@@ -22,10 +22,10 @@ import GeometryUpdater from "./GeometryUpdater.js";
 import GroundGeometryUpdater from "./GroundGeometryUpdater.js";
 import Property from "./Property.js";
 
-var scratchColor = new Color();
-var defaultOffset = Cartesian3.ZERO;
-var offsetScratch = new Cartesian3();
-var scratchRectangle = new Rectangle();
+const scratchColor = new Color();
+const defaultOffset = Cartesian3.ZERO;
+const offsetScratch = new Cartesian3();
+const scratchRectangle = new Rectangle();
 
 function CorridorGeometryOptions(entity) {
   this.id = entity;
@@ -86,10 +86,10 @@ CorridorGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
   }
   //>>includeEnd('debug');
 
-  var entity = this._entity;
-  var isAvailable = entity.isAvailable(time);
+  const entity = this._entity;
+  const isAvailable = entity.isAvailable(time);
 
-  var attributes = {
+  const attributes = {
     show: new ShowGeometryInstanceAttribute(
       isAvailable &&
         entity.isShowing &&
@@ -104,7 +104,7 @@ CorridorGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
   };
 
   if (this._materialProperty instanceof ColorMaterialProperty) {
-    var currentColor;
+    let currentColor;
     if (
       defined(this._materialProperty.color) &&
       (this._materialProperty.color.isConstant || isAvailable)
@@ -156,16 +156,16 @@ CorridorGeometryUpdater.prototype.createOutlineGeometryInstance = function (
   }
   //>>includeEnd('debug');
 
-  var entity = this._entity;
-  var isAvailable = entity.isAvailable(time);
-  var outlineColor = Property.getValueOrDefault(
+  const entity = this._entity;
+  const isAvailable = entity.isAvailable(time);
+  const outlineColor = Property.getValueOrDefault(
     this._outlineColorProperty,
     time,
     Color.BLACK,
     scratchColor
   );
 
-  var attributes = {
+  const attributes = {
     show: new ShowGeometryInstanceAttribute(
       isAvailable &&
         entity.isShowing &&
@@ -198,7 +198,7 @@ CorridorGeometryUpdater.prototype.createOutlineGeometryInstance = function (
 };
 
 CorridorGeometryUpdater.prototype._computeCenter = function (time, result) {
-  var positions = Property.getValueOrUndefined(
+  const positions = Property.getValueOrUndefined(
     this._entity.corridor.positions,
     time
   );
@@ -239,20 +239,20 @@ CorridorGeometryUpdater.prototype._setStaticOptions = function (
   entity,
   corridor
 ) {
-  var heightValue = Property.getValueOrUndefined(
+  let heightValue = Property.getValueOrUndefined(
     corridor.height,
     Iso8601.MINIMUM_VALUE
   );
-  var heightReferenceValue = Property.getValueOrDefault(
+  const heightReferenceValue = Property.getValueOrDefault(
     corridor.heightReference,
     Iso8601.MINIMUM_VALUE,
     HeightReference.NONE
   );
-  var extrudedHeightValue = Property.getValueOrUndefined(
+  let extrudedHeightValue = Property.getValueOrUndefined(
     corridor.extrudedHeight,
     Iso8601.MINIMUM_VALUE
   );
-  var extrudedHeightReferenceValue = Property.getValueOrDefault(
+  const extrudedHeightReferenceValue = Property.getValueOrDefault(
     corridor.extrudedHeightReference,
     Iso8601.MINIMUM_VALUE,
     HeightReference.NONE
@@ -261,7 +261,7 @@ CorridorGeometryUpdater.prototype._setStaticOptions = function (
     heightValue = 0;
   }
 
-  var options = this._options;
+  const options = this._options;
   options.vertexFormat =
     this._materialProperty instanceof ColorMaterialProperty
       ? PerInstanceColorAppearance.VERTEX_FORMAT
@@ -333,7 +333,7 @@ DynamicCorridorGeometryUpdater.prototype._isHidden = function (
   corridor,
   time
 ) {
-  var options = this._options;
+  const options = this._options;
   return (
     !defined(options.positions) ||
     !defined(options.width) ||
@@ -351,18 +351,18 @@ DynamicCorridorGeometryUpdater.prototype._setOptions = function (
   corridor,
   time
 ) {
-  var options = this._options;
-  var heightValue = Property.getValueOrUndefined(corridor.height, time);
-  var heightReferenceValue = Property.getValueOrDefault(
+  const options = this._options;
+  let heightValue = Property.getValueOrUndefined(corridor.height, time);
+  const heightReferenceValue = Property.getValueOrDefault(
     corridor.heightReference,
     time,
     HeightReference.NONE
   );
-  var extrudedHeightValue = Property.getValueOrUndefined(
+  let extrudedHeightValue = Property.getValueOrUndefined(
     corridor.extrudedHeight,
     time
   );
-  var extrudedHeightReferenceValue = Property.getValueOrDefault(
+  const extrudedHeightReferenceValue = Property.getValueOrDefault(
     corridor.extrudedHeightReference,
     time,
     HeightReference.NONE

@@ -4,10 +4,10 @@ import { RequestState } from "../../Source/Cesium.js";
 import { when } from "../../Source/Cesium.js";
 
 describe("Core/RequestScheduler", function () {
-  var originalMaximumRequests;
-  var originalMaximumRequestsPerServer;
-  var originalPriorityHeapLength;
-  var originalRequestsByServer;
+  let originalMaximumRequests;
+  let originalMaximumRequestsPerServer;
+  let originalPriorityHeapLength;
+  let originalRequestsByServer;
 
   beforeAll(function () {
     originalMaximumRequests = RequestScheduler.maximumRequests;
@@ -64,23 +64,23 @@ describe("Core/RequestScheduler", function () {
   });
 
   it("getServer with https", function () {
-    var server = RequestScheduler.getServerKey("https://test.invalid/1");
+    const server = RequestScheduler.getServerKey("https://test.invalid/1");
     expect(server).toEqual("test.invalid:443");
   });
 
   it("getServer with http", function () {
-    var server = RequestScheduler.getServerKey("http://test.invalid/1");
+    const server = RequestScheduler.getServerKey("http://test.invalid/1");
     expect(server).toEqual("test.invalid:80");
   });
 
   it("honors maximumRequests", function () {
     RequestScheduler.maximumRequests = 2;
-    var statistics = RequestScheduler.statistics;
+    const statistics = RequestScheduler.statistics;
 
-    var deferreds = [];
+    const deferreds = [];
 
     function requestFunction() {
-      var deferred = when.defer();
+      const deferred = when.defer();
       deferreds.push(deferred);
       return deferred.promise;
     }
@@ -93,12 +93,12 @@ describe("Core/RequestScheduler", function () {
       });
     }
 
-    var promise1 = RequestScheduler.request(createRequest());
-    var promise2 = RequestScheduler.request(createRequest());
+    const promise1 = RequestScheduler.request(createRequest());
+    const promise2 = RequestScheduler.request(createRequest());
     RequestScheduler.update();
 
     // Scheduler is full, promise3 will be undefined
-    var promise3 = RequestScheduler.request(createRequest());
+    const promise3 = RequestScheduler.request(createRequest());
     RequestScheduler.update();
 
     expect(statistics.numberOfActiveRequests).toBe(2);
@@ -112,14 +112,14 @@ describe("Core/RequestScheduler", function () {
 
     expect(statistics.numberOfActiveRequests).toBe(1);
 
-    var promise4 = RequestScheduler.request(createRequest());
+    const promise4 = RequestScheduler.request(createRequest());
     RequestScheduler.update();
 
     expect(statistics.numberOfActiveRequests).toBe(2);
     expect(promise4).toBeDefined();
 
     // Scheduler is full, promise5 will be undefined
-    var promise5 = RequestScheduler.request(createRequest());
+    const promise5 = RequestScheduler.request(createRequest());
     RequestScheduler.update();
 
     expect(statistics.numberOfActiveRequests).toBe(2);
@@ -127,14 +127,14 @@ describe("Core/RequestScheduler", function () {
 
     // maximumRequests increases, promise6 goes through
     RequestScheduler.maximumRequests = 3;
-    var promise6 = RequestScheduler.request(createRequest());
+    const promise6 = RequestScheduler.request(createRequest());
     RequestScheduler.update();
 
     expect(statistics.numberOfActiveRequests).toBe(3);
     expect(promise6).toBeDefined();
 
-    var length = deferreds.length;
-    for (var i = 0; i < length; ++i) {
+    const length = deferreds.length;
+    for (let i = 0; i < length; ++i) {
       deferreds[i].resolve();
     }
   });
@@ -142,16 +142,16 @@ describe("Core/RequestScheduler", function () {
   it("honors maximumRequestsPerServer", function () {
     RequestScheduler.maximumRequestsPerServer = 2;
 
-    var deferreds = [];
+    const deferreds = [];
 
     function requestFunction() {
-      var deferred = when.defer();
+      const deferred = when.defer();
       deferreds.push(deferred);
       return deferred.promise;
     }
 
-    var url = "http://test.invalid/1";
-    var server = RequestScheduler.getServerKey(url);
+    const url = "http://test.invalid/1";
+    const server = RequestScheduler.getServerKey(url);
 
     function createRequest() {
       return new Request({
@@ -161,12 +161,12 @@ describe("Core/RequestScheduler", function () {
       });
     }
 
-    var promise1 = RequestScheduler.request(createRequest());
-    var promise2 = RequestScheduler.request(createRequest());
+    const promise1 = RequestScheduler.request(createRequest());
+    const promise2 = RequestScheduler.request(createRequest());
     RequestScheduler.update();
 
     // Scheduler is full, promise3 will be undefined
-    var promise3 = RequestScheduler.request(createRequest());
+    const promise3 = RequestScheduler.request(createRequest());
     RequestScheduler.update();
 
     expect(RequestScheduler.numberOfActiveRequestsByServer(server)).toBe(2);
@@ -180,14 +180,14 @@ describe("Core/RequestScheduler", function () {
 
     expect(RequestScheduler.numberOfActiveRequestsByServer(server)).toBe(1);
 
-    var promise4 = RequestScheduler.request(createRequest());
+    const promise4 = RequestScheduler.request(createRequest());
     RequestScheduler.update();
 
     expect(RequestScheduler.numberOfActiveRequestsByServer(server)).toBe(2);
     expect(promise4).toBeDefined();
 
     // Scheduler is full, promise5 will be undefined
-    var promise5 = RequestScheduler.request(createRequest());
+    const promise5 = RequestScheduler.request(createRequest());
     RequestScheduler.update();
 
     expect(RequestScheduler.numberOfActiveRequestsByServer(server)).toBe(2);
@@ -195,30 +195,30 @@ describe("Core/RequestScheduler", function () {
 
     // maximumRequests increases, promise6 goes through
     RequestScheduler.maximumRequestsPerServer = 3;
-    var promise6 = RequestScheduler.request(createRequest());
+    const promise6 = RequestScheduler.request(createRequest());
     RequestScheduler.update();
 
     expect(RequestScheduler.numberOfActiveRequestsByServer(server)).toBe(3);
     expect(promise6).toBeDefined();
 
-    var length = deferreds.length;
-    for (var i = 0; i < length; ++i) {
+    const length = deferreds.length;
+    for (let i = 0; i < length; ++i) {
       deferreds[i].resolve();
     }
   });
 
   it("honors priorityHeapLength", function () {
-    var deferreds = [];
-    var requests = [];
+    const deferreds = [];
+    const requests = [];
 
     function requestFunction() {
-      var deferred = when.defer();
+      const deferred = when.defer();
       deferreds.push(deferred);
       return deferred.promise;
     }
 
     function createRequest(priority) {
-      var request = new Request({
+      const request = new Request({
         url: "http://test.invalid/1",
         requestFunction: requestFunction,
         throttle: true,
@@ -229,8 +229,8 @@ describe("Core/RequestScheduler", function () {
     }
 
     RequestScheduler.priorityHeapLength = 1;
-    var firstRequest = createRequest(0.0);
-    var promise = RequestScheduler.request(firstRequest);
+    const firstRequest = createRequest(0.0);
+    let promise = RequestScheduler.request(firstRequest);
     expect(promise).toBeDefined();
     promise = RequestScheduler.request(createRequest(1.0));
     expect(promise).toBeUndefined();
@@ -246,28 +246,28 @@ describe("Core/RequestScheduler", function () {
     RequestScheduler.priorityHeapLength = 2;
     expect(firstRequest.state).toBe(RequestState.CANCELLED);
 
-    var length = deferreds.length;
-    for (var i = 0; i < length; ++i) {
+    const length = deferreds.length;
+    for (let i = 0; i < length; ++i) {
       deferreds[i].resolve();
     }
   });
 
   function testImmediateRequest(url, dataOrBlobUri) {
-    var statistics = RequestScheduler.statistics;
-    var deferreds = [];
+    const statistics = RequestScheduler.statistics;
+    const deferreds = [];
 
     function requestFunction() {
-      var deferred = when.defer();
+      const deferred = when.defer();
       deferreds.push(deferred);
       return deferred.promise;
     }
 
-    var request = new Request({
+    const request = new Request({
       url: url,
       requestFunction: requestFunction,
     });
 
-    var promise = RequestScheduler.request(request);
+    const promise = RequestScheduler.request(request);
     expect(promise).toBeDefined();
 
     if (dataOrBlobUri) {
@@ -294,42 +294,42 @@ describe("Core/RequestScheduler", function () {
   }
 
   it("data uri goes through immediately", function () {
-    var dataUri = "data:text/plain;base64,SGVsbG8sIFdvcmxkIQ%3D%3D";
+    const dataUri = "data:text/plain;base64,SGVsbG8sIFdvcmxkIQ%3D%3D";
     testImmediateRequest(dataUri, true);
   });
 
   it("blob uri goes through immediately", function () {
-    var uint8Array = new Uint8Array(4);
-    var blob = new Blob([uint8Array], {
+    const uint8Array = new Uint8Array(4);
+    const blob = new Blob([uint8Array], {
       type: "application/octet-stream",
     });
 
-    var blobUrl = window.URL.createObjectURL(blob);
+    const blobUrl = window.URL.createObjectURL(blob);
     testImmediateRequest(blobUrl, true);
   });
 
   it("request goes through immediately when throttle is false", function () {
-    var url = "https://test.invalid/1";
+    const url = "https://test.invalid/1";
     testImmediateRequest(url, false);
   });
 
   it("makes a throttled request", function () {
-    var deferreds = [];
+    const deferreds = [];
 
     function requestFunction() {
-      var deferred = when.defer();
+      const deferred = when.defer();
       deferreds.push(deferred);
       return deferred.promise;
     }
 
-    var request = new Request({
+    const request = new Request({
       throttle: true,
       url: "https://test.invalid/1",
       requestFunction: requestFunction,
     });
     expect(request.state).toBe(RequestState.UNISSUED);
 
-    var promise = RequestScheduler.request(request);
+    const promise = RequestScheduler.request(request);
     expect(promise).toBeDefined();
     expect(request.state).toBe(RequestState.ISSUED);
 
@@ -341,19 +341,19 @@ describe("Core/RequestScheduler", function () {
   });
 
   it("cancels an issued request", function () {
-    var statistics = RequestScheduler.statistics;
+    const statistics = RequestScheduler.statistics;
 
     function requestFunction() {
       return when.resolve();
     }
 
-    var request = new Request({
+    const request = new Request({
       throttle: true,
       url: "https://test.invalid/1",
       requestFunction: requestFunction,
     });
 
-    var promise = RequestScheduler.request(request);
+    const promise = RequestScheduler.request(request);
     expect(request.state).toBe(RequestState.ISSUED);
 
     request.cancel();
@@ -373,21 +373,21 @@ describe("Core/RequestScheduler", function () {
   });
 
   it("cancels an active request", function () {
-    var statistics = RequestScheduler.statistics;
-    var cancelFunction = jasmine.createSpy("cancelFunction");
+    const statistics = RequestScheduler.statistics;
+    const cancelFunction = jasmine.createSpy("cancelFunction");
 
     function requestFunction() {
       return when.defer().promise;
     }
 
-    var request = new Request({
+    const request = new Request({
       throttle: true,
       url: "https://test.invalid/1",
       requestFunction: requestFunction,
       cancelFunction: cancelFunction,
     });
 
-    var promise = RequestScheduler.request(request);
+    const promise = RequestScheduler.request(request);
     RequestScheduler.update();
     expect(request.state).toBe(RequestState.ACTIVE);
 
@@ -412,21 +412,21 @@ describe("Core/RequestScheduler", function () {
   });
 
   it("handles request failure", function () {
-    var statistics = RequestScheduler.statistics;
-    var deferreds = [];
+    const statistics = RequestScheduler.statistics;
+    const deferreds = [];
 
     function requestFunction() {
-      var deferred = when.defer();
+      const deferred = when.defer();
       deferreds.push(deferred);
       return deferred.promise;
     }
 
-    var request = new Request({
+    const request = new Request({
       url: "https://test.invalid/1",
       requestFunction: requestFunction,
     });
 
-    var promise = RequestScheduler.request(request);
+    const promise = RequestScheduler.request(request);
     expect(request.state).toBe(RequestState.ACTIVE);
     expect(statistics.numberOfActiveRequests).toBe(1);
 
@@ -444,7 +444,7 @@ describe("Core/RequestScheduler", function () {
   });
 
   it("prioritizes requests", function () {
-    var currentPriority = 0.0;
+    let currentPriority = 0.0;
 
     function getRequestFunction(priority) {
       return function () {
@@ -463,9 +463,9 @@ describe("Core/RequestScheduler", function () {
       });
     }
 
-    var length = RequestScheduler.priorityHeapLength;
-    for (var i = 0; i < length; ++i) {
-      var priority = Math.random();
+    const length = RequestScheduler.priorityHeapLength;
+    for (let i = 0; i < length; ++i) {
+      const priority = Math.random();
       RequestScheduler.request(createRequest(priority));
     }
 
@@ -474,7 +474,7 @@ describe("Core/RequestScheduler", function () {
   });
 
   it("updates priority", function () {
-    var invertPriority = false;
+    let invertPriority = false;
 
     function getPriorityFunction(priority) {
       return function () {
@@ -498,11 +498,11 @@ describe("Core/RequestScheduler", function () {
       });
     }
 
-    var i;
-    var request;
-    var length = RequestScheduler.priorityHeapLength;
+    let i;
+    let request;
+    const length = RequestScheduler.priorityHeapLength;
     for (i = 0; i < length; ++i) {
-      var priority = i / (length - 1);
+      const priority = i / (length - 1);
       request = createRequest(priority);
       request.testId = i;
       RequestScheduler.request(request);
@@ -512,9 +512,9 @@ describe("Core/RequestScheduler", function () {
     RequestScheduler.maximumRequests = 0;
     RequestScheduler.update();
 
-    var requestHeap = RequestScheduler.requestHeap;
-    var requests = [];
-    var currentTestId = 0;
+    const requestHeap = RequestScheduler.requestHeap;
+    const requests = [];
+    let currentTestId = 0;
     while (requestHeap.length > 0) {
       request = requestHeap.pop();
       requests.push(request);
@@ -550,17 +550,17 @@ describe("Core/RequestScheduler", function () {
       });
     }
 
-    var highPriority = 0.0;
-    var mediumPriority = 0.5;
-    var lowPriority = 1.0;
+    const highPriority = 0.0;
+    const mediumPriority = 0.5;
+    const lowPriority = 1.0;
 
-    var length = RequestScheduler.priorityHeapLength;
-    for (var i = 0; i < length; ++i) {
+    const length = RequestScheduler.priorityHeapLength;
+    for (let i = 0; i < length; ++i) {
       RequestScheduler.request(createRequest(mediumPriority));
     }
 
     // Heap is full so low priority request is not even issued
-    var promise = RequestScheduler.request(createRequest(lowPriority));
+    let promise = RequestScheduler.request(createRequest(lowPriority));
     expect(promise).toBeUndefined();
     expect(RequestScheduler.statistics.numberOfCancelledRequests).toBe(0);
 
@@ -571,10 +571,10 @@ describe("Core/RequestScheduler", function () {
   });
 
   it("unthrottled requests starve throttled requests", function () {
-    var deferreds = [];
+    const deferreds = [];
 
     function requestFunction() {
-      var deferred = when.defer();
+      const deferred = when.defer();
       deferreds.push(deferred);
       return deferred.promise;
     }
@@ -587,10 +587,10 @@ describe("Core/RequestScheduler", function () {
       });
     }
 
-    var throttledRequest = createRequest(true);
+    const throttledRequest = createRequest(true);
     RequestScheduler.request(throttledRequest);
 
-    for (var i = 0; i < RequestScheduler.maximumRequests; ++i) {
+    for (let i = 0; i < RequestScheduler.maximumRequests; ++i) {
       RequestScheduler.request(createRequest(false));
     }
     RequestScheduler.update();
@@ -602,17 +602,17 @@ describe("Core/RequestScheduler", function () {
     RequestScheduler.update();
     expect(throttledRequest.state).toBe(RequestState.ACTIVE);
 
-    var length = deferreds.length;
-    for (var j = 0; j < length; ++j) {
+    const length = deferreds.length;
+    for (let j = 0; j < length; ++j) {
       deferreds[j].resolve();
     }
   });
 
   it("request throttled by server is cancelled", function () {
-    var deferreds = [];
+    const deferreds = [];
 
     function requestFunction() {
-      var deferred = when.defer();
+      const deferred = when.defer();
       deferreds.push(deferred);
       return deferred.promise;
     }
@@ -626,19 +626,19 @@ describe("Core/RequestScheduler", function () {
       });
     }
 
-    for (var i = 0; i < RequestScheduler.maximumRequestsPerServer - 1; ++i) {
+    for (let i = 0; i < RequestScheduler.maximumRequestsPerServer - 1; ++i) {
       RequestScheduler.request(createRequest(false));
     }
 
-    var throttledRequest = createRequest(true);
+    const throttledRequest = createRequest(true);
     RequestScheduler.request(throttledRequest);
     RequestScheduler.request(createRequest(false));
 
     RequestScheduler.update();
     expect(throttledRequest.state).toBe(RequestState.CANCELLED);
 
-    var length = deferreds.length;
-    for (var j = 0; j < length; ++j) {
+    const length = deferreds.length;
+    for (let j = 0; j < length; ++j) {
       deferreds[j].resolve();
     }
   });
@@ -651,12 +651,12 @@ describe("Core/RequestScheduler", function () {
     }
 
     RequestScheduler.throttleRequests = true;
-    var request = new Request({
+    let request = new Request({
       throttle: true,
       url: "https://test.invalid/1",
       requestFunction: requestFunction,
     });
-    var promise = RequestScheduler.request(request);
+    let promise = RequestScheduler.request(request);
     expect(promise).toBeUndefined();
 
     RequestScheduler.throttleRequests = false;
@@ -679,12 +679,12 @@ describe("Core/RequestScheduler", function () {
     }
 
     RequestScheduler.throttleRequests = true;
-    var request = new Request({
+    let request = new Request({
       throttleByServer: true,
       url: "https://test.invalid/1",
       requestFunction: requestFunction,
     });
-    var promise = RequestScheduler.request(request);
+    let promise = RequestScheduler.request(request);
     expect(promise).toBeUndefined();
 
     RequestScheduler.throttleRequests = false;
@@ -703,10 +703,10 @@ describe("Core/RequestScheduler", function () {
     spyOn(console, "log");
     RequestScheduler.debugShowStatistics = true;
 
-    var deferreds = [];
+    const deferreds = [];
 
     function requestFunction() {
-      var deferred = when.defer();
+      const deferred = when.defer();
       deferreds.push(deferred);
       return deferred.promise;
     }
@@ -718,7 +718,7 @@ describe("Core/RequestScheduler", function () {
       });
     }
 
-    var requests = [createRequest(), createRequest(), createRequest()];
+    const requests = [createRequest(), createRequest(), createRequest()];
     RequestScheduler.request(requests[0]);
     RequestScheduler.request(requests[1]);
     RequestScheduler.request(requests[2]);
@@ -737,8 +737,8 @@ describe("Core/RequestScheduler", function () {
     );
     expect(console.log).toHaveBeenCalledWith("Number of failed requests: 1");
 
-    var length = deferreds.length;
-    for (var i = 0; i < length; ++i) {
+    const length = deferreds.length;
+    for (let i = 0; i < length; ++i) {
       deferreds[i].resolve();
     }
 
@@ -746,23 +746,23 @@ describe("Core/RequestScheduler", function () {
   });
 
   it("successful request causes requestCompletedEvent to be raised", function () {
-    var deferred;
+    let deferred;
 
     function requestFunction() {
       deferred = when.defer();
       return deferred.promise;
     }
 
-    var request = new Request({
+    const request = new Request({
       url: "https://test.invalid/1",
       requestFunction: requestFunction,
     });
 
-    var promise = RequestScheduler.request(request);
+    const promise = RequestScheduler.request(request);
     expect(promise).toBeDefined();
 
-    var eventRaised = false;
-    var removeListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(
+    let eventRaised = false;
+    const removeListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(
       function () {
         eventRaised = true;
       }
@@ -780,26 +780,26 @@ describe("Core/RequestScheduler", function () {
   });
 
   it("successful data request causes requestCompletedEvent to be raised", function () {
-    var deferred;
+    let deferred;
 
     function requestFunction() {
       deferred = when.defer();
       return deferred.promise;
     }
 
-    var request = new Request({
+    const request = new Request({
       url: "data:text/plain;base64,SGVsbG8sIFdvcmxkIQ%3D%3D",
       requestFunction: requestFunction,
     });
 
-    var eventRaised = false;
-    var removeListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(
+    let eventRaised = false;
+    const removeListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(
       function () {
         eventRaised = true;
       }
     );
 
-    var promise = RequestScheduler.request(request);
+    const promise = RequestScheduler.request(request);
     expect(promise).toBeDefined();
 
     deferred.resolve();
@@ -815,33 +815,33 @@ describe("Core/RequestScheduler", function () {
   });
 
   it("successful blob request causes requestCompletedEvent to be raised", function () {
-    var deferred;
+    let deferred;
 
     function requestFunction() {
       deferred = when.defer();
       return deferred.promise;
     }
 
-    var uint8Array = new Uint8Array(4);
-    var blob = new Blob([uint8Array], {
+    const uint8Array = new Uint8Array(4);
+    const blob = new Blob([uint8Array], {
       type: "application/octet-stream",
     });
 
-    var blobUrl = window.URL.createObjectURL(blob);
+    const blobUrl = window.URL.createObjectURL(blob);
 
-    var request = new Request({
+    const request = new Request({
       url: blobUrl,
       requestFunction: requestFunction,
     });
 
-    var eventRaised = false;
-    var removeListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(
+    let eventRaised = false;
+    const removeListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(
       function () {
         eventRaised = true;
       }
     );
 
-    var promise = RequestScheduler.request(request);
+    const promise = RequestScheduler.request(request);
     expect(promise).toBeDefined();
 
     deferred.resolve();
@@ -857,26 +857,26 @@ describe("Core/RequestScheduler", function () {
   });
 
   it("unsuccessful requests raise requestCompletedEvent with error", function () {
-    var deferred;
+    let deferred;
     function requestFunction() {
       deferred = when.defer();
       return deferred.promise;
     }
 
-    var request = new Request({
+    const request = new Request({
       url: "https://test.invalid/1",
       requestFunction: requestFunction,
     });
 
-    var eventRaised = false;
-    var removeListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(
+    let eventRaised = false;
+    const removeListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(
       function (error) {
         eventRaised = true;
         expect(error).toBeDefined();
       }
     );
 
-    var promise = RequestScheduler.request(request);
+    const promise = RequestScheduler.request(request);
     expect(promise).toBeDefined();
 
     deferred.reject({
@@ -894,20 +894,20 @@ describe("Core/RequestScheduler", function () {
   });
 
   it("canceled requests do not cause requestCompletedEvent to be raised", function () {
-    var cancelDeferred;
+    let cancelDeferred;
     function requestCancelFunction() {
       cancelDeferred = when.defer();
       return cancelDeferred.promise;
     }
 
-    var requestToCancel = new Request({
+    const requestToCancel = new Request({
       url: "https://test.invalid/1",
       requestFunction: requestCancelFunction,
     });
 
     RequestScheduler.request(requestToCancel);
 
-    var removeListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(
+    const removeListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(
       function () {
         fail("should not be called");
       }
@@ -920,11 +920,11 @@ describe("Core/RequestScheduler", function () {
   });
 
   it("RequestScheduler.requestsByServer allows for custom maximum requests", function () {
-    var promise;
+    let promise;
 
     RequestScheduler.requestsByServer["test.invalid:80"] = 23;
 
-    for (var i = 0; i < 23; i++) {
+    for (let i = 0; i < 23; i++) {
       promise = RequestScheduler.request(
         new Request({
           url: "http://test.invalid/1",
@@ -950,5 +950,59 @@ describe("Core/RequestScheduler", function () {
       })
     );
     expect(promise).toBeUndefined();
+  });
+
+  it("serverHasOpenSlots works for single requests", function () {
+    const deferreds = [];
+
+    function requestFunction() {
+      const deferred = when.defer();
+      deferreds.push(deferred);
+      return deferred.promise;
+    }
+
+    function createRequest() {
+      return new Request({
+        url: "https://test.invalid:80/1",
+        requestFunction: requestFunction,
+      });
+    }
+
+    RequestScheduler.maximumRequestsPerServer = 5;
+    RequestScheduler.request(createRequest());
+    RequestScheduler.request(createRequest());
+    expect(RequestScheduler.serverHasOpenSlots("test.invalid:80")).toBe(true);
+
+    RequestScheduler.request(createRequest());
+    RequestScheduler.request(createRequest());
+    RequestScheduler.request(createRequest());
+    expect(RequestScheduler.serverHasOpenSlots("test.invalid:80")).toBe(false);
+  });
+
+  it("serverHasOpenSlots works for multiple requests on a single server", function () {
+    const deferreds = [];
+
+    function requestFunction() {
+      const deferred = when.defer();
+      deferreds.push(deferred);
+      return deferred.promise;
+    }
+
+    function createRequest() {
+      return new Request({
+        url: "https://test.invalid:80/1",
+        requestFunction: requestFunction,
+      });
+    }
+
+    RequestScheduler.maximumRequestsPerServer = 5;
+    RequestScheduler.request(createRequest());
+    RequestScheduler.request(createRequest());
+    expect(RequestScheduler.serverHasOpenSlots("test.invalid:80", 3)).toBe(
+      true
+    );
+    expect(RequestScheduler.serverHasOpenSlots("test.invalid:80", 4)).toBe(
+      false
+    );
   });
 });

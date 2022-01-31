@@ -21,18 +21,17 @@ import createCanvas from "../createCanvas.js";
 import DomEventSimulator from "../DomEventSimulator.js";
 
 describe("Scene/ScreenSpaceCameraController", function () {
-  var usePointerEvents;
-  var scene;
-  var canvas;
-  var camera;
-  var controller;
+  let usePointerEvents;
+  let scene;
+  let canvas;
+  let camera;
+  let controller;
 
   function MockScene(canvas, camera, ellipsoid) {
     this.canvas = canvas;
     this.camera = camera;
     this.globe = undefined;
     this.mapProjection = new GeographicProjection(ellipsoid);
-    this.terrainExaggeration = 1.0;
     this.screenSpaceCameraController = undefined;
     this.cameraUnderground = false;
     this.globeHeight = 0.0;
@@ -57,6 +56,10 @@ describe("Scene/ScreenSpaceCameraController", function () {
         tilesWaitingForChildren: 0,
       },
     };
+
+    this.terrainExaggeration = 1.0;
+    this.terrainExaggerationRelativeHeight = 0.0;
+
     this.show = true;
   }
   beforeAll(function () {
@@ -69,8 +72,8 @@ describe("Scene/ScreenSpaceCameraController", function () {
   });
 
   beforeEach(function () {
-    var maxRadii = Ellipsoid.WGS84.maximumRadius;
-    var offset = Cartesian3.multiplyByScalar(
+    const maxRadii = Ellipsoid.WGS84.maximumRadius;
+    const offset = Cartesian3.multiplyByScalar(
       Cartesian3.normalize(new Cartesian3(0.0, -2.0, 1.0), new Cartesian3()),
       2.5 * maxRadii,
       new Cartesian3()
@@ -96,7 +99,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
       controller && !controller.isDestroyed() && controller.destroy();
   });
 
-  var MouseButtons = {
+  const MouseButtons = {
     LEFT: 0,
     MIDDLE: 1,
     RIGHT: 2,
@@ -160,9 +163,9 @@ describe("Scene/ScreenSpaceCameraController", function () {
   }
 
   function moveMouse(button, startPosition, endPosition, shiftKey) {
-    var canvasRect = canvas.getBoundingClientRect();
+    const canvasRect = canvas.getBoundingClientRect();
 
-    var options = {
+    const options = {
       button: button,
       clientX: startPosition.x + canvasRect.left,
       clientY: startPosition.y + canvasRect.top,
@@ -178,7 +181,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
   function setUp2D() {
     scene.mode = SceneMode.SCENE2D;
 
-    var ellipsoid = Ellipsoid.WGS84;
+    const ellipsoid = Ellipsoid.WGS84;
     scene.mapProjection = new GeographicProjection(ellipsoid);
 
     scene.frameState = {
@@ -188,8 +191,8 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     scene.cameraUnderground = false;
 
-    var maxRadii = ellipsoid.maximumRadius;
-    var frustum = new OrthographicOffCenterFrustum();
+    const maxRadii = ellipsoid.maximumRadius;
+    const frustum = new OrthographicOffCenterFrustum();
     frustum.right = maxRadii * Math.PI;
     frustum.left = -frustum.right;
     frustum.top = frustum.right * (canvas.clientHeight / canvas.clientWidth);
@@ -207,7 +210,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
   function setUpCV() {
     scene.mode = SceneMode.COLUMBUS_VIEW;
 
-    var ellipsoid = Ellipsoid.WGS84;
+    const ellipsoid = Ellipsoid.WGS84;
     scene.mapProjection = new GeographicProjection(ellipsoid);
 
     scene.frameState = {
@@ -218,7 +221,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     scene.cameraUnderground = false;
     controller.enableCollisionDetection = true;
 
-    var maxRadii = ellipsoid.maximumRadius;
+    const maxRadii = ellipsoid.maximumRadius;
     camera.position = new Cartesian3(0.0, 0.0, maxRadii);
     camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
     camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
@@ -228,7 +231,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
   function setUpCVUnderground() {
     scene.mode = SceneMode.COLUMBUS_VIEW;
 
-    var ellipsoid = Ellipsoid.WGS84;
+    const ellipsoid = Ellipsoid.WGS84;
     scene.globe = new MockGlobe(ellipsoid);
     scene.mapProjection = new GeographicProjection(ellipsoid);
 
@@ -253,7 +256,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
   function setUp3D() {
     scene.mode = SceneMode.SCENE3D;
 
-    var ellipsoid = Ellipsoid.WGS84;
+    const ellipsoid = Ellipsoid.WGS84;
     scene.mapProjection = new GeographicProjection(ellipsoid);
 
     scene.frameState = {
@@ -272,7 +275,9 @@ describe("Scene/ScreenSpaceCameraController", function () {
     controller.enableCollisionDetection = false;
 
     camera.setView({ destination: Camera.DEFAULT_VIEW_RECTANGLE });
-    var positionCart = Ellipsoid.WGS84.cartesianToCartographic(camera.position);
+    const positionCart = Ellipsoid.WGS84.cartesianToCartographic(
+      camera.position
+    );
     positionCart.height = -100.0;
     camera.position = Ellipsoid.WGS84.cartographicToCartesian(positionCart);
   }
@@ -290,12 +295,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("translate right in 2D", function () {
     setUp2D();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 4,
       canvas.clientHeight / 2
     );
@@ -309,12 +314,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("translate left in 2D", function () {
     setUp2D();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 4,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -328,12 +333,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("translate up in 2D", function () {
     setUp2D();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
@@ -347,12 +352,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("translate down in 2D", function () {
     setUp2D();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -366,12 +371,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("translate in rotated 2D", function () {
     setUp2D();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -388,13 +393,13 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("zoom in 2D", function () {
     setUp2D();
-    var position = Cartesian3.clone(camera.position);
-    var frustumDiff = camera.frustum.right - camera.frustum.left;
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const frustumDiff = camera.frustum.right - camera.frustum.left;
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -412,19 +417,19 @@ describe("Scene/ScreenSpaceCameraController", function () {
   it("zoom out in 2D", function () {
     setUp2D();
 
-    var frustum = camera.frustum;
+    const frustum = camera.frustum;
     frustum.right = 1000.0;
     frustum.left = -frustum.right;
     frustum.top = frustum.right * (canvas.clientHeight / canvas.clientWidth);
     frustum.bottom = -frustum.top;
 
-    var position = Cartesian3.clone(camera.position);
-    var frustumDiff = frustum.right - frustum.left;
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const frustumDiff = frustum.right - frustum.left;
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
@@ -441,8 +446,8 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("zoom in 2D with wheel", function () {
     setUp2D();
-    var position = Cartesian3.clone(camera.position);
-    var frustumDiff = camera.frustum.right - camera.frustum.left;
+    const position = Cartesian3.clone(camera.position);
+    const frustumDiff = camera.frustum.right - camera.frustum.left;
 
     simulateMouseWheel(120);
     updateController();
@@ -457,14 +462,14 @@ describe("Scene/ScreenSpaceCameraController", function () {
   it("zoom out in 2D with wheel", function () {
     setUp2D();
 
-    var frustum = camera.frustum;
+    const frustum = camera.frustum;
     frustum.right = 1000.0;
     frustum.left = -frustum.right;
     frustum.top = frustum.right * (canvas.clientHeight / canvas.clientWidth);
     frustum.bottom = -frustum.top;
 
-    var position = Cartesian3.clone(camera.position);
-    var frustumDiff = frustum.right - frustum.left;
+    const position = Cartesian3.clone(camera.position);
+    const frustumDiff = frustum.right - frustum.left;
 
     simulateMouseWheel(-120);
     updateController();
@@ -478,20 +483,20 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("zoom with max zoom rate in 2D", function () {
     setUp2D();
-    var position = Cartesian3.clone(camera.position);
+    const position = Cartesian3.clone(camera.position);
 
-    var factor = 1000000.0;
+    const factor = 1000000.0;
     camera.frustum.right *= factor;
     camera.frustum.left *= factor;
     camera.frustum.top *= factor;
     camera.frustum.bottom *= factor;
 
-    var frustumDiff = camera.frustum.right - camera.frustum.left;
-    var startPosition = new Cartesian2(
+    const frustumDiff = camera.frustum.right - camera.frustum.left;
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -508,13 +513,13 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("zoom with no mouse movement has no effect on the camera", function () {
     setUp2D();
-    var position = Cartesian3.clone(camera.position);
-    var frustumDiff = camera.frustum.right - camera.frustum.left;
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const frustumDiff = camera.frustum.right - camera.frustum.left;
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -530,20 +535,20 @@ describe("Scene/ScreenSpaceCameraController", function () {
   it("zoom in does not affect camera close to the surface", function () {
     setUp2D();
 
-    var frustum = camera.frustum;
-    var ratio = frustum.top / frustum.right;
+    const frustum = camera.frustum;
+    const ratio = frustum.top / frustum.right;
     frustum.right = (controller.minimumZoomDistance + 1.0) * 0.5;
     frustum.left = -frustum.right;
     frustum.top = ratio * frustum.right;
     frustum.bottom = -frustum.top;
 
-    var position = Cartesian3.clone(camera.position);
-    var frustumDiff = camera.frustum.right - camera.frustum.left;
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const frustumDiff = camera.frustum.right - camera.frustum.left;
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -559,7 +564,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
   it("zooms out with maximum distance in 2D", function () {
     setUp2D();
 
-    var frustum = camera.frustum;
+    const frustum = camera.frustum;
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.left = -2.0;
@@ -567,15 +572,15 @@ describe("Scene/ScreenSpaceCameraController", function () {
     frustum.top = 1.0;
     frustum.bottom = -1.0;
 
-    var maxZoom = 10.0;
+    const maxZoom = 10.0;
     controller.minimumZoomDistance = 0.0;
     controller.maximumZoomDistance = maxZoom;
 
-    var startPosition = new Cartesian2(
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight
     );
-    var endPosition = new Cartesian2(canvas.clientWidth / 2, 0);
+    const endPosition = new Cartesian2(canvas.clientWidth / 2, 0);
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
     updateController();
@@ -595,12 +600,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
     setUp2D();
     scene.mapMode2D = MapMode2D.ROTATE;
 
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 4,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
@@ -629,12 +634,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
     setUp2D();
     scene.mapMode2D = MapMode2D.ROTATE;
 
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 4,
       canvas.clientHeight / 2
     );
@@ -660,12 +665,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
     setUp2D();
     scene.mapMode2D = MapMode2D.ROTATE;
 
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       (3 * canvas.clientWidth) / 4,
       (3 * canvas.clientHeight) / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 4,
       (3 * canvas.clientHeight) / 4
     );
@@ -692,12 +697,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("translate right in Columbus view", function () {
     setUpCV();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 4,
       canvas.clientHeight / 2
     );
@@ -711,12 +716,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("translate left in Columbus view", function () {
     setUpCV();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 4,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -730,12 +735,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("translate up in Columbus view", function () {
     setUpCV();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
@@ -749,12 +754,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("translate down in Columbus view", function () {
     setUpCV();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -769,12 +774,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
   it("translates in Columbus view when camera is underground", function () {
     setUpCVUnderground();
 
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -788,12 +793,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("looks in Columbus view", function () {
     setUpCV();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
@@ -814,12 +819,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("zoom in Columbus view", function () {
     setUpCV();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -833,12 +838,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("zoom out in Columbus view", function () {
     setUpCV();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
@@ -852,7 +857,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("zoom in Columbus view with wheel", function () {
     setUpCV();
-    var position = Cartesian3.clone(camera.position);
+    const position = Cartesian3.clone(camera.position);
 
     simulateMouseWheel(120);
     updateController();
@@ -863,7 +868,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("zoom out in Columbus view with wheel", function () {
     setUpCV();
-    var position = Cartesian3.clone(camera.position);
+    const position = Cartesian3.clone(camera.position);
 
     simulateMouseWheel(-120);
     updateController();
@@ -875,12 +880,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
   it("zoom in Columbus view when camera is underground", function () {
     setUpCVUnderground();
 
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -892,11 +897,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("rotates in Columbus view", function () {
     setUpCV();
-    var startPosition = new Cartesian2(
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       (3 * canvas.clientWidth) / 8,
       (3 * canvas.clientHeight) / 8
     );
@@ -923,15 +928,15 @@ describe("Scene/ScreenSpaceCameraController", function () {
   it("rotates in Columus view with camera transform set", function () {
     setUpCV();
 
-    var origin = Cartesian3.fromDegrees(-72.0, 40.0);
+    const origin = Cartesian3.fromDegrees(-72.0, 40.0);
     camera.lookAtTransform(
       Transforms.eastNorthUpToFixedFrame(origin),
       new Cartesian3(1.0, 0.0, 0.0)
     );
 
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(0, 0);
-    var endPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(0, 0);
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 4,
       canvas.clientHeight / 4
     );
@@ -959,12 +964,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
     setUpCVUnderground();
     camera.position.y = -100.0;
 
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       (3 * canvas.clientWidth) / 8,
       (3 * canvas.clientHeight) / 8
     );
@@ -977,15 +982,15 @@ describe("Scene/ScreenSpaceCameraController", function () {
   it("zooms in Columus view with camera transform set", function () {
     setUpCV();
 
-    var origin = Cartesian3.fromDegrees(-72.0, 40.0);
+    const origin = Cartesian3.fromDegrees(-72.0, 40.0);
     camera._transform = Transforms.eastNorthUpToFixedFrame(origin);
 
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -1000,10 +1005,10 @@ describe("Scene/ScreenSpaceCameraController", function () {
   it("zoom in Columbus view with camera transform set and with wheel", function () {
     setUpCV();
 
-    var origin = Cartesian3.fromDegrees(-72.0, 40.0);
+    const origin = Cartesian3.fromDegrees(-72.0, 40.0);
     camera._transform = Transforms.eastNorthUpToFixedFrame(origin);
 
-    var position = Cartesian3.clone(camera.position);
+    const position = Cartesian3.clone(camera.position);
 
     simulateMouseWheel(120);
     updateController();
@@ -1014,9 +1019,9 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("adds an animation to correct position or zoom in Columbus view", function () {
     setUpCV();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(0, canvas.clientHeight / 2);
-    var endPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(0, canvas.clientHeight / 2);
+    const endPosition = new Cartesian2(
       4.0 * canvas.clientWidth,
       canvas.clientHeight / 2
     );
@@ -1032,12 +1037,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("pans in 3D", function () {
     setUp3D();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       (3 * canvas.clientWidth) / 8,
       (3 * canvas.clientHeight) / 8
     );
@@ -1063,12 +1068,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("pans in 3D with constrained axis", function () {
     setUp3D();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       (3 * canvas.clientWidth) / 8,
       canvas.clientHeight / 2
     );
@@ -1096,14 +1101,14 @@ describe("Scene/ScreenSpaceCameraController", function () {
   it("strafes in 3D when camera is underground", function () {
     setUp3DUnderground();
 
-    var position = Cartesian3.clone(camera.position);
-    var direction = Cartesian3.clone(camera.direction);
+    const position = Cartesian3.clone(camera.position);
+    const direction = Cartesian3.clone(camera.direction);
 
-    var startPosition = new Cartesian2(
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       (3 * canvas.clientWidth) / 8,
       (3 * canvas.clientHeight) / 8
     );
@@ -1117,9 +1122,9 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("rotates in 3D", function () {
     setUp3D();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(0, 0);
-    var endPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(0, 0);
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 4,
       canvas.clientHeight / 4
     );
@@ -1146,11 +1151,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
   it("rotates with constrained axis", function () {
     setUp3D();
 
-    var axis = Cartesian3.clone(Cartesian3.UNIT_Z);
+    const axis = Cartesian3.clone(Cartesian3.UNIT_Z);
     camera.constrainedAxis = axis;
 
-    var startPosition = new Cartesian2(0.0, 0.0);
-    var endPosition = new Cartesian2(0.0, canvas.clientHeight);
+    const startPosition = new Cartesian2(0.0, 0.0);
+    const endPosition = new Cartesian2(0.0, canvas.clientHeight);
 
     moveMouse(MouseButtons.LEFT, startPosition, endPosition);
     updateController();
@@ -1172,12 +1177,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("zoom in 3D", function () {
     setUp3D();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -1201,9 +1206,9 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     updateController();
 
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(0, 0);
-    var endPosition = new Cartesian2(0, canvas.clientHeight / 2);
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(0, 0);
+    const endPosition = new Cartesian2(0, canvas.clientHeight / 2);
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
     updateController();
@@ -1214,12 +1219,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("zoom out in 3D", function () {
     setUp3D();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
@@ -1234,34 +1239,36 @@ describe("Scene/ScreenSpaceCameraController", function () {
   it("zooms out to maximum height in 3D", function () {
     setUp3D();
 
-    var positionCart = Ellipsoid.WGS84.cartesianToCartographic(camera.position);
+    const positionCart = Ellipsoid.WGS84.cartesianToCartographic(
+      camera.position
+    );
     positionCart.height = 0.0;
     camera.position = Ellipsoid.WGS84.cartographicToCartesian(positionCart);
 
-    var maxDist = 100.0;
+    const maxDist = 100.0;
     controller.minimumZoomDistance = 0.0;
     controller.maximumZoomDistance = maxDist;
 
-    var startPosition = new Cartesian2(
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight * 50
     );
-    var endPosition = new Cartesian2(canvas.clientWidth / 2, 0);
+    const endPosition = new Cartesian2(canvas.clientWidth / 2, 0);
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
     updateController();
 
-    var height = Ellipsoid.WGS84.cartesianToCartographic(camera.position)
+    const height = Ellipsoid.WGS84.cartesianToCartographic(camera.position)
       .height;
     expect(height).toEqualEpsilon(maxDist, CesiumMath.EPSILON2);
   });
 
   it("zoom in 3D with wheel", function () {
     setUp3D();
-    var position = Cartesian3.clone(camera.position);
-    var heading = camera.heading;
-    var pitch = camera.pitch;
-    var roll = camera.roll;
+    const position = Cartesian3.clone(camera.position);
+    const heading = camera.heading;
+    const pitch = camera.pitch;
+    const roll = camera.roll;
 
     simulateMouseWheel(120);
     updateController();
@@ -1275,10 +1282,10 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("zoom out in 3D with wheel", function () {
     setUp3D();
-    var position = Cartesian3.clone(camera.position);
-    var heading = camera.heading;
-    var pitch = camera.pitch;
-    var roll = camera.roll;
+    const position = Cartesian3.clone(camera.position);
+    const heading = camera.heading;
+    const pitch = camera.pitch;
+    const roll = camera.roll;
 
     simulateMouseWheel(-120);
     updateController();
@@ -1293,7 +1300,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
   it("zoom in 3D with orthographic projection", function () {
     setUp3D();
 
-    var frustum = new OrthographicFrustum();
+    const frustum = new OrthographicFrustum();
     frustum.aspectRatio = 1.0;
     frustum.width = 20.0;
     camera.frustum = frustum;
@@ -1302,13 +1309,13 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     camera.setView({ destination: Camera.DEFAULT_VIEW_RECTANGLE });
 
-    var position = Cartesian3.clone(camera.position);
-    var frustumWidth = camera.frustum.width;
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const frustumWidth = camera.frustum.width;
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -1324,7 +1331,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
   it("zoom out in 3D with orthographic projection", function () {
     setUp3D();
 
-    var frustum = new OrthographicFrustum();
+    const frustum = new OrthographicFrustum();
     frustum.aspectRatio = 1.0;
     frustum.width = 20.0;
     camera.frustum = frustum;
@@ -1333,13 +1340,13 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     camera.setView({ destination: Camera.DEFAULT_VIEW_RECTANGLE });
 
-    var position = Cartesian3.clone(camera.position);
-    var frustumWidth = camera.frustum.width;
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const frustumWidth = camera.frustum.width;
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
@@ -1355,26 +1362,26 @@ describe("Scene/ScreenSpaceCameraController", function () {
   it("zoom in 3D when camera is underground", function () {
     setUp3DUnderground();
 
-    var position = Cartesian3.clone(camera.position);
-    var direction = Cartesian3.clone(camera.direction);
+    const position = Cartesian3.clone(camera.position);
+    const direction = Cartesian3.clone(camera.direction);
 
-    var startPosition = new Cartesian2(
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
     updateController();
-    var vector = Cartesian3.subtract(
+    const vector = Cartesian3.subtract(
       camera.position,
       position,
       new Cartesian3()
     );
-    var normalizedVector = Cartesian3.normalize(vector, vector);
+    const normalizedVector = Cartesian3.normalize(vector, vector);
 
     expect(normalizedVector).toEqualEpsilon(direction, CesiumMath.EPSILON2);
     expect(camera.direction).toEqualEpsilon(direction, CesiumMath.EPSILON6);
@@ -1382,12 +1389,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("tilts in 3D", function () {
     setUp3D();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
@@ -1409,8 +1416,8 @@ describe("Scene/ScreenSpaceCameraController", function () {
       Cartesian3.cross(camera.right, camera.direction, new Cartesian3())
     ).toEqualEpsilon(camera.up, CesiumMath.EPSILON14);
 
-    var ray = new Ray(camera.positionWC, camera.directionWC);
-    var intersection = IntersectionTests.rayEllipsoid(
+    const ray = new Ray(camera.positionWC, camera.directionWC);
+    const intersection = IntersectionTests.rayEllipsoid(
       ray,
       scene.mapProjection.ellipsoid
     );
@@ -1419,12 +1426,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("does not tilt in the wrong direction", function () {
     setUp3D();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       (3 * canvas.clientHeight) / 4
     );
@@ -1450,20 +1457,22 @@ describe("Scene/ScreenSpaceCameraController", function () {
   it("tilts at the minimum zoom distance", function () {
     setUp3D();
 
-    var positionCart = Ellipsoid.WGS84.cartesianToCartographic(camera.position);
+    const positionCart = Ellipsoid.WGS84.cartesianToCartographic(
+      camera.position
+    );
     positionCart.height = controller.minimumZoomDistance;
     camera.position = Ellipsoid.WGS84.cartographicToCartesian(positionCart);
 
-    var startPosition = new Cartesian2(
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight
     );
-    var endPosition = new Cartesian2(canvas.clientWidth / 2, 0);
+    const endPosition = new Cartesian2(canvas.clientWidth / 2, 0);
 
     moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
     updateController();
 
-    var height = Ellipsoid.WGS84.cartesianToCartographic(camera.position)
+    const height = Ellipsoid.WGS84.cartesianToCartographic(camera.position)
       .height;
     expect(height).toBeLessThan(controller.minimumZoomDistance + 10.0);
     expect(
@@ -1477,14 +1486,14 @@ describe("Scene/ScreenSpaceCameraController", function () {
   it("tilts in 3D when camera is underground", function () {
     setUp3DUnderground();
 
-    var position = Cartesian3.clone(camera.position);
-    var direction = Cartesian3.clone(camera.direction);
+    const position = Cartesian3.clone(camera.position);
+    const direction = Cartesian3.clone(camera.direction);
 
-    var startPosition = new Cartesian2(
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
@@ -1497,12 +1506,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("looks in 3D", function () {
     setUp3D();
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
@@ -1545,14 +1554,14 @@ describe("Scene/ScreenSpaceCameraController", function () {
       new Cartesian3()
     );
 
-    var axis = Cartesian3.clone(Cartesian3.UNIT_X);
+    const axis = Cartesian3.clone(Cartesian3.UNIT_X);
     camera.constrainedAxis = axis;
 
-    var startPosition = new Cartesian2(
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -1598,14 +1607,14 @@ describe("Scene/ScreenSpaceCameraController", function () {
       new Cartesian3()
     );
 
-    var axis = Cartesian3.clone(Cartesian3.UNIT_Z);
+    const axis = Cartesian3.clone(Cartesian3.UNIT_Z);
     camera.constrainedAxis = axis;
 
-    var startPosition = new Cartesian2(
+    const startPosition = new Cartesian2(
       canvas.clientWidth * 0.5,
       canvas.clientHeight * 0.25
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth * 0.5,
       canvas.clientHeight * 0.75
     );
@@ -1632,13 +1641,13 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
   it("controller does not modify the camera after re-enabling motion", function () {
     setUp3D();
-    var position = Cartesian3.clone(camera.position);
-    var direction = Cartesian3.clone(camera.direction);
-    var up = Cartesian3.clone(camera.up);
-    var right = Cartesian3.clone(camera.right);
+    const position = Cartesian3.clone(camera.position);
+    const direction = Cartesian3.clone(camera.direction);
+    const up = Cartesian3.clone(camera.up);
+    const right = Cartesian3.clone(camera.right);
 
-    var startPosition = new Cartesian2(0.0, 0.0);
-    var endPosition = new Cartesian2(canvas.clientWidth, canvas.clientHeight);
+    const startPosition = new Cartesian2(0.0, 0.0);
+    const endPosition = new Cartesian2(canvas.clientWidth, canvas.clientHeight);
 
     controller.enableRotate = false;
     moveMouse(MouseButtons.LEFT, startPosition, endPosition);
@@ -1662,12 +1671,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
     setUp3D();
     controller.zoomEventTypes = undefined;
 
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -1684,12 +1693,12 @@ describe("Scene/ScreenSpaceCameraController", function () {
     controller.tiltEventTypes = undefined;
     controller.lookEventTypes = undefined;
 
-    var position = Cartesian3.clone(camera.position);
-    var startPosition = new Cartesian2(
+    let position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -1745,11 +1754,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     });
 
     // Trigger terrain adjustment with a small mouse movement
-    var startPosition = new Cartesian2(
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -1774,11 +1783,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     });
 
     // Trigger terrain adjustment with a small mouse movement
-    var startPosition = new Cartesian2(
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -1804,11 +1813,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     });
 
     // Trigger terrain adjustment with a small mouse movement
-    var startPosition = new Cartesian2(
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -1833,11 +1842,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     });
 
     // Trigger terrain adjustment with a small mouse movement
-    var startPosition = new Cartesian2(
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -1860,11 +1869,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     );
 
     // Trigger terrain adjustment with a small mouse movement
-    var startPosition = new Cartesian2(
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );
@@ -1889,11 +1898,11 @@ describe("Scene/ScreenSpaceCameraController", function () {
     );
 
     // Trigger terrain adjustment with a small mouse movement
-    var startPosition = new Cartesian2(
+    const startPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 4
     );
-    var endPosition = new Cartesian2(
+    const endPosition = new Cartesian2(
       canvas.clientWidth / 2,
       canvas.clientHeight / 2
     );

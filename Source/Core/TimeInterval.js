@@ -21,7 +21,7 @@ import JulianDate from "./JulianDate.js";
  * @example
  * // Create an instance that spans August 1st, 1980 and is associated
  * // with a Cartesian position.
- * var timeInterval = new Cesium.TimeInterval({
+ * const timeInterval = new Cesium.TimeInterval({
  *     start : Cesium.JulianDate.fromIso8601('1980-08-01T00:00:00Z'),
  *     stop : Cesium.JulianDate.fromIso8601('1980-08-02T00:00:00Z'),
  *     isStartIncluded : true,
@@ -32,30 +32,30 @@ import JulianDate from "./JulianDate.js";
  * @example
  * // Create two instances from ISO 8601 intervals with associated numeric data
  * // then compute their intersection, summing the data they contain.
- * var left = Cesium.TimeInterval.fromIso8601({
+ * const left = Cesium.TimeInterval.fromIso8601({
  *     iso8601 : '2000/2010',
  *     data : 2
  * });
  *
- * var right = Cesium.TimeInterval.fromIso8601({
+ * const right = Cesium.TimeInterval.fromIso8601({
  *     iso8601 : '1995/2005',
  *     data : 3
  * });
  *
  * //The result of the below intersection will be an interval equivalent to
- * //var intersection = Cesium.TimeInterval.fromIso8601({
+ * //const intersection = Cesium.TimeInterval.fromIso8601({
  * //  iso8601 : '2000/2005',
  * //  data : 5
  * //});
- * var intersection = new Cesium.TimeInterval();
+ * const intersection = new Cesium.TimeInterval();
  * Cesium.TimeInterval.intersect(left, right, intersection, function(leftData, rightData) {
  *     return leftData + rightData;
  * });
  *
  * @example
  * // Check if an interval contains a specific time.
- * var dateToCheck = Cesium.JulianDate.fromIso8601('1982-09-08T11:30:00Z');
- * var containsDate = Cesium.TimeInterval.contains(timeInterval, dateToCheck);
+ * const dateToCheck = Cesium.JulianDate.fromIso8601('1982-09-08T11:30:00Z');
+ * const containsDate = Cesium.TimeInterval.contains(timeInterval, dateToCheck);
  */
 function TimeInterval(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -105,7 +105,7 @@ Object.defineProperties(TimeInterval.prototype, {
    */
   isEmpty: {
     get: function () {
-      var stopComparedToStart = JulianDate.compare(this.stop, this.start);
+      const stopComparedToStart = JulianDate.compare(this.stop, this.start);
       return (
         stopComparedToStart < 0 ||
         (stopComparedToStart === 0 &&
@@ -115,7 +115,7 @@ Object.defineProperties(TimeInterval.prototype, {
   },
 });
 
-var scratchInterval = {
+const scratchInterval = {
   start: undefined,
   stop: undefined,
   isStartIncluded: undefined,
@@ -142,17 +142,17 @@ TimeInterval.fromIso8601 = function (options, result) {
   Check.typeOf.string("options.iso8601", options.iso8601);
   //>>includeEnd('debug');
 
-  var dates = options.iso8601.split("/");
+  const dates = options.iso8601.split("/");
   if (dates.length !== 2) {
     throw new DeveloperError(
       "options.iso8601 is an invalid ISO 8601 interval."
     );
   }
-  var start = JulianDate.fromIso8601(dates[0]);
-  var stop = JulianDate.fromIso8601(dates[1]);
-  var isStartIncluded = defaultValue(options.isStartIncluded, true);
-  var isStopIncluded = defaultValue(options.isStopIncluded, true);
-  var data = options.data;
+  const start = JulianDate.fromIso8601(dates[0]);
+  const stop = JulianDate.fromIso8601(dates[1]);
+  const isStartIncluded = defaultValue(options.isStartIncluded, true);
+  const isStopIncluded = defaultValue(options.isStopIncluded, true);
+  const data = options.data;
 
   if (!defined(result)) {
     scratchInterval.start = start;
@@ -282,16 +282,16 @@ TimeInterval.intersect = function (left, right, result, mergeCallback) {
     return TimeInterval.clone(TimeInterval.EMPTY, result);
   }
 
-  var leftStart = left.start;
-  var leftStop = left.stop;
+  const leftStart = left.start;
+  const leftStop = left.stop;
 
-  var rightStart = right.start;
-  var rightStop = right.stop;
+  const rightStart = right.start;
+  const rightStop = right.stop;
 
-  var intersectsStartRight =
+  const intersectsStartRight =
     JulianDate.greaterThanOrEquals(rightStart, leftStart) &&
     JulianDate.greaterThanOrEquals(leftStop, rightStart);
-  var intersectsStartLeft =
+  const intersectsStartLeft =
     !intersectsStartRight &&
     JulianDate.lessThanOrEquals(rightStart, leftStart) &&
     JulianDate.lessThanOrEquals(leftStart, rightStop);
@@ -300,11 +300,11 @@ TimeInterval.intersect = function (left, right, result, mergeCallback) {
     return TimeInterval.clone(TimeInterval.EMPTY, result);
   }
 
-  var leftIsStartIncluded = left.isStartIncluded;
-  var leftIsStopIncluded = left.isStopIncluded;
-  var rightIsStartIncluded = right.isStartIncluded;
-  var rightIsStopIncluded = right.isStopIncluded;
-  var leftLessThanRight = JulianDate.lessThan(leftStop, rightStop);
+  const leftIsStartIncluded = left.isStartIncluded;
+  const leftIsStopIncluded = left.isStopIncluded;
+  const rightIsStartIncluded = right.isStartIncluded;
+  const rightIsStopIncluded = right.isStopIncluded;
+  const leftLessThanRight = JulianDate.lessThan(leftStop, rightStop);
 
   if (!defined(result)) {
     result = new TimeInterval();
@@ -344,12 +344,15 @@ TimeInterval.contains = function (timeInterval, julianDate) {
     return false;
   }
 
-  var startComparedToDate = JulianDate.compare(timeInterval.start, julianDate);
+  const startComparedToDate = JulianDate.compare(
+    timeInterval.start,
+    julianDate
+  );
   if (startComparedToDate === 0) {
     return timeInterval.isStartIncluded;
   }
 
-  var dateComparedToStop = JulianDate.compare(julianDate, timeInterval.stop);
+  const dateComparedToStop = JulianDate.compare(julianDate, timeInterval.stop);
   if (dateComparedToStop === 0) {
     return timeInterval.isStopIncluded;
   }

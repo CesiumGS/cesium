@@ -104,9 +104,9 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
-        var viewModel = {
+        const viewModel = {
           show: true,
           intensity: 2.0,
           distortion: 10.0,
@@ -116,9 +116,9 @@
         };
 
         Cesium.knockout.track(viewModel);
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
-        for (var name in viewModel) {
+        for (const name in viewModel) {
           if (viewModel.hasOwnProperty(name)) {
             Cesium.knockout
               .getObservable(viewModel, name)
@@ -126,7 +126,7 @@
           }
         }
 
-        var lensFlare = viewer.scene.postProcessStages.add(
+        const lensFlare = viewer.scene.postProcessStages.add(
           Cesium.PostProcessStageLibrary.createLensFlareStage()
         );
 
@@ -141,7 +141,7 @@
         }
         updatePostProcess();
 
-        var camera = viewer.scene.camera;
+        const camera = viewer.scene.camera;
         camera.position = new Cesium.Cartesian3(
           40010447.97500168,
           56238683.46406788,

@@ -25,7 +25,7 @@ import Appearance from "./Appearance.js";
  *
  * @example
  * // A solid white line segment
- * var primitive = new Cesium.Primitive({
+ * const primitive = new Cesium.Primitive({
  *   geometryInstances : new Cesium.GeometryInstance({
  *     geometry : new Cesium.SimplePolylineGeometry({
  *       positions : Cesium.Cartesian3.fromDegreesArray([
@@ -44,7 +44,7 @@ import Appearance from "./Appearance.js";
  * });
  *
  * // Two rectangles in a primitive, each with a different color
- * var instance = new Cesium.GeometryInstance({
+ * const instance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.RectangleGeometry({
  *     rectangle : Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0)
  *   }),
@@ -53,7 +53,7 @@ import Appearance from "./Appearance.js";
  *   }
  * });
  *
- * var anotherInstance = new Cesium.GeometryInstance({
+ * const anotherInstance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.RectangleGeometry({
  *     rectangle : Cesium.Rectangle.fromDegrees(0.0, 40.0, 10.0, 50.0)
  *   }),
@@ -62,7 +62,7 @@ import Appearance from "./Appearance.js";
  *   }
  * });
  *
- * var rectanglePrimitive = new Cesium.Primitive({
+ * const rectanglePrimitive = new Cesium.Primitive({
  *   geometryInstances : [instance, anotherInstance],
  *   appearance : new Cesium.PerInstanceColorAppearance()
  * });
@@ -70,16 +70,16 @@ import Appearance from "./Appearance.js";
 function PerInstanceColorAppearance(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var translucent = defaultValue(options.translucent, true);
-  var closed = defaultValue(options.closed, false);
-  var flat = defaultValue(options.flat, false);
-  var vs = flat
+  const translucent = defaultValue(options.translucent, true);
+  const closed = defaultValue(options.closed, false);
+  const flat = defaultValue(options.flat, false);
+  const vs = flat
     ? PerInstanceFlatColorAppearanceVS
     : PerInstanceColorAppearanceVS;
-  var fs = flat
+  const fs = flat
     ? PerInstanceFlatColorAppearanceFS
     : PerInstanceColorAppearanceFS;
-  var vertexFormat = flat
+  const vertexFormat = flat
     ? PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
     : PerInstanceColorAppearance.VERTEX_FORMAT;
 

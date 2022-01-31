@@ -29,7 +29,7 @@ import Material from "./Material.js";
  * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
  *
  * @example
- * var primitive = new Cesium.Primitive({
+ * const primitive = new Cesium.Primitive({
  *   geometryInstances : new Cesium.GeometryInstance({
  *     geometry : new Cesium.PolygonGeometry({
  *       vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
@@ -44,8 +44,8 @@ import Material from "./Material.js";
 function EllipsoidSurfaceAppearance(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var translucent = defaultValue(options.translucent, true);
-  var aboveGround = defaultValue(options.aboveGround, false);
+  const translucent = defaultValue(options.translucent, true);
+  const aboveGround = defaultValue(options.aboveGround, false);
 
   /**
    * The material used to determine the fragment color.  Unlike other {@link EllipsoidSurfaceAppearance}

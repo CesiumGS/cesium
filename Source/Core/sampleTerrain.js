@@ -26,12 +26,12 @@ import Check from "./Check.js";
  *
  * @example
  * // Query the terrain height of two Cartographic positions
- * var terrainProvider = Cesium.createWorldTerrain();
- * var positions = [
+ * const terrainProvider = Cesium.createWorldTerrain();
+ * const positions = [
  *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),
  *     Cesium.Cartographic.fromDegrees(87.0, 28.0)
  * ];
- * var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
+ * const promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
  * Cesium.when(promise, function(updatedPositions) {
  *     // positions[0].height and positions[1].height have been updated.
  *     // updatedPositions is just a reference to positions.
@@ -50,20 +50,20 @@ function sampleTerrain(terrainProvider, level, positions) {
 }
 
 function doSampling(terrainProvider, level, positions) {
-  var tilingScheme = terrainProvider.tilingScheme;
+  const tilingScheme = terrainProvider.tilingScheme;
 
-  var i;
+  let i;
 
   // Sort points into a set of tiles
-  var tileRequests = []; // Result will be an Array as it's easier to work with
-  var tileRequestSet = {}; // A unique set
+  const tileRequests = []; // Result will be an Array as it's easier to work with
+  const tileRequestSet = {}; // A unique set
   for (i = 0; i < positions.length; ++i) {
-    var xy = tilingScheme.positionToTileXY(positions[i], level);
-    var key = xy.toString();
+    const xy = tilingScheme.positionToTileXY(positions[i], level);
+    const key = xy.toString();
 
     if (!tileRequestSet.hasOwnProperty(key)) {
       // When tile is requested for the first time
-      var value = {
+      const value = {
         x: xy.x,
         y: xy.y,
         level: level,
@@ -80,15 +80,15 @@ function doSampling(terrainProvider, level, positions) {
   }
 
   // Send request for each required tile
-  var tilePromises = [];
+  const tilePromises = [];
   for (i = 0; i < tileRequests.length; ++i) {
-    var tileRequest = tileRequests[i];
-    var requestPromise = tileRequest.terrainProvider.requestTileGeometry(
+    const tileRequest = tileRequests[i];
+    const requestPromise = tileRequest.terrainProvider.requestTileGeometry(
       tileRequest.x,
       tileRequest.y,
       tileRequest.level
     );
-    var tilePromise = requestPromise
+    const tilePromise = requestPromise
       .then(createInterpolateFunction(tileRequest))
       .otherwise(createMarkFailedFunction(tileRequest));
     tilePromises.push(tilePromise);
@@ -99,30 +99,92 @@ function doSampling(terrainProvider, level, positions) {
   });
 }
 
+/**
+ * Calls {@link TerrainData#interpolateHeight} on a given {@link TerrainData} for a given {@link Cartographic} and
+ *  will assign the height property if the return value is not undefined.
+ *
+ * If the return value is false; it's suggesting that you should call {@link TerrainData#createMesh} first.
+ * @param {Cartographic} position The position to interpolate for and assign the height value to
+ * @param {TerrainData} terrainData
+ * @param {Rectangle} rectangle
+ * @returns {Boolean} If the height was actually interpolated and assigned
+ * @private
+ */
+function interpolateAndAssignHeight(position, terrainData, rectangle) {
+  const height = terrainData.interpolateHeight(
+    rectangle,
+    position.longitude,
+    position.latitude
+  );
+  if (height === undefined) {
+    // if height comes back as undefined, it may implicitly mean the terrain data
+    //  requires us to call TerrainData.createMesh() first (ArcGIS requires this in particular)
+    //  so we'll return false and do that next!
+    return false;
+  }
+  position.height = height;
+  return true;
+}
+
 function createInterpolateFunction(tileRequest) {
-  var tilePositions = tileRequest.positions;
-  var rectangle = tileRequest.tilingScheme.tileXYToRectangle(
+  const tilePositions = tileRequest.positions;
+  const rectangle = tileRequest.tilingScheme.tileXYToRectangle(
     tileRequest.x,
     tileRequest.y,
     tileRequest.level
   );
   return function (terrainData) {
-    for (var i = 0; i < tilePositions.length; ++i) {
-      var position = tilePositions[i];
-      position.height = terrainData.interpolateHeight(
-        rectangle,
-        position.longitude,
-        position.latitude
+    let isMeshRequired = false;
+    for (let i = 0; i < tilePositions.length; ++i) {
+      const position = tilePositions[i];
+      const isHeightAssigned = interpolateAndAssignHeight(
+        position,
+        terrainData,
+        rectangle
       );
+      // we've found a position which returned undefined - hinting to us
+      //  that we probably need to create a mesh for this terrain data.
+      // so break out of this loop and create the mesh - then we'll interpolate all the heights again
+      if (!isHeightAssigned) {
+        isMeshRequired = true;
+        break;
+      }
     }
+
+    if (!isMeshRequired) {
+      // all position heights were interpolated - we don't need the mesh
+      return when.resolve();
+    }
+
+    // create the mesh - and interpolate all the positions again
+    // note: terrain exaggeration is not passed in - we are only interested in the raw data
+    return terrainData
+      .createMesh({
+        tilingScheme: tileRequest.tilingScheme,
+        x: tileRequest.x,
+        y: tileRequest.y,
+        level: tileRequest.level,
+        // don't throttle this mesh creation because we've asked to sample these points;
+        //  so sample them! We don't care how many tiles that is!
+        throttle: false,
+      })
+      .then(function () {
+        // mesh has been created - so go through every position (maybe again)
+        //  and re-interpolate the heights - presumably using the mesh this time
+        for (let i = 0; i < tilePositions.length; ++i) {
+          const position = tilePositions[i];
+          // if it doesn't work this time - that's fine, we tried.
+          interpolateAndAssignHeight(position, terrainData, rectangle);
+        }
+      });
   };
 }
 
 function createMarkFailedFunction(tileRequest) {
-  var tilePositions = tileRequest.positions;
+  const tilePositions = tileRequest.positions;
   return function () {
-    for (var i = 0; i < tilePositions.length; ++i) {
-      var position = tilePositions[i];
+    for (let i = 0; i < tilePositions.length; ++i) {
+      const position = tilePositions[i];
       position.height = undefined;
     }
   };

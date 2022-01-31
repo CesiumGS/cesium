@@ -7,8 +7,8 @@ import when from "../ThirdParty/when.js";
 
 /**
  * Represents the contents of a
- * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Composite|Composite}
- * tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset.
+ * {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Composite|Composite}
+ * tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles} tileset.
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
@@ -31,6 +31,7 @@ function Composite3DTileContent(
   this._resource = resource;
   this._contents = [];
   this._readyPromise = when.defer();
+  this._groupMetadata = undefined;
 
   initialize(this, arrayBuffer, byteOffset, factory);
 }
@@ -38,9 +39,9 @@ function Composite3DTileContent(
 Object.defineProperties(Composite3DTileContent.prototype, {
   featurePropertiesDirty: {
     get: function () {
-      var contents = this._contents;
-      var length = contents.length;
-      for (var i = 0; i < length; ++i) {
+      const contents = this._contents;
+      const length = contents.length;
+      for (let i = 0; i < length; ++i) {
         if (contents[i].featurePropertiesDirty) {
           return true;
         }
@@ -49,9 +50,9 @@ Object.defineProperties(Composite3DTileContent.prototype, {
       return false;
     },
     set: function (value) {
-      var contents = this._contents;
-      var length = contents.length;
-      for (var i = 0; i < length; ++i) {
+      const contents = this._contents;
+      const length = contents.length;
+      for (let i = 0; i < length; ++i) {
         contents[i].featurePropertiesDirty = value;
       }
     },
@@ -163,18 +164,39 @@ Object.defineProperties(Composite3DTileContent.prototype, {
       return undefined;
     },
   },
+
+  /**
+   * Part of the {@link Cesium3DTileContent} interface. <code>Composite3DTileContent</code>
+   * both stores the group metadata and propagates the group metadata to all of its children.
+   * @memberof Composite3DTileContent.prototype
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  groupMetadata: {
+    get: function () {
+      return this._groupMetadata;
+    },
+    set: function (value) {
+      this._groupMetadata = value;
+      const contents = this._contents;
+      const length = contents.length;
+      for (let i = 0; i < length; ++i) {
+        contents[i].groupMetadata = value;
+      }
+    },
+  },
 });
 
-var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
 function initialize(content, arrayBuffer, byteOffset, factory) {
   byteOffset = defaultValue(byteOffset, 0);
 
-  var uint8Array = new Uint8Array(arrayBuffer);
-  var view = new DataView(arrayBuffer);
+  const uint8Array = new Uint8Array(arrayBuffer);
+  const view = new DataView(arrayBuffer);
   byteOffset += sizeOfUint32; // Skip magic
 
-  var version = view.getUint32(byteOffset, true);
+  const version = view.getUint32(byteOffset, true);
   if (version !== 1) {
     throw new RuntimeError(
       "Only Composite Tile version 1 is supported. Version " +
@@ -187,21 +209,21 @@ function initialize(content, arrayBuffer, byteOffset, factory) {
   // Skip byteLength
   byteOffset += sizeOfUint32;
 
-  var tilesLength = view.getUint32(byteOffset, true);
+  const tilesLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var contentPromises = [];
+  const contentPromises = [];
 
-  for (var i = 0; i < tilesLength; ++i) {
-    var tileType = getMagic(uint8Array, byteOffset);
+  for (let i = 0; i < tilesLength; ++i) {
+    const tileType = getMagic(uint8Array, byteOffset);
 
     // Tile byte length is stored after magic and version
-    var tileByteLength = view.getUint32(byteOffset + sizeOfUint32 * 2, true);
+    const tileByteLength = view.getUint32(byteOffset + sizeOfUint32 * 2, true);
 
-    var contentFactory = factory[tileType];
+    const contentFactory = factory[tileType];
 
     if (defined(contentFactory)) {
-      var innerContent = contentFactory(
+      const innerContent = contentFactory(
         content._tileset,
         content._tile,
         content._resource,
@@ -249,25 +271,25 @@ Composite3DTileContent.prototype.applyDebugSettings = function (
   enabled,
   color
 ) {
-  var contents = this._contents;
-  var length = contents.length;
-  for (var i = 0; i < length; ++i) {
+  const contents = this._contents;
+  const length = contents.length;
+  for (let i = 0; i < length; ++i) {
     contents[i].applyDebugSettings(enabled, color);
   }
 };
 
 Composite3DTileContent.prototype.applyStyle = function (style) {
-  var contents = this._contents;
-  var length = contents.length;
-  for (var i = 0; i < length; ++i) {
+  const contents = this._contents;
+  const length = contents.length;
+  for (let i = 0; i < length; ++i) {
     contents[i].applyStyle(style);
   }
 };
 
 Composite3DTileContent.prototype.update = function (tileset, frameState) {
-  var contents = this._contents;
-  var length = contents.length;
-  for (var i = 0; i < length; ++i) {
+  const contents = this._contents;
+  const length = contents.length;
+  for (let i = 0; i < length; ++i) {
     contents[i].update(tileset, frameState);
   }
 };
@@ -277,9 +299,9 @@ Composite3DTileContent.prototype.isDestroyed = function () {
 };
 
 Composite3DTileContent.prototype.destroy = function () {
-  var contents = this._contents;
-  var length = contents.length;
-  for (var i = 0; i < length; ++i) {
+  const contents = this._contents;
+  const length = contents.length;
+  for (let i = 0; i < length; ++i) {
     contents[i].destroy();
   }
   return destroyObject(this);

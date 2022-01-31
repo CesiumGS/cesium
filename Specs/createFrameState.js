@@ -8,7 +8,7 @@ import { JobScheduler } from "../Source/Cesium.js";
 
 function createFrameState(context, camera, frameNumber, time) {
   // Mock frame-state for testing.
-  var frameState = new FrameState(
+  const frameState = new FrameState(
     context,
     new CreditDisplay(
       document.createElement("div"),
@@ -18,7 +18,7 @@ function createFrameState(context, camera, frameNumber, time) {
     new JobScheduler()
   );
 
-  var projection = new GeographicProjection();
+  const projection = new GeographicProjection();
   frameState.mapProjection = projection;
   frameState.frameNumber = defaultValue(frameNumber, 1.0);
   frameState.time = defaultValue(
@@ -42,6 +42,7 @@ function createFrameState(context, camera, frameNumber, time) {
   );
 
   frameState.terrainExaggeration = 1.0;
+  frameState.terrainExaggerationRelativeHeight = 0.0;
 
   frameState.passes.render = true;
   frameState.passes.pick = false;

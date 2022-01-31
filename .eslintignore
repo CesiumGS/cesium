@@ -2,6 +2,7 @@ Apps/HelloWorld.html
 Apps/Sandcastle/ThirdParty/**
 Build/**
 Documentation/**
+Source/Scene/GltfPipeline/**
 Source/Shaders/**
 Source/ThirdParty/**
 Source/Workers/**
@@ -12,3 +13,4 @@ Apps/Sandcastle/jsHintOptions.js
 Apps/Sandcastle/gallery/gallery-index.js
 Source/Core/buildModuleUrl.js
 Specs/spec-main.js
+index.release.html

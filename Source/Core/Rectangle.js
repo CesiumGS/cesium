@@ -144,8 +144,8 @@ Rectangle.computeWidth = function (rectangle) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("rectangle", rectangle);
   //>>includeEnd('debug');
-  var east = rectangle.east;
-  var west = rectangle.west;
+  let east = rectangle.east;
+  const west = rectangle.west;
   if (east < west) {
     east += CesiumMath.TWO_PI;
   }
@@ -175,7 +175,7 @@ Rectangle.computeHeight = function (rectangle) {
  * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
  *
  * @example
- * var rectangle = Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0);
+ * const rectangle = Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0);
  */
 Rectangle.fromDegrees = function (west, south, east, north, result) {
   west = CesiumMath.toRadians(defaultValue(west, 0.0));
@@ -206,7 +206,7 @@ Rectangle.fromDegrees = function (west, south, east, north, result) {
  * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
  *
  * @example
- * var rectangle = Cesium.Rectangle.fromRadians(0.0, Math.PI/4, Math.PI/8, 3*Math.PI/4);
+ * const rectangle = Cesium.Rectangle.fromRadians(0.0, Math.PI/4, Math.PI/8, 3*Math.PI/4);
  */
 Rectangle.fromRadians = function (west, south, east, north, result) {
   if (!defined(result)) {
@@ -233,21 +233,21 @@ Rectangle.fromCartographicArray = function (cartographics, result) {
   Check.defined("cartographics", cartographics);
   //>>includeEnd('debug');
 
-  var west = Number.MAX_VALUE;
-  var east = -Number.MAX_VALUE;
-  var westOverIDL = Number.MAX_VALUE;
-  var eastOverIDL = -Number.MAX_VALUE;
-  var south = Number.MAX_VALUE;
-  var north = -Number.MAX_VALUE;
+  let west = Number.MAX_VALUE;
+  let east = -Number.MAX_VALUE;
+  let westOverIDL = Number.MAX_VALUE;
+  let eastOverIDL = -Number.MAX_VALUE;
+  let south = Number.MAX_VALUE;
+  let north = -Number.MAX_VALUE;
 
-  for (var i = 0, len = cartographics.length; i < len; i++) {
-    var position = cartographics[i];
+  for (let i = 0, len = cartographics.length; i < len; i++) {
+    const position = cartographics[i];
     west = Math.min(west, position.longitude);
     east = Math.max(east, position.longitude);
     south = Math.min(south, position.latitude);
     north = Math.max(north, position.latitude);
 
-    var lonAdjusted =
+    const lonAdjusted =
       position.longitude >= 0
         ? position.longitude
         : position.longitude + CesiumMath.TWO_PI;
@@ -292,21 +292,21 @@ Rectangle.fromCartesianArray = function (cartesians, ellipsoid, result) {
   //>>includeEnd('debug');
   ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
-  var west = Number.MAX_VALUE;
-  var east = -Number.MAX_VALUE;
-  var westOverIDL = Number.MAX_VALUE;
-  var eastOverIDL = -Number.MAX_VALUE;
-  var south = Number.MAX_VALUE;
-  var north = -Number.MAX_VALUE;
+  let west = Number.MAX_VALUE;
+  let east = -Number.MAX_VALUE;
+  let westOverIDL = Number.MAX_VALUE;
+  let eastOverIDL = -Number.MAX_VALUE;
+  let south = Number.MAX_VALUE;
+  let north = -Number.MAX_VALUE;
 
-  for (var i = 0, len = cartesians.length; i < len; i++) {
-    var position = ellipsoid.cartesianToCartographic(cartesians[i]);
+  for (let i = 0, len = cartesians.length; i < len; i++) {
+    const position = ellipsoid.cartesianToCartographic(cartesians[i]);
     west = Math.min(west, position.longitude);
     east = Math.max(east, position.longitude);
     south = Math.min(south, position.latitude);
     north = Math.max(north, position.latitude);
 
-    var lonAdjusted =
+    const lonAdjusted =
       position.longitude >= 0
         ? position.longitude
         : position.longitude + CesiumMath.TWO_PI;
@@ -457,7 +457,7 @@ Rectangle.validate = function (rectangle) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("rectangle", rectangle);
 
-  var north = rectangle.north;
+  const north = rectangle.north;
   Check.typeOf.number.greaterThanOrEquals(
     "north",
     north,
@@ -465,7 +465,7 @@ Rectangle.validate = function (rectangle) {
   );
   Check.typeOf.number.lessThanOrEquals("north", north, CesiumMath.PI_OVER_TWO);
 
-  var south = rectangle.south;
+  const south = rectangle.south;
   Check.typeOf.number.greaterThanOrEquals(
     "south",
     south,
@@ -473,11 +473,11 @@ Rectangle.validate = function (rectangle) {
   );
   Check.typeOf.number.lessThanOrEquals("south", south, CesiumMath.PI_OVER_TWO);
 
-  var west = rectangle.west;
+  const west = rectangle.west;
   Check.typeOf.number.greaterThanOrEquals("west", west, -Math.PI);
   Check.typeOf.number.lessThanOrEquals("west", west, Math.PI);
 
-  var east = rectangle.east;
+  const east = rectangle.east;
   Check.typeOf.number.greaterThanOrEquals("east", east, -Math.PI);
   Check.typeOf.number.lessThanOrEquals("east", east, Math.PI);
   //>>includeEnd('debug');
@@ -579,15 +579,15 @@ Rectangle.center = function (rectangle, result) {
   Check.typeOf.object("rectangle", rectangle);
   //>>includeEnd('debug');
 
-  var east = rectangle.east;
-  var west = rectangle.west;
+  let east = rectangle.east;
+  const west = rectangle.west;
 
   if (east < west) {
     east += CesiumMath.TWO_PI;
   }
 
-  var longitude = CesiumMath.negativePiToPi((west + east) * 0.5);
-  var latitude = (rectangle.south + rectangle.north) * 0.5;
+  const longitude = CesiumMath.negativePiToPi((west + east) * 0.5);
+  const latitude = (rectangle.south + rectangle.north) * 0.5;
 
   if (!defined(result)) {
     return new Cartographic(longitude, latitude);
@@ -617,11 +617,11 @@ Rectangle.intersection = function (rectangle, otherRectangle, result) {
   Check.typeOf.object("otherRectangle", otherRectangle);
   //>>includeEnd('debug');
 
-  var rectangleEast = rectangle.east;
-  var rectangleWest = rectangle.west;
+  let rectangleEast = rectangle.east;
+  let rectangleWest = rectangle.west;
 
-  var otherRectangleEast = otherRectangle.east;
-  var otherRectangleWest = otherRectangle.west;
+  let otherRectangleEast = otherRectangle.east;
+  let otherRectangleWest = otherRectangle.west;
 
   if (rectangleEast < rectangleWest && otherRectangleEast > 0.0) {
     rectangleEast += CesiumMath.TWO_PI;
@@ -635,10 +635,10 @@ Rectangle.intersection = function (rectangle, otherRectangle, result) {
     rectangleWest += CesiumMath.TWO_PI;
   }
 
-  var west = CesiumMath.negativePiToPi(
+  const west = CesiumMath.negativePiToPi(
     Math.max(rectangleWest, otherRectangleWest)
   );
-  var east = CesiumMath.negativePiToPi(
+  const east = CesiumMath.negativePiToPi(
     Math.min(rectangleEast, otherRectangleEast)
   );
 
@@ -650,8 +650,8 @@ Rectangle.intersection = function (rectangle, otherRectangle, result) {
     return undefined;
   }
 
-  var south = Math.max(rectangle.south, otherRectangle.south);
-  var north = Math.min(rectangle.north, otherRectangle.north);
+  const south = Math.max(rectangle.south, otherRectangle.south);
+  const north = Math.min(rectangle.north, otherRectangle.north);
 
   if (south >= north) {
     return undefined;
@@ -684,10 +684,10 @@ Rectangle.simpleIntersection = function (rectangle, otherRectangle, result) {
   Check.typeOf.object("otherRectangle", otherRectangle);
   //>>includeEnd('debug');
 
-  var west = Math.max(rectangle.west, otherRectangle.west);
-  var south = Math.max(rectangle.south, otherRectangle.south);
-  var east = Math.min(rectangle.east, otherRectangle.east);
-  var north = Math.min(rectangle.north, otherRectangle.north);
+  const west = Math.max(rectangle.west, otherRectangle.west);
+  const south = Math.max(rectangle.south, otherRectangle.south);
+  const east = Math.min(rectangle.east, otherRectangle.east);
+  const north = Math.min(rectangle.north, otherRectangle.north);
 
   if (south >= north || west >= east) {
     return undefined;
@@ -722,11 +722,11 @@ Rectangle.union = function (rectangle, otherRectangle, result) {
     result = new Rectangle();
   }
 
-  var rectangleEast = rectangle.east;
-  var rectangleWest = rectangle.west;
+  let rectangleEast = rectangle.east;
+  let rectangleWest = rectangle.west;
 
-  var otherRectangleEast = otherRectangle.east;
-  var otherRectangleWest = otherRectangle.west;
+  let otherRectangleEast = otherRectangle.east;
+  let otherRectangleWest = otherRectangle.west;
 
   if (rectangleEast < rectangleWest && otherRectangleEast > 0.0) {
     rectangleEast += CesiumMath.TWO_PI;
@@ -740,10 +740,10 @@ Rectangle.union = function (rectangle, otherRectangle, result) {
     rectangleWest += CesiumMath.TWO_PI;
   }
 
-  var west = CesiumMath.convertLongitudeRange(
+  const west = CesiumMath.negativePiToPi(
     Math.min(rectangleWest, otherRectangleWest)
   );
-  var east = CesiumMath.convertLongitudeRange(
+  const east = CesiumMath.negativePiToPi(
     Math.max(rectangleEast, otherRectangleEast)
   );
 
@@ -794,11 +794,11 @@ Rectangle.contains = function (rectangle, cartographic) {
   Check.typeOf.object("cartographic", cartographic);
   //>>includeEnd('debug');
 
-  var longitude = cartographic.longitude;
-  var latitude = cartographic.latitude;
+  let longitude = cartographic.longitude;
+  const latitude = cartographic.latitude;
 
-  var west = rectangle.west;
-  var east = rectangle.east;
+  const west = rectangle.west;
+  let east = rectangle.east;
 
   if (east < west) {
     east += CesiumMath.TWO_PI;
@@ -816,7 +816,7 @@ Rectangle.contains = function (rectangle, cartographic) {
   );
 };
 
-var subsampleLlaScratch = new Cartographic();
+const subsampleLlaScratch = new Cartographic();
 /**
  * Samples a rectangle so that it includes a list of Cartesian points suitable for passing to
  * {@link BoundingSphere#fromPoints}.  Sampling is necessary to account
@@ -839,14 +839,14 @@ Rectangle.subsample = function (rectangle, ellipsoid, surfaceHeight, result) {
   if (!defined(result)) {
     result = [];
   }
-  var length = 0;
+  let length = 0;
 
-  var north = rectangle.north;
-  var south = rectangle.south;
-  var east = rectangle.east;
-  var west = rectangle.west;
+  const north = rectangle.north;
+  const south = rectangle.south;
+  const east = rectangle.east;
+  const west = rectangle.west;
 
-  var lla = subsampleLlaScratch;
+  const lla = subsampleLlaScratch;
   lla.height = surfaceHeight;
 
   lla.longitude = west;
@@ -874,7 +874,7 @@ Rectangle.subsample = function (rectangle, ellipsoid, surfaceHeight, result) {
     lla.latitude = 0.0;
   }
 
-  for (var i = 1; i < 8; ++i) {
+  for (let i = 1; i < 8; ++i) {
     lla.longitude = -Math.PI + i * CesiumMath.PI_OVER_TWO;
     if (Rectangle.contains(rectangle, lla)) {
       result[length] = ellipsoid.cartographicToCartesian(lla, result[length]);

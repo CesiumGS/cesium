@@ -9,8 +9,8 @@ import QuaternionSpline from "../Core/QuaternionSpline.js";
 import Spline from "../Core/Spline.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 import WeightSpline from "../Core/WeightSpline.js";
-import getAccessorByteStride from "../ThirdParty/GltfPipeline/getAccessorByteStride.js";
-import numberOfComponentsForType from "../ThirdParty/GltfPipeline/numberOfComponentsForType.js";
+import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
+import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import AttributeType from "./AttributeType.js";
 
 /**
@@ -18,52 +18,52 @@ import AttributeType from "./AttributeType.js";
  */
 function ModelAnimationCache() {}
 
-var dataUriRegex = /^data\:/i;
+const dataUriRegex = /^data\:/i;
 
 function getAccessorKey(model, accessor) {
-  var gltf = model.gltf;
-  var buffers = gltf.buffers;
-  var bufferViews = gltf.bufferViews;
+  const gltf = model.gltf;
+  const buffers = gltf.buffers;
+  const bufferViews = gltf.bufferViews;
 
-  var bufferView = bufferViews[accessor.bufferView];
-  var buffer = buffers[bufferView.buffer];
+  const bufferView = bufferViews[accessor.bufferView];
+  const buffer = buffers[bufferView.buffer];
 
-  var byteOffset = bufferView.byteOffset + accessor.byteOffset;
-  var byteLength = accessor.count * numberOfComponentsForType(accessor.type);
+  const byteOffset = bufferView.byteOffset + accessor.byteOffset;
+  const byteLength = accessor.count * numberOfComponentsForType(accessor.type);
 
-  var uriKey = dataUriRegex.test(buffer.uri) ? "" : buffer.uri;
+  const uriKey = dataUriRegex.test(buffer.uri) ? "" : buffer.uri;
   return model.cacheKey + "//" + uriKey + "/" + byteOffset + "/" + byteLength;
 }
 
-var cachedAnimationParameters = {};
+const cachedAnimationParameters = {};
 
 ModelAnimationCache.getAnimationParameterValues = function (model, accessor) {
-  var key = getAccessorKey(model, accessor);
-  var values = cachedAnimationParameters[key];
+  const key = getAccessorKey(model, accessor);
+  let values = cachedAnimationParameters[key];
 
   if (!defined(values)) {
     // Cache miss
-    var gltf = model.gltf;
+    const gltf = model.gltf;
 
-    var buffers = gltf.buffers;
-    var bufferViews = gltf.bufferViews;
+    const buffers = gltf.buffers;
+    const bufferViews = gltf.bufferViews;
 
-    var bufferView = bufferViews[accessor.bufferView];
-    var bufferId = bufferView.buffer;
-    var buffer = buffers[bufferId];
-    var source = buffer.extras._pipeline.source;
+    const bufferView = bufferViews[accessor.bufferView];
+    const bufferId = bufferView.buffer;
+    const buffer = buffers[bufferId];
+    const source = buffer.extras._pipeline.source;
 
-    var componentType = accessor.componentType;
-    var type = accessor.type;
-    var numberOfComponents = numberOfComponentsForType(type);
-    var count = accessor.count;
-    var byteStride = getAccessorByteStride(gltf, accessor);
+    const componentType = accessor.componentType;
+    const type = accessor.type;
+    const numberOfComponents = numberOfComponentsForType(type);
+    const count = accessor.count;
+    const byteStride = getAccessorByteStride(gltf, accessor);
 
     values = new Array(count);
-    var accessorByteOffset = defaultValue(accessor.byteOffset, 0);
-    var byteOffset = bufferView.byteOffset + accessorByteOffset;
-    for (var i = 0; i < count; i++) {
-      var typedArrayView = ComponentDatatype.createArrayBufferView(
+    const accessorByteOffset = defaultValue(accessor.byteOffset, 0);
+    let byteOffset = bufferView.byteOffset + accessorByteOffset;
+    for (let i = 0; i < count; i++) {
+      const typedArrayView = ComponentDatatype.createArrayBufferView(
         componentType,
         source.buffer,
         source.byteOffset + byteOffset,
@@ -89,7 +89,7 @@ ModelAnimationCache.getAnimationParameterValues = function (model, accessor) {
   return values;
 };
 
-var cachedAnimationSplines = {};
+const cachedAnimationSplines = {};
 
 function getAnimationSplineKey(model, animationName, samplerName) {
   return model.cacheKey + "//" + animationName + "/" + samplerName;
@@ -114,12 +114,12 @@ function SteppedSpline(backingSpline) {
 }
 SteppedSpline.prototype.findTimeInterval = Spline.prototype.findTimeInterval;
 SteppedSpline.prototype.evaluate = function (time, result) {
-  var i = (this._lastTimeIndex = this.findTimeInterval(
+  const i = (this._lastTimeIndex = this.findTimeInterval(
     time,
     this._lastTimeIndex
   ));
-  var times = this._spline.times;
-  var steppedTime = time >= times[i + 1] ? times[i + 1] : times[i];
+  const times = this._spline.times;
+  const steppedTime = time >= times[i + 1] ? times[i + 1] : times[i];
   return this._spline.evaluate(steppedTime, result);
 };
 Object.defineProperties(SteppedSpline.prototype, {
@@ -146,12 +146,12 @@ ModelAnimationCache.getAnimationSpline = function (
   path,
   output
 ) {
-  var key = getAnimationSplineKey(model, animationName, samplerName);
-  var spline = cachedAnimationSplines[key];
+  const key = getAnimationSplineKey(model, animationName, samplerName);
+  let spline = cachedAnimationSplines[key];
 
   if (!defined(spline)) {
-    var times = input;
-    var controlPoints = output;
+    const times = input;
+    const controlPoints = output;
 
     if (times.length === 1 && controlPoints.length === 1) {
       spline = new ConstantSpline(controlPoints[0]);
@@ -190,36 +190,36 @@ ModelAnimationCache.getAnimationSpline = function (
   return spline;
 };
 
-var cachedSkinInverseBindMatrices = {};
+const cachedSkinInverseBindMatrices = {};
 
 ModelAnimationCache.getSkinInverseBindMatrices = function (model, accessor) {
-  var key = getAccessorKey(model, accessor);
-  var matrices = cachedSkinInverseBindMatrices[key];
+  const key = getAccessorKey(model, accessor);
+  let matrices = cachedSkinInverseBindMatrices[key];
 
   if (!defined(matrices)) {
     // Cache miss
-    var gltf = model.gltf;
-    var buffers = gltf.buffers;
-    var bufferViews = gltf.bufferViews;
+    const gltf = model.gltf;
+    const buffers = gltf.buffers;
+    const bufferViews = gltf.bufferViews;
 
-    var bufferViewId = accessor.bufferView;
-    var bufferView = bufferViews[bufferViewId];
-    var bufferId = bufferView.buffer;
-    var buffer = buffers[bufferId];
-    var source = buffer.extras._pipeline.source;
+    const bufferViewId = accessor.bufferView;
+    const bufferView = bufferViews[bufferViewId];
+    const bufferId = bufferView.buffer;
+    const buffer = buffers[bufferId];
+    const source = buffer.extras._pipeline.source;
 
-    var componentType = accessor.componentType;
-    var type = accessor.type;
-    var count = accessor.count;
-    var byteStride = getAccessorByteStride(gltf, accessor);
-    var byteOffset = bufferView.byteOffset + accessor.byteOffset;
-    var numberOfComponents = numberOfComponentsForType(type);
+    const componentType = accessor.componentType;
+    const type = accessor.type;
+    const count = accessor.count;
+    const byteStride = getAccessorByteStride(gltf, accessor);
+    let byteOffset = bufferView.byteOffset + accessor.byteOffset;
+    const numberOfComponents = numberOfComponentsForType(type);
 
     matrices = new Array(count);
 
     if (componentType === WebGLConstants.FLOAT && type === AttributeType.MAT4) {
-      for (var i = 0; i < count; ++i) {
-        var typedArrayView = ComponentDatatype.createArrayBufferView(
+      for (let i = 0; i < count; ++i) {
+        const typedArrayView = ComponentDatatype.createArrayBufferView(
           componentType,
           source.buffer,
           source.byteOffset + byteOffset,

@@ -5,22 +5,22 @@ import Quaternion from "./Quaternion.js";
 import Spline from "./Spline.js";
 
 function createEvaluateFunction(spline) {
-  var points = spline.points;
-  var times = spline.times;
+  const points = spline.points;
+  const times = spline.times;
 
   // use slerp interpolation
   return function (time, result) {
     if (!defined(result)) {
       result = new Quaternion();
     }
-    var i = (spline._lastTimeIndex = spline.findTimeInterval(
+    const i = (spline._lastTimeIndex = spline.findTimeInterval(
       time,
       spline._lastTimeIndex
     ));
-    var u = (time - times[i]) / (times[i + 1] - times[i]);
+    const u = (time - times[i]) / (times[i + 1] - times[i]);
 
-    var q0 = points[i];
-    var q1 = points[i + 1];
+    const q0 = points[i];
+    const q1 = points[i + 1];
 
     return Quaternion.fastSlerp(q0, q1, u, result);
   };
@@ -49,8 +49,8 @@ function createEvaluateFunction(spline) {
 function QuaternionSpline(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var points = options.points;
-  var times = options.times;
+  const points = options.points;
+  const times = options.times;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(points) || !defined(times)) {

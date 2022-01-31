@@ -1,4 +1,3 @@
-import sprintf from "../ThirdParty/sprintf.js";
 import binarySearch from "./binarySearch.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
@@ -9,23 +8,23 @@ import LeapSecond from "./LeapSecond.js";
 import TimeConstants from "./TimeConstants.js";
 import TimeStandard from "./TimeStandard.js";
 
-var gregorianDateScratch = new GregorianDate();
-var daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-var daysInLeapFeburary = 29;
+const gregorianDateScratch = new GregorianDate();
+const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+const daysInLeapFeburary = 29;
 
 function compareLeapSecondDates(leapSecond, dateToFind) {
   return JulianDate.compare(leapSecond.julianDate, dateToFind.julianDate);
 }
 
 // we don't really need a leap second instance, anything with a julianDate property will do
-var binarySearchScratchLeapSecond = new LeapSecond();
+const binarySearchScratchLeapSecond = new LeapSecond();
 
 function convertUtcToTai(julianDate) {
   //Even though julianDate is in UTC, we'll treat it as TAI and
   //search the leap second table for it.
   binarySearchScratchLeapSecond.julianDate = julianDate;
-  var leapSeconds = JulianDate.leapSeconds;
-  var index = binarySearch(
+  const leapSeconds = JulianDate.leapSeconds;
+  let index = binarySearch(
     leapSeconds,
     binarySearchScratchLeapSecond,
     compareLeapSecondDates
@@ -39,13 +38,13 @@ function convertUtcToTai(julianDate) {
     index = leapSeconds.length - 1;
   }
 
-  var offset = leapSeconds[index].offset;
+  let offset = leapSeconds[index].offset;
   if (index > 0) {
     //Now we have the index of the closest leap second that comes on or after our UTC time.
     //However, if the difference between the UTC date being converted and the TAI
     //defined leap second is greater than the offset, we are off by one and need to use
     //the previous leap second.
-    var difference = JulianDate.secondsDifference(
+    const difference = JulianDate.secondsDifference(
       leapSeconds[index].julianDate,
       julianDate
     );
@@ -60,8 +59,8 @@ function convertUtcToTai(julianDate) {
 
 function convertTaiToUtc(julianDate, result) {
   binarySearchScratchLeapSecond.julianDate = julianDate;
-  var leapSeconds = JulianDate.leapSeconds;
-  var index = binarySearch(
+  const leapSeconds = JulianDate.leapSeconds;
+  let index = binarySearch(
     leapSeconds,
     binarySearchScratchLeapSecond,
     compareLeapSecondDates
@@ -85,7 +84,7 @@ function convertTaiToUtc(julianDate, result) {
   }
 
   //Compute the difference between the found leap second and the time we are converting.
-  var difference = JulianDate.secondsDifference(
+  const difference = JulianDate.secondsDifference(
     leapSeconds[index].julianDate,
     julianDate
   );
@@ -114,7 +113,7 @@ function convertTaiToUtc(julianDate, result) {
 }
 
 function setComponents(wholeDays, secondsOfDay, julianDate) {
-  var extraDays = (secondsOfDay / TimeConstants.SECONDS_PER_DAY) | 0;
+  const extraDays = (secondsOfDay / TimeConstants.SECONDS_PER_DAY) | 0;
   wholeDays += extraDays;
   secondsOfDay -= TimeConstants.SECONDS_PER_DAY * extraDays;
 
@@ -140,9 +139,9 @@ function computeJulianDateComponents(
   // Algorithm from page 604 of the Explanatory Supplement to the
   // Astronomical Almanac (Seidelmann 1992).
 
-  var a = ((month - 14) / 12) | 0;
-  var b = year + 4800 + a;
-  var dayNumber =
+  const a = ((month - 14) / 12) | 0;
+  const b = year + 4800 + a;
+  let dayNumber =
     (((1461 * b) / 4) | 0) +
     (((367 * (month - 2 - 12 * a)) / 12) | 0) -
     (((3 * (((b + 100) / 100) | 0)) / 4) | 0) +
@@ -155,7 +154,7 @@ function computeJulianDateComponents(
     hour += 24;
   }
 
-  var secondsOfDay =
+  const secondsOfDay =
     second +
     (hour * TimeConstants.SECONDS_PER_HOUR +
       minute * TimeConstants.SECONDS_PER_MINUTE +
@@ -170,26 +169,26 @@ function computeJulianDateComponents(
 
 //Regular expressions used for ISO8601 date parsing.
 //YYYY
-var matchCalendarYear = /^(\d{4})$/;
+const matchCalendarYear = /^(\d{4})$/;
 //YYYY-MM (YYYYMM is invalid)
-var matchCalendarMonth = /^(\d{4})-(\d{2})$/;
+const matchCalendarMonth = /^(\d{4})-(\d{2})$/;
 //YYYY-DDD or YYYYDDD
-var matchOrdinalDate = /^(\d{4})-?(\d{3})$/;
+const matchOrdinalDate = /^(\d{4})-?(\d{3})$/;
 //YYYY-Www or YYYYWww or YYYY-Www-D or YYYYWwwD
-var matchWeekDate = /^(\d{4})-?W(\d{2})-?(\d{1})?$/;
+const matchWeekDate = /^(\d{4})-?W(\d{2})-?(\d{1})?$/;
 //YYYY-MM-DD or YYYYMMDD
-var matchCalendarDate = /^(\d{4})-?(\d{2})-?(\d{2})$/;
+const matchCalendarDate = /^(\d{4})-?(\d{2})-?(\d{2})$/;
 // Match utc offset
-var utcOffset = /([Z+\-])?(\d{2})?:?(\d{2})?$/;
+const utcOffset = /([Z+\-])?(\d{2})?:?(\d{2})?$/;
 // Match hours HH or HH.xxxxx
-var matchHours = /^(\d{2})(\.\d+)?/.source + utcOffset.source;
+const matchHours = /^(\d{2})(\.\d+)?/.source + utcOffset.source;
 // Match hours/minutes HH:MM HHMM.xxxxx
-var matchHoursMinutes = /^(\d{2}):?(\d{2})(\.\d+)?/.source + utcOffset.source;
+const matchHoursMinutes = /^(\d{2}):?(\d{2})(\.\d+)?/.source + utcOffset.source;
 // Match hours/minutes HH:MM:SS HHMMSS.xxxxx
-var matchHoursMinutesSeconds =
+const matchHoursMinutesSeconds =
   /^(\d{2}):?(\d{2}):?(\d{2})(\.\d+)?/.source + utcOffset.source;
 
-var iso8601ErrorMessage = "Invalid ISO 8601 date.";
+const iso8601ErrorMessage = "Invalid ISO 8601 date.";
 
 /**
  * Represents an astronomical Julian date, which is the number of days since noon on January 1, -4712 (4713 BC).
@@ -222,7 +221,7 @@ function JulianDate(julianDayNumber, secondsOfDay, timeStandard) {
   timeStandard = defaultValue(timeStandard, TimeStandard.UTC);
 
   //If julianDayNumber is fractional, make it an integer and add the number of seconds the fraction represented.
-  var wholeDays = julianDayNumber | 0;
+  const wholeDays = julianDayNumber | 0;
   secondsOfDay =
     secondsOfDay +
     (julianDayNumber - wholeDays) * TimeConstants.SECONDS_PER_DAY;
@@ -250,7 +249,7 @@ JulianDate.fromGregorianDate = function (date, result) {
   }
   //>>includeEnd('debug');
 
-  var components = computeJulianDateComponents(
+  const components = computeJulianDateComponents(
     date.year,
     date.month,
     date.day,
@@ -283,7 +282,7 @@ JulianDate.fromDate = function (date, result) {
   }
   //>>includeEnd('debug');
 
-  var components = computeJulianDateComponents(
+  const components = computeJulianDateComponents(
     date.getUTCFullYear(),
     date.getUTCMonth() + 1,
     date.getUTCDate(),
@@ -323,26 +322,26 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
   iso8601String = iso8601String.replace(",", ".");
 
   //Split the string into its date and time components, denoted by a mandatory T
-  var tokens = iso8601String.split("T");
-  var year;
-  var month = 1;
-  var day = 1;
-  var hour = 0;
-  var minute = 0;
-  var second = 0;
-  var millisecond = 0;
+  let tokens = iso8601String.split("T");
+  let year;
+  let month = 1;
+  let day = 1;
+  let hour = 0;
+  let minute = 0;
+  let second = 0;
+  let millisecond = 0;
 
   //Lacking a time is okay, but a missing date is illegal.
-  var date = tokens[0];
-  var time = tokens[1];
-  var tmp;
-  var inLeapYear;
+  const date = tokens[0];
+  const time = tokens[1];
+  let tmp;
+  let inLeapYear;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(date)) {
     throw new DeveloperError(iso8601ErrorMessage);
   }
 
-  var dashCount;
+  let dashCount;
   //>>includeEnd('debug');
 
   //First match the date against possible regular expressions.
@@ -368,7 +367,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
         year = +tokens[1];
       } else {
         //Not a year/month/day so it must be an ordinal date.
-        var dayOfYear;
+        let dayOfYear;
         tokens = date.match(matchOrdinalDate);
         if (tokens !== null) {
           year = +tokens[1];
@@ -391,8 +390,8 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
             //ISO week date to ordinal date from
             //http://en.wikipedia.org/w/index.php?title=ISO_week_date&oldid=474176775
             year = +tokens[1];
-            var weekNumber = +tokens[2];
-            var dayOfWeek = +tokens[3] || 0;
+            const weekNumber = +tokens[2];
+            const dayOfWeek = +tokens[3] || 0;
 
             //>>includeStart('debug', pragmas.debug);
             dashCount = date.split("-").length - 1;
@@ -405,7 +404,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
             }
             //>>includeEnd('debug')
 
-            var january4 = new Date(Date.UTC(year, 0, 4));
+            const january4 = new Date(Date.UTC(year, 0, 4));
             dayOfYear = weekNumber * 7 + dayOfWeek - january4.getUTCDay() - 3;
           } else {
             //None of our regular expressions succeeded in parsing the date properly.
@@ -439,7 +438,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
 
   //Now move onto the time string, which is much simpler.
   //If no time is specified, it is considered the beginning of the day, UTC to match Javascript's implementation.
-  var offsetIndex;
+  let offsetIndex;
   if (defined(time)) {
     tokens = time.match(matchHoursMinutesSeconds);
     if (tokens !== null) {
@@ -497,9 +496,9 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
 
     //Check the UTC offset value, if no value exists, use local time
     //a Z indicates UTC, + or - are offsets.
-    var offset = tokens[offsetIndex];
-    var offsetHours = +tokens[offsetIndex + 1];
-    var offsetMinutes = +(tokens[offsetIndex + 2] || 0);
+    const offset = tokens[offsetIndex];
+    const offsetHours = +tokens[offsetIndex + 1];
+    const offsetMinutes = +(tokens[offsetIndex + 2] || 0);
     switch (offset) {
       case "+":
         hour = hour - offsetHours;
@@ -524,7 +523,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
   //ISO8601 denotes a leap second by any time having a seconds component of 60 seconds.
   //If that's the case, we need to temporarily subtract a second in order to build a UTC date.
   //Then we add it back in after converting to TAI.
-  var isLeapSecond = second === 60;
+  const isLeapSecond = second === 60;
   if (isLeapSecond) {
     second--;
   }
@@ -581,7 +580,7 @@ JulianDate.fromIso8601 = function (iso8601String, result) {
   }
 
   //Now create the JulianDate components from the Gregorian date and actually create our instance.
-  var components = computeJulianDateComponents(
+  const components = computeJulianDateComponents(
     year,
     month,
     day,
@@ -617,7 +616,7 @@ JulianDate.now = function (result) {
   return JulianDate.fromDate(new Date(), result);
 };
 
-var toGregorianDateScratch = new JulianDate(0, 0, TimeStandard.TAI);
+const toGregorianDateScratch = new JulianDate(0, 0, TimeStandard.TAI);
 
 /**
  * Creates a {@link GregorianDate} from the provided instance.
@@ -633,8 +632,8 @@ JulianDate.toGregorianDate = function (julianDate, result) {
   }
   //>>includeEnd('debug');
 
-  var isLeapSecond = false;
-  var thisUtc = convertTaiToUtc(julianDate, toGregorianDateScratch);
+  let isLeapSecond = false;
+  let thisUtc = convertTaiToUtc(julianDate, toGregorianDateScratch);
   if (!defined(thisUtc)) {
     //Conversion to UTC will fail if we are during a leap second.
     //If that's the case, subtract a second and convert again.
@@ -644,8 +643,8 @@ JulianDate.toGregorianDate = function (julianDate, result) {
     isLeapSecond = true;
   }
 
-  var julianDayNumber = thisUtc.dayNumber;
-  var secondsOfDay = thisUtc.secondsOfDay;
+  let julianDayNumber = thisUtc.dayNumber;
+  const secondsOfDay = thisUtc.secondsOfDay;
 
   if (secondsOfDay >= 43200.0) {
     julianDayNumber += 1;
@@ -653,24 +652,24 @@ JulianDate.toGregorianDate = function (julianDate, result) {
 
   // Algorithm from page 604 of the Explanatory Supplement to the
   // Astronomical Almanac (Seidelmann 1992).
-  var L = (julianDayNumber + 68569) | 0;
-  var N = ((4 * L) / 146097) | 0;
+  let L = (julianDayNumber + 68569) | 0;
+  const N = ((4 * L) / 146097) | 0;
   L = (L - (((146097 * N + 3) / 4) | 0)) | 0;
-  var I = ((4000 * (L + 1)) / 1461001) | 0;
+  const I = ((4000 * (L + 1)) / 1461001) | 0;
   L = (L - (((1461 * I) / 4) | 0) + 31) | 0;
-  var J = ((80 * L) / 2447) | 0;
-  var day = (L - (((2447 * J) / 80) | 0)) | 0;
+  const J = ((80 * L) / 2447) | 0;
+  const day = (L - (((2447 * J) / 80) | 0)) | 0;
   L = (J / 11) | 0;
-  var month = (J + 2 - 12 * L) | 0;
-  var year = (100 * (N - 49) + I + L) | 0;
+  const month = (J + 2 - 12 * L) | 0;
+  const year = (100 * (N - 49) + I + L) | 0;
 
-  var hour = (secondsOfDay / TimeConstants.SECONDS_PER_HOUR) | 0;
-  var remainingSeconds = secondsOfDay - hour * TimeConstants.SECONDS_PER_HOUR;
-  var minute = (remainingSeconds / TimeConstants.SECONDS_PER_MINUTE) | 0;
+  let hour = (secondsOfDay / TimeConstants.SECONDS_PER_HOUR) | 0;
+  let remainingSeconds = secondsOfDay - hour * TimeConstants.SECONDS_PER_HOUR;
+  const minute = (remainingSeconds / TimeConstants.SECONDS_PER_MINUTE) | 0;
   remainingSeconds =
     remainingSeconds - minute * TimeConstants.SECONDS_PER_MINUTE;
-  var second = remainingSeconds | 0;
-  var millisecond =
+  let second = remainingSeconds | 0;
+  const millisecond =
     (remainingSeconds - second) / TimeConstants.SECONDS_PER_MILLISECOND;
 
   // JulianDates are noon-based
@@ -724,8 +723,8 @@ JulianDate.toDate = function (julianDate) {
   }
   //>>includeEnd('debug');
 
-  var gDate = JulianDate.toGregorianDate(julianDate, gregorianDateScratch);
-  var second = gDate.second;
+  const gDate = JulianDate.toGregorianDate(julianDate, gregorianDateScratch);
+  let second = gDate.second;
   if (gDate.isLeapSecond) {
     second -= 1;
   }
@@ -756,14 +755,14 @@ JulianDate.toIso8601 = function (julianDate, precision) {
   }
   //>>includeEnd('debug');
 
-  var gDate = JulianDate.toGregorianDate(julianDate, gregorianDateScratch);
-  var year = gDate.year;
-  var month = gDate.month;
-  var day = gDate.day;
-  var hour = gDate.hour;
-  var minute = gDate.minute;
-  var second = gDate.second;
-  var millisecond = gDate.millisecond;
+  const gDate = JulianDate.toGregorianDate(julianDate, gregorianDateScratch);
+  let year = gDate.year;
+  let month = gDate.month;
+  let day = gDate.day;
+  let hour = gDate.hour;
+  const minute = gDate.minute;
+  const second = gDate.second;
+  const millisecond = gDate.millisecond;
 
   // special case - Iso8601.MAXIMUM_VALUE produces a string which we can't parse unless we adjust.
   // 10000-01-01T00:00:00 is the same instant as 9999-12-31T24:00:00
@@ -782,33 +781,44 @@ JulianDate.toIso8601 = function (julianDate, precision) {
     hour = 24;
   }
 
-  var millisecondStr;
+  let millisecondStr;
 
   if (!defined(precision) && millisecond !== 0) {
     //Forces milliseconds into a number with at least 3 digits to whatever the default toString() precision is.
     millisecondStr = (millisecond * 0.01).toString().replace(".", "");
-    return sprintf(
-      "%04d-%02d-%02dT%02d:%02d:%02d.%sZ",
-      year,
-      month,
-      day,
-      hour,
-      minute,
-      second,
-      millisecondStr
+    return (
+      year.toString().padStart(4, "0") +
+      "-" +
+      month.toString().padStart(2, "0") +
+      "-" +
+      day.toString().padStart(2, "0") +
+      "T" +
+      hour.toString().padStart(2, "0") +
+      ":" +
+      minute.toString().padStart(2, "0") +
+      ":" +
+      second.toString().padStart(2, "0") +
+      "." +
+      millisecondStr +
+      "Z"
     );
   }
 
   //Precision is either 0 or milliseconds is 0 with undefined precision, in either case, leave off milliseconds entirely
   if (!defined(precision) || precision === 0) {
-    return sprintf(
-      "%04d-%02d-%02dT%02d:%02d:%02dZ",
-      year,
-      month,
-      day,
-      hour,
-      minute,
-      second
+    return (
+      year.toString().padStart(4, "0") +
+      "-" +
+      month.toString().padStart(2, "0") +
+      "-" +
+      day.toString().padStart(2, "0") +
+      "T" +
+      hour.toString().padStart(2, "0") +
+      ":" +
+      minute.toString().padStart(2, "0") +
+      ":" +
+      second.toString().padStart(2, "0") +
+      "Z"
     );
   }
 
@@ -817,15 +827,21 @@ JulianDate.toIso8601 = function (julianDate, precision) {
     .toFixed(precision)
     .replace(".", "")
     .slice(0, precision);
-  return sprintf(
-    "%04d-%02d-%02dT%02d:%02d:%02d.%sZ",
-    year,
-    month,
-    day,
-    hour,
-    minute,
-    second,
-    millisecondStr
+  return (
+    year.toString().padStart(4, "0") +
+    "-" +
+    month.toString().padStart(2, "0") +
+    "-" +
+    day.toString().padStart(2, "0") +
+    "T" +
+    hour.toString().padStart(2, "0") +
+    ":" +
+    minute.toString().padStart(2, "0") +
+    ":" +
+    second.toString().padStart(2, "0") +
+    "." +
+    millisecondStr +
+    "Z"
   );
 };
 
@@ -869,7 +885,7 @@ JulianDate.compare = function (left, right) {
   }
   //>>includeEnd('debug');
 
-  var julianDayNumberDifference = left.dayNumber - right.dayNumber;
+  const julianDayNumberDifference = left.dayNumber - right.dayNumber;
   if (julianDayNumberDifference !== 0) {
     return julianDayNumberDifference;
   }
@@ -950,7 +966,7 @@ JulianDate.secondsDifference = function (left, right) {
   }
   //>>includeEnd('debug');
 
-  var dayDifference =
+  const dayDifference =
     (left.dayNumber - right.dayNumber) * TimeConstants.SECONDS_PER_DAY;
   return dayDifference + (left.secondsOfDay - right.secondsOfDay);
 };
@@ -972,8 +988,8 @@ JulianDate.daysDifference = function (left, right) {
   }
   //>>includeEnd('debug');
 
-  var dayDifference = left.dayNumber - right.dayNumber;
-  var secondDifference =
+  const dayDifference = left.dayNumber - right.dayNumber;
+  const secondDifference =
     (left.secondsOfDay - right.secondsOfDay) / TimeConstants.SECONDS_PER_DAY;
   return dayDifference + secondDifference;
 };
@@ -986,8 +1002,8 @@ JulianDate.daysDifference = function (left, right) {
  */
 JulianDate.computeTaiMinusUtc = function (julianDate) {
   binarySearchScratchLeapSecond.julianDate = julianDate;
-  var leapSeconds = JulianDate.leapSeconds;
-  var index = binarySearch(
+  const leapSeconds = JulianDate.leapSeconds;
+  let index = binarySearch(
     leapSeconds,
     binarySearchScratchLeapSecond,
     compareLeapSecondDates
@@ -1051,7 +1067,7 @@ JulianDate.addMinutes = function (julianDate, minutes, result) {
   }
   //>>includeEnd('debug');
 
-  var newSecondsOfDay =
+  const newSecondsOfDay =
     julianDate.secondsOfDay + minutes * TimeConstants.SECONDS_PER_MINUTE;
   return setComponents(julianDate.dayNumber, newSecondsOfDay, result);
 };
@@ -1077,7 +1093,7 @@ JulianDate.addHours = function (julianDate, hours, result) {
   }
   //>>includeEnd('debug');
 
-  var newSecondsOfDay =
+  const newSecondsOfDay =
     julianDate.secondsOfDay + hours * TimeConstants.SECONDS_PER_HOUR;
   return setComponents(julianDate.dayNumber, newSecondsOfDay, result);
 };
@@ -1103,7 +1119,7 @@ JulianDate.addDays = function (julianDate, days, result) {
   }
   //>>includeEnd('debug');
 
-  var newJulianDayNumber = julianDate.dayNumber + days;
+  const newJulianDayNumber = julianDate.dayNumber + days;
   return setComponents(newJulianDayNumber, julianDate.secondsOfDay, result);
 };
 

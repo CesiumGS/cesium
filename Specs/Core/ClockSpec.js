@@ -6,7 +6,7 @@ import { JulianDate } from "../../Source/Cesium.js";
 
 describe("Core/Clock", function () {
   it("sets default parameters when constructed", function () {
-    var clock = new Clock();
+    const clock = new Clock();
     expect(clock.stopTime).toEqual(
       JulianDate.addDays(clock.startTime, 1, new JulianDate())
     );
@@ -19,13 +19,13 @@ describe("Core/Clock", function () {
   });
 
   it("sets provided constructor parameters correctly", function () {
-    var start = new JulianDate(12);
-    var stop = new JulianDate(112);
-    var currentTime = new JulianDate(13);
-    var step = ClockStep.TICK_DEPENDENT;
-    var range = ClockRange.LOOP_STOP;
-    var multiplier = 1.5;
-    var clock = new Clock({
+    const start = new JulianDate(12);
+    const stop = new JulianDate(112);
+    const currentTime = new JulianDate(13);
+    const step = ClockStep.TICK_DEPENDENT;
+    const range = ClockRange.LOOP_STOP;
+    const multiplier = 1.5;
+    let clock = new Clock({
       startTime: start,
       stopTime: stop,
       currentTime: currentTime,
@@ -58,12 +58,12 @@ describe("Core/Clock", function () {
   });
 
   it("works when constructed with no currentTime parameter", function () {
-    var start = new JulianDate(12);
-    var stop = new JulianDate(112);
-    var step = ClockStep.TICK_DEPENDENT;
-    var range = ClockRange.LOOP_STOP;
-    var multiplier = 1.5;
-    var clock = new Clock({
+    const start = new JulianDate(12);
+    const stop = new JulianDate(112);
+    const step = ClockStep.TICK_DEPENDENT;
+    const range = ClockRange.LOOP_STOP;
+    const multiplier = 1.5;
+    const clock = new Clock({
       startTime: start,
       stopTime: stop,
       clockStep: step,
@@ -81,12 +81,12 @@ describe("Core/Clock", function () {
   });
 
   it("works when constructed with no startTime parameter", function () {
-    var stop = new JulianDate(112);
-    var currentTime = new JulianDate(13);
-    var step = ClockStep.TICK_DEPENDENT;
-    var range = ClockRange.LOOP_STOP;
-    var multiplier = 1.5;
-    var clock = new Clock({
+    const stop = new JulianDate(112);
+    const currentTime = new JulianDate(13);
+    const step = ClockStep.TICK_DEPENDENT;
+    const range = ClockRange.LOOP_STOP;
+    const multiplier = 1.5;
+    const clock = new Clock({
       stopTime: stop,
       currentTime: currentTime,
       clockStep: step,
@@ -104,17 +104,17 @@ describe("Core/Clock", function () {
   });
 
   it("works when constructed with no startTime or stopTime", function () {
-    var currentTime = new JulianDate(12);
-    var step = ClockStep.TICK_DEPENDENT;
-    var range = ClockRange.LOOP_STOP;
-    var multiplier = 1.5;
-    var clock = new Clock({
+    const currentTime = new JulianDate(12);
+    const step = ClockStep.TICK_DEPENDENT;
+    const range = ClockRange.LOOP_STOP;
+    const multiplier = 1.5;
+    const clock = new Clock({
       currentTime: currentTime,
       clockStep: step,
       multiplier: multiplier,
       clockRange: range,
     });
-    var expectedStop = JulianDate.addDays(currentTime, 1.0, new JulianDate());
+    const expectedStop = JulianDate.addDays(currentTime, 1.0, new JulianDate());
     expect(clock.startTime).toEqual(currentTime);
     expect(clock.stopTime).toEqual(expectedStop);
     expect(clock.currentTime).toEqual(currentTime);
@@ -126,17 +126,17 @@ describe("Core/Clock", function () {
   });
 
   it("works when constructed with no startTime or currentTime", function () {
-    var stop = new JulianDate(13);
-    var step = ClockStep.TICK_DEPENDENT;
-    var range = ClockRange.LOOP_STOP;
-    var multiplier = 1.5;
-    var clock = new Clock({
+    const stop = new JulianDate(13);
+    const step = ClockStep.TICK_DEPENDENT;
+    const range = ClockRange.LOOP_STOP;
+    const multiplier = 1.5;
+    const clock = new Clock({
       stopTime: stop,
       clockStep: step,
       multiplier: multiplier,
       clockRange: range,
     });
-    var expectedStart = JulianDate.addDays(stop, -1.0, new JulianDate());
+    const expectedStart = JulianDate.addDays(stop, -1.0, new JulianDate());
     expect(clock.startTime).toEqual(expectedStart);
     expect(clock.stopTime).toEqual(stop);
     expect(clock.currentTime).toEqual(expectedStart);
@@ -148,17 +148,17 @@ describe("Core/Clock", function () {
   });
 
   it("works when constructed with no currentTime or stopTime", function () {
-    var start = new JulianDate(12);
-    var step = ClockStep.TICK_DEPENDENT;
-    var range = ClockRange.LOOP_STOP;
-    var multiplier = 1.5;
-    var clock = new Clock({
+    const start = new JulianDate(12);
+    const step = ClockStep.TICK_DEPENDENT;
+    const range = ClockRange.LOOP_STOP;
+    const multiplier = 1.5;
+    const clock = new Clock({
       startTime: start,
       clockStep: step,
       multiplier: multiplier,
       clockRange: range,
     });
-    var expectedStop = JulianDate.addDays(start, 1.0, new JulianDate());
+    const expectedStop = JulianDate.addDays(start, 1.0, new JulianDate());
     expect(clock.startTime).toEqual(start);
     expect(clock.stopTime).toEqual(expectedStop);
     expect(clock.currentTime).toEqual(start);
@@ -170,19 +170,19 @@ describe("Core/Clock", function () {
   });
 
   it("works when constructed with no stopTime parameter", function () {
-    var start = new JulianDate(12);
-    var currentTime = new JulianDate(12);
-    var step = ClockStep.TICK_DEPENDENT;
-    var range = ClockRange.LOOP_STOP;
-    var multiplier = 1.5;
-    var clock = new Clock({
+    const start = new JulianDate(12);
+    const currentTime = new JulianDate(12);
+    const step = ClockStep.TICK_DEPENDENT;
+    const range = ClockRange.LOOP_STOP;
+    const multiplier = 1.5;
+    const clock = new Clock({
       startTime: start,
       currentTime: currentTime,
       clockStep: step,
       multiplier: multiplier,
       clockRange: range,
     });
-    var expectedStop = JulianDate.addDays(start, 1.0, new JulianDate());
+    const expectedStop = JulianDate.addDays(start, 1.0, new JulianDate());
     expect(clock.startTime).toEqual(start);
     expect(clock.stopTime).toEqual(expectedStop);
     expect(clock.currentTime).toEqual(currentTime);
@@ -194,8 +194,8 @@ describe("Core/Clock", function () {
   });
 
   it("throws when constructed if start time is after stop time", function () {
-    var start = new JulianDate(1);
-    var stop = new JulianDate(0);
+    const start = new JulianDate(1);
+    const stop = new JulianDate(0);
     expect(function () {
       return new Clock({
         startTime: start,
@@ -205,11 +205,11 @@ describe("Core/Clock", function () {
   });
 
   it("animates forward in TICK_DEPENDENT mode", function () {
-    var start = new JulianDate(0);
-    var stop = new JulianDate(1);
-    var currentTime = new JulianDate(0.5);
-    var multiplier = 1.5;
-    var clock = new Clock({
+    const start = new JulianDate(0);
+    const stop = new JulianDate(1);
+    let currentTime = new JulianDate(0.5);
+    const multiplier = 1.5;
+    const clock = new Clock({
       startTime: start,
       stopTime: stop,
       currentTime: currentTime,
@@ -238,11 +238,11 @@ describe("Core/Clock", function () {
   });
 
   it("animates backwards in TICK_DEPENDENT mode", function () {
-    var start = new JulianDate(0);
-    var stop = new JulianDate(1);
-    var currentTime = new JulianDate(0.5);
-    var multiplier = -1.5;
-    var clock = new Clock({
+    const start = new JulianDate(0);
+    const stop = new JulianDate(1);
+    let currentTime = new JulianDate(0.5);
+    const multiplier = -1.5;
+    const clock = new Clock({
       startTime: start,
       stopTime: stop,
       currentTime: currentTime,
@@ -271,11 +271,11 @@ describe("Core/Clock", function () {
   });
 
   it("animates forwards past stop time in UNBOUNDED TICK_DEPENDENT mode", function () {
-    var start = new JulianDate(0);
-    var stop = new JulianDate(1);
-    var currentTime = stop;
-    var multiplier = 1.5;
-    var clock = new Clock({
+    const start = new JulianDate(0);
+    const stop = new JulianDate(1);
+    let currentTime = stop;
+    const multiplier = 1.5;
+    const clock = new Clock({
       startTime: start,
       stopTime: stop,
       currentTime: currentTime,
@@ -304,11 +304,11 @@ describe("Core/Clock", function () {
   });
 
   it("animates backwards past start time in UNBOUNDED TICK_DEPENDENT mode", function () {
-    var start = new JulianDate(0);
-    var stop = new JulianDate(1);
-    var currentTime = start;
-    var multiplier = -1.5;
-    var clock = new Clock({
+    const start = new JulianDate(0);
+    const stop = new JulianDate(1);
+    let currentTime = start;
+    const multiplier = -1.5;
+    const clock = new Clock({
       startTime: start,
       stopTime: stop,
       currentTime: currentTime,
@@ -337,11 +337,11 @@ describe("Core/Clock", function () {
   });
 
   it("loops back to start time when animating forward past stop time in LOOP_STOP TICK_DEPENDENT mode", function () {
-    var start = new JulianDate(0);
-    var stop = new JulianDate(1);
-    var currentTime = stop;
-    var multiplier = 1.5;
-    var clock = new Clock({
+    const start = new JulianDate(0);
+    const stop = new JulianDate(1);
+    let currentTime = stop;
+    const multiplier = 1.5;
+    const clock = new Clock({
       startTime: start,
       stopTime: stop,
       currentTime: currentTime,
@@ -366,11 +366,11 @@ describe("Core/Clock", function () {
   });
 
   it("stops at start when animating backwards past start time in LOOP_STOP TICK_DEPENDENT mode", function () {
-    var start = new JulianDate(0);
-    var stop = new JulianDate(1);
-    var currentTime = start;
-    var multiplier = -100.0;
-    var clock = new Clock({
+    const start = new JulianDate(0);
+    const stop = new JulianDate(1);
+    const currentTime = start;
+    const multiplier = -100.0;
+    const clock = new Clock({
       startTime: start,
       stopTime: stop,
       currentTime: currentTime,
@@ -386,11 +386,11 @@ describe("Core/Clock", function () {
   });
 
   it("stops at stop time when animating forwards past stop time in CLAMPED TICK_DEPENDENT mode", function () {
-    var start = new JulianDate(0);
-    var stop = new JulianDate(1);
-    var currentTime = stop;
-    var multiplier = 100.0;
-    var clock = new Clock({
+    const start = new JulianDate(0);
+    const stop = new JulianDate(1);
+    const currentTime = stop;
+    const multiplier = 100.0;
+    const clock = new Clock({
       startTime: start,
       stopTime: stop,
       currentTime: currentTime,
@@ -406,11 +406,11 @@ describe("Core/Clock", function () {
   });
 
   it("stops at start time when animating backwards past start time in CLAMPED TICK_DEPENDENT mode", function () {
-    var start = new JulianDate(0);
-    var stop = new JulianDate(1);
-    var currentTime = start;
-    var multiplier = -100.0;
-    var clock = new Clock({
+    const start = new JulianDate(0);
+    const stop = new JulianDate(1);
+    const currentTime = start;
+    const multiplier = -100.0;
+    const clock = new Clock({
       startTime: start,
       stopTime: stop,
       currentTime: currentTime,
@@ -426,11 +426,11 @@ describe("Core/Clock", function () {
   });
 
   it("fires onEnd event when endTime is reached and clock range is CLAMPED", function () {
-    var start = new JulianDate(0);
-    var stop = new JulianDate(1);
-    var currentTime = stop;
-    var multiplier = 100.0;
-    var clock = new Clock({
+    const start = new JulianDate(0);
+    const stop = new JulianDate(1);
+    const currentTime = stop;
+    const multiplier = 100.0;
+    const clock = new Clock({
       startTime: start,
       stopTime: stop,
       currentTime: currentTime,
@@ -439,18 +439,18 @@ describe("Core/Clock", function () {
       clockRange: ClockRange.CLAMPED,
       shouldAnimate: true,
     });
-    var onStopSpy = jasmine.createSpy("event");
+    const onStopSpy = jasmine.createSpy("event");
     clock.onStop.addEventListener(onStopSpy);
     clock.tick();
     expect(onStopSpy).toHaveBeenCalled();
   });
 
   it("fires onEnd event when endTime is reached and clock range is LOOP_STOP", function () {
-    var start = new JulianDate(0);
-    var stop = new JulianDate(1);
-    var currentTime = stop;
-    var multiplier = 100.0;
-    var clock = new Clock({
+    const start = new JulianDate(0);
+    const stop = new JulianDate(1);
+    const currentTime = stop;
+    const multiplier = 100.0;
+    const clock = new Clock({
       startTime: start,
       stopTime: stop,
       currentTime: currentTime,
@@ -459,14 +459,14 @@ describe("Core/Clock", function () {
       clockRange: ClockRange.LOOP_STOP,
       shouldAnimate: true,
     });
-    var onStopSpy = jasmine.createSpy("event");
+    const onStopSpy = jasmine.createSpy("event");
     clock.onStop.addEventListener(onStopSpy);
     clock.tick();
     expect(onStopSpy).toHaveBeenCalled();
   });
 
   describe("SYSTEM_CLOCK modes", function () {
-    var baseDate = new Date(2016, 6, 7);
+    const baseDate = new Date(2016, 6, 7);
 
     beforeEach(function () {
       jasmine.clock().install();
@@ -484,7 +484,7 @@ describe("Core/Clock", function () {
     });
 
     it("uses current time in SYSTEM_CLOCK mode (real-time mode)", function () {
-      var clock = new Clock({
+      const clock = new Clock({
         clockStep: ClockStep.SYSTEM_CLOCK,
       });
 
@@ -492,12 +492,12 @@ describe("Core/Clock", function () {
       expect(clock.multiplier).toEqual(1.0);
       expect(clock.shouldAnimate).toEqual(true);
 
-      var time1 = clock.tick();
+      const time1 = clock.tick();
       expect(time1).toEqual(JulianDate.fromDate(baseDate));
 
       jasmine.clock().tick(1000);
 
-      var time2 = clock.tick();
+      const time2 = clock.tick();
       expect(time2).toEqual(
         JulianDate.addSeconds(
           JulianDate.fromDate(baseDate),
@@ -508,7 +508,7 @@ describe("Core/Clock", function () {
     });
 
     it("switches out of SYSTEM_CLOCK mode when changing currentTime", function () {
-      var clock = new Clock({
+      const clock = new Clock({
         clockStep: ClockStep.SYSTEM_CLOCK,
       });
       expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK);
@@ -521,7 +521,7 @@ describe("Core/Clock", function () {
     });
 
     it("switches out of SYSTEM_CLOCK mode when changing multiplier", function () {
-      var clock = new Clock({
+      const clock = new Clock({
         clockStep: ClockStep.SYSTEM_CLOCK,
       });
       expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK);
@@ -534,7 +534,7 @@ describe("Core/Clock", function () {
     });
 
     it("switches out of SYSTEM_CLOCK mode when changing shouldAnimate", function () {
-      var clock = new Clock({
+      const clock = new Clock({
         clockStep: ClockStep.SYSTEM_CLOCK,
       });
       expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK);
@@ -547,7 +547,7 @@ describe("Core/Clock", function () {
     });
 
     it("sets currentTime, multiplier and shouldAnimate when switching to SYSTEM_CLOCK mode", function () {
-      var clock = new Clock({
+      const clock = new Clock({
         currentTime: new JulianDate(1),
         clockStep: ClockStep.SYSTEM_CLOCK_MULTIPLIER,
         multiplier: 1.5,
@@ -561,7 +561,7 @@ describe("Core/Clock", function () {
     });
 
     it("stays in SYSTEM_CLOCK mode when changing other unrelated properties", function () {
-      var clock = new Clock({
+      const clock = new Clock({
         clockStep: ClockStep.SYSTEM_CLOCK,
       });
 
@@ -579,18 +579,18 @@ describe("Core/Clock", function () {
     });
 
     it("uses multiplier in SYSTEM_CLOCK_MULTIPLIER mode", function () {
-      var clock = new Clock({
+      const clock = new Clock({
         clockStep: ClockStep.SYSTEM_CLOCK_MULTIPLIER,
         multiplier: 2.0,
         shouldAnimate: true,
       });
 
-      var time1 = clock.tick();
+      const time1 = clock.tick();
       expect(time1).toEqual(JulianDate.fromDate(baseDate));
 
       jasmine.clock().tick(1000);
 
-      var time2 = clock.tick();
+      const time2 = clock.tick();
       expect(time2).toEqual(
         JulianDate.addSeconds(
           JulianDate.fromDate(baseDate),
@@ -601,9 +601,9 @@ describe("Core/Clock", function () {
     });
 
     it("does not advance if shouldAnimate is false and does advance if true", function () {
-      var start = JulianDate.fromDate(baseDate);
+      const start = JulianDate.fromDate(baseDate);
 
-      var clock = new Clock({
+      const clock = new Clock({
         startTime: start,
         clockStep: ClockStep.SYSTEM_CLOCK_MULTIPLIER,
       });
@@ -613,7 +613,7 @@ describe("Core/Clock", function () {
 
       jasmine.clock().tick(1000);
 
-      var time1 = clock.tick();
+      let time1 = clock.tick();
       expect(time1).toEqual(start);
       expect(clock.currentTime).toEqual(start);
 
@@ -633,7 +633,7 @@ describe("Core/Clock", function () {
 
       jasmine.clock().tick(1000);
 
-      var time2 = clock.tick();
+      const time2 = clock.tick();
 
       expect(time2).toEqual(
         JulianDate.addSeconds(

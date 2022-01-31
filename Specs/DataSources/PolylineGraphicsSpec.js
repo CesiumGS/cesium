@@ -11,7 +11,7 @@ import testMaterialDefinitionChanged from "../testMaterialDefinitionChanged.js";
 
 describe("DataSources/PolylineGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {
-    var options = {
+    const options = {
       material: Color.BLUE,
       depthFailMaterial: Color.RED,
       positions: [],
@@ -26,7 +26,7 @@ describe("DataSources/PolylineGraphics", function () {
       zIndex: 0,
     };
 
-    var polyline = new PolylineGraphics(options);
+    const polyline = new PolylineGraphics(options);
     expect(polyline.material).toBeInstanceOf(ColorMaterialProperty);
     expect(polyline.depthFailMaterial).toBeInstanceOf(ColorMaterialProperty);
     expect(polyline.positions).toBeInstanceOf(ConstantProperty);
@@ -61,7 +61,7 @@ describe("DataSources/PolylineGraphics", function () {
   });
 
   it("merge assigns unassigned properties", function () {
-    var source = new PolylineGraphics();
+    const source = new PolylineGraphics();
     source.material = new ColorMaterialProperty();
     source.depthFailMaterial = new ColorMaterialProperty();
     source.positions = new ConstantProperty();
@@ -79,7 +79,7 @@ describe("DataSources/PolylineGraphics", function () {
     source.arcType = new ConstantProperty(ArcType.GEODESIC);
     source.zIndex = new ConstantProperty();
 
-    var target = new PolylineGraphics();
+    const target = new PolylineGraphics();
     target.merge(source);
     expect(target.material).toBe(source.material);
     expect(target.depthFailMaterial).toBe(source.depthFailMaterial);
@@ -98,7 +98,7 @@ describe("DataSources/PolylineGraphics", function () {
   });
 
   it("merge does not assign assigned properties", function () {
-    var source = new PolylineGraphics();
+    const source = new PolylineGraphics();
     source.material = new ColorMaterialProperty();
     source.depthFailMaterial = new ColorMaterialProperty();
     source.positions = new ConstantProperty();
@@ -112,20 +112,20 @@ describe("DataSources/PolylineGraphics", function () {
     source.arcType = new ConstantProperty();
     source.zIndex = new ConstantProperty();
 
-    var color = new ColorMaterialProperty();
-    var depthFailColor = new ColorMaterialProperty();
-    var positions = new ConstantProperty();
-    var width = new ConstantProperty();
-    var show = new ConstantProperty();
-    var clampToGround = new ConstantProperty();
-    var granularity = new ConstantProperty();
-    var shadows = new ConstantProperty();
-    var distanceDisplayCondition = new ConstantProperty();
-    var classificationType = new ConstantProperty();
-    var arcType = new ConstantProperty();
-    var zIndex = new ConstantProperty();
+    const color = new ColorMaterialProperty();
+    const depthFailColor = new ColorMaterialProperty();
+    const positions = new ConstantProperty();
+    const width = new ConstantProperty();
+    const show = new ConstantProperty();
+    const clampToGround = new ConstantProperty();
+    const granularity = new ConstantProperty();
+    const shadows = new ConstantProperty();
+    const distanceDisplayCondition = new ConstantProperty();
+    const classificationType = new ConstantProperty();
+    const arcType = new ConstantProperty();
+    const zIndex = new ConstantProperty();
 
-    var target = new PolylineGraphics();
+    const target = new PolylineGraphics();
     target.material = color;
     target.depthFailMaterial = depthFailColor;
     target.positions = positions;
@@ -155,7 +155,7 @@ describe("DataSources/PolylineGraphics", function () {
   });
 
   it("clone works", function () {
-    var source = new PolylineGraphics();
+    const source = new PolylineGraphics();
     source.material = new ColorMaterialProperty();
     source.depthFailMaterial = new ColorMaterialProperty();
     source.width = new ConstantProperty();
@@ -169,7 +169,7 @@ describe("DataSources/PolylineGraphics", function () {
     source.arcType = new ConstantProperty();
     source.zIndex = new ConstantProperty();
 
-    var result = source.clone();
+    const result = source.clone();
     expect(result.material).toBe(source.material);
     expect(result.depthFailMaterial).toBe(source.depthFailMaterial);
     expect(result.positions).toBe(source.positions);
@@ -187,14 +187,14 @@ describe("DataSources/PolylineGraphics", function () {
   });
 
   it("merge throws if source undefined", function () {
-    var target = new PolylineGraphics();
+    const target = new PolylineGraphics();
     expect(function () {
       target.merge(undefined);
     }).toThrowDeveloperError();
   });
 
   it("raises definitionChanged when a property is assigned or modified", function () {
-    var property = new PolylineGraphics();
+    const property = new PolylineGraphics();
     testMaterialDefinitionChanged(property, "material", Color.RED, Color.BLUE);
     testMaterialDefinitionChanged(
       property,

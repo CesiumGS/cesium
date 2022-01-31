@@ -1,23 +1,27 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { HeadingPitchRange } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  HeadingPitchRange,
+  MetadataClass,
+  GroupMetadata,
+} from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 
 describe(
   "Scene/Tileset3DTileContent",
   function () {
-    var scene;
-    var centerLongitude = -1.31968;
-    var centerLatitude = 0.698874;
+    let scene;
+    const centerLongitude = -1.31968;
+    const centerLatitude = 0.698874;
 
-    var tilesetOfTilesetsUrl =
+    const tilesetOfTilesetsUrl =
       "./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
 
     beforeAll(function () {
       scene = createScene();
 
       // Point the camera at the center and far enough way to only load the root tile
-      var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+      const center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
       scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 100.0));
     });
 
@@ -43,8 +47,8 @@ describe(
     it("gets properties", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(
         function (tileset) {
-          var tile = tileset.root;
-          var content = tile.content;
+          const tile = tileset.root;
+          const content = tile.content;
           expect(content.featuresLength).toBe(0);
           expect(content.pointsLength).toBe(0);
           expect(content.trianglesLength).toBe(0);
@@ -61,6 +65,43 @@ describe(
           expect(content.getFeature(0)).toBeUndefined();
         }
       );
+    });
+
+    describe("3DTILES_metadata", function () {
+      const metadataClass = new MetadataClass({
+        id: "test",
+        class: {
+          properties: {
+            name: {
+              componentType: "STRING",
+            },
+            height: {
+              componentType: "FLOAT32",
+            },
+          },
+        },
+      });
+      const groupMetadata = new GroupMetadata({
+        id: "testGroup",
+        group: {
+          properties: {
+            name: "Test Group",
+            height: 35.6,
+          },
+        },
+        class: metadataClass,
+      });
+
+      it("assigns groupMetadata", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetOfTilesetsUrl
+        ).then(function (tileset) {
+          const content = tileset.root.content;
+          content.groupMetadata = groupMetadata;
+          expect(content.groupMetadata).toBe(groupMetadata);
+        });
+      });
     });
   },
   "WebGL"

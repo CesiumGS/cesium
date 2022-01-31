@@ -7,7 +7,7 @@ import Tween from "../ThirdParty/Tween.js";
  *
  * @namespace
  */
-var EasingFunction = {
+const EasingFunction = {
   /**
    * Linear easing.
    *
@@ -22,21 +22,21 @@ var EasingFunction = {
    * @type {EasingFunction.Callback}
    * @constant
    */
-  QUADRACTIC_IN: Tween.Easing.Quadratic.In,
+  QUADRATIC_IN: Tween.Easing.Quadratic.In,
   /**
    * Quadratic out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  QUADRACTIC_OUT: Tween.Easing.Quadratic.Out,
+  QUADRATIC_OUT: Tween.Easing.Quadratic.Out,
   /**
    * Quadratic in then out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  QUADRACTIC_IN_OUT: Tween.Easing.Quadratic.InOut,
+  QUADRATIC_IN_OUT: Tween.Easing.Quadratic.InOut,
 
   /**
    * Cubic in.
@@ -253,4 +253,5 @@ var EasingFunction = {
  *     return time * (2.0 - time);
  * }
  */
+
 export default Object.freeze(EasingFunction);

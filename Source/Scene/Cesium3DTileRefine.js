@@ -1,7 +1,7 @@
 /**
  * The refinement approach for a tile.
  * <p>
- * See the {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification#refinement|Refinement}
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification#refinement|Refinement}
  * in the 3D Tiles spec.
  * </p>
  *
@@ -9,7 +9,7 @@
  *
  * @private
  */
-var Cesium3DTileRefine = {
+const Cesium3DTileRefine = {
   /**
    * Render this tile and, if it doesn't meet the screen space error, also refine to its children.
    *

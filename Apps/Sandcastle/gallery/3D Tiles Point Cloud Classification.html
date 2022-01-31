@@ -37,20 +37,20 @@
         "use strict";
         //Sandcastle_Begin
         // An example showing a point cloud tileset classified by a Geometry tileset.
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
         //Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
-        var tileset = new Cesium.Cesium3DTileset({
+        const tileset = new Cesium.Cesium3DTileset({
           url: Cesium.IonResource.fromAssetId(16421),
         });
         viewer.scene.primitives.add(tileset);
 
         // Geometry Tiles are experimental and the format is subject to change in the future.
         // For more details, see:
-        //    https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/TileFormats/Geometry
-        var classificationTileset = new Cesium.Cesium3DTileset({
+        //    https://github.com/CesiumGS/3d-tiles/tree/vctr/TileFormats/Geometry
+        const classificationTileset = new Cesium.Cesium3DTileset({
           url:
             "../../SampleData/Cesium3DTiles/Classification/PointCloud/tileset.json",
           classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
@@ -85,7 +85,7 @@
         });
 
         // Information about the currently highlighted feature
-        var highlighted = {
+        const highlighted = {
           feature: undefined,
           originalColor: new Cesium.Color(),
         };
@@ -101,7 +101,7 @@
           }
 
           // Pick a new feature
-          var pickedFeature = viewer.scene.pick(movement.endPosition);
+          const pickedFeature = viewer.scene.pick(movement.endPosition);
           if (!Cesium.defined(pickedFeature)) {
             return;
           }

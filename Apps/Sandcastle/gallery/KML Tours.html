@@ -33,13 +33,13 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var options = {
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const options = {
           camera: viewer.scene.camera,
           canvas: viewer.scene.canvas,
         };
 
-        var tour = null;
+        let tour = null;
         viewer.dataSources
           .add(
             Cesium.KmlDataSource.load(

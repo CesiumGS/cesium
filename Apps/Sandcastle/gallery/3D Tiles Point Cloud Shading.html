@@ -160,12 +160,12 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
-        var scene = viewer.scene;
-        var viewModelTileset;
+        const scene = viewer.scene;
+        let viewModelTileset;
 
         if (!Cesium.PointCloudShading.isSupported(scene)) {
           window.alert("This browser does not support point cloud shading");
@@ -177,8 +177,8 @@
         }
 
         // The viewModel tracks the state of our mini application.
-        var pointClouds = ["St. Helens", "Church"];
-        var viewModel = {
+        const pointClouds = ["St. Helens", "Church"];
+        const viewModel = {
           exampleTypes: pointClouds,
           currentExampleType: pointClouds[0],
           maximumScreenSpaceError: 16.0,
@@ -192,7 +192,7 @@
         function tilesetToViewModel(tileset) {
           viewModelTileset = tileset;
 
-          var pointCloudShading = tileset.pointCloudShading;
+          const pointCloudShading = tileset.pointCloudShading;
           viewModel.maximumScreenSpaceError = tileset.maximumScreenSpaceError;
           viewModel.geometricErrorScale = pointCloudShading.geometricErrorScale;
           viewModel.maximumAttenuation = pointCloudShading.maximumAttenuation
@@ -209,12 +209,12 @@
 
         function loadStHelens() {
           // Set the initial camera view to look at Mt. St. Helens
-          var initialPosition = Cesium.Cartesian3.fromRadians(
+          const initialPosition = Cesium.Cartesian3.fromRadians(
             -2.1344873183780484,
             0.8071380277370774,
             5743.394497982162
           );
-          var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+          const initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
             112.99596671210358,
             -21.34390550872461,
             0.0716951918898415
@@ -228,7 +228,7 @@
           // Mt. St. Helens 3D Tileset generated from LAS provided by https://www.liblas.org/samples/
           // This tileset uses replacement refinement and has geometric error approximately equal to
           // the average interpoint distance in each tile.
-          var tileset = new Cesium.Cesium3DTileset({
+          const tileset = new Cesium.Cesium3DTileset({
             url: Cesium.IonResource.fromAssetId(5713),
           });
           viewer.scene.primitives.add(tileset);
@@ -246,7 +246,7 @@
         function loadChurch() {
           // Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
           // This tileset uses additive refinement and has geometric error based on the bounding box size for each tile.
-          var tileset = new Cesium.Cesium3DTileset({
+          const tileset = new Cesium.Cesium3DTileset({
             url: Cesium.IonResource.fromAssetId(16421),
           });
           viewer.scene.primitives.add(tileset);
@@ -275,7 +275,7 @@
         }
 
         function checkZero(newValue) {
-          var newValueFloat = parseFloat(newValue);
+          const newValueFloat = parseFloat(newValue);
           return newValueFloat === 0.0 ? undefined : newValueFloat;
         }
 
@@ -285,7 +285,7 @@
         Cesium.knockout.track(viewModel);
 
         // Bind the viewModel to the DOM elements of the UI that call for it.
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
         Cesium.knockout

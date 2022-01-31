@@ -1,11 +1,11 @@
 /*global __karma__*/
 import customizeJasmine from "./customizeJasmine.js";
 
-var included = "";
-var excluded = "";
-var webglValidation = false;
-var webglStub = false;
-var release = false;
+let included = "";
+let excluded = "";
+let webglValidation = false;
+let webglStub = false;
+let release = false;
 
 if (__karma__.config.args) {
   included = __karma__.config.args[0];

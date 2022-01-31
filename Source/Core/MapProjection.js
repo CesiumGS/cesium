@@ -6,6 +6,7 @@ import DeveloperError from "./DeveloperError.js";
  *
  * @alias MapProjection
  * @constructor
+ * @abstract
  *
  * @see GeographicProjection
  * @see WebMercatorProjection

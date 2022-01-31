@@ -10,9 +10,9 @@ import pollToPromise from "../pollToPromise.js";
 describe(
   "Scene/ViewportQuad",
   function () {
-    var scene;
-    var viewportQuad;
-    var testImage;
+    let scene;
+    let viewportQuad;
+    let testImage;
 
     beforeAll(function () {
       scene = createScene();
@@ -37,14 +37,14 @@ describe(
     });
 
     it("constructs with a rectangle", function () {
-      var rectangle = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
-      var quad = new ViewportQuad(rectangle);
+      const rectangle = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
+      const quad = new ViewportQuad(rectangle);
       expect(quad.rectangle).toEqual(rectangle);
     });
 
     it("constructs with a material", function () {
-      var material = Material.fromType(Material.StripeType);
-      var quad = new ViewportQuad(undefined, material);
+      const material = Material.fromType(Material.StripeType);
+      const quad = new ViewportQuad(undefined, material);
       expect(quad.material.type).toEqual(material.type);
     });
 
@@ -86,7 +86,7 @@ describe(
     });
 
     it("renders user created texture", function () {
-      var texture = new Texture({
+      const texture = new Texture({
         context: scene.context,
         source: testImage,
       });
@@ -103,9 +103,22 @@ describe(
       });
     });
 
+    it("updates rectangle", function () {
+      const otherRectangle = new BoundingRectangle(0, 0, 4, 4);
+
+      scene.primitives.add(viewportQuad);
+      scene.renderForSpecs();
+
+      viewportQuad.rectangle = otherRectangle;
+      scene.renderForSpecs();
+      expect(scene.frameState.commandList[0].renderState.viewport).toEqual(
+        otherRectangle
+      );
+    });
+
     it("isDestroyed", function () {
-      var boundRectangle = new BoundingRectangle(0, 0, 10, 10);
-      var vq = new ViewportQuad(boundRectangle);
+      const boundRectangle = new BoundingRectangle(0, 0, 10, 10);
+      const vq = new ViewportQuad(boundRectangle);
 
       expect(vq.isDestroyed()).toEqual(false);
       vq.destroy();

@@ -35,13 +35,13 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           orderIndependentTranslucency: false,
         });
 
-        var scene = viewer.scene;
-        var globe = scene.globe;
-        var baseLayer = viewer.scene.imageryLayers.get(0);
+        const scene = viewer.scene;
+        const globe = scene.globe;
+        const baseLayer = viewer.scene.imageryLayers.get(0);
 
         scene.screenSpaceCameraController.enableCollisionDetection = false;
 
@@ -95,11 +95,11 @@
           },
         ]);
 
-        var innerCoreRadius = 1250000;
-        var outerCoreRadius = 3450000;
-        var mantleRadius = 6350000.0;
+        const innerCoreRadius = 1250000;
+        const outerCoreRadius = 3450000;
+        const mantleRadius = 6300000.0;
 
-        var innerCore = viewer.entities.add({
+        const innerCore = viewer.entities.add({
           name: "Inner Core",
           position: Cesium.Cartesian3.ZERO,
           ellipsoid: {
@@ -112,7 +112,7 @@
           },
         });
 
-        var outerCore = viewer.entities.add({
+        const outerCore = viewer.entities.add({
           name: "Outer Core",
           position: Cesium.Cartesian3.ZERO,
           ellipsoid: {
@@ -125,7 +125,7 @@
           },
         });
 
-        var mantle = viewer.entities.add({
+        const mantle = viewer.entities.add({
           name: "Mantle",
           position: Cesium.Cartesian3.ZERO,
           ellipsoid: {
@@ -142,7 +142,7 @@
         outerCore.show = false;
         mantle.show = false;
 
-        var options = [
+        const options = [
           {
             text: "Inner Core",
             onselect: function () {

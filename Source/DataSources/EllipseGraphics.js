@@ -160,7 +160,7 @@ Object.defineProperties(EllipseGraphics.prototype, {
   extrudedHeightReference: createPropertyDescriptor("extrudedHeightReference"),
 
   /**
-   * Gets or sets the numeric property specifying the rotation of the ellipse clockwise from north.
+   * Gets or sets the numeric property specifying the rotation of the ellipse counter-clockwise from north.
    * @memberof EllipseGraphics.prototype
    * @type {Property|undefined}
    * @default 0
@@ -217,6 +217,9 @@ Object.defineProperties(EllipseGraphics.prototype, {
 
   /**
    * Gets or sets the numeric Property specifying the width of the outline.
+   * <p>
+   * Note: This property will be ignored on all major browsers on Windows platforms. For details, see (@link https://github.com/CesiumGS/cesium/issues/40}.
+   * </p>
    * @memberof EllipseGraphics.prototype
    * @type {Property|undefined}
    * @default 1.0

@@ -35,19 +35,19 @@
         //Sandcastle_Begin
         // A simple demo of 3D Tiles feature picking with hover and select behavior
         // Building data courtesy of NYC OpenData portal: http://www1.nyc.gov/site/doitt/initiatives/3d-building.page
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
         viewer.scene.globe.depthTestAgainstTerrain = true;
 
         // Set the initial camera view to look at Manhattan
-        var initialPosition = Cesium.Cartesian3.fromDegrees(
+        const initialPosition = Cesium.Cartesian3.fromDegrees(
           -74.01881302800248,
           40.69114333714821,
           753
         );
-        var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+        const initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
           21.27879878293835,
           -21.34390550872461,
           0.0716951918898415
@@ -59,13 +59,13 @@
         });
 
         // Load the NYC buildings tileset
-        var tileset = new Cesium.Cesium3DTileset({
+        const tileset = new Cesium.Cesium3DTileset({
           url: Cesium.IonResource.fromAssetId(75343),
         });
         viewer.scene.primitives.add(tileset);
 
         // HTML overlay for showing feature name on mouseover
-        var nameOverlay = document.createElement("div");
+        const nameOverlay = document.createElement("div");
         viewer.container.appendChild(nameOverlay);
         nameOverlay.className = "backdrop";
         nameOverlay.style.display = "none";
@@ -77,16 +77,16 @@
         nameOverlay.style.backgroundColor = "black";
 
         // Information about the currently selected feature
-        var selected = {
+        const selected = {
           feature: undefined,
           originalColor: new Cesium.Color(),
         };
 
         // An entity object which will hold info about the currently selected feature for infobox display
-        var selectedEntity = new Cesium.Entity();
+        const selectedEntity = new Cesium.Entity();
 
         // Get default left click handler for when a feature is not picked on left click
-        var clickHandler = viewer.screenSpaceEventHandler.getInputAction(
+        const clickHandler = viewer.screenSpaceEventHandler.getInputAction(
           Cesium.ScreenSpaceEventType.LEFT_CLICK
         );
 
@@ -96,12 +96,12 @@
           Cesium.PostProcessStageLibrary.isSilhouetteSupported(viewer.scene)
         ) {
           // Silhouettes are supported
-          var silhouetteBlue = Cesium.PostProcessStageLibrary.createEdgeDetectionStage();
+          const silhouetteBlue = Cesium.PostProcessStageLibrary.createEdgeDetectionStage();
           silhouetteBlue.uniforms.color = Cesium.Color.BLUE;
           silhouetteBlue.uniforms.length = 0.01;
           silhouetteBlue.selected = [];
 
-          var silhouetteGreen = Cesium.PostProcessStageLibrary.createEdgeDetectionStage();
+          const silhouetteGreen = Cesium.PostProcessStageLibrary.createEdgeDetectionStage();
           silhouetteGreen.uniforms.color = Cesium.Color.LIME;
           silhouetteGreen.uniforms.length = 0.01;
           silhouetteGreen.selected = [];
@@ -121,7 +121,7 @@
             silhouetteBlue.selected = [];
 
             // Pick a new feature
-            var pickedFeature = viewer.scene.pick(movement.endPosition);
+            const pickedFeature = viewer.scene.pick(movement.endPosition);
             if (!Cesium.defined(pickedFeature)) {
               nameOverlay.style.display = "none";
               return;
@@ -132,7 +132,7 @@
             nameOverlay.style.bottom =
               viewer.canvas.clientHeight - movement.endPosition.y + "px";
             nameOverlay.style.left = movement.endPosition.x + "px";
-            var name = pickedFeature.getProperty("BIN");
+            const name = pickedFeature.getProperty("BIN");
             nameOverlay.textContent = name;
 
             // Highlight the feature if it's not already selected.
@@ -150,7 +150,7 @@
             silhouetteGreen.selected = [];
 
             // Pick a new feature
-            var pickedFeature = viewer.scene.pick(movement.position);
+            const pickedFeature = viewer.scene.pick(movement.position);
             if (!Cesium.defined(pickedFeature)) {
               clickHandler(movement);
               return;
@@ -162,7 +162,7 @@
             }
 
             // Save the selected feature's original color
-            var highlightedFeature = silhouetteBlue.selected[0];
+            const highlightedFeature = silhouetteBlue.selected[0];
             if (pickedFeature === highlightedFeature) {
               silhouetteBlue.selected = [];
             }
@@ -171,7 +171,7 @@
             silhouetteGreen.selected = [pickedFeature];
 
             // Set feature infobox description
-            var featureName = pickedFeature.getProperty("name");
+            const featureName = pickedFeature.getProperty("name");
             selectedEntity.name = featureName;
             selectedEntity.description =
               'Loading <div class="cesium-infoBox-loading"></div>';
@@ -194,7 +194,7 @@
           // Silhouettes are not supported. Instead, change the feature color.
 
           // Information about the currently highlighted feature
-          var highlighted = {
+          const highlighted = {
             feature: undefined,
             originalColor: new Cesium.Color(),
           };
@@ -209,7 +209,7 @@
               highlighted.feature = undefined;
             }
             // Pick a new feature
-            var pickedFeature = viewer.scene.pick(movement.endPosition);
+            const pickedFeature = viewer.scene.pick(movement.endPosition);
             if (!Cesium.defined(pickedFeature)) {
               nameOverlay.style.display = "none";
               return;
@@ -219,7 +219,7 @@
             nameOverlay.style.bottom =
               viewer.canvas.clientHeight - movement.endPosition.y + "px";
             nameOverlay.style.left = movement.endPosition.x + "px";
-            var name = pickedFeature.getProperty("name");
+            let name = pickedFeature.getProperty("name");
             if (!Cesium.defined(name)) {
               name = pickedFeature.getProperty("id");
             }
@@ -246,7 +246,7 @@
               selected.feature = undefined;
             }
             // Pick a new feature
-            var pickedFeature = viewer.scene.pick(movement.position);
+            const pickedFeature = viewer.scene.pick(movement.position);
             if (!Cesium.defined(pickedFeature)) {
               clickHandler(movement);
               return;
@@ -269,7 +269,7 @@
             // Highlight newly selected feature
             pickedFeature.color = Cesium.Color.LIME;
             // Set feature infobox description
-            var featureName = pickedFeature.getProperty("name");
+            const featureName = pickedFeature.getProperty("name");
             selectedEntity.name = featureName;
             selectedEntity.description =
               'Loading <div class="cesium-infoBox-loading"></div>';

@@ -10,7 +10,7 @@ import DeveloperError from "./DeveloperError.js";
  * @exports CesiumMath
  * @alias Math
  */
-var CesiumMath = {};
+const CesiumMath = {};
 
 /**
  * 0.1
@@ -205,6 +205,7 @@ CesiumMath.FOUR_GIGABYTES = 4 * 1024 * 1024 * 1024;
  * @param {Number} value The value to return the sign of.
  * @returns {Number} The sign of value.
  */
+// eslint-disable-next-line es/no-math-sign
 CesiumMath.sign = defaultValue(Math.sign, function sign(value) {
   value = +value; // coerce to number
   if (value === 0 || value !== value) {
@@ -291,6 +292,7 @@ CesiumMath.normalize = function (value, rangeMinimum, rangeMaximum) {
  * @param {Number} value The number whose hyperbolic sine is to be returned.
  * @returns {Number} The hyperbolic sine of <code>value</code>.
  */
+// eslint-disable-next-line es/no-math-sinh
 CesiumMath.sinh = defaultValue(Math.sinh, function sinh(value) {
   return (Math.exp(value) - Math.exp(-value)) / 2.0;
 });
@@ -315,6 +317,7 @@ CesiumMath.sinh = defaultValue(Math.sinh, function sinh(value) {
  * @param {Number} value The number whose hyperbolic cosine is to be returned.
  * @returns {Number} The hyperbolic cosine of <code>value</code>.
  */
+// eslint-disable-next-line es/no-math-cosh
 CesiumMath.cosh = defaultValue(Math.cosh, function cosh(value) {
   return (Math.exp(value) + Math.exp(-value)) / 2.0;
 });
@@ -328,7 +331,7 @@ CesiumMath.cosh = defaultValue(Math.cosh, function cosh(value) {
  * @returns {Number} The linearly interpolated value.
  *
  * @example
- * var n = Cesium.Math.lerp(0.0, 2.0, 0.5); // returns 1.0
+ * const n = Cesium.Math.lerp(0.0, 2.0, 0.5); // returns 1.0
  */
 CesiumMath.lerp = function (p, q, time) {
   return (1.0 - time) * p + time * q;
@@ -466,7 +469,7 @@ CesiumMath.toDegrees = function (radians) {
  *
  * @example
  * // Convert 270 degrees to -90 degrees longitude
- * var longitude = Cesium.Math.convertLongitudeRange(Cesium.Math.toRadians(270.0));
+ * const longitude = Cesium.Math.convertLongitudeRange(Cesium.Math.toRadians(270.0));
  */
 CesiumMath.convertLongitudeRange = function (angle) {
   //>>includeStart('debug', pragmas.debug);
@@ -474,9 +477,9 @@ CesiumMath.convertLongitudeRange = function (angle) {
     throw new DeveloperError("angle is required.");
   }
   //>>includeEnd('debug');
-  var twoPi = CesiumMath.TWO_PI;
+  const twoPi = CesiumMath.TWO_PI;
 
-  var simplified = angle - Math.floor(angle / twoPi) * twoPi;
+  const simplified = angle - Math.floor(angle / twoPi) * twoPi;
 
   if (simplified < -Math.PI) {
     return simplified + twoPi;
@@ -497,7 +500,7 @@ CesiumMath.convertLongitudeRange = function (angle) {
  *
  * @example
  * // Clamp 108 degrees latitude to 90 degrees latitude
- * var latitude = Cesium.Math.clampToLatitudeRange(Cesium.Math.toRadians(108.0));
+ * const latitude = Cesium.Math.clampToLatitudeRange(Cesium.Math.toRadians(108.0));
  */
 CesiumMath.clampToLatitudeRange = function (angle) {
   //>>includeStart('debug', pragmas.debug);
@@ -525,6 +528,11 @@ CesiumMath.negativePiToPi = function (angle) {
     throw new DeveloperError("angle is required.");
   }
   //>>includeEnd('debug');
+  if (angle >= -CesiumMath.PI && angle <= CesiumMath.PI) {
+    // Early exit if the input is already inside the range. This avoids
+    // unnecessary math which could introduce floating point error.
+    return angle;
+  }
   return CesiumMath.zeroToTwoPi(angle + CesiumMath.PI) - CesiumMath.PI;
 };
 
@@ -540,7 +548,12 @@ CesiumMath.zeroToTwoPi = function (angle) {
     throw new DeveloperError("angle is required.");
   }
   //>>includeEnd('debug');
-  var mod = CesiumMath.mod(angle, CesiumMath.TWO_PI);
+  if (angle >= 0 && angle <= CesiumMath.TWO_PI) {
+    // Early exit if the input is already inside the range. This avoids
+    // unnecessary math which could introduce floating point error.
+    return angle;
+  }
+  const mod = CesiumMath.mod(angle, CesiumMath.TWO_PI);
   if (
     Math.abs(mod) < CesiumMath.EPSILON14 &&
     Math.abs(angle) > CesiumMath.EPSILON14
@@ -565,7 +578,16 @@ CesiumMath.mod = function (m, n) {
   if (!defined(n)) {
     throw new DeveloperError("n is required.");
   }
+  if (n === 0.0) {
+    throw new DeveloperError("divisor cannot be 0.");
+  }
   //>>includeEnd('debug');
+  if (CesiumMath.sign(m) === CesiumMath.sign(n) && Math.abs(m) < Math.abs(n)) {
+    // Early exit if the input does not need to be modded. This avoids
+    // unnecessary math which could introduce floating point error.
+    return m;
+  }
+
   return ((m % n) + n) % n;
 };
 
@@ -582,10 +604,10 @@ CesiumMath.mod = function (m, n) {
  * @returns {Boolean} <code>true</code> if the values are equal within the epsilon; otherwise, <code>false</code>.
  *
  * @example
- * var a = Cesium.Math.equalsEpsilon(0.0, 0.01, Cesium.Math.EPSILON2); // true
- * var b = Cesium.Math.equalsEpsilon(0.0, 0.1, Cesium.Math.EPSILON2);  // false
- * var c = Cesium.Math.equalsEpsilon(3699175.1634344, 3699175.2, Cesium.Math.EPSILON7); // true
- * var d = Cesium.Math.equalsEpsilon(3699175.1634344, 3699175.2, Cesium.Math.EPSILON9); // false
+ * const a = Cesium.Math.equalsEpsilon(0.0, 0.01, Cesium.Math.EPSILON2); // true
+ * const b = Cesium.Math.equalsEpsilon(0.0, 0.1, Cesium.Math.EPSILON2);  // false
+ * const c = Cesium.Math.equalsEpsilon(3699175.1634344, 3699175.2, Cesium.Math.EPSILON7); // true
+ * const d = Cesium.Math.equalsEpsilon(3699175.1634344, 3699175.2, Cesium.Math.EPSILON9); // false
  */
 CesiumMath.equalsEpsilon = function (
   left,
@@ -604,7 +626,7 @@ CesiumMath.equalsEpsilon = function (
 
   relativeEpsilon = defaultValue(relativeEpsilon, 0.0);
   absoluteEpsilon = defaultValue(absoluteEpsilon, relativeEpsilon);
-  var absDiff = Math.abs(left - right);
+  const absDiff = Math.abs(left - right);
   return (
     absDiff <= absoluteEpsilon ||
     absDiff <= relativeEpsilon * Math.max(Math.abs(left), Math.abs(right))
@@ -631,7 +653,7 @@ CesiumMath.lessThan = function (left, right, absoluteEpsilon) {
     throw new DeveloperError("second is required.");
   }
   if (!defined(absoluteEpsilon)) {
-    throw new DeveloperError("relativeEpsilon is required.");
+    throw new DeveloperError("absoluteEpsilon is required.");
   }
   //>>includeEnd('debug');
   return left - right < -absoluteEpsilon;
@@ -656,7 +678,7 @@ CesiumMath.lessThanOrEquals = function (left, right, absoluteEpsilon) {
     throw new DeveloperError("second is required.");
   }
   if (!defined(absoluteEpsilon)) {
-    throw new DeveloperError("relativeEpsilon is required.");
+    throw new DeveloperError("absoluteEpsilon is required.");
   }
   //>>includeEnd('debug');
   return left - right < absoluteEpsilon;
@@ -682,7 +704,7 @@ CesiumMath.greaterThan = function (left, right, absoluteEpsilon) {
     throw new DeveloperError("second is required.");
   }
   if (!defined(absoluteEpsilon)) {
-    throw new DeveloperError("relativeEpsilon is required.");
+    throw new DeveloperError("absoluteEpsilon is required.");
   }
   //>>includeEnd('debug');
   return left - right > absoluteEpsilon;
@@ -707,13 +729,13 @@ CesiumMath.greaterThanOrEquals = function (left, right, absoluteEpsilon) {
     throw new DeveloperError("second is required.");
   }
   if (!defined(absoluteEpsilon)) {
-    throw new DeveloperError("relativeEpsilon is required.");
+    throw new DeveloperError("absoluteEpsilon is required.");
   }
   //>>includeEnd('debug');
   return left - right > -absoluteEpsilon;
 };
 
-var factorials = [1];
+const factorials = [1];
 
 /**
  * Computes the factorial of the provided number.
@@ -726,7 +748,7 @@ var factorials = [1];
  *
  * @example
  * //Compute 7!, which is equal to 5040
- * var computedFactorial = Cesium.Math.factorial(7);
+ * const computedFactorial = Cesium.Math.factorial(7);
  *
  * @see {@link http://en.wikipedia.org/wiki/Factorial|Factorial on Wikipedia}
  */
@@ -739,11 +761,11 @@ CesiumMath.factorial = function (n) {
   }
   //>>includeEnd('debug');
 
-  var length = factorials.length;
+  const length = factorials.length;
   if (n >= length) {
-    var sum = factorials[length - 1];
-    for (var i = length; i <= n; i++) {
-      var next = sum * i;
+    let sum = factorials[length - 1];
+    for (let i = length; i <= n; i++) {
+      const next = sum * i;
       factorials.push(next);
       sum = next;
     }
@@ -762,8 +784,8 @@ CesiumMath.factorial = function (n) {
  * @exception {DeveloperError} Maximum value must be greater than minimum value.
  *
  * @example
- * var n = Cesium.Math.incrementWrap(5, 10, 0); // returns 6
- * var n = Cesium.Math.incrementWrap(10, 10, 0); // returns 0
+ * const n = Cesium.Math.incrementWrap(5, 10, 0); // returns 6
+ * const m = Cesium.Math.incrementWrap(10, 10, 0); // returns 0
  */
 CesiumMath.incrementWrap = function (n, maximumValue, minimumValue) {
   minimumValue = defaultValue(minimumValue, 0.0);
@@ -785,23 +807,22 @@ CesiumMath.incrementWrap = function (n, maximumValue, minimumValue) {
 };
 
 /**
- * Determines if a positive integer is a power of two.
+ * Determines if a non-negative integer is a power of two.
+ * The maximum allowed input is (2^32)-1 due to 32-bit bitwise operator limitation in Javascript.
  *
- * @param {Number} n The positive integer to test.
+ * @param {Number} n The integer to test in the range [0, (2^32)-1].
  * @returns {Boolean} <code>true</code> if the number if a power of two; otherwise, <code>false</code>.
  *
- * @exception {DeveloperError} A number greater than or equal to 0 is required.
+ * @exception {DeveloperError} A number between 0 and (2^32)-1 is required.
  *
  * @example
- * var t = Cesium.Math.isPowerOfTwo(16); // true
- * var f = Cesium.Math.isPowerOfTwo(20); // false
+ * const t = Cesium.Math.isPowerOfTwo(16); // true
+ * const f = Cesium.Math.isPowerOfTwo(20); // false
  */
 CesiumMath.isPowerOfTwo = function (n) {
   //>>includeStart('debug', pragmas.debug);
-  if (typeof n !== "number" || n < 0) {
-    throw new DeveloperError(
-      "A number greater than or equal to 0 is required."
-    );
+  if (typeof n !== "number" || n < 0 || n > 4294967295) {
+    throw new DeveloperError("A number between 0 and (2^32)-1 is required.");
   }
   //>>includeEnd('debug');
 
@@ -809,23 +830,22 @@ CesiumMath.isPowerOfTwo = function (n) {
 };
 
 /**
- * Computes the next power-of-two integer greater than or equal to the provided positive integer.
+ * Computes the next power-of-two integer greater than or equal to the provided non-negative integer.
+ * The maximum allowed input is 2^31 due to 32-bit bitwise operator limitation in Javascript.
  *
- * @param {Number} n The positive integer to test.
+ * @param {Number} n The integer to test in the range [0, 2^31].
  * @returns {Number} The next power-of-two integer.
  *
- * @exception {DeveloperError} A number greater than or equal to 0 is required.
+ * @exception {DeveloperError} A number between 0 and 2^31 is required.
  *
  * @example
- * var n = Cesium.Math.nextPowerOfTwo(29); // 32
- * var m = Cesium.Math.nextPowerOfTwo(32); // 32
+ * const n = Cesium.Math.nextPowerOfTwo(29); // 32
+ * const m = Cesium.Math.nextPowerOfTwo(32); // 32
  */
 CesiumMath.nextPowerOfTwo = function (n) {
   //>>includeStart('debug', pragmas.debug);
-  if (typeof n !== "number" || n < 0) {
-    throw new DeveloperError(
-      "A number greater than or equal to 0 is required."
-    );
+  if (typeof n !== "number" || n < 0 || n > 2147483648) {
+    throw new DeveloperError("A number between 0 and 2^31 is required.");
   }
   //>>includeEnd('debug');
 
@@ -837,6 +857,39 @@ CesiumMath.nextPowerOfTwo = function (n) {
   n |= n >> 8;
   n |= n >> 16;
   ++n;
+
+  return n;
+};
+
+/**
+ * Computes the previous power-of-two integer less than or equal to the provided non-negative integer.
+ * The maximum allowed input is (2^32)-1 due to 32-bit bitwise operator limitation in Javascript.
+ *
+ * @param {Number} n The integer to test in the range [0, (2^32)-1].
+ * @returns {Number} The previous power-of-two integer.
+ *
+ * @exception {DeveloperError} A number between 0 and (2^32)-1 is required.
+ *
+ * @example
+ * const n = Cesium.Math.previousPowerOfTwo(29); // 16
+ * const m = Cesium.Math.previousPowerOfTwo(32); // 32
+ */
+CesiumMath.previousPowerOfTwo = function (n) {
+  //>>includeStart('debug', pragmas.debug);
+  if (typeof n !== "number" || n < 0 || n > 4294967295) {
+    throw new DeveloperError("A number between 0 and (2^32)-1 is required.");
+  }
+  //>>includeEnd('debug');
+
+  n |= n >> 1;
+  n |= n >> 2;
+  n |= n >> 4;
+  n |= n >> 8;
+  n |= n >> 16;
+  n |= n >> 32;
+
+  // The previous bitwise operations implicitly convert to signed 32-bit. Use `>>>` to convert to unsigned
+  n = (n >>> 0) - (n >>> 1);
 
   return n;
 };
@@ -864,7 +917,7 @@ CesiumMath.clamp = function (value, min, max) {
   return value < min ? min : value > max ? max : value;
 };
 
-var randomNumberGenerator = new MersenneTwister();
+let randomNumberGenerator = new MersenneTwister();
 
 /**
  * Sets the seed used by the random number generator
@@ -986,8 +1039,9 @@ CesiumMath.logBase = function (number, base) {
  * @param {Number} [number] The number.
  * @returns {Number} The result.
  */
+// eslint-disable-next-line es/no-math-cbrt
 CesiumMath.cbrt = defaultValue(Math.cbrt, function cbrt(number) {
-  var result = Math.pow(Math.abs(number), 1.0 / 3.0);
+  const result = Math.pow(Math.abs(number), 1.0 / 3.0);
   return number < 0.0 ? -result : result;
 });
 
@@ -998,6 +1052,7 @@ CesiumMath.cbrt = defaultValue(Math.cbrt, function cbrt(number) {
  * @param {Number} number The number.
  * @returns {Number} The result.
  */
+// eslint-disable-next-line es/no-math-log2
 CesiumMath.log2 = defaultValue(Math.log2, function log2(number) {
   return Math.log(number) * Math.LOG2E;
 });
@@ -1006,7 +1061,7 @@ CesiumMath.log2 = defaultValue(Math.log2, function log2(number) {
  * @private
  */
 CesiumMath.fog = function (distanceToCamera, density) {
-  var scalar = distanceToCamera * density;
+  const scalar = distanceToCamera * density;
   return 1.0 - Math.exp(-(scalar * scalar));
 };
 
@@ -1046,14 +1101,13 @@ CesiumMath.fastApproximateAtan2 = function (x, y) {
 
   // atan approximations are usually only reliable over [-1, 1]
   // So reduce the range by flipping whether x or y is on top based on which is bigger.
-  var opposite;
-  var adjacent;
-  var t = Math.abs(x); // t used as swap and atan result.
+  let opposite;
+  let t = Math.abs(x); // t used as swap and atan result.
   opposite = Math.abs(y);
-  adjacent = Math.max(t, opposite);
+  const adjacent = Math.max(t, opposite);
   opposite = Math.min(t, opposite);
 
-  var oppositeOverAdjacent = opposite / adjacent;
+  const oppositeOverAdjacent = opposite / adjacent;
   //>>includeStart('debug', pragmas.debug);
   if (isNaN(oppositeOverAdjacent)) {
     throw new DeveloperError("either x or y must be nonzero");

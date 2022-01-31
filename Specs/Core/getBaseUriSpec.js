@@ -2,7 +2,7 @@ import { getBaseUri } from "../../Source/Cesium.js";
 
 describe("Core/getBaseUri", function () {
   it("works as expected", function () {
-    var result = getBaseUri("http://www.mysite.com/awesome?makeitawesome=true");
+    let result = getBaseUri("http://www.mysite.com/awesome?makeitawesome=true");
     expect(result).toEqual("http://www.mysite.com/");
 
     result = getBaseUri(
@@ -12,7 +12,7 @@ describe("Core/getBaseUri", function () {
   });
 
   it("works with includeQuery flag", function () {
-    var result = getBaseUri(
+    let result = getBaseUri(
       "http://www.mysite.com/awesome?makeitawesome=true",
       true
     );

@@ -7,7 +7,7 @@ import ViewportPrimitive from "../ViewportPrimitive.js";
 describe(
   "Scene/PostProcessStageCollection",
   function () {
-    var scene;
+    let scene;
 
     beforeAll(function () {
       scene = createScene();
@@ -23,10 +23,12 @@ describe(
       scene.postProcessStages.fxaa.enabled = false;
       scene.postProcessStages.bloom.enabled = false;
       scene.postProcessStages.ambientOcclusion.enabled = false;
+      scene.highDynamicRange = false;
+      scene.primitives.removeAll();
     });
 
     it("constructs", function () {
-      var stages = new PostProcessStageCollection();
+      const stages = new PostProcessStageCollection();
       expect(stages.ready).toEqual(false);
       expect(stages.fxaa).toBeDefined();
       expect(stages.ambientOcclusion).toBeDefined();
@@ -67,7 +69,7 @@ describe(
     });
 
     it("throws when adding the same stage", function () {
-      var stage = new PostProcessStage({
+      const stage = new PostProcessStage({
         fragmentShader:
           "void main() { gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }",
       });
@@ -78,7 +80,7 @@ describe(
     });
 
     it("removes a single stage", function () {
-      var stage1 = scene.postProcessStages.add(
+      const stage1 = scene.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
             "void main() { gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }",
@@ -95,13 +97,13 @@ describe(
     it("removes stages", function () {
       expect(scene).toRender([0, 0, 0, 255]);
 
-      var stage1 = scene.postProcessStages.add(
+      const stage1 = scene.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
             "void main() { gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }",
         })
       );
-      var stage2 = scene.postProcessStages.add(
+      const stage2 = scene.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
             "uniform sampler2D colorTexture;\n" +
@@ -138,13 +140,13 @@ describe(
     });
 
     it("gets stages at index", function () {
-      var stage1 = scene.postProcessStages.add(
+      const stage1 = scene.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
             "void main() { gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }",
         })
       );
-      var stage2 = scene.postProcessStages.add(
+      const stage2 = scene.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
             "uniform sampler2D colorTexture;\n" +
@@ -185,13 +187,13 @@ describe(
     it("removes all", function () {
       expect(scene).toRender([0, 0, 0, 255]);
 
-      var stage1 = scene.postProcessStages.add(
+      const stage1 = scene.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
             "void main() { gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }",
         })
       );
-      var stage2 = scene.postProcessStages.add(
+      const stage2 = scene.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
             "uniform sampler2D colorTexture;\n" +
@@ -221,13 +223,13 @@ describe(
     });
 
     it("gets by stage name", function () {
-      var stage1 = scene.postProcessStages.add(
+      const stage1 = scene.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
             "void main() { gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }",
         })
       );
-      var stage2 = scene.postProcessStages.add(
+      const stage2 = scene.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
             "uniform sampler2D colorTexture;\n" +
@@ -251,13 +253,13 @@ describe(
     });
 
     it("gets the output texture by stage name", function () {
-      var stage1 = scene.postProcessStages.add(
+      const stage1 = scene.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
             "void main() { gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }",
         })
       );
-      var stage2 = scene.postProcessStages.add(
+      const stage2 = scene.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
             "uniform sampler2D colorTexture;\n" +
@@ -295,12 +297,93 @@ describe(
       ).not.toBeDefined();
     });
 
+    it("shows correct output when single stage is enabled then disabled", function () {
+      const stage = scene.postProcessStages.add(
+        new PostProcessStage({
+          fragmentShader:
+            "void main() { gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0); }",
+        })
+      );
+      scene.renderForSpecs();
+      expect(scene).toRender([255, 0, 255, 255]);
+
+      stage.enabled = false;
+
+      scene.renderForSpecs();
+      expect(scene).toRender([0, 0, 0, 255]);
+    });
+
+    it("shows correct output when single stage is disabled then enabled", function () {
+      const stage = scene.postProcessStages.add(
+        new PostProcessStage({
+          fragmentShader:
+            "void main() { gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0); }",
+        })
+      );
+      stage.enabled = false;
+
+      scene.renderForSpecs();
+      expect(scene).toRender([0, 0, 0, 255]);
+
+      stage.enabled = true;
+
+      scene.renderForSpecs();
+      expect(scene).toRender([255, 0, 255, 255]);
+    });
+
+    it("shows correct output when additional stage is enabled then disabled", function () {
+      scene.postProcessStages.add(
+        new PostProcessStage({
+          fragmentShader:
+            "void main() { gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0); }",
+        })
+      );
+      const stage = scene.postProcessStages.add(
+        new PostProcessStage({
+          fragmentShader:
+            "void main() { gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0); }",
+        })
+      );
+
+      scene.renderForSpecs();
+      expect(scene).toRender([0, 255, 255, 255]);
+
+      stage.enabled = false;
+
+      scene.renderForSpecs();
+      expect(scene).toRender([255, 0, 255, 255]);
+    });
+
+    it("shows correct output when additional stage is disabled then enabled", function () {
+      scene.postProcessStages.add(
+        new PostProcessStage({
+          fragmentShader:
+            "void main() { gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0); }",
+        })
+      );
+      const stage = scene.postProcessStages.add(
+        new PostProcessStage({
+          fragmentShader:
+            "void main() { gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0); }",
+        })
+      );
+      stage.enabled = false;
+
+      scene.renderForSpecs();
+      expect(scene).toRender([255, 0, 255, 255]);
+
+      stage.enabled = true;
+
+      scene.renderForSpecs();
+      expect(scene).toRender([0, 255, 255, 255]);
+    });
+
     it("uses Reinhard tonemapping", function () {
       if (!scene.highDynamicRangeSupported) {
         return;
       }
 
-      var fs =
+      const fs =
         "void main() { \n" +
         "    gl_FragColor = vec4(4.0, 0.0, 0.0, 1.0); \n" +
         "} \n";
@@ -326,7 +409,7 @@ describe(
         return;
       }
 
-      var fs =
+      const fs =
         "void main() { \n" +
         "    gl_FragColor = vec4(0.5, 0.0, 0.0, 1.0); \n" +
         "} \n";
@@ -354,7 +437,7 @@ describe(
         return;
       }
 
-      var fs =
+      const fs =
         "void main() { \n" +
         "    gl_FragColor = vec4(4.0, 0.0, 0.0, 1.0); \n" +
         "} \n";
@@ -380,7 +463,7 @@ describe(
         return;
       }
 
-      var fs =
+      const fs =
         "void main() { \n" +
         "    gl_FragColor = vec4(4.0, 0.0, 0.0, 1.0); \n" +
         "} \n";
@@ -402,8 +485,8 @@ describe(
     });
 
     it("destroys", function () {
-      var stages = new PostProcessStageCollection();
-      var stage = stages.add(
+      const stages = new PostProcessStageCollection();
+      const stage = stages.add(
         new PostProcessStage({
           fragmentShader: "void main() { gl_FragColor = vec4(1.0); }",
         })

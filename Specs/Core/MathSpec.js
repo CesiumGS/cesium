@@ -207,51 +207,33 @@ describe("Core/Math", function () {
     }).toThrowDeveloperError();
   });
 
-  it("negativePiToPi positive", function () {
-    expect(CesiumMath.negativePiToPi((Math.PI / 2) * Math.PI)).toEqualEpsilon(
-      (Math.PI / 2) * Math.PI - CesiumMath.TWO_PI,
-      CesiumMath.EPSILON16
+  it("negativePiToPi", function () {
+    expect(CesiumMath.negativePiToPi(0.0)).toEqual(0.0);
+    expect(CesiumMath.negativePiToPi(+Math.PI)).toEqual(+Math.PI);
+    expect(CesiumMath.negativePiToPi(-Math.PI)).toEqual(-Math.PI);
+    expect(CesiumMath.negativePiToPi(+Math.PI - 1.0)).toEqual(+Math.PI - 1.0);
+    expect(CesiumMath.negativePiToPi(-Math.PI + 1.0)).toEqual(-Math.PI + 1.0);
+    expect(CesiumMath.negativePiToPi(+Math.PI - 0.1)).toEqual(+Math.PI - 0.1);
+    expect(CesiumMath.negativePiToPi(-Math.PI + 0.1)).toEqual(-Math.PI + 0.1);
+    expect(CesiumMath.negativePiToPi(+Math.PI + 0.1)).toEqualEpsilon(
+      -Math.PI + 0.1,
+      CesiumMath.EPSILON15
     );
-    expect(CesiumMath.negativePiToPi(Math.PI / 0.5)).toEqualEpsilon(
-      0.0,
-      CesiumMath.EPSILON16
+    expect(CesiumMath.negativePiToPi(-Math.PI - 0.1)).toEqualEpsilon(
+      +Math.PI - 0.1,
+      CesiumMath.EPSILON15
     );
-    expect(
-      CesiumMath.negativePiToPi(Math.PI + CesiumMath.EPSILON10)
-    ).toEqualEpsilon(-Math.PI, CesiumMath.EPSILON9);
-    expect(CesiumMath.negativePiToPi(Math.PI)).toEqualEpsilon(
-      Math.PI,
-      CesiumMath.EPSILON9
-    );
-  });
 
-  it("negativePiToPi negative", function () {
-    expect(CesiumMath.negativePiToPi(-Math.PI / 0.5)).toEqualEpsilon(
-      0.0,
-      CesiumMath.EPSILON16
-    );
-    expect(CesiumMath.negativePiToPi(-(Math.PI / 2) * Math.PI)).toEqualEpsilon(
-      -(Math.PI / 2) * Math.PI + CesiumMath.TWO_PI,
-      CesiumMath.EPSILON16
-    );
-    expect(
-      CesiumMath.negativePiToPi(-(Math.PI + CesiumMath.EPSILON10))
-    ).toEqualEpsilon(Math.PI, CesiumMath.EPSILON9);
-    expect(CesiumMath.negativePiToPi(-Math.PI)).toEqualEpsilon(
-      -Math.PI,
-      CesiumMath.EPSILON9
-    );
-  });
-
-  it("negativePiToPi should not change", function () {
-    expect(CesiumMath.negativePiToPi(Math.PI - 1)).toEqualEpsilon(
-      Math.PI - 1,
-      CesiumMath.EPSILON16
-    );
-    expect(CesiumMath.negativePiToPi(-Math.PI + 1)).toEqualEpsilon(
-      -Math.PI + 1,
-      CesiumMath.EPSILON16
-    );
+    expect(CesiumMath.negativePiToPi(+2.0 * Math.PI)).toEqual(0.0);
+    expect(CesiumMath.negativePiToPi(-2.0 * Math.PI)).toEqual(0.0);
+    expect(CesiumMath.negativePiToPi(+3.0 * Math.PI)).toEqual(Math.PI);
+    expect(CesiumMath.negativePiToPi(-3.0 * Math.PI)).toEqual(Math.PI);
+    expect(CesiumMath.negativePiToPi(+4.0 * Math.PI)).toEqual(0.0);
+    expect(CesiumMath.negativePiToPi(-4.0 * Math.PI)).toEqual(0.0);
+    expect(CesiumMath.negativePiToPi(+5.0 * Math.PI)).toEqual(Math.PI);
+    expect(CesiumMath.negativePiToPi(-5.0 * Math.PI)).toEqual(Math.PI);
+    expect(CesiumMath.negativePiToPi(+6.0 * Math.PI)).toEqual(0.0);
+    expect(CesiumMath.negativePiToPi(-6.0 * Math.PI)).toEqual(0.0);
   });
 
   it("negativePiToPi throws for undefined", function () {
@@ -261,39 +243,78 @@ describe("Core/Math", function () {
   });
 
   it("zeroToTwoPi", function () {
-    expect(CesiumMath.zeroToTwoPi(0.0)).toEqualEpsilon(
-      0.0,
-      CesiumMath.EPSILON14
+    expect(CesiumMath.zeroToTwoPi(0.0)).toEqual(0.0);
+    expect(CesiumMath.zeroToTwoPi(+Math.PI)).toEqual(+Math.PI);
+    expect(CesiumMath.zeroToTwoPi(-Math.PI)).toEqual(+Math.PI);
+    expect(CesiumMath.zeroToTwoPi(+Math.PI - 1.0)).toEqual(+Math.PI - 1.0);
+    expect(CesiumMath.zeroToTwoPi(-Math.PI + 1.0)).toEqualEpsilon(
+      +Math.PI + 1.0,
+      CesiumMath.EPSILON15
     );
-    expect(CesiumMath.zeroToTwoPi(Math.PI)).toEqualEpsilon(
-      Math.PI,
-      CesiumMath.EPSILON14
+    expect(CesiumMath.zeroToTwoPi(+Math.PI - 0.1)).toEqual(+Math.PI - 0.1);
+    expect(CesiumMath.zeroToTwoPi(-Math.PI + 0.1)).toEqualEpsilon(
+      +Math.PI + 0.1,
+      CesiumMath.EPSILON15
     );
-    expect(CesiumMath.zeroToTwoPi(CesiumMath.TWO_PI)).toEqualEpsilon(
-      CesiumMath.TWO_PI,
-      CesiumMath.EPSILON14
+    expect(CesiumMath.zeroToTwoPi(+Math.PI + 0.1)).toEqual(+Math.PI + 0.1);
+    expect(CesiumMath.zeroToTwoPi(-Math.PI - 0.1)).toEqualEpsilon(
+      +Math.PI - 0.1,
+      CesiumMath.EPSILON15
     );
-    expect(CesiumMath.zeroToTwoPi(3.0 * Math.PI)).toEqualEpsilon(
-      Math.PI,
-      CesiumMath.EPSILON14
-    );
-    expect(CesiumMath.zeroToTwoPi(2.0 * CesiumMath.TWO_PI)).toEqualEpsilon(
-      CesiumMath.TWO_PI,
-      CesiumMath.EPSILON14
-    );
-    expect(CesiumMath.zeroToTwoPi(-Math.PI)).toEqualEpsilon(
-      Math.PI,
-      CesiumMath.EPSILON14
-    );
-    expect(CesiumMath.zeroToTwoPi(-CesiumMath.TWO_PI)).toEqualEpsilon(
-      CesiumMath.TWO_PI,
-      CesiumMath.EPSILON14
-    );
+
+    expect(CesiumMath.zeroToTwoPi(+2.0 * Math.PI)).toEqual(2.0 * Math.PI);
+    expect(CesiumMath.zeroToTwoPi(-2.0 * Math.PI)).toEqual(2.0 * Math.PI);
+    expect(CesiumMath.zeroToTwoPi(+3.0 * Math.PI)).toEqual(Math.PI);
+    expect(CesiumMath.zeroToTwoPi(-3.0 * Math.PI)).toEqual(Math.PI);
+    expect(CesiumMath.zeroToTwoPi(+4.0 * Math.PI)).toEqual(2.0 * Math.PI);
+    expect(CesiumMath.zeroToTwoPi(-4.0 * Math.PI)).toEqual(2.0 * Math.PI);
+    expect(CesiumMath.zeroToTwoPi(+5.0 * Math.PI)).toEqual(Math.PI);
+    expect(CesiumMath.zeroToTwoPi(-5.0 * Math.PI)).toEqual(Math.PI);
+    expect(CesiumMath.zeroToTwoPi(+6.0 * Math.PI)).toEqual(2.0 * Math.PI);
+    expect(CesiumMath.zeroToTwoPi(-6.0 * Math.PI)).toEqual(2.0 * Math.PI);
   });
 
   it("zeroToTwoPi throws for undefined", function () {
     expect(function () {
       CesiumMath.zeroToTwoPi();
+    }).toThrowDeveloperError();
+  });
+
+  it("mod", function () {
+    expect(CesiumMath.mod(0.0, 1.0)).toEqual(0.0);
+    expect(CesiumMath.mod(0.1, 1.0)).toEqual(0.1);
+    expect(CesiumMath.mod(0.5, 1.0)).toEqual(0.5);
+    expect(CesiumMath.mod(1.0, 1.0)).toEqual(0.0);
+    expect(CesiumMath.mod(1.1, 1.0)).toEqualEpsilon(0.1, CesiumMath.EPSILON15);
+
+    expect(CesiumMath.mod(-0.0, 1.0)).toEqual(0.0);
+    expect(CesiumMath.mod(-0.1, 1.0)).toEqual(0.9);
+    expect(CesiumMath.mod(-0.5, 1.0)).toEqual(0.5);
+    expect(CesiumMath.mod(-1.0, 1.0)).toEqual(0.0);
+    expect(CesiumMath.mod(-1.1, 1.0)).toEqualEpsilon(0.9, CesiumMath.EPSILON15);
+
+    expect(CesiumMath.mod(0.0, -1.0)).toEqual(-0.0);
+    expect(CesiumMath.mod(0.1, -1.0)).toEqual(-0.9);
+    expect(CesiumMath.mod(0.5, -1.0)).toEqual(-0.5);
+    expect(CesiumMath.mod(1.0, -1.0)).toEqual(-0.0);
+    expect(CesiumMath.mod(1.1, -1.0)).toEqualEpsilon(
+      -0.9,
+      CesiumMath.EPSILON15
+    );
+
+    expect(CesiumMath.mod(-0.0, -1.0)).toEqual(-0.0);
+    expect(CesiumMath.mod(-0.1, -1.0)).toEqual(-0.1);
+    expect(CesiumMath.mod(-0.5, -1.0)).toEqual(-0.5);
+    expect(CesiumMath.mod(-1.0, -1.0)).toEqual(-0.0);
+    expect(CesiumMath.mod(-1.1, -1.0)).toEqualEpsilon(
+      -0.1,
+      CesiumMath.EPSILON15
+    );
+  });
+
+  it("mod throws for divisor of 0", function () {
+    expect(function () {
+      CesiumMath.mod(1.0, 0.0);
     }).toThrowDeveloperError();
   });
 
@@ -450,7 +471,7 @@ describe("Core/Math", function () {
   });
 
   it("factorial produces the correct results", function () {
-    var factorials = [
+    const factorials = [
       1,
       1,
       2,
@@ -478,9 +499,9 @@ describe("Core/Math", function () {
       620448401733239439360000,
     ];
 
-    var length = factorials.length;
-    var i;
-    var indices = [];
+    const length = factorials.length;
+    let i;
+    const indices = [];
 
     // Populate indices array
     for (i = 0; i < length; i++) {
@@ -489,14 +510,14 @@ describe("Core/Math", function () {
 
     // Randomize the indices array
     for (i = 0; i < length; i++) {
-      var tmp = indices[i];
-      var randomIndex = Math.floor(Math.random() * length);
+      const tmp = indices[i];
+      const randomIndex = Math.floor(Math.random() * length);
       indices[i] = indices[randomIndex];
       indices[randomIndex] = tmp;
     }
 
     for (i = 0; i < length; i++) {
-      var index = indices[i];
+      const index = indices[i];
       expect(CesiumMath.factorial(index)).toEqual(factorials[index]);
     }
   });
@@ -514,14 +535,11 @@ describe("Core/Math", function () {
   });
 
   it("isPowerOfTwo finds powers of two", function () {
-    expect(CesiumMath.isPowerOfTwo(1)).toEqual(true);
-    expect(CesiumMath.isPowerOfTwo(2)).toEqual(true);
-    expect(CesiumMath.isPowerOfTwo(4)).toEqual(true);
-    expect(CesiumMath.isPowerOfTwo(8)).toEqual(true);
-    expect(CesiumMath.isPowerOfTwo(16)).toEqual(true);
-    expect(CesiumMath.isPowerOfTwo(256)).toEqual(true);
-    expect(CesiumMath.isPowerOfTwo(1024)).toEqual(true);
-    expect(CesiumMath.isPowerOfTwo(16 * 1024)).toEqual(true);
+    // Test all power of twos from 1 to 2^31
+    for (let i = 0; i < 32; i++) {
+      const powerOfTwo = (1 << i) >>> 0; // `>>>` converts to unsigned
+      expect(CesiumMath.isPowerOfTwo(powerOfTwo)).toEqual(true);
+    }
   });
 
   it("isPowerOfTwo does not find powers of two", function () {
@@ -529,13 +547,33 @@ describe("Core/Math", function () {
     expect(CesiumMath.isPowerOfTwo(3)).toEqual(false);
     expect(CesiumMath.isPowerOfTwo(5)).toEqual(false);
     expect(CesiumMath.isPowerOfTwo(12)).toEqual(false);
+    expect(CesiumMath.isPowerOfTwo(4294967295)).toEqual(false); // (2^32)-1
   });
 
   it("nextPowerOfTwo finds next power of two", function () {
     expect(CesiumMath.nextPowerOfTwo(0)).toEqual(0);
+    expect(CesiumMath.nextPowerOfTwo(1)).toEqual(1);
+    expect(CesiumMath.nextPowerOfTwo(2)).toEqual(2);
+    expect(CesiumMath.nextPowerOfTwo(3)).toEqual(4);
     expect(CesiumMath.nextPowerOfTwo(257)).toEqual(512);
     expect(CesiumMath.nextPowerOfTwo(512)).toEqual(512);
     expect(CesiumMath.nextPowerOfTwo(1023)).toEqual(1024);
+    expect(CesiumMath.nextPowerOfTwo(1073741825)).toEqual(2147483648); // (2^30)+1 -> 2^31
+    expect(CesiumMath.nextPowerOfTwo(2147483647)).toEqual(2147483648); // (2^31)-1 -> 2^31
+    expect(CesiumMath.nextPowerOfTwo(2147483648)).toEqual(2147483648); // 2^31 -> 2^31
+  });
+
+  it("previousPowerOfTwo finds previous power of two", function () {
+    expect(CesiumMath.previousPowerOfTwo(0)).toEqual(0);
+    expect(CesiumMath.previousPowerOfTwo(1)).toEqual(1);
+    expect(CesiumMath.previousPowerOfTwo(2)).toEqual(2);
+    expect(CesiumMath.previousPowerOfTwo(3)).toEqual(2);
+    expect(CesiumMath.previousPowerOfTwo(257)).toEqual(256);
+    expect(CesiumMath.previousPowerOfTwo(512)).toEqual(512);
+    expect(CesiumMath.previousPowerOfTwo(1023)).toEqual(512);
+    expect(CesiumMath.previousPowerOfTwo(2147483648)).toEqual(2147483648); // 2^31 -> 2^31
+    expect(CesiumMath.previousPowerOfTwo(2147483649)).toEqual(2147483648); // (2^31)+1 -> 2^31
+    expect(CesiumMath.previousPowerOfTwo(4294967295)).toEqual(2147483648); // (2^32)-1 -> 2^31
   });
 
   it("factorial throws for non-numbers", function () {
@@ -577,6 +615,12 @@ describe("Core/Math", function () {
     }).toThrowDeveloperError();
   });
 
+  it("isPowerOfTwo throws for numbers that exceed maximum 32-bit unsigned int", function () {
+    expect(function () {
+      return CesiumMath.isPowerOfTwo(4294967296); // 2^32
+    }).toThrowDeveloperError();
+  });
+
   it("isPowerOfTwo throws for undefined", function () {
     expect(function () {
       CesiumMath.isPowerOfTwo();
@@ -595,9 +639,39 @@ describe("Core/Math", function () {
     }).toThrowDeveloperError();
   });
 
+  it("nextPowerOfTwo throws for results that would exceed maximum 32-bit unsigned int", function () {
+    expect(function () {
+      return CesiumMath.nextPowerOfTwo(2147483649); // (2^31)+1
+    }).toThrowDeveloperError();
+  });
+
   it("nextPowerOfTwo throws for undefined", function () {
     expect(function () {
       CesiumMath.nextPowerOfTwo();
+    }).toThrowDeveloperError();
+  });
+
+  it("previousPowerOfTwo throws for non-numbers", function () {
+    expect(function () {
+      CesiumMath.previousPowerOfTwo({});
+    }).toThrowDeveloperError();
+  });
+
+  it("previousPowerOfTwo throws for negative numbers", function () {
+    expect(function () {
+      CesiumMath.previousPowerOfTwo(-1);
+    }).toThrowDeveloperError();
+  });
+
+  it("previousPowerOfTwo throws for results that would exceed maximum 32-bit unsigned int", function () {
+    expect(function () {
+      return CesiumMath.previousPowerOfTwo(4294967296); // 2^32
+    }).toThrowDeveloperError();
+  });
+
+  it("previousPowerOfTwo throws for undefined", function () {
+    expect(function () {
+      CesiumMath.previousPowerOfTwo();
     }).toThrowDeveloperError();
   });
 

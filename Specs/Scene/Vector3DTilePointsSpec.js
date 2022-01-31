@@ -1,6 +1,7 @@
 import { Cartesian2 } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
+import { clone } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { DistanceDisplayCondition } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
@@ -20,11 +21,11 @@ import pollToPromise from "../pollToPromise.js";
 describe(
   "Scene/Vector3DTilePoints",
   function () {
-    var scene;
-    var rectangle;
-    var points;
+    let scene;
+    let rectangle;
+    let points;
 
-    var ellipsoid = Ellipsoid.WGS84;
+    const ellipsoid = Ellipsoid.WGS84;
 
     beforeAll(function () {
       scene = createScene();
@@ -34,7 +35,7 @@ describe(
       scene.destroyForSpecs();
     });
 
-    var mockTileset = {
+    const mockTileset = {
       _statistics: {
         texturesByteLength: 0,
       },
@@ -45,6 +46,7 @@ describe(
         colorBlendMode: ColorBlendMode.HIGHLIGHT,
         ellipsoid: Ellipsoid.WGS84,
       },
+      tile: {},
       getFeature: function (id) {
         return { batchId: id };
       },
@@ -60,7 +62,7 @@ describe(
     });
 
     function loadPoints(points) {
-      var ready = false;
+      let ready = false;
       points.readyPromise.then(function () {
         ready = true;
       });
@@ -75,7 +77,7 @@ describe(
       return ((value << 1) ^ (value >> 15)) & 0xffff;
     }
 
-    var maxShort = 32767;
+    const maxShort = 32767;
 
     function encodePositions(
       rectangle,
@@ -83,19 +85,19 @@ describe(
       maximumHeight,
       positions
     ) {
-      var length = positions.length;
-      var buffer = new Uint16Array(length * 3);
+      const length = positions.length;
+      const buffer = new Uint16Array(length * 3);
 
-      var lastU = 0;
-      var lastV = 0;
-      var lastH = 0;
+      let lastU = 0;
+      let lastV = 0;
+      let lastH = 0;
 
-      for (var i = 0; i < length; ++i) {
-        var position = positions[i];
+      for (let i = 0; i < length; ++i) {
+        const position = positions[i];
 
-        var u = (position.longitude - rectangle.west) / rectangle.width;
-        var v = (position.latitude - rectangle.south) / rectangle.height;
-        var h =
+        let u = (position.longitude - rectangle.west) / rectangle.width;
+        let v = (position.latitude - rectangle.south) / rectangle.height;
+        let h =
           (position.height - minimumHeight) / (maximumHeight - minimumHeight);
 
         u = CesiumMath.clamp(u, 0.0, 1.0);
@@ -119,17 +121,17 @@ describe(
     }
 
     it("renders a point", function () {
-      var minHeight = 0.0;
-      var maxHeight = 100.0;
-      var cartoPositions = [Cartographic.fromDegrees(0.0, 0.0, 10.0)];
-      var positions = encodePositions(
+      const minHeight = 0.0;
+      const maxHeight = 100.0;
+      const cartoPositions = [Cartographic.fromDegrees(0.0, 0.0, 10.0)];
+      const positions = encodePositions(
         rectangle,
         minHeight,
         maxHeight,
         cartoPositions
       );
 
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       batchTable.update(mockTileset, scene.frameState);
 
       points = scene.primitives.add(
@@ -143,7 +145,7 @@ describe(
         })
       );
       return loadPoints(points).then(function () {
-        var features = [];
+        const features = [];
         points.createFeatures(mockTileset, features);
         points.applyStyle(undefined, features);
 
@@ -156,23 +158,23 @@ describe(
     });
 
     it("renders multiple points", function () {
-      var minHeight = 0.0;
-      var maxHeight = 100.0;
-      var cartoPositions = [
+      const minHeight = 0.0;
+      const maxHeight = 100.0;
+      const cartoPositions = [
         Cartographic.fromDegrees(0.0, 0.0, 10.0),
         Cartographic.fromDegrees(5.0, 0.0, 20.0),
         Cartographic.fromDegrees(-5.0, 0.0, 1.0),
         Cartographic.fromDegrees(0.0, 6.0, 5.0),
         Cartographic.fromDegrees(0.0, -6.0, 90.0),
       ];
-      var positions = encodePositions(
+      const positions = encodePositions(
         rectangle,
         minHeight,
         maxHeight,
         cartoPositions
       );
 
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 5);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 5);
       batchTable.update(mockTileset, scene.frameState);
 
       points = scene.primitives.add(
@@ -185,16 +187,16 @@ describe(
           maximumHeight: maxHeight,
         })
       );
-      var style = new Cesium3DTileStyle({
+      const style = new Cesium3DTileStyle({
         verticalOrigin: VerticalOrigin.BOTTOM,
       });
       return loadPoints(points).then(function () {
-        var features = [];
+        const features = [];
         points.createFeatures(mockTileset, features);
         points.applyStyle(style, features);
 
-        for (var i = 0; i < cartoPositions.length; ++i) {
-          var position = ellipsoid.cartographicToCartesian(cartoPositions[i]);
+        for (let i = 0; i < cartoPositions.length; ++i) {
+          const position = ellipsoid.cartographicToCartesian(cartoPositions[i]);
           scene.camera.lookAt(position, new Cartesian3(0.0, 0.0, 50.0));
           expect(scene).toRenderAndCall(function (rgba) {
             expect(rgba[0]).toBeGreaterThan(0);
@@ -207,17 +209,17 @@ describe(
     });
 
     it("picks a point", function () {
-      var minHeight = 0.0;
-      var maxHeight = 100.0;
-      var cartoPositions = [Cartographic.fromDegrees(0.0, 0.0, 10.0)];
-      var positions = encodePositions(
+      const minHeight = 0.0;
+      const maxHeight = 100.0;
+      const cartoPositions = [Cartographic.fromDegrees(0.0, 0.0, 10.0)];
+      const positions = encodePositions(
         rectangle,
         minHeight,
         maxHeight,
         cartoPositions
       );
 
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
 
       points = scene.primitives.add(
         new Vector3DTilePoints({
@@ -235,11 +237,11 @@ describe(
           new Cartesian3(0.0, 0.0, 50.0)
         );
 
-        var features = [];
+        const features = [];
         points.createFeatures(mockTileset, features);
         points.applyStyle(undefined, features);
 
-        var getFeature = mockTileset.getFeature;
+        const getFeature = mockTileset.getFeature;
         mockTileset.getFeature = function (index) {
           return features[index];
         };
@@ -256,24 +258,30 @@ describe(
     });
 
     it("renders multiple points with style", function () {
-      var minHeight = 0.0;
-      var maxHeight = 100.0;
-      var cartoPositions = [
+      const minHeight = 0.0;
+      const maxHeight = 100.0;
+      const cartoPositions = [
         Cartographic.fromDegrees(0.0, 0.0, 10.0),
         Cartographic.fromDegrees(5.0, 0.0, 20.0),
         Cartographic.fromDegrees(-5.0, 0.0, 1.0),
         Cartographic.fromDegrees(0.0, 6.0, 5.0),
         Cartographic.fromDegrees(0.0, -6.0, 90.0),
       ];
-      var positions = encodePositions(
+      const positions = encodePositions(
         rectangle,
         minHeight,
         maxHeight,
         cartoPositions
       );
 
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 5);
-      batchTable.update(mockTileset, scene.frameState);
+      const mockTilesetClone = clone(mockTileset);
+      const batchTable = new Cesium3DTileBatchTable(mockTilesetClone, 5);
+      mockTilesetClone.batchTable = batchTable;
+
+      for (let i = 0; i < 5; ++i) {
+        batchTable.setProperty(i, "temperature", i);
+      }
+      batchTable.update(mockTilesetClone, scene.frameState);
 
       points = scene.primitives.add(
         new Vector3DTilePoints({
@@ -286,12 +294,12 @@ describe(
         })
       );
 
-      var style = new Cesium3DTileStyle({
+      const style = new Cesium3DTileStyle({
         show: "true",
         pointSize: "10.0",
         color: "rgba(255, 255, 0, 0.5)",
         pointOutlineColor: "rgba(255, 255, 0, 1.0)",
-        pointOutlineWidth: "11.0",
+        pointOutlineWidth: "11.0 * ${temperature}",
         labelColor: "rgba(255, 255, 0, 1.0)",
         labelOutlineColor: "rgba(255, 255, 0, 0.5)",
         labelOutlineWidth: "1.0",
@@ -315,20 +323,20 @@ describe(
       });
 
       return loadPoints(points).then(function () {
-        var features = [];
-        points.createFeatures(mockTileset, features);
+        const features = [];
+        points.createFeatures(mockTilesetClone, features);
         points.applyStyle(style, features);
 
-        var i;
+        let i;
         for (i = 0; i < features.length; ++i) {
-          var feature = features[i];
+          const feature = features[i];
           expect(feature.show).toEqual(true);
           expect(feature.pointSize).toEqual(10.0);
           expect(feature.color).toEqual(new Color(1.0, 1.0, 0.0, 0.5));
           expect(feature.pointOutlineColor).toEqual(
             new Color(1.0, 1.0, 0.0, 1.0)
           );
-          expect(feature.pointOutlineWidth).toEqual(11.0);
+          expect(feature.pointOutlineWidth).toEqual(11.0 * i);
           expect(feature.labelColor).toEqual(new Color(1.0, 1.0, 0.0, 1.0));
           expect(feature.labelOutlineColor).toEqual(
             new Color(1.0, 1.0, 0.0, 0.5)
@@ -363,7 +371,7 @@ describe(
           expect(feature.labelVerticalOrigin).toEqual(VerticalOrigin.BOTTOM);
         }
 
-        var position;
+        let position;
         for (i = 0; i < cartoPositions.length; ++i) {
           position = ellipsoid.cartographicToCartesian(cartoPositions[i]);
           scene.camera.lookAt(position, new Cartesian3(0.0, 0.0, 50.0));
@@ -378,17 +386,17 @@ describe(
     });
 
     it("renders a point with an image", function () {
-      var minHeight = 0.0;
-      var maxHeight = 100.0;
-      var cartoPositions = [Cartographic.fromDegrees(0.0, 0.0, 10.0)];
-      var positions = encodePositions(
+      const minHeight = 0.0;
+      const maxHeight = 100.0;
+      const cartoPositions = [Cartographic.fromDegrees(0.0, 0.0, 10.0)];
+      const positions = encodePositions(
         rectangle,
         minHeight,
         maxHeight,
         cartoPositions
       );
 
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
       batchTable.update(mockTileset, scene.frameState);
 
       points = scene.primitives.add(
@@ -402,17 +410,17 @@ describe(
         })
       );
 
-      var style = new Cesium3DTileStyle({
+      const style = new Cesium3DTileStyle({
         image: '"./Data/Images/Blue10x10.png"',
       });
       return loadPoints(points).then(function () {
-        var features = [];
+        const features = [];
         points.createFeatures(mockTileset, features);
         points.applyStyle(style, features);
 
-        var collection = points._billboardCollection;
+        const collection = points._billboardCollection;
         expect(collection.length).toEqual(1);
-        var billboard = collection.get(0);
+        const billboard = collection.get(0);
         expect(billboard).toBeDefined();
         expect(billboard.ready).toEqual(false);
 
@@ -431,23 +439,23 @@ describe(
     });
 
     it("renders multiple points with debug color", function () {
-      var minHeight = 0.0;
-      var maxHeight = 100.0;
-      var cartoPositions = [
+      const minHeight = 0.0;
+      const maxHeight = 100.0;
+      const cartoPositions = [
         Cartographic.fromDegrees(0.0, 0.0, 10.0),
         Cartographic.fromDegrees(5.0, 0.0, 20.0),
         Cartographic.fromDegrees(-5.0, 0.0, 1.0),
         Cartographic.fromDegrees(0.0, 6.0, 5.0),
         Cartographic.fromDegrees(0.0, -6.0, 90.0),
       ];
-      var positions = encodePositions(
+      const positions = encodePositions(
         rectangle,
         minHeight,
         maxHeight,
         cartoPositions
       );
 
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 5);
+      const batchTable = new Cesium3DTileBatchTable(mockTileset, 5);
       batchTable.update(mockTileset, scene.frameState);
 
       points = scene.primitives.add(
@@ -460,17 +468,17 @@ describe(
           maximumHeight: maxHeight,
         })
       );
-      var style = new Cesium3DTileStyle({
+      const style = new Cesium3DTileStyle({
         verticalOrigin: VerticalOrigin.BOTTOM,
       });
       return loadPoints(points).then(function () {
-        var features = [];
+        const features = [];
         points.createFeatures(mockTileset, features);
         points.applyStyle(style, features);
         points.applyDebugSettings(true, Color.YELLOW);
 
-        var i;
-        var position;
+        let i;
+        let position;
         for (i = 0; i < cartoPositions.length; ++i) {
           position = ellipsoid.cartographicToCartesian(cartoPositions[i]);
           scene.camera.lookAt(position, new Cartesian3(0.0, 0.0, 50.0));

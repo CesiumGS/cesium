@@ -6,7 +6,7 @@ import createContext from "../createContext.js";
 describe(
   "Renderer/Sampler",
   function () {
-    var context;
+    let context;
 
     beforeAll(function () {
       context = createContext();
@@ -17,7 +17,7 @@ describe(
     });
 
     it("has expected default values", function () {
-      var sampler = new Sampler();
+      const sampler = new Sampler();
       expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
       expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
       expect(sampler.minificationFilter).toEqual(

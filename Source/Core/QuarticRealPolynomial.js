@@ -8,7 +8,7 @@ import QuadraticRealPolynomial from "./QuadraticRealPolynomial.js";
  *
  * @namespace QuarticRealPolynomial
  */
-var QuarticRealPolynomial = {};
+const QuarticRealPolynomial = {};
 
 /**
  * Provides the discriminant of the quartic equation from the supplied coefficients.
@@ -39,18 +39,18 @@ QuarticRealPolynomial.computeDiscriminant = function (a, b, c, d, e) {
   }
   //>>includeEnd('debug');
 
-  var a2 = a * a;
-  var a3 = a2 * a;
-  var b2 = b * b;
-  var b3 = b2 * b;
-  var c2 = c * c;
-  var c3 = c2 * c;
-  var d2 = d * d;
-  var d3 = d2 * d;
-  var e2 = e * e;
-  var e3 = e2 * e;
+  const a2 = a * a;
+  const a3 = a2 * a;
+  const b2 = b * b;
+  const b3 = b2 * b;
+  const c2 = c * c;
+  const c3 = c2 * c;
+  const d2 = d * d;
+  const d3 = d2 * d;
+  const e2 = e * e;
+  const e3 = e2 * e;
 
-  var discriminant =
+  const discriminant =
     b2 * c2 * d2 -
     4.0 * b3 * d3 -
     4.0 * a * c3 * d2 +
@@ -73,18 +73,18 @@ QuarticRealPolynomial.computeDiscriminant = function (a, b, c, d, e) {
 };
 
 function original(a3, a2, a1, a0) {
-  var a3Squared = a3 * a3;
+  const a3Squared = a3 * a3;
 
-  var p = a2 - (3.0 * a3Squared) / 8.0;
-  var q = a1 - (a2 * a3) / 2.0 + (a3Squared * a3) / 8.0;
-  var r =
+  const p = a2 - (3.0 * a3Squared) / 8.0;
+  const q = a1 - (a2 * a3) / 2.0 + (a3Squared * a3) / 8.0;
+  const r =
     a0 -
     (a1 * a3) / 4.0 +
     (a2 * a3Squared) / 16.0 -
     (3.0 * a3Squared * a3Squared) / 256.0;
 
   // Find the roots of the cubic equations:  h^6 + 2 p h^4 + (p^2 - 4 r) h^2 - q^2 = 0.
-  var cubicRoots = CubicRealPolynomial.computeRealRoots(
+  const cubicRoots = CubicRealPolynomial.computeRealRoots(
     1.0,
     2.0 * p,
     p * p - 4.0 * r,
@@ -92,23 +92,23 @@ function original(a3, a2, a1, a0) {
   );
 
   if (cubicRoots.length > 0) {
-    var temp = -a3 / 4.0;
+    const temp = -a3 / 4.0;
 
     // Use the largest positive root.
-    var hSquared = cubicRoots[cubicRoots.length - 1];
+    const hSquared = cubicRoots[cubicRoots.length - 1];
 
     if (Math.abs(hSquared) < CesiumMath.EPSILON14) {
       // y^4 + p y^2 + r = 0.
-      var roots = QuadraticRealPolynomial.computeRealRoots(1.0, p, r);
+      const roots = QuadraticRealPolynomial.computeRealRoots(1.0, p, r);
 
       if (roots.length === 2) {
-        var root0 = roots[0];
-        var root1 = roots[1];
+        const root0 = roots[0];
+        const root1 = roots[1];
 
-        var y;
+        let y;
         if (root0 >= 0.0 && root1 >= 0.0) {
-          var y0 = Math.sqrt(root0);
-          var y1 = Math.sqrt(root1);
+          const y0 = Math.sqrt(root0);
+          const y1 = Math.sqrt(root1);
 
           return [temp - y1, temp - y0, temp + y0, temp + y1];
         } else if (root0 >= 0.0 && root1 < 0.0) {
@@ -121,14 +121,14 @@ function original(a3, a2, a1, a0) {
       }
       return [];
     } else if (hSquared > 0.0) {
-      var h = Math.sqrt(hSquared);
+      const h = Math.sqrt(hSquared);
 
-      var m = (p + hSquared - q / h) / 2.0;
-      var n = (p + hSquared + q / h) / 2.0;
+      const m = (p + hSquared - q / h) / 2.0;
+      const n = (p + hSquared + q / h) / 2.0;
 
       // Now solve the two quadratic factors:  (y^2 + h y + m)(y^2 - h y + n);
-      var roots1 = QuadraticRealPolynomial.computeRealRoots(1.0, h, m);
-      var roots2 = QuadraticRealPolynomial.computeRealRoots(1.0, -h, n);
+      const roots1 = QuadraticRealPolynomial.computeRealRoots(1.0, h, m);
+      const roots2 = QuadraticRealPolynomial.computeRealRoots(1.0, -h, n);
 
       if (roots1.length !== 0) {
         roots1[0] += temp;
@@ -167,47 +167,47 @@ function original(a3, a2, a1, a0) {
 }
 
 function neumark(a3, a2, a1, a0) {
-  var a1Squared = a1 * a1;
-  var a2Squared = a2 * a2;
-  var a3Squared = a3 * a3;
+  const a1Squared = a1 * a1;
+  const a2Squared = a2 * a2;
+  const a3Squared = a3 * a3;
 
-  var p = -2.0 * a2;
-  var q = a1 * a3 + a2Squared - 4.0 * a0;
-  var r = a3Squared * a0 - a1 * a2 * a3 + a1Squared;
+  const p = -2.0 * a2;
+  const q = a1 * a3 + a2Squared - 4.0 * a0;
+  const r = a3Squared * a0 - a1 * a2 * a3 + a1Squared;
 
-  var cubicRoots = CubicRealPolynomial.computeRealRoots(1.0, p, q, r);
+  const cubicRoots = CubicRealPolynomial.computeRealRoots(1.0, p, q, r);
 
   if (cubicRoots.length > 0) {
     // Use the most positive root
-    var y = cubicRoots[0];
+    const y = cubicRoots[0];
 
-    var temp = a2 - y;
-    var tempSquared = temp * temp;
+    const temp = a2 - y;
+    const tempSquared = temp * temp;
 
-    var g1 = a3 / 2.0;
-    var h1 = temp / 2.0;
+    const g1 = a3 / 2.0;
+    const h1 = temp / 2.0;
 
-    var m = tempSquared - 4.0 * a0;
-    var mError = tempSquared + 4.0 * Math.abs(a0);
+    const m = tempSquared - 4.0 * a0;
+    const mError = tempSquared + 4.0 * Math.abs(a0);
 
-    var n = a3Squared - 4.0 * y;
-    var nError = a3Squared + 4.0 * Math.abs(y);
+    const n = a3Squared - 4.0 * y;
+    const nError = a3Squared + 4.0 * Math.abs(y);
 
-    var g2;
-    var h2;
+    let g2;
+    let h2;
 
     if (y < 0.0 || m * nError < n * mError) {
-      var squareRootOfN = Math.sqrt(n);
+      const squareRootOfN = Math.sqrt(n);
       g2 = squareRootOfN / 2.0;
       h2 = squareRootOfN === 0.0 ? 0.0 : (a3 * h1 - a1) / squareRootOfN;
     } else {
-      var squareRootOfM = Math.sqrt(m);
+      const squareRootOfM = Math.sqrt(m);
       g2 = squareRootOfM === 0.0 ? 0.0 : (a3 * h1 - a1) / squareRootOfM;
       h2 = squareRootOfM / 2.0;
     }
 
-    var G;
-    var g;
+    let G;
+    let g;
     if (g1 === 0.0 && g2 === 0.0) {
       G = 0.0;
       g = 0.0;
@@ -219,8 +219,8 @@ function neumark(a3, a2, a1, a0) {
       G = y / g;
     }
 
-    var H;
-    var h;
+    let H;
+    let h;
     if (h1 === 0.0 && h2 === 0.0) {
       H = 0.0;
       h = 0.0;
@@ -233,8 +233,8 @@ function neumark(a3, a2, a1, a0) {
     }
 
     // Now solve the two quadratic factors:  (y^2 + G y + H)(y^2 + g y + h);
-    var roots1 = QuadraticRealPolynomial.computeRealRoots(1.0, G, H);
-    var roots2 = QuadraticRealPolynomial.computeRealRoots(1.0, g, h);
+    const roots1 = QuadraticRealPolynomial.computeRealRoots(1.0, G, H);
+    const roots2 = QuadraticRealPolynomial.computeRealRoots(1.0, g, h);
 
     if (roots1.length !== 0) {
       if (roots2.length !== 0) {
@@ -292,12 +292,12 @@ QuarticRealPolynomial.computeRealRoots = function (a, b, c, d, e) {
   if (Math.abs(a) < CesiumMath.EPSILON15) {
     return CubicRealPolynomial.computeRealRoots(b, c, d, e);
   }
-  var a3 = b / a;
-  var a2 = c / a;
-  var a1 = d / a;
-  var a0 = e / a;
+  const a3 = b / a;
+  const a2 = c / a;
+  const a1 = d / a;
+  const a0 = e / a;
 
-  var k = a3 < 0.0 ? 1 : 0;
+  let k = a3 < 0.0 ? 1 : 0;
   k += a2 < 0.0 ? k + 1 : k;
   k += a1 < 0.0 ? k + 1 : k;
   k += a0 < 0.0 ? k + 1 : k;

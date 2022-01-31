@@ -6,13 +6,13 @@ import EventHelper from "../../Core/EventHelper.js";
 import Fullscreen from "../../Core/Fullscreen.js";
 import OrthographicFrustum from "../../Core/OrthographicFrustum.js";
 import knockout from "../../ThirdParty/knockout.js";
-import NoSleep from "../../ThirdParty/NoSleep.js";
+import NoSleep from "../../ThirdParty/nosleep.js";
 import createCommand from "../createCommand.js";
 import getElement from "../getElement.js";
 
 function lockScreen(orientation) {
-  var locked = false;
-  var screen = window.screen;
+  let locked = false;
+  const screen = window.screen;
   if (defined(screen)) {
     if (defined(screen.lockOrientation)) {
       locked = screen.lockOrientation(orientation);
@@ -28,7 +28,7 @@ function lockScreen(orientation) {
 }
 
 function unlockScreen() {
-  var screen = window.screen;
+  const screen = window.screen;
   if (defined(screen)) {
     if (defined(screen.unlockOrientation)) {
       screen.unlockOrientation();
@@ -84,10 +84,10 @@ function VRButtonViewModel(scene, vrElement) {
   }
   //>>includeEnd('debug');
 
-  var that = this;
+  const that = this;
 
-  var isEnabled = knockout.observable(Fullscreen.enabled);
-  var isVRMode = knockout.observable(false);
+  const isEnabled = knockout.observable(Fullscreen.enabled);
+  const isVRMode = knockout.observable(false);
 
   /**
    * Gets whether or not VR mode is active.
@@ -130,7 +130,7 @@ function VRButtonViewModel(scene, vrElement) {
     return isVRMode() ? "Exit VR mode" : "Enter VR mode";
   });
 
-  var isOrthographic = knockout.observable(false);
+  const isOrthographic = knockout.observable(false);
 
   this._isOrthographic = undefined;
   knockout.defineProperty(this, "_isOrthographic", {

@@ -13,6 +13,7 @@ import CubeMap from "./CubeMap.js";
  *
  * @param {Context} context The context to use to create the cube map.
  * @param {Object} urls The source URL of each image.  See the example below.
+ * @param {Boolean} [skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the images will be ignored.
  * @returns {Promise.<CubeMap>} a promise that will resolve to the requested {@link CubeMap} when loaded.
  *
  * @exception {DeveloperError} context is required.
@@ -38,7 +39,7 @@ import CubeMap from "./CubeMap.js";
  *
  * @private
  */
-function loadCubeMap(context, urls) {
+function loadCubeMap(context, urls, skipColorSpaceConversion) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("context", context);
   if (
@@ -61,12 +62,13 @@ function loadCubeMap(context, urls) {
   //
   // Also, it is perhaps acceptable to use the context here in the callbacks, but
   // ideally, we would do it in the primitive's update function.
-  var flipOptions = {
+  const flipOptions = {
     flipY: true,
+    skipColorSpaceConversion: skipColorSpaceConversion,
     preferImageBitmap: true,
   };
 
-  var facePromises = [
+  const facePromises = [
     Resource.createIfNeeded(urls.positiveX).fetchImage(flipOptions),
     Resource.createIfNeeded(urls.negativeX).fetchImage(flipOptions),
     Resource.createIfNeeded(urls.positiveY).fetchImage(flipOptions),

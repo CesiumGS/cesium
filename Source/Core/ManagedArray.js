@@ -32,11 +32,11 @@ Object.defineProperties(ManagedArray.prototype, {
       //>>includeStart('debug', pragmas.debug);
       Check.typeOf.number.greaterThanOrEquals("length", length, 0);
       //>>includeEnd('debug');
-      var array = this._array;
-      var originalLength = this._length;
+      const array = this._array;
+      const originalLength = this._length;
       if (length < originalLength) {
         // Remove trailing references
-        for (var i = length; i < originalLength; ++i) {
+        for (let i = length; i < originalLength; ++i) {
           array[i] = undefined;
         }
       } else if (length > array.length) {
@@ -105,7 +105,7 @@ ManagedArray.prototype.peek = function () {
  * @param {*} element The element to push.
  */
 ManagedArray.prototype.push = function (element) {
-  var index = this.length++;
+  const index = this.length++;
   this._array[index] = element;
 };
 
@@ -118,7 +118,7 @@ ManagedArray.prototype.pop = function () {
   if (this._length === 0) {
     return undefined;
   }
-  var element = this._array[this._length - 1];
+  const element = this._array[this._length - 1];
   --this.length;
   return element;
 };

@@ -23,7 +23,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
     RequestScheduler.clearForSpecs();
   });
 
-  var supportsImageBitmapOptions;
+  let supportsImageBitmapOptions;
   beforeAll(function () {
     decodeGoogleEarthEnterpriseData.passThroughDataForTesting = true;
     // This suite spies on requests. Resource.supportsImageBitmapOptions needs to make a request to a data URI.
@@ -37,7 +37,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
     decodeGoogleEarthEnterpriseData.passThroughDataForTesting = false;
   });
 
-  var imageryProvider;
+  let imageryProvider;
   afterEach(function () {
     Resource._Implementations.createImage =
       Resource._DefaultImplementations.createImage;
@@ -100,7 +100,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
       crossOrigin,
       deferred
     ) {
-      var url = request.url;
+      let url = request.url;
       if (/^blob:/.test(url) || supportsImageBitmapOptions) {
         // load blob url normally
         Resource._DefaultImplementations.createImage(
@@ -108,12 +108,13 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
           crossOrigin,
           deferred,
           true,
+          false,
           true
         );
       } else {
         if (proxy) {
-          var uri = new Uri(url);
-          url = decodeURIComponent(uri.query);
+          const uri = new Uri(url);
+          url = decodeURIComponent(uri.query());
         }
         if (defined(expectedUrl)) {
           expect(url).toEqual(expectedUrl);
@@ -138,8 +139,8 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
     ) {
       if (defined(expectedUrl) && !/^blob:/.test(url)) {
         if (proxy) {
-          var uri = new Uri(url);
-          url = decodeURIComponent(uri.query);
+          const uri = new Uri(url);
+          url = decodeURIComponent(uri.query());
         }
 
         expect(url).toEqual(expectedUrl);
@@ -159,9 +160,9 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
 
   it("resolves readyPromise", function () {
     installMockGetQuadTreePacket();
-    var url = "http://fake.fake.invalid";
+    const url = "http://fake.fake.invalid";
 
-    var resource = new Resource({
+    const resource = new Resource({
       url: url,
     });
 
@@ -177,7 +178,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
 
   it("resolves readyPromise with Resource", function () {
     installMockGetQuadTreePacket();
-    var url = "http://fake.fake.invalid";
+    const url = "http://fake.fake.invalid";
 
     imageryProvider = new GoogleEarthEnterpriseImageryProvider({
       url: url,
@@ -190,7 +191,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
   });
 
   it("rejects readyPromise on error", function () {
-    var url = "http://host.invalid";
+    const url = "http://host.invalid";
     imageryProvider = new GoogleEarthEnterpriseImageryProvider({
       url: url,
     });
@@ -208,7 +209,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
   it("readyPromise rejects if there isn't imagery", function () {
     installMockGetQuadTreePacket();
 
-    var metadata = new GoogleEarthEnterpriseMetadata({
+    const metadata = new GoogleEarthEnterpriseMetadata({
       url: "made/up/url",
     });
 
@@ -229,7 +230,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
 
   it("returns false for hasAlphaChannel", function () {
     installMockGetQuadTreePacket();
-    var url = "http://fake.fake.invalid";
+    const url = "http://fake.fake.invalid";
 
     imageryProvider = new GoogleEarthEnterpriseImageryProvider({
       url: url,
@@ -245,7 +246,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
 
   it("can provide a root tile", function () {
     installMockGetQuadTreePacket();
-    var url = "http://fake.fake.invalid/";
+    const url = "http://fake.fake.invalid/";
 
     imageryProvider = new GoogleEarthEnterpriseImageryProvider({
       url: url,
@@ -280,12 +281,12 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
   });
 
   it("raises error on invalid url", function () {
-    var url = "http://host.invalid";
+    const url = "http://host.invalid";
     imageryProvider = new GoogleEarthEnterpriseImageryProvider({
       url: url,
     });
 
-    var errorEventRaised = false;
+    let errorEventRaised = false;
     imageryProvider.errorEvent.addEventListener(function (error) {
       expect(error.message).toContain(url);
       errorEventRaised = true;
@@ -301,15 +302,15 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
 
   it("raises error event when image cannot be loaded", function () {
     installMockGetQuadTreePacket();
-    var url = "http://foo.bar.invalid";
+    const url = "http://foo.bar.invalid";
 
     imageryProvider = new GoogleEarthEnterpriseImageryProvider({
       url: url,
     });
 
-    var layer = new ImageryLayer(imageryProvider);
+    const layer = new ImageryLayer(imageryProvider);
 
-    var tries = 0;
+    let tries = 0;
     imageryProvider.errorEvent.addEventListener(function (error) {
       expect(error.timesRetried).toEqual(tries);
       ++tries;
@@ -351,7 +352,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
     return pollToPromise(function () {
       return imageryProvider.ready;
     }).then(function () {
-      var imagery = new Imagery(layer, 0, 0, 0);
+      const imagery = new Imagery(layer, 0, 0, 0);
       imagery.addReference();
       layer._requestImagery(imagery);
       RequestScheduler.update();

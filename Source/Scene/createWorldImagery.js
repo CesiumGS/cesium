@@ -15,13 +15,13 @@ import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
  *
  * @example
  * // Create Cesium World Terrain with default settings
- * var viewer = new Cesium.Viewer('cesiumContainer', {
+ * const viewer = new Cesium.Viewer('cesiumContainer', {
  *     imageryProvider : Cesium.createWorldImagery();
  * });
  *
  * @example
  * // Create Cesium World Terrain with water and normals.
- * var viewer = new Cesium.Viewer('cesiumContainer', {
+ * const viewer = new Cesium.Viewer('cesiumContainer', {
  *     imageryProvider : Cesium.createWorldImagery({
  *         style: Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS
  *     })
@@ -30,7 +30,7 @@ import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
  */
 function createWorldImagery(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var style = defaultValue(options.style, IonWorldImageryStyle.AERIAL);
+  const style = defaultValue(options.style, IonWorldImageryStyle.AERIAL);
   return new IonImageryProvider({
     assetId: style,
   });

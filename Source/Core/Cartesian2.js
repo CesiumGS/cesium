@@ -157,8 +157,8 @@ Cartesian2.packArray = function (array, result) {
   Check.defined("array", array);
   //>>includeEnd('debug');
 
-  var length = array.length;
-  var resultLength = length * 2;
+  const length = array.length;
+  const resultLength = length * 2;
   if (!defined(result)) {
     result = new Array(resultLength);
   } else if (!Array.isArray(result) && result.length !== resultLength) {
@@ -169,7 +169,7 @@ Cartesian2.packArray = function (array, result) {
     result.length = resultLength;
   }
 
-  for (var i = 0; i < length; ++i) {
+  for (let i = 0; i < length; ++i) {
     Cartesian2.pack(array[i], result, i * 2);
   }
   return result;
@@ -191,15 +191,15 @@ Cartesian2.unpackArray = function (array, result) {
   }
   //>>includeEnd('debug');
 
-  var length = array.length;
+  const length = array.length;
   if (!defined(result)) {
     result = new Array(length / 2);
   } else {
     result.length = length / 2;
   }
 
-  for (var i = 0; i < length; i += 2) {
-    var index = i / 2;
+  for (let i = 0; i < length; i += 2) {
+    const index = i / 2;
     result[index] = Cartesian2.unpack(array, i, result[index]);
   }
   return result;
@@ -216,12 +216,12 @@ Cartesian2.unpackArray = function (array, result) {
  *
  * @example
  * // Create a Cartesian2 with (1.0, 2.0)
- * var v = [1.0, 2.0];
- * var p = Cesium.Cartesian2.fromArray(v);
+ * const v = [1.0, 2.0];
+ * const p = Cesium.Cartesian2.fromArray(v);
  *
  * // Create a Cartesian2 with (1.0, 2.0) using an offset into an array
- * var v2 = [0.0, 0.0, 1.0, 2.0];
- * var p2 = Cesium.Cartesian2.fromArray(v2, 2);
+ * const v2 = [0.0, 0.0, 1.0, 2.0];
+ * const p2 = Cesium.Cartesian2.fromArray(v2, 2);
  */
 Cartesian2.fromArray = Cartesian2.unpack;
 
@@ -318,7 +318,7 @@ Cartesian2.magnitude = function (cartesian) {
   return Math.sqrt(Cartesian2.magnitudeSquared(cartesian));
 };
 
-var distanceScratch = new Cartesian2();
+const distanceScratch = new Cartesian2();
 
 /**
  * Computes the distance between two points.
@@ -329,7 +329,7 @@ var distanceScratch = new Cartesian2();
  *
  * @example
  * // Returns 1.0
- * var d = Cesium.Cartesian2.distance(new Cesium.Cartesian2(1.0, 0.0), new Cesium.Cartesian2(2.0, 0.0));
+ * const d = Cesium.Cartesian2.distance(new Cesium.Cartesian2(1.0, 0.0), new Cesium.Cartesian2(2.0, 0.0));
  */
 Cartesian2.distance = function (left, right) {
   //>>includeStart('debug', pragmas.debug);
@@ -351,7 +351,7 @@ Cartesian2.distance = function (left, right) {
  *
  * @example
  * // Returns 4.0, not 2.0
- * var d = Cesium.Cartesian2.distance(new Cesium.Cartesian2(1.0, 0.0), new Cesium.Cartesian2(3.0, 0.0));
+ * const d = Cesium.Cartesian2.distance(new Cesium.Cartesian2(1.0, 0.0), new Cesium.Cartesian2(3.0, 0.0));
  */
 Cartesian2.distanceSquared = function (left, right) {
   //>>includeStart('debug', pragmas.debug);
@@ -376,7 +376,7 @@ Cartesian2.normalize = function (cartesian, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var magnitude = Cartesian2.magnitude(cartesian);
+  const magnitude = Cartesian2.magnitude(cartesian);
 
   result.x = cartesian.x / magnitude;
   result.y = cartesian.y / magnitude;
@@ -404,6 +404,22 @@ Cartesian2.dot = function (left, right) {
   //>>includeEnd('debug');
 
   return left.x * right.x + left.y * right.y;
+};
+
+/**
+ * Computes the magnitude of the cross product that would result from implicitly setting the Z coordinate of the input vectors to 0
+ *
+ * @param {Cartesian2} left The first Cartesian.
+ * @param {Cartesian2} right The second Cartesian.
+ * @returns {Number} The cross product.
+ */
+Cartesian2.cross = function (left, right) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  //>>includeEnd('debug');
+
+  return left.x * right.y - left.y * right.x;
 };
 
 /**
@@ -562,7 +578,7 @@ Cartesian2.abs = function (cartesian, result) {
   return result;
 };
 
-var lerpScratch = new Cartesian2();
+const lerpScratch = new Cartesian2();
 /**
  * Computes the linear interpolation or extrapolation at t using the provided cartesians.
  *
@@ -585,8 +601,8 @@ Cartesian2.lerp = function (start, end, t, result) {
   return Cartesian2.add(lerpScratch, result, result);
 };
 
-var angleBetweenScratch = new Cartesian2();
-var angleBetweenScratch2 = new Cartesian2();
+const angleBetweenScratch = new Cartesian2();
+const angleBetweenScratch2 = new Cartesian2();
 /**
  * Returns the angle, in radians, between the provided Cartesians.
  *
@@ -607,7 +623,7 @@ Cartesian2.angleBetween = function (left, right) {
   );
 };
 
-var mostOrthogonalAxisScratch = new Cartesian2();
+const mostOrthogonalAxisScratch = new Cartesian2();
 /**
  * Returns the axis that is most orthogonal to the provided Cartesian.
  *
@@ -621,7 +637,7 @@ Cartesian2.mostOrthogonalAxis = function (cartesian, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var f = Cartesian2.normalize(cartesian, mostOrthogonalAxisScratch);
+  const f = Cartesian2.normalize(cartesian, mostOrthogonalAxisScratch);
   Cartesian2.abs(f, f);
 
   if (f.x <= f.y) {
@@ -701,6 +717,14 @@ Cartesian2.equalsEpsilon = function (
  * @constant
  */
 Cartesian2.ZERO = Object.freeze(new Cartesian2(0.0, 0.0));
+
+/**
+ * An immutable Cartesian2 instance initialized to (1.0, 1.0).
+ *
+ * @type {Cartesian2}
+ * @constant
+ */
+Cartesian2.ONE = Object.freeze(new Cartesian2(1.0, 1.0));
 
 /**
  * An immutable Cartesian2 instance initialized to (1.0, 0.0).

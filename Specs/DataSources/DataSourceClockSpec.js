@@ -5,7 +5,7 @@ import { DataSourceClock } from "../../Source/Cesium.js";
 
 describe("DataSources/DataSourceClock", function () {
   it("merge assigns unassigned properties", function () {
-    var source = new DataSourceClock();
+    const source = new DataSourceClock();
     source.startTime = JulianDate.now();
     source.stopTime = JulianDate.now();
     source.currentTime = JulianDate.now();
@@ -13,7 +13,7 @@ describe("DataSources/DataSourceClock", function () {
     source.clockStep = ClockStep.TICK_DEPENDENT;
     source.multiplier = 1;
 
-    var target = new DataSourceClock();
+    const target = new DataSourceClock();
     target.merge(source);
 
     expect(target.startTime).toBe(source.startTime);
@@ -25,7 +25,7 @@ describe("DataSources/DataSourceClock", function () {
   });
 
   it("merge does not assign assigned properties", function () {
-    var source = new DataSourceClock();
+    const source = new DataSourceClock();
     source.startTime = JulianDate.now();
     source.stopTime = JulianDate.now();
     source.currentTime = JulianDate.now();
@@ -33,14 +33,14 @@ describe("DataSources/DataSourceClock", function () {
     source.clockStep = ClockStep.TICK_DEPENDENT;
     source.multiplier = 1;
 
-    var startTime = JulianDate.now();
-    var stopTime = JulianDate.now();
-    var currentTime = JulianDate.now();
-    var clockRange = ClockRange.CLAMPED;
-    var clockStep = ClockStep.TICK_DEPENDENT;
-    var multiplier = 1;
+    const startTime = JulianDate.now();
+    const stopTime = JulianDate.now();
+    const currentTime = JulianDate.now();
+    const clockRange = ClockRange.CLAMPED;
+    const clockStep = ClockStep.TICK_DEPENDENT;
+    const multiplier = 1;
 
-    var target = new DataSourceClock();
+    const target = new DataSourceClock();
     target.startTime = startTime;
     target.stopTime = stopTime;
     target.currentTime = currentTime;
@@ -59,7 +59,7 @@ describe("DataSources/DataSourceClock", function () {
   });
 
   it("clone works", function () {
-    var source = new DataSourceClock();
+    const source = new DataSourceClock();
     source.startTime = JulianDate.now();
     source.stopTime = JulianDate.now();
     source.currentTime = JulianDate.now();
@@ -67,7 +67,7 @@ describe("DataSources/DataSourceClock", function () {
     source.clockStep = ClockStep.TICK_DEPENDENT;
     source.multiplier = 1;
 
-    var result = source.clone();
+    const result = source.clone();
     expect(result.startTime).toBe(source.startTime);
     expect(result.stopTime).toBe(source.stopTime);
     expect(result.currentTime).toBe(source.currentTime);
@@ -77,14 +77,14 @@ describe("DataSources/DataSourceClock", function () {
   });
 
   it("merge throws if source undefined", function () {
-    var target = new DataSourceClock();
+    const target = new DataSourceClock();
     expect(function () {
       target.merge(undefined);
     }).toThrowDeveloperError();
   });
 
   it("gets value as a clock instance", function () {
-    var source = new DataSourceClock();
+    const source = new DataSourceClock();
     source.startTime = JulianDate.now();
     source.stopTime = JulianDate.now();
     source.currentTime = JulianDate.now();
@@ -92,7 +92,7 @@ describe("DataSources/DataSourceClock", function () {
     source.clockStep = ClockStep.TICK_DEPENDENT;
     source.multiplier = 2;
 
-    var clock = source.getValue();
+    let clock = source.getValue();
     expect(clock.startTime).toEqual(source.startTime);
     expect(clock.stopTime).toEqual(source.stopTime);
     expect(clock.currentTime).toEqual(source.currentTime);

@@ -2,6 +2,7 @@ import Cartographic from "../Core/Cartographic.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import createBillboardPointCallback from "./createBillboardPointCallback.js";
 
 /**
@@ -29,12 +30,12 @@ import createBillboardPointCallback from "./createBillboardPointCallback.js";
  * @example
  * // On mouse over, display all the properties for a feature in the console log.
  * handler.setInputAction(function(movement) {
- *     var feature = scene.pick(movement.endPosition);
+ *     const feature = scene.pick(movement.endPosition);
  *     if (feature instanceof Cesium.Cesium3DTilePointFeature) {
- *         var propertyNames = feature.getPropertyNames();
- *         var length = propertyNames.length;
- *         for (var i = 0; i < length; ++i) {
- *             var propertyName = propertyNames[i];
+ *         const propertyNames = feature.getPropertyNames();
+ *         const length = propertyNames.length;
+ *         for (let i = 0; i < length; ++i) {
+ *             const propertyName = propertyNames[i];
  *             console.log(propertyName + ': ' + feature.getProperty(propertyName));
  *         }
  *     }
@@ -70,7 +71,7 @@ function Cesium3DTilePointFeature(
   setBillboardImage(this);
 }
 
-var scratchCartographic = new Cartographic();
+const scratchCartographic = new Cartographic();
 
 Object.defineProperties(Cesium3DTilePointFeature.prototype, {
   /**
@@ -410,15 +411,15 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
       return this._heightOffset;
     },
     set: function (value) {
-      var offset = defaultValue(this._heightOffset, 0.0);
+      const offset = defaultValue(this._heightOffset, 0.0);
 
-      var ellipsoid = this._content.tileset.ellipsoid;
-      var cart = ellipsoid.cartesianToCartographic(
+      const ellipsoid = this._content.tileset.ellipsoid;
+      const cart = ellipsoid.cartesianToCartographic(
         this._billboard.position,
         scratchCartographic
       );
       cart.height = cart.height - offset + value;
-      var newPosition = ellipsoid.cartographicToCartesian(cart);
+      const newPosition = ellipsoid.cartographicToCartesian(cart);
 
       this._billboard.position = newPosition;
       this._label.position = this._billboard.position;
@@ -481,7 +482,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
       return this._billboardImage;
     },
     set: function (value) {
-      var imageChanged = this._billboardImage !== value;
+      const imageChanged = this._billboardImage !== value;
       this._billboardImage = value;
       if (imageChanged) {
         setBillboardImage(this);
@@ -626,7 +627,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    */
   pickIds: {
     get: function () {
-      var ids = this._pickIds;
+      const ids = this._pickIds;
       ids[0] = this._billboard.pickId;
       ids[1] = this._label.pickId;
       ids[2] = this._polyline.pickId;
@@ -641,7 +642,7 @@ Cesium3DTilePointFeature.defaultPointOutlineWidth = 0.0;
 Cesium3DTilePointFeature.defaultPointSize = 8.0;
 
 function setBillboardImage(feature) {
-  var b = feature._billboard;
+  const b = feature._billboard;
   if (defined(feature._billboardImage) && feature._billboardImage !== b.image) {
     b.image = feature._billboardImage;
     return;
@@ -651,27 +652,27 @@ function setBillboardImage(feature) {
     return;
   }
 
-  var newColor = defaultValue(
+  const newColor = defaultValue(
     feature._color,
     Cesium3DTilePointFeature.defaultColor
   );
-  var newOutlineColor = defaultValue(
+  const newOutlineColor = defaultValue(
     feature._pointOutlineColor,
     Cesium3DTilePointFeature.defaultPointOutlineColor
   );
-  var newOutlineWidth = defaultValue(
+  const newOutlineWidth = defaultValue(
     feature._pointOutlineWidth,
     Cesium3DTilePointFeature.defaultPointOutlineWidth
   );
-  var newPointSize = defaultValue(
+  const newPointSize = defaultValue(
     feature._pointSize,
     Cesium3DTilePointFeature.defaultPointSize
   );
 
-  var currentColor = feature._billboardColor;
-  var currentOutlineColor = feature._billboardOutlineColor;
-  var currentOutlineWidth = feature._billboardOutlineWidth;
-  var currentPointSize = feature._billboardSize;
+  const currentColor = feature._billboardColor;
+  const currentOutlineColor = feature._billboardOutlineColor;
+  const currentOutlineWidth = feature._billboardOutlineWidth;
+  const currentPointSize = feature._billboardSize;
 
   if (
     Color.equals(newColor, currentColor) &&
@@ -690,10 +691,10 @@ function setBillboardImage(feature) {
   feature._billboardOutlineWidth = newOutlineWidth;
   feature._billboardSize = newPointSize;
 
-  var centerAlpha = newColor.alpha;
-  var cssColor = newColor.toCssColorString();
-  var cssOutlineColor = newOutlineColor.toCssColorString();
-  var textureId = JSON.stringify([
+  const centerAlpha = newColor.alpha;
+  const cssColor = newColor.toCssColorString();
+  const cssOutlineColor = newOutlineColor.toCssColorString();
+  const textureId = JSON.stringify([
     cssColor,
     newPointSize,
     cssOutlineColor,
@@ -716,7 +717,7 @@ function setBillboardImage(feature) {
  * Returns whether the feature contains this property. This includes properties from this feature's
  * class and inherited classes when using a batch table hierarchy.
  *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy}
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
  *
  * @param {String} name The case-sensitive name of the property.
  * @returns {Boolean} Whether the feature contains this property.
@@ -729,7 +730,7 @@ Cesium3DTilePointFeature.prototype.hasProperty = function (name) {
  * Returns an array of property names for the feature. This includes properties from this feature's
  * class and inherited classes when using a batch table hierarchy.
  *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy}
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
  *
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The names of the feature's properties.
@@ -742,22 +743,46 @@ Cesium3DTilePointFeature.prototype.getPropertyNames = function (results) {
  * Returns a copy of the value of the feature's property with the given name. This includes properties from this feature's
  * class and inherited classes when using a batch table hierarchy.
  *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy}
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
  *
  * @param {String} name The case-sensitive name of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  *
  * @example
  * // Display all the properties for a feature in the console log.
- * var propertyNames = feature.getPropertyNames();
- * var length = propertyNames.length;
- * for (var i = 0; i < length; ++i) {
- *     var propertyName = propertyNames[i];
+ * const propertyNames = feature.getPropertyNames();
+ * const length = propertyNames.length;
+ * for (let i = 0; i < length; ++i) {
+ *     const propertyName = propertyNames[i];
  *     console.log(propertyName + ': ' + feature.getProperty(propertyName));
  * }
  */
 Cesium3DTilePointFeature.prototype.getProperty = function (name) {
   return this._content.batchTable.getProperty(this._batchId, name);
+};
+
+/**
+ * Returns a copy of the value of the feature's property with the given name.
+ * If the feature is contained within a tileset that uses the
+ * <code>3DTILES_metadata</code> extension, tileset, group and tile metadata is
+ * inherited.
+ * <p>
+ * To resolve name conflicts, this method resolves names from most specific to
+ * least specific by metadata granularity in the order: feature, tile, group,
+ * tileset. Within each granularity, semantics are resolved first, then other
+ * properties.
+ * </p>
+ * @param {String} name The case-sensitive name of the property.
+ * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+Cesium3DTilePointFeature.prototype.getPropertyInherited = function (name) {
+  return Cesium3DTileFeature.getPropertyInherited(
+    this._content,
+    this._batchId,
+    name
+  );
 };
 
 /**
@@ -772,10 +797,10 @@ Cesium3DTilePointFeature.prototype.getProperty = function (name) {
  * @exception {DeveloperError} Inherited batch table hierarchy property is read only.
  *
  * @example
- * var height = feature.getProperty('Height'); // e.g., the height of a building
+ * const height = feature.getProperty('Height'); // e.g., the height of a building
  *
  * @example
- * var name = 'clicked';
+ * const name = 'clicked';
  * if (feature.getProperty(name)) {
  *     console.log('already clicked');
  * } else {
@@ -793,7 +818,7 @@ Cesium3DTilePointFeature.prototype.setProperty = function (name, value) {
 };
 
 /**
- * Returns whether the feature's class name equals <code>className</code>. Unlike {@link Cesium3DTileFeature#isClass}
+ * Returns whether the feature's class name equals <code>className</code>. Unlike {@link Cesium3DTilePointFeature#isClass}
  * this function only checks the feature's exact class and not inherited classes.
  * <p>
  * This function returns <code>false</code> if no batch table hierarchy is present.
