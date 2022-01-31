@@ -33,12 +33,12 @@ import PolylineGraphics from "./PolylineGraphics.js";
 import PolylineOutlineMaterialProperty from "./PolylineOutlineMaterialProperty.js";
 import SampledPositionProperty from "./SampledPositionProperty.js";
 
-var parser;
+let parser;
 if (typeof DOMParser !== "undefined") {
   parser = new DOMParser();
 }
 
-var autolinker = new Autolinker({
+const autolinker = new Autolinker({
   stripPrefix: false,
   email: false,
   replaceFn: function (linker, match) {
@@ -50,20 +50,20 @@ var autolinker = new Autolinker({
   },
 });
 
-var BILLBOARD_SIZE = 32;
-var BILLBOARD_NEAR_DISTANCE = 2414016;
-var BILLBOARD_NEAR_RATIO = 1.0;
-var BILLBOARD_FAR_DISTANCE = 1.6093e7;
-var BILLBOARD_FAR_RATIO = 0.1;
+const BILLBOARD_SIZE = 32;
+const BILLBOARD_NEAR_DISTANCE = 2414016;
+const BILLBOARD_NEAR_RATIO = 1.0;
+const BILLBOARD_FAR_DISTANCE = 1.6093e7;
+const BILLBOARD_FAR_RATIO = 0.1;
 
-var gpxNamespaces = [null, undefined, "http://www.topografix.com/GPX/1/1"];
-var namespaces = {
+const gpxNamespaces = [null, undefined, "http://www.topografix.com/GPX/1/1"];
+const namespaces = {
   gpx: gpxNamespaces,
 };
 
 function readBlobAsText(blob) {
-  var deferred = when.defer();
-  var reader = new FileReader();
+  const deferred = when.defer();
+  const reader = new FileReader();
   reader.addEventListener("load", function () {
     deferred.resolve(reader.result);
   });
@@ -75,16 +75,16 @@ function readBlobAsText(blob) {
 }
 
 function getOrCreateEntity(node, entityCollection) {
-  var id = queryStringAttribute(node, "id");
+  let id = queryStringAttribute(node, "id");
   id = defined(id) ? id : createGuid();
-  var entity = entityCollection.getOrCreateEntity(id);
+  const entity = entityCollection.getOrCreateEntity(id);
   return entity;
 }
 
 function readCoordinateFromNode(node) {
-  var longitude = queryNumericAttribute(node, "lon");
-  var latitude = queryNumericAttribute(node, "lat");
-  var elevation = queryNumericValue(node, "ele", namespaces.gpx);
+  const longitude = queryNumericAttribute(node, "lon");
+  const latitude = queryNumericAttribute(node, "lat");
+  const elevation = queryNumericValue(node, "ele", namespaces.gpx);
   return Cartesian3.fromDegrees(longitude, latitude, elevation);
 }
 
@@ -93,9 +93,9 @@ function queryNumericAttribute(node, attributeName) {
     return undefined;
   }
 
-  var value = node.getAttribute(attributeName);
+  const value = node.getAttribute(attributeName);
   if (value !== null) {
-    var result = parseFloat(value);
+    const result = parseFloat(value);
     return !isNaN(result) ? result : undefined;
   }
   return undefined;
@@ -105,7 +105,7 @@ function queryStringAttribute(node, attributeName) {
   if (!defined(node)) {
     return undefined;
   }
-  var value = node.getAttribute(attributeName);
+  const value = node.getAttribute(attributeName);
   return value !== null ? value : undefined;
 }
 
@@ -113,10 +113,10 @@ function queryFirstNode(node, tagName, namespace) {
   if (!defined(node)) {
     return undefined;
   }
-  var childNodes = node.childNodes;
-  var length = childNodes.length;
-  for (var q = 0; q < length; q++) {
-    var child = childNodes[q];
+  const childNodes = node.childNodes;
+  const length = childNodes.length;
+  for (let q = 0; q < length; q++) {
+    const child = childNodes[q];
     if (
       child.localName === tagName &&
       namespace.indexOf(child.namespaceURI) !== -1
@@ -131,11 +131,11 @@ function queryNodes(node, tagName, namespace) {
   if (!defined(node)) {
     return undefined;
   }
-  var result = [];
-  var childNodes = node.getElementsByTagName(tagName);
-  var length = childNodes.length;
-  for (var q = 0; q < length; q++) {
-    var child = childNodes[q];
+  const result = [];
+  const childNodes = node.getElementsByTagName(tagName);
+  const length = childNodes.length;
+  for (let q = 0; q < length; q++) {
+    const child = childNodes[q];
     if (
       child.localName === tagName &&
       namespace.indexOf(child.namespaceURI) !== -1
@@ -147,16 +147,16 @@ function queryNodes(node, tagName, namespace) {
 }
 
 function queryNumericValue(node, tagName, namespace) {
-  var resultNode = queryFirstNode(node, tagName, namespace);
+  const resultNode = queryFirstNode(node, tagName, namespace);
   if (defined(resultNode)) {
-    var result = parseFloat(resultNode.textContent);
+    const result = parseFloat(resultNode.textContent);
     return !isNaN(result) ? result : undefined;
   }
   return undefined;
 }
 
 function queryStringValue(node, tagName, namespace) {
-  var result = queryFirstNode(node, tagName, namespace);
+  const result = queryFirstNode(node, tagName, namespace);
   if (defined(result)) {
     return result.textContent.trim();
   }
@@ -164,7 +164,7 @@ function queryStringValue(node, tagName, namespace) {
 }
 
 function createDefaultBillboard(image) {
-  var billboard = new BillboardGraphics();
+  const billboard = new BillboardGraphics();
   billboard.width = BILLBOARD_SIZE;
   billboard.height = BILLBOARD_SIZE;
   billboard.scaleByDistance = new NearFarScalar(
@@ -185,7 +185,7 @@ function createDefaultBillboard(image) {
 }
 
 function createDefaultLabel() {
-  var label = new LabelGraphics();
+  const label = new LabelGraphics();
   label.translucencyByDistance = new NearFarScalar(3000000, 1.0, 5000000, 0.0);
   label.pixelOffset = new Cartesian2(17, 0);
   label.horizontalOrigin = HorizontalOrigin.LEFT;
@@ -195,7 +195,7 @@ function createDefaultLabel() {
 }
 
 function createDefaultPolyline(color) {
-  var polyline = new PolylineGraphics();
+  const polyline = new PolylineGraphics();
   polyline.width = 4;
   polyline.material = new PolylineOutlineMaterialProperty();
   polyline.material.color = defined(color) ? color : Color.RED;
@@ -209,7 +209,7 @@ function createDefaultPolyline(color) {
 //  <desc> Descriptive description of the waypoint
 //  <src> Source of the waypoint data
 //  <type> Type (category) of waypoint
-var descriptiveInfoTypes = {
+const descriptiveInfoTypes = {
   time: {
     text: "Time",
     tag: "time",
@@ -236,19 +236,19 @@ var descriptiveInfoTypes = {
   },
 };
 
-var scratchDiv;
+let scratchDiv;
 if (typeof document !== "undefined") {
   scratchDiv = document.createElement("div");
 }
 function processDescription(node, entity) {
-  var i;
+  let i;
 
-  var text = "";
-  var infoTypeNames = Object.keys(descriptiveInfoTypes);
-  var length = infoTypeNames.length;
+  let text = "";
+  const infoTypeNames = Object.keys(descriptiveInfoTypes);
+  const length = infoTypeNames.length;
   for (i = 0; i < length; i++) {
-    var infoTypeName = infoTypeNames[i];
-    var infoType = descriptiveInfoTypes[infoTypeName];
+    const infoTypeName = infoTypeNames[i];
+    const infoType = descriptiveInfoTypes[infoTypeName];
     infoType.value = defaultValue(
       queryStringValue(node, infoType.tag, namespaces.gpx),
       ""
@@ -269,15 +269,15 @@ function processDescription(node, entity) {
   //Use a temporary div to manipulate the links
   //so that they open in a new window.
   scratchDiv.innerHTML = text;
-  var links = scratchDiv.querySelectorAll("a");
+  const links = scratchDiv.querySelectorAll("a");
 
   for (i = 0; i < links.length; i++) {
     links[i].setAttribute("target", "_blank");
   }
 
-  var background = Color.WHITE;
-  var foreground = Color.BLACK;
-  var tmp = '<div class="cesium-infoBox-description-lighter" style="';
+  const background = Color.WHITE;
+  const foreground = Color.BLACK;
+  let tmp = '<div class="cesium-infoBox-description-lighter" style="';
   tmp += "overflow:auto;";
   tmp += "word-wrap:break-word;";
   tmp += "background-color:" + background.toCssColorString() + ";";
@@ -291,16 +291,16 @@ function processDescription(node, entity) {
 }
 
 function processWpt(dataSource, geometryNode, entityCollection, options) {
-  var position = readCoordinateFromNode(geometryNode);
+  const position = readCoordinateFromNode(geometryNode);
   if (!defined(position)) {
     throw new DeveloperError("Position Coordinates are required.");
   }
 
-  var entity = getOrCreateEntity(geometryNode, entityCollection);
+  const entity = getOrCreateEntity(geometryNode, entityCollection);
   entity.position = position;
 
   // Get billboard image
-  var image = defined(options.wptImage)
+  const image = defined(options.wptImage)
     ? options.wptImage
     : dataSource._pinBuilder.fromMakiIconId(
         "marker",
@@ -309,7 +309,7 @@ function processWpt(dataSource, geometryNode, entityCollection, options) {
       );
   entity.billboard = createDefaultBillboard(image);
 
-  var name = queryStringValue(geometryNode, "name", namespaces.gpx);
+  const name = queryStringValue(geometryNode, "name", namespaces.gpx);
   entity.name = name;
   entity.label = createDefaultLabel();
   entity.label.text = name;
@@ -323,13 +323,13 @@ function processWpt(dataSource, geometryNode, entityCollection, options) {
 
 //rte represents route - an ordered list of waypoints representing a series of turn points leading to a destination
 function processRte(dataSource, geometryNode, entityCollection, options) {
-  var entity = getOrCreateEntity(geometryNode, entityCollection);
+  const entity = getOrCreateEntity(geometryNode, entityCollection);
   entity.description = processDescription(geometryNode, entity);
 
   //a list of wpt
-  var routePoints = queryNodes(geometryNode, "rtept", namespaces.gpx);
-  var coordinateTuples = new Array(routePoints.length);
-  for (var i = 0; i < routePoints.length; i++) {
+  const routePoints = queryNodes(geometryNode, "rtept", namespaces.gpx);
+  const coordinateTuples = new Array(routePoints.length);
+  for (let i = 0; i < routePoints.length; i++) {
     processWpt(dataSource, routePoints[i], entityCollection, options);
     coordinateTuples[i] = readCoordinateFromNode(routePoints[i]);
   }
@@ -342,16 +342,16 @@ function processRte(dataSource, geometryNode, entityCollection, options) {
 
 //trk represents a track - an ordered list of points describing a path.
 function processTrk(dataSource, geometryNode, entityCollection, options) {
-  var entity = getOrCreateEntity(geometryNode, entityCollection);
+  const entity = getOrCreateEntity(geometryNode, entityCollection);
   entity.description = processDescription(geometryNode, entity);
 
-  var trackSegs = queryNodes(geometryNode, "trkseg", namespaces.gpx);
-  var positions = [];
-  var times = [];
-  var trackSegInfo;
-  var isTimeDynamic = true;
-  var property = new SampledPositionProperty();
-  for (var i = 0; i < trackSegs.length; i++) {
+  const trackSegs = queryNodes(geometryNode, "trkseg", namespaces.gpx);
+  let positions = [];
+  let times = [];
+  let trackSegInfo;
+  let isTimeDynamic = true;
+  const property = new SampledPositionProperty();
+  for (let i = 0; i < trackSegs.length; i++) {
     trackSegInfo = processTrkSeg(trackSegs[i]);
     positions = positions.concat(trackSegInfo.positions);
     if (trackSegInfo.times.length > 0) {
@@ -365,7 +365,7 @@ function processTrk(dataSource, geometryNode, entityCollection, options) {
   }
   if (isTimeDynamic) {
     // Assign billboard image
-    var image = defined(options.wptImage)
+    const image = defined(options.wptImage)
       ? options.wptImage
       : dataSource._pinBuilder.fromMakiIconId(
           "marker",
@@ -393,14 +393,14 @@ function processTrk(dataSource, geometryNode, entityCollection, options) {
 }
 
 function processTrkSeg(node) {
-  var result = {
+  const result = {
     positions: [],
     times: [],
   };
-  var trackPoints = queryNodes(node, "trkpt", namespaces.gpx);
-  var time;
-  for (var i = 0; i < trackPoints.length; i++) {
-    var position = readCoordinateFromNode(trackPoints[i]);
+  const trackPoints = queryNodes(node, "trkpt", namespaces.gpx);
+  let time;
+  for (let i = 0; i < trackPoints.length; i++) {
+    const position = readCoordinateFromNode(trackPoints[i]);
     if (!defined(position)) {
       throw new DeveloperError("Trkpt: Position Coordinates are required.");
     }
@@ -417,9 +417,9 @@ function processTrkSeg(node) {
 // Processes a metadaType node and returns a metadata object
 // {@link http://www.topografix.com/gpx/1/1/#type_metadataType|GPX Schema}
 function processMetadata(node) {
-  var metadataNode = queryFirstNode(node, "metadata", namespaces.gpx);
+  const metadataNode = queryFirstNode(node, "metadata", namespaces.gpx);
   if (defined(metadataNode)) {
-    var metadata = {
+    const metadata = {
       name: queryStringValue(metadataNode, "name", namespaces.gpx),
       desc: queryStringValue(metadataNode, "desc", namespaces.gpx),
       author: getPerson(metadataNode),
@@ -448,9 +448,9 @@ function processMetadata(node) {
 // Receives a XML node and returns a personType object, refer to
 // {@link http://www.topografix.com/gpx/1/1/#type_personType|GPX Schema}
 function getPerson(node) {
-  var personNode = queryFirstNode(node, "author", namespaces.gpx);
+  const personNode = queryFirstNode(node, "author", namespaces.gpx);
   if (defined(personNode)) {
-    var person = {
+    const person = {
       name: queryStringValue(personNode, "name", namespaces.gpx),
       email: getEmail(personNode),
       link: getLink(personNode),
@@ -465,10 +465,10 @@ function getPerson(node) {
 // Receives a XML node and returns an email address (from emailType), refer to
 // {@link http://www.topografix.com/gpx/1/1/#type_emailType|GPX Schema}
 function getEmail(node) {
-  var emailNode = queryFirstNode(node, "email", namespaces.gpx);
+  const emailNode = queryFirstNode(node, "email", namespaces.gpx);
   if (defined(emailNode)) {
-    var id = queryStringValue(emailNode, "id", namespaces.gpx);
-    var domain = queryStringValue(emailNode, "domain", namespaces.gpx);
+    const id = queryStringValue(emailNode, "id", namespaces.gpx);
+    const domain = queryStringValue(emailNode, "domain", namespaces.gpx);
     return id + "@" + domain;
   }
   return undefined;
@@ -477,9 +477,9 @@ function getEmail(node) {
 // Receives a XML node and returns a linkType object, refer to
 // {@link http://www.topografix.com/gpx/1/1/#type_linkType|GPX Schema}
 function getLink(node) {
-  var linkNode = queryFirstNode(node, "link", namespaces.gpx);
+  const linkNode = queryFirstNode(node, "link", namespaces.gpx);
   if (defined(linkNode)) {
-    var link = {
+    const link = {
       href: queryStringAttribute(linkNode, "href"),
       text: queryStringValue(linkNode, "text", namespaces.gpx),
       mimeType: queryStringValue(linkNode, "type", namespaces.gpx),
@@ -494,9 +494,9 @@ function getLink(node) {
 // Receives a XML node and returns a copyrightType object, refer to
 // {@link http://www.topografix.com/gpx/1/1/#type_copyrightType|GPX Schema}
 function getCopyright(node) {
-  var copyrightNode = queryFirstNode(node, "copyright", namespaces.gpx);
+  const copyrightNode = queryFirstNode(node, "copyright", namespaces.gpx);
   if (defined(copyrightNode)) {
-    var copyright = {
+    const copyright = {
       author: queryStringAttribute(copyrightNode, "author"),
       year: queryStringValue(copyrightNode, "year", namespaces.gpx),
       license: queryStringValue(copyrightNode, "license", namespaces.gpx),
@@ -515,9 +515,9 @@ function getCopyright(node) {
 // Receives a XML node and returns a boundsType object, refer to
 // {@link http://www.topografix.com/gpx/1/1/#type_boundsType|GPX Schema}
 function getBounds(node) {
-  var boundsNode = queryFirstNode(node, "bounds", namespaces.gpx);
+  const boundsNode = queryFirstNode(node, "bounds", namespaces.gpx);
   if (defined(boundsNode)) {
-    var bounds = {
+    const bounds = {
       minLat: queryNumericValue(boundsNode, "minlat", namespaces.gpx),
       maxLat: queryNumericValue(boundsNode, "maxlat", namespaces.gpx),
       minLon: queryNumericValue(boundsNode, "minlon", namespaces.gpx),
@@ -535,24 +535,24 @@ function getBounds(node) {
   return undefined;
 }
 
-var complexTypes = {
+const complexTypes = {
   wpt: processWpt,
   rte: processRte,
   trk: processTrk,
 };
 
 function processGpx(dataSource, node, entityCollection, options) {
-  var complexTypeNames = Object.keys(complexTypes);
-  var complexTypeNamesLength = complexTypeNames.length;
+  const complexTypeNames = Object.keys(complexTypes);
+  const complexTypeNamesLength = complexTypeNames.length;
 
-  for (var i = 0; i < complexTypeNamesLength; i++) {
-    var typeName = complexTypeNames[i];
-    var processComplexTypeNode = complexTypes[typeName];
+  for (let i = 0; i < complexTypeNamesLength; i++) {
+    const typeName = complexTypeNames[i];
+    const processComplexTypeNode = complexTypes[typeName];
 
-    var childNodes = node.childNodes;
-    var length = childNodes.length;
-    for (var q = 0; q < length; q++) {
-      var child = childNodes[q];
+    const childNodes = node.childNodes;
+    const length = childNodes.length;
+    for (let q = 0; q < length; q++) {
+      const child = childNodes[q];
       if (
         child.localName === typeName &&
         namespaces.gpx.indexOf(child.namespaceURI) !== -1
@@ -564,16 +564,16 @@ function processGpx(dataSource, node, entityCollection, options) {
 }
 
 function loadGpx(dataSource, gpx, options) {
-  var entityCollection = dataSource._entityCollection;
+  const entityCollection = dataSource._entityCollection;
 
   entityCollection.removeAll();
 
-  var element = gpx.documentElement;
-  var version = queryStringAttribute(element, "version");
-  var creator = queryStringAttribute(element, "creator");
+  const element = gpx.documentElement;
+  const version = queryStringAttribute(element, "version");
+  const creator = queryStringAttribute(element, "creator");
 
-  var name;
-  var metadata = processMetadata(element);
+  let name;
+  const metadata = processMetadata(element);
   if (defined(metadata)) {
     name = metadata.name;
   }
@@ -584,15 +584,15 @@ function loadGpx(dataSource, gpx, options) {
     window.console.log("GPX - Unsupported node: " + element.localName);
   }
 
-  var clock;
-  var availability = entityCollection.computeAvailability();
+  let clock;
+  const availability = entityCollection.computeAvailability();
 
-  var start = availability.start;
-  var stop = availability.stop;
-  var isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
-  var isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
+  let start = availability.start;
+  let stop = availability.stop;
+  const isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
+  const isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
   if (!isMinStart || !isMaxStop) {
-    var date;
+    let date;
 
     //If start is min time just start at midnight this morning, local time
     if (isMinStart) {
@@ -621,7 +621,7 @@ function loadGpx(dataSource, gpx, options) {
       )
     );
   }
-  var changed = false;
+  let changed = false;
   if (dataSource._name !== name) {
     dataSource._name = name;
     changed = true;
@@ -678,17 +678,17 @@ function metadataChanged(old, current) {
 
 function load(dataSource, entityCollection, data, options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var promise = data;
+  let promise = data;
   if (typeof data === "string" || data instanceof Resource) {
     data = Resource.createIfNeeded(data);
     promise = data.fetchBlob();
 
     // Add resource credits to our list of credits to display
-    var resourceCredits = dataSource._resourceCredits;
-    var credits = data.credits;
+    const resourceCredits = dataSource._resourceCredits;
+    const credits = data.credits;
     if (defined(credits)) {
-      var length = credits.length;
-      for (var i = 0; i < length; i++) {
+      const length = credits.length;
+      for (let i = 0; i < length; i++) {
         resourceCredits.push(credits[i]);
       }
     }
@@ -701,8 +701,8 @@ function load(dataSource, entityCollection, data, options) {
           //There's no official way to validate if a parse was successful.
           //The following check detects the error on various browsers.
           //IE raises an exception
-          var gpx;
-          var error;
+          let gpx;
+          let error;
           try {
             gpx = parser.parseFromString(text, "application/xml");
           } catch (e) {
@@ -717,7 +717,7 @@ function load(dataSource, entityCollection, data, options) {
             gpx.documentElement.tagName === "parsererror"
           ) {
             //Firefox has error information as the firstChild nodeValue.
-            var msg = defined(error)
+            let msg = defined(error)
               ? error
               : gpx.documentElement.firstChild.nodeValue;
 
@@ -956,20 +956,20 @@ GpxDataSource.prototype.load = function (data, options) {
 
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   DataSource.setLoading(this, true);
-  var oldName = this._name;
-  var that = this;
+  const oldName = this._name;
+  const that = this;
   return load(this, this._entityCollection, data, options)
     .then(function () {
-      var clock;
+      let clock;
 
-      var availability = that._entityCollection.computeAvailability();
+      const availability = that._entityCollection.computeAvailability();
 
-      var start = availability.start;
-      var stop = availability.stop;
-      var isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
-      var isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
+      let start = availability.start;
+      let stop = availability.stop;
+      const isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
+      const isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
       if (!isMinStart || !isMaxStop) {
-        var date;
+        let date;
 
         //If start is min time just start at midnight this morning, local time
         if (isMinStart) {
@@ -999,7 +999,7 @@ GpxDataSource.prototype.load = function (data, options) {
         );
       }
 
-      var changed = false;
+      let changed = false;
       if (clock !== that._clock) {
         that._clock = clock;
         changed = true;

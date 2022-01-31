@@ -34,11 +34,11 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
-        var pinBuilder = new Cesium.PinBuilder();
+        const pinBuilder = new Cesium.PinBuilder();
 
         Sandcastle.addToolbarMenu(
           [

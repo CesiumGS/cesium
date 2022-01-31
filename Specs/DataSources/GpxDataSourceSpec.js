@@ -12,10 +12,10 @@ import { RuntimeError } from "../../Source/Cesium.js";
 import { VerticalOrigin } from "../../Source/Cesium.js";
 
 describe("DataSources/GpxDataSource", function () {
-  var parser = new DOMParser();
+  const parser = new DOMParser();
 
   it("default constructor has expected values", function () {
-    var dataSource = new GpxDataSource();
+    const dataSource = new GpxDataSource();
     expect(dataSource.name).toBeUndefined();
     expect(dataSource.clock).toBeUndefined();
     expect(dataSource.entities).toBeInstanceOf(EntityCollection);
@@ -26,14 +26,14 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("load throws with undefined GPX", function () {
-    var dataSource = new GpxDataSource();
+    const dataSource = new GpxDataSource();
     expect(function () {
       dataSource.load(undefined);
     }).toThrowDeveloperError();
   });
 
   it("load works with a GPX URL", function () {
-    var dataSource = new GpxDataSource();
+    const dataSource = new GpxDataSource();
     return dataSource.load("Data/GPX/simple.gpx").then(function (source) {
       expect(source).toBe(dataSource);
       expect(source.entities.values.length).toEqual(1);
@@ -53,8 +53,8 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("sets DataSource creator and version from gpx", function () {
-    var dataSource = new GpxDataSource();
-    var gpx =
+    const dataSource = new GpxDataSource();
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Test">\
             </gpx>';
@@ -67,8 +67,8 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("sets DataSource name from metadata", function () {
-    var dataSource = new GpxDataSource();
-    var gpx =
+    const dataSource = new GpxDataSource();
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Test">\
             <metadata>\
@@ -83,8 +83,8 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("sets DataSource metadata object correctly", function () {
-    var dataSource = new GpxDataSource();
-    var gpx =
+    const dataSource = new GpxDataSource();
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Test">\
             <metadata>\
@@ -97,7 +97,7 @@ describe("DataSources/GpxDataSource", function () {
     return dataSource
       .load(parser.parseFromString(gpx, "text/xml"))
       .then(function () {
-        var metadata = dataSource.metadata;
+        const metadata = dataSource.metadata;
         expect(metadata).toBeDefined();
 
         expect(metadata.name).toEqual("The name");
@@ -108,8 +108,8 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Metadata: handles personType, emailType and linkType", function () {
-    var dataSource = new GpxDataSource();
-    var gpx =
+    const dataSource = new GpxDataSource();
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Test">\
             <metadata>\
@@ -129,10 +129,10 @@ describe("DataSources/GpxDataSource", function () {
     return dataSource
       .load(parser.parseFromString(gpx, "text/xml"))
       .then(function () {
-        var metadata = dataSource.metadata;
+        const metadata = dataSource.metadata;
         expect(metadata).toBeDefined();
 
-        var person = metadata.author;
+        const person = metadata.author;
         expect(person).toBeDefined();
         expect(person.name).toEqual("The name");
         expect(person.email).toBeDefined();
@@ -145,8 +145,8 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Metadata: handles copyrightType", function () {
-    var dataSource = new GpxDataSource();
-    var gpx =
+    const dataSource = new GpxDataSource();
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Test">\
             <metadata>\
@@ -159,10 +159,10 @@ describe("DataSources/GpxDataSource", function () {
     return dataSource
       .load(parser.parseFromString(gpx, "text/xml"))
       .then(function () {
-        var metadata = dataSource.metadata;
+        const metadata = dataSource.metadata;
         expect(metadata).toBeDefined();
 
-        var copyright = metadata.copyright;
+        const copyright = metadata.copyright;
         expect(copyright).toBeDefined();
         expect(copyright.author).toEqual("The author");
         expect(copyright.year).toEqual("2015");
@@ -171,8 +171,8 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Metadata: handles boundsType", function () {
-    var dataSource = new GpxDataSource();
-    var gpx =
+    const dataSource = new GpxDataSource();
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Test">\
             <metadata>\
@@ -187,10 +187,10 @@ describe("DataSources/GpxDataSource", function () {
     return dataSource
       .load(parser.parseFromString(gpx, "text/xml"))
       .then(function () {
-        var metadata = dataSource.metadata;
+        const metadata = dataSource.metadata;
         expect(metadata).toBeDefined();
 
-        var bounds = metadata.bounds;
+        const bounds = metadata.bounds;
         expect(bounds).toBeDefined();
         expect(bounds.minLat).toEqual(1);
         expect(bounds.maxLat).toEqual(2);
@@ -200,7 +200,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("raises changed event when the name changes", function () {
-    var gpx =
+    let gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="Test">\
             <metadata>\
@@ -208,9 +208,9 @@ describe("DataSources/GpxDataSource", function () {
             </metadata>\
             </gpx>';
 
-    var dataSource = new GpxDataSource();
+    const dataSource = new GpxDataSource();
 
-    var spy = jasmine.createSpy("changedEvent");
+    const spy = jasmine.createSpy("changedEvent");
     dataSource.changedEvent.addEventListener(spy);
 
     return dataSource
@@ -239,12 +239,12 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("raises loadingEvent event at start and end of load", function () {
-    var dataSource = new GpxDataSource();
+    const dataSource = new GpxDataSource();
 
-    var spy = jasmine.createSpy("loadingEvent");
+    const spy = jasmine.createSpy("loadingEvent");
     dataSource.loadingEvent.addEventListener(spy);
 
-    var promise = dataSource.load("Data/GPX/simple.gpx");
+    const promise = dataSource.load("Data/GPX/simple.gpx");
     expect(spy).toHaveBeenCalledWith(dataSource, true);
     spy.calls.reset();
 
@@ -254,7 +254,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Waypoint: sets name", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <wpt lat="1" lon="2">\
@@ -264,7 +264,7 @@ describe("DataSources/GpxDataSource", function () {
 
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(
       function (dataSource) {
-        var entity = dataSource.entities.values[0];
+        const entity = dataSource.entities.values[0];
         expect(entity.name).toBe("Test");
         expect(entity.label).toBeDefined();
         expect(entity.label.text.getValue()).toBe("Test");
@@ -273,7 +273,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Waypoint: throws with invalid coordinates", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <wpt lat="hello" lon="world">\
@@ -287,7 +287,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Waypoint: throws when no coordinates are given", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <wpt>\
@@ -301,7 +301,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Waypoint: handles simple waypoint", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <wpt lon="38.737125" lat="-9.139242">\
@@ -310,7 +310,7 @@ describe("DataSources/GpxDataSource", function () {
             </gpx>';
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(
       function (dataSource) {
-        var entities = dataSource.entities.values;
+        const entities = dataSource.entities.values;
         expect(entities.length).toEqual(1);
         expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
           Cartesian3.fromDegrees(38.737125, -9.139242, undefined)
@@ -321,8 +321,8 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Waypoint: uses default billboard style", function () {
-    var BILLBOARD_SIZE = 32;
-    var gpx =
+    const BILLBOARD_SIZE = 32;
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <wpt lon="38.737125" lat="-9.139242">\
@@ -331,7 +331,7 @@ describe("DataSources/GpxDataSource", function () {
             </gpx>';
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(
       function (dataSource) {
-        var entities = dataSource.entities.values;
+        const entities = dataSource.entities.values;
         expect(entities[0].billboard.height.getValue()).toEqual(BILLBOARD_SIZE);
         expect(entities[0].billboard.width.getValue()).toEqual(BILLBOARD_SIZE);
         expect(entities[0].billboard.verticalOrigin.getValue()).toEqual(
@@ -343,7 +343,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Waypoint: uses clampToGround billboards", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <wpt lon="38.737125" lat="-9.139242">\
@@ -353,7 +353,7 @@ describe("DataSources/GpxDataSource", function () {
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml"), {
       clampToGround: true,
     }).then(function (dataSource) {
-      var entities = dataSource.entities.values;
+      const entities = dataSource.entities.values;
       expect(entities[0].billboard.heightReference.getValue()).toEqual(
         HeightReference.CLAMP_TO_GROUND
       );
@@ -361,7 +361,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Waypoint: uses custom image for billboard", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <wpt lon="38.737125" lat="-9.139242">\
@@ -369,20 +369,20 @@ describe("DataSources/GpxDataSource", function () {
                 </wpt>\
             </gpx>';
 
-    var image = document.createElement("img");
+    const image = document.createElement("img");
     image.name = "wpt";
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml"), {
       clampToGround: true,
       wptImage: image,
     }).then(function (dataSource) {
-      var entities = dataSource.entities.values;
-      var image = entities[0].billboard.image;
+      const entities = dataSource.entities.values;
+      const image = entities[0].billboard.image;
       expect(image.getValue().name).toEqual("wpt");
     });
   });
 
   it("Waypoint: handles simple waypoint with elevation", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <wpt lon="1" lat="2">\
@@ -392,7 +392,7 @@ describe("DataSources/GpxDataSource", function () {
             </gpx>';
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(
       function (dataSource) {
-        var entities = dataSource.entities.values;
+        const entities = dataSource.entities.values;
         expect(entities.length).toEqual(1);
         expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
           Cartesian3.fromDegrees(1, 2, 3)
@@ -402,7 +402,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Waypoint: handles multiple waypoints", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <wpt lon="1" lat="2">\
@@ -417,7 +417,7 @@ describe("DataSources/GpxDataSource", function () {
             </gpx>';
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(
       function (dataSource) {
-        var entities = dataSource.entities.values;
+        const entities = dataSource.entities.values;
         expect(entities.length).toEqual(3);
         expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
           Cartesian3.fromDegrees(1, 2, undefined)
@@ -433,7 +433,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Description: handles desc", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <wpt lon="1" lat="2">\
@@ -442,12 +442,12 @@ describe("DataSources/GpxDataSource", function () {
             </gpx>';
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(
       function (dataSource) {
-        var entity = dataSource.entities.values[0];
+        const entity = dataSource.entities.values[0];
 
-        var element = document.createElement("div");
+        const element = document.createElement("div");
         element.innerHTML = entity.description.getValue();
 
-        var div = element.firstChild;
+        const div = element.firstChild;
         expect(div.style["word-wrap"]).toEqual("break-word");
         expect(div.style["background-color"]).toEqual("rgb(255, 255, 255)");
         expect(div.style.color).toEqual("rgb(0, 0, 0)");
@@ -457,7 +457,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Description: handles time", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <wpt lon="1" lat="2">\
@@ -466,12 +466,12 @@ describe("DataSources/GpxDataSource", function () {
             </gpx>';
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(
       function (dataSource) {
-        var entity = dataSource.entities.values[0];
+        const entity = dataSource.entities.values[0];
 
-        var element = document.createElement("div");
+        const element = document.createElement("div");
         element.innerHTML = entity.description.getValue();
 
-        var div = element.firstChild;
+        const div = element.firstChild;
         expect(div.style["word-wrap"]).toEqual("break-word");
         expect(div.style["background-color"]).toEqual("rgb(255, 255, 255)");
         expect(div.style.color).toEqual("rgb(0, 0, 0)");
@@ -481,7 +481,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Description: handles comment", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <wpt lon="1" lat="2">\
@@ -490,12 +490,12 @@ describe("DataSources/GpxDataSource", function () {
             </gpx>';
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(
       function (dataSource) {
-        var entity = dataSource.entities.values[0];
+        const entity = dataSource.entities.values[0];
 
-        var element = document.createElement("div");
+        const element = document.createElement("div");
         element.innerHTML = entity.description.getValue();
 
-        var div = element.firstChild;
+        const div = element.firstChild;
         expect(div.style["word-wrap"]).toEqual("break-word");
         expect(div.style["background-color"]).toEqual("rgb(255, 255, 255)");
         expect(div.style.color).toEqual("rgb(0, 0, 0)");
@@ -505,7 +505,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Description: handles source", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <wpt lon="1" lat="2">\
@@ -514,12 +514,12 @@ describe("DataSources/GpxDataSource", function () {
             </gpx>';
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(
       function (dataSource) {
-        var entity = dataSource.entities.values[0];
+        const entity = dataSource.entities.values[0];
 
-        var element = document.createElement("div");
+        const element = document.createElement("div");
         element.innerHTML = entity.description.getValue();
 
-        var div = element.firstChild;
+        const div = element.firstChild;
         expect(div.style["word-wrap"]).toEqual("break-word");
         expect(div.style["background-color"]).toEqual("rgb(255, 255, 255)");
         expect(div.style.color).toEqual("rgb(0, 0, 0)");
@@ -529,7 +529,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Description: handles gps number", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <wpt lon="1" lat="2">\
@@ -538,12 +538,12 @@ describe("DataSources/GpxDataSource", function () {
             </gpx>';
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(
       function (dataSource) {
-        var entity = dataSource.entities.values[0];
+        const entity = dataSource.entities.values[0];
 
-        var element = document.createElement("div");
+        const element = document.createElement("div");
         element.innerHTML = entity.description.getValue();
 
-        var div = element.firstChild;
+        const div = element.firstChild;
         expect(div.style["word-wrap"]).toEqual("break-word");
         expect(div.style["background-color"]).toEqual("rgb(255, 255, 255)");
         expect(div.style.color).toEqual("rgb(0, 0, 0)");
@@ -553,7 +553,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Description: handles type", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <wpt lon="1" lat="2">\
@@ -562,12 +562,12 @@ describe("DataSources/GpxDataSource", function () {
             </gpx>';
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(
       function (dataSource) {
-        var entity = dataSource.entities.values[0];
+        const entity = dataSource.entities.values[0];
 
-        var element = document.createElement("div");
+        const element = document.createElement("div");
         element.innerHTML = entity.description.getValue();
 
-        var div = element.firstChild;
+        const div = element.firstChild;
         expect(div.style["word-wrap"]).toEqual("break-word");
         expect(div.style["background-color"]).toEqual("rgb(255, 255, 255)");
         expect(div.style.color).toEqual("rgb(0, 0, 0)");
@@ -577,7 +577,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Description: handles multiple fields", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <wpt lon="1" lat="2">\
@@ -588,12 +588,12 @@ describe("DataSources/GpxDataSource", function () {
             </gpx>';
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(
       function (dataSource) {
-        var entity = dataSource.entities.values[0];
+        const entity = dataSource.entities.values[0];
 
-        var element = document.createElement("div");
+        const element = document.createElement("div");
         element.innerHTML = entity.description.getValue();
 
-        var div = element.firstChild;
+        const div = element.firstChild;
         expect(div.style["word-wrap"]).toEqual("break-word");
         expect(div.style["background-color"]).toEqual("rgb(255, 255, 255)");
         expect(div.style.color).toEqual("rgb(0, 0, 0)");
@@ -605,7 +605,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Description: handles route description", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <rte>\
@@ -632,12 +632,12 @@ describe("DataSources/GpxDataSource", function () {
             </gpx>';
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(
       function (dataSource) {
-        var entity = dataSource.entities.values[0];
+        const entity = dataSource.entities.values[0];
 
-        var element = document.createElement("div");
+        const element = document.createElement("div");
         element.innerHTML = entity.description.getValue();
 
-        var div = element.firstChild;
+        const div = element.firstChild;
         expect(div.style["word-wrap"]).toEqual("break-word");
         expect(div.style["background-color"]).toEqual("rgb(255, 255, 255)");
         expect(div.style.color).toEqual("rgb(0, 0, 0)");
@@ -649,7 +649,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Route: handles simple route", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <rte>\
@@ -674,7 +674,7 @@ describe("DataSources/GpxDataSource", function () {
             </gpx>';
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(
       function (dataSource) {
-        var entities = dataSource.entities.values;
+        const entities = dataSource.entities.values;
         expect(entities.length).toEqual(5); //1 for the route and 4 routepoints
         expect(entities[1].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
           Cartesian3.fromDegrees(1, 2, 1)
@@ -693,7 +693,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Track: handles simple track", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <trk>\
@@ -712,14 +712,14 @@ describe("DataSources/GpxDataSource", function () {
             </gpx>';
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(
       function (dataSource) {
-        var entities = dataSource.entities.values;
+        const entities = dataSource.entities.values;
         expect(entities.length).toEqual(1);
 
-        var entity = entities[0];
+        const entity = entities[0];
         expect(entity.path).toBeUndefined();
         expect(entity.polyline).toBeDefined();
 
-        var positions = entity.polyline.positions.getValue(
+        const positions = entity.polyline.positions.getValue(
           Iso8601.MINIMUM_VALUE
         );
         expect(positions).toEqual([
@@ -731,7 +731,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Track: uses default polyline style", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <trk>\
@@ -750,10 +750,10 @@ describe("DataSources/GpxDataSource", function () {
             </gpx>';
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(
       function (dataSource) {
-        var entities = dataSource.entities.values;
+        const entities = dataSource.entities.values;
         expect(entities.length).toEqual(1);
 
-        var entity = entities[0];
+        const entity = entities[0];
         expect(entity.path).toBeUndefined();
         expect(entity.polyline).toBeDefined();
         expect(entity.polyline.width.getValue()).toEqual(4);
@@ -768,7 +768,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Track: uses custom polyline color", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <trk>\
@@ -788,16 +788,16 @@ describe("DataSources/GpxDataSource", function () {
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml"), {
       trkColor: Color.BLUE,
     }).then(function (dataSource) {
-      var entities = dataSource.entities.values;
+      const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
-      var entity = entities[0];
+      const entity = entities[0];
       expect(entity.polyline.material.color.getValue()).toEqual(Color.BLUE);
       expect(entity.polyline.clampToGround).toBeUndefined();
     });
   });
 
   it("Track: uses clampToGround polylines", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <trk>\
@@ -817,15 +817,15 @@ describe("DataSources/GpxDataSource", function () {
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml"), {
       clampToGround: true,
     }).then(function (dataSource) {
-      var entities = dataSource.entities.values;
+      const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
-      var entity = entities[0];
+      const entity = entities[0];
       expect(entity.polyline.clampToGround.getValue()).toEqual(true);
     });
   });
 
   it("Track: handles time-dynamic track", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <trk>\
@@ -851,11 +851,11 @@ describe("DataSources/GpxDataSource", function () {
             </gpx>';
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(
       function (dataSource) {
-        var time1 = JulianDate.fromIso8601("2000-01-01T00:00:00Z");
-        var time2 = JulianDate.fromIso8601("2000-01-01T00:00:01Z");
-        var time3 = JulianDate.fromIso8601("2000-01-01T00:00:02Z");
+        const time1 = JulianDate.fromIso8601("2000-01-01T00:00:00Z");
+        const time2 = JulianDate.fromIso8601("2000-01-01T00:00:01Z");
+        const time3 = JulianDate.fromIso8601("2000-01-01T00:00:02Z");
 
-        var entity = dataSource.entities.values[0];
+        const entity = dataSource.entities.values[0];
         expect(entity.position.getValue(time1)).toEqual(
           Cartesian3.fromDegrees(1, 2, 1)
         );
@@ -874,7 +874,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Track: time-dynamic uses default path style", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <trk>\
@@ -900,10 +900,10 @@ describe("DataSources/GpxDataSource", function () {
             </gpx>';
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).then(
       function (dataSource) {
-        var entities = dataSource.entities.values;
+        const entities = dataSource.entities.values;
         expect(entities.length).toEqual(1);
 
-        var entity = entities[0];
+        const entity = entities[0];
         expect(entity.polyline).toBeDefined();
         expect(entity.polyline.width.getValue()).toEqual(4);
         expect(entity.polyline.material.getValue()).toBeDefined();
@@ -917,7 +917,7 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("Track: time-dynamic track uses clampToGround", function () {
-    var gpx =
+    const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
                 <trk>\
@@ -944,9 +944,9 @@ describe("DataSources/GpxDataSource", function () {
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml"), {
       clampToGround: true,
     }).then(function (dataSource) {
-      var entities = dataSource.entities.values;
+      const entities = dataSource.entities.values;
 
-      var entity = entities[0];
+      const entity = entities[0];
       expect(entity.polyline).toBeDefined();
       expect(entity.polyline.clampToGround.getValue()).toEqual(true);
     });
