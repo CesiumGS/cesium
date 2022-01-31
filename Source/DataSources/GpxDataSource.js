@@ -753,7 +753,7 @@ function load(dataSource, entityCollection, data, options) {
  * @demo {@link http://sandcastle.cesium.com/index.html?src=GPX.html}
  *
  * @example
- * var viewer = new Cesium.Viewer('cesiumContainer');
+ * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.dataSources.add(Cesium.GpxDataSource.load('../../SampleData/track.gpx'));
  */
 function GpxDataSource() {
