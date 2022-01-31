@@ -1,9 +1,5 @@
 # `CustomShader` Documentation
 
-**Note**: This README is stored in `ModelExperimental/` temporarily while
-this is an experimental feature. In the future, this may move to the
-`Documentation/` directory.
-
 ## Constructor
 
 ```js
