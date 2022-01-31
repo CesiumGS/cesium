@@ -2756,7 +2756,7 @@ describe(
       expect(scene).toRender(color);
     }
 
-    xit("applies color style to a tileset", function () {
+    it("applies color style to a tileset", function () {
       return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
         function (tileset) {
           expectColorStyle(tileset);
