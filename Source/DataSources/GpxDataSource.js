@@ -43,8 +43,8 @@ const autolinker = new Autolinker({
   email: false,
   replaceFn: function (linker, match) {
     if (!match.protocolUrlMatch) {
-      //Prevent matching of non-explicit urls.
-      //i.e. foo.id won't match but http://foo.id will
+      // Prevent matching of non-explicit urls.
+      // i.e. foo.id won't match but http://foo.id will
       return false;
     }
   },
@@ -259,15 +259,15 @@ function processDescription(node, entity) {
   }
 
   if (!defined(text) || text === "") {
-    //No description
+    // No description
     return;
   }
 
-  //Turns non-explicit links into clickable links.
+  // Turns non-explicit links into clickable links.
   text = autolinker.link(text);
 
-  //Use a temporary div to manipulate the links
-  //so that they open in a new window.
+  // Use a temporary div to manipulate the links
+  // so that they open in a new window.
   scratchDiv.innerHTML = text;
   const links = scratchDiv.querySelectorAll("a");
 
@@ -286,7 +286,7 @@ function processDescription(node, entity) {
   tmp += scratchDiv.innerHTML + "</div>";
   scratchDiv.innerHTML = "";
 
-  //return the final HTML as the description.
+  // return the final HTML as the description.
   return tmp;
 }
 
@@ -321,12 +321,12 @@ function processWpt(dataSource, geometryNode, entityCollection, options) {
   }
 }
 
-//rte represents route - an ordered list of waypoints representing a series of turn points leading to a destination
+// rte represents route - an ordered list of waypoints representing a series of turn points leading to a destination
 function processRte(dataSource, geometryNode, entityCollection, options) {
   const entity = getOrCreateEntity(geometryNode, entityCollection);
   entity.description = processDescription(geometryNode, entity);
 
-  //a list of wpt
+  // a list of wpt
   const routePoints = queryNodes(geometryNode, "rtept", namespaces.gpx);
   const coordinateTuples = new Array(routePoints.length);
   for (let i = 0; i < routePoints.length; i++) {
@@ -340,7 +340,7 @@ function processRte(dataSource, geometryNode, entityCollection, options) {
   entity.polyline.positions = coordinateTuples;
 }
 
-//trk represents a track - an ordered list of points describing a path.
+// trk represents a track - an ordered list of points describing a path.
 function processTrk(dataSource, geometryNode, entityCollection, options) {
   const entity = getOrCreateEntity(geometryNode, entityCollection);
   entity.description = processDescription(geometryNode, entity);
@@ -357,7 +357,7 @@ function processTrk(dataSource, geometryNode, entityCollection, options) {
     if (trackSegInfo.times.length > 0) {
       times = times.concat(trackSegInfo.times);
       property.addSamples(times, positions);
-      //if one track segment is non dynamic the whole track must also be
+      // if one track segment is non dynamic the whole track must also be
       isTimeDynamic = isTimeDynamic && true;
     } else {
       isTimeDynamic = false;
@@ -594,14 +594,14 @@ function loadGpx(dataSource, gpx, options) {
   if (!isMinStart || !isMaxStop) {
     let date;
 
-    //If start is min time just start at midnight this morning, local time
+    // If start is min time just start at midnight this morning, local time
     if (isMinStart) {
       date = new Date();
       date.setHours(0, 0, 0, 0);
       start = JulianDate.fromDate(date);
     }
 
-    //If stop is max value just stop at midnight tonight, local time
+    // If stop is max value just stop at midnight tonight, local time
     if (isMaxStop) {
       date = new Date();
       date.setHours(24, 0, 0, 0);
@@ -698,9 +698,9 @@ function load(dataSource, entityCollection, data, options) {
     .then(function (dataToLoad) {
       if (dataToLoad instanceof Blob) {
         return readBlobAsText(dataToLoad).then(function (text) {
-          //There's no official way to validate if a parse was successful.
-          //The following check detects the error on various browsers.
-          //IE raises an exception
+          // There's no official way to validate if a parse was successful.
+          // The following check detects the error on various browsers.
+          // IE raises an exception
           let gpx;
           let error;
           try {
@@ -709,24 +709,24 @@ function load(dataSource, entityCollection, data, options) {
             error = e.toString();
           }
 
-          //The parse succeeds on Chrome and Firefox, but the error
-          //handling is different in each.
+          // The parse succeeds on Chrome and Firefox, but the error
+          // handling is different in each.
           if (
             defined(error) ||
             gpx.body ||
             gpx.documentElement.tagName === "parsererror"
           ) {
-            //Firefox has error information as the firstChild nodeValue.
+            // Firefox has error information as the firstChild nodeValue.
             let msg = defined(error)
               ? error
               : gpx.documentElement.firstChild.nodeValue;
 
-            //Chrome has it in the body text.
+            // Chrome has it in the body text.
             if (!msg) {
               msg = gpx.body.innerText;
             }
 
-            //Return the error
+            // Return the error
             throw new RuntimeError(msg);
           }
           return loadGpx(dataSource, gpx, options);
@@ -971,14 +971,14 @@ GpxDataSource.prototype.load = function (data, options) {
       if (!isMinStart || !isMaxStop) {
         let date;
 
-        //If start is min time just start at midnight this morning, local time
+        // If start is min time just start at midnight this morning, local time
         if (isMinStart) {
           date = new Date();
           date.setHours(0, 0, 0, 0);
           start = JulianDate.fromDate(date);
         }
 
-        //If stop is max value just stop at midnight tonight, local time
+        // If stop is max value just stop at midnight tonight, local time
         if (isMaxStop) {
           date = new Date();
           date.setHours(24, 0, 0, 0);
