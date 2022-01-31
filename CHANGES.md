@@ -4,6 +4,7 @@
 
 ##### Additions :tada:
 
+- Moved documentation for `CustomShader` into `Documentation/CustomShaderGuide/` to make it more discoverable. [#10054](https://github.com/CesiumGS/cesium/pull/10054)
 - Feature IDs for styling and picking in `ModelExperimental` can now be selected via `(tileset|model).featureIdIndex` and `(tileset|model).instanceFeatureIdIndex`. [#10018](https://github.com/CesiumGS/cesium/pull/10018)
 - Added support for all types of feature IDs in `CustomShader`. [#10018](https://github.com/CesiumGS/cesium/pull/10018)
 - Added getters `Cesium3DTileFeature.featureId` and `ModelFeature.featureId` so the feature ID or batch ID can be accessed from a picked feature. [#10022](https://github.com/CesiumGS/cesium/pull/10022)
