@@ -11,7 +11,7 @@ import { RequestErrorEvent } from "../../Source/Cesium.js";
 import { RuntimeError } from "../../Source/Cesium.js";
 import { VerticalOrigin } from "../../Source/Cesium.js";
 
-fdescribe("DataSources/GpxDataSource", function () {
+describe("DataSources/GpxDataSource", function () {
   const parser = new DOMParser();
 
   it("default constructor has expected values", function () {
