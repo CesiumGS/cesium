@@ -56,7 +56,7 @@ import ImageryProvider from "./ImageryProvider.js";
  *
  *
  * @example
- * var bing = new Cesium.BingMapsImageryProvider({
+ * const bing = new Cesium.BingMapsImageryProvider({
  *     url : 'https://dev.virtualearth.net',
  *     key : 'get-yours-at-https://www.bingmapsportal.com/',
  *     mapStyle : Cesium.BingMapsStyle.AERIAL

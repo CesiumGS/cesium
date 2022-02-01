@@ -212,7 +212,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       runtimeNode: {
         node: {
           instances: {
-            featureIdAttributes: [{}, {}],
+            featureIds: [{}, {}],
           },
         },
       },
@@ -273,12 +273,12 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
 
     const renderResources = {
       attributeIndex: 1,
-      hasFeatureIds: true,
+      hasPropertyTable: true,
       pickId: undefined,
       shaderBuilder: new ShaderBuilder(),
       uniformMap: {},
       model: {
-        featureIdTextureIndex: 0,
+        featureIdIndex: 0,
         type: ModelExperimentalType.GLTF,
         _resources: [],
         featureTables: [mockModelFeatureTable],
@@ -310,7 +310,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       ]);
 
       expect(renderResources.pickId).toEqual(
-        "((feature.id < int(model_featuresLength)) ? texture2D(model_pickTexture, feature.st) : vec4(0.0))"
+        "((selectedFeature.id < int(model_featuresLength)) ? texture2D(model_pickTexture, selectedFeature.st) : vec4(0.0))"
       );
     });
   });

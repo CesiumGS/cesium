@@ -18,9 +18,9 @@ import Property from "./Property.js";
  *
  * @example
  * //Create an entity with a billboard rotated to match its velocity.
- * var position = new Cesium.SampledProperty();
+ * const position = new Cesium.SampledProperty();
  * position.addSamples(...);
- * var entity = viewer.entities.add({
+ * const entity = viewer.entities.add({
  *   position : position,
  *   billboard : {
  *     image : 'image.png',

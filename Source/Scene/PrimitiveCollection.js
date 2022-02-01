@@ -17,10 +17,10 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @param {Boolean} [options.destroyPrimitives=true] Determines if primitives in the collection are destroyed when they are removed.
  *
  * @example
- * var billboards = new Cesium.BillboardCollection();
- * var labels = new Cesium.LabelCollection();
+ * const billboards = new Cesium.BillboardCollection();
+ * const labels = new Cesium.LabelCollection();
  *
- * var collection = new Cesium.PrimitiveCollection();
+ * const collection = new Cesium.PrimitiveCollection();
  * collection.add(billboards);
  *
  * scene.primitives.add(collection);  // Add collection
@@ -53,18 +53,18 @@ function PrimitiveCollection(options) {
    *
    * @example
    * // Example 1. Primitives are destroyed by default.
-   * var primitives = new Cesium.PrimitiveCollection();
-   * var labels = primitives.add(new Cesium.LabelCollection());
+   * const primitives = new Cesium.PrimitiveCollection();
+   * const labels = primitives.add(new Cesium.LabelCollection());
    * primitives = primitives.destroy();
-   * var b = labels.isDestroyed(); // true
+   * const b = labels.isDestroyed(); // true
    *
    * @example
    * // Example 2. Do not destroy primitives in a collection.
-   * var primitives = new Cesium.PrimitiveCollection();
+   * const primitives = new Cesium.PrimitiveCollection();
    * primitives.destroyPrimitives = false;
-   * var labels = primitives.add(new Cesium.LabelCollection());
+   * const labels = primitives.add(new Cesium.LabelCollection());
    * primitives = primitives.destroy();
-   * var b = labels.isDestroyed(); // false
+   * const b = labels.isDestroyed(); // false
    * labels = labels.destroy();    // explicitly destroy
    */
   this.destroyPrimitives = defaultValue(options.destroyPrimitives, true);
@@ -96,7 +96,7 @@ Object.defineProperties(PrimitiveCollection.prototype, {
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  *
  * @example
- * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+ * const billboards = scene.primitives.add(new Cesium.BillboardCollection());
  */
 PrimitiveCollection.prototype.add = function (primitive, index) {
   const hasIndex = defined(index);
@@ -141,7 +141,7 @@ PrimitiveCollection.prototype.add = function (primitive, index) {
  *
  *
  * @example
- * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+ * const billboards = scene.primitives.add(new Cesium.BillboardCollection());
  * scene.primitives.remove(billboards);  // Returns true
  *
  * @see PrimitiveCollection#destroyPrimitives
@@ -342,10 +342,10 @@ PrimitiveCollection.prototype.lowerToBottom = function (primitive) {
  *
  * @example
  * // Toggle the show property of every primitive in the collection.
- * var primitives = scene.primitives;
- * var length = primitives.length;
- * for (var i = 0; i < length; ++i) {
- *   var p = primitives.get(i);
+ * const primitives = scene.primitives;
+ * const length = primitives.length;
+ * for (let i = 0; i < length; ++i) {
+ *   const p = primitives.get(i);
  *   p.show = !p.show;
  * }
  *

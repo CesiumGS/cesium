@@ -33,12 +33,12 @@ const diffScratch = new Cartesian3();
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Box.html|Cesium Sandcastle Box Demo}
  *
  * @example
- * var box = new Cesium.BoxGeometry({
+ * const box = new Cesium.BoxGeometry({
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
  *   maximum : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
  *   minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
  * });
- * var geometry = Cesium.BoxGeometry.createGeometry(box);
+ * const geometry = Cesium.BoxGeometry.createGeometry(box);
  */
 function BoxGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -80,11 +80,11 @@ function BoxGeometry(options) {
  *
  *
  * @example
- * var box = Cesium.BoxGeometry.fromDimensions({
+ * const box = Cesium.BoxGeometry.fromDimensions({
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
  *   dimensions : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
  * });
- * var geometry = Cesium.BoxGeometry.createGeometry(box);
+ * const geometry = Cesium.BoxGeometry.createGeometry(box);
  *
  * @see BoxGeometry.createGeometry
  */
@@ -118,14 +118,14 @@ BoxGeometry.fromDimensions = function (options) {
  *
  *
  * @example
- * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
+ * const aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
  *      -72.0, 40.0,
  *      -70.0, 35.0,
  *      -75.0, 30.0,
  *      -70.0, 30.0,
  *      -68.0, 40.0
  * ]));
- * var box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox(aabb);
+ * const box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox(aabb);
  *
  * @see BoxGeometry.createGeometry
  */

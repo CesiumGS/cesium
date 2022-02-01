@@ -337,7 +337,7 @@ function Model(options) {
    * @default {@link Matrix4.IDENTITY}
    *
    * @example
-   * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+   * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
    * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
    */
   this.modelMatrix = Matrix4.clone(
@@ -781,7 +781,7 @@ Object.defineProperties(Model.prototype, {
    *
    * @example
    * // Center in WGS84 coordinates
-   * var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
+   * const center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
    */
   boundingSphere: {
     get: function () {
@@ -1428,16 +1428,16 @@ function containsGltfMagic(uint8Array) {
  *
  * @example
  * // Example 1. Create a model from a glTF asset
- * var model = scene.primitives.add(Cesium.Model.fromGltf({
+ * const model = scene.primitives.add(Cesium.Model.fromGltf({
  *   url : './duck/duck.gltf'
  * }));
  *
  * @example
  * // Example 2. Create model and provide all properties and events
- * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
- * var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
+ * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+ * const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
  *
- * var model = scene.primitives.add(Cesium.Model.fromGltf({
+ * const model = scene.primitives.add(Cesium.Model.fromGltf({
  *   url : './duck/duck.gltf',
  *   show : true,                     // default
  *   modelMatrix : modelMatrix,
@@ -1576,7 +1576,7 @@ function getRuntime(model, runtimeName, name) {
  *
  * @example
  * // Apply non-uniform scale to node LOD3sp
- * var node = model.getNode('LOD3sp');
+ * const node = model.getNode('LOD3sp');
  * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
  */
 Model.prototype.getNode = function (name) {

@@ -175,7 +175,7 @@ Rectangle.computeHeight = function (rectangle) {
  * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
  *
  * @example
- * var rectangle = Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0);
+ * const rectangle = Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0);
  */
 Rectangle.fromDegrees = function (west, south, east, north, result) {
   west = CesiumMath.toRadians(defaultValue(west, 0.0));
@@ -206,7 +206,7 @@ Rectangle.fromDegrees = function (west, south, east, north, result) {
  * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
  *
  * @example
- * var rectangle = Cesium.Rectangle.fromRadians(0.0, Math.PI/4, Math.PI/8, 3*Math.PI/4);
+ * const rectangle = Cesium.Rectangle.fromRadians(0.0, Math.PI/4, Math.PI/8, 3*Math.PI/4);
  */
 Rectangle.fromRadians = function (west, south, east, north, result) {
   if (!defined(result)) {

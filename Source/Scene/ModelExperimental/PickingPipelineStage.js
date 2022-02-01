@@ -1,7 +1,6 @@
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import Color from "../../Core/Color.js";
-import combine from "../../Core/combine.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
@@ -40,7 +39,7 @@ PickingPipelineStage.process = function (
   const model = renderResources.model;
   const instances = runtimeNode.node.instances;
 
-  if (renderResources.hasFeatureIds) {
+  if (renderResources.hasPropertyTable) {
     processPickTexture(renderResources, primitive, instances, context);
   } else if (defined(instances)) {
     // For instanced meshes, a pick color vertex attribute is used.
@@ -109,23 +108,19 @@ function processPickTexture(renderResources, primitive, instances) {
   const model = renderResources.model;
   let featureTableId;
   let featureIdAttribute;
-  const featureIdAttributeIndex = model.featureIdAttributeIndex;
+  const featureIdIndex = model.featureIdIndex;
+  const instanceFeatureIdIndex = model.instanceFeatureIdIndex;
 
   if (defined(model.featureTableId)) {
     // Extract the Feature Table ID from the Cesium3DTileContent.
     featureTableId = model.featureTableId;
   } else if (defined(instances)) {
     // Extract the Feature Table ID from the instanced Feature ID attributes.
-    featureIdAttribute = instances.featureIdAttributes[featureIdAttributeIndex];
+    featureIdAttribute = instances.featureIds[instanceFeatureIdIndex];
     featureTableId = featureIdAttribute.propertyTableId;
-  } else if (primitive.featureIdTextures.length > 0) {
-    // Extract the Feature Table ID from the instanced Feature ID textures.
-    const featureIdTextureIndex = model.featureIdTextureIndex;
-    const featureIdTexture = primitive.featureIdTextures[featureIdTextureIndex];
-    featureTableId = featureIdTexture.propertyTableId;
   } else {
     // Extract the Feature Table ID from the primitive Feature ID attributes.
-    featureIdAttribute = primitive.featureIdAttributes[featureIdAttributeIndex];
+    featureIdAttribute = primitive.featureIds[featureIdIndex];
     featureTableId = featureIdAttribute.propertyTableId;
   }
 
@@ -139,23 +134,13 @@ function processPickTexture(renderResources, primitive, instances) {
   );
 
   const batchTexture = featureTable.batchTexture;
-  const pickingUniforms = {
-    model_pickTexture: function () {
-      return defaultValue(
-        batchTexture.pickTexture,
-        batchTexture.defaultTexture
-      );
-    },
+  renderResources.uniformMap.model_pickTexture = function () {
+    return defaultValue(batchTexture.pickTexture, batchTexture.defaultTexture);
   };
-
-  renderResources.uniformMap = combine(
-    pickingUniforms,
-    renderResources.uniformMap
-  );
 
   // The feature ID  is ignored if it is greater than the number of features.
   renderResources.pickId =
-    "((feature.id < int(model_featuresLength)) ? texture2D(model_pickTexture, feature.st) : vec4(0.0))";
+    "((selectedFeature.id < int(model_featuresLength)) ? texture2D(model_pickTexture, selectedFeature.st) : vec4(0.0))";
 }
 
 function processInstancedPickIds(renderResources, instances, context) {

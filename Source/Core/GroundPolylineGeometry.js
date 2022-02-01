@@ -61,13 +61,13 @@ const WALL_INITIAL_MAX_HEIGHT = 1000.0;
  * @see GroundPolylinePrimitive
  *
  * @example
- * var positions = Cesium.Cartesian3.fromDegreesArray([
+ * const positions = Cesium.Cartesian3.fromDegreesArray([
  *   -112.1340164450331, 36.05494287836128,
  *   -112.08821010582645, 36.097804071380715,
  *   -112.13296079730024, 36.168769146801104
  * ]);
  *
- * var geometry = new Cesium.GroundPolylineGeometry({
+ * const geometry = new Cesium.GroundPolylineGeometry({
  *   positions : positions
  * });
  */

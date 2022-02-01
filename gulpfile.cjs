@@ -1504,7 +1504,7 @@ export default "' +
 }
 
 function createCesiumJs() {
-  let contents = `export var VERSION = '${version}';\n`;
+  let contents = `export const VERSION = '${version}';\n`;
   globby.sync(sourceFiles).forEach(function (file) {
     file = path.relative("Source", file);
 

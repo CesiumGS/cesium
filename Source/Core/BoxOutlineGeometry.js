@@ -29,11 +29,11 @@ const diffScratch = new Cartesian3();
  * @see Packable
  *
  * @example
- * var box = new Cesium.BoxOutlineGeometry({
+ * const box = new Cesium.BoxOutlineGeometry({
  *   maximum : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
  *   minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
  * });
- * var geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
+ * const geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
  */
 function BoxOutlineGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -71,10 +71,10 @@ function BoxOutlineGeometry(options) {
  *
  *
  * @example
- * var box = Cesium.BoxOutlineGeometry.fromDimensions({
+ * const box = Cesium.BoxOutlineGeometry.fromDimensions({
  *   dimensions : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
  * });
- * var geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
+ * const geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
  *
  * @see BoxOutlineGeometry.createGeometry
  */
@@ -107,14 +107,14 @@ BoxOutlineGeometry.fromDimensions = function (options) {
  *
  *
  * @example
- * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
+ * const aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
  *      -72.0, 40.0,
  *      -70.0, 35.0,
  *      -75.0, 30.0,
  *      -70.0, 30.0,
  *      -68.0, 40.0
  * ]));
- * var box = Cesium.BoxOutlineGeometry.fromAxisAlignedBoundingBox(aabb);
+ * const box = Cesium.BoxOutlineGeometry.fromAxisAlignedBoundingBox(aabb);
  *
  *  @see BoxOutlineGeometry.createGeometry
  */

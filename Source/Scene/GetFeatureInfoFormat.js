@@ -277,7 +277,7 @@ function msGmlToFeatureInfo(xml) {
   const result = [];
 
   // Find the first child. Except for IE, this would work:
-  // var layer = xml.documentElement.children[0];
+  // const layer = xml.documentElement.children[0];
   let layer;
   const children = xml.documentElement.childNodes;
   for (let i = 0; i < children.length; i++) {

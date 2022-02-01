@@ -331,7 +331,7 @@ CesiumMath.cosh = defaultValue(Math.cosh, function cosh(value) {
  * @returns {Number} The linearly interpolated value.
  *
  * @example
- * var n = Cesium.Math.lerp(0.0, 2.0, 0.5); // returns 1.0
+ * const n = Cesium.Math.lerp(0.0, 2.0, 0.5); // returns 1.0
  */
 CesiumMath.lerp = function (p, q, time) {
   return (1.0 - time) * p + time * q;
@@ -469,7 +469,7 @@ CesiumMath.toDegrees = function (radians) {
  *
  * @example
  * // Convert 270 degrees to -90 degrees longitude
- * var longitude = Cesium.Math.convertLongitudeRange(Cesium.Math.toRadians(270.0));
+ * const longitude = Cesium.Math.convertLongitudeRange(Cesium.Math.toRadians(270.0));
  */
 CesiumMath.convertLongitudeRange = function (angle) {
   //>>includeStart('debug', pragmas.debug);
@@ -500,7 +500,7 @@ CesiumMath.convertLongitudeRange = function (angle) {
  *
  * @example
  * // Clamp 108 degrees latitude to 90 degrees latitude
- * var latitude = Cesium.Math.clampToLatitudeRange(Cesium.Math.toRadians(108.0));
+ * const latitude = Cesium.Math.clampToLatitudeRange(Cesium.Math.toRadians(108.0));
  */
 CesiumMath.clampToLatitudeRange = function (angle) {
   //>>includeStart('debug', pragmas.debug);
@@ -604,10 +604,10 @@ CesiumMath.mod = function (m, n) {
  * @returns {Boolean} <code>true</code> if the values are equal within the epsilon; otherwise, <code>false</code>.
  *
  * @example
- * var a = Cesium.Math.equalsEpsilon(0.0, 0.01, Cesium.Math.EPSILON2); // true
- * var b = Cesium.Math.equalsEpsilon(0.0, 0.1, Cesium.Math.EPSILON2);  // false
- * var c = Cesium.Math.equalsEpsilon(3699175.1634344, 3699175.2, Cesium.Math.EPSILON7); // true
- * var d = Cesium.Math.equalsEpsilon(3699175.1634344, 3699175.2, Cesium.Math.EPSILON9); // false
+ * const a = Cesium.Math.equalsEpsilon(0.0, 0.01, Cesium.Math.EPSILON2); // true
+ * const b = Cesium.Math.equalsEpsilon(0.0, 0.1, Cesium.Math.EPSILON2);  // false
+ * const c = Cesium.Math.equalsEpsilon(3699175.1634344, 3699175.2, Cesium.Math.EPSILON7); // true
+ * const d = Cesium.Math.equalsEpsilon(3699175.1634344, 3699175.2, Cesium.Math.EPSILON9); // false
  */
 CesiumMath.equalsEpsilon = function (
   left,
@@ -748,7 +748,7 @@ const factorials = [1];
  *
  * @example
  * //Compute 7!, which is equal to 5040
- * var computedFactorial = Cesium.Math.factorial(7);
+ * const computedFactorial = Cesium.Math.factorial(7);
  *
  * @see {@link http://en.wikipedia.org/wiki/Factorial|Factorial on Wikipedia}
  */
@@ -784,8 +784,8 @@ CesiumMath.factorial = function (n) {
  * @exception {DeveloperError} Maximum value must be greater than minimum value.
  *
  * @example
- * var n = Cesium.Math.incrementWrap(5, 10, 0); // returns 6
- * var n = Cesium.Math.incrementWrap(10, 10, 0); // returns 0
+ * const n = Cesium.Math.incrementWrap(5, 10, 0); // returns 6
+ * const m = Cesium.Math.incrementWrap(10, 10, 0); // returns 0
  */
 CesiumMath.incrementWrap = function (n, maximumValue, minimumValue) {
   minimumValue = defaultValue(minimumValue, 0.0);
@@ -816,8 +816,8 @@ CesiumMath.incrementWrap = function (n, maximumValue, minimumValue) {
  * @exception {DeveloperError} A number between 0 and (2^32)-1 is required.
  *
  * @example
- * var t = Cesium.Math.isPowerOfTwo(16); // true
- * var f = Cesium.Math.isPowerOfTwo(20); // false
+ * const t = Cesium.Math.isPowerOfTwo(16); // true
+ * const f = Cesium.Math.isPowerOfTwo(20); // false
  */
 CesiumMath.isPowerOfTwo = function (n) {
   //>>includeStart('debug', pragmas.debug);
@@ -839,8 +839,8 @@ CesiumMath.isPowerOfTwo = function (n) {
  * @exception {DeveloperError} A number between 0 and 2^31 is required.
  *
  * @example
- * var n = Cesium.Math.nextPowerOfTwo(29); // 32
- * var m = Cesium.Math.nextPowerOfTwo(32); // 32
+ * const n = Cesium.Math.nextPowerOfTwo(29); // 32
+ * const m = Cesium.Math.nextPowerOfTwo(32); // 32
  */
 CesiumMath.nextPowerOfTwo = function (n) {
   //>>includeStart('debug', pragmas.debug);
@@ -871,8 +871,8 @@ CesiumMath.nextPowerOfTwo = function (n) {
  * @exception {DeveloperError} A number between 0 and (2^32)-1 is required.
  *
  * @example
- * var n = Cesium.Math.previousPowerOfTwo(29); // 16
- * var m = Cesium.Math.previousPowerOfTwo(32); // 32
+ * const n = Cesium.Math.previousPowerOfTwo(29); // 16
+ * const m = Cesium.Math.previousPowerOfTwo(32); // 32
  */
 CesiumMath.previousPowerOfTwo = function (n) {
   //>>includeStart('debug', pragmas.debug);

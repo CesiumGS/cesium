@@ -436,7 +436,7 @@ Texture.create = function (options) {
  *
  * @example
  * // Create a texture with the contents of the framebuffer.
- * var t = Texture.fromFramebuffer({
+ * const t = Texture.fromFramebuffer({
  *     context : context
  * });
  *

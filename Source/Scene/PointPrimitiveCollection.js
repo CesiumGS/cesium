@@ -75,7 +75,7 @@ const attributeLocations = {
  *
  * @example
  * // Create a pointPrimitive collection with two points
- * var points = scene.primitives.add(new Cesium.PointPrimitiveCollection());
+ * const points = scene.primitives.add(new Cesium.PointPrimitiveCollection());
  * points.add({
  *   position : new Cesium.Cartesian3(1.0, 2.0, 3.0),
  *   color : Cesium.Color.YELLOW
@@ -147,7 +147,7 @@ function PointPrimitiveCollection(options) {
    *
    *
    * @example
-   * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+   * const center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
    * pointPrimitives.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
    * pointPrimitives.add({
    *   color : Cesium.Color.ORANGE,
@@ -267,7 +267,7 @@ function destroyPointPrimitives(pointPrimitives) {
  *
  * @example
  * // Example 1:  Add a point, specifying all the default values.
- * var p = pointPrimitives.add({
+ * const p = pointPrimitives.add({
  *   show : true,
  *   position : Cesium.Cartesian3.ZERO,
  *   pixelSize : 10.0,
@@ -279,7 +279,7 @@ function destroyPointPrimitives(pointPrimitives) {
  *
  * @example
  * // Example 2:  Specify only the point's cartographic position.
- * var p = pointPrimitives.add({
+ * const p = pointPrimitives.add({
  *   position : Cesium.Cartesian3.fromDegrees(longitude, latitude, height)
  * });
  *
@@ -312,7 +312,7 @@ PointPrimitiveCollection.prototype.add = function (options) {
  *
  *
  * @example
- * var p = pointPrimitives.add(...);
+ * const p = pointPrimitives.add(...);
  * pointPrimitives.remove(p);  // Returns true
  *
  * @see PointPrimitiveCollection#add
@@ -423,9 +423,9 @@ PointPrimitiveCollection.prototype.contains = function (pointPrimitive) {
  *
  * @example
  * // Toggle the show property of every point in the collection
- * var len = pointPrimitives.length;
- * for (var i = 0; i < len; ++i) {
- *   var p = pointPrimitives.get(i);
+ * const len = pointPrimitives.length;
+ * for (let i = 0; i < len; ++i) {
+ *   const p = pointPrimitives.get(i);
  *   p.show = !p.show;
  * }
  *

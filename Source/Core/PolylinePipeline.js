@@ -193,11 +193,11 @@ function generateCartesianRhumbArc(
  *
  *
  * @example
- * var polylines = new Cesium.PolylineCollection();
- * var polyline = polylines.add(...);
- * var positions = polyline.positions;
- * var modelMatrix = polylines.modelMatrix;
- * var segments = Cesium.PolylinePipeline.wrapLongitude(positions, modelMatrix);
+ * const polylines = new Cesium.PolylineCollection();
+ * const polyline = polylines.add(...);
+ * const positions = polyline.positions;
+ * const modelMatrix = polylines.modelMatrix;
+ * const segments = Cesium.PolylinePipeline.wrapLongitude(positions, modelMatrix);
  *
  * @see PolygonPipeline.wrapLongitude
  * @see Polyline
@@ -315,13 +315,13 @@ PolylinePipeline.wrapLongitude = function (positions, modelMatrix) {
  * @returns {Number[]} A new array of positions of type {Number} that have been subdivided and raised to the surface of the ellipsoid.
  *
  * @example
- * var positions = Cesium.Cartesian3.fromDegreesArray([
+ * const positions = Cesium.Cartesian3.fromDegreesArray([
  *   -105.0, 40.0,
  *   -100.0, 38.0,
  *   -105.0, 35.0,
  *   -100.0, 32.0
  * ]);
- * var surfacePositions = Cesium.PolylinePipeline.generateArc({
+ * const surfacePositions = Cesium.PolylinePipeline.generateArc({
  *   positons: positions
  * });
  */
@@ -422,13 +422,13 @@ const scratchCartographic1 = new Cartographic();
  * @returns {Number[]} A new array of positions of type {Number} that have been subdivided and raised to the surface of the ellipsoid.
  *
  * @example
- * var positions = Cesium.Cartesian3.fromDegreesArray([
+ * const positions = Cesium.Cartesian3.fromDegreesArray([
  *   -105.0, 40.0,
  *   -100.0, 38.0,
  *   -105.0, 35.0,
  *   -100.0, 32.0
  * ]);
- * var surfacePositions = Cesium.PolylinePipeline.generateRhumbArc({
+ * const surfacePositions = Cesium.PolylinePipeline.generateRhumbArc({
  *   positons: positions
  * });
  */
@@ -528,13 +528,13 @@ PolylinePipeline.generateRhumbArc = function (options) {
  * @returns {Cartesian3[]} A new array of cartesian3 positions that have been subdivided and raised to the surface of the ellipsoid.
  *
  * @example
- * var positions = Cesium.Cartesian3.fromDegreesArray([
+ * const positions = Cesium.Cartesian3.fromDegreesArray([
  *   -105.0, 40.0,
  *   -100.0, 38.0,
  *   -105.0, 35.0,
  *   -100.0, 32.0
  * ]);
- * var surfacePositions = Cesium.PolylinePipeline.generateCartesianArc({
+ * const surfacePositions = Cesium.PolylinePipeline.generateCartesianArc({
  *   positons: positions
  * });
  */
@@ -558,13 +558,13 @@ PolylinePipeline.generateCartesianArc = function (options) {
  * @returns {Cartesian3[]} A new array of cartesian3 positions that have been subdivided and raised to the surface of the ellipsoid.
  *
  * @example
- * var positions = Cesium.Cartesian3.fromDegreesArray([
+ * const positions = Cesium.Cartesian3.fromDegreesArray([
  *   -105.0, 40.0,
  *   -100.0, 38.0,
  *   -105.0, 35.0,
  *   -100.0, 32.0
  * ]);
- * var surfacePositions = Cesium.PolylinePipeline.generateCartesianRhumbArc({
+ * const surfacePositions = Cesium.PolylinePipeline.generateCartesianRhumbArc({
  *   positons: positions
  * });
  */

@@ -101,7 +101,7 @@ const ComponentDatatype = {
  *
  * @example
  * // Returns Int8Array.BYTES_PER_ELEMENT
- * var size = Cesium.ComponentDatatype.getSizeInBytes(Cesium.ComponentDatatype.BYTE);
+ * const size = Cesium.ComponentDatatype.getSizeInBytes(Cesium.ComponentDatatype.BYTE);
  */
 ComponentDatatype.getSizeInBytes = function (componentDatatype) {
   //>>includeStart('debug', pragmas.debug);
@@ -203,7 +203,7 @@ ComponentDatatype.validate = function (componentDatatype) {
  *
  * @example
  * // creates a Float32Array with length of 100
- * var typedArray = Cesium.ComponentDatatype.createTypedArray(Cesium.ComponentDatatype.FLOAT, 100);
+ * const typedArray = Cesium.ComponentDatatype.createTypedArray(Cesium.ComponentDatatype.FLOAT, 100);
  */
 ComponentDatatype.createTypedArray = function (
   componentDatatype,

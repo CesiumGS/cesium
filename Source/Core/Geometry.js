@@ -45,13 +45,13 @@ import Transforms from "./Transforms.js";
  *
  * @example
  * // Create geometry with a position attribute and indexed lines.
- * var positions = new Float64Array([
+ * const positions = new Float64Array([
  *   0.0, 0.0, 0.0,
  *   7500000.0, 0.0, 0.0,
  *   0.0, 7500000.0, 0.0
  * ]);
  *
- * var geometry = new Cesium.Geometry({
+ * const geometry = new Cesium.Geometry({
  *   attributes : {
  *     position : new Cesium.GeometryAttribute({
  *       componentDatatype : Cesium.ComponentDatatype.DOUBLE,
@@ -177,7 +177,7 @@ function Geometry(options) {
  * @returns {Number} The number of vertices in the geometry.
  *
  * @example
- * var numVertices = Cesium.Geometry.computeNumberOfVertices(geometry);
+ * const numVertices = Cesium.Geometry.computeNumberOfVertices(geometry);
  */
 Geometry.computeNumberOfVertices = function (geometry) {
   //>>includeStart('debug', pragmas.debug);

@@ -148,19 +148,19 @@ const pickFeaturesTags = combine(tags, {
  *
  * @example
  * // Access Natural Earth II imagery, which uses a TMS tiling scheme and Geographic (EPSG:4326) project
- * var tms = new Cesium.UrlTemplateImageryProvider({
+ * const tms = new Cesium.UrlTemplateImageryProvider({
  *     url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII') + '/{z}/{x}/{reverseY}.jpg',
  *     credit : '© Analytical Graphics, Inc.',
  *     tilingScheme : new Cesium.GeographicTilingScheme(),
  *     maximumLevel : 5
  * });
  * // Access the CartoDB Positron basemap, which uses an OpenStreetMap-like tiling scheme.
- * var positron = new Cesium.UrlTemplateImageryProvider({
+ * const positron = new Cesium.UrlTemplateImageryProvider({
  *     url : 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
  *     credit : 'Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL.'
  * });
  * // Access a Web Map Service (WMS) server.
- * var wms = new Cesium.UrlTemplateImageryProvider({
+ * const wms = new Cesium.UrlTemplateImageryProvider({
  *    url : 'https://programs.communications.gov.au/geoserver/ows?tiled=true&' +
  *          'transparent=true&format=image%2Fpng&exceptions=application%2Fvnd.ogc.se_xml&' +
  *          'styles=&service=WMS&version=1.1.1&request=GetMap&' +
@@ -170,7 +170,7 @@ const pickFeaturesTags = combine(tags, {
  *    rectangle : Cesium.Rectangle.fromDegrees(96.799393, -43.598214999057824, 153.63925700000001, -9.2159219997013)
  * });
  * // Using custom tags in your template url.
- * var custom = new Cesium.UrlTemplateImageryProvider({
+ * const custom = new Cesium.UrlTemplateImageryProvider({
  *    url : 'https://yoururl/{Time}/{z}/{y}/{x}.png',
  *    customTags : {
  *        Time: function(imageryProvider, x, y, level) {

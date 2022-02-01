@@ -265,12 +265,12 @@ function constructExtrudedRectangle(rectangleGeometry, computedOptions) {
  * @see RectangleOutlineGeometry#createGeometry
  *
  * @example
- * var rectangle = new Cesium.RectangleOutlineGeometry({
+ * const rectangle = new Cesium.RectangleOutlineGeometry({
  *   ellipsoid : Cesium.Ellipsoid.WGS84,
  *   rectangle : Cesium.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
  *   height : 10000.0
  * });
- * var geometry = Cesium.RectangleOutlineGeometry.createGeometry(rectangle);
+ * const geometry = Cesium.RectangleOutlineGeometry.createGeometry(rectangle);
  */
 function RectangleOutlineGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

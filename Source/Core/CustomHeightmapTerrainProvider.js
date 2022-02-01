@@ -42,7 +42,7 @@ import TerrainProvider from "./TerrainProvider.js";
  * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
  *
  * @example
- * var viewer = new Cesium.Viewer("cesiumContainer", {
+ * const viewer = new Cesium.Viewer("cesiumContainer", {
  *   terrainProvider: new Cesium.CustomHeightmapTerrainProvider({
  *     width: 32,
  *     height: 32,

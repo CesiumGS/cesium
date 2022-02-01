@@ -111,7 +111,7 @@ function createTaskProcessorWorker(workerFunction) {
  * @example
  * function calculate(parameters, transferableObjects) {
  *   // perform whatever calculation is necessary.
- *   var typedArray = new Float32Array(0);
+ *   const typedArray = new Float32Array(0);
  *
  *   // typed arrays are transferable
  *   transferableObjects.push(typedArray)

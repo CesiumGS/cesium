@@ -51,7 +51,7 @@
         const scene = viewer.scene;
 
         const tileset = new Cesium.Cesium3DTileset({
-          url: Cesium.IonResource.fromAssetId(666297),
+          url: Cesium.IonResource.fromAssetId(775877),
         });
 
         const translation = new Cesium.Cartesian3(
@@ -107,8 +107,7 @@
             "const float TOTAL_FEATURES = 12.0;",
             "",
             "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {",
-            "  // NOTE: This is exposing internal details of the shader. It would be better if this was added to fsInput somewhere...",
-            "  float featureId = floor(texture2D(FEATURE_ID_TEXTURE, FEATURE_ID_TEXCOORD).FEATURE_ID_CHANNEL * 255.0 + 0.5);",
+            "  float featureId = fsInput.featureIds.featureId_0;",
             "",
             "  if (featureId == WINDOW || featureId == SKYLIGHT) {",
             "    material.alpha = 0.4;",
@@ -136,8 +135,7 @@
             "const float TRAFFIC_LIGHT = 11.0;",
             "",
             "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {",
-            "  // NOTE: This is exposing internal details of the shader. It would be better if this was added to fsInput somewhere...",
-            "  float featureId = floor(texture2D(FEATURE_ID_TEXTURE, FEATURE_ID_TEXCOORD).FEATURE_ID_CHANNEL * 255.0 + 0.5);",
+            "  float featureId = fsInput.featureIds.featureId_0;",
             "",
             "  if (featureId == CLOCK) {",
             "    // Shiny brass",
@@ -183,13 +181,46 @@
           fragmentShaderText: [
             "const float NOTHING_SELECTED = 12.0;",
             "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {",
-            "  // NOTE: This is exposing internal details of the shader. It would be better if this was added to fsInput somewhere...",
-            "  float featureId = floor(texture2D(FEATURE_ID_TEXTURE, FEATURE_ID_TEXCOORD).FEATURE_ID_CHANNEL * 255.0 + 0.5);",
+            "  float featureId = fsInput.featureIds.featureId_0;",
             "",
             "  if (u_selectedFeature < NOTHING_SELECTED && featureId == u_selectedFeature) {",
             "    material.specular = vec3(1.00, 0.85, 0.57);",
             "    material.roughness = 0.3;",
             "  }",
+            "}",
+          ].join("\n"),
+        });
+
+        const multipleFeatureIdsShader = new Cesium.CustomShader({
+          uniforms: {
+            u_selectedFeature: {
+              type: Cesium.UniformType.FLOAT,
+              value: NOTHING_SELECTED,
+            },
+          },
+          lightingModel: Cesium.LightingModel.UNLIT,
+          fragmentShaderText: [
+            "const float IDS0_WINDOW = 0.0;",
+            "const float IDS1_FACADE = 2.0;",
+            "const float IDS1_ROOF = 3.0;",
+            "const vec3 PURPLE = vec3(0.5, 0.0, 1.0);",
+            "const vec3 YELLOW = vec3(1.0, 1.0, 0.0);",
+            "const vec3 NO_TINT = vec3(1.0);",
+            "",
+            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {",
+            "  float featureId0 = fsInput.featureIds.featureId_0; // fine features",
+            "  float featureId1 = fsInput.featureIds.featureId_1; // coarse features",
+            "",
+            "  // use both feature ID sets to determine where the features are",
+            "  float isWindow = float(featureId0 == IDS0_WINDOW);",
+            "  float isFacade = float(featureId1 == IDS1_FACADE);",
+            "  float isRoof = float(featureId1 == IDS1_ROOF);",
+            "",
+            "  // Tint the roof windows yellow and facade windows purple",
+            "  vec3 tint = NO_TINT;",
+            "  tint = mix(tint, YELLOW, isWindow * isRoof);",
+            "  tint = mix(tint, PURPLE, isWindow * isFacade);",
+            "  material.diffuse *= tint;",
             "}",
           ].join("\n"),
         });
@@ -201,6 +232,7 @@
           tileset.customShader = unlitShader;
           tileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT;
           tileset.colorBlendAmount = 0.5;
+          tileset.featureIdIndex = 0;
         }
 
         const showPhotogrammetry = defaults;
@@ -209,6 +241,12 @@
           defaults();
           tileset.style = classificationStyle;
           tileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.MIX;
+        }
+
+        function showAlternativeClassification() {
+          showClassification();
+          // This dataset has a second feature ID texture.
+          tileset.featureIdIndex = 1;
         }
 
         function translucentWindows() {
@@ -224,6 +262,11 @@
         function goldenTouch() {
           defaults();
           tileset.customShader = selectFeatureShader;
+        }
+
+        function multipleFeatureIds() {
+          defaults();
+          tileset.customShader = multipleFeatureIdsShader;
         }
 
         // Pick Handlers ======================================================================
@@ -305,6 +348,10 @@
             onselect: showClassification,
           },
           {
+            text: "Show Alternative Classification",
+            onselect: showAlternativeClassification,
+          },
+          {
             text: "Translucent Windows",
             onselect: translucentWindows,
           },
@@ -315,6 +362,10 @@
           {
             text: "Golden Touch",
             onselect: goldenTouch,
+          },
+          {
+            text: "Multiple Feature ID Sets",
+            onselect: multipleFeatureIds,
           },
         ];
         Sandcastle.addToolbarMenu(demos);

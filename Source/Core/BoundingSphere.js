@@ -368,11 +368,11 @@ BoundingSphere.fromRectangle3D = function (
  * // Compute the bounding sphere from 3 positions, each specified relative to a center.
  * // In addition to the X, Y, and Z coordinates, the points array contains two additional
  * // elements per point which are ignored for the purpose of computing the bounding sphere.
- * var center = new Cesium.Cartesian3(1.0, 2.0, 3.0);
- * var points = [1.0, 2.0, 3.0, 0.1, 0.2,
+ * const center = new Cesium.Cartesian3(1.0, 2.0, 3.0);
+ * const points = [1.0, 2.0, 3.0, 0.1, 0.2,
  *               4.0, 5.0, 6.0, 0.1, 0.2,
  *               7.0, 8.0, 9.0, 0.1, 0.2];
- * var sphere = Cesium.BoundingSphere.fromVertices(points, center, 5);
+ * const sphere = Cesium.BoundingSphere.fromVertices(points, center, 5);
  *
  * @see {@link http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/|Bounding Sphere computation article}
  */
@@ -749,7 +749,7 @@ BoundingSphere.fromEncodedCartesianVertices = function (
  *
  * @example
  * // Create a bounding sphere around the unit cube
- * var sphere = Cesium.BoundingSphere.fromCornerPoints(new Cesium.Cartesian3(-0.5, -0.5, -0.5), new Cesium.Cartesian3(0.5, 0.5, 0.5));
+ * const sphere = Cesium.BoundingSphere.fromCornerPoints(new Cesium.Cartesian3(-0.5, -0.5, -0.5), new Cesium.Cartesian3(0.5, 0.5, 0.5));
  */
 BoundingSphere.fromCornerPoints = function (corner, oppositeCorner, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -774,7 +774,7 @@ BoundingSphere.fromCornerPoints = function (corner, oppositeCorner, result) {
  * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
  *
  * @example
- * var boundingSphere = Cesium.BoundingSphere.fromEllipsoid(ellipsoid);
+ * const boundingSphere = Cesium.BoundingSphere.fromEllipsoid(ellipsoid);
  */
 BoundingSphere.fromEllipsoid = function (ellipsoid, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -1152,9 +1152,9 @@ BoundingSphere.distanceSquaredTo = function (sphere, cartesian) {
  * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
  *
  * @example
- * var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid);
- * var boundingSphere = new Cesium.BoundingSphere();
- * var newBoundingSphere = Cesium.BoundingSphere.transformWithoutScale(boundingSphere, modelMatrix);
+ * const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid);
+ * const boundingSphere = new Cesium.BoundingSphere();
+ * const newBoundingSphere = Cesium.BoundingSphere.transformWithoutScale(boundingSphere, modelMatrix);
  */
 BoundingSphere.transformWithoutScale = function (sphere, transform, result) {
   //>>includeStart('debug', pragmas.debug);

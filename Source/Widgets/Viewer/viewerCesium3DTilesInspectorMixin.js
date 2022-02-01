@@ -10,7 +10,7 @@ import Cesium3DTilesInspector from "../Cesium3DTilesInspector/Cesium3DTilesInspe
  * @param {Viewer} viewer The viewer instance.
  *
  * @example
- * var viewer = new Cesium.Viewer('cesiumContainer');
+ * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
  */
 function viewerCesium3DTilesInspectorMixin(viewer) {

@@ -63,7 +63,7 @@ import TerrainMesh from "./TerrainMesh.js";
  *
  *
  * @example
- * var data = new Cesium.QuantizedMeshTerrainData({
+ * const data = new Cesium.QuantizedMeshTerrainData({
  *     minimumHeight : -100,
  *     maximumHeight : 2101,
  *     quantizedVertices : new Uint16Array([// order is SW NW SE NE

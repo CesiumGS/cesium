@@ -390,8 +390,8 @@ const cartographicToCartesianK = new Cartesian3();
  *
  * @example
  * //Create a Cartographic and determine it's Cartesian representation on a WGS84 ellipsoid.
- * var position = new Cesium.Cartographic(Cesium.Math.toRadians(21), Cesium.Math.toRadians(78), 5000);
- * var cartesianPosition = Cesium.Ellipsoid.WGS84.cartographicToCartesian(position);
+ * const position = new Cesium.Cartographic(Cesium.Math.toRadians(21), Cesium.Math.toRadians(78), 5000);
+ * const cartesianPosition = Cesium.Ellipsoid.WGS84.cartographicToCartesian(position);
  */
 Ellipsoid.prototype.cartographicToCartesian = function (cartographic, result) {
   //`cartographic is required` is thrown from geodeticSurfaceNormalCartographic.
@@ -418,10 +418,10 @@ Ellipsoid.prototype.cartographicToCartesian = function (cartographic, result) {
  *
  * @example
  * //Convert an array of Cartographics and determine their Cartesian representation on a WGS84 ellipsoid.
- * var positions = [new Cesium.Cartographic(Cesium.Math.toRadians(21), Cesium.Math.toRadians(78), 0),
+ * const positions = [new Cesium.Cartographic(Cesium.Math.toRadians(21), Cesium.Math.toRadians(78), 0),
  *                  new Cesium.Cartographic(Cesium.Math.toRadians(21.321), Cesium.Math.toRadians(78.123), 100),
  *                  new Cesium.Cartographic(Cesium.Math.toRadians(21.645), Cesium.Math.toRadians(78.456), 250)];
- * var cartesianPositions = Cesium.Ellipsoid.WGS84.cartographicArrayToCartesianArray(positions);
+ * const cartesianPositions = Cesium.Ellipsoid.WGS84.cartographicArrayToCartesianArray(positions);
  */
 Ellipsoid.prototype.cartographicArrayToCartesianArray = function (
   cartographics,
@@ -457,8 +457,8 @@ const cartesianToCartographicH = new Cartesian3();
  *
  * @example
  * //Create a Cartesian and determine it's Cartographic representation on a WGS84 ellipsoid.
- * var position = new Cesium.Cartesian3(17832.12, 83234.52, 952313.73);
- * var cartographicPosition = Cesium.Ellipsoid.WGS84.cartesianToCartographic(position);
+ * const position = new Cesium.Cartesian3(17832.12, 83234.52, 952313.73);
+ * const cartographicPosition = Cesium.Ellipsoid.WGS84.cartesianToCartographic(position);
  */
 Ellipsoid.prototype.cartesianToCartographic = function (cartesian, result) {
   //`cartesian is required.` is thrown from scaleToGeodeticSurface
@@ -494,10 +494,10 @@ Ellipsoid.prototype.cartesianToCartographic = function (cartesian, result) {
  *
  * @example
  * //Create an array of Cartesians and determine their Cartographic representation on a WGS84 ellipsoid.
- * var positions = [new Cesium.Cartesian3(17832.12, 83234.52, 952313.73),
+ * const positions = [new Cesium.Cartesian3(17832.12, 83234.52, 952313.73),
  *                  new Cesium.Cartesian3(17832.13, 83234.53, 952313.73),
  *                  new Cesium.Cartesian3(17832.14, 83234.54, 952313.73)]
- * var cartographicPositions = Cesium.Ellipsoid.WGS84.cartesianArrayToCartographicArray(positions);
+ * const cartographicPositions = Cesium.Ellipsoid.WGS84.cartesianArrayToCartographicArray(positions);
  */
 Ellipsoid.prototype.cartesianArrayToCartographicArray = function (
   cartesians,

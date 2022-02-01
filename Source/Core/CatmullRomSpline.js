@@ -126,7 +126,7 @@ const lastTangentScratch = new Cartesian3();
  *
  * @example
  * // spline above the earth from Philadelphia to Los Angeles
- * var spline = new Cesium.CatmullRomSpline({
+ * const spline = new Cesium.CatmullRomSpline({
  *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
  *     points : [
  *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
@@ -137,8 +137,8 @@ const lastTangentScratch = new Cartesian3();
  *     ]
  * });
  *
- * var p0 = spline.evaluate(times[i]);         // equal to positions[i]
- * var p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
+ * const p0 = spline.evaluate(times[i]);         // equal to positions[i]
+ * const p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
  *
  * @see HermiteSpline
  * @see LinearSpline

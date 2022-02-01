@@ -11,7 +11,7 @@ import DeveloperError from "./DeveloperError.js";
  *
  * @example
  * //extension will be "czml";
- * var extension = Cesium.getExtensionFromUri('/Gallery/simple.czml?value=true&example=false');
+ * const extension = Cesium.getExtensionFromUri('/Gallery/simple.czml?value=true&example=false');
  */
 function getExtensionFromUri(uri) {
   //>>includeStart('debug', pragmas.debug);

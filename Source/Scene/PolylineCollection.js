@@ -95,7 +95,7 @@ const attributeLocations = {
  *
  * @example
  * // Create a polyline collection with two polylines
- * var polylines = new Cesium.PolylineCollection();
+ * const polylines = new Cesium.PolylineCollection();
  * polylines.add({
  *   positions : Cesium.Cartesian3.fromDegreesArray([
  *     -75.10, 39.57,
@@ -226,7 +226,7 @@ Object.defineProperties(PolylineCollection.prototype, {
      *
      * @example
      * // Example 1:  Add a polyline, specifying all the default values.
-     * var p = polylines.add({
+     * const p = polylines.add({
      *   show : true,
      *   positions : ellipsoid.cartographicArrayToCartesianArray([
            Cesium.Cartographic.fromDegrees(-75.10, 39.57),
@@ -263,7 +263,7 @@ PolylineCollection.prototype.add = function (options) {
  *
  *
  * @example
- * var p = polylines.add(...);
+ * const p = polylines.add(...);
  * polylines.remove(p);  // Returns true
  *
  * @see PolylineCollection#add
@@ -346,9 +346,9 @@ PolylineCollection.prototype.contains = function (polyline) {
  *
  * @example
  * // Toggle the show property of every polyline in the collection
- * var len = polylines.length;
- * for (var i = 0; i < len; ++i) {
- *   var p = polylines.get(i);
+ * const len = polylines.length;
+ * for (let i = 0; i < len; ++i) {
+ *   const p = polylines.get(i);
  *   p.show = !p.show;
  * }
  *

@@ -82,7 +82,7 @@ import ShadowMode from "./ShadowMode.js";
  *
  * @example
  * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
- * var instance = new Cesium.GeometryInstance({
+ * const instance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.EllipseGeometry({
  *       center : Cesium.Cartesian3.fromDegrees(-100.0, 20.0),
  *       semiMinorAxis : 500000.0,
@@ -101,7 +101,7 @@ import ShadowMode from "./ShadowMode.js";
  *
  * @example
  * // 2. Draw different instances each with a unique color
- * var rectangleInstance = new Cesium.GeometryInstance({
+ * const rectangleInstance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.RectangleGeometry({
  *     rectangle : Cesium.Rectangle.fromDegrees(-140.0, 30.0, -100.0, 40.0),
  *     vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
@@ -111,7 +111,7 @@ import ShadowMode from "./ShadowMode.js";
  *     color : new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5)
  *   }
  * });
- * var ellipsoidInstance = new Cesium.GeometryInstance({
+ * const ellipsoidInstance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.EllipsoidGeometry({
  *     radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0),
  *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL
@@ -222,7 +222,7 @@ function Primitive(options) {
    * @default Matrix4.IDENTITY
    *
    * @example
-   * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+   * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
    * p.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
    */
   this.modelMatrix = Matrix4.clone(
@@ -2425,7 +2425,7 @@ function createPickIdProperty(primitive, properties, index) {
  * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
  *
  * @example
- * var attributes = primitive.getGeometryInstanceAttributes('an id');
+ * const attributes = primitive.getGeometryInstanceAttributes('an id');
  * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
  * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
  * attributes.distanceDisplayCondition = Cesium.DistanceDisplayConditionGeometryInstanceAttribute.toValue(100.0, 10000.0);

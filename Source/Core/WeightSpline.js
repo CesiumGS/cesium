@@ -23,14 +23,14 @@ import Spline from "./Spline.js";
  *
  *
  * @example
- * var times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
- * var weights = [0.0, 1.0, 0.25, 0.75, 0.5, 0.5, 0.75, 0.25, 1.0, 0.0]; //Two targets
- * var spline = new Cesium.WeightSpline({
+ * const times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
+ * const weights = [0.0, 1.0, 0.25, 0.75, 0.5, 0.5, 0.75, 0.25, 1.0, 0.0]; //Two targets
+ * const spline = new Cesium.WeightSpline({
  *     times : times,
  *     weights : weights
  * });
  *
- * var p0 = spline.evaluate(times[0]);
+ * const p0 = spline.evaluate(times[0]);
  *
  * @see LinearSpline
  * @see HermiteSpline

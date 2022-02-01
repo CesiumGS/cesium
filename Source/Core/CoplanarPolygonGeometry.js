@@ -223,7 +223,7 @@ function createGeometryFromPolygon(
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
  *
  * @example
- * var polygonGeometry = new Cesium.CoplanarPolygonGeometry({
+ * const polygonGeometry = new Cesium.CoplanarPolygonGeometry({
  *  polygonHierarchy: new Cesium.PolygonHierarchy(
  *     Cesium.Cartesian3.fromDegreesArrayHeights([
  *      -90.0, 30.0, 0.0,
@@ -273,7 +273,7 @@ function CoplanarPolygonGeometry(options) {
  *
  * @example
  * // create a polygon from points
- * var polygon = Cesium.CoplanarPolygonGeometry.fromPositions({
+ * const polygon = Cesium.CoplanarPolygonGeometry.fromPositions({
  *   positions : Cesium.Cartesian3.fromDegreesArray([
  *     -72.0, 40.0,
  *     -70.0, 35.0,
@@ -282,7 +282,7 @@ function CoplanarPolygonGeometry(options) {
  *     -68.0, 40.0
  *   ])
  * });
- * var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
+ * const geometry = Cesium.PolygonGeometry.createGeometry(polygon);
  *
  * @see PolygonGeometry#createGeometry
  */
