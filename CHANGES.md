@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.91 - 2022-03-01
+
+##### Additions :tada:
+
+- Added `depthPlaneEllipsoidOffset` to Viewer and Scene constructors to address rendering artefacts below ellipsoid zero elevation. [#9200](https://github.com/CesiumGS/cesium/pull/9200)
+
 ### 1.90 - 2022-02-01
 
 ##### Additions :tada:
