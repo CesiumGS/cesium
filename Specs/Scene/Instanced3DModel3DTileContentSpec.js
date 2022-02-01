@@ -85,12 +85,6 @@ describe(
       Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "i3dm");
     });
 
-    it("throws with empty gltf", function () {
-      // Expect to throw DeveloperError in Model due to invalid gltf magic
-      var arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer();
-      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "i3dm");
-    });
-
     it("resolves readyPromise", function () {
       return Cesium3DTilesTester.resolvesReadyPromise(
         scene,

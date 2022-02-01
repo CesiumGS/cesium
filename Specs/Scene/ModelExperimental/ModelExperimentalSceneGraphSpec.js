@@ -7,6 +7,7 @@ import {
   Matrix4,
   ModelColorPipelineStage,
   ModelExperimentalSceneGraph,
+  ModelExperimentalUtility,
   Pass,
   ResourceCache,
 } from "../../../Source/Cesium.js";
@@ -71,12 +72,14 @@ describe(
         var sceneGraph = model._sceneGraph;
         // Reset the draw commands so we can inspect the draw command generation.
         model._drawCommandsBuilt = false;
-        sceneGraph._drawCommands = [];
         frameState.commandList = [];
         scene.renderForSpecs();
-        expect(sceneGraph._drawCommands.length).toEqual(1);
+
+        var drawCommands = sceneGraph.getDrawCommands();
+
+        expect(drawCommands.length).toEqual(1);
+        expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
         expect(frameState.commandList.length).toEqual(1);
-        expect(sceneGraph._drawCommands[0].pass).toEqual(Pass.OPAQUE);
       });
     });
 
@@ -96,12 +99,14 @@ describe(
         var sceneGraph = model._sceneGraph;
         // Reset the draw commands so we can inspect the draw command generation.
         model._drawCommandsBuilt = false;
-        sceneGraph._drawCommands = [];
         frameState.commandList = [];
         scene.renderForSpecs();
-        expect(sceneGraph._drawCommands.length).toEqual(1);
+
+        var drawCommands = sceneGraph.getDrawCommands();
+
+        expect(drawCommands.length).toEqual(1);
+        expect(drawCommands[0].pass).toEqual(Pass.TRANSLUCENT);
         expect(frameState.commandList.length).toEqual(1);
-        expect(sceneGraph._drawCommands[0].pass).toEqual(Pass.TRANSLUCENT);
       });
     });
 
@@ -124,13 +129,14 @@ describe(
         var sceneGraph = model._sceneGraph;
         // Reset the draw commands so we can inspect the draw command generation.
         model._drawCommandsBuilt = false;
-        sceneGraph._drawCommands = [];
         frameState.commandList = [];
         scene.renderForSpecs();
-        expect(sceneGraph._drawCommands.length).toEqual(2);
+
+        var drawCommands = sceneGraph.getDrawCommands();
+        expect(drawCommands.length).toEqual(2);
+        expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
+        expect(drawCommands[1].pass).toEqual(Pass.TRANSLUCENT);
         expect(frameState.commandList.length).toEqual(2);
-        expect(sceneGraph._drawCommands[0].pass).toEqual(Pass.OPAQUE);
-        expect(sceneGraph._drawCommands[1].pass).toEqual(Pass.TRANSLUCENT);
       });
     });
 
@@ -138,6 +144,10 @@ describe(
       spyOn(
         ModelExperimentalSceneGraph.prototype,
         "buildDrawCommands"
+      ).and.callThrough();
+      spyOn(
+        ModelExperimentalSceneGraph.prototype,
+        "getDrawCommands"
       ).and.callThrough();
       return loadAndZoomToModelExperimental(
         { gltf: parentGltfUrl },
@@ -157,18 +167,22 @@ describe(
         expect(
           ModelExperimentalSceneGraph.prototype.buildDrawCommands
         ).toHaveBeenCalled();
+        expect(
+          ModelExperimentalSceneGraph.prototype.getDrawCommands
+        ).toHaveBeenCalled();
         expect(frameState.commandList.length).toEqual(primitivesCount);
 
         expect(model._drawCommandsBuilt).toEqual(true);
-        expect(sceneGraph._drawCommands.length).toEqual(primitivesCount);
 
         // Reset the draw command list to see if they're re-built.
         model._drawCommandsBuilt = false;
-        sceneGraph._drawCommands = [];
         frameState.commandList = [];
         scene.renderForSpecs();
         expect(
           ModelExperimentalSceneGraph.prototype.buildDrawCommands
+        ).toHaveBeenCalled();
+        expect(
+          ModelExperimentalSceneGraph.prototype.getDrawCommands
         ).toHaveBeenCalled();
         expect(frameState.commandList.length).toEqual(primitivesCount);
       });
@@ -199,19 +213,18 @@ describe(
       ).then(function (model) {
         var sceneGraph = model._sceneGraph;
         var modelComponents = sceneGraph._modelComponents;
-        var scene = modelComponents.scene;
         var runtimeNodes = sceneGraph._runtimeNodes;
 
-        expect(scene.upAxis).toEqual(Axis.Z);
-        expect(scene.forwardAxis).toEqual(Axis.X);
+        expect(modelComponents.upAxis).toEqual(Axis.Z);
+        expect(modelComponents.forwardAxis).toEqual(Axis.X);
 
-        expect(runtimeNodes[1].modelMatrix).toEqual(
-          modelComponents.nodes[0].matrix
+        expect(runtimeNodes[1].transform).toEqual(
+          ModelExperimentalUtility.getNodeTransform(modelComponents.nodes[0])
         );
-        expect(runtimeNodes[0].modelMatrix).toEqual(
-          Matrix4.multiplyByTranslation(
-            runtimeNodes[1].modelMatrix,
-            modelComponents.nodes[1].translation,
+        expect(runtimeNodes[0].transform).toEqual(
+          Matrix4.multiplyTransformation(
+            runtimeNodes[1].transform,
+            ModelExperimentalUtility.getNodeTransform(modelComponents.nodes[1]),
             new Matrix4()
           )
         );

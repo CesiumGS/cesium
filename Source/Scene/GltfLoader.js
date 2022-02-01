@@ -70,6 +70,7 @@ var GltfLoaderState = {
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  * @param {Boolean} [options.loadAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers.
+ * @param {Boolean} [options.renameBatchIdSemantic=false] If true, rename _BATCHID or BATCHID to FEATURE_ID_0. This is used for .b3dm models
  *
  * @private
  */
@@ -87,6 +88,10 @@ export default function GltfLoader(options) {
   var upAxis = defaultValue(options.upAxis, Axis.Y);
   var forwardAxis = defaultValue(options.forwardAxis, Axis.Z);
   var loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
+  var renameBatchIdSemantic = defaultValue(
+    options.renameBatchIdSemantic,
+    false
+  );
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltfResource", gltfResource);
@@ -104,6 +109,7 @@ export default function GltfLoader(options) {
   this._upAxis = upAxis;
   this._forwardAxis = forwardAxis;
   this._loadAsTypedArray = loadAsTypedArray;
+  this._renameBatchIdSemantic = renameBatchIdSemantic;
 
   // When loading EXT_feature_metadata, the feature tables and textures
   // are now stored as arrays like the newer EXT_mesh_features extension.
@@ -116,7 +122,6 @@ export default function GltfLoader(options) {
   this._textureState = GltfLoaderState.UNLOADED;
   this._promise = when.defer();
   this._texturesLoadedPromise = when.defer();
-  this._transform = Matrix4.IDENTITY;
 
   // Loaders that need to be processed before the glTF becomes ready
   this._textureLoaders = [];
@@ -191,22 +196,6 @@ Object.defineProperties(GltfLoader.prototype, {
   texturesLoadedPromise: {
     get: function () {
       return this._texturesLoadedPromise.promise;
-    },
-  },
-
-  /**
-   * A world-space transform to apply to the primitives.
-   *
-   * @memberof GltfLoader.prototype
-   *
-   * @type {Matrix4}
-   * @default {@link Matrix4.IDENTITY}
-   * @readonly
-   * @private
-   */
-  transform: {
-    get: function () {
-      return this._transform;
     },
   },
 });
@@ -520,6 +509,15 @@ function loadAttribute(
 ) {
   var accessor = gltf.accessors[accessorId];
   var bufferViewId = accessor.bufferView;
+
+  // For .b3dm, rename _BATCHID (or the legacy BATCHID) to FEATURE_ID_0
+  // for compatibility with EXT_feature_metadata
+  if (
+    loader._renameBatchIdSemantic &&
+    (gltfSemantic === "_BATCHID" || gltfSemantic === "BATCHID")
+  ) {
+    gltfSemantic = "FEATURE_ID_0";
+  }
 
   var name = gltfSemantic;
   var semantic = semanticType.fromGltfSemantic(gltfSemantic);
@@ -1344,10 +1342,8 @@ function getSceneNodeIds(gltf) {
   return nodesIds;
 }
 
-function loadScene(gltf, nodes, upAxis, forwardAxis) {
+function loadScene(gltf, nodes) {
   var scene = new Scene();
-  scene.upAxis = upAxis;
-  scene.forwardAxis = forwardAxis;
   var sceneNodeIds = getSceneNodeIds(gltf);
   scene.nodes = sceneNodeIds.map(function (sceneNodeId) {
     return nodes[sceneNodeId];
@@ -1376,13 +1372,13 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
   }
 
   var nodes = loadNodes(loader, gltf, supportedImageFormats, frameState);
-  var upAxis = loader._upAxis;
-  var forwardAxis = loader._forwardAxis;
-  var scene = loadScene(gltf, nodes, upAxis, forwardAxis);
+  var scene = loadScene(gltf, nodes);
 
   var components = new Components();
   components.scene = scene;
   components.nodes = nodes;
+  components.upAxis = loader._upAxis;
+  components.forwardAxis = loader._forwardAxis;
 
   loader._components = components;
 

@@ -7,8 +7,11 @@ import ModelExperimentalVS from "../../Shaders/ModelExperimental/ModelExperiment
 import Pass from "../../Renderer/Pass.js";
 import RenderState from "../../Renderer/RenderState.js";
 import RuntimeError from "../../Core/RuntimeError.js";
+import StencilConstants from "../StencilConstants.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import VertexArray from "../../Renderer/VertexArray.js";
+import BoundingSphere from "../../Core/BoundingSphere.js";
+import Matrix4 from "../../Core/Matrix4.js";
 
 /**
  * Builds the DrawCommands for a {@link ModelExperimentalPrimitive} using its render resources.
@@ -41,18 +44,38 @@ export default function buildDrawCommands(
   var model = primitiveRenderResources.model;
   model._resources.push(vertexArray);
 
-  var renderState = RenderState.fromCache(
-    primitiveRenderResources.renderStateOptions
-  );
+  var renderState = primitiveRenderResources.renderStateOptions;
+
+  if (model.opaquePass === Pass.CESIUM_3D_TILE) {
+    // Set stencil values for classification on 3D Tiles
+    renderState = clone(renderState, true);
+    renderState.stencilTest = StencilConstants.setCesium3DTileBit();
+    renderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+  }
+
+  renderState = RenderState.fromCache(renderState);
 
   var shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
   model._resources.push(shaderProgram);
 
   var pass = primitiveRenderResources.alphaOptions.pass;
 
+  var sceneGraph = model.sceneGraph;
+  var modelMatrix = Matrix4.multiply(
+    sceneGraph.computedModelMatrix,
+    primitiveRenderResources.transform,
+    new Matrix4()
+  );
+
+  BoundingSphere.transform(
+    primitiveRenderResources.boundingSphere,
+    modelMatrix,
+    primitiveRenderResources.boundingSphere
+  );
+
   var command = new DrawCommand({
     boundingVolume: primitiveRenderResources.boundingSphere,
-    modelMatrix: primitiveRenderResources.modelMatrix,
+    modelMatrix: modelMatrix,
     uniformMap: primitiveRenderResources.uniformMap,
     renderState: renderState,
     vertexArray: vertexArray,

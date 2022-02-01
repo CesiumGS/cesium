@@ -381,7 +381,7 @@ function createLineString(
     var opacity = properties["stroke-opacity"];
     if (defined(opacity) && opacity !== 1.0) {
       if (!defined(color)) {
-        color = material.color.clone();
+        color = material.color.getValue().clone();
       }
       color.alpha = opacity;
     }
@@ -460,7 +460,7 @@ function createPolygon(dataSource, geoJson, crsFunction, coordinates, options) {
     var opacity = properties["stroke-opacity"];
     if (defined(opacity) && opacity !== 1.0) {
       if (!defined(color)) {
-        color = options.strokeMaterialProperty.color.clone();
+        color = outlineColorProperty.getValue().clone();
       }
       color.alpha = opacity;
     }
@@ -471,14 +471,15 @@ function createPolygon(dataSource, geoJson, crsFunction, coordinates, options) {
 
     var fillColor;
     var fill = properties.fill;
+    var materialColor = material.color.getValue();
     if (defined(fill)) {
       fillColor = Color.fromCssColorString(fill);
-      fillColor.alpha = material.color.alpha;
+      fillColor.alpha = materialColor.alpha;
     }
     opacity = properties["fill-opacity"];
-    if (defined(opacity) && opacity !== material.color.alpha) {
+    if (defined(opacity) && opacity !== materialColor.alpha) {
       if (!defined(fillColor)) {
-        fillColor = material.color.clone();
+        fillColor = materialColor.clone();
       }
       fillColor.alpha = opacity;
     }

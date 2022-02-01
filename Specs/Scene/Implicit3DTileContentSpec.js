@@ -1052,7 +1052,7 @@ describe(
               expect(contents[0].groupMetadata).toBe(ground);
               expect(contents[1].groupMetadata).toBe(sky);
             } else {
-              // parent tile is a single B3DM tile
+              // parent tile is a single b3dm tile
               expect(tile.content.groupMetadata).toBe(ground);
             }
           });
