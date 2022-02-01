@@ -11,7 +11,7 @@ import { RequestErrorEvent } from "../../Source/Cesium.js";
 import { RuntimeError } from "../../Source/Cesium.js";
 import { VerticalOrigin } from "../../Source/Cesium.js";
 
-describe("DataSources/GpxDataSource", function () {
+fdescribe("DataSources/GpxDataSource", function () {
   const parser = new DOMParser();
 
   it("default constructor has expected values", function () {
@@ -23,6 +23,7 @@ describe("DataSources/GpxDataSource", function () {
     expect(dataSource.changedEvent).toBeInstanceOf(Event);
     expect(dataSource.errorEvent).toBeInstanceOf(Event);
     expect(dataSource.loadingEvent).toBeInstanceOf(Event);
+    expect(dataSource.show).toBe(true);
   });
 
   it("load throws with undefined GPX", function () {
@@ -949,6 +950,31 @@ describe("DataSources/GpxDataSource", function () {
       const entity = entities[0];
       expect(entity.polyline).toBeDefined();
       expect(entity.polyline.clampToGround.getValue()).toEqual(true);
+    });
+  });
+
+  it("update returns true", function () {
+    const gpx =
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+          <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
+              <trk>\
+              <name>Test Track</name>\
+                  <trkseg>\
+                      <trkpt lon="1" lat="2">\
+                          <ele>1.0</ele>\
+                          <name>Position 1</name>\
+                      </trkpt>\
+                      <trkpt lon="3" lat="4">\
+                          <ele>1.0</ele>\
+                          <name>Position 2</name>\
+                          </trkpt>\
+                  </trkseg>\
+              </trk>\
+          </gpx>';
+    return GpxDataSource.load(parser.parseFromString(gpx, "text/xml"), {
+      clampToGround: true,
+    }).then(function (dataSource) {
+      expect(dataSource.update()).toBe(true);
     });
   });
 });

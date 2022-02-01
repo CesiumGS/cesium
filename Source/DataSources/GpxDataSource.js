@@ -292,9 +292,6 @@ function processDescription(node, entity) {
 
 function processWpt(dataSource, geometryNode, entityCollection, options) {
   const position = readCoordinateFromNode(geometryNode);
-  if (!defined(position)) {
-    throw new DeveloperError("Position Coordinates are required.");
-  }
 
   const entity = getOrCreateEntity(geometryNode, entityCollection);
   entity.position = position;
@@ -401,9 +398,6 @@ function processTrkSeg(node) {
   let time;
   for (let i = 0; i < trackPoints.length; i++) {
     const position = readCoordinateFromNode(trackPoints[i]);
-    if (!defined(position)) {
-      throw new DeveloperError("Trkpt: Position Coordinates are required.");
-    }
     result.positions.push(position);
 
     time = queryStringValue(trackPoints[i], "time", namespaces.gpx);
@@ -581,7 +575,7 @@ function loadGpx(dataSource, gpx, options) {
   if (element.localName === "gpx") {
     processGpx(dataSource, element, entityCollection, options);
   } else {
-    window.console.log("GPX - Unsupported node: " + element.localName);
+    console.log("GPX - Unsupported node: " + element.localName);
   }
 
   let clock;
@@ -1020,7 +1014,7 @@ GpxDataSource.prototype.load = function (data, options) {
     .otherwise(function (error) {
       DataSource.setLoading(that, false);
       that._error.raiseEvent(that, error);
-      window.console.log(error);
+      console.log(error);
       return when.reject(error);
     });
 };
