@@ -17,9 +17,14 @@ import StencilOperation from "./StencilOperation.js";
  * @private
  */
 function GlobeDepth() {
+  this._picking = false;
   this._numSamples = 1;
   this._tempCopyDepthTexture = undefined;
 
+  this._pickColorFramebuffer = new FramebufferManager({
+    depthStencil: true,
+    supportsDepthTexture: true,
+  });
   this._colorFramebuffer = new FramebufferManager({
     depthStencil: true,
     supportsDepthTexture: true,
@@ -51,19 +56,35 @@ function GlobeDepth() {
 }
 
 Object.defineProperties(GlobeDepth.prototype, {
+  colorFramebufferManager: {
+    get: function () {
+      return this._picking
+        ? this._pickColorFramebuffer
+        : this._colorFramebuffer;
+    },
+  },
   framebuffer: {
     get: function () {
-      return this._colorFramebuffer.framebuffer;
+      return this.colorFramebufferManager.framebuffer;
     },
   },
   depthStencilTexture: {
     get: function () {
-      return this._colorFramebuffer.getDepthStencilTexture();
+      return this.colorFramebufferManager.getDepthStencilTexture();
+    },
+  },
+  picking: {
+    get: function () {
+      return this._picking;
+    },
+    set: function (value) {
+      this._picking = value;
     },
   },
 });
 
 function destroyFramebuffers(globeDepth) {
+  globeDepth._pickColorFramebuffer.destroy();
   globeDepth._colorFramebuffer.destroy();
   globeDepth._copyDepthFramebuffer.destroy();
   globeDepth._tempCopyDepthFramebuffer.destroy();
@@ -140,7 +161,7 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
       {
         uniformMap: {
           u_depthTexture: function () {
-            return globeDepth._colorFramebuffer.getDepthStencilTexture();
+            return globeDepth.colorFramebufferManager.getDepthStencilTexture();
           },
         },
         owner: globeDepth,
@@ -158,7 +179,7 @@ function updateCopyCommands(globeDepth, context, width, height, passState) {
       {
         uniformMap: {
           colorTexture: function () {
-            return globeDepth._colorFramebuffer.getColorTexture();
+            return globeDepth.colorFramebufferManager.getColorTexture();
           },
         },
         owner: globeDepth,
@@ -232,13 +253,17 @@ GlobeDepth.prototype.update = function (
       : PixelDatatype.FLOAT
     : PixelDatatype.UNSIGNED_BYTE;
   this._numSamples = numSamples;
-  this._colorFramebuffer.update(
-    context,
-    width,
-    height,
-    numSamples,
-    pixelDatatype
-  );
+  if (this.picking) {
+    this._pickColorFramebuffer.update(context, width, height, 1, pixelDatatype);
+  } else {
+    this._colorFramebuffer.update(
+      context,
+      width,
+      height,
+      numSamples,
+      pixelDatatype
+    );
+  }
   this._copyDepthFramebuffer.update(context, width, height);
   updateCopyCommands(this, context, width, height, passState);
   context.uniformState.globeDepthTexture = undefined;
@@ -248,7 +273,7 @@ GlobeDepth.prototype.update = function (
 };
 
 GlobeDepth.prototype.prepareColorTextures = function (context) {
-  if (this._numSamples > 1) {
+  if (!this.picking && this._numSamples > 1) {
     this._colorFramebuffer.prepareTextures(context);
   }
 };
@@ -272,7 +297,7 @@ GlobeDepth.prototype.executeUpdateDepth = function (
     : passState.framebuffer.depthStencilTexture;
   if (
     clearGlobeDepth ||
-    depthTextureToCopy !== this._colorFramebuffer.getDepthStencilTexture()
+    depthTextureToCopy !== this.colorFramebufferManager.getDepthStencilTexture()
   ) {
     // First copy the depth to a temporary globe depth texture, then update the
     // main globe depth texture where the stencil bit for 3D Tiles is set.
@@ -321,7 +346,7 @@ GlobeDepth.prototype.clear = function (context, passState, clearColor) {
   const clear = this._clearGlobeColorCommand;
   if (defined(clear)) {
     Color.clone(clearColor, clear.color);
-    this._colorFramebuffer.clear(context, clear, passState);
+    this.colorFramebufferManager.clear(context, clear, passState);
   }
 };
 

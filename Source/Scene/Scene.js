@@ -150,7 +150,6 @@ const requestRenderAfterFrame = function (scene) {
  * });
  */
 function Scene(options) {
-  this._samplesDirty = false;
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const canvas = options.canvas;
   let creditContainer = options.creditContainer;
@@ -3352,14 +3351,12 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
 
   const passes = scene._frameState.passes;
   const picking = passes.pick;
+  if (defined(view.globeDepth)) {
+    view.globeDepth.picking = picking;
+  }
   const useWebVR = environmentState.useWebVR;
 
   const originalSamples = scene.numberSamples;
-  if (picking) {
-    scene.numberSamples = 1;
-    scene.samplesDirty =
-      defined(view.oit) && view.oit.numSamples !== scene.numberSamples;
-  }
 
   // Preserve the reference to the original framebuffer.
   environmentState.originalFramebuffer = passState.framebuffer;
@@ -3408,9 +3405,9 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
     oit.update(
       context,
       passState,
-      view.globeDepth._colorFramebuffer,
+      view.globeDepth.colorFramebufferManager,
       scene._hdr,
-      scene.samplesDirty
+      scene.numberSamples
     );
     oit.clear(context, passState, clearColor);
     environmentState.useOIT = oit.isSupported();
@@ -3470,7 +3467,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
       scene._invertClassification.update(
         context,
         scene.numberSamples,
-        view.globeDepth._colorFramebuffer
+        view.globeDepth.colorFramebufferManager
       );
       scene._invertClassification.clear(context, passState);
 
@@ -3518,7 +3515,7 @@ Scene.prototype.resolveFramebuffers = function (passState) {
 
   const defaultFramebuffer = environmentState.originalFramebuffer;
   const globeFramebuffer = useGlobeDepthFramebuffer
-    ? globeDepth._colorFramebuffer
+    ? globeDepth.colorFramebufferManager
     : undefined;
   const sceneFramebuffer = view.sceneFramebuffer._colorFramebuffer;
   const idFramebuffer = view.sceneFramebuffer.idFramebuffer;
