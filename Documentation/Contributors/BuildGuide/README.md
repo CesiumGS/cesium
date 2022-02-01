@@ -8,7 +8,7 @@
 
 ## Quickstart
 
-1. [Clone the Reop](#get-the-code)
+1. [Clone the repository](#get-the-code)
 
 2. [Build](#build-the-code)
 
