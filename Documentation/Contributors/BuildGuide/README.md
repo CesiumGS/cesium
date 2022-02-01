@@ -17,7 +17,7 @@
     npm run build
    ```
 
-3. Start the Server
+3. Start the server
 
    ```
    npm start
