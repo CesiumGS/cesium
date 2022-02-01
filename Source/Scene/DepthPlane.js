@@ -125,6 +125,7 @@ DepthPlane.prototype.update = function (frameState) {
 
   const context = frameState.context;
 
+  // Allow offsetting the ellipsoid radius to avoid rendering artefacts below ellipsoid zero elevation.
   const radii = frameState.mapProjection.ellipsoid.radii;
   const ellipsoid = new Ellipsoid(
     radii.x + this._ellipsoidOffset,
