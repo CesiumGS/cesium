@@ -408,7 +408,7 @@ function processTrkSeg(node) {
   return result;
 }
 
-// Processes a metadaType node and returns a metadata object
+// Processes a metadataType node and returns a metadata object
 // {@link http://www.topografix.com/gpx/1/1/#type_metadataType|GPX Schema}
 function processMetadata(node) {
   const metadataNode = queryFirstNode(node, "metadata", namespaces.gpx);
