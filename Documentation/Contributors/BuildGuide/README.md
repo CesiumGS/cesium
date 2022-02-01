@@ -25,7 +25,7 @@
 
 4. Navigate to : [` http://localhost:8080/`](http://localhost:8080)
 
-_NOTE: If you change branchs, you might have to rebuild._
+_NOTE: If you change branches, you might have to rebuild._
 
 ---
 
