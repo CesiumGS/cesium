@@ -1962,6 +1962,7 @@ describe(
       return checkDebugColorizeTiles(pointCloudUrl);
     });
 
+    // see https://github.com/CesiumGS/cesium/issues/10061
     xit("debugColorizeTiles for glTF", function () {
       viewGltfContent();
       return checkDebugColorizeTiles(gltfContentUrl);
@@ -2583,6 +2584,7 @@ describe(
       return testBackFaceCulling(withoutBatchTableUrl, setViewOptions);
     });
 
+    // see https://github.com/CesiumGS/cesium/issues/10056
     xit("renders glTF tileset when back face culling is disabled", function () {
       const setViewOptions = {
         destination: new Cartesian3(
