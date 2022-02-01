@@ -21,8 +21,8 @@ import createScene from "../createScene.js";
 describe(
   "DataSources/CylinderGeometryUpdater",
   function () {
-    var scene;
-    var time;
+    let scene;
+    let time;
 
     beforeAll(function () {
       scene = createScene();
@@ -34,12 +34,12 @@ describe(
     });
 
     function createBasicCylinder() {
-      var cylinder = new CylinderGraphics();
+      const cylinder = new CylinderGraphics();
       cylinder.length = new ConstantProperty(1000);
       cylinder.topRadius = new ConstantProperty(1000);
       cylinder.bottomRadius = new ConstantProperty(1000);
 
-      var entity = new Entity();
+      const entity = new Entity();
       entity.position = new ConstantPositionProperty(
         Cartesian3.fromDegrees(0, 0, 0)
       );
@@ -48,14 +48,14 @@ describe(
     }
 
     function createDynamicCylinder() {
-      var entity = createBasicCylinder();
+      const entity = createBasicCylinder();
       entity.cylinder.topRadius = createDynamicProperty(4);
       return entity;
     }
 
     it("No geometry available when topRadius is undefined", function () {
-      var entity = createBasicCylinder();
-      var updater = new CylinderGeometryUpdater(entity, scene);
+      const entity = createBasicCylinder();
+      const updater = new CylinderGeometryUpdater(entity, scene);
       entity.cylinder.topRadius = undefined;
       updater._onEntityPropertyChanged(entity, "cylinder");
 
@@ -65,8 +65,8 @@ describe(
     });
 
     it("No geometry available when bottomRadius is undefined", function () {
-      var entity = createBasicCylinder();
-      var updater = new CylinderGeometryUpdater(entity, scene);
+      const entity = createBasicCylinder();
+      const updater = new CylinderGeometryUpdater(entity, scene);
       entity.cylinder.bottomRadius = undefined;
       updater._onEntityPropertyChanged(entity, "cylinder");
 
@@ -76,8 +76,8 @@ describe(
     });
 
     it("A time-varying position causes geometry to be dynamic", function () {
-      var entity = createBasicCylinder();
-      var updater = new CylinderGeometryUpdater(entity, scene);
+      const entity = createBasicCylinder();
+      const updater = new CylinderGeometryUpdater(entity, scene);
       entity.position = new SampledPositionProperty();
       entity.position.addSample(time, Cartesian3.ZERO);
       updater._onEntityPropertyChanged(entity, "position");
@@ -86,8 +86,8 @@ describe(
     });
 
     it("A time-varying bottomRadius causes geometry to be dynamic", function () {
-      var entity = createBasicCylinder();
-      var updater = new CylinderGeometryUpdater(entity, scene);
+      const entity = createBasicCylinder();
+      const updater = new CylinderGeometryUpdater(entity, scene);
       entity.cylinder.bottomRadius = new SampledProperty(Number);
       entity.cylinder.bottomRadius.addSample(time, 1);
       updater._onEntityPropertyChanged(entity, "cylinder");
@@ -96,8 +96,8 @@ describe(
     });
 
     it("A time-varying topRadius causes geometry to be dynamic", function () {
-      var entity = createBasicCylinder();
-      var updater = new CylinderGeometryUpdater(entity, scene);
+      const entity = createBasicCylinder();
+      const updater = new CylinderGeometryUpdater(entity, scene);
       entity.cylinder.topRadius = new SampledProperty(Number);
       entity.cylinder.topRadius.addSample(time, 1);
       updater._onEntityPropertyChanged(entity, "cylinder");
@@ -106,8 +106,8 @@ describe(
     });
 
     it("A time-varying length causes geometry to be dynamic", function () {
-      var entity = createBasicCylinder();
-      var updater = new CylinderGeometryUpdater(entity, scene);
+      const entity = createBasicCylinder();
+      const updater = new CylinderGeometryUpdater(entity, scene);
       entity.cylinder.length = new SampledProperty(Number);
       entity.cylinder.length.addSample(time, 1);
       updater._onEntityPropertyChanged(entity, "cylinder");
@@ -116,8 +116,8 @@ describe(
     });
 
     it("A time-varying numberOfVerticalLines causes geometry to be dynamic", function () {
-      var entity = createBasicCylinder();
-      var updater = new CylinderGeometryUpdater(entity, scene);
+      const entity = createBasicCylinder();
+      const updater = new CylinderGeometryUpdater(entity, scene);
       entity.cylinder.numberOfVerticalLines = new SampledProperty(Number);
       entity.cylinder.numberOfVerticalLines.addSample(time, 1);
       updater._onEntityPropertyChanged(entity, "cylinder");
@@ -126,17 +126,17 @@ describe(
     });
 
     it("Creates geometry with expected properties", function () {
-      var options = {
+      const options = {
         length: 1,
         topRadius: 3,
         bottomRadius: 2,
         numberOfVerticalLines: 15,
       };
-      var entity = new Entity();
+      const entity = new Entity();
       entity.position = new ConstantPositionProperty(new Cartesian3(4, 5, 6));
       entity.orientation = new ConstantProperty(Quaternion.IDENTITY);
 
-      var cylinder = new CylinderGraphics();
+      const cylinder = new CylinderGraphics();
       cylinder.outline = true;
       cylinder.numberOfVerticalLines = new ConstantProperty(
         options.numberOfVerticalLines
@@ -146,10 +146,10 @@ describe(
       cylinder.bottomRadius = new ConstantProperty(options.bottomRadius);
       entity.cylinder = cylinder;
 
-      var updater = new CylinderGeometryUpdater(entity, scene);
+      const updater = new CylinderGeometryUpdater(entity, scene);
 
-      var instance;
-      var geometry;
+      let instance;
+      let geometry;
       instance = updater.createFillGeometryInstance(time);
       geometry = instance.geometry;
       expect(geometry._topRadius).toEqual(options.topRadius);
@@ -169,15 +169,15 @@ describe(
     });
 
     it("Creates geometry with expected offsetAttribute", function () {
-      var entity = createBasicCylinder();
-      var graphics = entity.cylinder;
+      const entity = createBasicCylinder();
+      const graphics = entity.cylinder;
       graphics.outline = true;
       graphics.outlineColor = Color.BLACK;
       graphics.height = new ConstantProperty(20.0);
       graphics.extrudedHeight = new ConstantProperty(0.0);
-      var updater = new CylinderGeometryUpdater(entity, getScene());
+      const updater = new CylinderGeometryUpdater(entity, getScene());
 
-      var instance;
+      let instance;
 
       updater._onEntityPropertyChanged(entity, "cylinder");
       instance = updater.createFillGeometryInstance(time);
@@ -220,23 +220,23 @@ describe(
     });
 
     it("dynamic updater sets properties", function () {
-      var cylinder = new CylinderGraphics();
+      const cylinder = new CylinderGraphics();
       cylinder.topRadius = createDynamicProperty(2);
       cylinder.bottomRadius = createDynamicProperty(1);
       cylinder.length = createDynamicProperty(3);
 
-      var entity = new Entity();
+      const entity = new Entity();
       entity.position = createDynamicProperty(Cartesian3.UNIT_Z);
       entity.orientation = createDynamicProperty(Quaternion.IDENTITY);
       entity.cylinder = cylinder;
 
-      var updater = new CylinderGeometryUpdater(entity, scene);
-      var dynamicUpdater = updater.createDynamicUpdater(
+      const updater = new CylinderGeometryUpdater(entity, scene);
+      const dynamicUpdater = updater.createDynamicUpdater(
         new PrimitiveCollection(),
         new PrimitiveCollection()
       );
       dynamicUpdater.update(JulianDate.now());
-      var options = dynamicUpdater._options;
+      const options = dynamicUpdater._options;
       expect(options.topRadius).toEqual(cylinder.topRadius.getValue());
       expect(options.bottomRadius).toEqual(cylinder.bottomRadius.getValue());
       expect(options.length).toEqual(cylinder.length.getValue());
@@ -244,9 +244,9 @@ describe(
     });
 
     it("geometryChanged event is raised when expected", function () {
-      var entity = createBasicCylinder();
-      var updater = new CylinderGeometryUpdater(entity, scene);
-      var listener = jasmine.createSpy("listener");
+      const entity = createBasicCylinder();
+      const updater = new CylinderGeometryUpdater(entity, scene);
+      const listener = jasmine.createSpy("listener");
       updater.geometryChanged.addEventListener(listener);
 
       entity.position = new ConstantPositionProperty(Cartesian3.UNIT_Z);
@@ -281,8 +281,8 @@ describe(
     });
 
     it("computes center", function () {
-      var entity = createBasicCylinder();
-      var updater = new CylinderGeometryUpdater(entity, scene);
+      const entity = createBasicCylinder();
+      const updater = new CylinderGeometryUpdater(entity, scene);
 
       expect(updater._computeCenter(time)).toEqual(
         entity.position.getValue(time)

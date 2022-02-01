@@ -24,8 +24,8 @@ import ModelExperimentalType from "./ModelExperimentalType.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelFeatureTable(options) {
-  var model = options.model;
-  var propertyTable = options.propertyTable;
+  const model = options.model;
+  const propertyTable = options.propertyTable;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("propertyTable", propertyTable);
@@ -97,18 +97,18 @@ Object.defineProperties(ModelFeatureTable.prototype, {
 });
 
 function initialize(modelFeatureTable) {
-  var model = modelFeatureTable._model;
-  var is3DTiles = ModelExperimentalType.is3DTiles(model.type);
+  const model = modelFeatureTable._model;
+  const is3DTiles = ModelExperimentalType.is3DTiles(model.type);
 
-  var featuresLength = modelFeatureTable._propertyTable.count;
+  const featuresLength = modelFeatureTable._propertyTable.count;
   if (featuresLength === 0) {
     return;
   }
 
-  var i;
-  var features = new Array(featuresLength);
+  let i;
+  const features = new Array(featuresLength);
   if (is3DTiles) {
-    var content = model.content;
+    const content = model.content;
     for (i = 0; i < featuresLength; i++) {
       features[i] = new Cesium3DTileFeature(content, i);
     }
@@ -146,7 +146,7 @@ ModelFeatureTable.prototype.update = function (frameState) {
   this._styleCommandsNeededDirty = false;
   this._batchTexture.update(undefined, frameState);
 
-  var currentStyleCommandsNeeded = StyleCommandsNeeded.getStyleCommandsNeeded(
+  const currentStyleCommandsNeeded = StyleCommandsNeeded.getStyleCommandsNeeded(
     this._featuresLength,
     this._batchTexture.translucentFeaturesLength
   );
@@ -212,7 +212,7 @@ ModelFeatureTable.prototype.setProperty = function (featureId, name, value) {
   return this._propertyTable.setProperty(featureId, name, value);
 };
 
-var scratchColor = new Color();
+const scratchColor = new Color();
 /**
  * @private
  */
@@ -223,15 +223,15 @@ ModelFeatureTable.prototype.applyStyle = function (style) {
     return;
   }
 
-  for (var i = 0; i < this._featuresLength; i++) {
-    var feature = this.getFeature(i);
-    var color = defined(style.color)
+  for (let i = 0; i < this._featuresLength; i++) {
+    const feature = this.getFeature(i);
+    const color = defined(style.color)
       ? defaultValue(
           style.color.evaluateColor(feature, scratchColor),
           BatchTexture.DEFAULT_COLOR_VALUE
         )
       : BatchTexture.DEFAULT_COLOR_VALUE;
-    var show = defined(style.show)
+    const show = defined(style.show)
       ? defaultValue(
           style.show.evaluate(feature),
           BatchTexture.DEFAULT_SHOW_VALUE

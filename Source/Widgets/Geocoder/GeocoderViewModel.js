@@ -16,7 +16,7 @@ import createCommand from "../createCommand.js";
 import getElement from "../getElement.js";
 
 // The height we use if geocoding to a specific point instead of an rectangle.
-var DEFAULT_HEIGHT = 1000;
+const DEFAULT_HEIGHT = 1000;
 
 /**
  * The view model for the {@link Geocoder} widget.
@@ -61,12 +61,12 @@ function GeocoderViewModel(options) {
   this._handleArrowDown = handleArrowDown;
   this._handleArrowUp = handleArrowUp;
 
-  var that = this;
+  const that = this;
 
   this._suggestionsVisible = knockout.pureComputed(function () {
-    var suggestions = knockout.getObservable(that, "_suggestions");
-    var suggestionsNotEmpty = suggestions().length > 0;
-    var showSuggestions = knockout.getObservable(that, "_showSuggestions")();
+    const suggestions = knockout.getObservable(that, "_suggestions");
+    const suggestionsNotEmpty = suggestions().length > 0;
+    const showSuggestions = knockout.getObservable(that, "_showSuggestions")();
     return suggestionsNotEmpty && showSuggestions;
   });
 
@@ -90,9 +90,9 @@ function GeocoderViewModel(options) {
   };
 
   this.handleKeyDown = function (data, event) {
-    var downKey =
+    const downKey =
       event.key === "ArrowDown" || event.key === "Down" || event.keyCode === 40;
-    var upKey =
+    const upKey =
       event.key === "ArrowUp" || event.key === "Up" || event.keyCode === 38;
     if (downKey || upKey) {
       event.preventDefault();
@@ -102,11 +102,11 @@ function GeocoderViewModel(options) {
   };
 
   this.handleKeyUp = function (data, event) {
-    var downKey =
+    const downKey =
       event.key === "ArrowDown" || event.key === "Down" || event.keyCode === 40;
-    var upKey =
+    const upKey =
       event.key === "ArrowUp" || event.key === "Up" || event.keyCode === 38;
-    var enterKey = event.key === "Enter" || event.keyCode === 13;
+    const enterKey = event.key === "Enter" || event.keyCode === 13;
     if (upKey) {
       handleArrowUp(that);
     } else if (downKey) {
@@ -120,7 +120,7 @@ function GeocoderViewModel(options) {
   this.activateSuggestion = function (data) {
     that.hideSuggestions();
     that._searchText = data.displayName;
-    var destination = data.destination;
+    const destination = data.destination;
     clearSuggestions(that);
     that.destinationFound(that, destination);
   };
@@ -176,7 +176,7 @@ function GeocoderViewModel(options) {
     "_focusTextbox",
   ]);
 
-  var searchTextObservable = knockout.getObservable(this, "_searchText");
+  const searchTextObservable = knockout.getObservable(this, "_searchText");
   searchTextObservable.extend({ rateLimit: { timeout: 500 } });
   this._suggestionSubscription = searchTextObservable.subscribe(function () {
     GeocoderViewModel._updateSearchSuggestions(that);
@@ -317,15 +317,14 @@ function handleArrowUp(viewModel) {
   if (viewModel._suggestions.length === 0) {
     return;
   }
-  var next;
-  var currentIndex = viewModel._suggestions.indexOf(
+  const currentIndex = viewModel._suggestions.indexOf(
     viewModel._selectedSuggestion
   );
   if (currentIndex === -1 || currentIndex === 0) {
     viewModel._selectedSuggestion = undefined;
     return;
   }
-  next = currentIndex - 1;
+  const next = currentIndex - 1;
   viewModel._selectedSuggestion = viewModel._suggestions[next];
   GeocoderViewModel._adjustSuggestionsScroll(viewModel, next);
 }
@@ -334,18 +333,18 @@ function handleArrowDown(viewModel) {
   if (viewModel._suggestions.length === 0) {
     return;
   }
-  var numberOfSuggestions = viewModel._suggestions.length;
-  var currentIndex = viewModel._suggestions.indexOf(
+  const numberOfSuggestions = viewModel._suggestions.length;
+  const currentIndex = viewModel._suggestions.indexOf(
     viewModel._selectedSuggestion
   );
-  var next = (currentIndex + 1) % numberOfSuggestions;
+  const next = (currentIndex + 1) % numberOfSuggestions;
   viewModel._selectedSuggestion = viewModel._suggestions[next];
 
   GeocoderViewModel._adjustSuggestionsScroll(viewModel, next);
 }
 
 function computeFlyToLocationForCartographic(cartographic, terrainProvider) {
-  var availability = defined(terrainProvider)
+  const availability = defined(terrainProvider)
     ? terrainProvider.availability
     : undefined;
 
@@ -364,15 +363,15 @@ function computeFlyToLocationForCartographic(cartographic, terrainProvider) {
 }
 
 function flyToDestination(viewModel, destination) {
-  var scene = viewModel._scene;
-  var mapProjection = scene.mapProjection;
-  var ellipsoid = mapProjection.ellipsoid;
+  const scene = viewModel._scene;
+  const mapProjection = scene.mapProjection;
+  const ellipsoid = mapProjection.ellipsoid;
 
-  var camera = scene.camera;
-  var terrainProvider = scene.terrainProvider;
-  var finalDestination = destination;
+  const camera = scene.camera;
+  const terrainProvider = scene.terrainProvider;
+  let finalDestination = destination;
 
-  var promise;
+  let promise;
   if (destination instanceof Rectangle) {
     // Some geocoders return a Rectangle of zero width/height, treat it like a point instead.
     if (
@@ -427,7 +426,7 @@ function chainPromise(promise, geocoderService, query, geocodeType) {
     ) {
       return result;
     }
-    var nextPromise = geocoderService
+    const nextPromise = geocoderService
       .geocode(query, geocodeType)
       .then(function (result) {
         return { state: "fulfilled", value: result };
@@ -441,7 +440,7 @@ function chainPromise(promise, geocoderService, query, geocodeType) {
 }
 
 function geocode(viewModel, geocoderServices, geocodeType) {
-  var query = viewModel._searchText;
+  const query = viewModel._searchText;
 
   if (hasOnlyWhitespace(query)) {
     viewModel.showSuggestions();
@@ -450,8 +449,8 @@ function geocode(viewModel, geocoderServices, geocodeType) {
 
   viewModel._isSearchInProgress = true;
 
-  var promise = when.resolve();
-  for (var i = 0; i < geocoderServices.length; i++) {
+  let promise = when.resolve();
+  for (let i = 0; i < geocoderServices.length; i++) {
     promise = chainPromise(promise, geocoderServices[i], query, geocodeType);
   }
 
@@ -462,7 +461,7 @@ function geocode(viewModel, geocoderServices, geocodeType) {
     }
     viewModel._isSearchInProgress = false;
 
-    var geocoderResults = result.value;
+    const geocoderResults = result.value;
     if (
       result.state === "fulfilled" &&
       defined(geocoderResults) &&
@@ -477,17 +476,17 @@ function geocode(viewModel, geocoderServices, geocodeType) {
 }
 
 function adjustSuggestionsScroll(viewModel, focusedItemIndex) {
-  var container = getElement(viewModel._viewContainer);
-  var searchResults = container.getElementsByClassName("search-results")[0];
-  var listItems = container.getElementsByTagName("li");
-  var element = listItems[focusedItemIndex];
+  const container = getElement(viewModel._viewContainer);
+  const searchResults = container.getElementsByClassName("search-results")[0];
+  const listItems = container.getElementsByTagName("li");
+  const element = listItems[focusedItemIndex];
 
   if (focusedItemIndex === 0) {
     searchResults.scrollTop = 0;
     return;
   }
 
-  var offsetTop = element.offsetTop;
+  const offsetTop = element.offsetTop;
   if (offsetTop + element.clientHeight > searchResults.clientHeight) {
     searchResults.scrollTop = offsetTop + element.clientHeight;
   } else if (offsetTop < searchResults.scrollTop) {
@@ -516,14 +515,14 @@ function updateSearchSuggestions(viewModel) {
     return;
   }
 
-  var query = viewModel._searchText;
+  const query = viewModel._searchText;
 
   clearSuggestions(viewModel);
   if (hasOnlyWhitespace(query)) {
     return;
   }
 
-  var promise = when.resolve([]);
+  let promise = when.resolve([]);
   viewModel._geocoderServices.forEach(function (service) {
     promise = promise.then(function (results) {
       if (results.length >= 5) {
@@ -538,8 +537,8 @@ function updateSearchSuggestions(viewModel) {
     });
   });
   promise.then(function (results) {
-    var suggestions = viewModel._suggestions;
-    for (var i = 0; i < results.length; i++) {
+    const suggestions = viewModel._suggestions;
+    for (let i = 0; i < results.length; i++) {
       suggestions.push(results[i]);
     }
   });

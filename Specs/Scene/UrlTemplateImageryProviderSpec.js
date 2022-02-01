@@ -38,7 +38,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("resolves readyPromise", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url: "made/up/tms/server/",
     });
 
@@ -49,11 +49,11 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("resolves readyPromise with Resource", function () {
-    var resource = new Resource({
+    const resource = new Resource({
       url: "made/up/tms/server/",
     });
 
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url: resource,
     });
 
@@ -64,7 +64,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("returns valid value for hasAlphaChannel", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url: "made/up/tms/server/",
     });
 
@@ -76,7 +76,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("requestImage returns a promise for an image and loads it for cross-origin use", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url: "made/up/tms/server/{Z}/{X}/{reverseY}",
     });
 
@@ -115,14 +115,14 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("when no credit is supplied, the provider has no logo", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url: "made/up/tms/server",
     });
     expect(provider.credit).toBeUndefined();
   });
 
   it("turns the supplied credit into a logo", function () {
-    var providerWithCredit = new UrlTemplateImageryProvider({
+    const providerWithCredit = new UrlTemplateImageryProvider({
       url: "made/up/gms/server",
       credit: "Thanks to our awesome made up source of this imagery!",
     });
@@ -130,8 +130,8 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("rectangle passed to constructor does not affect tile numbering", function () {
-    var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
-    var provider = new UrlTemplateImageryProvider({
+    const rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
+    const provider = new UrlTemplateImageryProvider({
       url: "made/up/tms/server/{z}/{x}/{reverseY}",
       rectangle: rectangle,
     });
@@ -173,7 +173,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("uses minimumLevel and maximumLevel passed to constructor", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url: "made/up/tms/server",
       minimumLevel: 1,
       maximumLevel: 5,
@@ -188,13 +188,13 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("raises error event when image cannot be loaded", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url: "made/up/tms/server",
     });
 
-    var layer = new ImageryLayer(provider);
+    const layer = new ImageryLayer(provider);
 
-    var tries = 0;
+    let tries = 0;
     provider.errorEvent.addEventListener(function (error) {
       expect(error.timesRetried).toEqual(tries);
       ++tries;
@@ -229,7 +229,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     return pollToPromise(function () {
       return provider.ready;
     }).then(function () {
-      var imagery = new Imagery(layer, 0, 0, 0);
+      const imagery = new Imagery(layer, 0, 0, 0);
       imagery.addReference();
       layer._requestImagery(imagery);
       RequestScheduler.update();
@@ -245,7 +245,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("evaluation of pattern X Y reverseX reverseY Z reverseZ", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url:
         "made/up/tms/server/{z}/{reverseZ}/{reverseY}/{y}/{reverseX}/{x}.PNG",
       tilingScheme: new GeographicTilingScheme(),
@@ -278,7 +278,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("evaluation of schema zero padding for X Y Z as 0000", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url:
         "made/up/tms/server/{z}/{reverseZ}/{reverseY}/{y}/{reverseX}/{x}.PNG",
       urlSchemeZeroPadding: {
@@ -318,7 +318,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("evaluation of schema zero padding for reverseX reverseY reverseZ as 0000", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url:
         "made/up/tms/server/{z}/{reverseZ}/{reverseY}/{y}/{reverseX}/{x}.PNG",
       urlSchemeZeroPadding: {
@@ -358,7 +358,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("evaluation of schema zero padding for x y z as 0000 and large x and y", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url:
         "made/up/tms/server/{z}/{reverseZ}/{reverseY}/{y}/{reverseX}/{x}.PNG",
       urlSchemeZeroPadding: {
@@ -398,7 +398,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("evaluates pattern northDegrees", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url: "{northDegrees}",
       tilingScheme: new GeographicTilingScheme(),
     });
@@ -429,7 +429,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("evaluates pattern southDegrees", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url: "{southDegrees}",
       tilingScheme: new GeographicTilingScheme(),
     });
@@ -460,7 +460,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("evaluates pattern eastDegrees", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url: "{eastDegrees}",
       tilingScheme: new GeographicTilingScheme(),
     });
@@ -491,7 +491,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("evaluates pattern westDegrees", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url: "{westDegrees}",
       tilingScheme: new GeographicTilingScheme(),
     });
@@ -522,7 +522,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("evaluates pattern northProjected", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url: "{northProjected}",
       tilingScheme: new WebMercatorTilingScheme(),
     });
@@ -556,7 +556,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("evaluates pattern southProjected", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url: "{southProjected}",
     });
 
@@ -589,7 +589,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("evaluates pattern eastProjected", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url: "{eastProjected}",
     });
 
@@ -622,7 +622,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("evaluates pattern westProjected", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url: "{westProjected}",
     });
 
@@ -655,7 +655,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("evalutes multiple coordinate patterns", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url:
         "{westDegrees} {westProjected} {southProjected} {southDegrees} {eastProjected} {eastDegrees} {northDegrees} {northProjected}",
     });
@@ -699,7 +699,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("evaluates pattern s", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url: "{s}",
     });
 
@@ -731,7 +731,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("uses custom subdomain string", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url: "{s}",
       subdomains: "123",
     });
@@ -764,7 +764,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("uses custom subdomain array", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url: "{s}",
       subdomains: ["foo", "bar"],
     });
@@ -795,7 +795,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("uses custom tags", function () {
-    var provider = new UrlTemplateImageryProvider({
+    const provider = new UrlTemplateImageryProvider({
       url: "made/up/tms/server/{custom1}/{custom2}/{z}/{y}/{x}.PNG",
       tilingScheme: new GeographicTilingScheme(),
       maximumLevel: 6,
@@ -836,7 +836,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
 
   describe("pickFeatures", function () {
     it("returns undefined when enablePickFeatures is false", function () {
-      var provider = new UrlTemplateImageryProvider({
+      const provider = new UrlTemplateImageryProvider({
         url: "foo/bar",
         pickFeaturesUrl: "foo/bar",
         getFeatureInfoFormats: [
@@ -854,7 +854,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     });
 
     it("does not return undefined when enablePickFeatures is subsequently set to true", function () {
-      var provider = new UrlTemplateImageryProvider({
+      const provider = new UrlTemplateImageryProvider({
         url: "foo/bar",
         pickFeaturesUrl: "foo/bar",
         getFeatureInfoFormats: [
@@ -874,7 +874,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     });
 
     it("returns undefined when enablePickFeatures is initialized as true and set to false", function () {
-      var provider = new UrlTemplateImageryProvider({
+      const provider = new UrlTemplateImageryProvider({
         url: "foo/bar",
         pickFeaturesUrl: "foo/bar",
         getFeatureInfoFormats: [
@@ -895,7 +895,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("throws if tileWidth called before provider is ready", function () {
-    var provider = new UrlTemplateImageryProvider(when.defer());
+    const provider = new UrlTemplateImageryProvider(when.defer());
 
     expect(function () {
       return provider.tileWidth();
@@ -903,7 +903,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("throws if tileHeight called before provider is ready", function () {
-    var provider = new UrlTemplateImageryProvider(when.defer());
+    const provider = new UrlTemplateImageryProvider(when.defer());
 
     expect(function () {
       return provider.tileHeight();
@@ -911,7 +911,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("throws if maximumLevel called before provider is ready", function () {
-    var provider = new UrlTemplateImageryProvider(when.defer());
+    const provider = new UrlTemplateImageryProvider(when.defer());
 
     expect(function () {
       return provider.maximumLevel();
@@ -919,7 +919,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("throws if minimumLevel called before provider is ready", function () {
-    var provider = new UrlTemplateImageryProvider(when.defer());
+    const provider = new UrlTemplateImageryProvider(when.defer());
 
     expect(function () {
       return provider.minimumLevel();
@@ -927,7 +927,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("throws if tilingScheme called before provider is ready", function () {
-    var provider = new UrlTemplateImageryProvider(when.defer());
+    const provider = new UrlTemplateImageryProvider(when.defer());
 
     expect(function () {
       return provider.tilingScheme();
@@ -935,7 +935,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("throws if rectangle called before provider is ready", function () {
-    var provider = new UrlTemplateImageryProvider(when.defer());
+    const provider = new UrlTemplateImageryProvider(when.defer());
 
     expect(function () {
       return provider.rectangle();
@@ -943,7 +943,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("throws if tileDiscardPolicy called before provider is ready", function () {
-    var provider = new UrlTemplateImageryProvider(when.defer());
+    const provider = new UrlTemplateImageryProvider(when.defer());
 
     expect(function () {
       return provider.tileDiscardPolicy();
@@ -951,7 +951,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("throws if credit called before provider is ready", function () {
-    var provider = new UrlTemplateImageryProvider(when.defer());
+    const provider = new UrlTemplateImageryProvider(when.defer());
 
     expect(function () {
       return provider.credit();
@@ -959,7 +959,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("throws if hasAlphaChannel called before provider is ready", function () {
-    var provider = new UrlTemplateImageryProvider(when.defer());
+    const provider = new UrlTemplateImageryProvider(when.defer());
 
     expect(function () {
       return provider.hasAlphaChannel();
@@ -967,7 +967,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("throws if getTileCredits called before provider is ready", function () {
-    var provider = new UrlTemplateImageryProvider(when.defer());
+    const provider = new UrlTemplateImageryProvider(when.defer());
 
     expect(function () {
       return provider.getTileCredits();
@@ -975,7 +975,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("throws if requestImage called before provider is ready", function () {
-    var provider = new UrlTemplateImageryProvider(when.defer());
+    const provider = new UrlTemplateImageryProvider(when.defer());
 
     expect(function () {
       return provider.requestImage();
@@ -983,7 +983,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
   });
 
   it("throws if pickFeatures called before provider is ready", function () {
-    var provider = new UrlTemplateImageryProvider(when.defer());
+    const provider = new UrlTemplateImageryProvider(when.defer());
 
     expect(function () {
       return provider.pickFeatures();

@@ -3,8 +3,8 @@ import pollToPromise from "../../pollToPromise.js";
 import { InfoBox } from "../../../Source/Cesium.js";
 
 describe("Widgets/InfoBox/InfoBox", function () {
-  var testContainer;
-  var infoBox;
+  let testContainer;
+  let infoBox;
   beforeEach(function () {
     testContainer = document.createElement("span");
     testContainer.id = "testContainer";
@@ -28,10 +28,10 @@ describe("Widgets/InfoBox/InfoBox", function () {
   });
 
   it("can set description body", function () {
-    var infoBox = new InfoBox(testContainer);
-    var node;
+    const infoBox = new InfoBox(testContainer);
+    let node;
 
-    var infoElement = testContainer.firstChild;
+    const infoElement = testContainer.firstChild;
 
     infoBox.viewModel.description = "Please do not crash";
     return pollToPromise(function () {

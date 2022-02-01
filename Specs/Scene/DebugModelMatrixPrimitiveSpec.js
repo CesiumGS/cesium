@@ -6,11 +6,11 @@ import createScene from "../createScene.js";
 describe(
   "Scene/DebugModelMatrixPrimitive",
   function () {
-    var scene;
+    let scene;
 
     beforeAll(function () {
       scene = createScene();
-      var camera = scene.camera;
+      const camera = scene.camera;
       camera.position = new Cartesian3(1.02, 0.0, 0.0);
       camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
       camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
@@ -25,7 +25,7 @@ describe(
     });
 
     it("gets the default properties", function () {
-      var p = new DebugModelMatrixPrimitive();
+      const p = new DebugModelMatrixPrimitive();
       expect(p.length).toEqual(10000000.0);
       expect(p.width).toEqual(2.0);
       expect(p.modelMatrix).toEqual(Matrix4.IDENTITY);
@@ -35,7 +35,7 @@ describe(
     });
 
     it("Constructs with options", function () {
-      var p = new DebugModelMatrixPrimitive({
+      const p = new DebugModelMatrixPrimitive({
         length: 10.0,
         width: 1.0,
         modelMatrix: Matrix4.fromUniformScale(2.0),
@@ -51,7 +51,7 @@ describe(
     });
 
     it("renders", function () {
-      var p = scene.primitives.add(new DebugModelMatrixPrimitive());
+      const p = scene.primitives.add(new DebugModelMatrixPrimitive());
       expect(scene).notToRender([0, 0, 0, 255]);
 
       // Update and render again
@@ -69,7 +69,7 @@ describe(
     });
 
     it("is picked", function () {
-      var p = scene.primitives.add(
+      const p = scene.primitives.add(
         new DebugModelMatrixPrimitive({
           id: "id",
         })
@@ -82,7 +82,7 @@ describe(
     });
 
     it("isDestroyed", function () {
-      var p = new DebugModelMatrixPrimitive();
+      const p = new DebugModelMatrixPrimitive();
       expect(p.isDestroyed()).toEqual(false);
       p.destroy();
       expect(p.isDestroyed()).toEqual(true);

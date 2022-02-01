@@ -11,7 +11,7 @@
             "noDebug": true,
             "serverReadyAction":{
                 "action": "startDebugging",
-                "name": "Debug in Chrome",
+                "name": "Launch in Chrome",
                 "pattern": "Cesium development server running locally."
             }
         },

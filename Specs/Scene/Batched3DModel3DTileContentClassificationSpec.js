@@ -22,29 +22,29 @@ import createScene from "../createScene.js";
 describe(
   "Scene/Batched3DModel3DTileContentClassification",
   function () {
-    var scene;
-    var modelMatrix;
-    var centerLongitude = -1.31968;
-    var centerLatitude = 0.698874;
+    let scene;
+    let modelMatrix;
+    const centerLongitude = -1.31968;
+    const centerLatitude = 0.698874;
 
-    var withBatchTableUrl =
+    const withBatchTableUrl =
       "./Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json";
-    var withBatchTableBinaryUrl =
+    const withBatchTableBinaryUrl =
       "./Data/Cesium3DTiles/Batched/BatchedWithBatchTableBinary/tileset.json";
 
-    var globePrimitive;
-    var tilesetPrimitive;
-    var reusableGlobePrimitive;
-    var reusableTilesetPrimitive;
+    let globePrimitive;
+    let tilesetPrimitive;
+    let reusableGlobePrimitive;
+    let reusableTilesetPrimitive;
 
     function setCamera(longitude, latitude) {
       // One feature is located at the center, point the camera there
-      var center = Cartesian3.fromRadians(longitude, latitude);
+      const center = Cartesian3.fromRadians(longitude, latitude);
       scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15.0));
     }
 
     function createPrimitive(rectangle, pass) {
-      var renderState;
+      let renderState;
       if (pass === Pass.CESIUM_3D_TILE) {
         renderState = RenderState.fromCache({
           stencilTest: StencilConstants.setCesium3DTileBit(),
@@ -54,7 +54,7 @@ describe(
           },
         });
       }
-      var depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(
+      const depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(
         new Color(0.0, 0.0, 0.0, 1.0)
       );
       return new Primitive({
@@ -88,12 +88,12 @@ describe(
         return;
       }
 
-      var commandList = frameState.commandList;
-      var startLength = commandList.length;
+      const commandList = frameState.commandList;
+      const startLength = commandList.length;
       this._primitive.update(frameState);
 
-      for (var i = startLength; i < commandList.length; ++i) {
-        var command = commandList[i];
+      for (let i = startLength; i < commandList.length; ++i) {
+        const command = commandList[i];
         command.pass = this._pass;
       }
     };
@@ -109,14 +109,14 @@ describe(
     beforeAll(function () {
       scene = createScene();
 
-      var translation = Ellipsoid.WGS84.geodeticSurfaceNormalCartographic(
+      const translation = Ellipsoid.WGS84.geodeticSurfaceNormalCartographic(
         new Cartographic(centerLongitude, centerLatitude)
       );
       Cartesian3.multiplyByScalar(translation, -5.0, translation);
       modelMatrix = Matrix4.fromTranslation(translation);
 
-      var offset = CesiumMath.toRadians(0.01);
-      var rectangle = new Rectangle(
+      const offset = CesiumMath.toRadians(0.01);
+      const rectangle = new Rectangle(
         centerLongitude - offset,
         centerLatitude - offset,
         centerLongitude + offset,

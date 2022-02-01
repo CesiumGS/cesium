@@ -31,14 +31,14 @@ export default function ModelExperimentalNode(options) {
   Check.typeOf.object("options.children", options.children);
   //>>includeEnd('debug');
 
-  var sceneGraph = options.sceneGraph;
-  var transform = options.transform;
+  const sceneGraph = options.sceneGraph;
+  const transform = options.transform;
 
   this._sceneGraph = sceneGraph;
   this._children = options.children;
   this._node = options.node;
 
-  var components = sceneGraph.components;
+  const components = sceneGraph.components;
 
   this._originalTransform = Matrix4.clone(transform);
   this._axisCorrectedTransform = Matrix4.clone(transform);
@@ -235,10 +235,10 @@ ModelExperimentalNode.prototype.getChild = function (index) {
  * @private
  */
 ModelExperimentalNode.prototype.configurePipeline = function () {
-  var node = this.node;
-  var pipelineStages = this.pipelineStages;
+  const node = this.node;
+  const pipelineStages = this.pipelineStages;
   pipelineStages.length = 0;
-  var updateStages = this.updateStages;
+  const updateStages = this.updateStages;
   updateStages.length = 0;
 
   if (defined(node.instances)) {

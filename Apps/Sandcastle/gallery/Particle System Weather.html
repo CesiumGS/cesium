@@ -34,14 +34,15 @@
     <script id="cesium_sandcastle_script">
       function startup(Cesium) {
         "use strict";
+        /* eslint-disable prefer-const */
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
           terrainProvider: Cesium.createWorldTerrain(),
         });
-        var scene = viewer.scene;
+        const scene = viewer.scene;
         scene.globe.depthTestAgainstTerrain = true;
-        var resetCameraFunction = function () {
+        const resetCameraFunction = function () {
           scene.camera.setView({
             destination: new Cesium.Cartesian3(
               277096.634865404,
@@ -57,20 +58,20 @@
         resetCameraFunction();
 
         // snow
-        var snowParticleSize = 12.0;
-        var snowRadius = 100000.0;
-        var minimumSnowImageSize = new Cesium.Cartesian2(
+        const snowParticleSize = 12.0;
+        const snowRadius = 100000.0;
+        const minimumSnowImageSize = new Cesium.Cartesian2(
           snowParticleSize,
           snowParticleSize
         );
-        var maximumSnowImageSize = new Cesium.Cartesian2(
+        const maximumSnowImageSize = new Cesium.Cartesian2(
           snowParticleSize * 2.0,
           snowParticleSize * 2.0
         );
-        var snowSystem;
+        let snowSystem;
 
-        var snowGravityScratch = new Cesium.Cartesian3();
-        var snowUpdate = function (particle, dt) {
+        let snowGravityScratch = new Cesium.Cartesian3();
+        const snowUpdate = function (particle, dt) {
           snowGravityScratch = Cesium.Cartesian3.normalize(
             particle.position,
             snowGravityScratch
@@ -86,7 +87,7 @@
             particle.velocity
           );
 
-          var distance = Cesium.Cartesian3.distance(
+          const distance = Cesium.Cartesian3.distance(
             scene.camera.position,
             particle.position
           );
@@ -119,17 +120,17 @@
         scene.primitives.add(snowSystem);
 
         // rain
-        var rainParticleSize = 15.0;
-        var rainRadius = 100000.0;
-        var rainImageSize = new Cesium.Cartesian2(
+        const rainParticleSize = 15.0;
+        const rainRadius = 100000.0;
+        const rainImageSize = new Cesium.Cartesian2(
           rainParticleSize,
           rainParticleSize * 2.0
         );
 
-        var rainSystem;
+        let rainSystem;
 
-        var rainGravityScratch = new Cesium.Cartesian3();
-        var rainUpdate = function (particle, dt) {
+        let rainGravityScratch = new Cesium.Cartesian3();
+        const rainUpdate = function (particle, dt) {
           rainGravityScratch = Cesium.Cartesian3.normalize(
             particle.position,
             rainGravityScratch
@@ -146,7 +147,7 @@
             particle.position
           );
 
-          var distance = Cesium.Cartesian3.distance(
+          const distance = Cesium.Cartesian3.distance(
             scene.camera.position,
             particle.position
           );
@@ -180,7 +181,7 @@
         Sandcastle.addToolbarButton("Reset Camera", resetCameraFunction);
 
         // drop down
-        var options = [
+        const options = [
           {
             text: "Snow",
             onselect: function () {

@@ -9,7 +9,7 @@ import WebGLConstants from "./WebGLConstants.js";
  *
  * @enum {Number}
  */
-var IndexDatatype = {
+const IndexDatatype = {
   /**
    * 8-bit unsigned byte corresponding to <code>UNSIGNED_BYTE</code> and the type
    * of an element in <code>Uint8Array</code>.

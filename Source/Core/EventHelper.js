@@ -43,13 +43,13 @@ EventHelper.prototype.add = function (event, listener, scope) {
   }
   //>>includeEnd('debug');
 
-  var removalFunction = event.addEventListener(listener, scope);
+  const removalFunction = event.addEventListener(listener, scope);
   this._removalFunctions.push(removalFunction);
 
-  var that = this;
+  const that = this;
   return function () {
     removalFunction();
-    var removalFunctions = that._removalFunctions;
+    const removalFunctions = that._removalFunctions;
     removalFunctions.splice(removalFunctions.indexOf(removalFunction), 1);
   };
 };
@@ -60,8 +60,8 @@ EventHelper.prototype.add = function (event, listener, scope) {
  * @see Event#removeEventListener
  */
 EventHelper.prototype.removeAll = function () {
-  var removalFunctions = this._removalFunctions;
-  for (var i = 0, len = removalFunctions.length; i < len; ++i) {
+  const removalFunctions = this._removalFunctions;
+  for (let i = 0, len = removalFunctions.length; i < len; ++i) {
     removalFunctions[i]();
   }
   removalFunctions.length = 0;

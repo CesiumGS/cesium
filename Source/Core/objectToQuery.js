@@ -29,14 +29,14 @@ function objectToQuery(obj) {
   }
   //>>includeEnd('debug');
 
-  var result = "";
-  for (var propName in obj) {
+  let result = "";
+  for (const propName in obj) {
     if (obj.hasOwnProperty(propName)) {
-      var value = obj[propName];
+      const value = obj[propName];
 
-      var part = encodeURIComponent(propName) + "=";
+      const part = encodeURIComponent(propName) + "=";
       if (Array.isArray(value)) {
-        for (var i = 0, len = value.length; i < len; ++i) {
+        for (let i = 0, len = value.length; i < len; ++i) {
           result += part + encodeURIComponent(value[i]) + "&";
         }
       } else {

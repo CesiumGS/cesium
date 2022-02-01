@@ -86,7 +86,7 @@ ImplicitTilingTester.generateSubtreeBuffers = function (
   constantOnly = defaultValue(constantOnly, false);
 
   // This will be populated by makeBufferViews() and makeBuffers()
-  var subtreeJson = {};
+  let subtreeJson = {};
   if (!constantOnly) {
     subtreeJson = {
       buffers: [],
@@ -94,12 +94,12 @@ ImplicitTilingTester.generateSubtreeBuffers = function (
     };
   }
 
-  var bufferViewsU8 = makeBufferViews(subtreeDescription, subtreeJson);
-  var buffersU8 = makeBuffers(bufferViewsU8, subtreeJson);
-  var jsonChunk = makeJsonChunk(subtreeJson);
-  var binaryChunk = buffersU8.internal;
-  var header = makeSubtreeHeader(jsonChunk.length, binaryChunk.length);
-  var subtreeBuffer = concatTypedArrays([header, jsonChunk, binaryChunk]);
+  const bufferViewsU8 = makeBufferViews(subtreeDescription, subtreeJson);
+  const buffersU8 = makeBuffers(bufferViewsU8, subtreeJson);
+  const jsonChunk = makeJsonChunk(subtreeJson);
+  const binaryChunk = buffersU8.internal;
+  const header = makeSubtreeHeader(jsonChunk.length, binaryChunk.length);
+  const subtreeBuffer = concatTypedArrays([header, jsonChunk, binaryChunk]);
 
   return {
     subtreeBuffer: subtreeBuffer,
@@ -109,10 +109,10 @@ ImplicitTilingTester.generateSubtreeBuffers = function (
 
 function makeBufferViews(subtreeDescription, subtreeJson) {
   // Content availability is optional.
-  var hasContent = defined(subtreeDescription.contentAvailability);
+  const hasContent = defined(subtreeDescription.contentAvailability);
 
   // pass 1: parse availability -------------------------------------------
-  var parsedAvailability = {
+  const parsedAvailability = {
     tileAvailability: parseAvailability(subtreeDescription.tileAvailability),
     childSubtreeAvailability: parseAvailability(
       subtreeDescription.childSubtreeAvailability
@@ -131,13 +131,13 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
   }
 
   // pass 2: create buffer view JSON and gather typed arrays ------------------
-  var bufferViewsU8 = {
+  const bufferViewsU8 = {
     internal: [],
     external: [],
     count: 0,
   };
 
-  var bufferViewJsonArray = [];
+  const bufferViewJsonArray = [];
   gatherBufferViews(
     bufferViewsU8,
     bufferViewJsonArray,
@@ -179,7 +179,7 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
     parsedAvailability.childSubtreeAvailability.availabilityJson;
 
   if (hasContent) {
-    var contentAvailabilityArray = parsedAvailability.contentAvailability;
+    const contentAvailabilityArray = parsedAvailability.contentAvailability;
     if (contentAvailabilityArray.length > 1) {
       subtreeJson.extensions = {
         "3DTILES_multiple_contents": {
@@ -223,10 +223,10 @@ function gatherBufferViews(
       availableCount: parsedBitstream.availableCount,
     };
   } else {
-    var bufferViewId = bufferViewsU8.count;
+    const bufferViewId = bufferViewsU8.count;
     bufferViewsU8.count++;
 
-    var bufferViewJson = {
+    const bufferViewJson = {
       buffer: undefined,
       byteOffset: undefined,
       byteLength: parsedBitstream.byteLength,
@@ -238,7 +238,7 @@ function gatherBufferViews(
       availableCount: parsedBitstream.availableCount,
     };
 
-    var bufferView = {
+    const bufferView = {
       bufferView: parsedBitstream.bitstream,
       // save a reference to the object so we can update the offsets and
       // lengths later.
@@ -254,12 +254,12 @@ function gatherBufferViews(
 }
 
 function makeSubtreeHeader(jsonByteLength, binaryByteLength) {
-  var buffer = new ArrayBuffer(24);
-  var dataView = new DataView(buffer);
+  const buffer = new ArrayBuffer(24);
+  const dataView = new DataView(buffer);
   // ASCII 'subt' as a little-endian uint32_t
-  var MAGIC = 0x74627573;
-  var littleEndian = true;
-  var VERSION = 1;
+  const MAGIC = 0x74627573;
+  const littleEndian = true;
+  const VERSION = 1;
   dataView.setUint32(0, MAGIC, littleEndian);
   dataView.setUint32(4, VERSION, littleEndian);
 
@@ -271,17 +271,17 @@ function makeSubtreeHeader(jsonByteLength, binaryByteLength) {
 }
 
 function makeJsonChunk(json) {
-  var jsonString = JSON.stringify(json);
+  const jsonString = JSON.stringify(json);
   // To keep unit tests simple, this assumes ASCII characters. However, UTF-8
   // characters are allowed in general.
-  var jsonByteLength = jsonString.length;
-  var paddedLength = jsonByteLength;
+  const jsonByteLength = jsonString.length;
+  let paddedLength = jsonByteLength;
   if (paddedLength % 8 !== 0) {
     paddedLength += 8 - (paddedLength % 8);
   }
 
-  var i;
-  var buffer = new Uint8Array(paddedLength);
+  let i;
+  const buffer = new Uint8Array(paddedLength);
   for (i = 0; i < jsonByteLength; i++) {
     buffer[i] = jsonString.charCodeAt(i);
   }
@@ -294,7 +294,7 @@ function makeJsonChunk(json) {
 }
 
 function parseAvailability(availability) {
-  var parsed = parseAvailabilityDescriptor(availability.descriptor);
+  const parsed = parseAvailabilityDescriptor(availability.descriptor);
   parsed.isInternal = availability.isInternal;
   parsed.shareBuffer = availability.shareBuffer;
 
@@ -316,24 +316,24 @@ function parseAvailabilityDescriptor(descriptor, includeAvailableCount) {
     };
   }
 
-  var bits = descriptor.split("").map(function (x) {
+  const bits = descriptor.split("").map(function (x) {
     return Number(x);
   });
-  var byteLength = Math.ceil(bits.length / 8);
-  var byteLengthWithPadding = byteLength;
+  const byteLength = Math.ceil(bits.length / 8);
+  let byteLengthWithPadding = byteLength;
 
   // Add padding if needed
   if (byteLengthWithPadding % 8 !== 0) {
     byteLengthWithPadding += 8 - (byteLengthWithPadding % 8);
   }
 
-  var availableCount = 0;
-  var bitstream = new Uint8Array(byteLength);
-  for (var i = 0; i < bits.length; i++) {
-    var bit = bits[i];
+  let availableCount = 0;
+  const bitstream = new Uint8Array(byteLength);
+  for (let i = 0; i < bits.length; i++) {
+    const bit = bits[i];
     availableCount += bit;
-    var byte = i >> 3;
-    var bitIndex = i % 8;
+    const byte = i >> 3;
+    const bitIndex = i % 8;
     bitstream[byte] |= bit << bitIndex;
   }
 
@@ -350,7 +350,7 @@ function parseAvailabilityDescriptor(descriptor, includeAvailableCount) {
 }
 
 function addMetadata(bufferViewsU8, subtreeJson, metadataOptions) {
-  var propertyTableResults = MetadataTester.createPropertyTables(
+  const propertyTableResults = MetadataTester.createPropertyTables(
     metadataOptions.propertyTables
   );
 
@@ -358,26 +358,26 @@ function addMetadata(bufferViewsU8, subtreeJson, metadataOptions) {
   if (!defined(subtreeJson.bufferViews)) {
     subtreeJson.bufferViews = [];
   }
-  var bufferViewJsonArray = subtreeJson.bufferViews;
+  const bufferViewJsonArray = subtreeJson.bufferViews;
 
-  var bufferViewArray = metadataOptions.isInternal
+  const bufferViewArray = metadataOptions.isInternal
     ? bufferViewsU8.internal
     : bufferViewsU8.external;
 
-  var metadataBufferViewsU8 = propertyTableResults.bufferViews;
-  var metadataBufferViewCount = Object.keys(metadataBufferViewsU8).length;
-  for (var i = 0; i < metadataBufferViewCount; i++) {
-    var bufferViewU8 = metadataBufferViewsU8[i];
+  const metadataBufferViewsU8 = propertyTableResults.bufferViews;
+  const metadataBufferViewCount = Object.keys(metadataBufferViewsU8).length;
+  for (let i = 0; i < metadataBufferViewCount; i++) {
+    const bufferViewU8 = metadataBufferViewsU8[i];
 
-    var bufferViewJson = {
+    const bufferViewJson = {
       buffer: undefined,
       byteOffset: undefined,
       byteLength: bufferViewU8.byteLength,
     };
     bufferViewJsonArray.push(bufferViewJson);
 
-    var paddedBufferView = padUint8Array(bufferViewU8);
-    var bufferView = {
+    const paddedBufferView = padUint8Array(bufferViewU8);
+    const bufferView = {
       bufferView: paddedBufferView,
       // save a reference to the object so we can update the offsets and
       // lengths later.
@@ -388,17 +388,17 @@ function addMetadata(bufferViewsU8, subtreeJson, metadataOptions) {
 
   // Renumber buffer views ----------------------------------------------
   // This tester assumes there's a single property table for the tile metadata
-  var tileTable = propertyTableResults.propertyTables[0];
-  var tileTableProperties = tileTable.properties;
+  const tileTable = propertyTableResults.propertyTables[0];
+  const tileTableProperties = tileTable.properties;
 
-  var firstMetadataIndex = bufferViewsU8.count;
+  const firstMetadataIndex = bufferViewsU8.count;
 
-  var properties = {};
-  for (var key in tileTableProperties) {
+  const properties = {};
+  for (const key in tileTableProperties) {
     if (tileTableProperties.hasOwnProperty(key)) {
-      var property = tileTableProperties[key];
+      const property = tileTableProperties[key];
 
-      var propertyJson = {
+      const propertyJson = {
         bufferView: property.bufferView + firstMetadataIndex,
       };
 
@@ -433,17 +433,17 @@ function padUint8Array(array) {
     return array;
   }
 
-  var paddingLength = 8 - (array.length % 8);
-  var padding = new Uint8Array(paddingLength);
+  const paddingLength = 8 - (array.length % 8);
+  const padding = new Uint8Array(paddingLength);
   return concatTypedArrays([array, padding]);
 }
 
 function makeBuffers(bufferViewsU8, subtreeJson) {
-  var bufferCount = 0;
-  var byteLength = 0;
-  var typedArrays = [];
-  var i;
-  var bufferView;
+  let bufferCount = 0;
+  let byteLength = 0;
+  let typedArrays = [];
+  let i;
+  let bufferView;
   for (i = 0; i < bufferViewsU8.internal.length; i++) {
     bufferView = bufferViewsU8.internal[i];
     typedArrays.push(bufferView.bufferView);
@@ -455,7 +455,7 @@ function makeBuffers(bufferViewsU8, subtreeJson) {
 
   // An internal buffer typed array will always be returned, even if length
   // 0. However, don't add json for an unused buffer.
-  var internalBufferU8 = concatTypedArrays(typedArrays);
+  const internalBufferU8 = concatTypedArrays(typedArrays);
   if (typedArrays.length > 0) {
     subtreeJson.buffers.push({
       byteLength: byteLength,
@@ -476,7 +476,7 @@ function makeBuffers(bufferViewsU8, subtreeJson) {
     byteLength += bufferView.bufferView.length;
   }
 
-  var externalBufferU8 = concatTypedArrays(typedArrays);
+  const externalBufferU8 = concatTypedArrays(typedArrays);
   if (typedArrays.length > 0) {
     subtreeJson.buffers.push({
       // dummy URI, unit tests should mock any requests.

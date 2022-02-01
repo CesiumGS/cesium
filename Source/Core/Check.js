@@ -6,7 +6,7 @@ import DeveloperError from "./DeveloperError.js";
  * or meet specified conditions
  * @private
  */
-var Check = {};
+const Check = {};
 
 /**
  * Contains type checking functions, all using the typeof operator

@@ -10,7 +10,7 @@ import DeveloperError from "./DeveloperError.js";
  * @exports CesiumMath
  * @alias Math
  */
-var CesiumMath = {};
+const CesiumMath = {};
 
 /**
  * 0.1
@@ -477,9 +477,9 @@ CesiumMath.convertLongitudeRange = function (angle) {
     throw new DeveloperError("angle is required.");
   }
   //>>includeEnd('debug');
-  var twoPi = CesiumMath.TWO_PI;
+  const twoPi = CesiumMath.TWO_PI;
 
-  var simplified = angle - Math.floor(angle / twoPi) * twoPi;
+  const simplified = angle - Math.floor(angle / twoPi) * twoPi;
 
   if (simplified < -Math.PI) {
     return simplified + twoPi;
@@ -553,7 +553,7 @@ CesiumMath.zeroToTwoPi = function (angle) {
     // unnecessary math which could introduce floating point error.
     return angle;
   }
-  var mod = CesiumMath.mod(angle, CesiumMath.TWO_PI);
+  const mod = CesiumMath.mod(angle, CesiumMath.TWO_PI);
   if (
     Math.abs(mod) < CesiumMath.EPSILON14 &&
     Math.abs(angle) > CesiumMath.EPSILON14
@@ -626,7 +626,7 @@ CesiumMath.equalsEpsilon = function (
 
   relativeEpsilon = defaultValue(relativeEpsilon, 0.0);
   absoluteEpsilon = defaultValue(absoluteEpsilon, relativeEpsilon);
-  var absDiff = Math.abs(left - right);
+  const absDiff = Math.abs(left - right);
   return (
     absDiff <= absoluteEpsilon ||
     absDiff <= relativeEpsilon * Math.max(Math.abs(left), Math.abs(right))
@@ -735,7 +735,7 @@ CesiumMath.greaterThanOrEquals = function (left, right, absoluteEpsilon) {
   return left - right > -absoluteEpsilon;
 };
 
-var factorials = [1];
+const factorials = [1];
 
 /**
  * Computes the factorial of the provided number.
@@ -761,11 +761,11 @@ CesiumMath.factorial = function (n) {
   }
   //>>includeEnd('debug');
 
-  var length = factorials.length;
+  const length = factorials.length;
   if (n >= length) {
-    var sum = factorials[length - 1];
-    for (var i = length; i <= n; i++) {
-      var next = sum * i;
+    let sum = factorials[length - 1];
+    for (let i = length; i <= n; i++) {
+      const next = sum * i;
       factorials.push(next);
       sum = next;
     }
@@ -917,7 +917,7 @@ CesiumMath.clamp = function (value, min, max) {
   return value < min ? min : value > max ? max : value;
 };
 
-var randomNumberGenerator = new MersenneTwister();
+let randomNumberGenerator = new MersenneTwister();
 
 /**
  * Sets the seed used by the random number generator
@@ -1041,7 +1041,7 @@ CesiumMath.logBase = function (number, base) {
  */
 // eslint-disable-next-line es/no-math-cbrt
 CesiumMath.cbrt = defaultValue(Math.cbrt, function cbrt(number) {
-  var result = Math.pow(Math.abs(number), 1.0 / 3.0);
+  const result = Math.pow(Math.abs(number), 1.0 / 3.0);
   return number < 0.0 ? -result : result;
 });
 
@@ -1061,7 +1061,7 @@ CesiumMath.log2 = defaultValue(Math.log2, function log2(number) {
  * @private
  */
 CesiumMath.fog = function (distanceToCamera, density) {
-  var scalar = distanceToCamera * density;
+  const scalar = distanceToCamera * density;
   return 1.0 - Math.exp(-(scalar * scalar));
 };
 
@@ -1101,14 +1101,13 @@ CesiumMath.fastApproximateAtan2 = function (x, y) {
 
   // atan approximations are usually only reliable over [-1, 1]
   // So reduce the range by flipping whether x or y is on top based on which is bigger.
-  var opposite;
-  var adjacent;
-  var t = Math.abs(x); // t used as swap and atan result.
+  let opposite;
+  let t = Math.abs(x); // t used as swap and atan result.
   opposite = Math.abs(y);
-  adjacent = Math.max(t, opposite);
+  const adjacent = Math.max(t, opposite);
   opposite = Math.min(t, opposite);
 
-  var oppositeOverAdjacent = opposite / adjacent;
+  const oppositeOverAdjacent = opposite / adjacent;
   //>>includeStart('debug', pragmas.debug);
   if (isNaN(oppositeOverAdjacent)) {
     throw new DeveloperError("either x or y must be nonzero");

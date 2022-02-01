@@ -44,8 +44,8 @@ import Material from "./Material.js";
 function EllipsoidSurfaceAppearance(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var translucent = defaultValue(options.translucent, true);
-  var aboveGround = defaultValue(options.aboveGround, false);
+  const translucent = defaultValue(options.translucent, true);
+  const aboveGround = defaultValue(options.aboveGround, false);
 
   /**
    * The material used to determine the fragment color.  Unlike other {@link EllipsoidSurfaceAppearance}

@@ -12,7 +12,7 @@ describe("Scene/PropertyTable", function () {
     return;
   }
 
-  var properties = {
+  const properties = {
     name: {
       componentType: "STRING",
       semantic: "NAME",
@@ -23,15 +23,15 @@ describe("Scene/PropertyTable", function () {
     },
   };
 
-  var propertyValues = {
+  const propertyValues = {
     name: ["Building A", "Building B", "Building C"],
     height: [10.0, 20.0, 30.0],
   };
 
-  var extras = {
+  const extras = {
     description: "Extra",
   };
-  var extensions = {
+  const extensions = {
     EXT_other_extension: {},
   };
 
@@ -45,7 +45,7 @@ describe("Scene/PropertyTable", function () {
   }
 
   it("creates feature table with default values", function () {
-    var propertyTable = new PropertyTable({
+    const propertyTable = new PropertyTable({
       count: 3,
     });
     expect(propertyTable.count).toBe(3);
@@ -55,7 +55,7 @@ describe("Scene/PropertyTable", function () {
   });
 
   it("creates feature table", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(propertyTable.count).toBe(3);
     expect(propertyTable.class).toBeDefined();
     expect(propertyTable.getPropertyIds().length).toBe(2);
@@ -76,138 +76,138 @@ describe("Scene/PropertyTable", function () {
   });
 
   it("hasProperty throws without index", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(function () {
       propertyTable.hasProperty(undefined, "name");
     }).toThrowDeveloperError();
   });
 
   it("hasProperty throws without propertyId", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(function () {
       propertyTable.hasProperty(0, undefined);
     }).toThrowDeveloperError();
   });
 
   it("hasProperty returns true if the feature has this property", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(propertyTable.hasProperty(0, "name")).toBe(true);
   });
 
   it("hasProperty returns false if the feature does not have this property", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(propertyTable.hasProperty(0, "numberOfPoints")).toBe(false);
   });
 
   it("hasPropertyBySemantic throws without index", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(function () {
       propertyTable.hasPropertyBySemantic(undefined, "NAME");
     }).toThrowDeveloperError();
   });
 
   it("hasPropertyBySemantic throws without semantic", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(function () {
       propertyTable.hasPropertyBySemantic(0, undefined);
     }).toThrowDeveloperError();
   });
 
   it("hasPropertyBySemantic returns true if the feature has a property with the given semantic", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(propertyTable.hasPropertyBySemantic(0, "NAME")).toBe(true);
   });
 
   it("hasPropertyBySemantic returns false if the feature does not a property with the given semantic", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(propertyTable.hasPropertyBySemantic(0, "ID")).toBe(false);
   });
 
   it("propertyExists throws without propertyId", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(function () {
       propertyTable.propertyExists(undefined);
     }).toThrowDeveloperError();
   });
 
   it("propertyExists returns true if the property exists", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(propertyTable.propertyExists("name")).toBe(true);
   });
 
   it("propertyExists returns false if the property does not exist", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(propertyTable.propertyExists("numberOfPoints")).toBe(false);
   });
 
   it("propertyExistsBySemantic throws without semantic", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(function () {
       propertyTable.propertyExistsBySemantic(undefined);
     }).toThrowDeveloperError();
   });
 
   it("propertyExistsBySemantic returns true if the property exists", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(propertyTable.propertyExistsBySemantic("NAME")).toBe(true);
   });
 
   it("propertyExistsBySemantic returns false if the property does not exist", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(propertyTable.propertyExistsBySemantic("ID")).toBe(false);
   });
 
   it("getPropertyIds returns array of property IDs", function () {
-    var propertyTable = createPropertyTable();
-    var propertyIds = propertyTable.getPropertyIds([]);
+    const propertyTable = createPropertyTable();
+    const propertyIds = propertyTable.getPropertyIds([]);
     propertyIds.sort();
     expect(propertyIds).toEqual(["height", "name"]);
   });
 
   it("getProperty returns undefined if a property does not exist", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(propertyTable.getProperty(0, "numberOfPoints")).not.toBeDefined();
   });
 
   it("getProperty returns the property value", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(propertyTable.getProperty(0, "name")).toEqual("Building A");
     expect(propertyTable.getProperty(0, "height")).toEqual(10.0);
   });
 
   it("setProperty does not create property if it doesn't exist", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(propertyTable.setProperty(0, "numberOfPoints", 10)).toBe(false);
   });
 
   it("setProperty sets property value", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(propertyTable.getProperty(0, "name")).toBe("Building A");
     propertyTable.setProperty(0, "name", "Building New");
     expect(propertyTable.getProperty(0, "name")).toBe("Building New");
   });
 
   it("getPropertyBySemantic returns undefined when there's no property with the given semantic", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(propertyTable.getPropertyBySemantic(0, "ID")).not.toBeDefined();
   });
 
   it("getPropertyBySemantic returns the property value", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(propertyTable.getPropertyBySemantic(0, "NAME")).toEqual(
       "Building A"
     );
   });
 
   it("getPropertyBySemantic returns undefined if there is no metadataTable", function () {
-    var propertyTable = new PropertyTable({
+    const propertyTable = new PropertyTable({
       count: 3,
     });
     expect(propertyTable.getPropertyBySemantic(0, "NAME")).not.toBeDefined();
   });
 
   it("setPropertyBySemantic sets property value", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(propertyTable.getPropertyBySemantic(0, "NAME")).toEqual(
       "Building A"
     );
@@ -217,20 +217,20 @@ describe("Scene/PropertyTable", function () {
   });
 
   it("setPropertyBySemantic returns false if the semantic does not exist", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
     expect(propertyTable.setPropertyBySemantic(0, "ID", 10)).toBe(false);
   });
 
   it("setPropertyBySemantic returns false if there is no metadata table", function () {
-    var propertyTable = new PropertyTable({
+    const propertyTable = new PropertyTable({
       count: 3,
     });
     expect(propertyTable.setPropertyBySemantic(0, "NAME")).toBe(false);
   });
 
   it("getPropertyTypedArray returns typed array", function () {
-    var propertyTable = createPropertyTable();
-    var expectedTypedArray = new Float32Array([10.0, 20.0, 30.0]);
+    const propertyTable = createPropertyTable();
+    const expectedTypedArray = new Float32Array([10.0, 20.0, 30.0]);
 
     expect(propertyTable.getPropertyTypedArray("height")).toEqual(
       expectedTypedArray
@@ -238,13 +238,13 @@ describe("Scene/PropertyTable", function () {
   });
 
   it("getPropertyTypedArray returns undefined if property does not exist", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
 
     expect(propertyTable.getPropertyTypedArray("volume")).toBeUndefined();
   });
 
   it("getPropertyTypedArray throws if propertyId is undefined", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
 
     expect(function () {
       propertyTable.getPropertyTypedArray(undefined);
@@ -252,8 +252,8 @@ describe("Scene/PropertyTable", function () {
   });
 
   it("getPropertyTypedArrayBySemantic returns typed array", function () {
-    var propertyTable = createPropertyTable();
-    var expectedTypedArray = new Float32Array([10.0, 20.0, 30.0]);
+    const propertyTable = createPropertyTable();
+    const expectedTypedArray = new Float32Array([10.0, 20.0, 30.0]);
 
     expect(propertyTable.getPropertyTypedArrayBySemantic("HEIGHT")).toEqual(
       expectedTypedArray
@@ -261,13 +261,13 @@ describe("Scene/PropertyTable", function () {
   });
 
   it("getPropertyTypedArrayBySemantic returns undefined if semantic does not exist", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
 
     expect(propertyTable.getPropertyTypedArrayBySemantic("ID")).toBeUndefined();
   });
 
   it("getPropertyTypedArrayBySemantic throws if semantic is undefined", function () {
-    var propertyTable = createPropertyTable();
+    const propertyTable = createPropertyTable();
 
     expect(function () {
       propertyTable.getPropertyTypedArrayBySemantic(undefined);
@@ -275,7 +275,7 @@ describe("Scene/PropertyTable", function () {
   });
 
   describe("batch table compatibility", function () {
-    var schemaJson = {
+    const schemaJson = {
       classes: {
         box: {
           properties: {
@@ -289,9 +289,9 @@ describe("Scene/PropertyTable", function () {
         },
       },
     };
-    var schema = new MetadataSchema(schemaJson);
+    const schema = new MetadataSchema(schemaJson);
 
-    var propertyTableJson = {
+    const propertyTableJson = {
       count: 3,
       class: "box",
       properties: {
@@ -304,18 +304,18 @@ describe("Scene/PropertyTable", function () {
       },
     };
 
-    var bufferViews = {
+    const bufferViews = {
       0: new Uint8Array([25, 32, 57]),
       1: new Uint8Array([25, 0, 5, 1, 50, 0]),
     };
 
-    var jsonProperties = {
+    const jsonProperties = {
       priority: [2, 1, 0],
       uri: ["tree.las", "building.gltf", "map.tif"],
     };
-    var count = 3;
+    const count = 3;
 
-    var hierarchyExtension = {
+    const hierarchyExtension = {
       classes: [
         {
           name: "Wheels",
@@ -340,20 +340,20 @@ describe("Scene/PropertyTable", function () {
       parentCounts: [1, 1, 0],
     };
 
-    var batchTable;
-    var batchTableJsonOnly;
+    let batchTable;
+    let batchTableJsonOnly;
 
     beforeEach(function () {
-      var jsonTable = new JsonMetadataTable({
+      const jsonTable = new JsonMetadataTable({
         count: count,
         properties: jsonProperties,
       });
 
-      var hierarchy = new BatchTableHierarchy({
+      const hierarchy = new BatchTableHierarchy({
         extension: hierarchyExtension,
       });
 
-      var metadataTable = new MetadataTable({
+      const metadataTable = new MetadataTable({
         count: count,
         properties: propertyTableJson.properties,
         class: schema.classes.box,
@@ -374,7 +374,7 @@ describe("Scene/PropertyTable", function () {
     });
 
     it("getPropertyIds combines binary, json and hierarchy IDs", function () {
-      var results = batchTable.getPropertyIds(0);
+      const results = batchTable.getPropertyIds(0);
       expect(results.sort()).toEqual([
         "color",
         "itemCount",

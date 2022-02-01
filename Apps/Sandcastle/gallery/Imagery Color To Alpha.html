@@ -57,17 +57,17 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
-        var layers = viewer.scene.imageryLayers;
+        const layers = viewer.scene.imageryLayers;
 
         // Set oceans on Bing base layer to transparent
-        var baseLayer = layers.get(0);
+        const baseLayer = layers.get(0);
         baseLayer.colorToAlpha = new Cesium.Color(0.0, 0.016, 0.059);
         baseLayer.colorToAlphaThreshold = 0.2;
 
         // Add a bump layer with adjustable threshold
-        var singleTileLayer = layers.addImageryProvider(
+        const singleTileLayer = layers.addImageryProvider(
           new Cesium.SingleTileImageryProvider({
             url: "../images/earthbump1k.jpg",
             rectangle: Cesium.Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0),
@@ -77,13 +77,13 @@
         singleTileLayer.colorToAlpha = new Cesium.Color(0.0, 0.0, 0.0, 1.0);
         singleTileLayer.colorToAlphaThreshold = 0.1;
 
-        var viewModel = {
+        const viewModel = {
           threshold: singleTileLayer.colorToAlphaThreshold,
         };
 
         Cesium.knockout.track(viewModel);
 
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
         Cesium.knockout

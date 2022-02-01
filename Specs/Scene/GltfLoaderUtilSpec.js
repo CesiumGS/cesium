@@ -12,7 +12,7 @@ import {
 import createContext from "../createContext.js";
 
 describe("Scene/GltfLoaderUtil", function () {
-  var gltfWithTextures = {
+  const gltfWithTextures = {
     images: [
       {
         uri: "image.png",
@@ -82,7 +82,7 @@ describe("Scene/GltfLoaderUtil", function () {
   });
 
   it("getImageIdFromTexture gets image id", function () {
-    var imageId = GltfLoaderUtil.getImageIdFromTexture({
+    const imageId = GltfLoaderUtil.getImageIdFromTexture({
       gltf: gltfWithTextures,
       textureId: 0,
       supportedImageFormats: new SupportedImageFormats(),
@@ -91,7 +91,7 @@ describe("Scene/GltfLoaderUtil", function () {
   });
 
   it("getImageIdFromTexture gets WebP image when EXT_texture_webp extension is supported", function () {
-    var imageId = GltfLoaderUtil.getImageIdFromTexture({
+    const imageId = GltfLoaderUtil.getImageIdFromTexture({
       gltf: gltfWithTextures,
       textureId: 1,
       supportedImageFormats: new SupportedImageFormats({
@@ -102,7 +102,7 @@ describe("Scene/GltfLoaderUtil", function () {
   });
 
   it("getImageIdFromTexture gets default image when EXT_texture_webp extension is not supported", function () {
-    var imageId = GltfLoaderUtil.getImageIdFromTexture({
+    const imageId = GltfLoaderUtil.getImageIdFromTexture({
       gltf: gltfWithTextures,
       textureId: 1,
       supportedImageFormats: new SupportedImageFormats({
@@ -113,7 +113,7 @@ describe("Scene/GltfLoaderUtil", function () {
   });
 
   it("getImageIdFromTexture gets KTX2 image when KHR_texture_basisu extension is supported", function () {
-    var imageId = GltfLoaderUtil.getImageIdFromTexture({
+    const imageId = GltfLoaderUtil.getImageIdFromTexture({
       gltf: gltfWithTextures,
       textureId: 2,
       supportedImageFormats: new SupportedImageFormats({
@@ -124,7 +124,7 @@ describe("Scene/GltfLoaderUtil", function () {
   });
 
   it("getImageIdFromTexture gets default image when KHR_texture_basisu extension is not supported", function () {
-    var imageId = GltfLoaderUtil.getImageIdFromTexture({
+    const imageId = GltfLoaderUtil.getImageIdFromTexture({
       gltf: gltfWithTextures,
       textureId: 2,
       supportedImageFormats: new SupportedImageFormats({
@@ -155,7 +155,7 @@ describe("Scene/GltfLoaderUtil", function () {
   });
 
   it("createSampler gets default sampler when texture does not have a sampler", function () {
-    var sampler = GltfLoaderUtil.createSampler({
+    const sampler = GltfLoaderUtil.createSampler({
       gltf: {
         textures: [
           {
@@ -174,7 +174,7 @@ describe("Scene/GltfLoaderUtil", function () {
   });
 
   it("createSampler uses NEAREST when compressedTextureNoMipmap is true and the minFilter uses nearest mipmap filtering", function () {
-    var sampler = GltfLoaderUtil.createSampler({
+    const sampler = GltfLoaderUtil.createSampler({
       gltf: {
         textures: [
           {
@@ -203,7 +203,7 @@ describe("Scene/GltfLoaderUtil", function () {
   });
 
   it("createSampler uses LINEAR when compressedTextureNoMipmap is true and the minFilter uses linear mipmap filtering", function () {
-    var sampler = GltfLoaderUtil.createSampler({
+    const sampler = GltfLoaderUtil.createSampler({
       gltf: {
         textures: [
           {
@@ -232,7 +232,7 @@ describe("Scene/GltfLoaderUtil", function () {
   });
 
   function createSampler(options) {
-    var gltf = {
+    const gltf = {
       textures: [
         {
           source: 0,
@@ -249,7 +249,7 @@ describe("Scene/GltfLoaderUtil", function () {
       ],
     };
 
-    var textureInfo = {
+    const textureInfo = {
       index: 0,
     };
 
@@ -266,7 +266,7 @@ describe("Scene/GltfLoaderUtil", function () {
   }
 
   it("createSampler fills in undefined sampler properties", function () {
-    var sampler = createSampler({
+    const sampler = createSampler({
       wrapS: TextureWrap.CLAMP_TO_EDGE,
     });
 
@@ -277,7 +277,7 @@ describe("Scene/GltfLoaderUtil", function () {
   });
 
   it("createSampler creates non-mipmap sampler for KHR_texture_transform", function () {
-    var sampler = createSampler({
+    let sampler = createSampler({
       minFilter: TextureMinificationFilter.NEAREST_MIPMAP_NEAREST,
       useTextureTransform: true,
     });
@@ -303,11 +303,11 @@ describe("Scene/GltfLoaderUtil", function () {
   });
 
   it("createModelTextureReader creates texture with default values", function () {
-    var textureInfo = {
+    const textureInfo = {
       index: 0,
     };
 
-    var modelTexture = GltfLoaderUtil.createModelTextureReader({
+    const modelTexture = GltfLoaderUtil.createModelTextureReader({
       textureInfo: textureInfo,
     });
 
@@ -318,7 +318,7 @@ describe("Scene/GltfLoaderUtil", function () {
   });
 
   it("createModelTextureReader creates texture with KHR_texture_transform extension", function () {
-    var textureInfo = {
+    const textureInfo = {
       index: 0,
       texCoord: 0,
       extensions: {
@@ -331,13 +331,13 @@ describe("Scene/GltfLoaderUtil", function () {
     };
 
     // prettier-ignore
-    var expectedTransform = new Matrix3(
+    const expectedTransform = new Matrix3(
       0.1, 0.0, 0.5,
       0.0, 0.2, 0.5,
       0.0, 0.0, 1.0
     );
 
-    var modelTexture = GltfLoaderUtil.createModelTextureReader({
+    const modelTexture = GltfLoaderUtil.createModelTextureReader({
       textureInfo: textureInfo,
     });
 
@@ -346,8 +346,8 @@ describe("Scene/GltfLoaderUtil", function () {
   });
 
   it("createModelTextureReader handles KHR_texture_transform rotation correctly", function () {
-    var angle = Math.PI / 2.0;
-    var textureInfo = {
+    const angle = Math.PI / 2.0;
+    const textureInfo = {
       index: 0,
       texCoord: 0,
       extensions: {
@@ -362,13 +362,13 @@ describe("Scene/GltfLoaderUtil", function () {
     // This reverses the orientation of the uv coordinate space, so the angle
     // must be reversed.
     // prettier-ignore
-    var expectedTransform = new Matrix3(
+    const expectedTransform = new Matrix3(
       Math.cos(-angle), -Math.sin(-angle), 0.0,
       Math.sin(-angle), Math.cos(-angle), 0.0,
       0.0, 0.0, 1.0
     );
 
-    var modelTexture = GltfLoaderUtil.createModelTextureReader({
+    const modelTexture = GltfLoaderUtil.createModelTextureReader({
       textureInfo: textureInfo,
     });
 
@@ -377,9 +377,9 @@ describe("Scene/GltfLoaderUtil", function () {
   });
 
   it("createModelTextureReader creates texture", function () {
-    var context = createContext();
+    const context = createContext();
 
-    var texture = new Texture({
+    const texture = new Texture({
       context: context,
       pixelFormat: PixelFormat.RGBA,
       pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
@@ -390,12 +390,12 @@ describe("Scene/GltfLoaderUtil", function () {
       },
     });
 
-    var textureInfo = {
+    const textureInfo = {
       index: 0,
       texCoord: 1,
     };
 
-    var modelTexture = GltfLoaderUtil.createModelTextureReader({
+    const modelTexture = GltfLoaderUtil.createModelTextureReader({
       textureInfo: textureInfo,
       channels: "r",
       texture: texture,

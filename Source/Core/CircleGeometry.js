@@ -38,13 +38,13 @@ import VertexFormat from "./VertexFormat.js";
  */
 function CircleGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var radius = options.radius;
+  const radius = options.radius;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("radius", radius);
   //>>includeEnd('debug');
 
-  var ellipseGeometryOptions = {
+  const ellipseGeometryOptions = {
     center: options.center,
     semiMajorAxis: radius,
     semiMinorAxis: radius,
@@ -82,12 +82,12 @@ CircleGeometry.pack = function (value, array, startingIndex) {
   return EllipseGeometry.pack(value._ellipseGeometry, array, startingIndex);
 };
 
-var scratchEllipseGeometry = new EllipseGeometry({
+const scratchEllipseGeometry = new EllipseGeometry({
   center: new Cartesian3(),
   semiMajorAxis: 1.0,
   semiMinorAxis: 1.0,
 });
-var scratchOptions = {
+const scratchOptions = {
   center: new Cartesian3(),
   radius: undefined,
   ellipsoid: Ellipsoid.clone(Ellipsoid.UNIT_SPHERE),
@@ -110,7 +110,7 @@ var scratchOptions = {
  * @returns {CircleGeometry} The modified result parameter or a new CircleGeometry instance if one was not provided.
  */
 CircleGeometry.unpack = function (array, startingIndex, result) {
-  var ellipseGeometry = EllipseGeometry.unpack(
+  const ellipseGeometry = EllipseGeometry.unpack(
     array,
     startingIndex,
     scratchEllipseGeometry
@@ -162,11 +162,11 @@ CircleGeometry.createShadowVolume = function (
   minHeightFunc,
   maxHeightFunc
 ) {
-  var granularity = circleGeometry._ellipseGeometry._granularity;
-  var ellipsoid = circleGeometry._ellipseGeometry._ellipsoid;
+  const granularity = circleGeometry._ellipseGeometry._granularity;
+  const ellipsoid = circleGeometry._ellipseGeometry._ellipsoid;
 
-  var minHeight = minHeightFunc(granularity, ellipsoid);
-  var maxHeight = maxHeightFunc(granularity, ellipsoid);
+  const minHeight = minHeightFunc(granularity, ellipsoid);
+  const maxHeight = maxHeightFunc(granularity, ellipsoid);
 
   return new CircleGeometry({
     center: circleGeometry._ellipseGeometry._center,

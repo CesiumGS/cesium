@@ -10,49 +10,49 @@ import { TerrainMesh } from "../../Source/Cesium.js";
 import { when } from "../../Source/Cesium.js";
 
 describe("Core/GoogleEarthEnterpriseTerrainData", function () {
-  var sizeOfUint8 = Uint8Array.BYTES_PER_ELEMENT;
-  var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
-  var sizeOfInt32 = Int32Array.BYTES_PER_ELEMENT;
-  var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
-  var sizeOfFloat = Float32Array.BYTES_PER_ELEMENT;
-  var sizeOfDouble = Float64Array.BYTES_PER_ELEMENT;
-  var toEarthRadii = 1.0 / 6371010.0;
+  const sizeOfUint8 = Uint8Array.BYTES_PER_ELEMENT;
+  const sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
+  const sizeOfInt32 = Int32Array.BYTES_PER_ELEMENT;
+  const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+  const sizeOfFloat = Float32Array.BYTES_PER_ELEMENT;
+  const sizeOfDouble = Float64Array.BYTES_PER_ELEMENT;
+  const toEarthRadii = 1.0 / 6371010.0;
 
   function getBuffer(tilingScheme, x, y, level) {
-    var rectangle = tilingScheme.tileXYToRectangle(x, y, level);
-    var center = Rectangle.center(rectangle);
-    var southwest = Rectangle.southwest(rectangle);
-    var stepX = CesiumMath.toDegrees(rectangle.width / 2) / 180.0;
-    var stepY = CesiumMath.toDegrees(rectangle.height / 2) / 180.0;
+    const rectangle = tilingScheme.tileXYToRectangle(x, y, level);
+    const center = Rectangle.center(rectangle);
+    const southwest = Rectangle.southwest(rectangle);
+    const stepX = CesiumMath.toDegrees(rectangle.width / 2) / 180.0;
+    const stepY = CesiumMath.toDegrees(rectangle.height / 2) / 180.0;
 
     // 2 Uint8s: x and y values in units of step
-    var pointSize = 2 * sizeOfUint8 + sizeOfFloat;
+    const pointSize = 2 * sizeOfUint8 + sizeOfFloat;
 
     // 3 shorts
-    var faceSize = 3 * sizeOfUint16;
+    const faceSize = 3 * sizeOfUint16;
 
     // Doubles: OriginX, OriginY, SizeX, SizeY
     // Int32s: numPoints, numFaces, level
     // 4 corner points
     // 2 face (3 shorts)
-    var quadSize =
+    const quadSize =
       4 * sizeOfDouble + 3 * sizeOfInt32 + 4 * pointSize + 2 * faceSize;
 
     // QuadSize + size of each quad
-    var totalSize = 4 * (quadSize + sizeOfUint32);
-    var buf = new ArrayBuffer(totalSize);
-    var dv = new DataView(buf);
+    const totalSize = 4 * (quadSize + sizeOfUint32);
+    const buf = new ArrayBuffer(totalSize);
+    const dv = new DataView(buf);
 
-    var altitudeStart = 0;
-    var offset = 0;
-    for (var i = 0; i < 4; ++i) {
+    let altitudeStart = 0;
+    let offset = 0;
+    for (let i = 0; i < 4; ++i) {
       altitudeStart = 0;
       dv.setUint32(offset, quadSize, true);
       offset += sizeOfUint32;
 
       // Origin
-      var xOrigin = southwest.longitude;
-      var yOrigin = southwest.latitude;
+      let xOrigin = southwest.longitude;
+      let yOrigin = southwest.latitude;
 
       if ((i & 2) !== 0) {
         // Top row
@@ -92,11 +92,11 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
       offset += sizeOfInt32;
 
       // Points
-      var j;
+      let j;
       for (j = 0; j < 4; ++j) {
-        var xPos = 0;
-        var yPos = 0;
-        var altitude = altitudeStart;
+        let xPos = 0;
+        let yPos = 0;
+        let altitude = altitudeStart;
         if (j & 1) {
           ++xPos;
           altitude += 10;
@@ -112,7 +112,7 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
       }
 
       // Faces
-      var indices = [0, 1, 2, 1, 3, 2];
+      const indices = [0, 1, 2, 1, 3, 2];
       for (j = 0; j < indices.length; ++j) {
         dv.setUint16(offset, indices[j], true);
         offset += sizeOfUint16;
@@ -128,10 +128,10 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
 
   describe("upsample", function () {
     it("works for all four children of a simple quad", function () {
-      var maxShort = 32767;
-      var tilingScheme = new GeographicTilingScheme();
-      var buffer = getBuffer(tilingScheme, 0, 0, 0);
-      var data = new GoogleEarthEnterpriseTerrainData({
+      const maxShort = 32767;
+      let tilingScheme = new GeographicTilingScheme();
+      const buffer = getBuffer(tilingScheme, 0, 0, 0);
+      const data = new GoogleEarthEnterpriseTerrainData({
         buffer: buffer,
         childTileMask: 15,
         negativeAltitudeExponentBias: 32,
@@ -139,7 +139,7 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
       });
 
       tilingScheme = new GeographicTilingScheme();
-      var childRectangles = [
+      const childRectangles = [
         tilingScheme.tileXYToRectangle(0, 0, 1),
         tilingScheme.tileXYToRectangle(1, 0, 1),
         tilingScheme.tileXYToRectangle(0, 1, 1),
@@ -155,36 +155,36 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
         })
       )
         .then(function () {
-          var swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
-          var sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
-          var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
-          var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 1, 1);
+          const swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
+          const sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
+          const nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
+          const nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 1, 1);
           return when.join(swPromise, sePromise, nwPromise, nePromise);
         })
         .then(function (upsampleResults) {
           expect(upsampleResults.length).toBe(4);
 
-          for (var i = 0; i < upsampleResults.length; ++i) {
-            var upsampled = upsampleResults[i];
+          for (let i = 0; i < upsampleResults.length; ++i) {
+            const upsampled = upsampleResults[i];
             expect(upsampled).toBeDefined();
 
-            var uBuffer = upsampled._uValues;
-            var vBuffer = upsampled._vValues;
-            var ib = upsampled._indices;
-            var heights = upsampled._heightValues;
+            const uBuffer = upsampled._uValues;
+            const vBuffer = upsampled._vValues;
+            const ib = upsampled._indices;
+            const heights = upsampled._heightValues;
 
             expect(uBuffer.length).toBe(4);
             expect(vBuffer.length).toBe(4);
             expect(heights.length).toBe(4);
             expect(ib.length).toBe(6);
 
-            var rectangle = childRectangles[i];
-            var north = 0;
-            var south = 0;
-            var east = 0;
-            var west = 0;
-            var index, u, v;
-            for (var j = 0; j < ib.length; ++j) {
+            const rectangle = childRectangles[i];
+            let north = 0;
+            let south = 0;
+            let east = 0;
+            let west = 0;
+            let index, u, v;
+            for (let j = 0; j < ib.length; ++j) {
               index = ib[j];
               u =
                 (uBuffer[index] / maxShort) * rectangle.width + rectangle.west;
@@ -237,9 +237,9 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
   });
 
   describe("createMesh", function () {
-    var data;
-    var tilingScheme;
-    var buffer;
+    let data;
+    let tilingScheme;
+    let buffer;
 
     beforeEach(function () {
       tilingScheme = new GeographicTilingScheme();
@@ -297,9 +297,9 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
     });
 
     it("creates specified vertices plus skirt vertices", function () {
-      var rectangle = tilingScheme.tileXYToRectangle(0, 0, 0);
+      const rectangle = tilingScheme.tileXYToRectangle(0, 0, 0);
 
-      var wgs84 = Ellipsoid.WGS84;
+      const wgs84 = Ellipsoid.WGS84;
       return data
         .createMesh({
           tilingScheme: tilingScheme,
@@ -314,12 +314,12 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
           expect(mesh.minimumHeight).toBe(0);
           expect(mesh.maximumHeight).toBeCloseTo(20, 5);
 
-          var encoding = mesh.encoding;
-          var cartesian = new Cartesian3();
-          var cartographic = new Cartographic();
-          var count = mesh.vertices.length / mesh.encoding.stride;
-          for (var i = 0; i < count; ++i) {
-            var height = encoding.decodeHeight(mesh.vertices, i);
+          const encoding = mesh.encoding;
+          const cartesian = new Cartesian3();
+          const cartographic = new Cartographic();
+          const count = mesh.vertices.length / mesh.encoding.stride;
+          for (let i = 0; i < count; ++i) {
+            const height = encoding.decodeHeight(mesh.vertices, i);
             if (i < 9) {
               // Original vertices
               expect(height).toBeBetween(0, 20);
@@ -360,10 +360,10 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
           expect(mesh.maximumHeight).toBeCloseTo(20, 5);
           expect(mesh.encoding.exaggeration).toBe(2.0);
 
-          var encoding = mesh.encoding;
-          var count = mesh.vertices.length / mesh.encoding.stride;
-          for (var i = 0; i < count; ++i) {
-            var height = encoding.decodeHeight(mesh.vertices, i);
+          const encoding = mesh.encoding;
+          const count = mesh.vertices.length / mesh.encoding.stride;
+          for (let i = 0; i < count; ++i) {
+            const height = encoding.decodeHeight(mesh.vertices, i);
             if (i < 9) {
               // Original vertices
               expect(height).toBeBetween(0, 40);
@@ -377,14 +377,14 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
   });
 
   describe("interpolateHeight", function () {
-    var tilingScheme;
-    var rectangle;
-    var mesh;
+    let tilingScheme;
+    let rectangle;
+    let mesh;
 
     beforeEach(function () {
       tilingScheme = new GeographicTilingScheme();
       rectangle = tilingScheme.tileXYToRectangle(7, 6, 5);
-      var buffer = getBuffer(tilingScheme, 7, 6, 5);
+      const buffer = getBuffer(tilingScheme, 7, 6, 5);
       mesh = new GoogleEarthEnterpriseTerrainData({
         buffer: buffer,
         childTileMask: 15,
@@ -401,11 +401,11 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
 
     it("returns a height interpolated from the correct triangle", function () {
       // position in the northwest quadrant of the tile.
-      var longitude = rectangle.west + (rectangle.east - rectangle.west) * 0.25;
-      var latitude =
+      let longitude = rectangle.west + (rectangle.east - rectangle.west) * 0.25;
+      let latitude =
         rectangle.south + (rectangle.north - rectangle.south) * 0.75;
 
-      var result = mesh.interpolateHeight(rectangle, longitude, latitude);
+      let result = mesh.interpolateHeight(rectangle, longitude, latitude);
       expect(result).toBeBetween(0.0, 10.0);
 
       // position in the southeast quadrant of the tile.
@@ -425,7 +425,7 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
   });
 
   describe("isChildAvailable", function () {
-    var data;
+    let data;
 
     beforeEach(function () {
       data = new GoogleEarthEnterpriseTerrainData({
@@ -533,7 +533,7 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
   it("requires buffer", function () {
     expect(function () {
       /*eslint-disable no-unused-vars*/
-      var data = new GoogleEarthEnterpriseTerrainData({
+      const data = new GoogleEarthEnterpriseTerrainData({
         childTileMask: 8,
         negativeAltitudeExponentBias: 32,
         negativeElevationThreshold: CesiumMath.EPSILON12,
@@ -545,7 +545,7 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
   it("requires negativeAltitudeExponentBias", function () {
     expect(function () {
       /*eslint-disable no-unused-vars*/
-      var data = new GoogleEarthEnterpriseTerrainData({
+      const data = new GoogleEarthEnterpriseTerrainData({
         buffer: new ArrayBuffer(1),
         childTileMask: 8,
         negativeElevationThreshold: CesiumMath.EPSILON12,
@@ -557,7 +557,7 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
   it("requires negativeElevationThreshold", function () {
     expect(function () {
       /*eslint-disable no-unused-vars*/
-      var data = new GoogleEarthEnterpriseTerrainData({
+      const data = new GoogleEarthEnterpriseTerrainData({
         buffer: new ArrayBuffer(1),
         childTileMask: 8,
         negativeAltitudeExponentBias: 32,

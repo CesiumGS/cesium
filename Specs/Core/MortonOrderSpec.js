@@ -59,8 +59,8 @@ describe("Core/MortonOrder", function () {
   });
 
   it("decode2D uses result parameter", function () {
-    var array = new Array(2);
-    var result = MortonOrder.decode2D(0, array);
+    const array = new Array(2);
+    const result = MortonOrder.decode2D(0, array);
     expect(result).toBe(array);
   });
 
@@ -150,8 +150,8 @@ describe("Core/MortonOrder", function () {
   });
 
   it("decode3D uses result parameter", function () {
-    var array = new Array(3);
-    var result = MortonOrder.decode3D(0, array);
+    const array = new Array(3);
+    const result = MortonOrder.decode3D(0, array);
     expect(result).toBe(array);
   });
 

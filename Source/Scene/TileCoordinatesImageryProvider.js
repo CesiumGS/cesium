@@ -339,12 +339,12 @@ TileCoordinatesImageryProvider.prototype.requestImage = function (
   level,
   request
 ) {
-  var canvas = document.createElement("canvas");
+  const canvas = document.createElement("canvas");
   canvas.width = 256;
   canvas.height = 256;
-  var context = canvas.getContext("2d");
+  const context = canvas.getContext("2d");
 
-  var cssColor = this._color.toCssColorString();
+  const cssColor = this._color.toCssColorString();
 
   context.strokeStyle = cssColor;
   context.lineWidth = 2;

@@ -6,18 +6,18 @@ describe(
   "Scene/TweenCollection",
   function () {
     it("add() adds a tween", function () {
-      var startObject = {
+      const startObject = {
         value: 0.0,
       };
-      var stopObject = {
+      const stopObject = {
         value: 1.0,
       };
       function update(value) {}
       function complete() {}
       function cancel() {}
 
-      var tweens = new TweenCollection();
-      var tween = tweens.add({
+      const tweens = new TweenCollection();
+      const tween = tweens.add({
         startObject: startObject,
         stopObject: stopObject,
         duration: 1.0,
@@ -39,15 +39,15 @@ describe(
     });
 
     it("add() adds a tween with defaults", function () {
-      var startObject = {
+      const startObject = {
         value: 0.0,
       };
-      var stopObject = {
+      const stopObject = {
         value: 1.0,
       };
 
-      var tweens = new TweenCollection();
-      var tween = tweens.add({
+      const tweens = new TweenCollection();
+      const tween = tweens.add({
         startObject: startObject,
         stopObject: stopObject,
         duration: 1.0,
@@ -64,9 +64,9 @@ describe(
     });
 
     it("add() adds with a duration of zero", function () {
-      var complete = jasmine.createSpy("complete");
+      const complete = jasmine.createSpy("complete");
 
-      var tweens = new TweenCollection();
+      const tweens = new TweenCollection();
       tweens.add({
         startObject: {},
         stopObject: {},
@@ -79,7 +79,7 @@ describe(
     });
 
     it("add() throws without startObject", function () {
-      var tweens = new TweenCollection();
+      const tweens = new TweenCollection();
       expect(function () {
         tweens.add({
           stopObject: {},
@@ -89,7 +89,7 @@ describe(
     });
 
     it("add() throws without stopObject", function () {
-      var tweens = new TweenCollection();
+      const tweens = new TweenCollection();
       expect(function () {
         tweens.add({
           startObject: {},
@@ -99,7 +99,7 @@ describe(
     });
 
     it("add() throws without duration", function () {
-      var tweens = new TweenCollection();
+      const tweens = new TweenCollection();
       expect(function () {
         tweens.add({
           startObject: {},
@@ -109,7 +109,7 @@ describe(
     });
 
     it("add() throws with negative duration", function () {
-      var tweens = new TweenCollection();
+      const tweens = new TweenCollection();
       expect(function () {
         tweens.add({
           startObject: {},
@@ -120,10 +120,10 @@ describe(
     });
 
     it("cancelTween() cancels a tween", function () {
-      var cancel = jasmine.createSpy("cancel");
+      const cancel = jasmine.createSpy("cancel");
 
-      var tweens = new TweenCollection();
-      var tween = tweens.add({
+      const tweens = new TweenCollection();
+      const tween = tweens.add({
         startObject: {},
         stopObject: {},
         duration: 1.0,
@@ -138,10 +138,10 @@ describe(
     });
 
     it("remove() removes a tween", function () {
-      var cancel = jasmine.createSpy("cancel");
+      const cancel = jasmine.createSpy("cancel");
 
-      var tweens = new TweenCollection();
-      var tween = tweens.add({
+      const tweens = new TweenCollection();
+      const tween = tweens.add({
         startObject: {},
         stopObject: {},
         duration: 1.0,
@@ -151,7 +151,7 @@ describe(
       expect(tweens.length).toEqual(1);
       expect(tweens.contains(tween)).toEqual(true);
 
-      var b = tweens.remove(tween);
+      let b = tweens.remove(tween);
       expect(b).toEqual(true);
       expect(tweens.length).toEqual(0);
       expect(tweens.contains(tween)).toEqual(false);
@@ -162,9 +162,9 @@ describe(
     });
 
     it("removeAll() removes a tween", function () {
-      var cancel = jasmine.createSpy("cancel");
+      const cancel = jasmine.createSpy("cancel");
 
-      var tweens = new TweenCollection();
+      const tweens = new TweenCollection();
       tweens.add({
         startObject: {},
         stopObject: {},
@@ -186,20 +186,20 @@ describe(
     });
 
     it("contains() throws without an index", function () {
-      var tweens = new TweenCollection();
+      const tweens = new TweenCollection();
       expect(function () {
         return tweens.get();
       }).toThrowDeveloperError();
     });
 
     it("get() returns a tween", function () {
-      var tweens = new TweenCollection();
-      var tween = tweens.add({
+      const tweens = new TweenCollection();
+      const tween = tweens.add({
         startObject: {},
         stopObject: {},
         duration: 1.0,
       });
-      var anotherTween = tweens.add({
+      const anotherTween = tweens.add({
         startObject: {},
         stopObject: {},
         duration: 1.0,
@@ -210,17 +210,17 @@ describe(
     });
 
     it("update() animates a tween", function () {
-      var update = jasmine.createSpy("update");
-      var complete = jasmine.createSpy("complete");
+      const update = jasmine.createSpy("update");
+      const complete = jasmine.createSpy("complete");
 
-      var startObject = {
+      const startObject = {
         value: 0.0,
       };
-      var stopObject = {
+      const stopObject = {
         value: 1.0,
       };
 
-      var tweens = new TweenCollection();
+      const tweens = new TweenCollection();
       tweens.add({
         startObject: startObject,
         stopObject: stopObject,
@@ -247,8 +247,8 @@ describe(
     });
 
     it("update() animations a tween created with addProperty()", function () {
-      var tweens = new TweenCollection();
-      var object = {
+      const tweens = new TweenCollection();
+      const object = {
         property: 0.0,
       };
       tweens.addProperty({
@@ -264,7 +264,7 @@ describe(
     });
 
     it("addProperty() throws without an object", function () {
-      var tweens = new TweenCollection();
+      const tweens = new TweenCollection();
       expect(function () {
         return tweens.addProperty({
           property: "property",
@@ -275,8 +275,8 @@ describe(
     });
 
     it("addProperty() throws without a property", function () {
-      var tweens = new TweenCollection();
-      var object = {
+      const tweens = new TweenCollection();
+      const object = {
         property: 0.0,
       };
       expect(function () {
@@ -289,8 +289,8 @@ describe(
     });
 
     it("addProperty() throws when object does not contain property", function () {
-      var tweens = new TweenCollection();
-      var object = {
+      const tweens = new TweenCollection();
+      const object = {
         property: 0.0,
       };
       expect(function () {
@@ -304,8 +304,8 @@ describe(
     });
 
     it("addProperty() throws without a startValue", function () {
-      var tweens = new TweenCollection();
-      var object = {
+      const tweens = new TweenCollection();
+      const object = {
         property: 0.0,
       };
       expect(function () {
@@ -318,8 +318,8 @@ describe(
     });
 
     it("addProperty() throws without a stopValue", function () {
-      var tweens = new TweenCollection();
-      var object = {
+      const tweens = new TweenCollection();
+      const object = {
         property: 0.0,
       };
       expect(function () {
@@ -332,8 +332,8 @@ describe(
     });
 
     it("update() animations a tween created with addAlpha()", function () {
-      var tweens = new TweenCollection();
-      var material = {
+      const tweens = new TweenCollection();
+      const material = {
         uniforms: {
           lightColor: new Color(),
           darkColor: new Color(),
@@ -350,15 +350,15 @@ describe(
     });
 
     it("addAlpha() throws without a material", function () {
-      var tweens = new TweenCollection();
+      const tweens = new TweenCollection();
       expect(function () {
         return tweens.addAlpha({});
       }).toThrowDeveloperError();
     });
 
     it("addAlpha() throws without a material with color uniforms", function () {
-      var tweens = new TweenCollection();
-      var material = {
+      const tweens = new TweenCollection();
+      const material = {
         uniforms: {},
       };
       expect(function () {
@@ -369,8 +369,8 @@ describe(
     });
 
     it("update() animations a tween created with addOffsetIncrement()", function () {
-      var tweens = new TweenCollection();
-      var material = {
+      const tweens = new TweenCollection();
+      const material = {
         uniforms: {
           offset: 0.0,
         },
@@ -385,15 +385,15 @@ describe(
     });
 
     it("addOffsetIncrement() throws without a material", function () {
-      var tweens = new TweenCollection();
+      const tweens = new TweenCollection();
       expect(function () {
         return tweens.addOffsetIncrement({});
       }).toThrowDeveloperError();
     });
 
     it("addOffsetIncrement() throws without a material with an offset uniform", function () {
-      var tweens = new TweenCollection();
-      var material = {
+      const tweens = new TweenCollection();
+      const material = {
         uniforms: {},
       };
       expect(function () {

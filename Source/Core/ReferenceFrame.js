@@ -3,7 +3,7 @@
  *
  * @enum {Number}
  */
-var ReferenceFrame = {
+const ReferenceFrame = {
   /**
    * The fixed frame.
    *

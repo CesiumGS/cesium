@@ -37,7 +37,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
         viewer.scene.globe.depthTestAgainstTerrain = true;
@@ -50,7 +50,7 @@
               //
               text: "Draw Point with Label",
               onselect: function () {
-                var e = viewer.entities.add({
+                const e = viewer.entities.add({
                   position: Cesium.Cartesian3.fromDegrees(-122.1958, 46.1915),
                   point: {
                     color: Cesium.Color.SKYBLUE,
@@ -79,7 +79,7 @@
             {
               text: "Draw Billboard",
               onselect: function () {
-                var e = viewer.entities.add({
+                const e = viewer.entities.add({
                   position: Cesium.Cartesian3.fromDegrees(-122.1958, 46.1915),
                   billboard: {
                     image: "../images/facility.gif",
@@ -98,7 +98,7 @@
               //
               text: "Draw Corridor",
               onselect: function () {
-                var e = viewer.entities.add({
+                const e = viewer.entities.add({
                   corridor: {
                     positions: Cesium.Cartesian3.fromDegreesArray([
                       -122.19,
@@ -119,7 +119,7 @@
             {
               text: "Draw Polygon",
               onselect: function () {
-                var e = viewer.entities.add({
+                const e = viewer.entities.add({
                   polygon: {
                     hierarchy: {
                       positions: [
@@ -166,7 +166,7 @@
                   return;
                 }
 
-                var e = viewer.entities.add({
+                const e = viewer.entities.add({
                   polygon: {
                     hierarchy: {
                       positions: [
@@ -204,7 +204,7 @@
             {
               text: "Draw Rectangle",
               onselect: function () {
-                var e = viewer.entities.add({
+                const e = viewer.entities.add({
                   rectangle: {
                     coordinates: Cesium.Rectangle.fromDegrees(
                       -122.3,
@@ -222,7 +222,7 @@
             {
               text: "Draw Model",
               onselect: function () {
-                var e = viewer.entities.add({
+                const e = viewer.entities.add({
                   position: Cesium.Cartesian3.fromDegrees(-122.1958, 46.1915),
                   model: {
                     uri: "../../SampleData/models/CesiumMan/Cesium_Man.glb",
@@ -238,21 +238,21 @@
             {
               text: "Sample line positions and draw with depth test disabled",
               onselect: function () {
-                var length = 1000;
+                const length = 1000;
 
-                var startLon = Cesium.Math.toRadians(86.953793);
-                var endLon = Cesium.Math.toRadians(86.896497);
+                const startLon = Cesium.Math.toRadians(86.953793);
+                const endLon = Cesium.Math.toRadians(86.896497);
 
-                var lat = Cesium.Math.toRadians(27.988257);
+                const lat = Cesium.Math.toRadians(27.988257);
 
-                var terrainSamplePositions = [];
-                for (var i = 0; i < length; ++i) {
-                  var lon = Cesium.Math.lerp(
+                const terrainSamplePositions = [];
+                for (let i = 0; i < length; ++i) {
+                  const lon = Cesium.Math.lerp(
                     endLon,
                     startLon,
                     i / (length - 1)
                   );
-                  var position = new Cesium.Cartographic(lon, lat);
+                  const position = new Cesium.Cartographic(lon, lat);
                   terrainSamplePositions.push(position);
                 }
 
@@ -262,8 +262,8 @@
                     terrainSamplePositions
                   ),
                   function (samples) {
-                    var offset = 10.0;
-                    for (var i = 0; i < samples.length; ++i) {
+                    let offset = 10.0;
+                    for (let i = 0; i < samples.length; ++i) {
                       samples[i].height += offset;
                     }
 
@@ -289,7 +289,7 @@
                       },
                     });
 
-                    var target = new Cesium.Cartesian3(
+                    const target = new Cesium.Cartesian3(
                       300770.50872389384,
                       5634912.131394585,
                       2978152.2865545116
@@ -334,12 +334,12 @@
                   },
                 });
 
-                var target = new Cesium.Cartesian3(
+                const target = new Cesium.Cartesian3(
                   300770.50872389384,
                   5634912.131394585,
                   2978152.2865545116
                 );
-                var offset = new Cesium.Cartesian3(
+                const offset = new Cesium.Cartesian3(
                   6344.974098678562,
                   -793.3419798081741,
                   2499.9508860763162

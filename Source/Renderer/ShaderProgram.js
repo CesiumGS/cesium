@@ -9,14 +9,14 @@ import ContextLimits from "./ContextLimits.js";
 import createUniform from "./createUniform.js";
 import createUniformArray from "./createUniformArray.js";
 
-var nextShaderProgramId = 0;
+let nextShaderProgramId = 0;
 
 /**
  * @private
  */
 function ShaderProgram(options) {
-  var vertexShaderText = options.vertexShaderText;
-  var fragmentShaderText = options.fragmentShaderText;
+  let vertexShaderText = options.vertexShaderText;
+  let fragmentShaderText = options.fragmentShaderText;
 
   if (typeof spector !== "undefined") {
     // The #line statements common in Cesium shaders interfere with the ability of the
@@ -26,7 +26,7 @@ function ShaderProgram(options) {
     fragmentShaderText = fragmentShaderText.replace(/^#line/gm, "//#line");
   }
 
-  var modifiedFS = handleUniformPrecisionMismatches(
+  const modifiedFS = handleUniformPrecisionMismatches(
     vertexShaderText,
     fragmentShaderText
   );
@@ -128,13 +128,13 @@ Object.defineProperties(ShaderProgram.prototype, {
 });
 
 function extractUniforms(shaderText) {
-  var uniformNames = [];
-  var uniformLines = shaderText.match(/uniform.*?(?![^{]*})(?=[=\[;])/g);
+  const uniformNames = [];
+  const uniformLines = shaderText.match(/uniform.*?(?![^{]*})(?=[=\[;])/g);
   if (defined(uniformLines)) {
-    var len = uniformLines.length;
-    for (var i = 0; i < len; i++) {
-      var line = uniformLines[i].trim();
-      var name = line.slice(line.lastIndexOf(" ") + 1);
+    const len = uniformLines.length;
+    for (let i = 0; i < len; i++) {
+      const line = uniformLines[i].trim();
+      const name = line.slice(line.lastIndexOf(" ") + 1);
       uniformNames.push(name);
     }
   }
@@ -148,16 +148,16 @@ function handleUniformPrecisionMismatches(
   // If a uniform exists in both the vertex and fragment shader but with different precision qualifiers,
   // give the fragment shader uniform a different name. This fixes shader compilation errors on devices
   // that only support mediump in the fragment shader.
-  var duplicateUniformNames = {};
+  const duplicateUniformNames = {};
 
   if (!ContextLimits.highpFloatSupported || !ContextLimits.highpIntSupported) {
-    var i, j;
-    var uniformName;
-    var duplicateName;
-    var vertexShaderUniforms = extractUniforms(vertexShaderText);
-    var fragmentShaderUniforms = extractUniforms(fragmentShaderText);
-    var vertexUniformsCount = vertexShaderUniforms.length;
-    var fragmentUniformsCount = fragmentShaderUniforms.length;
+    let i, j;
+    let uniformName;
+    let duplicateName;
+    const vertexShaderUniforms = extractUniforms(vertexShaderText);
+    const fragmentShaderUniforms = extractUniforms(fragmentShaderText);
+    const vertexUniformsCount = vertexShaderUniforms.length;
+    const fragmentUniformsCount = fragmentShaderUniforms.length;
 
     for (i = 0; i < vertexUniformsCount; i++) {
       for (j = 0; j < fragmentUniformsCount; j++) {
@@ -165,7 +165,7 @@ function handleUniformPrecisionMismatches(
           uniformName = vertexShaderUniforms[i];
           duplicateName = "czm_mediump_" + uniformName;
           // Update fragmentShaderText with renamed uniforms
-          var re = new RegExp(uniformName + "\\b", "g");
+          const re = new RegExp(uniformName + "\\b", "g");
           fragmentShaderText = fragmentShaderText.replace(re, duplicateName);
           duplicateUniformNames[duplicateName] = uniformName;
         }
@@ -179,30 +179,30 @@ function handleUniformPrecisionMismatches(
   };
 }
 
-var consolePrefix = "[Cesium WebGL] ";
+const consolePrefix = "[Cesium WebGL] ";
 
 function createAndLinkProgram(gl, shader) {
-  var vsSource = shader._vertexShaderText;
-  var fsSource = shader._fragmentShaderText;
+  const vsSource = shader._vertexShaderText;
+  const fsSource = shader._fragmentShaderText;
 
-  var vertexShader = gl.createShader(gl.VERTEX_SHADER);
+  const vertexShader = gl.createShader(gl.VERTEX_SHADER);
   gl.shaderSource(vertexShader, vsSource);
   gl.compileShader(vertexShader);
 
-  var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+  const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
   gl.shaderSource(fragmentShader, fsSource);
   gl.compileShader(fragmentShader);
 
-  var program = gl.createProgram();
+  const program = gl.createProgram();
   gl.attachShader(program, vertexShader);
   gl.attachShader(program, fragmentShader);
 
   gl.deleteShader(vertexShader);
   gl.deleteShader(fragmentShader);
 
-  var attributeLocations = shader._attributeLocations;
+  const attributeLocations = shader._attributeLocations;
   if (defined(attributeLocations)) {
-    for (var attribute in attributeLocations) {
+    for (const attribute in attributeLocations) {
       if (attributeLocations.hasOwnProperty(attribute)) {
         gl.bindAttribLocation(
           program,
@@ -215,16 +215,16 @@ function createAndLinkProgram(gl, shader) {
 
   gl.linkProgram(program);
 
-  var log;
+  let log;
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    var debugShaders = shader._debugShaders;
+    const debugShaders = shader._debugShaders;
 
     // For performance, only check compile errors if there is a linker error.
     if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
       log = gl.getShaderInfoLog(fragmentShader);
       console.error(consolePrefix + "Fragment shader compile log: " + log);
       if (defined(debugShaders)) {
-        var fragmentSourceTranslation = debugShaders.getTranslatedShaderSource(
+        const fragmentSourceTranslation = debugShaders.getTranslatedShaderSource(
           fragmentShader
         );
         if (fragmentSourceTranslation !== "") {
@@ -248,7 +248,7 @@ function createAndLinkProgram(gl, shader) {
       log = gl.getShaderInfoLog(vertexShader);
       console.error(consolePrefix + "Vertex shader compile log: " + log);
       if (defined(debugShaders)) {
-        var vertexSourceTranslation = debugShaders.getTranslatedShaderSource(
+        const vertexSourceTranslation = debugShaders.getTranslatedShaderSource(
           vertexShader
         );
         if (vertexSourceTranslation !== "") {
@@ -287,7 +287,7 @@ function createAndLinkProgram(gl, shader) {
     throw new RuntimeError("Program failed to link.  Link log: " + log);
   }
 
-  var logShaderCompilation = shader._logShaderCompilation;
+  const logShaderCompilation = shader._logShaderCompilation;
 
   if (logShaderCompilation) {
     log = gl.getShaderInfoLog(vertexShader);
@@ -314,10 +314,10 @@ function createAndLinkProgram(gl, shader) {
 }
 
 function findVertexAttributes(gl, program, numberOfAttributes) {
-  var attributes = {};
-  for (var i = 0; i < numberOfAttributes; ++i) {
-    var attr = gl.getActiveAttrib(program, i);
-    var location = gl.getAttribLocation(program, attr.name);
+  const attributes = {};
+  for (let i = 0; i < numberOfAttributes; ++i) {
+    const attr = gl.getActiveAttrib(program, i);
+    const location = gl.getAttribLocation(program, attr.name);
 
     attributes[attr.name] = {
       name: attr.name,
@@ -330,16 +330,16 @@ function findVertexAttributes(gl, program, numberOfAttributes) {
 }
 
 function findUniforms(gl, program) {
-  var uniformsByName = {};
-  var uniforms = [];
-  var samplerUniforms = [];
+  const uniformsByName = {};
+  const uniforms = [];
+  const samplerUniforms = [];
 
-  var numberOfUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+  const numberOfUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
 
-  for (var i = 0; i < numberOfUniforms; ++i) {
-    var activeUniform = gl.getActiveUniform(program, i);
-    var suffix = "[0]";
-    var uniformName =
+  for (let i = 0; i < numberOfUniforms; ++i) {
+    const activeUniform = gl.getActiveUniform(program, i);
+    const suffix = "[0]";
+    const uniformName =
       activeUniform.name.indexOf(
         suffix,
         activeUniform.name.length - suffix.length
@@ -351,13 +351,18 @@ function findUniforms(gl, program) {
     if (uniformName.indexOf("gl_") !== 0) {
       if (activeUniform.name.indexOf("[") < 0) {
         // Single uniform
-        var location = gl.getUniformLocation(program, uniformName);
+        const location = gl.getUniformLocation(program, uniformName);
 
         // IE 11.0.9 needs this check since getUniformLocation can return null
         // if the uniform is not active (e.g., it is optimized out).  Looks like
         // getActiveUniform() above returns uniforms that are not actually active.
         if (location !== null) {
-          var uniform = createUniform(gl, activeUniform, uniformName, location);
+          const uniform = createUniform(
+            gl,
+            activeUniform,
+            uniformName,
+            location
+          );
 
           uniformsByName[uniformName] = uniform;
           uniforms.push(uniform);
@@ -369,14 +374,14 @@ function findUniforms(gl, program) {
       } else {
         // Uniform array
 
-        var uniformArray;
-        var locations;
-        var value;
-        var loc;
+        let uniformArray;
+        let locations;
+        let value;
+        let loc;
 
         // On some platforms - Nexus 4 in Firefox for one - an array of sampler2D ends up being represented
         // as separate uniforms, one for each array element.  Check for and handle that case.
-        var indexOfBracket = uniformName.indexOf("[");
+        const indexOfBracket = uniformName.indexOf("[");
         if (indexOfBracket >= 0) {
           // We're assuming the array elements show up in numerical order - it seems to be true.
           uniformArray = uniformsByName[uniformName.slice(0, indexOfBracket)];
@@ -404,7 +409,7 @@ function findUniforms(gl, program) {
           }
         } else {
           locations = [];
-          for (var j = 0; j < activeUniform.size; ++j) {
+          for (let j = 0; j < activeUniform.size; ++j) {
             loc = gl.getUniformLocation(program, uniformName + "[" + j + "]");
 
             // Workaround for IE 11.0.9.  See above.
@@ -438,20 +443,20 @@ function findUniforms(gl, program) {
 }
 
 function partitionUniforms(shader, uniforms) {
-  var automaticUniforms = [];
-  var manualUniforms = [];
+  const automaticUniforms = [];
+  const manualUniforms = [];
 
-  for (var uniform in uniforms) {
+  for (const uniform in uniforms) {
     if (uniforms.hasOwnProperty(uniform)) {
-      var uniformObject = uniforms[uniform];
-      var uniformName = uniform;
+      const uniformObject = uniforms[uniform];
+      let uniformName = uniform;
       // if it's a duplicate uniform, use its original name so it is updated correctly
-      var duplicateUniform = shader._duplicateUniformNames[uniformName];
+      const duplicateUniform = shader._duplicateUniformNames[uniformName];
       if (defined(duplicateUniform)) {
         uniformObject.name = duplicateUniform;
         uniformName = duplicateUniform;
       }
-      var automaticUniform = AutomaticUniforms[uniformName];
+      const automaticUniform = AutomaticUniforms[uniformName];
       if (defined(automaticUniform)) {
         automaticUniforms.push({
           uniform: uniformObject,
@@ -472,9 +477,9 @@ function partitionUniforms(shader, uniforms) {
 function setSamplerUniforms(gl, program, samplerUniforms) {
   gl.useProgram(program);
 
-  var textureUnitIndex = 0;
-  var length = samplerUniforms.length;
-  for (var i = 0; i < length; ++i) {
+  let textureUnitIndex = 0;
+  const length = samplerUniforms.length;
+  for (let i = 0; i < length; ++i) {
     textureUnitIndex = samplerUniforms[i]._setSampler(textureUnitIndex);
   }
 
@@ -492,16 +497,19 @@ function initialize(shader) {
 }
 
 function reinitialize(shader) {
-  var oldProgram = shader._program;
+  const oldProgram = shader._program;
 
-  var gl = shader._gl;
-  var program = createAndLinkProgram(gl, shader, shader._debugShaders);
-  var numberOfVertexAttributes = gl.getProgramParameter(
+  const gl = shader._gl;
+  const program = createAndLinkProgram(gl, shader, shader._debugShaders);
+  const numberOfVertexAttributes = gl.getProgramParameter(
     program,
     gl.ACTIVE_ATTRIBUTES
   );
-  var uniforms = findUniforms(gl, program);
-  var partitionedUniforms = partitionUniforms(shader, uniforms.uniformsByName);
+  const uniforms = findUniforms(gl, program);
+  const partitionedUniforms = partitionUniforms(
+    shader,
+    uniforms.uniformsByName
+  );
 
   shader._program = program;
   shader._numberOfVertexAttributes = numberOfVertexAttributes;
@@ -534,12 +542,12 @@ function reinitialize(shader) {
       onCompiled, // Callback triggered by your engine when the compilation is successful. It needs to send back the new linked program.
       onError // Callback triggered by your engine in case of error. It needs to send the WebGL error to allow the editor to display the error in the gutter.
     ) {
-      var originalVS = shader._vertexShaderText;
-      var originalFS = shader._fragmentShaderText;
+      const originalVS = shader._vertexShaderText;
+      const originalFS = shader._fragmentShaderText;
 
       // SpectorJS likes to replace `!=` with `! =` for unknown reasons,
       // and that causes glsl compile failures. So fix that up.
-      var regex = / ! = /g;
+      const regex = / ! = /g;
       shader._vertexShaderText = vertexSourceCode.replace(regex, " != ");
       shader._fragmentShaderText = fragmentSourceCode.replace(regex, " != ");
 
@@ -551,8 +559,8 @@ function reinitialize(shader) {
         shader._fragmentShaderText = originalFS;
 
         // Only pass on the WebGL error:
-        var errorMatcher = /(?:Compile|Link) error: ([^]*)/;
-        var match = errorMatcher.exec(e.message);
+        const errorMatcher = /(?:Compile|Link) error: ([^]*)/;
+        const match = errorMatcher.exec(e.message);
         if (match) {
           onError(match[1]);
         } else {
@@ -573,22 +581,22 @@ ShaderProgram.prototype._setUniforms = function (
   uniformState,
   validate
 ) {
-  var len;
-  var i;
+  let len;
+  let i;
 
   if (defined(uniformMap)) {
-    var manualUniforms = this._manualUniforms;
+    const manualUniforms = this._manualUniforms;
     len = manualUniforms.length;
     for (i = 0; i < len; ++i) {
-      var mu = manualUniforms[i];
+      const mu = manualUniforms[i];
       mu.value = uniformMap[mu.name]();
     }
   }
 
-  var automaticUniforms = this._automaticUniforms;
+  const automaticUniforms = this._automaticUniforms;
   len = automaticUniforms.length;
   for (i = 0; i < len; ++i) {
-    var au = automaticUniforms[i];
+    const au = automaticUniforms[i];
     au.uniform.value = au.automaticUniform.getValue(uniformState);
   }
 
@@ -598,15 +606,15 @@ ShaderProgram.prototype._setUniforms = function (
   // (which makes the GL calls) is faster than removing this loop and making
   // the GL calls above.  I suspect this is because each GL call pollutes the
   // L2 cache making our JavaScript and the browser/driver ping-pong cache lines.
-  var uniforms = this._uniforms;
+  const uniforms = this._uniforms;
   len = uniforms.length;
   for (i = 0; i < len; ++i) {
     uniforms[i].set();
   }
 
   if (validate) {
-    var gl = this._gl;
-    var program = this._program;
+    const gl = this._gl;
+    const program = this._program;
 
     gl.validateProgram(program);
     //>>includeStart('debug', pragmas.debug);

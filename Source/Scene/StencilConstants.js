@@ -8,7 +8,7 @@ import StencilOperation from "./StencilOperation.js";
  *
  * @private
  */
-var StencilConstants = {
+const StencilConstants = {
   CESIUM_3D_TILE_MASK: 0x80,
   SKIP_LOD_MASK: 0x70,
   SKIP_LOD_BIT_SHIFT: 4,

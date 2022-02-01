@@ -16,7 +16,7 @@ import DeveloperError from "./DeveloperError.js";
  *
  * @private
  */
-var Tipsify = {};
+const Tipsify = {};
 
 /**
  * Calculates the average cache miss ratio (ACMR) for a given set of indices.
@@ -40,9 +40,9 @@ var Tipsify = {};
  */
 Tipsify.calculateACMR = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var indices = options.indices;
-  var maximumIndex = options.maximumIndex;
-  var cacheSize = defaultValue(options.cacheSize, 24);
+  const indices = options.indices;
+  let maximumIndex = options.maximumIndex;
+  const cacheSize = defaultValue(options.cacheSize, 24);
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(indices)) {
@@ -50,7 +50,7 @@ Tipsify.calculateACMR = function (options) {
   }
   //>>includeEnd('debug');
 
-  var numIndices = indices.length;
+  const numIndices = indices.length;
 
   //>>includeStart('debug', pragmas.debug);
   if (numIndices < 3 || numIndices % 3 !== 0) {
@@ -67,8 +67,8 @@ Tipsify.calculateACMR = function (options) {
   // Compute the maximumIndex if not given
   if (!defined(maximumIndex)) {
     maximumIndex = 0;
-    var currentIndex = 0;
-    var intoIndices = indices[currentIndex];
+    let currentIndex = 0;
+    let intoIndices = indices[currentIndex];
     while (currentIndex < numIndices) {
       if (intoIndices > maximumIndex) {
         maximumIndex = intoIndices;
@@ -79,14 +79,14 @@ Tipsify.calculateACMR = function (options) {
   }
 
   // Vertex time stamps
-  var vertexTimeStamps = [];
-  for (var i = 0; i < maximumIndex + 1; i++) {
+  const vertexTimeStamps = [];
+  for (let i = 0; i < maximumIndex + 1; i++) {
     vertexTimeStamps[i] = 0;
   }
 
   // Cache processing
-  var s = cacheSize + 1;
-  for (var j = 0; j < numIndices; ++j) {
+  let s = cacheSize + 1;
+  for (let j = 0; j < numIndices; ++j) {
     if (s - vertexTimeStamps[indices[j]] > cacheSize) {
       vertexTimeStamps[indices[j]] = s;
       ++s;
@@ -118,16 +118,16 @@ Tipsify.calculateACMR = function (options) {
  */
 Tipsify.tipsify = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var indices = options.indices;
-  var maximumIndex = options.maximumIndex;
-  var cacheSize = defaultValue(options.cacheSize, 24);
+  const indices = options.indices;
+  const maximumIndex = options.maximumIndex;
+  const cacheSize = defaultValue(options.cacheSize, 24);
 
-  var cursor;
+  let cursor;
 
   function skipDeadEnd(vertices, deadEnd, indices, maximumIndexPlusOne) {
     while (deadEnd.length >= 1) {
       // while the stack is not empty
-      var d = deadEnd[deadEnd.length - 1]; // top of the stack
+      const d = deadEnd[deadEnd.length - 1]; // top of the stack
       deadEnd.splice(deadEnd.length - 1, 1); // pop the stack
 
       if (vertices[d].numLiveTriangles > 0) {
@@ -154,12 +154,12 @@ Tipsify.tipsify = function (options) {
     deadEnd,
     maximumIndexPlusOne
   ) {
-    var n = -1;
-    var p;
-    var m = -1;
-    var itOneRing = 0;
+    let n = -1;
+    let p;
+    let m = -1;
+    let itOneRing = 0;
     while (itOneRing < oneRing.length) {
-      var index = oneRing[itOneRing];
+      const index = oneRing[itOneRing];
       if (vertices[index].numLiveTriangles) {
         p = 0;
         if (
@@ -189,7 +189,7 @@ Tipsify.tipsify = function (options) {
   }
   //>>includeEnd('debug');
 
-  var numIndices = indices.length;
+  const numIndices = indices.length;
 
   //>>includeStart('debug', pragmas.debug);
   if (numIndices < 3 || numIndices % 3 !== 0) {
@@ -204,10 +204,10 @@ Tipsify.tipsify = function (options) {
   //>>includeEnd('debug');
 
   // Determine maximum index
-  var maximumIndexPlusOne = 0;
-  var currentIndex = 0;
-  var intoIndices = indices[currentIndex];
-  var endIndex = numIndices;
+  let maximumIndexPlusOne = 0;
+  let currentIndex = 0;
+  let intoIndices = indices[currentIndex];
+  const endIndex = numIndices;
   if (defined(maximumIndex)) {
     maximumIndexPlusOne = maximumIndex + 1;
   } else {
@@ -225,8 +225,8 @@ Tipsify.tipsify = function (options) {
   }
 
   // Vertices
-  var vertices = [];
-  var i;
+  const vertices = [];
+  let i;
   for (i = 0; i < maximumIndexPlusOne; i++) {
     vertices[i] = {
       numLiveTriangles: 0,
@@ -235,7 +235,7 @@ Tipsify.tipsify = function (options) {
     };
   }
   currentIndex = 0;
-  var triangle = 0;
+  let triangle = 0;
   while (currentIndex < endIndex) {
     vertices[indices[currentIndex]].vertexTriangles.push(triangle);
     ++vertices[indices[currentIndex]].numLiveTriangles;
@@ -248,36 +248,36 @@ Tipsify.tipsify = function (options) {
   }
 
   // Starting index
-  var f = 0;
+  let f = 0;
 
   // Time Stamp
-  var s = cacheSize + 1;
+  let s = cacheSize + 1;
   cursor = 1;
 
   // Process
-  var oneRing = [];
-  var deadEnd = []; //Stack
-  var vertex;
-  var intoVertices;
-  var currentOutputIndex = 0;
-  var outputIndices = [];
-  var numTriangles = numIndices / 3;
-  var triangleEmitted = [];
+  let oneRing = [];
+  const deadEnd = []; //Stack
+  let vertex;
+  let intoVertices;
+  let currentOutputIndex = 0;
+  const outputIndices = [];
+  const numTriangles = numIndices / 3;
+  const triangleEmitted = [];
   for (i = 0; i < numTriangles; i++) {
     triangleEmitted[i] = false;
   }
-  var index;
-  var limit;
+  let index;
+  let limit;
   while (f !== -1) {
     oneRing = [];
     intoVertices = vertices[f];
     limit = intoVertices.vertexTriangles.length;
-    for (var k = 0; k < limit; ++k) {
+    for (let k = 0; k < limit; ++k) {
       triangle = intoVertices.vertexTriangles[k];
       if (!triangleEmitted[triangle]) {
         triangleEmitted[triangle] = true;
         currentIndex = triangle + triangle + triangle;
-        for (var j = 0; j < 3; ++j) {
+        for (let j = 0; j < 3; ++j) {
           // Set this index as a possible next index
           index = indices[currentIndex];
           oneRing.push(index);

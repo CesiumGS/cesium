@@ -13,7 +13,7 @@ function MockImageryProvider() {
   this.tileHeight = 256;
   this._requestImageWillSucceed = {};
 
-  var that = this;
+  const that = this;
   Resource.fetchImage("./Data/Images/Green.png").then(function (image) {
     that.ready = true;
     that._image = image;
@@ -21,12 +21,12 @@ function MockImageryProvider() {
 }
 
 MockImageryProvider.prototype.requestImage = function (x, y, level, request) {
-  var willSucceed = this._requestImageWillSucceed[createTileKey(x, y, level)];
+  const willSucceed = this._requestImageWillSucceed[createTileKey(x, y, level)];
   if (willSucceed === undefined) {
     return undefined; // defer by default
   }
 
-  var that = this;
+  const that = this;
   return runLater(function () {
     if (willSucceed === true) {
       return that._image;
