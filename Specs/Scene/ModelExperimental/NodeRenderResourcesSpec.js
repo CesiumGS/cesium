@@ -50,7 +50,7 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
     expect(nodeResources.runtimeNode).toBe(runtimeNode);
     expect(nodeResources.modelMatrix).toBe(runtimeNode.transform);
     expect(nodeResources.attributes).toEqual([]);
-    expect(nodeResources.renderStateOptions).toBeDefined();
+    expect(nodeResources.renderStateOptions).toEqual({});
   });
 
   it("inherits from model render resources", function () {
