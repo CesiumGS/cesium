@@ -56,4 +56,16 @@ export default function ModelRenderResources(model) {
    * @private
    */
   this.alphaOptions = new ModelAlphaOptions();
+
+  /**
+   * An object storing options for creating a {@link RenderState}.
+   * The pipeline stages simply set the options, the render state is created
+   * when the {@link DrawCommand} is constructed.
+   *
+   * @type {Object}
+   * @readonly
+   *
+   * @private
+   */
+  this.renderStateOptions = {};
 }

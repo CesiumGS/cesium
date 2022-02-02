@@ -20,6 +20,7 @@ describe("Scene/ModelExperimental/ModelRenderResources", function () {
 
     expect(modelResources.model).toBe(mockModel);
     expect(modelResources.shaderBuilder).toBeDefined();
+    expect(modelResources.renderStateOptions).toEqual({});
     checkShaderDefines(modelResources.shaderBuilder, []);
   });
 });

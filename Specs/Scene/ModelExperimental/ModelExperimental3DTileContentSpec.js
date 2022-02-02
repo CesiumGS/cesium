@@ -79,6 +79,14 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     );
   });
 
+  it("renders glb content", function () {
+    return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(function (
+      tileset
+    ) {
+      Cesium3DTilesTester.expectRender(scene, tileset);
+    });
+  });
+
   it("renders glTF content", function () {
     return Cesium3DTilesTester.loadTileset(scene, buildingsMetadataUrl).then(
       function (tileset) {
