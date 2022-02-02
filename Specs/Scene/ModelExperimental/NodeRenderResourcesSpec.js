@@ -29,6 +29,7 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
       expectedDefines
     );
   }
+
   it("throws for undefined modelRenderResources", function () {
     expect(function () {
       return new NodeRenderResources(undefined, runtimeNode);
@@ -49,15 +50,28 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
     expect(nodeResources.runtimeNode).toBe(runtimeNode);
     expect(nodeResources.modelMatrix).toBe(runtimeNode.transform);
     expect(nodeResources.attributes).toEqual([]);
+    expect(nodeResources.renderStateOptions).toBeDefined();
   });
 
   it("inherits from model render resources", function () {
     const modelResources = new ModelRenderResources(mockModel);
     modelResources.shaderBuilder.addDefine("MODEL");
+    modelResources.renderStateOptions.cull = {
+      enabled: true,
+    };
+
     const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
     nodeResources.shaderBuilder.addDefine("NODE");
 
     expect(nodeResources.model).toBe(mockModel);
+
+    // The node's render resources should be a clone of the model's.
+    expect(nodeResources.renderStateOptions).not.toBe(
+      modelResources.renderStateOptions
+    );
+    expect(nodeResources.renderStateOptions.cull).toEqual({
+      enabled: true,
+    });
 
     // The node's shader builder should be a clone of the model's
     expect(nodeResources.shaderBuilder).not.toBe(modelResources.shaderBuilder);
