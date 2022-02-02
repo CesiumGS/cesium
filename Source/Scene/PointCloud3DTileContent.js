@@ -167,7 +167,7 @@ function getFragmentShaderLoaded(content) {
         false
       )(fs);
     }
-    return "uniform vec4 czm_pickColor;\n" + fs;
+    return `uniform vec4 czm_pickColor;\n${fs}`;
   };
 }
 
@@ -262,9 +262,9 @@ PointCloud3DTileContent.prototype.getFeature = function (batchId) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
     throw new DeveloperError(
-      "batchId is required and between zero and featuresLength - 1 (" +
-        (featuresLength - 1) +
-        ")."
+      `batchId is required and between zero and featuresLength - 1 (${
+        featuresLength - 1
+      }).`
     );
   }
   //>>includeEnd('debug');

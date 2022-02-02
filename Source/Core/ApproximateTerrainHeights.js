@@ -80,7 +80,7 @@ ApproximateTerrainHeights.getMinimumMaximumHeights = function (
   let minTerrainHeight = ApproximateTerrainHeights._defaultMinTerrainHeight;
   let maxTerrainHeight = ApproximateTerrainHeights._defaultMaxTerrainHeight;
   if (defined(xyLevel)) {
-    const key = xyLevel.level + "-" + xyLevel.x + "-" + xyLevel.y;
+    const key = `${xyLevel.level}-${xyLevel.x}-${xyLevel.y}`;
     const heights = ApproximateTerrainHeights._terrainHeights[key];
     if (defined(heights)) {
       minTerrainHeight = heights[0];
@@ -150,7 +150,7 @@ ApproximateTerrainHeights.getBoundingSphere = function (rectangle, ellipsoid) {
   // Get the terrain max for that tile
   let maxTerrainHeight = ApproximateTerrainHeights._defaultMaxTerrainHeight;
   if (defined(xyLevel)) {
-    const key = xyLevel.level + "-" + xyLevel.x + "-" + xyLevel.y;
+    const key = `${xyLevel.level}-${xyLevel.x}-${xyLevel.y}`;
     const heights = ApproximateTerrainHeights._terrainHeights[key];
     if (defined(heights)) {
       maxTerrainHeight = heights[1];

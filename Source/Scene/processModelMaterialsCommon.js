@@ -78,7 +78,7 @@ function processModelMaterialsCommon(gltf, options) {
           valueName !== "transparent" &&
           valueName !== "doubleSided"
         ) {
-          uniformName = "u_" + valueName.toLowerCase();
+          uniformName = `u_${valueName.toLowerCase()}`;
           materialValues[uniformName] = values[valueName];
         }
       }
@@ -150,7 +150,7 @@ function generateLightParameters(gltf) {
           delete lights[lightName];
           continue;
         }
-        const lightBaseName = "light" + lightCount.toString();
+        const lightBaseName = `light${lightCount.toString()}`;
         light.baseName = lightBaseName;
         let ambient;
         let directional;
@@ -159,19 +159,19 @@ function generateLightParameters(gltf) {
         switch (lightType) {
           case "ambient":
             ambient = light.ambient;
-            result[lightBaseName + "Color"] = {
+            result[`${lightBaseName}Color`] = {
               type: WebGLConstants.FLOAT_VEC3,
               value: ambient.color,
             };
             break;
           case "directional":
             directional = light.directional;
-            result[lightBaseName + "Color"] = {
+            result[`${lightBaseName}Color`] = {
               type: WebGLConstants.FLOAT_VEC3,
               value: directional.color,
             };
             if (defined(light.node)) {
-              result[lightBaseName + "Transform"] = {
+              result[`${lightBaseName}Transform`] = {
                 node: light.node,
                 semantic: "MODELVIEW",
                 type: WebGLConstants.FLOAT_MAT4,
@@ -180,18 +180,18 @@ function generateLightParameters(gltf) {
             break;
           case "point":
             point = light.point;
-            result[lightBaseName + "Color"] = {
+            result[`${lightBaseName}Color`] = {
               type: WebGLConstants.FLOAT_VEC3,
               value: point.color,
             };
             if (defined(light.node)) {
-              result[lightBaseName + "Transform"] = {
+              result[`${lightBaseName}Transform`] = {
                 node: light.node,
                 semantic: "MODELVIEW",
                 type: WebGLConstants.FLOAT_MAT4,
               };
             }
-            result[lightBaseName + "Attenuation"] = {
+            result[`${lightBaseName}Attenuation`] = {
               type: WebGLConstants.FLOAT_VEC3,
               value: [
                 point.constantAttenuation,
@@ -202,24 +202,24 @@ function generateLightParameters(gltf) {
             break;
           case "spot":
             spot = light.spot;
-            result[lightBaseName + "Color"] = {
+            result[`${lightBaseName}Color`] = {
               type: WebGLConstants.FLOAT_VEC3,
               value: spot.color,
             };
             if (defined(light.node)) {
-              result[lightBaseName + "Transform"] = {
+              result[`${lightBaseName}Transform`] = {
                 node: light.node,
                 semantic: "MODELVIEW",
                 type: WebGLConstants.FLOAT_MAT4,
               };
-              result[lightBaseName + "InverseTransform"] = {
+              result[`${lightBaseName}InverseTransform`] = {
                 node: light.node,
                 semantic: "MODELVIEWINVERSE",
                 type: WebGLConstants.FLOAT_MAT4,
                 useInFragment: true,
               };
             }
-            result[lightBaseName + "Attenuation"] = {
+            result[`${lightBaseName}Attenuation`] = {
               type: WebGLConstants.FLOAT_VEC3,
               value: [
                 spot.constantAttenuation,
@@ -228,7 +228,7 @@ function generateLightParameters(gltf) {
               ],
             };
 
-            result[lightBaseName + "FallOff"] = {
+            result[`${lightBaseName}FallOff`] = {
               type: WebGLConstants.FLOAT_VEC2,
               value: [spot.fallOffAngle, spot.fallOffExponent],
             };
@@ -333,7 +333,7 @@ function generateTechnique(
         name,
         parameterValues[name]
       );
-      uniformName = "u_" + name.toLowerCase();
+      uniformName = `u_${name.toLowerCase()}`;
       if (!hasTexCoords && uniformType === WebGLConstants.SAMPLER_2D) {
         hasTexCoords = true;
       }
@@ -353,7 +353,7 @@ function generateTechnique(
   if (defined(lightParameters)) {
     for (const lightParamName in lightParameters) {
       if (lightParameters.hasOwnProperty(lightParamName)) {
-        uniformName = "u_" + lightParamName;
+        uniformName = `u_${lightParamName}`;
         techniqueUniforms[uniformName] = lightParameters[lightParamName];
       }
     }
@@ -363,28 +363,20 @@ function generateTechnique(
   for (uniformName in techniqueUniforms) {
     if (techniqueUniforms.hasOwnProperty(uniformName)) {
       const uniform = techniqueUniforms[uniformName];
-      const arraySize = defined(uniform.count) ? "[" + uniform.count + "]" : "";
+      const arraySize = defined(uniform.count) ? `[${uniform.count}]` : "";
       if (
         (uniform.type !== WebGLConstants.FLOAT_MAT3 &&
           uniform.type !== WebGLConstants.FLOAT_MAT4) ||
         uniform.useInFragment
       ) {
-        fragmentShader +=
-          "uniform " +
-          webGLConstantToGlslType(uniform.type) +
-          " " +
-          uniformName +
-          arraySize +
-          ";\n";
+        fragmentShader += `uniform ${webGLConstantToGlslType(
+          uniform.type
+        )} ${uniformName}${arraySize};\n`;
         delete uniform.useInFragment;
       } else {
-        vertexShader +=
-          "uniform " +
-          webGLConstantToGlslType(uniform.type) +
-          " " +
-          uniformName +
-          arraySize +
-          ";\n";
+        vertexShader += `uniform ${webGLConstantToGlslType(
+          uniform.type
+        )} ${uniformName}${arraySize};\n`;
       }
     }
   }
@@ -445,10 +437,10 @@ function generateTechnique(
 
     v_texcoord = "v_texcoord_0";
     vertexShader += "attribute vec2 a_texcoord_0;\n";
-    vertexShader += "varying vec2 " + v_texcoord + ";\n";
-    vertexShaderMain += "  " + v_texcoord + " = a_texcoord_0;\n";
+    vertexShader += `varying vec2 ${v_texcoord};\n`;
+    vertexShaderMain += `  ${v_texcoord} = a_texcoord_0;\n`;
 
-    fragmentShader += "varying vec2 " + v_texcoord + ";\n";
+    fragmentShader += `varying vec2 ${v_texcoord};\n`;
   }
 
   if (hasSkinning) {
@@ -497,81 +489,53 @@ function generateTechnique(
       const lightType = light.type.toLowerCase();
       const lightBaseName = light.baseName;
       fragmentLightingBlock += "  {\n";
-      const lightColorName = "u_" + lightBaseName + "Color";
+      const lightColorName = `u_${lightBaseName}Color`;
       if (lightType === "ambient") {
         hasAmbientLights = true;
-        fragmentLightingBlock +=
-          "    ambientLight += " + lightColorName + ";\n";
+        fragmentLightingBlock += `    ambientLight += ${lightColorName};\n`;
       } else if (hasNormals) {
         hasNonAmbientLights = true;
-        const varyingDirectionName = "v_" + lightBaseName + "Direction";
-        const varyingPositionName = "v_" + lightBaseName + "Position";
+        const varyingDirectionName = `v_${lightBaseName}Direction`;
+        const varyingPositionName = `v_${lightBaseName}Position`;
 
         if (lightType !== "point") {
-          vertexShader += "varying vec3 " + varyingDirectionName + ";\n";
-          fragmentShader += "varying vec3 " + varyingDirectionName + ";\n";
+          vertexShader += `varying vec3 ${varyingDirectionName};\n`;
+          fragmentShader += `varying vec3 ${varyingDirectionName};\n`;
 
-          vertexShaderMain +=
-            "  " +
-            varyingDirectionName +
-            " = mat3(u_" +
-            lightBaseName +
-            "Transform) * vec3(0.,0.,1.);\n";
+          vertexShaderMain += `  ${varyingDirectionName} = mat3(u_${lightBaseName}Transform) * vec3(0.,0.,1.);\n`;
           if (lightType === "directional") {
-            fragmentLightingBlock +=
-              "    vec3 l = normalize(" + varyingDirectionName + ");\n";
+            fragmentLightingBlock += `    vec3 l = normalize(${varyingDirectionName});\n`;
           }
         }
 
         if (lightType !== "directional") {
-          vertexShader += "varying vec3 " + varyingPositionName + ";\n";
-          fragmentShader += "varying vec3 " + varyingPositionName + ";\n";
+          vertexShader += `varying vec3 ${varyingPositionName};\n`;
+          fragmentShader += `varying vec3 ${varyingPositionName};\n`;
 
-          vertexShaderMain +=
-            "  " +
-            varyingPositionName +
-            " = u_" +
-            lightBaseName +
-            "Transform[3].xyz;\n";
-          fragmentLightingBlock +=
-            "    vec3 VP = " + varyingPositionName + " - v_positionEC;\n";
+          vertexShaderMain += `  ${varyingPositionName} = u_${lightBaseName}Transform[3].xyz;\n`;
+          fragmentLightingBlock += `    vec3 VP = ${varyingPositionName} - v_positionEC;\n`;
           fragmentLightingBlock += "    vec3 l = normalize(VP);\n";
           fragmentLightingBlock += "    float range = length(VP);\n";
-          fragmentLightingBlock +=
-            "    float attenuation = 1.0 / (u_" +
-            lightBaseName +
-            "Attenuation.x + ";
-          fragmentLightingBlock +=
-            "(u_" + lightBaseName + "Attenuation.y * range) + ";
-          fragmentLightingBlock +=
-            "(u_" + lightBaseName + "Attenuation.z * range * range));\n";
+          fragmentLightingBlock += `    float attenuation = 1.0 / (u_${lightBaseName}Attenuation.x + `;
+          fragmentLightingBlock += `(u_${lightBaseName}Attenuation.y * range) + `;
+          fragmentLightingBlock += `(u_${lightBaseName}Attenuation.z * range * range));\n`;
         } else {
           fragmentLightingBlock += "    float attenuation = 1.0;\n";
         }
 
         if (lightType === "spot") {
-          fragmentLightingBlock +=
-            "    float spotDot = dot(l, normalize(" +
-            varyingDirectionName +
-            "));\n";
-          fragmentLightingBlock +=
-            "    if (spotDot < cos(u_" + lightBaseName + "FallOff.x * 0.5))\n";
+          fragmentLightingBlock += `    float spotDot = dot(l, normalize(${varyingDirectionName}));\n`;
+          fragmentLightingBlock += `    if (spotDot < cos(u_${lightBaseName}FallOff.x * 0.5))\n`;
           fragmentLightingBlock += "    {\n";
           fragmentLightingBlock += "      attenuation = 0.0;\n";
           fragmentLightingBlock += "    }\n";
           fragmentLightingBlock += "    else\n";
           fragmentLightingBlock += "    {\n";
-          fragmentLightingBlock +=
-            "        attenuation *= max(0.0, pow(spotDot, u_" +
-            lightBaseName +
-            "FallOff.y));\n";
+          fragmentLightingBlock += `        attenuation *= max(0.0, pow(spotDot, u_${lightBaseName}FallOff.y));\n`;
           fragmentLightingBlock += "    }\n";
         }
 
-        fragmentLightingBlock +=
-          "    diffuseLight += " +
-          lightColorName +
-          "* max(dot(normal,l), 0.) * attenuation;\n";
+        fragmentLightingBlock += `    diffuseLight += ${lightColorName}* max(dot(normal,l), 0.) * attenuation;\n`;
 
         if (hasSpecular) {
           if (lightingModel === "BLINN") {
@@ -585,10 +549,7 @@ function generateTechnique(
             fragmentLightingBlock +=
               "    float specularIntensity = max(0., pow(max(dot(reflectDir, viewDir), 0.), u_shininess)) * attenuation;\n";
           }
-          fragmentLightingBlock +=
-            "    specularLight += " +
-            lightColorName +
-            " * specularIntensity;\n";
+          fragmentLightingBlock += `    specularLight += ${lightColorName} * specularIntensity;\n`;
         }
       }
       fragmentLightingBlock += "  }\n";
@@ -613,10 +574,7 @@ function generateTechnique(
 
     fragmentLightingBlock += "  vec3 l = normalize(czm_lightDirectionEC);\n";
     const minimumLighting = "0.2"; // Use strings instead of values as 0.0 -> 0 when stringified
-    fragmentLightingBlock +=
-      "  diffuseLight += lightColor * max(dot(normal,l), " +
-      minimumLighting +
-      ");\n";
+    fragmentLightingBlock += `  diffuseLight += lightColor * max(dot(normal,l), ${minimumLighting});\n`;
 
     if (hasSpecular) {
       if (lightingModel === "BLINN") {
@@ -655,8 +613,7 @@ function generateTechnique(
   if (lightingModel !== "CONSTANT") {
     if (defined(techniqueUniforms.u_diffuse)) {
       if (techniqueUniforms.u_diffuse.type === WebGLConstants.SAMPLER_2D) {
-        fragmentShader +=
-          "  vec4 diffuse = texture2D(u_diffuse, " + v_texcoord + ");\n";
+        fragmentShader += `  vec4 diffuse = texture2D(u_diffuse, ${v_texcoord});\n`;
       } else {
         fragmentShader += "  vec4 diffuse = u_diffuse;\n";
       }
@@ -666,8 +623,7 @@ function generateTechnique(
 
     if (hasSpecular) {
       if (techniqueUniforms.u_specular.type === WebGLConstants.SAMPLER_2D) {
-        fragmentShader +=
-          "  vec3 specular = texture2D(u_specular, " + v_texcoord + ").rgb;\n";
+        fragmentShader += `  vec3 specular = texture2D(u_specular, ${v_texcoord}).rgb;\n`;
       } else {
         fragmentShader += "  vec3 specular = u_specular.rgb;\n";
       }
@@ -695,8 +651,7 @@ function generateTechnique(
 
   if (defined(techniqueUniforms.u_emission)) {
     if (techniqueUniforms.u_emission.type === WebGLConstants.SAMPLER_2D) {
-      fragmentShader +=
-        "  vec3 emission = texture2D(u_emission, " + v_texcoord + ").rgb;\n";
+      fragmentShader += `  vec3 emission = texture2D(u_emission, ${v_texcoord}).rgb;\n`;
     } else {
       fragmentShader += "  vec3 emission = u_emission.rgb;\n";
     }
@@ -706,8 +661,7 @@ function generateTechnique(
   if (defined(techniqueUniforms.u_ambient) || lightingModel !== "CONSTANT") {
     if (defined(techniqueUniforms.u_ambient)) {
       if (techniqueUniforms.u_ambient.type === WebGLConstants.SAMPLER_2D) {
-        fragmentShader +=
-          "  vec3 ambient = texture2D(u_ambient, " + v_texcoord + ").rgb;\n";
+        fragmentShader += `  vec3 ambient = texture2D(u_ambient, ${v_texcoord}).rgb;\n`;
       } else {
         fragmentShader += "  vec3 ambient = u_ambient.rgb;\n";
       }
@@ -808,7 +762,7 @@ function getKHRMaterialsCommonValueType(paramName, paramValue) {
 
 function getTechniqueKey(khrMaterialsCommon, primitiveInfo) {
   let techniqueKey = "";
-  techniqueKey += "technique:" + khrMaterialsCommon.technique + ";";
+  techniqueKey += `technique:${khrMaterialsCommon.technique};`;
 
   const values = khrMaterialsCommon.values;
   const keys = Object.keys(values).sort();
@@ -816,18 +770,20 @@ function getTechniqueKey(khrMaterialsCommon, primitiveInfo) {
   for (let i = 0; i < keysCount; ++i) {
     const name = keys[i];
     if (values.hasOwnProperty(name)) {
-      techniqueKey +=
-        name + ":" + getKHRMaterialsCommonValueType(name, values[name]);
+      techniqueKey += `${name}:${getKHRMaterialsCommonValueType(
+        name,
+        values[name]
+      )}`;
       techniqueKey += ";";
     }
   }
 
   const jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
-  techniqueKey += jointCount.toString() + ";";
+  techniqueKey += `${jointCount.toString()};`;
   if (defined(primitiveInfo)) {
     const skinningInfo = primitiveInfo.skinning;
     if (jointCount > 0) {
-      techniqueKey += skinningInfo.type + ";";
+      techniqueKey += `${skinningInfo.type};`;
     }
     techniqueKey += primitiveInfo.hasVertexColors;
   }

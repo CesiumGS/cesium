@@ -179,6 +179,6 @@ Spherical.prototype.equalsEpsilon = function (other, epsilon) {
  * @returns {String} A string representing this instance.
  */
 Spherical.prototype.toString = function () {
-  return "(" + this.clock + ", " + this.cone + ", " + this.magnitude + ")";
+  return `(${this.clock}, ${this.cone}, ${this.magnitude})`;
 };
 export default Spherical;

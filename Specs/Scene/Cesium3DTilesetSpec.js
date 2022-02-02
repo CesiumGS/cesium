@@ -281,7 +281,7 @@ describe(
         },
       };
 
-      const uri = "data:text/plain;base64," + btoa(JSON.stringify(tilesetJson));
+      const uri = `data:text/plain;base64,${btoa(JSON.stringify(tilesetJson))}`;
 
       Cesium3DTileset.loadJson(uri)
         .then(function (result) {
@@ -364,7 +364,7 @@ describe(
         },
       };
 
-      const uri = "data:text/plain;base64," + btoa(JSON.stringify(tilesetJson));
+      const uri = `data:text/plain;base64,${btoa(JSON.stringify(tilesetJson))}`;
 
       options.url = uri;
       const tileset = scene.primitives.add(new Cesium3DTileset(options));
@@ -386,7 +386,7 @@ describe(
         extensionsRequired: ["unsupported_extension"],
       };
 
-      const uri = "data:text/plain;base64," + btoa(JSON.stringify(tilesetJson));
+      const uri = `data:text/plain;base64,${btoa(JSON.stringify(tilesetJson))}`;
 
       options.url = uri;
       const tileset = scene.primitives.add(new Cesium3DTileset(options));
@@ -1819,12 +1819,10 @@ describe(
       spyOn(Resource._Implementations, "loadWithXhr").and.callThrough();
 
       const queryParams = "a=1&b=boy";
-      let expectedUrl =
-        "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json?" +
-        queryParams;
+      let expectedUrl = `Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json?${queryParams}`;
       return Cesium3DTilesTester.loadTileset(
         scene,
-        tilesetOfTilesetsUrl + "?" + queryParams
+        `${tilesetOfTilesetsUrl}?${queryParams}`
       )
         .then(function (tileset) {
           //Make sure tileset JSON file was requested with query parameters
@@ -1843,8 +1841,7 @@ describe(
         .then(function () {
           //Make sure tileset2.json was requested with query parameters and does not use parent tilesetVersion
           expectedUrl = getAbsoluteUri(
-            "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset2.json?v=1.2.3&" +
-              queryParams
+            `Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset2.json?v=1.2.3&${queryParams}`
           );
           expect(
             Resource._Implementations.loadWithXhr.calls.argsFor(0)[0]
@@ -2052,19 +2049,19 @@ describe(
 
         const root = tileset.root;
         expect(tileset._tileDebugLabels._labels[0].text).toEqual(
-          "Geometric error: " + root.geometricError
+          `Geometric error: ${root.geometricError}`
         );
         expect(tileset._tileDebugLabels._labels[1].text).toEqual(
-          "Geometric error: " + root.children[0].geometricError
+          `Geometric error: ${root.children[0].geometricError}`
         );
         expect(tileset._tileDebugLabels._labels[2].text).toEqual(
-          "Geometric error: " + root.children[1].geometricError
+          `Geometric error: ${root.children[1].geometricError}`
         );
         expect(tileset._tileDebugLabels._labels[3].text).toEqual(
-          "Geometric error: " + root.children[2].geometricError
+          `Geometric error: ${root.children[2].geometricError}`
         );
         expect(tileset._tileDebugLabels._labels[4].text).toEqual(
-          "Geometric error: " + root.children[3].geometricError
+          `Geometric error: ${root.children[3].geometricError}`
         );
 
         tileset.debugShowGeometricError = false;
@@ -2086,10 +2083,10 @@ describe(
 
         const root = tileset.root;
         expect(tileset._tileDebugLabels._labels[0].text).toEqual(
-          "Geometric error: " + root.geometricError
+          `Geometric error: ${root.geometricError}`
         );
         expect(tileset._tileDebugLabels._labels[1].text).toEqual(
-          "Geometric error: " + root.children[0].geometricError
+          `Geometric error: ${root.children[0].geometricError}`
         );
 
         tileset.debugShowGeometricError = false;
@@ -2113,7 +2110,7 @@ describe(
 
         for (let i = 0; i < length; ++i) {
           expect(tileset._tileDebugLabels._labels[i].text).toEqual(
-            "Geometric error: " + tileset._selectedTiles[i].geometricError
+            `Geometric error: ${tileset._selectedTiles[i].geometricError}`
           );
         }
 
@@ -2136,14 +2133,9 @@ describe(
 
         const content = tileset.root.content;
         const expected =
-          "Commands: " +
-          tileset.root.commandsLength +
-          "\n" +
-          "Triangles: " +
-          content.trianglesLength +
-          "\n" +
-          "Features: " +
-          content.featuresLength;
+          `Commands: ${tileset.root.commandsLength}\n` +
+          `Triangles: ${content.trianglesLength}\n` +
+          `Features: ${content.featuresLength}`;
 
         expect(tileset._tileDebugLabels._labels[0].text).toEqual(expected);
 

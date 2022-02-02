@@ -92,15 +92,11 @@
             const endTime = window.performance.now();
             const duration = endTime - startTime;
             alert(
-              (duration / 1000).toFixed(2) +
-                " seconds " +
-                statistics.numberOfActiveRequestsEver +
-                " requests, min/max/avg frame FPS " +
-                minFrameRate +
-                "/" +
-                maxFrameRate +
-                "/" +
+              `${(duration / 1000).toFixed(2)} seconds ${
+                statistics.numberOfActiveRequestsEver
+              } requests, min/max/avg frame FPS ${minFrameRate}/${maxFrameRate}/${
                 sumFrameRate / frameRateSamples
+              }`
             );
             scene.postRender.removeEventListener(viewReady);
           }
@@ -270,34 +266,10 @@
 
         Sandcastle.addToolbarButton("Save camera", function () {
           const cameraString =
-            "camera.position = new Cesium.Cartesian3(" +
-            camera.positionWC.x +
-            ", " +
-            camera.positionWC.y +
-            ", " +
-            camera.positionWC.z +
-            ");\n" +
-            "camera.direction = new Cesium.Cartesian3(" +
-            camera.directionWC.x +
-            ", " +
-            camera.directionWC.y +
-            ", " +
-            camera.directionWC.z +
-            ");\n" +
-            "camera.right = new Cesium.Cartesian3(" +
-            camera.rightWC.x +
-            ", " +
-            camera.rightWC.y +
-            ", " +
-            camera.rightWC.z +
-            ");\n" +
-            "camera.up = new Cesium.Cartesian3(" +
-            camera.upWC.x +
-            ", " +
-            camera.upWC.y +
-            ", " +
-            camera.upWC.z +
-            ");\n";
+            `camera.position = new Cesium.Cartesian3(${camera.positionWC.x}, ${camera.positionWC.y}, ${camera.positionWC.z});\n` +
+            `camera.direction = new Cesium.Cartesian3(${camera.directionWC.x}, ${camera.directionWC.y}, ${camera.directionWC.z});\n` +
+            `camera.right = new Cesium.Cartesian3(${camera.rightWC.x}, ${camera.rightWC.y}, ${camera.rightWC.z});\n` +
+            `camera.up = new Cesium.Cartesian3(${camera.upWC.x}, ${camera.upWC.y}, ${camera.upWC.z});\n`;
           console.log(cameraString);
         }); //Sandcastle_End
         Sandcastle.finishedLoading();

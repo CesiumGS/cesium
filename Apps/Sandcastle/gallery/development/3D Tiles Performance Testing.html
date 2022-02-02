@@ -177,10 +177,7 @@ The heatmapTileProperty will colorize the tile property in a heatmap. Booleans s
 
         destinationFunctions[3] = function () {
           console.log(
-            "Total Loads and Time (ignoring first view and flight time): " +
-              tourLoads +
-              ", " +
-              tourTime
+            `Total Loads and Time (ignoring first view and flight time): ${tourLoads}, ${tourTime}`
           );
         };
 
@@ -223,12 +220,7 @@ The heatmapTileProperty will colorize the tile property in a heatmap. Booleans s
             duration -= currentDestination === 0 ? 0 : flightDuration;
             const flightLoads = totalLoaded - lastTotalLoaded;
             console.log(
-              "view " +
-                currentDestination +
-                " flight loads, final view time: " +
-                flightLoads +
-                ", " +
-                duration
+              `view ${currentDestination} flight loads, final view time: ${flightLoads}, ${duration}`
             );
             lastTotalLoaded = totalLoaded;
             tourTime += currentDestination === 0 ? 0 : duration;
@@ -255,37 +247,19 @@ The heatmapTileProperty will colorize the tile property in a heatmap. Booleans s
           const up = camera.up;
 
           console.log(
-            "\n\
+            `\n\
 Sandcastle.addToolbarButton(VIEW, function() {\n\
     camera.flyTo({\n\
-        destination : new Cartesian3(" +
-              position.x +
-              ", " +
-              position.y +
-              ", " +
-              position.z +
-              "),\n\
-        orientation : {\n\
-            direction : new Cartesian3(" +
-              direction.x +
-              ", " +
-              direction.y +
-              ", " +
-              direction.z +
-              "),\n\
-            up : new Cartesian3(" +
-              up.x +
-              ", " +
-              up.y +
-              ", " +
-              up.z +
-              "),\n\
-        },\n\
-        duration : flightDuration,\n\
-        easingFunction: Cesium.EasingFunction.LINEAR_NONE,\n\
+  destination : new Cartesian3(${position.x}, ${position.y}, ${position.z}),\n\
+  orientation : {\n\
+      direction : new Cartesian3(${direction.x}, ${direction.y}, ${direction.z}),\n\
+      up : new Cartesian3(${up.x}, ${up.y}, ${up.z}),\n\
+  },\n\
+  duration : flightDuration,\n\
+  easingFunction: Cesium.EasingFunction.LINEAR_NONE,\n\
     });\n\
     timeAll();\n\
-});"
+});`
           );
         }); //Sandcastle_End
         Sandcastle.finishedLoading();

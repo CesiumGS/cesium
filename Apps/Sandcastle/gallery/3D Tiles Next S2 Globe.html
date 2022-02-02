@@ -157,9 +157,10 @@
             const feature = scene.pick(movement.endPosition);
             if (feature instanceof Cesium.Cesium3DTileFeature) {
               metadataOverlay.style.display = "block";
-              metadataOverlay.style.bottom =
-                viewer.canvas.clientHeight - movement.endPosition.y + "px";
-              metadataOverlay.style.left = movement.endPosition.x + "px";
+              metadataOverlay.style.bottom = `${
+                viewer.canvas.clientHeight - movement.endPosition.y
+              }px`;
+              metadataOverlay.style.left = `${movement.endPosition.x}px`;
 
               tableHtmlScratch =
                 "<table><thead><tr><th><tt>Property</tt></th><th><tt>Value</tt></th></tr></thead><tbody>";
@@ -169,12 +170,7 @@
               for (let i = 0; i < length; ++i) {
                 const propertyName = propertyNames[i];
                 const propertyValue = feature.getProperty(propertyName);
-                tableHtmlScratch +=
-                  "<tr><td><tt>" +
-                  propertyName +
-                  "</tt></td><td><tt>" +
-                  propertyValue +
-                  "</tt></td></tr>";
+                tableHtmlScratch += `<tr><td><tt>${propertyName}</tt></td><td><tt>${propertyValue}</tt></td></tr>`;
               }
               tableHtmlScratch += "</tbody></table>";
               metadataOverlay.innerHTML = tableHtmlScratch;

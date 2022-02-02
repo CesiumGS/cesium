@@ -147,7 +147,7 @@ function BaseLayerPickerViewModel(options) {
       : undefined;
 
     if (defined(imageryTip) && defined(terrainTip)) {
-      return imageryTip + "\n" + terrainTip;
+      return `${imageryTip}\n${terrainTip}`;
     } else if (defined(imageryTip)) {
       return imageryTip;
     }

@@ -384,7 +384,7 @@ ImplicitTileCoordinates.prototype.getChildCoordinates = function (childIndex) {
   );
   if (childIndex < 0 || branchingFactor <= childIndex) {
     throw new DeveloperError(
-      "childIndex must be at least 0 and less than " + branchingFactor
+      `childIndex must be at least 0 and less than ${branchingFactor}`
     );
   }
   //>>includeEnd('debug');

@@ -12,6 +12,6 @@ function createTileKey(xOrTile, y, level) {
     y = tile.y;
     level = tile.level;
   }
-  return "L" + level + "X" + xOrTile + "Y" + y;
+  return `L${level}X${xOrTile}Y${y}`;
 }
 export default createTileKey;

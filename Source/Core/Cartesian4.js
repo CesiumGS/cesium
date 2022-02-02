@@ -874,7 +874,7 @@ Cartesian4.prototype.equalsEpsilon = function (
  * @returns {String} A string representing the provided Cartesian in the format '(x, y, z, w)'.
  */
 Cartesian4.prototype.toString = function () {
-  return "(" + this.x + ", " + this.y + ", " + this.z + ", " + this.w + ")";
+  return `(${this.x}, ${this.y}, ${this.z}, ${this.w})`;
 };
 
 // scratchU8Array and scratchF32Array are views into the same buffer

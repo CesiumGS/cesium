@@ -1136,6 +1136,6 @@ Quaternion.prototype.equalsEpsilon = function (right, epsilon) {
  * @returns {String} A string representing this Quaternion.
  */
 Quaternion.prototype.toString = function () {
-  return "(" + this.x + ", " + this.y + ", " + this.z + ", " + this.w + ")";
+  return `(${this.x}, ${this.y}, ${this.z}, ${this.w})`;
 };
 export default Quaternion;

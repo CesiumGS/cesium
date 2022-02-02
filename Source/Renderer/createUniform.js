@@ -46,11 +46,7 @@ function createUniform(gl, activeUniform, uniformName, location) {
       return new UniformMat4(gl, activeUniform, uniformName, location);
     default:
       throw new RuntimeError(
-        "Unrecognized uniform type: " +
-          activeUniform.type +
-          ' for uniform "' +
-          uniformName +
-          '".'
+        `Unrecognized uniform type: ${activeUniform.type} for uniform "${uniformName}".`
       );
   }
 }
@@ -143,9 +139,7 @@ UniformFloatVec3.prototype.set = function () {
     }
   } else {
     //>>includeStart('debug', pragmas.debug);
-    throw new DeveloperError(
-      'Invalid vec3 value for uniform "' + this.name + '".'
-    );
+    throw new DeveloperError(`Invalid vec3 value for uniform "${this.name}".`);
     //>>includeEnd('debug');
   }
 };
@@ -185,9 +179,7 @@ UniformFloatVec4.prototype.set = function () {
     }
   } else {
     //>>includeStart('debug', pragmas.debug);
-    throw new DeveloperError(
-      'Invalid vec4 value for uniform "' + this.name + '".'
-    );
+    throw new DeveloperError(`Invalid vec4 value for uniform "${this.name}".`);
     //>>includeEnd('debug');
   }
 };

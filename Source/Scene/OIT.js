@@ -480,23 +480,23 @@ function getTranslucentShaderProgram(context, shaderProgram, keyword, source) {
     fs.sources.splice(
       0,
       0,
-      (source.indexOf("gl_FragData") !== -1
-        ? "#extension GL_EXT_draw_buffers : enable \n"
-        : "") +
-        "vec4 czm_gl_FragColor;\n" +
-        "bool czm_discard = false;\n"
+      `${
+        source.indexOf("gl_FragData") !== -1
+          ? "#extension GL_EXT_draw_buffers : enable \n"
+          : ""
+      }vec4 czm_gl_FragColor;\n` + `bool czm_discard = false;\n`
     );
 
     fs.sources.push(
-      "void main()\n" +
+      `${
+        "void main()\n" +
         "{\n" +
         "    czm_translucent_main();\n" +
         "    if (czm_discard)\n" +
         "    {\n" +
         "        discard;\n" +
-        "    }\n" +
-        source +
-        "}\n"
+        "    }\n"
+      }${source}}\n`
     );
 
     shader = context.shaderCache.createDerivedShaderProgram(

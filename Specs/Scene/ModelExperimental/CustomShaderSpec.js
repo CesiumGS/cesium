@@ -219,7 +219,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
         vertexShaderText: [
           "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
           "{",
-          "    vsOutput.positionMC = vsInput.attributes." + variableName + ";",
+          `    vsOutput.positionMC = vsInput.attributes.${variableName};`,
           "}",
         ].join("\n"),
       });
@@ -230,7 +230,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
         fragmentShaderText: [
           "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
           "{",
-          "    material.diffuse = fsInput.attributes." + variableName + ";",
+          `    material.diffuse = fsInput.attributes.${variableName};`,
           "}",
         ].join("\n"),
       });

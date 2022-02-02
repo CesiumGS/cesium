@@ -169,14 +169,7 @@ function MapboxStyleImageryProvider(options) {
   if (!trailingSlashRegex.test(templateUrl)) {
     templateUrl += "/";
   }
-  templateUrl +=
-    this._username +
-    "/" +
-    styleId +
-    "/tiles/" +
-    this._tilesize +
-    "/{z}/{x}/{y}" +
-    scaleFactor;
+  templateUrl += `${this._username}/${styleId}/tiles/${this._tilesize}/{z}/{x}/{y}${scaleFactor}`;
   resource.url = templateUrl;
 
   resource.setQueryParameters({

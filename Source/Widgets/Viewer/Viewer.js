@@ -63,15 +63,12 @@ function getCesium3DTileFeatureDescription(feature) {
   propertyNames.forEach(function (propertyName) {
     const value = feature.getProperty(propertyName);
     if (defined(value)) {
-      html += "<tr><th>" + propertyName + "</th><td>" + value + "</td></tr>";
+      html += `<tr><th>${propertyName}</th><td>${value}</td></tr>`;
     }
   });
 
   if (html.length > 0) {
-    html =
-      '<table class="cesium-infoBox-defaultTable"><tbody>' +
-      html +
-      "</tbody></table>";
+    html = `<table class="cesium-infoBox-defaultTable"><tbody>${html}</tbody></table>`;
   }
 
   return html;
@@ -285,7 +282,7 @@ function enableVRUI(viewer, enabled) {
       enabled || !defined(fullscreenButton)
         ? 0
         : fullscreenButton.container.clientWidth;
-    viewer._vrButton.container.style.right = right + "px";
+    viewer._vrButton.container.style.right = `${right}px`;
 
     viewer.forceResize();
   }
@@ -763,8 +760,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
           ? "block"
           : "none";
         if (defined(timeline)) {
-          timeline.container.style.right =
-            fullscreenContainer.clientWidth + "px";
+          timeline.container.style.right = `${fullscreenContainer.clientWidth}px`;
           timeline.resize();
         }
       }
@@ -787,10 +783,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
       function (isVREnabled) {
         vrContainer.style.display = isVREnabled ? "block" : "none";
         if (defined(fullscreenButton)) {
-          vrContainer.style.right = fullscreenContainer.clientWidth + "px";
+          vrContainer.style.right = `${fullscreenContainer.clientWidth}px`;
         }
         if (defined(timeline)) {
-          timeline.container.style.right = vrContainer.clientWidth + "px";
+          timeline.container.style.right = `${vrContainer.clientWidth}px`;
           timeline.resize();
         }
       }
@@ -1568,12 +1564,12 @@ Viewer.prototype.resize = function () {
   const baseLayerPickerDropDown = this._baseLayerPickerDropDown;
 
   if (defined(baseLayerPickerDropDown)) {
-    baseLayerPickerDropDown.style.maxHeight = panelMaxHeight + "px";
+    baseLayerPickerDropDown.style.maxHeight = `${panelMaxHeight}px`;
   }
 
   if (defined(this._geocoder)) {
     const geocoderSuggestions = this._geocoder.searchSuggestionsContainer;
-    geocoderSuggestions.style.maxHeight = panelMaxHeight + "px";
+    geocoderSuggestions.style.maxHeight = `${panelMaxHeight}px`;
   }
 
   if (defined(this._infoBox)) {
@@ -1627,7 +1623,7 @@ Viewer.prototype.resize = function () {
     const timelineStyle = timelineContainer.style;
 
     creditBottom = timelineContainer.clientHeight + 3;
-    timelineStyle.left = animationWidth + "px";
+    timelineStyle.left = `${animationWidth}px`;
 
     let pixels = 0;
     if (defined(fullscreenButton)) {
@@ -1637,12 +1633,12 @@ Viewer.prototype.resize = function () {
       pixels += vrButton.container.clientWidth;
     }
 
-    timelineStyle.right = pixels + "px";
+    timelineStyle.right = `${pixels}px`;
     timeline.resize();
   }
 
-  this._bottomContainer.style.left = creditLeft + "px";
-  this._bottomContainer.style.bottom = creditBottom + "px";
+  this._bottomContainer.style.left = `${creditLeft}px`;
+  this._bottomContainer.style.bottom = `${creditBottom}px`;
 
   this._lastWidth = width;
   this._lastHeight = height;

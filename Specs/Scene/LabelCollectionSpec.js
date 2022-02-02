@@ -2010,7 +2010,7 @@ describe(
 
         it("filters out soft hyphens from input strings", function () {
           const softHyphen = String.fromCharCode(0xad);
-          const text = "test string" + softHyphen;
+          const text = `test string${softHyphen}`;
           const label = labels.add({
             text: text,
           });

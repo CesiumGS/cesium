@@ -259,14 +259,14 @@
 
             if (isTerrainFeature) {
               metadataOverlay.style.display = "block";
-              metadataOverlay.style.bottom =
-                viewer.canvas.clientHeight - movement.endPosition.y + "px";
-              metadataOverlay.style.left = movement.endPosition.x + "px";
+              metadataOverlay.style.bottom = `${
+                viewer.canvas.clientHeight - movement.endPosition.y
+              }px`;
+              metadataOverlay.style.left = `${movement.endPosition.x}px`;
 
-              tableHtmlScratch =
-                "<table><thead><tr><td>Material:</td><th><tt>" +
-                feature.getProperty("name") +
-                "</tt></tr></thead><tbody>";
+              tableHtmlScratch = `<table><thead><tr><td>Material:</td><th><tt>${feature.getProperty(
+                "name"
+              )}</tt></tr></thead><tbody>`;
 
               materialsScratch = feature.getProperty("substrates");
               weightsScratch = feature.getProperty("weights");
@@ -274,12 +274,11 @@
                 "<tr><td colspan='2' style='text-align: center;'><b>Substrates</b></td></tr>";
 
               for (i = 0; i < materialsScratch.length; i++) {
-                tableHtmlScratch +=
-                  "<tr><td><tt>" +
-                  materialsScratch[i].slice(3) +
-                  "</tt></td><td style='text-align: right;'><tt>" +
-                  weightsScratch[i] +
-                  "%</tt></td></tr>";
+                tableHtmlScratch += `<tr><td><tt>${materialsScratch[i].slice(
+                  3
+                )}</tt></td><td style='text-align: right;'><tt>${
+                  weightsScratch[i]
+                }%</tt></td></tr>`;
               }
               tableHtmlScratch += "</tbody></table>";
               metadataOverlay.innerHTML = tableHtmlScratch;
@@ -350,18 +349,7 @@
               const propertyValue = feature.getProperty(propertyName);
               const property = metadataClass.properties[propertyName];
 
-              tableHtmlScratch +=
-                "<tr style='font-family: monospace;' title='" +
-                property.description +
-                "'><th>" +
-                property.name +
-                "</th><th><b>" +
-                property.id +
-                "</b></th><td>" +
-                property.componentType +
-                "</td><td>" +
-                propertyValue +
-                "</td></tr>";
+              tableHtmlScratch += `<tr style='font-family: monospace;' title='${property.description}'><th>${property.name}</th><th><b>${property.id}</b></th><td>${property.componentType}</td><td>${propertyValue}</td></tr>`;
             }
             tableHtmlScratch +=
               "<tr><th colspan='4'><i style='font-size:10px'>Hover on a row for description</i></th></tr></tbody></table>";
