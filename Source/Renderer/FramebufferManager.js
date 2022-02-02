@@ -14,6 +14,7 @@ import PixelFormat from "../Core/PixelFormat.js";
  * Creates a wrapper object around a framebuffer and its resources.
  *
  * @param {Object} options Object with the following properties:
+ * @param {Number} [options.numSamples=1] The multisampling rate of the render targets. Requires a WebGL2 context.
  * @param {Number} [options.colorAttachmentsLength=1] The number of color attachments this FramebufferManager will create.
  * @param {Boolean} [options.color=true] Whether the FramebufferManager will use color attachments.
  * @param {Boolean} [options.depth=false] Whether the FramebufferManager will use depth attachments.
@@ -32,7 +33,7 @@ import PixelFormat from "../Core/PixelFormat.js";
  */
 function FramebufferManager(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  this._numSamples = 1;
+  this._numSamples = defaultValue(options.numSamples, 1);
   this._colorAttachmentsLength = defaultValue(
     options.colorAttachmentsLength,
     1
@@ -96,6 +97,11 @@ Object.defineProperties(FramebufferManager.prototype, {
         return this._multisampleFramebuffer.getRenderFramebuffer();
       }
       return this._framebuffer;
+    },
+  },
+  numSamples: {
+    get: function () {
+      return this._numSamples;
     },
   },
   status: {
@@ -407,18 +413,8 @@ FramebufferManager.prototype.clear = function (
   passState
 ) {
   const framebuffer = clearCommand.framebuffer;
-
-  if (this._numSamples > 1) {
-    clearCommand.framebuffer = this._multisampleFramebuffer.getRenderFramebuffer();
-    clearCommand.execute(context, passState);
-
-    clearCommand.framebuffer = this._multisampleFramebuffer.getColorFramebuffer();
-    clearCommand.execute(context, passState);
-  } else {
-    clearCommand.framebuffer = this._framebuffer;
-    clearCommand.execute(context, passState);
-  }
-
+  clearCommand.framebuffer = this.framebuffer;
+  clearCommand.execute(context, passState);
   clearCommand.framebuffer = framebuffer;
 };
 

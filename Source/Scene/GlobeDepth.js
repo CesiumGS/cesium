@@ -25,7 +25,7 @@ function GlobeDepth() {
     depthStencil: true,
     supportsDepthTexture: true,
   });
-  this._colorFramebuffer = new FramebufferManager({
+  this._outputFramebuffer = new FramebufferManager({
     depthStencil: true,
     supportsDepthTexture: true,
   });
@@ -60,7 +60,7 @@ Object.defineProperties(GlobeDepth.prototype, {
     get: function () {
       return this._picking
         ? this._pickColorFramebuffer
-        : this._colorFramebuffer;
+        : this._outputFramebuffer;
     },
   },
   framebuffer: {
@@ -85,7 +85,7 @@ Object.defineProperties(GlobeDepth.prototype, {
 
 function destroyFramebuffers(globeDepth) {
   globeDepth._pickColorFramebuffer.destroy();
-  globeDepth._colorFramebuffer.destroy();
+  globeDepth._outputFramebuffer.destroy();
   globeDepth._copyDepthFramebuffer.destroy();
   globeDepth._tempCopyDepthFramebuffer.destroy();
   globeDepth._updateDepthFramebuffer.destroy();
@@ -254,9 +254,9 @@ GlobeDepth.prototype.update = function (
     : PixelDatatype.UNSIGNED_BYTE;
   this._numSamples = numSamples;
   if (this.picking) {
-    this._pickColorFramebuffer.update(context, width, height, 1, pixelDatatype);
+    this._pickColorFramebuffer.update(context, width, height);
   } else {
-    this._colorFramebuffer.update(
+    this._outputFramebuffer.update(
       context,
       width,
       height,
@@ -274,7 +274,7 @@ GlobeDepth.prototype.update = function (
 
 GlobeDepth.prototype.prepareColorTextures = function (context) {
   if (!this.picking && this._numSamples > 1) {
-    this._colorFramebuffer.prepareTextures(context);
+    this._outputFramebuffer.prepareTextures(context);
   }
 };
 

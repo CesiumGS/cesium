@@ -89,14 +89,6 @@ function OIT(context) {
   this._useHDR = false;
 }
 
-Object.defineProperties(OIT.prototype, {
-  numSamples: {
-    get: function () {
-      return defined(this._opaqueFBO) ? this._opaqueFBO._numSamples : 1;
-    },
-  },
-});
-
 function destroyTextures(oit) {
   oit._accumulationTexture =
     oit._accumulationTexture &&

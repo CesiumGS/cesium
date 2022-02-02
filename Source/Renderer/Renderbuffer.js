@@ -65,8 +65,8 @@ function Renderbuffer(options) {
       gl.RENDERBUFFER,
       numSamples,
       format,
-      this._width,
-      this._height
+      width,
+      height
     );
   } else {
     gl.renderbufferStorage(gl.RENDERBUFFER, format, width, height);

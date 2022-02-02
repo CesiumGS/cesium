@@ -590,11 +590,11 @@ function Scene(options) {
   this.eyeSeparation = undefined;
 
   /**
-   * The number of samples for MSAA (MSAA is disabled when numberSamples = 1).
+   * The number of samples for MSAA (MSAA is disabled when msaaSamples = 1).
    * @type {Number}
    * @default 1
    */
-  this.numberSamples = 1;
+  this.msaaSamples = 1;
 
   /**
    * Post processing effects applied to the final render.
@@ -2620,7 +2620,7 @@ function executeCommands(scene, passState) {
         executeCommand,
         passState,
         commands,
-        globeDepth.framebuffer
+        globeDepth.depthStencilTexture
       );
       view.translucentTileClassification.executeClassificationCommands(
         scene,
@@ -3356,8 +3356,6 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
   }
   const useWebVR = environmentState.useWebVR;
 
-  const originalSamples = scene.numberSamples;
-
   // Preserve the reference to the original framebuffer.
   environmentState.originalFramebuffer = passState.framebuffer;
 
@@ -3390,7 +3388,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
       context,
       passState,
       view.viewport,
-      scene.numberSamples,
+      scene.msaaSamples,
       scene._hdr,
       environmentState.clearGlobeDepth
     );
@@ -3407,7 +3405,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
       passState,
       view.globeDepth.colorFramebufferManager,
       scene._hdr,
-      scene.numberSamples
+      scene.msaaSamples
     );
     oit.clear(context, passState, clearColor);
     environmentState.useOIT = oit.isSupported();
@@ -3427,7 +3425,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
       context,
       view.viewport,
       scene._hdr,
-      scene.numberSamples
+      scene.msaaSamples
     );
     view.sceneFramebuffer.clear(context, passState, clearColor);
 
@@ -3466,7 +3464,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
       scene._invertClassification.previousFramebuffer = depthFramebuffer;
       scene._invertClassification.update(
         context,
-        scene.numberSamples,
+        scene.msaaSamples,
         view.globeDepth.colorFramebufferManager
       );
       scene._invertClassification.clear(context, passState);
@@ -3493,8 +3491,6 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
       passState
     );
   }
-
-  scene.numberSamples = originalSamples;
 }
 
 /**
