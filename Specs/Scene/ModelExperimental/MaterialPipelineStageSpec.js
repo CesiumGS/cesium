@@ -14,6 +14,7 @@ import {
   ShaderBuilder,
   Cartesian4,
   Cartesian3,
+  Color,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
@@ -105,6 +106,7 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         MaterialPipelineStage.process(
@@ -154,6 +156,7 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         MaterialPipelineStage.process(
@@ -203,6 +206,7 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         MaterialPipelineStage.process(
@@ -253,6 +257,7 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         MaterialPipelineStage.process(
@@ -304,6 +309,7 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         MaterialPipelineStage.process(
@@ -353,6 +359,7 @@ describe(
           lightingOptions: lightingOptions,
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         MaterialPipelineStage.process(
@@ -375,6 +382,7 @@ describe(
           lightingOptions: lightingOptions,
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         MaterialPipelineStage.process(
@@ -397,6 +405,7 @@ describe(
           lightingOptions: lightingOptions,
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         MaterialPipelineStage.process(
@@ -419,6 +428,7 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         MaterialPipelineStage.process(
@@ -445,6 +455,7 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         const cutoff = 0.6;
@@ -473,6 +484,7 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
           pass: Pass.OPAQUE,
         };
 
@@ -489,6 +501,36 @@ describe(
       });
     });
 
+    it("disables back-face culling if model options specify", function () {
+      return loadGltf(boxUnlit).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[1].primitives[0];
+        const renderStateOptions = {};
+        const renderResources = {
+          shaderBuilder: new ShaderBuilder(),
+          uniformMap: {},
+          lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
+          renderStateOptions: renderStateOptions,
+          model: {
+            backFaceCulling: false,
+          },
+          cull: true,
+        };
+
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
+        expect(renderStateOptions).toEqual({
+          cull: {
+            enabled: false,
+          },
+        });
+      });
+    });
+
     it("enables back-face culling if material is not double-sided", function () {
       return loadGltf(boxUnlit).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -500,6 +542,9 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: renderStateOptions,
+          model: {
+            backFaceCulling: true,
+          },
           cull: true,
         };
 
@@ -527,7 +572,9 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: renderStateOptions,
-          cull: true,
+          model: {
+            backFaceCulling: true,
+          },
         };
 
         primitive.material.doubleSided = true;
@@ -537,6 +584,37 @@ describe(
           mockFrameState
         );
 
+        expect(renderStateOptions).toEqual({
+          cull: {
+            enabled: false,
+          },
+        });
+      });
+    });
+
+    it("disables back-face culling if model color is translucent", function () {
+      return loadGltf(boxUnlit).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[1].primitives[0];
+        const renderStateOptions = {};
+        const renderResources = {
+          shaderBuilder: new ShaderBuilder(),
+          uniformMap: {},
+          lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
+          renderStateOptions: renderStateOptions,
+          model: {
+            color: new Color(0, 0, 1, 0.5),
+            backFaceCulling: true,
+          },
+          cull: true,
+        };
+
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
         expect(renderStateOptions).toEqual({
           cull: {
             enabled: false,
@@ -556,6 +634,7 @@ describe(
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         primitive.material.doubleSided = true;

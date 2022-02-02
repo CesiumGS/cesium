@@ -1,6 +1,7 @@
 import buildDrawCommands from "./buildDrawCommands.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Check from "../../Core/Check.js";
+import clone from "../../Core/clone.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
@@ -11,6 +12,7 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelRenderResources from "./ModelRenderResources.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
+import RenderState from "../../Renderer/RenderState.js";
 
 /**
  * An in memory representation of the scene graph for a {@link ModelExperimental}
@@ -401,6 +403,41 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
   for (let i = 0; i < rootNodes.length; i++) {
     const node = this._runtimeNodes[rootNodes[i]];
     node.updateModelMatrix();
+  }
+};
+
+function forEachDrawCommand(sceneGraph, callback) {
+  for (let i = 0; i < sceneGraph._runtimeNodes.length; i++) {
+    const runtimeNode = sceneGraph._runtimeNodes[i];
+    for (let j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
+      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
+      for (let k = 0; k < runtimePrimitive.drawCommands.length; k++) {
+        const drawCommands = runtimePrimitive.drawCommands;
+        callback(drawCommands[i]);
+      }
+    }
+  }
+}
+
+/**
+ * Traverses through all draw commands and changes the back-face cull setting.
+ *
+ * @private
+ */
+ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (value) {
+  for (let i = 0; i < this._runtimeNodes.length; i++) {
+    const runtimeNode = this._runtimeNodes[i];
+    for (let j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
+      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
+      for (let k = 0; k < runtimePrimitive.drawCommands.length; k++) {
+        const drawCommand = runtimePrimitive.drawCommands[k];
+        const renderState = clone(drawCommand.renderState, true);
+        renderState.cull.enabled = value;
+        drawCommand.renderState = RenderState.fromCache(renderState);
+        //const doubleSided = runtimePrimitive.primitive.material.doubleSided;
+        // wanted to avoid derivedcommands
+      }
+    }
   }
 };
 

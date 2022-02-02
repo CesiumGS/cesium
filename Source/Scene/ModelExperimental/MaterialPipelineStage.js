@@ -92,9 +92,11 @@ MaterialPipelineStage.process = function (
   }
 
   // Configure back-face culling
-  const cull = !material.doubleSided;
+  const model = renderResources.model;
+  const cull = model.backFaceCulling && !material.doubleSided;
+  const translucent = defined(model.color) && model.color.alpha < 1.0;
   renderResources.renderStateOptions.cull = {
-    enabled: cull,
+    enabled: cull && !translucent,
   };
 
   const alphaOptions = renderResources.alphaOptions;

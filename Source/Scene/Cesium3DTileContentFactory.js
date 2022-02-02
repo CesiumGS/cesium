@@ -119,26 +119,20 @@ const Cesium3DTileContentFactory = {
     const dataView = new DataView(arrayBuffer, byteOffset);
     const byteLength = dataView.getUint32(8, true);
     const glb = new Uint8Array(arrayBuffer, byteOffset, byteLength);
-    if (tileset.enableModelExperimental) {
-      return ModelExperimental3DTileContent.fromGltf(
-        tileset,
-        tile,
-        resource,
-        glb
-      );
-    }
-    return new Gltf3DTileContent(tileset, tile, resource, glb);
+    return ModelExperimental3DTileContent.fromGltf(
+      tileset,
+      tile,
+      resource,
+      glb
+    );
   },
   gltf: function (tileset, tile, resource, json) {
-    if (tileset.enableModelExperimental) {
-      return ModelExperimental3DTileContent.fromGltf(
-        tileset,
-        tile,
-        resource,
-        json
-      );
-    }
-    return new Gltf3DTileContent(tileset, tile, resource, json);
+    return ModelExperimental3DTileContent.fromGltf(
+      tileset,
+      tile,
+      resource,
+      json
+    );
   },
 };
 export default Cesium3DTileContentFactory;
