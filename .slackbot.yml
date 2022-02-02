@@ -1,14 +1,12 @@
 # List of Slack usernames (not GitHub) for the Cesium Concierge Slackbot to send release reminders for.
 releaseSchedule:
-  - eli, 1/3/2022
-  - peter, 2/1/2022
+  - ggetz, 2/1/2022
   - eli, 3/1/2022
   - sam.suhag, 4/1/2022
-  - eli, 5/2/2022
-  - peter, 6/1/2022
-  - eli, 7/1/2022
-  - sam.suhag, 8/1/2022
+  - ggetz, 5/2/2022
+  - eli, 6/1/2022
+  - sam.suhag, 7/1/2022
+  - ggetz, 8/1/2022
   - eli, 9/1/2022
-  - peter, 10/3/2022
-  - eli, 11/1/2022
-  - sam.suhag, 12/1/2022
+  - sam.suhag, 10/3/2022
+  - ggetz, 11/1/2022

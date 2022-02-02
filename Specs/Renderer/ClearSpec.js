@@ -9,7 +9,7 @@ import createContext from "../createContext.js";
 describe(
   "Renderer/Clear",
   function () {
-    var context;
+    let context;
 
     beforeAll(function () {
       context = createContext();
@@ -28,7 +28,7 @@ describe(
       ClearCommand.ALL.execute(context);
       expect(context).toReadPixels([0, 0, 0, 255]);
 
-      var command = new ClearCommand({
+      const command = new ClearCommand({
         color: Color.WHITE,
       });
       command.execute(context);
@@ -39,7 +39,7 @@ describe(
       ClearCommand.ALL.execute(context);
       expect(context).toReadPixels([0, 0, 0, 255]);
 
-      var command = new ClearCommand({
+      const command = new ClearCommand({
         color: Color.WHITE,
         renderState: RenderState.fromCache({
           colorMask: {
@@ -55,7 +55,7 @@ describe(
     });
 
     it("clears with scissor test", function () {
-      var command = new ClearCommand({
+      const command = new ClearCommand({
         color: Color.WHITE,
       });
 
@@ -85,17 +85,17 @@ describe(
     });
 
     it("clears a framebuffer color attachment", function () {
-      var colorTexture = new Texture({
+      const colorTexture = new Texture({
         context: context,
         width: 1,
         height: 1,
       });
-      var framebuffer = new Framebuffer({
+      let framebuffer = new Framebuffer({
         context: context,
         colorTextures: [colorTexture],
       });
 
-      var command = new ClearCommand({
+      const command = new ClearCommand({
         color: new Color(0.0, 1.0, 0.0, 1.0),
         framebuffer: framebuffer,
       });

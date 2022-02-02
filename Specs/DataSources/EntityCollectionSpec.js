@@ -25,15 +25,15 @@ describe("DataSources/EntityCollection", function () {
   };
 
   it("constructor has expected defaults", function () {
-    var entityCollection = new EntityCollection();
+    const entityCollection = new EntityCollection();
     expect(entityCollection.id).toBeDefined();
     expect(entityCollection.values.length).toEqual(0);
   });
 
   it("add/remove works", function () {
-    var entity = new Entity();
-    var entity2 = new Entity();
-    var entityCollection = new EntityCollection();
+    const entity = new Entity();
+    const entity2 = new Entity();
+    const entityCollection = new EntityCollection();
 
     entityCollection.add(entity);
     expect(entityCollection.values.length).toEqual(1);
@@ -49,22 +49,22 @@ describe("DataSources/EntityCollection", function () {
   });
 
   it("add sets entityCollection on entity", function () {
-    var entity = new Entity();
-    var entityCollection = new EntityCollection();
+    const entity = new Entity();
+    const entityCollection = new EntityCollection();
 
     entityCollection.add(entity);
     expect(entity.entityCollection).toBe(entityCollection);
   });
 
   it("Entity.isShowing changes when collection show changes.", function () {
-    var entity = new Entity();
-    var entityCollection = new EntityCollection();
+    const entity = new Entity();
+    const entityCollection = new EntityCollection();
 
     entityCollection.add(entity);
 
     expect(entity.isShowing).toBe(true);
 
-    var listener = jasmine.createSpy("listener");
+    const listener = jasmine.createSpy("listener");
     entity.definitionChanged.addEventListener(listener);
 
     entityCollection.show = false;
@@ -80,9 +80,9 @@ describe("DataSources/EntityCollection", function () {
   });
 
   it("add with template", function () {
-    var entityCollection = new EntityCollection();
+    const entityCollection = new EntityCollection();
 
-    var entity = entityCollection.add({
+    const entity = entityCollection.add({
       id: "1",
     });
 
@@ -92,11 +92,11 @@ describe("DataSources/EntityCollection", function () {
   });
 
   it("add/remove raises expected events", function () {
-    var entity = new Entity();
-    var entity2 = new Entity();
-    var entityCollection = new EntityCollection();
+    const entity = new Entity();
+    const entity2 = new Entity();
+    const entityCollection = new EntityCollection();
 
-    var listener = new CollectionListener();
+    const listener = new CollectionListener();
     entityCollection.collectionChanged.addEventListener(
       listener.onCollectionChanged,
       listener
@@ -143,20 +143,20 @@ describe("DataSources/EntityCollection", function () {
   });
 
   it("raises expected events when reentrant", function () {
-    var entityCollection = new EntityCollection();
+    const entityCollection = new EntityCollection();
 
-    var entity = new Entity();
-    var entity2 = new Entity();
+    const entity = new Entity();
+    const entity2 = new Entity();
     entityCollection.add(entity);
     entityCollection.add(entity2);
 
-    var entityToDelete = new Entity();
+    const entityToDelete = new Entity();
     entityCollection.add(entityToDelete);
 
-    var entityToAdd = new Entity();
+    const entityToAdd = new Entity();
 
-    var inCallback = false;
-    var listener = jasmine
+    let inCallback = false;
+    const listener = jasmine
       .createSpy("listener")
       .and.callFake(function (collection, added, removed, changed) {
         //When we set the name to `newName` below, this code will modify entity2's name, thus triggering
@@ -202,13 +202,13 @@ describe("DataSources/EntityCollection", function () {
   });
 
   it("suspended add/remove raises expected events", function () {
-    var entity = new Entity();
-    var entity2 = new Entity();
-    var entity3 = new Entity();
+    const entity = new Entity();
+    const entity2 = new Entity();
+    const entity3 = new Entity();
 
-    var entityCollection = new EntityCollection();
+    const entityCollection = new EntityCollection();
 
-    var listener = new CollectionListener();
+    const listener = new CollectionListener();
     entityCollection.collectionChanged.addEventListener(
       listener.onCollectionChanged,
       listener
@@ -263,9 +263,9 @@ describe("DataSources/EntityCollection", function () {
   });
 
   it("removeAll works", function () {
-    var entity = new Entity();
-    var entity2 = new Entity();
-    var entityCollection = new EntityCollection();
+    const entity = new Entity();
+    const entity2 = new Entity();
+    const entityCollection = new EntityCollection();
 
     entityCollection.add(entity);
     entityCollection.add(entity2);
@@ -274,11 +274,11 @@ describe("DataSources/EntityCollection", function () {
   });
 
   it("removeAll raises expected events", function () {
-    var entity = new Entity();
-    var entity2 = new Entity();
-    var entityCollection = new EntityCollection();
+    const entity = new Entity();
+    const entity2 = new Entity();
+    const entityCollection = new EntityCollection();
 
-    var listener = new CollectionListener();
+    const listener = new CollectionListener();
 
     entityCollection.add(entity);
     entityCollection.add(entity2);
@@ -305,11 +305,11 @@ describe("DataSources/EntityCollection", function () {
   });
 
   it("suspended removeAll raises expected events", function () {
-    var entity = new Entity();
-    var entity2 = new Entity();
-    var entityCollection = new EntityCollection();
+    const entity = new Entity();
+    const entity2 = new Entity();
+    const entityCollection = new EntityCollection();
 
-    var listener = new CollectionListener();
+    const listener = new CollectionListener();
 
     entityCollection.add(entity);
     entityCollection.add(entity2);
@@ -345,14 +345,14 @@ describe("DataSources/EntityCollection", function () {
   });
 
   it("removeById returns false if id not in collection.", function () {
-    var entityCollection = new EntityCollection();
+    const entityCollection = new EntityCollection();
     expect(entityCollection.removeById("notThere")).toBe(false);
   });
 
   it("getById works", function () {
-    var entity = new Entity();
-    var entity2 = new Entity();
-    var entityCollection = new EntityCollection();
+    const entity = new Entity();
+    const entity2 = new Entity();
+    const entityCollection = new EntityCollection();
 
     entityCollection.add(entity);
     entityCollection.add(entity2);
@@ -362,43 +362,43 @@ describe("DataSources/EntityCollection", function () {
   });
 
   it("getById returns undefined for non-existent object", function () {
-    var entityCollection = new EntityCollection();
+    const entityCollection = new EntityCollection();
     expect(entityCollection.getById("123")).toBeUndefined();
   });
 
   it("getOrCreateEntity creates a new object if it does not exist.", function () {
-    var entityCollection = new EntityCollection();
+    const entityCollection = new EntityCollection();
     expect(entityCollection.values.length).toEqual(0);
-    var testObject = entityCollection.getOrCreateEntity("test");
+    const testObject = entityCollection.getOrCreateEntity("test");
     expect(entityCollection.values.length).toEqual(1);
     expect(entityCollection.values[0]).toEqual(testObject);
   });
 
   it("getOrCreateEntity does not create a new object if it already exists.", function () {
-    var entityCollection = new EntityCollection();
+    const entityCollection = new EntityCollection();
     expect(entityCollection.values.length).toEqual(0);
-    var testObject = entityCollection.getOrCreateEntity("test");
+    const testObject = entityCollection.getOrCreateEntity("test");
     expect(entityCollection.values.length).toEqual(1);
     expect(entityCollection.values[0]).toEqual(testObject);
-    var testObject2 = entityCollection.getOrCreateEntity("test");
+    const testObject2 = entityCollection.getOrCreateEntity("test");
     expect(entityCollection.values.length).toEqual(1);
     expect(entityCollection.values[0]).toEqual(testObject);
     expect(testObject2).toEqual(testObject);
   });
 
   it("computeAvailability returns infinite with no data.", function () {
-    var entityCollection = new EntityCollection();
-    var availability = entityCollection.computeAvailability();
+    const entityCollection = new EntityCollection();
+    const availability = entityCollection.computeAvailability();
     expect(availability.start).toEqual(Iso8601.MINIMUM_VALUE);
     expect(availability.stop).toEqual(Iso8601.MAXIMUM_VALUE);
   });
 
   it("computeAvailability returns intersction of collections.", function () {
-    var entityCollection = new EntityCollection();
+    const entityCollection = new EntityCollection();
 
-    var entity = entityCollection.getOrCreateEntity("1");
-    var entity2 = entityCollection.getOrCreateEntity("2");
-    var entity3 = entityCollection.getOrCreateEntity("3");
+    const entity = entityCollection.getOrCreateEntity("1");
+    const entity2 = entityCollection.getOrCreateEntity("2");
+    const entity3 = entityCollection.getOrCreateEntity("3");
 
     entity.availability = new TimeIntervalCollection();
     entity.availability.addInterval(
@@ -414,17 +414,17 @@ describe("DataSources/EntityCollection", function () {
     );
     entity3.availability = undefined;
 
-    var availability = entityCollection.computeAvailability();
+    const availability = entityCollection.computeAvailability();
     expect(availability.start).toEqual(JulianDate.fromIso8601("2012-08-01"));
     expect(availability.stop).toEqual(JulianDate.fromIso8601("2012-08-06"));
   });
 
   it("computeAvailability works if only start or stop time is infinite.", function () {
-    var entityCollection = new EntityCollection();
+    const entityCollection = new EntityCollection();
 
-    var entity = entityCollection.getOrCreateEntity("1");
-    var entity2 = entityCollection.getOrCreateEntity("2");
-    var entity3 = entityCollection.getOrCreateEntity("3");
+    const entity = entityCollection.getOrCreateEntity("1");
+    const entity2 = entityCollection.getOrCreateEntity("2");
+    const entity3 = entityCollection.getOrCreateEntity("3");
 
     entity.availability = new TimeIntervalCollection();
     entity.availability.addInterval(
@@ -440,31 +440,31 @@ describe("DataSources/EntityCollection", function () {
     );
     entity3.availability = undefined;
 
-    var availability = entityCollection.computeAvailability();
+    const availability = entityCollection.computeAvailability();
     expect(availability.start).toEqual(JulianDate.fromIso8601("2012-08-01"));
     expect(availability.stop).toEqual(JulianDate.fromIso8601("2012-08-06"));
   });
 
   it("resumeEvents throws if no matching suspendEvents ", function () {
-    var entityCollection = new EntityCollection();
+    const entityCollection = new EntityCollection();
     expect(function () {
       entityCollection.resumeEvents();
     }).toThrowDeveloperError();
   });
 
   it("add throws with undefined Entity", function () {
-    var entityCollection = new EntityCollection();
+    const entityCollection = new EntityCollection();
     expect(function () {
       entityCollection.add(undefined);
     }).toThrowDeveloperError();
   });
 
   it("add throws for Entity with same id", function () {
-    var entityCollection = new EntityCollection();
-    var entity = new Entity({
+    const entityCollection = new EntityCollection();
+    const entity = new Entity({
       id: "1",
     });
-    var entity2 = new Entity({
+    const entity2 = new Entity({
       id: "1",
     });
     entityCollection.add(entity);
@@ -475,42 +475,42 @@ describe("DataSources/EntityCollection", function () {
   });
 
   it("contains returns true if in collection", function () {
-    var entityCollection = new EntityCollection();
-    var entity = entityCollection.getOrCreateEntity("asd");
+    const entityCollection = new EntityCollection();
+    const entity = entityCollection.getOrCreateEntity("asd");
     expect(entityCollection.contains(entity)).toBe(true);
   });
 
   it("contains returns false if not in collection", function () {
-    var entityCollection = new EntityCollection();
+    const entityCollection = new EntityCollection();
     expect(entityCollection.contains(new Entity())).toBe(false);
   });
 
   it("contains throws with undefined Entity", function () {
-    var entityCollection = new EntityCollection();
+    const entityCollection = new EntityCollection();
     expect(function () {
       entityCollection.contains(undefined);
     }).toThrowDeveloperError();
   });
 
   it("remove returns false with undefined Entity", function () {
-    var entityCollection = new EntityCollection();
+    const entityCollection = new EntityCollection();
     expect(entityCollection.remove(undefined)).toBe(false);
   });
 
   it("removeById returns false with undefined id", function () {
-    var entityCollection = new EntityCollection();
+    const entityCollection = new EntityCollection();
     expect(entityCollection.removeById(undefined)).toBe(false);
   });
 
   it("getById throws if no id specified", function () {
-    var entityCollection = new EntityCollection();
+    const entityCollection = new EntityCollection();
     expect(function () {
       entityCollection.getById(undefined);
     }).toThrowDeveloperError();
   });
 
   it("getOrCreateEntity throws if no id specified", function () {
-    var entityCollection = new EntityCollection();
+    const entityCollection = new EntityCollection();
     expect(function () {
       entityCollection.getOrCreateEntity(undefined);
     }).toThrowDeveloperError();

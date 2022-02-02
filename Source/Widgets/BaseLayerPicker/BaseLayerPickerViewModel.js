@@ -23,12 +23,12 @@ import createCommand from "../createCommand.js";
 function BaseLayerPickerViewModel(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var globe = options.globe;
-  var imageryProviderViewModels = defaultValue(
+  const globe = options.globe;
+  const imageryProviderViewModels = defaultValue(
     options.imageryProviderViewModels,
     []
   );
-  var terrainProviderViewModels = defaultValue(
+  const terrainProviderViewModels = defaultValue(
     options.terrainProviderViewModels,
     []
   );
@@ -68,28 +68,28 @@ function BaseLayerPickerViewModel(options) {
     "dropDownVisible",
   ]);
 
-  var imageryObservable = knockout.getObservable(
+  const imageryObservable = knockout.getObservable(
     this,
     "imageryProviderViewModels"
   );
-  var imageryProviders = knockout.pureComputed(function () {
-    var providers = imageryObservable();
-    var categories = {};
-    var i;
+  const imageryProviders = knockout.pureComputed(function () {
+    const providers = imageryObservable();
+    const categories = {};
+    let i;
     for (i = 0; i < providers.length; i++) {
-      var provider = providers[i];
-      var category = provider.category;
+      const provider = providers[i];
+      const category = provider.category;
       if (defined(categories[category])) {
         categories[category].push(provider);
       } else {
         categories[category] = [provider];
       }
     }
-    var allCategoryNames = Object.keys(categories);
+    const allCategoryNames = Object.keys(categories);
 
-    var result = [];
+    const result = [];
     for (i = 0; i < allCategoryNames.length; i++) {
-      var name = allCategoryNames[i];
+      const name = allCategoryNames[i];
       result.push({
         name: name,
         providers: categories[name],
@@ -99,28 +99,28 @@ function BaseLayerPickerViewModel(options) {
   });
   this._imageryProviders = imageryProviders;
 
-  var terrainObservable = knockout.getObservable(
+  const terrainObservable = knockout.getObservable(
     this,
     "terrainProviderViewModels"
   );
-  var terrainProviders = knockout.pureComputed(function () {
-    var providers = terrainObservable();
-    var categories = {};
-    var i;
+  const terrainProviders = knockout.pureComputed(function () {
+    const providers = terrainObservable();
+    const categories = {};
+    let i;
     for (i = 0; i < providers.length; i++) {
-      var provider = providers[i];
-      var category = provider.category;
+      const provider = providers[i];
+      const category = provider.category;
       if (defined(categories[category])) {
         categories[category].push(provider);
       } else {
         categories[category] = [provider];
       }
     }
-    var allCategoryNames = Object.keys(categories);
+    const allCategoryNames = Object.keys(categories);
 
-    var result = [];
+    const result = [];
     for (i = 0; i < allCategoryNames.length; i++) {
-      var name = allCategoryNames[i];
+      const name = allCategoryNames[i];
       result.push({
         name: name,
         providers: categories[name],
@@ -136,13 +136,13 @@ function BaseLayerPickerViewModel(options) {
    */
   this.buttonTooltip = undefined;
   knockout.defineProperty(this, "buttonTooltip", function () {
-    var selectedImagery = this.selectedImagery;
-    var selectedTerrain = this.selectedTerrain;
+    const selectedImagery = this.selectedImagery;
+    const selectedTerrain = this.selectedTerrain;
 
-    var imageryTip = defined(selectedImagery)
+    const imageryTip = defined(selectedImagery)
       ? selectedImagery.name
       : undefined;
-    var terrainTip = defined(selectedTerrain)
+    const terrainTip = defined(selectedTerrain)
       ? selectedTerrain.name
       : undefined;
 
@@ -160,7 +160,7 @@ function BaseLayerPickerViewModel(options) {
    */
   this.buttonImageUrl = undefined;
   knockout.defineProperty(this, "buttonImageUrl", function () {
-    var selectedImagery = this.selectedImagery;
+    const selectedImagery = this.selectedImagery;
     if (defined(selectedImagery)) {
       return selectedImagery.iconUrl;
     }
@@ -172,7 +172,7 @@ function BaseLayerPickerViewModel(options) {
    * @default undefined
    */
   this.selectedImagery = undefined;
-  var selectedImageryViewModel = knockout.observable();
+  const selectedImageryViewModel = knockout.observable();
 
   this._currentImageryProviders = [];
   knockout.defineProperty(this, "selectedImagery", {
@@ -185,15 +185,15 @@ function BaseLayerPickerViewModel(options) {
         return;
       }
 
-      var i;
-      var currentImageryProviders = this._currentImageryProviders;
-      var currentImageryProvidersLength = currentImageryProviders.length;
-      var imageryLayers = this._globe.imageryLayers;
-      var hadExistingBaseLayer = false;
+      let i;
+      const currentImageryProviders = this._currentImageryProviders;
+      const currentImageryProvidersLength = currentImageryProviders.length;
+      const imageryLayers = this._globe.imageryLayers;
+      let hadExistingBaseLayer = false;
       for (i = 0; i < currentImageryProvidersLength; i++) {
-        var layersLength = imageryLayers.length;
-        for (var x = 0; x < layersLength; x++) {
-          var layer = imageryLayers.get(x);
+        const layersLength = imageryLayers.length;
+        for (let x = 0; x < layersLength; x++) {
+          const layer = imageryLayers.get(x);
           if (layer.imageryProvider === currentImageryProviders[i]) {
             imageryLayers.remove(layer);
             hadExistingBaseLayer = true;
@@ -203,9 +203,9 @@ function BaseLayerPickerViewModel(options) {
       }
 
       if (defined(value)) {
-        var newProviders = value.creationCommand();
+        const newProviders = value.creationCommand();
         if (Array.isArray(newProviders)) {
-          var newProvidersLength = newProviders.length;
+          const newProvidersLength = newProviders.length;
           for (i = newProvidersLength - 1; i >= 0; i--) {
             imageryLayers.addImageryProvider(newProviders[i], 0);
           }
@@ -215,7 +215,7 @@ function BaseLayerPickerViewModel(options) {
           if (hadExistingBaseLayer) {
             imageryLayers.addImageryProvider(newProviders, 0);
           } else {
-            var baseLayer = imageryLayers.get(0);
+            const baseLayer = imageryLayers.get(0);
             if (defined(baseLayer)) {
               imageryLayers.remove(baseLayer);
             }
@@ -234,7 +234,7 @@ function BaseLayerPickerViewModel(options) {
    * @default undefined
    */
   this.selectedTerrain = undefined;
-  var selectedTerrainViewModel = knockout.observable();
+  const selectedTerrainViewModel = knockout.observable();
 
   knockout.defineProperty(this, "selectedTerrain", {
     get: function () {
@@ -246,7 +246,7 @@ function BaseLayerPickerViewModel(options) {
         return;
       }
 
-      var newProvider;
+      let newProvider;
       if (defined(value)) {
         newProvider = value.creationCommand();
       }
@@ -260,7 +260,7 @@ function BaseLayerPickerViewModel(options) {
     },
   });
 
-  var that = this;
+  const that = this;
   this._toggleDropDown = createCommand(function () {
     that.dropDownVisible = !that.dropDownVisible;
   });

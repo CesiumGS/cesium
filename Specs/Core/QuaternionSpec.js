@@ -7,7 +7,7 @@ import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/Quaternion", function () {
   it("construct with default values", function () {
-    var quaternion = new Quaternion();
+    const quaternion = new Quaternion();
     expect(quaternion.x).toEqual(0.0);
     expect(quaternion.y).toEqual(0.0);
     expect(quaternion.z).toEqual(0.0);
@@ -15,7 +15,7 @@ describe("Core/Quaternion", function () {
   });
 
   it("construct with all values", function () {
-    var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
+    const quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
     expect(quaternion.x).toEqual(1.0);
     expect(quaternion.y).toEqual(2.0);
     expect(quaternion.z).toEqual(3.0);
@@ -23,35 +23,35 @@ describe("Core/Quaternion", function () {
   });
 
   it("fromAxisAngle works without a result parameter", function () {
-    var axis = new Cartesian3(0.0, 0.0, 1.0);
-    var angle = CesiumMath.PI_OVER_TWO;
-    var s = Math.sin(angle / 2.0);
-    var c = Math.cos(angle / 2.0);
-    var a = Cartesian3.multiplyByScalar(axis, s, new Cartesian3());
-    var expected = new Quaternion(a.x, a.y, a.z, c);
-    var returnedResult = Quaternion.fromAxisAngle(axis, angle);
+    const axis = new Cartesian3(0.0, 0.0, 1.0);
+    const angle = CesiumMath.PI_OVER_TWO;
+    const s = Math.sin(angle / 2.0);
+    const c = Math.cos(angle / 2.0);
+    const a = Cartesian3.multiplyByScalar(axis, s, new Cartesian3());
+    const expected = new Quaternion(a.x, a.y, a.z, c);
+    const returnedResult = Quaternion.fromAxisAngle(axis, angle);
     expect(returnedResult).toEqual(expected);
   });
 
   it("fromAxisAngle works with a result parameter", function () {
-    var axis = new Cartesian3(0.0, 0.0, 1.0);
-    var angle = CesiumMath.PI_OVER_TWO;
-    var s = Math.sin(angle / 2.0);
-    var c = Math.cos(angle / 2.0);
-    var a = Cartesian3.multiplyByScalar(axis, s, new Cartesian3());
-    var result = new Quaternion();
-    var expected = new Quaternion(a.x, a.y, a.z, c);
-    var returnedResult = Quaternion.fromAxisAngle(axis, angle, result);
+    const axis = new Cartesian3(0.0, 0.0, 1.0);
+    const angle = CesiumMath.PI_OVER_TWO;
+    const s = Math.sin(angle / 2.0);
+    const c = Math.cos(angle / 2.0);
+    const a = Cartesian3.multiplyByScalar(axis, s, new Cartesian3());
+    const result = new Quaternion();
+    const expected = new Quaternion(a.x, a.y, a.z, c);
+    const returnedResult = Quaternion.fromAxisAngle(axis, angle, result);
     expect(result).toBe(returnedResult);
     expect(returnedResult).toEqual(expected);
   });
 
   it("fromRotationMatrix works when m22 is max", function () {
-    var q = Quaternion.fromAxisAngle(
+    const q = Quaternion.fromAxisAngle(
       Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
       Math.PI
     );
-    var rotation = new Matrix3(-1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 1.0);
+    const rotation = new Matrix3(-1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 1.0);
     expect(Quaternion.fromRotationMatrix(rotation)).toEqualEpsilon(
       q,
       CesiumMath.EPSILON15
@@ -59,11 +59,11 @@ describe("Core/Quaternion", function () {
   });
 
   it("fromRotationMatrix works when m11 is max", function () {
-    var q = Quaternion.fromAxisAngle(
+    const q = Quaternion.fromAxisAngle(
       Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3()),
       Math.PI
     );
-    var rotation = new Matrix3(-1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, -1.0);
+    const rotation = new Matrix3(-1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, -1.0);
     expect(Quaternion.fromRotationMatrix(rotation)).toEqualEpsilon(
       q,
       CesiumMath.EPSILON15
@@ -71,11 +71,11 @@ describe("Core/Quaternion", function () {
   });
 
   it("fromRotationMatrix works when m00 is max", function () {
-    var q = Quaternion.fromAxisAngle(
+    const q = Quaternion.fromAxisAngle(
       Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
       Math.PI
     );
-    var rotation = new Matrix3(1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0);
+    const rotation = new Matrix3(1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0);
     expect(Quaternion.fromRotationMatrix(rotation)).toEqualEpsilon(
       q,
       CesiumMath.EPSILON15
@@ -83,8 +83,8 @@ describe("Core/Quaternion", function () {
   });
 
   it("fromRotationMatrix works when trace is greater than zero", function () {
-    var rotation = new Matrix3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
-    var q = new Quaternion(0.0, 0.0, 0.0, 1.0);
+    const rotation = new Matrix3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+    const q = new Quaternion(0.0, 0.0, 0.0, 1.0);
     expect(Quaternion.fromRotationMatrix(rotation)).toEqualEpsilon(
       q,
       CesiumMath.EPSILON15
@@ -92,31 +92,31 @@ describe("Core/Quaternion", function () {
   });
 
   it("fromRotationMatrix works with result parameter", function () {
-    var rotation = new Matrix3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
-    var q = new Quaternion(0.0, 0.0, 0.0, 1.0);
-    var result = new Quaternion();
-    var returnedResult = Quaternion.fromRotationMatrix(rotation, result);
+    const rotation = new Matrix3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+    const q = new Quaternion(0.0, 0.0, 0.0, 1.0);
+    const result = new Quaternion();
+    const returnedResult = Quaternion.fromRotationMatrix(rotation, result);
     expect(returnedResult).toEqualEpsilon(q, CesiumMath.EPSILON15);
     expect(returnedResult).toBe(result);
   });
 
   it("fromRotationMatrix using a view matrix", function () {
-    var direction = new Cartesian3(
+    const direction = new Cartesian3(
       -0.2349326833984488,
       0.8513513009480378,
       0.46904967396353314
     );
-    var up = new Cartesian3(
+    const up = new Cartesian3(
       0.12477198625717335,
       -0.4521499177166376,
       0.8831717858696695
     );
-    var right = new Cartesian3(
+    const right = new Cartesian3(
       0.9639702203483635,
       0.26601017702986895,
       6.456422901079747e-10
     );
-    var matrix = new Matrix3(
+    const matrix = new Matrix3(
       right.x,
       right.y,
       right.z,
@@ -127,7 +127,7 @@ describe("Core/Quaternion", function () {
       -direction.y,
       -direction.z
     );
-    var quaternion = Quaternion.fromRotationMatrix(matrix);
+    const quaternion = Quaternion.fromRotationMatrix(matrix);
     expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(
       matrix,
       CesiumMath.EPSILON12
@@ -135,9 +135,9 @@ describe("Core/Quaternion", function () {
   });
 
   it("fromHeadingPitchRoll with just heading", function () {
-    var angle = CesiumMath.toRadians(20.0);
-    var hpr = new HeadingPitchRoll(angle, 0.0, 0.0);
-    var quaternion = Quaternion.fromHeadingPitchRoll(hpr);
+    const angle = CesiumMath.toRadians(20.0);
+    const hpr = new HeadingPitchRoll(angle, 0.0, 0.0);
+    const quaternion = Quaternion.fromHeadingPitchRoll(hpr);
     expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(
       Matrix3.fromRotationZ(-angle),
       CesiumMath.EPSILON11
@@ -145,9 +145,9 @@ describe("Core/Quaternion", function () {
   });
 
   it("fromHeadingPitchRoll with just pitch", function () {
-    var angle = CesiumMath.toRadians(20.0);
-    var hpr = new HeadingPitchRoll(0.0, angle, 0.0);
-    var quaternion = Quaternion.fromHeadingPitchRoll(hpr);
+    const angle = CesiumMath.toRadians(20.0);
+    const hpr = new HeadingPitchRoll(0.0, angle, 0.0);
+    const quaternion = Quaternion.fromHeadingPitchRoll(hpr);
     expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(
       Matrix3.fromRotationY(-angle),
       CesiumMath.EPSILON11
@@ -155,9 +155,9 @@ describe("Core/Quaternion", function () {
   });
 
   it("fromHeadingPitchRoll with just roll", function () {
-    var angle = CesiumMath.toRadians(20.0);
-    var hpr = new HeadingPitchRoll(0.0, 0.0, angle);
-    var quaternion = Quaternion.fromHeadingPitchRoll(hpr);
+    const angle = CesiumMath.toRadians(20.0);
+    const hpr = new HeadingPitchRoll(0.0, 0.0, angle);
+    const quaternion = Quaternion.fromHeadingPitchRoll(hpr);
     expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(
       Matrix3.fromRotationX(angle),
       CesiumMath.EPSILON11
@@ -165,10 +165,10 @@ describe("Core/Quaternion", function () {
   });
 
   it("fromHeadingPitchRoll with all angles (1)", function () {
-    var angle = CesiumMath.toRadians(20.0);
-    var hpr = new HeadingPitchRoll(angle, angle, angle);
-    var quaternion = Quaternion.fromHeadingPitchRoll(hpr);
-    var expected = Matrix3.fromRotationX(angle);
+    const angle = CesiumMath.toRadians(20.0);
+    const hpr = new HeadingPitchRoll(angle, angle, angle);
+    const quaternion = Quaternion.fromHeadingPitchRoll(hpr);
+    const expected = Matrix3.fromRotationX(angle);
     Matrix3.multiply(Matrix3.fromRotationY(-angle), expected, expected);
     Matrix3.multiply(Matrix3.fromRotationZ(-angle), expected, expected);
     expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(
@@ -178,12 +178,12 @@ describe("Core/Quaternion", function () {
   });
 
   it("fromHeadingPitchRoll with all angles (2)", function () {
-    var heading = CesiumMath.toRadians(180.0);
-    var pitch = CesiumMath.toRadians(-45.0);
-    var roll = CesiumMath.toRadians(45.0);
-    var hpr = new HeadingPitchRoll(heading, pitch, roll);
-    var quaternion = Quaternion.fromHeadingPitchRoll(hpr);
-    var expected = Matrix3.fromRotationX(roll);
+    const heading = CesiumMath.toRadians(180.0);
+    const pitch = CesiumMath.toRadians(-45.0);
+    const roll = CesiumMath.toRadians(45.0);
+    const hpr = new HeadingPitchRoll(heading, pitch, roll);
+    const quaternion = Quaternion.fromHeadingPitchRoll(hpr);
+    const expected = Matrix3.fromRotationX(roll);
     Matrix3.multiply(Matrix3.fromRotationY(-pitch), expected, expected);
     Matrix3.multiply(Matrix3.fromRotationZ(-heading), expected, expected);
     expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(
@@ -193,187 +193,189 @@ describe("Core/Quaternion", function () {
   });
 
   it("fromHeadingPitchRoll works with result parameter", function () {
-    var angle = CesiumMath.toRadians(20.0);
-    var hpr = new HeadingPitchRoll(0.0, 0.0, angle);
-    var result = new Quaternion();
-    var quaternion = Quaternion.fromHeadingPitchRoll(hpr, result);
-    var expected = Quaternion.fromRotationMatrix(Matrix3.fromRotationX(angle));
+    const angle = CesiumMath.toRadians(20.0);
+    const hpr = new HeadingPitchRoll(0.0, 0.0, angle);
+    const result = new Quaternion();
+    const quaternion = Quaternion.fromHeadingPitchRoll(hpr, result);
+    const expected = Quaternion.fromRotationMatrix(
+      Matrix3.fromRotationX(angle)
+    );
     expect(quaternion).toBe(result);
     expect(quaternion).toEqualEpsilon(expected, CesiumMath.EPSILON11);
   });
 
   it("clone without a result parameter", function () {
-    var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
-    var result = quaternion.clone();
+    const quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
+    const result = quaternion.clone();
     expect(quaternion).not.toBe(result);
     expect(quaternion).toEqual(result);
   });
 
   it("clone with a result parameter", function () {
-    var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
-    var result = new Quaternion();
-    var returnedResult = quaternion.clone(result);
+    const quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
+    const result = new Quaternion();
+    const returnedResult = quaternion.clone(result);
     expect(quaternion).not.toBe(result);
     expect(result).toBe(returnedResult);
     expect(quaternion).toEqual(result);
   });
 
   it("clone works with a result parameter that is an input parameter", function () {
-    var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
-    var returnedResult = quaternion.clone(quaternion);
+    const quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
+    const returnedResult = quaternion.clone(quaternion);
     expect(quaternion).toBe(returnedResult);
   });
 
   it("conjugate works", function () {
-    var expected = new Quaternion(-1.0, -2.0, -3.0, 4.0);
-    var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
-    var result = new Quaternion();
-    var returnedResult = Quaternion.conjugate(quaternion, result);
+    const expected = new Quaternion(-1.0, -2.0, -3.0, 4.0);
+    const quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
+    const result = new Quaternion();
+    const returnedResult = Quaternion.conjugate(quaternion, result);
     expect(result).toBe(returnedResult);
     expect(returnedResult).toEqual(expected);
   });
 
   it("conjugate works with a result parameter that is an input parameter", function () {
-    var expected = new Quaternion(-1.0, -2.0, -3.0, 4.0);
-    var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
-    var returnedResult = Quaternion.conjugate(quaternion, quaternion);
+    const expected = new Quaternion(-1.0, -2.0, -3.0, 4.0);
+    const quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
+    const returnedResult = Quaternion.conjugate(quaternion, quaternion);
     expect(quaternion).toBe(returnedResult);
     expect(quaternion).toEqual(expected);
   });
 
   it("magnitudeSquared computes correct result", function () {
-    var expected = 2 * 2 + 3 * 3 + 4 * 4 + 5 * 5;
-    var quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
-    var result = Quaternion.magnitudeSquared(quaternion);
+    const expected = 2 * 2 + 3 * 3 + 4 * 4 + 5 * 5;
+    const quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
+    const result = Quaternion.magnitudeSquared(quaternion);
     expect(result).toEqual(expected);
   });
 
   it("norm computes correct result", function () {
-    var expected = Math.sqrt(2 * 2 + 3 * 3 + 4 * 4 + 5 * 5);
-    var quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
-    var result = Quaternion.magnitude(quaternion);
+    const expected = Math.sqrt(2 * 2 + 3 * 3 + 4 * 4 + 5 * 5);
+    const quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
+    const result = Quaternion.magnitude(quaternion);
     expect(result).toEqual(expected);
   });
 
   it("normalize works", function () {
-    var quaternion = new Quaternion(2.0, 0.0, 0.0, 0.0);
-    var expectedResult = new Quaternion(1.0, 0.0, 0.0, 0.0);
-    var result = new Quaternion();
-    var returnedResult = Quaternion.normalize(quaternion, result);
+    const quaternion = new Quaternion(2.0, 0.0, 0.0, 0.0);
+    const expectedResult = new Quaternion(1.0, 0.0, 0.0, 0.0);
+    const result = new Quaternion();
+    const returnedResult = Quaternion.normalize(quaternion, result);
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expectedResult);
   });
 
   it("normalize works with a result parameter that is an input parameter", function () {
-    var quaternion = new Quaternion(2.0, 0.0, 0.0, 0.0);
-    var expectedResult = new Quaternion(1.0, 0.0, 0.0, 0.0);
-    var returnedResult = Quaternion.normalize(quaternion, quaternion);
+    const quaternion = new Quaternion(2.0, 0.0, 0.0, 0.0);
+    const expectedResult = new Quaternion(1.0, 0.0, 0.0, 0.0);
+    const returnedResult = Quaternion.normalize(quaternion, quaternion);
     expect(quaternion).toBe(returnedResult);
     expect(quaternion).toEqual(expectedResult);
   });
 
   it("inverse works", function () {
-    var quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
-    var magnitudeSquared = Quaternion.magnitudeSquared(quaternion);
-    var expected = new Quaternion(
+    const quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
+    const magnitudeSquared = Quaternion.magnitudeSquared(quaternion);
+    const expected = new Quaternion(
       -2.0 / magnitudeSquared,
       -3.0 / magnitudeSquared,
       -4.0 / magnitudeSquared,
       5.0 / magnitudeSquared
     );
-    var result = new Quaternion();
-    var returnedResult = Quaternion.inverse(quaternion, result);
+    const result = new Quaternion();
+    const returnedResult = Quaternion.inverse(quaternion, result);
     expect(returnedResult).toEqual(expected);
     expect(returnedResult).toBe(result);
   });
 
   it("inverse works with a result parameter that is an input parameter", function () {
-    var quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
-    var magnitudeSquared = Quaternion.magnitudeSquared(quaternion);
-    var expected = new Quaternion(
+    const quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
+    const magnitudeSquared = Quaternion.magnitudeSquared(quaternion);
+    const expected = new Quaternion(
       -2.0 / magnitudeSquared,
       -3.0 / magnitudeSquared,
       -4.0 / magnitudeSquared,
       5.0 / magnitudeSquared
     );
-    var returnedResult = Quaternion.inverse(quaternion, quaternion);
+    const returnedResult = Quaternion.inverse(quaternion, quaternion);
     expect(returnedResult).toEqual(expected);
     expect(returnedResult).toBe(quaternion);
   });
 
   it("dot", function () {
-    var left = new Quaternion(2.0, 3.0, 6.0, 8.0);
-    var right = new Quaternion(4.0, 5.0, 7.0, 9.0);
-    var expectedResult = 137.0;
-    var result = Quaternion.dot(left, right);
+    const left = new Quaternion(2.0, 3.0, 6.0, 8.0);
+    const right = new Quaternion(4.0, 5.0, 7.0, 9.0);
+    const expectedResult = 137.0;
+    const result = Quaternion.dot(left, right);
     expect(result).toEqual(expectedResult);
   });
 
   it("multiply works", function () {
-    var left = new Quaternion(1.0, 2.0, 3.0, 4.0);
-    var right = new Quaternion(8.0, 7.0, 6.0, 5.0);
+    const left = new Quaternion(1.0, 2.0, 3.0, 4.0);
+    const right = new Quaternion(8.0, 7.0, 6.0, 5.0);
 
-    var expected = new Quaternion(28.0, 56.0, 30.0, -20.0);
-    var result = new Quaternion();
-    var returnedResult = Quaternion.multiply(left, right, result);
+    const expected = new Quaternion(28.0, 56.0, 30.0, -20.0);
+    const result = new Quaternion();
+    const returnedResult = Quaternion.multiply(left, right, result);
     expect(returnedResult).toEqual(expected);
     expect(result).toBe(returnedResult);
   });
 
   it("multiply works with a result parameter that is an input parameter", function () {
-    var left = new Quaternion(1.0, 2.0, 3.0, 4.0);
-    var right = new Quaternion(8.0, 7.0, 6.0, 5.0);
+    const left = new Quaternion(1.0, 2.0, 3.0, 4.0);
+    const right = new Quaternion(8.0, 7.0, 6.0, 5.0);
 
-    var expected = new Quaternion(28.0, 56.0, 30.0, -20.0);
-    var returnedResult = Quaternion.multiply(left, right, left);
+    const expected = new Quaternion(28.0, 56.0, 30.0, -20.0);
+    const returnedResult = Quaternion.multiply(left, right, left);
     expect(returnedResult).toEqual(expected);
     expect(left).toBe(returnedResult);
   });
 
   it("add works", function () {
-    var left = new Quaternion(2.0, 3.0, 6.0, 8.0);
-    var right = new Quaternion(4.0, 5.0, 7.0, 9.0);
-    var result = new Quaternion();
-    var expectedResult = new Quaternion(6.0, 8.0, 13.0, 17.0);
-    var returnedResult = Quaternion.add(left, right, result);
+    const left = new Quaternion(2.0, 3.0, 6.0, 8.0);
+    const right = new Quaternion(4.0, 5.0, 7.0, 9.0);
+    const result = new Quaternion();
+    const expectedResult = new Quaternion(6.0, 8.0, 13.0, 17.0);
+    const returnedResult = Quaternion.add(left, right, result);
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expectedResult);
   });
 
   it("add works with a result parameter that is an input parameter", function () {
-    var left = new Quaternion(2.0, 3.0, 6.0, 8.0);
-    var right = new Quaternion(4.0, 5.0, 7.0, 9.0);
-    var expectedResult = new Quaternion(6.0, 8.0, 13.0, 17.0);
-    var returnedResult = Quaternion.add(left, right, left);
+    const left = new Quaternion(2.0, 3.0, 6.0, 8.0);
+    const right = new Quaternion(4.0, 5.0, 7.0, 9.0);
+    const expectedResult = new Quaternion(6.0, 8.0, 13.0, 17.0);
+    const returnedResult = Quaternion.add(left, right, left);
     expect(left).toBe(returnedResult);
     expect(left).toEqual(expectedResult);
   });
 
   it("subtract works", function () {
-    var left = new Quaternion(2.0, 3.0, 4.0, 8.0);
-    var right = new Quaternion(1.0, 5.0, 7.0, 9.0);
-    var result = new Quaternion();
-    var expectedResult = new Quaternion(1.0, -2.0, -3.0, -1.0);
-    var returnedResult = Quaternion.subtract(left, right, result);
+    const left = new Quaternion(2.0, 3.0, 4.0, 8.0);
+    const right = new Quaternion(1.0, 5.0, 7.0, 9.0);
+    const result = new Quaternion();
+    const expectedResult = new Quaternion(1.0, -2.0, -3.0, -1.0);
+    const returnedResult = Quaternion.subtract(left, right, result);
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expectedResult);
   });
 
   it("subtract works with this result parameter", function () {
-    var left = new Quaternion(2.0, 3.0, 4.0, 8.0);
-    var right = new Quaternion(1.0, 5.0, 7.0, 9.0);
-    var expectedResult = new Quaternion(1.0, -2.0, -3.0, -1.0);
-    var returnedResult = Quaternion.subtract(left, right, left);
+    const left = new Quaternion(2.0, 3.0, 4.0, 8.0);
+    const right = new Quaternion(1.0, 5.0, 7.0, 9.0);
+    const expectedResult = new Quaternion(1.0, -2.0, -3.0, -1.0);
+    const returnedResult = Quaternion.subtract(left, right, left);
     expect(returnedResult).toBe(left);
     expect(left).toEqual(expectedResult);
   });
 
   it("multiplyByScalar works ", function () {
-    var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
-    var result = new Quaternion();
-    var scalar = 2;
-    var expectedResult = new Quaternion(2.0, 4.0, 6.0, 8.0);
-    var returnedResult = Quaternion.multiplyByScalar(
+    const quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
+    const result = new Quaternion();
+    const scalar = 2;
+    const expectedResult = new Quaternion(2.0, 4.0, 6.0, 8.0);
+    const returnedResult = Quaternion.multiplyByScalar(
       quaternion,
       scalar,
       result
@@ -383,10 +385,10 @@ describe("Core/Quaternion", function () {
   });
 
   it("multiplyByScalar works with a result parameter that is an input parameter", function () {
-    var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
-    var scalar = 2;
-    var expectedResult = new Quaternion(2.0, 4.0, 6.0, 8.0);
-    var returnedResult = Quaternion.multiplyByScalar(
+    const quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
+    const scalar = 2;
+    const expectedResult = new Quaternion(2.0, 4.0, 6.0, 8.0);
+    const returnedResult = Quaternion.multiplyByScalar(
       quaternion,
       scalar,
       quaternion
@@ -396,20 +398,24 @@ describe("Core/Quaternion", function () {
   });
 
   it("divideByScalar works", function () {
-    var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
-    var result = new Quaternion();
-    var scalar = 2;
-    var expectedResult = new Quaternion(0.5, 1.0, 1.5, 2.0);
-    var returnedResult = Quaternion.divideByScalar(quaternion, scalar, result);
+    const quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
+    const result = new Quaternion();
+    const scalar = 2;
+    const expectedResult = new Quaternion(0.5, 1.0, 1.5, 2.0);
+    const returnedResult = Quaternion.divideByScalar(
+      quaternion,
+      scalar,
+      result
+    );
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expectedResult);
   });
 
   it("divideByScalar works with a result parameter that is an input parameter", function () {
-    var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
-    var scalar = 2;
-    var expectedResult = new Quaternion(0.5, 1.0, 1.5, 2.0);
-    var returnedResult = Quaternion.divideByScalar(
+    const quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
+    const scalar = 2;
+    const expectedResult = new Quaternion(0.5, 1.0, 1.5, 2.0);
+    const returnedResult = Quaternion.divideByScalar(
       quaternion,
       scalar,
       quaternion
@@ -420,168 +426,168 @@ describe("Core/Quaternion", function () {
 
   it("axis works", function () {
     // 60 degrees is used here to ensure that the sine and cosine of the half angle are not equal.
-    var angle = Math.PI / 3.0;
-    var cos = Math.cos(angle / 2.0);
-    var sin = Math.sin(angle / 2.0);
-    var expected = Cartesian3.normalize(
+    const angle = Math.PI / 3.0;
+    const cos = Math.cos(angle / 2.0);
+    const sin = Math.sin(angle / 2.0);
+    const expected = Cartesian3.normalize(
       new Cartesian3(2.0, 3.0, 6.0),
       new Cartesian3()
     );
-    var quaternion = new Quaternion(
+    const quaternion = new Quaternion(
       sin * expected.x,
       sin * expected.y,
       sin * expected.z,
       cos
     );
-    var result = new Cartesian3();
-    var returnedResult = Quaternion.computeAxis(quaternion, result);
+    const result = new Cartesian3();
+    const returnedResult = Quaternion.computeAxis(quaternion, result);
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
     expect(result).toBe(returnedResult);
   });
 
   it("axis returns Cartesian3 0 when w equals 1.0", function () {
-    var expected = new Cartesian3(0.0, 0.0, 0.0);
-    var quaternion = new Quaternion(4.0, 2.0, 3.0, 1.0);
-    var result = new Cartesian3(1, 2, 3);
-    var returnedResult = Quaternion.computeAxis(quaternion, result);
+    const expected = new Cartesian3(0.0, 0.0, 0.0);
+    const quaternion = new Quaternion(4.0, 2.0, 3.0, 1.0);
+    const result = new Cartesian3(1, 2, 3);
+    const returnedResult = Quaternion.computeAxis(quaternion, result);
     expect(returnedResult).toEqual(expected);
     expect(result).toBe(returnedResult);
   });
 
   it("angle works", function () {
     // 60 degrees is used here to ensure that the sine and cosine of the half angle are not equal.
-    var angle = Math.PI / 3.0;
-    var cos = Math.cos(angle / 2.0);
-    var sin = Math.sin(angle / 2.0);
-    var axis = Cartesian3.normalize(
+    const angle = Math.PI / 3.0;
+    const cos = Math.cos(angle / 2.0);
+    const sin = Math.sin(angle / 2.0);
+    const axis = Cartesian3.normalize(
       new Cartesian3(2.0, 3.0, 6.0),
       new Cartesian3()
     );
-    var quaternion = new Quaternion(
+    const quaternion = new Quaternion(
       sin * axis.x,
       sin * axis.y,
       sin * axis.z,
       cos
     );
-    var result = Quaternion.computeAngle(quaternion);
+    const result = Quaternion.computeAngle(quaternion);
     expect(result).toEqualEpsilon(angle, CesiumMath.EPSILON15);
   });
 
   it("negate works", function () {
-    var quaternion = new Quaternion(1.0, -2.0, -5.0, 4.0);
-    var result = new Quaternion();
-    var expectedResult = new Quaternion(-1.0, 2.0, 5.0, -4.0);
-    var returnedResult = Quaternion.negate(quaternion, result);
+    const quaternion = new Quaternion(1.0, -2.0, -5.0, 4.0);
+    const result = new Quaternion();
+    const expectedResult = new Quaternion(-1.0, 2.0, 5.0, -4.0);
+    const returnedResult = Quaternion.negate(quaternion, result);
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expectedResult);
   });
 
   it("negate works with a result parameter that is an input parameter", function () {
-    var quaternion = new Quaternion(1.0, -2.0, -5.0);
-    var expectedResult = new Quaternion(-1.0, 2.0, 5.0);
-    var returnedResult = Quaternion.negate(quaternion, quaternion);
+    const quaternion = new Quaternion(1.0, -2.0, -5.0);
+    const expectedResult = new Quaternion(-1.0, 2.0, 5.0);
+    const returnedResult = Quaternion.negate(quaternion, quaternion);
     expect(quaternion).toBe(returnedResult);
     expect(quaternion).toEqual(expectedResult);
   });
 
   it("lerp works", function () {
-    var start = new Quaternion(4.0, 8.0, 10.0, 20.0);
-    var end = new Quaternion(8.0, 20.0, 20.0, 30.0);
-    var t = 0.25;
-    var result = new Quaternion();
-    var expectedResult = new Quaternion(5.0, 11.0, 12.5, 22.5);
-    var returnedResult = Quaternion.lerp(start, end, t, result);
+    const start = new Quaternion(4.0, 8.0, 10.0, 20.0);
+    const end = new Quaternion(8.0, 20.0, 20.0, 30.0);
+    const t = 0.25;
+    const result = new Quaternion();
+    const expectedResult = new Quaternion(5.0, 11.0, 12.5, 22.5);
+    const returnedResult = Quaternion.lerp(start, end, t, result);
     expect(result).toBe(returnedResult);
     expect(result).toEqual(expectedResult);
   });
 
   it("lerp works with a result parameter that is an input parameter", function () {
-    var start = new Quaternion(4.0, 8.0, 10.0, 20.0);
-    var end = new Quaternion(8.0, 20.0, 20.0, 30.0);
-    var t = 0.25;
-    var expectedResult = new Quaternion(5.0, 11.0, 12.5, 22.5);
-    var returnedResult = Quaternion.lerp(start, end, t, start);
+    const start = new Quaternion(4.0, 8.0, 10.0, 20.0);
+    const end = new Quaternion(8.0, 20.0, 20.0, 30.0);
+    const t = 0.25;
+    const expectedResult = new Quaternion(5.0, 11.0, 12.5, 22.5);
+    const returnedResult = Quaternion.lerp(start, end, t, start);
     expect(start).toBe(returnedResult);
     expect(start).toEqual(expectedResult);
   });
 
   it("lerp extrapolate forward", function () {
-    var start = new Quaternion(4.0, 8.0, 10.0, 20.0);
-    var end = new Quaternion(8.0, 20.0, 20.0, 30.0);
-    var t = 2.0;
-    var expectedResult = new Quaternion(12.0, 32.0, 30.0, 40.0);
-    var result = Quaternion.lerp(start, end, t, new Quaternion());
+    const start = new Quaternion(4.0, 8.0, 10.0, 20.0);
+    const end = new Quaternion(8.0, 20.0, 20.0, 30.0);
+    const t = 2.0;
+    const expectedResult = new Quaternion(12.0, 32.0, 30.0, 40.0);
+    const result = Quaternion.lerp(start, end, t, new Quaternion());
     expect(result).toEqual(expectedResult);
   });
 
   it("lerp extrapolate backward", function () {
-    var start = new Quaternion(4.0, 8.0, 10.0, 20.0);
-    var end = new Quaternion(8.0, 20.0, 20.0, 30.0);
-    var t = -1.0;
-    var expectedResult = new Quaternion(0.0, -4.0, 0.0, 10.0);
-    var result = Quaternion.lerp(start, end, t, new Quaternion());
+    const start = new Quaternion(4.0, 8.0, 10.0, 20.0);
+    const end = new Quaternion(8.0, 20.0, 20.0, 30.0);
+    const t = -1.0;
+    const expectedResult = new Quaternion(0.0, -4.0, 0.0, 10.0);
+    const result = Quaternion.lerp(start, end, t, new Quaternion());
     expect(result).toEqual(expectedResult);
   });
 
   it("slerp works", function () {
-    var start = Quaternion.normalize(
+    const start = Quaternion.normalize(
       new Quaternion(0.0, 0.0, 0.0, 1.0),
       new Quaternion()
     );
-    var end = new Quaternion(
+    const end = new Quaternion(
       0.0,
       0.0,
       Math.sin(CesiumMath.PI_OVER_FOUR),
       Math.cos(CesiumMath.PI_OVER_FOUR)
     );
-    var expected = new Quaternion(
+    const expected = new Quaternion(
       0.0,
       0.0,
       Math.sin(Math.PI / 8.0),
       Math.cos(Math.PI / 8.0)
     );
 
-    var result = new Quaternion();
-    var returnedResult = Quaternion.slerp(start, end, 0.5, result);
+    const result = new Quaternion();
+    const returnedResult = Quaternion.slerp(start, end, 0.5, result);
     expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON15);
     expect(result).toBe(returnedResult);
   });
 
   it("slerp works with a result parameter that is an input parameter", function () {
-    var start = Quaternion.normalize(
+    const start = Quaternion.normalize(
       new Quaternion(0.0, 0.0, 0.0, 1.0),
       new Quaternion()
     );
-    var end = new Quaternion(
+    const end = new Quaternion(
       0.0,
       0.0,
       Math.sin(CesiumMath.PI_OVER_FOUR),
       Math.cos(CesiumMath.PI_OVER_FOUR)
     );
-    var expected = new Quaternion(
+    const expected = new Quaternion(
       0.0,
       0.0,
       Math.sin(Math.PI / 8.0),
       Math.cos(Math.PI / 8.0)
     );
 
-    var returnedResult = Quaternion.slerp(start, end, 0.5, start);
+    const returnedResult = Quaternion.slerp(start, end, 0.5, start);
     expect(start).toEqualEpsilon(expected, CesiumMath.EPSILON15);
     expect(start).toBe(returnedResult);
   });
 
   it("slerp works with obtuse angles", function () {
-    var start = Quaternion.normalize(
+    const start = Quaternion.normalize(
       new Quaternion(0.0, 0.0, 0.0, -1.0),
       new Quaternion()
     );
-    var end = new Quaternion(
+    const end = new Quaternion(
       0.0,
       0.0,
       Math.sin(CesiumMath.PI_OVER_FOUR),
       Math.cos(CesiumMath.PI_OVER_FOUR)
     );
-    var expected = new Quaternion(
+    const expected = new Quaternion(
       0.0,
       0.0,
       -Math.sin(Math.PI / 8.0),
@@ -594,36 +600,36 @@ describe("Core/Quaternion", function () {
   });
 
   it("slerp uses lerp when dot product is close to 1", function () {
-    var start = new Quaternion(0.0, 0.0, 0.0, 1.0);
-    var end = new Quaternion(1.0, 2.0, 3.0, 1.0);
-    var expected = new Quaternion(0.5, 1.0, 1.5, 1.0);
-    var result = new Quaternion();
+    const start = new Quaternion(0.0, 0.0, 0.0, 1.0);
+    const end = new Quaternion(1.0, 2.0, 3.0, 1.0);
+    const expected = new Quaternion(0.5, 1.0, 1.5, 1.0);
+    const result = new Quaternion();
     expect(Quaternion.slerp(start, end, 0.0, result)).toEqual(start);
     expect(Quaternion.slerp(start, end, 1.0, result)).toEqual(end);
     expect(Quaternion.slerp(start, end, 0.5, result)).toEqual(expected);
   });
 
   it("slerp uses lerp when dot product is close to 1 and a result parameter", function () {
-    var start = new Quaternion(0.0, 0.0, 0.0, 1.0);
-    var end = new Quaternion(1.0, 2.0, 3.0, 1.0);
+    const start = new Quaternion(0.0, 0.0, 0.0, 1.0);
+    const end = new Quaternion(1.0, 2.0, 3.0, 1.0);
 
-    var result = new Quaternion();
-    var actual = Quaternion.slerp(start, end, 0.0, result);
+    const result = new Quaternion();
+    const actual = Quaternion.slerp(start, end, 0.0, result);
     expect(actual).toBe(result);
     expect(result).toEqual(start);
   });
 
   it("log works", function () {
-    var axis = Cartesian3.normalize(
+    const axis = Cartesian3.normalize(
       new Cartesian3(1.0, -1.0, 1.0),
       new Cartesian3()
     );
-    var angle = CesiumMath.PI_OVER_FOUR;
-    var quat = Quaternion.fromAxisAngle(axis, angle);
+    const angle = CesiumMath.PI_OVER_FOUR;
+    const quat = Quaternion.fromAxisAngle(axis, angle);
 
-    var result = new Cartesian3();
-    var log = Quaternion.log(quat, result);
-    var expected = Cartesian3.multiplyByScalar(
+    const result = new Cartesian3();
+    const log = Quaternion.log(quat, result);
+    const expected = Cartesian3.multiplyByScalar(
       axis,
       angle * 0.5,
       new Cartesian3()
@@ -633,110 +639,110 @@ describe("Core/Quaternion", function () {
   });
 
   it("exp works", function () {
-    var axis = Cartesian3.normalize(
+    const axis = Cartesian3.normalize(
       new Cartesian3(1.0, -1.0, 1.0),
       new Cartesian3()
     );
-    var angle = CesiumMath.PI_OVER_FOUR;
-    var cartesian = Cartesian3.multiplyByScalar(
+    const angle = CesiumMath.PI_OVER_FOUR;
+    const cartesian = Cartesian3.multiplyByScalar(
       axis,
       angle * 0.5,
       new Cartesian3()
     );
 
-    var result = new Quaternion();
-    var exp = Quaternion.exp(cartesian, result);
-    var expected = Quaternion.fromAxisAngle(axis, angle);
+    const result = new Quaternion();
+    const exp = Quaternion.exp(cartesian, result);
+    const expected = Quaternion.fromAxisAngle(axis, angle);
     expect(exp).toBe(result);
     expect(exp).toEqualEpsilon(expected, CesiumMath.EPSILON15);
   });
 
   it("squad and computeInnerQuadrangle work", function () {
-    var q0 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0);
-    var q1 = Quaternion.fromAxisAngle(
+    const q0 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0);
+    const q1 = Quaternion.fromAxisAngle(
       Cartesian3.UNIT_X,
       CesiumMath.PI_OVER_FOUR
     );
-    var q2 = Quaternion.fromAxisAngle(
+    const q2 = Quaternion.fromAxisAngle(
       Cartesian3.UNIT_Z,
       CesiumMath.PI_OVER_FOUR
     );
-    var q3 = Quaternion.fromAxisAngle(
+    const q3 = Quaternion.fromAxisAngle(
       Cartesian3.UNIT_X,
       -CesiumMath.PI_OVER_FOUR
     );
 
-    var s1Result = new Quaternion();
-    var s1 = Quaternion.computeInnerQuadrangle(q0, q1, q2, s1Result);
+    const s1Result = new Quaternion();
+    const s1 = Quaternion.computeInnerQuadrangle(q0, q1, q2, s1Result);
     expect(s1).toBe(s1Result);
 
-    var s2 = Quaternion.computeInnerQuadrangle(q1, q2, q3, new Quaternion());
+    const s2 = Quaternion.computeInnerQuadrangle(q1, q2, q3, new Quaternion());
 
-    var squadResult = new Quaternion();
-    var squad = Quaternion.squad(q1, q2, s1, s2, 0.0, squadResult);
+    const squadResult = new Quaternion();
+    const squad = Quaternion.squad(q1, q2, s1, s2, 0.0, squadResult);
     expect(squad).toBe(squadResult);
     expect(squad).toEqualEpsilon(q1, CesiumMath.EPSILON15);
   });
 
   it("fastSlerp works", function () {
-    var start = Quaternion.normalize(
+    const start = Quaternion.normalize(
       new Quaternion(0.0, 0.0, 0.0, 1.0),
       new Quaternion()
     );
-    var end = new Quaternion(
+    const end = new Quaternion(
       0.0,
       0.0,
       Math.sin(CesiumMath.PI_OVER_FOUR),
       Math.cos(CesiumMath.PI_OVER_FOUR)
     );
-    var expected = new Quaternion(
+    const expected = new Quaternion(
       0.0,
       0.0,
       Math.sin(Math.PI / 8.0),
       Math.cos(Math.PI / 8.0)
     );
 
-    var result = new Quaternion();
-    var returnedResult = Quaternion.fastSlerp(start, end, 0.5, result);
+    const result = new Quaternion();
+    const returnedResult = Quaternion.fastSlerp(start, end, 0.5, result);
     expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     expect(result).toBe(returnedResult);
   });
 
   it("fastSlerp works with a result parameter that is an input parameter", function () {
-    var start = Quaternion.normalize(
+    const start = Quaternion.normalize(
       new Quaternion(0.0, 0.0, 0.0, 1.0),
       new Quaternion()
     );
-    var end = new Quaternion(
+    const end = new Quaternion(
       0.0,
       0.0,
       Math.sin(CesiumMath.PI_OVER_FOUR),
       Math.cos(CesiumMath.PI_OVER_FOUR)
     );
-    var expected = new Quaternion(
+    const expected = new Quaternion(
       0.0,
       0.0,
       Math.sin(Math.PI / 8.0),
       Math.cos(Math.PI / 8.0)
     );
 
-    var returnedResult = Quaternion.fastSlerp(start, end, 0.5, start);
+    const returnedResult = Quaternion.fastSlerp(start, end, 0.5, start);
     expect(start).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     expect(start).toBe(returnedResult);
   });
 
   it("fastSlerp works with obtuse angles", function () {
-    var start = Quaternion.normalize(
+    const start = Quaternion.normalize(
       new Quaternion(0.0, 0.0, 0.0, -1.0),
       new Quaternion()
     );
-    var end = new Quaternion(
+    const end = new Quaternion(
       0.0,
       0.0,
       Math.sin(CesiumMath.PI_OVER_FOUR),
       Math.cos(CesiumMath.PI_OVER_FOUR)
     );
-    var expected = new Quaternion(
+    const expected = new Quaternion(
       0.0,
       0.0,
       -Math.sin(Math.PI / 8.0),
@@ -748,19 +754,19 @@ describe("Core/Quaternion", function () {
   });
 
   it("fastSlerp vs slerp", function () {
-    var start = Quaternion.normalize(
+    const start = Quaternion.normalize(
       new Quaternion(0.0, 0.0, 0.0, 1.0),
       new Quaternion()
     );
-    var end = new Quaternion(
+    const end = new Quaternion(
       0.0,
       0.0,
       Math.sin(CesiumMath.PI_OVER_FOUR),
       Math.cos(CesiumMath.PI_OVER_FOUR)
     );
 
-    var expected = Quaternion.slerp(start, end, 0.25, new Quaternion());
-    var actual = Quaternion.fastSlerp(start, end, 0.25, new Quaternion());
+    let expected = Quaternion.slerp(start, end, 0.25, new Quaternion());
+    let actual = Quaternion.fastSlerp(start, end, 0.25, new Quaternion());
     expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
 
     expected = Quaternion.slerp(start, end, 0.5, new Quaternion());
@@ -773,49 +779,49 @@ describe("Core/Quaternion", function () {
   });
 
   it("fastSquad works", function () {
-    var q0 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0);
-    var q1 = Quaternion.fromAxisAngle(
+    const q0 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0);
+    const q1 = Quaternion.fromAxisAngle(
       Cartesian3.UNIT_X,
       CesiumMath.PI_OVER_FOUR
     );
-    var q2 = Quaternion.fromAxisAngle(
+    const q2 = Quaternion.fromAxisAngle(
       Cartesian3.UNIT_Z,
       CesiumMath.PI_OVER_FOUR
     );
-    var q3 = Quaternion.fromAxisAngle(
+    const q3 = Quaternion.fromAxisAngle(
       Cartesian3.UNIT_X,
       -CesiumMath.PI_OVER_FOUR
     );
 
-    var s1 = Quaternion.computeInnerQuadrangle(q0, q1, q2, new Quaternion());
-    var s2 = Quaternion.computeInnerQuadrangle(q1, q2, q3, new Quaternion());
+    const s1 = Quaternion.computeInnerQuadrangle(q0, q1, q2, new Quaternion());
+    const s2 = Quaternion.computeInnerQuadrangle(q1, q2, q3, new Quaternion());
 
-    var squadResult = new Quaternion();
-    var squad = Quaternion.fastSquad(q1, q2, s1, s2, 0.0, squadResult);
+    const squadResult = new Quaternion();
+    const squad = Quaternion.fastSquad(q1, q2, s1, s2, 0.0, squadResult);
     expect(squad).toBe(squadResult);
     expect(squad).toEqualEpsilon(q1, CesiumMath.EPSILON6);
   });
 
   it("fastSquad vs squad", function () {
-    var q0 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0);
-    var q1 = Quaternion.fromAxisAngle(
+    const q0 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0);
+    const q1 = Quaternion.fromAxisAngle(
       Cartesian3.UNIT_X,
       CesiumMath.PI_OVER_FOUR
     );
-    var q2 = Quaternion.fromAxisAngle(
+    const q2 = Quaternion.fromAxisAngle(
       Cartesian3.UNIT_Z,
       CesiumMath.PI_OVER_FOUR
     );
-    var q3 = Quaternion.fromAxisAngle(
+    const q3 = Quaternion.fromAxisAngle(
       Cartesian3.UNIT_X,
       -CesiumMath.PI_OVER_FOUR
     );
 
-    var s1 = Quaternion.computeInnerQuadrangle(q0, q1, q2, new Quaternion());
-    var s2 = Quaternion.computeInnerQuadrangle(q1, q2, q3, new Quaternion());
+    const s1 = Quaternion.computeInnerQuadrangle(q0, q1, q2, new Quaternion());
+    const s2 = Quaternion.computeInnerQuadrangle(q1, q2, q3, new Quaternion());
 
-    var actual = Quaternion.fastSquad(q1, q2, s1, s2, 0.25, new Quaternion());
-    var expected = Quaternion.squad(q1, q2, s1, s2, 0.25, new Quaternion());
+    let actual = Quaternion.fastSquad(q1, q2, s1, s2, 0.25, new Quaternion());
+    let expected = Quaternion.squad(q1, q2, s1, s2, 0.25, new Quaternion());
     expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
 
     actual = Quaternion.fastSquad(q1, q2, s1, s2, 0.5, new Quaternion());
@@ -828,7 +834,7 @@ describe("Core/Quaternion", function () {
   });
 
   it("equals", function () {
-    var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
+    const quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
     expect(
       Quaternion.equals(quaternion, new Quaternion(1.0, 2.0, 3.0, 4.0))
     ).toEqual(true);
@@ -848,7 +854,7 @@ describe("Core/Quaternion", function () {
   });
 
   it("equalsEpsilon", function () {
-    var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
+    const quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
     expect(
       Quaternion.equalsEpsilon(
         quaternion,
@@ -923,7 +929,7 @@ describe("Core/Quaternion", function () {
   });
 
   it("toString", function () {
-    var quaternion = new Quaternion(1.123, 2.345, 6.789, 6.123);
+    const quaternion = new Quaternion(1.123, 2.345, 6.789, 6.123);
     expect(quaternion.toString()).toEqual("(1.123, 2.345, 6.789, 6.123)");
   });
 
@@ -1070,48 +1076,48 @@ describe("Core/Quaternion", function () {
   });
 
   it("lerp throws with no start parameter", function () {
-    var end = new Quaternion(8.0, 20.0, 6.0);
-    var t = 0.25;
+    const end = new Quaternion(8.0, 20.0, 6.0);
+    const t = 0.25;
     expect(function () {
       Quaternion.lerp(undefined, end, t);
     }).toThrowDeveloperError();
   });
 
   it("lerp throws with no end parameter", function () {
-    var start = new Quaternion(4.0, 8.0, 6.0);
-    var t = 0.25;
+    const start = new Quaternion(4.0, 8.0, 6.0);
+    const t = 0.25;
     expect(function () {
       Quaternion.lerp(start, undefined, t);
     }).toThrowDeveloperError();
   });
 
   it("lerp throws with no t parameter", function () {
-    var start = new Quaternion(4.0, 8.0, 6.0, 7.0);
-    var end = new Quaternion(8.0, 20.0, 6.0, 7.0);
+    const start = new Quaternion(4.0, 8.0, 6.0, 7.0);
+    const end = new Quaternion(8.0, 20.0, 6.0, 7.0);
     expect(function () {
       Quaternion.lerp(start, end, undefined);
     }).toThrowDeveloperError();
   });
 
   it("slerp throws with no start parameter", function () {
-    var end = new Quaternion(8.0, 20.0, 6.0);
-    var t = 0.25;
+    const end = new Quaternion(8.0, 20.0, 6.0);
+    const t = 0.25;
     expect(function () {
       Quaternion.slerp(undefined, end, t);
     }).toThrowDeveloperError();
   });
 
   it("slerp throws with no end parameter", function () {
-    var start = new Quaternion(4.0, 8.0, 6.0);
-    var t = 0.25;
+    const start = new Quaternion(4.0, 8.0, 6.0);
+    const t = 0.25;
     expect(function () {
       Quaternion.slerp(start, undefined, t);
     }).toThrowDeveloperError();
   });
 
   it("slerp throws with no t parameter", function () {
-    var start = new Quaternion(4.0, 8.0, 6.0, 7.0);
-    var end = new Quaternion(8.0, 20.0, 6.0, 7.0);
+    const start = new Quaternion(4.0, 8.0, 6.0, 7.0);
+    const end = new Quaternion(8.0, 20.0, 6.0, 7.0);
     expect(function () {
       Quaternion.slerp(start, end, undefined);
     }).toThrowDeveloperError();
@@ -1321,7 +1327,7 @@ describe("Core/Quaternion", function () {
     }).toThrowDeveloperError();
   });
 
-  var q = new Quaternion(1, 2, 3, 4);
+  const q = new Quaternion(1, 2, 3, 4);
   Quaternion.normalize(q, q);
   createPackableSpecs(Quaternion, q, [q.x, q.y, q.z, q.w]);
 });

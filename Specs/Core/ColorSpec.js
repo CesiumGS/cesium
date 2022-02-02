@@ -5,7 +5,7 @@ import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/Color", function () {
   it("Constructing without arguments produces expected defaults", function () {
-    var v = new Color();
+    const v = new Color();
     expect(v.red).toEqual(1.0);
     expect(v.green).toEqual(1.0);
     expect(v.blue).toEqual(1.0);
@@ -13,7 +13,7 @@ describe("Core/Color", function () {
   });
 
   it("Constructing with arguments sets property values", function () {
-    var v = new Color(0.1, 0.2, 0.3, 0.4);
+    const v = new Color(0.1, 0.2, 0.3, 0.4);
     expect(v.red).toEqual(0.1);
     expect(v.green).toEqual(0.2);
     expect(v.blue).toEqual(0.3);
@@ -21,7 +21,7 @@ describe("Core/Color", function () {
   });
 
   it("fromBytes without arguments produces expected defaults", function () {
-    var v = new Color();
+    const v = new Color();
     expect(v.red).toEqual(1.0);
     expect(v.green).toEqual(1.0);
     expect(v.blue).toEqual(1.0);
@@ -29,7 +29,7 @@ describe("Core/Color", function () {
   });
 
   it("fromBytes with arguments sets property values", function () {
-    var v = Color.fromBytes(0, 255, 51, 102);
+    const v = Color.fromBytes(0, 255, 51, 102);
     expect(v.red).toEqual(0.0);
     expect(v.green).toEqual(1.0);
     expect(v.blue).toEqual(0.2);
@@ -37,8 +37,8 @@ describe("Core/Color", function () {
   });
 
   it("fromBytes works with result parameter", function () {
-    var result = new Color();
-    var v = Color.fromBytes(0, 255, 51, 102, result);
+    const result = new Color();
+    const v = Color.fromBytes(0, 255, 51, 102, result);
     expect(v).toBe(result);
     expect(v.red).toEqual(0.0);
     expect(v.green).toEqual(1.0);
@@ -47,20 +47,20 @@ describe("Core/Color", function () {
   });
 
   it("toBytes returns the same values that fromBytes took", function () {
-    var r = 5;
-    var g = 87;
-    var b = 23;
-    var a = 88;
-    var c = Color.fromBytes(r, g, b, a);
-    var bytes = c.toBytes();
+    const r = 5;
+    const g = 87;
+    const b = 23;
+    const a = 88;
+    const c = Color.fromBytes(r, g, b, a);
+    const bytes = c.toBytes();
     expect(bytes).toEqual([r, g, b, a]);
   });
 
   it("toBytes works with a result parameter", function () {
-    var color = new Color(0.1, 0.2, 0.3, 0.4);
-    var result = [];
-    var expectedResult = [25, 51, 76, 102];
-    var returnedResult = color.toBytes(result);
+    const color = new Color(0.1, 0.2, 0.3, 0.4);
+    const result = [];
+    const expectedResult = [25, 51, 76, 102];
+    const returnedResult = color.toBytes(result);
     expect(returnedResult).toBe(result);
     expect(returnedResult).toEqual(expectedResult);
   });
@@ -78,13 +78,13 @@ describe("Core/Color", function () {
   });
 
   it("fromCartesian4 returns a color with corrrect values", function () {
-    var color = Color.fromCartesian4(new Cartesian4(1.0, 2.0, 3.0, 4.0));
+    const color = Color.fromCartesian4(new Cartesian4(1.0, 2.0, 3.0, 4.0));
     expect(color).toEqual(new Color(1.0, 2.0, 3.0, 4.0));
   });
 
   it("fromCartesian4 result param returns color with correct values", function () {
-    var color = new Color();
-    var result = Color.fromCartesian4(
+    const color = new Color();
+    const result = Color.fromCartesian4(
       new Cartesian4(1.0, 2.0, 3.0, 4.0),
       color
     );
@@ -99,27 +99,27 @@ describe("Core/Color", function () {
   });
 
   it("clone with no parameters returns a new identical copy.", function () {
-    var v = new Color(0.1, 0.2, 0.3, 0.4);
-    var clone = v.clone();
+    const v = new Color(0.1, 0.2, 0.3, 0.4);
+    const clone = v.clone();
     expect(clone).toEqual(v);
     expect(clone).not.toBe(v);
   });
 
   it("clone with a parameter modifies the parameter.", function () {
-    var v = new Color(0.1, 0.2, 0.3, 0.4);
-    var v2 = new Color();
-    var clone = v.clone(v2);
+    const v = new Color(0.1, 0.2, 0.3, 0.4);
+    const v2 = new Color();
+    const clone = v.clone(v2);
     expect(clone).toEqual(v2);
     expect(clone).toBe(v2);
   });
 
   it("equals works", function () {
-    var v = new Color(0.1, 0.2, 0.3, 0.4);
-    var v2 = new Color(0.1, 0.2, 0.3, 0.4);
-    var v3 = new Color(0.1, 0.2, 0.3, 0.5);
-    var v4 = new Color(0.1, 0.2, 0.5, 0.4);
-    var v5 = new Color(0.1, 0.5, 0.3, 0.4);
-    var v6 = new Color(0.5, 0.2, 0.3, 0.4);
+    const v = new Color(0.1, 0.2, 0.3, 0.4);
+    const v2 = new Color(0.1, 0.2, 0.3, 0.4);
+    const v3 = new Color(0.1, 0.2, 0.3, 0.5);
+    const v4 = new Color(0.1, 0.2, 0.5, 0.4);
+    const v5 = new Color(0.1, 0.5, 0.3, 0.4);
+    const v6 = new Color(0.5, 0.2, 0.3, 0.4);
     expect(v.equals(v2)).toEqual(true);
     expect(v.equals(v3)).toEqual(false);
     expect(v.equals(v4)).toEqual(false);
@@ -128,12 +128,12 @@ describe("Core/Color", function () {
   });
 
   it("equalsEpsilon works", function () {
-    var v = new Color(0.1, 0.2, 0.3, 0.4);
-    var v2 = new Color(0.1, 0.2, 0.3, 0.4);
-    var v3 = new Color(0.1, 0.2, 0.3, 0.5);
-    var v4 = new Color(0.1, 0.2, 0.5, 0.4);
-    var v5 = new Color(0.1, 0.5, 0.3, 0.4);
-    var v6 = new Color(0.5, 0.2, 0.3, 0.4);
+    const v = new Color(0.1, 0.2, 0.3, 0.4);
+    const v2 = new Color(0.1, 0.2, 0.3, 0.4);
+    const v3 = new Color(0.1, 0.2, 0.3, 0.5);
+    const v4 = new Color(0.1, 0.2, 0.5, 0.4);
+    const v5 = new Color(0.1, 0.5, 0.3, 0.4);
+    const v6 = new Color(0.5, 0.2, 0.3, 0.4);
     expect(v.equalsEpsilon(v2, 0.0)).toEqual(true);
     expect(v.equalsEpsilon(v3, 0.0)).toEqual(false);
     expect(v.equalsEpsilon(v4, 0.0)).toEqual(false);
@@ -331,8 +331,8 @@ describe("Core/Color", function () {
   });
 
   it("fromCssColorString works with a result parameter.", function () {
-    var c = new Color();
-    var c2 = Color.fromCssColorString("yellow", c);
+    const c = new Color();
+    let c2 = Color.fromCssColorString("yellow", c);
     expect(c).toBe(c2);
     expect(c).toEqual(Color.YELLOW);
 
@@ -386,14 +386,14 @@ describe("Core/Color", function () {
   });
 
   it("fromHsl works with result parameter", function () {
-    var c1 = new Color();
-    var c2 = Color.fromHsl(5, 1.0, 0.5, 1.0, c1);
+    const c1 = new Color();
+    const c2 = Color.fromHsl(5, 1.0, 0.5, 1.0, c1);
     expect(c1).toEqual(Color.RED);
     expect(c1).toBe(c2);
   });
 
   it("fromRandom generates a random color with no options", function () {
-    var color = Color.fromRandom();
+    const color = Color.fromRandom();
     expect(color.red).toBeBetween(0.0, 1.0);
     expect(color.green).toBeBetween(0.0, 1.0);
     expect(color.blue).toBeBetween(0.0, 1.0);
@@ -401,8 +401,8 @@ describe("Core/Color", function () {
   });
 
   it("fromRandom generates a random color with no options", function () {
-    var result = new Color();
-    var color = Color.fromRandom({}, result);
+    const result = new Color();
+    const color = Color.fromRandom({}, result);
     expect(result).toBe(color);
     expect(color.red).toBeBetween(0.0, 1.0);
     expect(color.green).toBeBetween(0.0, 1.0);
@@ -411,13 +411,13 @@ describe("Core/Color", function () {
   });
 
   it("fromRandom uses specified exact values", function () {
-    var options = {
+    const options = {
       red: 0.1,
       green: 0.2,
       blue: 0.3,
       alpha: 0.4,
     };
-    var color = Color.fromRandom(options);
+    const color = Color.fromRandom(options);
     expect(color.red).toEqual(options.red);
     expect(color.green).toEqual(options.green);
     expect(color.blue).toEqual(options.blue);
@@ -425,7 +425,7 @@ describe("Core/Color", function () {
   });
 
   it("fromRandom generates a random kind of Red color within intervals", function () {
-    var options = {
+    const options = {
       red: undefined,
       minimumRed: 0.1,
       maximumRed: 0.2,
@@ -437,8 +437,8 @@ describe("Core/Color", function () {
       maximumAlpha: 0.8,
     };
 
-    for (var i = 0; i < 100; i++) {
-      var color = Color.fromRandom(options);
+    for (let i = 0; i < 100; i++) {
+      const color = Color.fromRandom(options);
       expect(color.red).toBeBetween(options.minimumRed, options.maximumRed);
       expect(color.green).toBeBetween(
         options.minimumGreen,
@@ -489,42 +489,42 @@ describe("Core/Color", function () {
   });
 
   it("fromAlpha works", function () {
-    var result = Color.fromAlpha(Color.RED, 0.5);
+    const result = Color.fromAlpha(Color.RED, 0.5);
     expect(result).toEqual(new Color(1, 0, 0, 0.5));
   });
 
   it("fromAlpha works with result parameter", function () {
-    var resultParam = new Color();
-    var result = Color.fromAlpha(Color.RED, 0.5, resultParam);
+    const resultParam = new Color();
+    const result = Color.fromAlpha(Color.RED, 0.5, resultParam);
     expect(resultParam).toBe(result);
     expect(result).toEqual(new Color(1, 0, 0, 0.5));
   });
 
   it("fromAlpha throws with undefined color", function () {
-    var result = new Color();
+    const result = new Color();
     expect(function () {
       Color.fromAlpha(undefined, 0.5, result);
     }).toThrowDeveloperError();
   });
 
   it("fromAlpha throws with undefined color", function () {
-    var result = new Color();
+    const result = new Color();
     expect(function () {
       Color.fromAlpha(undefined, 0.5, result);
     }).toThrowDeveloperError();
   });
 
   it("fromAlpha throws with undefined alpha", function () {
-    var result = new Color();
-    var color = new Color();
+    const result = new Color();
+    const color = new Color();
     expect(function () {
       Color.fromAlpha(color, undefined, result);
     }).toThrowDeveloperError();
   });
 
   it("withAlpha works", function () {
-    var resultParam = new Color();
-    var result = Color.RED.withAlpha(0.5, resultParam);
+    const resultParam = new Color();
+    const result = Color.RED.withAlpha(0.5, resultParam);
     expect(resultParam).toBe(result);
     expect(result).toEqual(new Color(1, 0, 0, 0.5));
   });
@@ -537,28 +537,28 @@ describe("Core/Color", function () {
 
   it("can convert to and from RGBA", function () {
     // exact values will depend on endianness, but it should round-trip.
-    var color = Color.fromBytes(0xff, 0xcc, 0x00, 0xee);
+    const color = Color.fromBytes(0xff, 0xcc, 0x00, 0xee);
 
-    var rgba = color.toRgba();
+    const rgba = color.toRgba();
     expect(rgba).toBeGreaterThan(0);
 
-    var result = new Color();
-    var newColor = Color.fromRgba(rgba, result);
+    const result = new Color();
+    const newColor = Color.fromRgba(rgba, result);
     expect(result).toBe(newColor);
     expect(color).toEqual(newColor);
   });
 
   it("fromRgba works with result parameter", function () {
-    var color = Color.fromBytes(0xff, 0xcc, 0x00, 0xee);
-    var rgba = color.toRgba();
+    const color = Color.fromBytes(0xff, 0xcc, 0x00, 0xee);
+    const rgba = color.toRgba();
 
-    var newColor = Color.fromRgba(rgba);
+    const newColor = Color.fromRgba(rgba);
     expect(color).toEqual(newColor);
   });
 
   it("Can brighten", function () {
-    var dark = new Color(0.2, 0.4, 0.6, 0.8);
-    var brighter = dark.brighten(0.5, new Color());
+    const dark = new Color(0.2, 0.4, 0.6, 0.8);
+    const brighter = dark.brighten(0.5, new Color());
     expect(brighter.red).toEqual(0.6);
     expect(brighter.green).toEqual(0.7);
     expect(brighter.blue).toEqual(0.8);
@@ -566,8 +566,8 @@ describe("Core/Color", function () {
   });
 
   it("Can darken", function () {
-    var dark = new Color(0.1, 0.6, 0.8, 0.8);
-    var darker = dark.darken(0.2, new Color());
+    const dark = new Color(0.1, 0.6, 0.8, 0.8);
+    const darker = dark.darken(0.2, new Color());
     expect(darker.red).toEqualEpsilon(0.08, CesiumMath.EPSILON15);
     expect(darker.green).toEqualEpsilon(0.48, CesiumMath.EPSILON15);
     expect(darker.blue).toEqualEpsilon(0.64, CesiumMath.EPSILON15);
@@ -611,9 +611,9 @@ describe("Core/Color", function () {
   });
 
   it("Can add", function () {
-    var left = new Color(0.1, 0.2, 0.3, 0.4);
-    var right = new Color(0.3, 0.3, 0.3, 0.3);
-    var result = Color.add(left, right, new Color());
+    const left = new Color(0.1, 0.2, 0.3, 0.4);
+    const right = new Color(0.3, 0.3, 0.3, 0.3);
+    const result = Color.add(left, right, new Color());
     expect(result.red).toEqual(0.4);
     expect(result.green).toEqual(0.5);
     expect(result.blue).toEqual(0.6);
@@ -635,9 +635,9 @@ describe("Core/Color", function () {
   });
 
   it("can add with a result parameter that is an input parameter", function () {
-    var left = new Color(0.1, 0.2, 0.3, 0.4);
-    var right = new Color(0.3, 0.3, 0.3, 0.3);
-    var result = Color.add(left, right, left);
+    const left = new Color(0.1, 0.2, 0.3, 0.4);
+    const right = new Color(0.3, 0.3, 0.3, 0.3);
+    const result = Color.add(left, right, left);
     expect(result.red).toEqual(0.4);
     expect(result.green).toEqual(0.5);
     expect(result.blue).toEqual(0.6);
@@ -645,9 +645,9 @@ describe("Core/Color", function () {
   });
 
   it("Can subtract", function () {
-    var left = new Color(1.0, 1.0, 1.0, 1.0);
-    var right = new Color(0.1, 0.2, 0.3, 0.4);
-    var result = Color.subtract(left, right, new Color());
+    const left = new Color(1.0, 1.0, 1.0, 1.0);
+    const right = new Color(0.1, 0.2, 0.3, 0.4);
+    const result = Color.subtract(left, right, new Color());
     expect(result.red).toEqual(0.9);
     expect(result.green).toEqual(0.8);
     expect(result.blue).toEqual(0.7);
@@ -669,9 +669,9 @@ describe("Core/Color", function () {
   });
 
   it("subtract multiply with a result parameter that is an input parameter", function () {
-    var left = new Color(1.0, 1.0, 1.0, 1.0);
-    var right = new Color(0.1, 0.2, 0.3, 0.4);
-    var result = Color.subtract(left, right, left);
+    const left = new Color(1.0, 1.0, 1.0, 1.0);
+    const right = new Color(0.1, 0.2, 0.3, 0.4);
+    const result = Color.subtract(left, right, left);
     expect(result.red).toEqual(0.9);
     expect(result.green).toEqual(0.8);
     expect(result.blue).toEqual(0.7);
@@ -679,9 +679,9 @@ describe("Core/Color", function () {
   });
 
   it("Can multiply", function () {
-    var left = new Color(0.1, 0.2, 0.3, 0.4);
-    var right = new Color(0.2, 0.2, 0.2, 0.2);
-    var result = Color.multiply(left, right, new Color());
+    const left = new Color(0.1, 0.2, 0.3, 0.4);
+    const right = new Color(0.2, 0.2, 0.2, 0.2);
+    const result = Color.multiply(left, right, new Color());
     expect(result.red).toEqualEpsilon(0.02, CesiumMath.EPSILON15);
     expect(result.green).toEqualEpsilon(0.04, CesiumMath.EPSILON15);
     expect(result.blue).toEqualEpsilon(0.06, CesiumMath.EPSILON15);
@@ -703,9 +703,9 @@ describe("Core/Color", function () {
   });
 
   it("can multiply with a result parameter that is an input parameter", function () {
-    var left = new Color(0.1, 0.2, 0.3, 0.4);
-    var right = new Color(0.2, 0.2, 0.2, 0.2);
-    var result = Color.multiply(left, right, left);
+    const left = new Color(0.1, 0.2, 0.3, 0.4);
+    const right = new Color(0.2, 0.2, 0.2, 0.2);
+    const result = Color.multiply(left, right, left);
     expect(result.red).toEqualEpsilon(0.02, CesiumMath.EPSILON15);
     expect(result.green).toEqualEpsilon(0.04, CesiumMath.EPSILON15);
     expect(result.blue).toEqualEpsilon(0.06, CesiumMath.EPSILON15);
@@ -713,9 +713,9 @@ describe("Core/Color", function () {
   });
 
   it("Can divide", function () {
-    var left = new Color(0.1, 0.2, 0.1, 0.2);
-    var right = new Color(0.2, 0.2, 0.4, 0.4);
-    var result = Color.divide(left, right, new Color());
+    const left = new Color(0.1, 0.2, 0.1, 0.2);
+    const right = new Color(0.2, 0.2, 0.4, 0.4);
+    const result = Color.divide(left, right, new Color());
     expect(result.red).toEqualEpsilon(0.5, CesiumMath.EPSILON15);
     expect(result.green).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
     expect(result.blue).toEqualEpsilon(0.25, CesiumMath.EPSILON15);
@@ -737,9 +737,9 @@ describe("Core/Color", function () {
   });
 
   it("can divide with a result parameter that is an input parameter", function () {
-    var left = new Color(0.1, 0.2, 0.1, 0.2);
-    var right = new Color(0.2, 0.2, 0.4, 0.4);
-    var result = Color.divide(left, right, left);
+    const left = new Color(0.1, 0.2, 0.1, 0.2);
+    const right = new Color(0.2, 0.2, 0.4, 0.4);
+    const result = Color.divide(left, right, left);
     expect(result.red).toEqualEpsilon(0.5, CesiumMath.EPSILON15);
     expect(result.green).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
     expect(result.blue).toEqualEpsilon(0.25, CesiumMath.EPSILON15);
@@ -747,9 +747,9 @@ describe("Core/Color", function () {
   });
 
   it("Can mod", function () {
-    var left = new Color(0.1, 0.2, 0.3, 0.2);
-    var right = new Color(0.2, 0.2, 0.2, 0.4);
-    var result = Color.mod(left, right, new Color());
+    const left = new Color(0.1, 0.2, 0.3, 0.2);
+    const right = new Color(0.2, 0.2, 0.2, 0.4);
+    const result = Color.mod(left, right, new Color());
     expect(result.red).toEqualEpsilon(0.1, CesiumMath.EPSILON15);
     expect(result.green).toEqualEpsilon(0.0, CesiumMath.EPSILON15);
     expect(result.blue).toEqualEpsilon(0.1, CesiumMath.EPSILON15);
@@ -771,9 +771,9 @@ describe("Core/Color", function () {
   });
 
   it("can mod with a result parameter that is an input parameter", function () {
-    var left = new Color(0.1, 0.2, 0.3, 0.2);
-    var right = new Color(0.2, 0.2, 0.2, 0.4);
-    var result = Color.mod(left, right, left);
+    const left = new Color(0.1, 0.2, 0.3, 0.2);
+    const right = new Color(0.2, 0.2, 0.2, 0.4);
+    const result = Color.mod(left, right, left);
     expect(result.red).toEqualEpsilon(0.1, CesiumMath.EPSILON15);
     expect(result.green).toEqualEpsilon(0.0, CesiumMath.EPSILON15);
     expect(result.blue).toEqualEpsilon(0.1, CesiumMath.EPSILON15);
@@ -781,8 +781,8 @@ describe("Core/Color", function () {
   });
 
   it("Can multiply by scalar", function () {
-    var color = new Color(0.1, 0.2, 0.3, 0.4);
-    var result = Color.multiplyByScalar(color, 2.0, new Color());
+    const color = new Color(0.1, 0.2, 0.3, 0.4);
+    const result = Color.multiplyByScalar(color, 2.0, new Color());
     expect(result.red).toEqualEpsilon(0.2, CesiumMath.EPSILON15);
     expect(result.green).toEqualEpsilon(0.4, CesiumMath.EPSILON15);
     expect(result.blue).toEqualEpsilon(0.6, CesiumMath.EPSILON15);
@@ -804,8 +804,8 @@ describe("Core/Color", function () {
   });
 
   it("can multiply by scalar with a result parameter that is an input parameter", function () {
-    var color = new Color(0.1, 0.2, 0.3, 0.4);
-    var result = Color.multiplyByScalar(color, 2.0, color);
+    const color = new Color(0.1, 0.2, 0.3, 0.4);
+    const result = Color.multiplyByScalar(color, 2.0, color);
     expect(result.red).toEqualEpsilon(0.2, CesiumMath.EPSILON15);
     expect(result.green).toEqualEpsilon(0.4, CesiumMath.EPSILON15);
     expect(result.blue).toEqualEpsilon(0.6, CesiumMath.EPSILON15);
@@ -813,8 +813,8 @@ describe("Core/Color", function () {
   });
 
   it("Can divide by scalar", function () {
-    var color = new Color(0.1, 0.2, 0.3, 0.4);
-    var result = Color.divideByScalar(color, 2.0, new Color());
+    const color = new Color(0.1, 0.2, 0.3, 0.4);
+    const result = Color.divideByScalar(color, 2.0, new Color());
     expect(result.red).toEqualEpsilon(0.05, CesiumMath.EPSILON15);
     expect(result.green).toEqualEpsilon(0.1, CesiumMath.EPSILON15);
     expect(result.blue).toEqualEpsilon(0.15, CesiumMath.EPSILON15);
@@ -836,8 +836,8 @@ describe("Core/Color", function () {
   });
 
   it("can divide by scalar with a result parameter that is an input parameter", function () {
-    var color = new Color(0.1, 0.2, 0.3, 0.4);
-    var result = Color.divideByScalar(color, 2.0, color);
+    const color = new Color(0.1, 0.2, 0.3, 0.4);
+    const result = Color.divideByScalar(color, 2.0, color);
     expect(result.red).toEqualEpsilon(0.05, CesiumMath.EPSILON15);
     expect(result.green).toEqualEpsilon(0.1, CesiumMath.EPSILON15);
     expect(result.blue).toEqualEpsilon(0.15, CesiumMath.EPSILON15);
@@ -863,9 +863,9 @@ describe("Core/Color", function () {
   });
 
   it("can lerp between two colors", function () {
-    var colorA = new Color(0.0, 0.0, 0.0, 0.0);
-    var colorB = new Color(1.0, 1.0, 1.0, 1.0);
-    var result = Color.lerp(colorA, colorB, 0.5, new Color());
+    const colorA = new Color(0.0, 0.0, 0.0, 0.0);
+    const colorB = new Color(1.0, 1.0, 1.0, 1.0);
+    const result = Color.lerp(colorA, colorB, 0.5, new Color());
 
     expect(result.red).toEqualEpsilon(0.5, CesiumMath.EPSILON15);
     expect(result.green).toEqualEpsilon(0.5, CesiumMath.EPSILON15);

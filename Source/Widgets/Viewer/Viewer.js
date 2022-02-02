@@ -48,20 +48,20 @@ import Cesium3DTileFeature from "../../Scene/Cesium3DTileFeature.js";
 import JulianDate from "../../Core/JulianDate.js";
 import CesiumMath from "../../Core/Math.js";
 
-var boundingSphereScratch = new BoundingSphere();
+const boundingSphereScratch = new BoundingSphere();
 
 function onTimelineScrubfunction(e) {
-  var clock = e.clock;
+  const clock = e.clock;
   clock.currentTime = e.timeJulian;
   clock.shouldAnimate = false;
 }
 
 function getCesium3DTileFeatureDescription(feature) {
-  var propertyNames = feature.getPropertyNames();
+  const propertyNames = feature.getPropertyNames();
 
-  var html = "";
+  let html = "";
   propertyNames.forEach(function (propertyName) {
-    var value = feature.getProperty(propertyName);
+    const value = feature.getProperty(propertyName);
     if (defined(value)) {
       html += "<tr><th>" + propertyName + "</th><td>" + value + "</td></tr>";
     }
@@ -84,11 +84,11 @@ function getCesium3DTileFeatureName(feature) {
   // and then use the first defined element in the array
   // as the preferred choice.
 
-  var i;
-  var possibleNames = [];
-  var propertyNames = feature.getPropertyNames();
+  let i;
+  const possibleNames = [];
+  const propertyNames = feature.getPropertyNames();
   for (i = 0; i < propertyNames.length; i++) {
-    var propertyName = propertyNames[i];
+    const propertyName = propertyNames[i];
     if (/^name$/i.test(propertyName)) {
       possibleNames[0] = feature.getProperty(propertyName);
     } else if (/name/i.test(propertyName)) {
@@ -104,9 +104,9 @@ function getCesium3DTileFeatureName(feature) {
     }
   }
 
-  var length = possibleNames.length;
+  const length = possibleNames.length;
   for (i = 0; i < length; i++) {
-    var item = possibleNames[i];
+    const item = possibleNames[i];
     if (defined(item) && item !== "") {
       return item;
     }
@@ -115,9 +115,9 @@ function getCesium3DTileFeatureName(feature) {
 }
 
 function pickEntity(viewer, e) {
-  var picked = viewer.scene.pick(e.position);
+  const picked = viewer.scene.pick(e.position);
   if (defined(picked)) {
-    var id = defaultValue(picked.id, picked.primitive.id);
+    const id = defaultValue(picked.id, picked.primitive.id);
     if (id instanceof Entity) {
       return id;
     }
@@ -137,16 +137,16 @@ function pickEntity(viewer, e) {
   }
 }
 
-var scratchStopTime = new JulianDate();
+const scratchStopTime = new JulianDate();
 
 function trackDataSourceClock(timeline, clock, dataSource) {
   if (defined(dataSource)) {
-    var dataSourceClock = dataSource.clock;
+    const dataSourceClock = dataSource.clock;
     if (defined(dataSourceClock)) {
       dataSourceClock.getValue(clock);
       if (defined(timeline)) {
-        var startTime = dataSourceClock.startTime;
-        var stopTime = dataSourceClock.stopTime;
+        const startTime = dataSourceClock.startTime;
+        let stopTime = dataSourceClock.stopTime;
         // When the start and stop times are equal, set the timeline to the shortest interval
         // starting at the start time. This prevents an invalid timeline configuration.
         if (JulianDate.equals(startTime, stopTime)) {
@@ -163,12 +163,12 @@ function trackDataSourceClock(timeline, clock, dataSource) {
   }
 }
 
-var cartesian3Scratch = new Cartesian3();
+const cartesian3Scratch = new Cartesian3();
 
 function pickImageryLayerFeature(viewer, windowPosition) {
-  var scene = viewer.scene;
-  var pickRay = scene.camera.getPickRay(windowPosition);
-  var imageryLayerFeaturePromise = scene.imageryLayers.pickImageryLayerFeatures(
+  const scene = viewer.scene;
+  const pickRay = scene.camera.getPickRay(windowPosition);
+  const imageryLayerFeaturePromise = scene.imageryLayers.pickImageryLayerFeatures(
     pickRay,
     scene
   );
@@ -177,7 +177,7 @@ function pickImageryLayerFeature(viewer, windowPosition) {
   }
 
   // Imagery layer feature picking is asynchronous, so put up a message while loading.
-  var loadingMessage = new Entity({
+  const loadingMessage = new Entity({
     id: "Loading...",
     description: "Loading feature information...",
   });
@@ -196,15 +196,15 @@ function pickImageryLayerFeature(viewer, windowPosition) {
       }
 
       // Select the first feature.
-      var feature = features[0];
+      const feature = features[0];
 
-      var entity = new Entity({
+      const entity = new Entity({
         id: feature.name,
         description: feature.description,
       });
 
       if (defined(feature.position)) {
-        var ecfPosition = viewer.scene.globe.ellipsoid.cartographicToCartesian(
+        const ecfPosition = viewer.scene.globe.ellipsoid.cartographicToCartesian(
           feature.position,
           cartesian3Scratch
         );
@@ -233,18 +233,18 @@ function createNoFeaturesEntity() {
 }
 
 function enableVRUI(viewer, enabled) {
-  var geocoder = viewer._geocoder;
-  var homeButton = viewer._homeButton;
-  var sceneModePicker = viewer._sceneModePicker;
-  var projectionPicker = viewer._projectionPicker;
-  var baseLayerPicker = viewer._baseLayerPicker;
-  var animation = viewer._animation;
-  var timeline = viewer._timeline;
-  var fullscreenButton = viewer._fullscreenButton;
-  var infoBox = viewer._infoBox;
-  var selectionIndicator = viewer._selectionIndicator;
+  const geocoder = viewer._geocoder;
+  const homeButton = viewer._homeButton;
+  const sceneModePicker = viewer._sceneModePicker;
+  const projectionPicker = viewer._projectionPicker;
+  const baseLayerPicker = viewer._baseLayerPicker;
+  const animation = viewer._animation;
+  const timeline = viewer._timeline;
+  const fullscreenButton = viewer._fullscreenButton;
+  const infoBox = viewer._infoBox;
+  const selectionIndicator = viewer._selectionIndicator;
 
-  var visibility = enabled ? "hidden" : "visible";
+  const visibility = enabled ? "hidden" : "visible";
 
   if (defined(geocoder)) {
     geocoder.container.style.visibility = visibility;
@@ -281,7 +281,7 @@ function enableVRUI(viewer, enabled) {
   }
 
   if (viewer._container) {
-    var right =
+    const right =
       enabled || !defined(fullscreenButton)
         ? 0
         : fullscreenButton.container.clientWidth;
@@ -369,7 +369,7 @@ function enableVRUI(viewer, enabled) {
  *
  * @example
  * //Initialize the viewer widget with several custom options and mixins.
- * var viewer = new Cesium.Viewer('cesiumContainer', {
+ * const viewer = new Cesium.Viewer('cesiumContainer', {
  *     //Start in Columbus Viewer
  *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
  *     //Use Cesium World Terrain
@@ -413,7 +413,7 @@ function Viewer(container, options) {
   container = getElement(container);
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var createBaseLayerPicker =
+  const createBaseLayerPicker =
     (!defined(options.globe) || options.globe !== false) &&
     (!defined(options.baseLayerPicker) || options.baseLayerPicker !== false);
 
@@ -441,28 +441,28 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   }
   //>>includeEnd('debug')
 
-  var that = this;
+  const that = this;
 
-  var viewerContainer = document.createElement("div");
+  const viewerContainer = document.createElement("div");
   viewerContainer.className = "cesium-viewer";
   container.appendChild(viewerContainer);
 
   // Cesium widget container
-  var cesiumWidgetContainer = document.createElement("div");
+  const cesiumWidgetContainer = document.createElement("div");
   cesiumWidgetContainer.className = "cesium-viewer-cesiumWidgetContainer";
   viewerContainer.appendChild(cesiumWidgetContainer);
 
   // Bottom container
-  var bottomContainer = document.createElement("div");
+  const bottomContainer = document.createElement("div");
   bottomContainer.className = "cesium-viewer-bottom";
 
   viewerContainer.appendChild(bottomContainer);
 
-  var scene3DOnly = defaultValue(options.scene3DOnly, false);
+  const scene3DOnly = defaultValue(options.scene3DOnly, false);
 
-  var clock;
-  var clockViewModel;
-  var destroyClockViewModel = false;
+  let clock;
+  let clockViewModel;
+  let destroyClockViewModel = false;
   if (defined(options.clockViewModel)) {
     clockViewModel = options.clockViewModel;
     clock = clockViewModel.clock;
@@ -477,7 +477,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   }
 
   // Cesium widget
-  var cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
+  const cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
     imageryProvider:
       createBaseLayerPicker || defined(options.imageryProvider)
         ? false
@@ -506,32 +506,32 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     maximumRenderTimeChange: options.maximumRenderTimeChange,
   });
 
-  var dataSourceCollection = options.dataSources;
-  var destroyDataSourceCollection = false;
+  let dataSourceCollection = options.dataSources;
+  let destroyDataSourceCollection = false;
   if (!defined(dataSourceCollection)) {
     dataSourceCollection = new DataSourceCollection();
     destroyDataSourceCollection = true;
   }
 
-  var scene = cesiumWidget.scene;
+  const scene = cesiumWidget.scene;
 
-  var dataSourceDisplay = new DataSourceDisplay({
+  const dataSourceDisplay = new DataSourceDisplay({
     scene: scene,
     dataSourceCollection: dataSourceCollection,
   });
 
-  var eventHelper = new EventHelper();
+  const eventHelper = new EventHelper();
 
   eventHelper.add(clock.onTick, Viewer.prototype._onTick, this);
   eventHelper.add(scene.morphStart, Viewer.prototype._clearTrackedObject, this);
 
   // Selection Indicator
-  var selectionIndicator;
+  let selectionIndicator;
   if (
     !defined(options.selectionIndicator) ||
     options.selectionIndicator !== false
   ) {
-    var selectionIndicatorContainer = document.createElement("div");
+    const selectionIndicatorContainer = document.createElement("div");
     selectionIndicatorContainer.className =
       "cesium-viewer-selectionIndicatorContainer";
     viewerContainer.appendChild(selectionIndicatorContainer);
@@ -542,14 +542,14 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   }
 
   // Info Box
-  var infoBox;
+  let infoBox;
   if (!defined(options.infoBox) || options.infoBox !== false) {
-    var infoBoxContainer = document.createElement("div");
+    const infoBoxContainer = document.createElement("div");
     infoBoxContainer.className = "cesium-viewer-infoBoxContainer";
     viewerContainer.appendChild(infoBoxContainer);
     infoBox = new InfoBox(infoBoxContainer);
 
-    var infoBoxViewModel = infoBox.viewModel;
+    const infoBoxViewModel = infoBox.viewModel;
     eventHelper.add(
       infoBoxViewModel.cameraClicked,
       Viewer.prototype._onInfoBoxCameraClicked,
@@ -563,17 +563,17 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   }
 
   // Main Toolbar
-  var toolbar = document.createElement("div");
+  const toolbar = document.createElement("div");
   toolbar.className = "cesium-viewer-toolbar";
   viewerContainer.appendChild(toolbar);
 
   // Geocoder
-  var geocoder;
+  let geocoder;
   if (!defined(options.geocoder) || options.geocoder !== false) {
-    var geocoderContainer = document.createElement("div");
+    const geocoderContainer = document.createElement("div");
     geocoderContainer.className = "cesium-viewer-geocoderContainer";
     toolbar.appendChild(geocoderContainer);
-    var geocoderService;
+    let geocoderService;
     if (defined(options.geocoder) && typeof options.geocoder !== "boolean") {
       geocoderService = Array.isArray(options.geocoder)
         ? options.geocoder
@@ -593,12 +593,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   }
 
   // HomeButton
-  var homeButton;
+  let homeButton;
   if (!defined(options.homeButton) || options.homeButton !== false) {
     homeButton = new HomeButton(toolbar, scene);
     if (defined(geocoder)) {
       eventHelper.add(homeButton.viewModel.command.afterExecute, function () {
-        var viewModel = geocoder.viewModel;
+        const viewModel = geocoder.viewModel;
         viewModel.searchText = "";
         if (viewModel.isSearchInProgress) {
           viewModel.search();
@@ -624,7 +624,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   }
   //>>includeEnd('debug');
 
-  var sceneModePicker;
+  let sceneModePicker;
   if (
     !scene3DOnly &&
     (!defined(options.sceneModePicker) || options.sceneModePicker !== false)
@@ -632,20 +632,20 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     sceneModePicker = new SceneModePicker(toolbar, scene);
   }
 
-  var projectionPicker;
+  let projectionPicker;
   if (options.projectionPicker) {
     projectionPicker = new ProjectionPicker(toolbar, scene);
   }
 
   // BaseLayerPicker
-  var baseLayerPicker;
-  var baseLayerPickerDropDown;
+  let baseLayerPicker;
+  let baseLayerPickerDropDown;
   if (createBaseLayerPicker) {
-    var imageryProviderViewModels = defaultValue(
+    const imageryProviderViewModels = defaultValue(
       options.imageryProviderViewModels,
       createDefaultImageryProviderViewModels()
     );
-    var terrainProviderViewModels = defaultValue(
+    const terrainProviderViewModels = defaultValue(
       options.terrainProviderViewModels,
       createDefaultTerrainProviderViewModels()
     );
@@ -661,7 +661,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     });
 
     //Grab the dropdown for resize code.
-    var elements = toolbar.getElementsByClassName(
+    const elements = toolbar.getElementsByClassName(
       "cesium-baseLayerPicker-dropDown"
     );
     baseLayerPickerDropDown = elements[0];
@@ -683,16 +683,16 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   }
 
   // Navigation Help Button
-  var navigationHelpButton;
+  let navigationHelpButton;
   if (
     !defined(options.navigationHelpButton) ||
     options.navigationHelpButton !== false
   ) {
-    var showNavHelp = true;
+    let showNavHelp = true;
     try {
       //window.localStorage is null if disabled in Firefox or undefined in browsers with implementation
       if (defined(window.localStorage)) {
-        var hasSeenNavHelp = window.localStorage.getItem(
+        const hasSeenNavHelp = window.localStorage.getItem(
           "cesium-hasSeenNavHelp"
         );
         if (defined(hasSeenNavHelp) && Boolean(hasSeenNavHelp)) {
@@ -715,9 +715,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   }
 
   // Animation
-  var animation;
+  let animation;
   if (!defined(options.animation) || options.animation !== false) {
-    var animationContainer = document.createElement("div");
+    const animationContainer = document.createElement("div");
     animationContainer.className = "cesium-viewer-animationContainer";
     viewerContainer.appendChild(animationContainer);
     animation = new Animation(
@@ -727,9 +727,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   }
 
   // Timeline
-  var timeline;
+  let timeline;
   if (!defined(options.timeline) || options.timeline !== false) {
-    var timelineContainer = document.createElement("div");
+    const timelineContainer = document.createElement("div");
     timelineContainer.className = "cesium-viewer-timelineContainer";
     viewerContainer.appendChild(timelineContainer);
     timeline = new Timeline(timelineContainer, clock);
@@ -738,9 +738,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   }
 
   // Fullscreen
-  var fullscreenButton;
-  var fullscreenSubscription;
-  var fullscreenContainer;
+  let fullscreenButton;
+  let fullscreenSubscription;
+  let fullscreenContainer;
   if (
     !defined(options.fullscreenButton) ||
     options.fullscreenButton !== false
@@ -772,11 +772,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   }
 
   // VR
-  var vrButton;
-  var vrSubscription;
-  var vrModeSubscription;
+  let vrButton;
+  let vrSubscription;
+  let vrModeSubscription;
   if (options.vrButton) {
-    var vrContainer = document.createElement("div");
+    const vrContainer = document.createElement("div");
     vrContainer.className = "cesium-viewer-vrContainer";
     viewerContainer.appendChild(vrContainer);
     vrButton = new VRButton(vrContainer, scene, options.fullScreenElement);
@@ -881,8 +881,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   // We need to subscribe to the data sources and collections so that we can clear the
   // tracked object when it is removed from the scene.
   // Subscribe to current data sources
-  var dataSourceLength = dataSourceCollection.length;
-  for (var i = 0; i < dataSourceLength; i++) {
+  const dataSourceLength = dataSourceCollection.length;
+  for (let i = 0; i < dataSourceLength; i++) {
     this._dataSourceAdded(dataSourceCollection, dataSourceCollection.get(i));
   }
   this._dataSourceAdded(undefined, dataSourceDisplay.defaultDataSource);
@@ -901,7 +901,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
   // Subscribe to left clicks and zoom to the picked object.
   function pickAndTrackObject(e) {
-    var entity = pickEntity(that, e);
+    const entity = pickEntity(that, e);
     if (defined(entity)) {
       //Only track the entity if it has a valid position at the current time.
       if (
@@ -1421,8 +1421,8 @@ Object.defineProperties(Viewer.prototype, {
         //Cancel any pending zoom
         cancelZoom(this);
 
-        var scene = this.scene;
-        var sceneMode = scene.mode;
+        const scene = this.scene;
+        const sceneMode = scene.mode;
 
         //Stop tracking
         if (!defined(value) || !defined(value.position)) {
@@ -1470,7 +1470,7 @@ Object.defineProperties(Viewer.prototype, {
     set: function (value) {
       if (this._selectedEntity !== value) {
         this._selectedEntity = value;
-        var selectionIndicatorViewModel = defined(this._selectionIndicator)
+        const selectionIndicatorViewModel = defined(this._selectionIndicator)
           ? this._selectionIndicator.viewModel
           : undefined;
         if (defined(value)) {
@@ -1551,12 +1551,12 @@ Viewer.prototype.extend = function (mixin, options) {
  * <code>useDefaultRenderLoop</code> is set to false.
  */
 Viewer.prototype.resize = function () {
-  var cesiumWidget = this._cesiumWidget;
-  var container = this._container;
-  var width = container.clientWidth;
-  var height = container.clientHeight;
-  var animationExists = defined(this._animation);
-  var timelineExists = defined(this._timeline);
+  const cesiumWidget = this._cesiumWidget;
+  const container = this._container;
+  const width = container.clientWidth;
+  const height = container.clientHeight;
+  const animationExists = defined(this._animation);
+  const timelineExists = defined(this._timeline);
 
   cesiumWidget.resize();
 
@@ -1564,15 +1564,15 @@ Viewer.prototype.resize = function () {
     return;
   }
 
-  var panelMaxHeight = height - 125;
-  var baseLayerPickerDropDown = this._baseLayerPickerDropDown;
+  const panelMaxHeight = height - 125;
+  const baseLayerPickerDropDown = this._baseLayerPickerDropDown;
 
   if (defined(baseLayerPickerDropDown)) {
     baseLayerPickerDropDown.style.maxHeight = panelMaxHeight + "px";
   }
 
   if (defined(this._geocoder)) {
-    var geocoderSuggestions = this._geocoder.searchSuggestionsContainer;
+    const geocoderSuggestions = this._geocoder.searchSuggestionsContainer;
     geocoderSuggestions.style.maxHeight = panelMaxHeight + "px";
   }
 
@@ -1580,17 +1580,17 @@ Viewer.prototype.resize = function () {
     this._infoBox.viewModel.maxHeight = panelMaxHeight;
   }
 
-  var timeline = this._timeline;
-  var animationContainer;
-  var animationWidth = 0;
-  var creditLeft = 0;
-  var creditBottom = 0;
+  const timeline = this._timeline;
+  let animationContainer;
+  let animationWidth = 0;
+  let creditLeft = 0;
+  let creditBottom = 0;
 
   if (
     animationExists &&
     window.getComputedStyle(this._animation.container).visibility !== "hidden"
   ) {
-    var lastWidth = this._lastWidth;
+    const lastWidth = this._lastWidth;
     animationContainer = this._animation.container;
     if (width > 900) {
       animationWidth = 169;
@@ -1621,15 +1621,15 @@ Viewer.prototype.resize = function () {
     timelineExists &&
     window.getComputedStyle(this._timeline.container).visibility !== "hidden"
   ) {
-    var fullscreenButton = this._fullscreenButton;
-    var vrButton = this._vrButton;
-    var timelineContainer = timeline.container;
-    var timelineStyle = timelineContainer.style;
+    const fullscreenButton = this._fullscreenButton;
+    const vrButton = this._vrButton;
+    const timelineContainer = timeline.container;
+    const timelineStyle = timelineContainer.style;
 
     creditBottom = timelineContainer.clientHeight + 3;
     timelineStyle.left = animationWidth + "px";
 
-    var pixels = 0;
+    let pixels = 0;
     if (defined(fullscreenButton)) {
       pixels += fullscreenButton.container.clientWidth;
     }
@@ -1677,7 +1677,7 @@ Viewer.prototype.isDestroyed = function () {
  * removing the widget from layout.
  */
 Viewer.prototype.destroy = function () {
-  var i;
+  let i;
 
   this.screenSpaceEventHandler.removeInputAction(
     ScreenSpaceEventType.LEFT_CLICK
@@ -1687,8 +1687,8 @@ Viewer.prototype.destroy = function () {
   );
 
   // Unsubscribe from data sources
-  var dataSources = this.dataSources;
-  var dataSourceLength = dataSources.length;
+  const dataSources = this.dataSources;
+  const dataSourceLength = dataSources.length;
   for (i = 0; i < dataSourceLength; i++) {
     this._dataSourceRemoved(dataSources, dataSources.get(i));
   }
@@ -1777,7 +1777,7 @@ Viewer.prototype._dataSourceAdded = function (
   dataSourceCollection,
   dataSource
 ) {
-  var entityCollection = dataSource.entities;
+  const entityCollection = dataSource.entities;
   entityCollection.collectionChanged.addEventListener(
     Viewer.prototype._onEntityCollectionChanged,
     this
@@ -1791,7 +1791,7 @@ Viewer.prototype._dataSourceRemoved = function (
   dataSourceCollection,
   dataSource
 ) {
-  var entityCollection = dataSource.entities;
+  const entityCollection = dataSource.entities;
   entityCollection.collectionChanged.removeEventListener(
     Viewer.prototype._onEntityCollectionChanged,
     this
@@ -1818,17 +1818,17 @@ Viewer.prototype._dataSourceRemoved = function (
  * @private
  */
 Viewer.prototype._onTick = function (clock) {
-  var time = clock.currentTime;
+  const time = clock.currentTime;
 
-  var isUpdated = this._dataSourceDisplay.update(time);
+  const isUpdated = this._dataSourceDisplay.update(time);
   if (this._allowDataSourcesToSuspendAnimation) {
     this._clockViewModel.canAnimate = isUpdated;
   }
 
-  var entityView = this._entityView;
+  const entityView = this._entityView;
   if (defined(entityView)) {
-    var trackedEntity = this._trackedEntity;
-    var trackedState = this._dataSourceDisplay.getBoundingSphere(
+    const trackedEntity = this._trackedEntity;
+    const trackedState = this._dataSourceDisplay.getBoundingSphere(
       trackedEntity,
       false,
       boundingSphereScratch
@@ -1838,17 +1838,17 @@ Viewer.prototype._onTick = function (clock) {
     }
   }
 
-  var position;
-  var enableCamera = false;
-  var selectedEntity = this.selectedEntity;
-  var showSelection = defined(selectedEntity) && this._enableInfoOrSelection;
+  let position;
+  let enableCamera = false;
+  const selectedEntity = this.selectedEntity;
+  const showSelection = defined(selectedEntity) && this._enableInfoOrSelection;
 
   if (
     showSelection &&
     selectedEntity.isShowing &&
     selectedEntity.isAvailable(time)
   ) {
-    var state = this._dataSourceDisplay.getBoundingSphere(
+    const state = this._dataSourceDisplay.getBoundingSphere(
       selectedEntity,
       true,
       boundingSphereScratch
@@ -1861,7 +1861,7 @@ Viewer.prototype._onTick = function (clock) {
     enableCamera = defined(position);
   }
 
-  var selectionIndicatorViewModel = defined(this._selectionIndicator)
+  const selectionIndicatorViewModel = defined(this._selectionIndicator)
     ? this._selectionIndicator.viewModel
     : undefined;
   if (defined(selectionIndicatorViewModel)) {
@@ -1873,7 +1873,7 @@ Viewer.prototype._onTick = function (clock) {
     selectionIndicatorViewModel.update();
   }
 
-  var infoBoxViewModel = defined(this._infoBox)
+  const infoBoxViewModel = defined(this._infoBox)
     ? this._infoBox.viewModel
     : undefined;
   if (defined(infoBoxViewModel)) {
@@ -1907,9 +1907,9 @@ Viewer.prototype._onEntityCollectionChanged = function (
   added,
   removed
 ) {
-  var length = removed.length;
-  for (var i = 0; i < length; i++) {
-    var removedObject = removed[i];
+  const length = removed.length;
+  for (let i = 0; i < length; i++) {
+    const removedObject = removed[i];
     if (this.trackedEntity === removedObject) {
       this.trackedEntity = undefined;
     }
@@ -1929,8 +1929,8 @@ Viewer.prototype._onInfoBoxCameraClicked = function (infoBoxViewModel) {
   ) {
     this.trackedEntity = undefined;
   } else {
-    var selectedEntity = this.selectedEntity;
-    var position = selectedEntity.position;
+    const selectedEntity = this.selectedEntity;
+    const position = selectedEntity.position;
     if (defined(position)) {
       this.trackedEntity = this.selectedEntity;
     } else {
@@ -1980,8 +1980,8 @@ Viewer.prototype._onDataSourceAdded = function (
   if (this._automaticallyTrackDataSourceClocks) {
     this.clockTrackedDataSource = dataSource;
   }
-  var id = dataSource.entities.id;
-  var removalFunc = this._eventHelper.add(
+  const id = dataSource.entities.id;
+  const removalFunc = this._eventHelper.add(
     dataSource.changedEvent,
     Viewer.prototype._onDataSourceChanged,
     this
@@ -1996,12 +1996,12 @@ Viewer.prototype._onDataSourceRemoved = function (
   dataSourceCollection,
   dataSource
 ) {
-  var resetClock = this.clockTrackedDataSource === dataSource;
-  var id = dataSource.entities.id;
+  const resetClock = this.clockTrackedDataSource === dataSource;
+  const id = dataSource.entities.id;
   this._dataSourceChangedListeners[id]();
   this._dataSourceChangedListeners[id] = undefined;
   if (resetClock) {
-    var numDataSources = dataSourceCollection.length;
+    const numDataSources = dataSourceCollection.length;
     if (this._automaticallyTrackDataSourceClocks && numDataSources > 0) {
       this.clockTrackedDataSource = dataSourceCollection.get(
         numDataSources - 1
@@ -2032,7 +2032,7 @@ Viewer.prototype._onDataSourceRemoved = function (
  * @returns {Promise.<Boolean>} A Promise that resolves to true if the zoom was successful or false if the target is not currently visualized in the scene or the zoom was cancelled.
  */
 Viewer.prototype.zoomTo = function (target, offset) {
-  var options = {
+  const options = {
     offset: offset,
   };
   return zoomToOrFly(this, target, options, false);
@@ -2077,7 +2077,7 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
   //bounding spheres have been computed.  Therefore we create and return
   //a deferred which will be resolved as part of the post-render step in the
   //frame that actually performs the zoom
-  var zoomPromise = when.defer();
+  const zoomPromise = when.defer();
   that._zoomPromise = zoomPromise;
   that._zoomIsFlight = isFlight;
   that._zoomOptions = options;
@@ -2118,7 +2118,7 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
 
     //If the zoom target is a data source, and it's in the middle of loading, wait for it to finish loading.
     if (zoomTarget.isLoading && defined(zoomTarget.loadingEvent)) {
-      var removeEvent = zoomTarget.loadingEvent.addEventListener(function () {
+      const removeEvent = zoomTarget.loadingEvent.addEventListener(function () {
         removeEvent();
 
         //Only perform the zoom if it wasn't cancelled before the data source finished.
@@ -2163,7 +2163,7 @@ function clearZoom(viewer) {
 }
 
 function cancelZoom(viewer) {
-  var zoomPromise = viewer._zoomPromise;
+  const zoomPromise = viewer._zoomPromise;
   if (defined(zoomPromise)) {
     clearZoom(viewer);
     zoomPromise.resolve(false);
@@ -2179,22 +2179,21 @@ Viewer.prototype._postRender = function () {
 };
 
 function updateZoomTarget(viewer) {
-  var target = viewer._zoomTarget;
+  const target = viewer._zoomTarget;
   if (!defined(target) || viewer.scene.mode === SceneMode.MORPHING) {
     return;
   }
 
-  var scene = viewer.scene;
-  var camera = scene.camera;
-  var zoomPromise = viewer._zoomPromise;
-  var zoomOptions = defaultValue(viewer._zoomOptions, {});
-  var options;
-  var boundingSphere;
+  const scene = viewer.scene;
+  const camera = scene.camera;
+  const zoomPromise = viewer._zoomPromise;
+  const zoomOptions = defaultValue(viewer._zoomOptions, {});
+  let options;
 
   // If zoomTarget was Cesium3DTileset
   if (target instanceof Cesium3DTileset) {
     return target.readyPromise.then(function () {
-      var boundingSphere = target.boundingSphere;
+      const boundingSphere = target.boundingSphere;
       // If offset was originally undefined then give it base value instead of empty object
       if (!defined(zoomOptions.offset)) {
         zoomOptions.offset = new HeadingPitchRange(
@@ -2233,7 +2232,7 @@ function updateZoomTarget(viewer) {
   // If zoomTarget was TimeDynamicPointCloud
   if (target instanceof TimeDynamicPointCloud) {
     return target.readyPromise.then(function () {
-      var boundingSphere = target.boundingSphere;
+      const boundingSphere = target.boundingSphere;
       // If offset was originally undefined then give it base value instead of empty object
       if (!defined(zoomOptions.offset)) {
         zoomOptions.offset = new HeadingPitchRange(
@@ -2295,11 +2294,11 @@ function updateZoomTarget(viewer) {
     return;
   }
 
-  var entities = target;
+  const entities = target;
 
-  var boundingSpheres = [];
-  for (var i = 0, len = entities.length; i < len; i++) {
-    var state = viewer._dataSourceDisplay.getBoundingSphere(
+  const boundingSpheres = [];
+  for (let i = 0, len = entities.length; i < len; i++) {
+    const state = viewer._dataSourceDisplay.getBoundingSphere(
       entities[i],
       false,
       boundingSphereScratch
@@ -2320,7 +2319,7 @@ function updateZoomTarget(viewer) {
   //Stop tracking the current entity.
   viewer.trackedEntity = undefined;
 
-  boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
+  const boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
 
   if (!viewer._zoomIsFlight) {
     camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
@@ -2348,13 +2347,13 @@ function updateTrackedEntity(viewer) {
     return;
   }
 
-  var trackedEntity = viewer._trackedEntity;
-  var currentTime = viewer.clock.currentTime;
+  const trackedEntity = viewer._trackedEntity;
+  const currentTime = viewer.clock.currentTime;
 
   //Verify we have a current position at this time. This is only triggered if a position
   //has become undefined after trackedEntity is set but before the boundingSphere has been
   //computed. In this case, we will track the entity once it comes back into existence.
-  var currentPosition = Property.getValueOrUndefined(
+  const currentPosition = Property.getValueOrUndefined(
     trackedEntity.position,
     currentTime
   );
@@ -2363,9 +2362,9 @@ function updateTrackedEntity(viewer) {
     return;
   }
 
-  var scene = viewer.scene;
+  const scene = viewer.scene;
 
-  var state = viewer._dataSourceDisplay.getBoundingSphere(
+  const state = viewer._dataSourceDisplay.getBoundingSphere(
     trackedEntity,
     false,
     boundingSphereScratch
@@ -2374,7 +2373,7 @@ function updateTrackedEntity(viewer) {
     return;
   }
 
-  var sceneMode = scene.mode;
+  const sceneMode = scene.mode;
   if (
     sceneMode === SceneMode.COLUMBUS_VIEW ||
     sceneMode === SceneMode.SCENE2D
@@ -2389,7 +2388,7 @@ function updateTrackedEntity(viewer) {
     scene.screenSpaceCameraController.enableTilt = false;
   }
 
-  var bs =
+  const bs =
     state !== BoundingSphereState.FAILED ? boundingSphereScratch : undefined;
   viewer._entityView = new EntityView(
     trackedEntity,

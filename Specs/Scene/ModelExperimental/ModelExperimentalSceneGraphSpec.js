@@ -7,6 +7,7 @@ import {
   Matrix4,
   ModelColorPipelineStage,
   ModelExperimentalSceneGraph,
+  ModelExperimentalUtility,
   Pass,
   ResourceCache,
 } from "../../../Source/Cesium.js";
@@ -16,13 +17,13 @@ import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js"
 describe(
   "Scene/ModelExperimental/ModelExperimentalSceneGraph",
   function () {
-    var parentGltfUrl = "./Data/Cesium3DTiles/GltfContent/glTF/parent.gltf";
-    var vertexColorGltfUrl =
+    const parentGltfUrl = "./Data/Cesium3DTiles/GltfContent/glTF/parent.gltf";
+    const vertexColorGltfUrl =
       "./Data/Models/PBR/VertexColorTest/VertexColorTest.gltf";
-    var buildingsMetadata =
+    const buildingsMetadata =
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
 
-    var scene;
+    let scene;
 
     beforeAll(function () {
       scene = createScene();
@@ -42,12 +43,12 @@ describe(
         { gltf: vertexColorGltfUrl },
         scene
       ).then(function (model) {
-        var sceneGraph = model._sceneGraph;
-        var modelComponents = sceneGraph._modelComponents;
+        const sceneGraph = model._sceneGraph;
+        const modelComponents = sceneGraph._modelComponents;
 
         expect(sceneGraph).toBeDefined();
 
-        var runtimeNodes = sceneGraph._runtimeNodes;
+        const runtimeNodes = sceneGraph._runtimeNodes;
         expect(runtimeNodes.length).toEqual(modelComponents.nodes.length);
 
         expect(runtimeNodes[0].runtimePrimitives.length).toEqual(1);
@@ -67,16 +68,18 @@ describe(
             conditions: [["${height} > 1", "color('red')"]],
           },
         });
-        var frameState = scene.frameState;
-        var sceneGraph = model._sceneGraph;
+        const frameState = scene.frameState;
+        const sceneGraph = model._sceneGraph;
         // Reset the draw commands so we can inspect the draw command generation.
         model._drawCommandsBuilt = false;
-        sceneGraph._drawCommands = [];
         frameState.commandList = [];
         scene.renderForSpecs();
-        expect(sceneGraph._drawCommands.length).toEqual(1);
+
+        const drawCommands = sceneGraph.getDrawCommands();
+
+        expect(drawCommands.length).toEqual(1);
+        expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
         expect(frameState.commandList.length).toEqual(1);
-        expect(sceneGraph._drawCommands[0].pass).toEqual(Pass.OPAQUE);
       });
     });
 
@@ -92,16 +95,18 @@ describe(
             conditions: [["${height} > 1", "color('red', 0.1)"]],
           },
         });
-        var frameState = scene.frameState;
-        var sceneGraph = model._sceneGraph;
+        const frameState = scene.frameState;
+        const sceneGraph = model._sceneGraph;
         // Reset the draw commands so we can inspect the draw command generation.
         model._drawCommandsBuilt = false;
-        sceneGraph._drawCommands = [];
         frameState.commandList = [];
         scene.renderForSpecs();
-        expect(sceneGraph._drawCommands.length).toEqual(1);
+
+        const drawCommands = sceneGraph.getDrawCommands();
+
+        expect(drawCommands.length).toEqual(1);
+        expect(drawCommands[0].pass).toEqual(Pass.TRANSLUCENT);
         expect(frameState.commandList.length).toEqual(1);
-        expect(sceneGraph._drawCommands[0].pass).toEqual(Pass.TRANSLUCENT);
       });
     });
 
@@ -120,17 +125,18 @@ describe(
             ],
           },
         });
-        var frameState = scene.frameState;
-        var sceneGraph = model._sceneGraph;
+        const frameState = scene.frameState;
+        const sceneGraph = model._sceneGraph;
         // Reset the draw commands so we can inspect the draw command generation.
         model._drawCommandsBuilt = false;
-        sceneGraph._drawCommands = [];
         frameState.commandList = [];
         scene.renderForSpecs();
-        expect(sceneGraph._drawCommands.length).toEqual(2);
+
+        const drawCommands = sceneGraph.getDrawCommands();
+        expect(drawCommands.length).toEqual(2);
+        expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
+        expect(drawCommands[1].pass).toEqual(Pass.TRANSLUCENT);
         expect(frameState.commandList.length).toEqual(2);
-        expect(sceneGraph._drawCommands[0].pass).toEqual(Pass.OPAQUE);
-        expect(sceneGraph._drawCommands[1].pass).toEqual(Pass.TRANSLUCENT);
       });
     });
 
@@ -139,36 +145,44 @@ describe(
         ModelExperimentalSceneGraph.prototype,
         "buildDrawCommands"
       ).and.callThrough();
+      spyOn(
+        ModelExperimentalSceneGraph.prototype,
+        "getDrawCommands"
+      ).and.callThrough();
       return loadAndZoomToModelExperimental(
         { gltf: parentGltfUrl },
         scene
       ).then(function (model) {
-        var sceneGraph = model._sceneGraph;
-        var runtimeNodes = sceneGraph._runtimeNodes;
+        const sceneGraph = model._sceneGraph;
+        const runtimeNodes = sceneGraph._runtimeNodes;
 
-        var primitivesCount = 0;
-        for (var i = 0; i < runtimeNodes.length; i++) {
+        let primitivesCount = 0;
+        for (let i = 0; i < runtimeNodes.length; i++) {
           primitivesCount += runtimeNodes[i].runtimePrimitives.length;
         }
 
-        var frameState = scene.frameState;
+        const frameState = scene.frameState;
         frameState.commandList = [];
         scene.renderForSpecs();
         expect(
           ModelExperimentalSceneGraph.prototype.buildDrawCommands
         ).toHaveBeenCalled();
+        expect(
+          ModelExperimentalSceneGraph.prototype.getDrawCommands
+        ).toHaveBeenCalled();
         expect(frameState.commandList.length).toEqual(primitivesCount);
 
         expect(model._drawCommandsBuilt).toEqual(true);
-        expect(sceneGraph._drawCommands.length).toEqual(primitivesCount);
 
         // Reset the draw command list to see if they're re-built.
         model._drawCommandsBuilt = false;
-        sceneGraph._drawCommands = [];
         frameState.commandList = [];
         scene.renderForSpecs();
         expect(
           ModelExperimentalSceneGraph.prototype.buildDrawCommands
+        ).toHaveBeenCalled();
+        expect(
+          ModelExperimentalSceneGraph.prototype.getDrawCommands
         ).toHaveBeenCalled();
         expect(frameState.commandList.length).toEqual(primitivesCount);
       });
@@ -179,9 +193,9 @@ describe(
         { gltf: parentGltfUrl },
         scene
       ).then(function (model) {
-        var sceneGraph = model._sceneGraph;
-        var modelComponents = sceneGraph._modelComponents;
-        var runtimeNodes = sceneGraph._runtimeNodes;
+        const sceneGraph = model._sceneGraph;
+        const modelComponents = sceneGraph._modelComponents;
+        const runtimeNodes = sceneGraph._runtimeNodes;
 
         expect(runtimeNodes[1].node).toEqual(modelComponents.nodes[0]);
         expect(runtimeNodes[0].node).toEqual(modelComponents.nodes[1]);
@@ -197,21 +211,20 @@ describe(
         },
         scene
       ).then(function (model) {
-        var sceneGraph = model._sceneGraph;
-        var modelComponents = sceneGraph._modelComponents;
-        var scene = modelComponents.scene;
-        var runtimeNodes = sceneGraph._runtimeNodes;
+        const sceneGraph = model._sceneGraph;
+        const modelComponents = sceneGraph._modelComponents;
+        const runtimeNodes = sceneGraph._runtimeNodes;
 
-        expect(scene.upAxis).toEqual(Axis.Z);
-        expect(scene.forwardAxis).toEqual(Axis.X);
+        expect(modelComponents.upAxis).toEqual(Axis.Z);
+        expect(modelComponents.forwardAxis).toEqual(Axis.X);
 
-        expect(runtimeNodes[1].modelMatrix).toEqual(
-          modelComponents.nodes[0].matrix
+        expect(runtimeNodes[1].transform).toEqual(
+          ModelExperimentalUtility.getNodeTransform(modelComponents.nodes[0])
         );
-        expect(runtimeNodes[0].modelMatrix).toEqual(
-          Matrix4.multiplyByTranslation(
-            runtimeNodes[1].modelMatrix,
-            modelComponents.nodes[1].translation,
+        expect(runtimeNodes[0].transform).toEqual(
+          Matrix4.multiplyTransformation(
+            runtimeNodes[1].transform,
+            ModelExperimentalUtility.getNodeTransform(modelComponents.nodes[1]),
             new Matrix4()
           )
         );

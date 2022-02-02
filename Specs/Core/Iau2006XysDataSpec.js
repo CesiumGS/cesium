@@ -5,7 +5,7 @@ import { Iau2006XysSample } from "../../Source/Cesium.js";
 import pollToPromise from "../pollToPromise.js";
 
 describe("Core/Iau2006XysData", function () {
-  var xys;
+  let xys;
 
   beforeEach(function () {
     xys = new Iau2006XysData();
@@ -26,7 +26,7 @@ describe("Core/Iau2006XysData", function () {
   });
 
   it("returns the same answer as STK Components", function () {
-    var result;
+    let result;
     return pollToPromise(function () {
       result = xys.computeXysRadians(2442399, 777.77);
       return defined(result);

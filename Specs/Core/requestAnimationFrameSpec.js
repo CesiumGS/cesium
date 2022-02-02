@@ -4,8 +4,8 @@ import { when } from "../../Source/Cesium.js";
 
 describe("Core/requestAnimationFrame", function () {
   it("calls the callback", function () {
-    var deferred = when.defer();
-    var requestID = requestAnimationFrame(function () {
+    const deferred = when.defer();
+    const requestID = requestAnimationFrame(function () {
       deferred.resolve();
     });
     expect(requestID).toBeDefined();
@@ -13,9 +13,9 @@ describe("Core/requestAnimationFrame", function () {
   });
 
   it("provides a timestamp that increases each frame", function () {
-    var deferred = when.defer();
+    const deferred = when.defer();
 
-    var callbackTimestamps = [];
+    const callbackTimestamps = [];
 
     function callback(timestamp) {
       callbackTimestamps.push(timestamp);
@@ -39,11 +39,11 @@ describe("Core/requestAnimationFrame", function () {
   });
 
   it("can cancel a callback", function () {
-    var deferred = when.defer();
+    const deferred = when.defer();
 
-    var shouldNotBeCalled = jasmine.createSpy("shouldNotBeCalled");
+    const shouldNotBeCalled = jasmine.createSpy("shouldNotBeCalled");
 
-    var requestID = requestAnimationFrame(shouldNotBeCalled);
+    const requestID = requestAnimationFrame(shouldNotBeCalled);
     cancelAnimationFrame(requestID);
 
     // schedule and wait for another callback

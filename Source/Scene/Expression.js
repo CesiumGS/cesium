@@ -27,11 +27,11 @@ import ExpressionNodeType from "./ExpressionNodeType.js";
  * @param {Object} [defines] Defines in the style.
  *
  * @example
- * var expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');
+ * const expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');
  * expression.evaluate(feature); // returns true or false depending on the feature's properties
  *
  * @example
- * var expression = new Cesium.Expression('(${Temperature} > 90) ? color("red") : color("white")');
+ * const expression = new Cesium.Expression('(${Temperature} > 90) ? color("red") : color("white")');
  * expression.evaluateColor(feature, result); // returns a Cesium.Color object
  */
 function Expression(expression, defines) {
@@ -47,7 +47,7 @@ function Expression(expression, defines) {
   jsep.addBinaryOp("=~", 0);
   jsep.addBinaryOp("!~", 0);
 
-  var ast;
+  let ast;
   try {
     ast = jsep(expression);
   } catch (e) {
@@ -77,7 +77,7 @@ Object.defineProperties(Expression.prototype, {
 
 // Scratch storage manager while evaluating deep expressions.
 // For example, an expression like dot(vec4(${red}), vec4(${green}) * vec4(${blue}) requires 3 scratch Cartesian4's
-var scratchStorage = {
+const scratchStorage = {
   arrayIndex: 0,
   arrayArray: [[]],
   cartesian2Index: 0,
@@ -96,7 +96,7 @@ var scratchStorage = {
     if (this.arrayIndex >= this.arrayArray.length) {
       this.arrayArray.push([]);
     }
-    var array = this.arrayArray[this.arrayIndex++];
+    const array = this.arrayArray[this.arrayIndex++];
     array.length = 0;
     return array;
   },
@@ -136,7 +136,7 @@ var scratchStorage = {
  */
 Expression.prototype.evaluate = function (feature, result) {
   scratchStorage.reset();
-  var value = this._runtimeAst.evaluate(feature);
+  const value = this._runtimeAst.evaluate(feature);
   if (result instanceof Color && value instanceof Cartesian4) {
     return Color.fromCartesian4(value, result);
   }
@@ -162,7 +162,7 @@ Expression.prototype.evaluate = function (feature, result) {
  */
 Expression.prototype.evaluateColor = function (feature, result) {
   scratchStorage.reset();
-  var color = this._runtimeAst.evaluate(feature);
+  const color = this._runtimeAst.evaluate(feature);
   return Color.fromCartesian4(color, result);
 };
 
@@ -185,7 +185,7 @@ Expression.prototype.getShaderFunction = function (
   shaderState,
   returnType
 ) {
-  var shaderExpression = this.getShaderExpression(
+  let shaderExpression = this.getShaderExpression(
     variableSubstitutionMap,
     shaderState
   );
@@ -233,7 +233,7 @@ Expression.prototype.getShaderExpression = function (
  * @private
  */
 Expression.prototype.getVariables = function () {
-  var variables = [];
+  let variables = [];
 
   this._runtimeAst.getVariables(variables);
 
@@ -245,8 +245,8 @@ Expression.prototype.getVariables = function () {
   return variables;
 };
 
-var unaryOperators = ["!", "-", "+"];
-var binaryOperators = [
+const unaryOperators = ["!", "-", "+"];
+const binaryOperators = [
   "+",
   "-",
   "*",
@@ -264,14 +264,14 @@ var binaryOperators = [
   "=~",
 ];
 
-var variableRegex = /\${(.*?)}/g; // Matches ${variable_name}
-var backslashRegex = /\\/g;
-var backslashReplacement = "@#%";
-var replacementRegex = /@#%/g;
+const variableRegex = /\${(.*?)}/g; // Matches ${variable_name}
+const backslashRegex = /\\/g;
+const backslashReplacement = "@#%";
+const replacementRegex = /@#%/g;
 
-var scratchColor = new Color();
+const scratchColor = new Color();
 
-var unaryFunctions = {
+const unaryFunctions = {
   abs: getEvaluateUnaryComponentwise(Math.abs),
   sqrt: getEvaluateUnaryComponentwise(Math.sqrt),
   cos: getEvaluateUnaryComponentwise(Math.cos),
@@ -295,7 +295,7 @@ var unaryFunctions = {
   normalize: normalize,
 };
 
-var binaryFunctions = {
+const binaryFunctions = {
   atan2: getEvaluateBinaryComponentwise(Math.atan2, false),
   pow: getEvaluateBinaryComponentwise(Math.pow, false),
   min: getEvaluateBinaryComponentwise(Math.min, true),
@@ -305,7 +305,7 @@ var binaryFunctions = {
   cross: cross,
 };
 
-var ternaryFunctions = {
+const ternaryFunctions = {
   clamp: getEvaluateTernaryComponentwise(CesiumMath.clamp, true),
   mix: getEvaluateTernaryComponentwise(CesiumMath.lerp, true),
 };
@@ -623,10 +623,10 @@ function replaceDefines(expression, defines) {
   if (!defined(defines)) {
     return expression;
   }
-  for (var key in defines) {
+  for (const key in defines) {
     if (defines.hasOwnProperty(key)) {
-      var definePlaceholder = new RegExp("\\$\\{" + key + "\\}", "g");
-      var defineReplace = "(" + defines[key] + ")";
+      const definePlaceholder = new RegExp("\\$\\{" + key + "\\}", "g");
+      const defineReplace = "(" + defines[key] + ")";
       if (defined(defineReplace)) {
         expression = expression.replace(definePlaceholder, defineReplace);
       }
@@ -644,14 +644,14 @@ function replaceBackslashes(expression) {
 }
 
 function replaceVariables(expression) {
-  var exp = expression;
-  var result = "";
-  var i = exp.indexOf("${");
+  let exp = expression;
+  let result = "";
+  let i = exp.indexOf("${");
   while (i >= 0) {
     // Check if string is inside quotes
-    var openSingleQuote = exp.indexOf("'");
-    var openDoubleQuote = exp.indexOf('"');
-    var closeQuote;
+    const openSingleQuote = exp.indexOf("'");
+    const openDoubleQuote = exp.indexOf('"');
+    let closeQuote;
     if (openSingleQuote >= 0 && openSingleQuote < i) {
       closeQuote = exp.indexOf("'", openSingleQuote + 1);
       result += exp.substr(0, closeQuote + 1);
@@ -664,7 +664,7 @@ function replaceVariables(expression) {
       i = exp.indexOf("${");
     } else {
       result += exp.substr(0, i);
-      var j = exp.indexOf("}");
+      const j = exp.indexOf("}");
       if (j < 0) {
         throw new RuntimeError("Unmatched {.");
       }
@@ -678,7 +678,7 @@ function replaceVariables(expression) {
 }
 
 function parseLiteral(ast) {
-  var type = typeof ast.value;
+  const type = typeof ast.value;
   if (ast.value === null) {
     return new Node(ExpressionNodeType.LITERAL_NULL, null);
   } else if (type === "boolean") {
@@ -697,15 +697,15 @@ function parseLiteral(ast) {
 }
 
 function parseCall(expression, ast) {
-  var args = ast.arguments;
-  var argsLength = args.length;
-  var call;
-  var val, left, right;
+  const args = ast.arguments;
+  const argsLength = args.length;
+  let call;
+  let val, left, right;
 
   // Member function calls
   if (ast.callee.type === "MemberExpression") {
     call = ast.callee.property.name;
-    var object = ast.callee.object;
+    const object = ast.callee.object;
     if (call === "test" || call === "exec") {
       // Make sure this is called on a valid type
       if (object.callee.name !== "regExp") {
@@ -736,7 +736,7 @@ function parseCall(expression, ast) {
     }
     val = createRuntimeAst(expression, args[0]);
     if (defined(args[1])) {
-      var alpha = createRuntimeAst(expression, args[1]);
+      const alpha = createRuntimeAst(expression, args[1]);
       return new Node(ExpressionNodeType.LITERAL_COLOR, call, [val, alpha]);
     }
     return new Node(ExpressionNodeType.LITERAL_COLOR, call, [val]);
@@ -764,7 +764,7 @@ function parseCall(expression, ast) {
   } else if (call === "vec2" || call === "vec3" || call === "vec4") {
     // Check for invalid constructors at evaluation time
     val = new Array(argsLength);
-    for (var i = 0; i < argsLength; ++i) {
+    for (let i = 0; i < argsLength; ++i) {
       val[i] = createRuntimeAst(expression, args[i]);
     }
     return new Node(ExpressionNodeType.LITERAL_VECTOR, call, val);
@@ -807,7 +807,7 @@ function parseCall(expression, ast) {
     }
     left = createRuntimeAst(expression, args[0]);
     right = createRuntimeAst(expression, args[1]);
-    var test = createRuntimeAst(expression, args[2]);
+    const test = createRuntimeAst(expression, args[2]);
     return new Node(ExpressionNodeType.TERNARY, call, left, right, test);
   } else if (call === "Boolean") {
     if (argsLength === 0) {
@@ -835,18 +835,18 @@ function parseCall(expression, ast) {
 }
 
 function parseRegex(expression, ast) {
-  var args = ast.arguments;
+  const args = ast.arguments;
   // no arguments, return default regex
   if (args.length === 0) {
     return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp());
   }
 
-  var pattern = createRuntimeAst(expression, args[0]);
-  var exp;
+  const pattern = createRuntimeAst(expression, args[0]);
+  let exp;
 
   // optional flag argument supplied
   if (args.length > 1) {
-    var flags = createRuntimeAst(expression, args[1]);
+    const flags = createRuntimeAst(expression, args[1]);
     if (isLiteralType(pattern) && isLiteralType(flags)) {
       try {
         exp = new RegExp(
@@ -875,7 +875,7 @@ function parseRegex(expression, ast) {
 
 function parseKeywordsAndVariables(ast) {
   if (isVariable(ast.name)) {
-    var name = getPropertyName(ast.name);
+    const name = getPropertyName(ast.name);
     if (name.substr(0, 8) === "tiles3d_") {
       return new Node(ExpressionNodeType.BUILTIN_VARIABLE, name);
     }
@@ -892,7 +892,7 @@ function parseKeywordsAndVariables(ast) {
 }
 
 function parseMathConstant(ast) {
-  var name = ast.property.name;
+  const name = ast.property.name;
   if (name === "PI") {
     return new Node(ExpressionNodeType.LITERAL_NUMBER, Math.PI);
   } else if (name === "E") {
@@ -901,7 +901,7 @@ function parseMathConstant(ast) {
 }
 
 function parseNumberConstant(ast) {
-  var name = ast.property.name;
+  const name = ast.property.name;
   if (name === "POSITIVE_INFINITY") {
     return new Node(
       ExpressionNodeType.LITERAL_NUMBER,
@@ -917,8 +917,8 @@ function parseMemberExpression(expression, ast) {
     return parseNumberConstant(ast);
   }
 
-  var val;
-  var obj = createRuntimeAst(expression, ast.object);
+  let val;
+  const obj = createRuntimeAst(expression, ast.object);
   if (ast.computed) {
     val = createRuntimeAst(expression, ast.property);
     return new Node(ExpressionNodeType.MEMBER, "brackets", obj, val);
@@ -941,10 +941,10 @@ function getPropertyName(variable) {
 }
 
 function createRuntimeAst(expression, ast) {
-  var node;
-  var op;
-  var left;
-  var right;
+  let node;
+  let op;
+  let left;
+  let right;
 
   if (ast.type === "Literal") {
     node = parseLiteral(ast);
@@ -954,7 +954,7 @@ function createRuntimeAst(expression, ast) {
     node = parseKeywordsAndVariables(ast);
   } else if (ast.type === "UnaryExpression") {
     op = ast.operator;
-    var child = createRuntimeAst(expression, ast.argument);
+    const child = createRuntimeAst(expression, ast.argument);
     if (unaryOperators.indexOf(op) > -1) {
       node = new Node(ExpressionNodeType.UNARY, op, child);
     } else {
@@ -977,15 +977,15 @@ function createRuntimeAst(expression, ast) {
       node = new Node(ExpressionNodeType.BINARY, op, left, right);
     }
   } else if (ast.type === "ConditionalExpression") {
-    var test = createRuntimeAst(expression, ast.test);
+    const test = createRuntimeAst(expression, ast.test);
     left = createRuntimeAst(expression, ast.consequent);
     right = createRuntimeAst(expression, ast.alternate);
     node = new Node(ExpressionNodeType.CONDITIONAL, "?", left, right, test);
   } else if (ast.type === "MemberExpression") {
     node = parseMemberExpression(expression, ast);
   } else if (ast.type === "ArrayExpression") {
-    var val = [];
-    for (var i = 0; i < ast.elements.length; i++) {
+    const val = [];
+    for (let i = 0; i < ast.elements.length; i++) {
       val[i] = createRuntimeAst(expression, ast.elements[i]);
     }
     node = new Node(ExpressionNodeType.ARRAY, val);
@@ -1109,28 +1109,28 @@ function evaluateTilesetTime(feature) {
 }
 
 function getEvaluateUnaryFunction(call) {
-  var evaluate = unaryFunctions[call];
+  const evaluate = unaryFunctions[call];
   return function (feature) {
-    var left = this._left.evaluate(feature);
+    const left = this._left.evaluate(feature);
     return evaluate(call, left);
   };
 }
 
 function getEvaluateBinaryFunction(call) {
-  var evaluate = binaryFunctions[call];
+  const evaluate = binaryFunctions[call];
   return function (feature) {
-    var left = this._left.evaluate(feature);
-    var right = this._right.evaluate(feature);
+    const left = this._left.evaluate(feature);
+    const right = this._right.evaluate(feature);
     return evaluate(call, left, right);
   };
 }
 
 function getEvaluateTernaryFunction(call) {
-  var evaluate = ternaryFunctions[call];
+  const evaluate = ternaryFunctions[call];
   return function (feature) {
-    var left = this._left.evaluate(feature);
-    var right = this._right.evaluate(feature);
-    var test = this._test.evaluate(feature);
+    const left = this._left.evaluate(feature);
+    const right = this._right.evaluate(feature);
+    const test = this._test.evaluate(feature);
     return evaluate(call, left, right, test);
   };
 }
@@ -1147,8 +1147,8 @@ Node.prototype._evaluateLiteral = function () {
 };
 
 Node.prototype._evaluateLiteralColor = function (feature) {
-  var color = scratchColor;
-  var args = this._left;
+  const color = scratchColor;
+  const args = this._left;
   if (this._value === "color") {
     if (!defined(args)) {
       Color.fromBytes(255, 255, 255, 255, color);
@@ -1168,7 +1168,7 @@ Node.prototype._evaluateLiteralColor = function (feature) {
     );
   } else if (this._value === "rgba") {
     // convert between css alpha (0 to 1) and cesium alpha (0 to 255)
-    var a = args[3].evaluate(feature) * 255;
+    const a = args[3].evaluate(feature) * 255;
     Color.fromBytes(
       args[0].evaluate(feature),
       args[1].evaluate(feature),
@@ -1210,12 +1210,12 @@ Node.prototype._evaluateLiteralVector = function (feature) {
   // vec3(1, 2, 3, 4)  // too many components
   // vec2(vec4(1), 1)  // too many components
 
-  var components = scratchStorage.getArray();
-  var call = this._value;
-  var args = this._left;
-  var argsLength = args.length;
-  for (var i = 0; i < argsLength; ++i) {
-    var value = args[i].evaluate(feature);
+  const components = scratchStorage.getArray();
+  const call = this._value;
+  const args = this._left;
+  const argsLength = args.length;
+  for (let i = 0; i < argsLength; ++i) {
+    const value = args[i].evaluate(feature);
     if (typeof value === "number") {
       components.push(value);
     } else if (value instanceof Cartesian2) {
@@ -1234,8 +1234,8 @@ Node.prototype._evaluateLiteralVector = function (feature) {
     }
   }
 
-  var componentsLength = components.length;
-  var vectorLength = parseInt(call.charAt(3));
+  const componentsLength = components.length;
+  const vectorLength = parseInt(call.charAt(3));
 
   if (componentsLength === 0) {
     throw new RuntimeError(
@@ -1253,7 +1253,7 @@ Node.prototype._evaluateLiteralVector = function (feature) {
 
   if (componentsLength === 1) {
     // Add the same component 3 more times
-    var component = components[0];
+    const component = components[0];
     components.push(component, component, component);
   }
 
@@ -1271,12 +1271,12 @@ Node.prototype._evaluateLiteralString = function () {
 };
 
 Node.prototype._evaluateVariableString = function (feature) {
-  var result = this._value;
-  var match = variableRegex.exec(result);
+  let result = this._value;
+  let match = variableRegex.exec(result);
   while (match !== null) {
-    var placeholder = match[0];
-    var variableName = match[1];
-    var property = getFeatureProperty(feature, variableName);
+    const placeholder = match[0];
+    const variableName = match[1];
+    let property = getFeatureProperty(feature, variableName);
     if (!defined(property)) {
       property = "";
     }
@@ -1300,12 +1300,12 @@ Node.prototype._evaluateMemberDot = function (feature) {
   if (checkFeature(this._left)) {
     return getFeatureProperty(feature, this._right.evaluate(feature));
   }
-  var property = this._left.evaluate(feature);
+  const property = this._left.evaluate(feature);
   if (!defined(property)) {
     return undefined;
   }
 
-  var member = this._right.evaluate(feature);
+  const member = this._right.evaluate(feature);
   if (
     property instanceof Cartesian2 ||
     property instanceof Cartesian3 ||
@@ -1329,12 +1329,12 @@ Node.prototype._evaluateMemberBrackets = function (feature) {
   if (checkFeature(this._left)) {
     return getFeatureProperty(feature, this._right.evaluate(feature));
   }
-  var property = this._left.evaluate(feature);
+  const property = this._left.evaluate(feature);
   if (!defined(property)) {
     return undefined;
   }
 
-  var member = this._right.evaluate(feature);
+  const member = this._right.evaluate(feature);
   if (
     property instanceof Cartesian2 ||
     property instanceof Cartesian3 ||
@@ -1356,8 +1356,8 @@ Node.prototype._evaluateMemberBrackets = function (feature) {
 };
 
 Node.prototype._evaluateArray = function (feature) {
-  var array = [];
-  for (var i = 0; i < this._value.length; i++) {
+  const array = [];
+  for (let i = 0; i < this._value.length; i++) {
     array[i] = this._value[i].evaluate(feature);
   }
   return array;
@@ -1367,7 +1367,7 @@ Node.prototype._evaluateArray = function (feature) {
 // that we can assign if we know the types before runtime
 
 Node.prototype._evaluateNot = function (feature) {
-  var left = this._left.evaluate(feature);
+  const left = this._left.evaluate(feature);
   if (typeof left !== "boolean") {
     throw new RuntimeError(
       'Operator "!" requires a boolean argument. Argument is ' + left + "."
@@ -1377,7 +1377,7 @@ Node.prototype._evaluateNot = function (feature) {
 };
 
 Node.prototype._evaluateNegative = function (feature) {
-  var left = this._left.evaluate(feature);
+  const left = this._left.evaluate(feature);
   if (left instanceof Cartesian2) {
     return Cartesian2.negate(left, scratchStorage.getCartesian2());
   } else if (left instanceof Cartesian3) {
@@ -1396,7 +1396,7 @@ Node.prototype._evaluateNegative = function (feature) {
 };
 
 Node.prototype._evaluatePositive = function (feature) {
-  var left = this._left.evaluate(feature);
+  const left = this._left.evaluate(feature);
 
   if (
     !(
@@ -1417,8 +1417,8 @@ Node.prototype._evaluatePositive = function (feature) {
 };
 
 Node.prototype._evaluateLessThan = function (feature) {
-  var left = this._left.evaluate(feature);
-  var right = this._right.evaluate(feature);
+  const left = this._left.evaluate(feature);
+  const right = this._right.evaluate(feature);
 
   if (typeof left !== "number" || typeof right !== "number") {
     throw new RuntimeError(
@@ -1434,8 +1434,8 @@ Node.prototype._evaluateLessThan = function (feature) {
 };
 
 Node.prototype._evaluateLessThanOrEquals = function (feature) {
-  var left = this._left.evaluate(feature);
-  var right = this._right.evaluate(feature);
+  const left = this._left.evaluate(feature);
+  const right = this._right.evaluate(feature);
 
   if (typeof left !== "number" || typeof right !== "number") {
     throw new RuntimeError(
@@ -1451,8 +1451,8 @@ Node.prototype._evaluateLessThanOrEquals = function (feature) {
 };
 
 Node.prototype._evaluateGreaterThan = function (feature) {
-  var left = this._left.evaluate(feature);
-  var right = this._right.evaluate(feature);
+  const left = this._left.evaluate(feature);
+  const right = this._right.evaluate(feature);
 
   if (typeof left !== "number" || typeof right !== "number") {
     throw new RuntimeError(
@@ -1468,8 +1468,8 @@ Node.prototype._evaluateGreaterThan = function (feature) {
 };
 
 Node.prototype._evaluateGreaterThanOrEquals = function (feature) {
-  var left = this._left.evaluate(feature);
-  var right = this._right.evaluate(feature);
+  const left = this._left.evaluate(feature);
+  const right = this._right.evaluate(feature);
 
   if (typeof left !== "number" || typeof right !== "number") {
     throw new RuntimeError(
@@ -1485,7 +1485,7 @@ Node.prototype._evaluateGreaterThanOrEquals = function (feature) {
 };
 
 Node.prototype._evaluateOr = function (feature) {
-  var left = this._left.evaluate(feature);
+  const left = this._left.evaluate(feature);
   if (typeof left !== "boolean") {
     throw new RuntimeError(
       'Operator "||" requires boolean arguments. First argument is ' +
@@ -1499,7 +1499,7 @@ Node.prototype._evaluateOr = function (feature) {
     return true;
   }
 
-  var right = this._right.evaluate(feature);
+  const right = this._right.evaluate(feature);
   if (typeof right !== "boolean") {
     throw new RuntimeError(
       'Operator "||" requires boolean arguments. Second argument is ' +
@@ -1512,7 +1512,7 @@ Node.prototype._evaluateOr = function (feature) {
 };
 
 Node.prototype._evaluateAnd = function (feature) {
-  var left = this._left.evaluate(feature);
+  const left = this._left.evaluate(feature);
   if (typeof left !== "boolean") {
     throw new RuntimeError(
       'Operator "&&" requires boolean arguments. First argument is ' +
@@ -1526,7 +1526,7 @@ Node.prototype._evaluateAnd = function (feature) {
     return false;
   }
 
-  var right = this._right.evaluate(feature);
+  const right = this._right.evaluate(feature);
   if (typeof right !== "boolean") {
     throw new RuntimeError(
       'Operator "&&" requires boolean arguments. Second argument is ' +
@@ -1539,8 +1539,8 @@ Node.prototype._evaluateAnd = function (feature) {
 };
 
 Node.prototype._evaluatePlus = function (feature) {
-  var left = this._left.evaluate(feature);
-  var right = this._right.evaluate(feature);
+  const left = this._left.evaluate(feature);
+  const right = this._right.evaluate(feature);
   if (right instanceof Cartesian2 && left instanceof Cartesian2) {
     return Cartesian2.add(left, right, scratchStorage.getCartesian2());
   } else if (right instanceof Cartesian3 && left instanceof Cartesian3) {
@@ -1564,8 +1564,8 @@ Node.prototype._evaluatePlus = function (feature) {
 };
 
 Node.prototype._evaluateMinus = function (feature) {
-  var left = this._left.evaluate(feature);
-  var right = this._right.evaluate(feature);
+  const left = this._left.evaluate(feature);
+  const right = this._right.evaluate(feature);
   if (right instanceof Cartesian2 && left instanceof Cartesian2) {
     return Cartesian2.subtract(left, right, scratchStorage.getCartesian2());
   } else if (right instanceof Cartesian3 && left instanceof Cartesian3) {
@@ -1586,8 +1586,8 @@ Node.prototype._evaluateMinus = function (feature) {
 };
 
 Node.prototype._evaluateTimes = function (feature) {
-  var left = this._left.evaluate(feature);
-  var right = this._right.evaluate(feature);
+  const left = this._left.evaluate(feature);
+  const right = this._right.evaluate(feature);
   if (right instanceof Cartesian2 && left instanceof Cartesian2) {
     return Cartesian2.multiplyComponents(
       left,
@@ -1656,8 +1656,8 @@ Node.prototype._evaluateTimes = function (feature) {
 };
 
 Node.prototype._evaluateDivide = function (feature) {
-  var left = this._left.evaluate(feature);
-  var right = this._right.evaluate(feature);
+  const left = this._left.evaluate(feature);
+  const right = this._right.evaluate(feature);
   if (right instanceof Cartesian2 && left instanceof Cartesian2) {
     return Cartesian2.divideComponents(
       left,
@@ -1708,8 +1708,8 @@ Node.prototype._evaluateDivide = function (feature) {
 };
 
 Node.prototype._evaluateMod = function (feature) {
-  var left = this._left.evaluate(feature);
-  var right = this._right.evaluate(feature);
+  const left = this._left.evaluate(feature);
+  const right = this._right.evaluate(feature);
   if (right instanceof Cartesian2 && left instanceof Cartesian2) {
     return Cartesian2.fromElements(
       left.x % right.x,
@@ -1745,8 +1745,8 @@ Node.prototype._evaluateMod = function (feature) {
 };
 
 Node.prototype._evaluateEqualsStrict = function (feature) {
-  var left = this._left.evaluate(feature);
-  var right = this._right.evaluate(feature);
+  const left = this._left.evaluate(feature);
+  const right = this._right.evaluate(feature);
   if (
     (right instanceof Cartesian2 && left instanceof Cartesian2) ||
     (right instanceof Cartesian3 && left instanceof Cartesian3) ||
@@ -1758,8 +1758,8 @@ Node.prototype._evaluateEqualsStrict = function (feature) {
 };
 
 Node.prototype._evaluateNotEqualsStrict = function (feature) {
-  var left = this._left.evaluate(feature);
-  var right = this._right.evaluate(feature);
+  const left = this._left.evaluate(feature);
+  const right = this._right.evaluate(feature);
   if (
     (right instanceof Cartesian2 && left instanceof Cartesian2) ||
     (right instanceof Cartesian3 && left instanceof Cartesian3) ||
@@ -1771,7 +1771,7 @@ Node.prototype._evaluateNotEqualsStrict = function (feature) {
 };
 
 Node.prototype._evaluateConditional = function (feature) {
-  var test = this._test.evaluate(feature);
+  const test = this._test.evaluate(feature);
 
   if (typeof test !== "boolean") {
     throw new RuntimeError(
@@ -1828,14 +1828,14 @@ Node.prototype._evaluateStringConversion = function (feature) {
 };
 
 Node.prototype._evaluateRegExp = function (feature) {
-  var pattern = this._value.evaluate(feature);
-  var flags = "";
+  const pattern = this._value.evaluate(feature);
+  let flags = "";
 
   if (defined(this._left)) {
     flags = this._left.evaluate(feature);
   }
 
-  var exp;
+  let exp;
   try {
     exp = new RegExp(pattern, flags);
   } catch (e) {
@@ -1845,8 +1845,8 @@ Node.prototype._evaluateRegExp = function (feature) {
 };
 
 Node.prototype._evaluateRegExpTest = function (feature) {
-  var left = this._left.evaluate(feature);
-  var right = this._right.evaluate(feature);
+  const left = this._left.evaluate(feature);
+  const right = this._right.evaluate(feature);
 
   if (!(left instanceof RegExp && typeof right === "string")) {
     throw new RuntimeError(
@@ -1862,8 +1862,8 @@ Node.prototype._evaluateRegExpTest = function (feature) {
 };
 
 Node.prototype._evaluateRegExpMatch = function (feature) {
-  var left = this._left.evaluate(feature);
-  var right = this._right.evaluate(feature);
+  const left = this._left.evaluate(feature);
+  const right = this._right.evaluate(feature);
 
   if (left instanceof RegExp && typeof right === "string") {
     return left.test(right);
@@ -1881,8 +1881,8 @@ Node.prototype._evaluateRegExpMatch = function (feature) {
 };
 
 Node.prototype._evaluateRegExpNotMatch = function (feature) {
-  var left = this._left.evaluate(feature);
-  var right = this._right.evaluate(feature);
+  const left = this._left.evaluate(feature);
+  const right = this._right.evaluate(feature);
 
   if (left instanceof RegExp && typeof right === "string") {
     return !left.test(right);
@@ -1900,8 +1900,8 @@ Node.prototype._evaluateRegExpNotMatch = function (feature) {
 };
 
 Node.prototype._evaluateRegExpExec = function (feature) {
-  var left = this._left.evaluate(feature);
-  var right = this._right.evaluate(feature);
+  const left = this._left.evaluate(feature);
+  const right = this._right.evaluate(feature);
 
   if (!(left instanceof RegExp && typeof right === "string")) {
     throw new RuntimeError(
@@ -1913,7 +1913,7 @@ Node.prototype._evaluateRegExpExec = function (feature) {
     );
   }
 
-  var exec = left.exec(right);
+  const exec = left.exec(right);
   if (!defined(exec)) {
     return null;
   }
@@ -1921,7 +1921,7 @@ Node.prototype._evaluateRegExpExec = function (feature) {
 };
 
 Node.prototype._evaluateToString = function (feature) {
-  var left = this._left.evaluate(feature);
+  const left = this._left.evaluate(feature);
   if (
     left instanceof RegExp ||
     left instanceof Cartesian2 ||
@@ -1937,31 +1937,31 @@ Node.prototype._evaluateToString = function (feature) {
 function convertHSLToRGB(ast) {
   // Check if the color contains any nested expressions to see if the color can be converted here.
   // E.g. "hsl(0.9, 0.6, 0.7)" is able to convert directly to rgb, "hsl(0.9, 0.6, ${Height})" is not.
-  var channels = ast._left;
-  var length = channels.length;
-  for (var i = 0; i < length; ++i) {
+  const channels = ast._left;
+  const length = channels.length;
+  for (let i = 0; i < length; ++i) {
     if (channels[i]._type !== ExpressionNodeType.LITERAL_NUMBER) {
       return undefined;
     }
   }
-  var h = channels[0]._value;
-  var s = channels[1]._value;
-  var l = channels[2]._value;
-  var a = length === 4 ? channels[3]._value : 1.0;
+  const h = channels[0]._value;
+  const s = channels[1]._value;
+  const l = channels[2]._value;
+  const a = length === 4 ? channels[3]._value : 1.0;
   return Color.fromHsl(h, s, l, a, scratchColor);
 }
 
 function convertRGBToColor(ast) {
   // Check if the color contains any nested expressions to see if the color can be converted here.
   // E.g. "rgb(255, 255, 255)" is able to convert directly to Color, "rgb(255, 255, ${Height})" is not.
-  var channels = ast._left;
-  var length = channels.length;
-  for (var i = 0; i < length; ++i) {
+  const channels = ast._left;
+  const length = channels.length;
+  for (let i = 0; i < length; ++i) {
     if (channels[i]._type !== ExpressionNodeType.LITERAL_NUMBER) {
       return undefined;
     }
   }
-  var color = scratchColor;
+  const color = scratchColor;
   color.red = channels[0]._value / 255.0;
   color.green = channels[1]._value / 255.0;
   color.blue = channels[2]._value / 255.0;
@@ -1979,17 +1979,17 @@ function numberToString(number) {
 }
 
 function colorToVec3(color) {
-  var r = numberToString(color.red);
-  var g = numberToString(color.green);
-  var b = numberToString(color.blue);
+  const r = numberToString(color.red);
+  const g = numberToString(color.green);
+  const b = numberToString(color.blue);
   return "vec3(" + r + ", " + g + ", " + b + ")";
 }
 
 function colorToVec4(color) {
-  var r = numberToString(color.red);
-  var g = numberToString(color.green);
-  var b = numberToString(color.blue);
-  var a = numberToString(color.alpha);
+  const r = numberToString(color.red);
+  const g = numberToString(color.green);
+  const b = numberToString(color.blue);
+  const a = numberToString(color.alpha);
   return "vec4(" + r + ", " + g + ", " + b + ", " + a + ")";
 }
 
@@ -1999,9 +1999,9 @@ function getExpressionArray(
   shaderState,
   parent
 ) {
-  var length = array.length;
-  var expressions = new Array(length);
-  for (var i = 0; i < length; ++i) {
+  const length = array.length;
+  const expressions = new Array(length);
+  for (let i = 0; i < length; ++i) {
     expressions[i] = array[i].getShaderExpression(
       variableSubstitutionMap,
       shaderState,
@@ -2029,13 +2029,13 @@ Node.prototype.getShaderExpression = function (
   shaderState,
   parent
 ) {
-  var color;
-  var left;
-  var right;
-  var test;
+  let color;
+  let left;
+  let right;
+  let test;
 
-  var type = this._type;
-  var value = this._value;
+  const type = this._type;
+  let value = this._value;
 
   if (defined(this._left)) {
     if (Array.isArray(this._left)) {
@@ -2081,6 +2081,9 @@ Node.prototype.getShaderExpression = function (
     );
   }
 
+  let args;
+  let length;
+  let vectorExpression;
   switch (type) {
     case ExpressionNodeType.VARIABLE:
       if (checkFeature(this)) {
@@ -2215,13 +2218,13 @@ Node.prototype.getShaderExpression = function (
         "Error generating style shader: String literals are not supported."
       );
     case ExpressionNodeType.LITERAL_COLOR:
-      var args = left;
+      args = left;
       if (value === "color") {
         if (!defined(args)) {
           return "vec4(1.0)";
         } else if (args.length > 1) {
-          var rgb = args[0];
-          var alpha = args[1];
+          const rgb = args[0];
+          const alpha = args[1];
           if (alpha !== "1.0") {
             shaderState.translucent = true;
           }
@@ -2307,9 +2310,9 @@ Node.prototype.getShaderExpression = function (
         );
       }
       //>>includeEnd('debug');
-      var length = left.length;
-      var vectorExpression = value + "(";
-      for (var i = 0; i < length; ++i) {
+      length = left.length;
+      vectorExpression = value + "(";
+      for (let i = 0; i < length; ++i) {
         vectorExpression += left[i];
         if (i < length - 1) {
           vectorExpression += ", ";
@@ -2331,12 +2334,12 @@ Node.prototype.getShaderExpression = function (
 };
 
 Node.prototype.getVariables = function (variables, parent) {
-  var array;
-  var length;
-  var i;
+  let array;
+  let length;
+  let i;
 
-  var type = this._type;
-  var value = this._value;
+  const type = this._type;
+  const value = this._value;
 
   if (defined(this._left)) {
     if (Array.isArray(this._left)) {
@@ -2368,6 +2371,7 @@ Node.prototype.getVariables = function (variables, parent) {
     }
   }
 
+  let match;
   switch (type) {
     case ExpressionNodeType.VARIABLE:
       if (!checkFeature(this)) {
@@ -2375,7 +2379,7 @@ Node.prototype.getVariables = function (variables, parent) {
       }
       break;
     case ExpressionNodeType.VARIABLE_IN_STRING:
-      var match = variableRegex.exec(value);
+      match = variableRegex.exec(value);
       while (match !== null) {
         variables.push(match[1]);
         match = variableRegex.exec(value);

@@ -28,7 +28,7 @@ function computeAttributes(
   boundingRectangle,
   vertexFormat
 ) {
-  var attributes = new GeometryAttributes();
+  const attributes = new GeometryAttributes();
   if (vertexFormat.position) {
     attributes.position = new GeometryAttribute({
       componentDatatype: ComponentDatatype.DOUBLE,
@@ -36,18 +36,18 @@ function computeAttributes(
       values: combinedPositions,
     });
   }
-  var shapeLength = shape.length;
-  var vertexCount = combinedPositions.length / 3;
-  var length = (vertexCount - shapeLength * 2) / (shapeLength * 2);
-  var firstEndIndices = PolygonPipeline.triangulate(shape);
+  const shapeLength = shape.length;
+  const vertexCount = combinedPositions.length / 3;
+  const length = (vertexCount - shapeLength * 2) / (shapeLength * 2);
+  const firstEndIndices = PolygonPipeline.triangulate(shape);
 
-  var indicesCount =
+  const indicesCount =
     (length - 1) * shapeLength * 6 + firstEndIndices.length * 2;
-  var indices = IndexDatatype.createTypedArray(vertexCount, indicesCount);
-  var i, j;
-  var ll, ul, ur, lr;
-  var offset = shapeLength * 2;
-  var index = 0;
+  const indices = IndexDatatype.createTypedArray(vertexCount, indicesCount);
+  let i, j;
+  let ll, ul, ur, lr;
+  const offset = shapeLength * 2;
+  let index = 0;
   for (i = 0; i < length - 1; i++) {
     for (j = 0; j < shapeLength - 1; j++) {
       ll = j * 2 + i * shapeLength * 2;
@@ -77,12 +77,12 @@ function computeAttributes(
 
   if (vertexFormat.st || vertexFormat.tangent || vertexFormat.bitangent) {
     // st required for tangent/bitangent calculation
-    var st = new Float32Array(vertexCount * 2);
-    var lengthSt = 1 / (length - 1);
-    var heightSt = 1 / boundingRectangle.height;
-    var heightOffset = boundingRectangle.height / 2;
-    var s, t;
-    var stindex = 0;
+    const st = new Float32Array(vertexCount * 2);
+    const lengthSt = 1 / (length - 1);
+    const heightSt = 1 / boundingRectangle.height;
+    const heightOffset = boundingRectangle.height / 2;
+    let s, t;
+    let stindex = 0;
     for (i = 0; i < length; i++) {
       s = i * lengthSt;
       t = heightSt * (shape[0].y + heightOffset);
@@ -119,11 +119,11 @@ function computeAttributes(
     });
   }
 
-  var endOffset = vertexCount - shapeLength * 2;
+  const endOffset = vertexCount - shapeLength * 2;
   for (i = 0; i < firstEndIndices.length; i += 3) {
-    var v0 = firstEndIndices[i] + endOffset;
-    var v1 = firstEndIndices[i + 1] + endOffset;
-    var v2 = firstEndIndices[i + 2] + endOffset;
+    const v0 = firstEndIndices[i] + endOffset;
+    const v1 = firstEndIndices[i + 1] + endOffset;
+    const v2 = firstEndIndices[i + 2] + endOffset;
 
     indices[index++] = v0;
     indices[index++] = v1;
@@ -133,7 +133,7 @@ function computeAttributes(
     indices[index++] = v0 + shapeLength;
   }
 
-  var geometry = new Geometry({
+  let geometry = new Geometry({
     attributes: attributes,
     indices: indices,
     boundingSphere: BoundingSphere.fromVertices(combinedPositions),
@@ -189,15 +189,15 @@ function computeAttributes(
  *
  * @example
  * function computeCircle(radius) {
- *   var positions = [];
- *   for (var i = 0; i < 360; i++) {
- *     var radians = Cesium.Math.toRadians(i);
+ *   const positions = [];
+ *   for (let i = 0; i < 360; i++) {
+ *     const radians = Cesium.Math.toRadians(i);
  *     positions.push(new Cesium.Cartesian2(radius * Math.cos(radians), radius * Math.sin(radians)));
  *   }
  *   return positions;
  * }
  *
- * var volume = new Cesium.PolylineVolumeGeometry({
+ * const volume = new Cesium.PolylineVolumeGeometry({
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
  *   polylinePositions : Cesium.Cartesian3.fromDegreesArray([
  *     -72.0, 40.0,
@@ -208,8 +208,8 @@ function computeAttributes(
  */
 function PolylineVolumeGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var positions = options.polylinePositions;
-  var shape = options.shapePositions;
+  const positions = options.polylinePositions;
+  const shape = options.shapePositions;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(positions)) {
@@ -235,7 +235,7 @@ function PolylineVolumeGeometry(options) {
   );
   this._workerName = "createPolylineVolumeGeometry";
 
-  var numComponents = 1 + positions.length * Cartesian3.packedLength;
+  let numComponents = 1 + positions.length * Cartesian3.packedLength;
   numComponents += 1 + shape.length * Cartesian2.packedLength;
 
   /**
@@ -267,17 +267,17 @@ PolylineVolumeGeometry.pack = function (value, array, startingIndex) {
 
   startingIndex = defaultValue(startingIndex, 0);
 
-  var i;
+  let i;
 
-  var positions = value._positions;
-  var length = positions.length;
+  const positions = value._positions;
+  let length = positions.length;
   array[startingIndex++] = length;
 
   for (i = 0; i < length; ++i, startingIndex += Cartesian3.packedLength) {
     Cartesian3.pack(positions[i], array, startingIndex);
   }
 
-  var shape = value._shape;
+  const shape = value._shape;
   length = shape.length;
   array[startingIndex++] = length;
 
@@ -297,9 +297,9 @@ PolylineVolumeGeometry.pack = function (value, array, startingIndex) {
   return array;
 };
 
-var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
-var scratchVertexFormat = new VertexFormat();
-var scratchOptions = {
+const scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+const scratchVertexFormat = new VertexFormat();
+const scratchOptions = {
   polylinePositions: undefined,
   shapePositions: undefined,
   ellipsoid: scratchEllipsoid,
@@ -325,34 +325,34 @@ PolylineVolumeGeometry.unpack = function (array, startingIndex, result) {
 
   startingIndex = defaultValue(startingIndex, 0);
 
-  var i;
+  let i;
 
-  var length = array[startingIndex++];
-  var positions = new Array(length);
+  let length = array[startingIndex++];
+  const positions = new Array(length);
 
   for (i = 0; i < length; ++i, startingIndex += Cartesian3.packedLength) {
     positions[i] = Cartesian3.unpack(array, startingIndex);
   }
 
   length = array[startingIndex++];
-  var shape = new Array(length);
+  const shape = new Array(length);
 
   for (i = 0; i < length; ++i, startingIndex += Cartesian2.packedLength) {
     shape[i] = Cartesian2.unpack(array, startingIndex);
   }
 
-  var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
+  const ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
   startingIndex += Ellipsoid.packedLength;
 
-  var vertexFormat = VertexFormat.unpack(
+  const vertexFormat = VertexFormat.unpack(
     array,
     startingIndex,
     scratchVertexFormat
   );
   startingIndex += VertexFormat.packedLength;
 
-  var cornerType = array[startingIndex++];
-  var granularity = array[startingIndex];
+  const cornerType = array[startingIndex++];
+  const granularity = array[startingIndex];
 
   if (!defined(result)) {
     scratchOptions.polylinePositions = positions;
@@ -372,7 +372,7 @@ PolylineVolumeGeometry.unpack = function (array, startingIndex, result) {
   return result;
 };
 
-var brScratch = new BoundingRectangle();
+const brScratch = new BoundingRectangle();
 
 /**
  * Computes the geometric representation of a polyline with a volume, including its vertices, indices, and a bounding sphere.
@@ -381,12 +381,12 @@ var brScratch = new BoundingRectangle();
  * @returns {Geometry|undefined} The computed vertices and indices.
  */
 PolylineVolumeGeometry.createGeometry = function (polylineVolumeGeometry) {
-  var positions = polylineVolumeGeometry._positions;
-  var cleanPositions = arrayRemoveDuplicates(
+  const positions = polylineVolumeGeometry._positions;
+  const cleanPositions = arrayRemoveDuplicates(
     positions,
     Cartesian3.equalsEpsilon
   );
-  var shape2D = polylineVolumeGeometry._shape;
+  let shape2D = polylineVolumeGeometry._shape;
   shape2D = PolylineVolumeGeometryLibrary.removeDuplicatesFromShape(shape2D);
 
   if (cleanPositions.length < 2 || shape2D.length < 3) {
@@ -398,9 +398,9 @@ PolylineVolumeGeometry.createGeometry = function (polylineVolumeGeometry) {
   ) {
     shape2D.reverse();
   }
-  var boundingRectangle = BoundingRectangle.fromPoints(shape2D, brScratch);
+  const boundingRectangle = BoundingRectangle.fromPoints(shape2D, brScratch);
 
-  var computedPositions = PolylineVolumeGeometryLibrary.computePositions(
+  const computedPositions = PolylineVolumeGeometryLibrary.computePositions(
     cleanPositions,
     shape2D,
     boundingRectangle,

@@ -36,6 +36,7 @@ import TextureManager from "./TextureManager.js";
  * Variable sets parsed from the user-defined vertex shader text.
  * @typedef {Object} VertexVariableSets
  * @property {VariableSet} attributeSet A set of all unique attributes used in the vertex shader via the <code>vsInput.attributes</code> struct.
+ * @property {VariableSet} featureIdSet A set of all unique feature ID sets used in the vertex shader via the <code>vsInput.featureIds</code> struct.
  * @private
  */
 
@@ -43,6 +44,7 @@ import TextureManager from "./TextureManager.js";
  * Variable sets parsed from the user-defined fragment shader text.
  * @typedef {Object} FragmentVariableSets
  * @property {VariableSet} attributeSet A set of all unique attributes used in the fragment shader via the <code>fsInput.attributes</code> struct
+ * @property {VariableSet} featureIdSet A set of all unique feature ID sets used in the fragment shader via the <code>fsInput.featureIds</code> struct.
  * @property {VariableSet} materialSet A set of all material variables such as diffuse, specular or alpha that are used in the fragment shader via the <code>material</code> struct.
  * @private
  */
@@ -66,7 +68,7 @@ import TextureManager from "./TextureManager.js";
  *   </li>
  * </ul>
  * <p>
- * To enable the use of {@link ModelExperimental} in {@link Cesium3DTileset}, set {@link ExperimentalFeatures.enableModelExperimental} to <code>true</code>.
+ * To enable the use of {@link ModelExperimental} in {@link Cesium3DTileset}, set {@link ExperimentalFeatures.enableModelExperimental} to <code>true</code> or tileset.enableModelExperimental to <code>true</code>.
  * </p>
  *
  * @param {Object} options An object with the following options
@@ -84,7 +86,7 @@ import TextureManager from "./TextureManager.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @example
- * var customShader = new CustomShader({
+ * const customShader = new CustomShader({
  *   uniforms: {
  *     u_colorIndex: {
  *       type: Cesium.UniformType.FLOAT,
@@ -206,6 +208,7 @@ export default function CustomShader(options) {
    */
   this.usedVariablesVertex = {
     attributeSet: {},
+    featureIdSet: {},
   };
   /**
    * A collection of variables used in <code>fragmentShaderText</code>. This
@@ -215,6 +218,7 @@ export default function CustomShader(options) {
    */
   this.usedVariablesFragment = {
     attributeSet: {},
+    featureIdSet: {},
     materialSet: {},
   };
 
@@ -223,12 +227,12 @@ export default function CustomShader(options) {
 }
 
 function buildUniformMap(customShader) {
-  var uniforms = customShader.uniforms;
-  var uniformMap = {};
-  for (var uniformName in uniforms) {
+  const uniforms = customShader.uniforms;
+  const uniformMap = {};
+  for (const uniformName in uniforms) {
     if (uniforms.hasOwnProperty(uniformName)) {
-      var uniform = uniforms[uniformName];
-      var type = uniform.type;
+      const uniform = uniforms[uniformName];
+      const type = uniform.type;
       //>>includeStart('debug', pragmas.debug);
       if (type === UniformType.SAMPLER_CUBE) {
         throw new DeveloperError(
@@ -270,9 +274,9 @@ function createUniformFunction(customShader, uniformName) {
 }
 
 function getVariables(shaderText, regex, outputSet) {
-  var match;
+  let match;
   while ((match = regex.exec(shaderText)) !== null) {
-    var variableName = match[1];
+    const variableName = match[1];
 
     // Using a dictionary like a set. The value doesn't
     // matter, as this will only be used for queries such as
@@ -282,30 +286,37 @@ function getVariables(shaderText, regex, outputSet) {
 }
 
 function findUsedVariables(customShader) {
-  var attributeRegex = /[vf]sInput\.attributes\.(\w+)/g;
-  var attributeSet;
+  const attributeRegex = /[vf]sInput\.attributes\.(\w+)/g;
+  const featureIdRegex = /[vf]sInput\.featureIds\.(\w+)/g;
+  let attributeSet;
 
-  var vertexShaderText = customShader.vertexShaderText;
+  const vertexShaderText = customShader.vertexShaderText;
   if (defined(vertexShaderText)) {
     attributeSet = customShader.usedVariablesVertex.attributeSet;
     getVariables(vertexShaderText, attributeRegex, attributeSet);
+
+    attributeSet = customShader.usedVariablesVertex.featureIdSet;
+    getVariables(vertexShaderText, featureIdRegex, attributeSet);
   }
 
-  var fragmentShaderText = customShader.fragmentShaderText;
+  const fragmentShaderText = customShader.fragmentShaderText;
   if (defined(fragmentShaderText)) {
     attributeSet = customShader.usedVariablesFragment.attributeSet;
     getVariables(fragmentShaderText, attributeRegex, attributeSet);
 
-    var materialRegex = /material\.(\w+)/g;
-    var materialSet = customShader.usedVariablesFragment.materialSet;
+    attributeSet = customShader.usedVariablesFragment.featureIdSet;
+    getVariables(fragmentShaderText, featureIdRegex, attributeSet);
+
+    const materialRegex = /material\.(\w+)/g;
+    const materialSet = customShader.usedVariablesFragment.materialSet;
     getVariables(fragmentShaderText, materialRegex, materialSet);
   }
 }
 
 function expandCoordinateAbbreviations(variableName) {
-  var modelCoordinatesRegex = /^.*MC$/;
-  var worldCoordinatesRegex = /^.*WC$/;
-  var eyeCoordinatesRegex = /^.*EC$/;
+  const modelCoordinatesRegex = /^.*MC$/;
+  const worldCoordinatesRegex = /^.*WC$/;
+  const eyeCoordinatesRegex = /^.*EC$/;
 
   if (modelCoordinatesRegex.test(variableName)) {
     return variableName + " (model coordinates)";
@@ -329,7 +340,7 @@ function validateVariableUsage(
   vertexOrFragment
 ) {
   if (variableSet.hasOwnProperty(incorrectVariable)) {
-    var message =
+    const message =
       expandCoordinateAbbreviations(incorrectVariable) +
       " is not available in the " +
       vertexOrFragment +
@@ -341,7 +352,7 @@ function validateVariableUsage(
 }
 
 function validateBuiltinVariables(customShader) {
-  var attributesVS = customShader.usedVariablesVertex.attributeSet;
+  const attributesVS = customShader.usedVariablesVertex.attributeSet;
 
   // names without MC/WC/EC are ambiguous
   validateVariableUsage(attributesVS, "position", "positionMC", "vertex");
@@ -358,7 +369,7 @@ function validateBuiltinVariables(customShader) {
   validateVariableUsage(attributesVS, "tangentEC", "tangentMC", "vertex");
   validateVariableUsage(attributesVS, "bitangentEC", "bitangentMC", "vertex");
 
-  var attributesFS = customShader.usedVariablesFragment.attributeSet;
+  const attributesFS = customShader.usedVariablesFragment.attributeSet;
 
   // names without MC/WC/EC are ambiguous
   validateVariableUsage(attributesFS, "position", "positionEC", "fragment");
@@ -390,7 +401,7 @@ CustomShader.prototype.setUniform = function (uniformName, value) {
     );
   }
   //>>includeEnd('debug');
-  var uniform = this.uniforms[uniformName];
+  const uniform = this.uniforms[uniformName];
   if (uniform.type === UniformType.SAMPLER_2D) {
     // Textures are loaded asynchronously
     this._textureManager.loadTexture2D(uniformName, value);

@@ -35,12 +35,12 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var worldTerrain = Cesium.createWorldTerrain({
+        const worldTerrain = Cesium.createWorldTerrain({
           requestWaterMask: true,
           requestVertexNormals: true,
         });
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: worldTerrain,
         });
 
@@ -50,8 +50,8 @@
           );
         }
 
-        var rectangle;
-        var worldRectangle;
+        let rectangle;
+        let worldRectangle;
 
         function applyAlphaMapMaterial(primitive, scene) {
           Sandcastle.declare(applyAlphaMapMaterial); // For highlighting in Sandcastle.
@@ -527,12 +527,12 @@
             })
           );
 
-          var initialPosition = Cesium.Cartesian3.fromRadians(
+          const initialPosition = Cesium.Cartesian3.fromRadians(
             -2.1344873183780484,
             0.8071380277370774,
             5743.394497982162
           );
-          var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+          const initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
             112.99596671210358,
             -21.34390550872461,
             0.0716951918898415
@@ -544,7 +544,7 @@
           });
         }
 
-        var scene = viewer.scene;
+        const scene = viewer.scene;
         scene.globe.enableLighting = true;
 
         createPrimitives(scene);

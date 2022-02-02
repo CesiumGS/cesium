@@ -287,29 +287,29 @@ describe("Scene/MetadataComponentType", function () {
   });
 
   it("normalizes signed integers", function () {
-    var signedTypes = ["INT8", "INT16", "INT32"];
-    for (var i = 0; i < signedTypes.length; ++i) {
-      var type = signedTypes[i];
-      var min = MetadataComponentType.getMinimum(MetadataComponentType[type]);
-      var max = MetadataComponentType.getMaximum(MetadataComponentType[type]);
-      var values = [min, min / 2, 0, max / 2, max];
-      var expectedResults = [-1.0, -0.5, 0.0, 0.5, 1.0];
-      for (var j = 0; j < values.length; ++j) {
-        var result = MetadataComponentType.normalize(values[j], type);
+    const signedTypes = ["INT8", "INT16", "INT32"];
+    for (let i = 0; i < signedTypes.length; ++i) {
+      const type = signedTypes[i];
+      const min = MetadataComponentType.getMinimum(MetadataComponentType[type]);
+      const max = MetadataComponentType.getMaximum(MetadataComponentType[type]);
+      const values = [min, min / 2, 0, max / 2, max];
+      const expectedResults = [-1.0, -0.5, 0.0, 0.5, 1.0];
+      for (let j = 0; j < values.length; ++j) {
+        const result = MetadataComponentType.normalize(values[j], type);
         expect(result).toBe(expectedResults[j]);
       }
     }
   });
 
   it("normalizes unsigned integers", function () {
-    var unsignedTypes = ["UINT8", "UINT16", "UINT32"];
-    for (var i = 0; i < unsignedTypes.length; ++i) {
-      var type = unsignedTypes[i];
-      var max = MetadataComponentType.getMaximum(MetadataComponentType[type]);
-      var values = [0, max / 4, max / 2, max];
-      var expectedResults = [0.0, 0.25, 0.5, 1.0];
-      for (var j = 0; j < values.length; ++j) {
-        var result = MetadataComponentType.normalize(values[j], type);
+    const unsignedTypes = ["UINT8", "UINT16", "UINT32"];
+    for (let i = 0; i < unsignedTypes.length; ++i) {
+      const type = unsignedTypes[i];
+      const max = MetadataComponentType.getMaximum(MetadataComponentType[type]);
+      const values = [0, max / 4, max / 2, max];
+      const expectedResults = [0.0, 0.25, 0.5, 1.0];
+      for (let j = 0; j < values.length; ++j) {
+        const result = MetadataComponentType.normalize(values[j], type);
         expect(result).toBe(expectedResults[j]);
       }
     }
@@ -320,12 +320,12 @@ describe("Scene/MetadataComponentType", function () {
       return;
     }
 
-    var min = MetadataComponentType.getMinimum(MetadataComponentType.INT64);
-    var max = MetadataComponentType.getMaximum(MetadataComponentType.INT64);
+    const min = MetadataComponentType.getMinimum(MetadataComponentType.INT64);
+    const max = MetadataComponentType.getMaximum(MetadataComponentType.INT64);
     var values = [min, min / BigInt(2), 0, max / BigInt(2), max]; // eslint-disable-line
-    var expectedResults = [-1.0, -0.5, 0.0, 0.5, 1.0];
-    for (var j = 0; j < values.length; ++j) {
-      var result = MetadataComponentType.normalize(
+    const expectedResults = [-1.0, -0.5, 0.0, 0.5, 1.0];
+    for (let j = 0; j < values.length; ++j) {
+      const result = MetadataComponentType.normalize(
         values[j],
         MetadataComponentType.INT64
       );
@@ -338,11 +338,11 @@ describe("Scene/MetadataComponentType", function () {
       return;
     }
 
-    var max = MetadataComponentType.getMaximum(MetadataComponentType.UINT64);
+    const max = MetadataComponentType.getMaximum(MetadataComponentType.UINT64);
     var values = [BigInt(0), max / BigInt(4), max / BigInt(2), max]; // eslint-disable-line
-    var expectedResults = [0.0, 0.25, 0.5, 1.0];
-    for (var j = 0; j < values.length; ++j) {
-      var result = MetadataComponentType.normalize(
+    const expectedResults = [0.0, 0.25, 0.5, 1.0];
+    for (let j = 0; j < values.length; ++j) {
+      const result = MetadataComponentType.normalize(
         values[j],
         MetadataComponentType.UINT64
       );
@@ -375,29 +375,29 @@ describe("Scene/MetadataComponentType", function () {
   });
 
   it("unnormalizes signed numbers", function () {
-    var signedTypes = ["INT8", "INT16", "INT32"];
-    for (var i = 0; i < signedTypes.length; ++i) {
-      var type = signedTypes[i];
-      var min = MetadataComponentType.getMinimum(MetadataComponentType[type]);
-      var max = MetadataComponentType.getMaximum(MetadataComponentType[type]);
-      var values = [-1.0, -0.5, 0.0, 0.5, 1.0];
-      var expectedResults = [min, min / 2, 0, max / 2, max];
-      for (var j = 0; j < values.length; ++j) {
-        var result = MetadataComponentType.unnormalize(values[j], type);
+    const signedTypes = ["INT8", "INT16", "INT32"];
+    for (let i = 0; i < signedTypes.length; ++i) {
+      const type = signedTypes[i];
+      const min = MetadataComponentType.getMinimum(MetadataComponentType[type]);
+      const max = MetadataComponentType.getMaximum(MetadataComponentType[type]);
+      const values = [-1.0, -0.5, 0.0, 0.5, 1.0];
+      const expectedResults = [min, min / 2, 0, max / 2, max];
+      for (let j = 0; j < values.length; ++j) {
+        const result = MetadataComponentType.unnormalize(values[j], type);
         expect(result).toBe(expectedResults[j]);
       }
     }
   });
 
   it("unnormalizes unsigned numbers", function () {
-    var unsignedTypes = ["UINT8", "UINT16", "UINT32"];
-    for (var i = 0; i < unsignedTypes.length; ++i) {
-      var type = unsignedTypes[i];
-      var max = MetadataComponentType.getMaximum(MetadataComponentType[type]);
-      var values = [0.0, 0.25, 0.5, 1.0];
-      var expectedResults = [0, max / 4, max / 2, max];
-      for (var j = 0; j < values.length; ++j) {
-        var result = MetadataComponentType.unnormalize(values[j], type);
+    const unsignedTypes = ["UINT8", "UINT16", "UINT32"];
+    for (let i = 0; i < unsignedTypes.length; ++i) {
+      const type = unsignedTypes[i];
+      const max = MetadataComponentType.getMaximum(MetadataComponentType[type]);
+      const values = [0.0, 0.25, 0.5, 1.0];
+      const expectedResults = [0, max / 4, max / 2, max];
+      for (let j = 0; j < values.length; ++j) {
+        const result = MetadataComponentType.unnormalize(values[j], type);
         expect(result).toBe(expectedResults[j]);
       }
     }
@@ -408,21 +408,21 @@ describe("Scene/MetadataComponentType", function () {
       return;
     }
 
-    var min = MetadataComponentType.getMinimum(MetadataComponentType.INT64);
-    var max = MetadataComponentType.getMaximum(MetadataComponentType.INT64);
-    var values = [-1.0, -0.5, 0.0, 0.5, 1.0];
+    const min = MetadataComponentType.getMinimum(MetadataComponentType.INT64);
+    const max = MetadataComponentType.getMaximum(MetadataComponentType.INT64);
+    const values = [-1.0, -0.5, 0.0, 0.5, 1.0];
 
     // Unnormalization is not always exact since it must be through Float64 math
     // first, hence the + BigInt(1)
-    var expectedResults = [
+    const expectedResults = [
       min,
       min / BigInt(2), // eslint-disable-line
       BigInt(0), // eslint-disable-line
       max / BigInt(2) + BigInt(1), // eslint-disable-line
       max,
     ];
-    for (var i = 0; i < values.length; ++i) {
-      var result = MetadataComponentType.unnormalize(
+    for (let i = 0; i < values.length; ++i) {
+      const result = MetadataComponentType.unnormalize(
         values[i],
         MetadataComponentType.INT64
       );
@@ -435,19 +435,19 @@ describe("Scene/MetadataComponentType", function () {
       return;
     }
 
-    var max = MetadataComponentType.getMaximum(MetadataComponentType.UINT64);
-    var values = [0.0, 0.25, 0.5, 1.0];
+    const max = MetadataComponentType.getMaximum(MetadataComponentType.UINT64);
+    const values = [0.0, 0.25, 0.5, 1.0];
 
     // Unnormalization is not always exact since it must be through Float64 math
     // first, hence the + BigInt(1)
-    var expectedResults = [
+    const expectedResults = [
       BigInt(0), // eslint-disable-line
       max / BigInt(4) + BigInt(1), // eslint-disable-line
       max / BigInt(2) + BigInt(1), // eslint-disable-line
       max,
     ];
-    for (var i = 0; i < values.length; ++i) {
-      var result = MetadataComponentType.unnormalize(
+    for (let i = 0; i < values.length; ++i) {
+      const result = MetadataComponentType.unnormalize(
         values[i],
         MetadataComponentType.UINT64
       );

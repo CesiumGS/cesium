@@ -46,11 +46,11 @@ function processPbrMaterials(gltf, options) {
   gltf.extensionsUsed.push("KHR_techniques_webgl");
   gltf.extensionsRequired.push("KHR_techniques_webgl");
 
-  var primitiveByMaterial = ModelUtility.splitIncompatibleMaterials(gltf);
+  const primitiveByMaterial = ModelUtility.splitIncompatibleMaterials(gltf);
 
   ForEach.material(gltf, function (material, materialIndex) {
-    var generatedMaterialValues = {};
-    var technique = generateTechnique(
+    const generatedMaterialValues = {};
+    const technique = generateTechnique(
       gltf,
       material,
       materialIndex,
@@ -90,8 +90,8 @@ function addTextureCoordinates(
   defaultTexCoord,
   result
 ) {
-  var texCoord;
-  var texInfo = generatedMaterialValues[textureName];
+  let texCoord;
+  const texInfo = generatedMaterialValues[textureName];
   if (defined(texInfo) && defined(texInfo.texCoord) && texInfo.texCoord === 1) {
     defaultTexCoord = defaultTexCoord.replace("0", "1");
   }
@@ -115,9 +115,9 @@ function addTextureCoordinates(
   return texCoord;
 }
 
-var DEFAULT_TEXTURE_OFFSET = [0.0, 0.0];
-var DEFAULT_TEXTURE_ROTATION = [0.0];
-var DEFAULT_TEXTURE_SCALE = [1.0, 1.0];
+const DEFAULT_TEXTURE_OFFSET = [0.0, 0.0];
+const DEFAULT_TEXTURE_ROTATION = [0.0];
+const DEFAULT_TEXTURE_SCALE = [1.0, 1.0];
 
 function handleKHRTextureTransform(
   parameterName,
@@ -132,8 +132,8 @@ function handleKHRTextureTransform(
     return;
   }
 
-  var uniformName = "u_" + parameterName;
-  var extension = value.extensions.KHR_texture_transform;
+  const uniformName = "u_" + parameterName;
+  const extension = value.extensions.KHR_texture_transform;
   generatedMaterialValues[uniformName + "Offset"] = defaultValue(
     extension.offset,
     DEFAULT_TEXTURE_OFFSET
@@ -160,22 +160,22 @@ function generateTechnique(
   primitiveByMaterial,
   options
 ) {
-  var addBatchIdToGeneratedShaders = defaultValue(
+  const addBatchIdToGeneratedShaders = defaultValue(
     options.addBatchIdToGeneratedShaders,
     false
   );
 
-  var techniquesWebgl = gltf.extensions.KHR_techniques_webgl;
-  var techniques = techniquesWebgl.techniques;
-  var shaders = techniquesWebgl.shaders;
-  var programs = techniquesWebgl.programs;
+  const techniquesWebgl = gltf.extensions.KHR_techniques_webgl;
+  const techniques = techniquesWebgl.techniques;
+  const shaders = techniquesWebgl.shaders;
+  const programs = techniquesWebgl.programs;
 
-  var useSpecGloss = isSpecularGlossinessMaterial(material);
+  const useSpecGloss = isSpecularGlossinessMaterial(material);
 
-  var uniformName;
-  var parameterName;
-  var value;
-  var pbrMetallicRoughness = material.pbrMetallicRoughness;
+  let uniformName;
+  let parameterName;
+  let value;
+  const pbrMetallicRoughness = material.pbrMetallicRoughness;
   if (defined(pbrMetallicRoughness) && !useSpecGloss) {
     for (parameterName in pbrMetallicRoughness) {
       if (pbrMetallicRoughness.hasOwnProperty(parameterName)) {
@@ -192,7 +192,7 @@ function generateTechnique(
   }
 
   if (useSpecGloss) {
-    var pbrSpecularGlossiness =
+    const pbrSpecularGlossiness =
       material.extensions.KHR_materials_pbrSpecularGlossiness;
     for (parameterName in pbrSpecularGlossiness) {
       if (pbrSpecularGlossiness.hasOwnProperty(parameterName)) {
@@ -208,7 +208,7 @@ function generateTechnique(
     }
   }
 
-  for (var additional in material) {
+  for (const additional in material) {
     if (
       material.hasOwnProperty(additional) &&
       (additional.indexOf("Texture") >= 0 || additional.indexOf("Factor") >= 0)
@@ -220,28 +220,28 @@ function generateTechnique(
     }
   }
 
-  var vertexShader = "precision highp float;\n";
-  var fragmentShader = "precision highp float;\n";
+  let vertexShader = "precision highp float;\n";
+  let fragmentShader = "precision highp float;\n";
 
-  var skin;
+  let skin;
   if (defined(gltf.skins)) {
     skin = gltf.skins[0];
   }
-  var joints = defined(skin) ? skin.joints : [];
-  var jointCount = joints.length;
+  const joints = defined(skin) ? skin.joints : [];
+  const jointCount = joints.length;
 
-  var primitiveInfo = primitiveByMaterial[materialIndex];
+  const primitiveInfo = primitiveByMaterial[materialIndex];
 
-  var skinningInfo;
-  var hasSkinning = false;
-  var hasVertexColors = false;
-  var hasMorphTargets = false;
-  var hasNormals = false;
-  var hasTangents = false;
-  var hasTexCoords = false;
-  var hasTexCoord1 = false;
-  var hasOutline = false;
-  var isUnlit = false;
+  let skinningInfo;
+  let hasSkinning = false;
+  let hasVertexColors = false;
+  let hasMorphTargets = false;
+  let hasNormals = false;
+  let hasTangents = false;
+  let hasTexCoords = false;
+  let hasTexCoord1 = false;
+  let hasOutline = false;
+  let isUnlit = false;
 
   if (defined(primitiveInfo)) {
     skinningInfo = primitiveInfo.skinning;
@@ -255,12 +255,12 @@ function generateTechnique(
     hasOutline = primitiveInfo.hasOutline;
   }
 
-  var morphTargets;
+  let morphTargets;
   if (hasMorphTargets) {
     ForEach.mesh(gltf, function (mesh) {
       ForEach.meshPrimitive(mesh, function (primitive) {
         if (primitive.material === materialIndex) {
-          var targets = primitive.targets;
+          const targets = primitive.targets;
           if (defined(targets)) {
             morphTargets = targets;
           }
@@ -270,7 +270,7 @@ function generateTechnique(
   }
 
   // Add techniques
-  var techniqueUniforms = {
+  const techniqueUniforms = {
     // Add matrices
     u_modelViewMatrix: {
       semantic: usesExtension(gltf, "CESIUM_RTC")
@@ -314,7 +314,7 @@ function generateTechnique(
     };
   }
 
-  var alphaMode = material.alphaMode;
+  const alphaMode = material.alphaMode;
   if (defined(alphaMode) && alphaMode === "MASK") {
     techniqueUniforms.u_alphaCutoff = {
       semantic: "ALPHACUTOFF",
@@ -331,7 +331,7 @@ function generateTechnique(
     }
   }
 
-  var baseColorUniform = defaultValue(
+  const baseColorUniform = defaultValue(
     techniqueUniforms.u_baseColorTexture,
     techniqueUniforms.u_baseColorFactor
   );
@@ -342,8 +342,8 @@ function generateTechnique(
   // Add uniforms to shaders
   for (uniformName in techniqueUniforms) {
     if (techniqueUniforms.hasOwnProperty(uniformName)) {
-      var uniform = techniqueUniforms[uniformName];
-      var arraySize = defined(uniform.count) ? "[" + uniform.count + "]" : "";
+      const uniform = techniqueUniforms[uniformName];
+      const arraySize = defined(uniform.count) ? "[" + uniform.count + "]" : "";
       if (
         (uniform.type !== WebGLConstants.FLOAT_MAT3 &&
           uniform.type !== WebGLConstants.FLOAT_MAT4 &&
@@ -375,7 +375,7 @@ function generateTechnique(
   }
 
   // Add attributes with semantics
-  var vertexShaderMain = "";
+  let vertexShaderMain = "";
   if (hasSkinning) {
     vertexShaderMain +=
       "    mat4 skinMatrix =\n" +
@@ -386,7 +386,7 @@ function generateTechnique(
   }
 
   // Add position always
-  var techniqueAttributes = {
+  const techniqueAttributes = {
     a_position: {
       semantic: "POSITION",
     },
@@ -416,14 +416,14 @@ function generateTechnique(
     vertexShaderMain += "    vec4 weightedTangent = a_tangent;\n";
   }
   if (hasMorphTargets) {
-    for (var k = 0; k < morphTargets.length; k++) {
-      var targetAttributes = morphTargets[k];
-      for (var targetAttribute in targetAttributes) {
+    for (let k = 0; k < morphTargets.length; k++) {
+      const targetAttributes = morphTargets[k];
+      for (const targetAttribute in targetAttributes) {
         if (
           targetAttributes.hasOwnProperty(targetAttribute) &&
           targetAttribute !== "extras"
         ) {
-          var attributeName = "a_" + targetAttribute + "_" + k;
+          const attributeName = "a_" + targetAttribute + "_" + k;
           techniqueAttributes[attributeName] = {
             semantic: targetAttribute + "_" + k,
           };
@@ -509,17 +509,17 @@ function generateTechnique(
     fragmentShader += "varying vec3 v_outlineCoordinates;\n";
   }
 
-  var fragmentShaderMain = "";
+  let fragmentShaderMain = "";
 
   // Add texture coordinates if the material uses them
-  var v_texCoord;
-  var normalTexCoord;
-  var baseColorTexCoord;
-  var specularGlossinessTexCoord;
-  var diffuseTexCoord;
-  var metallicRoughnessTexCoord;
-  var occlusionTexCoord;
-  var emissiveTexCoord;
+  let v_texCoord;
+  let normalTexCoord;
+  let baseColorTexCoord;
+  let specularGlossinessTexCoord;
+  let diffuseTexCoord;
+  let metallicRoughnessTexCoord;
+  let occlusionTexCoord;
+  let emissiveTexCoord;
 
   if (hasTexCoords) {
     techniqueAttributes.a_texcoord_0 = {
@@ -538,7 +538,7 @@ function generateTechnique(
         semantic: "TEXCOORD_1",
       };
 
-      var v_texCoord1 = v_texCoord.replace("0", "1");
+      const v_texCoord1 = v_texCoord.replace("0", "1");
       vertexShader += "attribute vec2 a_texcoord_1;\n";
       vertexShader += "varying vec2 " + v_texCoord1 + ";\n";
       vertexShaderMain += "    " + v_texCoord1 + " = a_texcoord_1;\n";
@@ -546,7 +546,7 @@ function generateTechnique(
       fragmentShader += "varying vec2 " + v_texCoord1 + ";\n";
     }
 
-    var result = {
+    const result = {
       fragmentShaderMain: fragmentShaderMain,
     };
     normalTexCoord = addTextureCoordinates(
@@ -1139,7 +1139,7 @@ function generateTechnique(
   fragmentShader += "}\n";
 
   // Add shaders
-  var vertexShaderId = addToArray(shaders, {
+  const vertexShaderId = addToArray(shaders, {
     type: WebGLConstants.VERTEX_SHADER,
     extras: {
       _pipeline: {
@@ -1149,7 +1149,7 @@ function generateTechnique(
     },
   });
 
-  var fragmentShaderId = addToArray(shaders, {
+  const fragmentShaderId = addToArray(shaders, {
     type: WebGLConstants.FRAGMENT_SHADER,
     extras: {
       _pipeline: {
@@ -1160,12 +1160,12 @@ function generateTechnique(
   });
 
   // Add program
-  var programId = addToArray(programs, {
+  const programId = addToArray(programs, {
     fragmentShader: fragmentShaderId,
     vertexShader: vertexShaderId,
   });
 
-  var techniqueId = addToArray(techniques, {
+  const techniqueId = addToArray(techniques, {
     attributes: techniqueAttributes,
     program: programId,
     uniforms: techniqueUniforms,

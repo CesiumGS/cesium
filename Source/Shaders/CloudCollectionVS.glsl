@@ -5,9 +5,11 @@ attribute vec4 positionHighAndScaleX;
 attribute vec4 positionLowAndScaleY;
 attribute vec4 packedAttribute0;
 attribute vec4 packedAttribute1;
+attribute vec4 color;
 
 varying vec2 v_offset;
 varying vec3 v_maximumSize;
+varying vec4 v_color;
 varying float v_slice;
 varying float v_brightness;
 
@@ -40,6 +42,7 @@ void main() {
 
     v_offset = offset;
     v_maximumSize = maximumSize;
+    v_color = color;
     v_slice = slice;
     v_brightness = brightness;
 }

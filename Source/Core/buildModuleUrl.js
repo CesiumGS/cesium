@@ -97,7 +97,7 @@ var implementation;
  * @returns {String} The absolutely URL representation of the provided path.
  *
  * @example
- * var viewer = new Cesium.Viewer("cesiumContainer", {
+ * const viewer = new Cesium.Viewer("cesiumContainer", {
  *   imageryProvider: new Cesium.TileMapServiceImageryProvider({
  *   url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
  *   }),

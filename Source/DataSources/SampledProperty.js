@@ -8,7 +8,7 @@ import ExtrapolationType from "../Core/ExtrapolationType.js";
 import JulianDate from "../Core/JulianDate.js";
 import LinearApproximation from "../Core/LinearApproximation.js";
 
-var PackableNumber = {
+const PackableNumber = {
   packedLength: 1,
   pack: function (value, array, startingIndex) {
     startingIndex = defaultValue(startingIndex, 0);
@@ -23,14 +23,14 @@ var PackableNumber = {
 //We can't use splice for inserting new elements because function apply can't handle
 //a huge number of arguments.  See https://code.google.com/p/chromium/issues/detail?id=56588
 function arrayInsert(array, startIndex, items) {
-  var i;
-  var arrayLength = array.length;
-  var itemsLength = items.length;
-  var newLength = arrayLength + itemsLength;
+  let i;
+  const arrayLength = array.length;
+  const itemsLength = items.length;
+  const newLength = arrayLength + itemsLength;
 
   array.length = newLength;
   if (arrayLength !== startIndex) {
-    var q = arrayLength - 1;
+    let q = arrayLength - 1;
     for (i = newLength - 1; i >= startIndex; i--) {
       array[i] = array[q--];
     }
@@ -51,23 +51,23 @@ function convertDate(date, epoch) {
   return JulianDate.addSeconds(epoch, date, new JulianDate());
 }
 
-var timesSpliceArgs = [];
-var valuesSpliceArgs = [];
+const timesSpliceArgs = [];
+const valuesSpliceArgs = [];
 
 function mergeNewSamples(epoch, times, values, newData, packedLength) {
-  var newDataIndex = 0;
-  var i;
-  var prevItem;
-  var timesInsertionPoint;
-  var valuesInsertionPoint;
-  var currentTime;
-  var nextTime;
+  let newDataIndex = 0;
+  let i;
+  let prevItem;
+  let timesInsertionPoint;
+  let valuesInsertionPoint;
+  let currentTime;
+  let nextTime;
 
   while (newDataIndex < newData.length) {
     currentTime = convertDate(newData[newDataIndex], epoch);
     timesInsertionPoint = binarySearch(times, currentTime, JulianDate.compare);
-    var timesSpliceArgsCount = 0;
-    var valuesSpliceArgsCount = 0;
+    let timesSpliceArgsCount = 0;
+    let valuesSpliceArgsCount = 0;
 
     if (timesInsertionPoint < 0) {
       //Doesn't exist, insert as many additional values as we can.
@@ -124,18 +124,18 @@ function mergeNewSamples(epoch, times, values, newData, packedLength) {
  *
  * @example
  * //Create a linearly interpolated Cartesian2
- * var property = new Cesium.SampledProperty(Cesium.Cartesian2);
+ * const property = new Cesium.SampledProperty(Cesium.Cartesian2);
  *
  * //Populate it with data
  * property.addSample(Cesium.JulianDate.fromIso8601('2012-08-01T00:00:00.00Z'), new Cesium.Cartesian2(0, 0));
  * property.addSample(Cesium.JulianDate.fromIso8601('2012-08-02T00:00:00.00Z'), new Cesium.Cartesian2(4, 7));
  *
  * //Retrieve an interpolated value
- * var result = property.getValue(Cesium.JulianDate.fromIso8601('2012-08-01T12:00:00.00Z'));
+ * const result = property.getValue(Cesium.JulianDate.fromIso8601('2012-08-01T12:00:00.00Z'));
  *
  * @example
  * //Create a simple numeric SampledProperty that uses third degree Hermite Polynomial Approximation
- * var property = new Cesium.SampledProperty(Number);
+ * const property = new Cesium.SampledProperty(Number);
  * property.setInterpolationOptions({
  *     interpolationDegree : 3,
  *     interpolationAlgorithm : Cesium.HermitePolynomialApproximation
@@ -152,7 +152,7 @@ function mergeNewSamples(epoch, times, values, newData, packedLength) {
  * property.addSample(Cesium.JulianDate.fromIso8601('2012-08-01T00:00:30.00Z'), 6.2);
  *
  * //Retrieve an interpolated value
- * var result = property.getValue(Cesium.JulianDate.fromIso8601('2012-08-01T00:02:34.00Z'));
+ * const result = property.getValue(Cesium.JulianDate.fromIso8601('2012-08-01T00:02:34.00Z'));
  *
  * @see SampledPositionProperty
  */
@@ -161,27 +161,27 @@ function SampledProperty(type, derivativeTypes) {
   Check.defined("type", type);
   //>>includeEnd('debug');
 
-  var innerType = type;
+  let innerType = type;
   if (innerType === Number) {
     innerType = PackableNumber;
   }
-  var packedLength = innerType.packedLength;
-  var packedInterpolationLength = defaultValue(
+  let packedLength = innerType.packedLength;
+  let packedInterpolationLength = defaultValue(
     innerType.packedInterpolationLength,
     packedLength
   );
 
-  var inputOrder = 0;
-  var innerDerivativeTypes;
+  let inputOrder = 0;
+  let innerDerivativeTypes;
   if (defined(derivativeTypes)) {
-    var length = derivativeTypes.length;
+    const length = derivativeTypes.length;
     innerDerivativeTypes = new Array(length);
-    for (var i = 0; i < length; i++) {
-      var derivativeType = derivativeTypes[i];
+    for (let i = 0; i < length; i++) {
+      let derivativeType = derivativeTypes[i];
       if (derivativeType === Number) {
         derivativeType = PackableNumber;
       }
-      var derivativePackedLength = derivativeType.packedLength;
+      const derivativePackedLength = derivativeType.packedLength;
       packedLength += derivativePackedLength;
       packedInterpolationLength += defaultValue(
         derivativeType.packedInterpolationLength,
@@ -371,22 +371,22 @@ SampledProperty.prototype.getValue = function (time, result) {
   Check.defined("time", time);
   //>>includeEnd('debug');
 
-  var times = this._times;
-  var timesLength = times.length;
+  const times = this._times;
+  const timesLength = times.length;
   if (timesLength === 0) {
     return undefined;
   }
 
-  var timeout;
-  var innerType = this._innerType;
-  var values = this._values;
-  var index = binarySearch(times, time, JulianDate.compare);
+  let timeout;
+  const innerType = this._innerType;
+  const values = this._values;
+  let index = binarySearch(times, time, JulianDate.compare);
 
   if (index < 0) {
     index = ~index;
 
     if (index === 0) {
-      var startTime = times[index];
+      const startTime = times[index];
       timeout = this._backwardExtrapolationDuration;
       if (
         this._backwardExtrapolationType === ExtrapolationType.NONE ||
@@ -402,7 +402,7 @@ SampledProperty.prototype.getValue = function (time, result) {
 
     if (index >= timesLength) {
       index = timesLength - 1;
-      var endTime = times[index];
+      const endTime = times[index];
       timeout = this._forwardExtrapolationDuration;
       if (
         this._forwardExtrapolationType === ExtrapolationType.NONE ||
@@ -416,15 +416,15 @@ SampledProperty.prototype.getValue = function (time, result) {
       }
     }
 
-    var xTable = this._xTable;
-    var yTable = this._yTable;
-    var interpolationAlgorithm = this._interpolationAlgorithm;
-    var packedInterpolationLength = this._packedInterpolationLength;
-    var inputOrder = this._inputOrder;
+    const xTable = this._xTable;
+    const yTable = this._yTable;
+    const interpolationAlgorithm = this._interpolationAlgorithm;
+    const packedInterpolationLength = this._packedInterpolationLength;
+    const inputOrder = this._inputOrder;
 
     if (this._updateTableLength) {
       this._updateTableLength = false;
-      var numberOfPoints = Math.min(
+      const numberOfPoints = Math.min(
         interpolationAlgorithm.getRequiredDataPoints(
           this._interpolationDegree,
           inputOrder
@@ -438,21 +438,21 @@ SampledProperty.prototype.getValue = function (time, result) {
       }
     }
 
-    var degree = this._numberOfPoints - 1;
+    const degree = this._numberOfPoints - 1;
     if (degree < 1) {
       return undefined;
     }
 
-    var firstIndex = 0;
-    var lastIndex = timesLength - 1;
-    var pointsInCollection = lastIndex - firstIndex + 1;
+    let firstIndex = 0;
+    let lastIndex = timesLength - 1;
+    const pointsInCollection = lastIndex - firstIndex + 1;
 
     if (pointsInCollection >= degree + 1) {
-      var computedFirstIndex = index - ((degree / 2) | 0) - 1;
+      let computedFirstIndex = index - ((degree / 2) | 0) - 1;
       if (computedFirstIndex < firstIndex) {
         computedFirstIndex = firstIndex;
       }
-      var computedLastIndex = computedFirstIndex + degree;
+      let computedLastIndex = computedFirstIndex + degree;
       if (computedLastIndex > lastIndex) {
         computedLastIndex = lastIndex;
         computedFirstIndex = computedLastIndex - degree;
@@ -464,10 +464,10 @@ SampledProperty.prototype.getValue = function (time, result) {
       firstIndex = computedFirstIndex;
       lastIndex = computedLastIndex;
     }
-    var length = lastIndex - firstIndex + 1;
+    const length = lastIndex - firstIndex + 1;
 
     // Build the tables
-    for (var i = 0; i < length; ++i) {
+    for (let i = 0; i < length; ++i) {
       xTable[i] = JulianDate.secondsDifference(
         times[firstIndex + i],
         times[lastIndex]
@@ -475,10 +475,10 @@ SampledProperty.prototype.getValue = function (time, result) {
     }
 
     if (!defined(innerType.convertPackedArrayForInterpolation)) {
-      var destinationIndex = 0;
-      var packedLength = this._packedLength;
-      var sourceIndex = firstIndex * packedLength;
-      var stop = (lastIndex + 1) * packedLength;
+      let destinationIndex = 0;
+      const packedLength = this._packedLength;
+      let sourceIndex = firstIndex * packedLength;
+      const stop = (lastIndex + 1) * packedLength;
 
       while (sourceIndex < stop) {
         yTable[destinationIndex] = values[sourceIndex];
@@ -495,8 +495,8 @@ SampledProperty.prototype.getValue = function (time, result) {
     }
 
     // Interpolate!
-    var x = JulianDate.secondsDifference(time, times[lastIndex]);
-    var interpolationResult;
+    const x = JulianDate.secondsDifference(time, times[lastIndex]);
+    let interpolationResult;
     if (inputOrder === 0 || !defined(interpolationAlgorithm.interpolate)) {
       interpolationResult = interpolationAlgorithm.interpolateOrderZero(
         x,
@@ -506,7 +506,7 @@ SampledProperty.prototype.getValue = function (time, result) {
         this._interpolationResult
       );
     } else {
-      var yStride = Math.floor(packedInterpolationLength / (inputOrder + 1));
+      const yStride = Math.floor(packedInterpolationLength / (inputOrder + 1));
       interpolationResult = interpolationAlgorithm.interpolate(
         x,
         xTable,
@@ -544,10 +544,10 @@ SampledProperty.prototype.setInterpolationOptions = function (options) {
     return;
   }
 
-  var valuesChanged = false;
+  let valuesChanged = false;
 
-  var interpolationAlgorithm = options.interpolationAlgorithm;
-  var interpolationDegree = options.interpolationDegree;
+  const interpolationAlgorithm = options.interpolationAlgorithm;
+  const interpolationDegree = options.interpolationDegree;
 
   if (
     defined(interpolationAlgorithm) &&
@@ -579,8 +579,8 @@ SampledProperty.prototype.setInterpolationOptions = function (options) {
  * @param {Packable[]} [derivatives] The array of derivatives at the provided time.
  */
 SampledProperty.prototype.addSample = function (time, value, derivatives) {
-  var innerDerivativeTypes = this._innerDerivativeTypes;
-  var hasDerivatives = defined(innerDerivativeTypes);
+  const innerDerivativeTypes = this._innerDerivativeTypes;
+  const hasDerivatives = defined(innerDerivativeTypes);
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("time", time);
@@ -590,14 +590,14 @@ SampledProperty.prototype.addSample = function (time, value, derivatives) {
   }
   //>>includeEnd('debug');
 
-  var innerType = this._innerType;
-  var data = [];
+  const innerType = this._innerType;
+  const data = [];
   data.push(time);
   innerType.pack(value, data, data.length);
 
   if (hasDerivatives) {
-    var derivativesLength = innerDerivativeTypes.length;
-    for (var x = 0; x < derivativesLength; x++) {
+    const derivativesLength = innerDerivativeTypes.length;
+    for (let x = 0; x < derivativesLength; x++) {
       innerDerivativeTypes[x].pack(derivatives[x], data, data.length);
     }
   }
@@ -627,8 +627,8 @@ SampledProperty.prototype.addSamples = function (
   values,
   derivativeValues
 ) {
-  var innerDerivativeTypes = this._innerDerivativeTypes;
-  var hasDerivatives = defined(innerDerivativeTypes);
+  const innerDerivativeTypes = this._innerDerivativeTypes;
+  const hasDerivatives = defined(innerDerivativeTypes);
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("times", times);
@@ -646,17 +646,17 @@ SampledProperty.prototype.addSamples = function (
   }
   //>>includeEnd('debug');
 
-  var innerType = this._innerType;
-  var length = times.length;
-  var data = [];
-  for (var i = 0; i < length; i++) {
+  const innerType = this._innerType;
+  const length = times.length;
+  const data = [];
+  for (let i = 0; i < length; i++) {
     data.push(times[i]);
     innerType.pack(values[i], data, data.length);
 
     if (hasDerivatives) {
-      var derivatives = derivativeValues[i];
-      var derivativesLength = innerDerivativeTypes.length;
-      for (var x = 0; x < derivativesLength; x++) {
+      const derivatives = derivativeValues[i];
+      const derivativesLength = innerDerivativeTypes.length;
+      for (let x = 0; x < derivativesLength; x++) {
         innerDerivativeTypes[x].pack(derivatives[x], data, data.length);
       }
     }
@@ -709,7 +709,7 @@ SampledProperty.prototype.removeSample = function (time) {
   Check.defined("time", time);
   //>>includeEnd('debug');
 
-  var index = binarySearch(this._times, time, JulianDate.compare);
+  const index = binarySearch(this._times, time, JulianDate.compare);
   if (index < 0) {
     return false;
   }
@@ -718,7 +718,7 @@ SampledProperty.prototype.removeSample = function (time) {
 };
 
 function removeSamples(property, startIndex, numberToRemove) {
-  var packedLength = property._packedLength;
+  const packedLength = property._packedLength;
   property._times.splice(startIndex, numberToRemove);
   property._values.splice(
     startIndex * packedLength,
@@ -738,14 +738,14 @@ SampledProperty.prototype.removeSamples = function (timeInterval) {
   Check.defined("timeInterval", timeInterval);
   //>>includeEnd('debug');
 
-  var times = this._times;
-  var startIndex = binarySearch(times, timeInterval.start, JulianDate.compare);
+  const times = this._times;
+  let startIndex = binarySearch(times, timeInterval.start, JulianDate.compare);
   if (startIndex < 0) {
     startIndex = ~startIndex;
   } else if (!timeInterval.isStartIncluded) {
     ++startIndex;
   }
-  var stopIndex = binarySearch(times, timeInterval.stop, JulianDate.compare);
+  let stopIndex = binarySearch(times, timeInterval.stop, JulianDate.compare);
   if (stopIndex < 0) {
     stopIndex = ~stopIndex;
   } else if (timeInterval.isStopIncluded) {
@@ -778,16 +778,16 @@ SampledProperty.prototype.equals = function (other) {
     return false;
   }
 
-  var derivativeTypes = this._derivativeTypes;
-  var hasDerivatives = defined(derivativeTypes);
-  var otherDerivativeTypes = other._derivativeTypes;
-  var otherHasDerivatives = defined(otherDerivativeTypes);
+  const derivativeTypes = this._derivativeTypes;
+  const hasDerivatives = defined(derivativeTypes);
+  const otherDerivativeTypes = other._derivativeTypes;
+  const otherHasDerivatives = defined(otherDerivativeTypes);
   if (hasDerivatives !== otherHasDerivatives) {
     return false;
   }
 
-  var i;
-  var length;
+  let i;
+  let length;
   if (hasDerivatives) {
     length = derivativeTypes.length;
     if (length !== otherDerivativeTypes.length) {
@@ -801,8 +801,8 @@ SampledProperty.prototype.equals = function (other) {
     }
   }
 
-  var times = this._times;
-  var otherTimes = other._times;
+  const times = this._times;
+  const otherTimes = other._times;
   length = times.length;
 
   if (length !== otherTimes.length) {
@@ -815,8 +815,8 @@ SampledProperty.prototype.equals = function (other) {
     }
   }
 
-  var values = this._values;
-  var otherValues = other._values;
+  const values = this._values;
+  const otherValues = other._values;
   length = values.length;
 
   //Since time lengths are equal, values length and other length are guaranteed to be equal.

@@ -7,10 +7,10 @@ import { TimeIntervalCollectionProperty } from "../../Source/Cesium.js";
 
 describe("DataSources/PolylineDashMaterialProperty", function () {
   it("constructor provides the expected defaults", function () {
-    var property = new PolylineDashMaterialProperty();
+    const property = new PolylineDashMaterialProperty();
     expect(property.getType()).toEqual("PolylineDash");
 
-    var result = property.getValue();
+    const result = property.getValue();
     expect(result.color).toEqual(Color.WHITE);
     expect(result.gapColor).toEqual(Color.TRANSPARENT);
     expect(result.dashLength).toEqual(16.0);
@@ -18,14 +18,14 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
   });
 
   it("constructor sets options and allows raw assignment", function () {
-    var options = {
+    const options = {
       color: Color.RED,
       gapColor: Color.YELLOW,
       dashLength: 10.0,
       dashPattern: 7.0,
     };
 
-    var property = new PolylineDashMaterialProperty(options);
+    const property = new PolylineDashMaterialProperty(options);
     expect(property.color).toBeInstanceOf(ConstantProperty);
     expect(property.gapColor).toBeInstanceOf(ConstantProperty);
     expect(property.dashLength).toBeInstanceOf(ConstantProperty);
@@ -38,13 +38,13 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
   });
 
   it("works with constant values", function () {
-    var property = new PolylineDashMaterialProperty();
+    const property = new PolylineDashMaterialProperty();
     property.color = new ConstantProperty(Color.RED);
     property.gapColor = new ConstantProperty(Color.YELLOW);
     property.dashLength = new ConstantProperty(10.0);
     property.dashPattern = new ConstantProperty(7.0);
 
-    var result = property.getValue(JulianDate.now());
+    const result = property.getValue(JulianDate.now());
     expect(result.color).toEqual(Color.RED);
     expect(result.gapColor).toEqual(Color.YELLOW);
     expect(result.dashLength).toEqual(10.0);
@@ -52,14 +52,14 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
   });
 
   it("works with dynamic values", function () {
-    var property = new PolylineDashMaterialProperty();
+    const property = new PolylineDashMaterialProperty();
     property.color = new TimeIntervalCollectionProperty();
     property.gapColor = new TimeIntervalCollectionProperty();
     property.dashLength = new TimeIntervalCollectionProperty();
     property.dashPattern = new TimeIntervalCollectionProperty();
 
-    var start = new JulianDate(1, 0);
-    var stop = new JulianDate(2, 0);
+    const start = new JulianDate(1, 0);
+    const stop = new JulianDate(2, 0);
     property.color.intervals.addInterval(
       new TimeInterval({
         start: start,
@@ -89,7 +89,7 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
       })
     );
 
-    var result = property.getValue(start);
+    const result = property.getValue(start);
     expect(result.color).toEqual(Color.BLUE);
     expect(result.gapColor).toEqual(Color.YELLOW);
     expect(result.dashLength).toEqual(10.0);
@@ -97,19 +97,19 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
   });
 
   it("works with a result parameter", function () {
-    var property = new PolylineDashMaterialProperty();
+    const property = new PolylineDashMaterialProperty();
     property.color = new ConstantProperty(Color.RED);
     property.gapColor = new ConstantProperty(Color.YELLOW);
     property.dashLength = new ConstantProperty(10.0);
     property.dashPattern = new ConstantProperty(11.0);
 
-    var result = {
+    const result = {
       color: Color.YELLOW.clone(),
       gapColor: Color.RED.clone(),
       dashLength: 1.0,
       dashPattern: 2.0,
     };
-    var returnedResult = property.getValue(JulianDate.now(), result);
+    const returnedResult = property.getValue(JulianDate.now(), result);
     expect(returnedResult).toBe(result);
     expect(result.color).toEqual(Color.RED);
     expect(result.gapColor).toEqual(Color.YELLOW);
@@ -118,13 +118,13 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
   });
 
   it("equals works", function () {
-    var left = new PolylineDashMaterialProperty();
+    const left = new PolylineDashMaterialProperty();
     left.color = new ConstantProperty(Color.WHITE);
     left.gapColor = new ConstantProperty(Color.YELLOW);
     left.dashLength = new ConstantProperty(5.0);
     left.dashPattern = new ConstantProperty(7.0);
 
-    var right = new PolylineDashMaterialProperty();
+    const right = new PolylineDashMaterialProperty();
     right.color = new ConstantProperty(Color.WHITE);
     right.gapColor = new ConstantProperty(Color.YELLOW);
     right.dashLength = new ConstantProperty(5.0);
@@ -140,11 +140,11 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
   });
 
   it("raises definitionChanged when a property is assigned or modified", function () {
-    var property = new PolylineDashMaterialProperty();
-    var listener = jasmine.createSpy("listener");
+    const property = new PolylineDashMaterialProperty();
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
-    var oldValue = property.color;
+    let oldValue = property.color;
     property.color = new ConstantProperty(Color.RED);
     expect(listener).toHaveBeenCalledWith(
       property,
@@ -236,7 +236,7 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
   });
 
   it("isConstant is only true when all properties are constant or undefined", function () {
-    var property = new PolylineDashMaterialProperty();
+    const property = new PolylineDashMaterialProperty();
     expect(property.isConstant).toBe(true);
 
     property.color = undefined;
@@ -245,8 +245,8 @@ describe("DataSources/PolylineDashMaterialProperty", function () {
     property.dashPattern = undefined;
     expect(property.isConstant).toBe(true);
 
-    var start = new JulianDate(1, 0);
-    var stop = new JulianDate(2, 0);
+    const start = new JulianDate(1, 0);
+    const stop = new JulianDate(2, 0);
     property.color = new TimeIntervalCollectionProperty();
     property.color.intervals.addInterval(
       new TimeInterval({

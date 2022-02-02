@@ -5,7 +5,7 @@
  *
  * @see JulianDate
  */
-var TimeStandard = {
+const TimeStandard = {
   /**
    * Represents the coordinated Universal Time (UTC) time standard.
    *

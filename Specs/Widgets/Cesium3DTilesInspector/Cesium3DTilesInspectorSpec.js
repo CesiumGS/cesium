@@ -8,12 +8,12 @@ describe(
   "Widgets/Cesium3DTilesInspector/Cesium3DTilesInspector",
   function () {
     // Parent tile with content and four child tiles with content
-    var tilesetUrl = "./Data/Cesium3DTiles/Tilesets/Tileset/tileset.json";
+    const tilesetUrl = "./Data/Cesium3DTiles/Tilesets/Tileset/tileset.json";
 
-    var scene;
+    let scene;
     beforeAll(function () {
       scene = createScene();
-      var ellipsoid = Ellipsoid.UNIT_SPHERE;
+      const ellipsoid = Ellipsoid.UNIT_SPHERE;
       scene.globe = new Globe(ellipsoid);
     });
 
@@ -22,11 +22,11 @@ describe(
     });
 
     it("can create and destroy", function () {
-      var container = document.createElement("div");
+      const container = document.createElement("div");
       container.id = "testContainer";
       document.body.appendChild(container);
 
-      var widget = new Cesium3DTilesInspector("testContainer", scene);
+      const widget = new Cesium3DTilesInspector("testContainer", scene);
       expect(widget.container).toBe(container);
       expect(widget.viewModel._scene).toBe(scene);
       expect(widget.isDestroyed()).toEqual(false);
@@ -55,8 +55,8 @@ describe(
     });
 
     describe("logging", function () {
-      var widget;
-      var container;
+      let widget;
+      let container;
 
       beforeAll(function () {
         container = document.createElement("div");
@@ -64,7 +64,7 @@ describe(
         document.body.appendChild(container);
         widget = new Cesium3DTilesInspector("testContainer", scene);
 
-        var viewModel = widget.viewModel;
+        const viewModel = widget.viewModel;
         viewModel.tileset = new Cesium3DTileset({
           url: tilesetUrl,
         });

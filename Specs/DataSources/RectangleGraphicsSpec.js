@@ -11,7 +11,7 @@ import testMaterialDefinitionChanged from "../testMaterialDefinitionChanged.js";
 
 describe("DataSources/RectangleGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {
-    var options = {
+    const options = {
       material: Color.BLUE,
       show: true,
       coordinates: new Rectangle(0.1, 0.2, 0.3, 0.4),
@@ -30,7 +30,7 @@ describe("DataSources/RectangleGraphics", function () {
       zIndex: 5,
     };
 
-    var rectangle = new RectangleGraphics(options);
+    const rectangle = new RectangleGraphics(options);
     expect(rectangle.material).toBeInstanceOf(ColorMaterialProperty);
     expect(rectangle.show).toBeInstanceOf(ConstantProperty);
     expect(rectangle.coordinates).toBeInstanceOf(ConstantProperty);
@@ -71,7 +71,7 @@ describe("DataSources/RectangleGraphics", function () {
   });
 
   it("merge assigns unassigned properties", function () {
-    var source = new RectangleGraphics();
+    const source = new RectangleGraphics();
     source.material = new ColorMaterialProperty();
     source.show = new ConstantProperty();
     source.coordinates = new ConstantProperty();
@@ -89,7 +89,7 @@ describe("DataSources/RectangleGraphics", function () {
     source.classificationType = new ConstantProperty();
     source.zIndex = new ConstantProperty();
 
-    var target = new RectangleGraphics();
+    const target = new RectangleGraphics();
     target.merge(source);
 
     expect(target.material).toBe(source.material);
@@ -113,26 +113,26 @@ describe("DataSources/RectangleGraphics", function () {
   });
 
   it("merge does not assign assigned properties", function () {
-    var source = new RectangleGraphics();
+    const source = new RectangleGraphics();
 
-    var material = new ColorMaterialProperty();
-    var show = new ConstantProperty();
-    var coordinates = new ConstantProperty();
-    var height = new ConstantProperty();
-    var extrudedHeight = new ConstantProperty();
-    var granularity = new ConstantProperty();
-    var stRotation = new ConstantProperty();
-    var rotation = new ConstantProperty();
-    var fill = new ConstantProperty();
-    var outline = new ConstantProperty();
-    var outlineColor = new ConstantProperty();
-    var outlineWidth = new ConstantProperty();
-    var shadows = new ConstantProperty();
-    var distanceDisplayCondition = new ConstantProperty();
-    var classificationType = new ConstantProperty();
-    var zIndex = new ConstantProperty();
+    const material = new ColorMaterialProperty();
+    const show = new ConstantProperty();
+    const coordinates = new ConstantProperty();
+    const height = new ConstantProperty();
+    const extrudedHeight = new ConstantProperty();
+    const granularity = new ConstantProperty();
+    const stRotation = new ConstantProperty();
+    const rotation = new ConstantProperty();
+    const fill = new ConstantProperty();
+    const outline = new ConstantProperty();
+    const outlineColor = new ConstantProperty();
+    const outlineWidth = new ConstantProperty();
+    const shadows = new ConstantProperty();
+    const distanceDisplayCondition = new ConstantProperty();
+    const classificationType = new ConstantProperty();
+    const zIndex = new ConstantProperty();
 
-    var target = new RectangleGraphics();
+    const target = new RectangleGraphics();
     target.material = material;
     target.show = show;
     target.coordinates = coordinates;
@@ -171,7 +171,7 @@ describe("DataSources/RectangleGraphics", function () {
   });
 
   it("clone works", function () {
-    var source = new RectangleGraphics();
+    const source = new RectangleGraphics();
     source.material = new ColorMaterialProperty();
     source.show = new ConstantProperty();
     source.coordinates = new ConstantProperty();
@@ -189,7 +189,7 @@ describe("DataSources/RectangleGraphics", function () {
     source.classificationType = new ConstantProperty();
     source.zIndex = new ConstantProperty();
 
-    var result = source.clone();
+    const result = source.clone();
     expect(result.material).toBe(source.material);
     expect(result.show).toBe(source.show);
     expect(result.coordinates).toBe(source.coordinates);
@@ -211,14 +211,14 @@ describe("DataSources/RectangleGraphics", function () {
   });
 
   it("merge throws if source undefined", function () {
-    var target = new RectangleGraphics();
+    const target = new RectangleGraphics();
     expect(function () {
       target.merge(undefined);
     }).toThrowDeveloperError();
   });
 
   it("raises definitionChanged when a property is assigned or modified", function () {
-    var property = new RectangleGraphics();
+    const property = new RectangleGraphics();
     testMaterialDefinitionChanged(property, "material", Color.RED, Color.BLUE);
     testDefinitionChanged(property, "show", true, false);
     testDefinitionChanged(

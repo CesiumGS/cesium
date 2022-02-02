@@ -6,9 +6,9 @@ import Event from "../Core/Event.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import Property from "./Property.js";
 
-var defaultEvenColor = Color.WHITE;
-var defaultOddColor = Color.BLACK;
-var defaultRepeat = new Cartesian2(2.0, 2.0);
+const defaultEvenColor = Color.WHITE;
+const defaultOddColor = Color.BLACK;
+const defaultRepeat = new Cartesian2(2.0, 2.0);
 
 /**
  * A {@link MaterialProperty} that maps to checkerboard {@link Material} uniforms.

@@ -20,13 +20,13 @@ import MetadataEntity from "./MetadataEntity.js";
  */
 function TilesetMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var tileset = options.tileset;
+  const tileset = options.tileset;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.tileset", tileset);
   //>>includeEnd('debug');
 
-  var properties = defined(tileset.properties) ? tileset.properties : {};
+  const properties = defined(tileset.properties) ? tileset.properties : {};
 
   this._class = options.class;
   this._properties = properties;

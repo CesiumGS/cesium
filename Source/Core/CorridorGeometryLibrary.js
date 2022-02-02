@@ -10,28 +10,28 @@ import Quaternion from "./Quaternion.js";
 /**
  * @private
  */
-var CorridorGeometryLibrary = {};
+const CorridorGeometryLibrary = {};
 
-var scratch1 = new Cartesian3();
-var scratch2 = new Cartesian3();
-var scratch3 = new Cartesian3();
-var scratch4 = new Cartesian3();
+const scratch1 = new Cartesian3();
+const scratch2 = new Cartesian3();
+const scratch3 = new Cartesian3();
+const scratch4 = new Cartesian3();
 
-var scaleArray2 = [new Cartesian3(), new Cartesian3()];
+const scaleArray2 = [new Cartesian3(), new Cartesian3()];
 
-var cartesian1 = new Cartesian3();
-var cartesian2 = new Cartesian3();
-var cartesian3 = new Cartesian3();
-var cartesian4 = new Cartesian3();
-var cartesian5 = new Cartesian3();
-var cartesian6 = new Cartesian3();
-var cartesian7 = new Cartesian3();
-var cartesian8 = new Cartesian3();
-var cartesian9 = new Cartesian3();
-var cartesian10 = new Cartesian3();
+const cartesian1 = new Cartesian3();
+const cartesian2 = new Cartesian3();
+const cartesian3 = new Cartesian3();
+const cartesian4 = new Cartesian3();
+const cartesian5 = new Cartesian3();
+const cartesian6 = new Cartesian3();
+const cartesian7 = new Cartesian3();
+const cartesian8 = new Cartesian3();
+const cartesian9 = new Cartesian3();
+const cartesian10 = new Cartesian3();
 
-var quaterion = new Quaternion();
-var rotMatrix = new Matrix3();
+const quaterion = new Quaternion();
+const rotMatrix = new Matrix3();
 function computeRoundCorner(
   cornerPoint,
   startPoint,
@@ -39,23 +39,23 @@ function computeRoundCorner(
   cornerType,
   leftIsOutside
 ) {
-  var angle = Cartesian3.angleBetween(
+  const angle = Cartesian3.angleBetween(
     Cartesian3.subtract(startPoint, cornerPoint, scratch1),
     Cartesian3.subtract(endPoint, cornerPoint, scratch2)
   );
-  var granularity =
+  const granularity =
     cornerType === CornerType.BEVELED
       ? 1
       : Math.ceil(angle / CesiumMath.toRadians(5)) + 1;
 
-  var size = granularity * 3;
-  var array = new Array(size);
+  const size = granularity * 3;
+  const array = new Array(size);
 
   array[size - 3] = endPoint.x;
   array[size - 2] = endPoint.y;
   array[size - 1] = endPoint.z;
 
-  var m;
+  let m;
   if (leftIsOutside) {
     m = Matrix3.fromQuaternion(
       Quaternion.fromAxisAngle(
@@ -72,9 +72,9 @@ function computeRoundCorner(
     );
   }
 
-  var index = 0;
+  let index = 0;
   startPoint = Cartesian3.clone(startPoint, scratch1);
-  for (var i = 0; i < granularity; i++) {
+  for (let i = 0; i < granularity; i++) {
     startPoint = Matrix3.multiplyByVector(m, startPoint, startPoint);
     array[index++] = startPoint.x;
     array[index++] = startPoint.y;
@@ -85,11 +85,11 @@ function computeRoundCorner(
 }
 
 function addEndCaps(calculatedPositions) {
-  var cornerPoint = cartesian1;
-  var startPoint = cartesian2;
-  var endPoint = cartesian3;
+  let cornerPoint = cartesian1;
+  let startPoint = cartesian2;
+  let endPoint = cartesian3;
 
-  var leftEdge = calculatedPositions[1];
+  let leftEdge = calculatedPositions[1];
   startPoint = Cartesian3.fromArray(
     calculatedPositions[1],
     leftEdge.length - 3,
@@ -97,7 +97,7 @@ function addEndCaps(calculatedPositions) {
   );
   endPoint = Cartesian3.fromArray(calculatedPositions[0], 0, endPoint);
   cornerPoint = Cartesian3.midpoint(startPoint, endPoint, cornerPoint);
-  var firstEndCap = computeRoundCorner(
+  const firstEndCap = computeRoundCorner(
     cornerPoint,
     startPoint,
     endPoint,
@@ -105,8 +105,8 @@ function addEndCaps(calculatedPositions) {
     false
   );
 
-  var length = calculatedPositions.length - 1;
-  var rightEdge = calculatedPositions[length - 1];
+  const length = calculatedPositions.length - 1;
+  const rightEdge = calculatedPositions[length - 1];
   leftEdge = calculatedPositions[length];
   startPoint = Cartesian3.fromArray(
     rightEdge,
@@ -115,7 +115,7 @@ function addEndCaps(calculatedPositions) {
   );
   endPoint = Cartesian3.fromArray(leftEdge, 0, endPoint);
   cornerPoint = Cartesian3.midpoint(startPoint, endPoint, cornerPoint);
-  var lastEndCap = computeRoundCorner(
+  const lastEndCap = computeRoundCorner(
     cornerPoint,
     startPoint,
     endPoint,
@@ -132,7 +132,7 @@ function computeMiteredCorner(
   lastPoint,
   leftIsOutside
 ) {
-  var cornerPoint = scratch1;
+  let cornerPoint = scratch1;
   if (leftIsOutside) {
     cornerPoint = Cartesian3.add(position, leftCornerDirection, cornerPoint);
   } else {
@@ -153,21 +153,21 @@ function computeMiteredCorner(
 }
 
 function addShiftedPositions(positions, left, scalar, calculatedPositions) {
-  var rightPositions = new Array(positions.length);
-  var leftPositions = new Array(positions.length);
-  var scaledLeft = Cartesian3.multiplyByScalar(left, scalar, scratch1);
-  var scaledRight = Cartesian3.negate(scaledLeft, scratch2);
-  var rightIndex = 0;
-  var leftIndex = positions.length - 1;
+  const rightPositions = new Array(positions.length);
+  const leftPositions = new Array(positions.length);
+  const scaledLeft = Cartesian3.multiplyByScalar(left, scalar, scratch1);
+  const scaledRight = Cartesian3.negate(scaledLeft, scratch2);
+  let rightIndex = 0;
+  let leftIndex = positions.length - 1;
 
-  for (var i = 0; i < positions.length; i += 3) {
-    var pos = Cartesian3.fromArray(positions, i, scratch3);
-    var rightPos = Cartesian3.add(pos, scaledRight, scratch4);
+  for (let i = 0; i < positions.length; i += 3) {
+    const pos = Cartesian3.fromArray(positions, i, scratch3);
+    const rightPos = Cartesian3.add(pos, scaledRight, scratch4);
     rightPositions[rightIndex++] = rightPos.x;
     rightPositions[rightIndex++] = rightPos.y;
     rightPositions[rightIndex++] = rightPos.z;
 
-    var leftPos = Cartesian3.add(pos, scaledLeft, scratch4);
+    const leftPos = Cartesian3.add(pos, scaledLeft, scratch4);
     leftPositions[leftIndex--] = leftPos.z;
     leftPositions[leftIndex--] = leftPos.y;
     leftPositions[leftIndex--] = leftPos.x;
@@ -186,9 +186,9 @@ CorridorGeometryLibrary.addAttribute = function (
   front,
   back
 ) {
-  var x = value.x;
-  var y = value.y;
-  var z = value.z;
+  const x = value.x;
+  const y = value.y;
+  const z = value.z;
   if (defined(front)) {
     attribute[front] = x;
     attribute[front + 1] = y;
@@ -201,34 +201,34 @@ CorridorGeometryLibrary.addAttribute = function (
   }
 };
 
-var scratchForwardProjection = new Cartesian3();
-var scratchBackwardProjection = new Cartesian3();
+const scratchForwardProjection = new Cartesian3();
+const scratchBackwardProjection = new Cartesian3();
 
 /**
  * @private
  */
 CorridorGeometryLibrary.computePositions = function (params) {
-  var granularity = params.granularity;
-  var positions = params.positions;
-  var ellipsoid = params.ellipsoid;
-  var width = params.width / 2;
-  var cornerType = params.cornerType;
-  var saveAttributes = params.saveAttributes;
-  var normal = cartesian1;
-  var forward = cartesian2;
-  var backward = cartesian3;
-  var left = cartesian4;
-  var cornerDirection = cartesian5;
-  var startPoint = cartesian6;
-  var previousPos = cartesian7;
-  var rightPos = cartesian8;
-  var leftPos = cartesian9;
-  var center = cartesian10;
-  var calculatedPositions = [];
-  var calculatedLefts = saveAttributes ? [] : undefined;
-  var calculatedNormals = saveAttributes ? [] : undefined;
-  var position = positions[0]; //add first point
-  var nextPosition = positions[1];
+  const granularity = params.granularity;
+  const positions = params.positions;
+  const ellipsoid = params.ellipsoid;
+  const width = params.width / 2;
+  const cornerType = params.cornerType;
+  const saveAttributes = params.saveAttributes;
+  let normal = cartesian1;
+  let forward = cartesian2;
+  let backward = cartesian3;
+  let left = cartesian4;
+  let cornerDirection = cartesian5;
+  let startPoint = cartesian6;
+  let previousPos = cartesian7;
+  let rightPos = cartesian8;
+  let leftPos = cartesian9;
+  let center = cartesian10;
+  let calculatedPositions = [];
+  const calculatedLefts = saveAttributes ? [] : undefined;
+  const calculatedNormals = saveAttributes ? [] : undefined;
+  let position = positions[0]; //add first point
+  let nextPosition = positions[1];
 
   forward = Cartesian3.normalize(
     Cartesian3.subtract(nextPosition, position, forward),
@@ -244,10 +244,10 @@ CorridorGeometryLibrary.computePositions = function (params) {
   position = nextPosition;
   backward = Cartesian3.negate(forward, backward);
 
-  var subdividedPositions;
-  var corners = [];
-  var i;
-  var length = positions.length;
+  let subdividedPositions;
+  const corners = [];
+  let i;
+  const length = positions.length;
   for (i = 1; i < length - 1; i++) {
     // add middle points and corners
     normal = ellipsoid.geodeticSurfaceNormal(position, normal);
@@ -261,7 +261,7 @@ CorridorGeometryLibrary.computePositions = function (params) {
       cornerDirection
     );
 
-    var forwardProjection = Cartesian3.multiplyByScalar(
+    const forwardProjection = Cartesian3.multiplyByScalar(
       normal,
       Cartesian3.dot(forward, normal),
       scratchForwardProjection
@@ -269,7 +269,7 @@ CorridorGeometryLibrary.computePositions = function (params) {
     Cartesian3.subtract(forward, forwardProjection, forwardProjection);
     Cartesian3.normalize(forwardProjection, forwardProjection);
 
-    var backwardProjection = Cartesian3.multiplyByScalar(
+    const backwardProjection = Cartesian3.multiplyByScalar(
       normal,
       Cartesian3.dot(backward, normal),
       scratchBackwardProjection
@@ -277,7 +277,7 @@ CorridorGeometryLibrary.computePositions = function (params) {
     Cartesian3.subtract(backward, backwardProjection, backwardProjection);
     Cartesian3.normalize(backwardProjection, backwardProjection);
 
-    var doCorner = !CesiumMath.equalsEpsilon(
+    const doCorner = !CesiumMath.equalsEpsilon(
       Math.abs(Cartesian3.dot(forwardProjection, backwardProjection)),
       1.0,
       CesiumMath.EPSILON7
@@ -295,7 +295,7 @@ CorridorGeometryLibrary.computePositions = function (params) {
         cornerDirection
       );
       cornerDirection = Cartesian3.normalize(cornerDirection, cornerDirection);
-      var scalar =
+      const scalar =
         width /
         Math.max(
           0.25,
@@ -303,7 +303,7 @@ CorridorGeometryLibrary.computePositions = function (params) {
             Cartesian3.cross(cornerDirection, backward, scratch1)
           )
         );
-      var leftIsOutside = PolylineVolumeGeometryLibrary.angleIsGreaterThanPi(
+      const leftIsOutside = PolylineVolumeGeometryLibrary.angleIsGreaterThanPi(
         forward,
         backward,
         position,
@@ -485,7 +485,7 @@ CorridorGeometryLibrary.computePositions = function (params) {
     calculatedNormals.push(normal.x, normal.y, normal.z);
   }
 
-  var endPositions;
+  let endPositions;
   if (cornerType === CornerType.ROUNDED) {
     endPositions = addEndCaps(calculatedPositions);
   }

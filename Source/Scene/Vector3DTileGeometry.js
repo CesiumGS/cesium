@@ -157,11 +157,11 @@ Vector3DTileGeometry.packedEllipsoidLength =
 Vector3DTileGeometry.packedSphereLength = Cartesian3.packedLength + 1;
 
 function packBuffer(geometries) {
-  var packedBuffer = new Float64Array(
+  const packedBuffer = new Float64Array(
     Matrix4.packedLength + Cartesian3.packedLength
   );
 
-  var offset = 0;
+  let offset = 0;
   Cartesian3.pack(geometries._center, packedBuffer, offset);
   offset += Cartesian3.packedLength;
   Matrix4.pack(geometries._modelMatrix, packedBuffer, offset);
@@ -170,31 +170,31 @@ function packBuffer(geometries) {
 }
 
 function unpackBuffer(geometries, packedBuffer) {
-  var offset = 0;
+  let offset = 0;
 
-  var indicesBytesPerElement = packedBuffer[offset++];
-  var numBVS = packedBuffer[offset++];
-  var bvs = (geometries._boundingVolumes = new Array(numBVS));
+  const indicesBytesPerElement = packedBuffer[offset++];
+  const numBVS = packedBuffer[offset++];
+  const bvs = (geometries._boundingVolumes = new Array(numBVS));
 
-  for (var i = 0; i < numBVS; ++i) {
+  for (let i = 0; i < numBVS; ++i) {
     bvs[i] = BoundingSphere.unpack(packedBuffer, offset);
     offset += BoundingSphere.packedLength;
   }
 
-  var numBatchedIndices = packedBuffer[offset++];
-  var bis = (geometries._batchedIndices = new Array(numBatchedIndices));
+  const numBatchedIndices = packedBuffer[offset++];
+  const bis = (geometries._batchedIndices = new Array(numBatchedIndices));
 
-  for (var j = 0; j < numBatchedIndices; ++j) {
-    var color = Color.unpack(packedBuffer, offset);
+  for (let j = 0; j < numBatchedIndices; ++j) {
+    const color = Color.unpack(packedBuffer, offset);
     offset += Color.packedLength;
 
-    var indexOffset = packedBuffer[offset++];
-    var count = packedBuffer[offset++];
+    const indexOffset = packedBuffer[offset++];
+    const count = packedBuffer[offset++];
 
-    var length = packedBuffer[offset++];
-    var batchIds = new Array(length);
+    const length = packedBuffer[offset++];
+    const batchIds = new Array(length);
 
-    for (var k = 0; k < length; ++k) {
+    for (let k = 0; k < length; ++k) {
       batchIds[k] = packedBuffer[offset++];
     }
 
@@ -209,11 +209,11 @@ function unpackBuffer(geometries, packedBuffer) {
   return indicesBytesPerElement;
 }
 
-var createVerticesTaskProcessor = new TaskProcessor(
+const createVerticesTaskProcessor = new TaskProcessor(
   "createVectorTileGeometries",
   5
 );
-var scratchColor = new Color();
+const scratchColor = new Color();
 
 function createPrimitive(geometries) {
   if (defined(geometries._primitive)) {
@@ -221,21 +221,21 @@ function createPrimitive(geometries) {
   }
 
   if (!defined(geometries._verticesPromise)) {
-    var boxes = geometries._boxes;
-    var boxBatchIds = geometries._boxBatchIds;
-    var cylinders = geometries._cylinders;
-    var cylinderBatchIds = geometries._cylinderBatchIds;
-    var ellipsoids = geometries._ellipsoids;
-    var ellipsoidBatchIds = geometries._ellipsoidBatchIds;
-    var spheres = geometries._spheres;
-    var sphereBatchIds = geometries._sphereBatchIds;
+    let boxes = geometries._boxes;
+    let boxBatchIds = geometries._boxBatchIds;
+    let cylinders = geometries._cylinders;
+    let cylinderBatchIds = geometries._cylinderBatchIds;
+    let ellipsoids = geometries._ellipsoids;
+    let ellipsoidBatchIds = geometries._ellipsoidBatchIds;
+    let spheres = geometries._spheres;
+    let sphereBatchIds = geometries._sphereBatchIds;
 
-    var batchTableColors = geometries._batchTableColors;
-    var packedBuffer = geometries._packedBuffer;
+    let batchTableColors = geometries._batchTableColors;
+    let packedBuffer = geometries._packedBuffer;
 
     if (!defined(batchTableColors)) {
       // Copy because they may be the views on the same buffer.
-      var length = 0;
+      let length = 0;
       if (defined(geometries._boxes)) {
         boxes = geometries._boxes = arraySlice(boxes);
         boxBatchIds = geometries._boxBatchIds = arraySlice(boxBatchIds);
@@ -264,17 +264,17 @@ function createPrimitive(geometries) {
       }
 
       batchTableColors = geometries._batchTableColors = new Uint32Array(length);
-      var batchTable = geometries._batchTable;
+      const batchTable = geometries._batchTable;
 
-      for (var i = 0; i < length; ++i) {
-        var color = batchTable.getColor(i, scratchColor);
+      for (let i = 0; i < length; ++i) {
+        const color = batchTable.getColor(i, scratchColor);
         batchTableColors[i] = color.toRgba();
       }
 
       packedBuffer = geometries._packedBuffer = packBuffer(geometries);
     }
 
-    var transferrableObjects = [];
+    const transferrableObjects = [];
     if (defined(boxes)) {
       transferrableObjects.push(boxes.buffer, boxBatchIds.buffer);
     }
@@ -289,7 +289,7 @@ function createPrimitive(geometries) {
     }
     transferrableObjects.push(batchTableColors.buffer, packedBuffer.buffer);
 
-    var parameters = {
+    const parameters = {
       boxes: defined(boxes) ? boxes.buffer : undefined,
       boxBatchIds: defined(boxes) ? boxBatchIds.buffer : undefined,
       cylinders: defined(cylinders) ? cylinders.buffer : undefined,
@@ -306,7 +306,7 @@ function createPrimitive(geometries) {
       packedBuffer: packedBuffer.buffer,
     };
 
-    var verticesPromise = (geometries._verticesPromise = createVerticesTaskProcessor.scheduleTask(
+    const verticesPromise = (geometries._verticesPromise = createVerticesTaskProcessor.scheduleTask(
       parameters,
       transferrableObjects
     ));
@@ -316,8 +316,8 @@ function createPrimitive(geometries) {
     }
 
     verticesPromise.then(function (result) {
-      var packedBuffer = new Float64Array(result.packedBuffer);
-      var indicesBytesPerElement = unpackBuffer(geometries, packedBuffer);
+      const packedBuffer = new Float64Array(result.packedBuffer);
+      const indicesBytesPerElement = unpackBuffer(geometries, packedBuffer);
 
       if (indicesBytesPerElement === 2) {
         geometries._indices = new Uint16Array(result.indices);

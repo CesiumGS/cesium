@@ -19,9 +19,9 @@ import createContext from "../createContext.js";
 describe(
   "Renderer/Draw",
   function () {
-    var context;
-    var sp;
-    var va;
+    let context;
+    let sp;
+    let va;
 
     beforeAll(function () {
       context = createContext();
@@ -37,7 +37,7 @@ describe(
     });
 
     it("draws a white point", function () {
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       expect({
         context: context,
         fragmentShader: fs,
@@ -46,11 +46,11 @@ describe(
 
     it("draws a white point with an index buffer", function () {
       // Use separate context to work around IE 11.0.9 bug
-      var context = createContext();
+      const context = createContext();
 
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -62,7 +62,7 @@ describe(
 
       // Two indices instead of one is a workaround for NVIDIA:
       //   http://www.khronos.org/message_boards/viewtopic.php?f=44&t=3719
-      var indexBuffer = Buffer.createIndexBuffer({
+      const indexBuffer = Buffer.createIndexBuffer({
         context: context,
         typedArray: new Uint16Array([0, 0]),
         usage: BufferUsage.STATIC_DRAW,
@@ -88,7 +88,7 @@ describe(
       ClearCommand.ALL.execute(context);
       expect(context).toReadPixels([0, 0, 0, 255]);
 
-      var command = new DrawCommand({
+      const command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -102,7 +102,7 @@ describe(
     });
 
     it("draws a red point with two vertex buffers", function () {
-      var vs =
+      const vs =
         "attribute vec4 position;" +
         "attribute mediump float intensity;" +
         "varying mediump float fs_intensity;" +
@@ -111,7 +111,7 @@ describe(
         "  gl_Position = position;" +
         "  fs_intensity = intensity;" +
         "}";
-      var fs =
+      const fs =
         "varying mediump float fs_intensity; void main() { gl_FragColor = vec4(fs_intensity, 0.0, 0.0, 1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
@@ -150,7 +150,7 @@ describe(
       ClearCommand.ALL.execute(context);
       expect(context).toReadPixels([0, 0, 0, 255]);
 
-      var command = new DrawCommand({
+      const command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -160,7 +160,7 @@ describe(
     });
 
     it("draws a red point with one interleaved vertex buffers", function () {
-      var vs =
+      const vs =
         "attribute vec4 position;" +
         "attribute mediump float intensity;" +
         "varying mediump float fs_intensity;" +
@@ -169,7 +169,7 @@ describe(
         "  gl_Position = position;" +
         "  fs_intensity = intensity;" +
         "}";
-      var fs =
+      const fs =
         "varying mediump float fs_intensity; void main() { gl_FragColor = vec4(fs_intensity, 0.0, 0.0, 1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
@@ -181,8 +181,8 @@ describe(
         },
       });
 
-      var stride = 5 * Float32Array.BYTES_PER_ELEMENT;
-      var vertexBuffer = Buffer.createVertexBuffer({
+      const stride = 5 * Float32Array.BYTES_PER_ELEMENT;
+      const vertexBuffer = Buffer.createVertexBuffer({
         context: context,
         typedArray: new Float32Array([0, 0, 0, 1, 1]),
         usage: BufferUsage.STATIC_DRAW,
@@ -211,7 +211,7 @@ describe(
       ClearCommand.ALL.execute(context);
       expect(context).toReadPixels([0, 0, 0, 255]);
 
-      var command = new DrawCommand({
+      const command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -221,9 +221,9 @@ describe(
     });
 
     it("draws with scissor test", function () {
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -253,7 +253,7 @@ describe(
       expect(context).toReadPixels([0, 0, 0, 255]);
 
       // 2 of 3:  Render point - fails scissor test
-      var command = new DrawCommand({
+      let command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -284,9 +284,9 @@ describe(
     });
 
     it("draws with color mask", function () {
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -316,7 +316,7 @@ describe(
       expect(context).toReadPixels([0, 0, 0, 255]);
 
       // 2 of 3:  Render point - blue color mask
-      var command = new DrawCommand({
+      let command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -351,16 +351,16 @@ describe(
     });
 
     it("draws with additive blending", function () {
-      var cxt = createContext({
+      const cxt = createContext({
         webgl: {
           alpha: true,
         },
       });
 
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(0.5); }";
-      var sp = ShaderProgram.fromCache({
+      const fs = "void main() { gl_FragColor = vec4(0.5); }";
+      const sp = ShaderProgram.fromCache({
         context: cxt,
         vertexShaderSource: vs,
         fragmentShaderSource: fs,
@@ -369,7 +369,7 @@ describe(
         },
       });
 
-      var va = new VertexArray({
+      const va = new VertexArray({
         context: cxt,
         attributes: [
           {
@@ -388,7 +388,7 @@ describe(
       ClearCommand.ALL.execute(cxt);
       expect(cxt).toReadPixels([0, 0, 0, 0]);
 
-      var command = new DrawCommand({
+      const command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -425,16 +425,16 @@ describe(
     });
 
     it("draws with alpha blending", function () {
-      var cxt = createContext({
+      const cxt = createContext({
         webgl: {
           alpha: true,
         },
       });
 
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 0.5); }";
-      var sp = ShaderProgram.fromCache({
+      const fs = "void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 0.5); }";
+      const sp = ShaderProgram.fromCache({
         context: cxt,
         vertexShaderSource: vs,
         fragmentShaderSource: fs,
@@ -443,7 +443,7 @@ describe(
         },
       });
 
-      var va = new VertexArray({
+      const va = new VertexArray({
         context: cxt,
         attributes: [
           {
@@ -462,7 +462,7 @@ describe(
       ClearCommand.ALL.execute(cxt);
       expect(cxt).toReadPixels([0, 0, 0, 0]);
 
-      var command = new DrawCommand({
+      const command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -499,9 +499,9 @@ describe(
     });
 
     it("draws with blend color", function () {
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -529,7 +529,7 @@ describe(
       ClearCommand.ALL.execute(context);
       expect(context).toReadPixels([0, 0, 0, 255]);
 
-      var command = new DrawCommand({
+      const command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -562,9 +562,9 @@ describe(
     });
 
     it("draws with culling", function () {
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -611,7 +611,7 @@ describe(
       expect(context).toReadPixels([0, 0, 0, 255]);
 
       // 2 of 3:  Cull front faces - nothing is drawn
-      var command = new DrawCommand({
+      let command = new DrawCommand({
         primitiveType: PrimitiveType.TRIANGLE_STRIP,
         shaderProgram: sp,
         vertexArray: va,
@@ -642,9 +642,9 @@ describe(
     });
 
     it("draws with front face winding order", function () {
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -691,7 +691,7 @@ describe(
       expect(context).toReadPixels([0, 0, 0, 255]);
 
       // 2 of 3:  Cull back faces with opposite winding order - nothing is drawn
-      var command = new DrawCommand({
+      let command = new DrawCommand({
         primitiveType: PrimitiveType.TRIANGLE_STRIP,
         shaderProgram: sp,
         vertexArray: va,
@@ -724,9 +724,9 @@ describe(
     });
 
     it("draws with the depth test", function () {
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -768,7 +768,7 @@ describe(
         ],
       });
 
-      var command = new DrawCommand({
+      const command = new DrawCommand({
         primitiveType: PrimitiveType.TRIANGLE_STRIP,
         shaderProgram: sp,
         vertexArray: va,
@@ -782,7 +782,7 @@ describe(
 
       // 1 of 2.  Triangle fan passes the depth test.
 
-      var clearCommand = new ClearCommand({
+      const clearCommand = new ClearCommand({
         color: new Color(0.0, 0.0, 0.0, 0.0),
         depth: 1.0,
       });
@@ -804,9 +804,9 @@ describe(
     });
 
     it("draws with depth range", function () {
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs =
+      const fs =
         "void main() { gl_FragColor = vec4(gl_DepthRange.near, gl_DepthRange.far, 0.0, 1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
@@ -835,7 +835,7 @@ describe(
       ClearCommand.ALL.execute(context);
       expect(context).toReadPixels([0, 0, 0, 255]);
 
-      var command = new DrawCommand({
+      const command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -851,9 +851,9 @@ describe(
     });
 
     it("draws with line width", function () {
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -890,7 +890,7 @@ describe(
       ClearCommand.ALL.execute(context);
       expect(context).toReadPixels([0, 0, 0, 255]);
 
-      var command = new DrawCommand({
+      const command = new DrawCommand({
         primitiveType: PrimitiveType.LINES,
         shaderProgram: sp,
         vertexArray: va,
@@ -908,9 +908,9 @@ describe(
     });
 
     it("draws with polygon offset", function () {
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -938,7 +938,7 @@ describe(
       ClearCommand.ALL.execute(context);
       expect(context).toReadPixels([0, 0, 0, 255]);
 
-      var command = new DrawCommand({
+      const command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -960,9 +960,9 @@ describe(
         return;
       }
 
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -990,7 +990,7 @@ describe(
       ClearCommand.ALL.execute(context);
       expect(context).toReadPixels([0, 0, 0, 255]);
 
-      var command = new DrawCommand({
+      let command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -1024,9 +1024,9 @@ describe(
         return;
       }
 
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -1068,7 +1068,7 @@ describe(
         ],
       });
 
-      var rs = RenderState.fromCache({
+      const rs = RenderState.fromCache({
         stencilTest: {
           enabled: true,
           frontFunction: WebGLConstants.EQUAL,
@@ -1082,7 +1082,7 @@ describe(
       expect(context).toReadPixels([0, 0, 0, 255]);
 
       // 2 of 4.  Render where stencil is set - nothing is drawn
-      var command = new DrawCommand({
+      let command = new DrawCommand({
         primitiveType: PrimitiveType.TRIANGLE_STRIP,
         shaderProgram: sp,
         vertexArray: va,
@@ -1130,9 +1130,9 @@ describe(
         return;
       }
 
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -1174,7 +1174,7 @@ describe(
         ],
       });
 
-      var rs = RenderState.fromCache({
+      const rs = RenderState.fromCache({
         frontFace: WindingOrder.CLOCKWISE,
         stencilTest: {
           enabled: true,
@@ -1188,7 +1188,7 @@ describe(
       expect(context).toReadPixels([0, 0, 0, 255]);
 
       // 2 of 4.  Render where stencil is set - nothing is drawn
-      var command = new DrawCommand({
+      let command = new DrawCommand({
         primitiveType: PrimitiveType.TRIANGLE_STRIP,
         shaderProgram: sp,
         vertexArray: va,
@@ -1233,9 +1233,9 @@ describe(
     });
 
     it("draws with an offset and count", function () {
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -1264,7 +1264,7 @@ describe(
       expect(context).toReadPixels([0, 0, 0, 255]);
 
       // The first point in the vertex buffer does not generate any pixels
-      var command = new DrawCommand({
+      let command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         offset: 0,
         count: 1,
@@ -1287,7 +1287,7 @@ describe(
 
     it("draws two instances of a point with different per-instance colors", function () {
       if (context.instancedArrays) {
-        var vs =
+        const vs =
           "attribute vec4 position;" +
           "attribute vec4 color;" +
           "varying vec4 v_color;" +
@@ -1296,7 +1296,7 @@ describe(
           "  gl_Position = position;" +
           "  v_color = color;" +
           "}";
-        var fs =
+        const fs =
           "varying vec4 v_color; void main() { gl_FragColor = v_color; }";
         sp = ShaderProgram.fromCache({
           context: context,
@@ -1338,7 +1338,7 @@ describe(
         ClearCommand.ALL.execute(context);
         expect(context).toReadPixels([0, 0, 0, 255]);
 
-        var command = new DrawCommand({
+        const command = new DrawCommand({
           primitiveType: PrimitiveType.POINTS,
           shaderProgram: sp,
           vertexArray: va,
@@ -1367,9 +1367,9 @@ describe(
     });
 
     it("fails to draw (missing primitiveType)", function () {
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -1384,9 +1384,9 @@ describe(
     });
 
     it("fails to draw (primitiveType)", function () {
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -1402,9 +1402,9 @@ describe(
     });
 
     it("fails to draw (missing vertexArray)", function () {
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -1420,9 +1420,9 @@ describe(
     });
 
     it("fails to draw (negative offset)", function () {
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -1443,9 +1443,9 @@ describe(
     });
 
     it("throws if instanceCount is less than one", function () {
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -1470,7 +1470,7 @@ describe(
         ],
       });
 
-      var command = new DrawCommand({
+      const command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -1484,9 +1484,9 @@ describe(
 
     it("throws when instanceCount is greater than one and the instanced arrays extension is not supported", function () {
       if (!context.instancedArrays) {
-        var vs =
+        const vs =
           "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+        const fs = "void main() { gl_FragColor = vec4(1.0); }";
         sp = ShaderProgram.fromCache({
           context: context,
           vertexShaderSource: vs,
@@ -1511,7 +1511,7 @@ describe(
           ],
         });
 
-        var command = new DrawCommand({
+        const command = new DrawCommand({
           primitiveType: PrimitiveType.POINTS,
           shaderProgram: sp,
           vertexArray: va,

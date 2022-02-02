@@ -7,8 +7,8 @@ import { TimeStandard } from "../../Source/Cesium.js";
 
 describe("Core/IauOrientationAxes", function () {
   it("compute ICRF to Moon Fixed", function () {
-    var date = new JulianDate(2451545.0, -32.184, TimeStandard.TAI);
-    var axes = new IauOrientationAxes(Iau2000Orientation.ComputeMoon);
+    const date = new JulianDate(2451545.0, -32.184, TimeStandard.TAI);
+    const axes = new IauOrientationAxes(Iau2000Orientation.ComputeMoon);
 
     // expected results taken from STK Components:
     //    EvaluatorGroup group = new EvaluatorGroup();
@@ -16,7 +16,7 @@ describe("Core/IauOrientationAxes", function () {
     //    AxesEvaluator eval1 = axes.GetEvaluator(group);
     //    UnitQuaternion q = eval1.Evaluate(TimeConstants.J2000);
     //    Matrix3By3 expectedMatrix = new Matrix3By3(q);
-    var expectedMatrix = new Matrix3(
+    const expectedMatrix = new Matrix3(
       0.784227052091917,
       0.55784711246016394,
       0.27165148607559436,
@@ -28,7 +28,7 @@ describe("Core/IauOrientationAxes", function () {
       0.91097977859342938
     );
 
-    var mtx = axes.evaluate(date);
+    const mtx = axes.evaluate(date);
     expect(mtx).toEqualEpsilon(expectedMatrix, CesiumMath.EPSILON13);
   });
 });

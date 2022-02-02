@@ -23,7 +23,7 @@ import defined from "../../Core/defined.js";
  * @example
  * // On mouse over, display all the properties for a feature in the console log.
  * handler.setInputAction(function(movement) {
- *     var feature = scene.pick(movement.endPosition);
+ *     const feature = scene.pick(movement.endPosition);
  *     if (feature instanceof Cesium.ModelFeature) {
  *         console.log(feature);
  *     }
@@ -116,6 +116,24 @@ Object.defineProperties(ModelFeature.prototype, {
       return this._featureTable;
     },
   },
+
+  /**
+   * Get the feature ID associated with this feature. For 3D Tiles 1.0, the
+   * batch ID is returned. For EXT_mesh_features, this is the feature ID from
+   * the selected feature ID set.
+   *
+   * @memberof ModelFeature.prototype
+   *
+   * @type {Number}
+   *
+   * @readonly
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  featureId: {
+    get: function () {
+      return this._featureId;
+    },
+  },
 });
 
 /**
@@ -136,10 +154,10 @@ ModelFeature.prototype.hasProperty = function (name) {
  *
  * @example
  * // Display all the properties for a feature in the console log.
- * var propertyNames = feature.getPropertyNames();
- * var length = propertyNames.length;
- * for (var i = 0; i < length; ++i) {
- *     var propertyName = propertyNames[i];
+ * const propertyNames = feature.getPropertyNames();
+ * const length = propertyNames.length;
+ * for (let i = 0; i < length; ++i) {
+ *     const propertyName = propertyNames[i];
  *     console.log(propertyName + ': ' + feature.getProperty(propertyName));
  * }
  */
@@ -167,7 +185,7 @@ ModelFeature.prototype.getProperty = function (name) {
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ModelFeature.prototype.getPropertyInherited = function (name) {
-  var value = this._featureTable.getPropertyBySemantic(this._featureId, name);
+  const value = this._featureTable.getPropertyBySemantic(this._featureId, name);
   if (defined(value)) {
     return value;
   }
@@ -195,10 +213,10 @@ ModelFeature.prototype.getPropertyNames = function (results) {
  * @exception {DeveloperError} Inherited batch table hierarchy property is read only.
  *
  * @example
- * var height = feature.getProperty('Height'); // e.g., the height of a building
+ * const height = feature.getProperty('Height'); // e.g., the height of a building
  *
  * @example
- * var name = 'clicked';
+ * const name = 'clicked';
  * if (feature.getProperty(name)) {
  *     console.log('already clicked');
  * } else {

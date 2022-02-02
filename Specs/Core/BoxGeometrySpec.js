@@ -24,7 +24,7 @@ describe("Core/BoxGeometry", function () {
   });
 
   it("constructor creates optimized number of positions for VertexFormat.POSITIONS_ONLY", function () {
-    var m = BoxGeometry.createGeometry(
+    const m = BoxGeometry.createGeometry(
       new BoxGeometry({
         minimum: new Cartesian3(-1, -2, -3),
         maximum: new Cartesian3(1, 2, 3),
@@ -37,9 +37,9 @@ describe("Core/BoxGeometry", function () {
   });
 
   it("constructor computes all vertex attributes", function () {
-    var minimumCorner = new Cartesian3(0, 0, 0);
-    var maximumCorner = new Cartesian3(1, 1, 1);
-    var m = BoxGeometry.createGeometry(
+    const minimumCorner = new Cartesian3(0, 0, 0);
+    const maximumCorner = new Cartesian3(1, 1, 1);
+    const m = BoxGeometry.createGeometry(
       new BoxGeometry({
         minimum: minimumCorner,
         maximum: maximumCorner,
@@ -47,8 +47,8 @@ describe("Core/BoxGeometry", function () {
       })
     );
 
-    var numVertices = 24; //3 points x 8 corners
-    var numTriangles = 12; //6 sides x 2 triangles per side
+    const numVertices = 24; //3 points x 8 corners
+    const numTriangles = 12; //6 sides x 2 triangles per side
     expect(m.attributes.position.values.length).toEqual(numVertices * 3);
     expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
     expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
@@ -64,7 +64,7 @@ describe("Core/BoxGeometry", function () {
   });
 
   it("computes offset attribute", function () {
-    var m = BoxGeometry.createGeometry(
+    const m = BoxGeometry.createGeometry(
       new BoxGeometry({
         minimum: new Cartesian3(-1, -2, -3),
         maximum: new Cartesian3(1, 2, 3),
@@ -73,12 +73,12 @@ describe("Core/BoxGeometry", function () {
       })
     );
 
-    var numVertices = 8;
+    const numVertices = 8;
     expect(m.attributes.position.values.length).toEqual(numVertices * 3);
 
-    var offset = m.attributes.applyOffset.values;
+    const offset = m.attributes.applyOffset.values;
     expect(offset.length).toEqual(numVertices);
-    var expected = new Array(offset.length);
+    let expected = new Array(offset.length);
     expected = arrayFill(expected, 1);
     expect(offset).toEqual(expected);
   });
@@ -98,7 +98,7 @@ describe("Core/BoxGeometry", function () {
   });
 
   it("fromDimensions", function () {
-    var m = BoxGeometry.createGeometry(
+    const m = BoxGeometry.createGeometry(
       BoxGeometry.fromDimensions({
         dimensions: new Cartesian3(1, 2, 3),
         vertexFormat: VertexFormat.POSITION_ONLY,
@@ -116,9 +116,9 @@ describe("Core/BoxGeometry", function () {
   });
 
   it("fromAxisAlignedBoundingBox", function () {
-    var min = new Cartesian3(-1, -2, -3);
-    var max = new Cartesian3(1, 2, 3);
-    var m = BoxGeometry.fromAxisAlignedBoundingBox(
+    const min = new Cartesian3(-1, -2, -3);
+    const max = new Cartesian3(1, 2, 3);
+    const m = BoxGeometry.fromAxisAlignedBoundingBox(
       new AxisAlignedBoundingBox(min, max)
     );
     expect(m._minimum).toEqual(min);
@@ -126,13 +126,13 @@ describe("Core/BoxGeometry", function () {
   });
 
   it("undefined is returned if min and max are equal", function () {
-    var box = new BoxGeometry({
+    const box = new BoxGeometry({
       vertexFormat: VertexFormat.POSITION_ONLY,
       maximum: new Cartesian3(250000.0, 250000.0, 250000.0),
       minimum: new Cartesian3(250000.0, 250000.0, 250000.0),
     });
 
-    var geometry = BoxGeometry.createGeometry(box);
+    const geometry = BoxGeometry.createGeometry(box);
 
     expect(geometry).toBeUndefined();
   });

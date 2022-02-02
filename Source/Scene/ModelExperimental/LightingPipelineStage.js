@@ -11,7 +11,7 @@ import LightingModel from "./LightingModel.js";
  *
  * @private
  */
-var LightingPipelineStage = {};
+const LightingPipelineStage = {};
 LightingPipelineStage.name = "LightingPipelineStage"; // Helps with debugging
 
 /**
@@ -26,12 +26,12 @@ LightingPipelineStage.name = "LightingPipelineStage"; // Helps with debugging
  * @private
  */
 LightingPipelineStage.process = function (renderResources, primitive) {
-  var lightingOptions = renderResources.lightingOptions;
-  var shaderBuilder = renderResources.shaderBuilder;
+  const lightingOptions = renderResources.lightingOptions;
+  const shaderBuilder = renderResources.shaderBuilder;
 
   // The lighting model is always set by the material. However, custom shaders
   // can override this.
-  var lightingModel = lightingOptions.lightingModel;
+  const lightingModel = lightingOptions.lightingModel;
 
   if (lightingModel === LightingModel.PBR) {
     shaderBuilder.addDefine(

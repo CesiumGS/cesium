@@ -254,7 +254,7 @@ PropertyTable.prototype.propertyExistsBySemantic = function (semantic) {
   return false;
 };
 
-var scratchResults = [];
+const scratchResults = [];
 
 /**
  * Returns an array of property IDs. For compatibility with the <code>3DTILES_batch_table_hierarchy</code> extension, this is computed for a specific feature.
@@ -305,7 +305,7 @@ PropertyTable.prototype.getPropertyIds = function (index, results) {
  * @private
  */
 PropertyTable.prototype.getProperty = function (index, propertyId) {
-  var result;
+  let result;
   if (defined(this._metadataTable)) {
     result = this._metadataTable.getProperty(index, propertyId);
     if (defined(result)) {

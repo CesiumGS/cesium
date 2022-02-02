@@ -2,7 +2,7 @@ import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
-var warnings = {};
+const warnings = {};
 
 /**
  * Logs a one time message to the console.  Use this function instead of
@@ -15,7 +15,7 @@ var warnings = {};
  * @param {String} [message=identifier] The message to log to the console.
  *
  * @example
- * for(var i=0;i<foo.length;++i) {
+ * for(let i=0;i<foo.length;++i) {
  *    if (!defined(foo[i].bar)) {
  *       // Something that can be recovered from but may happen a lot
  *       oneTimeWarning('foo.bar undefined', 'foo.bar is undefined. Setting to 0.');

@@ -15,11 +15,11 @@
  * //     vec3 normal;
  * //     vec2 texCoord;
  * // };
- * var struct = new ShaderStruct("Attributes");
+ * const struct = new ShaderStruct("Attributes");
  * struct.addField("vec3", "position");
  * struct.addField("vec3", "normal");
  * struct.addField("vec2", "texCoord");
- * var generatedLines = struct.generateGlslLines();
+ * const generatedLines = struct.generateGlslLines();
  *
  * @private
  */
@@ -34,7 +34,7 @@ export default function ShaderStruct(name) {
  * @param {String} identifier The identifier of the struct field
  */
 ShaderStruct.prototype.addField = function (type, identifier) {
-  var field = "    " + type + " " + identifier + ";";
+  const field = "    " + type + " " + identifier + ";";
   this.fields.push(field);
 };
 
@@ -43,7 +43,7 @@ ShaderStruct.prototype.addField = function (type, identifier) {
  * @return {String[]} The generated GLSL code.
  */
 ShaderStruct.prototype.generateGlslLines = function () {
-  var fields = this.fields;
+  let fields = this.fields;
   if (fields.length === 0) {
     // GLSL requires structs to have at least one field
     fields = ["    float _empty;"];

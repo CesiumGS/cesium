@@ -58,7 +58,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("resolves readyPromise", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
     });
@@ -70,11 +70,11 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("resolves readyPromise with Resource", function () {
-    var resource = new Resource({
+    const resource = new Resource({
       url: "made/up/wms/server",
     });
 
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: resource,
       layers: "someLayer",
     });
@@ -86,7 +86,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("returns valid value for hasAlphaChannel", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
     });
@@ -99,8 +99,8 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("can use a custom ellipsoid", function () {
-    var ellipsoid = new Ellipsoid(1, 2, 3);
-    var provider = new WebMapServiceImageryProvider({
+    const ellipsoid = new Ellipsoid(1, 2, 3);
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
       ellipsoid: ellipsoid,
@@ -114,7 +114,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("includes specified parameters in URL", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
       parameters: {
@@ -132,8 +132,8 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new Uri(request.url);
-        var params = queryToObject(uri.query());
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
         expect(params.something).toEqual("foo");
         expect(params.another).toEqual("false");
         expect(params.version).toEqual("1.3.0");
@@ -149,7 +149,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("includes crs parameters in URL for WMS version 1.3.0", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
       crs: "CRS:27",
@@ -166,8 +166,8 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new Uri(request.url);
-        var params = queryToObject(uri.query());
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
         expect(params.crs).toEqual("CRS:27");
         expect(params.version).toEqual("1.3.0");
 
@@ -181,8 +181,144 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
   });
 
+  it("includes bbox parameters in URL for WMS version 1.3.0 and CRS EPSG:4326", function () {
+    const provider = new WebMapServiceImageryProvider({
+      url: "made/up/wms/server",
+      layers: "someLayer",
+      crs: "EPSG:4326",
+      parameters: {
+        version: "1.3.0",
+      },
+    });
+
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      spyOn(Resource._Implementations, "createImage").and.callFake(function (
+        request,
+        crossOrigin,
+        deferred
+      ) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
+        expect(params.crs).toEqual("EPSG:4326");
+        expect(params.version).toEqual("1.3.0");
+        expect(params.bbox).toEqual("-90,-180,90,0");
+
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      });
+
+      return provider.requestImage(0, 0, 0).then(function (image) {
+        expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      });
+    });
+  });
+
+  it("reverses axis order for EPSG code between 4000-5000 for WMS version 1.3.0", function () {
+    const provider = new WebMapServiceImageryProvider({
+      url: "made/up/wms/server",
+      layers: "someLayer",
+      crs: "EPSG:4321",
+      parameters: {
+        version: "1.3.0",
+      },
+    });
+
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      spyOn(Resource._Implementations, "createImage").and.callFake(function (
+        request,
+        crossOrigin,
+        deferred
+      ) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
+        expect(params.crs).toEqual("EPSG:4321");
+        expect(params.version).toEqual("1.3.0");
+        expect(params.bbox).toEqual("-90,-180,90,0");
+
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      });
+
+      return provider.requestImage(0, 0, 0).then(function (image) {
+        expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      });
+    });
+  });
+
+  it("reverses axis order for included EPSG code for WMS version 1.3.0", function () {
+    const provider = new WebMapServiceImageryProvider({
+      url: "made/up/wms/server",
+      layers: "someLayer",
+      crs: "EPSG:3035",
+      parameters: {
+        version: "1.3.0",
+      },
+    });
+
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      spyOn(Resource._Implementations, "createImage").and.callFake(function (
+        request,
+        crossOrigin,
+        deferred
+      ) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
+        expect(params.crs).toEqual("EPSG:3035");
+        expect(params.version).toEqual("1.3.0");
+        expect(params.bbox).toEqual("-90,-180,90,0");
+
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      });
+
+      return provider.requestImage(0, 0, 0).then(function (image) {
+        expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      });
+    });
+  });
+
+  it("does not reverse axis order for excluded EPSG code for WMS version 1.3.0", function () {
+    const provider = new WebMapServiceImageryProvider({
+      url: "made/up/wms/server",
+      layers: "someLayer",
+      crs: "EPSG:4559",
+      parameters: {
+        version: "1.3.0",
+      },
+    });
+
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      spyOn(Resource._Implementations, "createImage").and.callFake(function (
+        request,
+        crossOrigin,
+        deferred
+      ) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
+        expect(params.crs).toEqual("EPSG:4559");
+        expect(params.version).toEqual("1.3.0");
+        expect(params.bbox).toEqual("-180,-90,0,90");
+
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      });
+
+      return provider.requestImage(0, 0, 0).then(function (image) {
+        expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      });
+    });
+  });
+
   it("disregard crs parameters in URL for WMS version 1.1.0", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
       crs: "CRS:27",
@@ -199,8 +335,8 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new Uri(request.url);
-        var params = queryToObject(uri.query());
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
         expect(params.srs).toEqual("EPSG:4326");
         expect(params.version).toEqual("1.1.0");
 
@@ -215,7 +351,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("includes srs parameters in URL for WMS version 1.1.0", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
       srs: "IAU2000:30118",
@@ -232,8 +368,8 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new Uri(request.url);
-        var params = queryToObject(uri.query());
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
         expect(params.srs).toEqual("IAU2000:30118");
         expect(params.version).toEqual("1.1.0");
 
@@ -247,8 +383,42 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
   });
 
+  it("includes bbox parameters in URL for WMS version 1.1.1", function () {
+    const provider = new WebMapServiceImageryProvider({
+      url: "made/up/wms/server",
+      layers: "someLayer",
+      crs: "CRS:27",
+      parameters: {
+        version: "1.1.0",
+      },
+    });
+
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      spyOn(Resource._Implementations, "createImage").and.callFake(function (
+        request,
+        crossOrigin,
+        deferred
+      ) {
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
+        expect(params.srs).toEqual("EPSG:4326");
+        expect(params.version).toEqual("1.1.0");
+        expect(params.bbox).toEqual("-180,-90,0,90");
+
+        // Don't need to actually load image, but satisfy the request.
+        deferred.resolve(true);
+      });
+
+      return provider.requestImage(0, 0, 0).then(function (image) {
+        expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      });
+    });
+  });
+
   it("supports subdomains string in URL", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "{s}",
       subdomains: "123",
       layers: "",
@@ -256,12 +426,12 @@ describe("Scene/WebMapServiceImageryProvider", function () {
 
     spyOn(ImageryProvider, "loadImage");
     provider.requestImage(0, 0, 0);
-    var url = ImageryProvider.loadImage.calls.mostRecent().args[1].url;
+    const url = ImageryProvider.loadImage.calls.mostRecent().args[1].url;
     expect("123".indexOf(url.substring(0, 1))).toBeGreaterThanOrEqualTo(0);
   });
 
   it("supports subdomains array in URL", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "{s}",
       subdomains: ["foo", "bar"],
       layers: "",
@@ -269,14 +439,14 @@ describe("Scene/WebMapServiceImageryProvider", function () {
 
     spyOn(ImageryProvider, "loadImage");
     provider.requestImage(0, 0, 0);
-    var url = ImageryProvider.loadImage.calls.mostRecent().args[1].url;
+    const url = ImageryProvider.loadImage.calls.mostRecent().args[1].url;
     expect(
       ["foo", "bar"].indexOf(url.substring(0, 3))
     ).toBeGreaterThanOrEqualTo(0);
   });
 
   it("supports a question mark at the end of the URL", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server?",
       layers: "someLayer",
     });
@@ -289,7 +459,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var questionMarkCount = request.url.match(/\?/g).length;
+        const questionMarkCount = request.url.match(/\?/g).length;
         expect(questionMarkCount).toEqual(1);
 
         // Don't need to actually load image, but satisfy the request.
@@ -303,7 +473,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("supports an ampersand at the end of the URL", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server?foo=bar&",
       layers: "someLayer",
     });
@@ -316,8 +486,8 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var url = request.url;
-        var questionMarkCount = url.match(/\?/g).length;
+        const url = request.url;
+        const questionMarkCount = url.match(/\?/g).length;
         expect(questionMarkCount).toEqual(1);
         expect(url).not.toContain("&&");
 
@@ -332,7 +502,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("supports a query parameter at the end of the URL", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server?foo=bar",
       layers: "someLayer",
     });
@@ -345,12 +515,12 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var url = request.url;
-        var questionMarkCount = url.match(/\?/g).length;
+        const url = request.url;
+        const questionMarkCount = url.match(/\?/g).length;
         expect(questionMarkCount).toEqual(1);
 
-        var uri = new Uri(url);
-        var params = queryToObject(uri.query());
+        const uri = new Uri(url);
+        const params = queryToObject(uri.query());
         expect(params.foo).toEqual("bar");
 
         // Don't need to actually load image, but satisfy the request.
@@ -364,7 +534,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("defaults WMS version to 1.1.1", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server?foo=bar",
       layers: "someLayer",
     });
@@ -377,9 +547,9 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var url = request.url;
-        var uri = new Uri(url);
-        var params = queryToObject(uri.query());
+        const url = request.url;
+        const uri = new Uri(url);
+        const params = queryToObject(uri.query());
         expect(params.version).toEqual("1.1.1");
 
         // Don't need to actually load image, but satisfy the request.
@@ -393,7 +563,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("requestImage returns a promise for an image and loads it for cross-origin use", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
     });
@@ -433,8 +603,8 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("requestImage requests tiles with SRS EPSG:3857 when tiling scheme is WebMercatorTilingScheme, WMS 1.1.1", function () {
-    var tilingScheme = new WebMercatorTilingScheme();
-    var provider = new WebMapServiceImageryProvider({
+    const tilingScheme = new WebMercatorTilingScheme();
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
       tilingScheme: tilingScheme,
@@ -459,13 +629,13 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new Uri(request.url);
-        var params = queryToObject(uri.query());
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
 
         expect(params.srs).toEqual("EPSG:3857");
         expect(params.version).toEqual("1.1.1");
 
-        var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
+        const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
         expect(params.bbox).toEqual(
           rect.west + "," + rect.south + "," + rect.east + "," + rect.north
         );
@@ -485,8 +655,8 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("requestImage requests tiles with CRS EPSG:3857 when tiling scheme is WebMercatorTilingScheme, WMS 1.3.0", function () {
-    var tilingScheme = new WebMercatorTilingScheme();
-    var provider = new WebMapServiceImageryProvider({
+    const tilingScheme = new WebMercatorTilingScheme();
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
       tilingScheme: tilingScheme,
@@ -514,13 +684,13 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new Uri(request.url);
-        var params = queryToObject(uri.query());
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
 
         expect(params.crs).toEqual("EPSG:3857");
         expect(params.version).toEqual("1.3.0");
 
-        var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
+        const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
         expect(params.bbox).toEqual(
           rect.west + "," + rect.south + "," + rect.east + "," + rect.north
         );
@@ -540,8 +710,8 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("requestImage requests tiles with SRS EPSG:4326 when tiling scheme is GeographicTilingScheme, WMS 1.1.1", function () {
-    var tilingScheme = new GeographicTilingScheme();
-    var provider = new WebMapServiceImageryProvider({
+    const tilingScheme = new GeographicTilingScheme();
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
       tilingScheme: tilingScheme,
@@ -566,13 +736,13 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new Uri(request.url);
-        var params = queryToObject(uri.query());
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
 
         expect(params.srs).toEqual("EPSG:4326");
         expect(params.version).toEqual("1.1.1");
 
-        var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
+        const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
         expect(params.bbox).toEqual(
           rect.west + "," + rect.south + "," + rect.east + "," + rect.north
         );
@@ -592,8 +762,8 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("requestImage requests tiles with SRS EPSG:4326 when tiling scheme is GeographicTilingScheme, WMS 1.1.0", function () {
-    var tilingScheme = new GeographicTilingScheme();
-    var provider = new WebMapServiceImageryProvider({
+    const tilingScheme = new GeographicTilingScheme();
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
       tilingScheme: tilingScheme,
@@ -621,13 +791,13 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new Uri(request.url);
-        var params = queryToObject(uri.query());
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
 
         expect(params.srs).toEqual("EPSG:4326");
         expect(params.version).toEqual("1.1.0");
 
-        var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
+        const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
         expect(params.bbox).toEqual(
           rect.west + "," + rect.south + "," + rect.east + "," + rect.north
         );
@@ -647,8 +817,8 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("requestImage requests tiles with CRS CRS:84 when tiling scheme is GeographicTilingScheme, WMS 1.3.0", function () {
-    var tilingScheme = new GeographicTilingScheme();
-    var provider = new WebMapServiceImageryProvider({
+    const tilingScheme = new GeographicTilingScheme();
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
       tilingScheme: tilingScheme,
@@ -676,13 +846,13 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new Uri(request.url);
-        var params = queryToObject(uri.query());
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
 
         expect(params.crs).toEqual("CRS:84");
         expect(params.version).toEqual("1.3.0");
 
-        var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
+        const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
         expect(params.bbox).toEqual(
           rect.west + "," + rect.south + "," + rect.east + "," + rect.north
         );
@@ -702,8 +872,8 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("requestImage requests tiles with CRS CRS:84 when tiling scheme is GeographicTilingScheme, WMS 1.3.1", function () {
-    var tilingScheme = new GeographicTilingScheme();
-    var provider = new WebMapServiceImageryProvider({
+    const tilingScheme = new GeographicTilingScheme();
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
       tilingScheme: tilingScheme,
@@ -731,13 +901,13 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new Uri(request.url);
-        var params = queryToObject(uri.query());
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
 
         expect(params.crs).toEqual("CRS:84");
         expect(params.version).toEqual("1.3.1");
 
-        var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
+        const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
         expect(params.bbox).toEqual(
           rect.west + "," + rect.south + "," + rect.east + "," + rect.north
         );
@@ -757,7 +927,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("does not treat parameter names as case sensitive", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server?foo=bar",
       layers: "someLayer",
       parameters: {
@@ -773,8 +943,8 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        var uri = new Uri(request.url);
-        var params = queryToObject(uri.query());
+        const uri = new Uri(request.url);
+        const params = queryToObject(uri.query());
 
         expect(params.format).toEqual("foo");
         expect(params.format).not.toEqual("image/jpeg");
@@ -794,13 +964,13 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("turns the supplied credit into a logo", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server?foo=bar",
       layers: "someLayer",
     });
     expect(provider.credit).toBeUndefined();
 
-    var providerWithCredit = new WebMapServiceImageryProvider({
+    const providerWithCredit = new WebMapServiceImageryProvider({
       url: "made/up/wms/server?foo=bar",
       layers: "someLayer",
       credit: "Thanks to our awesome made up source of this imagery!",
@@ -809,8 +979,8 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("uses rectangle passed to constructor", function () {
-    var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
-    var provider = new WebMapServiceImageryProvider({
+    const rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
       rectangle: rectangle,
@@ -832,7 +1002,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("uses maximumLevel passed to constructor", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
       maximumLevel: 5,
@@ -841,7 +1011,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("uses minimumLevel passed to constructor", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
       minimumLevel: 1,
@@ -850,8 +1020,8 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("uses tilingScheme passed to constructor", function () {
-    var tilingScheme = new WebMercatorTilingScheme();
-    var provider = new WebMapServiceImageryProvider({
+    const tilingScheme = new WebMercatorTilingScheme();
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
       tilingScheme: tilingScheme,
@@ -860,7 +1030,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("uses tileWidth passed to constructor", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
       tileWidth: 123,
@@ -869,7 +1039,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("uses tileHeight passed to constructor", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
       tileWidth: 456,
@@ -878,7 +1048,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   });
 
   it("raises error event when image cannot be loaded", function () {
-    var provider = new WebMapServiceImageryProvider({
+    const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
       layers: "someLayer",
     });
@@ -886,9 +1056,9 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     return pollToPromise(function () {
       return provider.ready;
     }).then(function () {
-      var layer = new ImageryLayer(provider);
+      const layer = new ImageryLayer(provider);
 
-      var tries = 0;
+      let tries = 0;
       provider.errorEvent.addEventListener(function (error) {
         expect(error.timesRetried).toEqual(tries);
         ++tries;
@@ -920,7 +1090,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         }
       };
 
-      var imagery = new Imagery(layer, 0, 0, 0);
+      const imagery = new Imagery(layer, 0, 0, 0);
       imagery.addReference();
       layer._requestImagery(imagery);
       RequestScheduler.update();
@@ -937,7 +1107,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
 
   describe("pickFeatures", function () {
     it("works with GeoJSON responses", function () {
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         url: "made/up/wms/server",
         layers: "someLayer",
       });
@@ -971,7 +1141,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           .then(function (pickResult) {
             expect(pickResult.length).toBe(1);
 
-            var firstResult = pickResult[0];
+            const firstResult = pickResult[0];
             expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
             expect(firstResult.name).toBe("TOP TANK");
             expect(firstResult.description).toContain("GEOSCIENCE AUSTRALIA");
@@ -983,7 +1153,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("works with MapInfo MXP responses", function () {
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         url: "made/up/wms/server",
         layers: "someLayer",
       });
@@ -1017,7 +1187,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           .then(function (pickResult) {
             expect(pickResult.length).toBe(1);
 
-            var firstResult = pickResult[0];
+            const firstResult = pickResult[0];
             expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
             expect(firstResult.name).toBe("SPRINGWOOD");
             expect(firstResult.description).toContain("NSW");
@@ -1026,7 +1196,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("works with Esri WMS responses", function () {
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         url: "made/up/wms/server",
         layers: "someLayer",
       });
@@ -1060,7 +1230,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           .then(function (pickResult) {
             expect(pickResult.length).toBe(1);
 
-            var firstResult = pickResult[0];
+            const firstResult = pickResult[0];
             expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
             expect(firstResult.name).toBe("Kyogle (A)");
             expect(firstResult.description).toContain("New South Wales");
@@ -1069,7 +1239,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("works with THREDDS XML format", function () {
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         url: "made/up/wms/server",
         layers: "someLayer",
       });
@@ -1103,7 +1273,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           .then(function (pickResult) {
             expect(pickResult.length).toBe(1);
 
-            var firstResult = pickResult[0];
+            const firstResult = pickResult[0];
             expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
             expect(+firstResult.properties.value).toBe(42);
             expect(firstResult.description).toContain("42");
@@ -1112,7 +1282,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("works with msGMLOutput format", function () {
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         url: "made/up/wms/server",
         layers: "someLayer",
       });
@@ -1146,7 +1316,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           .then(function (pickResult) {
             expect(pickResult.length).toBe(1);
 
-            var firstResult = pickResult[0];
+            const firstResult = pickResult[0];
             expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
             expect(firstResult.name).toBe("Hovercraft");
             expect(firstResult.description).toContain("Hovercraft");
@@ -1155,7 +1325,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("works with unknown XML responses", function () {
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         url: "made/up/wms/server",
         layers: "someLayer",
       });
@@ -1189,7 +1359,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           .then(function (pickResult) {
             expect(pickResult.length).toBe(1);
 
-            var firstResult = pickResult[0];
+            const firstResult = pickResult[0];
             expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
             expect(firstResult.name).toBeUndefined();
             expect(firstResult.description).toContain("&lt;FooFeature&gt;");
@@ -1198,7 +1368,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("resolves to undefined on a ServiceException", function () {
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         url: "made/up/wms/server",
         layers: "someLayer",
       });
@@ -1236,7 +1406,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("returns undefined if list of feature info formats is empty", function () {
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         url: "made/up/wms/server",
         layers: "someLayer",
         getFeatureInfoFormats: [],
@@ -1250,7 +1420,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("returns undefined if enablePickFeatures is false", function () {
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         url: "made/up/wms/server",
         layers: "someLayer",
         enablePickFeatures: false,
@@ -1266,7 +1436,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("returns undefined if enablePickFeatures is set to false after initialization", function () {
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         url: "made/up/wms/server",
         layers: "someLayer",
         enablePickFeatures: true,
@@ -1283,7 +1453,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("does not return undefined if enablePickFeatures is set to true after initialization as false", function () {
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         url: "made/up/wms/server",
         layers: "someLayer",
         enablePickFeatures: false,
@@ -1300,7 +1470,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("requests XML exclusively if specified in getFeatureInfoFormats", function () {
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         url: "made/up/wms/server",
         layers: "someLayer",
         getFeatureInfoFormats: [new GetFeatureInfoFormat("xml")],
@@ -1336,7 +1506,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           .then(function (pickResult) {
             expect(pickResult.length).toBe(1);
 
-            var firstResult = pickResult[0];
+            const firstResult = pickResult[0];
             expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
             expect(firstResult.name).toBe("SPRINGWOOD");
             expect(firstResult.description).toContain("NSW");
@@ -1345,7 +1515,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("requests GeoJSON exclusively if specified in getFeatureInfoFormats", function () {
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         url: "made/up/wms/server",
         layers: "someLayer",
         getFeatureInfoFormats: [new GetFeatureInfoFormat("json")],
@@ -1391,7 +1561,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("generates correct getFeatureInfo link, WMS 1.1.1, version in getFeatureInfoParameters", function () {
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         url: "made/up/wms/server",
         layers: "someLayer",
         getFeatureInfoParameters: {
@@ -1434,7 +1604,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("generates correct getFeatureInfo link, WMS 1.3.0, version in getFeatureInfoParameters", function () {
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         url: "made/up/wms/server",
         layers: "someLayer",
         getFeatureInfoParameters: {
@@ -1477,7 +1647,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("generates correct getFeatureInfo link, WMS 1.1.1, default version", function () {
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         url: "made/up/wms/server",
         layers: "someLayer",
       });
@@ -1517,14 +1687,14 @@ describe("Scene/WebMapServiceImageryProvider", function () {
 
     it("uses custom GetFeatureInfo handling function if specified", function () {
       function fooProcessor(response) {
-        var json = JSON.parse(response);
+        const json = JSON.parse(response);
         expect(json.custom).toBe(true);
-        var feature = new ImageryLayerFeatureInfo();
+        const feature = new ImageryLayerFeatureInfo();
         feature.name = "Foo processed!";
         return [feature];
       }
 
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         url: "made/up/wms/server",
         layers: "someLayer",
         getFeatureInfoFormats: [
@@ -1571,7 +1741,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("works with HTML response", function () {
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         url: "made/up/wms/server",
         layers: "someLayer",
       });
@@ -1608,7 +1778,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           .then(function (pickResult) {
             expect(pickResult.length).toBe(1);
 
-            var firstResult = pickResult[0];
+            const firstResult = pickResult[0];
             expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
             expect(firstResult.name).toBe("HTML yeah!");
             expect(firstResult.description).toContain("great information");
@@ -1631,7 +1801,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("tiles preload on requestImage as we approach the next time interval", function () {
-      var times = TimeIntervalCollection.fromIso8601({
+      const times = TimeIntervalCollection.fromIso8601({
         iso8601: "2017-04-26/2017-04-30/P1D",
         dataCallback: function (interval, index) {
           return {
@@ -1639,12 +1809,12 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           };
         },
       });
-      var clock = new Clock({
+      const clock = new Clock({
         currentTime: JulianDate.fromIso8601("2017-04-26"),
         shouldAnimate: true,
       });
 
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         layers: "someLayer",
         style: "someStyle",
         url: "http://wms.invalid/",
@@ -1664,7 +1834,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         );
       };
 
-      var entry;
+      let entry;
       return pollToPromise(function () {
         return provider.ready;
       })
@@ -1676,7 +1846,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           RequestScheduler.update();
 
           // Test tile 0,0,0 was prefetched
-          var cache = provider._timeDynamicImagery._tileCache;
+          const cache = provider._timeDynamicImagery._tileCache;
           expect(cache["1"]).toBeDefined();
           entry = cache["1"]["0-0-0"];
           expect(entry).toBeDefined();
@@ -1690,7 +1860,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("tiles preload onTick event as we approach the next time interval", function () {
-      var times = TimeIntervalCollection.fromIso8601({
+      const times = TimeIntervalCollection.fromIso8601({
         iso8601: "2017-04-26/2017-04-30/P1D",
         dataCallback: function (interval, index) {
           return {
@@ -1698,12 +1868,12 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           };
         },
       });
-      var clock = new Clock({
+      const clock = new Clock({
         currentTime: JulianDate.fromIso8601("2017-04-26"),
         shouldAnimate: true,
       });
 
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         layers: "someLayer",
         style: "someStyle",
         url: "http://wms.invalid/",
@@ -1723,7 +1893,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         );
       };
 
-      var entry;
+      let entry;
       return pollToPromise(function () {
         return provider.ready;
       })
@@ -1732,7 +1902,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         })
         .then(function () {
           // Test tile 0,0,0 wasn't prefetched
-          var cache = provider._timeDynamicImagery._tileCache;
+          const cache = provider._timeDynamicImagery._tileCache;
           expect(cache["1"]).toBeUndefined();
 
           // Update the clock and process any requests
@@ -1754,7 +1924,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("reload is called once we cross into next interval", function () {
-      var times = TimeIntervalCollection.fromIso8601({
+      const times = TimeIntervalCollection.fromIso8601({
         iso8601: "2017-04-26/2017-04-30/P1D",
         dataCallback: function (interval, index) {
           return {
@@ -1762,7 +1932,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           };
         },
       });
-      var clock = new Clock({
+      const clock = new Clock({
         currentTime: JulianDate.fromIso8601("2017-04-26"),
         clockStep: ClockStep.TICK_DEPENDENT,
         shouldAnimate: true,
@@ -1780,7 +1950,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         );
       };
 
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         layers: "someLayer",
         style: "someStyle",
         url: "http://wms.invalid/",
@@ -1807,7 +1977,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         .then(function () {
           expect(provider._reload.calls.count()).toEqual(1);
 
-          var calls = provider._timeDynamicImagery.getFromCache.calls.all();
+          const calls = provider._timeDynamicImagery.getFromCache.calls.all();
           expect(calls.length).toBe(2);
           expect(calls[0].returnValue).toBeUndefined();
           expect(calls[1].returnValue).toBeDefined();
@@ -1815,7 +1985,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     it("Data in request comes from the time interval collection", function () {
-      var times = TimeIntervalCollection.fromIso8601({
+      const times = TimeIntervalCollection.fromIso8601({
         iso8601: "2017-04-26/2017-04-30/P1D",
         dataCallback: function (interval, index) {
           return {
@@ -1824,7 +1994,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           };
         },
       });
-      var clock = new Clock({
+      const clock = new Clock({
         currentTime: JulianDate.fromIso8601("2017-04-26"),
         clockStep: ClockStep.TICK_DEPENDENT,
         shouldAnimate: false,
@@ -1842,7 +2012,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         );
       };
 
-      var provider = new WebMapServiceImageryProvider({
+      const provider = new WebMapServiceImageryProvider({
         layers: "someLayer",
         style: "someStyle",
         url: "http://wms.invalid/",
@@ -1860,11 +2030,42 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           return provider.requestImage(0, 0, 0, new Request());
         })
         .then(function () {
-          var queryParameters =
+          const queryParameters =
             provider._tileProvider._resource.queryParameters;
           expect(queryParameters.Time).toEqual("2017-04-26T00:00:00Z");
           expect(queryParameters.Test).toEqual("testValue");
         });
+    });
+  });
+
+  it("uses getFeatureInfoUrl in options for getting the getFeatureInfo URL", function () {
+    const featureUrl = "made/up/wms/feature/server";
+    const provider = new WebMapServiceImageryProvider({
+      url: "made/up/wms/server",
+      layers: "someLayer",
+      getFeatureInfoUrl: featureUrl,
+    });
+
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      expect(provider._pickFeaturesResource.url).toContain(featureUrl);
+    });
+  });
+
+  it("uses url in options if getFeatureInfoUrl is absent for pickResources", function () {
+    const featureUrl = "made/up/wms/feature/server";
+    const getCapabilitiesUrl = "made/up/wms/server";
+    const provider = new WebMapServiceImageryProvider({
+      url: getCapabilitiesUrl,
+      layers: "someLayer",
+    });
+
+    return pollToPromise(function () {
+      return provider.ready;
+    }).then(function () {
+      expect(provider._pickFeaturesResource.url).not.toContain(featureUrl);
+      expect(provider._pickFeaturesResource.url).toContain(getCapabilitiesUrl);
     });
   });
 });

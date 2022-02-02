@@ -54,10 +54,10 @@ Object.defineProperties(GeographicProjection.prototype, {
  */
 GeographicProjection.prototype.project = function (cartographic, result) {
   // Actually this is the special case of equidistant cylindrical called the plate carree
-  var semimajorAxis = this._semimajorAxis;
-  var x = cartographic.longitude * semimajorAxis;
-  var y = cartographic.latitude * semimajorAxis;
-  var z = cartographic.height;
+  const semimajorAxis = this._semimajorAxis;
+  const x = cartographic.longitude * semimajorAxis;
+  const y = cartographic.latitude * semimajorAxis;
+  const z = cartographic.height;
 
   if (!defined(result)) {
     return new Cartesian3(x, y, z);
@@ -88,10 +88,10 @@ GeographicProjection.prototype.unproject = function (cartesian, result) {
   }
   //>>includeEnd('debug');
 
-  var oneOverEarthSemimajorAxis = this._oneOverSemimajorAxis;
-  var longitude = cartesian.x * oneOverEarthSemimajorAxis;
-  var latitude = cartesian.y * oneOverEarthSemimajorAxis;
-  var height = cartesian.z;
+  const oneOverEarthSemimajorAxis = this._oneOverSemimajorAxis;
+  const longitude = cartesian.x * oneOverEarthSemimajorAxis;
+  const latitude = cartesian.y * oneOverEarthSemimajorAxis;
+  const height = cartesian.z;
 
   if (!defined(result)) {
     return new Cartographic(longitude, latitude, height);
