@@ -9,13 +9,13 @@ import pollToPromise from "../pollToPromise.js";
 describe(
   "Scene/OctahedralProjectedCubeMap",
   function () {
-    var context;
-    var computeEngine;
-    var octahedralMap;
+    let context;
+    let computeEngine;
+    let octahedralMap;
 
-    var environmentMapUrl =
+    const environmentMapUrl =
       "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2";
-    var fsOctahedralMap =
+    const fsOctahedralMap =
       "uniform sampler2D projectedMap;" +
       "uniform vec2 textureSize;" +
       "uniform vec3 direction;" +
@@ -26,7 +26,7 @@ describe(
       "   gl_FragColor = vec4(color, 1.0);" +
       "}";
 
-    var fsCubeMap =
+    const fsCubeMap =
       "uniform samplerCube cubeMap;" +
       "uniform vec3 direction;" +
       "void main() {" +
@@ -50,9 +50,9 @@ describe(
     });
 
     function executeCommands(frameState) {
-      var length = frameState.commandList.length;
-      for (var i = 0; i < length; ++i) {
-        var command = frameState.commandList[i];
+      const length = frameState.commandList.length;
+      for (let i = 0; i < length; ++i) {
+        const command = frameState.commandList[i];
         if (command.pass === Pass.COMPUTE) {
           command.execute(computeEngine);
         } else {
@@ -105,7 +105,7 @@ describe(
       return sampleCubeMap(octahedralMap._cubeMaps[lod], direction, function (
         cubeMapColor
       ) {
-        var directionFlipY = direction.clone();
+        const directionFlipY = direction.clone();
         directionFlipY.y *= -1;
 
         sampleOctahedralMap(octahedralMap, directionFlipY, lod, function (
@@ -122,7 +122,7 @@ describe(
       }
 
       octahedralMap = new OctahedralProjectedCubeMap(environmentMapUrl);
-      var frameState = createFrameState(context);
+      const frameState = createFrameState(context);
 
       return pollToPromise(function () {
         octahedralMap.update(frameState);
@@ -140,7 +140,7 @@ describe(
       }
 
       octahedralMap = new OctahedralProjectedCubeMap(environmentMapUrl);
-      var frameState = createFrameState(context);
+      const frameState = createFrameState(context);
 
       return pollToPromise(function () {
         // We manually call update and execute the commands
@@ -152,7 +152,7 @@ describe(
 
         return octahedralMap.ready;
       }).then(function () {
-        var directions = {
+        const directions = {
           positiveX: new Cartesian3(1, 0, 0),
           negativeX: new Cartesian3(-1, 0, 0),
           positiveY: new Cartesian3(0, 1, 0),
@@ -162,13 +162,13 @@ describe(
         };
 
         for (
-          var mipLevel = 0;
+          let mipLevel = 0;
           mipLevel < octahedralMap.maximumMipmapLevel;
           mipLevel++
         ) {
-          for (var key in directions) {
+          for (const key in directions) {
             if (directions.hasOwnProperty(key)) {
-              var direction = directions[key];
+              const direction = directions[key];
 
               expectCubeMapAndOctahedralMapEqual(
                 octahedralMap,
@@ -186,15 +186,15 @@ describe(
         return;
       }
 
-      var projection = new OctahedralProjectedCubeMap(environmentMapUrl);
-      var frameState = createFrameState(context);
+      const projection = new OctahedralProjectedCubeMap(environmentMapUrl);
+      const frameState = createFrameState(context);
 
       return pollToPromise(function () {
         projection.update(frameState);
         return projection.ready;
       })
         .then(function () {
-          var projection2 = new OctahedralProjectedCubeMap(environmentMapUrl);
+          const projection2 = new OctahedralProjectedCubeMap(environmentMapUrl);
           projection2.update(frameState);
           expect(projection2.ready).toEqual(true);
           expect(projection.texture).toEqual(projection2.texture);
@@ -210,9 +210,9 @@ describe(
         return;
       }
 
-      var projection = new OctahedralProjectedCubeMap("http://invalid.url");
-      var frameState = createFrameState(context);
-      var error;
+      const projection = new OctahedralProjectedCubeMap("http://invalid.url");
+      const frameState = createFrameState(context);
+      let error;
 
       projection.readyPromise
         .then(function () {

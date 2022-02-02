@@ -19,34 +19,34 @@ import createScene from "../createScene.js";
 describe(
   "Scene/Batched3DModel3DTileContent",
   function () {
-    var scene;
-    var centerLongitude = -1.31968;
-    var centerLatitude = 0.698874;
+    let scene;
+    const centerLongitude = -1.31968;
+    const centerLatitude = 0.698874;
 
-    var withBatchTableUrl =
+    const withBatchTableUrl =
       "./Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json";
-    var withBatchTableBinaryUrl =
+    const withBatchTableBinaryUrl =
       "./Data/Cesium3DTiles/Batched/BatchedWithBatchTableBinary/tileset.json";
-    var withoutBatchTableUrl =
+    const withoutBatchTableUrl =
       "./Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json";
-    var translucentUrl =
+    const translucentUrl =
       "./Data/Cesium3DTiles/Batched/BatchedTranslucent/tileset.json";
-    var translucentOpaqueMixUrl =
+    const translucentOpaqueMixUrl =
       "./Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/tileset.json";
-    var withTransformBoxUrl =
+    const withTransformBoxUrl =
       "./Data/Cesium3DTiles/Batched/BatchedWithTransformBox/tileset.json";
-    var withTransformSphereUrl =
+    const withTransformSphereUrl =
       "./Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/tileset.json";
-    var withTransformRegionUrl =
+    const withTransformRegionUrl =
       "./Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/tileset.json";
-    var texturedUrl =
+    const texturedUrl =
       "./Data/Cesium3DTiles/Batched/BatchedTextured/tileset.json";
-    var withRtcCenterUrl =
+    const withRtcCenterUrl =
       "./Data/Cesium3DTiles/Batched/BatchedWithRtcCenter/tileset.json";
 
     function setCamera(longitude, latitude) {
       // One feature is located at the center, point the camera there
-      var center = Cartesian3.fromRadians(longitude, latitude);
+      const center = Cartesian3.fromRadians(longitude, latitude);
       scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15.0));
     }
 
@@ -132,11 +132,15 @@ describe(
       ) {
         Cesium3DTilesTester.expectRenderTileset(scene, tileset);
 
-        var newLongitude = -1.31962;
-        var newLatitude = 0.698874;
-        var newCenter = Cartesian3.fromRadians(newLongitude, newLatitude, 0.0);
-        var newHPR = new HeadingPitchRoll();
-        var newTransform = Transforms.headingPitchRollToFixedFrame(
+        const newLongitude = -1.31962;
+        const newLatitude = 0.698874;
+        const newCenter = Cartesian3.fromRadians(
+          newLongitude,
+          newLatitude,
+          0.0
+        );
+        const newHPR = new HeadingPitchRoll();
+        const newTransform = Transforms.headingPitchRollToFixedFrame(
           newCenter,
           newHPR
         );
@@ -166,7 +170,7 @@ describe(
     it("picks with batch table", function () {
       return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
         function (tileset) {
-          var content = tileset.root.content;
+          const content = tileset.root.content;
           tileset.show = false;
           expect(scene).toPickPrimitive(undefined);
           tileset.show = true;
@@ -182,7 +186,7 @@ describe(
     it("picks without batch table", function () {
       return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
         function (tileset) {
-          var content = tileset.root.content;
+          const content = tileset.root.content;
           tileset.show = false;
           expect(scene).toPickPrimitive(undefined);
           tileset.show = true;
@@ -198,7 +202,7 @@ describe(
     it("can get features and properties", function () {
       return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
         function (tileset) {
-          var content = tileset.root.content;
+          const content = tileset.root.content;
           expect(content.featuresLength).toBe(10);
           expect(content.innerContents).toBeUndefined();
           expect(content.hasProperty(0, "id")).toBe(true);
@@ -210,7 +214,7 @@ describe(
     it("throws when calling getFeature with invalid index", function () {
       return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
         function (tileset) {
-          var content = tileset.root.content;
+          const content = tileset.root.content;
           expect(function () {
             content.getFeature(-1);
           }).toThrowDeveloperError();
@@ -228,18 +232,18 @@ describe(
       return Cesium3DTilesTester.loadTileset(scene, texturedUrl).then(function (
         tileset
       ) {
-        var content = tileset.root.content;
+        const content = tileset.root.content;
 
         // 10 buildings, 36 ushort indices and 24 vertices per building, 8 float components (position, normal, uv) and 1 uint component (batchId) per vertex.
         // 10 * ((24 * (8 * 4 + 1 * 4)) + (36 * 2)) = 9360
-        var geometryByteLength = 9360;
+        const geometryByteLength = 9360;
 
         // Texture is 128x128 RGBA bytes, not mipmapped
-        var texturesByteLength = 65536;
+        const texturesByteLength = 65536;
 
         // One RGBA byte pixel per feature
-        var batchTexturesByteLength = content.featuresLength * 4;
-        var pickTexturesByteLength = content.featuresLength * 4;
+        const batchTexturesByteLength = content.featuresLength * 4;
+        const pickTexturesByteLength = content.featuresLength * 4;
 
         // Features have not been picked or colored yet, so the batch table contribution is 0.
         expect(content.geometryByteLength).toEqual(geometryByteLength);
@@ -266,16 +270,16 @@ describe(
     it("Links model to tileset clipping planes based on bounding volume clipping", function () {
       return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
         function (tileset) {
-          var tile = tileset.root;
-          var content = tile.content;
-          var model = content._model;
-          var passOptions = Cesium3DTilePass.getPassOptions(
+          const tile = tileset.root;
+          const content = tile.content;
+          const model = content._model;
+          const passOptions = Cesium3DTilePass.getPassOptions(
             Cesium3DTilePass.RENDER
           );
 
           expect(model.clippingPlanes).toBeUndefined();
 
-          var clippingPlaneCollection = new ClippingPlaneCollection({
+          const clippingPlaneCollection = new ClippingPlaneCollection({
             planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
           });
           tileset.clippingPlanes = clippingPlaneCollection;
@@ -296,15 +300,15 @@ describe(
     it("Links model to tileset clipping planes if tileset clipping planes are reassigned", function () {
       return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
         function (tileset) {
-          var tile = tileset.root;
-          var model = tile.content._model;
-          var passOptions = Cesium3DTilePass.getPassOptions(
+          const tile = tileset.root;
+          const model = tile.content._model;
+          const passOptions = Cesium3DTilePass.getPassOptions(
             Cesium3DTilePass.RENDER
           );
 
           expect(model.clippingPlanes).toBeUndefined();
 
-          var clippingPlaneCollection = new ClippingPlaneCollection({
+          const clippingPlaneCollection = new ClippingPlaneCollection({
             planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
           });
           tileset.clippingPlanes = clippingPlaneCollection;
@@ -314,7 +318,7 @@ describe(
           expect(model.clippingPlanes).toBeDefined();
           expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
 
-          var newClippingPlaneCollection = new ClippingPlaneCollection({
+          const newClippingPlaneCollection = new ClippingPlaneCollection({
             planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
           });
           tileset.clippingPlanes = newClippingPlaneCollection;
@@ -332,12 +336,12 @@ describe(
 
       return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
         function (tileset) {
-          var tile = tileset.root;
-          var passOptions = Cesium3DTilePass.getPassOptions(
+          const tile = tileset.root;
+          const passOptions = Cesium3DTilePass.getPassOptions(
             Cesium3DTilePass.RENDER
           );
 
-          var clippingPlaneCollection = new ClippingPlaneCollection({
+          const clippingPlaneCollection = new ClippingPlaneCollection({
             planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
           });
           tileset.clippingPlanes = clippingPlaneCollection;
@@ -354,12 +358,12 @@ describe(
         function (tileset) {
           Cesium3DTilesTester.expectRenderTileset(scene, tileset);
 
-          var rtcTransform = tileset.root.content._rtcCenterTransform;
+          const rtcTransform = tileset.root.content._rtcCenterTransform;
           expect(rtcTransform).toEqual(
             Matrix4.fromTranslation(new Cartesian3(0.1, 0.2, 0.3))
           );
 
-          var expectedModelTransform = Matrix4.multiply(
+          let expectedModelTransform = Matrix4.multiply(
             tileset.root.transform,
             rtcTransform,
             new Matrix4()
@@ -372,15 +376,15 @@ describe(
           );
 
           // Update tile transform
-          var newLongitude = -1.31962;
-          var newLatitude = 0.698874;
-          var newCenter = Cartesian3.fromRadians(
+          const newLongitude = -1.31962;
+          const newLatitude = 0.698874;
+          const newCenter = Cartesian3.fromRadians(
             newLongitude,
             newLatitude,
             0.0
           );
-          var newHPR = new HeadingPitchRoll();
-          var newTransform = Transforms.headingPitchRollToFixedFrame(
+          const newHPR = new HeadingPitchRoll();
+          const newTransform = Transforms.headingPitchRollToFixedFrame(
             newCenter,
             newHPR
           );
@@ -405,7 +409,7 @@ describe(
     });
 
     describe("3DTILES_metadata", function () {
-      var metadataClass = new MetadataClass({
+      const metadataClass = new MetadataClass({
         id: "test",
         class: {
           properties: {
@@ -418,7 +422,7 @@ describe(
           },
         },
       });
-      var groupMetadata = new GroupMetadata({
+      const groupMetadata = new GroupMetadata({
         id: "testGroup",
         group: {
           properties: {
@@ -434,7 +438,7 @@ describe(
           scene,
           withoutBatchTableUrl
         ).then(function (tileset) {
-          var content = tileset.root.content;
+          const content = tileset.root.content;
           content.groupMetadata = groupMetadata;
           expect(content.groupMetadata).toBe(groupMetadata);
         });

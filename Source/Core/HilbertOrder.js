@@ -6,7 +6,7 @@ import DeveloperError from "./DeveloperError.js";
  *
  * @namespace HilbertOrder
  */
-var HilbertOrder = {};
+const HilbertOrder = {};
 
 /**
  * Computes the Hilbert index at the given level from 2D coordinates.
@@ -18,7 +18,7 @@ var HilbertOrder = {};
  * @private
  */
 HilbertOrder.encode2D = function (level, x, y) {
-  var n = Math.pow(2, level);
+  const n = Math.pow(2, level);
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("level", level);
   Check.typeOf.number("x", x);
@@ -31,11 +31,11 @@ HilbertOrder.encode2D = function (level, x, y) {
   }
   //>>includeEnd('debug');
 
-  var p = {
+  const p = {
     x: x,
     y: y,
   };
-  var rx,
+  let rx,
     ry,
     s,
     // eslint-disable-next-line no-undef
@@ -75,12 +75,12 @@ HilbertOrder.decode2D = function (level, index) {
   }
   //>>includeEnd('debug');
 
-  var n = Math.pow(2, level);
-  var p = {
+  const n = Math.pow(2, level);
+  const p = {
     x: 0,
     y: 0,
   };
-  var rx, ry, s, t;
+  let rx, ry, s, t;
 
   for (s = 1, t = index; s < n; s *= 2) {
     // eslint-disable-next-line no-undef
@@ -110,7 +110,7 @@ function rotate(n, p, rx, ry) {
     p.y = n - 1 - p.y;
   }
 
-  var t = p.x;
+  const t = p.x;
   p.x = p.y;
   p.y = t;
 }

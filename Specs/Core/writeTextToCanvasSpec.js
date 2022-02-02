@@ -3,7 +3,7 @@ import { writeTextToCanvas } from "../../Source/Cesium.js";
 
 describe("Core/writeTextToCanvas", function () {
   it("returns undefined when text is blank", function () {
-    var canvas = writeTextToCanvas("");
+    const canvas = writeTextToCanvas("");
 
     expect(canvas).toBeUndefined();
   });
@@ -15,37 +15,37 @@ describe("Core/writeTextToCanvas", function () {
   });
 
   it("sizes the canvas to fit the text", function () {
-    var canvas1 = writeTextToCanvas("m");
-    var canvas2 = writeTextToCanvas("mm");
+    const canvas1 = writeTextToCanvas("m");
+    const canvas2 = writeTextToCanvas("mm");
 
     expect(canvas1.width).not.toEqual(canvas2.width);
     expect(canvas1.height).toEqual(canvas2.height);
   });
 
   it("allows the text to be either stroked or filled", function () {
-    var row = 20;
+    const row = 20;
 
     // exact pixel checks are problematic due to browser differences in how text is drawn
     // so walk pixels left-to-right and check the number of times that the pixel value changes
     // color, ignoring alpha.
 
     function getColorChangeCount(canvas) {
-      var colorChangeCount = 0;
+      let colorChangeCount = 0;
 
-      var context = canvas.getContext("2d");
+      const context = canvas.getContext("2d");
 
-      var pixel = context.getImageData(0, row, 1, 1).data;
+      let pixel = context.getImageData(0, row, 1, 1).data;
 
-      var lastRed = pixel[0];
-      var lastGreen = pixel[1];
-      var lastBlue = pixel[2];
+      let lastRed = pixel[0];
+      let lastGreen = pixel[1];
+      let lastBlue = pixel[2];
 
-      for (var column = 0; column < canvas.width; ++column) {
+      for (let column = 0; column < canvas.width; ++column) {
         pixel = context.getImageData(column, row, 1, 1).data;
 
-        var red = pixel[0];
-        var green = pixel[1];
-        var blue = pixel[2];
+        let red = pixel[0];
+        let green = pixel[1];
+        let blue = pixel[2];
 
         // round up pixels that have been subpixel anti-aliased
         if (red > 0 && red !== 255) {
@@ -68,7 +68,7 @@ describe("Core/writeTextToCanvas", function () {
       return colorChangeCount;
     }
 
-    var canvas1 = writeTextToCanvas("I", {
+    const canvas1 = writeTextToCanvas("I", {
       font: '90px "Open Sans"',
       fill: true,
       fillColor: Color.RED,
@@ -78,10 +78,10 @@ describe("Core/writeTextToCanvas", function () {
     // canvas1 is filled, completely by the I on the left
     // and then has empty space on the right, so there
     // should only be one "edge": fill -> outside
-    var count = getColorChangeCount(canvas1);
+    let count = getColorChangeCount(canvas1);
     expect(count === 1 || count === 2).toEqual(true);
 
-    var canvas2 = writeTextToCanvas("I", {
+    const canvas2 = writeTextToCanvas("I", {
       font: '90px "Open Sans"',
       fill: false,
       stroke: true,
@@ -94,33 +94,33 @@ describe("Core/writeTextToCanvas", function () {
   });
 
   it("background color defaults to transparent", function () {
-    var canvas = writeTextToCanvas("a", {
+    const canvas = writeTextToCanvas("a", {
       font: '90px "Open Sans"',
     });
 
-    var context = canvas.getContext("2d");
-    var pixel = context.getImageData(0, 0, 1, 1).data;
+    const context = canvas.getContext("2d");
+    const pixel = context.getImageData(0, 0, 1, 1).data;
     expect(pixel).toEqual([0, 0, 0, 0]);
   });
 
   it("background can be set", function () {
-    var canvas = writeTextToCanvas("a", {
+    const canvas = writeTextToCanvas("a", {
       font: '90px "Open Sans"',
       backgroundColor: Color.RED,
     });
 
-    var context = canvas.getContext("2d");
-    var pixel = context.getImageData(0, 0, 1, 1).data;
+    const context = canvas.getContext("2d");
+    const pixel = context.getImageData(0, 0, 1, 1).data;
     expect(pixel).toEqual([255, 0, 0, 255]);
   });
 
   it("border can be set", function () {
-    var canvas1 = writeTextToCanvas("a", {
+    const canvas1 = writeTextToCanvas("a", {
       font: '90px "Open Sans"',
       backgroundColor: Color.RED,
     });
 
-    var canvas2 = writeTextToCanvas("a", {
+    const canvas2 = writeTextToCanvas("a", {
       font: '90px "Open Sans"',
       backgroundColor: Color.RED,
       padding: 2,

@@ -37,13 +37,13 @@
         //Sandcastle_Begin
         Cesium.Math.setRandomNumberSeed(1234);
 
-        var viewer = new Cesium.Viewer("cesiumContainer", { infoBox: false });
-        var entities = viewer.entities;
+        const viewer = new Cesium.Viewer("cesiumContainer", { infoBox: false });
+        const entities = viewer.entities;
 
-        var i;
-        var height;
-        var positions;
-        var stripeMaterial = new Cesium.StripeMaterialProperty({
+        let i;
+        let height;
+        let positions;
+        const stripeMaterial = new Cesium.StripeMaterialProperty({
           evenColor: Cesium.Color.WHITE.withAlpha(0.5),
           oddColor: Cesium.Color.BLUE.withAlpha(0.5),
           repeat: 5.0,
@@ -555,11 +555,11 @@
         });
 
         function starPositions(arms, rOuter, rInner) {
-          var angle = Math.PI / arms;
-          var pos = [];
-          for (var i = 0; i < 2 * arms; i++) {
-            var r = i % 2 === 0 ? rOuter : rInner;
-            var p = new Cesium.Cartesian2(
+          const angle = Math.PI / arms;
+          const pos = [];
+          for (let i = 0; i < 2 * arms; i++) {
+            const r = i % 2 === 0 ? rOuter : rInner;
+            const p = new Cesium.Cartesian2(
               Math.cos(i * angle) * r,
               Math.sin(i * angle) * r
             );
@@ -605,9 +605,9 @@
         });
 
         function computeCircle(radius) {
-          var positions = [];
-          for (var i = 0; i < 360; i++) {
-            var radians = Cesium.Math.toRadians(i);
+          const positions = [];
+          for (let i = 0; i < 360; i++) {
+            const radians = Cesium.Math.toRadians(i);
             positions.push(
               new Cesium.Cartesian2(
                 radius * Math.cos(radians),

@@ -8,24 +8,24 @@ import { TimeIntervalCollectionProperty } from "../../Source/Cesium.js";
 
 describe("DataSources/ImageMaterialProperty", function () {
   it("constructor provides the expected defaults", function () {
-    var property = new ImageMaterialProperty();
+    const property = new ImageMaterialProperty();
     expect(property.getType()).toEqual("Image");
 
-    var result = property.getValue();
+    const result = property.getValue();
     expect(result.image).toBeUndefined();
     expect(result.repeat).toEqual(new Cartesian2(1.0, 1.0));
     expect(result.color).toEqual(Color.WHITE);
   });
 
   it("constructor sets options and allows raw assignment", function () {
-    var options = {
+    const options = {
       image: "test.invalid",
       repeat: new Cartesian2(1, 2),
       color: Color.RED.withAlpha(0.5),
       transparent: true,
     };
 
-    var property = new ImageMaterialProperty(options);
+    const property = new ImageMaterialProperty(options);
     expect(property.image).toBeInstanceOf(ConstantProperty);
     expect(property.repeat).toBeInstanceOf(ConstantProperty);
     expect(property.color).toBeInstanceOf(ConstantProperty);
@@ -38,22 +38,22 @@ describe("DataSources/ImageMaterialProperty", function () {
   });
 
   it("works with constant values", function () {
-    var property = new ImageMaterialProperty();
+    const property = new ImageMaterialProperty();
     property.image = new ConstantProperty("http://test.invalid/image.png");
     property.repeat = new ConstantProperty(new Cartesian2(2, 3));
 
-    var result = property.getValue(JulianDate.now());
+    const result = property.getValue(JulianDate.now());
     expect(result.image).toEqual("http://test.invalid/image.png");
     expect(result.repeat).toEqual(new Cartesian2(2, 3));
   });
 
   it("works with dynamic values", function () {
-    var property = new ImageMaterialProperty();
+    const property = new ImageMaterialProperty();
     property.image = new TimeIntervalCollectionProperty();
     property.repeat = new TimeIntervalCollectionProperty();
 
-    var start = new JulianDate(1, 0);
-    var stop = new JulianDate(2, 0);
+    const start = new JulianDate(1, 0);
+    const stop = new JulianDate(2, 0);
     property.image.intervals.addInterval(
       new TimeInterval({
         start: start,
@@ -69,29 +69,29 @@ describe("DataSources/ImageMaterialProperty", function () {
       })
     );
 
-    var result = property.getValue(start);
+    const result = property.getValue(start);
     expect(result.image).toEqual("http://test.invalid/image.png");
     expect(result.repeat).toEqual(new Cartesian2(2, 3));
   });
 
   it("works with a result parameter", function () {
-    var property = new ImageMaterialProperty();
+    const property = new ImageMaterialProperty();
     property.image = new ConstantProperty("http://test.invalid/image.png");
     property.repeat = new ConstantProperty(new Cartesian2(2, 3));
 
-    var result = {};
-    var returnedResult = property.getValue(JulianDate.now(), result);
+    const result = {};
+    const returnedResult = property.getValue(JulianDate.now(), result);
     expect(result).toBe(returnedResult);
     expect(result.image).toEqual("http://test.invalid/image.png");
     expect(result.repeat).toEqual(new Cartesian2(2, 3));
   });
 
   it("equals works", function () {
-    var left = new ImageMaterialProperty();
+    const left = new ImageMaterialProperty();
     left.image = new ConstantProperty("http://test.invalid/image.png");
     left.repeat = new ConstantProperty(new Cartesian2(2, 3));
 
-    var right = new ImageMaterialProperty();
+    const right = new ImageMaterialProperty();
     right.image = new ConstantProperty("http://test.invalid/image.png");
     right.repeat = new ConstantProperty(new Cartesian2(2, 3));
 
@@ -109,11 +109,11 @@ describe("DataSources/ImageMaterialProperty", function () {
   });
 
   it("raises definitionChanged when a property is assigned or modified", function () {
-    var property = new ImageMaterialProperty();
-    var listener = jasmine.createSpy("listener");
+    const property = new ImageMaterialProperty();
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
-    var oldValue = property.image;
+    let oldValue = property.image;
     property.image = new ConstantProperty("http://test.invalid/image.png");
     expect(listener).toHaveBeenCalledWith(
       property,
@@ -160,15 +160,15 @@ describe("DataSources/ImageMaterialProperty", function () {
   });
 
   it("isConstant is only true when all properties are constant or undefined", function () {
-    var property = new ImageMaterialProperty();
+    const property = new ImageMaterialProperty();
     expect(property.isConstant).toBe(true);
 
     property.image = undefined;
     property.repeat = undefined;
     expect(property.isConstant).toBe(true);
 
-    var start = new JulianDate(1, 0);
-    var stop = new JulianDate(2, 0);
+    const start = new JulianDate(1, 0);
+    const stop = new JulianDate(2, 0);
     property.image = new TimeIntervalCollectionProperty();
     property.image.intervals.addInterval(
       new TimeInterval({

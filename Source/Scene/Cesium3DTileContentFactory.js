@@ -15,7 +15,7 @@ import ModelExperimental3DTileContent from "./ModelExperimental/ModelExperimenta
  *
  * @private
  */
-var Cesium3DTileContentFactory = {
+const Cesium3DTileContentFactory = {
   b3dm: function (tileset, tile, resource, arrayBuffer, byteOffset) {
     if (tileset.enableModelExperimental) {
       return ModelExperimental3DTileContent.fromB3dm(
@@ -35,6 +35,15 @@ var Cesium3DTileContentFactory = {
     );
   },
   pnts: function (tileset, tile, resource, arrayBuffer, byteOffset) {
+    if (tileset.enableModelExperimental) {
+      return ModelExperimental3DTileContent.fromPnts(
+        tileset,
+        tile,
+        resource,
+        arrayBuffer,
+        byteOffset
+      );
+    }
     return new PointCloud3DTileContent(
       tileset,
       tile,
@@ -44,6 +53,15 @@ var Cesium3DTileContentFactory = {
     );
   },
   i3dm: function (tileset, tile, resource, arrayBuffer, byteOffset) {
+    if (tileset.enableModelExperimental) {
+      return ModelExperimental3DTileContent.fromI3dm(
+        tileset,
+        tile,
+        resource,
+        arrayBuffer,
+        byteOffset
+      );
+    }
     return new Instanced3DModel3DTileContent(
       tileset,
       tile,
@@ -94,13 +112,13 @@ var Cesium3DTileContentFactory = {
     );
   },
   glb: function (tileset, tile, resource, arrayBuffer, byteOffset) {
-    var arrayBufferByteLength = arrayBuffer.byteLength;
+    const arrayBufferByteLength = arrayBuffer.byteLength;
     if (arrayBufferByteLength < 12) {
       throw new RuntimeError("Invalid glb content");
     }
-    var dataView = new DataView(arrayBuffer, byteOffset);
-    var byteLength = dataView.getUint32(8, true);
-    var glb = new Uint8Array(arrayBuffer, byteOffset, byteLength);
+    const dataView = new DataView(arrayBuffer, byteOffset);
+    const byteLength = dataView.getUint32(8, true);
+    const glb = new Uint8Array(arrayBuffer, byteOffset, byteLength);
     if (tileset.enableModelExperimental) {
       return ModelExperimental3DTileContent.fromGltf(
         tileset,

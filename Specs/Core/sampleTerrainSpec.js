@@ -8,14 +8,14 @@ import { Resource } from "../../Source/Cesium.js";
 import { sampleTerrain } from "../../Source/Cesium.js";
 
 describe("Core/sampleTerrain", function () {
-  var worldTerrain;
+  let worldTerrain;
   beforeAll(function () {
     worldTerrain = createWorldTerrain();
     return worldTerrain.readyPromise;
   });
 
   xit("queries heights", function () {
-    var positions = [
+    const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(87.0, 28.0),
     ];
@@ -32,11 +32,11 @@ describe("Core/sampleTerrain", function () {
   });
 
   xit("queries heights from Small Terrain", function () {
-    var terrainProvider = new CesiumTerrainProvider({
+    const terrainProvider = new CesiumTerrainProvider({
       url: "https://s3.amazonaws.com/cesiumjs/smallTerrain",
     });
 
-    var positions = [
+    const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(87.0, 28.0),
     ];
@@ -53,7 +53,7 @@ describe("Core/sampleTerrain", function () {
   });
 
   xit("sets height to undefined if terrain data is not available at the position and specified level", function () {
-    var positions = [Cartographic.fromDegrees(0.0, 0.0, 0.0)];
+    const positions = [Cartographic.fromDegrees(0.0, 0.0, 0.0)];
 
     return sampleTerrain(worldTerrain, 18, positions).then(function () {
       expect(positions[0].height).toBeUndefined();
@@ -61,7 +61,7 @@ describe("Core/sampleTerrain", function () {
   });
 
   xit("fills in what it can when given a mix of positions with and without valid tiles", function () {
-    var positions = [
+    const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(0.0, 89.0, 0.0),
       Cartographic.fromDegrees(87.0, 28.0),
@@ -77,7 +77,7 @@ describe("Core/sampleTerrain", function () {
   });
 
   xit("requires terrainProvider, level, and positions", function () {
-    var positions = [
+    const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(0.0, 0.0, 0.0),
       Cartographic.fromDegrees(87.0, 28.0),
@@ -97,7 +97,9 @@ describe("Core/sampleTerrain", function () {
   });
 
   xit("works for a dodgy point right near the edge of a tile", function () {
-    var positions = [new Cartographic(0.33179290856829535, 0.7363107781851078)];
+    const positions = [
+      new Cartographic(0.33179290856829535, 0.7363107781851078),
+    ];
 
     return sampleTerrain(worldTerrain, 12, positions).then(function () {
       expect(positions[0].height).toBeDefined();
@@ -116,7 +118,7 @@ describe("Core/sampleTerrain", function () {
 
     function spyOnTerrainDataCreateMesh(terrainProvider) {
       // do some sneaky spying so we can check how many times createMesh is called
-      var originalRequestTileGeometry = terrainProvider.requestTileGeometry;
+      const originalRequestTileGeometry = terrainProvider.requestTileGeometry;
       spyOn(terrainProvider, "requestTileGeometry").and.callFake(function (
         x,
         y,
@@ -173,11 +175,11 @@ describe("Core/sampleTerrain", function () {
         overrideMimeType
       ) {
         // find a key (source path) path in the spec which matches (ends with) the requested url
-        var availablePaths = Object.keys(proxySpec);
-        var proxiedUrl;
+        const availablePaths = Object.keys(proxySpec);
+        let proxiedUrl;
 
-        for (var i = 0; i < availablePaths.length; i++) {
-          var srcPath = availablePaths[i];
+        for (let i = 0; i < availablePaths.length; i++) {
+          const srcPath = availablePaths[i];
           if (endsWith(url, srcPath)) {
             proxiedUrl = proxySpec[availablePaths[i]];
             break;
@@ -213,26 +215,26 @@ describe("Core/sampleTerrain", function () {
         "/9/759/335.terrain?v=1.2.0":
           "Data/CesiumTerrainTileJson/9_759_335/9_759_335.terrain",
       });
-      var terrainProvider = new CesiumTerrainProvider({
+      const terrainProvider = new CesiumTerrainProvider({
         url: "made/up/url",
       });
 
       spyOnTerrainDataCreateMesh(terrainProvider);
 
-      var positionA = Cartographic.fromDegrees(
+      const positionA = Cartographic.fromDegrees(
         86.93666235421982,
         27.97989963555095
       );
-      var positionB = Cartographic.fromDegrees(
+      const positionB = Cartographic.fromDegrees(
         86.9366623542198,
         27.9798996355509
       );
-      var positionC = Cartographic.fromDegrees(
+      const positionC = Cartographic.fromDegrees(
         86.936662354213,
         27.979899635557
       );
 
-      var level = 9;
+      const level = 9;
 
       return sampleTerrain(terrainProvider, level, [
         positionA,
@@ -256,26 +258,26 @@ describe("Core/sampleTerrain", function () {
         "/tile/9/214/379": "Data/ArcGIS/9_214_379/tile_9_214_379.tile",
       });
 
-      var terrainProvider = new ArcGISTiledElevationTerrainProvider({
+      const terrainProvider = new ArcGISTiledElevationTerrainProvider({
         url: "made/up/url",
       });
 
       spyOnTerrainDataCreateMesh(terrainProvider);
 
-      var positionA = Cartographic.fromDegrees(
+      const positionA = Cartographic.fromDegrees(
         86.93666235421982,
         27.97989963555095
       );
-      var positionB = Cartographic.fromDegrees(
+      const positionB = Cartographic.fromDegrees(
         86.9366623542198,
         27.9798996355509
       );
-      var positionC = Cartographic.fromDegrees(
+      const positionC = Cartographic.fromDegrees(
         86.936662354213,
         27.979899635557
       );
 
-      var level = 9;
+      const level = 9;
       return sampleTerrain(terrainProvider, level, [
         positionA,
         positionB,

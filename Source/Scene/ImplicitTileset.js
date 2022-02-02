@@ -27,7 +27,7 @@ export default function ImplicitTileset(
   tileJson,
   metadataSchema
 ) {
-  var extension = tileJson.extensions["3DTILES_implicit_tiling"];
+  const extension = tileJson.extensions["3DTILES_implicit_tiling"];
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object(
     'tileJson.extensions["3DTILES_implicit_tiling"]',
@@ -131,11 +131,11 @@ export default function ImplicitTileset(
    */
   this.contentHeaders = [];
 
-  var contentHeaders = gatherContentHeaders(tileJson);
-  for (var i = 0; i < contentHeaders.length; i++) {
-    var contentHeader = contentHeaders[i];
+  const contentHeaders = gatherContentHeaders(tileJson);
+  for (let i = 0; i < contentHeaders.length; i++) {
+    const contentHeader = contentHeaders[i];
     this.contentHeaders.push(clone(contentHeader, true));
-    var contentResource = new Resource({ url: contentHeader.uri });
+    const contentResource = new Resource({ url: contentHeader.uri });
     this.contentUriTemplates.push(contentResource);
   }
 
@@ -231,7 +231,7 @@ function gatherContentHeaders(tileJson) {
 }
 
 function makeTileHeaderTemplate(tileJson) {
-  var template = clone(tileJson, true);
+  const template = clone(tileJson, true);
 
   // remove the implicit tiling extension to prevent infinite loops
   delete template.extensions["3DTILES_implicit_tiling"];

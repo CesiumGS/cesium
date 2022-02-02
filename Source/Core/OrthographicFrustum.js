@@ -21,9 +21,9 @@ import OrthographicOffCenterFrustum from "./OrthographicOffCenterFrustum.js";
  * @param {Number} [options.far=500000000.0] The distance of the far plane.
  *
  * @example
- * var maxRadii = ellipsoid.maximumRadius;
+ * const maxRadii = ellipsoid.maximumRadius;
  *
- * var frustum = new Cesium.OrthographicFrustum();
+ * const frustum = new Cesium.OrthographicFrustum();
  * frustum.near = 0.01 * maxRadii;
  * frustum.far = 50.0 * maxRadii;
  */
@@ -137,7 +137,7 @@ function update(frustum) {
   }
   //>>includeEnd('debug');
 
-  var f = frustum._offCenterFrustum;
+  const f = frustum._offCenterFrustum;
 
   if (
     frustum.width !== frustum._width ||
@@ -161,7 +161,7 @@ function update(frustum) {
     frustum._near = frustum.near;
     frustum._far = frustum.far;
 
-    var ratio = 1.0 / frustum.aspectRatio;
+    const ratio = 1.0 / frustum.aspectRatio;
     f.right = frustum.width * 0.5;
     f.left = -f.right;
     f.top = ratio * f.right;
@@ -196,8 +196,8 @@ Object.defineProperties(OrthographicFrustum.prototype, {
  *
  * @example
  * // Check if a bounding volume intersects the frustum.
- * var cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
- * var intersect = cullingVolume.computeVisibility(boundingVolume);
+ * const cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
+ * const intersect = cullingVolume.computeVisibility(boundingVolume);
  */
 OrthographicFrustum.prototype.computeCullingVolume = function (
   position,
@@ -225,7 +225,7 @@ OrthographicFrustum.prototype.computeCullingVolume = function (
  * @example
  * // Example 1
  * // Get the width and height of a pixel.
- * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, scene.pixelRatio, new Cesium.Cartesian2());
+ * const pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, scene.pixelRatio, new Cesium.Cartesian2());
  */
 OrthographicFrustum.prototype.getPixelDimensions = function (
   drawingBufferWidth,

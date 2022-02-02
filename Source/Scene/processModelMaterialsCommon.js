@@ -35,26 +35,26 @@ function processModelMaterialsCommon(gltf, options) {
     gltf.extensionsRequired.push("KHR_techniques_webgl");
   }
 
-  var techniquesWebgl = gltf.extensions.KHR_techniques_webgl;
+  const techniquesWebgl = gltf.extensions.KHR_techniques_webgl;
 
   lightDefaults(gltf);
 
-  var lightParameters = generateLightParameters(gltf);
+  const lightParameters = generateLightParameters(gltf);
 
-  var primitiveByMaterial = ModelUtility.splitIncompatibleMaterials(gltf);
+  const primitiveByMaterial = ModelUtility.splitIncompatibleMaterials(gltf);
 
-  var techniques = {};
-  var generatedTechniques = false;
+  const techniques = {};
+  let generatedTechniques = false;
   ForEach.material(gltf, function (material, materialIndex) {
     if (
       defined(material.extensions) &&
       defined(material.extensions.KHR_materials_common)
     ) {
-      var khrMaterialsCommon = material.extensions.KHR_materials_common;
-      var primitiveInfo = primitiveByMaterial[materialIndex];
+      const khrMaterialsCommon = material.extensions.KHR_materials_common;
+      const primitiveInfo = primitiveByMaterial[materialIndex];
 
-      var techniqueKey = getTechniqueKey(khrMaterialsCommon, primitiveInfo);
-      var technique = techniques[techniqueKey];
+      const techniqueKey = getTechniqueKey(khrMaterialsCommon, primitiveInfo);
+      let technique = techniques[techniqueKey];
 
       if (!defined(technique)) {
         technique = generateTechnique(
@@ -69,10 +69,10 @@ function processModelMaterialsCommon(gltf, options) {
         generatedTechniques = true;
       }
 
-      var materialValues = {};
-      var values = khrMaterialsCommon.values;
-      var uniformName;
-      for (var valueName in values) {
+      const materialValues = {};
+      const values = khrMaterialsCommon.values;
+      let uniformName;
+      for (const valueName in values) {
         if (
           values.hasOwnProperty(valueName) &&
           valueName !== "transparent" &&
@@ -111,9 +111,9 @@ function processModelMaterialsCommon(gltf, options) {
 }
 
 function generateLightParameters(gltf) {
-  var result = {};
+  const result = {};
 
-  var lights;
+  let lights;
   if (
     defined(gltf.extensions) &&
     defined(gltf.extensions.KHR_materials_common)
@@ -123,15 +123,15 @@ function generateLightParameters(gltf) {
 
   if (defined(lights)) {
     // Figure out which node references the light
-    var nodes = gltf.nodes;
-    for (var nodeName in nodes) {
+    const nodes = gltf.nodes;
+    for (const nodeName in nodes) {
       if (nodes.hasOwnProperty(nodeName)) {
-        var node = nodes[nodeName];
+        const node = nodes[nodeName];
         if (
           defined(node.extensions) &&
           defined(node.extensions.KHR_materials_common)
         ) {
-          var nodeLightId = node.extensions.KHR_materials_common.light;
+          const nodeLightId = node.extensions.KHR_materials_common.light;
           if (defined(nodeLightId) && defined(lights[nodeLightId])) {
             lights[nodeLightId].node = nodeName;
           }
@@ -141,27 +141,31 @@ function generateLightParameters(gltf) {
     }
 
     // Add light parameters to result
-    var lightCount = 0;
-    for (var lightName in lights) {
+    let lightCount = 0;
+    for (const lightName in lights) {
       if (lights.hasOwnProperty(lightName)) {
-        var light = lights[lightName];
-        var lightType = light.type;
+        const light = lights[lightName];
+        const lightType = light.type;
         if (lightType !== "ambient" && !defined(light.node)) {
           delete lights[lightName];
           continue;
         }
-        var lightBaseName = "light" + lightCount.toString();
+        const lightBaseName = "light" + lightCount.toString();
         light.baseName = lightBaseName;
+        let ambient;
+        let directional;
+        let point;
+        let spot;
         switch (lightType) {
           case "ambient":
-            var ambient = light.ambient;
+            ambient = light.ambient;
             result[lightBaseName + "Color"] = {
               type: WebGLConstants.FLOAT_VEC3,
               value: ambient.color,
             };
             break;
           case "directional":
-            var directional = light.directional;
+            directional = light.directional;
             result[lightBaseName + "Color"] = {
               type: WebGLConstants.FLOAT_VEC3,
               value: directional.color,
@@ -175,7 +179,7 @@ function generateLightParameters(gltf) {
             }
             break;
           case "point":
-            var point = light.point;
+            point = light.point;
             result[lightBaseName + "Color"] = {
               type: WebGLConstants.FLOAT_VEC3,
               value: point.color,
@@ -197,7 +201,7 @@ function generateLightParameters(gltf) {
             };
             break;
           case "spot":
-            var spot = light.spot;
+            spot = light.spot;
             result[lightBaseName + "Color"] = {
               type: WebGLConstants.FLOAT_VEC3,
               value: spot.color,
@@ -255,11 +259,11 @@ function generateTechnique(
     false
   );
 
-  var techniques = techniquesWebgl.techniques;
-  var shaders = techniquesWebgl.shaders;
-  var programs = techniquesWebgl.programs;
-  var lightingModel = khrMaterialsCommon.technique.toUpperCase();
-  var lights;
+  const techniques = techniquesWebgl.techniques;
+  const shaders = techniquesWebgl.shaders;
+  const programs = techniquesWebgl.programs;
+  const lightingModel = khrMaterialsCommon.technique.toUpperCase();
+  let lights;
   if (
     defined(gltf.extensions) &&
     defined(gltf.extensions.KHR_materials_common)
@@ -267,12 +271,12 @@ function generateTechnique(
     lights = gltf.extensions.KHR_materials_common.lights;
   }
 
-  var parameterValues = khrMaterialsCommon.values;
-  var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
+  const parameterValues = khrMaterialsCommon.values;
+  const jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
 
-  var skinningInfo;
-  var hasSkinning = false;
-  var hasVertexColors = false;
+  let skinningInfo;
+  let hasSkinning = false;
+  let hasVertexColors = false;
 
   if (defined(primitiveInfo)) {
     skinningInfo = primitiveInfo.skinning;
@@ -280,13 +284,13 @@ function generateTechnique(
     hasVertexColors = primitiveInfo.hasVertexColors;
   }
 
-  var vertexShader = "precision highp float;\n";
-  var fragmentShader = "precision highp float;\n";
+  let vertexShader = "precision highp float;\n";
+  let fragmentShader = "precision highp float;\n";
 
-  var hasNormals = lightingModel !== "CONSTANT";
+  const hasNormals = lightingModel !== "CONSTANT";
 
   // Add techniques
-  var techniqueUniforms = {
+  const techniqueUniforms = {
     u_modelViewMatrix: {
       semantic: usesExtension(gltf, "CESIUM_RTC")
         ? "CESIUM_RTC_MODELVIEW"
@@ -315,9 +319,9 @@ function generateTechnique(
   }
 
   // Add material values
-  var uniformName;
-  var hasTexCoords = false;
-  for (var name in parameterValues) {
+  let uniformName;
+  let hasTexCoords = false;
+  for (const name in parameterValues) {
     //generate shader parameters for KHR_materials_common attributes
     //(including a check, because some boolean flags should not be used as shader parameters)
     if (
@@ -325,7 +329,7 @@ function generateTechnique(
       name !== "transparent" &&
       name !== "doubleSided"
     ) {
-      var uniformType = getKHRMaterialsCommonValueType(
+      const uniformType = getKHRMaterialsCommonValueType(
         name,
         parameterValues[name]
       );
@@ -347,7 +351,7 @@ function generateTechnique(
 
   // Copy light parameters into technique parameters
   if (defined(lightParameters)) {
-    for (var lightParamName in lightParameters) {
+    for (const lightParamName in lightParameters) {
       if (lightParameters.hasOwnProperty(lightParamName)) {
         uniformName = "u_" + lightParamName;
         techniqueUniforms[uniformName] = lightParameters[lightParamName];
@@ -358,8 +362,8 @@ function generateTechnique(
   // Add uniforms to shaders
   for (uniformName in techniqueUniforms) {
     if (techniqueUniforms.hasOwnProperty(uniformName)) {
-      var uniform = techniqueUniforms[uniformName];
-      var arraySize = defined(uniform.count) ? "[" + uniform.count + "]" : "";
+      const uniform = techniqueUniforms[uniformName];
+      const arraySize = defined(uniform.count) ? "[" + uniform.count + "]" : "";
       if (
         (uniform.type !== WebGLConstants.FLOAT_MAT3 &&
           uniform.type !== WebGLConstants.FLOAT_MAT4) ||
@@ -386,7 +390,7 @@ function generateTechnique(
   }
 
   // Add attributes with semantics
-  var vertexShaderMain = "";
+  let vertexShaderMain = "";
   if (hasSkinning) {
     vertexShaderMain +=
       "    mat4 skinMatrix =\n" +
@@ -397,7 +401,7 @@ function generateTechnique(
   }
 
   // Add position always
-  var techniqueAttributes = {
+  const techniqueAttributes = {
     a_position: {
       semantic: "POSITION",
     },
@@ -433,7 +437,7 @@ function generateTechnique(
   }
 
   // Add texture coordinates if the material uses them
-  var v_texcoord;
+  let v_texcoord;
   if (hasTexCoords) {
     techniqueAttributes.a_texcoord_0 = {
       semantic: "TEXCOORD_0",
@@ -476,7 +480,7 @@ function generateTechnique(
     vertexShader += "attribute float a_batchId;\n";
   }
 
-  var hasSpecular =
+  const hasSpecular =
     hasNormals &&
     (lightingModel === "BLINN" || lightingModel === "PHONG") &&
     defined(techniqueUniforms.u_specular) &&
@@ -484,26 +488,24 @@ function generateTechnique(
     techniqueUniforms.u_shininess > 0.0;
 
   // Generate lighting code blocks
-  var hasNonAmbientLights = false;
-  var hasAmbientLights = false;
-  var fragmentLightingBlock = "";
-  for (var lightName in lights) {
+  let hasNonAmbientLights = false;
+  let hasAmbientLights = false;
+  let fragmentLightingBlock = "";
+  for (const lightName in lights) {
     if (lights.hasOwnProperty(lightName)) {
-      var light = lights[lightName];
-      var lightType = light.type.toLowerCase();
-      var lightBaseName = light.baseName;
+      const light = lights[lightName];
+      const lightType = light.type.toLowerCase();
+      const lightBaseName = light.baseName;
       fragmentLightingBlock += "  {\n";
-      var lightColorName = "u_" + lightBaseName + "Color";
-      var varyingDirectionName;
-      var varyingPositionName;
+      const lightColorName = "u_" + lightBaseName + "Color";
       if (lightType === "ambient") {
         hasAmbientLights = true;
         fragmentLightingBlock +=
           "    ambientLight += " + lightColorName + ";\n";
       } else if (hasNormals) {
         hasNonAmbientLights = true;
-        varyingDirectionName = "v_" + lightBaseName + "Direction";
-        varyingPositionName = "v_" + lightBaseName + "Position";
+        const varyingDirectionName = "v_" + lightBaseName + "Direction";
+        const varyingPositionName = "v_" + lightBaseName + "Position";
 
         if (lightType !== "point") {
           vertexShader += "varying vec3 " + varyingDirectionName + ";\n";
@@ -610,7 +612,7 @@ function generateTechnique(
     fragmentLightingBlock += "#endif \n";
 
     fragmentLightingBlock += "  vec3 l = normalize(czm_lightDirectionEC);\n";
-    var minimumLighting = "0.2"; // Use strings instead of values as 0.0 -> 0 when stringified
+    const minimumLighting = "0.2"; // Use strings instead of values as 0.0 -> 0 when stringified
     fragmentLightingBlock +=
       "  diffuseLight += lightColor * max(dot(normal,l), " +
       minimumLighting +
@@ -638,7 +640,7 @@ function generateTechnique(
   vertexShader += "}\n";
 
   fragmentShader += "void main(void) {\n";
-  var colorCreationBlock = "  vec3 color = vec3(0.0, 0.0, 0.0);\n";
+  let colorCreationBlock = "  vec3 color = vec3(0.0, 0.0, 0.0);\n";
   if (hasNormals) {
     fragmentShader += "  vec3 normal = normalize(v_normal);\n";
     if (khrMaterialsCommon.doubleSided) {
@@ -649,7 +651,7 @@ function generateTechnique(
     }
   }
 
-  var finalColorComputation;
+  let finalColorComputation;
   if (lightingModel !== "CONSTANT") {
     if (defined(techniqueUniforms.u_diffuse)) {
       if (techniqueUniforms.u_diffuse.type === WebGLConstants.SAMPLER_2D) {
@@ -725,7 +727,7 @@ function generateTechnique(
   fragmentShader += "}\n";
 
   // Add shaders
-  var vertexShaderId = addToArray(shaders, {
+  const vertexShaderId = addToArray(shaders, {
     type: WebGLConstants.VERTEX_SHADER,
     extras: {
       _pipeline: {
@@ -735,7 +737,7 @@ function generateTechnique(
     },
   });
 
-  var fragmentShaderId = addToArray(shaders, {
+  const fragmentShaderId = addToArray(shaders, {
     type: WebGLConstants.FRAGMENT_SHADER,
     extras: {
       _pipeline: {
@@ -746,12 +748,12 @@ function generateTechnique(
   });
 
   // Add program
-  var programId = addToArray(programs, {
+  const programId = addToArray(programs, {
     fragmentShader: fragmentShaderId,
     vertexShader: vertexShaderId,
   });
 
-  var techniqueId = addToArray(techniques, {
+  const techniqueId = addToArray(techniques, {
     attributes: techniqueAttributes,
     program: programId,
     uniforms: techniqueUniforms,
@@ -761,7 +763,7 @@ function generateTechnique(
 }
 
 function getKHRMaterialsCommonValueType(paramName, paramValue) {
-  var value;
+  let value;
 
   // Backwards compatibility for COLLADA2GLTF v1.0-draft when it encoding
   // materials using KHR_materials_common with explicit type/value members
@@ -805,14 +807,14 @@ function getKHRMaterialsCommonValueType(paramName, paramValue) {
 }
 
 function getTechniqueKey(khrMaterialsCommon, primitiveInfo) {
-  var techniqueKey = "";
+  let techniqueKey = "";
   techniqueKey += "technique:" + khrMaterialsCommon.technique + ";";
 
-  var values = khrMaterialsCommon.values;
-  var keys = Object.keys(values).sort();
-  var keysCount = keys.length;
-  for (var i = 0; i < keysCount; ++i) {
-    var name = keys[i];
+  const values = khrMaterialsCommon.values;
+  const keys = Object.keys(values).sort();
+  const keysCount = keys.length;
+  for (let i = 0; i < keysCount; ++i) {
+    const name = keys[i];
     if (values.hasOwnProperty(name)) {
       techniqueKey +=
         name + ":" + getKHRMaterialsCommonValueType(name, values[name]);
@@ -820,10 +822,10 @@ function getTechniqueKey(khrMaterialsCommon, primitiveInfo) {
     }
   }
 
-  var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
+  const jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
   techniqueKey += jointCount.toString() + ";";
   if (defined(primitiveInfo)) {
-    var skinningInfo = primitiveInfo.skinning;
+    const skinningInfo = primitiveInfo.skinning;
     if (jointCount > 0) {
       techniqueKey += skinningInfo.type + ";";
     }
@@ -834,21 +836,21 @@ function getTechniqueKey(khrMaterialsCommon, primitiveInfo) {
 }
 
 function lightDefaults(gltf) {
-  var khrMaterialsCommon = gltf.extensions.KHR_materials_common;
+  const khrMaterialsCommon = gltf.extensions.KHR_materials_common;
   if (!defined(khrMaterialsCommon) || !defined(khrMaterialsCommon.lights)) {
     return;
   }
 
-  var lights = khrMaterialsCommon.lights;
+  const lights = khrMaterialsCommon.lights;
 
-  var lightsLength = lights.length;
-  for (var lightId = 0; lightId < lightsLength; lightId++) {
-    var light = lights[lightId];
+  const lightsLength = lights.length;
+  for (let lightId = 0; lightId < lightsLength; lightId++) {
+    const light = lights[lightId];
     if (light.type === "ambient") {
       if (!defined(light.ambient)) {
         light.ambient = {};
       }
-      var ambientLight = light.ambient;
+      const ambientLight = light.ambient;
 
       if (!defined(ambientLight.color)) {
         ambientLight.color = [1.0, 1.0, 1.0];
@@ -857,7 +859,7 @@ function lightDefaults(gltf) {
       if (!defined(light.directional)) {
         light.directional = {};
       }
-      var directionalLight = light.directional;
+      const directionalLight = light.directional;
 
       if (!defined(directionalLight.color)) {
         directionalLight.color = [1.0, 1.0, 1.0];
@@ -866,7 +868,7 @@ function lightDefaults(gltf) {
       if (!defined(light.point)) {
         light.point = {};
       }
-      var pointLight = light.point;
+      const pointLight = light.point;
 
       if (!defined(pointLight.color)) {
         pointLight.color = [1.0, 1.0, 1.0];
@@ -888,7 +890,7 @@ function lightDefaults(gltf) {
       if (!defined(light.spot)) {
         light.spot = {};
       }
-      var spotLight = light.spot;
+      const spotLight = light.spot;
 
       if (!defined(spotLight.color)) {
         spotLight.color = [1.0, 1.0, 1.0];

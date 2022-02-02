@@ -9,7 +9,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  */
 function getElement(element) {
   if (typeof element === "string") {
-    var foundElement = document.getElementById(element);
+    const foundElement = document.getElementById(element);
 
     //>>includeStart('debug', pragmas.debug);
     if (foundElement === null) {

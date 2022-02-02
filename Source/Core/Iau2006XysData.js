@@ -48,19 +48,19 @@ function Iau2006XysData(options) {
   this._samples = new Array(this._totalSamples * 3);
   this._chunkDownloadsInProgress = [];
 
-  var order = this._interpolationOrder;
+  const order = this._interpolationOrder;
 
   // Compute denominators and X values for interpolation.
-  var denom = (this._denominators = new Array(order + 1));
-  var xTable = (this._xTable = new Array(order + 1));
+  const denom = (this._denominators = new Array(order + 1));
+  const xTable = (this._xTable = new Array(order + 1));
 
-  var stepN = Math.pow(this._stepSizeDays, order);
+  const stepN = Math.pow(this._stepSizeDays, order);
 
-  for (var i = 0; i <= order; ++i) {
+  for (let i = 0; i <= order; ++i) {
     denom[i] = stepN;
     xTable[i] = i * this._stepSizeDays;
 
-    for (var j = 0; j <= order; ++j) {
+    for (let j = 0; j <= order; ++j) {
       if (j !== i) {
         denom[i] *= i - j;
       }
@@ -74,10 +74,10 @@ function Iau2006XysData(options) {
   this._coef = new Array(order + 1);
 }
 
-var julianDateScratch = new JulianDate(0, 0.0, TimeStandard.TAI);
+const julianDateScratch = new JulianDate(0, 0.0, TimeStandard.TAI);
 
 function getDaysSinceEpoch(xys, dayTT, secondTT) {
-  var dateTT = julianDateScratch;
+  const dateTT = julianDateScratch;
   dateTT.dayNumber = dayTT;
   dateTT.secondsOfDay = secondTT;
   return JulianDate.daysDifference(dateTT, xys._sampleZeroDateTT);
@@ -103,28 +103,32 @@ Iau2006XysData.prototype.preload = function (
   stopDayTT,
   stopSecondTT
 ) {
-  var startDaysSinceEpoch = getDaysSinceEpoch(this, startDayTT, startSecondTT);
-  var stopDaysSinceEpoch = getDaysSinceEpoch(this, stopDayTT, stopSecondTT);
+  const startDaysSinceEpoch = getDaysSinceEpoch(
+    this,
+    startDayTT,
+    startSecondTT
+  );
+  const stopDaysSinceEpoch = getDaysSinceEpoch(this, stopDayTT, stopSecondTT);
 
-  var startIndex =
+  let startIndex =
     (startDaysSinceEpoch / this._stepSizeDays - this._interpolationOrder / 2) |
     0;
   if (startIndex < 0) {
     startIndex = 0;
   }
 
-  var stopIndex =
+  let stopIndex =
     (stopDaysSinceEpoch / this._stepSizeDays - this._interpolationOrder / 2) |
     (0 + this._interpolationOrder);
   if (stopIndex >= this._totalSamples) {
     stopIndex = this._totalSamples - 1;
   }
 
-  var startChunk = (startIndex / this._samplesPerXysFile) | 0;
-  var stopChunk = (stopIndex / this._samplesPerXysFile) | 0;
+  const startChunk = (startIndex / this._samplesPerXysFile) | 0;
+  const stopChunk = (stopIndex / this._samplesPerXysFile) | 0;
 
-  var promises = [];
-  for (var i = startChunk; i <= stopChunk; ++i) {
+  const promises = [];
+  for (let i = startChunk; i <= stopChunk; ++i) {
     promises.push(requestXysChunk(this, i));
   }
 
@@ -151,25 +155,25 @@ Iau2006XysData.prototype.computeXysRadians = function (
   secondTT,
   result
 ) {
-  var daysSinceEpoch = getDaysSinceEpoch(this, dayTT, secondTT);
+  const daysSinceEpoch = getDaysSinceEpoch(this, dayTT, secondTT);
   if (daysSinceEpoch < 0.0) {
     // Can't evaluate prior to the epoch of the data.
     return undefined;
   }
 
-  var centerIndex = (daysSinceEpoch / this._stepSizeDays) | 0;
+  const centerIndex = (daysSinceEpoch / this._stepSizeDays) | 0;
   if (centerIndex >= this._totalSamples) {
     // Can't evaluate after the last sample in the data.
     return undefined;
   }
 
-  var degree = this._interpolationOrder;
+  const degree = this._interpolationOrder;
 
-  var firstIndex = centerIndex - ((degree / 2) | 0);
+  let firstIndex = centerIndex - ((degree / 2) | 0);
   if (firstIndex < 0) {
     firstIndex = 0;
   }
-  var lastIndex = firstIndex + degree;
+  let lastIndex = firstIndex + degree;
   if (lastIndex >= this._totalSamples) {
     lastIndex = this._totalSamples - 1;
     firstIndex = lastIndex - degree;
@@ -180,8 +184,8 @@ Iau2006XysData.prototype.computeXysRadians = function (
 
   // Are all the samples we need present?
   // We can assume so if the first and last are present
-  var isDataMissing = false;
-  var samples = this._samples;
+  let isDataMissing = false;
+  const samples = this._samples;
   if (!defined(samples[firstIndex * 3])) {
     requestXysChunk(this, (firstIndex / this._samplesPerXysFile) | 0);
     isDataMissing = true;
@@ -204,14 +208,14 @@ Iau2006XysData.prototype.computeXysRadians = function (
     result.s = 0.0;
   }
 
-  var x = daysSinceEpoch - firstIndex * this._stepSizeDays;
+  const x = daysSinceEpoch - firstIndex * this._stepSizeDays;
 
-  var work = this._work;
-  var denom = this._denominators;
-  var coef = this._coef;
-  var xTable = this._xTable;
+  const work = this._work;
+  const denom = this._denominators;
+  const coef = this._coef;
+  const xTable = this._xTable;
 
-  var i, j;
+  let i, j;
   for (i = 0; i <= degree; ++i) {
     work[i] = x - xTable[i];
   }
@@ -227,7 +231,7 @@ Iau2006XysData.prototype.computeXysRadians = function (
 
     coef[i] *= denom[i];
 
-    var sampleIndex = (firstIndex + i) * 3;
+    let sampleIndex = (firstIndex + i) * 3;
     result.x += coef[i] * samples[sampleIndex++];
     result.y += coef[i] * samples[sampleIndex++];
     result.s += coef[i] * samples[sampleIndex];
@@ -242,12 +246,12 @@ function requestXysChunk(xysData, chunkIndex) {
     return xysData._chunkDownloadsInProgress[chunkIndex];
   }
 
-  var deferred = when.defer();
+  const deferred = when.defer();
 
   xysData._chunkDownloadsInProgress[chunkIndex] = deferred;
 
-  var chunkUrl;
-  var xysFileUrlTemplate = xysData._xysFileUrlTemplate;
+  let chunkUrl;
+  const xysFileUrlTemplate = xysData._xysFileUrlTemplate;
   if (defined(xysFileUrlTemplate)) {
     chunkUrl = xysFileUrlTemplate.getDerivedResource({
       templateValues: {
@@ -265,11 +269,11 @@ function requestXysChunk(xysData, chunkIndex) {
   when(chunkUrl.fetchJson(), function (chunk) {
     xysData._chunkDownloadsInProgress[chunkIndex] = false;
 
-    var samples = xysData._samples;
-    var newSamples = chunk.samples;
-    var startIndex = chunkIndex * xysData._samplesPerXysFile * 3;
+    const samples = xysData._samples;
+    const newSamples = chunk.samples;
+    const startIndex = chunkIndex * xysData._samplesPerXysFile * 3;
 
-    for (var i = 0, len = newSamples.length; i < len; ++i) {
+    for (let i = 0, len = newSamples.length; i < len; ++i) {
       samples[startIndex + i] = newSamples[i];
     }
 

@@ -5,7 +5,7 @@ import { EntityCollection } from "../../Source/Cesium.js";
 
 describe("DataSources/CustomDataSource", function () {
   it("constructor has expected defaults", function () {
-    var dataSource = new CustomDataSource();
+    const dataSource = new CustomDataSource();
     expect(dataSource.name).toBeUndefined();
     expect(dataSource.clock).toBeUndefined();
     expect(dataSource.entities).toBeInstanceOf(EntityCollection);
@@ -17,7 +17,7 @@ describe("DataSources/CustomDataSource", function () {
   });
 
   it("show sets underlying entity collection show.", function () {
-    var dataSource = new CustomDataSource();
+    const dataSource = new CustomDataSource();
 
     dataSource.show = false;
     expect(dataSource.show).toBe(false);
@@ -29,12 +29,12 @@ describe("DataSources/CustomDataSource", function () {
   });
 
   it("setting name raises changed event", function () {
-    var dataSource = new CustomDataSource();
+    const dataSource = new CustomDataSource();
 
-    var spy = jasmine.createSpy("changedEvent");
+    const spy = jasmine.createSpy("changedEvent");
     dataSource.changedEvent.addEventListener(spy);
 
-    var newName = "chester";
+    const newName = "chester";
     dataSource.name = newName;
     expect(dataSource.name).toEqual(newName);
     expect(spy.calls.count()).toEqual(1);
@@ -42,12 +42,12 @@ describe("DataSources/CustomDataSource", function () {
   });
 
   it("setting clock raises changed event", function () {
-    var dataSource = new CustomDataSource();
+    const dataSource = new CustomDataSource();
 
-    var spy = jasmine.createSpy("changedEvent");
+    const spy = jasmine.createSpy("changedEvent");
     dataSource.changedEvent.addEventListener(spy);
 
-    var newClock = new DataSourceClock();
+    const newClock = new DataSourceClock();
     dataSource.clock = newClock;
     expect(dataSource.clock).toBe(newClock);
     expect(spy.calls.count()).toEqual(1);
@@ -55,9 +55,9 @@ describe("DataSources/CustomDataSource", function () {
   });
 
   it("setting isLoading raises loading event", function () {
-    var dataSource = new CustomDataSource();
+    const dataSource = new CustomDataSource();
 
-    var spy = jasmine.createSpy("loadingEvent");
+    const spy = jasmine.createSpy("loadingEvent");
     dataSource.loadingEvent.addEventListener(spy);
 
     dataSource.isLoading = true;
@@ -70,8 +70,8 @@ describe("DataSources/CustomDataSource", function () {
   });
 
   it("has entity collection with link to data source", function () {
-    var dataSource = new CustomDataSource();
-    var entityCollection = dataSource.entities;
+    const dataSource = new CustomDataSource();
+    const entityCollection = dataSource.entities;
     expect(entityCollection.owner).toEqual(dataSource);
   });
 });

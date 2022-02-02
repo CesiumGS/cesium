@@ -3,7 +3,7 @@
  * @enum {Number}
  * @see Geocoder
  */
-var GeocodeType = {
+const GeocodeType = {
   /**
    * Perform a search where the input is considered complete.
    *

@@ -21,10 +21,10 @@ import createContext from "../createContext.js";
 describe(
   "Renderer/Framebuffer",
   function () {
-    var context;
-    var sp;
-    var va;
-    var framebuffer;
+    let context;
+    let sp;
+    let va;
+    let framebuffer;
 
     beforeAll(function () {
       context = createContext();
@@ -155,7 +155,7 @@ describe(
       expect(context).toReadPixels([0, 0, 0, 255]);
 
       // 2 of 3.  Clear framebuffer color attachment to green.
-      var colorTexture = new Texture({
+      const colorTexture = new Texture({
         context: context,
         width: 1,
         height: 1,
@@ -165,16 +165,16 @@ describe(
         colorTextures: [colorTexture],
       });
 
-      var clearCommand = new ClearCommand({
+      const clearCommand = new ClearCommand({
         color: new Color(0.0, 1.0, 0.0, 1.0),
         framebuffer: framebuffer,
       });
       clearCommand.execute(context);
 
       // 3 of 3.  Render green to default color buffer by reading from previous color attachment
-      var fs =
+      const fs =
         "uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }";
-      var uniformMap = {
+      const uniformMap = {
         u_texture: function () {
           return colorTexture;
         },
@@ -188,7 +188,7 @@ describe(
     });
 
     it("clears a cube map face color attachment", function () {
-      var cubeMap = new CubeMap({
+      let cubeMap = new CubeMap({
         context: context,
         width: 1,
         height: 1,
@@ -205,16 +205,16 @@ describe(
         destroyAttachments: false,
       });
 
-      var clearCommand = new ClearCommand({
+      const clearCommand = new ClearCommand({
         color: new Color(0.0, 1.0, 0.0, 1.0),
         framebuffer: framebuffer,
       });
       clearCommand.execute(context);
 
       // 3 of 3.  Render green to default color buffer by reading from previous color attachment
-      var fs =
+      const fs =
         "uniform samplerCube u_cubeMap; void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }";
-      var uniformMap = {
+      const uniformMap = {
         u_cubeMap: function () {
           return cubeMap;
         },
@@ -230,9 +230,9 @@ describe(
     });
 
     function renderColorTexture(framebuffer, color, expectedColor) {
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs = "uniform vec4 color; void main() { gl_FragColor = color; }";
+      const fs = "uniform vec4 color; void main() { gl_FragColor = color; }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -257,13 +257,13 @@ describe(
         ],
       });
 
-      var uniformMap = {
+      const uniformMap = {
         color: function () {
           return color;
         },
       };
 
-      var command = new DrawCommand({
+      const command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -348,7 +348,7 @@ describe(
     function renderDepthAttachment(framebuffer, texture) {
       ClearCommand.ALL.execute(context);
 
-      var framebufferClear = new ClearCommand({
+      const framebufferClear = new ClearCommand({
         depth: 1.0,
         framebuffer: framebuffer,
       });
@@ -356,9 +356,9 @@ describe(
       framebufferClear.execute(context);
 
       // 1 of 3.  Render green point into color attachment.
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -383,7 +383,7 @@ describe(
         ],
       });
 
-      var command = new DrawCommand({
+      let command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -400,11 +400,11 @@ describe(
       expect(context).toReadPixels([0, 0, 0, 255]);
 
       // 3 of 3.  Render green to default color buffer by reading from previous color attachment
-      var vs2 =
+      const vs2 =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs2 =
+      const fs2 =
         "uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)).rrrr; }";
-      var sp2 = ShaderProgram.fromCache({
+      let sp2 = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs2,
         fragmentShaderSource: fs2,
@@ -412,7 +412,7 @@ describe(
           position: 0,
         },
       });
-      var uniformMap = {
+      const uniformMap = {
         u_texture: function () {
           return texture;
         },
@@ -505,9 +505,9 @@ describe(
         }),
       });
 
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -533,7 +533,7 @@ describe(
       });
 
       // 1 of 3.  Clear framebuffer
-      var clearCommand = new ClearCommand({
+      const clearCommand = new ClearCommand({
         color: new Color(0.0, 0.0, 0.0, 0.0),
         depth: 1.0,
         framebuffer: framebuffer,
@@ -545,7 +545,7 @@ describe(
       }).toReadPixels([0, 0, 0, 0]);
 
       // 2 of 3.  Does not pass depth test
-      var command = new DrawCommand({
+      let command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -588,8 +588,8 @@ describe(
         return;
       }
 
-      var source = new Uint8Array(4);
-      var colorTexture0 = new Texture({
+      const source = new Uint8Array(4);
+      const colorTexture0 = new Texture({
         context: context,
         source: {
           arrayBufferView: source,
@@ -597,7 +597,7 @@ describe(
           height: 1,
         },
       });
-      var colorTexture1 = new Texture({
+      const colorTexture1 = new Texture({
         context: context,
         source: {
           arrayBufferView: source,
@@ -615,9 +615,9 @@ describe(
       expect(context).toReadPixels([0, 0, 0, 255]);
 
       // 2 of 5.  Render red point into color attachment 0 and green point to color attachment 1.
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs =
+      const fs =
         "#extension GL_EXT_draw_buffers : enable \n void main() { gl_FragData[0] = vec4(1.0, 0.0, 0.0, 1.0); gl_FragData[1] = vec4(0.0, 1.0, 0.0, 1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
@@ -643,7 +643,7 @@ describe(
         ],
       });
 
-      var command = new DrawCommand({
+      let command = new DrawCommand({
         primitiveType: PrimitiveType.POINTS,
         shaderProgram: sp,
         vertexArray: va,
@@ -655,11 +655,11 @@ describe(
       expect(context).toReadPixels([0, 0, 0, 255]);
 
       // 4 of 5.  Render yellow to default color buffer by reading from previous color attachments
-      var vs2 =
+      const vs2 =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs2 =
+      const fs2 =
         "uniform sampler2D u_texture0; uniform sampler2D u_texture1; void main() { gl_FragColor = texture2D(u_texture0, vec2(0.0)) + texture2D(u_texture1, vec2(0.0)); }";
-      var sp2 = ShaderProgram.fromCache({
+      let sp2 = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs2,
         fragmentShaderSource: fs2,
@@ -667,7 +667,7 @@ describe(
           position: 0,
         },
       });
-      var uniformMap = {
+      const uniformMap = {
         u_texture0: function () {
           return colorTexture0;
         },
@@ -686,7 +686,7 @@ describe(
       expect(context).toReadPixels([255, 255, 0, 255]);
 
       // 5 of 5. Verify clearing multiple color attachments
-      var clearCommand = new ClearCommand({
+      const clearCommand = new ClearCommand({
         color: new Color(0.0, 0.0, 0.0, 0.0),
         framebuffer: framebuffer,
       });
@@ -750,7 +750,7 @@ describe(
     });
 
     it("destroys", function () {
-      var f = new Framebuffer({
+      const f = new Framebuffer({
         context: context,
       });
       expect(f.isDestroyed()).toEqual(false);
@@ -875,9 +875,9 @@ describe(
         ],
       });
 
-      var vs =
+      const vs =
         "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      var fs = "void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -903,7 +903,7 @@ describe(
       });
 
       expect(function () {
-        var command = new DrawCommand({
+        const command = new DrawCommand({
           primitiveType: PrimitiveType.POINTS,
           shaderProgram: sp,
           vertexArray: va,
@@ -1013,7 +1013,7 @@ describe(
     });
 
     it("fails to destroy", function () {
-      var f = new Framebuffer({
+      const f = new Framebuffer({
         context: context,
       });
       f.destroy();

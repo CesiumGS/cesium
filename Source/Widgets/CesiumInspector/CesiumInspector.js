@@ -30,15 +30,15 @@ function CesiumInspector(container, scene) {
 
   container = getElement(container);
 
-  var performanceContainer = document.createElement("div");
+  const performanceContainer = document.createElement("div");
 
-  var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
+  const viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
   this._viewModel = viewModel;
   this._container = container;
 
-  var element = document.createElement("div");
+  const element = document.createElement("div");
   this._element = element;
-  var text = document.createElement("div");
+  const text = document.createElement("div");
   text.textContent = "Cesium Inspector";
   text.className = "cesium-cesiumInspector-button";
   text.setAttribute("data-bind", "click: toggleDropDown");
@@ -50,24 +50,24 @@ function CesiumInspector(container, scene) {
   );
   container.appendChild(this._element);
 
-  var panel = document.createElement("div");
+  const panel = document.createElement("div");
   this._panel = panel;
   panel.className = "cesium-cesiumInspector-dropDown";
   element.appendChild(panel);
 
-  var createSection = InspectorShared.createSection;
-  var createCheckbox = InspectorShared.createCheckbox;
+  const createSection = InspectorShared.createSection;
+  const createCheckbox = InspectorShared.createCheckbox;
 
   // General
-  var generalSection = createSection(
+  const generalSection = createSection(
     panel,
     "General",
     "generalVisible",
     "toggleGeneral"
   );
 
-  var debugShowFrustums = createCheckbox("Show Frustums", "frustums");
-  var frustumStatistics = document.createElement("div");
+  const debugShowFrustums = createCheckbox("Show Frustums", "frustums");
+  const frustumStatistics = document.createElement("div");
   frustumStatistics.className = "cesium-cesiumInspector-frustumStatistics";
   frustumStatistics.setAttribute(
     "data-bind",
@@ -86,34 +86,34 @@ function CesiumInspector(container, scene) {
   performanceContainer.className = "cesium-cesiumInspector-performanceDisplay";
   generalSection.appendChild(performanceContainer);
 
-  var shaderCacheDisplay = document.createElement("div");
+  const shaderCacheDisplay = document.createElement("div");
   shaderCacheDisplay.className = "cesium-cesiumInspector-shaderCache";
   shaderCacheDisplay.setAttribute("data-bind", "html: shaderCacheText");
   generalSection.appendChild(shaderCacheDisplay);
 
-  var depthFrustum = document.createElement("div");
+  const depthFrustum = document.createElement("div");
   generalSection.appendChild(depthFrustum);
 
   // Use a span with HTML binding so that we can indent with non-breaking spaces.
-  var gLabel = document.createElement("span");
+  const gLabel = document.createElement("span");
   gLabel.setAttribute(
     "data-bind",
     'html: "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Frustum:"'
   );
   depthFrustum.appendChild(gLabel);
 
-  var gText = document.createElement("span");
+  const gText = document.createElement("span");
   gText.setAttribute("data-bind", "text: depthFrustumText");
   depthFrustum.appendChild(gText);
 
-  var gMinusButton = document.createElement("input");
+  const gMinusButton = document.createElement("input");
   gMinusButton.type = "button";
   gMinusButton.value = "-";
   gMinusButton.className = "cesium-cesiumInspector-pickButton";
   gMinusButton.setAttribute("data-bind", "click: decrementDepthFrustum");
   depthFrustum.appendChild(gMinusButton);
 
-  var gPlusButton = document.createElement("input");
+  const gPlusButton = document.createElement("input");
   gPlusButton.type = "button";
   gPlusButton.value = "+";
   gPlusButton.className = "cesium-cesiumInspector-pickButton";
@@ -121,17 +121,17 @@ function CesiumInspector(container, scene) {
   depthFrustum.appendChild(gPlusButton);
 
   // Primitives
-  var primSection = createSection(
+  const primSection = createSection(
     panel,
     "Primitives",
     "primitivesVisible",
     "togglePrimitives"
   );
-  var pickPrimRequired = document.createElement("div");
+  const pickPrimRequired = document.createElement("div");
   pickPrimRequired.className = "cesium-cesiumInspector-pickSection";
   primSection.appendChild(pickPrimRequired);
 
-  var pickPrimitiveButton = document.createElement("input");
+  const pickPrimitiveButton = document.createElement("input");
   pickPrimitiveButton.type = "button";
   pickPrimitiveButton.value = "Pick a primitive";
   pickPrimitiveButton.className = "cesium-cesiumInspector-pickButton";
@@ -139,7 +139,7 @@ function CesiumInspector(container, scene) {
     "data-bind",
     'css: {"cesium-cesiumInspector-pickButtonHighlight" : pickPrimitiveActive}, click: pickPrimitive'
   );
-  var buttonWrap = document.createElement("div");
+  let buttonWrap = document.createElement("div");
   buttonWrap.className = "cesium-cesiumInspector-center";
   buttonWrap.appendChild(pickPrimitiveButton);
   pickPrimRequired.appendChild(buttonWrap);
@@ -167,16 +167,16 @@ function CesiumInspector(container, scene) {
   pickPrimRequired.appendChild(this._primitiveOnly);
 
   // Terrain
-  var terrainSection = createSection(
+  const terrainSection = createSection(
     panel,
     "Terrain",
     "terrainVisible",
     "toggleTerrain"
   );
-  var pickTileRequired = document.createElement("div");
+  const pickTileRequired = document.createElement("div");
   pickTileRequired.className = "cesium-cesiumInspector-pickSection";
   terrainSection.appendChild(pickTileRequired);
-  var pickTileButton = document.createElement("input");
+  const pickTileButton = document.createElement("input");
   pickTileButton.type = "button";
   pickTileButton.value = "Pick a tile";
   pickTileButton.className = "cesium-cesiumInspector-pickButton";
@@ -188,62 +188,62 @@ function CesiumInspector(container, scene) {
   buttonWrap.appendChild(pickTileButton);
   buttonWrap.className = "cesium-cesiumInspector-center";
   pickTileRequired.appendChild(buttonWrap);
-  var tileInfo = document.createElement("div");
+  const tileInfo = document.createElement("div");
   pickTileRequired.appendChild(tileInfo);
-  var parentTile = document.createElement("input");
+  const parentTile = document.createElement("input");
   parentTile.type = "button";
   parentTile.value = "Parent";
   parentTile.className = "cesium-cesiumInspector-pickButton";
   parentTile.setAttribute("data-bind", "click: selectParent");
-  var nwTile = document.createElement("input");
+  const nwTile = document.createElement("input");
   nwTile.type = "button";
   nwTile.value = "NW";
   nwTile.className = "cesium-cesiumInspector-pickButton";
   nwTile.setAttribute("data-bind", "click: selectNW");
-  var neTile = document.createElement("input");
+  const neTile = document.createElement("input");
   neTile.type = "button";
   neTile.value = "NE";
   neTile.className = "cesium-cesiumInspector-pickButton";
   neTile.setAttribute("data-bind", "click: selectNE");
-  var swTile = document.createElement("input");
+  const swTile = document.createElement("input");
   swTile.type = "button";
   swTile.value = "SW";
   swTile.className = "cesium-cesiumInspector-pickButton";
   swTile.setAttribute("data-bind", "click: selectSW");
-  var seTile = document.createElement("input");
+  const seTile = document.createElement("input");
   seTile.type = "button";
   seTile.value = "SE";
   seTile.className = "cesium-cesiumInspector-pickButton";
   seTile.setAttribute("data-bind", "click: selectSE");
 
-  var tileText = document.createElement("div");
+  const tileText = document.createElement("div");
   tileText.className = "cesium-cesiumInspector-tileText";
   tileInfo.className = "cesium-cesiumInspector-frustumStatistics";
   tileInfo.appendChild(tileText);
   tileInfo.setAttribute("data-bind", "visible: hasPickedTile");
   tileText.setAttribute("data-bind", "html: tileText");
 
-  var relativeText = document.createElement("div");
+  const relativeText = document.createElement("div");
   relativeText.className = "cesium-cesiumInspector-relativeText";
   relativeText.textContent = "Select relative:";
   tileInfo.appendChild(relativeText);
 
-  var table = document.createElement("table");
-  var tr1 = document.createElement("tr");
-  var tr2 = document.createElement("tr");
-  var td1 = document.createElement("td");
+  const table = document.createElement("table");
+  const tr1 = document.createElement("tr");
+  const tr2 = document.createElement("tr");
+  const td1 = document.createElement("td");
   td1.appendChild(parentTile);
-  var td2 = document.createElement("td");
+  const td2 = document.createElement("td");
   td2.appendChild(nwTile);
-  var td3 = document.createElement("td");
+  const td3 = document.createElement("td");
   td3.appendChild(neTile);
   tr1.appendChild(td1);
   tr1.appendChild(td2);
   tr1.appendChild(td3);
-  var td4 = document.createElement("td");
-  var td5 = document.createElement("td");
+  const td4 = document.createElement("td");
+  const td5 = document.createElement("td");
   td5.appendChild(swTile);
-  var td6 = document.createElement("td");
+  const td6 = document.createElement("td");
   td6.appendChild(seTile);
   tr2.appendChild(td4);
   tr2.appendChild(td5);

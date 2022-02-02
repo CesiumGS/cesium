@@ -6,11 +6,11 @@ import Event from "../Core/Event.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 import Property from "./Property.js";
 
-var defaultColor = Color.WHITE;
-var defaultCellAlpha = 0.1;
-var defaultLineCount = new Cartesian2(8, 8);
-var defaultLineOffset = new Cartesian2(0, 0);
-var defaultLineThickness = new Cartesian2(1, 1);
+const defaultColor = Color.WHITE;
+const defaultCellAlpha = 0.1;
+const defaultLineCount = new Cartesian2(8, 8);
+const defaultLineOffset = new Cartesian2(0, 0);
+const defaultLineThickness = new Cartesian2(1, 1);
 
 /**
  * A {@link MaterialProperty} that maps to grid {@link Material} uniforms.

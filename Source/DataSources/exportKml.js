@@ -30,10 +30,10 @@ import SampledPositionProperty from "./SampledPositionProperty.js";
 import SampledProperty from "./SampledProperty.js";
 import ScaledPositionProperty from "./ScaledPositionProperty.js";
 
-var BILLBOARD_SIZE = 32;
-var kmlNamespace = "http://www.opengis.net/kml/2.2";
-var gxNamespace = "http://www.google.com/kml/ext/2.2";
-var xmlnsNamespace = "http://www.w3.org/2000/xmlns/";
+const BILLBOARD_SIZE = 32;
+const kmlNamespace = "http://www.opengis.net/kml/2.2";
+const gxNamespace = "http://www.google.com/kml/ext/2.2";
+const xmlnsNamespace = "http://www.w3.org/2000/xmlns/";
 
 //
 // Handles files external to the KML (eg. textures and models)
@@ -45,10 +45,10 @@ function ExternalFileHandler(modelCallback) {
   this._modelCallback = modelCallback;
 }
 
-var imageTypeRegex = /^data:image\/([^,;]+)/;
+const imageTypeRegex = /^data:image\/([^,;]+)/;
 ExternalFileHandler.prototype.texture = function (texture) {
-  var that = this;
-  var filename;
+  const that = this;
+  let filename;
 
   if (typeof texture === "string" || texture instanceof Resource) {
     texture = Resource.createIfNeeded(texture);
@@ -57,13 +57,13 @@ ExternalFileHandler.prototype.texture = function (texture) {
     }
 
     // If its a data URI try and get the correct extension and then fetch the blob
-    var regexResult = texture.url.match(imageTypeRegex);
+    const regexResult = texture.url.match(imageTypeRegex);
     filename = "texture_" + ++this._count;
     if (defined(regexResult)) {
       filename += "." + regexResult[1];
     }
 
-    var promise = texture.fetchBlob().then(function (blob) {
+    const promise = texture.fetchBlob().then(function (blob) {
       that._files[filename] = blob;
     });
 
@@ -73,7 +73,7 @@ ExternalFileHandler.prototype.texture = function (texture) {
   }
 
   if (texture instanceof HTMLCanvasElement) {
-    var deferred = when.defer();
+    const deferred = when.defer();
     this._promises.push(deferred.promise);
 
     filename = "texture_" + ++this._count + ".png";
@@ -95,20 +95,20 @@ function getModelBlobHander(that, filename) {
 }
 
 ExternalFileHandler.prototype.model = function (model, time) {
-  var modelCallback = this._modelCallback;
+  const modelCallback = this._modelCallback;
   if (!defined(modelCallback)) {
     throw new RuntimeError(
       "Encountered a model entity while exporting to KML, but no model callback was supplied."
     );
   }
 
-  var externalFiles = {};
-  var url = modelCallback(model, time, externalFiles);
+  const externalFiles = {};
+  const url = modelCallback(model, time, externalFiles);
 
   // Iterate through external files and add them to our list once the promise resolves
-  for (var filename in externalFiles) {
+  for (const filename in externalFiles) {
     if (externalFiles.hasOwnProperty(filename)) {
-      var promise = when(externalFiles[filename]);
+      const promise = when(externalFiles[filename]);
       this._promises.push(promise);
 
       promise.then(getModelBlobHander(this, filename));
@@ -139,7 +139,7 @@ function ValueGetter(time) {
 }
 
 ValueGetter.prototype.get = function (property, defaultVal, result) {
-  var value;
+  let value;
   if (defined(property)) {
     value = defined(property.getValue)
       ? property.getValue(this._time, result)
@@ -150,7 +150,7 @@ ValueGetter.prototype.get = function (property, defaultVal, result) {
 };
 
 ValueGetter.prototype.getColor = function (property, defaultVal) {
-  var result = this.get(property, defaultVal);
+  const result = this.get(property, defaultVal);
   if (defined(result)) {
     return colorToString(result);
   }
@@ -174,13 +174,13 @@ function StyleCache() {
 }
 
 StyleCache.prototype.get = function (element) {
-  var ids = this._ids;
-  var key = element.innerHTML;
+  const ids = this._ids;
+  const key = element.innerHTML;
   if (defined(ids[key])) {
     return ids[key];
   }
 
-  var styleId = "style-" + ++this._count;
+  let styleId = "style-" + ++this._count;
   element.setAttribute("id", styleId);
 
   // Store with #
@@ -192,10 +192,10 @@ StyleCache.prototype.get = function (element) {
 };
 
 StyleCache.prototype.save = function (parentElement) {
-  var styles = this._styles;
+  const styles = this._styles;
 
-  var firstElement = parentElement.childNodes[0];
-  for (var key in styles) {
+  const firstElement = parentElement.childNodes[0];
+  for (const key in styles) {
     if (styles.hasOwnProperty(key)) {
       parentElement.insertBefore(styles[key], firstElement);
     }
@@ -214,7 +214,7 @@ IdManager.prototype.get = function (id) {
     return this.get(createGuid());
   }
 
-  var ids = this._ids;
+  const ids = this._ids;
   if (!defined(ids[id])) {
     ids[id] = 0;
     return id;
@@ -266,8 +266,8 @@ IdManager.prototype.get = function (id) {
  *   .then(function(result) {
  *     // The XML string is in result.kml
  *
- *     var externalFiles = result.externalFiles
- *     for(var file in externalFiles) {
+ *     const externalFiles = result.externalFiles
+ *     for(const file in externalFiles) {
  *       // file is the name of the file used in the KML document as the href
  *       // externalFiles[file] is a blob with the contents of the file
  *     }
@@ -276,8 +276,8 @@ IdManager.prototype.get = function (id) {
  */
 function exportKml(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var entities = options.entities;
-  var kmz = defaultValue(options.kmz, false);
+  const entities = options.entities;
+  const kmz = defaultValue(options.kmz, false);
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(entities)) {
@@ -287,18 +287,18 @@ function exportKml(options) {
 
   // Get the state that is passed around during the recursion
   // This is separated out for testing.
-  var state = exportKml._createState(options);
+  const state = exportKml._createState(options);
 
   // Filter EntityCollection so we only have top level entities
-  var rootEntities = entities.values.filter(function (entity) {
+  const rootEntities = entities.values.filter(function (entity) {
     return !defined(entity.parent);
   });
 
   // Add the <Document>
-  var kmlDoc = state.kmlDoc;
-  var kmlElement = kmlDoc.documentElement;
+  const kmlDoc = state.kmlDoc;
+  const kmlElement = kmlDoc.documentElement;
   kmlElement.setAttributeNS(xmlnsNamespace, "xmlns:gx", gxNamespace);
-  var kmlDocumentElement = kmlDoc.createElement("Document");
+  const kmlDocumentElement = kmlDoc.createElement("Document");
   kmlElement.appendChild(kmlDocumentElement);
 
   // Create the KML Hierarchy
@@ -308,10 +308,10 @@ function exportKml(options) {
   state.styleCache.save(kmlDocumentElement);
 
   // Once all the blobs have resolved return the KML string along with the blob collection
-  var externalFileHandler = state.externalFileHandler;
+  const externalFileHandler = state.externalFileHandler;
   return externalFileHandler.promise.then(function () {
-    var serializer = new XMLSerializer();
-    var kmlString = serializer.serializeToString(state.kmlDoc);
+    const serializer = new XMLSerializer();
+    const kmlString = serializer.serializeToString(state.kmlDoc);
     if (kmz) {
       return createKmz(kmlString, externalFileHandler.files);
     }
@@ -324,19 +324,19 @@ function exportKml(options) {
 }
 
 function createKmz(kmlString, externalFiles) {
-  var zWorkerUrl = buildModuleUrl("ThirdParty/Workers/z-worker-pako.js");
+  const zWorkerUrl = buildModuleUrl("ThirdParty/Workers/z-worker-pako.js");
   zip.configure({
     workerScripts: {
       deflate: [zWorkerUrl, "./pako_deflate.min.js"],
       inflate: [zWorkerUrl, "./pako_inflate.min.js"],
     },
   });
-  var blobWriter = new zip.BlobWriter();
-  var writer = new zip.ZipWriter(blobWriter);
+  const blobWriter = new zip.BlobWriter();
+  const writer = new zip.ZipWriter(blobWriter);
   // We need to only write one file at a time so the zip doesn't get corrupted
   return when(writer.add("doc.kml", new zip.TextReader(kmlString)))
     .then(function () {
-      var keys = Object.keys(externalFiles);
+      const keys = Object.keys(externalFiles);
       return addExternalFilesToZip(writer, keys, externalFiles, 0);
     })
     .then(function () {
@@ -352,7 +352,7 @@ function addExternalFilesToZip(writer, keys, externalFiles, index) {
   if (keys.length === index) {
     return;
   }
-  var filename = keys[index];
+  const filename = keys[index];
   return when(
     writer.add(filename, new zip.BlobReader(externalFiles[filename]))
   ).then(function () {
@@ -361,21 +361,21 @@ function addExternalFilesToZip(writer, keys, externalFiles, index) {
 }
 
 exportKml._createState = function (options) {
-  var entities = options.entities;
+  const entities = options.entities;
 
-  var styleCache = new StyleCache();
+  const styleCache = new StyleCache();
 
   // Use the start time as the default because just in case they define
   //  properties with an interval even if they don't change.
-  var entityAvailability = entities.computeAvailability();
-  var time = defined(options.time) ? options.time : entityAvailability.start;
+  const entityAvailability = entities.computeAvailability();
+  const time = defined(options.time) ? options.time : entityAvailability.start;
 
   // Figure out how we will sample dynamic position properties
-  var defaultAvailability = defaultValue(
+  let defaultAvailability = defaultValue(
     options.defaultAvailability,
     entityAvailability
   );
-  var sampleDuration = defaultValue(options.sampleDuration, 60);
+  const sampleDuration = defaultValue(options.sampleDuration, 60);
 
   // Make sure we don't have infinite availability if we need to sample
   if (defaultAvailability.start === Iso8601.MINIMUM_VALUE) {
@@ -399,9 +399,9 @@ exportKml._createState = function (options) {
     );
   }
 
-  var externalFileHandler = new ExternalFileHandler(options.modelCallback);
+  const externalFileHandler = new ExternalFileHandler(options.modelCallback);
 
-  var kmlDoc = document.implementation.createDocument(kmlNamespace, "kml");
+  const kmlDoc = document.implementation.createDocument(kmlNamespace, "kml");
   return {
     kmlDoc: kmlDoc,
     ellipsoid: defaultValue(options.ellipsoid, Ellipsoid.WGS84),
@@ -417,17 +417,17 @@ exportKml._createState = function (options) {
 };
 
 function recurseEntities(state, parentNode, entities) {
-  var kmlDoc = state.kmlDoc;
-  var styleCache = state.styleCache;
-  var valueGetter = state.valueGetter;
-  var idManager = state.idManager;
+  const kmlDoc = state.kmlDoc;
+  const styleCache = state.styleCache;
+  const valueGetter = state.valueGetter;
+  const idManager = state.idManager;
 
-  var count = entities.length;
-  var overlays;
-  var geometries;
-  var styles;
-  for (var i = 0; i < count; ++i) {
-    var entity = entities[i];
+  const count = entities.length;
+  let overlays;
+  let geometries;
+  let styles;
+  for (let i = 0; i < count; ++i) {
+    const entity = entities[i];
     overlays = [];
     geometries = [];
     styles = [];
@@ -438,8 +438,8 @@ function recurseEntities(state, parentNode, entities) {
     createPolygon(state, entity.polygon, geometries, styles, overlays);
     createModel(state, entity, entity.model, geometries, styles);
 
-    var timeSpan;
-    var availability = entity.availability;
+    let timeSpan;
+    const availability = entity.availability;
     if (defined(availability)) {
       timeSpan = kmlDoc.createElement("TimeSpan");
 
@@ -464,8 +464,8 @@ function recurseEntities(state, parentNode, entities) {
       }
     }
 
-    for (var overlayIndex = 0; overlayIndex < overlays.length; ++overlayIndex) {
-      var overlay = overlays[overlayIndex];
+    for (let overlayIndex = 0; overlayIndex < overlays.length; ++overlayIndex) {
+      const overlay = overlays[overlayIndex];
 
       overlay.setAttribute("id", idManager.get(entity.id));
       overlay.appendChild(
@@ -485,21 +485,21 @@ function recurseEntities(state, parentNode, entities) {
       parentNode.appendChild(overlay);
     }
 
-    var geometryCount = geometries.length;
+    const geometryCount = geometries.length;
     if (geometryCount > 0) {
-      var placemark = kmlDoc.createElement("Placemark");
+      const placemark = kmlDoc.createElement("Placemark");
       placemark.setAttribute("id", idManager.get(entity.id));
 
-      var name = entity.name;
-      var labelGraphics = entity.label;
+      let name = entity.name;
+      const labelGraphics = entity.label;
       if (defined(labelGraphics)) {
-        var labelStyle = kmlDoc.createElement("LabelStyle");
+        const labelStyle = kmlDoc.createElement("LabelStyle");
 
         // KML only shows the name as a label, so just change the name if we need to show a label
-        var text = valueGetter.get(labelGraphics.text);
+        const text = valueGetter.get(labelGraphics.text);
         name = defined(text) && text.length > 0 ? text : name;
 
-        var color = valueGetter.getColor(labelGraphics.fillColor);
+        const color = valueGetter.getColor(labelGraphics.fillColor);
         if (defined(color)) {
           labelStyle.appendChild(
             createBasicElementWithText(kmlDoc, "color", color)
@@ -509,7 +509,7 @@ function recurseEntities(state, parentNode, entities) {
           );
         }
 
-        var scale = valueGetter.get(labelGraphics.scale);
+        const scale = valueGetter.get(labelGraphics.scale);
         if (defined(scale)) {
           labelStyle.appendChild(
             createBasicElementWithText(kmlDoc, "scale", scale)
@@ -533,10 +533,10 @@ function recurseEntities(state, parentNode, entities) {
 
       parentNode.appendChild(placemark);
 
-      var styleCount = styles.length;
+      const styleCount = styles.length;
       if (styleCount > 0) {
-        var style = kmlDoc.createElement("Style");
-        for (var styleIndex = 0; styleIndex < styleCount; ++styleIndex) {
+        const style = kmlDoc.createElement("Style");
+        for (let styleIndex = 0; styleIndex < styleCount; ++styleIndex) {
           style.appendChild(styles[styleIndex]);
         }
 
@@ -548,9 +548,9 @@ function recurseEntities(state, parentNode, entities) {
       if (geometries.length === 1) {
         placemark.appendChild(geometries[0]);
       } else if (geometries.length > 1) {
-        var multigeometry = kmlDoc.createElement("MultiGeometry");
+        const multigeometry = kmlDoc.createElement("MultiGeometry");
         for (
-          var geometryIndex = 0;
+          let geometryIndex = 0;
           geometryIndex < geometryCount;
           ++geometryIndex
         ) {
@@ -560,9 +560,9 @@ function recurseEntities(state, parentNode, entities) {
       }
     }
 
-    var children = entity._children;
+    const children = entity._children;
     if (children.length > 0) {
-      var folderNode = kmlDoc.createElement("Folder");
+      const folderNode = kmlDoc.createElement("Folder");
       folderNode.setAttribute("id", idManager.get(entity.id));
       folderNode.appendChild(
         createBasicElementWithText(kmlDoc, "name", entity.name)
@@ -581,38 +581,38 @@ function recurseEntities(state, parentNode, entities) {
   }
 }
 
-var scratchCartesian3 = new Cartesian3();
-var scratchCartographic = new Cartographic();
-var scratchJulianDate = new JulianDate();
+const scratchCartesian3 = new Cartesian3();
+const scratchCartographic = new Cartographic();
+const scratchJulianDate = new JulianDate();
 
 function createPoint(state, entity, geometries, styles) {
-  var kmlDoc = state.kmlDoc;
-  var ellipsoid = state.ellipsoid;
-  var valueGetter = state.valueGetter;
+  const kmlDoc = state.kmlDoc;
+  const ellipsoid = state.ellipsoid;
+  const valueGetter = state.valueGetter;
 
-  var pointGraphics = defaultValue(entity.billboard, entity.point);
+  const pointGraphics = defaultValue(entity.billboard, entity.point);
   if (!defined(pointGraphics) && !defined(entity.path)) {
     return;
   }
 
   // If the point isn't constant then create gx:Track or gx:MultiTrack
-  var entityPositionProperty = entity.position;
+  const entityPositionProperty = entity.position;
   if (!entityPositionProperty.isConstant) {
     createTracks(state, entity, pointGraphics, geometries, styles);
     return;
   }
 
   valueGetter.get(entityPositionProperty, undefined, scratchCartesian3);
-  var coordinates = createBasicElementWithText(
+  const coordinates = createBasicElementWithText(
     kmlDoc,
     "coordinates",
     getCoordinates(scratchCartesian3, ellipsoid)
   );
 
-  var pointGeometry = kmlDoc.createElement("Point");
+  const pointGeometry = kmlDoc.createElement("Point");
 
   // Set altitude mode
-  var altitudeMode = kmlDoc.createElement("altitudeMode");
+  const altitudeMode = kmlDoc.createElement("altitudeMode");
   altitudeMode.appendChild(
     getAltitudeMode(state, pointGraphics.heightReference)
   );
@@ -622,7 +622,7 @@ function createPoint(state, entity, geometries, styles) {
   geometries.push(pointGeometry);
 
   // Create style
-  var iconStyle =
+  const iconStyle =
     pointGraphics instanceof BillboardGraphics
       ? createIconStyleFromBillboard(state, pointGraphics)
       : createIconStyleFromPoint(state, pointGraphics);
@@ -630,13 +630,13 @@ function createPoint(state, entity, geometries, styles) {
 }
 
 function createTracks(state, entity, pointGraphics, geometries, styles) {
-  var kmlDoc = state.kmlDoc;
-  var ellipsoid = state.ellipsoid;
-  var valueGetter = state.valueGetter;
+  const kmlDoc = state.kmlDoc;
+  const ellipsoid = state.ellipsoid;
+  const valueGetter = state.valueGetter;
 
-  var intervals;
-  var entityPositionProperty = entity.position;
-  var useEntityPositionProperty = true;
+  let intervals;
+  const entityPositionProperty = entity.position;
+  let useEntityPositionProperty = true;
   if (entityPositionProperty instanceof CompositePositionProperty) {
     intervals = entityPositionProperty.intervals;
     useEntityPositionProperty = false;
@@ -644,17 +644,17 @@ function createTracks(state, entity, pointGraphics, geometries, styles) {
     intervals = defaultValue(entity.availability, state.defaultAvailability);
   }
 
-  var isModel = pointGraphics instanceof ModelGraphics;
+  const isModel = pointGraphics instanceof ModelGraphics;
 
-  var i, j, times;
-  var tracks = [];
+  let i, j, times;
+  const tracks = [];
   for (i = 0; i < intervals.length; ++i) {
-    var interval = intervals.get(i);
-    var positionProperty = useEntityPositionProperty
+    const interval = intervals.get(i);
+    let positionProperty = useEntityPositionProperty
       ? entityPositionProperty
       : interval.data;
 
-    var trackAltitudeMode = kmlDoc.createElement("altitudeMode");
+    const trackAltitudeMode = kmlDoc.createElement("altitudeMode");
     // This is something that KML importing uses to handle clampToGround,
     //  so just extract the internal property and set the altitudeMode.
     if (positionProperty instanceof ScaledPositionProperty) {
@@ -673,12 +673,12 @@ function createTracks(state, entity, pointGraphics, geometries, styles) {
       );
     }
 
-    var positionTimes = [];
-    var positionValues = [];
+    const positionTimes = [];
+    const positionValues = [];
 
     if (positionProperty.isConstant) {
       valueGetter.get(positionProperty, undefined, scratchCartesian3);
-      var constCoordinates = createBasicElementWithText(
+      const constCoordinates = createBasicElementWithText(
         kmlDoc,
         "coordinates",
         getCoordinates(scratchCartesian3, ellipsoid)
@@ -703,7 +703,7 @@ function createTracks(state, entity, pointGraphics, geometries, styles) {
       }
     } else if (positionProperty instanceof SampledProperty) {
       times = positionProperty._times;
-      var values = positionProperty._values;
+      const values = positionProperty._values;
 
       for (j = 0; j < times.length; ++j) {
         positionTimes.push(JulianDate.toIso8601(times[j]));
@@ -711,13 +711,13 @@ function createTracks(state, entity, pointGraphics, geometries, styles) {
         positionValues.push(getCoordinates(scratchCartesian3, ellipsoid));
       }
     } else {
-      var duration = state.sampleDuration;
+      const duration = state.sampleDuration;
       interval.start.clone(scratchJulianDate);
       if (!interval.isStartIncluded) {
         JulianDate.addSeconds(scratchJulianDate, duration, scratchJulianDate);
       }
 
-      var stopDate = interval.stop;
+      const stopDate = interval.stop;
       while (JulianDate.lessThan(scratchJulianDate, stopDate)) {
         positionProperty.getValue(scratchJulianDate, scratchCartesian3);
 
@@ -738,12 +738,12 @@ function createTracks(state, entity, pointGraphics, geometries, styles) {
       }
     }
 
-    var trackGeometry = kmlDoc.createElementNS(gxNamespace, "Track");
+    const trackGeometry = kmlDoc.createElementNS(gxNamespace, "Track");
     trackGeometry.appendChild(trackAltitudeMode);
 
-    for (var k = 0; k < positionTimes.length; ++k) {
-      var when = createBasicElementWithText(kmlDoc, "when", positionTimes[k]);
-      var coord = createBasicElementWithText(
+    for (let k = 0; k < positionTimes.length; ++k) {
+      const when = createBasicElementWithText(kmlDoc, "when", positionTimes[k]);
+      const coord = createBasicElementWithText(
         kmlDoc,
         "coord",
         positionValues[k],
@@ -765,7 +765,10 @@ function createTracks(state, entity, pointGraphics, geometries, styles) {
   if (tracks.length === 1) {
     geometries.push(tracks[0]);
   } else if (tracks.length > 1) {
-    var multiTrackGeometry = kmlDoc.createElementNS(gxNamespace, "MultiTrack");
+    const multiTrackGeometry = kmlDoc.createElementNS(
+      gxNamespace,
+      "MultiTrack"
+    );
 
     for (i = 0; i < tracks.length; ++i) {
       multiTrackGeometry.appendChild(tracks[i]);
@@ -776,7 +779,7 @@ function createTracks(state, entity, pointGraphics, geometries, styles) {
 
   // Create style
   if (defined(pointGraphics) && !isModel) {
-    var iconStyle =
+    const iconStyle =
       pointGraphics instanceof BillboardGraphics
         ? createIconStyleFromBillboard(state, pointGraphics)
         : createIconStyleFromPoint(state, pointGraphics);
@@ -784,12 +787,12 @@ function createTracks(state, entity, pointGraphics, geometries, styles) {
   }
 
   // See if we have a line that needs to be drawn
-  var path = entity.path;
+  const path = entity.path;
   if (defined(path)) {
-    var width = valueGetter.get(path.width);
-    var material = path.material;
+    const width = valueGetter.get(path.width);
+    const material = path.material;
     if (defined(material) || defined(width)) {
-      var lineStyle = kmlDoc.createElement("LineStyle");
+      const lineStyle = kmlDoc.createElement("LineStyle");
       if (defined(width)) {
         lineStyle.appendChild(
           createBasicElementWithText(kmlDoc, "width", width)
@@ -803,12 +806,12 @@ function createTracks(state, entity, pointGraphics, geometries, styles) {
 }
 
 function createIconStyleFromPoint(state, pointGraphics) {
-  var kmlDoc = state.kmlDoc;
-  var valueGetter = state.valueGetter;
+  const kmlDoc = state.kmlDoc;
+  const valueGetter = state.valueGetter;
 
-  var iconStyle = kmlDoc.createElement("IconStyle");
+  const iconStyle = kmlDoc.createElement("IconStyle");
 
-  var color = valueGetter.getColor(pointGraphics.color);
+  const color = valueGetter.getColor(pointGraphics.color);
   if (defined(color)) {
     iconStyle.appendChild(createBasicElementWithText(kmlDoc, "color", color));
     iconStyle.appendChild(
@@ -816,7 +819,7 @@ function createIconStyleFromPoint(state, pointGraphics) {
     );
   }
 
-  var pixelSize = valueGetter.get(pointGraphics.pixelSize);
+  const pixelSize = valueGetter.get(pointGraphics.pixelSize);
   if (defined(pixelSize)) {
     iconStyle.appendChild(
       createBasicElementWithText(kmlDoc, "scale", pixelSize / BILLBOARD_SIZE)
@@ -827,20 +830,20 @@ function createIconStyleFromPoint(state, pointGraphics) {
 }
 
 function createIconStyleFromBillboard(state, billboardGraphics) {
-  var kmlDoc = state.kmlDoc;
-  var valueGetter = state.valueGetter;
-  var externalFileHandler = state.externalFileHandler;
+  const kmlDoc = state.kmlDoc;
+  const valueGetter = state.valueGetter;
+  const externalFileHandler = state.externalFileHandler;
 
-  var iconStyle = kmlDoc.createElement("IconStyle");
+  const iconStyle = kmlDoc.createElement("IconStyle");
 
-  var image = valueGetter.get(billboardGraphics.image);
+  let image = valueGetter.get(billboardGraphics.image);
   if (defined(image)) {
     image = externalFileHandler.texture(image);
 
-    var icon = kmlDoc.createElement("Icon");
+    const icon = kmlDoc.createElement("Icon");
     icon.appendChild(createBasicElementWithText(kmlDoc, "href", image));
 
-    var imageSubRegion = valueGetter.get(billboardGraphics.imageSubRegion);
+    const imageSubRegion = valueGetter.get(billboardGraphics.imageSubRegion);
     if (defined(imageSubRegion)) {
       icon.appendChild(
         createBasicElementWithText(kmlDoc, "x", imageSubRegion.x, gxNamespace)
@@ -869,7 +872,7 @@ function createIconStyleFromBillboard(state, billboardGraphics) {
     iconStyle.appendChild(icon);
   }
 
-  var color = valueGetter.getColor(billboardGraphics.color);
+  const color = valueGetter.getColor(billboardGraphics.color);
   if (defined(color)) {
     iconStyle.appendChild(createBasicElementWithText(kmlDoc, "color", color));
     iconStyle.appendChild(
@@ -877,24 +880,24 @@ function createIconStyleFromBillboard(state, billboardGraphics) {
     );
   }
 
-  var scale = valueGetter.get(billboardGraphics.scale);
+  let scale = valueGetter.get(billboardGraphics.scale);
   if (defined(scale)) {
     iconStyle.appendChild(createBasicElementWithText(kmlDoc, "scale", scale));
   }
 
-  var pixelOffset = valueGetter.get(billboardGraphics.pixelOffset);
+  const pixelOffset = valueGetter.get(billboardGraphics.pixelOffset);
   if (defined(pixelOffset)) {
     scale = defaultValue(scale, 1.0);
 
     Cartesian2.divideByScalar(pixelOffset, scale, pixelOffset);
 
-    var width = valueGetter.get(billboardGraphics.width, BILLBOARD_SIZE);
-    var height = valueGetter.get(billboardGraphics.height, BILLBOARD_SIZE);
+    const width = valueGetter.get(billboardGraphics.width, BILLBOARD_SIZE);
+    const height = valueGetter.get(billboardGraphics.height, BILLBOARD_SIZE);
 
     // KML Hotspots are from the bottom left, but we work from the top left
 
     // Move to left
-    var horizontalOrigin = valueGetter.get(
+    const horizontalOrigin = valueGetter.get(
       billboardGraphics.horizontalOrigin,
       HorizontalOrigin.CENTER
     );
@@ -905,7 +908,7 @@ function createIconStyleFromBillboard(state, billboardGraphics) {
     }
 
     // Move to bottom
-    var verticalOrigin = valueGetter.get(
+    const verticalOrigin = valueGetter.get(
       billboardGraphics.verticalOrigin,
       VerticalOrigin.CENTER
     );
@@ -915,7 +918,7 @@ function createIconStyleFromBillboard(state, billboardGraphics) {
       pixelOffset.y += height * 0.5;
     }
 
-    var hotSpot = kmlDoc.createElement("hotSpot");
+    const hotSpot = kmlDoc.createElement("hotSpot");
     hotSpot.setAttribute("x", -pixelOffset.x);
     hotSpot.setAttribute("y", pixelOffset.y);
     hotSpot.setAttribute("xunits", "pixels");
@@ -926,8 +929,8 @@ function createIconStyleFromBillboard(state, billboardGraphics) {
 
   // We can only specify heading so if axis isn't Z, then we skip the rotation
   // GE treats a heading of zero as no heading but can still point north using a 360 degree angle
-  var rotation = valueGetter.get(billboardGraphics.rotation);
-  var alignedAxis = valueGetter.get(billboardGraphics.alignedAxis);
+  let rotation = valueGetter.get(billboardGraphics.rotation);
+  const alignedAxis = valueGetter.get(billboardGraphics.alignedAxis);
   if (defined(rotation) && Cartesian3.equals(Cartesian3.UNIT_Z, alignedAxis)) {
     rotation = CesiumMath.toDegrees(-rotation);
     if (rotation === 0) {
@@ -943,20 +946,20 @@ function createIconStyleFromBillboard(state, billboardGraphics) {
 }
 
 function createLineString(state, polylineGraphics, geometries, styles) {
-  var kmlDoc = state.kmlDoc;
-  var ellipsoid = state.ellipsoid;
-  var valueGetter = state.valueGetter;
+  const kmlDoc = state.kmlDoc;
+  const ellipsoid = state.ellipsoid;
+  const valueGetter = state.valueGetter;
 
   if (!defined(polylineGraphics)) {
     return;
   }
 
-  var lineStringGeometry = kmlDoc.createElement("LineString");
+  const lineStringGeometry = kmlDoc.createElement("LineString");
 
   // Set altitude mode
-  var altitudeMode = kmlDoc.createElement("altitudeMode");
-  var clampToGround = valueGetter.get(polylineGraphics.clampToGround, false);
-  var altitudeModeText;
+  const altitudeMode = kmlDoc.createElement("altitudeMode");
+  const clampToGround = valueGetter.get(polylineGraphics.clampToGround, false);
+  let altitudeModeText;
   if (clampToGround) {
     lineStringGeometry.appendChild(
       createBasicElementWithText(kmlDoc, "tessellate", true)
@@ -969,9 +972,9 @@ function createLineString(state, polylineGraphics, geometries, styles) {
   lineStringGeometry.appendChild(altitudeMode);
 
   // Set coordinates
-  var positionsProperty = polylineGraphics.positions;
-  var cartesians = valueGetter.get(positionsProperty);
-  var coordinates = createBasicElementWithText(
+  const positionsProperty = polylineGraphics.positions;
+  const cartesians = valueGetter.get(positionsProperty);
+  const coordinates = createBasicElementWithText(
     kmlDoc,
     "coordinates",
     getCoordinates(cartesians, ellipsoid)
@@ -979,7 +982,7 @@ function createLineString(state, polylineGraphics, geometries, styles) {
   lineStringGeometry.appendChild(coordinates);
 
   // Set draw order
-  var zIndex = valueGetter.get(polylineGraphics.zIndex);
+  const zIndex = valueGetter.get(polylineGraphics.zIndex);
   if (clampToGround && defined(zIndex)) {
     lineStringGeometry.appendChild(
       createBasicElementWithText(kmlDoc, "drawOrder", zIndex, gxNamespace)
@@ -989,9 +992,9 @@ function createLineString(state, polylineGraphics, geometries, styles) {
   geometries.push(lineStringGeometry);
 
   // Create style
-  var lineStyle = kmlDoc.createElement("LineStyle");
+  const lineStyle = kmlDoc.createElement("LineStyle");
 
-  var width = valueGetter.get(polylineGraphics.width);
+  const width = valueGetter.get(polylineGraphics.width);
   if (defined(width)) {
     lineStyle.appendChild(createBasicElementWithText(kmlDoc, "width", width));
   }
@@ -1002,11 +1005,10 @@ function createLineString(state, polylineGraphics, geometries, styles) {
 }
 
 function getRectangleBoundaries(state, rectangleGraphics, extrudedHeight) {
-  var kmlDoc = state.kmlDoc;
-  var valueGetter = state.valueGetter;
+  const kmlDoc = state.kmlDoc;
+  const valueGetter = state.valueGetter;
 
-  var coordinates;
-  var height = valueGetter.get(rectangleGraphics.height, 0.0);
+  let height = valueGetter.get(rectangleGraphics.height, 0.0);
 
   if (extrudedHeight > 0) {
     // We extrude up and KML extrudes down, so if we extrude, set the polygon height to
@@ -1014,18 +1016,18 @@ function getRectangleBoundaries(state, rectangleGraphics, extrudedHeight) {
     height = extrudedHeight;
   }
 
-  var coordinatesProperty = rectangleGraphics.coordinates;
-  var rectangle = valueGetter.get(coordinatesProperty);
+  const coordinatesProperty = rectangleGraphics.coordinates;
+  const rectangle = valueGetter.get(coordinatesProperty);
 
-  var coordinateStrings = [];
-  var cornerFunction = [
+  const coordinateStrings = [];
+  const cornerFunction = [
     Rectangle.northeast,
     Rectangle.southeast,
     Rectangle.southwest,
     Rectangle.northwest,
   ];
 
-  for (var i = 0; i < 4; ++i) {
+  for (let i = 0; i < 4; ++i) {
     cornerFunction[i](rectangle, scratchCartographic);
     coordinateStrings.push(
       CesiumMath.toDegrees(scratchCartographic.longitude) +
@@ -1036,14 +1038,14 @@ function getRectangleBoundaries(state, rectangleGraphics, extrudedHeight) {
     );
   }
 
-  coordinates = createBasicElementWithText(
+  const coordinates = createBasicElementWithText(
     kmlDoc,
     "coordinates",
     coordinateStrings.join(" ")
   );
 
-  var outerBoundaryIs = kmlDoc.createElement("outerBoundaryIs");
-  var linearRing = kmlDoc.createElement("LinearRing");
+  const outerBoundaryIs = kmlDoc.createElement("outerBoundaryIs");
+  const linearRing = kmlDoc.createElement("LinearRing");
   linearRing.appendChild(coordinates);
   outerBoundaryIs.appendChild(linearRing);
 
@@ -1051,12 +1053,12 @@ function getRectangleBoundaries(state, rectangleGraphics, extrudedHeight) {
 }
 
 function getLinearRing(state, positions, height, perPositionHeight) {
-  var kmlDoc = state.kmlDoc;
-  var ellipsoid = state.ellipsoid;
+  const kmlDoc = state.kmlDoc;
+  const ellipsoid = state.ellipsoid;
 
-  var coordinateStrings = [];
-  var positionCount = positions.length;
-  for (var i = 0; i < positionCount; ++i) {
+  const coordinateStrings = [];
+  const positionCount = positions.length;
+  for (let i = 0; i < positionCount; ++i) {
     Cartographic.fromCartesian(positions[i], ellipsoid, scratchCartographic);
     coordinateStrings.push(
       CesiumMath.toDegrees(scratchCartographic.longitude) +
@@ -1067,23 +1069,23 @@ function getLinearRing(state, positions, height, perPositionHeight) {
     );
   }
 
-  var coordinates = createBasicElementWithText(
+  const coordinates = createBasicElementWithText(
     kmlDoc,
     "coordinates",
     coordinateStrings.join(" ")
   );
-  var linearRing = kmlDoc.createElement("LinearRing");
+  const linearRing = kmlDoc.createElement("LinearRing");
   linearRing.appendChild(coordinates);
 
   return linearRing;
 }
 
 function getPolygonBoundaries(state, polygonGraphics, extrudedHeight) {
-  var kmlDoc = state.kmlDoc;
-  var valueGetter = state.valueGetter;
+  const kmlDoc = state.kmlDoc;
+  const valueGetter = state.valueGetter;
 
-  var height = valueGetter.get(polygonGraphics.height, 0.0);
-  var perPositionHeight = valueGetter.get(
+  let height = valueGetter.get(polygonGraphics.height, 0.0);
+  const perPositionHeight = valueGetter.get(
     polygonGraphics.perPositionHeight,
     false
   );
@@ -1094,26 +1096,26 @@ function getPolygonBoundaries(state, polygonGraphics, extrudedHeight) {
     height = extrudedHeight;
   }
 
-  var boundaries = [];
-  var hierarchyProperty = polygonGraphics.hierarchy;
-  var hierarchy = valueGetter.get(hierarchyProperty);
+  const boundaries = [];
+  const hierarchyProperty = polygonGraphics.hierarchy;
+  const hierarchy = valueGetter.get(hierarchyProperty);
 
   // Polygon hierarchy can sometimes just be an array of positions
-  var positions = Array.isArray(hierarchy) ? hierarchy : hierarchy.positions;
+  const positions = Array.isArray(hierarchy) ? hierarchy : hierarchy.positions;
 
   // Polygon boundaries
-  var outerBoundaryIs = kmlDoc.createElement("outerBoundaryIs");
+  const outerBoundaryIs = kmlDoc.createElement("outerBoundaryIs");
   outerBoundaryIs.appendChild(
     getLinearRing(state, positions, height, perPositionHeight)
   );
   boundaries.push(outerBoundaryIs);
 
   // Hole boundaries
-  var holes = hierarchy.holes;
+  const holes = hierarchy.holes;
   if (defined(holes)) {
-    var holeCount = holes.length;
-    for (var i = 0; i < holeCount; ++i) {
-      var innerBoundaryIs = kmlDoc.createElement("innerBoundaryIs");
+    const holeCount = holes.length;
+    for (let i = 0; i < holeCount; ++i) {
+      const innerBoundaryIs = kmlDoc.createElement("innerBoundaryIs");
       innerBoundaryIs.appendChild(
         getLinearRing(state, holes[i].positions, height, perPositionHeight)
       );
@@ -1125,15 +1127,15 @@ function getPolygonBoundaries(state, polygonGraphics, extrudedHeight) {
 }
 
 function createPolygon(state, geometry, geometries, styles, overlays) {
-  var kmlDoc = state.kmlDoc;
-  var valueGetter = state.valueGetter;
+  const kmlDoc = state.kmlDoc;
+  const valueGetter = state.valueGetter;
 
   if (!defined(geometry)) {
     return;
   }
 
   // Detect textured quads and use ground overlays instead
-  var isRectangle = geometry instanceof RectangleGraphics;
+  const isRectangle = geometry instanceof RectangleGraphics;
   if (
     isRectangle &&
     valueGetter.getMaterialType(geometry.material) === "Image"
@@ -1142,9 +1144,9 @@ function createPolygon(state, geometry, geometries, styles, overlays) {
     return;
   }
 
-  var polygonGeometry = kmlDoc.createElement("Polygon");
+  const polygonGeometry = kmlDoc.createElement("Polygon");
 
-  var extrudedHeight = valueGetter.get(geometry.extrudedHeight, 0.0);
+  const extrudedHeight = valueGetter.get(geometry.extrudedHeight, 0.0);
   if (extrudedHeight > 0) {
     polygonGeometry.appendChild(
       createBasicElementWithText(kmlDoc, "extrude", true)
@@ -1152,47 +1154,50 @@ function createPolygon(state, geometry, geometries, styles, overlays) {
   }
 
   // Set boundaries
-  var boundaries = isRectangle
+  const boundaries = isRectangle
     ? getRectangleBoundaries(state, geometry, extrudedHeight)
     : getPolygonBoundaries(state, geometry, extrudedHeight);
 
-  var boundaryCount = boundaries.length;
-  for (var i = 0; i < boundaryCount; ++i) {
+  const boundaryCount = boundaries.length;
+  for (let i = 0; i < boundaryCount; ++i) {
     polygonGeometry.appendChild(boundaries[i]);
   }
 
   // Set altitude mode
-  var altitudeMode = kmlDoc.createElement("altitudeMode");
+  const altitudeMode = kmlDoc.createElement("altitudeMode");
   altitudeMode.appendChild(getAltitudeMode(state, geometry.heightReference));
   polygonGeometry.appendChild(altitudeMode);
 
   geometries.push(polygonGeometry);
 
   // Create style
-  var polyStyle = kmlDoc.createElement("PolyStyle");
+  const polyStyle = kmlDoc.createElement("PolyStyle");
 
-  var fill = valueGetter.get(geometry.fill, false);
+  const fill = valueGetter.get(geometry.fill, false);
   if (fill) {
     polyStyle.appendChild(createBasicElementWithText(kmlDoc, "fill", fill));
   }
 
   processMaterial(state, geometry.material, polyStyle);
 
-  var outline = valueGetter.get(geometry.outline, false);
+  const outline = valueGetter.get(geometry.outline, false);
   if (outline) {
     polyStyle.appendChild(
       createBasicElementWithText(kmlDoc, "outline", outline)
     );
 
     // Outline uses LineStyle
-    var lineStyle = kmlDoc.createElement("LineStyle");
+    const lineStyle = kmlDoc.createElement("LineStyle");
 
-    var outlineWidth = valueGetter.get(geometry.outlineWidth, 1.0);
+    const outlineWidth = valueGetter.get(geometry.outlineWidth, 1.0);
     lineStyle.appendChild(
       createBasicElementWithText(kmlDoc, "width", outlineWidth)
     );
 
-    var outlineColor = valueGetter.getColor(geometry.outlineColor, Color.BLACK);
+    const outlineColor = valueGetter.getColor(
+      geometry.outlineColor,
+      Color.BLACK
+    );
     lineStyle.appendChild(
       createBasicElementWithText(kmlDoc, "color", outlineColor)
     );
@@ -1207,28 +1212,28 @@ function createPolygon(state, geometry, geometries, styles, overlays) {
 }
 
 function createGroundOverlay(state, rectangleGraphics, overlays) {
-  var kmlDoc = state.kmlDoc;
-  var valueGetter = state.valueGetter;
-  var externalFileHandler = state.externalFileHandler;
+  const kmlDoc = state.kmlDoc;
+  const valueGetter = state.valueGetter;
+  const externalFileHandler = state.externalFileHandler;
 
-  var groundOverlay = kmlDoc.createElement("GroundOverlay");
+  const groundOverlay = kmlDoc.createElement("GroundOverlay");
 
   // Set altitude mode
-  var altitudeMode = kmlDoc.createElement("altitudeMode");
+  const altitudeMode = kmlDoc.createElement("altitudeMode");
   altitudeMode.appendChild(
     getAltitudeMode(state, rectangleGraphics.heightReference)
   );
   groundOverlay.appendChild(altitudeMode);
 
-  var height = valueGetter.get(rectangleGraphics.height);
+  const height = valueGetter.get(rectangleGraphics.height);
   if (defined(height)) {
     groundOverlay.appendChild(
       createBasicElementWithText(kmlDoc, "altitude", height)
     );
   }
 
-  var rectangle = valueGetter.get(rectangleGraphics.coordinates);
-  var latLonBox = kmlDoc.createElement("LatLonBox");
+  const rectangle = valueGetter.get(rectangleGraphics.coordinates);
+  const latLonBox = kmlDoc.createElement("LatLonBox");
   latLonBox.appendChild(
     createBasicElementWithText(
       kmlDoc,
@@ -1260,13 +1265,13 @@ function createGroundOverlay(state, rectangleGraphics, overlays) {
   groundOverlay.appendChild(latLonBox);
 
   // We should only end up here if we have an ImageMaterialProperty
-  var material = valueGetter.get(rectangleGraphics.material);
-  var href = externalFileHandler.texture(material.image);
-  var icon = kmlDoc.createElement("Icon");
+  const material = valueGetter.get(rectangleGraphics.material);
+  const href = externalFileHandler.texture(material.image);
+  const icon = kmlDoc.createElement("Icon");
   icon.appendChild(createBasicElementWithText(kmlDoc, "href", href));
   groundOverlay.appendChild(icon);
 
-  var color = material.color;
+  const color = material.color;
   if (defined(color)) {
     groundOverlay.appendChild(
       createBasicElementWithText(kmlDoc, "color", colorToString(material.color))
@@ -1277,23 +1282,23 @@ function createGroundOverlay(state, rectangleGraphics, overlays) {
 }
 
 function createModelGeometry(state, modelGraphics) {
-  var kmlDoc = state.kmlDoc;
-  var valueGetter = state.valueGetter;
-  var externalFileHandler = state.externalFileHandler;
+  const kmlDoc = state.kmlDoc;
+  const valueGetter = state.valueGetter;
+  const externalFileHandler = state.externalFileHandler;
 
-  var modelGeometry = kmlDoc.createElement("Model");
+  const modelGeometry = kmlDoc.createElement("Model");
 
-  var scale = valueGetter.get(modelGraphics.scale);
+  const scale = valueGetter.get(modelGraphics.scale);
   if (defined(scale)) {
-    var scaleElement = kmlDoc.createElement("scale");
+    const scaleElement = kmlDoc.createElement("scale");
     scaleElement.appendChild(createBasicElementWithText(kmlDoc, "x", scale));
     scaleElement.appendChild(createBasicElementWithText(kmlDoc, "y", scale));
     scaleElement.appendChild(createBasicElementWithText(kmlDoc, "z", scale));
     modelGeometry.appendChild(scaleElement);
   }
 
-  var link = kmlDoc.createElement("Link");
-  var uri = externalFileHandler.model(modelGraphics, state.time);
+  const link = kmlDoc.createElement("Link");
+  const uri = externalFileHandler.model(modelGraphics, state.time);
 
   link.appendChild(createBasicElementWithText(kmlDoc, "href", uri));
   modelGeometry.appendChild(link);
@@ -1302,25 +1307,25 @@ function createModelGeometry(state, modelGraphics) {
 }
 
 function createModel(state, entity, modelGraphics, geometries, styles) {
-  var kmlDoc = state.kmlDoc;
-  var ellipsoid = state.ellipsoid;
-  var valueGetter = state.valueGetter;
+  const kmlDoc = state.kmlDoc;
+  const ellipsoid = state.ellipsoid;
+  const valueGetter = state.valueGetter;
 
   if (!defined(modelGraphics)) {
     return;
   }
 
   // If the point isn't constant then create gx:Track or gx:MultiTrack
-  var entityPositionProperty = entity.position;
+  const entityPositionProperty = entity.position;
   if (!entityPositionProperty.isConstant) {
     createTracks(state, entity, modelGraphics, geometries, styles);
     return;
   }
 
-  var modelGeometry = createModelGeometry(state, modelGraphics);
+  const modelGeometry = createModelGeometry(state, modelGraphics);
 
   // Set altitude mode
-  var altitudeMode = kmlDoc.createElement("altitudeMode");
+  const altitudeMode = kmlDoc.createElement("altitudeMode");
   altitudeMode.appendChild(
     getAltitudeMode(state, modelGraphics.heightReference)
   );
@@ -1328,7 +1333,7 @@ function createModel(state, entity, modelGraphics, geometries, styles) {
 
   valueGetter.get(entityPositionProperty, undefined, scratchCartesian3);
   Cartographic.fromCartesian(scratchCartesian3, ellipsoid, scratchCartographic);
-  var location = kmlDoc.createElement("Location");
+  const location = kmlDoc.createElement("Location");
   location.appendChild(
     createBasicElementWithText(
       kmlDoc,
@@ -1352,20 +1357,22 @@ function createModel(state, entity, modelGraphics, geometries, styles) {
 }
 
 function processMaterial(state, materialProperty, style) {
-  var kmlDoc = state.kmlDoc;
-  var valueGetter = state.valueGetter;
+  const kmlDoc = state.kmlDoc;
+  const valueGetter = state.valueGetter;
 
   if (!defined(materialProperty)) {
     return;
   }
 
-  var material = valueGetter.get(materialProperty);
+  const material = valueGetter.get(materialProperty);
   if (!defined(material)) {
     return;
   }
 
-  var color;
-  var type = valueGetter.getMaterialType(materialProperty);
+  let color;
+  const type = valueGetter.getMaterialType(materialProperty);
+  let outlineColor;
+  let outlineWidth;
   switch (type) {
     case "Image":
       // Image materials are only able to be represented on rectangles, so if we make it
@@ -1382,8 +1389,8 @@ function processMaterial(state, materialProperty, style) {
     case "PolylineOutline":
       color = colorToString(material.color);
 
-      var outlineColor = colorToString(material.outlineColor);
-      var outlineWidth = material.outlineWidth;
+      outlineColor = colorToString(material.outlineColor);
+      outlineWidth = material.outlineWidth;
       style.appendChild(
         createBasicElementWithText(
           kmlDoc,
@@ -1415,14 +1422,14 @@ function processMaterial(state, materialProperty, style) {
 }
 
 function getAltitudeMode(state, heightReferenceProperty) {
-  var kmlDoc = state.kmlDoc;
-  var valueGetter = state.valueGetter;
+  const kmlDoc = state.kmlDoc;
+  const valueGetter = state.valueGetter;
 
-  var heightReference = valueGetter.get(
+  const heightReference = valueGetter.get(
     heightReferenceProperty,
     HeightReference.NONE
   );
-  var altitudeModeText;
+  let altitudeModeText;
   switch (heightReference) {
     case HeightReference.NONE:
       altitudeModeText = kmlDoc.createTextNode("absolute");
@@ -1443,9 +1450,9 @@ function getCoordinates(coordinates, ellipsoid) {
     coordinates = [coordinates];
   }
 
-  var count = coordinates.length;
-  var coordinateStrings = [];
-  for (var i = 0; i < count; ++i) {
+  const count = coordinates.length;
+  const coordinateStrings = [];
+  for (let i = 0; i < count; ++i) {
     Cartographic.fromCartesian(coordinates[i], ellipsoid, scratchCartographic);
     coordinateStrings.push(
       CesiumMath.toDegrees(scratchCartographic.longitude) +
@@ -1472,12 +1479,12 @@ function createBasicElementWithText(
   }
 
   // Create element with optional namespace
-  var element = defined(namespace)
+  const element = defined(namespace)
     ? kmlDoc.createElementNS(namespace, elementName)
     : kmlDoc.createElement(elementName);
 
   // Wrap value in CDATA section if it contains HTML
-  var text =
+  const text =
     elementValue === "string" && elementValue.indexOf("<") !== -1
       ? kmlDoc.createCDATASection(elementValue)
       : kmlDoc.createTextNode(elementValue);
@@ -1488,9 +1495,9 @@ function createBasicElementWithText(
 }
 
 function colorToString(color) {
-  var result = "";
-  var bytes = color.toBytes();
-  for (var i = 3; i >= 0; --i) {
+  let result = "";
+  const bytes = color.toBytes();
+  for (let i = 3; i >= 0; --i) {
     result +=
       bytes[i] < 16 ? "0" + bytes[i].toString(16) : bytes[i].toString(16);
   }

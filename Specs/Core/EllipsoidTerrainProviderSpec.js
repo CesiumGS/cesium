@@ -5,7 +5,7 @@ import createContext from "../createContext.js";
 describe(
   "Core/EllipsoidTerrainProvider",
   function () {
-    var context;
+    let context;
 
     beforeAll(function () {
       context = createContext();
@@ -20,7 +20,7 @@ describe(
     });
 
     it("resolves readyPromise", function () {
-      var provider = new EllipsoidTerrainProvider();
+      const provider = new EllipsoidTerrainProvider();
 
       return provider.readyPromise.then(function (result) {
         expect(result).toBe(true);
@@ -29,19 +29,19 @@ describe(
     });
 
     it("requestTileGeometry creates terrain data.", function () {
-      var terrain = new EllipsoidTerrainProvider();
-      var terrainData = terrain.requestTileGeometry(0, 0, 0);
+      const terrain = new EllipsoidTerrainProvider();
+      const terrainData = terrain.requestTileGeometry(0, 0, 0);
       expect(terrainData).toBeDefined();
     });
 
     it("has error event", function () {
-      var provider = new EllipsoidTerrainProvider();
+      const provider = new EllipsoidTerrainProvider();
       expect(provider.errorEvent).toBeDefined();
       expect(provider.errorEvent).toBe(provider.errorEvent);
     });
 
     it("returns undefined on getTileDataAvailable()", function () {
-      var provider = new EllipsoidTerrainProvider();
+      const provider = new EllipsoidTerrainProvider();
       expect(provider.getTileDataAvailable()).toBeUndefined();
     });
   },

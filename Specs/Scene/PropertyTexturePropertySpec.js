@@ -9,15 +9,15 @@ import {
 import createContext from "../createContext.js";
 
 describe("Scene/PropertyTextureProperty", function () {
-  var classProperty;
-  var context;
-  var texture;
-  var extras;
-  var extensions;
-  var propertyTextureProperty;
+  let classProperty;
+  let context;
+  let texture;
+  let extras;
+  let extensions;
+  let propertyTextureProperty;
 
   beforeAll(function () {
-    var classDefinition = new MetadataClass({
+    const classDefinition = new MetadataClass({
       id: "map",
       class: {
         properties: {
@@ -53,7 +53,7 @@ describe("Scene/PropertyTextureProperty", function () {
       EXT_other_extension: {},
     };
 
-    var property = {
+    const property = {
       channels: "rgb",
       texture: {
         index: 0,
@@ -89,13 +89,13 @@ describe("Scene/PropertyTextureProperty", function () {
     expect(propertyTextureProperty.extensions).toBe(extensions);
 
     // prettier-ignore
-    var expectedTransform = new Matrix3(
+    const expectedTransform = new Matrix3(
       0.1, 0.0, 0.5,
       0.0, 0.2, 0.5,
       0.0, 0.0, 1.0
     );
 
-    var modelTextureReader = propertyTextureProperty.textureReader;
+    const modelTextureReader = propertyTextureProperty.textureReader;
     expect(modelTextureReader.texture).toBe(texture);
     expect(modelTextureReader.texCoord).toBe(1);
     expect(modelTextureReader.transform).toEqual(expectedTransform);

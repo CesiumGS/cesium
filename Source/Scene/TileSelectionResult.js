@@ -2,7 +2,7 @@
  * Indicates what happened the last time this tile was visited for selection.
  * @private
  */
-var TileSelectionResult = {
+const TileSelectionResult = {
   /**
    * There was no selection result, perhaps because the tile wasn't visited
    * last frame.

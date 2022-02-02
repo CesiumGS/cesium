@@ -4,7 +4,7 @@
  * @enum {String}
  * @private
  */
-var AlphaMode = {
+const AlphaMode = {
   /**
    * The alpha value is ignored and the rendered output is fully opaque.
    *

@@ -8,9 +8,9 @@ import PolylineFS from "../Shaders/PolylineFS.js";
 import Appearance from "./Appearance.js";
 import Material from "./Material.js";
 
-var defaultVertexShaderSource =
+let defaultVertexShaderSource =
   PolylineCommon + "\n" + PolylineMaterialAppearanceVS;
-var defaultFragmentShaderSource = PolylineFS;
+const defaultFragmentShaderSource = PolylineFS;
 
 if (!FeatureDetection.isInternetExplorer()) {
   defaultVertexShaderSource =
@@ -33,7 +33,7 @@ if (!FeatureDetection.isInternetExplorer()) {
  * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
  *
  * @example
- * var primitive = new Cesium.Primitive({
+ * const primitive = new Cesium.Primitive({
  *   geometryInstances : new Cesium.GeometryInstance({
  *     geometry : new Cesium.PolylineGeometry({
  *       positions : Cesium.Cartesian3.fromDegreesArray([
@@ -52,9 +52,9 @@ if (!FeatureDetection.isInternetExplorer()) {
 function PolylineMaterialAppearance(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var translucent = defaultValue(options.translucent, true);
-  var closed = false;
-  var vertexFormat = PolylineMaterialAppearance.VERTEX_FORMAT;
+  const translucent = defaultValue(options.translucent, true);
+  const closed = false;
+  const vertexFormat = PolylineMaterialAppearance.VERTEX_FORMAT;
 
   /**
    * The material used to determine the fragment color.  Unlike other {@link PolylineMaterialAppearance}
@@ -111,7 +111,7 @@ Object.defineProperties(PolylineMaterialAppearance.prototype, {
    */
   vertexShaderSource: {
     get: function () {
-      var vs = this._vertexShaderSource;
+      let vs = this._vertexShaderSource;
       if (
         this.material.shaderSource.search(
           /varying\s+float\s+v_polylineAngle;/g

@@ -17,7 +17,7 @@ import DeveloperError from "./DeveloperError.js";
  *
  *
  * @example
- * var instance = new Cesium.GeometryInstance({
+ * const instance = new Cesium.GeometryInstance({
  *   geometry : Cesium.BoxGeometry.fromDimensions({
  *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
  *   }),
@@ -113,7 +113,7 @@ Object.defineProperties(ColorGeometryInstanceAttribute.prototype, {
  * @returns {ColorGeometryInstanceAttribute} The new {@link ColorGeometryInstanceAttribute} instance.
  *
  * @example
- * var instance = new Cesium.GeometryInstance({
+ * const instance = new Cesium.GeometryInstance({
  *   geometry : geometry,
  *   attributes : {
  *     color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.CORNFLOWERBLUE),
@@ -144,7 +144,7 @@ ColorGeometryInstanceAttribute.fromColor = function (color) {
  * @returns {Uint8Array} The modified result parameter or a new instance if result was undefined.
  *
  * @example
- * var attributes = primitive.getGeometryInstanceAttributes('an id');
+ * const attributes = primitive.getGeometryInstanceAttributes('an id');
  * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA, attributes.color);
  */
 ColorGeometryInstanceAttribute.toValue = function (color, result) {

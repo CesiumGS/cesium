@@ -14,7 +14,7 @@ import when from "../ThirdParty/when.js";
  * @param {Boolean} bc7 Whether or not BC7 is supported
  * @private
  */
-var supportedTranscoderFormats;
+let supportedTranscoderFormats;
 
 loadKTX2.setKTX2SupportedFormats = function (
   s3tc,
@@ -66,10 +66,10 @@ loadKTX2.setKTX2SupportedFormats = function (
  * @example
  * // load a single URL asynchronously
  * Cesium.loadKTX2('some/url').then(function (ktx2Data) {
- *     var width = ktx2Data.width;
- *     var height = ktx2Data.height;
- *     var format = ktx2Data.internalFormat;
- *     var arrayBufferView = ktx2Data.bufferView;
+ *     const width = ktx2Data.width;
+ *     const height = ktx2Data.height;
+ *     const format = ktx2Data.internalFormat;
+ *     const arrayBufferView = ktx2Data.bufferView;
  *     // use the data to create a texture
  * }).otherwise(function (error) {
  *     // an error occurred.
@@ -85,14 +85,14 @@ function loadKTX2(resourceOrUrlOrBuffer) {
   Check.defined("resourceOrUrlOrBuffer", resourceOrUrlOrBuffer);
   //>>includeEnd('debug');
 
-  var loadPromise;
+  let loadPromise;
   if (
     resourceOrUrlOrBuffer instanceof ArrayBuffer ||
     ArrayBuffer.isView(resourceOrUrlOrBuffer)
   ) {
     loadPromise = when.resolve(resourceOrUrlOrBuffer);
   } else {
-    var resource = Resource.createIfNeeded(resourceOrUrlOrBuffer);
+    const resource = Resource.createIfNeeded(resourceOrUrlOrBuffer);
     loadPromise = resource.fetchArrayBuffer();
   }
 

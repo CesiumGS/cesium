@@ -2,11 +2,11 @@ import defined from "./defined.js";
 import isBitSet from "./isBitSet.js";
 
 // Bitmask for checking tile properties
-var childrenBitmasks = [0x01, 0x02, 0x04, 0x08];
-var anyChildBitmask = 0x0f;
-var cacheFlagBitmask = 0x10; // True if there is a child subtree
-var imageBitmask = 0x40;
-var terrainBitmask = 0x80;
+const childrenBitmasks = [0x01, 0x02, 0x04, 0x08];
+const anyChildBitmask = 0x0f;
+const cacheFlagBitmask = 0x10; // True if there is a child subtree
+const imageBitmask = 0x40;
+const terrainBitmask = 0x80;
 
 /**
  * Contains information about each tile from a Google Earth Enterprise server

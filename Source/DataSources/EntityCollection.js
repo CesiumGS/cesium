@@ -9,7 +9,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import TimeInterval from "../Core/TimeInterval.js";
 import Entity from "./Entity.js";
 
-var entityOptionsScratch = {
+const entityOptionsScratch = {
   id: undefined,
 };
 
@@ -20,16 +20,16 @@ function fireChangedEvent(collection) {
   }
 
   if (collection._suspendCount === 0) {
-    var added = collection._addedEntities;
-    var removed = collection._removedEntities;
-    var changed = collection._changedEntities;
+    const added = collection._addedEntities;
+    const removed = collection._removedEntities;
+    const changed = collection._changedEntities;
     if (changed.length !== 0 || added.length !== 0 || removed.length !== 0) {
       collection._firing = true;
       do {
         collection._refire = false;
-        var addedArray = added.values.slice(0);
-        var removedArray = removed.values.slice(0);
-        var changedArray = changed.values.slice(0);
+        const addedArray = added.values.slice(0);
+        const removedArray = removed.values.slice(0);
+        const changedArray = changed.values.slice(0);
 
         added.removeAll();
         removed.removeAll();
@@ -176,10 +176,10 @@ Object.defineProperties(EntityCollection.prototype, {
       //to raise the changed event.
       this.suspendEvents();
 
-      var i;
-      var oldShows = [];
-      var entities = this._entities.values;
-      var entitiesLength = entities.length;
+      let i;
+      const oldShows = [];
+      const entities = this._entities.values;
+      const entitiesLength = entities.length;
 
       for (i = 0; i < entitiesLength; i++) {
         oldShows.push(entities[i].isShowing);
@@ -188,8 +188,8 @@ Object.defineProperties(EntityCollection.prototype, {
       this._show = value;
 
       for (i = 0; i < entitiesLength; i++) {
-        var oldShow = oldShows[i];
-        var entity = entities[i];
+        const oldShow = oldShows[i];
+        const entity = entities[i];
         if (oldShow !== entity.isShowing) {
           entity.definitionChanged.raiseEvent(
             entity,
@@ -225,15 +225,15 @@ Object.defineProperties(EntityCollection.prototype, {
  * @returns {TimeInterval} The availability of entities in the collection.
  */
 EntityCollection.prototype.computeAvailability = function () {
-  var startTime = Iso8601.MAXIMUM_VALUE;
-  var stopTime = Iso8601.MINIMUM_VALUE;
-  var entities = this._entities.values;
-  for (var i = 0, len = entities.length; i < len; i++) {
-    var entity = entities[i];
-    var availability = entity.availability;
+  let startTime = Iso8601.MAXIMUM_VALUE;
+  let stopTime = Iso8601.MINIMUM_VALUE;
+  const entities = this._entities.values;
+  for (let i = 0, len = entities.length; i < len; i++) {
+    const entity = entities[i];
+    const availability = entity.availability;
     if (defined(availability)) {
-      var start = availability.start;
-      var stop = availability.stop;
+      const start = availability.start;
+      const stop = availability.stop;
       if (
         JulianDate.lessThan(start, startTime) &&
         !start.equals(Iso8601.MINIMUM_VALUE)
@@ -279,8 +279,8 @@ EntityCollection.prototype.add = function (entity) {
     entity = new Entity(entity);
   }
 
-  var id = entity.id;
-  var entities = this._entities;
+  const id = entity.id;
+  const entities = this._entities;
   if (entities.contains(id)) {
     throw new RuntimeError(
       "An entity with id " + id + " already exists in this collection."
@@ -341,8 +341,8 @@ EntityCollection.prototype.removeById = function (id) {
     return false;
   }
 
-  var entities = this._entities;
-  var entity = entities.get(id);
+  const entities = this._entities;
+  const entity = entities.get(id);
   if (!this._entities.remove(id)) {
     return false;
   }
@@ -367,17 +367,17 @@ EntityCollection.prototype.removeById = function (id) {
 EntityCollection.prototype.removeAll = function () {
   //The event should only contain items added before events were suspended
   //and the contents of the collection.
-  var entities = this._entities;
-  var entitiesLength = entities.length;
-  var array = entities.values;
+  const entities = this._entities;
+  const entitiesLength = entities.length;
+  const array = entities.values;
 
-  var addedEntities = this._addedEntities;
-  var removed = this._removedEntities;
+  const addedEntities = this._addedEntities;
+  const removed = this._removedEntities;
 
-  for (var i = 0; i < entitiesLength; i++) {
-    var existingItem = array[i];
-    var existingItemId = existingItem.id;
-    var addedItem = addedEntities.get(existingItemId);
+  for (let i = 0; i < entitiesLength; i++) {
+    const existingItem = array[i];
+    const existingItemId = existingItem.id;
+    const addedItem = addedEntities.get(existingItemId);
     if (!defined(addedItem)) {
       existingItem.definitionChanged.removeEventListener(
         EntityCollection.prototype._onEntityDefinitionChanged,
@@ -422,7 +422,7 @@ EntityCollection.prototype.getOrCreateEntity = function (id) {
   }
   //>>includeEnd('debug');
 
-  var entity = this._entities.get(id);
+  let entity = this._entities.get(id);
   if (!defined(entity)) {
     entityOptionsScratch.id = id;
     entity = new Entity(entityOptionsScratch);
@@ -432,7 +432,7 @@ EntityCollection.prototype.getOrCreateEntity = function (id) {
 };
 
 EntityCollection.prototype._onEntityDefinitionChanged = function (entity) {
-  var id = entity.id;
+  const id = entity.id;
   if (!this._addedEntities.contains(id)) {
     this._changedEntities.set(id, entity);
   }

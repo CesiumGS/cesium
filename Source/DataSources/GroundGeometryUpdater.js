@@ -11,7 +11,7 @@ import ConstantProperty from "./ConstantProperty.js";
 import GeometryUpdater from "./GeometryUpdater.js";
 import TerrainOffsetProperty from "./TerrainOffsetProperty.js";
 
-var defaultZIndex = new ConstantProperty(0);
+const defaultZIndex = new ConstantProperty(0);
 
 /**
  * An abstract class for updating ground geometry entities.
@@ -73,8 +73,8 @@ GroundGeometryUpdater.prototype._isOnTerrain = function (entity, geometry) {
 };
 
 GroundGeometryUpdater.prototype._getIsClosed = function (options) {
-  var height = options.height;
-  var extrudedHeight = options.extrudedHeight;
+  const height = options.height;
+  const extrudedHeight = options.extrudedHeight;
   return height === 0 || (defined(extrudedHeight) && extrudedHeight !== height);
 };
 
@@ -98,7 +98,7 @@ GroundGeometryUpdater.prototype._onEntityPropertyChanged = function (
     return;
   }
 
-  var geometry = this._entity[this._geometryPropertyName];
+  const geometry = this._entity[this._geometryPropertyName];
   if (!defined(geometry)) {
     return;
   }
@@ -116,14 +116,14 @@ GroundGeometryUpdater.prototype._onEntityPropertyChanged = function (
     this._terrainOffsetProperty = undefined;
   }
 
-  var heightReferenceProperty = geometry.heightReference;
-  var extrudedHeightReferenceProperty = geometry.extrudedHeightReference;
+  const heightReferenceProperty = geometry.heightReference;
+  const extrudedHeightReferenceProperty = geometry.extrudedHeightReference;
 
   if (
     defined(heightReferenceProperty) ||
     defined(extrudedHeightReferenceProperty)
   ) {
-    var centerPosition = new CallbackProperty(
+    const centerPosition = new CallbackProperty(
       this._computeCenter.bind(this),
       !this._dynamic
     );
@@ -213,7 +213,7 @@ GroundGeometryUpdater.computeGeometryOffsetAttribute = function (
   if (!defined(extrudedHeight) || !defined(extrudedHeightReference)) {
     extrudedHeightReference = HeightReference.NONE;
   }
-  var n = 0;
+  let n = 0;
   if (heightReference !== HeightReference.NONE) {
     n++;
   }
