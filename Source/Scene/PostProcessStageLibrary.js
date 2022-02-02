@@ -1,11 +1,13 @@
 import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import AcesTonemapping from "../Shaders/PostProcessStages/AcesTonemappingStage.js";
 import AmbientOcclusionGenerate from "../Shaders/PostProcessStages/AmbientOcclusionGenerate.js";
 import AmbientOcclusionModulate from "../Shaders/PostProcessStages/AmbientOcclusionModulate.js";
+import AtmosphericScattering from "../Shaders/PostProcessStages/AtmosphericScattering.js";
 import BlackAndWhite from "../Shaders/PostProcessStages/BlackAndWhite.js";
 import BloomComposite from "../Shaders/PostProcessStages/BloomComposite.js";
 import Brightness from "../Shaders/PostProcessStages/Brightness.js";
@@ -647,6 +649,63 @@ PostProcessStageLibrary.createAmbientOcclusionStage = function () {
  * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
  */
 PostProcessStageLibrary.isAmbientOcclusionSupported = function (scene) {
+  return scene.context.depthTexture;
+};
+
+/**
+ * Creates a post-process stage that renders Atmospheric light scattering.
+ * <p>
+ * Shader by Dimas Leenman, Shared under the MIT license
+ * https://github.com/Dimev/Realistic-Atmosphere-Godot-and-UE4/blob/master/godot/shader/atmosphere.shade
+ *
+ * </p>
+ * <p>
+ * The uniforms have the following properties: <code>planetRadius</code>.
+ * </p>
+ * <p>
+ * This stage requires to disable native Cesium skyAtmosphere and groundAtmosphere.
+ * <code>viewer.scene.skyAtmosphere.show = false;</code>
+ * <code>viewer.scene.globe.showGroundAtmosphere = false;</code>
+ * </p>
+ * <ul>
+ * <li><code>planetRadius</code> is a scalar value to be used to adjust earth radius based on viewer position. The default value is <code>6357000.0</code> and represent the minimum earth radius at the pole.</li>
+ * </ul>
+ * @param {Number} [primarySteps=16] The number of steps along the 'primary' ray, more looks better but is slower.
+ * @param {Number} [lightSteps=4] The number of steps along the light ray, more looks better but is slower
+ * @return {PostProcessStage} A post-process stage that applies atmosphere light scattering.
+ *
+ * @private
+ */
+PostProcessStageLibrary.createAtmosphereScatteringStage = function (
+  primarySteps,
+  lightSteps
+) {
+  var fs = "#define PRIMARY_STEPS " + defaultValue(primarySteps, 16) + "\n";
+  fs += "#define LIGHT_STEPS " + defaultValue(lightSteps, 4) + "\n";
+  fs += AtmosphericScattering;
+
+  return new PostProcessStage({
+    name: "czm_atmosphere_scattering_generate",
+    fragmentShader: fs,
+    uniforms: {
+      planetRadius: 6357000,
+    },
+  });
+};
+
+/**
+ * Whether or not a Atmosphere scattering stage is supported.
+ * <p>
+ * This stage requires the WEBGL_depth_texture extension.
+ * </p>
+ *
+ * @param {Scene} scene The scene.
+ * @return {Boolean} Whether this post process stage is supported.
+ *
+ * @see {Context#depthTexture}
+ * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
+ */
+PostProcessStageLibrary.isAtmosphereScatteringSupported = function (scene) {
   return scene.context.depthTexture;
 };
 
