@@ -1168,12 +1168,17 @@ describe("Core/CesiumTerrainProvider", function () {
       });
     });
 
-    xit("Uses query parameter extensions for ion resource", function () {
+    it("Uses query parameter extensions for ion resource", function () {
+      // NOTE: Default instanciation block causes test to timeout.
       const terrainProvider = new CesiumTerrainProvider({
-        url: IonResource.fromAssetId(1),
+        // url: IonResource.fromAssetId(1),
+        url: "made/up/url",
         requestVertexNormals: true,
         requestWaterMask: true,
       });
+
+      // CAPTURED OBJECT TO LOCALIZE
+      // const terrainProvider = {"url":"https://assets.cesium.com/1/","_heightmapWidth":65,"_hasWaterMask":false,"_hertexNormals":false,"_requestVertexNormals":true,"_requestWaterMask":true,"_requestMetadata":true,"_errorEvent":{"_listeners":[],"_scopes":[],"_toRemove":[],"_insideRaiseEvent":false},"ready":true,"_readyPromise":{"promise":{},"resolver":{}},"_layers":[]};
 
       return pollToPromise(function () {
         return terrainProvider.ready;
@@ -1182,8 +1187,9 @@ describe("Core/CesiumTerrainProvider", function () {
           IonResource.prototype,
           "getDerivedResource"
         ).and.callThrough();
-        terrainProvider.requestTileGeometry(0, 0, 0);
+        terrainProvider.requestTileGeometry(0, 0, 0); //<== NOTE: line 814 CesiumTerrainProvider.
         const options = getDerivedResource.calls.argsFor(0)[0];
+        console.log(options);
         expect(options.queryParameters.extensions).toEqual(
           "octvertexnormals-watermask-metadata"
         );
