@@ -14,7 +14,7 @@ import Matrix4 from "../Core/Matrix4.js";
  * @class
  *
  * @example
- * var node = model.getNode('LOD3sp');
+ * const node = model.getNode('LOD3sp');
  * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
  *
  * @see Model#getNode
@@ -103,7 +103,7 @@ Object.defineProperties(ModelNode.prototype, {
       this._matrix = Matrix4.clone(value, this._matrix);
       this.useMatrix = true;
 
-      var model = this._model;
+      const model = this._model;
       model._cesiumAnimationsDirty = true;
       this._runtimeNode.dirtyNumber = model._maxDirtyNumber;
     },

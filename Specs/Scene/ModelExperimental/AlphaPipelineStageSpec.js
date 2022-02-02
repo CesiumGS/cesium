@@ -8,14 +8,14 @@ import {
 } from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/AlphaPipelineStage", function () {
-  var mockModel = {
+  const mockModel = {
     opaquePass: Pass.CESIUM_3D_TILE,
   };
-  var mockPrimitive = {};
-  var mockFrameState = {};
+  const mockPrimitive = {};
+  const mockFrameState = {};
 
   it("Defaults to the model's pass if not specified", function () {
-    var renderResources = {
+    const renderResources = {
       model: mockModel,
       shaderBuilder: new ShaderBuilder(),
       alphaOptions: new ModelAlphaOptions(),
@@ -31,8 +31,8 @@ describe("Scene/ModelExperimental/AlphaPipelineStage", function () {
   });
 
   it("handles alphaMode = OPAQUE", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var renderResources = {
+    const shaderBuilder = new ShaderBuilder();
+    const renderResources = {
       model: mockModel,
       shaderBuilder: shaderBuilder,
       alphaOptions: new ModelAlphaOptions(),
@@ -54,15 +54,15 @@ describe("Scene/ModelExperimental/AlphaPipelineStage", function () {
   });
 
   it("handles alphaMode = MASK", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var renderResources = {
+    const shaderBuilder = new ShaderBuilder();
+    const renderResources = {
       model: mockModel,
       shaderBuilder: shaderBuilder,
       alphaOptions: new ModelAlphaOptions(),
       uniformMap: {},
       renderStateOptions: {},
     };
-    var cutoff = 0.6;
+    const cutoff = 0.6;
     renderResources.alphaOptions.pass = Pass.TRANSLUCENT;
     renderResources.alphaOptions.alphaCutoff = cutoff;
     renderResources.alphaOptions.alphaMode = AlphaMode.MASK;
@@ -84,8 +84,8 @@ describe("Scene/ModelExperimental/AlphaPipelineStage", function () {
   });
 
   it("handles alphaMode = BLEND", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var renderResources = {
+    const shaderBuilder = new ShaderBuilder();
+    const renderResources = {
       model: mockModel,
       shaderBuilder: shaderBuilder,
       alphaOptions: new ModelAlphaOptions(),

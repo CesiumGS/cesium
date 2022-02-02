@@ -1,8 +1,8 @@
 import Axis from "../Axis.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
-import ModelExperimental from "./ModelExperimental.js";
 import Pass from "../../Renderer/Pass.js";
+import ModelExperimental from "./ModelExperimental.js";
 
 /**
  * Represents the contents of a glTF, glb or
@@ -31,9 +31,9 @@ export default function ModelExperimental3DTileContent(
 Object.defineProperties(ModelExperimental3DTileContent.prototype, {
   featuresLength: {
     get: function () {
-      var model = this._model;
-      var featureTables = model.featureTables;
-      var featureTableId = model.featureTableId;
+      const model = this._model;
+      const featureTables = model.featureTables;
+      const featureTableId = model.featureTableId;
 
       if (defined(featureTables) && defined(featureTables[featureTableId])) {
         return featureTables[featureTableId].featuresLength;
@@ -105,9 +105,9 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
 
   batchTable: {
     get: function () {
-      var model = this._model;
-      var featureTables = model.featureTables;
-      var featureTableId = model.featureTableId;
+      const model = this._model;
+      const featureTables = model.featureTables;
+      const featureTableId = model.featureTableId;
 
       if (defined(featureTables) && defined(featureTables[featureTableId])) {
         return featureTables[featureTableId];
@@ -128,13 +128,13 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
 });
 
 ModelExperimental3DTileContent.prototype.getFeature = function (featureId) {
-  var model = this._model;
-  var featureTableId = model.featureTableId;
+  const model = this._model;
+  const featureTableId = model.featureTableId;
   if (!defined(featureTableId)) {
     return undefined;
   }
 
-  var featureTable = model.featureTables[featureTableId];
+  const featureTable = model.featureTables[featureTableId];
   return featureTable.getFeature(featureId);
 };
 
@@ -142,13 +142,13 @@ ModelExperimental3DTileContent.prototype.hasProperty = function (
   featureId,
   name
 ) {
-  var model = this._model;
-  var featureTableId = model.featureTableId;
+  const model = this._model;
+  const featureTableId = model.featureTableId;
   if (!defined(featureTableId)) {
     return false;
   }
 
-  var featureTable = model.featureTables[featureTableId];
+  const featureTable = model.featureTables[featureTableId];
   return featureTable.hasProperty(featureId, name);
 };
 
@@ -160,20 +160,24 @@ ModelExperimental3DTileContent.prototype.applyDebugSettings = function (
 };
 
 ModelExperimental3DTileContent.prototype.applyStyle = function (style) {
-  this._model.applyStyle(style);
+  // the setter will call model.applyStyle()
+  this._model.style = style;
 };
 
 ModelExperimental3DTileContent.prototype.update = function (
   tileset,
   frameState
 ) {
-  var model = this._model;
-  var tile = this._tile;
+  const model = this._model;
+  const tile = this._tile;
 
   model.colorBlendAmount = tileset.colorBlendAmount;
   model.colorBlendMode = tileset.colorBlendMode;
   model.modelMatrix = tile.computedTransform;
   model.customShader = tileset.customShader;
+  model.pointCloudShading = tileset.pointCloudShading;
+  model.featureIdIndex = tileset.featureIdIndex;
+  model.instanceFeatureIdIndex = tileset.instanceFeatureIdIndex;
 
   model.update(frameState);
 };
@@ -193,9 +197,9 @@ ModelExperimental3DTileContent.fromGltf = function (
   resource,
   gltf
 ) {
-  var content = new ModelExperimental3DTileContent(tileset, tile, resource);
+  const content = new ModelExperimental3DTileContent(tileset, tile, resource);
 
-  var modelOptions = {
+  const modelOptions = {
     gltf: gltf,
     cull: false, // The model is already culled by 3D Tiles
     releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
@@ -221,9 +225,9 @@ ModelExperimental3DTileContent.fromB3dm = function (
   arrayBuffer,
   byteOffset
 ) {
-  var content = new ModelExperimental3DTileContent(tileset, tile, resource);
+  const content = new ModelExperimental3DTileContent(tileset, tile, resource);
 
-  var modelOptions = {
+  const modelOptions = {
     arrayBuffer: arrayBuffer,
     byteOffset: byteOffset,
     resource: resource,
@@ -240,5 +244,63 @@ ModelExperimental3DTileContent.fromB3dm = function (
     colorBlendAmount: tileset.colorBlendAmount,
   };
   content._model = ModelExperimental.fromB3dm(modelOptions);
+  return content;
+};
+
+ModelExperimental3DTileContent.fromI3dm = function (
+  tileset,
+  tile,
+  resource,
+  arrayBuffer,
+  byteOffset
+) {
+  const content = new ModelExperimental3DTileContent(tileset, tile, resource);
+
+  const modelOptions = {
+    arrayBuffer: arrayBuffer,
+    byteOffset: byteOffset,
+    resource: resource,
+    cull: false, // The model is already culled by 3D Tiles
+    releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
+    opaquePass: Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
+    modelMatrix: tile.computedTransform,
+    upAxis: tileset._gltfUpAxis,
+    forwardAxis: Axis.X,
+    incrementallyLoadTextures: false,
+    customShader: tileset.customShader,
+    content: content,
+    colorBlendMode: tileset.colorBlendMode,
+    colorBlendAmount: tileset.colorBlendAmount,
+  };
+  content._model = ModelExperimental.fromI3dm(modelOptions);
+  return content;
+};
+
+ModelExperimental3DTileContent.fromPnts = function (
+  tileset,
+  tile,
+  resource,
+  arrayBuffer,
+  byteOffset
+) {
+  const content = new ModelExperimental3DTileContent(tileset, tile, resource);
+
+  const modelOptions = {
+    arrayBuffer: arrayBuffer,
+    byteOffset: byteOffset,
+    resource: resource,
+    cull: false, // The model is already culled by 3D Tiles
+    releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
+    opaquePass: Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
+    modelMatrix: tile.computedTransform,
+    upAxis: tileset._gltfUpAxis,
+    forwardAxis: Axis.X,
+    incrementallyLoadTextures: false,
+    customShader: tileset.customShader,
+    content: content,
+    colorBlendMode: tileset.colorBlendMode,
+    colorBlendAmount: tileset.colorBlendAmount,
+  };
+  content._model = ModelExperimental.fromPnts(modelOptions);
   return content;
 };

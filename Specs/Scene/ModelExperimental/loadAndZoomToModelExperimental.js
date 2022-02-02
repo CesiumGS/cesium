@@ -2,7 +2,7 @@ import { ModelExperimental, when } from "../../../Source/Cesium.js";
 import pollToPromise from "../../pollToPromise.js";
 
 function loadAndZoomToModelExperimental(options, scene) {
-  var model;
+  let model;
 
   try {
     model = ModelExperimental.fromGltf({
@@ -17,8 +17,8 @@ function loadAndZoomToModelExperimental(options, scene) {
       upAxis: options.upAxis,
       forwardAxis: options.forwardAxis,
       debugShowBoundingVolume: options.debugShowBoundingVolume,
-      featureIdAttributeIndex: options.featureIdAttributeIndex,
-      featureIdTextureIndex: options.featureIdTextureIndex,
+      featureIdIndex: options.featureIdIndex,
+      instanceFeatureIdIndex: options.instanceFeatureIdIndex,
       incrementallyLoadTextures: options.incrementallyLoadTextures,
     });
   } catch (error) {
@@ -27,8 +27,8 @@ function loadAndZoomToModelExperimental(options, scene) {
 
   scene.primitives.add(model);
 
-  var finished = false;
-  var rejected = false;
+  let finished = false;
+  let rejected = false;
   model.readyPromise
     .otherwise(function () {
       rejected = true;

@@ -1,7 +1,7 @@
 import { MetadataClass, TileMetadata } from "../../Source/Cesium.js";
 
 describe("Scene/TileMetadata", function () {
-  var tileClass = new MetadataClass({
+  const tileClass = new MetadataClass({
     id: "tile",
     class: {
       properties: {
@@ -20,7 +20,7 @@ describe("Scene/TileMetadata", function () {
     },
   });
 
-  var tileExtension = {
+  const tileExtension = {
     class: "tile",
     properties: {
       color: [1.0, 0.5, 0.0],
@@ -28,7 +28,7 @@ describe("Scene/TileMetadata", function () {
     },
   };
 
-  var tileMetadata;
+  let tileMetadata;
   beforeEach(function () {
     tileMetadata = new TileMetadata({
       tile: tileExtension,
@@ -46,7 +46,7 @@ describe("Scene/TileMetadata", function () {
   });
 
   it("creates tile metadata with default values", function () {
-    var metadata = new TileMetadata({
+    const metadata = new TileMetadata({
       tile: {},
     });
 
@@ -56,16 +56,16 @@ describe("Scene/TileMetadata", function () {
   });
 
   it("creates tile metadata", function () {
-    var properties = {
+    const properties = {
       color: [0.0, 0.0, 1.0],
       isSquare: false,
     };
 
-    var extras = {
+    const extras = {
       version: "0.0",
     };
 
-    var extensions = {
+    const extensions = {
       "3DTILES_extension": {},
     };
     tileMetadata = new TileMetadata({
@@ -101,7 +101,7 @@ describe("Scene/TileMetadata", function () {
   });
 
   it("getPropertyIds returns array of property IDs", function () {
-    var propertyIds = tileMetadata.getPropertyIds([]);
+    const propertyIds = tileMetadata.getPropertyIds([]);
     propertyIds.sort();
     expect(propertyIds).toEqual(["color", "isSquare"]);
   });

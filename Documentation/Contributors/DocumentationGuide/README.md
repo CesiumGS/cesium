@@ -193,7 +193,7 @@ Useful examples:
  * ...
  *
  * @example
- * var n = Cesium.Math.lerp(0.0, 2.0, 0.5); // returns 1.0
+ * const n = Cesium.Math.lerp(0.0, 2.0, 0.5); // returns 1.0
  */
 CesiumMath.lerp = function(p, q, time) {
     // ...
@@ -205,7 +205,7 @@ CesiumMath.lerp = function(p, q, time) {
  *
  * @example
  * // Apply non-uniform scale to node LOD3sp
- * var node = model.getNode('LOD3sp');
+ * const node = model.getNode('LOD3sp');
  * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
  */
 Model.prototype.getNode = function(name) {
@@ -219,7 +219,7 @@ Unnecessary example:
  * ..
  *
  * @example
- * var f = Cesium.Math.EPSILON1;
+ * const f = Cesium.Math.EPSILON1;
  */
 CesiumMath.EPSILON1 = 0.1;
 ```
@@ -364,12 +364,12 @@ Cartesian3.ZERO = Object.freeze(new Cartesian3(0.0, 0.0, 0.0));
  *
  * @example
  * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0)
- * var v = [1.0, 2.0, 3.0, 4.0];
- * var p = Cesium.Cartesian4.fromArray(v);
+ * const v = [1.0, 2.0, 3.0, 4.0];
+ * const p = Cesium.Cartesian4.fromArray(v);
  *
  * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0) using an offset into an array
- * var v2 = [0.0, 0.0, 1.0, 2.0, 3.0, 4.0];
- * var p2 = Cesium.Cartesian4.fromArray(v2, 2);
+ * const v2 = [0.0, 0.0, 1.0, 2.0, 3.0, 4.0];
+ * const p2 = Cesium.Cartesian4.fromArray(v2, 2);
  */
 Cartesian4.fromArray = Cartesian4.unpack;
 ```

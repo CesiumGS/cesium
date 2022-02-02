@@ -47,7 +47,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  *
  * @example
  * // Simple stage to change the color
- * var fs =
+ * const fs =
  *     'uniform sampler2D colorTexture;\n' +
  *     'varying vec2 v_textureCoordinates;\n' +
  *     'uniform float scale;\n' +
@@ -69,7 +69,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  * @example
  * // Simple stage to change the color of what is selected.
  * // If czm_selected returns true, the current fragment belongs to geometry in the selected array.
- * var fs =
+ * const fs =
  *     'uniform sampler2D colorTexture;\n' +
  *     'varying vec2 v_textureCoordinates;\n' +
  *     'uniform vec4 highlight;\n' +
@@ -82,7 +82,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  *     '        gl_FragColor = color;\n' +
  *     '    }\n' +
  *     '}\n';
- * var stage = scene.postProcessStages.add(new Cesium.PostProcessStage({
+ * const stage = scene.postProcessStages.add(new Cesium.PostProcessStage({
  *     fragmentShader : fs,
  *     uniforms : {
  *         highlight : function() {
@@ -94,9 +94,9 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  */
 function PostProcessStage(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var fragmentShader = options.fragmentShader;
-  var textureScale = defaultValue(options.textureScale, 1.0);
-  var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
+  const fragmentShader = options.fragmentShader;
+  const textureScale = defaultValue(options.textureScale, 1.0);
+  const pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("options.fragmentShader", fragmentShader);
@@ -139,7 +139,7 @@ function PostProcessStage(options) {
   this._texturesToCreate = [];
   this._texturePromise = undefined;
 
-  var passState = new PassState();
+  const passState = new PassState();
   passState.scissorTest = {
     enabled: true,
     rectangle: defined(options.scissorRectangle)
@@ -150,7 +150,7 @@ function PostProcessStage(options) {
 
   this._ready = false;
 
-  var name = options.name;
+  let name = options.name;
   if (!defined(name)) {
     name = createGuid();
   }
@@ -348,7 +348,7 @@ Object.defineProperties(PostProcessStage.prototype, {
   outputTexture: {
     get: function () {
       if (defined(this._textureCache)) {
-        var framebuffer = this._textureCache.getFramebuffer(this._name);
+        const framebuffer = this._textureCache.getFramebuffer(this._name);
         if (defined(framebuffer)) {
           return framebuffer.getColorTexture(0);
         }
@@ -394,7 +394,7 @@ Object.defineProperties(PostProcessStage.prototype, {
   },
 });
 
-var depthTextureRegex = /uniform\s+sampler2D\s+depthTexture/g;
+const depthTextureRegex = /uniform\s+sampler2D\s+depthTexture/g;
 
 /**
  * @private
@@ -404,7 +404,7 @@ PostProcessStage.prototype._isSupported = function (context) {
 };
 
 function getUniformValueGetterAndSetter(stage, uniforms, name) {
-  var currentValue = uniforms[name];
+  const currentValue = uniforms[name];
   if (
     typeof currentValue === "string" ||
     currentValue instanceof HTMLCanvasElement ||
@@ -420,11 +420,11 @@ function getUniformValueGetterAndSetter(stage, uniforms, name) {
       return uniforms[name];
     },
     set: function (value) {
-      var currentValue = uniforms[name];
+      const currentValue = uniforms[name];
       uniforms[name] = value;
 
-      var actualUniforms = stage._actualUniforms;
-      var actualValue = actualUniforms[name];
+      const actualUniforms = stage._actualUniforms;
+      const actualValue = actualUniforms[name];
       if (
         defined(actualValue) &&
         actualValue !== currentValue &&
@@ -457,7 +457,7 @@ function getUniformValueGetterAndSetter(stage, uniforms, name) {
 
 function getUniformMapFunction(stage, name) {
   return function () {
-    var value = stage._actualUniforms[name];
+    const value = stage._actualUniforms[name];
     if (typeof value === "function") {
       return value();
     }
@@ -467,7 +467,7 @@ function getUniformMapFunction(stage, name) {
 
 function getUniformMapDimensionsFunction(uniformMap, name) {
   return function () {
-    var texture = uniformMap[name]();
+    const texture = uniformMap[name]();
     if (defined(texture)) {
       return texture.dimensions;
     }
@@ -480,11 +480,11 @@ function createUniformMap(stage) {
     return;
   }
 
-  var uniformMap = {};
-  var newUniforms = {};
-  var uniforms = stage._uniforms;
-  var actualUniforms = stage._actualUniforms;
-  for (var name in uniforms) {
+  const uniformMap = {};
+  const newUniforms = {};
+  const uniforms = stage._uniforms;
+  const actualUniforms = stage._actualUniforms;
+  for (const name in uniforms) {
     if (uniforms.hasOwnProperty(name)) {
       if (typeof uniforms[name] !== "function") {
         uniformMap[name] = getUniformMapFunction(stage, name);
@@ -500,7 +500,7 @@ function createUniformMap(stage) {
 
       actualUniforms[name] = uniforms[name];
 
-      var value = uniformMap[name]();
+      const value = uniformMap[name]();
       if (
         typeof value === "string" ||
         value instanceof Texture ||
@@ -553,9 +553,9 @@ function createDrawCommand(stage, context) {
     return;
   }
 
-  var fs = stage._fragmentShader;
+  let fs = stage._fragmentShader;
   if (defined(stage._selectedIdTexture)) {
-    var width = stage._selectedIdTexture.width;
+    const width = stage._selectedIdTexture.width;
 
     fs = fs.replace(/varying\s+vec2\s+v_textureCoordinates;/g, "");
     fs =
@@ -587,7 +587,7 @@ function createDrawCommand(stage, context) {
       fs;
   }
 
-  var fragmentShader = new ShaderSource({
+  const fragmentShader = new ShaderSource({
     defines: [stage._useLogDepth ? "LOG_DEPTH" : ""],
     sources: [fs],
   });
@@ -598,10 +598,10 @@ function createDrawCommand(stage, context) {
 }
 
 function createSampler(stage) {
-  var mode = stage._sampleMode;
+  const mode = stage._sampleMode;
 
-  var minFilter;
-  var magFilter;
+  let minFilter;
+  let magFilter;
 
   if (mode === PostProcessStageSampleMode.LINEAR) {
     minFilter = TextureMinificationFilter.LINEAR;
@@ -611,7 +611,7 @@ function createSampler(stage) {
     magFilter = TextureMagnificationFilter.NEAREST;
   }
 
-  var sampler = stage._sampler;
+  const sampler = stage._sampler;
   if (
     !defined(sampler) ||
     sampler.minificationFilter !== minFilter ||
@@ -642,24 +642,24 @@ function createStageOutputTextureFunction(stage, name) {
 }
 
 function updateUniformTextures(stage, context) {
-  var i;
-  var texture;
-  var name;
+  let i;
+  let texture;
+  let name;
 
-  var texturesToRelease = stage._texturesToRelease;
-  var length = texturesToRelease.length;
+  const texturesToRelease = stage._texturesToRelease;
+  let length = texturesToRelease.length;
   for (i = 0; i < length; ++i) {
     texture = texturesToRelease[i];
     texture = texture && texture.destroy();
   }
   texturesToRelease.length = 0;
 
-  var texturesToCreate = stage._texturesToCreate;
+  const texturesToCreate = stage._texturesToCreate;
   length = texturesToCreate.length;
   for (i = 0; i < length; ++i) {
-    var textureToCreate = texturesToCreate[i];
+    const textureToCreate = texturesToCreate[i];
     name = textureToCreate.name;
-    var source = textureToCreate.source;
+    const source = textureToCreate.source;
     stage._actualUniforms[name] = new Texture({
       context: context,
       source: source,
@@ -667,7 +667,7 @@ function updateUniformTextures(stage, context) {
   }
   texturesToCreate.length = 0;
 
-  var dirtyUniforms = stage._dirtyUniforms;
+  const dirtyUniforms = stage._dirtyUniforms;
   if (dirtyUniforms.length === 0 && !defined(stage._texturePromise)) {
     stage._ready = true;
     return;
@@ -678,19 +678,21 @@ function updateUniformTextures(stage, context) {
   }
 
   length = dirtyUniforms.length;
-  var uniforms = stage._uniforms;
-  var promises = [];
+  const uniforms = stage._uniforms;
+  const promises = [];
   for (i = 0; i < length; ++i) {
     name = dirtyUniforms[i];
-    var stageNameUrlOrImage = uniforms[name];
-    var stageWithName = stage._textureCache.getStageByName(stageNameUrlOrImage);
+    const stageNameUrlOrImage = uniforms[name];
+    const stageWithName = stage._textureCache.getStageByName(
+      stageNameUrlOrImage
+    );
     if (defined(stageWithName)) {
       stage._actualUniforms[name] = createStageOutputTextureFunction(
         stage,
         stageNameUrlOrImage
       );
     } else if (typeof stageNameUrlOrImage === "string") {
-      var resource = new Resource({
+      const resource = new Resource({
         url: stageNameUrlOrImage,
       });
 
@@ -728,14 +730,14 @@ function releaseResources(stage) {
   stage._selectedIdTexture =
     stage._selectedIdTexture && stage._selectedIdTexture.destroy();
 
-  var textureCache = stage._textureCache;
+  const textureCache = stage._textureCache;
   if (!defined(textureCache)) {
     return;
   }
 
-  var uniforms = stage._uniforms;
-  var actualUniforms = stage._actualUniforms;
-  for (var name in actualUniforms) {
+  const uniforms = stage._uniforms;
+  const actualUniforms = stage._actualUniforms;
+  for (const name in actualUniforms) {
     if (actualUniforms.hasOwnProperty(name)) {
       if (actualUniforms[name] instanceof Texture) {
         if (!defined(textureCache.getStageByName(uniforms[name]))) {
@@ -748,9 +750,11 @@ function releaseResources(stage) {
 }
 
 function isSelectedTextureDirty(stage) {
-  var length = defined(stage._selected) ? stage._selected.length : 0;
-  var parentLength = defined(stage._parentSelected) ? stage._parentSelected : 0;
-  var dirty =
+  let length = defined(stage._selected) ? stage._selected.length : 0;
+  const parentLength = defined(stage._parentSelected)
+    ? stage._parentSelected
+    : 0;
+  let dirty =
     stage._selected !== stage._selectedShadow ||
     length !== stage._selectedLength;
   dirty =
@@ -772,7 +776,7 @@ function isSelectedTextureDirty(stage) {
     }
 
     length = stage._combinedSelected.length;
-    for (var i = 0; i < length; ++i) {
+    for (let i = 0; i < length; ++i) {
       if (stage._combinedSelected[i] !== stage._combinedSelectedShadow[i]) {
         return true;
       }
@@ -790,16 +794,16 @@ function createSelectedTexture(stage, context) {
     stage._selectedIdTexture && stage._selectedIdTexture.destroy();
   stage._selectedIdTexture = undefined;
 
-  var features = stage._combinedSelected;
+  const features = stage._combinedSelected;
   if (!defined(features)) {
     return;
   }
 
-  var i;
-  var feature;
+  let i;
+  let feature;
 
-  var textureLength = 0;
-  var length = features.length;
+  let textureLength = 0;
+  const length = features.length;
   for (i = 0; i < length; ++i) {
     feature = features[i];
     if (defined(feature.pickIds)) {
@@ -811,7 +815,7 @@ function createSelectedTexture(stage, context) {
 
   if (length === 0 || textureLength === 0) {
     // max pick id is reserved
-    var empty = new Uint8Array(4);
+    const empty = new Uint8Array(4);
     empty[0] = 255;
     empty[1] = 255;
     empty[2] = 255;
@@ -831,15 +835,15 @@ function createSelectedTexture(stage, context) {
     return;
   }
 
-  var pickColor;
-  var offset = 0;
-  var ids = new Uint8Array(textureLength * 4);
+  let pickColor;
+  let offset = 0;
+  const ids = new Uint8Array(textureLength * 4);
   for (i = 0; i < length; ++i) {
     feature = features[i];
     if (defined(feature.pickIds)) {
-      var pickIds = feature.pickIds;
-      var pickIdsLength = pickIds.length;
-      for (var j = 0; j < pickIdsLength; ++j) {
+      const pickIds = feature.pickIds;
+      const pickIdsLength = pickIds.length;
+      for (let j = 0; j < pickIdsLength; ++j) {
         pickColor = pickIds[j].color;
         ids[offset] = Color.floatToByte(pickColor.red);
         ids[offset + 1] = Color.floatToByte(pickColor.green);
@@ -911,15 +915,15 @@ PostProcessStage.prototype.update = function (context, useLogDepth) {
     return;
   }
 
-  var framebuffer = this._textureCache.getFramebuffer(this._name);
+  const framebuffer = this._textureCache.getFramebuffer(this._name);
   this._command.framebuffer = framebuffer;
 
   if (!defined(framebuffer)) {
     return;
   }
 
-  var colorTexture = framebuffer.getColorTexture(0);
-  var renderState;
+  const colorTexture = framebuffer.getColorTexture(0);
+  let renderState;
   if (
     colorTexture.width !== context.drawingBufferWidth ||
     colorTexture.height !== context.drawingBufferHeight
@@ -975,7 +979,7 @@ PostProcessStage.prototype.execute = function (
     this._colorTexture.sampler = this._sampler;
   }
 
-  var passState =
+  const passState =
     this.scissorRectangle.width > 0 && this.scissorRectangle.height > 0
       ? this._passState
       : undefined;

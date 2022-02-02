@@ -32,9 +32,9 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
-        var bluePlane = viewer.entities.add({
+        const bluePlane = viewer.entities.add({
           name: "Blue plane",
           position: Cesium.Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
           plane: {
@@ -44,7 +44,7 @@
           },
         });
 
-        var redPlane = viewer.entities.add({
+        const redPlane = viewer.entities.add({
           name: "Red plane with black outline",
           position: Cesium.Cartesian3.fromDegrees(-107.0, 40.0, 300000.0),
           plane: {
@@ -56,7 +56,7 @@
           },
         });
 
-        var outlineOnly = viewer.entities.add({
+        const outlineOnly = viewer.entities.add({
           name: "Yellow plane outline",
           position: Cesium.Cartesian3.fromDegrees(-100.0, 40.0, 300000.0),
           plane: {

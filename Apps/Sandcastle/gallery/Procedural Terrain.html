@@ -33,10 +33,10 @@
         "use strict";
         //Sandcastle_Begin
 
-        var width = 32;
-        var height = 32;
+        const width = 32;
+        const height = 32;
 
-        var noiseTerrainProvider = new Cesium.CustomHeightmapTerrainProvider({
+        const noiseTerrainProvider = new Cesium.CustomHeightmapTerrainProvider({
           width: width,
           height: height,
           callback: function (x, y, level) {
@@ -47,9 +47,9 @@
               return x * x * (3.0 - 2.0 * x);
             }
             function hash(x, y) {
-              var a = 50.0 * fract(x * 0.3183099 + 0.71);
-              var b = 50.0 * fract(y * 0.3183099 + 0.113);
-              var v = fract(a * b * (a + b));
+              const a = 50.0 * fract(x * 0.3183099 + 0.71);
+              const b = 50.0 * fract(y * 0.3183099 + 0.113);
+              const v = fract(a * b * (a + b));
               return -1.0 + 2.0 * v; // -1 to +1
             }
             function lerp(x, y, t) {
@@ -57,22 +57,22 @@
             }
             function noise(x, y) {
               // Value noise: lerp between random values
-              var ix = Math.floor(x);
-              var iy = Math.floor(y);
-              var fx = fract(x);
-              var fy = fract(y);
-              var tx = smoothstep(fx);
-              var ty = smoothstep(fy);
-              var v00 = hash(ix, iy);
-              var v10 = hash(ix + 1, iy);
-              var v01 = hash(ix, iy + 1);
-              var v11 = hash(ix + 1, iy + 1);
-              var v = lerp(lerp(v00, v10, tx), lerp(v01, v11, tx), ty);
+              const ix = Math.floor(x);
+              const iy = Math.floor(y);
+              const fx = fract(x);
+              const fy = fract(y);
+              const tx = smoothstep(fx);
+              const ty = smoothstep(fy);
+              const v00 = hash(ix, iy);
+              const v10 = hash(ix + 1, iy);
+              const v01 = hash(ix, iy + 1);
+              const v11 = hash(ix + 1, iy + 1);
+              const v = lerp(lerp(v00, v10, tx), lerp(v01, v11, tx), ty);
               return v; // -1 to +1
             }
             function fbm(x, y) {
               // Fractal brownian motion: accumulate octaves of self-similar noise
-              var v = 0.5 * noise(x * 1.0, y * 1.0);
+              let v = 0.5 * noise(x * 1.0, y * 1.0);
               v += 0.25 * noise(x * 0.4, y * 2.8);
               v += 0.125 * noise(x * -2.72, y * 4.96);
               v += 0.0625 * noise(x * -10.3, y * 4.67);
@@ -83,22 +83,23 @@
               return v; // -1 to +1
             }
             function terrainNoise(x, y) {
-              var v = fbm(x, y);
+              let v = fbm(x, y);
               // Move to 0 to 1 range, then make it pointier
               v = Math.pow(v * 0.5 + 0.5, 2.0);
               return v;
             }
 
-            var buffer = new Float32Array(width * height);
+            const buffer = new Float32Array(width * height);
 
-            for (var yy = 0; yy < height; yy++) {
-              for (var xx = 0; xx < width; xx++) {
-                var u = (x + xx / (width - 1)) / Math.pow(2, level);
-                var v = (y + yy / (height - 1)) / Math.pow(2, level);
+            for (let yy = 0; yy < height; yy++) {
+              for (let xx = 0; xx < width; xx++) {
+                const u = (x + xx / (width - 1)) / Math.pow(2, level);
+                const v = (y + yy / (height - 1)) / Math.pow(2, level);
 
-                var heightValue = 9000 * terrainNoise(u * 1750 - 10, v * 1500);
+                const heightValue =
+                  9000 * terrainNoise(u * 1750 - 10, v * 1500);
 
-                var index = yy * width + xx;
+                const index = yy * width + xx;
                 buffer[index] = heightValue;
               }
             }
@@ -107,20 +108,20 @@
           },
         });
 
-        var sineTerrainProvider = new Cesium.CustomHeightmapTerrainProvider({
+        const sineTerrainProvider = new Cesium.CustomHeightmapTerrainProvider({
           width: width,
           height: height,
           callback: function (x, y, level) {
-            var buffer = new Float32Array(width * height);
+            const buffer = new Float32Array(width * height);
 
-            for (var yy = 0; yy < height; yy++) {
-              for (var xx = 0; xx < width; xx++) {
-                var u = (x + xx / (width - 1)) / Math.pow(2, level);
-                var v = (y + yy / (height - 1)) / Math.pow(2, level);
+            for (let yy = 0; yy < height; yy++) {
+              for (let xx = 0; xx < width; xx++) {
+                const u = (x + xx / (width - 1)) / Math.pow(2, level);
+                const v = (y + yy / (height - 1)) / Math.pow(2, level);
 
-                var heightValue = 4000 * (Math.sin(8000 * v) * 0.5 + 0.5);
+                const heightValue = 4000 * (Math.sin(8000 * v) * 0.5 + 0.5);
 
-                var index = yy * width + xx;
+                const index = yy * width + xx;
                 buffer[index] = heightValue;
               }
             }
@@ -129,7 +130,7 @@
           },
         });
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: noiseTerrainProvider,
         });
 

@@ -27,15 +27,15 @@ import createScene from "../createScene.js";
 describe(
   "Scene/Implicit3DTileContent",
   function () {
-    var tilesetResource = new Resource({
+    const tilesetResource = new Resource({
       url: "https://example.com/tileset.json",
     });
-    var mockTileset = {
+    const mockTileset = {
       modelMatrix: Matrix4.IDENTITY,
     };
-    var metadataSchema; // intentionally left undefined
+    let metadataSchema; // intentionally left undefined
 
-    var tileJson = {
+    const tileJson = {
       geometricError: 800,
       refine: "ADD",
       boundingVolume: {
@@ -63,13 +63,13 @@ describe(
       },
     };
 
-    var implicitTileset = new ImplicitTileset(
+    const implicitTileset = new ImplicitTileset(
       tilesetResource,
       tileJson,
       metadataSchema
     );
 
-    var quadtreeBuffer = ImplicitTilingTester.generateSubtreeBuffers({
+    const quadtreeBuffer = ImplicitTilingTester.generateSubtreeBuffers({
       tileAvailability: {
         descriptor: "11010",
         bitLength: 5,
@@ -89,7 +89,7 @@ describe(
       },
     }).subtreeBuffer;
 
-    var rootCoordinates = new ImplicitTileCoordinates({
+    const rootCoordinates = new ImplicitTileCoordinates({
       subdivisionScheme: implicitTileset.subdivisionScheme,
       subtreeLevels: implicitTileset.subtreeLevels,
       level: 0,
@@ -99,30 +99,30 @@ describe(
     });
 
     function gatherTilesPreorder(tile, minLevel, maxLevel, result) {
-      var level = tile.implicitCoordinates.level;
+      const level = tile.implicitCoordinates.level;
       if (minLevel <= level && level <= maxLevel) {
         result.push(tile);
       }
 
-      for (var i = 0; i < tile.children.length; i++) {
+      for (let i = 0; i < tile.children.length; i++) {
         gatherTilesPreorder(tile.children[i], minLevel, maxLevel, result);
       }
     }
 
     function getBoundingBoxArray(tile) {
-      var boundingBox = tile.boundingVolume.boundingVolume;
-      var box = new Array(12);
+      const boundingBox = tile.boundingVolume.boundingVolume;
+      const box = new Array(12);
       Cartesian3.pack(boundingBox.center, box);
       Matrix3.pack(boundingBox.halfAxes, box, 3);
       return box;
     }
 
-    var scene;
+    let scene;
 
     // This scene is the same as Composite/Composite, just rephrased
     // using 3DTILES_multiple_contents
-    var centerLongitude = -1.31968;
-    var centerLatitude = 0.698874;
+    const centerLongitude = -1.31968;
+    const centerLatitude = 0.698874;
 
     beforeAll(function () {
       scene = createScene();
@@ -132,7 +132,7 @@ describe(
       scene.destroyForSpecs();
     });
 
-    var mockPlaceholderTile;
+    let mockPlaceholderTile;
     beforeEach(function () {
       mockPlaceholderTile = new Cesium3DTile(mockTileset, tilesetResource, {
         geometricError: 400,
@@ -145,7 +145,7 @@ describe(
       mockPlaceholderTile.implicitTileset = implicitTileset;
 
       // One item in each data set is always located in the center, so point the camera there
-      var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+      const center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
       scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 26.0));
     });
 
@@ -154,7 +154,7 @@ describe(
     });
 
     it("expands subtree", function () {
-      var content = new Implicit3DTileContent(
+      const content = new Implicit3DTileContent(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -162,19 +162,19 @@ describe(
         0
       );
       return content.readyPromise.then(function () {
-        var expectedChildrenCounts = [2, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0];
-        var tiles = [];
-        var subtreeRootTile = mockPlaceholderTile.children[0];
+        const expectedChildrenCounts = [2, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0];
+        const tiles = [];
+        const subtreeRootTile = mockPlaceholderTile.children[0];
         gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
         expect(expectedChildrenCounts.length).toEqual(tiles.length);
-        for (var i = 0; i < tiles.length; i++) {
+        for (let i = 0; i < tiles.length; i++) {
           expect(tiles[i].children.length).toEqual(expectedChildrenCounts[i]);
         }
       });
     });
 
     it("sets tile coordinates on each tile", function () {
-      var content = new Implicit3DTileContent(
+      const content = new Implicit3DTileContent(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -182,7 +182,7 @@ describe(
         0
       );
       return content.readyPromise.then(function () {
-        var expectedCoordinates = [
+        const expectedCoordinates = [
           [0, 0, 0],
           [1, 0, 0],
           [2, 0, 0],
@@ -195,12 +195,12 @@ describe(
           [2, 0, 3],
           [2, 1, 3],
         ];
-        var tiles = [];
-        var subtreeRootTile = mockPlaceholderTile.children[0];
+        const tiles = [];
+        const subtreeRootTile = mockPlaceholderTile.children[0];
         gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
-        for (var i = 0; i < tiles.length; i++) {
-          var expected = expectedCoordinates[i];
-          var coordinates = new ImplicitTileCoordinates({
+        for (let i = 0; i < tiles.length; i++) {
+          const expected = expectedCoordinates[i];
+          const coordinates = new ImplicitTileCoordinates({
             subdivisionScheme: implicitTileset.subdivisionScheme,
             subtreeLevels: implicitTileset.subtreeLevels,
             level: expected[0],
@@ -220,32 +220,32 @@ describe(
         x: 2,
         y: 1,
       });
-      var content = new Implicit3DTileContent(
+      const content = new Implicit3DTileContent(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
         quadtreeBuffer,
         0
       );
-      var refine =
+      const refine =
         implicitTileset.refine === "ADD"
           ? Cesium3DTileRefine.ADD
           : Cesium3DTileRefine.REPLACE;
 
-      var parentCoordinates = mockPlaceholderTile.implicitCoordinates;
-      var childCoordinates = parentCoordinates.getChildCoordinates(0);
+      const parentCoordinates = mockPlaceholderTile.implicitCoordinates;
+      const childCoordinates = parentCoordinates.getChildCoordinates(0);
 
-      var parentGeometricError = implicitTileset.geometricError / 4;
-      var childGeometricError = implicitTileset.geometricError / 8;
+      const parentGeometricError = implicitTileset.geometricError / 4;
+      const childGeometricError = implicitTileset.geometricError / 8;
 
-      var rootBoundingVolume = [10, 0, 0, 256, 0, 0, 0, 256, 0, 0, 0, 256];
-      var parentBox = Implicit3DTileContent._deriveBoundingBox(
+      const rootBoundingVolume = [10, 0, 0, 256, 0, 0, 0, 256, 0, 0, 0, 256];
+      const parentBox = Implicit3DTileContent._deriveBoundingBox(
         rootBoundingVolume,
         parentCoordinates.level,
         parentCoordinates.x,
         parentCoordinates.y
       );
-      var childBox = Implicit3DTileContent._deriveBoundingBox(
+      const childBox = Implicit3DTileContent._deriveBoundingBox(
         rootBoundingVolume,
         childCoordinates.level,
         childCoordinates.x,
@@ -253,8 +253,8 @@ describe(
       );
 
       return content.readyPromise.then(function () {
-        var subtreeRootTile = mockPlaceholderTile.children[0];
-        var childTile = subtreeRootTile.children[0];
+        const subtreeRootTile = mockPlaceholderTile.children[0];
+        const childTile = subtreeRootTile.children[0];
         expect(subtreeRootTile.implicitCoordinates).toEqual(parentCoordinates);
         expect(childTile.implicitCoordinates).toEqual(childCoordinates);
 
@@ -270,7 +270,7 @@ describe(
     });
 
     it("puts the root tile inside the placeholder tile", function () {
-      var content = new Implicit3DTileContent(
+      const content = new Implicit3DTileContent(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -283,7 +283,7 @@ describe(
     });
 
     it("preserves tile extras", function () {
-      var content = new Implicit3DTileContent(
+      const content = new Implicit3DTileContent(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -296,7 +296,7 @@ describe(
     });
 
     it("stores a reference to the subtree in each transcoded tile", function () {
-      var content = new Implicit3DTileContent(
+      const content = new Implicit3DTileContent(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -306,20 +306,20 @@ describe(
       return content.readyPromise.then(function () {
         expect(mockPlaceholderTile.implicitSubtree).not.toBeDefined();
 
-        var subtreeRootTile = mockPlaceholderTile.children[0];
-        var subtree = subtreeRootTile.implicitSubtree;
+        const subtreeRootTile = mockPlaceholderTile.children[0];
+        const subtree = subtreeRootTile.implicitSubtree;
         expect(subtree).toBeDefined();
 
-        var tiles = [];
+        const tiles = [];
         gatherTilesPreorder(subtreeRootTile, 0, 1, tiles);
-        for (var i = 0; i < tiles.length; i++) {
+        for (let i = 0; i < tiles.length; i++) {
           expect(tiles[i].implicitSubtree).toBe(subtree);
         }
       });
     });
 
     it("does not store references to subtrees in placeholder tiles", function () {
-      var content = new Implicit3DTileContent(
+      const content = new Implicit3DTileContent(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -329,18 +329,18 @@ describe(
       return content.readyPromise.then(function () {
         expect(mockPlaceholderTile.implicitSubtree).not.toBeDefined();
 
-        var subtreeRootTile = mockPlaceholderTile.children[0];
+        const subtreeRootTile = mockPlaceholderTile.children[0];
 
-        var tiles = [];
+        const tiles = [];
         gatherTilesPreorder(subtreeRootTile, 2, 2, tiles);
-        for (var i = 0; i < tiles.length; i++) {
+        for (let i = 0; i < tiles.length; i++) {
           expect(tiles[i].implicitSubtree).not.toBeDefined();
         }
       });
     });
 
     it("destroys", function () {
-      var content = new Implicit3DTileContent(
+      const content = new Implicit3DTileContent(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -348,7 +348,7 @@ describe(
         0
       );
       return content.readyPromise.then(function () {
-        var subtree = content._implicitSubtree;
+        const subtree = content._implicitSubtree;
         expect(content.isDestroyed()).toBe(false);
         expect(subtree.isDestroyed()).toBe(false);
 
@@ -359,7 +359,7 @@ describe(
     });
 
     it("returns default values for most Cesium3DTileContent properties", function () {
-      var content = new Implicit3DTileContent(
+      const content = new Implicit3DTileContent(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -381,7 +381,7 @@ describe(
     });
 
     it("url returns the subtree url", function () {
-      var content = new Implicit3DTileContent(
+      const content = new Implicit3DTileContent(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -392,7 +392,7 @@ describe(
     });
 
     it("templates content URIs for each tile with content", function () {
-      var content = new Implicit3DTileContent(
+      const content = new Implicit3DTileContent(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -400,27 +400,27 @@ describe(
         0
       );
       return content.readyPromise.then(function () {
-        var expectedCoordinates = [
+        const expectedCoordinates = [
           [0, 0, 0],
           [1, 0, 0],
           [1, 0, 1],
         ];
-        var contentAvailability = [false, true, true];
-        var templateUri = implicitTileset.contentUriTemplates[0];
-        var subtreeRootTile = mockPlaceholderTile.children[0];
-        var tiles = [];
+        const contentAvailability = [false, true, true];
+        const templateUri = implicitTileset.contentUriTemplates[0];
+        const subtreeRootTile = mockPlaceholderTile.children[0];
+        const tiles = [];
         gatherTilesPreorder(subtreeRootTile, 0, 1, tiles);
         expect(expectedCoordinates.length).toEqual(tiles.length);
-        for (var i = 0; i < tiles.length; i++) {
-          var expected = expectedCoordinates[i];
-          var coordinates = new ImplicitTileCoordinates({
+        for (let i = 0; i < tiles.length; i++) {
+          const expected = expectedCoordinates[i];
+          const coordinates = new ImplicitTileCoordinates({
             subdivisionScheme: implicitTileset.subdivisionScheme,
             subtreeLevels: implicitTileset.subtreeLevels,
             level: expected[0],
             x: expected[1],
             y: expected[2],
           });
-          var expectedResource = templateUri.getDerivedResource({
+          const expectedResource = templateUri.getDerivedResource({
             templateValues: coordinates.getTemplateValues(),
           });
           if (contentAvailability[i]) {
@@ -433,7 +433,7 @@ describe(
     });
 
     it("constructs placeholder tiles for child subtrees", function () {
-      var content = new Implicit3DTileContent(
+      const content = new Implicit3DTileContent(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -441,7 +441,7 @@ describe(
         0
       );
       return content.readyPromise.then(function () {
-        var expectedCoordinates = [
+        const expectedCoordinates = [
           [2, 0, 0],
           [2, 1, 0],
           [2, 0, 1],
@@ -451,25 +451,25 @@ describe(
           [2, 0, 3],
           [2, 1, 3],
         ];
-        var templateUri = implicitTileset.subtreeUriTemplate;
-        var subtreeRootTile = mockPlaceholderTile.children[0];
-        var tiles = [];
+        const templateUri = implicitTileset.subtreeUriTemplate;
+        const subtreeRootTile = mockPlaceholderTile.children[0];
+        const tiles = [];
         gatherTilesPreorder(subtreeRootTile, 2, 2, tiles);
 
         expect(expectedCoordinates.length).toEqual(tiles.length);
-        for (var i = 0; i < tiles.length; i++) {
-          var expected = expectedCoordinates[i];
-          var coordinates = new ImplicitTileCoordinates({
+        for (let i = 0; i < tiles.length; i++) {
+          const expected = expectedCoordinates[i];
+          const coordinates = new ImplicitTileCoordinates({
             subdivisionScheme: implicitTileset.subdivisionScheme,
             subtreeLevels: implicitTileset.subtreeLevels,
             level: expected[0],
             x: expected[1],
             y: expected[2],
           });
-          var expectedResource = templateUri.getDerivedResource({
+          const expectedResource = templateUri.getDerivedResource({
             templateValues: coordinates.getTemplateValues(),
           });
-          var placeholderTile = tiles[i];
+          const placeholderTile = tiles[i];
           expect(placeholderTile._contentResource.url).toEqual(
             expectedResource.url
           );
@@ -480,42 +480,42 @@ describe(
     });
 
     it("propagates refine down the tree", function () {
-      var content = new Implicit3DTileContent(
+      const content = new Implicit3DTileContent(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
         quadtreeBuffer,
         0
       );
-      var refine =
+      const refine =
         implicitTileset.refine === "ADD"
           ? Cesium3DTileRefine.ADD
           : Cesium3DTileRefine.REPLACE;
       return content.readyPromise.then(function () {
-        var subtreeRootTile = mockPlaceholderTile.children[0];
-        var tiles = [];
+        const subtreeRootTile = mockPlaceholderTile.children[0];
+        const tiles = [];
         gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
-        for (var i = 0; i < tiles.length; i++) {
+        for (let i = 0; i < tiles.length; i++) {
           expect(tiles[i].refine).toEqual(refine);
         }
       });
     });
 
     it("divides the geometricError by 2 for each level of the tree", function () {
-      var content = new Implicit3DTileContent(
+      const content = new Implicit3DTileContent(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
         quadtreeBuffer,
         0
       );
-      var rootGeometricError = implicitTileset.geometricError;
+      const rootGeometricError = implicitTileset.geometricError;
       return content.readyPromise.then(function () {
-        var subtreeRootTile = mockPlaceholderTile.children[0];
-        var tiles = [];
+        const subtreeRootTile = mockPlaceholderTile.children[0];
+        const tiles = [];
         gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
-        for (var i = 0; i < tiles.length; i++) {
-          var level = tiles[i].implicitCoordinates.level;
+        for (let i = 0; i < tiles.length; i++) {
+          const level = tiles[i].implicitCoordinates.level;
           expect(tiles[i].geometricError).toEqual(
             rootGeometricError / Math.pow(2, level)
           );
@@ -524,7 +524,7 @@ describe(
     });
 
     it("subdivides bounding volumes for each tile", function () {
-      var content = new Implicit3DTileContent(
+      const content = new Implicit3DTileContent(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -532,7 +532,7 @@ describe(
         0
       );
       return content.readyPromise.then(function () {
-        var expectedCoordinates = [
+        const expectedCoordinates = [
           [0, 0, 0],
           [1, 0, 0],
           [2, 0, 0],
@@ -545,22 +545,22 @@ describe(
           [2, 0, 3],
           [2, 1, 3],
         ];
-        var rootBoundingVolume = [10, 0, 0, 256, 0, 0, 0, 256, 0, 0, 0, 256];
+        const rootBoundingVolume = [10, 0, 0, 256, 0, 0, 0, 256, 0, 0, 0, 256];
 
-        var subtreeRootTile = mockPlaceholderTile.children[0];
-        var tiles = [];
+        const subtreeRootTile = mockPlaceholderTile.children[0];
+        const tiles = [];
         gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
 
         expect(expectedCoordinates.length).toEqual(tiles.length);
-        for (var i = 0; i < tiles.length; i++) {
-          var coordinates = expectedCoordinates[i];
+        for (let i = 0; i < tiles.length; i++) {
+          const coordinates = expectedCoordinates[i];
 
-          var boundingBox = tiles[i].boundingVolume.boundingVolume;
-          var childBox = new Array(12);
+          const boundingBox = tiles[i].boundingVolume.boundingVolume;
+          const childBox = new Array(12);
           Cartesian3.pack(boundingBox.center, childBox);
           Matrix3.pack(boundingBox.halfAxes, childBox, 3);
 
-          var expectedBounds = Implicit3DTileContent._deriveBoundingBox(
+          const expectedBounds = Implicit3DTileContent._deriveBoundingBox(
             rootBoundingVolume,
             coordinates[0],
             coordinates[1],
@@ -572,7 +572,7 @@ describe(
     });
 
     it("propagates transform", function () {
-      var content = new Implicit3DTileContent(
+      const content = new Implicit3DTileContent(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -580,7 +580,7 @@ describe(
         0
       );
       return content.readyPromise.then(function () {
-        var subtreeRootTile = mockPlaceholderTile.children[0];
+        const subtreeRootTile = mockPlaceholderTile.children[0];
         expect(subtreeRootTile.computedTransform).toEqual(
           mockPlaceholderTile.transform
         );
@@ -588,17 +588,17 @@ describe(
     });
 
     describe("_deriveBoundingVolumeS2", function () {
-      var deriveBoundingVolumeS2 =
+      const deriveBoundingVolumeS2 =
         Implicit3DTileContent._deriveBoundingVolumeS2;
-      var simpleBoundingVolumeS2 = {
+      const simpleBoundingVolumeS2 = {
         token: "1",
         minimumHeight: 0,
         maximumHeight: 10,
       };
-      var simpleBoundingVolumeS2Cell = new TileBoundingS2Cell(
+      const simpleBoundingVolumeS2Cell = new TileBoundingS2Cell(
         simpleBoundingVolumeS2
       );
-      var implicitTilesetS2 = {
+      const implicitTilesetS2 = {
         boundingVolume: {
           extensions: {
             "3DTILES_bounding_volume_S2": simpleBoundingVolumeS2,
@@ -650,10 +650,10 @@ describe(
       });
 
       it("returns implicit tileset boundingVolume if parentIsPlaceholderTile is true", function () {
-        var placeholderTile = {
+        const placeholderTile = {
           _boundingVolume: simpleBoundingVolumeS2Cell,
         };
-        var result = deriveBoundingVolumeS2(
+        const result = deriveBoundingVolumeS2(
           true,
           placeholderTile,
           0,
@@ -667,15 +667,15 @@ describe(
       });
 
       it("subdivides correctly using QUADTREE", function () {
-        var parentTile = {
+        const parentTile = {
           _boundingVolume: simpleBoundingVolumeS2Cell,
         };
-        var expected = {
+        let expected = {
           token: "04",
           minimumHeight: 0,
           maximumHeight: 10,
         };
-        var result = deriveBoundingVolumeS2(false, parentTile, 0, 1, 0, 0);
+        let result = deriveBoundingVolumeS2(false, parentTile, 0, 1, 0, 0);
         expect(result).toEqual({
           extensions: {
             "3DTILES_bounding_volume_S2": expected,
@@ -702,26 +702,42 @@ describe(
 
       it("subdivides correctly using OCTREE", function () {
         implicitTilesetS2.subdivisionScheme = ImplicitSubdivisionScheme.OCTREE;
-        var parentTile = {
+        const parentTile = {
           _boundingVolume: simpleBoundingVolumeS2Cell,
         };
-        var expected0 = {
+        const expected0 = {
           token: "04",
           minimumHeight: 0,
           maximumHeight: 5,
         };
-        var expected1 = {
+        const expected1 = {
           token: "04",
           minimumHeight: 5,
           maximumHeight: 10,
         };
-        var result0 = deriveBoundingVolumeS2(false, parentTile, 0, 1, 0, 0, 0);
+        const result0 = deriveBoundingVolumeS2(
+          false,
+          parentTile,
+          0,
+          1,
+          0,
+          0,
+          0
+        );
         expect(result0).toEqual({
           extensions: {
             "3DTILES_bounding_volume_S2": expected0,
           },
         });
-        var result1 = deriveBoundingVolumeS2(false, parentTile, 4, 1, 0, 0, 0);
+        const result1 = deriveBoundingVolumeS2(
+          false,
+          parentTile,
+          4,
+          1,
+          0,
+          0,
+          0
+        );
         expect(result1).toEqual({
           extensions: {
             "3DTILES_bounding_volume_S2": expected1,
@@ -731,8 +747,8 @@ describe(
     });
 
     describe("_deriveBoundingBox", function () {
-      var deriveBoundingBox = Implicit3DTileContent._deriveBoundingBox;
-      var simpleBoundingBox = [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1];
+      const deriveBoundingBox = Implicit3DTileContent._deriveBoundingBox;
+      const simpleBoundingBox = [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1];
       it("throws if rootBox is undefined", function () {
         expect(function () {
           deriveBoundingBox(undefined, 0, 0, 0);
@@ -758,30 +774,30 @@ describe(
       });
 
       it("subdivides like a quadtree if z is not given", function () {
-        var tile = [1, 3, 0, 4, 0, 0, 0, 2, 0, 0, 0, 1];
-        var expected = [0, 1.5, 0, 1, 0, 0, 0, 0.5, 0, 0, 0, 1];
-        var result = deriveBoundingBox(tile, 2, 1, 0);
+        const tile = [1, 3, 0, 4, 0, 0, 0, 2, 0, 0, 0, 1];
+        const expected = [0, 1.5, 0, 1, 0, 0, 0, 0.5, 0, 0, 0, 1];
+        const result = deriveBoundingBox(tile, 2, 1, 0);
         expect(result).toEqual(expected);
       });
 
       it("subdivides like an octree if z is given", function () {
-        var tile = [1, 3, 0, 4, 0, 0, 0, 2, 0, 0, 0, 1];
-        var expected = [0, 1.5, 0.25, 1, 0, 0, 0, 0.5, 0, 0, 0, 0.25];
-        var result = deriveBoundingBox(tile, 2, 1, 0, 2);
+        const tile = [1, 3, 0, 4, 0, 0, 0, 2, 0, 0, 0, 1];
+        const expected = [0, 1.5, 0.25, 1, 0, 0, 0, 0.5, 0, 0, 0, 0.25];
+        const result = deriveBoundingBox(tile, 2, 1, 0, 2);
         expect(result).toEqual(expected);
       });
 
       it("handles rotation and non-uniform scaling correctly", function () {
-        var tile = [1, 2, 3, 0, 4, 0, 0, 0, 2, 1, 0, 0];
-        var expected = [1.25, 1, 1.5, 0, 1, 0, 0, 0, 0.5, 0.25, 0, 0];
-        var result = deriveBoundingBox(tile, 2, 1, 0, 2);
+        const tile = [1, 2, 3, 0, 4, 0, 0, 0, 2, 1, 0, 0];
+        const expected = [1.25, 1, 1.5, 0, 1, 0, 0, 0, 0.5, 0.25, 0, 0];
+        const result = deriveBoundingBox(tile, 2, 1, 0, 2);
         expect(result).toEqual(expected);
       });
     });
 
     describe("_deriveBoundingRegion", function () {
-      var deriveBoundingRegion = Implicit3DTileContent._deriveBoundingRegion;
-      var simpleRegion = [
+      const deriveBoundingRegion = Implicit3DTileContent._deriveBoundingRegion;
+      const simpleRegion = [
         0,
         0,
         CesiumMath.PI_OVER_FOUR,
@@ -834,34 +850,34 @@ describe(
       it("subdivides like a quadtree if z is not given", function () {
         // 4x4 degree rectangle so the subdivisions at level 2 will
         // be 1 degree each
-        var tile = makeRectangle(-1, -2, 3, 2, 0, 20);
-        var expected = makeRectangle(0, 1, 1, 2, 0, 20);
+        const tile = makeRectangle(-1, -2, 3, 2, 0, 20);
+        const expected = makeRectangle(0, 1, 1, 2, 0, 20);
 
-        var result = deriveBoundingRegion(tile, 2, 1, 3);
+        const result = deriveBoundingRegion(tile, 2, 1, 3);
         expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON9);
       });
 
       it("deriveVolume subdivides like an octree if z is given", function () {
         // 4x4 degree rectangle so the subdivisions at level 2 will
         // be 1 degree each
-        var tile = makeRectangle(-1, -2, 3, 2, 0, 20);
-        var expected = makeRectangle(0, 1, 1, 2, 10, 15);
+        const tile = makeRectangle(-1, -2, 3, 2, 0, 20);
+        const expected = makeRectangle(0, 1, 1, 2, 10, 15);
 
-        var result = deriveBoundingRegion(tile, 2, 1, 3, 2);
+        const result = deriveBoundingRegion(tile, 2, 1, 3, 2);
         expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON9);
       });
 
       it("handles the IDL", function () {
-        var tile = makeRectangle(90, -45, -90, 45, 0, 20);
-        var expected = makeRectangle(180, -45, -90, 0, 0, 20);
+        const tile = makeRectangle(90, -45, -90, 45, 0, 20);
+        const expected = makeRectangle(180, -45, -90, 0, 0, 20);
 
-        var result = deriveBoundingRegion(tile, 1, 1, 0);
+        const result = deriveBoundingRegion(tile, 1, 1, 0);
         expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON9);
       });
     });
 
     describe("3DTILES_multiple_contents", function () {
-      var implicitMultipleContentsUrl =
+      const implicitMultipleContentsUrl =
         "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset.json";
 
       it("a single content is transcoded as a regular tile", function () {
@@ -870,8 +886,8 @@ describe(
           implicitMultipleContentsUrl
         ).then(function (tileset) {
           // The root tile of this tileset only has one available content
-          var transcodedRoot = tileset.root.children[0];
-          var transcodedRootHeader = transcodedRoot._header;
+          const transcodedRoot = tileset.root.children[0];
+          const transcodedRootHeader = transcodedRoot._header;
           expect(transcodedRoot.content).toBeInstanceOf(
             Batched3DModel3DTileContent
           );
@@ -887,30 +903,30 @@ describe(
           scene,
           implicitMultipleContentsUrl
         ).then(function (tileset) {
-          var childTiles = tileset.root.children[0].children;
-          for (var i = 0; i < childTiles.length; i++) {
-            var childTile = childTiles[i];
-            var content = childTile.content;
+          const childTiles = tileset.root.children[0].children;
+          for (let i = 0; i < childTiles.length; i++) {
+            const childTile = childTiles[i];
+            const content = childTile.content;
             expect(content).toBeInstanceOf(Multiple3DTileContent);
 
-            var childTileHeader = childTile._header;
+            const childTileHeader = childTile._header;
             expect(childTileHeader.content).not.toBeDefined();
           }
         });
       });
 
       it("passes extensions through correctly", function () {
-        var originalLoadJson = Cesium3DTileset.loadJson;
-        var metadataExtension = {
+        const originalLoadJson = Cesium3DTileset.loadJson;
+        const metadataExtension = {
           group: "buildings",
         };
-        var otherExtension = {
+        const otherExtension = {
           someKey: "someValue",
         };
 
         spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
           return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
-            var multiContent =
+            const multiContent =
               tilesetJson.root.extensions["3DTILES_multiple_contents"];
             multiContent.content.forEach(function (content) {
               content.extensions = {
@@ -928,13 +944,13 @@ describe(
           implicitMultipleContentsUrl
         ).then(function (tileset) {
           // the placeholder tile does not have any extensions.
-          var placeholderTile = tileset.root;
-          var placeholderHeader = placeholderTile._header;
+          const placeholderTile = tileset.root;
+          const placeholderHeader = placeholderTile._header;
           expect(placeholderHeader.extensions).not.toBeDefined();
           expect(placeholderHeader.content.extensions).not.toBeDefined();
 
-          var transcodedRoot = placeholderTile.children[0];
-          var transcodedRootHeader = transcodedRoot._header;
+          const transcodedRoot = placeholderTile.children[0];
+          const transcodedRootHeader = transcodedRoot._header;
           expect(transcodedRootHeader.extensions).toEqual({
             "3DTILES_extension": otherExtension,
           });
@@ -942,16 +958,16 @@ describe(
             "3DTILES_metadata": metadataExtension,
           });
 
-          var childTiles = transcodedRoot.children;
-          for (var i = 0; i < childTiles.length; i++) {
-            var childTile = childTiles[i];
+          const childTiles = transcodedRoot.children;
+          for (let i = 0; i < childTiles.length; i++) {
+            const childTile = childTiles[i];
 
-            var childTileHeader = childTile._header;
+            const childTileHeader = childTile._header;
             expect(childTileHeader.extensions["3DTILES_extension"]).toEqual(
               otherExtension
             );
 
-            var innerContentHeaders =
+            const innerContentHeaders =
               childTileHeader.extensions["3DTILES_multiple_contents"].content;
 
             innerContentHeaders.forEach(function (header) {
@@ -965,30 +981,30 @@ describe(
     });
 
     describe("3DTILES_metadata", function () {
-      var implicitTilesetUrl =
+      const implicitTilesetUrl =
         "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset.json";
-      var implicitGroupMetadataUrl =
+      const implicitGroupMetadataUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitGroupMetadata/tileset.json";
-      var implicitHeightSemanticsUrl =
+      const implicitHeightSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitHeightSemantics/tileset.json";
-      var implicitS2HeightSemanticsUrl =
+      const implicitS2HeightSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitHeightSemantics/s2-tileset.json";
-      var implicitTileBoundingVolumeSemanticsUrl =
+      const implicitTileBoundingVolumeSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitTileBoundingVolumeSemantics/tileset.json";
-      var implicitHeightAndSphereSemanticsUrl =
+      const implicitHeightAndSphereSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitHeightAndSphereSemantics/tileset.json";
-      var implicitHeightAndRegionSemanticsUrl =
+      const implicitHeightAndRegionSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitHeightAndRegionSemantics/tileset.json";
-      var implicitContentBoundingVolumeSemanticsUrl =
+      const implicitContentBoundingVolumeSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitContentBoundingVolumeSemantics/tileset.json";
-      var implicitContentHeightSemanticsUrl =
+      const implicitContentHeightSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitContentHeightSemantics/tileset.json";
-      var implicitContentHeightAndRegionSemanticsUrl =
+      const implicitContentHeightAndRegionSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitContentHeightAndRegionSemantics/tileset.json";
-      var implicitGeometricErrorSemanticsUrl =
+      const implicitGeometricErrorSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitGeometricErrorSemantics/tileset.json";
 
-      var metadataClass = new MetadataClass({
+      const metadataClass = new MetadataClass({
         id: "test",
         class: {
           properties: {
@@ -1001,7 +1017,7 @@ describe(
           },
         },
       });
-      var groupMetadata = new GroupMetadata({
+      const groupMetadata = new GroupMetadata({
         id: "testGroup",
         group: {
           properties: {
@@ -1015,7 +1031,7 @@ describe(
       it("assigns groupMetadata", function () {
         return Cesium3DTilesTester.loadTileset(scene, implicitTilesetUrl).then(
           function (tileset) {
-            var content = tileset.root.content;
+            const content = tileset.root.content;
             content.groupMetadata = groupMetadata;
             expect(content.groupMetadata).toBe(groupMetadata);
           }
@@ -1027,19 +1043,19 @@ describe(
           scene,
           implicitGroupMetadataUrl
         ).then(function (tileset) {
-          var placeholderTile = tileset.root;
-          var subtreeRootTile = placeholderTile.children[0];
-          var tiles = [];
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
+          const tiles = [];
           gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
 
-          var groups = tileset.metadata.groups;
-          var ground = groups.ground;
+          const groups = tileset.metadata.groups;
+          const ground = groups.ground;
           expect(ground.getProperty("color")).toEqual(
             new Cartesian3(120, 68, 32)
           );
           expect(ground.getProperty("priority")).toBe(0);
 
-          var sky = groups.sky;
+          const sky = groups.sky;
           expect(sky.getProperty("color")).toEqual(
             new Cartesian3(206, 237, 242)
           );
@@ -1048,11 +1064,11 @@ describe(
           tiles.forEach(function (tile) {
             if (tile.hasMultipleContents) {
               // child tiles have multiple contents
-              var contents = tile.content.innerContents;
+              const contents = tile.content.innerContents;
               expect(contents[0].groupMetadata).toBe(ground);
               expect(contents[1].groupMetadata).toBe(sky);
             } else {
-              // parent tile is a single B3DM tile
+              // parent tile is a single b3dm tile
               expect(tile.content.groupMetadata).toBe(ground);
             }
           });
@@ -1061,8 +1077,8 @@ describe(
 
       // view (lon, lat, height) = (0, 0, 0) from height meters above
       function viewCartographicOrigin(height) {
-        var center = Cartesian3.fromDegrees(0.0, 0.0);
-        var offset = new Cartesian3(0, 0, height);
+        const center = Cartesian3.fromDegrees(0.0, 0.0);
+        const offset = new Cartesian3(0, 0, height);
         scene.camera.lookAt(center, offset);
       }
 
@@ -1072,20 +1088,20 @@ describe(
           scene,
           implicitHeightSemanticsUrl
         ).then(function (tileset) {
-          var placeholderTile = tileset.root;
-          var subtreeRootTile = placeholderTile.children[0];
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
 
-          var implicitRegion =
+          const implicitRegion =
             placeholderTile.implicitTileset.boundingVolume.region;
-          var minimumHeight = implicitRegion[4];
-          var maximumHeight = implicitRegion[5];
+          const minimumHeight = implicitRegion[4];
+          const maximumHeight = implicitRegion[5];
 
           // This tileset uses TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT
           // to set tighter bounding volumes
-          var tiles = [];
+          const tiles = [];
           gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
-          for (var i = 0; i < tiles.length; i++) {
-            var tileRegion = tiles[i].boundingVolume;
+          for (let i = 0; i < tiles.length; i++) {
+            const tileRegion = tiles[i].boundingVolume;
             expect(tileRegion.minimumHeight).toBeGreaterThan(minimumHeight);
             expect(tileRegion.maximumHeight).toBeLessThan(maximumHeight);
           }
@@ -1098,22 +1114,22 @@ describe(
           scene,
           implicitS2HeightSemanticsUrl
         ).then(function (tileset) {
-          var placeholderTile = tileset.root;
-          var subtreeRootTile = placeholderTile.children[0];
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
 
-          var implicitS2Volume =
+          const implicitS2Volume =
             placeholderTile.implicitTileset.boundingVolume.extensions[
               "3DTILES_bounding_volume_S2"
             ];
-          var minimumHeight = implicitS2Volume.minimumHeight;
-          var maximumHeight = implicitS2Volume.maximumHeight;
+          const minimumHeight = implicitS2Volume.minimumHeight;
+          const maximumHeight = implicitS2Volume.maximumHeight;
 
           // This tileset uses TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT
           // to set tighter bounding volumes
-          var tiles = [];
+          const tiles = [];
           gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
-          for (var i = 0; i < tiles.length; i++) {
-            var tileS2Volume = tiles[i].boundingVolume;
+          for (let i = 0; i < tiles.length; i++) {
+            const tileS2Volume = tiles[i].boundingVolume;
             expect(tileS2Volume.minimumHeight).toBeGreaterThan(minimumHeight);
             expect(tileS2Volume.maximumHeight).toBeLessThan(maximumHeight);
           }
@@ -1127,9 +1143,9 @@ describe(
       }
 
       it("ignores height semantics if the implicit volume is a box", function () {
-        var cameraHeight = 100;
-        var rootHalfWidth = 10;
-        var originalLoadJson = Cesium3DTileset.loadJson;
+        const cameraHeight = 100;
+        const rootHalfWidth = 10;
+        const originalLoadJson = Cesium3DTileset.loadJson;
         spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
           return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
             tilesetJson.root.boundingVolume = {
@@ -1157,17 +1173,17 @@ describe(
           scene,
           implicitHeightSemanticsUrl
         ).then(function (tileset) {
-          var placeholderTile = tileset.root;
-          var subtreeRootTile = placeholderTile.children[0];
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
 
-          var tiles = [];
+          const tiles = [];
           gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
 
           // TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT only apply to
           // regions, so this will check that they are not used.
           tiles.forEach(function (tile) {
-            var level = tile.implicitCoordinates.level;
-            var halfWidth = getHalfWidth(tile.boundingVolume);
+            const level = tile.implicitCoordinates.level;
+            const halfWidth = getHalfWidth(tile.boundingVolume);
             // Even for floats, divide by 2 operations are exact as long
             // as there is no overflow.
             expect(halfWidth).toEqual(rootHalfWidth / Math.pow(2, level));
@@ -1181,24 +1197,24 @@ describe(
           scene,
           implicitTileBoundingVolumeSemanticsUrl
         ).then(function (tileset) {
-          var placeholderTile = tileset.root.children[0];
-          var subtreeRootTile = placeholderTile.children[0];
+          const placeholderTile = tileset.root.children[0];
+          const subtreeRootTile = placeholderTile.children[0];
 
-          var rootHalfWidth = 2048;
+          const rootHalfWidth = 2048;
           expect(getHalfWidth(subtreeRootTile.boundingVolume)).toBe(
             rootHalfWidth
           );
 
-          for (var level = 1; level < 4; level++) {
-            var halfWidthAtLevel = rootHalfWidth / (1 << level);
-            var tiles = [];
+          for (let level = 1; level < 4; level++) {
+            const halfWidthAtLevel = rootHalfWidth / (1 << level);
+            const tiles = [];
             gatherTilesPreorder(subtreeRootTile, level, level, tiles);
-            for (var i = 0; i < tiles.length; i++) {
+            for (let i = 0; i < tiles.length; i++) {
               // In this tileset, each tile's TILE_BOUNDING_BOX is
               // smaller than the implicit tile bounds. Make sure
               // this is true.
-              var tile = tiles[i];
-              var halfWidth = getHalfWidth(tile.boundingVolume);
+              const tile = tiles[i];
+              const halfWidth = getHalfWidth(tile.boundingVolume);
               expect(halfWidth).toBeLessThan(halfWidthAtLevel);
             }
           }
@@ -1211,21 +1227,21 @@ describe(
           scene,
           implicitHeightAndSphereSemanticsUrl
         ).then(function (tileset) {
-          var placeholderTile = tileset.root;
-          var subtreeRootTile = placeholderTile.children[0];
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
 
-          var implicitRegion =
+          const implicitRegion =
             placeholderTile.implicitTileset.boundingVolume.region;
 
-          var minimumHeight = implicitRegion[4];
-          var maximumHeight = implicitRegion[5];
+          const minimumHeight = implicitRegion[4];
+          const maximumHeight = implicitRegion[5];
 
           // This tileset uses TILE_BOUNDING_SPHERE, TILE_MINIMUM_HEIGHT, and
           // TILE_MAXIMUM_HEIGHT but TILE_BOUNDING_SPHERE is ignored
-          var tiles = [];
+          const tiles = [];
           gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
-          for (var i = 0; i < tiles.length; i++) {
-            var tileRegion = tiles[i].boundingVolume;
+          for (let i = 0; i < tiles.length; i++) {
+            const tileRegion = tiles[i].boundingVolume;
             expect(tileRegion.minimumHeight).toBeDefined();
             expect(tileRegion.maximumHeight).toBeDefined();
             expect(tileRegion.minimumHeight).toBeGreaterThan(minimumHeight);
@@ -1240,25 +1256,25 @@ describe(
           scene,
           implicitHeightAndRegionSemanticsUrl
         ).then(function (tileset) {
-          var placeholderTile = tileset.root;
-          var subtreeRootTile = placeholderTile.children[0];
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
 
-          var implicitRegion =
+          const implicitRegion =
             placeholderTile.implicitTileset.boundingVolume.region;
 
-          var west = implicitRegion[0];
-          var south = implicitRegion[1];
-          var east = implicitRegion[2];
-          var north = implicitRegion[3];
-          var minimumHeight = implicitRegion[4];
-          var maximumHeight = implicitRegion[5];
+          const west = implicitRegion[0];
+          const south = implicitRegion[1];
+          const east = implicitRegion[2];
+          const north = implicitRegion[3];
+          const minimumHeight = implicitRegion[4];
+          const maximumHeight = implicitRegion[5];
 
           // This tileset uses TILE_BOUNDING_REGION, TILE_MINIMUM_HEIGHT, and
           // TILE_MAXIMUM_HEIGHT to set tighter bounding volumes
-          var tiles = [];
+          const tiles = [];
           gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
-          for (var i = 0; i < tiles.length; i++) {
-            var tileRegion = tiles[i].boundingVolume;
+          for (let i = 0; i < tiles.length; i++) {
+            const tileRegion = tiles[i].boundingVolume;
             expect(tileRegion.minimumHeight).toBeGreaterThan(minimumHeight);
             expect(tileRegion.maximumHeight).toBeLessThan(maximumHeight);
             // Check that the bounding volume is using the explicit tile regions
@@ -1277,13 +1293,13 @@ describe(
           scene,
           implicitContentBoundingVolumeSemanticsUrl
         ).then(function (tileset) {
-          var placeholderTile = tileset.root.children[0];
-          var subtreeRootTile = placeholderTile.children[0];
+          const placeholderTile = tileset.root.children[0];
+          const subtreeRootTile = placeholderTile.children[0];
 
           // This tileset defines the content bounding spheres in a
           // property with metadata semantic CONTENT_BOUNDING_SPHERE.
           // Check that each tile has a content bounding volume.
-          var tiles = [];
+          const tiles = [];
           gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
           tiles.forEach(function (tile) {
             expect(
@@ -1300,21 +1316,21 @@ describe(
           scene,
           implicitContentHeightSemanticsUrl
         ).then(function (tileset) {
-          var placeholderTile = tileset.root;
-          var subtreeRootTile = placeholderTile.children[0];
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
 
-          var implicitRegion =
+          const implicitRegion =
             placeholderTile.implicitTileset.boundingVolume.region;
 
-          var minimumHeight = implicitRegion[4];
-          var maximumHeight = implicitRegion[5];
+          const minimumHeight = implicitRegion[4];
+          const maximumHeight = implicitRegion[5];
 
           // This tileset uses CONTENT_MINIMUM_HEIGHT and CONTENT_MAXIMUM_HEIGHT
           // to set tighter bounding volumes
-          var tiles = [];
+          const tiles = [];
           gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
-          for (var i = 0; i < tiles.length; i++) {
-            var contentRegion = tiles[i].contentBoundingVolume;
+          for (let i = 0; i < tiles.length; i++) {
+            const contentRegion = tiles[i].contentBoundingVolume;
             expect(contentRegion.minimumHeight).toBeGreaterThan(minimumHeight);
             expect(contentRegion.maximumHeight).toBeLessThan(maximumHeight);
           }
@@ -1327,25 +1343,25 @@ describe(
           scene,
           implicitContentHeightAndRegionSemanticsUrl
         ).then(function (tileset) {
-          var placeholderTile = tileset.root;
-          var subtreeRootTile = placeholderTile.children[0];
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
 
-          var implicitRegion =
+          const implicitRegion =
             placeholderTile.implicitTileset.boundingVolume.region;
 
-          var west = implicitRegion[0];
-          var south = implicitRegion[1];
-          var east = implicitRegion[2];
-          var north = implicitRegion[3];
-          var minimumHeight = implicitRegion[4];
-          var maximumHeight = implicitRegion[5];
+          const west = implicitRegion[0];
+          const south = implicitRegion[1];
+          const east = implicitRegion[2];
+          const north = implicitRegion[3];
+          const minimumHeight = implicitRegion[4];
+          const maximumHeight = implicitRegion[5];
 
           // This tileset uses CONTENT_BOUNDING_REGION, CONTENT_MINIMUM_HEIGHT, and
           // CONTENT_MAXIMUM_HEIGHT to set tighter bounding volumes
-          var tiles = [];
+          const tiles = [];
           gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
-          for (var i = 0; i < tiles.length; i++) {
-            var contentRegion = tiles[i].contentBoundingVolume;
+          for (let i = 0; i < tiles.length; i++) {
+            const contentRegion = tiles[i].contentBoundingVolume;
             expect(contentRegion.minimumHeight).toBeGreaterThan(minimumHeight);
             expect(contentRegion.maximumHeight).toBeLessThan(maximumHeight);
             // Check that the content bounding volume is using the explicit tile
@@ -1364,19 +1380,19 @@ describe(
           scene,
           implicitGeometricErrorSemanticsUrl
         ).then(function (tileset) {
-          var placeholderTile = tileset.root;
-          var subtreeRootTile = placeholderTile.children[0];
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
 
           // This tileset defines the geometric error in a
           // property with metadata semantic TILE_GEOMETRIC_ERROR.
           // Check that each tile has the right geometric error.
-          var tiles = [];
+          const tiles = [];
           gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
-          var geometricErrors = tiles.map(function (tile) {
+          const geometricErrors = tiles.map(function (tile) {
             return tile.geometricError;
           });
           // prettier-ignore
-          var expectedGeometricErrors = [
+          const expectedGeometricErrors = [
             300, 203, 112, 113, 114, 115, 201, 104, 105, 106,
             107, 202, 108, 109, 110, 111, 200, 103, 101, 102, 100
           ];

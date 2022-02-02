@@ -22,24 +22,24 @@ import MetadataTable from "./MetadataTable.js";
  */
 export default function parseFeatureMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var extension = options.extension;
+  const extension = options.extension;
 
   // The calling code is responsible for loading the schema.
   // This keeps metadata parsing synchronous.
-  var schema = options.schema;
+  const schema = options.schema;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.extension", extension);
   Check.typeOf.object("options.schema", schema);
   //>>includeEnd('debug');
 
-  var i;
-  var propertyTables = [];
+  let i;
+  const propertyTables = [];
   if (defined(extension.propertyTables)) {
     for (i = 0; i < extension.propertyTables.length; i++) {
-      var propertyTable = extension.propertyTables[i];
-      var classDefinition = schema.classes[propertyTable.class];
-      var metadataTable = new MetadataTable({
+      const propertyTable = extension.propertyTables[i];
+      const classDefinition = schema.classes[propertyTable.class];
+      const metadataTable = new MetadataTable({
         count: propertyTable.count,
         properties: propertyTable.properties,
         class: classDefinition,
@@ -58,10 +58,10 @@ export default function parseFeatureMetadata(options) {
     }
   }
 
-  var propertyTextures = [];
+  const propertyTextures = [];
   if (defined(extension.propertyTextures)) {
     for (i = 0; i < extension.propertyTextures.length; i++) {
-      var propertyTexture = extension.propertyTextures[i];
+      const propertyTexture = extension.propertyTextures[i];
       propertyTextures.push(
         new PropertyTexture({
           id: i,
@@ -97,15 +97,15 @@ export default function parseFeatureMetadata(options) {
 function reformatPropertyTexture(propertyTexture) {
   // in EXT_mesh_features propertyTexture is a valid glTF textureInfo
   // since it has an index and a texCoord.
-  var textureInfo = clone(propertyTexture);
+  const textureInfo = clone(propertyTexture);
 
-  var featureTexture = clone(propertyTexture);
+  const featureTexture = clone(propertyTexture);
   featureTexture.properties = {};
 
-  var originalProperties = propertyTexture.properties;
-  for (var propertyId in originalProperties) {
+  const originalProperties = propertyTexture.properties;
+  for (const propertyId in originalProperties) {
     if (originalProperties.hasOwnProperty(propertyId)) {
-      var channels = originalProperties[propertyId];
+      const channels = originalProperties[propertyId];
       featureTexture.properties[propertyId] = {
         texture: textureInfo,
         channels: reformatChannels(channels),

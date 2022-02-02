@@ -29,12 +29,12 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  */
 export default function GltfBufferViewLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var resourceCache = options.resourceCache;
-  var gltf = options.gltf;
-  var bufferViewId = options.bufferViewId;
-  var gltfResource = options.gltfResource;
-  var baseResource = options.baseResource;
-  var cacheKey = options.cacheKey;
+  const resourceCache = options.resourceCache;
+  const gltf = options.gltf;
+  const bufferViewId = options.bufferViewId;
+  const gltfResource = options.gltfResource;
+  const baseResource = options.baseResource;
+  const cacheKey = options.cacheKey;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);
@@ -44,19 +44,19 @@ export default function GltfBufferViewLoader(options) {
   Check.typeOf.object("options.baseResource", baseResource);
   //>>includeEnd('debug');
 
-  var bufferView = gltf.bufferViews[bufferViewId];
-  var bufferId = bufferView.buffer;
-  var byteOffset = bufferView.byteOffset;
-  var byteLength = bufferView.byteLength;
+  const bufferView = gltf.bufferViews[bufferViewId];
+  let bufferId = bufferView.buffer;
+  let byteOffset = bufferView.byteOffset;
+  let byteLength = bufferView.byteLength;
 
-  var hasMeshopt = false;
-  var meshoptByteStride;
-  var meshoptCount;
-  var meshoptMode;
-  var meshoptFilter;
+  let hasMeshopt = false;
+  let meshoptByteStride;
+  let meshoptCount;
+  let meshoptMode;
+  let meshoptFilter;
 
   if (hasExtension(bufferView, "EXT_meshopt_compression")) {
-    var meshopt = bufferView.extensions.EXT_meshopt_compression;
+    const meshopt = bufferView.extensions.EXT_meshopt_compression;
     bufferId = meshopt.buffer;
     byteOffset = defaultValue(meshopt.byteOffset, 0);
     byteLength = meshopt.byteLength;
@@ -68,7 +68,7 @@ export default function GltfBufferViewLoader(options) {
     meshoptFilter = defaultValue(meshopt.filter, "NONE");
   }
 
-  var buffer = gltf.buffers[bufferId];
+  const buffer = gltf.buffers[bufferId];
 
   this._hasMeshopt = hasMeshopt;
   this._meshoptByteStride = meshoptByteStride;
@@ -145,19 +145,19 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
  * @private
  */
 GltfBufferViewLoader.prototype.load = function () {
-  var bufferLoader = getBufferLoader(this);
+  const bufferLoader = getBufferLoader(this);
   this._bufferLoader = bufferLoader;
   this._state = ResourceLoaderState.LOADING;
 
-  var that = this;
+  const that = this;
 
   bufferLoader.promise
     .then(function () {
       if (that.isDestroyed()) {
         return;
       }
-      var bufferTypedArray = bufferLoader.typedArray;
-      var bufferViewTypedArray = new Uint8Array(
+      const bufferTypedArray = bufferLoader.typedArray;
+      const bufferViewTypedArray = new Uint8Array(
         bufferTypedArray.buffer,
         bufferTypedArray.byteOffset + that._byteOffset,
         that._byteLength
@@ -180,17 +180,17 @@ GltfBufferViewLoader.prototype.load = function () {
       }
       that.unload();
       that._state = ResourceLoaderState.FAILED;
-      var errorMessage = "Failed to load buffer view";
+      const errorMessage = "Failed to load buffer view";
       that._promise.reject(that.getError(errorMessage, error));
     });
 };
 
 function getBufferLoader(bufferViewLoader) {
-  var resourceCache = bufferViewLoader._resourceCache;
-  var buffer = bufferViewLoader._buffer;
+  const resourceCache = bufferViewLoader._resourceCache;
+  const buffer = bufferViewLoader._buffer;
   if (defined(buffer.uri)) {
-    var baseResource = bufferViewLoader._baseResource;
-    var resource = baseResource.getDerivedResource({
+    const baseResource = bufferViewLoader._baseResource;
+    const resource = baseResource.getDerivedResource({
       url: buffer.uri,
     });
     return resourceCache.loadExternalBuffer({
@@ -226,9 +226,9 @@ GltfBufferViewLoader.prototype.process = function (frameState) {
     return;
   }
 
-  var count = this._meshoptCount;
-  var byteStride = this._meshoptByteStride;
-  var result = new Uint8Array(count * byteStride);
+  const count = this._meshoptCount;
+  const byteStride = this._meshoptByteStride;
+  const result = new Uint8Array(count * byteStride);
   MeshoptDecoder.decodeGltfBuffer(
     result,
     count,

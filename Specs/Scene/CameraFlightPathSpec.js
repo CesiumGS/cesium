@@ -12,7 +12,7 @@ import createScene from "../createScene.js";
 describe(
   "Scene/CameraFlightPath",
   function () {
-    var scene;
+    let scene;
 
     beforeEach(function () {
       scene = createScene();
@@ -23,12 +23,12 @@ describe(
     });
 
     function createOrthographicFrustum() {
-      var current = scene.camera.frustum;
-      var f = new OrthographicOffCenterFrustum();
+      const current = scene.camera.frustum;
+      const f = new OrthographicOffCenterFrustum();
       f.near = current.near;
       f.far = current.far;
 
-      var tanTheta = Math.tan(0.5 * current.fovy);
+      const tanTheta = Math.tan(0.5 * current.fovy);
       f.top = f.near * tanTheta;
       f.bottom = -f.top;
       f.right = current.aspectRatio * f.top;
@@ -52,12 +52,12 @@ describe(
     });
 
     it("creates an animation", function () {
-      var destination = new Cartesian3(1e9, 1e9, 1e9);
-      var duration = 5.0;
-      var complete = function () {};
-      var cancel = function () {};
+      const destination = new Cartesian3(1e9, 1e9, 1e9);
+      const duration = 5.0;
+      const complete = function () {};
+      const cancel = function () {};
 
-      var flight = CameraFlightPath.createTween(scene, {
+      const flight = CameraFlightPath.createTween(scene, {
         destination: destination,
         duration: duration,
         complete: complete,
@@ -74,20 +74,20 @@ describe(
     });
 
     it("creates an animation in 3d", function () {
-      var camera = scene.camera;
+      const camera = scene.camera;
 
-      var startPosition = Cartesian3.clone(camera.position);
-      var startHeading = camera.heading;
-      var startPitch = camera.pitch;
-      var startRoll = camera.roll;
+      const startPosition = Cartesian3.clone(camera.position);
+      const startHeading = camera.heading;
+      const startPitch = camera.pitch;
+      const startRoll = camera.roll;
 
-      var endPosition = Cartesian3.negate(startPosition, new Cartesian3());
-      var endHeading = CesiumMath.toRadians(20.0);
-      var endPitch = CesiumMath.toRadians(-45.0);
-      var endRoll = CesiumMath.TWO_PI;
+      const endPosition = Cartesian3.negate(startPosition, new Cartesian3());
+      const endHeading = CesiumMath.toRadians(20.0);
+      const endPitch = CesiumMath.toRadians(-45.0);
+      const endRoll = CesiumMath.TWO_PI;
 
-      var duration = 5.0;
-      var flight = CameraFlightPath.createTween(scene, {
+      const duration = 5.0;
+      const flight = CameraFlightPath.createTween(scene, {
         destination: endPosition,
         heading: endHeading,
         pitch: endPitch,
@@ -112,20 +112,20 @@ describe(
     });
 
     it("creates an animation in 3d using custom ellipsoid", function () {
-      var ellipsoid = new Ellipsoid(1737400, 1737400, 1737400);
-      var mapProjection = new GeographicProjection(ellipsoid);
+      const ellipsoid = new Ellipsoid(1737400, 1737400, 1737400);
+      const mapProjection = new GeographicProjection(ellipsoid);
       scene = createScene({
         mapProjection: mapProjection,
       });
       scene.globe = new Globe(ellipsoid);
 
-      var camera = scene.camera;
+      const camera = scene.camera;
 
-      var startPosition = Cartesian3.clone(camera.position);
-      var endPosition = Cartesian3.fromDegrees(0.0, 0.0, 100.0, ellipsoid);
+      const startPosition = Cartesian3.clone(camera.position);
+      const endPosition = Cartesian3.fromDegrees(0.0, 0.0, 100.0, ellipsoid);
 
-      var duration = 1.0;
-      var flight = CameraFlightPath.createTween(scene, {
+      const duration = 1.0;
+      const flight = CameraFlightPath.createTween(scene, {
         destination: endPosition,
         duration: duration,
       });
@@ -142,7 +142,7 @@ describe(
 
     it("creates an animation in Columbus view", function () {
       scene._mode = SceneMode.COLUMBUS_VIEW;
-      var camera = scene.camera;
+      const camera = scene.camera;
 
       camera.position = new Cartesian3(0.0, 0.0, 1000.0);
       camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
@@ -153,20 +153,20 @@ describe(
         new Cartesian3()
       );
 
-      var startPosition = Cartesian3.clone(camera.position);
+      const startPosition = Cartesian3.clone(camera.position);
 
-      var projection = scene.mapProjection;
-      var destination = Cartesian3.add(
+      const projection = scene.mapProjection;
+      const destination = Cartesian3.add(
         startPosition,
         new Cartesian3(-6e5 * Math.PI, 6e5 * CesiumMath.PI_OVER_FOUR, 100.0),
         new Cartesian3()
       );
-      var endPosition = projection.ellipsoid.cartographicToCartesian(
+      const endPosition = projection.ellipsoid.cartographicToCartesian(
         projection.unproject(destination)
       );
 
-      var duration = 5.0;
-      var flight = CameraFlightPath.createTween(scene, {
+      const duration = 5.0;
+      const flight = CameraFlightPath.createTween(scene, {
         destination: endPosition,
         duration: duration,
       });
@@ -183,7 +183,7 @@ describe(
 
     it("creates an animation in 2D", function () {
       scene._mode = SceneMode.SCENE2D;
-      var camera = scene.camera;
+      const camera = scene.camera;
 
       camera.position = new Cartesian3(0.0, 0.0, 1000.0);
       camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
@@ -195,21 +195,21 @@ describe(
       );
       camera.frustum = createOrthographicFrustum();
 
-      var startHeight = camera.frustum.right - camera.frustum.left;
-      var startPosition = Cartesian3.clone(camera.position);
+      const startHeight = camera.frustum.right - camera.frustum.left;
+      const startPosition = Cartesian3.clone(camera.position);
 
-      var projection = scene.mapProjection;
-      var destination = Cartesian3.add(
+      const projection = scene.mapProjection;
+      const destination = Cartesian3.add(
         startPosition,
         new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0),
         new Cartesian3()
       );
-      var endPosition = projection.ellipsoid.cartographicToCartesian(
+      const endPosition = projection.ellipsoid.cartographicToCartesian(
         projection.unproject(destination)
       );
 
-      var duration = 5.0;
-      var flight = CameraFlightPath.createTween(scene, {
+      const duration = 5.0;
+      const flight = CameraFlightPath.createTween(scene, {
         destination: endPosition,
         duration: duration,
       });
@@ -244,17 +244,17 @@ describe(
     });
 
     it("creates a path where the start and end points only differ in height", function () {
-      var camera = scene.camera;
-      var start = Cartesian3.clone(camera.position);
-      var mag = Cartesian3.magnitude(start);
-      var end = Cartesian3.multiplyByScalar(
+      const camera = scene.camera;
+      const start = Cartesian3.clone(camera.position);
+      const mag = Cartesian3.magnitude(start);
+      const end = Cartesian3.multiplyByScalar(
         Cartesian3.normalize(start, new Cartesian3()),
         mag - 1000000.0,
         new Cartesian3()
       );
 
-      var duration = 3.0;
-      var flight = CameraFlightPath.createTween(scene, {
+      const duration = 3.0;
+      const flight = CameraFlightPath.createTween(scene, {
         destination: end,
         duration: duration,
       });
@@ -267,16 +267,16 @@ describe(
     });
 
     it("does not create a path to the same point", function () {
-      var camera = scene.camera;
+      const camera = scene.camera;
       camera.position = new Cartesian3(7000000.0, 0.0, 0.0);
 
-      var startPosition = Cartesian3.clone(camera.position);
-      var startHeading = camera.heading;
-      var startPitch = camera.pitch;
-      var startRoll = camera.roll;
+      const startPosition = Cartesian3.clone(camera.position);
+      const startHeading = camera.heading;
+      const startPitch = camera.pitch;
+      const startRoll = camera.roll;
 
-      var duration = 3.0;
-      var flight = CameraFlightPath.createTween(scene, {
+      const duration = 3.0;
+      const flight = CameraFlightPath.createTween(scene, {
         destination: startPosition,
         heading: startHeading,
         pitch: startPitch,
@@ -292,13 +292,13 @@ describe(
     });
 
     it("creates an animation with 0 duration", function () {
-      var destination = new Cartesian3(1e9, 1e9, 1e9);
-      var duration = 0.0;
-      var complete = function () {
+      const destination = new Cartesian3(1e9, 1e9, 1e9);
+      const duration = 0.0;
+      const complete = function () {
         return true;
       };
 
-      var flight = CameraFlightPath.createTween(scene, {
+      const flight = CameraFlightPath.createTween(scene, {
         destination: destination,
         duration: duration,
         complete: complete,
@@ -317,7 +317,7 @@ describe(
 
     it("duration is 0 when destination is the same as camera position in 2D", function () {
       scene._mode = SceneMode.SCENE2D;
-      var camera = scene.camera;
+      const camera = scene.camera;
 
       camera.position = new Cartesian3(0.0, 0.0, 1000.0);
       camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
@@ -329,19 +329,19 @@ describe(
       );
       camera.frustum = createOrthographicFrustum();
       camera.update(scene.mode);
-      var frustum = camera.frustum;
-      var destination = Cartesian3.clone(camera.position);
+      const frustum = camera.frustum;
+      const destination = Cartesian3.clone(camera.position);
       destination.z = Math.max(
         frustum.right - frustum.left,
         frustum.top - frustum.bottom
       );
 
-      var projection = scene.mapProjection;
-      var endPosition = projection.ellipsoid.cartographicToCartesian(
+      const projection = scene.mapProjection;
+      const endPosition = projection.ellipsoid.cartographicToCartesian(
         projection.unproject(destination)
       );
 
-      var flight = CameraFlightPath.createTween(scene, {
+      const flight = CameraFlightPath.createTween(scene, {
         destination: endPosition,
       });
 
@@ -350,7 +350,7 @@ describe(
 
     it("duration is 0 when destination is the same as camera position in 3D", function () {
       scene._mode = SceneMode.SCENE3D;
-      var camera = scene.camera;
+      const camera = scene.camera;
 
       camera.position = new Cartesian3(0.0, 0.0, 1000.0);
       camera.setView({
@@ -362,7 +362,7 @@ describe(
       });
       camera.frustum = createOrthographicFrustum();
 
-      var flight = CameraFlightPath.createTween(scene, {
+      const flight = CameraFlightPath.createTween(scene, {
         destination: camera.position,
       });
 
@@ -371,7 +371,7 @@ describe(
 
     it("duration is 0 when destination is the same as camera position in CV", function () {
       scene._mode = SceneMode.COLUMBUS_VIEW;
-      var camera = scene.camera;
+      const camera = scene.camera;
 
       camera.position = new Cartesian3(0.0, 0.0, 1000.0);
       camera.setView({
@@ -382,12 +382,12 @@ describe(
         },
       });
 
-      var projection = scene.mapProjection;
-      var endPosition = projection.ellipsoid.cartographicToCartesian(
+      const projection = scene.mapProjection;
+      const endPosition = projection.ellipsoid.cartographicToCartesian(
         projection.unproject(camera.position)
       );
 
-      var flight = CameraFlightPath.createTween(scene, {
+      const flight = CameraFlightPath.createTween(scene, {
         destination: endPosition,
       });
 
@@ -396,7 +396,7 @@ describe(
 
     it("creates an animation in 2D 0 duration", function () {
       scene._mode = SceneMode.SCENE2D;
-      var camera = scene.camera;
+      const camera = scene.camera;
 
       camera.position = new Cartesian3(0.0, 0.0, 1000.0);
       camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
@@ -410,19 +410,19 @@ describe(
 
       camera.update(scene.mode);
 
-      var startPosition = Cartesian3.clone(camera.position);
+      const startPosition = Cartesian3.clone(camera.position);
 
-      var projection = scene.mapProjection;
-      var destination = Cartesian3.add(
+      const projection = scene.mapProjection;
+      const destination = Cartesian3.add(
         startPosition,
         new Cartesian3(-6e5 * Math.PI, 6e5 * CesiumMath.PI_OVER_FOUR, 100.0),
         new Cartesian3()
       );
-      var endPosition = projection.ellipsoid.cartographicToCartesian(
+      const endPosition = projection.ellipsoid.cartographicToCartesian(
         projection.unproject(destination)
       );
 
-      var flight = CameraFlightPath.createTween(scene, {
+      const flight = CameraFlightPath.createTween(scene, {
         destination: endPosition,
         duration: 0.0,
       });
@@ -445,7 +445,7 @@ describe(
 
     it("creates an animation in Columbus view 0 duration", function () {
       scene._mode = SceneMode.COLUMBUS_VIEW;
-      var camera = scene.camera;
+      const camera = scene.camera;
 
       camera.position = new Cartesian3(0.0, 0.0, 1000.0);
       camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
@@ -456,19 +456,19 @@ describe(
         new Cartesian3()
       );
 
-      var startPosition = Cartesian3.clone(camera.position);
+      const startPosition = Cartesian3.clone(camera.position);
 
-      var projection = scene.mapProjection;
-      var destination = Cartesian3.add(
+      const projection = scene.mapProjection;
+      const destination = Cartesian3.add(
         startPosition,
         new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0),
         new Cartesian3()
       );
-      var endPosition = projection.ellipsoid.cartographicToCartesian(
+      const endPosition = projection.ellipsoid.cartographicToCartesian(
         projection.unproject(destination)
       );
 
-      var flight = CameraFlightPath.createTween(scene, {
+      const flight = CameraFlightPath.createTween(scene, {
         destination: endPosition,
         duration: 0.0,
       });
@@ -479,12 +479,12 @@ describe(
     });
 
     it("creates an animation in 3d 0 duration", function () {
-      var camera = scene.camera;
+      const camera = scene.camera;
 
-      var startPosition = Cartesian3.clone(camera.position);
-      var endPosition = Cartesian3.negate(startPosition, new Cartesian3());
+      const startPosition = Cartesian3.clone(camera.position);
+      const endPosition = Cartesian3.negate(startPosition, new Cartesian3());
 
-      var flight = CameraFlightPath.createTween(scene, {
+      const flight = CameraFlightPath.createTween(scene, {
         destination: endPosition,
         duration: 0.0,
       });
@@ -495,21 +495,21 @@ describe(
     });
 
     it("creates animation to hit flyOverLongitude", function () {
-      var camera = scene.camera;
-      var projection = scene.mapProjection;
-      var position = new Cartographic();
+      const camera = scene.camera;
+      const projection = scene.mapProjection;
+      const position = new Cartographic();
 
       camera.position = Cartesian3.fromDegrees(10.0, 45.0, 1000.0);
 
-      var endPosition = Cartesian3.fromDegrees(20.0, 45.0, 1000.0);
+      const endPosition = Cartesian3.fromDegrees(20.0, 45.0, 1000.0);
 
-      var overLonFlight = CameraFlightPath.createTween(scene, {
+      const overLonFlight = CameraFlightPath.createTween(scene, {
         destination: endPosition,
         duration: 1.0,
         flyOverLongitude: CesiumMath.toRadians(0.0),
       });
 
-      var directFlight = CameraFlightPath.createTween(scene, {
+      const directFlight = CameraFlightPath.createTween(scene, {
         destination: endPosition,
         duration: 1.0,
       });
@@ -519,7 +519,7 @@ describe(
 
       overLonFlight.update({ time: 0.3 });
       projection.ellipsoid.cartesianToCartographic(camera.position, position);
-      var lon = CesiumMath.toDegrees(position.longitude);
+      let lon = CesiumMath.toDegrees(position.longitude);
 
       expect(lon).toBeLessThan(10.0);
 
@@ -532,22 +532,22 @@ describe(
     });
 
     it("uses flyOverLongitudeWeight", function () {
-      var camera = scene.camera;
-      var projection = scene.mapProjection;
-      var position = new Cartographic();
+      const camera = scene.camera;
+      const projection = scene.mapProjection;
+      const position = new Cartographic();
 
       camera.position = Cartesian3.fromDegrees(10.0, 45.0, 1000.0);
 
-      var endPosition = Cartesian3.fromDegrees(50.0, 45.0, 1000.0);
+      const endPosition = Cartesian3.fromDegrees(50.0, 45.0, 1000.0);
 
-      var overLonFlightSmallWeight = CameraFlightPath.createTween(scene, {
+      const overLonFlightSmallWeight = CameraFlightPath.createTween(scene, {
         destination: endPosition,
         duration: 1.0,
         flyOverLongitude: CesiumMath.toRadians(0.0),
         flyOverLongitudeWeight: 2,
       });
 
-      var overLonFlightBigWeight = CameraFlightPath.createTween(scene, {
+      const overLonFlightBigWeight = CameraFlightPath.createTween(scene, {
         destination: endPosition,
         duration: 1.0,
         flyOverLongitude: CesiumMath.toRadians(0.0),
@@ -556,7 +556,7 @@ describe(
 
       overLonFlightBigWeight.update({ time: 0.3 });
       projection.ellipsoid.cartesianToCartographic(camera.position, position);
-      var lon = CesiumMath.toDegrees(position.longitude);
+      let lon = CesiumMath.toDegrees(position.longitude);
 
       expect(lon).toBeLessThan(10.0);
 
@@ -569,8 +569,8 @@ describe(
     });
 
     it("adjust pitch if camera flyes higher than pitchAdjustHeight", function () {
-      var camera = scene.camera;
-      var duration = 5.0;
+      const camera = scene.camera;
+      const duration = 5.0;
 
       camera.setView({
         destination: Cartesian3.fromDegrees(-20.0, 0.0, 1000.0),
@@ -581,10 +581,10 @@ describe(
         },
       });
 
-      var startPitch = camera.pitch;
-      var endPitch = CesiumMath.toRadians(-45.0);
+      const startPitch = camera.pitch;
+      const endPitch = CesiumMath.toRadians(-45.0);
 
-      var flight = CameraFlightPath.createTween(scene, {
+      const flight = CameraFlightPath.createTween(scene, {
         destination: Cartesian3.fromDegrees(60.0, 0.0, 2000.0),
         pitch: endPitch,
         duration: duration,
@@ -605,30 +605,30 @@ describe(
     });
 
     it("animation with flyOverLongitude is smooth over two pi", function () {
-      var camera = scene.camera;
-      var duration = 100.0;
-      var projection = scene.mapProjection;
-      var position = new Cartographic();
+      const camera = scene.camera;
+      const duration = 100.0;
+      const projection = scene.mapProjection;
+      const position = new Cartographic();
 
-      var startLonDegrees = 10.0;
-      var endLonDegrees = 20.0;
+      const startLonDegrees = 10.0;
+      const endLonDegrees = 20.0;
 
       camera.position = Cartesian3.fromDegrees(startLonDegrees, 45.0, 1000.0);
-      var endPosition = Cartesian3.fromDegrees(endLonDegrees, 45.0, 1000.0);
+      const endPosition = Cartesian3.fromDegrees(endLonDegrees, 45.0, 1000.0);
 
-      var outsideTwoPiFlight = CameraFlightPath.createTween(scene, {
+      const outsideTwoPiFlight = CameraFlightPath.createTween(scene, {
         destination: endPosition,
         duration: duration,
         flyOverLongitude: CesiumMath.toRadians(0.0),
       });
 
-      var prevLon = startLonDegrees;
-      var crossedDateChangesLine = 0;
-      for (var t = 1; t < duration; t++) {
+      let prevLon = startLonDegrees;
+      let crossedDateChangesLine = 0;
+      for (let t = 1; t < duration; t++) {
         outsideTwoPiFlight.update({ time: t });
         projection.ellipsoid.cartesianToCartographic(camera.position, position);
-        var lon = CesiumMath.toDegrees(position.longitude);
-        var d = lon - prevLon;
+        const lon = CesiumMath.toDegrees(position.longitude);
+        let d = lon - prevLon;
         if (d > 0) {
           expect(prevLon).toBeLessThan(-90);
           crossedDateChangesLine++;
@@ -642,52 +642,52 @@ describe(
     });
 
     it("animation with flyOverLongitude is smooth", function () {
-      var camera = scene.camera;
-      var duration = 100.0;
-      var projection = scene.mapProjection;
-      var position = new Cartographic();
+      const camera = scene.camera;
+      const duration = 100.0;
+      const projection = scene.mapProjection;
+      const position = new Cartographic();
 
-      var startLonDegrees = -100.0;
-      var endLonDegrees = 100.0;
+      const startLonDegrees = -100.0;
+      const endLonDegrees = 100.0;
 
       camera.position = Cartesian3.fromDegrees(startLonDegrees, 45.0, 1000.0);
-      var endPosition = Cartesian3.fromDegrees(endLonDegrees, 45.0, 1000.0);
+      const endPosition = Cartesian3.fromDegrees(endLonDegrees, 45.0, 1000.0);
 
-      var flight = CameraFlightPath.createTween(scene, {
+      const flight = CameraFlightPath.createTween(scene, {
         destination: endPosition,
         duration: duration,
         flyOverLongitude: CesiumMath.toRadians(0.0),
       });
 
-      var prevLon = startLonDegrees;
-      for (var t = 1; t < duration; t++) {
+      let prevLon = startLonDegrees;
+      for (let t = 1; t < duration; t++) {
         flight.update({ time: t });
         projection.ellipsoid.cartesianToCartographic(camera.position, position);
-        var lon = CesiumMath.toDegrees(position.longitude);
-        var d = lon - prevLon;
+        const lon = CesiumMath.toDegrees(position.longitude);
+        const d = lon - prevLon;
         prevLon = lon;
         expect(d).toBeGreaterThan(0);
       }
     });
 
     it("does not go above the maximum height", function () {
-      var camera = scene.camera;
+      const camera = scene.camera;
 
-      var startPosition = Cartesian3.fromDegrees(0.0, 0.0, 1000.0);
-      var endPosition = Cartesian3.fromDegrees(10.0, 0.0, 1000.0);
-      var duration = 5.0;
+      const startPosition = Cartesian3.fromDegrees(0.0, 0.0, 1000.0);
+      const endPosition = Cartesian3.fromDegrees(10.0, 0.0, 1000.0);
+      const duration = 5.0;
 
       camera.setView({
         destination: startPosition,
       });
 
-      var flight = CameraFlightPath.createTween(scene, {
+      let flight = CameraFlightPath.createTween(scene, {
         destination: endPosition,
         duration: duration,
       });
 
-      var maximumHeight = Number.NEGATIVE_INFINITY;
-      var i;
+      let maximumHeight = Number.NEGATIVE_INFINITY;
+      let i;
       for (i = 0; i <= duration; ++i) {
         flight.update({ time: i });
         maximumHeight = Math.max(

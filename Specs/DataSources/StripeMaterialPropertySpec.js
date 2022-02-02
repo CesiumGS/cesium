@@ -9,7 +9,7 @@ import testDefinitionChanged from "../testDefinitionChanged.js";
 
 describe("DataSources/StripeMaterialProperty", function () {
   it("constructor provides the expected defaults", function () {
-    var property = new StripeMaterialProperty();
+    const property = new StripeMaterialProperty();
     expect(property.getType()).toEqual("Stripe");
     expect(property.isConstant).toBe(true);
     expect(property.orientation).toBeUndefined();
@@ -18,7 +18,7 @@ describe("DataSources/StripeMaterialProperty", function () {
     expect(property.offset).toBeUndefined();
     expect(property.repeat).toBeUndefined();
 
-    var result = property.getValue();
+    const result = property.getValue();
     expect(result.horizontal).toEqual(true);
     expect(result.evenColor).toEqual(Color.WHITE);
     expect(result.oddColor).toEqual(Color.BLACK);
@@ -27,7 +27,7 @@ describe("DataSources/StripeMaterialProperty", function () {
   });
 
   it("constructor sets options and allows raw assignment", function () {
-    var options = {
+    const options = {
       orientation: StripeOrientation.VERTICAL,
       evenColor: Color.RED,
       oddColor: Color.BLUE,
@@ -35,7 +35,7 @@ describe("DataSources/StripeMaterialProperty", function () {
       repeat: 2,
     };
 
-    var property = new StripeMaterialProperty(options);
+    const property = new StripeMaterialProperty(options);
     expect(property.orientation).toBeInstanceOf(ConstantProperty);
     expect(property.evenColor).toBeInstanceOf(ConstantProperty);
     expect(property.oddColor).toBeInstanceOf(ConstantProperty);
@@ -50,14 +50,14 @@ describe("DataSources/StripeMaterialProperty", function () {
   });
 
   it("works with constant values", function () {
-    var property = new StripeMaterialProperty();
+    const property = new StripeMaterialProperty();
     property.orientation = new ConstantProperty(StripeOrientation.VERTICAL);
     property.evenColor = new ConstantProperty(Color.RED);
     property.oddColor = new ConstantProperty(Color.BLUE);
     property.offset = new ConstantProperty(10);
     property.repeat = new ConstantProperty(20);
 
-    var result = property.getValue(JulianDate.now());
+    const result = property.getValue(JulianDate.now());
     expect(result.horizontal).toEqual(false);
     expect(result.evenColor).toEqual(Color.RED);
     expect(result.oddColor).toEqual(Color.BLUE);
@@ -66,15 +66,15 @@ describe("DataSources/StripeMaterialProperty", function () {
   });
 
   it("works with dynamic values", function () {
-    var property = new StripeMaterialProperty();
+    const property = new StripeMaterialProperty();
     property.orientation = new TimeIntervalCollectionProperty();
     property.evenColor = new TimeIntervalCollectionProperty();
     property.oddColor = new TimeIntervalCollectionProperty();
     property.offset = new TimeIntervalCollectionProperty();
     property.repeat = new TimeIntervalCollectionProperty();
 
-    var start = new JulianDate(1, 0);
-    var stop = new JulianDate(2, 0);
+    const start = new JulianDate(1, 0);
+    const stop = new JulianDate(2, 0);
     property.orientation.intervals.addInterval(
       new TimeInterval({
         start: start,
@@ -113,7 +113,7 @@ describe("DataSources/StripeMaterialProperty", function () {
 
     expect(property.isConstant).toBe(false);
 
-    var result = property.getValue(start);
+    const result = property.getValue(start);
     expect(result.horizontal).toEqual(false);
     expect(result.evenColor).toEqual(Color.RED);
     expect(result.oddColor).toEqual(Color.BLUE);
@@ -122,21 +122,21 @@ describe("DataSources/StripeMaterialProperty", function () {
   });
 
   it("works with a result parameter", function () {
-    var property = new StripeMaterialProperty();
+    const property = new StripeMaterialProperty();
     property.orientation = new ConstantProperty(StripeOrientation.VERTICAL);
     property.evenColor = new ConstantProperty(Color.RED);
     property.oddColor = new ConstantProperty(Color.BLUE);
     property.offset = new ConstantProperty(10);
     property.repeat = new ConstantProperty(20);
 
-    var result = {
+    const result = {
       horizontal: true,
       evenColor: Color.YELLOW.clone(),
       oddColor: Color.YELLOW.clone(),
       offset: 3,
       repeat: 4,
     };
-    var returnedResult = property.getValue(JulianDate.now(), result);
+    const returnedResult = property.getValue(JulianDate.now(), result);
     expect(returnedResult).toBe(result);
     expect(result.horizontal).toEqual(false);
     expect(result.evenColor).toEqual(Color.RED);
@@ -146,14 +146,14 @@ describe("DataSources/StripeMaterialProperty", function () {
   });
 
   it("equals works", function () {
-    var left = new StripeMaterialProperty();
+    const left = new StripeMaterialProperty();
     left.orientation = new ConstantProperty(StripeOrientation.VERTICAL);
     left.evenColor = new ConstantProperty(Color.RED);
     left.oddColor = new ConstantProperty(Color.BLUE);
     left.offset = new ConstantProperty(10);
     left.repeat = new ConstantProperty(20);
 
-    var right = new StripeMaterialProperty();
+    const right = new StripeMaterialProperty();
     right.orientation = new ConstantProperty(StripeOrientation.VERTICAL);
     right.evenColor = new ConstantProperty(Color.RED);
     right.oddColor = new ConstantProperty(Color.BLUE);
@@ -186,7 +186,7 @@ describe("DataSources/StripeMaterialProperty", function () {
   });
 
   it("raises definitionChanged when a property is assigned or modified", function () {
-    var property = new StripeMaterialProperty();
+    const property = new StripeMaterialProperty();
     testDefinitionChanged(property, "orientation", false, true);
     testDefinitionChanged(property, "evenColor", Color.RED, Color.BLUE);
     testDefinitionChanged(property, "oddColor", Color.RED, Color.BLUE);

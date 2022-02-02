@@ -35,10 +35,10 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
-        var scene = viewer.scene;
+        const scene = viewer.scene;
 
         if (!Cesium.GroundPolylinePrimitive.isSupported(scene)) {
           window.alert(

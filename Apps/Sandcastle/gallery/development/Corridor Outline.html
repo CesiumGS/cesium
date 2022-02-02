@@ -33,12 +33,12 @@
         "use strict";
         //Sandcastle_Begin
         // Create the viewer.
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         // Example 1: Draw the outline of a corridor on the globe surface.
         // Create the corridor outline geometry.
-        var corridorOutlineGeometry = new Cesium.CorridorOutlineGeometry({
+        let corridorOutlineGeometry = new Cesium.CorridorOutlineGeometry({
           positions: Cesium.Cartesian3.fromDegreesArray([
             -100.0,
             40.0,
@@ -50,7 +50,7 @@
           width: 200000.0,
         });
         // Create the geometry instance.
-        var corridorOutline = new Cesium.GeometryInstance({
+        const corridorOutline = new Cesium.GeometryInstance({
           geometry: corridorOutlineGeometry,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(
@@ -76,7 +76,7 @@
           extrudedHeight: 100000.0,
         });
         // Create the geometry instance.
-        var extrudedCorridorOutline = new Cesium.GeometryInstance({
+        const extrudedCorridorOutline = new Cesium.GeometryInstance({
           geometry: corridorOutlineGeometry,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(

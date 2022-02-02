@@ -26,24 +26,24 @@ function IauOrientationAxes(computeFunction) {
   this._computeFunction = computeFunction;
 }
 
-var xAxisScratch = new Cartesian3();
-var yAxisScratch = new Cartesian3();
-var zAxisScratch = new Cartesian3();
+const xAxisScratch = new Cartesian3();
+const yAxisScratch = new Cartesian3();
+const zAxisScratch = new Cartesian3();
 
 function computeRotationMatrix(alpha, delta, result) {
-  var xAxis = xAxisScratch;
+  const xAxis = xAxisScratch;
   xAxis.x = Math.cos(alpha + CesiumMath.PI_OVER_TWO);
   xAxis.y = Math.sin(alpha + CesiumMath.PI_OVER_TWO);
   xAxis.z = 0.0;
 
-  var cosDec = Math.cos(delta);
+  const cosDec = Math.cos(delta);
 
-  var zAxis = zAxisScratch;
+  const zAxis = zAxisScratch;
   zAxis.x = cosDec * Math.cos(alpha);
   zAxis.y = cosDec * Math.sin(alpha);
   zAxis.z = Math.sin(delta);
 
-  var yAxis = Cartesian3.cross(zAxis, xAxis, yAxisScratch);
+  const yAxis = Cartesian3.cross(zAxis, xAxis, yAxisScratch);
 
   if (!defined(result)) {
     result = new Matrix3();
@@ -62,8 +62,8 @@ function computeRotationMatrix(alpha, delta, result) {
   return result;
 }
 
-var rotMtxScratch = new Matrix3();
-var quatScratch = new Quaternion();
+const rotMtxScratch = new Matrix3();
+const quatScratch = new Quaternion();
 
 /**
  * Computes a rotation from ICRF to a Globe's Fixed axes.
@@ -77,21 +77,21 @@ IauOrientationAxes.prototype.evaluate = function (date, result) {
     date = JulianDate.now();
   }
 
-  var alphaDeltaW = this._computeFunction(date);
-  var precMtx = computeRotationMatrix(
+  const alphaDeltaW = this._computeFunction(date);
+  const precMtx = computeRotationMatrix(
     alphaDeltaW.rightAscension,
     alphaDeltaW.declination,
     result
   );
 
-  var rot = CesiumMath.zeroToTwoPi(alphaDeltaW.rotation);
-  var quat = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, rot, quatScratch);
-  var rotMtx = Matrix3.fromQuaternion(
+  const rot = CesiumMath.zeroToTwoPi(alphaDeltaW.rotation);
+  const quat = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, rot, quatScratch);
+  const rotMtx = Matrix3.fromQuaternion(
     Quaternion.conjugate(quat, quat),
     rotMtxScratch
   );
 
-  var cbi2cbf = Matrix3.multiply(rotMtx, precMtx, precMtx);
+  const cbi2cbf = Matrix3.multiply(rotMtx, precMtx, precMtx);
   return cbi2cbf;
 };
 

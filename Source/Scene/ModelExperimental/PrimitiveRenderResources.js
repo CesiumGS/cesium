@@ -1,6 +1,7 @@
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
 import defined from "../../Core/defined.js";
+import Matrix4 from "../../Core/Matrix4.js";
 import BlendingState from "../BlendingState.js";
 import DepthFunction from "../DepthFunction.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
@@ -76,7 +77,8 @@ export default function PrimitiveRenderResources(
     nodeRenderResources.featureIdVertexAttributeSetIndex;
 
   /**
-   * Whether or not this primitive has feature IDs (at the node's instance or through primitive's feature ID attribute or texture).
+   * Whether or not this primitive has a property table for storing metadata.
+   * When present, picking and styling can use this
    *
    * @type {Boolean}
    * @default false
@@ -84,7 +86,7 @@ export default function PrimitiveRenderResources(
    *
    * @private
    */
-  this.hasFeatureIds = false;
+  this.hasPropertyTable = false;
 
   /**
    * A dictionary mapping uniform name to functions that return the uniform
@@ -109,15 +111,15 @@ export default function PrimitiveRenderResources(
   this.alphaOptions = clone(nodeRenderResources.alphaOptions);
 
   /**
-   * The computed model matrix for this primitive. This is cloned from the
+   * The model space transform for this primitive. This is cloned from the
    * node render resources as the primitive may further modify it
    *
    * @type {Matrix4}
    *
    * @private
    */
+  this.transform = nodeRenderResources.runtimeNode.transform.clone();
 
-  this.modelMatrix = nodeRenderResources.modelMatrix.clone();
   /**
    * An object used to build a shader incrementally. This is cloned from the
    * node render resources because each primitive can compute a different shader.
@@ -157,7 +159,7 @@ export default function PrimitiveRenderResources(
    *
    * @private
    */
-  var primitive = runtimePrimitive.primitive;
+  const primitive = runtimePrimitive.primitive;
 
   // other properties
   /**
@@ -198,7 +200,7 @@ export default function PrimitiveRenderResources(
    */
   this.boundingSphere = ModelExperimentalUtility.createBoundingSphere(
     primitive,
-    this.modelMatrix,
+    Matrix4.IDENTITY,
     nodeRenderResources.instancingTranslationMax,
     nodeRenderResources.instancingTranslationMin
   );

@@ -94,9 +94,9 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
-        var viewModel = {
+        const viewModel = {
           loadingDescendantLimit: viewer.scene.globe.loadingDescendantLimit,
           preloadAncestors: viewer.scene.globe.preloadAncestors,
           preloadSiblings: viewer.scene.globe.preloadSiblings,
@@ -112,7 +112,7 @@
 
         Cesium.knockout.track(viewModel);
 
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
         Cesium.knockout

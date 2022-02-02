@@ -11,18 +11,18 @@ import Matrix4 from "../Core/Matrix4.js";
 import Transforms from "../Core/Transforms.js";
 import SceneMode from "../Scene/SceneMode.js";
 
-var updateTransformMatrix3Scratch1 = new Matrix3();
-var updateTransformMatrix3Scratch2 = new Matrix3();
-var updateTransformMatrix3Scratch3 = new Matrix3();
-var updateTransformMatrix4Scratch = new Matrix4();
-var updateTransformCartesian3Scratch1 = new Cartesian3();
-var updateTransformCartesian3Scratch2 = new Cartesian3();
-var updateTransformCartesian3Scratch3 = new Cartesian3();
-var updateTransformCartesian3Scratch4 = new Cartesian3();
-var updateTransformCartesian3Scratch5 = new Cartesian3();
-var updateTransformCartesian3Scratch6 = new Cartesian3();
-var deltaTime = new JulianDate();
-var northUpAxisFactor = 1.25; // times ellipsoid's maximum radius
+const updateTransformMatrix3Scratch1 = new Matrix3();
+const updateTransformMatrix3Scratch2 = new Matrix3();
+const updateTransformMatrix3Scratch3 = new Matrix3();
+const updateTransformMatrix4Scratch = new Matrix4();
+const updateTransformCartesian3Scratch1 = new Cartesian3();
+const updateTransformCartesian3Scratch2 = new Cartesian3();
+const updateTransformCartesian3Scratch3 = new Cartesian3();
+const updateTransformCartesian3Scratch4 = new Cartesian3();
+const updateTransformCartesian3Scratch5 = new Cartesian3();
+const updateTransformCartesian3Scratch6 = new Cartesian3();
+const deltaTime = new JulianDate();
+const northUpAxisFactor = 1.25; // times ellipsoid's maximum radius
 
 function updateTransform(
   that,
@@ -33,20 +33,20 @@ function updateTransform(
   time,
   ellipsoid
 ) {
-  var mode = that.scene.mode;
-  var cartesian = positionProperty.getValue(time, that._lastCartesian);
+  const mode = that.scene.mode;
+  let cartesian = positionProperty.getValue(time, that._lastCartesian);
   if (defined(cartesian)) {
-    var hasBasis = false;
-    var invertVelocity = false;
-    var xBasis;
-    var yBasis;
-    var zBasis;
+    let hasBasis = false;
+    let invertVelocity = false;
+    let xBasis;
+    let yBasis;
+    let zBasis;
 
     if (mode === SceneMode.SCENE3D) {
       // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
       // Slower moving vehicles will most likely default to east-north-up, while faster ones will be VVLH.
       JulianDate.addSeconds(time, 0.001, deltaTime);
-      var deltaCartesian = positionProperty.getValue(
+      let deltaCartesian = positionProperty.getValue(
         deltaTime,
         updateTransformCartesian3Scratch1
       );
@@ -62,15 +62,15 @@ function updateTransform(
       }
 
       if (defined(deltaCartesian)) {
-        var toInertial = Transforms.computeFixedToIcrfMatrix(
+        let toInertial = Transforms.computeFixedToIcrfMatrix(
           time,
           updateTransformMatrix3Scratch1
         );
-        var toInertialDelta = Transforms.computeFixedToIcrfMatrix(
+        let toInertialDelta = Transforms.computeFixedToIcrfMatrix(
           deltaTime,
           updateTransformMatrix3Scratch2
         );
-        var toFixed;
+        let toFixed;
 
         if (!defined(toInertial) || !defined(toInertialDelta)) {
           toFixed = Transforms.computeTemeToPseudoFixedMatrix(
@@ -93,12 +93,12 @@ function updateTransform(
           );
         }
 
-        var inertialCartesian = Matrix3.multiplyByVector(
+        const inertialCartesian = Matrix3.multiplyByVector(
           toInertial,
           cartesian,
           updateTransformCartesian3Scratch5
         );
-        var inertialDeltaCartesian = Matrix3.multiplyByVector(
+        const inertialDeltaCartesian = Matrix3.multiplyByVector(
           toInertialDelta,
           deltaCartesian,
           updateTransformCartesian3Scratch6
@@ -109,11 +109,11 @@ function updateTransform(
           inertialDeltaCartesian,
           updateTransformCartesian3Scratch4
         );
-        var inertialVelocity =
+        const inertialVelocity =
           Cartesian3.magnitude(updateTransformCartesian3Scratch4) * 1000.0; // meters/sec
 
-        var mu = CesiumMath.GRAVITATIONALPARAMETER; // m^3 / sec^2
-        var semiMajorAxis =
+        const mu = CesiumMath.GRAVITATIONALPARAMETER; // m^3 / sec^2
+        const semiMajorAxis =
           -mu /
           (inertialVelocity * inertialVelocity -
             (2 * mu) / Cartesian3.magnitude(inertialCartesian));
@@ -211,9 +211,9 @@ function updateTransform(
       cartesian = that.boundingSphere.center;
     }
 
-    var position;
-    var direction;
-    var up;
+    let position;
+    let direction;
+    let up;
 
     if (saveCamera) {
       position = Cartesian3.clone(
@@ -227,7 +227,7 @@ function updateTransform(
       up = Cartesian3.clone(camera.up, updateTransformCartesian3Scratch6);
     }
 
-    var transform = updateTransformMatrix4Scratch;
+    const transform = updateTransformMatrix4Scratch;
     if (hasBasis) {
       transform[0] = xBasis.x;
       transform[1] = xBasis.y;
@@ -261,7 +261,7 @@ function updateTransform(
   }
 
   if (updateLookAt) {
-    var offset =
+    const offset =
       mode === SceneMode.SCENE2D ||
       Cartesian3.equals(that._offset3D, Cartesian3.ZERO)
         ? undefined
@@ -340,8 +340,8 @@ Object.defineProperties(EntityView, {
 // Initialize the static property.
 EntityView.defaultOffset3D = new Cartesian3(-14000, 3500, 3500);
 
-var scratchHeadingPitchRange = new HeadingPitchRange();
-var scratchCartesian = new Cartesian3();
+const scratchHeadingPitchRange = new HeadingPitchRange();
+const scratchCartesian = new Cartesian3();
 
 /**
  * Should be called each animation frame to update the camera
@@ -354,29 +354,29 @@ EntityView.prototype.update = function (time, boundingSphere) {
   Check.defined("time", time);
   //>>includeEnd('debug');
 
-  var scene = this.scene;
-  var ellipsoid = this.ellipsoid;
-  var sceneMode = scene.mode;
+  const scene = this.scene;
+  const ellipsoid = this.ellipsoid;
+  const sceneMode = scene.mode;
   if (sceneMode === SceneMode.MORPHING) {
     return;
   }
 
-  var entity = this.entity;
-  var positionProperty = entity.position;
+  const entity = this.entity;
+  const positionProperty = entity.position;
   if (!defined(positionProperty)) {
     return;
   }
-  var objectChanged = entity !== this._lastEntity;
-  var sceneModeChanged = sceneMode !== this._mode;
+  const objectChanged = entity !== this._lastEntity;
+  const sceneModeChanged = sceneMode !== this._mode;
 
-  var camera = scene.camera;
+  const camera = scene.camera;
 
-  var updateLookAt = objectChanged || sceneModeChanged;
-  var saveCamera = true;
+  let updateLookAt = objectChanged || sceneModeChanged;
+  let saveCamera = true;
 
   if (objectChanged) {
-    var viewFromProperty = entity.viewFrom;
-    var hasViewFrom = defined(viewFromProperty);
+    const viewFromProperty = entity.viewFrom;
+    const hasViewFrom = defined(viewFromProperty);
 
     if (!hasViewFrom && defined(boundingSphere)) {
       // The default HPR is not ideal for high altitude objects so
@@ -384,9 +384,9 @@ EntityView.prototype.update = function (time, boundingSphere) {
       // downward view.
       scratchHeadingPitchRange.pitch = -CesiumMath.PI_OVER_FOUR;
       scratchHeadingPitchRange.range = 0;
-      var position = positionProperty.getValue(time, scratchCartesian);
+      const position = positionProperty.getValue(time, scratchCartesian);
       if (defined(position)) {
-        var factor =
+        const factor =
           2 -
           1 /
             Math.max(

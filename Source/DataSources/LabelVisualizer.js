@@ -15,32 +15,32 @@ import VerticalOrigin from "../Scene/VerticalOrigin.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 import Property from "./Property.js";
 
-var defaultScale = 1.0;
-var defaultFont = "30px sans-serif";
-var defaultStyle = LabelStyle.FILL;
-var defaultFillColor = Color.WHITE;
-var defaultOutlineColor = Color.BLACK;
-var defaultOutlineWidth = 1.0;
-var defaultShowBackground = false;
-var defaultBackgroundColor = new Color(0.165, 0.165, 0.165, 0.8);
-var defaultBackgroundPadding = new Cartesian2(7, 5);
-var defaultPixelOffset = Cartesian2.ZERO;
-var defaultEyeOffset = Cartesian3.ZERO;
-var defaultHeightReference = HeightReference.NONE;
-var defaultHorizontalOrigin = HorizontalOrigin.CENTER;
-var defaultVerticalOrigin = VerticalOrigin.CENTER;
+const defaultScale = 1.0;
+const defaultFont = "30px sans-serif";
+const defaultStyle = LabelStyle.FILL;
+const defaultFillColor = Color.WHITE;
+const defaultOutlineColor = Color.BLACK;
+const defaultOutlineWidth = 1.0;
+const defaultShowBackground = false;
+const defaultBackgroundColor = new Color(0.165, 0.165, 0.165, 0.8);
+const defaultBackgroundPadding = new Cartesian2(7, 5);
+const defaultPixelOffset = Cartesian2.ZERO;
+const defaultEyeOffset = Cartesian3.ZERO;
+const defaultHeightReference = HeightReference.NONE;
+const defaultHorizontalOrigin = HorizontalOrigin.CENTER;
+const defaultVerticalOrigin = VerticalOrigin.CENTER;
 
-var positionScratch = new Cartesian3();
-var fillColorScratch = new Color();
-var outlineColorScratch = new Color();
-var backgroundColorScratch = new Color();
-var backgroundPaddingScratch = new Cartesian2();
-var eyeOffsetScratch = new Cartesian3();
-var pixelOffsetScratch = new Cartesian2();
-var translucencyByDistanceScratch = new NearFarScalar();
-var pixelOffsetScaleByDistanceScratch = new NearFarScalar();
-var scaleByDistanceScratch = new NearFarScalar();
-var distanceDisplayConditionScratch = new DistanceDisplayCondition();
+const positionScratch = new Cartesian3();
+const fillColorScratch = new Color();
+const outlineColorScratch = new Color();
+const backgroundColorScratch = new Color();
+const backgroundPaddingScratch = new Cartesian2();
+const eyeOffsetScratch = new Cartesian3();
+const pixelOffsetScratch = new Cartesian2();
+const translucencyByDistanceScratch = new NearFarScalar();
+const pixelOffsetScaleByDistanceScratch = new NearFarScalar();
+const scaleByDistanceScratch = new NearFarScalar();
+const distanceDisplayConditionScratch = new DistanceDisplayCondition();
 
 function EntityData(entity) {
   this.entity = entity;
@@ -93,20 +93,20 @@ LabelVisualizer.prototype.update = function (time) {
   }
   //>>includeEnd('debug');
 
-  var items = this._items.values;
-  var cluster = this._cluster;
+  const items = this._items.values;
+  const cluster = this._cluster;
 
-  for (var i = 0, len = items.length; i < len; i++) {
-    var item = items[i];
-    var entity = item.entity;
-    var labelGraphics = entity._label;
-    var text;
-    var label = item.label;
-    var show =
+  for (let i = 0, len = items.length; i < len; i++) {
+    const item = items[i];
+    const entity = item.entity;
+    const labelGraphics = entity._label;
+    let text;
+    let label = item.label;
+    let show =
       entity.isShowing &&
       entity.isAvailable(time) &&
       Property.getValueOrDefault(labelGraphics._show, time, true);
-    var position;
+    let position;
     if (show) {
       position = Property.getValueOrUndefined(
         entity._position,
@@ -127,8 +127,8 @@ LabelVisualizer.prototype.update = function (time) {
       cluster._clusterDirty = true;
     }
 
-    var updateClamping = false;
-    var heightReference = Property.getValueOrDefault(
+    let updateClamping = false;
+    const heightReference = Property.getValueOrDefault(
       labelGraphics._heightReference,
       time,
       defaultHeightReference
@@ -276,12 +276,12 @@ LabelVisualizer.prototype.getBoundingSphere = function (entity, result) {
   }
   //>>includeEnd('debug');
 
-  var item = this._items.get(entity.id);
+  const item = this._items.get(entity.id);
   if (!defined(item) || !defined(item.label)) {
     return BoundingSphereState.FAILED;
   }
 
-  var label = item.label;
+  const label = item.label;
   result.center = Cartesian3.clone(
     defaultValue(label._clampedPosition, label.position),
     result.center
@@ -307,8 +307,8 @@ LabelVisualizer.prototype.destroy = function () {
     LabelVisualizer.prototype._onCollectionChanged,
     this
   );
-  var entities = this._entityCollection.values;
-  for (var i = 0; i < entities.length; i++) {
+  const entities = this._entityCollection.values;
+  for (let i = 0; i < entities.length; i++) {
     this._cluster.removeLabel(entities[i]);
   }
   return destroyObject(this);
@@ -320,10 +320,10 @@ LabelVisualizer.prototype._onCollectionChanged = function (
   removed,
   changed
 ) {
-  var i;
-  var entity;
-  var items = this._items;
-  var cluster = this._cluster;
+  let i;
+  let entity;
+  const items = this._items;
+  const cluster = this._cluster;
 
   for (i = added.length - 1; i > -1; i--) {
     entity = added[i];

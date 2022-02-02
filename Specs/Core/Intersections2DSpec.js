@@ -3,7 +3,7 @@ import { Intersections2D } from "../../Source/Cesium.js";
 describe("Core/Intersections2D", function () {
   describe("clipTriangleAtAxisAlignedThreshold", function () {
     it("eliminates a triangle that is entirely on the wrong side of the threshold", function () {
-      var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
+      const result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
         0.1,
         false,
         0.2,
@@ -14,7 +14,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("keeps a triangle that is entirely on the correct side of the threshold", function () {
-      var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
+      const result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
         0.1,
         true,
         0.2,
@@ -28,7 +28,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("adds two vertices on threshold when point 0 is on the wrong side and above", function () {
-      var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
+      const result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
         0.5,
         false,
         0.6,
@@ -52,7 +52,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("adds two vertices on threshold when point 0 is on the wrong side and below", function () {
-      var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
+      const result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
         0.5,
         true,
         0.4,
@@ -76,7 +76,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("adds two vertices on threshold when point 1 is on the wrong side and above", function () {
-      var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
+      const result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
         0.5,
         false,
         0.2,
@@ -100,7 +100,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("adds two vertices on threshold when point 1 is on the wrong side and below", function () {
-      var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
+      const result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
         0.5,
         true,
         0.8,
@@ -124,7 +124,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("adds two vertices on threshold when point 2 is on the wrong side and above", function () {
-      var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
+      const result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
         0.5,
         false,
         0.4,
@@ -148,7 +148,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("adds two vertices on threshold when point 2 is on the wrong side and below", function () {
-      var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
+      const result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
         0.5,
         true,
         0.6,
@@ -172,7 +172,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("adds two vertices on threshold when only point 0 is on the right side and below", function () {
-      var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
+      const result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
         0.5,
         false,
         0.4,
@@ -195,7 +195,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("adds two vertices on threshold when only point 0 is on the right side and above", function () {
-      var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
+      const result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
         0.5,
         true,
         0.6,
@@ -218,7 +218,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("adds two vertices on threshold when only point 1 is on the right side and below", function () {
-      var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
+      const result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
         0.5,
         false,
         0.8,
@@ -241,7 +241,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("adds two vertices on threshold when only point 1 is on the right side and above", function () {
-      var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
+      const result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
         0.5,
         true,
         0.2,
@@ -264,7 +264,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("adds two vertices on threshold when only point 2 is on the right side and below", function () {
-      var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
+      const result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
         0.5,
         false,
         0.6,
@@ -287,7 +287,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("adds two vertices on threshold when only point 2 is on the right side and above", function () {
-      var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
+      const result = Intersections2D.clipTriangleAtAxisAlignedThreshold(
         0.5,
         true,
         0.4,
@@ -312,7 +312,7 @@ describe("Core/Intersections2D", function () {
 
   describe("computeBarycentricCoordinates", function () {
     it("returns the correct result for positions on a triangle vertex", function () {
-      var ll = Intersections2D.computeBarycentricCoordinates(
+      const ll = Intersections2D.computeBarycentricCoordinates(
         0.0,
         0.0,
         0.0,
@@ -326,7 +326,7 @@ describe("Core/Intersections2D", function () {
       expect(ll.y).toEqualEpsilon(0.0, 1e-15);
       expect(ll.z).toEqualEpsilon(0.0, 1e-15);
 
-      var lr = Intersections2D.computeBarycentricCoordinates(
+      const lr = Intersections2D.computeBarycentricCoordinates(
         1.0,
         0.0,
         0.0,
@@ -340,7 +340,7 @@ describe("Core/Intersections2D", function () {
       expect(lr.y).toEqualEpsilon(1.0, 1e-15);
       expect(lr.z).toEqualEpsilon(0.0, 1e-15);
 
-      var ul = Intersections2D.computeBarycentricCoordinates(
+      const ul = Intersections2D.computeBarycentricCoordinates(
         0.0,
         1.0,
         0.0,
@@ -356,7 +356,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("returns the correct result for a position in the barycenter of a triangle", function () {
-      var result = Intersections2D.computeBarycentricCoordinates(
+      const result = Intersections2D.computeBarycentricCoordinates(
         0.0,
         0.0,
         0.0,
@@ -372,7 +372,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("returns the correct result for a position on an edge between two vertices", function () {
-      var e12 = Intersections2D.computeBarycentricCoordinates(
+      const e12 = Intersections2D.computeBarycentricCoordinates(
         1.5,
         1.0,
         1.0,
@@ -386,7 +386,7 @@ describe("Core/Intersections2D", function () {
       expect(e12.y).toEqualEpsilon(0.5, 1e-15);
       expect(e12.z).toEqualEpsilon(0.0, 1e-15);
 
-      var e23 = Intersections2D.computeBarycentricCoordinates(
+      const e23 = Intersections2D.computeBarycentricCoordinates(
         1.5,
         1.5,
         1.0,
@@ -400,7 +400,7 @@ describe("Core/Intersections2D", function () {
       expect(e23.y).toEqualEpsilon(0.5, 1e-15);
       expect(e23.z).toEqualEpsilon(0.5, 1e-15);
 
-      var e31 = Intersections2D.computeBarycentricCoordinates(
+      const e31 = Intersections2D.computeBarycentricCoordinates(
         1.0,
         1.5,
         1.0,
@@ -416,7 +416,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("returns the correct result for a position outside a triangle", function () {
-      var result1 = Intersections2D.computeBarycentricCoordinates(
+      const result1 = Intersections2D.computeBarycentricCoordinates(
         0.5,
         0.5,
         1.0,
@@ -430,7 +430,7 @@ describe("Core/Intersections2D", function () {
       expect(result1.y).toBeLessThan(0.0);
       expect(result1.z).toBeLessThan(0.0);
 
-      var result2 = Intersections2D.computeBarycentricCoordinates(
+      const result2 = Intersections2D.computeBarycentricCoordinates(
         2.1,
         0.99,
         1.0,
@@ -444,7 +444,7 @@ describe("Core/Intersections2D", function () {
       expect(result2.y).toBeGreaterThan(0.0);
       expect(result2.z).toBeLessThan(0.0);
 
-      var result3 = Intersections2D.computeBarycentricCoordinates(
+      const result3 = Intersections2D.computeBarycentricCoordinates(
         0.99,
         2.1,
         1.0,
@@ -462,7 +462,7 @@ describe("Core/Intersections2D", function () {
 
   describe("computeLineSegmentLineSegmentIntersection", function () {
     it("returns the correct result for intersection point", function () {
-      var intersection0 = Intersections2D.computeLineSegmentLineSegmentIntersection(
+      const intersection0 = Intersections2D.computeLineSegmentLineSegmentIntersection(
         0.0,
         0.0,
         0.0,
@@ -475,7 +475,7 @@ describe("Core/Intersections2D", function () {
       expect(intersection0.x).toEqualEpsilon(0.0, 1e-15);
       expect(intersection0.y).toEqualEpsilon(1.0, 1e-15);
 
-      var intersection1 = Intersections2D.computeLineSegmentLineSegmentIntersection(
+      const intersection1 = Intersections2D.computeLineSegmentLineSegmentIntersection(
         0.0,
         0.0,
         10.0,
@@ -488,7 +488,7 @@ describe("Core/Intersections2D", function () {
       expect(intersection1.x).toEqualEpsilon(5.0, 1e-15);
       expect(intersection1.y).toEqualEpsilon(2.5, 1e-15);
 
-      var intersection2 = Intersections2D.computeLineSegmentLineSegmentIntersection(
+      const intersection2 = Intersections2D.computeLineSegmentLineSegmentIntersection(
         0.0,
         -5.0,
         4.0,
@@ -503,7 +503,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("returns the correct result for intersection point on a vertex", function () {
-      var intersection0 = Intersections2D.computeLineSegmentLineSegmentIntersection(
+      const intersection0 = Intersections2D.computeLineSegmentLineSegmentIntersection(
         0.0,
         0.0,
         0.0,
@@ -516,7 +516,7 @@ describe("Core/Intersections2D", function () {
       expect(intersection0.x).toEqualEpsilon(0.0, 1e-15);
       expect(intersection0.y).toEqualEpsilon(0.0, 1e-15);
 
-      var intersection1 = Intersections2D.computeLineSegmentLineSegmentIntersection(
+      const intersection1 = Intersections2D.computeLineSegmentLineSegmentIntersection(
         0.0,
         0.0,
         1.0,
@@ -529,7 +529,7 @@ describe("Core/Intersections2D", function () {
       expect(intersection1.x).toEqualEpsilon(1.0, 1e-15);
       expect(intersection1.y).toEqualEpsilon(1.0, 1e-15);
 
-      var intersection2 = Intersections2D.computeLineSegmentLineSegmentIntersection(
+      const intersection2 = Intersections2D.computeLineSegmentLineSegmentIntersection(
         0.0,
         0.0,
         4.0,
@@ -544,7 +544,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("returns undefined for non-intersecting lines", function () {
-      var intersection0 = Intersections2D.computeLineSegmentLineSegmentIntersection(
+      const intersection0 = Intersections2D.computeLineSegmentLineSegmentIntersection(
         0.0,
         0.0,
         0.0,
@@ -556,7 +556,7 @@ describe("Core/Intersections2D", function () {
       );
       expect(intersection0).toBeUndefined();
 
-      var intersection1 = Intersections2D.computeLineSegmentLineSegmentIntersection(
+      const intersection1 = Intersections2D.computeLineSegmentLineSegmentIntersection(
         10.0,
         0.0,
         0.0,
@@ -570,7 +570,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("returns undefined for parallel lines", function () {
-      var intersection0 = Intersections2D.computeLineSegmentLineSegmentIntersection(
+      const intersection0 = Intersections2D.computeLineSegmentLineSegmentIntersection(
         0.0,
         0.0,
         0.0,
@@ -582,7 +582,7 @@ describe("Core/Intersections2D", function () {
       );
       expect(intersection0).toBeUndefined();
 
-      var intersection1 = Intersections2D.computeLineSegmentLineSegmentIntersection(
+      const intersection1 = Intersections2D.computeLineSegmentLineSegmentIntersection(
         1.0,
         1.0,
         4.0,
@@ -596,7 +596,7 @@ describe("Core/Intersections2D", function () {
     });
 
     it("returns undefined for coincident lines", function () {
-      var intersection0 = Intersections2D.computeLineSegmentLineSegmentIntersection(
+      const intersection0 = Intersections2D.computeLineSegmentLineSegmentIntersection(
         0.0,
         0.0,
         0.0,
@@ -608,7 +608,7 @@ describe("Core/Intersections2D", function () {
       );
       expect(intersection0).toBeUndefined();
 
-      var intersection1 = Intersections2D.computeLineSegmentLineSegmentIntersection(
+      const intersection1 = Intersections2D.computeLineSegmentLineSegmentIntersection(
         0.0,
         0.0,
         0.0,

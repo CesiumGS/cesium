@@ -2,8 +2,8 @@ import { getStringFromTypedArray } from "../../Source/Cesium.js";
 
 describe("Core/getStringFromTypedArray", function () {
   function verifyString() {
-    var arr = new Uint8Array([67, 101, 115, 105, 117, 109]);
-    var string = getStringFromTypedArray(arr);
+    let arr = new Uint8Array([67, 101, 115, 105, 117, 109]);
+    let string = getStringFromTypedArray(arr);
     expect(string).toEqual("Cesium");
 
     arr = new Uint8Array();
@@ -24,27 +24,27 @@ describe("Core/getStringFromTypedArray", function () {
   });
 
   it("converts a sub-region of a typed array to a string", function () {
-    var arr = new Uint8Array([67, 101, 115, 105, 117, 109]);
-    var string = getStringFromTypedArray(arr, 1, 3);
+    const arr = new Uint8Array([67, 101, 115, 105, 117, 109]);
+    const string = getStringFromTypedArray(arr, 1, 3);
     expect(string).toEqual("esi");
   });
 
   it("throws if sub-region exceeds array bounds", function () {
-    var arr = new Uint8Array([67, 101, 115, 105, 117, 109]);
+    const arr = new Uint8Array([67, 101, 115, 105, 117, 109]);
     expect(function () {
       getStringFromTypedArray(arr, 3, 4);
     }).toThrowDeveloperError();
   });
 
   it("throws if byteOffset is negative", function () {
-    var arr = new Uint8Array([67, 101, 115, 105, 117, 109]);
+    const arr = new Uint8Array([67, 101, 115, 105, 117, 109]);
     expect(function () {
       getStringFromTypedArray(arr, -1, 0);
     }).toThrowDeveloperError();
   });
 
   it("throws if byteLength is negative", function () {
-    var arr = new Uint8Array([67, 101, 115, 105, 117, 109]);
+    const arr = new Uint8Array([67, 101, 115, 105, 117, 109]);
     expect(function () {
       getStringFromTypedArray(arr, 0, -1);
     }).toThrowDeveloperError();
@@ -57,7 +57,7 @@ describe("Core/getStringFromTypedArray", function () {
   });
 
   it("Unicode 2-byte characters work", function () {
-    var arr = new Uint8Array([90, 195, 188, 114, 105, 99, 104]);
+    const arr = new Uint8Array([90, 195, 188, 114, 105, 99, 104]);
     expect(getStringFromTypedArray(arr)).toEqual("Zürich");
   });
 
@@ -66,12 +66,12 @@ describe("Core/getStringFromTypedArray", function () {
       getStringFromTypedArray.decodeWithFromCharCode
     );
 
-    var arr = new Uint8Array([90, 195, 188, 114, 105, 99, 104]);
+    const arr = new Uint8Array([90, 195, 188, 114, 105, 99, 104]);
     expect(getStringFromTypedArray(arr)).toEqual("Zürich");
   });
 
   it("Unicode 3-byte characters work", function () {
-    var arr = new Uint8Array([224, 162, 160]);
+    const arr = new Uint8Array([224, 162, 160]);
     expect(getStringFromTypedArray(arr)).toEqual("ࢠ");
   });
 
@@ -80,12 +80,12 @@ describe("Core/getStringFromTypedArray", function () {
       getStringFromTypedArray.decodeWithFromCharCode
     );
 
-    var arr = new Uint8Array([224, 162, 160]);
+    const arr = new Uint8Array([224, 162, 160]);
     expect(getStringFromTypedArray(arr)).toEqual("ࢠ");
   });
 
   it("Unicode 4-byte characters work", function () {
-    var arr = new Uint8Array([240, 144, 138, 129]);
+    const arr = new Uint8Array([240, 144, 138, 129]);
     expect(getStringFromTypedArray(arr)).toEqual("𐊁");
   });
 
@@ -94,7 +94,7 @@ describe("Core/getStringFromTypedArray", function () {
       getStringFromTypedArray.decodeWithFromCharCode
     );
 
-    var arr = new Uint8Array([240, 144, 138, 129]);
+    const arr = new Uint8Array([240, 144, 138, 129]);
     expect(getStringFromTypedArray(arr)).toEqual("𐊁");
   });
 });

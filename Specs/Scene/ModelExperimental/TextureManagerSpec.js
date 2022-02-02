@@ -10,7 +10,7 @@ import pollToPromise from "../../pollToPromise.js";
 describe(
   "Scene/ModelExperimental/TextureManager",
   function () {
-    var scene;
+    let scene;
 
     beforeAll(function () {
       scene = createScene();
@@ -20,10 +20,10 @@ describe(
       scene.destroyForSpecs();
     });
 
-    var textureManagers = [];
+    const textureManagers = [];
     afterEach(function () {
-      for (var i = 0; i < textureManagers.length; i++) {
-        var textureManager = textureManagers[i];
+      for (let i = 0; i < textureManagers.length; i++) {
+        const textureManager = textureManagers[i];
         if (!textureManager.isDestroyed()) {
           textureManager.destroy();
         }
@@ -32,7 +32,7 @@ describe(
     });
 
     function waitForTextureLoad(textureManager, textureId) {
-      var oldValue = textureManager.getTexture(textureId);
+      const oldValue = textureManager.getTexture(textureId);
       return pollToPromise(function () {
         scene.renderForSpecs();
         textureManager.update(scene.frameState);
@@ -44,20 +44,20 @@ describe(
         return textureManager.getTexture(textureId);
       });
     }
-    var blueUrl = "Data/Images/Blue2x2.png";
-    var greenUrl = "Data/Images/Green1x4.png";
+    const blueUrl = "Data/Images/Blue2x2.png";
+    const greenUrl = "Data/Images/Green1x4.png";
 
     it("constructs", function () {
-      var textureManager = new TextureManager();
+      const textureManager = new TextureManager();
       textureManagers.push(textureManager);
       expect(textureManager._textures).toEqual({});
       expect(textureManager._loadedImages).toEqual([]);
     });
 
     it("loads texture from a URL", function () {
-      var textureManager = new TextureManager();
+      const textureManager = new TextureManager();
       textureManagers.push(textureManager);
-      var id = "testTexture";
+      const id = "testTexture";
 
       textureManager.loadTexture2D(
         id,
@@ -73,9 +73,9 @@ describe(
     });
 
     it("loads texture from a typed array", function () {
-      var textureManager = new TextureManager();
+      const textureManager = new TextureManager();
       textureManagers.push(textureManager);
-      var id = "testTexture";
+      const id = "testTexture";
 
       textureManager.loadTexture2D(
         id,
@@ -93,9 +93,9 @@ describe(
     });
 
     it("destroys old texture before adding a new one", function () {
-      var textureManager = new TextureManager();
+      const textureManager = new TextureManager();
       textureManagers.push(textureManager);
-      var id = "testTexture";
+      const id = "testTexture";
 
       textureManager.loadTexture2D(
         id,
@@ -129,17 +129,17 @@ describe(
     });
 
     it("getTexture returns undefined for unknown texture", function () {
-      var textureManager = new TextureManager();
+      const textureManager = new TextureManager();
       textureManagers.push(textureManager);
-      var texture = textureManager.getTexture("notATexture");
+      const texture = textureManager.getTexture("notATexture");
       expect(texture).not.toBeDefined();
     });
 
     it("sets a defaultTexture on error", function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(when.reject());
-      var textureManager = new TextureManager();
+      const textureManager = new TextureManager();
       textureManagers.push(textureManager);
-      var id = "testTexture";
+      const id = "testTexture";
 
       // Call update first to ensure the default texture is available
       // when the fetchImage() call rejects
@@ -152,16 +152,16 @@ describe(
       );
       return waitForTextureLoad(textureManager, id)
         .then(function (texture) {
-          var defaultTexture = scene.frameState.context.defaultTexture;
+          const defaultTexture = scene.frameState.context.defaultTexture;
           expect(texture).toBe(defaultTexture);
         })
         .otherwise(console.error);
     });
 
     it("destroys", function () {
-      var textureManager = new TextureManager();
+      const textureManager = new TextureManager();
       textureManagers.push(textureManager);
-      var id = "testTexture";
+      const id = "testTexture";
 
       textureManager.loadTexture2D(
         id,

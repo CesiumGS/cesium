@@ -36,16 +36,16 @@
         "use strict";
         //Sandcastle_Begin
         // Power Plant design model provided by Bentley Systems
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
-        var powerplant = scene.primitives.add(
+        const powerplant = scene.primitives.add(
           new Cesium.Cesium3DTileset({
             url: Cesium.IonResource.fromAssetId(8564),
             show: false,
           })
         );
-        var pipes = viewer.entities.add({
+        const pipes = viewer.entities.add({
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArray([
               -76.36053390920833,
@@ -66,12 +66,12 @@
           },
         });
 
-        var building = viewer.scene.primitives.add(
+        const building = viewer.scene.primitives.add(
           new Cesium.Cesium3DTileset({
             url: Cesium.IonResource.fromAssetId(40866),
           })
         );
-        var route = viewer.entities.add({
+        const route = viewer.entities.add({
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArray([
               -75.59604807301078,

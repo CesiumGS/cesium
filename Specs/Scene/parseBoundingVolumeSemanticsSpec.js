@@ -6,11 +6,11 @@ import {
 } from "../../Source/Cesium.js";
 
 describe("Scene/parseBoundingVolumeSemantics", function () {
-  var boundingBox = [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1];
-  var boundingRegion = [0, 0, Math.PI_OVER_SIX, Math.PI_OVER_TWO, 0, 50];
-  var boundingSphere = [0, 0, 0, 1];
-  var minimumHeight = -10;
-  var maximumHeight = 10;
+  const boundingBox = [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1];
+  const boundingRegion = [0, 0, Math.PI_OVER_SIX, Math.PI_OVER_TWO, 0, 50];
+  const boundingSphere = [0, 0, 0, 1];
+  const minimumHeight = -10;
+  const maximumHeight = 10;
 
   it("throws without tileMetadata", function () {
     expect(function () {
@@ -21,7 +21,7 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
   it("works if no semantics are present", function () {
     // Note: TileMetadata is used in unit tests instead of ImplicitTileMetadata
     // as the former is more straightforward to construct
-    var emptyMetadata = new TileMetadata({
+    const emptyMetadata = new TileMetadata({
       tile: {
         properties: {},
       },
@@ -41,7 +41,7 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
   });
 
   it("parses minimum and maximum height", function () {
-    var tileClass = new MetadataClass({
+    const tileClass = new MetadataClass({
       id: "tile",
       class: {
         properties: {
@@ -65,7 +65,7 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
       },
     });
 
-    var tileMetadata = new TileMetadata({
+    const tileMetadata = new TileMetadata({
       class: tileClass,
       tile: {
         properties: {
@@ -92,7 +92,7 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
   });
 
   it("parses bounding volumes", function () {
-    var tileClass = new MetadataClass({
+    const tileClass = new MetadataClass({
       id: "tile",
       class: {
         properties: {
@@ -112,7 +112,7 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
       },
     });
 
-    var tileMetadata = new TileMetadata({
+    const tileMetadata = new TileMetadata({
       class: tileClass,
       tile: {
         properties: {
@@ -141,7 +141,7 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
   });
 
   it("bounding volumes are parsed with the precedence box, region, then sphere", function () {
-    var tileClass = new MetadataClass({
+    const tileClass = new MetadataClass({
       id: "tile",
       class: {
         properties: {
@@ -173,7 +173,7 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
       },
     });
 
-    var tileMetadata = new TileMetadata({
+    const tileMetadata = new TileMetadata({
       class: tileClass,
       tile: {
         properties: {

@@ -31,7 +31,7 @@ import Tipsify from "./Tipsify.js";
  *
  * @see Geometry
  */
-var GeometryPipeline = {};
+const GeometryPipeline = {};
 
 function addTriangle(lines, index, i0, i1, i2) {
   lines[index++] = i0;
@@ -45,12 +45,12 @@ function addTriangle(lines, index, i0, i1, i2) {
 }
 
 function trianglesToLines(triangles) {
-  var count = triangles.length;
-  var size = (count / 3) * 6;
-  var lines = IndexDatatype.createTypedArray(count, size);
+  const count = triangles.length;
+  const size = (count / 3) * 6;
+  const lines = IndexDatatype.createTypedArray(count, size);
 
-  var index = 0;
-  for (var i = 0; i < count; i += 3, index += 6) {
+  let index = 0;
+  for (let i = 0; i < count; i += 3, index += 6) {
     addTriangle(lines, index, triangles[i], triangles[i + 1], triangles[i + 2]);
   }
 
@@ -58,15 +58,15 @@ function trianglesToLines(triangles) {
 }
 
 function triangleStripToLines(triangles) {
-  var count = triangles.length;
+  const count = triangles.length;
   if (count >= 3) {
-    var size = (count - 2) * 6;
-    var lines = IndexDatatype.createTypedArray(count, size);
+    const size = (count - 2) * 6;
+    const lines = IndexDatatype.createTypedArray(count, size);
 
     addTriangle(lines, 0, triangles[0], triangles[1], triangles[2]);
-    var index = 6;
+    let index = 6;
 
-    for (var i = 3; i < count; ++i, index += 6) {
+    for (let i = 3; i < count; ++i, index += 6) {
       addTriangle(
         lines,
         index,
@@ -84,13 +84,13 @@ function triangleStripToLines(triangles) {
 
 function triangleFanToLines(triangles) {
   if (triangles.length > 0) {
-    var count = triangles.length - 1;
-    var size = (count - 1) * 6;
-    var lines = IndexDatatype.createTypedArray(count, size);
+    const count = triangles.length - 1;
+    const size = (count - 1) * 6;
+    const lines = IndexDatatype.createTypedArray(count, size);
 
-    var base = triangles[0];
-    var index = 0;
-    for (var i = 1; i < count; ++i, index += 6) {
+    const base = triangles[0];
+    let index = 0;
+    for (let i = 1; i < count; ++i, index += 6) {
       addTriangle(lines, index, base, triangles[i], triangles[i + 1]);
     }
 
@@ -123,7 +123,7 @@ GeometryPipeline.toWireframe = function (geometry) {
   }
   //>>includeEnd('debug');
 
-  var indices = geometry.indices;
+  const indices = geometry.indices;
   if (defined(indices)) {
     switch (geometry.primitiveType) {
       case PrimitiveType.TRIANGLES:
@@ -162,7 +162,7 @@ GeometryPipeline.toWireframe = function (geometry) {
  * @exception {DeveloperError} geometry.attributes must have an attribute with the same name as the attributeName parameter.
  *
  * @example
- * var geometry = Cesium.GeometryPipeline.createLineSegmentsForVectors(instance.geometry, 'bitangent', 100000.0);
+ * const geometry = Cesium.GeometryPipeline.createLineSegmentsForVectors(instance.geometry, 'bitangent', 100000.0);
  */
 GeometryPipeline.createLineSegmentsForVectors = function (
   geometry,
@@ -189,14 +189,14 @@ GeometryPipeline.createLineSegmentsForVectors = function (
 
   length = defaultValue(length, 10000.0);
 
-  var positions = geometry.attributes.position.values;
-  var vectors = geometry.attributes[attributeName].values;
-  var positionsLength = positions.length;
+  const positions = geometry.attributes.position.values;
+  const vectors = geometry.attributes[attributeName].values;
+  const positionsLength = positions.length;
 
-  var newPositions = new Float64Array(2 * positionsLength);
+  const newPositions = new Float64Array(2 * positionsLength);
 
-  var j = 0;
-  for (var i = 0; i < positionsLength; i += 3) {
+  let j = 0;
+  for (let i = 0; i < positionsLength; i += 3) {
     newPositions[j++] = positions[i];
     newPositions[j++] = positions[i + 1];
     newPositions[j++] = positions[i + 2];
@@ -206,8 +206,8 @@ GeometryPipeline.createLineSegmentsForVectors = function (
     newPositions[j++] = positions[i + 2] + vectors[i + 2] * length;
   }
 
-  var newBoundingSphere;
-  var bs = geometry.boundingSphere;
+  let newBoundingSphere;
+  const bs = geometry.boundingSphere;
   if (defined(bs)) {
     newBoundingSphere = new BoundingSphere(bs.center, bs.radius + length);
   }
@@ -233,7 +233,7 @@ GeometryPipeline.createLineSegmentsForVectors = function (
  * @returns {Object} An object with attribute name / index pairs.
  *
  * @example
- * var attributeLocations = Cesium.GeometryPipeline.createAttributeLocations(geometry);
+ * const attributeLocations = Cesium.GeometryPipeline.createAttributeLocations(geometry);
  * // Example output
  * // {
  * //   'position' : 0,
@@ -249,7 +249,7 @@ GeometryPipeline.createAttributeLocations = function (geometry) {
 
   // There can be a WebGL performance hit when attribute 0 is disabled, so
   // assign attribute locations to well-known attributes.
-  var semantics = [
+  const semantics = [
     "position",
     "positionHigh",
     "positionLow",
@@ -276,15 +276,15 @@ GeometryPipeline.createAttributeLocations = function (geometry) {
     "compressedAttributes",
   ];
 
-  var attributes = geometry.attributes;
-  var indices = {};
-  var j = 0;
-  var i;
-  var len = semantics.length;
+  const attributes = geometry.attributes;
+  const indices = {};
+  let j = 0;
+  let i;
+  const len = semantics.length;
 
   // Attribute locations for well-known attributes
   for (i = 0; i < len; ++i) {
-    var semantic = semantics[i];
+    const semantic = semantics[i];
 
     if (defined(attributes[semantic])) {
       indices[semantic] = j++;
@@ -292,7 +292,7 @@ GeometryPipeline.createAttributeLocations = function (geometry) {
   }
 
   // Locations for custom attributes
-  for (var name in attributes) {
+  for (const name in attributes) {
     if (attributes.hasOwnProperty(name) && !defined(indices[name])) {
       indices[name] = j++;
     }
@@ -322,24 +322,24 @@ GeometryPipeline.reorderForPreVertexCache = function (geometry) {
   }
   //>>includeEnd('debug');
 
-  var numVertices = Geometry.computeNumberOfVertices(geometry);
+  const numVertices = Geometry.computeNumberOfVertices(geometry);
 
-  var indices = geometry.indices;
+  const indices = geometry.indices;
   if (defined(indices)) {
-    var indexCrossReferenceOldToNew = new Int32Array(numVertices);
-    for (var i = 0; i < numVertices; i++) {
+    const indexCrossReferenceOldToNew = new Int32Array(numVertices);
+    for (let i = 0; i < numVertices; i++) {
       indexCrossReferenceOldToNew[i] = -1;
     }
 
     // Construct cross reference and reorder indices
-    var indicesIn = indices;
-    var numIndices = indicesIn.length;
-    var indicesOut = IndexDatatype.createTypedArray(numVertices, numIndices);
+    const indicesIn = indices;
+    const numIndices = indicesIn.length;
+    const indicesOut = IndexDatatype.createTypedArray(numVertices, numIndices);
 
-    var intoIndicesIn = 0;
-    var intoIndicesOut = 0;
-    var nextIndex = 0;
-    var tempIndex;
+    let intoIndicesIn = 0;
+    let intoIndicesOut = 0;
+    let nextIndex = 0;
+    let tempIndex;
     while (intoIndicesIn < numIndices) {
       tempIndex = indexCrossReferenceOldToNew[indicesIn[intoIndicesIn]];
       if (tempIndex !== -1) {
@@ -357,25 +357,25 @@ GeometryPipeline.reorderForPreVertexCache = function (geometry) {
     geometry.indices = indicesOut;
 
     // Reorder attributes
-    var attributes = geometry.attributes;
-    for (var property in attributes) {
+    const attributes = geometry.attributes;
+    for (const property in attributes) {
       if (
         attributes.hasOwnProperty(property) &&
         defined(attributes[property]) &&
         defined(attributes[property].values)
       ) {
-        var attribute = attributes[property];
-        var elementsIn = attribute.values;
-        var intoElementsIn = 0;
-        var numComponents = attribute.componentsPerAttribute;
-        var elementsOut = ComponentDatatype.createTypedArray(
+        const attribute = attributes[property];
+        const elementsIn = attribute.values;
+        let intoElementsIn = 0;
+        const numComponents = attribute.componentsPerAttribute;
+        const elementsOut = ComponentDatatype.createTypedArray(
           attribute.componentDatatype,
           nextIndex * numComponents
         );
         while (intoElementsIn < numVertices) {
-          var temp = indexCrossReferenceOldToNew[intoElementsIn];
+          const temp = indexCrossReferenceOldToNew[intoElementsIn];
           if (temp !== -1) {
-            for (var j = 0; j < numComponents; j++) {
+            for (let j = 0; j < numComponents; j++) {
               elementsOut[numComponents * temp + j] =
                 elementsIn[numComponents * intoElementsIn + j];
             }
@@ -419,11 +419,11 @@ GeometryPipeline.reorderForPostVertexCache = function (
   }
   //>>includeEnd('debug');
 
-  var indices = geometry.indices;
+  const indices = geometry.indices;
   if (geometry.primitiveType === PrimitiveType.TRIANGLES && defined(indices)) {
-    var numIndices = indices.length;
-    var maximumIndex = 0;
-    for (var j = 0; j < numIndices; j++) {
+    const numIndices = indices.length;
+    let maximumIndex = 0;
+    for (let j = 0; j < numIndices; j++) {
       if (indices[j] > maximumIndex) {
         maximumIndex = indices[j];
       }
@@ -439,15 +439,15 @@ GeometryPipeline.reorderForPostVertexCache = function (
 };
 
 function copyAttributesDescriptions(attributes) {
-  var newAttributes = {};
+  const newAttributes = {};
 
-  for (var attribute in attributes) {
+  for (const attribute in attributes) {
     if (
       attributes.hasOwnProperty(attribute) &&
       defined(attributes[attribute]) &&
       defined(attributes[attribute].values)
     ) {
-      var attr = attributes[attribute];
+      const attr = attributes[attribute];
       newAttributes[attribute] = new GeometryAttribute({
         componentDatatype: attr.componentDatatype,
         componentsPerAttribute: attr.componentsPerAttribute,
@@ -461,15 +461,15 @@ function copyAttributesDescriptions(attributes) {
 }
 
 function copyVertex(destinationAttributes, sourceAttributes, index) {
-  for (var attribute in sourceAttributes) {
+  for (const attribute in sourceAttributes) {
     if (
       sourceAttributes.hasOwnProperty(attribute) &&
       defined(sourceAttributes[attribute]) &&
       defined(sourceAttributes[attribute].values)
     ) {
-      var attr = sourceAttributes[attribute];
+      const attr = sourceAttributes[attribute];
 
-      for (var k = 0; k < attr.componentsPerAttribute; ++k) {
+      for (let k = 0; k < attr.componentsPerAttribute; ++k) {
         destinationAttributes[attribute].values.push(
           attr.values[index * attr.componentsPerAttribute + k]
         );
@@ -493,7 +493,7 @@ function copyVertex(destinationAttributes, sourceAttributes, index) {
  * @exception {DeveloperError} All geometry attribute lists must have the same number of attributes.
  *
  * @example
- * var geometries = Cesium.GeometryPipeline.fitToUnsignedShortIndices(geometry);
+ * const geometries = Cesium.GeometryPipeline.fitToUnsignedShortIndices(geometry);
  */
 GeometryPipeline.fitToUnsignedShortIndices = function (geometry) {
   //>>includeStart('debug', pragmas.debug);
@@ -512,24 +512,24 @@ GeometryPipeline.fitToUnsignedShortIndices = function (geometry) {
   }
   //>>includeEnd('debug');
 
-  var geometries = [];
+  const geometries = [];
 
   // If there's an index list and more than 64K attributes, it is possible that
   // some indices are outside the range of unsigned short [0, 64K - 1]
-  var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+  const numberOfVertices = Geometry.computeNumberOfVertices(geometry);
   if (
     defined(geometry.indices) &&
     numberOfVertices >= CesiumMath.SIXTY_FOUR_KILOBYTES
   ) {
-    var oldToNewIndex = [];
-    var newIndices = [];
-    var currentIndex = 0;
-    var newAttributes = copyAttributesDescriptions(geometry.attributes);
+    let oldToNewIndex = [];
+    let newIndices = [];
+    let currentIndex = 0;
+    let newAttributes = copyAttributesDescriptions(geometry.attributes);
 
-    var originalIndices = geometry.indices;
-    var numberOfIndices = originalIndices.length;
+    const originalIndices = geometry.indices;
+    const numberOfIndices = originalIndices.length;
 
-    var indicesPerPrimitive;
+    let indicesPerPrimitive;
 
     if (geometry.primitiveType === PrimitiveType.TRIANGLES) {
       indicesPerPrimitive = 3;
@@ -539,10 +539,10 @@ GeometryPipeline.fitToUnsignedShortIndices = function (geometry) {
       indicesPerPrimitive = 1;
     }
 
-    for (var j = 0; j < numberOfIndices; j += indicesPerPrimitive) {
-      for (var k = 0; k < indicesPerPrimitive; ++k) {
-        var x = originalIndices[j + k];
-        var i = oldToNewIndex[x];
+    for (let j = 0; j < numberOfIndices; j += indicesPerPrimitive) {
+      for (let k = 0; k < indicesPerPrimitive; ++k) {
+        const x = originalIndices[j + k];
+        let i = oldToNewIndex[x];
         if (!defined(i)) {
           i = currentIndex++;
           oldToNewIndex[x] = i;
@@ -592,8 +592,8 @@ GeometryPipeline.fitToUnsignedShortIndices = function (geometry) {
   return geometries;
 };
 
-var scratchProjectTo2DCartesian3 = new Cartesian3();
-var scratchProjectTo2DCartographic = new Cartographic();
+const scratchProjectTo2DCartesian3 = new Cartesian3();
+const scratchProjectTo2DCartographic = new Cartographic();
 
 /**
  * Projects a geometry's 3D <code>position</code> attribute to 2D, replacing the <code>position</code>
@@ -653,19 +653,23 @@ GeometryPipeline.projectTo2D = function (
   }
   //>>includeEnd('debug');
 
-  var attribute = geometry.attributes[attributeName];
+  const attribute = geometry.attributes[attributeName];
   projection = defined(projection) ? projection : new GeographicProjection();
-  var ellipsoid = projection.ellipsoid;
+  const ellipsoid = projection.ellipsoid;
 
   // Project original values to 2D.
-  var values3D = attribute.values;
-  var projectedValues = new Float64Array(values3D.length);
-  var index = 0;
+  const values3D = attribute.values;
+  const projectedValues = new Float64Array(values3D.length);
+  let index = 0;
 
-  for (var i = 0; i < values3D.length; i += 3) {
-    var value = Cartesian3.fromArray(values3D, i, scratchProjectTo2DCartesian3);
+  for (let i = 0; i < values3D.length; i += 3) {
+    const value = Cartesian3.fromArray(
+      values3D,
+      i,
+      scratchProjectTo2DCartesian3
+    );
 
-    var lonLat = ellipsoid.cartesianToCartographic(
+    const lonLat = ellipsoid.cartesianToCartographic(
       value,
       scratchProjectTo2DCartographic
     );
@@ -683,7 +687,7 @@ GeometryPipeline.projectTo2D = function (
     }
     //>>includeEnd('debug');
 
-    var projectedLonLat = projection.project(
+    const projectedLonLat = projection.project(
       lonLat,
       scratchProjectTo2DCartesian3
     );
@@ -707,7 +711,7 @@ GeometryPipeline.projectTo2D = function (
   return geometry;
 };
 
-var encodedResult = {
+const encodedResult = {
   high: 0.0,
   low: 0.0,
 };
@@ -767,19 +771,19 @@ GeometryPipeline.encodeAttribute = function (
   }
   //>>includeEnd('debug');
 
-  var attribute = geometry.attributes[attributeName];
-  var values = attribute.values;
-  var length = values.length;
-  var highValues = new Float32Array(length);
-  var lowValues = new Float32Array(length);
+  const attribute = geometry.attributes[attributeName];
+  const values = attribute.values;
+  const length = values.length;
+  const highValues = new Float32Array(length);
+  const lowValues = new Float32Array(length);
 
-  for (var i = 0; i < length; ++i) {
+  for (let i = 0; i < length; ++i) {
     EncodedCartesian3.encode(values[i], encodedResult);
     highValues[i] = encodedResult.high;
     lowValues[i] = encodedResult.low;
   }
 
-  var componentsPerAttribute = attribute.componentsPerAttribute;
+  const componentsPerAttribute = attribute.componentsPerAttribute;
 
   geometry.attributes[attributeHighName] = new GeometryAttribute({
     componentDatatype: ComponentDatatype.FLOAT,
@@ -796,13 +800,13 @@ GeometryPipeline.encodeAttribute = function (
   return geometry;
 };
 
-var scratchCartesian3 = new Cartesian3();
+let scratchCartesian3 = new Cartesian3();
 
 function transformPoint(matrix, attribute) {
   if (defined(attribute)) {
-    var values = attribute.values;
-    var length = values.length;
-    for (var i = 0; i < length; i += 3) {
+    const values = attribute.values;
+    const length = values.length;
+    for (let i = 0; i < length; i += 3) {
       Cartesian3.unpack(values, i, scratchCartesian3);
       Matrix4.multiplyByPoint(matrix, scratchCartesian3, scratchCartesian3);
       Cartesian3.pack(scratchCartesian3, values, i);
@@ -812,9 +816,9 @@ function transformPoint(matrix, attribute) {
 
 function transformVector(matrix, attribute) {
   if (defined(attribute)) {
-    var values = attribute.values;
-    var length = values.length;
-    for (var i = 0; i < length; i += 3) {
+    const values = attribute.values;
+    const length = values.length;
+    for (let i = 0; i < length; i += 3) {
       Cartesian3.unpack(values, i, scratchCartesian3);
       Matrix3.multiplyByVector(matrix, scratchCartesian3, scratchCartesian3);
       scratchCartesian3 = Cartesian3.normalize(
@@ -826,8 +830,8 @@ function transformVector(matrix, attribute) {
   }
 }
 
-var inverseTranspose = new Matrix4();
-var normalMatrix = new Matrix3();
+const inverseTranspose = new Matrix4();
+const normalMatrix = new Matrix3();
 
 /**
  * Transforms a geometry instance to world coordinates.  This changes
@@ -848,14 +852,14 @@ GeometryPipeline.transformToWorldCoordinates = function (instance) {
   }
   //>>includeEnd('debug');
 
-  var modelMatrix = instance.modelMatrix;
+  const modelMatrix = instance.modelMatrix;
 
   if (Matrix4.equals(modelMatrix, Matrix4.IDENTITY)) {
     // Already in world coordinates
     return instance;
   }
 
-  var attributes = instance.geometry.attributes;
+  const attributes = instance.geometry.attributes;
 
   // Transform attributes in known vertex formats
   transformPoint(modelMatrix, attributes.position);
@@ -876,7 +880,7 @@ GeometryPipeline.transformToWorldCoordinates = function (instance) {
     transformVector(normalMatrix, attributes.bitangent);
   }
 
-  var boundingSphere = instance.geometry.boundingSphere;
+  const boundingSphere = instance.geometry.boundingSphere;
   if (defined(boundingSphere)) {
     instance.geometry.boundingSphere = BoundingSphere.transform(
       boundingSphere,
@@ -891,12 +895,12 @@ GeometryPipeline.transformToWorldCoordinates = function (instance) {
 };
 
 function findAttributesInAllGeometries(instances, propertyName) {
-  var length = instances.length;
+  const length = instances.length;
 
-  var attributesInAllGeometries = {};
+  const attributesInAllGeometries = {};
 
-  var attributes0 = instances[0][propertyName].attributes;
-  var name;
+  const attributes0 = instances[0][propertyName].attributes;
+  let name;
 
   for (name in attributes0) {
     if (
@@ -904,13 +908,13 @@ function findAttributesInAllGeometries(instances, propertyName) {
       defined(attributes0[name]) &&
       defined(attributes0[name].values)
     ) {
-      var attribute = attributes0[name];
-      var numberOfComponents = attribute.values.length;
-      var inAllGeometries = true;
+      const attribute = attributes0[name];
+      let numberOfComponents = attribute.values.length;
+      let inAllGeometries = true;
 
       // Does this same attribute exist in all geometries?
-      for (var i = 1; i < length; ++i) {
-        var otherAttribute = instances[i][propertyName].attributes[name];
+      for (let i = 1; i < length; ++i) {
+        const otherAttribute = instances[i][propertyName].attributes[name];
 
         if (
           !defined(otherAttribute) ||
@@ -943,19 +947,19 @@ function findAttributesInAllGeometries(instances, propertyName) {
   return attributesInAllGeometries;
 }
 
-var tempScratch = new Cartesian3();
+const tempScratch = new Cartesian3();
 
 function combineGeometries(instances, propertyName) {
-  var length = instances.length;
+  const length = instances.length;
 
-  var name;
-  var i;
-  var j;
-  var k;
+  let name;
+  let i;
+  let j;
+  let k;
 
-  var m = instances[0].modelMatrix;
-  var haveIndices = defined(instances[0][propertyName].indices);
-  var primitiveType = instances[0][propertyName].primitiveType;
+  const m = instances[0].modelMatrix;
+  const haveIndices = defined(instances[0][propertyName].indices);
+  const primitiveType = instances[0][propertyName].primitiveType;
 
   //>>includeStart('debug', pragmas.debug);
   for (i = 1; i < length; ++i) {
@@ -976,10 +980,10 @@ function combineGeometries(instances, propertyName) {
   //>>includeEnd('debug');
 
   // Find subset of attributes in all geometries
-  var attributes = findAttributesInAllGeometries(instances, propertyName);
-  var values;
-  var sourceValues;
-  var sourceValuesLength;
+  const attributes = findAttributesInAllGeometries(instances, propertyName);
+  let values;
+  let sourceValues;
+  let sourceValuesLength;
 
   // Combine attributes from each geometry into a single typed array
   for (name in attributes) {
@@ -999,31 +1003,31 @@ function combineGeometries(instances, propertyName) {
   }
 
   // Combine index lists
-  var indices;
+  let indices;
 
   if (haveIndices) {
-    var numberOfIndices = 0;
+    let numberOfIndices = 0;
     for (i = 0; i < length; ++i) {
       numberOfIndices += instances[i][propertyName].indices.length;
     }
 
-    var numberOfVertices = Geometry.computeNumberOfVertices(
+    const numberOfVertices = Geometry.computeNumberOfVertices(
       new Geometry({
         attributes: attributes,
         primitiveType: PrimitiveType.POINTS,
       })
     );
-    var destIndices = IndexDatatype.createTypedArray(
+    const destIndices = IndexDatatype.createTypedArray(
       numberOfVertices,
       numberOfIndices
     );
 
-    var destOffset = 0;
-    var offset = 0;
+    let destOffset = 0;
+    let offset = 0;
 
     for (i = 0; i < length; ++i) {
-      var sourceIndices = instances[i][propertyName].indices;
-      var sourceIndicesLen = sourceIndices.length;
+      const sourceIndices = instances[i][propertyName].indices;
+      const sourceIndicesLen = sourceIndices.length;
 
       for (k = 0; k < sourceIndicesLen; ++k) {
         destIndices[destOffset++] = offset + sourceIndices[k];
@@ -1036,9 +1040,9 @@ function combineGeometries(instances, propertyName) {
   }
 
   // Create bounding sphere that includes all instances
-  var center = new Cartesian3();
-  var radius = 0.0;
-  var bs;
+  let center = new Cartesian3();
+  let radius = 0.0;
+  let bs;
 
   for (i = 0; i < length; ++i) {
     bs = instances[i][propertyName].boundingSphere;
@@ -1056,7 +1060,7 @@ function combineGeometries(instances, propertyName) {
 
     for (i = 0; i < length; ++i) {
       bs = instances[i][propertyName].boundingSphere;
-      var tempRadius =
+      const tempRadius =
         Cartesian3.magnitude(
           Cartesian3.subtract(bs.center, center, tempScratch)
         ) + bs.radius;
@@ -1100,10 +1104,10 @@ function combineGeometries(instances, propertyName) {
  *
  *
  * @example
- * for (var i = 0; i < instances.length; ++i) {
+ * for (let i = 0; i < instances.length; ++i) {
  *   Cesium.GeometryPipeline.transformToWorldCoordinates(instances[i]);
  * }
- * var geometries = Cesium.GeometryPipeline.combineInstances(instances);
+ * const geometries = Cesium.GeometryPipeline.combineInstances(instances);
  *
  * @see GeometryPipeline.transformToWorldCoordinates
  */
@@ -1116,11 +1120,11 @@ GeometryPipeline.combineInstances = function (instances) {
   }
   //>>includeEnd('debug');
 
-  var instanceGeometry = [];
-  var instanceSplitGeometry = [];
-  var length = instances.length;
-  for (var i = 0; i < length; ++i) {
-    var instance = instances[i];
+  const instanceGeometry = [];
+  const instanceSplitGeometry = [];
+  const length = instances.length;
+  for (let i = 0; i < length; ++i) {
+    const instance = instances[i];
 
     if (defined(instance.geometry)) {
       instanceGeometry.push(instance);
@@ -1132,7 +1136,7 @@ GeometryPipeline.combineInstances = function (instances) {
     }
   }
 
-  var geometries = [];
+  const geometries = [];
   if (instanceGeometry.length > 0) {
     geometries.push(combineGeometries(instanceGeometry, "geometry"));
   }
@@ -1149,10 +1153,10 @@ GeometryPipeline.combineInstances = function (instances) {
   return geometries;
 };
 
-var normal = new Cartesian3();
-var v0 = new Cartesian3();
-var v1 = new Cartesian3();
-var v2 = new Cartesian3();
+const normal = new Cartesian3();
+const v0 = new Cartesian3();
+const v1 = new Cartesian3();
+const v2 = new Cartesian3();
 
 /**
  * Computes per-vertex normals for a geometry containing <code>TRIANGLES</code> by averaging the normals of
@@ -1196,15 +1200,15 @@ GeometryPipeline.computeNormal = function (geometry) {
   }
   //>>includeEnd('debug');
 
-  var indices = geometry.indices;
-  var attributes = geometry.attributes;
-  var vertices = attributes.position.values;
-  var numVertices = attributes.position.values.length / 3;
-  var numIndices = indices.length;
-  var normalsPerVertex = new Array(numVertices);
-  var normalsPerTriangle = new Array(numIndices / 3);
-  var normalIndices = new Array(numIndices);
-  var i;
+  const indices = geometry.indices;
+  const attributes = geometry.attributes;
+  const vertices = attributes.position.values;
+  const numVertices = attributes.position.values.length / 3;
+  const numIndices = indices.length;
+  const normalsPerVertex = new Array(numVertices);
+  const normalsPerTriangle = new Array(numIndices / 3);
+  const normalIndices = new Array(numIndices);
+  let i;
   for (i = 0; i < numVertices; i++) {
     normalsPerVertex[i] = {
       indexOffset: 0,
@@ -1213,14 +1217,14 @@ GeometryPipeline.computeNormal = function (geometry) {
     };
   }
 
-  var j = 0;
+  let j = 0;
   for (i = 0; i < numIndices; i += 3) {
-    var i0 = indices[i];
-    var i1 = indices[i + 1];
-    var i2 = indices[i + 2];
-    var i03 = i0 * 3;
-    var i13 = i1 * 3;
-    var i23 = i2 * 3;
+    const i0 = indices[i];
+    const i1 = indices[i + 1];
+    const i2 = indices[i + 2];
+    const i03 = i0 * 3;
+    const i13 = i1 * 3;
+    const i23 = i2 * 3;
 
     v0.x = vertices[i03];
     v0.y = vertices[i03 + 1];
@@ -1242,17 +1246,17 @@ GeometryPipeline.computeNormal = function (geometry) {
     j++;
   }
 
-  var indexOffset = 0;
+  let indexOffset = 0;
   for (i = 0; i < numVertices; i++) {
     normalsPerVertex[i].indexOffset += indexOffset;
     indexOffset += normalsPerVertex[i].count;
   }
 
   j = 0;
-  var vertexNormalData;
+  let vertexNormalData;
   for (i = 0; i < numIndices; i += 3) {
     vertexNormalData = normalsPerVertex[indices[i]];
-    var index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
+    let index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
     normalIndices[index] = j;
     vertexNormalData.currentCount++;
 
@@ -1269,9 +1273,9 @@ GeometryPipeline.computeNormal = function (geometry) {
     j++;
   }
 
-  var normalValues = new Float32Array(numVertices * 3);
+  const normalValues = new Float32Array(numVertices * 3);
   for (i = 0; i < numVertices; i++) {
-    var i3 = i * 3;
+    const i3 = i * 3;
     vertexNormalData = normalsPerVertex[i];
     Cartesian3.clone(Cartesian3.ZERO, normal);
     if (vertexNormalData.count > 0) {
@@ -1317,9 +1321,9 @@ GeometryPipeline.computeNormal = function (geometry) {
   return geometry;
 };
 
-var normalScratch = new Cartesian3();
-var normalScale = new Cartesian3();
-var tScratch = new Cartesian3();
+const normalScratch = new Cartesian3();
+const normalScale = new Cartesian3();
+const tScratch = new Cartesian3();
 
 /**
  * Computes per-vertex tangents and bitangents for a geometry containing <code>TRIANGLES</code>.
@@ -1346,8 +1350,8 @@ GeometryPipeline.computeTangentAndBitangent = function (geometry) {
   }
   //>>includeEnd('debug');
 
-  var attributes = geometry.attributes;
-  var indices = geometry.indices;
+  const attributes = geometry.attributes;
+  const indices = geometry.indices;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(attributes.position) || !defined(attributes.position.values)) {
@@ -1376,47 +1380,47 @@ GeometryPipeline.computeTangentAndBitangent = function (geometry) {
   }
   //>>includeEnd('debug');
 
-  var vertices = geometry.attributes.position.values;
-  var normals = geometry.attributes.normal.values;
-  var st = geometry.attributes.st.values;
+  const vertices = geometry.attributes.position.values;
+  const normals = geometry.attributes.normal.values;
+  const st = geometry.attributes.st.values;
 
-  var numVertices = geometry.attributes.position.values.length / 3;
-  var numIndices = indices.length;
-  var tan1 = new Array(numVertices * 3);
+  const numVertices = geometry.attributes.position.values.length / 3;
+  const numIndices = indices.length;
+  const tan1 = new Array(numVertices * 3);
 
-  var i;
+  let i;
   for (i = 0; i < tan1.length; i++) {
     tan1[i] = 0;
   }
 
-  var i03;
-  var i13;
-  var i23;
+  let i03;
+  let i13;
+  let i23;
   for (i = 0; i < numIndices; i += 3) {
-    var i0 = indices[i];
-    var i1 = indices[i + 1];
-    var i2 = indices[i + 2];
+    const i0 = indices[i];
+    const i1 = indices[i + 1];
+    const i2 = indices[i + 2];
     i03 = i0 * 3;
     i13 = i1 * 3;
     i23 = i2 * 3;
-    var i02 = i0 * 2;
-    var i12 = i1 * 2;
-    var i22 = i2 * 2;
+    const i02 = i0 * 2;
+    const i12 = i1 * 2;
+    const i22 = i2 * 2;
 
-    var ux = vertices[i03];
-    var uy = vertices[i03 + 1];
-    var uz = vertices[i03 + 2];
+    const ux = vertices[i03];
+    const uy = vertices[i03 + 1];
+    const uz = vertices[i03 + 2];
 
-    var wx = st[i02];
-    var wy = st[i02 + 1];
-    var t1 = st[i12 + 1] - wy;
-    var t2 = st[i22 + 1] - wy;
+    const wx = st[i02];
+    const wy = st[i02 + 1];
+    const t1 = st[i12 + 1] - wy;
+    const t2 = st[i22 + 1] - wy;
 
-    var r = 1.0 / ((st[i12] - wx) * t2 - (st[i22] - wx) * t1);
-    var sdirx = (t2 * (vertices[i13] - ux) - t1 * (vertices[i23] - ux)) * r;
-    var sdiry =
+    const r = 1.0 / ((st[i12] - wx) * t2 - (st[i22] - wx) * t1);
+    const sdirx = (t2 * (vertices[i13] - ux) - t1 * (vertices[i23] - ux)) * r;
+    const sdiry =
       (t2 * (vertices[i13 + 1] - uy) - t1 * (vertices[i23 + 1] - uy)) * r;
-    var sdirz =
+    const sdirz =
       (t2 * (vertices[i13 + 2] - uz) - t1 * (vertices[i23 + 2] - uz)) * r;
 
     tan1[i03] += sdirx;
@@ -1432,17 +1436,17 @@ GeometryPipeline.computeTangentAndBitangent = function (geometry) {
     tan1[i23 + 2] += sdirz;
   }
 
-  var tangentValues = new Float32Array(numVertices * 3);
-  var bitangentValues = new Float32Array(numVertices * 3);
+  const tangentValues = new Float32Array(numVertices * 3);
+  const bitangentValues = new Float32Array(numVertices * 3);
 
   for (i = 0; i < numVertices; i++) {
     i03 = i * 3;
     i13 = i03 + 1;
     i23 = i03 + 2;
 
-    var n = Cartesian3.fromArray(normals, i03, normalScratch);
-    var t = Cartesian3.fromArray(tan1, i03, tScratch);
-    var scalar = Cartesian3.dot(n, t);
+    const n = Cartesian3.fromArray(normals, i03, normalScratch);
+    const t = Cartesian3.fromArray(tan1, i03, tScratch);
+    const scalar = Cartesian3.dot(n, t);
     Cartesian3.multiplyByScalar(n, scalar, normalScale);
     Cartesian3.normalize(Cartesian3.subtract(t, normalScale, t), t);
 
@@ -1472,11 +1476,11 @@ GeometryPipeline.computeTangentAndBitangent = function (geometry) {
   return geometry;
 };
 
-var scratchCartesian2 = new Cartesian2();
-var toEncode1 = new Cartesian3();
-var toEncode2 = new Cartesian3();
-var toEncode3 = new Cartesian3();
-var encodeResult2 = new Cartesian2();
+const scratchCartesian2 = new Cartesian2();
+const toEncode1 = new Cartesian3();
+const toEncode2 = new Cartesian3();
+const toEncode3 = new Cartesian3();
+let encodeResult2 = new Cartesian2();
 /**
  * Compresses and packs geometry normal attribute values to save memory.
  *
@@ -1493,16 +1497,16 @@ GeometryPipeline.compressVertices = function (geometry) {
   }
   //>>includeEnd('debug');
 
-  var extrudeAttribute = geometry.attributes.extrudeDirection;
-  var i;
-  var numVertices;
+  const extrudeAttribute = geometry.attributes.extrudeDirection;
+  let i;
+  let numVertices;
   if (defined(extrudeAttribute)) {
     //only shadow volumes use extrudeDirection, and shadow volumes use vertexFormat: POSITION_ONLY so we don't need to check other attributes
-    var extrudeDirections = extrudeAttribute.values;
+    const extrudeDirections = extrudeAttribute.values;
     numVertices = extrudeDirections.length / 3.0;
-    var compressedDirections = new Float32Array(numVertices * 2);
+    const compressedDirections = new Float32Array(numVertices * 2);
 
-    var i2 = 0;
+    let i2 = 0;
     for (i = 0; i < numVertices; ++i) {
       Cartesian3.fromArray(extrudeDirections, i * 3.0, toEncode1);
       if (Cartesian3.equals(toEncode1, Cartesian3.ZERO)) {
@@ -1527,25 +1531,25 @@ GeometryPipeline.compressVertices = function (geometry) {
     return geometry;
   }
 
-  var normalAttribute = geometry.attributes.normal;
-  var stAttribute = geometry.attributes.st;
+  const normalAttribute = geometry.attributes.normal;
+  const stAttribute = geometry.attributes.st;
 
-  var hasNormal = defined(normalAttribute);
-  var hasSt = defined(stAttribute);
+  const hasNormal = defined(normalAttribute);
+  const hasSt = defined(stAttribute);
   if (!hasNormal && !hasSt) {
     return geometry;
   }
 
-  var tangentAttribute = geometry.attributes.tangent;
-  var bitangentAttribute = geometry.attributes.bitangent;
+  const tangentAttribute = geometry.attributes.tangent;
+  const bitangentAttribute = geometry.attributes.bitangent;
 
-  var hasTangent = defined(tangentAttribute);
-  var hasBitangent = defined(bitangentAttribute);
+  const hasTangent = defined(tangentAttribute);
+  const hasBitangent = defined(bitangentAttribute);
 
-  var normals;
-  var st;
-  var tangents;
-  var bitangents;
+  let normals;
+  let st;
+  let tangents;
+  let bitangents;
 
   if (hasNormal) {
     normals = normalAttribute.values;
@@ -1560,18 +1564,18 @@ GeometryPipeline.compressVertices = function (geometry) {
     bitangents = bitangentAttribute.values;
   }
 
-  var length = hasNormal ? normals.length : st.length;
-  var numComponents = hasNormal ? 3.0 : 2.0;
+  const length = hasNormal ? normals.length : st.length;
+  const numComponents = hasNormal ? 3.0 : 2.0;
   numVertices = length / numComponents;
 
-  var compressedLength = numVertices;
-  var numCompressedComponents = hasSt && hasNormal ? 2.0 : 1.0;
+  let compressedLength = numVertices;
+  let numCompressedComponents = hasSt && hasNormal ? 2.0 : 1.0;
   numCompressedComponents += hasTangent || hasBitangent ? 1.0 : 0.0;
   compressedLength *= numCompressedComponents;
 
-  var compressedAttributes = new Float32Array(compressedLength);
+  const compressedAttributes = new Float32Array(compressedLength);
 
-  var normalIndex = 0;
+  let normalIndex = 0;
   for (i = 0; i < numVertices; ++i) {
     if (hasSt) {
       Cartesian2.fromArray(st, i * 2.0, scratchCartesian2);
@@ -1580,7 +1584,7 @@ GeometryPipeline.compressVertices = function (geometry) {
       ] = AttributeCompression.compressTextureCoordinates(scratchCartesian2);
     }
 
-    var index = i * 3.0;
+    const index = i * 3.0;
     if (hasNormal && defined(tangents) && defined(bitangents)) {
       Cartesian3.fromArray(normals, index, toEncode1);
       Cartesian3.fromArray(tangents, index, toEncode2);
@@ -1644,7 +1648,7 @@ function indexTriangles(geometry) {
   if (defined(geometry.indices)) {
     return geometry;
   }
-  var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+  const numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
   //>>includeStart('debug', pragmas.debug);
   if (numberOfVertices < 3) {
@@ -1657,11 +1661,11 @@ function indexTriangles(geometry) {
   }
   //>>includeEnd('debug');
 
-  var indices = IndexDatatype.createTypedArray(
+  const indices = IndexDatatype.createTypedArray(
     numberOfVertices,
     numberOfVertices
   );
-  for (var i = 0; i < numberOfVertices; ++i) {
+  for (let i = 0; i < numberOfVertices; ++i) {
     indices[i] = i;
   }
 
@@ -1670,7 +1674,7 @@ function indexTriangles(geometry) {
 }
 
 function indexTriangleFan(geometry) {
-  var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+  const numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
   //>>includeStart('debug', pragmas.debug);
   if (numberOfVertices < 3) {
@@ -1678,7 +1682,7 @@ function indexTriangleFan(geometry) {
   }
   //>>includeEnd('debug');
 
-  var indices = IndexDatatype.createTypedArray(
+  const indices = IndexDatatype.createTypedArray(
     numberOfVertices,
     (numberOfVertices - 2) * 3
   );
@@ -1686,8 +1690,8 @@ function indexTriangleFan(geometry) {
   indices[1] = 0;
   indices[2] = 2;
 
-  var indicesIndex = 3;
-  for (var i = 3; i < numberOfVertices; ++i) {
+  let indicesIndex = 3;
+  for (let i = 3; i < numberOfVertices; ++i) {
     indices[indicesIndex++] = i - 1;
     indices[indicesIndex++] = 0;
     indices[indicesIndex++] = i;
@@ -1699,7 +1703,7 @@ function indexTriangleFan(geometry) {
 }
 
 function indexTriangleStrip(geometry) {
-  var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+  const numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
   //>>includeStart('debug', pragmas.debug);
   if (numberOfVertices < 3) {
@@ -1707,7 +1711,7 @@ function indexTriangleStrip(geometry) {
   }
   //>>includeEnd('debug');
 
-  var indices = IndexDatatype.createTypedArray(
+  const indices = IndexDatatype.createTypedArray(
     numberOfVertices,
     (numberOfVertices - 2) * 3
   );
@@ -1721,8 +1725,8 @@ function indexTriangleStrip(geometry) {
     indices[5] = 3;
   }
 
-  var indicesIndex = 6;
-  for (var i = 3; i < numberOfVertices - 1; i += 2) {
+  let indicesIndex = 6;
+  for (let i = 3; i < numberOfVertices - 1; i += 2) {
     indices[indicesIndex++] = i;
     indices[indicesIndex++] = i - 1;
     indices[indicesIndex++] = i + 1;
@@ -1743,7 +1747,7 @@ function indexLines(geometry) {
   if (defined(geometry.indices)) {
     return geometry;
   }
-  var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+  const numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
   //>>includeStart('debug', pragmas.debug);
   if (numberOfVertices < 2) {
@@ -1754,11 +1758,11 @@ function indexLines(geometry) {
   }
   //>>includeEnd('debug');
 
-  var indices = IndexDatatype.createTypedArray(
+  const indices = IndexDatatype.createTypedArray(
     numberOfVertices,
     numberOfVertices
   );
-  for (var i = 0; i < numberOfVertices; ++i) {
+  for (let i = 0; i < numberOfVertices; ++i) {
     indices[i] = i;
   }
 
@@ -1767,7 +1771,7 @@ function indexLines(geometry) {
 }
 
 function indexLineStrip(geometry) {
-  var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+  const numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
   //>>includeStart('debug', pragmas.debug);
   if (numberOfVertices < 2) {
@@ -1775,14 +1779,14 @@ function indexLineStrip(geometry) {
   }
   //>>includeEnd('debug');
 
-  var indices = IndexDatatype.createTypedArray(
+  const indices = IndexDatatype.createTypedArray(
     numberOfVertices,
     (numberOfVertices - 1) * 2
   );
   indices[0] = 0;
   indices[1] = 1;
-  var indicesIndex = 2;
-  for (var i = 2; i < numberOfVertices; ++i) {
+  let indicesIndex = 2;
+  for (let i = 2; i < numberOfVertices; ++i) {
     indices[indicesIndex++] = i - 1;
     indices[indicesIndex++] = i;
   }
@@ -1793,7 +1797,7 @@ function indexLineStrip(geometry) {
 }
 
 function indexLineLoop(geometry) {
-  var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+  const numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
   //>>includeStart('debug', pragmas.debug);
   if (numberOfVertices < 2) {
@@ -1801,7 +1805,7 @@ function indexLineLoop(geometry) {
   }
   //>>includeEnd('debug');
 
-  var indices = IndexDatatype.createTypedArray(
+  const indices = IndexDatatype.createTypedArray(
     numberOfVertices,
     numberOfVertices * 2
   );
@@ -1809,8 +1813,8 @@ function indexLineLoop(geometry) {
   indices[0] = 0;
   indices[1] = 1;
 
-  var indicesIndex = 2;
-  for (var i = 2; i < numberOfVertices; ++i) {
+  let indicesIndex = 2;
+  for (let i = 2; i < numberOfVertices; ++i) {
     indices[indicesIndex++] = i - 1;
     indices[indicesIndex++] = i;
   }
@@ -1860,11 +1864,11 @@ function offsetTriangleFromXZPlane(p0, p1, p2) {
     return;
   }
 
-  var p0y = Math.abs(p0.y);
-  var p1y = Math.abs(p1.y);
-  var p2y = Math.abs(p2.y);
+  const p0y = Math.abs(p0.y);
+  const p1y = Math.abs(p1.y);
+  const p2y = Math.abs(p2.y);
 
-  var sign;
+  let sign;
   if (p0y > p1y) {
     if (p0y > p2y) {
       sign = CesiumMath.sign(p0.y);
@@ -1877,13 +1881,13 @@ function offsetTriangleFromXZPlane(p0, p1, p2) {
     sign = CesiumMath.sign(p2.y);
   }
 
-  var isBehind = sign < 0.0;
+  const isBehind = sign < 0.0;
   offsetPointFromXZPlane(p0, isBehind);
   offsetPointFromXZPlane(p1, isBehind);
   offsetPointFromXZPlane(p2, isBehind);
 }
 
-var c3 = new Cartesian3();
+const c3 = new Cartesian3();
 function getXZIntersectionOffsetPoints(p, p1, u1, v1) {
   Cartesian3.add(
     p,
@@ -1899,12 +1903,12 @@ function getXZIntersectionOffsetPoints(p, p1, u1, v1) {
   offsetPointFromXZPlane(v1, false);
 }
 
-var u1 = new Cartesian3();
-var u2 = new Cartesian3();
-var q1 = new Cartesian3();
-var q2 = new Cartesian3();
+const u1 = new Cartesian3();
+const u2 = new Cartesian3();
+const q1 = new Cartesian3();
+const q2 = new Cartesian3();
 
-var splitTriangleResult = {
+const splitTriangleResult = {
   positions: new Array(7),
   indices: new Array(3 * 3),
 };
@@ -1919,16 +1923,16 @@ function splitTriangle(p0, p1, p2) {
 
   offsetTriangleFromXZPlane(p0, p1, p2);
 
-  var p0Behind = p0.y < 0.0;
-  var p1Behind = p1.y < 0.0;
-  var p2Behind = p2.y < 0.0;
+  const p0Behind = p0.y < 0.0;
+  const p1Behind = p1.y < 0.0;
+  const p2Behind = p2.y < 0.0;
 
-  var numBehind = 0;
+  let numBehind = 0;
   numBehind += p0Behind ? 1 : 0;
   numBehind += p1Behind ? 1 : 0;
   numBehind += p2Behind ? 1 : 0;
 
-  var indices = splitTriangleResult.indices;
+  const indices = splitTriangleResult.indices;
 
   if (numBehind === 1) {
     indices[1] = 3;
@@ -1996,7 +2000,7 @@ function splitTriangle(p0, p1, p2) {
     }
   }
 
-  var positions = splitTriangleResult.positions;
+  const positions = splitTriangleResult.positions;
   positions[0] = p0;
   positions[1] = p1;
   positions[2] = p2;
@@ -2014,19 +2018,19 @@ function splitTriangle(p0, p1, p2) {
 }
 
 function updateGeometryAfterSplit(geometry, computeBoundingSphere) {
-  var attributes = geometry.attributes;
+  const attributes = geometry.attributes;
 
   if (attributes.position.values.length === 0) {
     return undefined;
   }
 
-  for (var property in attributes) {
+  for (const property in attributes) {
     if (
       attributes.hasOwnProperty(property) &&
       defined(attributes[property]) &&
       defined(attributes[property].values)
     ) {
-      var attribute = attributes[property];
+      const attribute = attributes[property];
       attribute.values = ComponentDatatype.createTypedArray(
         attribute.componentDatatype,
         attribute.values
@@ -2034,7 +2038,7 @@ function updateGeometryAfterSplit(geometry, computeBoundingSphere) {
     }
   }
 
-  var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+  const numberOfVertices = Geometry.computeNumberOfVertices(geometry);
   geometry.indices = IndexDatatype.createTypedArray(
     numberOfVertices,
     geometry.indices
@@ -2050,16 +2054,16 @@ function updateGeometryAfterSplit(geometry, computeBoundingSphere) {
 }
 
 function copyGeometryForSplit(geometry) {
-  var attributes = geometry.attributes;
-  var copiedAttributes = {};
+  const attributes = geometry.attributes;
+  const copiedAttributes = {};
 
-  for (var property in attributes) {
+  for (const property in attributes) {
     if (
       attributes.hasOwnProperty(property) &&
       defined(attributes[property]) &&
       defined(attributes[property].values)
     ) {
-      var attribute = attributes[property];
+      const attribute = attributes[property];
       copiedAttributes[property] = new GeometryAttribute({
         componentDatatype: attribute.componentDatatype,
         componentsPerAttribute: attribute.componentsPerAttribute,
@@ -2077,7 +2081,7 @@ function copyGeometryForSplit(geometry) {
 }
 
 function updateInstanceAfterSplit(instance, westGeometry, eastGeometry) {
-  var computeBoundingSphere = defined(instance.geometry.boundingSphere);
+  const computeBoundingSphere = defined(instance.geometry.boundingSphere);
 
   westGeometry = updateGeometryAfterSplit(westGeometry, computeBoundingSphere);
   eastGeometry = updateGeometryAfterSplit(eastGeometry, computeBoundingSphere);
@@ -2097,9 +2101,9 @@ function generateBarycentricInterpolateFunction(
   CartesianType,
   numberOfComponents
 ) {
-  var v0Scratch = new CartesianType();
-  var v1Scratch = new CartesianType();
-  var v2Scratch = new CartesianType();
+  const v0Scratch = new CartesianType();
+  const v1Scratch = new CartesianType();
+  const v2Scratch = new CartesianType();
 
   return function (
     i0,
@@ -2111,17 +2115,17 @@ function generateBarycentricInterpolateFunction(
     insertedIndex,
     normalize
   ) {
-    var v0 = CartesianType.fromArray(
+    const v0 = CartesianType.fromArray(
       sourceValues,
       i0 * numberOfComponents,
       v0Scratch
     );
-    var v1 = CartesianType.fromArray(
+    const v1 = CartesianType.fromArray(
       sourceValues,
       i1 * numberOfComponents,
       v1Scratch
     );
-    var v2 = CartesianType.fromArray(
+    const v2 = CartesianType.fromArray(
       sourceValues,
       i2 * numberOfComponents,
       v2Scratch
@@ -2131,7 +2135,7 @@ function generateBarycentricInterpolateFunction(
     CartesianType.multiplyByScalar(v1, coords.y, v1);
     CartesianType.multiplyByScalar(v2, coords.z, v2);
 
-    var value = CartesianType.add(v0, v1, v0);
+    const value = CartesianType.add(v0, v1, v0);
     CartesianType.add(value, v2, value);
 
     if (normalize) {
@@ -2146,19 +2150,19 @@ function generateBarycentricInterpolateFunction(
   };
 }
 
-var interpolateAndPackCartesian4 = generateBarycentricInterpolateFunction(
+const interpolateAndPackCartesian4 = generateBarycentricInterpolateFunction(
   Cartesian4,
   4
 );
-var interpolateAndPackCartesian3 = generateBarycentricInterpolateFunction(
+const interpolateAndPackCartesian3 = generateBarycentricInterpolateFunction(
   Cartesian3,
   3
 );
-var interpolateAndPackCartesian2 = generateBarycentricInterpolateFunction(
+const interpolateAndPackCartesian2 = generateBarycentricInterpolateFunction(
   Cartesian2,
   2
 );
-var interpolateAndPackBoolean = function (
+const interpolateAndPackBoolean = function (
   i0,
   i1,
   i2,
@@ -2167,16 +2171,16 @@ var interpolateAndPackBoolean = function (
   currentValues,
   insertedIndex
 ) {
-  var v1 = sourceValues[i0] * coords.x;
-  var v2 = sourceValues[i1] * coords.y;
-  var v3 = sourceValues[i2] * coords.z;
+  const v1 = sourceValues[i0] * coords.x;
+  const v2 = sourceValues[i1] * coords.y;
+  const v3 = sourceValues[i2] * coords.z;
   currentValues[insertedIndex] = v1 + v2 + v3 > CesiumMath.EPSILON6 ? 1 : 0;
 };
 
-var p0Scratch = new Cartesian3();
-var p1Scratch = new Cartesian3();
-var p2Scratch = new Cartesian3();
-var barycentricScratch = new Cartesian3();
+const p0Scratch = new Cartesian3();
+const p1Scratch = new Cartesian3();
+const p2Scratch = new Cartesian3();
+const barycentricScratch = new Cartesian3();
 
 function computeTriangleAttributes(
   i0,
@@ -2207,10 +2211,13 @@ function computeTriangleAttributes(
     return;
   }
 
-  var p0 = Cartesian3.fromArray(positions, i0 * 3, p0Scratch);
-  var p1 = Cartesian3.fromArray(positions, i1 * 3, p1Scratch);
-  var p2 = Cartesian3.fromArray(positions, i2 * 3, p2Scratch);
-  var coords = barycentricCoordinates(point, p0, p1, p2, barycentricScratch);
+  const p0 = Cartesian3.fromArray(positions, i0 * 3, p0Scratch);
+  const p1 = Cartesian3.fromArray(positions, i1 * 3, p1Scratch);
+  const p2 = Cartesian3.fromArray(positions, i2 * 3, p2Scratch);
+  const coords = barycentricCoordinates(point, p0, p1, p2, barycentricScratch);
+  if (!defined(coords)) {
+    return;
+  }
 
   if (defined(normals)) {
     interpolateAndPackCartesian3(
@@ -2226,15 +2233,15 @@ function computeTriangleAttributes(
   }
 
   if (defined(extrudeDirections)) {
-    var d0 = Cartesian3.fromArray(extrudeDirections, i0 * 3, p0Scratch);
-    var d1 = Cartesian3.fromArray(extrudeDirections, i1 * 3, p1Scratch);
-    var d2 = Cartesian3.fromArray(extrudeDirections, i2 * 3, p2Scratch);
+    const d0 = Cartesian3.fromArray(extrudeDirections, i0 * 3, p0Scratch);
+    const d1 = Cartesian3.fromArray(extrudeDirections, i1 * 3, p1Scratch);
+    const d2 = Cartesian3.fromArray(extrudeDirections, i2 * 3, p2Scratch);
 
     Cartesian3.multiplyByScalar(d0, coords.x, d0);
     Cartesian3.multiplyByScalar(d1, coords.y, d1);
     Cartesian3.multiplyByScalar(d2, coords.z, d2);
 
-    var direction;
+    let direction;
     if (
       !Cartesian3.equals(d0, Cartesian3.ZERO) ||
       !Cartesian3.equals(d1, Cartesian3.ZERO) ||
@@ -2307,8 +2314,8 @@ function computeTriangleAttributes(
   }
 
   if (customAttributesLength > 0) {
-    for (var i = 0; i < customAttributesLength; i++) {
-      var attributeName = customAttributeNames[i];
+    for (let i = 0; i < customAttributesLength; i++) {
+      const attributeName = customAttributeNames[i];
       genericInterpolate(
         i0,
         i1,
@@ -2331,9 +2338,9 @@ function genericInterpolate(
   sourceAttribute,
   currentAttribute
 ) {
-  var componentsPerAttribute = sourceAttribute.componentsPerAttribute;
-  var sourceValues = sourceAttribute.values;
-  var currentValues = currentAttribute.values;
+  const componentsPerAttribute = sourceAttribute.componentsPerAttribute;
+  const sourceValues = sourceAttribute.values;
+  const currentValues = currentAttribute.values;
   switch (componentsPerAttribute) {
     case 4:
       interpolateAndPackCartesian4(
@@ -2387,11 +2394,11 @@ function insertSplitPoint(
   currentIndex,
   point
 ) {
-  var insertIndex = currentAttributes.position.values.length / 3;
+  const insertIndex = currentAttributes.position.values.length / 3;
 
   if (currentIndex !== -1) {
-    var prevIndex = indices[currentIndex];
-    var newIndex = currentIndexMap[prevIndex];
+    const prevIndex = indices[currentIndex];
+    const newIndex = currentIndexMap[prevIndex];
 
     if (newIndex === -1) {
       currentIndexMap[prevIndex] = insertIndex;
@@ -2409,7 +2416,7 @@ function insertSplitPoint(
   return insertIndex;
 }
 
-var NAMED_ATTRIBUTES = {
+const NAMED_ATTRIBUTES = {
   position: true,
   normal: true,
   bitangent: true,
@@ -2419,29 +2426,29 @@ var NAMED_ATTRIBUTES = {
   applyOffset: true,
 };
 function splitLongitudeTriangles(instance) {
-  var geometry = instance.geometry;
-  var attributes = geometry.attributes;
-  var positions = attributes.position.values;
-  var normals = defined(attributes.normal)
+  const geometry = instance.geometry;
+  const attributes = geometry.attributes;
+  const positions = attributes.position.values;
+  const normals = defined(attributes.normal)
     ? attributes.normal.values
     : undefined;
-  var bitangents = defined(attributes.bitangent)
+  const bitangents = defined(attributes.bitangent)
     ? attributes.bitangent.values
     : undefined;
-  var tangents = defined(attributes.tangent)
+  const tangents = defined(attributes.tangent)
     ? attributes.tangent.values
     : undefined;
-  var texCoords = defined(attributes.st) ? attributes.st.values : undefined;
-  var extrudeDirections = defined(attributes.extrudeDirection)
+  const texCoords = defined(attributes.st) ? attributes.st.values : undefined;
+  const extrudeDirections = defined(attributes.extrudeDirection)
     ? attributes.extrudeDirection.values
     : undefined;
-  var applyOffset = defined(attributes.applyOffset)
+  const applyOffset = defined(attributes.applyOffset)
     ? attributes.applyOffset.values
     : undefined;
-  var indices = geometry.indices;
+  const indices = geometry.indices;
 
-  var customAttributeNames = [];
-  for (var attributeName in attributes) {
+  const customAttributeNames = [];
+  for (const attributeName in attributes) {
     if (
       attributes.hasOwnProperty(attributeName) &&
       !NAMED_ATTRIBUTES[attributeName] &&
@@ -2450,21 +2457,21 @@ function splitLongitudeTriangles(instance) {
       customAttributeNames.push(attributeName);
     }
   }
-  var customAttributesLength = customAttributeNames.length;
+  const customAttributesLength = customAttributeNames.length;
 
-  var eastGeometry = copyGeometryForSplit(geometry);
-  var westGeometry = copyGeometryForSplit(geometry);
+  const eastGeometry = copyGeometryForSplit(geometry);
+  const westGeometry = copyGeometryForSplit(geometry);
 
-  var currentAttributes;
-  var currentIndices;
-  var currentIndexMap;
-  var insertedIndex;
-  var i;
+  let currentAttributes;
+  let currentIndices;
+  let currentIndexMap;
+  let insertedIndex;
+  let i;
 
-  var westGeometryIndexMap = [];
+  const westGeometryIndexMap = [];
   westGeometryIndexMap.length = positions.length / 3;
 
-  var eastGeometryIndexMap = [];
+  const eastGeometryIndexMap = [];
   eastGeometryIndexMap.length = positions.length / 3;
 
   for (i = 0; i < westGeometryIndexMap.length; ++i) {
@@ -2472,25 +2479,25 @@ function splitLongitudeTriangles(instance) {
     eastGeometryIndexMap[i] = -1;
   }
 
-  var len = indices.length;
+  const len = indices.length;
   for (i = 0; i < len; i += 3) {
-    var i0 = indices[i];
-    var i1 = indices[i + 1];
-    var i2 = indices[i + 2];
+    const i0 = indices[i];
+    const i1 = indices[i + 1];
+    const i2 = indices[i + 2];
 
-    var p0 = Cartesian3.fromArray(positions, i0 * 3);
-    var p1 = Cartesian3.fromArray(positions, i1 * 3);
-    var p2 = Cartesian3.fromArray(positions, i2 * 3);
+    let p0 = Cartesian3.fromArray(positions, i0 * 3);
+    let p1 = Cartesian3.fromArray(positions, i1 * 3);
+    let p2 = Cartesian3.fromArray(positions, i2 * 3);
 
-    var result = splitTriangle(p0, p1, p2);
+    const result = splitTriangle(p0, p1, p2);
     if (defined(result) && result.positions.length > 3) {
-      var resultPositions = result.positions;
-      var resultIndices = result.indices;
-      var resultLength = resultIndices.length;
+      const resultPositions = result.positions;
+      const resultIndices = result.indices;
+      const resultLength = resultIndices.length;
 
-      for (var j = 0; j < resultLength; ++j) {
-        var resultIndex = resultIndices[j];
-        var point = resultPositions[resultIndex];
+      for (let j = 0; j < resultLength; ++j) {
+        const resultIndex = resultIndices[j];
+        const point = resultPositions[resultIndex];
 
         if (point.y < 0.0) {
           currentAttributes = westGeometry.attributes;
@@ -2632,10 +2639,10 @@ function splitLongitudeTriangles(instance) {
   updateInstanceAfterSplit(instance, westGeometry, eastGeometry);
 }
 
-var xzPlane = Plane.fromPointNormal(Cartesian3.ZERO, Cartesian3.UNIT_Y);
+const xzPlane = Plane.fromPointNormal(Cartesian3.ZERO, Cartesian3.UNIT_Y);
 
-var offsetScratch = new Cartesian3();
-var offsetPointScratch = new Cartesian3();
+const offsetScratch = new Cartesian3();
+const offsetPointScratch = new Cartesian3();
 
 function computeLineAttributes(
   i0,
@@ -2650,7 +2657,7 @@ function computeLineAttributes(
     return;
   }
 
-  var p0 = Cartesian3.fromArray(positions, i0 * 3, p0Scratch);
+  const p0 = Cartesian3.fromArray(positions, i0 * 3, p0Scratch);
   if (Cartesian3.equalsEpsilon(p0, point, CesiumMath.EPSILON10)) {
     currentAttributes.applyOffset.values[insertIndex] = applyOffset[i0];
   } else {
@@ -2659,24 +2666,24 @@ function computeLineAttributes(
 }
 
 function splitLongitudeLines(instance) {
-  var geometry = instance.geometry;
-  var attributes = geometry.attributes;
-  var positions = attributes.position.values;
-  var applyOffset = defined(attributes.applyOffset)
+  const geometry = instance.geometry;
+  const attributes = geometry.attributes;
+  const positions = attributes.position.values;
+  const applyOffset = defined(attributes.applyOffset)
     ? attributes.applyOffset.values
     : undefined;
-  var indices = geometry.indices;
+  const indices = geometry.indices;
 
-  var eastGeometry = copyGeometryForSplit(geometry);
-  var westGeometry = copyGeometryForSplit(geometry);
+  const eastGeometry = copyGeometryForSplit(geometry);
+  const westGeometry = copyGeometryForSplit(geometry);
 
-  var i;
-  var length = indices.length;
+  let i;
+  const length = indices.length;
 
-  var westGeometryIndexMap = [];
+  const westGeometryIndexMap = [];
   westGeometryIndexMap.length = positions.length / 3;
 
-  var eastGeometryIndexMap = [];
+  const eastGeometryIndexMap = [];
   eastGeometryIndexMap.length = positions.length / 3;
 
   for (i = 0; i < westGeometryIndexMap.length; ++i) {
@@ -2685,12 +2692,12 @@ function splitLongitudeLines(instance) {
   }
 
   for (i = 0; i < length; i += 2) {
-    var i0 = indices[i];
-    var i1 = indices[i + 1];
+    const i0 = indices[i];
+    const i1 = indices[i + 1];
 
-    var p0 = Cartesian3.fromArray(positions, i0 * 3, p0Scratch);
-    var p1 = Cartesian3.fromArray(positions, i1 * 3, p1Scratch);
-    var insertIndex;
+    const p0 = Cartesian3.fromArray(positions, i0 * 3, p0Scratch);
+    const p1 = Cartesian3.fromArray(positions, i1 * 3, p1Scratch);
+    let insertIndex;
 
     if (Math.abs(p0.y) < CesiumMath.EPSILON6) {
       if (p0.y < 0.0) {
@@ -2708,14 +2715,14 @@ function splitLongitudeLines(instance) {
       }
     }
 
-    var p0Attributes = eastGeometry.attributes;
-    var p0Indices = eastGeometry.indices;
-    var p0IndexMap = eastGeometryIndexMap;
-    var p1Attributes = westGeometry.attributes;
-    var p1Indices = westGeometry.indices;
-    var p1IndexMap = westGeometryIndexMap;
+    let p0Attributes = eastGeometry.attributes;
+    let p0Indices = eastGeometry.indices;
+    let p0IndexMap = eastGeometryIndexMap;
+    let p1Attributes = westGeometry.attributes;
+    let p1Indices = westGeometry.indices;
+    let p1IndexMap = westGeometryIndexMap;
 
-    var intersection = IntersectionTests.lineSegmentPlane(
+    const intersection = IntersectionTests.lineSegmentPlane(
       p0,
       p1,
       xzPlane,
@@ -2723,7 +2730,7 @@ function splitLongitudeLines(instance) {
     );
     if (defined(intersection)) {
       // move point on the xz-plane slightly away from the plane
-      var offset = Cartesian3.multiplyByScalar(
+      const offset = Cartesian3.multiplyByScalar(
         Cartesian3.UNIT_Y,
         5.0 * CesiumMath.EPSILON9,
         offsetScratch
@@ -2739,7 +2746,7 @@ function splitLongitudeLines(instance) {
         p1IndexMap = eastGeometryIndexMap;
       }
 
-      var offsetPoint = Cartesian3.add(
+      const offsetPoint = Cartesian3.add(
         intersection,
         offset,
         offsetPointScratch
@@ -2819,9 +2826,9 @@ function splitLongitudeLines(instance) {
         applyOffset
       );
     } else {
-      var currentAttributes;
-      var currentIndices;
-      var currentIndexMap;
+      let currentAttributes;
+      let currentIndices;
+      let currentIndexMap;
 
       if (p0.y < 0.0) {
         currentAttributes = westGeometry.attributes;
@@ -2874,32 +2881,36 @@ function splitLongitudeLines(instance) {
   updateInstanceAfterSplit(instance, westGeometry, eastGeometry);
 }
 
-var cartesian2Scratch0 = new Cartesian2();
-var cartesian2Scratch1 = new Cartesian2();
+const cartesian2Scratch0 = new Cartesian2();
+const cartesian2Scratch1 = new Cartesian2();
 
-var cartesian3Scratch0 = new Cartesian3();
-var cartesian3Scratch2 = new Cartesian3();
-var cartesian3Scratch3 = new Cartesian3();
-var cartesian3Scratch4 = new Cartesian3();
-var cartesian3Scratch5 = new Cartesian3();
-var cartesian3Scratch6 = new Cartesian3();
+const cartesian3Scratch0 = new Cartesian3();
+const cartesian3Scratch2 = new Cartesian3();
+const cartesian3Scratch3 = new Cartesian3();
+const cartesian3Scratch4 = new Cartesian3();
+const cartesian3Scratch5 = new Cartesian3();
+const cartesian3Scratch6 = new Cartesian3();
 
-var cartesian4Scratch0 = new Cartesian4();
+const cartesian4Scratch0 = new Cartesian4();
 
 function updateAdjacencyAfterSplit(geometry) {
-  var attributes = geometry.attributes;
-  var positions = attributes.position.values;
-  var prevPositions = attributes.prevPosition.values;
-  var nextPositions = attributes.nextPosition.values;
+  const attributes = geometry.attributes;
+  const positions = attributes.position.values;
+  const prevPositions = attributes.prevPosition.values;
+  const nextPositions = attributes.nextPosition.values;
 
-  var length = positions.length;
-  for (var j = 0; j < length; j += 3) {
-    var position = Cartesian3.unpack(positions, j, cartesian3Scratch0);
+  const length = positions.length;
+  for (let j = 0; j < length; j += 3) {
+    const position = Cartesian3.unpack(positions, j, cartesian3Scratch0);
     if (position.x > 0.0) {
       continue;
     }
 
-    var prevPosition = Cartesian3.unpack(prevPositions, j, cartesian3Scratch2);
+    const prevPosition = Cartesian3.unpack(
+      prevPositions,
+      j,
+      cartesian3Scratch2
+    );
     if (
       (position.y < 0.0 && prevPosition.y > 0.0) ||
       (position.y > 0.0 && prevPosition.y < 0.0)
@@ -2913,7 +2924,11 @@ function updateAdjacencyAfterSplit(geometry) {
       }
     }
 
-    var nextPosition = Cartesian3.unpack(nextPositions, j, cartesian3Scratch3);
+    const nextPosition = Cartesian3.unpack(
+      nextPositions,
+      j,
+      cartesian3Scratch3
+    );
     if (
       (position.y < 0.0 && nextPosition.y > 0.0) ||
       (position.y > 0.0 && nextPosition.y < 0.0)
@@ -2929,36 +2944,38 @@ function updateAdjacencyAfterSplit(geometry) {
   }
 }
 
-var offsetScalar = 5.0 * CesiumMath.EPSILON9;
-var coplanarOffset = CesiumMath.EPSILON6;
+const offsetScalar = 5.0 * CesiumMath.EPSILON9;
+const coplanarOffset = CesiumMath.EPSILON6;
 
 function splitLongitudePolyline(instance) {
-  var geometry = instance.geometry;
-  var attributes = geometry.attributes;
-  var positions = attributes.position.values;
-  var prevPositions = attributes.prevPosition.values;
-  var nextPositions = attributes.nextPosition.values;
-  var expandAndWidths = attributes.expandAndWidth.values;
+  const geometry = instance.geometry;
+  const attributes = geometry.attributes;
+  const positions = attributes.position.values;
+  const prevPositions = attributes.prevPosition.values;
+  const nextPositions = attributes.nextPosition.values;
+  const expandAndWidths = attributes.expandAndWidth.values;
 
-  var texCoords = defined(attributes.st) ? attributes.st.values : undefined;
-  var colors = defined(attributes.color) ? attributes.color.values : undefined;
+  const texCoords = defined(attributes.st) ? attributes.st.values : undefined;
+  const colors = defined(attributes.color)
+    ? attributes.color.values
+    : undefined;
 
-  var eastGeometry = copyGeometryForSplit(geometry);
-  var westGeometry = copyGeometryForSplit(geometry);
+  const eastGeometry = copyGeometryForSplit(geometry);
+  const westGeometry = copyGeometryForSplit(geometry);
 
-  var i;
-  var j;
-  var index;
+  let i;
+  let j;
+  let index;
 
-  var intersectionFound = false;
+  let intersectionFound = false;
 
-  var length = positions.length / 3;
+  const length = positions.length / 3;
   for (i = 0; i < length; i += 4) {
-    var i0 = i;
-    var i2 = i + 2;
+    const i0 = i;
+    const i2 = i + 2;
 
-    var p0 = Cartesian3.fromArray(positions, i0 * 3, cartesian3Scratch0);
-    var p2 = Cartesian3.fromArray(positions, i2 * 3, cartesian3Scratch2);
+    const p0 = Cartesian3.fromArray(positions, i0 * 3, cartesian3Scratch0);
+    const p2 = Cartesian3.fromArray(positions, i2 * 3, cartesian3Scratch2);
 
     // Offset points that are close to the 180 longitude and change the previous/next point
     // to be the same offset point so it can be projected to 2D. There is special handling in the
@@ -2988,12 +3005,12 @@ function splitLongitudePolyline(instance) {
       }
     }
 
-    var p0Attributes = eastGeometry.attributes;
-    var p0Indices = eastGeometry.indices;
-    var p2Attributes = westGeometry.attributes;
-    var p2Indices = westGeometry.indices;
+    let p0Attributes = eastGeometry.attributes;
+    let p0Indices = eastGeometry.indices;
+    let p2Attributes = westGeometry.attributes;
+    let p2Indices = westGeometry.indices;
 
-    var intersection = IntersectionTests.lineSegmentPlane(
+    const intersection = IntersectionTests.lineSegmentPlane(
       p0,
       p2,
       xzPlane,
@@ -3003,7 +3020,7 @@ function splitLongitudePolyline(instance) {
       intersectionFound = true;
 
       // move point on the xz-plane slightly away from the plane
-      var offset = Cartesian3.multiplyByScalar(
+      const offset = Cartesian3.multiplyByScalar(
         Cartesian3.UNIT_Y,
         offsetScalar,
         cartesian3Scratch5
@@ -3016,7 +3033,7 @@ function splitLongitudePolyline(instance) {
         p2Indices = eastGeometry.indices;
       }
 
-      var offsetPoint = Cartesian3.add(
+      const offsetPoint = Cartesian3.add(
         intersection,
         offset,
         cartesian3Scratch6
@@ -3113,19 +3130,19 @@ function splitLongitudePolyline(instance) {
         nextPositions[i2 * 3 + 5]
       );
 
-      var ew0 = Cartesian2.fromArray(
+      const ew0 = Cartesian2.fromArray(
         expandAndWidths,
         i0 * 2,
         cartesian2Scratch0
       );
-      var width = Math.abs(ew0.y);
+      const width = Math.abs(ew0.y);
 
       p0Attributes.expandAndWidth.values.push(-1, width, 1, width);
       p0Attributes.expandAndWidth.values.push(-1, -width, 1, -width);
       p2Attributes.expandAndWidth.values.push(-1, width, 1, width);
       p2Attributes.expandAndWidth.values.push(-1, -width, 1, -width);
 
-      var t = Cartesian3.magnitudeSquared(
+      let t = Cartesian3.magnitudeSquared(
         Cartesian3.subtract(intersection, p0, cartesian3Scratch3)
       );
       t /= Cartesian3.magnitudeSquared(
@@ -3133,13 +3150,13 @@ function splitLongitudePolyline(instance) {
       );
 
       if (defined(colors)) {
-        var c0 = Cartesian4.fromArray(colors, i0 * 4, cartesian4Scratch0);
-        var c2 = Cartesian4.fromArray(colors, i2 * 4, cartesian4Scratch0);
+        const c0 = Cartesian4.fromArray(colors, i0 * 4, cartesian4Scratch0);
+        const c2 = Cartesian4.fromArray(colors, i2 * 4, cartesian4Scratch0);
 
-        var r = CesiumMath.lerp(c0.x, c2.x, t);
-        var g = CesiumMath.lerp(c0.y, c2.y, t);
-        var b = CesiumMath.lerp(c0.z, c2.z, t);
-        var a = CesiumMath.lerp(c0.w, c2.w, t);
+        const r = CesiumMath.lerp(c0.x, c2.x, t);
+        const g = CesiumMath.lerp(c0.y, c2.y, t);
+        const b = CesiumMath.lerp(c0.z, c2.z, t);
+        const a = CesiumMath.lerp(c0.w, c2.w, t);
 
         for (j = i0 * 4; j < i0 * 4 + 2 * 4; ++j) {
           p0Attributes.color.values.push(colors[j]);
@@ -3154,14 +3171,14 @@ function splitLongitudePolyline(instance) {
       }
 
       if (defined(texCoords)) {
-        var s0 = Cartesian2.fromArray(texCoords, i0 * 2, cartesian2Scratch0);
-        var s3 = Cartesian2.fromArray(
+        const s0 = Cartesian2.fromArray(texCoords, i0 * 2, cartesian2Scratch0);
+        const s3 = Cartesian2.fromArray(
           texCoords,
           (i + 3) * 2,
           cartesian2Scratch1
         );
 
-        var sx = CesiumMath.lerp(s0.x, s3.x, t);
+        const sx = CesiumMath.lerp(s0.x, s3.x, t);
 
         for (j = i0 * 2; j < i0 * 2 + 2 * 2; ++j) {
           p0Attributes.st.values.push(texCoords[j]);
@@ -3183,8 +3200,8 @@ function splitLongitudePolyline(instance) {
       p2Indices.push(index, index + 2, index + 1);
       p2Indices.push(index + 1, index + 2, index + 3);
     } else {
-      var currentAttributes;
-      var currentIndices;
+      let currentAttributes;
+      let currentIndices;
 
       if (p0.y < 0.0) {
         currentAttributes = westGeometry.attributes;
@@ -3252,10 +3269,10 @@ GeometryPipeline.splitLongitude = function (instance) {
   }
   //>>includeEnd('debug');
 
-  var geometry = instance.geometry;
-  var boundingSphere = geometry.boundingSphere;
+  const geometry = instance.geometry;
+  const boundingSphere = geometry.boundingSphere;
   if (defined(boundingSphere)) {
-    var minX = boundingSphere.center.x - boundingSphere.radius;
+    const minX = boundingSphere.center.x - boundingSphere.radius;
     if (
       minX > 0 ||
       BoundingSphere.intersectPlane(boundingSphere, Plane.ORIGIN_ZX_PLANE) !==

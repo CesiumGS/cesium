@@ -143,18 +143,18 @@
         //Sandcastle_Begin
         // Create a viewer that won't render a new frame unless
         // updates to the scene require it to reduce overall CPU usage.
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           requestRenderMode: true,
           maximumRenderTimeChange: Infinity,
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
-        var scene = viewer.scene;
+        const scene = viewer.scene;
         scene.debugShowFramesPerSecond = true;
 
-        var tileset;
+        let tileset;
 
-        var viewModel = {
+        const viewModel = {
           requestRenderMode: true,
           showTimeOptions: false,
           timeChangeEnabled: false,
@@ -166,7 +166,7 @@
         };
 
         // Clear scene and set default view.
-        var handler;
+        let handler;
         function resetScene() {
           viewer.trackedEntity = undefined;
           viewer.dataSources.removeAll();
@@ -203,7 +203,7 @@
           viewModel.timeChangeEnabled = true;
           viewModel.showTimeOptions = true;
 
-          var entity = viewer.entities.add({
+          const entity = viewer.entities.add({
             name: "Aircraft",
             position: Cesium.Cartesian3.fromDegrees(
               -123.0744619,
@@ -241,11 +241,11 @@
         function pickingScenario() {
           resetScene();
 
-          var color = Cesium.Color.CORNFLOWERBLUE;
-          var colorProperty = new Cesium.CallbackProperty(function () {
+          let color = Cesium.Color.CORNFLOWERBLUE;
+          const colorProperty = new Cesium.CallbackProperty(function () {
             return color;
           }, false);
-          var entity = viewer.entities.add({
+          const entity = viewer.entities.add({
             position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
             box: {
               dimensions: new Cesium.Cartesian3(1000000.0, 1000000.0, 30000.0),
@@ -257,10 +257,10 @@
 
           // If the mouse is over the box, change its scale and color,
           // then request a new render frame.
-          var lastPicked;
+          let lastPicked;
           handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
           handler.setInputAction(function (movement) {
-            var pickedObject = scene.pick(movement.endPosition);
+            const pickedObject = scene.pick(movement.endPosition);
             if (Cesium.defined(pickedObject) && pickedObject.id === entity) {
               if (Cesium.defined(lastPicked)) {
                 return;
@@ -288,7 +288,7 @@
 
         // BEGIN SANDCASTLE EXAMPLE UI SETUP
 
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.track(viewModel);
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
@@ -313,8 +313,8 @@
           });
 
         scene.postRender.addEventListener(function () {
-          var time = Cesium.JulianDate.toGregorianDate(scene.lastRenderTime);
-          var value =
+          const time = Cesium.JulianDate.toGregorianDate(scene.lastRenderTime);
+          const value =
             time.hour +
             ":" +
             time.minute +
@@ -325,7 +325,7 @@
           Cesium.knockout.getObservable(viewModel, "lastRenderTime")(value);
         });
 
-        var scenarios = [
+        const scenarios = [
           {
             text: "Default view",
             onselect: resetScene,

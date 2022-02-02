@@ -8,7 +8,7 @@ import Check from "../Core/Check.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-var MetadataType = {
+const MetadataType = {
   /**
    * A single component
    *

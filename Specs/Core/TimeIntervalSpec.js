@@ -7,7 +7,7 @@ describe("Core/TimeInterval", function () {
   }
 
   it("Constructor sets expected defaults.", function () {
-    var interval = new TimeInterval();
+    const interval = new TimeInterval();
     expect(interval.start).toEqual(new JulianDate());
     expect(interval.stop).toEqual(new JulianDate());
     expect(interval.isStartIncluded).toBe(true);
@@ -16,13 +16,13 @@ describe("Core/TimeInterval", function () {
   });
 
   it("Constructor assigns all options.", function () {
-    var start = JulianDate.now();
-    var stop = JulianDate.addDays(start, 1, new JulianDate());
-    var isStartIncluded = false;
-    var isStopIncluded = false;
-    var data = {};
+    const start = JulianDate.now();
+    const stop = JulianDate.addDays(start, 1, new JulianDate());
+    const isStartIncluded = false;
+    const isStopIncluded = false;
+    const data = {};
 
-    var interval = new TimeInterval({
+    const interval = new TimeInterval({
       start: start,
       stop: stop,
       isStartIncluded: isStartIncluded,
@@ -38,10 +38,10 @@ describe("Core/TimeInterval", function () {
   });
 
   it("fromIso8601 assigns expected defaults.", function () {
-    var start = JulianDate.fromIso8601("2013");
-    var stop = JulianDate.fromIso8601("2014");
+    const start = JulianDate.fromIso8601("2013");
+    const stop = JulianDate.fromIso8601("2014");
 
-    var interval = TimeInterval.fromIso8601({
+    const interval = TimeInterval.fromIso8601({
       iso8601: "2013/2014",
     });
 
@@ -53,13 +53,13 @@ describe("Core/TimeInterval", function () {
   });
 
   it("fromIso8601 assigns all options.", function () {
-    var start = JulianDate.fromIso8601("2013");
-    var stop = JulianDate.fromIso8601("2014");
-    var isStartIncluded = false;
-    var isStopIncluded = false;
-    var data = {};
+    const start = JulianDate.fromIso8601("2013");
+    const stop = JulianDate.fromIso8601("2014");
+    const isStartIncluded = false;
+    const isStopIncluded = false;
+    const data = {};
 
-    var interval = TimeInterval.fromIso8601({
+    const interval = TimeInterval.fromIso8601({
       iso8601: "2013/2014",
       isStartIncluded: isStartIncluded,
       isStopIncluded: isStopIncluded,
@@ -74,14 +74,14 @@ describe("Core/TimeInterval", function () {
   });
 
   it("fromIso8601 works with result parameter.", function () {
-    var start = JulianDate.fromIso8601("2013");
-    var stop = JulianDate.fromIso8601("2014");
-    var isStartIncluded = false;
-    var isStopIncluded = false;
-    var data = {};
+    const start = JulianDate.fromIso8601("2013");
+    const stop = JulianDate.fromIso8601("2014");
+    const isStartIncluded = false;
+    const isStopIncluded = false;
+    const data = {};
 
-    var expectedResult = new TimeInterval();
-    var interval = TimeInterval.fromIso8601(
+    const expectedResult = new TimeInterval();
+    const interval = TimeInterval.fromIso8601(
       {
         iso8601: "2013/2014",
         isStartIncluded: isStartIncluded,
@@ -106,9 +106,9 @@ describe("Core/TimeInterval", function () {
   });
 
   it("toIso8601 works", function () {
-    var isoDate1 = "0950-01-02T03:04:05Z";
-    var isoDate2 = "0950-01-03T03:04:05Z";
-    var interval = new TimeInterval({
+    const isoDate1 = "0950-01-02T03:04:05Z";
+    const isoDate2 = "0950-01-03T03:04:05Z";
+    const interval = new TimeInterval({
       start: JulianDate.fromIso8601(isoDate1),
       stop: JulianDate.fromIso8601(isoDate2),
     });
@@ -118,7 +118,7 @@ describe("Core/TimeInterval", function () {
   });
 
   it("can round-trip with ISO8601", function () {
-    var interval = new TimeInterval({
+    const interval = new TimeInterval({
       start: JulianDate.now(),
       stop: JulianDate.now(),
     });
@@ -130,9 +130,9 @@ describe("Core/TimeInterval", function () {
   });
 
   it("toIso8601 works with specified precision", function () {
-    var isoDate1 = "0950-01-02T03:04:05.012345Z";
-    var isoDate2 = "0950-01-03T03:04:05.012345Z";
-    var interval = new TimeInterval({
+    const isoDate1 = "0950-01-02T03:04:05.012345Z";
+    const isoDate2 = "0950-01-03T03:04:05.012345Z";
+    const interval = new TimeInterval({
       start: JulianDate.fromIso8601(isoDate1),
       stop: JulianDate.fromIso8601(isoDate2),
     });
@@ -145,7 +145,7 @@ describe("Core/TimeInterval", function () {
   });
 
   it("isEmpty is false for a non-empty interval", function () {
-    var interval = new TimeInterval({
+    const interval = new TimeInterval({
       start: new JulianDate(1),
       stop: new JulianDate(2),
     });
@@ -153,7 +153,7 @@ describe("Core/TimeInterval", function () {
   });
 
   it("isEmpty is false for an instantaneous interval closed on both ends", function () {
-    var interval = new TimeInterval({
+    const interval = new TimeInterval({
       start: new JulianDate(1),
       stop: new JulianDate(1),
     });
@@ -161,7 +161,7 @@ describe("Core/TimeInterval", function () {
   });
 
   it("isEmpty is true for an instantaneous interval open on both ends", function () {
-    var interval = new TimeInterval({
+    const interval = new TimeInterval({
       start: new JulianDate(1),
       stop: new JulianDate(1),
       isStartIncluded: false,
@@ -171,7 +171,7 @@ describe("Core/TimeInterval", function () {
   });
 
   it("isEmpty is true for an instantaneous interval open on start", function () {
-    var interval = new TimeInterval({
+    const interval = new TimeInterval({
       start: new JulianDate(1),
       stop: new JulianDate(1),
       isStartIncluded: false,
@@ -181,7 +181,7 @@ describe("Core/TimeInterval", function () {
   });
 
   it("isEmpty is true for an instantaneous interval open on stop", function () {
-    var interval = new TimeInterval({
+    const interval = new TimeInterval({
       start: new JulianDate(1),
       stop: new JulianDate(1),
       isStartIncluded: true,
@@ -191,7 +191,7 @@ describe("Core/TimeInterval", function () {
   });
 
   it("isEmpty is true for an interval with stop before start", function () {
-    var interval = new TimeInterval({
+    const interval = new TimeInterval({
       start: new JulianDate(5),
       stop: new JulianDate(4),
     });
@@ -199,7 +199,7 @@ describe("Core/TimeInterval", function () {
   });
 
   it("isEmpty is true for an instantaneous interval only closed on stop end", function () {
-    var interval = new TimeInterval({
+    const interval = new TimeInterval({
       start: new JulianDate(5),
       stop: new JulianDate(5),
       isStartIncluded: false,
@@ -209,7 +209,7 @@ describe("Core/TimeInterval", function () {
   });
 
   it("isEmpty is true for an instantaneous interval only closed on start end", function () {
-    var interval = new TimeInterval({
+    const interval = new TimeInterval({
       start: new JulianDate(5),
       stop: new JulianDate(5),
       isStartIncluded: true,
@@ -219,7 +219,7 @@ describe("Core/TimeInterval", function () {
   });
 
   it("contains works for a non-empty interval.", function () {
-    var interval = new TimeInterval({
+    const interval = new TimeInterval({
       start: new JulianDate(2451545),
       stop: new JulianDate(2451546),
     });
@@ -238,7 +238,7 @@ describe("Core/TimeInterval", function () {
   });
 
   it("contains returns true at start and stop times of a closed interval", function () {
-    var interval = new TimeInterval({
+    const interval = new TimeInterval({
       start: new JulianDate(2451545),
       stop: new JulianDate(2451546),
       isStartIncluded: true,
@@ -253,7 +253,7 @@ describe("Core/TimeInterval", function () {
   });
 
   it("contains returns false at start and stop times of an open interval", function () {
-    var interval = new TimeInterval({
+    const interval = new TimeInterval({
       start: new JulianDate(2451545),
       stop: new JulianDate(2451546),
       isStartIncluded: false,
@@ -268,8 +268,8 @@ describe("Core/TimeInterval", function () {
   });
 
   it("equals and equalsEpsilon work", function () {
-    var left = new TimeInterval();
-    var right = new TimeInterval();
+    let left = new TimeInterval();
+    let right = new TimeInterval();
 
     expect(left.equals(right)).toEqual(true);
     expect(left.equalsEpsilon(right, 0)).toEqual(true);
@@ -314,11 +314,11 @@ describe("Core/TimeInterval", function () {
   });
 
   it("equalsEpsilon works within threshold", function () {
-    var left = new TimeInterval({
+    const left = new TimeInterval({
       start: new JulianDate(0),
       stop: new JulianDate(1),
     });
-    var right = new TimeInterval({
+    const right = new TimeInterval({
       start: new JulianDate(0),
       stop: new JulianDate(1, 1),
     });
@@ -327,7 +327,7 @@ describe("Core/TimeInterval", function () {
   });
 
   it("clone returns an identical interval", function () {
-    var interval = new TimeInterval({
+    const interval = new TimeInterval({
       start: new JulianDate(1),
       stop: new JulianDate(2.5),
       isStartIncluded: true,
@@ -338,15 +338,15 @@ describe("Core/TimeInterval", function () {
   });
 
   it("clone works with a result parameter", function () {
-    var result = new TimeInterval();
-    var interval = new TimeInterval({
+    const result = new TimeInterval();
+    const interval = new TimeInterval({
       start: new JulianDate(1),
       stop: new JulianDate(2.5),
       isStartIncluded: true,
       isStopIncluded: false,
       data: 12,
     });
-    var returnedResult = interval.clone(result);
+    const returnedResult = interval.clone(result);
     expect(returnedResult).toBe(result);
     expect(returnedResult).toEqual(interval);
   });
@@ -356,7 +356,7 @@ describe("Core/TimeInterval", function () {
   });
 
   it("formats as ISO8601 with toString", function () {
-    var interval = new TimeInterval({
+    const interval = new TimeInterval({
       start: new JulianDate(1),
       stop: new JulianDate(2.5),
     });
@@ -364,7 +364,7 @@ describe("Core/TimeInterval", function () {
   });
 
   it("intersect properly intersects with an exhaustive set of cases", function () {
-    var testParameters = [
+    const testParameters = [
       new TimeInterval({
         start: new JulianDate(1),
         stop: new JulianDate(2.5),
@@ -565,16 +565,16 @@ describe("Core/TimeInterval", function () {
       }),
     ];
 
-    for (var i = 0; i < testParameters.length - 2; i = i + 3) {
-      var first = testParameters[i];
-      var second = testParameters[i + 1];
-      var expectedResult = testParameters[i + 2];
-      var intersect1 = TimeInterval.intersect(
+    for (let i = 0; i < testParameters.length - 2; i = i + 3) {
+      const first = testParameters[i];
+      const second = testParameters[i + 1];
+      const expectedResult = testParameters[i + 2];
+      const intersect1 = TimeInterval.intersect(
         first,
         second,
         new TimeInterval()
       );
-      var intersect2 = TimeInterval.intersect(
+      const intersect2 = TimeInterval.intersect(
         second,
         first,
         new TimeInterval()
@@ -586,7 +586,7 @@ describe("Core/TimeInterval", function () {
   });
 
   it("intersect with undefined results in an empty interval.", function () {
-    var interval = new TimeInterval({
+    const interval = new TimeInterval({
       start: new JulianDate(1),
       stop: new JulianDate(2),
     });
@@ -596,17 +596,17 @@ describe("Core/TimeInterval", function () {
   });
 
   it("intersect with a merge callback properly merges data.", function () {
-    var oneToThree = new TimeInterval({
+    const oneToThree = new TimeInterval({
       start: new JulianDate(1),
       stop: new JulianDate(3),
       data: 2,
     });
-    var twoToFour = new TimeInterval({
+    const twoToFour = new TimeInterval({
       start: new JulianDate(2),
       stop: new JulianDate(4),
       data: 3,
     });
-    var twoToThree = TimeInterval.intersect(
+    const twoToThree = TimeInterval.intersect(
       oneToThree,
       twoToFour,
       new TimeInterval(),
@@ -634,22 +634,22 @@ describe("Core/TimeInterval", function () {
   });
 
   it("intersect throws without left.", function () {
-    var right = new TimeInterval();
-    var result = new TimeInterval();
+    const right = new TimeInterval();
+    const result = new TimeInterval();
     expect(function () {
       TimeInterval.intersect(undefined, right, result);
     }).toThrowDeveloperError();
   });
 
   it("contains throws without interval.", function () {
-    var date = new JulianDate();
+    const date = new JulianDate();
     expect(function () {
       TimeInterval.contains(undefined, date);
     }).toThrowDeveloperError();
   });
 
   it("contains throws without date.", function () {
-    var timeInterval = new TimeInterval();
+    const timeInterval = new TimeInterval();
     expect(function () {
       TimeInterval.contains(timeInterval, undefined);
     }).toThrowDeveloperError();

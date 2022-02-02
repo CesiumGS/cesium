@@ -32,20 +32,20 @@ TimelineHighlightRange.prototype.setRange = function (start, stop) {
 };
 
 TimelineHighlightRange.prototype.render = function (renderState) {
-  var range = "";
+  let range = "";
   if (this._start && this._stop && this._color) {
-    var highlightStart = JulianDate.secondsDifference(
+    const highlightStart = JulianDate.secondsDifference(
       this._start,
       renderState.epochJulian
     );
-    var highlightLeft = Math.round(
+    let highlightLeft = Math.round(
       renderState.timeBarWidth * renderState.getAlpha(highlightStart)
     );
-    var highlightStop = JulianDate.secondsDifference(
+    const highlightStop = JulianDate.secondsDifference(
       this._stop,
       renderState.epochJulian
     );
-    var highlightWidth =
+    let highlightWidth =
       Math.round(
         renderState.timeBarWidth * renderState.getAlpha(highlightStop)
       ) - highlightLeft;

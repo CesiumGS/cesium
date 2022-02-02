@@ -11,7 +11,7 @@ import BlendingState from "./BlendingState.js";
 import CullFace from "./CullFace.js";
 import SceneMode from "./SceneMode.js";
 
-var DerivedCommandType = {
+const DerivedCommandType = {
   OPAQUE_FRONT_FACE: 0,
   OPAQUE_BACK_FACE: 1,
   DEPTH_ONLY_FRONT_FACE: 2,
@@ -26,10 +26,10 @@ var DerivedCommandType = {
   DERIVED_COMMANDS_MAXIMUM_LENGTH: 11,
 };
 
-var derivedCommandsMaximumLength =
+const derivedCommandsMaximumLength =
   DerivedCommandType.DERIVED_COMMANDS_MAXIMUM_LENGTH;
 
-var DerivedCommandNames = [
+const DerivedCommandNames = [
   "opaqueFrontFaceCommand",
   "opaqueBackFaceCommand",
   "depthOnlyFrontFaceCommand",
@@ -119,7 +119,7 @@ Object.defineProperties(GlobeTranslucencyState.prototype, {
 });
 
 GlobeTranslucencyState.prototype.update = function (scene) {
-  var globe = scene.globe;
+  const globe = scene.globe;
   if (!defined(globe) || !globe.show) {
     this._frontFaceTranslucent = false;
     this._backFaceTranslucent = false;
@@ -199,8 +199,8 @@ function isFaceTranslucent(translucencyEnabled, alphaByDistance, globe) {
 function isSunVisibleThroughGlobe(state, scene) {
   // The sun is visible through the globe if the front and back faces are translucent when above ground
   // or if front faces are translucent when below ground
-  var frontTranslucent = state._frontFaceTranslucent;
-  var backTranslucent = state._backFaceTranslucent;
+  const frontTranslucent = state._frontFaceTranslucent;
+  const backTranslucent = state._backFaceTranslucent;
   return frontTranslucent && (scene.cameraUnderground || backTranslucent);
 }
 
@@ -225,7 +225,7 @@ function requiresManualDepthTest(state, scene, globe) {
 }
 
 function getNumberOfTextureUniforms(state) {
-  var numberOfTextureUniforms = 0;
+  let numberOfTextureUniforms = 0;
 
   if (state._frontFaceTranslucent) {
     ++numberOfTextureUniforms; // classification texture
@@ -263,9 +263,9 @@ function gatherDerivedCommandRequirements(state, scene) {
     state._derivedPickCommandTypes
   );
 
-  var i;
+  let i;
 
-  var derivedCommandKey = 0;
+  let derivedCommandKey = 0;
   for (i = 0; i < state._derivedCommandsLength; ++i) {
     derivedCommandKey |= 1 << state._derivedCommandTypes[i];
   }
@@ -276,7 +276,7 @@ function gatherDerivedCommandRequirements(state, scene) {
     derivedCommandKey |= 1 << state._derivedPickCommandTypes[i];
   }
 
-  var derivedCommandsToUpdateLength = 0;
+  let derivedCommandsToUpdateLength = 0;
   for (i = 0; i < derivedCommandsMaximumLength; ++i) {
     if ((derivedCommandKey & (1 << i)) > 0) {
       state._derivedCommandTypesToUpdate[derivedCommandsToUpdateLength++] = i;
@@ -284,7 +284,7 @@ function gatherDerivedCommandRequirements(state, scene) {
   }
   state._derivedCommandsToUpdateLength = derivedCommandsToUpdateLength;
 
-  var derivedCommandsDirty = derivedCommandKey !== state._derivedCommandKey;
+  const derivedCommandsDirty = derivedCommandKey !== state._derivedCommandKey;
   state._derivedCommandKey = derivedCommandKey;
   state._derivedCommandsDirty = derivedCommandsDirty;
 
@@ -300,26 +300,26 @@ function getDerivedCommandTypes(
   isPickCommand,
   types
 ) {
-  var length = 0;
+  let length = 0;
 
-  var frontTranslucent = state._frontFaceTranslucent;
-  var backTranslucent = state._backFaceTranslucent;
+  const frontTranslucent = state._frontFaceTranslucent;
+  const backTranslucent = state._backFaceTranslucent;
 
   if (!frontTranslucent) {
     // Don't use derived commands if the globe is opaque
     return length;
   }
 
-  var cameraUnderground = scene.cameraUnderground;
-  var requiresManualDepthTest = state._requiresManualDepthTest;
+  const cameraUnderground = scene.cameraUnderground;
+  const requiresManualDepthTest = state._requiresManualDepthTest;
 
-  var translucentFrontFaceCommandType = isPickCommand
+  const translucentFrontFaceCommandType = isPickCommand
     ? DerivedCommandType.PICK_FRONT_FACE
     : requiresManualDepthTest
     ? DerivedCommandType.TRANSLUCENT_FRONT_FACE_MANUAL_DEPTH_TEST
     : DerivedCommandType.TRANSLUCENT_FRONT_FACE;
 
-  var translucentBackFaceCommandType = isPickCommand
+  const translucentBackFaceCommandType = isPickCommand
     ? DerivedCommandType.PICK_BACK_FACE
     : requiresManualDepthTest
     ? DerivedCommandType.TRANSLUCENT_BACK_FACE_MANUAL_DEPTH_TEST
@@ -367,7 +367,7 @@ function getDerivedCommandTypes(
 }
 
 function removeDefine(defines, defineToRemove) {
-  var index = defines.indexOf(defineToRemove);
+  const index = defines.indexOf(defineToRemove);
   if (index > -1) {
     defines.splice(index, 1);
   }
@@ -400,23 +400,23 @@ function getDepthOnlyShaderProgram(vs, fs) {
     return;
   }
 
-  var depthOnlyShader =
+  const depthOnlyShader =
     "void main() \n" + "{ \n" + "    gl_FragColor = vec4(1.0); \n" + "} \n";
 
   fs.sources = [depthOnlyShader];
 }
 
 function getTranslucentShaderProgram(vs, fs) {
-  var sources = fs.sources;
-  var length = sources.length;
-  for (var i = 0; i < length; ++i) {
+  const sources = fs.sources;
+  const length = sources.length;
+  for (let i = 0; i < length; ++i) {
     sources[i] = ShaderSource.replaceMain(
       sources[i],
       "czm_globe_translucency_main"
     );
   }
 
-  var globeTranslucencyMain =
+  const globeTranslucencyMain =
     "\n\n" +
     "uniform sampler2D u_classificationTexture; \n" +
     "void main() \n" +
@@ -468,7 +468,7 @@ function getTranslucentBackFaceManualDepthTestShaderProgram(vs, fs) {
 }
 
 function getPickShaderProgram(vs, fs) {
-  var pickShader =
+  const pickShader =
     "uniform sampler2D u_classificationTexture; \n" +
     "void main() \n" +
     "{ \n" +
@@ -500,14 +500,14 @@ function getDerivedShaderProgram(
     return derivedShaderProgram;
   }
 
-  var shader = context.shaderCache.getDerivedShaderProgram(
+  let shader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
     cacheName
   );
   if (!defined(shader)) {
-    var attributeLocations = shaderProgram._attributeLocations;
-    var vs = shaderProgram.vertexShaderSource.clone();
-    var fs = shaderProgram.fragmentShaderSource.clone();
+    const attributeLocations = shaderProgram._attributeLocations;
+    const vs = shaderProgram.vertexShaderSource.clone();
+    const fs = shaderProgram.fragmentShaderSource.clone();
     vs.defines = defined(vs.defines) ? vs.defines.slice(0) : [];
     fs.defines = defined(fs.defines) ? fs.defines.slice(0) : [];
 
@@ -610,9 +610,9 @@ function getDerivedRenderState(
     return derivedRenderState;
   }
 
-  var cachedRenderState = cache[renderState.id];
+  let cachedRenderState = cache[renderState.id];
   if (!defined(cachedRenderState)) {
-    var rs = RenderState.getState(renderState);
+    const rs = RenderState.getState(renderState);
     getRenderStateFunction(rs);
     cachedRenderState = RenderState.fromCache(rs);
     cache[renderState.id] = cachedRenderState;
@@ -749,21 +749,21 @@ function createDerivedCommandPacks() {
   ];
 }
 
-var derivedCommandNames = new Array(derivedCommandsMaximumLength);
-var derivedCommandPacks = new Array(derivedCommandsMaximumLength);
+const derivedCommandNames = new Array(derivedCommandsMaximumLength);
+const derivedCommandPacks = new Array(derivedCommandsMaximumLength);
 
 GlobeTranslucencyState.prototype.updateDerivedCommands = function (
   command,
   frameState
 ) {
-  var derivedCommandTypes = this._derivedCommandTypesToUpdate;
-  var derivedCommandsLength = this._derivedCommandsToUpdateLength;
+  const derivedCommandTypes = this._derivedCommandTypesToUpdate;
+  const derivedCommandsLength = this._derivedCommandsToUpdateLength;
 
   if (derivedCommandsLength === 0) {
     return;
   }
 
-  for (var i = 0; i < derivedCommandsLength; ++i) {
+  for (let i = 0; i < derivedCommandsLength; ++i) {
     derivedCommandPacks[i] = this._derivedCommandPacks[derivedCommandTypes[i]];
     derivedCommandNames[i] = DerivedCommandNames[derivedCommandTypes[i]];
   }
@@ -788,8 +788,8 @@ function updateDerivedCommands(
   derivedCommandPacks,
   frameState
 ) {
-  var derivedCommandsObject = command.derivedCommands.globeTranslucency;
-  var derivedCommandsDirty = state._derivedCommandsDirty;
+  let derivedCommandsObject = command.derivedCommands.globeTranslucency;
+  const derivedCommandsDirty = state._derivedCommandsDirty;
 
   if (
     command.dirty ||
@@ -803,28 +803,28 @@ function updateDerivedCommands(
       command.derivedCommands.globeTranslucency = derivedCommandsObject;
     }
 
-    var frameNumber = frameState.frameNumber;
+    const frameNumber = frameState.frameNumber;
 
-    var uniformMapDirtyFrame = defaultValue(
+    const uniformMapDirtyFrame = defaultValue(
       derivedCommandsObject.uniformMapDirtyFrame,
       0
     );
-    var shaderProgramDirtyFrame = defaultValue(
+    const shaderProgramDirtyFrame = defaultValue(
       derivedCommandsObject.shaderProgramDirtyFrame,
       0
     );
-    var renderStateDirtyFrame = defaultValue(
+    const renderStateDirtyFrame = defaultValue(
       derivedCommandsObject.renderStateDirtyFrame,
       0
     );
 
-    var uniformMapDirty =
+    const uniformMapDirty =
       derivedCommandsObject.uniformMap !== command.uniformMap;
 
-    var shaderProgramDirty =
+    const shaderProgramDirty =
       derivedCommandsObject.shaderProgramId !== command.shaderProgram.id;
 
-    var renderStateDirty =
+    const renderStateDirty =
       derivedCommandsObject.renderStateId !== command.renderState.id;
 
     if (uniformMapDirty) {
@@ -841,15 +841,15 @@ function updateDerivedCommands(
     derivedCommandsObject.shaderProgramId = command.shaderProgram.id;
     derivedCommandsObject.renderStateId = command.renderState.id;
 
-    for (var i = 0; i < derivedCommandsLength; ++i) {
-      var derivedCommandPack = derivedCommandPacks[i];
-      var derivedCommandType = derivedCommandTypes[i];
-      var derivedCommandName = derivedCommandNames[i];
-      var derivedCommand = derivedCommandsObject[derivedCommandName];
+    for (let i = 0; i < derivedCommandsLength; ++i) {
+      const derivedCommandPack = derivedCommandPacks[i];
+      const derivedCommandType = derivedCommandTypes[i];
+      const derivedCommandName = derivedCommandNames[i];
+      let derivedCommand = derivedCommandsObject[derivedCommandName];
 
-      var derivedUniformMap;
-      var derivedShaderProgram;
-      var derivedRenderState;
+      let derivedUniformMap;
+      let derivedShaderProgram;
+      let derivedRenderState;
 
       if (defined(derivedCommand)) {
         derivedUniformMap = derivedCommand.uniformMap;
@@ -864,25 +864,25 @@ function updateDerivedCommands(
       derivedCommand = DrawCommand.shallowClone(command, derivedCommand);
       derivedCommandsObject[derivedCommandName] = derivedCommand;
 
-      var derivedUniformMapDirtyFrame = defaultValue(
+      const derivedUniformMapDirtyFrame = defaultValue(
         derivedCommand.derivedCommands.uniformMapDirtyFrame,
         0
       );
-      var derivedShaderProgramDirtyFrame = defaultValue(
+      const derivedShaderProgramDirtyFrame = defaultValue(
         derivedCommand.derivedCommands.shaderProgramDirtyFrame,
         0
       );
-      var derivedRenderStateDirtyFrame = defaultValue(
+      const derivedRenderStateDirtyFrame = defaultValue(
         derivedCommand.derivedCommands.renderStateDirtyFrame,
         0
       );
 
-      var derivedUniformMapDirty =
+      const derivedUniformMapDirty =
         uniformMapDirty || derivedUniformMapDirtyFrame < uniformMapDirtyFrame;
-      var derivedShaderProgramDirty =
+      const derivedShaderProgramDirty =
         shaderProgramDirty ||
         derivedShaderProgramDirtyFrame < shaderProgramDirtyFrame;
-      var derivedRenderStateDirty =
+      const derivedRenderStateDirty =
         renderStateDirty ||
         derivedRenderStateDirtyFrame < renderStateDirtyFrame;
 
@@ -930,14 +930,14 @@ GlobeTranslucencyState.prototype.pushDerivedCommands = function (
   isBlendCommand,
   frameState
 ) {
-  var picking = frameState.passes.pick;
+  const picking = frameState.passes.pick;
   if (picking && isBlendCommand) {
     // No need to push blend commands in the pick pass
     return;
   }
 
-  var derivedCommandTypes = this._derivedCommandTypes;
-  var derivedCommandsLength = this._derivedCommandsLength;
+  let derivedCommandTypes = this._derivedCommandTypes;
+  let derivedCommandsLength = this._derivedCommandsLength;
 
   if (picking) {
     derivedCommandTypes = this._derivedPickCommandTypes;
@@ -954,9 +954,9 @@ GlobeTranslucencyState.prototype.pushDerivedCommands = function (
   }
 
   // Push derived commands
-  var derivedCommands = command.derivedCommands.globeTranslucency;
-  for (var i = 0; i < derivedCommandsLength; ++i) {
-    var derivedCommandName = DerivedCommandNames[derivedCommandTypes[i]];
+  const derivedCommands = command.derivedCommands.globeTranslucency;
+  for (let i = 0; i < derivedCommandsLength; ++i) {
+    const derivedCommandName = DerivedCommandNames[derivedCommandTypes[i]];
     frameState.commandList.push(derivedCommands[derivedCommandName]);
   }
 };
@@ -970,9 +970,9 @@ function executeCommandsMatchingType(
   passState,
   types
 ) {
-  for (var i = 0; i < commandsLength; ++i) {
-    var command = commands[i];
-    var type = command.derivedCommands.type;
+  for (let i = 0; i < commandsLength; ++i) {
+    const command = commands[i];
+    const type = command.derivedCommands.type;
     if (!defined(types) || types.indexOf(type) > -1) {
       executeCommandFunction(command, scene, context, passState);
     }
@@ -987,16 +987,16 @@ function executeCommands(
   context,
   passState
 ) {
-  for (var i = 0; i < commandsLength; ++i) {
+  for (let i = 0; i < commandsLength; ++i) {
     executeCommandFunction(commands[i], scene, context, passState);
   }
 }
 
-var opaqueTypes = [
+const opaqueTypes = [
   DerivedCommandType.OPAQUE_FRONT_FACE,
   DerivedCommandType.OPAQUE_BACK_FACE,
 ];
-var depthOnlyTypes = [
+const depthOnlyTypes = [
   DerivedCommandType.DEPTH_ONLY_FRONT_FACE,
   DerivedCommandType.DEPTH_ONLY_BACK_FACE,
   DerivedCommandType.DEPTH_ONLY_FRONT_AND_BACK_FACE,
@@ -1009,9 +1009,9 @@ GlobeTranslucencyState.prototype.executeGlobeCommands = function (
   scene,
   passState
 ) {
-  var context = scene.context;
-  var globeCommands = frustumCommands.commands[Pass.GLOBE];
-  var globeCommandsLength = frustumCommands.indices[Pass.GLOBE];
+  const context = scene.context;
+  const globeCommands = frustumCommands.commands[Pass.GLOBE];
+  const globeCommandsLength = frustumCommands.indices[Pass.GLOBE];
 
   if (globeCommandsLength === 0) {
     return;
@@ -1039,20 +1039,20 @@ GlobeTranslucencyState.prototype.executeGlobeClassificationCommands = function (
   scene,
   passState
 ) {
-  var context = scene.context;
-  var globeCommands = frustumCommands.commands[Pass.GLOBE];
-  var globeCommandsLength = frustumCommands.indices[Pass.GLOBE];
-  var classificationCommands =
+  const context = scene.context;
+  const globeCommands = frustumCommands.commands[Pass.GLOBE];
+  const globeCommandsLength = frustumCommands.indices[Pass.GLOBE];
+  const classificationCommands =
     frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
-  var classificationCommandsLength =
+  const classificationCommandsLength =
     frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
 
   if (globeCommandsLength === 0 || classificationCommandsLength === 0) {
     return;
   }
 
-  var frontTranslucent = this._frontFaceTranslucent;
-  var backTranslucent = this._backFaceTranslucent;
+  const frontTranslucent = this._frontFaceTranslucent;
+  const backTranslucent = this._backFaceTranslucent;
 
   if (!frontTranslucent || !backTranslucent) {
     // Render classification on opaque faces like normal
@@ -1073,8 +1073,8 @@ GlobeTranslucencyState.prototype.executeGlobeClassificationCommands = function (
 
   this._globeTranslucencyFramebuffer = globeTranslucencyFramebuffer;
 
-  var originalGlobeDepthTexture = context.uniformState.globeDepthTexture;
-  var originalFramebuffer = passState.framebuffer;
+  const originalGlobeDepthTexture = context.uniformState.globeDepthTexture;
+  const originalFramebuffer = passState.framebuffer;
 
   // Render to internal framebuffer and get the first depth peel
   passState.framebuffer =
@@ -1092,7 +1092,7 @@ GlobeTranslucencyState.prototype.executeGlobeClassificationCommands = function (
 
   if (context.depthTexture) {
     // Pack depth into separate texture for ground polylines and textured ground primitives
-    var packedDepthTexture = globeTranslucencyFramebuffer.packDepth(
+    const packedDepthTexture = globeTranslucencyFramebuffer.packDepth(
       context,
       passState
     );

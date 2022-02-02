@@ -9,7 +9,7 @@ import testMaterialDefinitionChanged from "../testMaterialDefinitionChanged.js";
 
 describe("DataSources/CylinderGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {
-    var options = {
+    const options = {
       material: Color.BLUE,
       show: true,
       length: 1,
@@ -25,7 +25,7 @@ describe("DataSources/CylinderGraphics", function () {
       distanceDisplayCondition: new DistanceDisplayCondition(10.0, 100.0),
     };
 
-    var cylinder = new CylinderGraphics(options);
+    const cylinder = new CylinderGraphics(options);
     expect(cylinder.material).toBeInstanceOf(ColorMaterialProperty);
     expect(cylinder.show).toBeInstanceOf(ConstantProperty);
     expect(cylinder.length).toBeInstanceOf(ConstantProperty);
@@ -60,7 +60,7 @@ describe("DataSources/CylinderGraphics", function () {
   });
 
   it("merge assigns unassigned properties", function () {
-    var source = new CylinderGraphics();
+    const source = new CylinderGraphics();
     source.material = new ColorMaterialProperty();
     source.length = new ConstantProperty();
     source.topRadius = new ConstantProperty();
@@ -74,7 +74,7 @@ describe("DataSources/CylinderGraphics", function () {
     source.shadows = new ConstantProperty(ShadowMode.ENABLED);
     source.distanceDisplayCondition = new ConstantProperty();
 
-    var target = new CylinderGraphics();
+    const target = new CylinderGraphics();
     target.merge(source);
 
     expect(target.material).toBe(source.material);
@@ -94,22 +94,22 @@ describe("DataSources/CylinderGraphics", function () {
   });
 
   it("merge does not assign assigned properties", function () {
-    var source = new CylinderGraphics();
+    const source = new CylinderGraphics();
 
-    var material = new ColorMaterialProperty();
-    var topRadius = new ConstantProperty();
-    var length = new ConstantProperty();
-    var bottomRadius = new ConstantProperty();
-    var numberOfVerticalLines = new ConstantProperty();
-    var slices = new ConstantProperty();
-    var fill = new ConstantProperty();
-    var outline = new ConstantProperty();
-    var outlineColor = new ConstantProperty();
-    var outlineWidth = new ConstantProperty();
-    var shadows = new ConstantProperty();
-    var distanceDisplayCondition = new ConstantProperty();
+    const material = new ColorMaterialProperty();
+    const topRadius = new ConstantProperty();
+    const length = new ConstantProperty();
+    const bottomRadius = new ConstantProperty();
+    const numberOfVerticalLines = new ConstantProperty();
+    const slices = new ConstantProperty();
+    const fill = new ConstantProperty();
+    const outline = new ConstantProperty();
+    const outlineColor = new ConstantProperty();
+    const outlineWidth = new ConstantProperty();
+    const shadows = new ConstantProperty();
+    const distanceDisplayCondition = new ConstantProperty();
 
-    var target = new CylinderGraphics();
+    const target = new CylinderGraphics();
     target.material = material;
     target.length = length;
     target.topRadius = topRadius;
@@ -140,7 +140,7 @@ describe("DataSources/CylinderGraphics", function () {
   });
 
   it("clone works", function () {
-    var source = new CylinderGraphics();
+    const source = new CylinderGraphics();
     source.material = new ColorMaterialProperty();
     source.length = new ConstantProperty();
     source.topRadius = new ConstantProperty();
@@ -154,7 +154,7 @@ describe("DataSources/CylinderGraphics", function () {
     source.shadows = new ConstantProperty();
     source.distanceDisplayCondition = new ConstantProperty();
 
-    var result = source.clone();
+    const result = source.clone();
     expect(result.material).toBe(source.material);
     expect(result.length).toBe(source.length);
     expect(result.topRadius).toBe(source.topRadius);
@@ -172,14 +172,14 @@ describe("DataSources/CylinderGraphics", function () {
   });
 
   it("merge throws if source undefined", function () {
-    var target = new CylinderGraphics();
+    const target = new CylinderGraphics();
     expect(function () {
       target.merge(undefined);
     }).toThrowDeveloperError();
   });
 
   it("raises definitionChanged when a property is assigned or modified", function () {
-    var property = new CylinderGraphics();
+    const property = new CylinderGraphics();
     testMaterialDefinitionChanged(property, "material", Color.RED, Color.BLUE);
     testDefinitionChanged(property, "length", 2, 3);
     testDefinitionChanged(property, "topRadius", 3, 4);

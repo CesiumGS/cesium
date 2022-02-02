@@ -8,7 +8,7 @@ describe("Core/parseResponseHeaders", function () {
   });
 
   it("correctly parses response headers", function () {
-    var headerString =
+    const headerString =
       "Date: Sun, 24 Oct 2004 04:58:38 GMT\r\n" +
       "Server: Apache/1.3.31 (Unix)\r\n" +
       "Keep-Alive: timeout=15, max=99\r\n" +

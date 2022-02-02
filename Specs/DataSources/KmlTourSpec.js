@@ -9,8 +9,8 @@ import pollToPromise from "../pollToPromise.js";
 
 describe("DataSources/KmlTour", function () {
   function getLookAt() {
-    var position = Cartesian3.fromDegrees(40.0, 30.0, 1000);
-    var hpr = new HeadingPitchRange(
+    const position = Cartesian3.fromDegrees(40.0, 30.0, 1000);
+    const hpr = new HeadingPitchRange(
       CesiumMath.toRadians(10.0),
       CesiumMath.toRadians(45.0),
       10000
@@ -19,7 +19,7 @@ describe("DataSources/KmlTour", function () {
   }
 
   function createMockViewer() {
-    var mockViewer = {};
+    const mockViewer = {};
     mockViewer.scene = {};
     mockViewer.scene.camera = {};
     mockViewer.scene.camera.flyTo = jasmine
@@ -40,9 +40,9 @@ describe("DataSources/KmlTour", function () {
   }
 
   it("add entries to playlist", function () {
-    var tour = new KmlTour("test", "test");
-    var wait = new KmlTourWait(10);
-    var flyTo = new KmlTourFlyTo(5, null, getLookAt());
+    const tour = new KmlTour("test", "test");
+    const wait = new KmlTourWait(10);
+    const flyTo = new KmlTourFlyTo(5, null, getLookAt());
     tour.addPlaylistEntry(wait);
     tour.addPlaylistEntry(flyTo);
 
@@ -52,24 +52,24 @@ describe("DataSources/KmlTour", function () {
   });
 
   it("calls entries play", function () {
-    var waitSpy = spyOn(KmlTourWait.prototype, "play").and.callFake(function (
+    const waitSpy = spyOn(KmlTourWait.prototype, "play").and.callFake(function (
       callback
     ) {
       callback();
     });
-    var flySpy = spyOn(KmlTourFlyTo.prototype, "play").and.callFake(function (
+    const flySpy = spyOn(KmlTourFlyTo.prototype, "play").and.callFake(function (
       callback
     ) {
       callback();
     });
 
-    var tour = new KmlTour("test", "test");
-    var wait = new KmlTourWait(0.1);
-    var flyTo = new KmlTourFlyTo(0.1, null, getLookAt());
+    const tour = new KmlTour("test", "test");
+    const wait = new KmlTourWait(0.1);
+    const flyTo = new KmlTourFlyTo(0.1, null, getLookAt());
     tour.addPlaylistEntry(wait);
     tour.addPlaylistEntry(flyTo);
 
-    var mockViewer = createMockViewer();
+    const mockViewer = createMockViewer();
     tour.play(mockViewer);
     return pollToPromise(function () {
       return waitSpy.calls.count() > 0 && flySpy.calls.count() > 0;
@@ -80,14 +80,14 @@ describe("DataSources/KmlTour", function () {
   });
 
   it("calls events", function () {
-    var tour = new KmlTour("test", "test");
-    var wait1 = new KmlTourWait(0.05);
-    var wait2 = new KmlTourWait(0.02);
+    const tour = new KmlTour("test", "test");
+    const wait1 = new KmlTourWait(0.05);
+    const wait2 = new KmlTourWait(0.02);
 
-    var tourStart = jasmine.createSpy("TourStart");
-    var tourEnd = jasmine.createSpy("TourEnd");
-    var entryStart = jasmine.createSpy("EntryStart");
-    var entryEnd = jasmine.createSpy("EntryEnd");
+    const tourStart = jasmine.createSpy("TourStart");
+    const tourEnd = jasmine.createSpy("TourEnd");
+    const entryStart = jasmine.createSpy("EntryStart");
+    const entryEnd = jasmine.createSpy("EntryEnd");
 
     tour.addPlaylistEntry(wait1);
     tour.addPlaylistEntry(wait2);
@@ -109,14 +109,14 @@ describe("DataSources/KmlTour", function () {
   });
 
   it("terminates playback", function () {
-    var tour = new KmlTour("test", "test");
-    var wait = new KmlTourWait(60);
-    var flyTo = new KmlTourFlyTo(0.1, null, getLookAt());
+    const tour = new KmlTour("test", "test");
+    const wait = new KmlTourWait(60);
+    const flyTo = new KmlTourFlyTo(0.1, null, getLookAt());
 
-    var tourStart = jasmine.createSpy("TourStart");
-    var tourEnd = jasmine.createSpy("TourEnd");
-    var entryStart = jasmine.createSpy("EntryStart");
-    var entryEnd = jasmine.createSpy("EntryEnd");
+    const tourStart = jasmine.createSpy("TourStart");
+    const tourEnd = jasmine.createSpy("TourEnd");
+    const entryStart = jasmine.createSpy("EntryStart");
+    const entryEnd = jasmine.createSpy("EntryEnd");
 
     tour.addPlaylistEntry(wait);
     tour.addPlaylistEntry(flyTo);
@@ -126,7 +126,7 @@ describe("DataSources/KmlTour", function () {
     tour.entryStart.addEventListener(entryStart);
     tour.entryEnd.addEventListener(entryEnd);
 
-    var mockViewer = createMockViewer();
+    const mockViewer = createMockViewer();
     tour.play(mockViewer);
     setTimeout(function () {
       tour.stop();

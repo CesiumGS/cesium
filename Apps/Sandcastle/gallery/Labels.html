@@ -32,8 +32,8 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var labelListenerCallback;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        let labelListenerCallback;
 
         function addLabel() {
           Sandcastle.declare(addLabel);
@@ -62,7 +62,7 @@
 
         function setProperties() {
           Sandcastle.declare(setProperties);
-          var entity = viewer.entities.add({
+          const entity = viewer.entities.add({
             position: Cesium.Cartesian3.fromDegrees(
               -75.1641667,
               39.9522222,
@@ -79,7 +79,7 @@
 
         function offsetByDistance() {
           Sandcastle.declare(offsetByDistance);
-          var image = new Image();
+          const image = new Image();
           image.onload = function () {
             viewer.entities.add({
               position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
@@ -167,7 +167,7 @@
 
         function animateLabel() {
           Sandcastle.declare(animateLabel);
-          var entity = viewer.entities.add({
+          const entity = viewer.entities.add({
             position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
             label: {
               text: "Philadelphia",
@@ -177,11 +177,11 @@
             },
           });
 
-          var outlineDelta = 0.1;
-          var fontDelta = -1.0;
-          var fontSize = 20.0;
-          var minFontSize = 1.0;
-          var maxFontSize = 48.0;
+          let outlineDelta = 0.1;
+          let fontDelta = -1.0;
+          let fontSize = 20.0;
+          const minFontSize = 1.0;
+          const maxFontSize = 48.0;
 
           labelListenerCallback = viewer.scene.preUpdate.addEventListener(
             function (scene, time) {

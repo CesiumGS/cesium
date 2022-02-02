@@ -7,16 +7,16 @@ import defined from "./defined.js";
  * it will be treated as an empty object.
  *
  * @example
- * var object1 = {
+ * const object1 = {
  *     propOne : 1,
  *     propTwo : {
  *         value1 : 10
  *     }
  * }
- * var object2 = {
+ * const object2 = {
  *     propTwo : 2
  * }
- * var final = Cesium.combine(object1, object2);
+ * const final = Cesium.combine(object1, object2);
  *
  * // final === {
  * //     propOne : 1,
@@ -35,13 +35,13 @@ import defined from "./defined.js";
 function combine(object1, object2, deep) {
   deep = defaultValue(deep, false);
 
-  var result = {};
+  const result = {};
 
-  var object1Defined = defined(object1);
-  var object2Defined = defined(object2);
-  var property;
-  var object1Value;
-  var object2Value;
+  const object1Defined = defined(object1);
+  const object2Defined = defined(object2);
+  let property;
+  let object1Value;
+  let object2Value;
   if (object1Defined) {
     for (property in object1) {
       if (object1.hasOwnProperty(property)) {
