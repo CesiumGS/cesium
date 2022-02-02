@@ -175,7 +175,7 @@ function addSemanticDefine(shaderBuilder, attribute) {
     case VertexAttributeSemantic.FEATURE_ID:
     case VertexAttributeSemantic.TEXCOORD:
     case VertexAttributeSemantic.COLOR:
-      shaderBuilder.addDefine("HAS_" + semantic + "_" + setIndex);
+      shaderBuilder.addDefine(`HAS_${semantic}_${setIndex}`);
   }
 }
 
@@ -220,7 +220,7 @@ function addAttributeToRenderResources(
 
 function addVaryingDeclaration(shaderBuilder, attributeInfo) {
   const variableName = attributeInfo.variableName;
-  let varyingName = "v_" + variableName;
+  let varyingName = `v_${variableName}`;
 
   let glslType;
   if (variableName === "normalMC") {
@@ -248,10 +248,10 @@ function addAttributeDeclaration(shaderBuilder, attributeInfo) {
   let attributeName;
   let glslType;
   if (attributeInfo.isQuantized) {
-    attributeName = "a_quantized_" + variableName;
+    attributeName = `a_quantized_${variableName}`;
     glslType = attributeInfo.quantizedGlslType;
   } else {
-    attributeName = "a_" + variableName;
+    attributeName = `a_${variableName}`;
     glslType = attributeInfo.glslType;
   }
 
@@ -304,7 +304,7 @@ function updateInitialzeAttributesFunction(shaderBuilder, attributeInfo) {
   if (variableName === "tangentMC") {
     line = "attributes.tangentMC = a_tangentMC.xyz;";
   } else {
-    line = "attributes." + variableName + " = a_" + variableName + ";";
+    line = `attributes.${variableName} = a_${variableName};`;
   }
   shaderBuilder.addFunctionLines(functionId, [line]);
 }
@@ -322,13 +322,13 @@ function updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo) {
   // v_texCoord_1 = attributes.texCoord_1;
   let functionId = GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS;
   const variableName = attributeInfo.variableName;
-  let line = "v_" + variableName + " = attributes." + variableName + ";";
+  let line = `v_${variableName} = attributes.${variableName};`;
   shaderBuilder.addFunctionLines(functionId, [line]);
 
   // In the fragment shader, we do the opposite:
   // attributes.texCoord_1 = v_texCoord_1;
   functionId = GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS;
-  line = "attributes." + variableName + " = v_" + variableName + ";";
+  line = `attributes.${variableName} = v_${variableName};`;
   shaderBuilder.addFunctionLines(functionId, [line]);
 }
 

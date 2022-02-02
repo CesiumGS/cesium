@@ -27,9 +27,9 @@ export default function ModelExperimentalUtility() {}
  */
 ModelExperimentalUtility.getFailedLoadFunction = function (model, type, path) {
   return function (error) {
-    let message = "Failed to load " + type + ": " + path;
+    let message = `Failed to load ${type}: ${path}`;
     if (defined(error)) {
-      message += "\n" + error.message;
+      message += `\n${error.message}`;
     }
     model._readyPromise.reject(new RuntimeError(message));
   };

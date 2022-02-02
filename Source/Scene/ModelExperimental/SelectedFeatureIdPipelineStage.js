@@ -104,7 +104,7 @@ function getSelectedFeatureIds(model, node, primitive) {
     featureIds = node.instances.featureIds[model.instanceFeatureIdIndex];
 
     if (defined(featureIds)) {
-      variableName = "instanceFeatureId_" + model.instanceFeatureIdIndex;
+      variableName = `instanceFeatureId_${model.instanceFeatureIdIndex}`;
       return {
         featureIds: featureIds,
         variableName: variableName,
@@ -115,7 +115,7 @@ function getSelectedFeatureIds(model, node, primitive) {
   }
 
   featureIds = primitive.featureIds[model.featureIdIndex];
-  variableName = "featureId_" + model.featureIdIndex;
+  variableName = `featureId_${model.featureIdIndex}`;
   return {
     featureIds: featureIds,
     variableName: variableName,

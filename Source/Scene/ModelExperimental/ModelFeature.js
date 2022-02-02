@@ -158,7 +158,7 @@ ModelFeature.prototype.hasProperty = function (name) {
  * const length = propertyNames.length;
  * for (let i = 0; i < length; ++i) {
  *     const propertyName = propertyNames[i];
- *     console.log(propertyName + ': ' + feature.getProperty(propertyName));
+ *     console.log(`${propertyName}: ${feature.getProperty(propertyName)});
  * }
  */
 ModelFeature.prototype.getProperty = function (name) {
