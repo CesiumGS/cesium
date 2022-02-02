@@ -36,12 +36,12 @@
         "use strict";
         //Sandcastle_Begin
 
-        let worldTerrain = Cesium.createWorldTerrain({
+        const worldTerrain = Cesium.createWorldTerrain({
           requestWaterMask: true,
           requestVertexNormals: true,
         });
 
-        let viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: worldTerrain,
         });
 
@@ -86,10 +86,10 @@
 
         // compute and set sun color and intensity based on sun angle from horizon
         // this could be part of Cesium if it were made in a more physicaly accurate way
-        let daySunColor = Cesium.Color.fromCssColorString("#ffffffff");
-        let sunsetColor = Cesium.Color.fromCssColorString("#9e6241ff");
-        let nightSunColor = Cesium.Color.fromCssColorString("#222222ff");
-        let sunColor = new Cesium.Color();
+        const daySunColor = Cesium.Color.fromCssColorString("#ffffffff");
+        const sunsetColor = Cesium.Color.fromCssColorString("#9e6241ff");
+        const nightSunColor = Cesium.Color.fromCssColorString("#222222ff");
+        const sunColor = new Cesium.Color();
 
         viewer.scene.preRender.addEventListener(function () {
           if (
@@ -99,15 +99,15 @@
           )
             return; // wait for sun to be ready
 
-          let sunLightDirection = Cesium.Cartesian3.normalize(
+          const sunLightDirection = Cesium.Cartesian3.normalize(
             viewer.scene.sun._boundingVolume.center,
             new Cesium.Cartesian3()
           );
-          let surfaceNormal = Cesium.Cartesian3.normalize(
+          const surfaceNormal = Cesium.Cartesian3.normalize(
             viewer.camera.position,
             new Cesium.Cartesian3()
           );
-          let sunDotNormal = parseFloat(
+          const sunDotNormal = parseFloat(
             Cesium.Cartesian3.dot(surfaceNormal, sunLightDirection).toPrecision(
               2
             )

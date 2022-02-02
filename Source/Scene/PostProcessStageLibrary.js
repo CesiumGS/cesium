@@ -680,7 +680,7 @@ PostProcessStageLibrary.createAtmosphereScatteringStage = function (
   primarySteps,
   lightSteps
 ) {
-  var fs = "#define PRIMARY_STEPS " + defaultValue(primarySteps, 16) + "\n";
+  let fs = "#define PRIMARY_STEPS " + defaultValue(primarySteps, 16) + "\n";
   fs += "#define LIGHT_STEPS " + defaultValue(lightSteps, 4) + "\n";
   fs += AtmosphericScattering;
 
