@@ -11,7 +11,7 @@ import { VerticalOrigin } from "../../Source/Cesium.js";
 
 describe("DataSources/BillboardGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {
-    var options = {
+    const options = {
       image: "0",
       rotation: 1,
       alignedAxis: Cartesian3.UNIT_Z,
@@ -33,7 +33,7 @@ describe("DataSources/BillboardGraphics", function () {
       disableDepthTestDistance: 10.0,
     };
 
-    var billboard = new BillboardGraphics(options);
+    const billboard = new BillboardGraphics(options);
     expect(billboard.image).toBeInstanceOf(ConstantProperty);
     expect(billboard.rotation).toBeInstanceOf(ConstantProperty);
     expect(billboard.alignedAxis).toBeInstanceOf(ConstantProperty);
@@ -90,7 +90,7 @@ describe("DataSources/BillboardGraphics", function () {
   });
 
   it("merge assigns unassigned properties", function () {
-    var source = new BillboardGraphics();
+    const source = new BillboardGraphics();
     source.image = new ConstantProperty("");
     source.imageSubRegion = new ConstantProperty();
     source.rotation = new ConstantProperty(5);
@@ -118,7 +118,7 @@ describe("DataSources/BillboardGraphics", function () {
     );
     source.disableDepthTestDistance = 10.0;
 
-    var target = new BillboardGraphics();
+    const target = new BillboardGraphics();
     target.merge(source);
 
     expect(target.image).toBe(source.image);
@@ -150,7 +150,7 @@ describe("DataSources/BillboardGraphics", function () {
   });
 
   it("merge does not assign assigned properties", function () {
-    var source = new BillboardGraphics();
+    const source = new BillboardGraphics();
     source.image = new ConstantProperty("");
     source.imageSubRegion = new ConstantProperty();
     source.rotation = new ConstantProperty(5);
@@ -178,30 +178,34 @@ describe("DataSources/BillboardGraphics", function () {
     );
     source.disableDepthTestDistance = new ConstantProperty(10.0);
 
-    var image = new ConstantProperty("");
-    var imageSubRegion = new ConstantProperty();
-    var rotation = new ConstantProperty(5);
-    var alignedAxis = new ConstantProperty(new Cartesian3());
-    var color = new ConstantProperty(Color.BLACK);
-    var heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
-    var horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
-    var verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
-    var eyeOffset = new ConstantProperty(Cartesian3.UNIT_Y);
-    var pixelOffset = new ConstantProperty(Cartesian2.UNIT_X);
-    var scale = new ConstantProperty(1);
-    var show = new ConstantProperty(false);
-    var width = new ConstantProperty(2);
-    var height = new ConstantProperty(3);
-    var scaleByDistance = new ConstantProperty(new NearFarScalar());
-    var translucencyByDistance = new ConstantProperty(new NearFarScalar());
-    var pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar());
-    var sizeInMeters = new ConstantProperty(true);
-    var distanceDisplayCondition = new ConstantProperty(
+    const image = new ConstantProperty("");
+    const imageSubRegion = new ConstantProperty();
+    const rotation = new ConstantProperty(5);
+    const alignedAxis = new ConstantProperty(new Cartesian3());
+    const color = new ConstantProperty(Color.BLACK);
+    const heightReference = new ConstantProperty(
+      HeightReference.CLAMP_TO_GROUND
+    );
+    const horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
+    const verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
+    const eyeOffset = new ConstantProperty(Cartesian3.UNIT_Y);
+    const pixelOffset = new ConstantProperty(Cartesian2.UNIT_X);
+    const scale = new ConstantProperty(1);
+    const show = new ConstantProperty(false);
+    const width = new ConstantProperty(2);
+    const height = new ConstantProperty(3);
+    const scaleByDistance = new ConstantProperty(new NearFarScalar());
+    const translucencyByDistance = new ConstantProperty(new NearFarScalar());
+    const pixelOffsetScaleByDistance = new ConstantProperty(
+      new NearFarScalar()
+    );
+    const sizeInMeters = new ConstantProperty(true);
+    const distanceDisplayCondition = new ConstantProperty(
       new DistanceDisplayCondition()
     );
-    var disableDepthTestDistance = new ConstantProperty(10.0);
+    const disableDepthTestDistance = new ConstantProperty(10.0);
 
-    var target = new BillboardGraphics();
+    const target = new BillboardGraphics();
     target.image = image;
     target.imageSubRegion = imageSubRegion;
     target.rotation = rotation;
@@ -248,7 +252,7 @@ describe("DataSources/BillboardGraphics", function () {
   });
 
   it("clone works", function () {
-    var source = new BillboardGraphics();
+    const source = new BillboardGraphics();
     source.image = new ConstantProperty("");
     source.imageSubRegion = new ConstantProperty();
     source.rotation = new ConstantProperty(5);
@@ -276,7 +280,7 @@ describe("DataSources/BillboardGraphics", function () {
     );
     source.disableDepthTestDistance = new ConstantProperty(10.0);
 
-    var result = source.clone();
+    const result = source.clone();
     expect(result.image).toBe(source.image);
     expect(result.imageSubRegion).toBe(source.imageSubRegion);
     expect(result.rotation).toBe(source.rotation);
@@ -306,7 +310,7 @@ describe("DataSources/BillboardGraphics", function () {
   });
 
   it("merge throws if source undefined", function () {
-    var target = new BillboardGraphics();
+    const target = new BillboardGraphics();
     expect(function () {
       target.merge(undefined);
     }).toThrowDeveloperError();

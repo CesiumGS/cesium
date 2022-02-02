@@ -1,47 +1,39 @@
 import BoundingRectangle from "../Core/BoundingRectangle.js";
-import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import Framebuffer from "../Renderer/Framebuffer.js";
+import FramebufferManager from "../Renderer/FramebufferManager.js";
 import PassState from "../Renderer/PassState.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
-import Texture from "../Renderer/Texture.js";
 
 /**
  * @private
  */
 function PickDepthFramebuffer() {
-  this._depthStencilTexture = undefined;
-  this._framebuffer = undefined;
+  this._framebuffer = new FramebufferManager({
+    color: false,
+    depthStencil: true,
+    supportsDepthTexture: true,
+  });
   this._passState = undefined;
 }
 
+Object.defineProperties(PickDepthFramebuffer.prototype, {
+  framebuffer: {
+    get: function () {
+      return this._framebuffer.framebuffer;
+    },
+  },
+});
+
 function destroyResources(pickDepth) {
-  pickDepth._framebuffer =
-    pickDepth._framebuffer && pickDepth._framebuffer.destroy();
-  pickDepth._depthStencilTexture =
-    pickDepth._depthStencilTexture && pickDepth._depthStencilTexture.destroy();
+  pickDepth._framebuffer.destroy();
 }
 
 function createResources(pickDepth, context) {
-  var width = context.drawingBufferWidth;
-  var height = context.drawingBufferHeight;
+  const width = context.drawingBufferWidth;
+  const height = context.drawingBufferHeight;
 
-  pickDepth._depthStencilTexture = new Texture({
-    context: context,
-    width: width,
-    height: height,
-    pixelFormat: PixelFormat.DEPTH_STENCIL,
-    pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
-  });
+  pickDepth._framebuffer.update(context, width, height);
 
-  pickDepth._framebuffer = new Framebuffer({
-    context: context,
-    depthStencilTexture: pickDepth._depthStencilTexture,
-    destroyAttachments: false,
-  });
-
-  var passState = new PassState(context);
+  const passState = new PassState(context);
   passState.blendingEnabled = false;
   passState.scissorTest = {
     enabled: true,
@@ -56,20 +48,15 @@ PickDepthFramebuffer.prototype.update = function (
   drawingBufferPosition,
   viewport
 ) {
-  var width = viewport.width;
-  var height = viewport.height;
+  const width = viewport.width;
+  const height = viewport.height;
 
-  if (
-    !defined(this._framebuffer) ||
-    width !== this._depthStencilTexture.width ||
-    height !== this._depthStencilTexture.height
-  ) {
-    destroyResources(this);
+  if (this._framebuffer.isDirty(width, height)) {
     createResources(this, context);
   }
 
-  var framebuffer = this._framebuffer;
-  var passState = this._passState;
+  const framebuffer = this.framebuffer;
+  const passState = this._passState;
   passState.framebuffer = framebuffer;
   passState.viewport.width = width;
   passState.viewport.height = height;

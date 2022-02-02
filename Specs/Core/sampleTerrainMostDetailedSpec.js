@@ -4,14 +4,14 @@ import { createWorldTerrain } from "../../Source/Cesium.js";
 import { sampleTerrainMostDetailed } from "../../Source/Cesium.js";
 
 describe("Core/sampleTerrainMostDetailed", function () {
-  var worldTerrain;
+  let worldTerrain;
   beforeAll(function () {
     worldTerrain = createWorldTerrain();
     return worldTerrain.readyPromise;
   });
 
-  it("queries heights", function () {
-    var positions = [
+  xit("queries heights", function () {
+    const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(87.0, 28.0),
     ];
@@ -27,12 +27,12 @@ describe("Core/sampleTerrainMostDetailed", function () {
     });
   });
 
-  it("should throw querying heights from Small Terrain", function () {
-    var terrainProvider = new CesiumTerrainProvider({
+  xit("should throw querying heights from Small Terrain", function () {
+    const terrainProvider = new CesiumTerrainProvider({
       url: "https://s3.amazonaws.com/cesiumjs/smallTerrain",
     });
 
-    var positions = [
+    const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(87.0, 28.0),
     ];
@@ -59,7 +59,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
   });
 
   it("requires terrainProvider and positions", function () {
-    var positions = [
+    const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(87.0, 28.0),
     ];
@@ -73,8 +73,10 @@ describe("Core/sampleTerrainMostDetailed", function () {
     }).toThrowDeveloperError();
   });
 
-  it("works for a dodgy point right near the edge of a tile", function () {
-    var positions = [new Cartographic(0.33179290856829535, 0.7363107781851078)];
+  xit("works for a dodgy point right near the edge of a tile", function () {
+    const positions = [
+      new Cartographic(0.33179290856829535, 0.7363107781851078),
+    ];
 
     return sampleTerrainMostDetailed(worldTerrain, positions).then(function () {
       expect(positions[0].height).toBeDefined();

@@ -3,14 +3,14 @@ import { PixelFormat } from "../../Source/Cesium.js";
 
 describe("Core/PixelFormat", function () {
   it("flipY works", function () {
-    var width = 1;
-    var height = 2;
-    var values = [255, 0, 0, 0, 255, 0];
-    var expectedValues = [0, 255, 0, 255, 0, 0];
-    var dataBuffer = new Uint8Array(values);
-    var expectedDataBuffer = new Uint8Array(expectedValues);
+    const width = 1;
+    const height = 2;
+    const values = [255, 0, 0, 0, 255, 0];
+    const expectedValues = [0, 255, 0, 255, 0, 0];
+    const dataBuffer = new Uint8Array(values);
+    const expectedDataBuffer = new Uint8Array(expectedValues);
 
-    var flipped = PixelFormat.flipY(
+    const flipped = PixelFormat.flipY(
       dataBuffer,
       PixelFormat.RGB,
       PixelDatatype.UNSIGNED_BYTE,
@@ -21,12 +21,12 @@ describe("Core/PixelFormat", function () {
   });
 
   it("flipY returns early if height is 1", function () {
-    var width = 1;
-    var height = 1;
-    var values = [255, 255, 255];
-    var dataBuffer = new Uint8Array(values);
+    const width = 1;
+    const height = 1;
+    const values = [255, 255, 255];
+    const dataBuffer = new Uint8Array(values);
 
-    var flipped = PixelFormat.flipY(
+    const flipped = PixelFormat.flipY(
       dataBuffer,
       PixelFormat.RGB,
       PixelDatatype.UNSIGNED_BYTE,

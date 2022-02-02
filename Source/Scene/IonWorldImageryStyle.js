@@ -5,7 +5,7 @@
  *
  * @enum {Number}
  */
-var IonWorldImageryStyle = {
+const IonWorldImageryStyle = {
   /**
    * Aerial imagery.
    *

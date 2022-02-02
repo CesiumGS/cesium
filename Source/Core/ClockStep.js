@@ -7,7 +7,7 @@
  * @see Clock
  * @see ClockRange
  */
-var ClockStep = {
+const ClockStep = {
   /**
    * {@link Clock#tick} advances the current time by a fixed step,
    * which is the number of seconds specified by {@link Clock#multiplier}.

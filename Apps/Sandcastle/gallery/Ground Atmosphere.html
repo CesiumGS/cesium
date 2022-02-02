@@ -118,19 +118,19 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           sceneModePicker: false,
         });
-        var scene = viewer.scene;
-        var globe = scene.globe;
+        const scene = viewer.scene;
+        const globe = scene.globe;
 
-        var defaultLightFadeOut = globe.lightingFadeOutDistance;
-        var defaultLightFadeIn = globe.lightingFadeInDistance;
-        var defaultNightFadeOut = globe.nightFadeOutDistance;
-        var defaultNightFadeIn = globe.nightFadeInDistance;
+        const defaultLightFadeOut = globe.lightingFadeOutDistance;
+        const defaultLightFadeIn = globe.lightingFadeInDistance;
+        const defaultNightFadeOut = globe.nightFadeOutDistance;
+        const defaultNightFadeIn = globe.nightFadeInDistance;
 
         // The viewModel tracks the state of our mini application.
-        var viewModel = {
+        const viewModel = {
           lightingFadeOutDistance: defaultLightFadeOut,
           lightingFadeInDistance: defaultLightFadeIn,
           nightFadeOutDistance: defaultNightFadeOut,
@@ -140,7 +140,7 @@
         Cesium.knockout.track(viewModel);
 
         // Bind the viewModel to the DOM elements of the UI that call for it.
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
         function subscribeParameter(name) {

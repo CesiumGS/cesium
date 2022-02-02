@@ -134,10 +134,10 @@ function SingleTileImageryProvider(options) {
    */
   this.defaultMagnificationFilter = undefined;
 
-  var resource = Resource.createIfNeeded(options.url);
+  const resource = Resource.createIfNeeded(options.url);
 
-  var rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
-  var tilingScheme = new GeographicTilingScheme({
+  const rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
+  const tilingScheme = new GeographicTilingScheme({
     rectangle: rectangle,
     numberOfLevelZeroTilesX: 1,
     numberOfLevelZeroTilesY: 1,
@@ -155,14 +155,14 @@ function SingleTileImageryProvider(options) {
   this._ready = false;
   this._readyPromise = when.defer();
 
-  var credit = options.credit;
+  let credit = options.credit;
   if (typeof credit === "string") {
     credit = new Credit(credit);
   }
   this._credit = credit;
 
-  var that = this;
-  var error;
+  const that = this;
+  let error;
 
   function success(image) {
     that._image = image;
@@ -174,7 +174,7 @@ function SingleTileImageryProvider(options) {
   }
 
   function failure(e) {
-    var message = "Failed to load image " + resource.url + ".";
+    const message = "Failed to load image " + resource.url + ".";
     error = TileProviderError.handleError(
       error,
       that,

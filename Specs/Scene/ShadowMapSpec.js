@@ -34,33 +34,33 @@ import { when } from "../../Source/Cesium.js";
 describe(
   "Scene/ShadowMap",
   function () {
-    var scene;
-    var sunShadowMap;
-    var backgroundColor = [0, 0, 0, 255];
+    let scene;
+    let sunShadowMap;
+    const backgroundColor = [0, 0, 0, 255];
 
-    var longitude = -1.31968;
-    var latitude = 0.4101524;
-    var height = 0.0;
-    var boxHeight = 4.0;
-    var floorHeight = -1.0;
+    const longitude = -1.31968;
+    const latitude = 0.4101524;
+    const height = 0.0;
+    const boxHeight = 4.0;
+    const floorHeight = -1.0;
 
-    var boxUrl = "./Data/Models/Shadows/Box.gltf";
-    var boxTranslucentUrl = "./Data/Models/Shadows/BoxTranslucent.gltf";
-    var boxCutoutUrl = "./Data/Models/Shadows/BoxCutout.gltf";
-    var boxInvertedUrl = "./Data/Models/Shadows/BoxInverted.gltf";
+    const boxUrl = "./Data/Models/Shadows/Box.gltf";
+    const boxTranslucentUrl = "./Data/Models/Shadows/BoxTranslucent.gltf";
+    const boxCutoutUrl = "./Data/Models/Shadows/BoxCutout.gltf";
+    const boxInvertedUrl = "./Data/Models/Shadows/BoxInverted.gltf";
 
-    var box;
-    var boxTranslucent;
-    var boxCutout;
-    var room;
-    var floor;
-    var floorTranslucent;
+    let box;
+    let boxTranslucent;
+    let boxCutout;
+    let room;
+    let floor;
+    let floorTranslucent;
 
-    var primitiveBox;
-    var primitiveBoxRTC;
-    var primitiveBoxTranslucent;
-    var primitiveFloor;
-    var primitiveFloorRTC;
+    let primitiveBox;
+    let primitiveBoxRTC;
+    let primitiveBoxTranslucent;
+    let primitiveFloor;
+    let primitiveFloorRTC;
 
     beforeAll(function () {
       scene = createScene();
@@ -69,33 +69,37 @@ describe(
 
       sunShadowMap = scene.shadowMap;
 
-      var boxOrigin = new Cartesian3.fromRadians(
+      const boxOrigin = new Cartesian3.fromRadians(
         longitude,
         latitude,
         boxHeight
       );
-      var boxTransform = Transforms.headingPitchRollToFixedFrame(
+      const boxTransform = Transforms.headingPitchRollToFixedFrame(
         boxOrigin,
         new HeadingPitchRoll()
       );
 
-      var floorOrigin = new Cartesian3.fromRadians(
+      const floorOrigin = new Cartesian3.fromRadians(
         longitude,
         latitude,
         floorHeight
       );
-      var floorTransform = Transforms.headingPitchRollToFixedFrame(
+      const floorTransform = Transforms.headingPitchRollToFixedFrame(
         floorOrigin,
         new HeadingPitchRoll()
       );
 
-      var roomOrigin = new Cartesian3.fromRadians(longitude, latitude, height);
-      var roomTransform = Transforms.headingPitchRollToFixedFrame(
+      const roomOrigin = new Cartesian3.fromRadians(
+        longitude,
+        latitude,
+        height
+      );
+      const roomTransform = Transforms.headingPitchRollToFixedFrame(
         roomOrigin,
         new HeadingPitchRoll()
       );
 
-      var modelPromises = [];
+      const modelPromises = [];
       modelPromises.push(
         loadModel({
           url: boxUrl,
@@ -196,16 +200,16 @@ describe(
     }
 
     function createPrimitiveRTC(transform, size, color) {
-      var boxGeometry = BoxGeometry.createGeometry(
+      const boxGeometry = BoxGeometry.createGeometry(
         BoxGeometry.fromDimensions({
           vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
           dimensions: new Cartesian3(size, size, size),
         })
       );
 
-      var positions = boxGeometry.attributes.position.values;
-      var newPositions = new Float32Array(positions.length);
-      for (var i = 0; i < positions.length; ++i) {
+      const positions = boxGeometry.attributes.position.values;
+      const newPositions = new Float32Array(positions.length);
+      for (let i = 0; i < positions.length; ++i) {
         newPositions[i] = positions[i];
       }
       boxGeometry.attributes.position.values = newPositions;
@@ -218,7 +222,7 @@ describe(
         boxGeometry.boundingSphere
       );
 
-      var boxGeometryInstance = new GeometryInstance({
+      const boxGeometryInstance = new GeometryInstance({
         geometry: boxGeometry,
         attributes: {
           color: ColorGeometryInstanceAttribute.fromColor(color),
@@ -241,7 +245,7 @@ describe(
     }
 
     function loadModel(options) {
-      var model = scene.primitives.add(Model.fromGltf(options));
+      const model = scene.primitives.add(Model.fromGltf(options));
       return pollToPromise(
         function () {
           // Render scene to progressively load the model
@@ -261,7 +265,7 @@ describe(
     function loadGlobe() {
       return pollToPromise(function () {
         scene.render();
-        var globe = scene.globe;
+        const globe = scene.globe;
         return (
           globe._surface.tileProvider.ready &&
           globe._surface._tileLoadQueueHigh.length === 0 &&
@@ -277,8 +281,8 @@ describe(
     });
 
     afterEach(function () {
-      var length = scene.primitives.length;
-      for (var i = 0; i < length; ++i) {
+      const length = scene.primitives.length;
+      for (let i = 0; i < length; ++i) {
         scene.primitives.get(i).show = false;
       }
 
@@ -287,14 +291,14 @@ describe(
     });
 
     function createCascadedShadowMap() {
-      var center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
       );
 
       // Create light camera pointing straight down
-      var lightCamera = new Camera(scene);
+      const lightCamera = new Camera(scene);
       lightCamera.lookAt(center, new Cartesian3(0.0, 0.0, 1.0));
 
       scene.shadowMap = new ShadowMap({
@@ -304,14 +308,14 @@ describe(
     }
 
     function createSingleCascadeShadowMap() {
-      var center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
       );
 
       // Create light camera pointing straight down
-      var lightCamera = new Camera(scene);
+      const lightCamera = new Camera(scene);
       lightCamera.lookAt(center, new Cartesian3(0.0, 0.0, 1.0));
 
       scene.shadowMap = new ShadowMap({
@@ -322,13 +326,13 @@ describe(
     }
 
     function createShadowMapForDirectionalLight() {
-      var center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
       );
 
-      var frustum = new OrthographicOffCenterFrustum();
+      const frustum = new OrthographicOffCenterFrustum();
       frustum.left = -50.0;
       frustum.right = 50.0;
       frustum.bottom = -50.0;
@@ -337,7 +341,7 @@ describe(
       frustum.far = 1000;
 
       // Create light camera pointing straight down
-      var lightCamera = new Camera(scene);
+      const lightCamera = new Camera(scene);
       lightCamera.frustum = frustum;
       lightCamera.lookAt(center, new Cartesian3(0.0, 0.0, 20.0));
 
@@ -349,13 +353,13 @@ describe(
     }
 
     function createShadowMapForSpotLight() {
-      var center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
       );
 
-      var lightCamera = new Camera(scene);
+      const lightCamera = new Camera(scene);
       lightCamera.frustum.fov = CesiumMath.PI_OVER_TWO;
       lightCamera.frustum.aspectRatio = 1.0;
       lightCamera.frustum.near = 1.0;
@@ -370,13 +374,13 @@ describe(
     }
 
     function createShadowMapForPointLight() {
-      var center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
       );
 
-      var lightCamera = new Camera(scene);
+      const lightCamera = new Camera(scene);
       lightCamera.position = center;
 
       scene.shadowMap = new ShadowMap({
@@ -395,7 +399,7 @@ describe(
     }
 
     function renderAndReadPixels() {
-      var color;
+      let color;
 
       expect({
         scene: scene,
@@ -423,7 +427,7 @@ describe(
 
       // Render without shadows
       scene.shadowMap.enabled = false;
-      var unshadowedColor;
+      let unshadowedColor;
       renderAndCall(function (rgba) {
         unshadowedColor = rgba;
         expect(unshadowedColor).not.toEqual(backgroundColor);
@@ -431,7 +435,7 @@ describe(
 
       // Render with shadows
       scene.shadowMap.enabled = true;
-      var shadowedColor;
+      let shadowedColor;
       renderAndCall(function (rgba) {
         shadowedColor = rgba;
         expect(rgba).not.toEqual(backgroundColor);
@@ -518,7 +522,7 @@ describe(
       // Render without shadows
       scene.shadowMap.enabled = false;
 
-      var unshadowedColor;
+      let unshadowedColor;
       renderAndCall(function (rgba) {
         unshadowedColor = rgba;
         expect(rgba).not.toEqual(backgroundColor);
@@ -577,14 +581,14 @@ describe(
       scene.globe = new Globe();
       scene.camera.frustum._sseDenominator = 0.01;
 
-      var center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
       );
 
       // Create light camera that is angled horizontally
-      var lightCamera = new Camera(scene);
+      const lightCamera = new Camera(scene);
       lightCamera.lookAt(center, new Cartesian3(1.0, 0.0, 0.1));
 
       scene.shadowMap = new ShadowMap({
@@ -597,11 +601,11 @@ describe(
         EllipsoidTerrainProvider.prototype,
         "requestTileGeometry"
       ).and.callFake(function () {
-        var width = 16;
-        var height = 16;
-        var buffer = new Uint8Array(width * height);
-        for (var i = 0; i < buffer.length; ++i) {
-          var row = i % width;
+        const width = 16;
+        const height = 16;
+        const buffer = new Uint8Array(width * height);
+        for (let i = 0; i < buffer.length; ++i) {
+          const row = i % width;
           if (row > 6 && row < 10) {
             buffer[i] = 1;
           }
@@ -617,7 +621,7 @@ describe(
         // Render without shadows
         scene.shadowMap.enabled = false;
 
-        var unshadowedColor;
+        let unshadowedColor;
         renderAndCall(function (rgba) {
           unshadowedColor = rgba;
           expect(rgba).not.toEqual(backgroundColor);
@@ -641,14 +645,14 @@ describe(
       box.show = true;
       floor.show = true;
 
-      var center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
       );
 
       // Create light camera pointing straight down
-      var lightCamera = new Camera(scene);
+      const lightCamera = new Camera(scene);
       lightCamera.lookAt(center, new Cartesian3(0.0, 0.0, 1.0));
 
       scene.shadowMap = new ShadowMap({
@@ -657,7 +661,7 @@ describe(
       });
 
       // Render with shadows
-      var shadowedColor = renderAndReadPixels();
+      const shadowedColor = renderAndReadPixels();
 
       // Move the camera away from the shadow
       scene.camera.moveLeft(0.5);
@@ -675,10 +679,10 @@ describe(
       box.show = true;
       floor.show = true;
 
-      var startTime = new JulianDate(2457561.211806); // Sun pointing straight above
-      var endTime = new JulianDate(2457561.276389); // Sun at an angle
+      const startTime = new JulianDate(2457561.211806); // Sun pointing straight above
+      const endTime = new JulianDate(2457561.276389); // Sun at an angle
 
-      var center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
@@ -690,7 +694,7 @@ describe(
       // Render without shadows
       scene.shadowMap.enabled = false;
 
-      var unshadowedColor;
+      let unshadowedColor;
       renderAndCall(function (rgba) {
         unshadowedColor = rgba;
         expect(rgba).not.toEqual(backgroundColor);
@@ -710,23 +714,23 @@ describe(
     });
 
     it("uses scene's light source", function () {
-      var originalLight = scene.light;
+      const originalLight = scene.light;
 
       box.show = true;
       floor.show = true;
 
-      var lightDirectionAbove = new Cartesian3(
+      const lightDirectionAbove = new Cartesian3(
         -0.22562675028973597,
         0.8893549458095356,
         -0.3976686433675793
       ); // Light pointing straight above
-      var lightDirectionAngle = new Cartesian3(
+      const lightDirectionAngle = new Cartesian3(
         0.14370705890272903,
         0.9062077731227641,
         -0.3976628636840613
       ); // Light at an angle
 
-      var center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
@@ -741,7 +745,7 @@ describe(
       // Render without shadows
       scene.shadowMap.enabled = false;
 
-      var unshadowedColor;
+      let unshadowedColor;
       renderAndCall(function (rgba) {
         unshadowedColor = rgba;
         expect(rgba).not.toEqual(backgroundColor);
@@ -791,11 +795,11 @@ describe(
       room.show = true;
       createShadowMapForPointLight();
 
-      var longitudeSpacing = 0.0000003419296208325038;
-      var latitudeSpacing = 0.000000315782;
-      var heightSpacing = 2.0;
+      const longitudeSpacing = 0.0000003419296208325038;
+      const latitudeSpacing = 0.000000315782;
+      const heightSpacing = 2.0;
 
-      var origins = [
+      const origins = [
         Cartesian3.fromRadians(longitude, latitude + latitudeSpacing, height),
         Cartesian3.fromRadians(longitude, latitude - latitudeSpacing, height),
         Cartesian3.fromRadians(longitude + longitudeSpacing, latitude, height),
@@ -804,7 +808,7 @@ describe(
         Cartesian3.fromRadians(longitude, latitude, height + heightSpacing),
       ];
 
-      var offsets = [
+      const offsets = [
         new HeadingPitchRange(0.0, 0.0, 0.1),
         new HeadingPitchRange(CesiumMath.PI, 0.0, 0.1),
         new HeadingPitchRange(CesiumMath.PI_OVER_TWO, 0.0, 0.1),
@@ -813,8 +817,8 @@ describe(
         new HeadingPitchRange(0, CesiumMath.PI_OVER_TWO, 0.1),
       ];
 
-      for (var i = 0; i < 6; ++i) {
-        var box = scene.primitives.add(
+      for (let i = 0; i < 6; ++i) {
+        const box = scene.primitives.add(
           Model.fromGltf({
             url: boxUrl,
             modelMatrix: Transforms.headingPitchRollToFixedFrame(
@@ -831,7 +835,7 @@ describe(
 
         // Render without shadows
         scene.shadowMap.enabled = false;
-        var unshadowedColor;
+        let unshadowedColor;
         //eslint-disable-next-line no-loop-func
         renderAndCall(function (rgba) {
           unshadowedColor = rgba;
@@ -847,7 +851,7 @@ describe(
         });
 
         // Check that setting a smaller radius works
-        var radius = scene.shadowMap._pointLightRadius;
+        const radius = scene.shadowMap._pointLightRadius;
         scene.shadowMap._pointLightRadius = 3.0;
         renderAndExpect(unshadowedColor);
         scene.shadowMap._pointLightRadius = radius;
@@ -866,7 +870,7 @@ describe(
       createCascadedShadowMap();
 
       // Render with shadows
-      var shadowedColor = renderAndReadPixels();
+      const shadowedColor = renderAndReadPixels();
 
       // Change size
       scene.shadowMap.size = 256;
@@ -884,7 +888,7 @@ describe(
       createCascadedShadowMap();
 
       // Render with shadows
-      var shadowedColor = renderAndReadPixels();
+      const shadowedColor = renderAndReadPixels();
 
       // Render cascade colors
       scene.shadowMap.debugCascadeColors = true;
@@ -902,12 +906,12 @@ describe(
 
       // Render without shadows
       scene.shadowMap.enabled = false;
-      var unshadowedColor = renderAndReadPixels();
+      const unshadowedColor = renderAndReadPixels();
 
       // Render with shadows
       scene.shadowMap.enabled = true;
       expect(scene.shadowMap.dirty).toBe(true);
-      var shadowedColor = renderAndReadPixels();
+      const shadowedColor = renderAndReadPixels();
 
       // Render with soft shadows
       scene.shadowMap.softShadows = true;
@@ -927,11 +931,11 @@ describe(
 
       // Render without shadows
       scene.shadowMap.enabled = false;
-      var unshadowedColor = renderAndReadPixels();
+      const unshadowedColor = renderAndReadPixels();
 
       // Render with shadows
       scene.shadowMap.enabled = true;
-      var shadowedColor = renderAndReadPixels();
+      const shadowedColor = renderAndReadPixels();
 
       scene.shadowMap.darkness = 0.5;
       renderAndCall(function (rgba) {
@@ -945,14 +949,14 @@ describe(
       box.show = true;
       floor.show = true;
 
-      var center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
       );
 
       // Create light camera pointing straight down
-      var lightCamera = new Camera(scene);
+      const lightCamera = new Camera(scene);
       lightCamera.lookAt(center, new Cartesian3(0.0, 0.0, 1.0));
 
       scene.shadowMap = new ShadowMap({
@@ -961,13 +965,13 @@ describe(
       });
 
       // Render with light looking straight down
-      var shadowedColor = renderAndReadPixels();
+      const shadowedColor = renderAndReadPixels();
 
       // Move the light close to the horizon
       lightCamera.lookAt(center, new Cartesian3(1.0, 0.0, 0.01));
 
       // Render with faded shadows
-      var horizonShadowedColor = renderAndReadPixels();
+      const horizonShadowedColor = renderAndReadPixels();
 
       // Render with unfaded shadows
       scene.shadowMap.fadingEnabled = false;
@@ -978,7 +982,7 @@ describe(
     });
 
     function depthFramebufferSupported() {
-      var framebuffer = new Framebuffer({
+      const framebuffer = new Framebuffer({
         context: scene.context,
         depthStencilTexture: new Texture({
           context: scene.context,
@@ -1018,7 +1022,7 @@ describe(
       scene.shadowMap = scene.shadowMap && scene.shadowMap.destroy();
 
       // Disable extension
-      var depthTexture = scene.context._depthTexture;
+      const depthTexture = scene.context._depthTexture;
       scene.context._depthTexture = false;
       createCascadedShadowMap();
 
@@ -1042,7 +1046,7 @@ describe(
         expect(scene.shadowMap.outOfView).toBe(false);
       });
 
-      var center = new Cartesian3.fromRadians(longitude, latitude, 200000);
+      const center = new Cartesian3.fromRadians(longitude, latitude, 200000);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
@@ -1057,14 +1061,14 @@ describe(
       box.show = true;
       floor.show = true;
 
-      var center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = new Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0)
       );
 
       // Create light camera pointing straight down
-      var lightCamera = new Camera(scene);
+      const lightCamera = new Camera(scene);
       lightCamera.lookAt(center, new Cartesian3(0.0, 0.0, 1.0));
 
       scene.shadowMap = new ShadowMap({
@@ -1135,8 +1139,8 @@ describe(
       createShadowMapForDirectionalLight();
       scene.shadowMap._fitNearFar = true; // True by default
 
-      var shadowNearFit;
-      var shadowFarFit;
+      let shadowNearFit;
+      let shadowFarFit;
       renderAndCall(function (rgba) {
         shadowNearFit = scene.shadowMap._sceneCamera.frustum.near;
         shadowFarFit = scene.shadowMap._sceneCamera.frustum.far;
@@ -1144,8 +1148,8 @@ describe(
 
       scene.shadowMap._fitNearFar = false;
       renderAndCall(function (rgba) {
-        var shadowNear = scene.shadowMap._sceneCamera.frustum.near;
-        var shadowFar = scene.shadowMap._sceneCamera.frustum.far;
+        const shadowNear = scene.shadowMap._sceneCamera.frustum.near;
+        const shadowFar = scene.shadowMap._sceneCamera.frustum.far;
 
         // When fitNearFar is true the shadowed region is smaller
         expect(shadowNear).toBeLessThan(shadowNearFit);
@@ -1170,7 +1174,7 @@ describe(
 
       // Render without shadows
       scene.shadowMap.enabled = false;
-      var unshadowedColor;
+      let unshadowedColor;
       renderAndCall(function (rgba) {
         expect(rgba).not.toEqual(backgroundColor);
         unshadowedColor = rgba;
@@ -1178,7 +1182,7 @@ describe(
 
       // Render with shadows
       scene.shadowMap.enabled = true;
-      var shadowedColor;
+      let shadowedColor;
       renderAndCall(function (rgba) {
         expect(rgba).not.toEqual(backgroundColor);
         expect(rgba).not.toEqual(unshadowedColor);
@@ -1198,7 +1202,7 @@ describe(
     });
 
     it("shadows are disabled during the pick pass", function () {
-      var spy = spyOn(Context.prototype, "draw").and.callThrough();
+      const spy = spyOn(Context.prototype, "draw").and.callThrough();
 
       boxTranslucent.show = true;
       floorTranslucent.show = true;
@@ -1207,9 +1211,9 @@ describe(
 
       // Render normally and expect every model shader program to be shadow related.
       renderAndCall(function (rgba) {
-        var count = spy.calls.count();
-        for (var i = 0; i < count; ++i) {
-          var drawCommand = spy.calls.argsFor(i)[0];
+        const count = spy.calls.count();
+        for (let i = 0; i < count; ++i) {
+          const drawCommand = spy.calls.argsFor(i)[0];
           if (drawCommand.owner.primitive instanceof Model) {
             expect(
               drawCommand.shaderProgram._fragmentShaderText.indexOf(
@@ -1224,9 +1228,9 @@ describe(
       // that there are no shadow cast commands.
       spy.calls.reset();
       expect(scene).toPickAndCall(function (result) {
-        var count = spy.calls.count();
-        for (var i = 0; i < count; ++i) {
-          var drawCommand = spy.calls.argsFor(i)[0];
+        const count = spy.calls.count();
+        for (let i = 0; i < count; ++i) {
+          const drawCommand = spy.calls.argsFor(i)[0];
           if (drawCommand.owner.primitive instanceof Model) {
             expect(
               drawCommand.shaderProgram._fragmentShaderText.indexOf(
@@ -1239,11 +1243,14 @@ describe(
     });
 
     it("model updates derived commands when the shadow map is dirty", function () {
-      var spy1 = spyOn(
+      const spy1 = spyOn(
         ShadowMap,
         "createReceiveDerivedCommand"
       ).and.callThrough();
-      var spy2 = spyOn(ShadowMap, "createCastDerivedCommand").and.callThrough();
+      const spy2 = spyOn(
+        ShadowMap,
+        "createCastDerivedCommand"
+      ).and.callThrough();
 
       box.show = true;
       floor.show = true;
@@ -1251,7 +1258,7 @@ describe(
 
       // Render without shadows
       scene.shadowMap.enabled = false;
-      var unshadowedColor;
+      let unshadowedColor;
       renderAndCall(function (rgba) {
         unshadowedColor = rgba;
         expect(rgba).not.toEqual(backgroundColor);
@@ -1259,7 +1266,7 @@ describe(
 
       // Render with shadows
       scene.shadowMap.enabled = true;
-      var shadowedColor;
+      let shadowedColor;
       renderAndCall(function (rgba) {
         shadowedColor = rgba;
         expect(rgba).not.toEqual(backgroundColor);
@@ -1271,7 +1278,7 @@ describe(
       scene.shadowMap.debugCascadeColors = true;
 
       // Render a few frames
-      var i;
+      let i;
       for (i = 0; i < 6; ++i) {
         scene.render();
       }
@@ -1305,7 +1312,7 @@ describe(
 
       // Render without shadows
       scene.shadowMap.enabled = false;
-      var unshadowedColor;
+      let unshadowedColor;
       renderAndCall(function (rgba) {
         unshadowedColor = rgba;
         expect(rgba).not.toEqual(backgroundColor);
@@ -1326,7 +1333,7 @@ describe(
 
       // Render without shadows
       scene.shadowMap.enabled = false;
-      var unshadowedColor;
+      let unshadowedColor;
       renderAndCall(function (rgba) {
         unshadowedColor = rgba;
         expect(rgba).not.toEqual(backgroundColor);
@@ -1334,7 +1341,7 @@ describe(
 
       // Render with shadows
       scene.shadowMap.enabled = true;
-      var shadowedColor;
+      let shadowedColor;
       renderAndCall(function (rgba) {
         shadowedColor = rgba;
         expect(rgba).not.toEqual(backgroundColor);

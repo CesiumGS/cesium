@@ -1,6 +1,6 @@
 import Check from "./Check.js";
 
-var dataUriRegex = /^data:/i;
+const dataUriRegex = /^data:/i;
 
 /**
  * Determines if the specified uri is a data uri.

@@ -11,12 +11,12 @@ describe("Widgets/BaseLayerPicker/BaseLayerPicker", function () {
   }
 
   it("can create and destroy", function () {
-    var container = document.createElement("div");
+    const container = document.createElement("div");
     container.id = "testContainer";
     document.body.appendChild(container);
 
-    var globe = new MockGlobe();
-    var widget = new BaseLayerPicker("testContainer", {
+    const globe = new MockGlobe();
+    const widget = new BaseLayerPicker("testContainer", {
       globe: globe,
     });
     expect(widget.container).toBe(container);
@@ -32,11 +32,11 @@ describe("Widgets/BaseLayerPicker/BaseLayerPicker", function () {
     it(
       name + " event closes dropdown if target is not inside container",
       function () {
-        var container = document.createElement("div");
+        const container = document.createElement("div");
         container.id = "testContainer";
         document.body.appendChild(container);
 
-        var widget = new BaseLayerPicker("testContainer", {
+        const widget = new BaseLayerPicker("testContainer", {
           globe: new MockGlobe(),
         });
 

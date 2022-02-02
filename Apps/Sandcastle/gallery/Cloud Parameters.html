@@ -162,9 +162,9 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
-        var position = Cesium.Cartesian3.fromDegrees(
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
+        const position = Cesium.Cartesian3.fromDegrees(
           -123.0744619,
           44.0503706,
           50
@@ -176,14 +176,14 @@
         // These noise parameters are set to default, but can be changed
         // to produce different cloud results. However, the noise is precomputed,
         // so this cannot be changed dynamically.
-        var clouds = scene.primitives.add(
+        const clouds = scene.primitives.add(
           new Cesium.CloudCollection({
             noiseDetail: 16.0,
             noiseOffset: Cesium.Cartesian3.ZERO,
           })
         );
 
-        var cloudParameters = {
+        const cloudParameters = {
           scaleWithMaximumSize: true,
           scaleX: 25,
           scaleY: 12,
@@ -197,7 +197,7 @@
           colors: ["White", "Red", "Green", "Blue", "Yellow", "Gray"],
         };
 
-        var cloud = clouds.add({
+        const cloud = clouds.add({
           position: position,
           scale: new Cesium.Cartesian2(
             cloudParameters.scaleX,
@@ -214,7 +214,7 @@
         });
 
         Cesium.knockout.track(cloudParameters);
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(cloudParameters, toolbar);
 
         Cesium.knockout
@@ -229,21 +229,21 @@
         Cesium.knockout
           .getObservable(cloudParameters, "scaleX")
           .subscribe(function (newValue) {
-            var value = Number(newValue);
+            const value = Number(newValue);
             cloud.scale = new Cesium.Cartesian2(value, cloud.scale.y);
           });
 
         Cesium.knockout
           .getObservable(cloudParameters, "scaleY")
           .subscribe(function (newValue) {
-            var value = Number(newValue);
+            const value = Number(newValue);
             cloud.scale = new Cesium.Cartesian2(cloud.scale.x, value);
           });
 
         Cesium.knockout
           .getObservable(cloudParameters, "maximumSizeX")
           .subscribe(function (newValue) {
-            var value = Number(newValue);
+            const value = Number(newValue);
             cloud.maximumSize = new Cesium.Cartesian3(
               value,
               cloud.maximumSize.y,
@@ -257,7 +257,7 @@
         Cesium.knockout
           .getObservable(cloudParameters, "maximumSizeY")
           .subscribe(function (newValue) {
-            var value = Number(newValue);
+            const value = Number(newValue);
             cloud.maximumSize = new Cesium.Cartesian3(
               cloud.maximumSize.x,
               value,
@@ -271,7 +271,7 @@
         Cesium.knockout
           .getObservable(cloudParameters, "maximumSizeZ")
           .subscribe(function (newValue) {
-            var value = Number(newValue);
+            const value = Number(newValue);
             cloud.maximumSize = new Cesium.Cartesian3(
               cloud.maximumSize.x,
               cloud.maximumSize.y,

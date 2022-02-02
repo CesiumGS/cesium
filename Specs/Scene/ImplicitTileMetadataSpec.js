@@ -11,15 +11,15 @@ import {
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
 
 describe("Scene/ImplicitTileMetadata", function () {
-  var highlightColors = [
+  const highlightColors = [
     [255, 0, 0],
     [255, 255, 0],
     [255, 0, 255],
   ];
 
-  var buildingCounts = [100, 350, 200];
+  const buildingCounts = [100, 350, 200];
 
-  var tileTableDescription = {
+  const tileTableDescription = {
     name: "Tiles",
     class: "tile",
     properties: {
@@ -28,7 +28,7 @@ describe("Scene/ImplicitTileMetadata", function () {
     },
   };
 
-  var schema = {
+  const schema = {
     classes: {
       tile: {
         properties: {
@@ -45,17 +45,17 @@ describe("Scene/ImplicitTileMetadata", function () {
     },
   };
 
-  var tileClass = new MetadataClass({
+  const tileClass = new MetadataClass({
     id: "tile",
     class: schema.classes.tile,
   });
 
-  var propertyTablesDescription = {
+  const propertyTablesDescription = {
     schema: schema,
     propertyTables: [tileTableDescription],
   };
 
-  var subtreeDescription = {
+  const subtreeDescription = {
     tileAvailability: {
       descriptor: "10011",
       lengthBits: 5,
@@ -80,27 +80,27 @@ describe("Scene/ImplicitTileMetadata", function () {
     },
   };
 
-  var bufferResults = ImplicitTilingTester.generateSubtreeBuffers(
+  const bufferResults = ImplicitTilingTester.generateSubtreeBuffers(
     subtreeDescription
   );
 
-  var tilesetResource = new Resource({
+  const tilesetResource = new Resource({
     url: "https://example.com/tileset.json",
   });
 
-  var subtreeResource = new Resource({
+  const subtreeResource = new Resource({
     url: "https://example.com/test.subtree",
   });
 
-  var mockTilesetWithMetadata = {
+  const mockTilesetWithMetadata = {
     metadata: {
       schema: new MetadataSchema(schema),
     },
   };
 
-  var metadataSchema = mockTilesetWithMetadata.metadata.schema;
+  const metadataSchema = mockTilesetWithMetadata.metadata.schema;
 
-  var implicitQuadtreeJson = {
+  const implicitQuadtreeJson = {
     geometricError: 500,
     refine: "ADD",
     boundingVolume: {
@@ -121,13 +121,13 @@ describe("Scene/ImplicitTileMetadata", function () {
     },
   };
 
-  var metadataQuadtree = new ImplicitTileset(
+  const metadataQuadtree = new ImplicitTileset(
     tilesetResource,
     implicitQuadtreeJson,
     metadataSchema
   );
 
-  var rootCoordinates = new ImplicitTileCoordinates({
+  const rootCoordinates = new ImplicitTileCoordinates({
     subdivisionScheme: metadataQuadtree.subdivisionScheme,
     subtreeLevels: metadataQuadtree.subtreeLevels,
     x: 0,
@@ -135,7 +135,7 @@ describe("Scene/ImplicitTileMetadata", function () {
     level: 0,
   });
 
-  var implicitCoordinates = new ImplicitTileCoordinates({
+  const implicitCoordinates = new ImplicitTileCoordinates({
     subdivisionScheme: metadataQuadtree.subdivisionScheme,
     subtreeLevels: metadataQuadtree.subtreeLevels,
     x: 0,
@@ -143,7 +143,7 @@ describe("Scene/ImplicitTileMetadata", function () {
     level: 1,
   });
 
-  var subtree;
+  let subtree;
   beforeAll(function () {
     subtree = new ImplicitSubtree(
       subtreeResource,
@@ -155,7 +155,7 @@ describe("Scene/ImplicitTileMetadata", function () {
     return subtree.readyPromise;
   });
 
-  var tileMetadata;
+  let tileMetadata;
   beforeEach(function () {
     tileMetadata = new ImplicitTileMetadata({
       implicitSubtree: subtree,
@@ -212,7 +212,7 @@ describe("Scene/ImplicitTileMetadata", function () {
   });
 
   it("getPropertyIds returns array of property IDs", function () {
-    var propertyIds = tileMetadata.getPropertyIds([]);
+    const propertyIds = tileMetadata.getPropertyIds([]);
     propertyIds.sort();
     expect(propertyIds).toEqual(["buildingCount", "highlightColor"]);
   });

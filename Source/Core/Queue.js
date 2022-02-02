@@ -46,9 +46,9 @@ Queue.prototype.dequeue = function () {
     return undefined;
   }
 
-  var array = this._array;
-  var offset = this._offset;
-  var item = array[offset];
+  const array = this._array;
+  let offset = this._offset;
+  const item = array[offset];
   array[offset] = undefined;
 
   offset++;

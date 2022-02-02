@@ -1,7 +1,7 @@
 /**
  * @private
  */
-var ContextLimits = {
+const ContextLimits = {
   _maximumCombinedTextureImageUnits: 0,
   _maximumCubeMapSize: 0,
   _maximumFragmentUniformVectors: 0,

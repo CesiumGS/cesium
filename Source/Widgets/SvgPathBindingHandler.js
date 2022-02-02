@@ -1,5 +1,5 @@
-var svgNS = "http://www.w3.org/2000/svg";
-var svgClassName = "cesium-svgPath-svg";
+const svgNS = "http://www.w3.org/2000/svg";
+const svgClassName = "cesium-svgPath-svg";
 
 /**
  * A Knockout binding handler that creates a DOM element for a single SVG path.
@@ -28,29 +28,29 @@ var svgClassName = "cesium-svgPath-svg";
  * // or the whole object can be observable from the view model
  * <div data-bind="cesiumSvgPath: svgPathOptions"></div>
  */
-var SvgPathBindingHandler = {
+const SvgPathBindingHandler = {
   /**
    * @function
    */
   register: function (knockout) {
     knockout.bindingHandlers.cesiumSvgPath = {
       init: function (element, valueAccessor) {
-        var svg = document.createElementNS(svgNS, "svg:svg");
+        const svg = document.createElementNS(svgNS, "svg:svg");
         svg.setAttribute("class", svgClassName);
 
-        var pathElement = document.createElementNS(svgNS, "path");
+        const pathElement = document.createElementNS(svgNS, "path");
         svg.appendChild(pathElement);
 
         knockout.virtualElements.setDomNodeChildren(element, [svg]);
 
         knockout.computed({
           read: function () {
-            var value = knockout.unwrap(valueAccessor());
+            const value = knockout.unwrap(valueAccessor());
 
             pathElement.setAttribute("d", knockout.unwrap(value.path));
 
-            var pathWidth = knockout.unwrap(value.width);
-            var pathHeight = knockout.unwrap(value.height);
+            const pathWidth = knockout.unwrap(value.width);
+            const pathHeight = knockout.unwrap(value.height);
 
             svg.setAttribute("width", pathWidth);
             svg.setAttribute("height", pathHeight);

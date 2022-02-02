@@ -3,7 +3,7 @@ import { getBaseUri } from "../../Source/Cesium.js";
 
 describe("Core/getAbsoluteUri", function () {
   it("works as expected", function () {
-    var result = getAbsoluteUri(
+    let result = getAbsoluteUri(
       "http://www.mysite.com/awesome?makeitawesome=true"
     );
     expect(result).toEqual("http://www.mysite.com/awesome?makeitawesome=true");
@@ -16,12 +16,12 @@ describe("Core/getAbsoluteUri", function () {
   });
 
   it("document.baseURI is respected", function () {
-    var fakeDocument = {
+    const fakeDocument = {
       baseURI: "http://test.com/index.html",
       location: document.location,
     };
 
-    var result = getAbsoluteUri._implementation(
+    const result = getAbsoluteUri._implementation(
       "awesome.png",
       undefined,
       fakeDocument

@@ -32,7 +32,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
             url:
               "https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/",

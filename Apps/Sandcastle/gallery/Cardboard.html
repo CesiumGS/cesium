@@ -35,7 +35,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           vrButton: true,
           terrainProvider: Cesium.createWorldTerrain(),
         });
@@ -47,8 +47,8 @@
         // Follow the path of a plane. See the interpolation Sandcastle example.
         Cesium.Math.setRandomNumberSeed(3);
 
-        var start = Cesium.JulianDate.fromDate(new Date(2015, 2, 25, 16));
-        var stop = Cesium.JulianDate.addSeconds(
+        const start = Cesium.JulianDate.fromDate(new Date(2015, 2, 25, 16));
+        const stop = Cesium.JulianDate.addSeconds(
           start,
           360,
           new Cesium.JulianDate()
@@ -62,21 +62,21 @@
         viewer.clock.shouldAnimate = true;
 
         function computeCirclularFlight(lon, lat, radius) {
-          var property = new Cesium.SampledPositionProperty();
-          var startAngle = Cesium.Math.nextRandomNumber() * 360.0;
-          var endAngle = startAngle + 360.0;
+          const property = new Cesium.SampledPositionProperty();
+          const startAngle = Cesium.Math.nextRandomNumber() * 360.0;
+          const endAngle = startAngle + 360.0;
 
-          var increment =
+          const increment =
             (Cesium.Math.nextRandomNumber() * 2.0 - 1.0) * 10.0 + 45.0;
-          for (var i = startAngle; i < endAngle; i += increment) {
-            var radians = Cesium.Math.toRadians(i);
-            var timeIncrement = i - startAngle;
-            var time = Cesium.JulianDate.addSeconds(
+          for (let i = startAngle; i < endAngle; i += increment) {
+            const radians = Cesium.Math.toRadians(i);
+            const timeIncrement = i - startAngle;
+            const time = Cesium.JulianDate.addSeconds(
               start,
               timeIncrement,
               new Cesium.JulianDate()
             );
-            var position = Cesium.Cartesian3.fromDegrees(
+            const position = Cesium.Cartesian3.fromDegrees(
               lon + radius * 1.5 * Math.cos(radians),
               lat + radius * Math.sin(radians),
               Cesium.Math.nextRandomNumber() * 500 + 1800
@@ -86,13 +86,13 @@
           return property;
         }
 
-        var longitude = -112.110693;
-        var latitude = 36.0994841;
-        var radius = 0.03;
+        const longitude = -112.110693;
+        const latitude = 36.0994841;
+        const radius = 0.03;
 
-        var modelURI =
+        const modelURI =
           "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb";
-        var entity = viewer.entities.add({
+        const entity = viewer.entities.add({
           availability: new Cesium.TimeIntervalCollection([
             new Cesium.TimeInterval({
               start: start,
@@ -112,23 +112,23 @@
         });
 
         // Set initial camera position and orientation to be when in the model's reference frame.
-        var camera = viewer.camera;
+        const camera = viewer.camera;
         camera.position = new Cesium.Cartesian3(0.25, 0.0, 0.0);
         camera.direction = new Cesium.Cartesian3(1.0, 0.0, 0.0);
         camera.up = new Cesium.Cartesian3(0.0, 0.0, 1.0);
         camera.right = new Cesium.Cartesian3(0.0, -1.0, 0.0);
 
         viewer.scene.postUpdate.addEventListener(function (scene, time) {
-          var position = entity.position.getValue(time);
+          const position = entity.position.getValue(time);
           if (!Cesium.defined(position)) {
             return;
           }
 
-          var transform;
+          let transform;
           if (!Cesium.defined(entity.orientation)) {
             transform = Cesium.Transforms.eastNorthUpToFixedFrame(position);
           } else {
-            var orientation = entity.orientation.getValue(time);
+            const orientation = entity.orientation.getValue(time);
             if (!Cesium.defined(orientation)) {
               return;
             }
@@ -140,9 +140,9 @@
           }
 
           // Save camera state
-          var offset = Cesium.Cartesian3.clone(camera.position);
-          var direction = Cesium.Cartesian3.clone(camera.direction);
-          var up = Cesium.Cartesian3.clone(camera.up);
+          const offset = Cesium.Cartesian3.clone(camera.position);
+          const direction = Cesium.Cartesian3.clone(camera.direction);
+          const up = Cesium.Cartesian3.clone(camera.up);
 
           // Set camera to be in model's reference frame.
           camera.lookAtTransform(transform);
@@ -155,11 +155,11 @@
         });
 
         // Add a few more balloons flying with the one the viewer is in.
-        var numBalloons = 12;
-        for (var i = 0; i < numBalloons; ++i) {
-          var balloonRadius =
+        const numBalloons = 12;
+        for (let i = 0; i < numBalloons; ++i) {
+          const balloonRadius =
             (Cesium.Math.nextRandomNumber() * 2.0 - 1.0) * 0.01 + radius;
-          var balloon = viewer.entities.add({
+          const balloon = viewer.entities.add({
             availability: new Cesium.TimeIntervalCollection([
               new Cesium.TimeInterval({
                 start: start,

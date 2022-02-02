@@ -11,9 +11,9 @@ function removeComments(source) {
   // remove multiline comment block
   return source.replace(/\/\*\*[\s\S]*?\*\//gm, function (match) {
     // preserve the number of lines in the comment block so the line numbers will be correct when debugging shaders
-    var numberOfLines = match.match(/\n/gm).length;
-    var replacement = "";
-    for (var lineNumber = 0; lineNumber < numberOfLines; ++lineNumber) {
+    const numberOfLines = match.match(/\n/gm).length;
+    let replacement = "";
+    for (let lineNumber = 0; lineNumber < numberOfLines; ++lineNumber) {
       replacement += "\n";
     }
     return replacement;
@@ -21,10 +21,10 @@ function removeComments(source) {
 }
 
 function getDependencyNode(name, glslSource, nodes) {
-  var dependencyNode;
+  let dependencyNode;
 
   // check if already loaded
-  for (var i = 0; i < nodes.length; ++i) {
+  for (let i = 0; i < nodes.length; ++i) {
     if (nodes[i].name === name) {
       dependencyNode = nodes[i];
     }
@@ -57,7 +57,7 @@ function generateDependencies(currentNode, dependencyNodes) {
   currentNode.evaluated = true;
 
   // identify all dependencies that are referenced from this glsl source code
-  var czmMatches = currentNode.glslSource.match(/\bczm_[a-zA-Z0-9_]*/g);
+  let czmMatches = currentNode.glslSource.match(/\bczm_[a-zA-Z0-9_]*/g);
   if (defined(czmMatches) && czmMatches !== null) {
     // remove duplicates
     czmMatches = czmMatches.filter(function (elem, pos) {
@@ -69,7 +69,7 @@ function generateDependencies(currentNode, dependencyNodes) {
         element !== currentNode.name &&
         ShaderSource._czmBuiltinsAndUniforms.hasOwnProperty(element)
       ) {
-        var referencedNode = getDependencyNode(
+        const referencedNode = getDependencyNode(
           element,
           ShaderSource._czmBuiltinsAndUniforms[element],
           dependencyNodes
@@ -85,11 +85,11 @@ function generateDependencies(currentNode, dependencyNodes) {
 }
 
 function sortDependencies(dependencyNodes) {
-  var nodesWithoutIncomingEdges = [];
-  var allNodes = [];
+  const nodesWithoutIncomingEdges = [];
+  const allNodes = [];
 
   while (dependencyNodes.length > 0) {
-    var node = dependencyNodes.pop();
+    const node = dependencyNodes.pop();
     allNodes.push(node);
 
     if (node.requiredBy.length === 0) {
@@ -98,14 +98,14 @@ function sortDependencies(dependencyNodes) {
   }
 
   while (nodesWithoutIncomingEdges.length > 0) {
-    var currentNode = nodesWithoutIncomingEdges.shift();
+    const currentNode = nodesWithoutIncomingEdges.shift();
 
     dependencyNodes.push(currentNode);
 
-    for (var i = 0; i < currentNode.dependsOn.length; ++i) {
+    for (let i = 0; i < currentNode.dependsOn.length; ++i) {
       // remove the edge from the graph
-      var referencedNode = currentNode.dependsOn[i];
-      var index = referencedNode.requiredBy.indexOf(currentNode);
+      const referencedNode = currentNode.dependsOn[i];
+      const index = referencedNode.requiredBy.indexOf(currentNode);
       referencedNode.requiredBy.splice(index, 1);
 
       // if referenced node has no more incoming edges, add to list
@@ -116,8 +116,8 @@ function sortDependencies(dependencyNodes) {
   }
 
   // if there are any nodes left with incoming edges, then there was a circular dependency somewhere in the graph
-  var badNodes = [];
-  for (var j = 0; j < allNodes.length; ++j) {
+  const badNodes = [];
+  for (let j = 0; j < allNodes.length; ++j) {
     if (allNodes[j].requiredBy.length !== 0) {
       badNodes.push(allNodes[j]);
     }
@@ -125,9 +125,9 @@ function sortDependencies(dependencyNodes) {
 
   //>>includeStart('debug', pragmas.debug);
   if (badNodes.length !== 0) {
-    var message =
+    let message =
       "A circular dependency was found in the following built-in functions/structs/constants: \n";
-    for (var k = 0; k < badNodes.length; ++k) {
+    for (let k = 0; k < badNodes.length; ++k) {
       message = message + badNodes[k].name + "\n";
     }
     throw new DeveloperError(message);
@@ -137,15 +137,15 @@ function sortDependencies(dependencyNodes) {
 
 function getBuiltinsAndAutomaticUniforms(shaderSource) {
   // generate a dependency graph for builtin functions
-  var dependencyNodes = [];
-  var root = getDependencyNode("main", shaderSource, dependencyNodes);
+  const dependencyNodes = [];
+  const root = getDependencyNode("main", shaderSource, dependencyNodes);
   generateDependencies(root, dependencyNodes);
   sortDependencies(dependencyNodes);
 
   // Concatenate the source code for the function dependencies.
   // Iterate in reverse so that dependent items are declared before they are used.
-  var builtinsSource = "";
-  for (var i = dependencyNodes.length - 1; i >= 0; --i) {
+  let builtinsSource = "";
+  for (let i = dependencyNodes.length - 1; i >= 0; --i) {
     builtinsSource = builtinsSource + dependencyNodes[i].glslSource + "\n";
   }
 
@@ -153,12 +153,12 @@ function getBuiltinsAndAutomaticUniforms(shaderSource) {
 }
 
 function combineShader(shaderSource, isFragmentShader, context) {
-  var i;
-  var length;
+  let i;
+  let length;
 
   // Combine shader sources, generally for pseudo-polymorphism, e.g., czm_getMaterial.
-  var combinedSources = "";
-  var sources = shaderSource.sources;
+  let combinedSources = "";
+  const sources = shaderSource.sources;
   if (defined(sources)) {
     for (i = 0, length = sources.length; i < length; ++i) {
       // #line needs to be on its own line.
@@ -169,7 +169,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
   combinedSources = removeComments(combinedSources);
 
   // Extract existing shader version from sources
-  var version;
+  let version;
   combinedSources = combinedSources.replace(/#version\s+(.*?)\n/gm, function (
     match,
     group1
@@ -193,7 +193,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
   });
 
   // Extract shader extensions from sources
-  var extensions = [];
+  const extensions = [];
   combinedSources = combinedSources.replace(/#extension.*\n/gm, function (
     match
   ) {
@@ -212,7 +212,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
   );
 
   // Replace main() for picked if desired.
-  var pickColorQualifier = shaderSource.pickColorQualifier;
+  const pickColorQualifier = shaderSource.pickColorQualifier;
   if (defined(pickColorQualifier)) {
     combinedSources = ShaderSource.createPickFragmentShaderSource(
       combinedSources,
@@ -221,7 +221,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
   }
 
   // combine into single string
-  var result = "";
+  let result = "";
 
   // #version must be first
   // defaults to #version 100 if not specified
@@ -229,7 +229,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
     result = "#version " + version + "\n";
   }
 
-  var extensionsLength = extensions.length;
+  const extensionsLength = extensions.length;
   for (i = 0; i < extensionsLength; i++) {
     result += extensions[i];
   }
@@ -249,10 +249,10 @@ function combineShader(shaderSource, isFragmentShader, context) {
   }
 
   // Prepend #defines for uber-shaders
-  var defines = shaderSource.defines;
+  const defines = shaderSource.defines;
   if (defined(defines)) {
     for (i = 0, length = defines.length; i < length; ++i) {
-      var define = defines[i];
+      const define = defines[i];
       if (define.length !== 0) {
         result += "#define " + define + "\n";
       }
@@ -307,13 +307,13 @@ function combineShader(shaderSource, isFragmentShader, context) {
  *
  * @example
  * // 1. Prepend #defines to a shader
- * var source = new Cesium.ShaderSource({
+ * const source = new Cesium.ShaderSource({
  *   defines : ['WHITE'],
  *   sources : ['void main() { \n#ifdef WHITE\n gl_FragColor = vec4(1.0); \n#else\n gl_FragColor = vec4(0.0); \n#endif\n }']
  * });
  *
  * // 2. Modify a fragment shader for picking
- * var source = new Cesium.ShaderSource({
+ * const source2 = new Cesium.ShaderSource({
  *   sources : ['void main() { gl_FragColor = vec4(1.0); }'],
  *   pickColorQualifier : 'uniform'
  * });
@@ -322,7 +322,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
  */
 function ShaderSource(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var pickColorQualifier = options.pickColorQualifier;
+  const pickColorQualifier = options.pickColorQualifier;
 
   //>>includeStart('debug', pragmas.debug);
   if (
@@ -385,15 +385,15 @@ ShaderSource.prototype.createCombinedFragmentShader = function (context) {
 ShaderSource._czmBuiltinsAndUniforms = {};
 
 // combine automatic uniforms and Cesium built-ins
-for (var builtinName in CzmBuiltins) {
+for (const builtinName in CzmBuiltins) {
   if (CzmBuiltins.hasOwnProperty(builtinName)) {
     ShaderSource._czmBuiltinsAndUniforms[builtinName] =
       CzmBuiltins[builtinName];
   }
 }
-for (var uniformName in AutomaticUniforms) {
+for (const uniformName in AutomaticUniforms) {
   if (AutomaticUniforms.hasOwnProperty(uniformName)) {
-    var uniform = AutomaticUniforms[uniformName];
+    const uniform = AutomaticUniforms[uniformName];
     if (typeof uniform.getDeclaration === "function") {
       ShaderSource._czmBuiltinsAndUniforms[
         uniformName
@@ -403,8 +403,11 @@ for (var uniformName in AutomaticUniforms) {
 }
 
 ShaderSource.createPickVertexShaderSource = function (vertexShaderSource) {
-  var renamedVS = ShaderSource.replaceMain(vertexShaderSource, "czm_old_main");
-  var pickMain =
+  const renamedVS = ShaderSource.replaceMain(
+    vertexShaderSource,
+    "czm_old_main"
+  );
+  const pickMain =
     "attribute vec4 pickColor; \n" +
     "varying vec4 czm_pickColor; \n" +
     "void main() \n" +
@@ -420,11 +423,11 @@ ShaderSource.createPickFragmentShaderSource = function (
   fragmentShaderSource,
   pickColorQualifier
 ) {
-  var renamedFS = ShaderSource.replaceMain(
+  const renamedFS = ShaderSource.replaceMain(
     fragmentShaderSource,
     "czm_old_main"
   );
-  var pickMain =
+  const pickMain =
     pickColorQualifier +
     " vec4 czm_pickColor; \n" +
     "void main() \n" +
@@ -440,14 +443,14 @@ ShaderSource.createPickFragmentShaderSource = function (
 };
 
 ShaderSource.findVarying = function (shaderSource, names) {
-  var sources = shaderSource.sources;
+  const sources = shaderSource.sources;
 
-  var namesLength = names.length;
-  for (var i = 0; i < namesLength; ++i) {
-    var name = names[i];
+  const namesLength = names.length;
+  for (let i = 0; i < namesLength; ++i) {
+    const name = names[i];
 
-    var sourcesLength = sources.length;
-    for (var j = 0; j < sourcesLength; ++j) {
+    const sourcesLength = sources.length;
+    for (let j = 0; j < sourcesLength; ++j) {
       if (sources[j].indexOf(name) !== -1) {
         return name;
       }
@@ -457,13 +460,13 @@ ShaderSource.findVarying = function (shaderSource, names) {
   return undefined;
 };
 
-var normalVaryingNames = ["v_normalEC", "v_normal"];
+const normalVaryingNames = ["v_normalEC", "v_normal"];
 
 ShaderSource.findNormalVarying = function (shaderSource) {
   return ShaderSource.findVarying(shaderSource, normalVaryingNames);
 };
 
-var positionVaryingNames = ["v_positionEC"];
+const positionVaryingNames = ["v_positionEC"];
 
 ShaderSource.findPositionVarying = function (shaderSource) {
   return ShaderSource.findVarying(shaderSource, positionVaryingNames);

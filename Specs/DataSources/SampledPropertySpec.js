@@ -12,7 +12,7 @@ import { SampledProperty } from "../../Source/Cesium.js";
 
 describe("DataSources/SampledProperty", function () {
   it("constructor sets expected defaults", function () {
-    var property = new SampledProperty(Cartesian3);
+    let property = new SampledProperty(Cartesian3);
     expect(property.interpolationDegree).toEqual(1);
     expect(property.interpolationAlgorithm).toEqual(LinearApproximation);
     expect(property.isConstant).toEqual(true);
@@ -23,7 +23,7 @@ describe("DataSources/SampledProperty", function () {
     expect(property.backwardExtrapolationType).toEqual(ExtrapolationType.NONE);
     expect(property.backwardExtrapolationDuration).toEqual(0);
 
-    var derivatives = [Cartesian3, Cartesian3];
+    const derivatives = [Cartesian3, Cartesian3];
     property = new SampledProperty(Quaternion, derivatives);
     expect(property.interpolationDegree).toEqual(1);
     expect(property.interpolationAlgorithm).toEqual(LinearApproximation);
@@ -37,18 +37,18 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("isConstant works", function () {
-    var property = new SampledProperty(Number);
+    const property = new SampledProperty(Number);
     expect(property.isConstant).toEqual(true);
     property.addSample(new JulianDate(0, 0), 1);
     expect(property.isConstant).toEqual(false);
   });
 
   it("addSamplesPackedArray works", function () {
-    var data = [0, 7, 1, 8, 2, 9];
-    var epoch = new JulianDate(0, 0);
+    const data = [0, 7, 1, 8, 2, 9];
+    const epoch = new JulianDate(0, 0);
 
-    var property = new SampledProperty(Number);
-    var listener = jasmine.createSpy("listener");
+    const property = new SampledProperty(Number);
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
     property.addSamplesPackedArray(data, epoch);
@@ -59,15 +59,15 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("addSample works", function () {
-    var times = [
+    const times = [
       new JulianDate(0, 0),
       new JulianDate(1, 0),
       new JulianDate(2, 0),
     ];
-    var values = [7, 8, 9];
+    const values = [7, 8, 9];
 
-    var property = new SampledProperty(Number);
-    var listener = jasmine.createSpy("listener");
+    const property = new SampledProperty(Number);
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
     property.addSample(times[0], values[0]);
@@ -89,15 +89,15 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("addSamples works", function () {
-    var times = [
+    const times = [
       new JulianDate(0, 0),
       new JulianDate(1, 0),
       new JulianDate(2, 0),
     ];
-    var values = [7, 8, 9];
+    const values = [7, 8, 9];
 
-    var property = new SampledProperty(Number);
-    var listener = jasmine.createSpy("listener");
+    const property = new SampledProperty(Number);
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
     property.addSamples(times, values);
 
@@ -109,23 +109,23 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("can remove a sample at a date", function () {
-    var times = [
+    const times = [
       new JulianDate(0, 0),
       new JulianDate(1, 0),
       new JulianDate(2, 0),
     ];
-    var values = [1, 8, 3];
+    const values = [1, 8, 3];
 
-    var property = new SampledProperty(Number);
+    const property = new SampledProperty(Number);
     property.addSamples(times, values);
     expect(property.getValue(times[0])).toEqual(values[0]);
     expect(property.getValue(times[1])).toEqual(values[1]);
     expect(property.getValue(times[2])).toEqual(values[2]);
 
-    var listener = jasmine.createSpy("listener");
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
-    var result = property.removeSample(new JulianDate(4, 0));
+    let result = property.removeSample(new JulianDate(4, 0));
     expect(result).toEqual(false);
 
     result = property.removeSample(times[1]);
@@ -148,17 +148,17 @@ describe("DataSources/SampledProperty", function () {
   }
 
   it("can remove samples for a time interval", function () {
-    var times = [
+    const times = [
       new JulianDate(0, 0),
       new JulianDate(1, 0),
       new JulianDate(2, 0),
       new JulianDate(3, 0),
       new JulianDate(4, 0),
     ];
-    var values = [1, 8, 13, 1, 3];
+    const values = [1, 8, 13, 1, 3];
 
     function createProperty() {
-      var property = new SampledProperty(Number);
+      const property = new SampledProperty(Number);
       property.addSamples(times, values);
       expect(property.getValue(times[0])).toEqual(values[0]);
       expect(property.getValue(times[1])).toEqual(values[1]);
@@ -168,8 +168,8 @@ describe("DataSources/SampledProperty", function () {
       return property;
     }
 
-    var property = createProperty();
-    var listener = jasmine.createSpy("listener");
+    let property = createProperty();
+    let listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
     property.removeSamples(
@@ -228,17 +228,17 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("can remove samples for a time interval with start or stop not included", function () {
-    var times = [
+    const times = [
       new JulianDate(0, 0),
       new JulianDate(1, 0),
       new JulianDate(2, 0),
       new JulianDate(3, 0),
       new JulianDate(4, 0),
     ];
-    var values = [1, 8, 13, 1, 3];
+    const values = [1, 8, 13, 1, 3];
 
     function createProperty() {
-      var property = new SampledProperty(Number);
+      const property = new SampledProperty(Number);
       property.addSamples(times, values);
       expect(property.getValue(times[0])).toEqual(values[0]);
       expect(property.getValue(times[1])).toEqual(values[1]);
@@ -248,8 +248,8 @@ describe("DataSources/SampledProperty", function () {
       return property;
     }
 
-    var property = createProperty();
-    var listener = jasmine.createSpy("listener");
+    let property = createProperty();
+    let listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
     property.removeSamples(
@@ -324,8 +324,8 @@ describe("DataSources/SampledProperty", function () {
       lastIndex,
       result
     ) {
-      for (var i = 0, len = lastIndex - startingIndex + 1; i < len; i++) {
-        var offset = i * 2;
+      for (let i = 0, len = lastIndex - startingIndex + 1; i < len; i++) {
+        const offset = i * 2;
         result[offset] = packedArray[i] * 0.5;
         result[offset + 1] = packedArray[i] * 0.5;
       }
@@ -345,14 +345,14 @@ describe("DataSources/SampledProperty", function () {
       return result;
     };
 
-    var times = [
+    const times = [
       new JulianDate(0, 0),
       new JulianDate(1, 0),
       new JulianDate(2, 0),
     ];
-    var values = [new CustomType(0), new CustomType(2), new CustomType(4)];
+    const values = [new CustomType(0), new CustomType(2), new CustomType(4)];
 
-    var property = new SampledProperty(CustomType);
+    const property = new SampledProperty(CustomType);
     property.addSample(times[0], values[0]);
     property.addSample(times[1], values[1]);
     property.addSample(times[2], values[2]);
@@ -361,11 +361,11 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("can set interpolationAlgorithm and degree", function () {
-    var data = [0, 7, 2, 9, 4, 11];
-    var epoch = new JulianDate(0, 0);
+    const data = [0, 7, 2, 9, 4, 11];
+    const epoch = new JulianDate(0, 0);
 
-    var timesCalled = 0;
-    var MockInterpolation = {
+    let timesCalled = 0;
+    const MockInterpolation = {
       type: "Mock",
       getRequiredDataPoints: function (degree) {
         return 3;
@@ -394,11 +394,11 @@ describe("DataSources/SampledProperty", function () {
       },
     };
 
-    var property = new SampledProperty(Number);
+    const property = new SampledProperty(Number);
     property.forwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;
     property.addSamplesPackedArray(data, epoch);
 
-    var listener = jasmine.createSpy("listener");
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
     expect(property.getValue(epoch)).toEqual(7);
@@ -417,10 +417,10 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("Returns undefined if trying to interpolate with less than enough samples.", function () {
-    var value = 7;
-    var time = new JulianDate(0, 0);
+    const value = 7;
+    const time = new JulianDate(0, 0);
 
-    var property = new SampledProperty(Number);
+    const property = new SampledProperty(Number);
     property.addSample(time, value);
 
     expect(property.getValue(time)).toEqual(value);
@@ -430,10 +430,10 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("Allows empty options object without failing", function () {
-    var property = new SampledProperty(Number);
+    const property = new SampledProperty(Number);
 
-    var interpolationAlgorithm = property.interpolationAlgorithm;
-    var interpolationDegree = property.interpolationDegree;
+    const interpolationAlgorithm = property.interpolationAlgorithm;
+    const interpolationDegree = property.interpolationDegree;
 
     property.setInterpolationOptions({});
 
@@ -442,15 +442,15 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("mergeNewSamples works with huge data sets.", function () {
-    var times = [];
-    var values = [];
-    var epoch = JulianDate.now();
+    const times = [];
+    const values = [];
+    const epoch = JulianDate.now();
 
-    var data = [];
-    var expectedTimes = [];
-    var expectedValues = [];
+    const data = [];
+    const expectedTimes = [];
+    const expectedValues = [];
 
-    for (var i = 0; i < 200000; i++) {
+    for (let i = 0; i < 200000; i++) {
       data.push(i);
       data.push(i);
       expectedTimes.push(JulianDate.addSeconds(epoch, i, new JulianDate()));
@@ -464,14 +464,14 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("mergeNewSamples works for sorted non-intersecting data.", function () {
-    var times = [];
-    var values = [];
-    var epoch = JulianDate.now();
+    const times = [];
+    const values = [];
+    const epoch = JulianDate.now();
 
-    var newData = [0, "a", 1, "b", 2, "c"];
-    var newData2 = [3, "d", 4, "e", 5, "f"];
+    const newData = [0, "a", 1, "b", 2, "c"];
+    const newData2 = [3, "d", 4, "e", 5, "f"];
 
-    var expectedTimes = [
+    const expectedTimes = [
       JulianDate.addSeconds(epoch, 0, new JulianDate()),
       JulianDate.addSeconds(epoch, 1, new JulianDate()),
       JulianDate.addSeconds(epoch, 2, new JulianDate()),
@@ -479,7 +479,7 @@ describe("DataSources/SampledProperty", function () {
       JulianDate.addSeconds(epoch, 4, new JulianDate()),
       JulianDate.addSeconds(epoch, 5, new JulianDate()),
     ];
-    var expectedValues = ["a", "b", "c", "d", "e", "f"];
+    const expectedValues = ["a", "b", "c", "d", "e", "f"];
 
     SampledProperty._mergeNewSamples(epoch, times, values, newData, 1);
     SampledProperty._mergeNewSamples(epoch, times, values, newData2, 1);
@@ -489,11 +489,11 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("mergeNewSamples works for ISO8601 dates", function () {
-    var times = [];
-    var values = [];
-    var epoch = JulianDate.fromIso8601("2010-01-01T12:00:00");
+    const times = [];
+    const values = [];
+    const epoch = JulianDate.fromIso8601("2010-01-01T12:00:00");
 
-    var newData = [
+    const newData = [
       "2010-01-01T12:00:00",
       "a",
       "2010-01-01T12:00:01",
@@ -501,7 +501,7 @@ describe("DataSources/SampledProperty", function () {
       "2010-01-01T12:00:02",
       "c",
     ];
-    var newData2 = [
+    const newData2 = [
       "2010-01-01T12:00:03",
       "d",
       "2010-01-01T12:00:04",
@@ -510,7 +510,7 @@ describe("DataSources/SampledProperty", function () {
       "f",
     ];
 
-    var expectedTimes = [
+    const expectedTimes = [
       JulianDate.addSeconds(epoch, 0, new JulianDate()),
       JulianDate.addSeconds(epoch, 1, new JulianDate()),
       JulianDate.addSeconds(epoch, 2, new JulianDate()),
@@ -518,7 +518,7 @@ describe("DataSources/SampledProperty", function () {
       JulianDate.addSeconds(epoch, 4, new JulianDate()),
       JulianDate.addSeconds(epoch, 5, new JulianDate()),
     ];
-    var expectedValues = ["a", "b", "c", "d", "e", "f"];
+    const expectedValues = ["a", "b", "c", "d", "e", "f"];
 
     SampledProperty._mergeNewSamples(undefined, times, values, newData, 1);
     SampledProperty._mergeNewSamples(undefined, times, values, newData2, 1);
@@ -528,21 +528,21 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("mergeNewSamples works for elements of size 2.", function () {
-    var times = [];
-    var values = [];
-    var epoch = JulianDate.now();
+    const times = [];
+    const values = [];
+    const epoch = JulianDate.now();
 
-    var newData = [1, "b", "b", 4, "e", "e", 0, "a", "a"];
-    var newData2 = [2, "c", "c", 3, "d", "d"];
+    const newData = [1, "b", "b", 4, "e", "e", 0, "a", "a"];
+    const newData2 = [2, "c", "c", 3, "d", "d"];
 
-    var expectedTimes = [
+    const expectedTimes = [
       JulianDate.addSeconds(epoch, 0, new JulianDate()),
       JulianDate.addSeconds(epoch, 1, new JulianDate()),
       JulianDate.addSeconds(epoch, 2, new JulianDate()),
       JulianDate.addSeconds(epoch, 3, new JulianDate()),
       JulianDate.addSeconds(epoch, 4, new JulianDate()),
     ];
-    var expectedValues = ["a", "a", "b", "b", "c", "c", "d", "d", "e", "e"];
+    const expectedValues = ["a", "a", "b", "b", "c", "c", "d", "d", "e", "e"];
 
     SampledProperty._mergeNewSamples(epoch, times, values, newData, 2);
     SampledProperty._mergeNewSamples(epoch, times, values, newData2, 2);
@@ -552,14 +552,14 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("mergeNewSamples works for unsorted intersecting data.", function () {
-    var times = [];
-    var values = [];
-    var epoch = JulianDate.now();
+    const times = [];
+    const values = [];
+    const epoch = JulianDate.now();
 
-    var newData = [1, "b", 4, "e", 0, "a"];
-    var newData2 = [5, "f", 2, "c", 3, "d"];
+    const newData = [1, "b", 4, "e", 0, "a"];
+    const newData2 = [5, "f", 2, "c", 3, "d"];
 
-    var expectedTimes = [
+    const expectedTimes = [
       JulianDate.addSeconds(epoch, 0, new JulianDate()),
       JulianDate.addSeconds(epoch, 1, new JulianDate()),
       JulianDate.addSeconds(epoch, 2, new JulianDate()),
@@ -567,7 +567,7 @@ describe("DataSources/SampledProperty", function () {
       JulianDate.addSeconds(epoch, 4, new JulianDate()),
       JulianDate.addSeconds(epoch, 5, new JulianDate()),
     ];
-    var expectedValues = ["a", "b", "c", "d", "e", "f"];
+    const expectedValues = ["a", "b", "c", "d", "e", "f"];
 
     SampledProperty._mergeNewSamples(epoch, times, values, newData, 1);
     SampledProperty._mergeNewSamples(epoch, times, values, newData2, 1);
@@ -577,25 +577,25 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("mergeNewSamples works for data with repeated values.", function () {
-    var times = [];
-    var values = [];
-    var epoch = JulianDate.now();
+    const times = [];
+    const values = [];
+    const epoch = JulianDate.now();
 
-    var newData = [0, "a", 1, "b", 1, "c", 0, "d", 4, "e", 5, "f"];
-    var expectedTimes = [
+    const newData = [0, "a", 1, "b", 1, "c", 0, "d", 4, "e", 5, "f"];
+    const expectedTimes = [
       JulianDate.addSeconds(epoch, 0, new JulianDate()),
       JulianDate.addSeconds(epoch, 1, new JulianDate()),
       JulianDate.addSeconds(epoch, 4, new JulianDate()),
       JulianDate.addSeconds(epoch, 5, new JulianDate()),
     ];
-    var expectedValues = ["d", "c", "e", "f"];
+    const expectedValues = ["d", "c", "e", "f"];
     SampledProperty._mergeNewSamples(epoch, times, values, newData, 1);
 
     expect(times).toEqual(expectedTimes, JulianDate.compare);
     expect(values).toEqual(expectedValues);
   });
 
-  var interwovenData = [
+  const interwovenData = [
     {
       epoch: JulianDate.fromIso8601("20130205T150405.704999999999927Z"),
       values: [
@@ -649,8 +649,8 @@ describe("DataSources/SampledProperty", function () {
   ];
 
   it("mergeNewSamples works with interwoven data", function () {
-    var times = [];
-    var values = [];
+    const times = [];
+    const values = [];
     SampledProperty._mergeNewSamples(
       interwovenData[0].epoch,
       times,
@@ -665,7 +665,7 @@ describe("DataSources/SampledProperty", function () {
       interwovenData[1].values,
       1
     );
-    for (var i = 0; i < values.length; i++) {
+    for (let i = 0; i < values.length; i++) {
       expect(values[i]).toBe(i + 1);
     }
   });
@@ -677,8 +677,8 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("equals works when interpolators differ", function () {
-    var left = new SampledProperty(Number);
-    var right = new SampledProperty(Number);
+    const left = new SampledProperty(Number);
+    const right = new SampledProperty(Number);
 
     expect(left.equals(right)).toEqual(true);
     right.setInterpolationOptions({
@@ -688,14 +688,14 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("equals works when interpolator degree differ", function () {
-    var left = new SampledProperty(Number);
+    const left = new SampledProperty(Number);
 
     left.setInterpolationOptions({
       interpolationDegree: 2,
       interpolationAlgorithm: LagrangePolynomialApproximation,
     });
 
-    var right = new SampledProperty(Number);
+    const right = new SampledProperty(Number);
     right.setInterpolationOptions({
       interpolationDegree: 2,
       interpolationAlgorithm: LagrangePolynomialApproximation,
@@ -711,11 +711,11 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("equals works when samples differ", function () {
-    var left = new SampledProperty(Number);
-    var right = new SampledProperty(Number);
+    const left = new SampledProperty(Number);
+    const right = new SampledProperty(Number);
     expect(left.equals(right)).toEqual(true);
 
-    var time = JulianDate.now();
+    const time = JulianDate.now();
     left.addSample(time, 5);
     expect(left.equals(right)).toEqual(false);
 
@@ -724,19 +724,19 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("equals works when samples differ with quaternion", function () {
-    var left = new SampledProperty(Quaternion);
-    var right = new SampledProperty(Quaternion);
+    const left = new SampledProperty(Quaternion);
+    const right = new SampledProperty(Quaternion);
     expect(left.equals(right)).toEqual(true);
 
-    var time = JulianDate.now();
+    const time = JulianDate.now();
     left.addSample(time, new Quaternion(1, 2, 3, 4));
     right.addSample(time, new Quaternion(1, 2, 3, 5));
     expect(left.equals(right)).toEqual(false);
   });
 
   it("equals works when derivatives differ", function () {
-    var left = new SampledProperty(Number, [Number]);
-    var right = new SampledProperty(Number);
+    let left = new SampledProperty(Number, [Number]);
+    let right = new SampledProperty(Number);
     expect(left.equals(right)).toEqual(false);
 
     left = new SampledProperty(Number, [Number]);
@@ -752,11 +752,11 @@ describe("DataSources/SampledProperty", function () {
     expect(left.equals(right)).toEqual(false);
   });
 
-  var epoch = JulianDate.fromIso8601("2014-01-01T00:00:00");
+  const epoch = JulianDate.fromIso8601("2014-01-01T00:00:00");
 
   //The remaining tests were verified with STK Components available from http://www.agi.com.
   it("addSample works with multiple derivatives", function () {
-    var results = [
+    const results = [
       0,
       -3.39969163485071,
       0.912945250727628,
@@ -769,23 +769,23 @@ describe("DataSources/SampledProperty", function () {
       169.448966391543,
     ];
 
-    var property = new SampledProperty(Number, [Number, Number]);
+    const property = new SampledProperty(Number, [Number, Number]);
     property.forwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;
     property.setInterpolationOptions({
       interpolationAlgorithm: HermitePolynomialApproximation,
       interpolationDegree: 1,
     });
 
-    for (var x = 0; x < 100; x += 20) {
+    for (let x = 0; x < 100; x += 20) {
       property.addSample(
         JulianDate.addSeconds(epoch, x, new JulianDate()),
         Math.sin(x),
         [Math.cos(x), -Math.sin(x)]
       );
     }
-    var resultIndex = 0;
-    for (var i = 0; i < 100; i += 10) {
-      var result = property.getValue(
+    let resultIndex = 0;
+    for (let i = 0; i < 100; i += 10) {
+      const result = property.getValue(
         JulianDate.addSeconds(epoch, i, new JulianDate())
       );
       expect(result).toEqualEpsilon(
@@ -795,7 +795,7 @@ describe("DataSources/SampledProperty", function () {
     }
   });
 
-  var times = [
+  const times = [
     JulianDate.addSeconds(epoch, 0, new JulianDate()),
     JulianDate.addSeconds(epoch, 60, new JulianDate()),
     JulianDate.addSeconds(epoch, 120, new JulianDate()),
@@ -806,7 +806,7 @@ describe("DataSources/SampledProperty", function () {
     JulianDate.addSeconds(epoch, 420, new JulianDate()),
   ];
 
-  var positions = [
+  const positions = [
     new Cartesian3(13378137.0, 0.0, 1),
     new Cartesian3(13374128.3576279, 327475.593690065, 2),
     new Cartesian3(13362104.8328212, 654754.936954423, 3),
@@ -817,7 +817,7 @@ describe("DataSources/SampledProperty", function () {
     new Cartesian3(13182183.953374, 2281353.94232816, 8),
   ];
 
-  var derivatives = [
+  const derivatives = [
     [new Cartesian3(0.0, 5458.47176691947, 0)],
     [new Cartesian3(-133.614738921601, 5456.83618333919, 0)],
     [new Cartesian3(-267.149404854867, 5451.93041277513, 0)],
@@ -828,7 +828,7 @@ describe("DataSources/SampledProperty", function () {
     [new Cartesian3(-930.82512793439, 5378.52011351288, 0)],
   ];
 
-  var order0Results = [
+  const order0Results = [
     new Cartesian3(13378137, 0, 1),
     new Cartesian3(13376800.785876, 109158.531230022, 1.33333333333333),
     new Cartesian3(13375464.5717519, 218317.062460043, 1.66666666666667),
@@ -853,7 +853,7 @@ describe("DataSources/SampledProperty", function () {
     new Cartesian3(13182183.953374, 2281353.94232816, 8),
   ];
 
-  var order1Results = [
+  const order1Results = [
     new Cartesian3(13378137, 0, 1),
     new Cartesian3(13377691.5656321, 109168.223625571, 1.25925925925926),
     new Cartesian3(13376355.3218481, 218329.177845564, 1.74074074074074),
@@ -879,18 +879,18 @@ describe("DataSources/SampledProperty", function () {
   ];
 
   it("addSample works with derivatives", function () {
-    var property = new SampledProperty(Cartesian3, [Cartesian3]);
+    const property = new SampledProperty(Cartesian3, [Cartesian3]);
     property.setInterpolationOptions({
       interpolationAlgorithm: HermitePolynomialApproximation,
       interpolationDegree: 1,
     });
 
-    for (var x = 0; x < times.length; x++) {
+    for (let x = 0; x < times.length; x++) {
       property.addSample(times[x], positions[x], derivatives[x]);
     }
-    var resultIndex = 0;
-    for (var i = 0; i < 420; i += 20) {
-      var result = property.getValue(
+    let resultIndex = 0;
+    for (let i = 0; i < 420; i += 20) {
+      const result = property.getValue(
         JulianDate.addSeconds(epoch, i, new JulianDate())
       );
       expect(result).toEqualEpsilon(
@@ -901,19 +901,19 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("addSample works without derivatives", function () {
-    var property = new SampledProperty(Cartesian3);
+    const property = new SampledProperty(Cartesian3);
     property.setInterpolationOptions({
       interpolationAlgorithm: HermitePolynomialApproximation,
       interpolationDegree: 1,
     });
 
-    for (var x = 0; x < times.length; x++) {
+    for (let x = 0; x < times.length; x++) {
       property.addSample(times[x], positions[x]);
     }
 
-    var resultIndex = 0;
-    for (var i = 0; i < 420; i += 20) {
-      var result = property.getValue(
+    let resultIndex = 0;
+    for (let i = 0; i < 420; i += 20) {
+      const result = property.getValue(
         JulianDate.addSeconds(epoch, i, new JulianDate())
       );
       expect(result).toEqualEpsilon(
@@ -924,16 +924,16 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("addSamples works with derivatives", function () {
-    var property = new SampledProperty(Cartesian3, [Cartesian3]);
+    const property = new SampledProperty(Cartesian3, [Cartesian3]);
     property.setInterpolationOptions({
       interpolationAlgorithm: HermitePolynomialApproximation,
       interpolationDegree: 1,
     });
 
     property.addSamples(times, positions, derivatives);
-    var resultIndex = 0;
-    for (var i = 0; i < 420; i += 20) {
-      var result = property.getValue(
+    let resultIndex = 0;
+    for (let i = 0; i < 420; i += 20) {
+      const result = property.getValue(
         JulianDate.addSeconds(epoch, i, new JulianDate())
       );
       expect(result).toEqualEpsilon(
@@ -944,16 +944,16 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("addSamples works without derivatives", function () {
-    var property = new SampledProperty(Cartesian3);
+    const property = new SampledProperty(Cartesian3);
     property.setInterpolationOptions({
       interpolationAlgorithm: HermitePolynomialApproximation,
       interpolationDegree: 1,
     });
 
     property.addSamples(times, positions);
-    var resultIndex = 0;
-    for (var i = 0; i < 420; i += 20) {
-      var result = property.getValue(
+    let resultIndex = 0;
+    for (let i = 0; i < 420; i += 20) {
+      const result = property.getValue(
         JulianDate.addSeconds(epoch, i, new JulianDate())
       );
       expect(result).toEqualEpsilon(
@@ -964,23 +964,23 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("addSamplesPackedArray works with derivatives", function () {
-    var property = new SampledProperty(Cartesian3, [Cartesian3]);
+    const property = new SampledProperty(Cartesian3, [Cartesian3]);
     property.setInterpolationOptions({
       interpolationAlgorithm: HermitePolynomialApproximation,
       interpolationDegree: 1,
     });
 
-    var data = [];
-    for (var x = 0; x < times.length; x++) {
+    const data = [];
+    for (let x = 0; x < times.length; x++) {
       data.push(times[x]);
       Cartesian3.pack(positions[x], data, data.length);
       Cartesian3.pack(derivatives[x][0], data, data.length);
     }
     property.addSamplesPackedArray(data);
 
-    var resultIndex = 0;
-    for (var i = 0; i < 420; i += 20) {
-      var result = property.getValue(
+    let resultIndex = 0;
+    for (let i = 0; i < 420; i += 20) {
+      const result = property.getValue(
         JulianDate.addSeconds(epoch, i, new JulianDate())
       );
       expect(result).toEqualEpsilon(
@@ -991,22 +991,22 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("addSamplesPackedArray works without derivatives", function () {
-    var property = new SampledProperty(Cartesian3);
+    const property = new SampledProperty(Cartesian3);
     property.setInterpolationOptions({
       interpolationAlgorithm: HermitePolynomialApproximation,
       interpolationDegree: 1,
     });
 
-    var data = [];
-    for (var x = 0; x < times.length; x++) {
+    const data = [];
+    for (let x = 0; x < times.length; x++) {
       data.push(times[x]);
       Cartesian3.pack(positions[x], data, data.length);
     }
     property.addSamplesPackedArray(data);
 
-    var resultIndex = 0;
-    for (var i = 0; i < 420; i += 20) {
-      var result = property.getValue(
+    let resultIndex = 0;
+    for (let i = 0; i < 420; i += 20) {
+      const result = property.getValue(
         JulianDate.addSeconds(epoch, i, new JulianDate())
       );
       expect(result).toEqualEpsilon(
@@ -1017,14 +1017,14 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("obeys extrapolation options", function () {
-    var property = new SampledProperty(Number);
+    const property = new SampledProperty(Number);
 
-    var time0 = new JulianDate(0, 0.99);
-    var time1 = new JulianDate(0, 1);
-    var time2 = new JulianDate(0, 2);
-    var time3 = new JulianDate(0, 3);
-    var time4 = new JulianDate(0, 4);
-    var time5 = new JulianDate(0, 4.01);
+    const time0 = new JulianDate(0, 0.99);
+    const time1 = new JulianDate(0, 1);
+    const time2 = new JulianDate(0, 2);
+    const time3 = new JulianDate(0, 3);
+    const time4 = new JulianDate(0, 4);
+    const time5 = new JulianDate(0, 4.01);
 
     property.addSample(time2, 1);
     property.addSample(time3, 2);
@@ -1087,16 +1087,16 @@ describe("DataSources/SampledProperty", function () {
   });
 
   it("getValue returns undefined for empty extrapolated property", function () {
-    var sampledPosition = new SampledProperty(Cartesian3);
+    const sampledPosition = new SampledProperty(Cartesian3);
     sampledPosition.backwardExtrapolationType = ExtrapolationType.HOLD;
     sampledPosition.forwardExtrapolationType = ExtrapolationType.HOLD;
-    var result = sampledPosition.getValue(JulianDate.now());
+    const result = sampledPosition.getValue(JulianDate.now());
     expect(result).toBeUndefined();
   });
 
   it("raises definitionChanged when extrapolation options change", function () {
-    var property = new SampledProperty(Number);
-    var listener = jasmine.createSpy("listener");
+    const property = new SampledProperty(Number);
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
     property.forwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;

@@ -9,7 +9,7 @@ import DeveloperError from "./DeveloperError.js";
  * @see LinearApproximation
  * @see HermitePolynomialApproximation
  */
-var InterpolationAlgorithm = {};
+const InterpolationAlgorithm = {};
 
 /**
  * Gets the name of this interpolation algorithm.

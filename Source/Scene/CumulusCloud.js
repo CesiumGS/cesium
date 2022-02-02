@@ -47,7 +47,7 @@ function CumulusCloud(options, cloudCollection) {
       defaultValue(options.scale, new Cartesian2(20.0, 12.0))
     );
 
-    var defaultMaxSize = new Cartesian3(
+    const defaultMaxSize = new Cartesian3(
       this._scale.x,
       this._scale.y,
       Math.min(this._scale.x, this._scale.y) / 1.5
@@ -64,17 +64,17 @@ function CumulusCloud(options, cloudCollection) {
   this._index = -1; // Used by CloudCollection
 }
 
-var SHOW_INDEX = (CumulusCloud.SHOW_INDEX = 0);
-var POSITION_INDEX = (CumulusCloud.POSITION_INDEX = 1);
-var SCALE_INDEX = (CumulusCloud.SCALE_INDEX = 2);
-var MAXIMUM_SIZE_INDEX = (CumulusCloud.MAXIMUM_SIZE_INDEX = 3);
-var SLICE_INDEX = (CumulusCloud.SLICE_INDEX = 4);
-var BRIGHTNESS_INDEX = (CumulusCloud.BRIGHTNESS_INDEX = 5);
-var COLOR_INDEX = (CumulusCloud.COLOR_INDEX = 6);
+const SHOW_INDEX = (CumulusCloud.SHOW_INDEX = 0);
+const POSITION_INDEX = (CumulusCloud.POSITION_INDEX = 1);
+const SCALE_INDEX = (CumulusCloud.SCALE_INDEX = 2);
+const MAXIMUM_SIZE_INDEX = (CumulusCloud.MAXIMUM_SIZE_INDEX = 3);
+const SLICE_INDEX = (CumulusCloud.SLICE_INDEX = 4);
+const BRIGHTNESS_INDEX = (CumulusCloud.BRIGHTNESS_INDEX = 5);
+const COLOR_INDEX = (CumulusCloud.COLOR_INDEX = 6);
 CumulusCloud.NUMBER_OF_PROPERTIES = 7;
 
 function makeDirty(cloud, propertyChanged) {
-  var cloudCollection = cloud._cloudCollection;
+  const cloudCollection = cloud._cloudCollection;
   if (defined(cloudCollection)) {
     cloudCollection._updateCloud(cloud, propertyChanged);
     cloud._dirty = true;
@@ -119,7 +119,7 @@ Object.defineProperties(CumulusCloud.prototype, {
       Check.typeOf.object("value", value);
       //>>includeEnd('debug');
 
-      var position = this._position;
+      const position = this._position;
       if (!Cartesian3.equals(position, value)) {
         Cartesian3.clone(value, position);
         makeDirty(this, POSITION_INDEX);
@@ -161,7 +161,7 @@ Object.defineProperties(CumulusCloud.prototype, {
       Check.typeOf.object("value", value);
       //>>includeEnd('debug');
 
-      var scale = this._scale;
+      const scale = this._scale;
       if (!Cartesian2.equals(scale, value)) {
         Cartesian2.clone(value, scale);
         makeDirty(this, SCALE_INDEX);
@@ -217,7 +217,7 @@ Object.defineProperties(CumulusCloud.prototype, {
       Check.typeOf.object("value", value);
       //>>includeEnd('debug');
 
-      var maximumSize = this._maximumSize;
+      const maximumSize = this._maximumSize;
       if (!Cartesian3.equals(maximumSize, value)) {
         Cartesian3.clone(value, maximumSize);
         makeDirty(this, MAXIMUM_SIZE_INDEX);
@@ -239,7 +239,7 @@ Object.defineProperties(CumulusCloud.prototype, {
       Check.typeOf.object("value", value);
       //>>includeEnd('debug');
 
-      var color = this._color;
+      const color = this._color;
       if (!Color.equals(color, value)) {
         Color.clone(value, color);
         makeDirty(this, COLOR_INDEX);
@@ -303,7 +303,7 @@ Object.defineProperties(CumulusCloud.prototype, {
       Check.typeOf.number("value", value);
       //>>includeEnd('debug');
 
-      var slice = this._slice;
+      const slice = this._slice;
       if (slice !== value) {
         this._slice = value;
         makeDirty(this, SLICE_INDEX);
@@ -335,7 +335,7 @@ Object.defineProperties(CumulusCloud.prototype, {
       Check.typeOf.number("value", value);
       //>>includeEnd('debug');
 
-      var brightness = this._brightness;
+      const brightness = this._brightness;
       if (brightness !== value) {
         this._brightness = value;
         makeDirty(this, BRIGHTNESS_INDEX);

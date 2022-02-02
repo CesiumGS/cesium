@@ -5,8 +5,8 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
-var trailingSlashRegex = /\/$/;
-var defaultCredit = new Credit(
+const trailingSlashRegex = /\/$/;
+const defaultCredit = new Credit(
   '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/">Improve this map</a></strong>'
 );
 
@@ -40,7 +40,7 @@ var defaultCredit = new Credit(
  *
  * @example
  * // Mapbox style provider
- * var mapbox = new Cesium.MapboxStyleImageryProvider({
+ * const mapbox = new Cesium.MapboxStyleImageryProvider({
  *     styleId: 'streets-v11',
  *     accessToken: 'thisIsMyAccessToken'
  * });
@@ -50,14 +50,14 @@ var defaultCredit = new Credit(
  */
 function MapboxStyleImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var styleId = options.styleId;
+  const styleId = options.styleId;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(styleId)) {
     throw new DeveloperError("options.styleId is required.");
   }
   //>>includeEnd('debug');
 
-  var accessToken = options.accessToken;
+  const accessToken = options.accessToken;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(accessToken)) {
     throw new DeveloperError("options.accessToken is required.");
@@ -150,22 +150,22 @@ function MapboxStyleImageryProvider(options) {
    */
   this.defaultMagnificationFilter = undefined;
 
-  var resource = Resource.createIfNeeded(
+  const resource = Resource.createIfNeeded(
     defaultValue(options.url, "https://api.mapbox.com/styles/v1/")
   );
 
   this._styleId = styleId;
   this._accessToken = accessToken;
 
-  var tilesize = defaultValue(options.tilesize, 512);
+  const tilesize = defaultValue(options.tilesize, 512);
   this._tilesize = tilesize;
 
-  var username = defaultValue(options.username, "mapbox");
+  const username = defaultValue(options.username, "mapbox");
   this._username = username;
 
-  var scaleFactor = defined(options.scaleFactor) ? "@2x" : "";
+  const scaleFactor = defined(options.scaleFactor) ? "@2x" : "";
 
-  var templateUrl = resource.getUrlComponent();
+  let templateUrl = resource.getUrlComponent();
   if (!trailingSlashRegex.test(templateUrl)) {
     templateUrl += "/";
   }
@@ -183,7 +183,7 @@ function MapboxStyleImageryProvider(options) {
     access_token: accessToken,
   });
 
-  var credit;
+  let credit;
   if (defined(options.credit)) {
     credit = options.credit;
     if (typeof credit === "string") {

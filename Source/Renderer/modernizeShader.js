@@ -14,15 +14,15 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @private
  */
 function modernizeShader(source, isFragmentShader) {
-  var outputDeclarationRegex = /#define OUTPUT_DECLARATION/;
-  var splitSource = source.split("\n");
+  const outputDeclarationRegex = /#define OUTPUT_DECLARATION/;
+  const splitSource = source.split("\n");
 
   if (/#version 300 es/g.test(source)) {
     return source;
   }
 
-  var outputDeclarationLine = -1;
-  var i, line;
+  let outputDeclarationLine = -1;
+  let i, line;
   for (i = 0; i < splitSource.length; ++i) {
     line = splitSource[i];
     if (outputDeclarationRegex.test(line)) {
@@ -35,12 +35,12 @@ function modernizeShader(source, isFragmentShader) {
     throw new DeveloperError("Could not find a #define OUTPUT_DECLARATION!");
   }
 
-  var outputVariables = [];
+  const outputVariables = [];
 
   for (i = 0; i < 10; i++) {
-    var fragDataString = "gl_FragData\\[" + i + "\\]";
-    var newOutput = "czm_out" + i;
-    var regex = new RegExp(fragDataString, "g");
+    const fragDataString = "gl_FragData\\[" + i + "\\]";
+    const newOutput = "czm_out" + i;
+    const regex = new RegExp(fragDataString, "g");
     if (regex.test(source)) {
       setAdd(newOutput, outputVariables);
       replaceInSourceString(fragDataString, newOutput, splitSource);
@@ -53,7 +53,7 @@ function modernizeShader(source, isFragmentShader) {
     }
   }
 
-  var czmFragColor = "czm_fragColor";
+  const czmFragColor = "czm_fragColor";
   if (findInSource("gl_FragColor", splitSource)) {
     setAdd(czmFragColor, outputVariables);
     replaceInSourceString("gl_FragColor", czmFragColor, splitSource);
@@ -65,13 +65,16 @@ function modernizeShader(source, isFragmentShader) {
     outputDeclarationLine += 1;
   }
 
-  var variableMap = getVariablePreprocessorBranch(outputVariables, splitSource);
-  var lineAdds = {};
+  const variableMap = getVariablePreprocessorBranch(
+    outputVariables,
+    splitSource
+  );
+  const lineAdds = {};
   for (i = 0; i < splitSource.length; i++) {
     line = splitSource[i];
-    for (var variable in variableMap) {
+    for (const variable in variableMap) {
       if (variableMap.hasOwnProperty(variable)) {
-        var matchVar = new RegExp(
+        const matchVar = new RegExp(
           "(layout)[^]+(out)[^]+(" + variable + ")[^]+",
           "g"
         );
@@ -82,27 +85,26 @@ function modernizeShader(source, isFragmentShader) {
     }
   }
 
-  for (var layoutDeclaration in lineAdds) {
+  for (const layoutDeclaration in lineAdds) {
     if (lineAdds.hasOwnProperty(layoutDeclaration)) {
-      var variableName = lineAdds[layoutDeclaration];
-      var lineNumber = splitSource.indexOf(layoutDeclaration);
-      var entry = variableMap[variableName];
-      var depth = entry.length;
-      var d;
-      for (d = 0; d < depth; d++) {
+      const variableName = lineAdds[layoutDeclaration];
+      let lineNumber = splitSource.indexOf(layoutDeclaration);
+      const entry = variableMap[variableName];
+      const depth = entry.length;
+      for (let d = 0; d < depth; d++) {
         splitSource.splice(lineNumber, 0, entry[d]);
       }
       lineNumber += depth + 1;
-      for (d = depth - 1; d >= 0; d--) {
+      for (let d = depth - 1; d >= 0; d--) {
         splitSource.splice(lineNumber, 0, "#endif //" + entry[d]);
       }
     }
   }
 
-  var webgl2UniqueID = "WEBGL_2";
-  var webgl2DefineMacro = "#define " + webgl2UniqueID;
-  var versionThree = "#version 300 es";
-  var foundVersion = false;
+  const webgl2UniqueID = "WEBGL_2";
+  const webgl2DefineMacro = "#define " + webgl2UniqueID;
+  const versionThree = "#version 300 es";
+  let foundVersion = false;
   for (i = 0; i < splitSource.length; i++) {
     if (/#version/.test(splitSource[i])) {
       splitSource[i] = versionThree;
@@ -139,31 +141,31 @@ function modernizeShader(source, isFragmentShader) {
 // Note that this fails if your string looks like
 // searchString[singleCharacter]searchString
 function replaceInSourceString(str, replacement, splitSource) {
-  var regexStr = "(^|[^\\w])(" + str + ")($|[^\\w])";
-  var regex = new RegExp(regexStr, "g");
+  const regexStr = "(^|[^\\w])(" + str + ")($|[^\\w])";
+  const regex = new RegExp(regexStr, "g");
 
-  var splitSourceLength = splitSource.length;
-  for (var i = 0; i < splitSourceLength; ++i) {
-    var line = splitSource[i];
+  const splitSourceLength = splitSource.length;
+  for (let i = 0; i < splitSourceLength; ++i) {
+    const line = splitSource[i];
     splitSource[i] = line.replace(regex, "$1" + replacement + "$3");
   }
 }
 
 function replaceInSourceRegex(regex, replacement, splitSource) {
-  var splitSourceLength = splitSource.length;
-  for (var i = 0; i < splitSourceLength; ++i) {
-    var line = splitSource[i];
+  const splitSourceLength = splitSource.length;
+  for (let i = 0; i < splitSourceLength; ++i) {
+    const line = splitSource[i];
     splitSource[i] = line.replace(regex, replacement);
   }
 }
 
 function findInSource(str, splitSource) {
-  var regexStr = "(^|[^\\w])(" + str + ")($|[^\\w])";
-  var regex = new RegExp(regexStr, "g");
+  const regexStr = "(^|[^\\w])(" + str + ")($|[^\\w])";
+  const regex = new RegExp(regexStr, "g");
 
-  var splitSourceLength = splitSource.length;
-  for (var i = 0; i < splitSourceLength; ++i) {
-    var line = splitSource[i];
+  const splitSourceLength = splitSource.length;
+  for (let i = 0; i < splitSourceLength; ++i) {
+    const line = splitSource[i];
     if (regex.test(line)) {
       return true;
     }
@@ -172,10 +174,10 @@ function findInSource(str, splitSource) {
 }
 
 function compileSource(splitSource) {
-  var wholeSource = "";
+  let wholeSource = "";
 
-  var splitSourceLength = splitSource.length;
-  for (var i = 0; i < splitSourceLength; ++i) {
+  const splitSourceLength = splitSource.length;
+  for (let i = 0; i < splitSourceLength; ++i) {
     wholeSource += splitSource[i] + "\n";
   }
   return wholeSource;
@@ -188,22 +190,22 @@ function setAdd(variable, set) {
 }
 
 function getVariablePreprocessorBranch(layoutVariables, splitSource) {
-  var variableMap = {};
+  const variableMap = {};
 
-  var numLayoutVariables = layoutVariables.length;
+  const numLayoutVariables = layoutVariables.length;
 
-  var stack = [];
-  for (var i = 0; i < splitSource.length; ++i) {
-    var line = splitSource[i];
-    var hasIF = /(#ifdef|#if)/g.test(line);
-    var hasELSE = /#else/g.test(line);
-    var hasENDIF = /#endif/g.test(line);
+  const stack = [];
+  for (let i = 0; i < splitSource.length; ++i) {
+    const line = splitSource[i];
+    const hasIF = /(#ifdef|#if)/g.test(line);
+    const hasELSE = /#else/g.test(line);
+    const hasENDIF = /#endif/g.test(line);
 
     if (hasIF) {
       stack.push(line);
     } else if (hasELSE) {
-      var top = stack[stack.length - 1];
-      var op = top.replace("ifdef", "ifndef");
+      const top = stack[stack.length - 1];
+      let op = top.replace("ifdef", "ifndef");
       if (/if/g.test(op)) {
         op = op.replace(/(#if\s+)(\S*)([^]*)/, "$1!($2)$3");
       }
@@ -212,8 +214,8 @@ function getVariablePreprocessorBranch(layoutVariables, splitSource) {
     } else if (hasENDIF) {
       stack.pop();
     } else if (!/layout/g.test(line)) {
-      for (var varIndex = 0; varIndex < numLayoutVariables; ++varIndex) {
-        var varName = layoutVariables[varIndex];
+      for (let varIndex = 0; varIndex < numLayoutVariables; ++varIndex) {
+        const varName = layoutVariables[varIndex];
         if (line.indexOf(varName) !== -1) {
           if (!defined(variableMap[varName])) {
             variableMap[varName] = stack.slice();
@@ -231,7 +233,7 @@ function getVariablePreprocessorBranch(layoutVariables, splitSource) {
 }
 
 function removeExtension(name, webgl2UniqueID, splitSource) {
-  var regex = "#extension\\s+GL_" + name + "\\s+:\\s+[a-zA-Z0-9]+\\s*$";
+  const regex = "#extension\\s+GL_" + name + "\\s+:\\s+[a-zA-Z0-9]+\\s*$";
   replaceInSourceRegex(new RegExp(regex, "g"), "", splitSource);
 
   // replace any possible directive #ifdef (GL_EXT_extension) with WEBGL_2 unique directive

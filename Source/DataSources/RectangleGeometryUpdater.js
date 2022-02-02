@@ -24,12 +24,12 @@ import GeometryUpdater from "./GeometryUpdater.js";
 import GroundGeometryUpdater from "./GroundGeometryUpdater.js";
 import Property from "./Property.js";
 
-var scratchColor = new Color();
-var defaultOffset = Cartesian3.ZERO;
-var offsetScratch = new Cartesian3();
-var scratchRectangle = new Rectangle();
-var scratchCenterRect = new Rectangle();
-var scratchCarto = new Cartographic();
+const scratchColor = new Color();
+const defaultOffset = Cartesian3.ZERO;
+const offsetScratch = new Cartesian3();
+const scratchRectangle = new Rectangle();
+const scratchCenterRect = new Rectangle();
+const scratchCarto = new Cartographic();
 
 function RectangleGeometryOptions(entity) {
   this.id = entity;
@@ -97,10 +97,10 @@ RectangleGeometryUpdater.prototype.createFillGeometryInstance = function (
   }
   //>>includeEnd('debug');
 
-  var entity = this._entity;
-  var isAvailable = entity.isAvailable(time);
+  const entity = this._entity;
+  const isAvailable = entity.isAvailable(time);
 
-  var attributes = {
+  const attributes = {
     show: new ShowGeometryInstanceAttribute(
       isAvailable &&
         entity.isShowing &&
@@ -115,7 +115,7 @@ RectangleGeometryUpdater.prototype.createFillGeometryInstance = function (
   };
 
   if (this._materialProperty instanceof ColorMaterialProperty) {
-    var currentColor;
+    let currentColor;
     if (
       defined(this._materialProperty.color) &&
       (this._materialProperty.color.isConstant || isAvailable)
@@ -166,19 +166,19 @@ RectangleGeometryUpdater.prototype.createOutlineGeometryInstance = function (
   }
   //>>includeEnd('debug');
 
-  var entity = this._entity;
-  var isAvailable = entity.isAvailable(time);
-  var outlineColor = Property.getValueOrDefault(
+  const entity = this._entity;
+  const isAvailable = entity.isAvailable(time);
+  const outlineColor = Property.getValueOrDefault(
     this._outlineColorProperty,
     time,
     Color.BLACK,
     scratchColor
   );
-  var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
+  const distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(
     time
   );
 
-  var attributes = {
+  const attributes = {
     show: new ShowGeometryInstanceAttribute(
       isAvailable &&
         entity.isShowing &&
@@ -211,7 +211,7 @@ RectangleGeometryUpdater.prototype.createOutlineGeometryInstance = function (
 };
 
 RectangleGeometryUpdater.prototype._computeCenter = function (time, result) {
-  var rect = Property.getValueOrUndefined(
+  const rect = Property.getValueOrUndefined(
     this._entity.rectangle.coordinates,
     time,
     scratchCenterRect
@@ -219,7 +219,7 @@ RectangleGeometryUpdater.prototype._computeCenter = function (time, result) {
   if (!defined(rect)) {
     return;
   }
-  var center = Rectangle.center(rect, scratchCarto);
+  const center = Rectangle.center(rect, scratchCarto);
   return Cartographic.toCartesian(center, Ellipsoid.WGS84, result);
 };
 
@@ -250,22 +250,23 @@ RectangleGeometryUpdater.prototype._setStaticOptions = function (
   entity,
   rectangle
 ) {
-  var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
+  const isColorMaterial =
+    this._materialProperty instanceof ColorMaterialProperty;
 
-  var heightValue = Property.getValueOrUndefined(
+  let heightValue = Property.getValueOrUndefined(
     rectangle.height,
     Iso8601.MINIMUM_VALUE
   );
-  var heightReferenceValue = Property.getValueOrDefault(
+  const heightReferenceValue = Property.getValueOrDefault(
     rectangle.heightReference,
     Iso8601.MINIMUM_VALUE,
     HeightReference.NONE
   );
-  var extrudedHeightValue = Property.getValueOrUndefined(
+  let extrudedHeightValue = Property.getValueOrUndefined(
     rectangle.extrudedHeight,
     Iso8601.MINIMUM_VALUE
   );
-  var extrudedHeightReferenceValue = Property.getValueOrDefault(
+  const extrudedHeightReferenceValue = Property.getValueOrDefault(
     rectangle.extrudedHeightReference,
     Iso8601.MINIMUM_VALUE,
     HeightReference.NONE
@@ -274,7 +275,7 @@ RectangleGeometryUpdater.prototype._setStaticOptions = function (
     heightValue = 0;
   }
 
-  var options = this._options;
+  const options = this._options;
   options.vertexFormat = isColorMaterial
     ? PerInstanceColorAppearance.VERTEX_FORMAT
     : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
@@ -364,18 +365,18 @@ DynamicRectangleGeometryUpdater.prototype._setOptions = function (
   rectangle,
   time
 ) {
-  var options = this._options;
-  var heightValue = Property.getValueOrUndefined(rectangle.height, time);
-  var heightReferenceValue = Property.getValueOrDefault(
+  const options = this._options;
+  let heightValue = Property.getValueOrUndefined(rectangle.height, time);
+  const heightReferenceValue = Property.getValueOrDefault(
     rectangle.heightReference,
     time,
     HeightReference.NONE
   );
-  var extrudedHeightValue = Property.getValueOrUndefined(
+  let extrudedHeightValue = Property.getValueOrUndefined(
     rectangle.extrudedHeight,
     time
   );
-  var extrudedHeightReferenceValue = Property.getValueOrDefault(
+  const extrudedHeightReferenceValue = Property.getValueOrDefault(
     rectangle.extrudedHeightReference,
     time,
     HeightReference.NONE

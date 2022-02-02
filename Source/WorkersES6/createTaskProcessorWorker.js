@@ -8,7 +8,7 @@ import when from "../ThirdParty/when.js";
 // For fully synchronous functions, just wrapping the function call in a `when` Promise doesn't
 // handle errors correctly, hence try-catch
 function callAndWrap(workerFunction, parameters, transferableObjects) {
-  var resultOrPromise;
+  let resultOrPromise;
   try {
     resultOrPromise = workerFunction(parameters, transferableObjects);
     return resultOrPromise; // errors handled by Promise
@@ -43,13 +43,13 @@ function callAndWrap(workerFunction, parameters, transferableObjects) {
  * @see {@link http://www.w3.org/TR/html5/common-dom-interfaces.html#transferable-objects|Transferable objects}
  */
 function createTaskProcessorWorker(workerFunction) {
-  var postMessage;
+  let postMessage;
 
   return function (event) {
-    var data = event.data;
+    const data = event.data;
 
-    var transferableObjects = [];
-    var responseMessage = {
+    const transferableObjects = [];
+    const responseMessage = {
       id: data.id,
       result: undefined,
       error: undefined,
@@ -111,7 +111,7 @@ function createTaskProcessorWorker(workerFunction) {
  * @example
  * function calculate(parameters, transferableObjects) {
  *   // perform whatever calculation is necessary.
- *   var typedArray = new Float32Array(0);
+ *   const typedArray = new Float32Array(0);
  *
  *   // typed arrays are transferable
  *   transferableObjects.push(typedArray)

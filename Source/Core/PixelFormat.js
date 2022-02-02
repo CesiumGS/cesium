@@ -6,7 +6,7 @@ import WebGLConstants from "./WebGLConstants.js";
  *
  * @enum {Number}
  */
-var PixelFormat = {
+const PixelFormat = {
   /**
    * A pixel format containing a depth value.
    *
@@ -362,7 +362,7 @@ PixelFormat.textureSizeInBytes = function (
   width,
   height
 ) {
-  var componentsLength = PixelFormat.componentsLength(pixelFormat);
+  let componentsLength = PixelFormat.componentsLength(pixelFormat);
   if (PixelDatatype.isPacked(pixelDatatype)) {
     componentsLength = 1;
   }
@@ -375,7 +375,7 @@ PixelFormat.textureSizeInBytes = function (
  * @private
  */
 PixelFormat.alignmentInBytes = function (pixelFormat, pixelDatatype, width) {
-  var mod =
+  const mod =
     PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, width, 1) % 4;
   return mod === 0 ? 4 : mod === 2 ? 2 : 1;
 };
@@ -389,8 +389,8 @@ PixelFormat.createTypedArray = function (
   width,
   height
 ) {
-  var constructor;
-  var sizeInBytes = PixelDatatype.sizeInBytes(pixelDatatype);
+  let constructor;
+  const sizeInBytes = PixelDatatype.sizeInBytes(pixelDatatype);
   if (sizeInBytes === Uint8Array.BYTES_PER_ELEMENT) {
     constructor = Uint8Array;
   } else if (sizeInBytes === Uint16Array.BYTES_PER_ELEMENT) {
@@ -404,7 +404,7 @@ PixelFormat.createTypedArray = function (
     constructor = Uint32Array;
   }
 
-  var size = PixelFormat.componentsLength(pixelFormat) * width * height;
+  const size = PixelFormat.componentsLength(pixelFormat) * width * height;
   return new constructor(size);
 };
 
@@ -421,18 +421,18 @@ PixelFormat.flipY = function (
   if (height === 1) {
     return bufferView;
   }
-  var flipped = PixelFormat.createTypedArray(
+  const flipped = PixelFormat.createTypedArray(
     pixelFormat,
     pixelDatatype,
     width,
     height
   );
-  var numberOfComponents = PixelFormat.componentsLength(pixelFormat);
-  var textureWidth = width * numberOfComponents;
-  for (var i = 0; i < height; ++i) {
-    var row = i * width * numberOfComponents;
-    var flippedRow = (height - i - 1) * width * numberOfComponents;
-    for (var j = 0; j < textureWidth; ++j) {
+  const numberOfComponents = PixelFormat.componentsLength(pixelFormat);
+  const textureWidth = width * numberOfComponents;
+  for (let i = 0; i < height; ++i) {
+    const row = i * width * numberOfComponents;
+    const flippedRow = (height - i - 1) * width * numberOfComponents;
+    for (let j = 0; j < textureWidth; ++j) {
       flipped[flippedRow + j] = bufferView[row + j];
     }
   }

@@ -6,10 +6,10 @@ import createCanvas from "../createCanvas.js";
 import DomEventSimulator from "../DomEventSimulator.js";
 
 describe("Scene/DeviceOrientationCameraController", function () {
-  var scene;
-  var canvas;
-  var camera;
-  var controller;
+  let scene;
+  let canvas;
+  let camera;
+  let controller;
 
   function MockScene(canvas, camera) {
     this.canvas = canvas;
@@ -54,8 +54,8 @@ describe("Scene/DeviceOrientationCameraController", function () {
   });
 
   it("rotates for alpha", function () {
-    var position = Cartesian3.clone(camera.position);
-    var up = Cartesian3.clone(camera.up);
+    const position = Cartesian3.clone(camera.position);
+    const up = Cartesian3.clone(camera.up);
 
     fireEvent({
       alpha: 90.0,
@@ -74,8 +74,8 @@ describe("Scene/DeviceOrientationCameraController", function () {
   });
 
   it("rotates for beta", function () {
-    var position = Cartesian3.clone(camera.position);
-    var direction = Cartesian3.clone(camera.direction);
+    const position = Cartesian3.clone(camera.position);
+    const direction = Cartesian3.clone(camera.direction);
 
     fireEvent({
       beta: 90.0,
@@ -91,8 +91,8 @@ describe("Scene/DeviceOrientationCameraController", function () {
   });
 
   it("rotates for gamma", function () {
-    var position = Cartesian3.clone(camera.position);
-    var right = Cartesian3.clone(camera.right);
+    const position = Cartesian3.clone(camera.position);
+    const right = Cartesian3.clone(camera.right);
 
     fireEvent({
       gamma: 90.0,

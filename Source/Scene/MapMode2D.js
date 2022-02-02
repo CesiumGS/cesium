@@ -3,7 +3,7 @@
  *
  * @enum {Number}
  */
-var MapMode2D = {
+const MapMode2D = {
   /**
    * The 2D map can be rotated about the z axis.
    *

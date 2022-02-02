@@ -23,8 +23,8 @@ import createScene from "../createScene.js";
 describe(
   "DataSources/PathVisualizer",
   function () {
-    var scene;
-    var visualizer;
+    let scene;
+    let visualizer;
 
     beforeAll(function () {
       scene = createScene();
@@ -45,7 +45,7 @@ describe(
     });
 
     it("update throws if no time specified.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PathVisualizer(scene, entityCollection);
       expect(function () {
         visualizer.update();
@@ -53,7 +53,7 @@ describe(
     });
 
     it("isDestroy returns false until destroyed.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PathVisualizer(scene, entityCollection);
       expect(visualizer.isDestroyed()).toEqual(false);
       visualizer.destroy();
@@ -62,18 +62,18 @@ describe(
     });
 
     it("removes the listener from the entity collection when destroyed", function () {
-      var entityCollection = new EntityCollection();
-      var visualizer = new PathVisualizer(scene, entityCollection);
+      const entityCollection = new EntityCollection();
+      const visualizer = new PathVisualizer(scene, entityCollection);
       expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
       visualizer.destroy();
       expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
     });
 
     it("object with no path does not create one.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PathVisualizer(scene, entityCollection);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantProperty([
         new Cartesian3(1234, 5678, 9101112),
         new Cartesian3(5678, 1234, 1101112),
@@ -83,11 +83,11 @@ describe(
     });
 
     it("object with no position does not create a polyline.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PathVisualizer(scene, entityCollection);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
-      var path = (testObject.path = new PathGraphics());
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const path = (testObject.path = new PathGraphics());
       path.show = new ConstantProperty(true);
 
       visualizer.update(JulianDate.now());
@@ -95,19 +95,19 @@ describe(
     });
 
     it("adding and removing an entity path without rendering does not crash.", function () {
-      var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
-      var positions = [
+      const times = [new JulianDate(0, 0), new JulianDate(1, 0)];
+      const positions = [
         new Cartesian3(1234, 5678, 9101112),
         new Cartesian3(5678, 1234, 1101112),
       ];
 
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PathVisualizer(scene, entityCollection);
 
-      var position = new SampledPositionProperty();
+      const position = new SampledPositionProperty();
       position.addSamples(times, positions);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = position;
       testObject.path = new PathGraphics();
 
@@ -117,24 +117,24 @@ describe(
     });
 
     it("A PathGraphics causes a primitive to be created and updated.", function () {
-      var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
-      var updateTime = new JulianDate(0.5, 0);
-      var positions = [
+      const times = [new JulianDate(0, 0), new JulianDate(1, 0)];
+      const updateTime = new JulianDate(0.5, 0);
+      const positions = [
         new Cartesian3(1234, 5678, 9101112),
         new Cartesian3(5678, 1234, 1101112),
       ];
 
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PathVisualizer(scene, entityCollection);
 
       expect(scene.primitives.length).toEqual(0);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
-      var position = new SampledPositionProperty();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const position = new SampledPositionProperty();
       testObject.position = position;
       position.addSamples(times, positions);
 
-      var path = (testObject.path = new PathGraphics());
+      const path = (testObject.path = new PathGraphics());
       path.show = new ConstantProperty(true);
       path.material = new PolylineOutlineMaterialProperty();
       path.material.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
@@ -153,8 +153,8 @@ describe(
 
       expect(scene.primitives.length).toEqual(1);
 
-      var polylineCollection = scene.primitives.get(0);
-      var primitive = polylineCollection.get(0);
+      const polylineCollection = scene.primitives.get(0);
+      const primitive = polylineCollection.get(0);
       expect(primitive.positions[0]).toEqual(
         testObject.position.getValue(
           JulianDate.addSeconds(
@@ -184,7 +184,7 @@ describe(
         testObject.path.distanceDisplayCondition.getValue(updateTime)
       );
 
-      var material = primitive.material;
+      const material = primitive.material;
       expect(material.uniforms.color).toEqual(
         testObject.path.material.color.getValue(updateTime)
       );
@@ -201,21 +201,21 @@ describe(
     });
 
     it("creates primitives when an entity is already in the collection.", function () {
-      var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
-      var updateTime = new JulianDate(0.5, 0);
-      var positions = [
+      const times = [new JulianDate(0, 0), new JulianDate(1, 0)];
+      const updateTime = new JulianDate(0.5, 0);
+      const positions = [
         new Cartesian3(1234, 5678, 9101112),
         new Cartesian3(5678, 1234, 1101112),
       ];
 
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
 
-      var testObject = entityCollection.getOrCreateEntity("test");
-      var position = new SampledPositionProperty();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const position = new SampledPositionProperty();
       testObject.position = position;
       position.addSamples(times, positions);
 
-      var path = (testObject.path = new PathGraphics());
+      const path = (testObject.path = new PathGraphics());
       path.show = new ConstantProperty(true);
       path.material = new PolylineOutlineMaterialProperty();
       path.material.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
@@ -237,24 +237,24 @@ describe(
     });
 
     it("A custom material can be used.", function () {
-      var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
-      var updateTime = new JulianDate(0.5, 0);
-      var positions = [
+      const times = [new JulianDate(0, 0), new JulianDate(1, 0)];
+      const updateTime = new JulianDate(0.5, 0);
+      const positions = [
         new Cartesian3(1234, 5678, 9101112),
         new Cartesian3(5678, 1234, 1101112),
       ];
 
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PathVisualizer(scene, entityCollection);
 
       expect(scene.primitives.length).toEqual(0);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
-      var position = new SampledPositionProperty();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const position = new SampledPositionProperty();
       testObject.position = position;
       position.addSamples(times, positions);
 
-      var path = (testObject.path = new PathGraphics());
+      const path = (testObject.path = new PathGraphics());
       path.show = new ConstantProperty(true);
       path.material = new PolylineGlowMaterialProperty();
       path.material.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
@@ -268,10 +268,10 @@ describe(
 
       expect(scene.primitives.length).toEqual(1);
 
-      var polylineCollection = scene.primitives.get(0);
-      var primitive = polylineCollection.get(0);
+      const polylineCollection = scene.primitives.get(0);
+      const primitive = polylineCollection.get(0);
 
-      var material = primitive.material;
+      const material = primitive.material;
       expect(material.uniforms.color).toEqual(
         testObject.path.material.color.getValue(updateTime)
       );
@@ -284,20 +284,20 @@ describe(
     });
 
     it("Reuses primitives when hiding one and showing another", function () {
-      var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
-      var time = new JulianDate(0.5, 0);
-      var positions = [
+      const times = [new JulianDate(0, 0), new JulianDate(1, 0)];
+      const time = new JulianDate(0.5, 0);
+      const positions = [
         new Cartesian3(1234, 5678, 9101112),
         new Cartesian3(5678, 1234, 1101112),
       ];
 
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PathVisualizer(scene, entityCollection);
 
-      var position = new SampledPositionProperty();
+      let position = new SampledPositionProperty();
       position.addSamples(times, positions);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = position;
       testObject.path = new PathGraphics();
       testObject.path.show = new ConstantProperty(true);
@@ -306,7 +306,7 @@ describe(
 
       visualizer.update(time);
 
-      var polylineCollection = scene.primitives.get(0);
+      const polylineCollection = scene.primitives.get(0);
       expect(polylineCollection.length).toEqual(1);
 
       testObject.path.show = new ConstantProperty(false);
@@ -318,7 +318,7 @@ describe(
       position = new SampledPositionProperty();
       position.addSamples(times, positions);
 
-      var testObject2 = entityCollection.getOrCreateEntity("test2");
+      const testObject2 = entityCollection.getOrCreateEntity("test2");
       testObject2.position = position;
       testObject2.path = new PathGraphics();
       testObject2.path.show = new ConstantProperty(true);
@@ -330,19 +330,19 @@ describe(
     });
 
     it("Switches from inertial to fixed paths in 2D", function () {
-      var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
-      var time = new JulianDate(0.5, 0);
-      var positions = [
+      const times = [new JulianDate(0, 0), new JulianDate(1, 0)];
+      const time = new JulianDate(0.5, 0);
+      const positions = [
         new Cartesian3(1234, 5678, 9101112),
         new Cartesian3(5678, 1234, 1101112),
       ];
 
-      var position = new SampledPositionProperty(ReferenceFrame.INERTIAL);
+      const position = new SampledPositionProperty(ReferenceFrame.INERTIAL);
       position.addSamples(times, positions);
 
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PathVisualizer(scene, entityCollection);
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = position;
       testObject.path = new PathGraphics();
       testObject.path.leadTime = new ConstantProperty(25);
@@ -353,13 +353,13 @@ describe(
       expect(scene.primitives.length).toEqual(1);
 
       //They'll be one inertial polyline collection
-      var inertialPolylineCollection = scene.primitives.get(0);
+      const inertialPolylineCollection = scene.primitives.get(0);
       expect(inertialPolylineCollection.length).toEqual(1);
       expect(inertialPolylineCollection.modelMatrix).not.toEqual(
         Matrix4.IDENTITY
       );
 
-      var inertialLine = inertialPolylineCollection.get(0);
+      const inertialLine = inertialPolylineCollection.get(0);
       expect(inertialLine.show).toEqual(true);
 
       scene.mode = SceneMode.SCENE2D;
@@ -369,35 +369,35 @@ describe(
       //and a new fixed polyline collection.
       expect(scene.primitives.length).toEqual(2);
 
-      var fixedPolylineCollection = scene.primitives.get(1);
+      const fixedPolylineCollection = scene.primitives.get(1);
 
       expect(inertialLine.show).toEqual(false);
       expect(fixedPolylineCollection.length).toEqual(1);
       expect(fixedPolylineCollection.modelMatrix).toEqual(Matrix4.IDENTITY);
 
-      var fixedLine = fixedPolylineCollection.get(0);
+      const fixedLine = fixedPolylineCollection.get(0);
       expect(fixedLine.show).toEqual(true);
     });
 
     it("clear hides primitives.", function () {
-      var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
-      var updateTime = new JulianDate(0.5, 0);
-      var positions = [
+      const times = [new JulianDate(0, 0), new JulianDate(1, 0)];
+      const updateTime = new JulianDate(0.5, 0);
+      const positions = [
         new Cartesian3(1234, 5678, 9101112),
         new Cartesian3(5678, 1234, 1101112),
       ];
 
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PathVisualizer(scene, entityCollection);
 
       expect(scene.primitives.length).toEqual(0);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
-      var position = new SampledPositionProperty();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const position = new SampledPositionProperty();
       testObject.position = position;
       position.addSamples(times, positions);
 
-      var path = (testObject.path = new PathGraphics());
+      const path = (testObject.path = new PathGraphics());
       path.show = new ConstantProperty(true);
       path.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
       path.width = new ConstantProperty(12.5);
@@ -410,8 +410,8 @@ describe(
 
       expect(scene.primitives.length).toEqual(1);
 
-      var polylineCollection = scene.primitives.get(0);
-      var primitive = polylineCollection.get(0);
+      const polylineCollection = scene.primitives.get(0);
+      const primitive = polylineCollection.get(0);
 
       visualizer.update(updateTime);
       //Clearing won't actually remove the primitive because of the
@@ -422,24 +422,24 @@ describe(
     });
 
     it("Visualizer sets entity property.", function () {
-      var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
-      var updateTime = new JulianDate(0.5, 0);
-      var positions = [
+      const times = [new JulianDate(0, 0), new JulianDate(1, 0)];
+      const updateTime = new JulianDate(0.5, 0);
+      const positions = [
         new Cartesian3(1234, 5678, 9101112),
         new Cartesian3(5678, 1234, 1101112),
       ];
 
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PathVisualizer(scene, entityCollection);
 
       expect(scene.primitives.length).toEqual(0);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
-      var position = new SampledPositionProperty();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const position = new SampledPositionProperty();
       testObject.position = position;
       position.addSamples(times, positions);
 
-      var path = (testObject.path = new PathGraphics());
+      const path = (testObject.path = new PathGraphics());
       path.show = new ConstantProperty(true);
       path.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
       path.width = new ConstantProperty(12.5);
@@ -449,30 +449,30 @@ describe(
       path.trailTime = new ConstantProperty(10);
 
       visualizer.update(updateTime);
-      var polylineCollection = scene.primitives.get(0);
-      var primitive = polylineCollection.get(0);
+      const polylineCollection = scene.primitives.get(0);
+      const primitive = polylineCollection.get(0);
       expect(primitive.id).toEqual(testObject);
     });
 
     it("Visualizer destroys primitives when all items are removed.", function () {
-      var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
-      var updateTime = new JulianDate(0.5, 0);
-      var positions = [
+      const times = [new JulianDate(0, 0), new JulianDate(1, 0)];
+      const updateTime = new JulianDate(0.5, 0);
+      const positions = [
         new Cartesian3(1234, 5678, 9101112),
         new Cartesian3(5678, 1234, 1101112),
       ];
 
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PathVisualizer(scene, entityCollection);
 
       expect(scene.primitives.length).toEqual(0);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
-      var position = new SampledPositionProperty();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const position = new SampledPositionProperty();
       testObject.position = position;
       position.addSamples(times, positions);
 
-      var path = (testObject.path = new PathGraphics());
+      const path = (testObject.path = new PathGraphics());
       path.show = new ConstantProperty(true);
       path.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
       path.width = new ConstantProperty(12.5);
@@ -492,15 +492,15 @@ describe(
     });
 
     it("subSample works for constant properties", function () {
-      var property = new ConstantPositionProperty(
+      const property = new ConstantPositionProperty(
         new Cartesian3(1000, 2000, 3000)
       );
-      var start = new JulianDate(0, 0);
-      var stop = new JulianDate(1, 0);
-      var updateTime = new JulianDate(1, 43200);
-      var referenceFrame = ReferenceFrame.FIXED;
-      var maximumStep = 10;
-      var result = PathVisualizer._subSample(
+      const start = new JulianDate(0, 0);
+      const stop = new JulianDate(1, 0);
+      const updateTime = new JulianDate(1, 43200);
+      const referenceFrame = ReferenceFrame.FIXED;
+      const maximumStep = 10;
+      const result = PathVisualizer._subSample(
         property,
         start,
         stop,
@@ -512,24 +512,24 @@ describe(
     });
 
     it("subSample works for reference properties", function () {
-      var property = new ConstantPositionProperty(
+      const property = new ConstantPositionProperty(
         new Cartesian3(1000, 2000, 3000)
       );
-      var start = new JulianDate(0, 0);
-      var stop = new JulianDate(1, 0);
-      var updateTime = new JulianDate(1, 43200);
-      var referenceFrame = ReferenceFrame.FIXED;
-      var maximumStep = 10;
+      const start = new JulianDate(0, 0);
+      const stop = new JulianDate(1, 0);
+      const updateTime = new JulianDate(1, 43200);
+      const referenceFrame = ReferenceFrame.FIXED;
+      const maximumStep = 10;
 
-      var entities = new EntityCollection();
-      var targetEntity = entities.getOrCreateEntity("target");
+      const entities = new EntityCollection();
+      const targetEntity = entities.getOrCreateEntity("target");
       targetEntity.position = property;
 
-      var referenceProperty = new ReferenceProperty(entities, "target", [
+      const referenceProperty = new ReferenceProperty(entities, "target", [
         "position",
       ]);
 
-      var result = PathVisualizer._subSample(
+      const result = PathVisualizer._subSample(
         referenceProperty,
         start,
         stop,
@@ -541,18 +541,18 @@ describe(
     });
 
     it("subSample works for sampled properties", function () {
-      var property = new SampledPositionProperty();
+      const property = new SampledPositionProperty();
 
-      var start = new JulianDate(0, 0);
-      var stop = new JulianDate(1, 0);
+      const start = new JulianDate(0, 0);
+      const stop = new JulianDate(1, 0);
 
       property.addSample(start, new Cartesian3(0, 0, 0));
       property.addSample(stop, new Cartesian3(0, 0, 100));
 
-      var updateTime = new JulianDate(0, 43200);
-      var referenceFrame = ReferenceFrame.FIXED;
-      var maximumStep = 86400;
-      var result = [];
+      let updateTime = new JulianDate(0, 43200);
+      const referenceFrame = ReferenceFrame.FIXED;
+      let maximumStep = 86400;
+      const result = [];
 
       //A large maximum step causes no sub-smapling.
       PathVisualizer._subSample(
@@ -572,7 +572,7 @@ describe(
 
       //An evenly spaced maximum step causes equal steps from start to stop
       maximumStep = 28800;
-      var expectedStep = 28800;
+      let expectedStep = 28800;
       PathVisualizer._subSample(
         property,
         start,
@@ -643,12 +643,12 @@ describe(
     });
 
     it("subSample works for interval properties", function () {
-      var t1 = new JulianDate(0, 0);
-      var t2 = new JulianDate(1, 0);
-      var t3 = new JulianDate(2, 0);
-      var t4 = new JulianDate(3, 0);
+      const t1 = new JulianDate(0, 0);
+      const t2 = new JulianDate(1, 0);
+      const t3 = new JulianDate(2, 0);
+      const t4 = new JulianDate(3, 0);
 
-      var property = new TimeIntervalCollectionPositionProperty();
+      const property = new TimeIntervalCollectionPositionProperty();
       property.intervals.addInterval(
         new TimeInterval({
           start: t1,
@@ -673,10 +673,10 @@ describe(
         })
       );
 
-      var updateTime = new JulianDate(1, 43200);
-      var referenceFrame = ReferenceFrame.FIXED;
-      var maximumStep = 10;
-      var result = [];
+      const updateTime = new JulianDate(1, 43200);
+      const referenceFrame = ReferenceFrame.FIXED;
+      const maximumStep = 10;
+      const result = [];
       PathVisualizer._subSample(
         property,
         t1,
@@ -754,23 +754,23 @@ describe(
     }
 
     it("subSample works for custom properties", function () {
-      var t1 = new JulianDate(0, 0);
-      var t2 = new JulianDate(1, 0);
-      var t3 = new JulianDate(2, 0);
-      var t4 = new JulianDate(3, 0);
-      var updateTime = new JulianDate(1, 1);
+      const t1 = new JulianDate(0, 0);
+      const t2 = new JulianDate(1, 0);
+      const t3 = new JulianDate(2, 0);
+      const t4 = new JulianDate(3, 0);
+      const updateTime = new JulianDate(1, 1);
 
-      var sampledProperty = new SampledPositionProperty();
+      const sampledProperty = new SampledPositionProperty();
       sampledProperty.addSample(t1, new Cartesian3(0, 0, 1));
       sampledProperty.addSample(t2, new Cartesian3(0, 0, 2));
       sampledProperty.addSample(t3, new Cartesian3(0, 0, 3));
       sampledProperty.addSample(t4, new Cartesian3(0, 0, 4));
 
-      var property = new CustomPositionProperty(sampledProperty);
+      const property = new CustomPositionProperty(sampledProperty);
 
-      var referenceFrame = ReferenceFrame.FIXED;
-      var maximumStep = 43200;
-      var result = [];
+      const referenceFrame = ReferenceFrame.FIXED;
+      const maximumStep = 43200;
+      const result = [];
       PathVisualizer._subSample(
         property,
         t1,
@@ -805,18 +805,18 @@ describe(
     });
 
     function createCompositeTest(useReferenceProperty) {
-      var t1 = new JulianDate(0, 0);
-      var t2 = new JulianDate(1, 0);
-      var t3 = new JulianDate(2, 0);
-      var t4 = new JulianDate(3, 0);
-      var t5 = new JulianDate(4, 0);
-      var t6 = new JulianDate(5, 0);
+      const t1 = new JulianDate(0, 0);
+      const t2 = new JulianDate(1, 0);
+      const t3 = new JulianDate(2, 0);
+      const t4 = new JulianDate(3, 0);
+      const t5 = new JulianDate(4, 0);
+      const t6 = new JulianDate(5, 0);
 
-      var constantProperty = new ConstantPositionProperty(
+      const constantProperty = new ConstantPositionProperty(
         new Cartesian3(0, 0, 1)
       );
 
-      var intervalProperty = new TimeIntervalCollectionPositionProperty();
+      const intervalProperty = new TimeIntervalCollectionPositionProperty();
       intervalProperty.intervals.addInterval(
         new TimeInterval({
           start: t1,
@@ -841,24 +841,24 @@ describe(
         })
       );
 
-      var sampledProperty = new SampledPositionProperty();
+      const sampledProperty = new SampledPositionProperty();
       sampledProperty.addSample(t1, new Cartesian3(0, 0, 1));
       sampledProperty.addSample(t2, new Cartesian3(0, 0, 2));
       sampledProperty.addSample(t3, new Cartesian3(0, 0, 3));
       sampledProperty.addSample(t4, new Cartesian3(0, 0, 4));
 
-      var entities = new EntityCollection();
-      var targetEntity = entities.getOrCreateEntity("target");
+      const entities = new EntityCollection();
+      const targetEntity = entities.getOrCreateEntity("target");
       targetEntity.position = new ConstantPositionProperty(
         new Cartesian3(0, 0, 5)
       );
-      var referenceProperty = new ReferenceProperty(entities, "target", [
+      const referenceProperty = new ReferenceProperty(entities, "target", [
         "position",
       ]);
 
-      var scaledProperty = new ScaledPositionProperty(referenceProperty);
+      const scaledProperty = new ScaledPositionProperty(referenceProperty);
 
-      var property = new CompositePositionProperty();
+      const property = new CompositePositionProperty();
       property.intervals.addInterval(
         new TimeInterval({
           start: t1,
@@ -901,14 +901,14 @@ describe(
         })
       );
 
-      var updateTime = new JulianDate(0, 0);
-      var referenceFrame = ReferenceFrame.FIXED;
-      var maximumStep = 43200;
-      var result = [];
+      const updateTime = new JulianDate(0, 0);
+      const referenceFrame = ReferenceFrame.FIXED;
+      const maximumStep = 43200;
+      const result = [];
 
-      var propertyToTest = property;
+      let propertyToTest = property;
       if (useReferenceProperty) {
-        var testReference = entities.getOrCreateEntity("testReference");
+        const testReference = entities.getOrCreateEntity("testReference");
         testReference.position = property;
         propertyToTest = new ReferenceProperty(entities, "testReference", [
           "position",

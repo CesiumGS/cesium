@@ -13,13 +13,13 @@ import createScene from "../../createScene.js";
 import pollToPromise from "../../pollToPromise.js";
 
 describe("Scene/ModelExperimental/CustomShader", function () {
-  var emptyVertexShader =
+  const emptyVertexShader =
     "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {}";
-  var emptyFragmentShader =
+  const emptyFragmentShader =
     "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}";
 
   it("constructs with default values", function () {
-    var customShader = new CustomShader();
+    const customShader = new CustomShader();
 
     expect(customShader.mode).toBe(CustomShaderMode.MODIFY_MATERIAL);
     expect(customShader.lightingModel).not.toBeDefined();
@@ -31,7 +31,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
   });
 
   it("constructs", function () {
-    var customShader = new CustomShader({
+    const customShader = new CustomShader({
       mode: CustomShaderMode.REPLACE_MATERIAL,
       lightingModel: LightingModel.PBR,
       vertexShaderText: emptyVertexShader,
@@ -48,7 +48,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
   });
 
   it("defines uniforms", function () {
-    var uniforms = {
+    const uniforms = {
       u_time: {
         value: 0,
         type: UniformType.FLOAT,
@@ -59,7 +59,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
       },
     };
 
-    var customShader = new CustomShader({
+    const customShader = new CustomShader({
       uniforms: uniforms,
     });
 
@@ -69,28 +69,28 @@ describe("Scene/ModelExperimental/CustomShader", function () {
   });
 
   it("setUniform throws for undefined uniformName", function () {
-    var customShader = new CustomShader();
+    const customShader = new CustomShader();
     expect(function () {
       return customShader.setUniform(undefined, 45);
     }).toThrowDeveloperError();
   });
 
   it("setUniform throws for undefined value", function () {
-    var customShader = new CustomShader();
+    const customShader = new CustomShader();
     expect(function () {
       return customShader.setUniform("u_time", undefined);
     }).toThrowDeveloperError();
   });
 
   it("setUniform throws for undeclared uniform", function () {
-    var customShader = new CustomShader();
+    const customShader = new CustomShader();
     expect(function () {
       return customShader.setUniform("u_time", 10);
     }).toThrowDeveloperError();
   });
 
   it("setUniform updates uniform values", function () {
-    var uniforms = {
+    const uniforms = {
       u_time: {
         value: 0,
         type: UniformType.FLOAT,
@@ -101,7 +101,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
       },
     };
 
-    var customShader = new CustomShader({
+    const customShader = new CustomShader({
       uniforms: uniforms,
     });
 
@@ -111,50 +111,50 @@ describe("Scene/ModelExperimental/CustomShader", function () {
   });
 
   it("setUniform clones vectors", function () {
-    var uniforms = {
+    const uniforms = {
       u_vector: {
         type: UniformType.VEC3,
         value: new Cartesian3(),
       },
     };
 
-    var customShader = new CustomShader({
+    const customShader = new CustomShader({
       uniforms: uniforms,
     });
 
-    var value = new Cartesian3(1, 0, 0);
+    const value = new Cartesian3(1, 0, 0);
     customShader.setUniform("u_vector", value);
-    var result = customShader.uniformMap.u_vector();
+    const result = customShader.uniformMap.u_vector();
     expect(result).toEqual(value);
     expect(result).not.toBe(value);
   });
 
   it("setUniform clones matrices", function () {
-    var uniforms = {
+    const uniforms = {
       u_matrix: {
         type: UniformType.MAT2,
         value: new Matrix2(),
       },
     };
 
-    var customShader = new CustomShader({
+    const customShader = new CustomShader({
       uniforms: uniforms,
     });
 
-    var value = new Matrix2(2, 0, 0, 2);
+    const value = new Matrix2(2, 0, 0, 2);
     customShader.setUniform("u_matrix", value);
-    var result = customShader.uniformMap.u_matrix();
+    const result = customShader.uniformMap.u_matrix();
     expect(result).toEqual(value);
     expect(result).not.toBe(value);
   });
 
   it("declares varyings", function () {
-    var varyings = {
+    const varyings = {
       v_dist_from_center: VaryingType.FLOAT,
       v_computedMatrix: VaryingType.MAT4,
     };
 
-    var customShader = new CustomShader({
+    const customShader = new CustomShader({
       varyings: varyings,
     });
 
@@ -162,16 +162,18 @@ describe("Scene/ModelExperimental/CustomShader", function () {
   });
 
   it("detects input variables in the shader text", function () {
-    var customShader = new CustomShader({
+    const customShader = new CustomShader({
       vertexShaderText: [
         "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
         "{",
+        "    float value = vsInput.featureIds.featureId_0;",
         "    positionMC += vsInput.attributes.expansion * vsInput.attributes.normalMC;",
         "}",
       ].join("\n"),
       fragmentShaderText: [
         "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
         "{",
+        "    float value = fsInput.featureIds.featureId_1 + fsInput.featureIds.instanceFeatureId_0;",
         "    material.normalEC = normalize(fsInput.attributes.normalEC);",
         "    material.diffuse = fsInput.attributes.color_0;",
         "    material.specular = fsInput.attributes.positionWC / 1.0e6;",
@@ -179,13 +181,16 @@ describe("Scene/ModelExperimental/CustomShader", function () {
       ].join("\n"),
     });
 
-    var expectedVertexVariables = {
+    const expectedVertexVariables = {
       attributeSet: {
         expansion: true,
         normalMC: true,
       },
+      featureIdSet: {
+        featureId_0: true,
+      },
     };
-    var expectedFragmentVariables = {
+    const expectedFragmentVariables = {
       attributeSet: {
         normalEC: true,
         color_0: true,
@@ -195,6 +200,10 @@ describe("Scene/ModelExperimental/CustomShader", function () {
         normalEC: true,
         diffuse: true,
         specular: true,
+      },
+      featureIdSet: {
+        featureId_1: true,
+        instanceFeatureId_0: true,
       },
     };
 
@@ -326,7 +335,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
   describe(
     "texture uniforms",
     function () {
-      var scene;
+      let scene;
 
       beforeAll(function () {
         scene = createScene();
@@ -336,10 +345,10 @@ describe("Scene/ModelExperimental/CustomShader", function () {
         scene.destroyForSpecs();
       });
 
-      var shaders = [];
+      const shaders = [];
       afterEach(function () {
-        for (var i = 0; i < shaders.length; i++) {
-          var shader = shaders[i];
+        for (let i = 0; i < shaders.length; i++) {
+          const shader = shaders[i];
           if (!shader.isDestroyed()) {
             shader.destroy();
           }
@@ -347,12 +356,12 @@ describe("Scene/ModelExperimental/CustomShader", function () {
         shaders.length = 0;
       });
 
-      var blueUrl = "Data/Images/Blue2x2.png";
-      var greenUrl = "Data/Images/Green1x4.png";
+      const blueUrl = "Data/Images/Blue2x2.png";
+      const greenUrl = "Data/Images/Green1x4.png";
 
       function waitForTextureLoad(customShader, textureId) {
-        var textureManager = customShader._textureManager;
-        var oldValue = textureManager.getTexture(textureId);
+        const textureManager = customShader._textureManager;
+        const oldValue = textureManager.getTexture(textureId);
         return pollToPromise(function () {
           scene.renderForSpecs();
           customShader.update(scene.frameState);
@@ -367,7 +376,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
       }
 
       it("supports texture uniforms", function () {
-        var customShader = new CustomShader({
+        const customShader = new CustomShader({
           vertexShaderText: emptyVertexShader,
           fragmentShaderText: emptyFragmentShader,
           uniforms: {
@@ -393,7 +402,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
       });
 
       it("can change texture uniform value", function () {
-        var customShader = new CustomShader({
+        const customShader = new CustomShader({
           vertexShaderText: emptyVertexShader,
           fragmentShaderText: emptyFragmentShader,
           uniforms: {
@@ -432,7 +441,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
       });
 
       it("destroys", function () {
-        var customShader = new CustomShader({
+        const customShader = new CustomShader({
           vertexShaderText: emptyVertexShader,
           fragmentShaderText: emptyFragmentShader,
           uniforms: {

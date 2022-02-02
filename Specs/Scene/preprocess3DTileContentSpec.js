@@ -5,17 +5,17 @@ import {
 
 describe("Scene/preprocess3DTileContent", function () {
   function makeBinaryFile(magic) {
-    var binaryFile = new Uint8Array(magic.length + 8);
-    for (var i = 0; i < magic.length; i++) {
+    const binaryFile = new Uint8Array(magic.length + 8);
+    for (let i = 0; i < magic.length; i++) {
       binaryFile[i] = magic.charCodeAt(i);
     }
     return binaryFile;
   }
 
   function makeJsonFile(json) {
-    var jsonString = JSON.stringify(json);
-    var jsonFile = new Uint8Array(jsonString.length);
-    for (var i = 0; i < jsonFile.length; i++) {
+    const jsonString = JSON.stringify(json);
+    const jsonFile = new Uint8Array(jsonString.length);
+    for (let i = 0; i < jsonFile.length; i++) {
       jsonFile[i] = jsonString.charCodeAt(i);
     }
     return jsonFile;
@@ -23,10 +23,10 @@ describe("Scene/preprocess3DTileContent", function () {
 
   it("detects binary contents by magic number", function () {
     // glb is handled in a separate test
-    var magics = ["b3dm", "i3dm", "pnts", "cmpt", "vctr", "geom", "subt"];
+    const magics = ["b3dm", "i3dm", "pnts", "cmpt", "vctr", "geom", "subt"];
     magics.forEach(function (magic) {
-      var typedArray = makeBinaryFile(magic);
-      var results = preprocess3DTileContent(typedArray.buffer);
+      const typedArray = makeBinaryFile(magic);
+      const results = preprocess3DTileContent(typedArray.buffer);
       expect(results).toEqual({
         contentType: magic,
         binaryPayload: typedArray,
@@ -35,15 +35,15 @@ describe("Scene/preprocess3DTileContent", function () {
   });
 
   it("detects external tilesets", function () {
-    var externalTileset = {
+    const externalTileset = {
       asset: {
         version: "1.0",
       },
       geometricError: 100,
       root: {},
     };
-    var payload = makeJsonFile(externalTileset);
-    var results = preprocess3DTileContent(payload.buffer);
+    const payload = makeJsonFile(externalTileset);
+    const results = preprocess3DTileContent(payload.buffer);
     expect(results).toEqual({
       contentType: Cesium3DTileContentType.EXTERNAL_TILESET,
       jsonPayload: externalTileset,
@@ -51,8 +51,8 @@ describe("Scene/preprocess3DTileContent", function () {
   });
 
   it("labels binary glTF as glb", function () {
-    var typedArray = makeBinaryFile("glTF");
-    var results = preprocess3DTileContent(typedArray.buffer);
+    const typedArray = makeBinaryFile("glTF");
+    const results = preprocess3DTileContent(typedArray.buffer);
     expect(results).toEqual({
       contentType: Cesium3DTileContentType.GLTF_BINARY,
       binaryPayload: typedArray,
@@ -60,14 +60,14 @@ describe("Scene/preprocess3DTileContent", function () {
   });
 
   it("detects gltf JSON content", function () {
-    var glTF = {
+    const glTF = {
       asset: {
         version: "1.0",
       },
       meshes: [],
     };
-    var payload = makeJsonFile(glTF);
-    var results = preprocess3DTileContent(payload.buffer);
+    const payload = makeJsonFile(glTF);
+    const results = preprocess3DTileContent(payload.buffer);
     expect(results).toEqual({
       contentType: Cesium3DTileContentType.GLTF,
       jsonPayload: glTF,
@@ -76,7 +76,7 @@ describe("Scene/preprocess3DTileContent", function () {
 
   it("throws for invalid content", function () {
     expect(function () {
-      var payload = makeBinaryFile("fake");
+      const payload = makeBinaryFile("fake");
       preprocess3DTileContent(payload.buffer);
     }).toThrowRuntimeError();
   });

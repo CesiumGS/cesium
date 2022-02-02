@@ -21,9 +21,9 @@ import createScene from "../createScene.js";
 describe(
   "DataSources/PointVisualizer",
   function () {
-    var scene;
-    var entityCluster;
-    var visualizer;
+    let scene;
+    let entityCluster;
+    let visualizer;
 
     beforeAll(function () {
       scene = createScene();
@@ -68,7 +68,7 @@ describe(
     });
 
     it("constructor throws if no scene is passed.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       expect(function () {
         return new PointVisualizer(undefined, entityCollection);
       }).toThrowDeveloperError();
@@ -81,7 +81,7 @@ describe(
     });
 
     it("update throws if no time specified.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PointVisualizer(entityCluster, entityCollection);
       expect(function () {
         visualizer.update();
@@ -89,7 +89,7 @@ describe(
     });
 
     it("isDestroy returns false until destroyed.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PointVisualizer(entityCluster, entityCollection);
       expect(visualizer.isDestroyed()).toEqual(false);
       visualizer.destroy();
@@ -98,7 +98,7 @@ describe(
     });
 
     it("removes the listener from the entity collection when destroyed", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PointVisualizer(entityCluster, entityCollection);
       expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
       visualizer.destroy();
@@ -107,10 +107,10 @@ describe(
     });
 
     it("object with no point does not create a pointPrimitive.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PointVisualizer(entityCluster, entityCollection);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantProperty(
         new Cartesian3(1234, 5678, 9101112)
       );
@@ -119,11 +119,11 @@ describe(
     });
 
     it("object with no position does not create a pointPrimitive.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PointVisualizer(entityCluster, entityCollection);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
-      var point = (testObject.point = new PointGraphics());
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const point = (testObject.point = new PointGraphics());
       point.show = new ConstantProperty(true);
 
       visualizer.update(JulianDate.now());
@@ -131,12 +131,12 @@ describe(
     });
 
     it("A PointGraphics causes a PointPrimitive to be created and updated.", function () {
-      var time = JulianDate.now();
+      const time = JulianDate.now();
 
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PointVisualizer(entityCluster, entityCollection);
 
-      var entity = entityCollection.add({
+      const entity = entityCollection.add({
         position: new Cartesian3(1234, 5678, 9101112),
         point: {
           show: true,
@@ -149,14 +149,14 @@ describe(
           disableDepthTestDistance: 10.0,
         },
       });
-      var point = entity.point;
+      const point = entity.point;
 
       visualizer.update(time);
 
-      var pointPrimitiveCollection = entityCluster._pointCollection;
+      const pointPrimitiveCollection = entityCluster._pointCollection;
       expect(pointPrimitiveCollection).toBeInstanceOf(PointPrimitiveCollection);
       expect(pointPrimitiveCollection.length).toEqual(1);
-      var pointPrimitive = pointPrimitiveCollection.get(0);
+      const pointPrimitive = pointPrimitiveCollection.get(0);
 
       expect(pointPrimitive.show).toEqual(point.show.getValue(time));
       expect(pointPrimitive.position).toEqual(entity.position.getValue(time));
@@ -215,12 +215,12 @@ describe(
     });
 
     it("A PointGraphics on terrain causes a Billboard to be created and updated.", function () {
-      var time = JulianDate.now();
+      const time = JulianDate.now();
 
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PointVisualizer(entityCluster, entityCollection);
 
-      var entity = entityCollection.add({
+      const entity = entityCollection.add({
         position: new Cartesian3(1234, 5678, 9101112),
         point: {
           show: true,
@@ -234,14 +234,14 @@ describe(
           heightReference: HeightReference.CLAMP_TO_GROUND,
         },
       });
-      var point = entity.point;
+      const point = entity.point;
 
       visualizer.update(time);
 
-      var billboardCollection = entityCluster._billboardCollection;
+      const billboardCollection = entityCluster._billboardCollection;
       expect(billboardCollection).toBeInstanceOf(BillboardCollection);
       expect(billboardCollection.length).toEqual(1);
-      var billboard = billboardCollection.get(0);
+      const billboard = billboardCollection.get(0);
 
       expect(billboard.show).toEqual(point.show.getValue(time));
       expect(billboard.position).toEqual(entity.position.getValue(time));
@@ -292,11 +292,11 @@ describe(
     });
 
     it("Reuses primitives when hiding one and showing another", function () {
-      var time = JulianDate.now();
-      var entityCollection = new EntityCollection();
+      const time = JulianDate.now();
+      const entityCollection = new EntityCollection();
       visualizer = new PointVisualizer(entityCluster, entityCollection);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantProperty(
         new Cartesian3(1234, 5678, 9101112)
       );
@@ -305,7 +305,7 @@ describe(
 
       visualizer.update(time);
 
-      var pointPrimitiveCollection = entityCluster._pointCollection;
+      const pointPrimitiveCollection = entityCluster._pointCollection;
       expect(pointPrimitiveCollection.length).toEqual(1);
 
       testObject.point.show = new ConstantProperty(false);
@@ -314,7 +314,7 @@ describe(
 
       expect(pointPrimitiveCollection.length).toEqual(1);
 
-      var testObject2 = entityCollection.getOrCreateEntity("test2");
+      const testObject2 = entityCollection.getOrCreateEntity("test2");
       testObject2.position = new ConstantProperty(
         new Cartesian3(1234, 5678, 9101112)
       );
@@ -326,21 +326,21 @@ describe(
     });
 
     it("clear hides pointPrimitives.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PointVisualizer(entityCluster, entityCollection);
-      var testObject = entityCollection.getOrCreateEntity("test");
-      var time = JulianDate.now();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const time = JulianDate.now();
 
       testObject.position = new ConstantProperty(
         new Cartesian3(1234, 5678, 9101112)
       );
-      var point = (testObject.point = new PointGraphics());
+      const point = (testObject.point = new PointGraphics());
       point.show = new ConstantProperty(true);
       visualizer.update(time);
 
-      var pointPrimitiveCollection = entityCluster._pointCollection;
+      const pointPrimitiveCollection = entityCluster._pointCollection;
       expect(pointPrimitiveCollection.length).toEqual(1);
-      var bb = pointPrimitiveCollection.get(0);
+      const bb = pointPrimitiveCollection.get(0);
 
       visualizer.update(time);
       //Clearing won't actually remove the pointPrimitive because of the
@@ -351,12 +351,12 @@ describe(
     });
 
     it("Visualizer sets entity property.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PointVisualizer(entityCluster, entityCollection);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
-      var time = JulianDate.now();
-      var point = (testObject.point = new PointGraphics());
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const time = JulianDate.now();
+      const point = (testObject.point = new PointGraphics());
 
       testObject.position = new ConstantProperty(
         new Cartesian3(1234, 5678, 9101112)
@@ -365,19 +365,19 @@ describe(
 
       visualizer.update(time);
 
-      var pointPrimitiveCollection = entityCluster._pointCollection;
+      const pointPrimitiveCollection = entityCluster._pointCollection;
       expect(pointPrimitiveCollection.length).toEqual(1);
-      var bb = pointPrimitiveCollection.get(0);
+      const bb = pointPrimitiveCollection.get(0);
       expect(bb.id).toEqual(testObject);
     });
 
     it("Computes bounding sphere.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PointVisualizer(entityCluster, entityCollection);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
-      var time = JulianDate.now();
-      var point = (testObject.point = new PointGraphics());
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const time = JulianDate.now();
+      const point = (testObject.point = new PointGraphics());
 
       testObject.position = new ConstantProperty(
         new Cartesian3(1234, 5678, 9101112)
@@ -386,8 +386,8 @@ describe(
 
       visualizer.update(time);
 
-      var result = new BoundingSphere();
-      var state = visualizer.getBoundingSphere(testObject, result);
+      const result = new BoundingSphere();
+      const state = visualizer.getBoundingSphere(testObject, result);
 
       expect(state).toBe(BoundingSphereState.DONE);
       expect(result.center).toEqual(testObject.position.getValue());
@@ -395,27 +395,27 @@ describe(
     });
 
     it("Fails bounding sphere for entity without pointPrimitive.", function () {
-      var entityCollection = new EntityCollection();
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const entityCollection = new EntityCollection();
+      const testObject = entityCollection.getOrCreateEntity("test");
       visualizer = new PointVisualizer(entityCluster, entityCollection);
       visualizer.update(JulianDate.now());
-      var result = new BoundingSphere();
-      var state = visualizer.getBoundingSphere(testObject, result);
+      const result = new BoundingSphere();
+      const state = visualizer.getBoundingSphere(testObject, result);
       expect(state).toBe(BoundingSphereState.FAILED);
     });
 
     it("Compute bounding sphere throws without entity.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new PointVisualizer(entityCluster, entityCollection);
-      var result = new BoundingSphere();
+      const result = new BoundingSphere();
       expect(function () {
         visualizer.getBoundingSphere(undefined, result);
       }).toThrowDeveloperError();
     });
 
     it("Compute bounding sphere throws without result.", function () {
-      var entityCollection = new EntityCollection();
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const entityCollection = new EntityCollection();
+      const testObject = entityCollection.getOrCreateEntity("test");
       visualizer = new PointVisualizer(entityCluster, entityCollection);
       expect(function () {
         visualizer.getBoundingSphere(testObject, undefined);

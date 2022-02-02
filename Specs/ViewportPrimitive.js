@@ -3,7 +3,7 @@ import { destroyObject } from "../Source/Cesium.js";
 import { Pass } from "../Source/Cesium.js";
 import { RenderState } from "../Source/Cesium.js";
 
-var ViewportPrimitive = function (fragmentShader) {
+const ViewportPrimitive = function (fragmentShader) {
   this._fs = fragmentShader;
   this._command = undefined;
 };

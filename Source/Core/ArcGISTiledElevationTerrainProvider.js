@@ -20,7 +20,7 @@ import TileAvailability from "./TileAvailability.js";
 import TileProviderError from "./TileProviderError.js";
 import WebMercatorTilingScheme from "./WebMercatorTilingScheme.js";
 
-var ALL_CHILDREN = 15;
+const ALL_CHILDREN = 15;
 
 /**
  * A {@link TerrainProvider} that produces terrain geometry by tessellating height maps
@@ -37,7 +37,7 @@ var ALL_CHILDREN = 15;
  *                    If neither parameter is specified, the WGS84 ellipsoid is used.
  *
  * @example
- * var terrainProvider = new Cesium.ArcGISTiledElevationTerrainProvider({
+ * const terrainProvider = new Cesium.ArcGISTiledElevationTerrainProvider({
  *   url : 'https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer',
  *   token : 'KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg..'
  * });
@@ -62,18 +62,18 @@ function ArcGISTiledElevationTerrainProvider(options) {
   this._width = undefined;
   this._height = undefined;
   this._encoding = undefined;
-  var token = options.token;
+  const token = options.token;
 
   this._hasAvailability = false;
   this._tilesAvailable = undefined;
   this._tilesAvailablityLoaded = undefined;
   this._availableCache = {};
 
-  var that = this;
-  var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  const that = this;
+  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
   this._readyPromise = when(options.url)
     .then(function (url) {
-      var resource = Resource.createIfNeeded(url);
+      let resource = Resource.createIfNeeded(url);
       resource.appendForwardSlash();
       if (defined(token)) {
         resource = resource.getDerivedResource({
@@ -84,7 +84,7 @@ function ArcGISTiledElevationTerrainProvider(options) {
       }
       that._resource = resource;
 
-      var metadataResource = resource.getDerivedResource({
+      const metadataResource = resource.getDerivedResource({
         queryParameters: {
           f: "pjson",
         },
@@ -93,18 +93,18 @@ function ArcGISTiledElevationTerrainProvider(options) {
       return metadataResource.fetchJson();
     })
     .then(function (metadata) {
-      var copyrightText = metadata.copyrightText;
+      const copyrightText = metadata.copyrightText;
       if (defined(copyrightText)) {
         that._credit = new Credit(copyrightText);
       }
 
-      var spatialReference = metadata.spatialReference;
-      var wkid = defaultValue(
+      const spatialReference = metadata.spatialReference;
+      const wkid = defaultValue(
         spatialReference.latestWkid,
         spatialReference.wkid
       );
-      var extent = metadata.extent;
-      var tilingSchemeOptions = {
+      const extent = metadata.extent;
+      const tilingSchemeOptions = {
         ellipsoid: ellipsoid,
       };
       if (wkid === 4326) {
@@ -129,7 +129,7 @@ function ArcGISTiledElevationTerrainProvider(options) {
         return when.reject(new RuntimeError("Invalid spatial reference"));
       }
 
-      var tileInfo = metadata.tileInfo;
+      const tileInfo = metadata.tileInfo;
       if (!defined(tileInfo)) {
         return when.reject(new RuntimeError("tileInfo is required"));
       }
@@ -142,7 +142,7 @@ function ArcGISTiledElevationTerrainProvider(options) {
           : HeightmapEncoding.NONE;
       that._lodCount = tileInfo.lods.length - 1;
 
-      var hasAvailability = (that._hasAvailability =
+      const hasAvailability = (that._hasAvailability =
         metadata.capabilities.indexOf("Tilemap") !== -1);
       if (hasAvailability) {
         that._tilesAvailable = new TileAvailability(
@@ -185,7 +185,7 @@ function ArcGISTiledElevationTerrainProvider(options) {
       return true;
     })
     .otherwise(function (error) {
-      var message =
+      const message =
         "An error occurred while accessing " + that._resource.url + ".";
       TileProviderError.handleError(undefined, that, that._errorEvent, message);
       return when.reject(error);
@@ -350,32 +350,37 @@ ArcGISTiledElevationTerrainProvider.prototype.requestTileGeometry = function (
   }
   //>>includeEnd('debug');
 
-  var tileResource = this._resource.getDerivedResource({
+  const tileResource = this._resource.getDerivedResource({
     url: "tile/" + level + "/" + y + "/" + x,
     request: request,
   });
 
-  var hasAvailability = this._hasAvailability;
-  var availabilityPromise = when.resolve(true);
-  var availabilityRequest;
+  const hasAvailability = this._hasAvailability;
+  let availabilityPromise = when.resolve(true);
+  let availabilityRequest;
   if (
     hasAvailability &&
     !defined(isTileAvailable(this, level + 1, x * 2, y * 2))
   ) {
     // We need to load child availability
-    var availabilityResult = requestAvailability(this, level + 1, x * 2, y * 2);
+    const availabilityResult = requestAvailability(
+      this,
+      level + 1,
+      x * 2,
+      y * 2
+    );
 
     availabilityPromise = availabilityResult.promise;
     availabilityRequest = availabilityResult.request;
   }
 
-  var promise = tileResource.fetchArrayBuffer();
+  const promise = tileResource.fetchArrayBuffer();
   if (!defined(promise) || !defined(availabilityPromise)) {
     return undefined;
   }
 
-  var that = this;
-  var tilesAvailable = this._tilesAvailable;
+  const that = this;
+  const tilesAvailable = this._tilesAvailable;
   return when
     .join(promise, availabilityPromise)
     .then(function (result) {
@@ -413,8 +418,8 @@ function isTileAvailable(that, level, x, y) {
     return undefined;
   }
 
-  var tilesAvailablityLoaded = that._tilesAvailablityLoaded;
-  var tilesAvailable = that._tilesAvailable;
+  const tilesAvailablityLoaded = that._tilesAvailablityLoaded;
+  const tilesAvailable = that._tilesAvailable;
 
   if (level > that._lodCount) {
     return false;
@@ -470,7 +475,7 @@ ArcGISTiledElevationTerrainProvider.prototype.getTileDataAvailable = function (
     return undefined;
   }
 
-  var result = isTileAvailable(this, level, x, y);
+  const result = isTileAvailable(this, level, x, y);
   if (defined(result)) {
     return result;
   }
@@ -497,32 +502,32 @@ ArcGISTiledElevationTerrainProvider.prototype.loadTileDataAvailability = functio
 };
 
 function findRange(origin, width, height, data) {
-  var endCol = width - 1;
-  var endRow = height - 1;
+  const endCol = width - 1;
+  const endRow = height - 1;
 
-  var value = data[origin.y * width + origin.x];
-  var endingIndices = [];
-  var range = {
+  const value = data[origin.y * width + origin.x];
+  const endingIndices = [];
+  const range = {
     startX: origin.x,
     startY: origin.y,
     endX: 0,
     endY: 0,
   };
 
-  var corner = new Cartesian2(origin.x + 1, origin.y + 1);
-  var doneX = false;
-  var doneY = false;
+  const corner = new Cartesian2(origin.x + 1, origin.y + 1);
+  let doneX = false;
+  let doneY = false;
   while (!(doneX && doneY)) {
     // We want to use the original value when checking Y,
     //  so get it before it possibly gets incremented
-    var endX = corner.x;
+    let endX = corner.x;
 
     // If we no longer move in the Y direction we need to check the corner tile in X pass
-    var endY = doneY ? corner.y + 1 : corner.y;
+    const endY = doneY ? corner.y + 1 : corner.y;
 
     // Check X range
     if (!doneX) {
-      for (var y = origin.y; y < endY; ++y) {
+      for (let y = origin.y; y < endY; ++y) {
         if (data[y * width + corner.x] !== value) {
           doneX = true;
           break;
@@ -546,8 +551,8 @@ function findRange(origin, width, height, data) {
 
     // Check Y range - The corner tile is checked here
     if (!doneY) {
-      var col = corner.y * width;
-      for (var x = origin.x; x <= endX; ++x) {
+      const col = corner.y * width;
+      for (let x = origin.x; x <= endX; ++x) {
         if (data[col + x] !== value) {
           doneY = true;
           break;
@@ -577,9 +582,9 @@ function findRange(origin, width, height, data) {
 }
 
 function computeAvailability(x, y, width, height, data) {
-  var ranges = [];
+  const ranges = [];
 
-  var singleValue = data.every(function (val) {
+  const singleValue = data.every(function (val) {
     return val === data[0];
   });
   if (singleValue) {
@@ -595,14 +600,14 @@ function computeAvailability(x, y, width, height, data) {
     return ranges;
   }
 
-  var positions = [new Cartesian2(0, 0)];
+  let positions = [new Cartesian2(0, 0)];
   while (positions.length > 0) {
-    var origin = positions.pop();
-    var result = findRange(origin, width, height, data);
+    const origin = positions.pop();
+    const result = findRange(origin, width, height, data);
 
     if (result.value === 1) {
       // Convert range into the array into global tile coordinates
-      var range = result.range;
+      const range = result.range;
       range.startX += x;
       range.endX += x;
       range.startY += y;
@@ -610,7 +615,7 @@ function computeAvailability(x, y, width, height, data) {
       ranges.push(range);
     }
 
-    var endingIndices = result.endingIndices;
+    const endingIndices = result.endingIndices;
     if (endingIndices.length > 0) {
       positions = positions.concat(endingIndices);
     }
@@ -625,36 +630,36 @@ function requestAvailability(that, level, x, y) {
   }
 
   // Fetch 128x128 availability list, so we make the minimum amount of requests
-  var xOffset = Math.floor(x / 128) * 128;
-  var yOffset = Math.floor(y / 128) * 128;
+  const xOffset = Math.floor(x / 128) * 128;
+  const yOffset = Math.floor(y / 128) * 128;
 
-  var dim = Math.min(1 << level, 128);
-  var url =
+  const dim = Math.min(1 << level, 128);
+  const url =
     "tilemap/" + level + "/" + yOffset + "/" + xOffset + "/" + dim + "/" + dim;
 
-  var availableCache = that._availableCache;
+  const availableCache = that._availableCache;
   if (defined(availableCache[url])) {
     return availableCache[url];
   }
 
-  var request = new Request({
+  const request = new Request({
     throttle: false,
     throttleByServer: true,
     type: RequestType.TERRAIN,
   });
 
-  var tilemapResource = that._resource.getDerivedResource({
+  const tilemapResource = that._resource.getDerivedResource({
     url: url,
     request: request,
   });
 
-  var promise = tilemapResource.fetchJson();
+  let promise = tilemapResource.fetchJson();
   if (!defined(promise)) {
     return {};
   }
 
   promise = promise.then(function (result) {
-    var available = computeAvailability(
+    const available = computeAvailability(
       xOffset,
       yOffset,
       dim,
@@ -671,9 +676,9 @@ function requestAvailability(that, level, x, y) {
       yOffset + dim
     );
 
-    var tilesAvailable = that._tilesAvailable;
-    for (var i = 0; i < available.length; ++i) {
-      var range = available[i];
+    const tilesAvailable = that._tilesAvailable;
+    for (let i = 0; i < available.length; ++i) {
+      const range = available[i];
       tilesAvailable.addAvailableTileRange(
         level,
         range.startX,

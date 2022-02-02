@@ -68,7 +68,7 @@ Object.defineProperties(CubeMapFace.prototype, {
  *
  * @example
  * // Create a cubemap with 1x1 faces, and make the +x face red.
- * var cubeMap = new CubeMap({
+ * const cubeMap = new CubeMap({
  *   context : context
  *   width : 1,
  *   height : 1
@@ -86,8 +86,8 @@ CubeMapFace.prototype.copyFrom = function (options) {
   Check.defined("options", options);
   //>>includeEnd('debug');
 
-  var xOffset = defaultValue(options.xOffset, 0);
-  var yOffset = defaultValue(options.yOffset, 0);
+  const xOffset = defaultValue(options.xOffset, 0);
+  const yOffset = defaultValue(options.yOffset, 0);
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.source", options.source);
@@ -105,32 +105,32 @@ CubeMapFace.prototype.copyFrom = function (options) {
   }
   //>>includeEnd('debug');
 
-  var source = options.source;
+  const source = options.source;
 
-  var gl = this._context._gl;
-  var target = this._textureTarget;
-  var targetFace = this._targetFace;
+  const gl = this._context._gl;
+  const target = this._textureTarget;
+  const targetFace = this._targetFace;
 
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(target, this._texture);
 
-  var width = source.width;
-  var height = source.height;
-  var arrayBufferView = source.arrayBufferView;
+  const width = source.width;
+  const height = source.height;
+  let arrayBufferView = source.arrayBufferView;
 
-  var size = this._size;
-  var pixelFormat = this._pixelFormat;
-  var internalFormat = this._internalFormat;
-  var pixelDatatype = this._pixelDatatype;
+  const size = this._size;
+  const pixelFormat = this._pixelFormat;
+  const internalFormat = this._internalFormat;
+  const pixelDatatype = this._pixelDatatype;
 
-  var preMultiplyAlpha = this._preMultiplyAlpha;
-  var flipY = this._flipY;
-  var skipColorSpaceConversion = defaultValue(
+  const preMultiplyAlpha = this._preMultiplyAlpha;
+  const flipY = this._flipY;
+  const skipColorSpaceConversion = defaultValue(
     options.skipColorSpaceConversion,
     false
   );
 
-  var unpackAlignment = 4;
+  let unpackAlignment = 4;
   if (defined(arrayBufferView)) {
     unpackAlignment = PixelFormat.alignmentInBytes(
       pixelFormat,
@@ -150,7 +150,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
     );
   }
 
-  var uploaded = false;
+  let uploaded = false;
   if (!this._initialized) {
     if (xOffset === 0 && yOffset === 0 && width === size && height === size) {
       // initialize the entire texture
@@ -198,7 +198,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
       // initialize the entire texture to zero
-      var bufferView = PixelFormat.createTypedArray(
+      const bufferView = PixelFormat.createTypedArray(
         pixelFormat,
         pixelDatatype,
         size,
@@ -340,8 +340,8 @@ CubeMapFace.prototype.copyFromFramebuffer = function (
   }
   //>>includeEnd('debug');
 
-  var gl = this._context._gl;
-  var target = this._textureTarget;
+  const gl = this._context._gl;
+  const target = this._textureTarget;
 
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(target, this._texture);

@@ -100,7 +100,7 @@ require({
 ) {
   "use strict";
   // attach clipboard handling to our Copy button
-  var clipboardjs = new ClipboardJS(".copyButton");
+  const clipboardjs = new ClipboardJS(".copyButton");
 
   function defined(value) {
     return value !== undefined && value !== null;
@@ -115,11 +115,11 @@ require({
     },
   }).play();
 
-  var numberOfNewConsoleMessages = 0;
+  let numberOfNewConsoleMessages = 0;
 
-  var logOutput = document.getElementById("logOutput");
+  const logOutput = document.getElementById("logOutput");
   function appendConsole(className, message, showConsole) {
-    var ele = document.createElement("span");
+    const ele = document.createElement("span");
     ele.className = className;
     ele.textContent = message + "\n";
     logOutput.appendChild(ele);
@@ -135,17 +135,17 @@ require({
     }
   }
 
-  var URL = window.URL || window.webkitURL;
+  const URL = window.URL || window.webkitURL;
 
   function findCssStyle(selectorText) {
     for (
-      var iSheets = 0, lenSheets = document.styleSheets.length;
+      let iSheets = 0, lenSheets = document.styleSheets.length;
       iSheets < lenSheets;
       ++iSheets
     ) {
-      var rules = document.styleSheets[iSheets].cssRules;
+      const rules = document.styleSheets[iSheets].cssRules;
       for (
-        var iRules = 0, lenRules = rules.length;
+        let iRules = 0, lenRules = rules.length;
         iRules < lenRules;
         ++iRules
       ) {
@@ -156,52 +156,52 @@ require({
     }
   }
 
-  var jsEditor;
-  var htmlEditor;
-  var suggestButton = registry.byId("buttonSuggest");
-  var docTimer;
-  var docTabs = {};
-  var subtabs = {};
-  var docError = false;
-  var galleryError = false;
-  var deferredLoadError = false;
-  var galleryTooltipTimer;
-  var activeGalleryTooltipDemo;
-  var demoTileHeightRule = findCssStyle(".demoTileThumbnail");
-  var cesiumContainer = registry.byId("cesiumContainer");
-  var docNode = dom.byId("docPopup");
-  var docMessage = dom.byId("docPopupMessage");
-  var local = {
+  /* eslint-disable-next-line prefer-const */
+  let jsEditor;
+  const suggestButton = registry.byId("buttonSuggest");
+  let docTimer;
+  const docTabs = {};
+  const subtabs = {};
+  let docError = false;
+  const galleryError = false;
+  let deferredLoadError = false;
+  let galleryTooltipTimer;
+  let activeGalleryTooltipDemo;
+  const demoTileHeightRule = findCssStyle(".demoTileThumbnail");
+  const cesiumContainer = registry.byId("cesiumContainer");
+  const docNode = dom.byId("docPopup");
+  const docMessage = dom.byId("docPopupMessage");
+  const local = {
     docTypes: [],
     headers: "<html><head></head><body>",
     bucketName: "",
     emptyBucket: "",
   };
-  var bucketTypes = {};
-  var demoTooltips = {};
-  var errorLines = [];
-  var highlightLines = [];
-  var searchTerm = "";
-  var searchRegExp;
-  var hintTimer;
-  var defaultDemo = "Hello World";
-  var defaultLabel = "Showcases";
-  var currentTab = defaultLabel;
-  var newDemo;
-  var demoHtml = "";
-  var demoCode = "";
+  const bucketTypes = {};
+  const demoTooltips = {};
+  const errorLines = [];
+  const highlightLines = [];
+  let searchTerm = "";
+  let searchRegExp;
+  let hintTimer;
+  const defaultDemo = "Hello World";
+  const defaultLabel = "Showcases";
+  let currentTab = defaultLabel;
+  let newDemo;
+  let demoHtml = "";
+  let demoCode = "";
 
-  var defaultHtml =
+  const defaultHtml =
     '<style>\n@import url(../templates/bucket.css);\n</style>\n<div id="cesiumContainer" class="fullSize"></div>\n<div id="loadingOverlay"><h1>Loading...</h1></div>\n<div id="toolbar"></div>';
 
-  var galleryErrorMsg = document.createElement("span");
+  const galleryErrorMsg = document.createElement("span");
   galleryErrorMsg.className = "galleryError";
   galleryErrorMsg.style.display = "none";
   galleryErrorMsg.textContent = "No demos match your search terms.";
 
-  var bucketFrame = document.getElementById("bucketFrame");
-  var bucketPane = registry.byId("bucketPane");
-  var bucketWaiting = false;
+  const bucketFrame = document.getElementById("bucketFrame");
+  const bucketPane = registry.byId("bucketPane");
+  let bucketWaiting = false;
 
   xhr
     .get({
@@ -218,7 +218,7 @@ require({
       local.docTypes = value;
     });
 
-  var decoderSpan = document.createElement("span");
+  const decoderSpan = document.createElement("span");
   function encodeHTML(text) {
     decoderSpan.textContent = text;
     text = decoderSpan.innerHTML;
@@ -271,10 +271,10 @@ require({
   }
 
   function showDocPopup() {
-    var selectedText = jsEditor.getSelection();
-    var lowerText = selectedText.toLowerCase();
+    const selectedText = jsEditor.getSelection();
+    const lowerText = selectedText.toLowerCase();
 
-    var onDocClick = function () {
+    const onDocClick = function () {
       openDocTab(this.textContent, this.href);
       return false;
     };
@@ -288,9 +288,9 @@ require({
       typeof local.docTypes[lowerText].push === "function"
     ) {
       docMessage.innerHTML = "";
-      for (var i = 0, len = local.docTypes[lowerText].length; i < len; ++i) {
-        var member = local.docTypes[lowerText][i];
-        var ele = document.createElement("a");
+      for (let i = 0, len = local.docTypes[lowerText].length; i < len; ++i) {
+        const member = local.docTypes[lowerText][i];
+        const ele = document.createElement("a");
         ele.target = "_blank";
         ele.textContent = member
           .replace(".html", "")
@@ -315,7 +315,7 @@ require({
   }
 
   function makeLineLabel(msg, className) {
-    var element = document.createElement("abbr");
+    const element = document.createElement("abbr");
     element.className = className;
     switch (className) {
       case "hintMarker":
@@ -341,8 +341,9 @@ require({
   function openGalleryTooltip() {
     galleryTooltipTimer = undefined;
 
-    var selectedTabName = registry.byId("innerPanel").selectedChildWidget.title;
-    var suffix = selectedTabName + "Demos";
+    const selectedTabName = registry.byId("innerPanel").selectedChildWidget
+      .title;
+    let suffix = selectedTabName + "Demos";
     if (selectedTabName === "All") {
       suffix = "all";
     } else if (selectedTabName === "Search Results") {
@@ -374,9 +375,9 @@ require({
   }
 
   function clearErrorsAddHints() {
-    var line;
-    var i;
-    var len;
+    let line;
+    let i;
+    let len;
     hintTimer = undefined;
     closeGalleryTooltip();
     jsEditor.clearGutter("hintGutter");
@@ -391,9 +392,9 @@ require({
       line = highlightLines.pop();
       jsEditor.removeLineClass(line, "text");
     }
-    var code = jsEditor.getValue();
+    const code = jsEditor.getValue();
     if (searchTerm !== "") {
-      var codeLines = code.split("\n");
+      const codeLines = code.split("\n");
       for (i = 0, len = codeLines.length; i < len; ++i) {
         if (searchRegExp.test(codeLines[i])) {
           line = jsEditor.setGutterMarker(
@@ -407,14 +408,14 @@ require({
       }
     }
     // make a copy of the options, JSHint modifies the object it's given
-    var options = JSON.parse(JSON.stringify(sandcastleJsHintOptions));
+    const options = JSON.parse(JSON.stringify(sandcastleJsHintOptions));
     /*eslint-disable new-cap*/
     if (
       !JSHINT(embedInSandcastleTemplate(jsEditor.getValue(), false), options)
     ) {
-      var hints = JSHINT.errors;
+      const hints = JSHINT.errors;
       for (i = 0, len = hints.length; i < len; ++i) {
-        var hint = hints[i];
+        const hint = hints[i];
         if (hint !== null && defined(hint.reason) && hint.line > 0) {
           line = jsEditor.setGutterMarker(
             scriptLineToEditorLine(hint.line),
@@ -474,7 +475,7 @@ require({
   }
 
   function highlightLine(lineNum) {
-    var line;
+    let line;
     jsEditor.clearGutter("highlightGutter");
     while (highlightLines.length > 0) {
       line = highlightLines.pop();
@@ -493,7 +494,7 @@ require({
     }
   }
 
-  var tabs = registry.byId("bottomPanel");
+  const tabs = registry.byId("bottomPanel");
 
   function showGallery() {
     tabs.selectChild(registry.byId("innerPanel"));
@@ -563,22 +564,25 @@ require({
   jsEditor.on("cursorActivity", onCursorActivity);
   jsEditor.on("change", scheduleHint);
 
-  htmlEditor = CodeMirror.fromTextArea(document.getElementById("htmlBody"), {
-    mode: "text/html",
-    lineNumbers: true,
-    matchBrackets: true,
-    indentUnit: 2,
-    viewportMargin: 1300,
-    extraKeys: {
-      F8: "runCesium",
-      Tab: "indentMore",
-      "Shift-Tab": "indentLess",
-    },
-  });
+  const htmlEditor = CodeMirror.fromTextArea(
+    document.getElementById("htmlBody"),
+    {
+      mode: "text/html",
+      lineNumbers: true,
+      matchBrackets: true,
+      indentUnit: 2,
+      viewportMargin: 1300,
+      extraKeys: {
+        F8: "runCesium",
+        Tab: "indentMore",
+        "Shift-Tab": "indentLess",
+      },
+    }
+  );
 
   window.onbeforeunload = function (e) {
-    var htmlText = htmlEditor.getValue().replace(/\s/g, "");
-    var jsText = jsEditor.getValue().replace(/\s/g, "");
+    const htmlText = htmlEditor.getValue().replace(/\s/g, "");
+    const jsText = jsEditor.getValue().replace(/\s/g, "");
     if (demoHtml !== htmlText || demoCode !== jsText) {
       return "Be sure to save a copy of any important edits before leaving this page.";
     }
@@ -594,13 +598,13 @@ require({
       }
     });
 
-  var scriptCodeRegex = /\/\/Sandcastle_Begin\s*([\s\S]*)\/\/Sandcastle_End/;
+  const scriptCodeRegex = /\/\/Sandcastle_Begin\s*([\s\S]*)\/\/Sandcastle_End/;
 
   function activateBucketScripts(bucketDoc) {
-    var headNodes = bucketDoc.head.childNodes;
-    var node;
-    var nodes = [];
-    var i, len;
+    const headNodes = bucketDoc.head.childNodes;
+    let node;
+    const nodes = [];
+    let i, len;
     for (i = 0, len = headNodes.length; i < len; ++i) {
       node = headNodes[i];
       // header is included in blank frame.
@@ -617,11 +621,11 @@ require({
     }
 
     // Apply user HTML to bucket.
-    var htmlElement = bucketDoc.createElement("div");
+    const htmlElement = bucketDoc.createElement("div");
     htmlElement.innerHTML = htmlEditor.getValue();
     bucketDoc.body.appendChild(htmlElement);
 
-    var onScriptTagError = function () {
+    const onScriptTagError = function () {
       if (bucketFrame.contentDocument === bucketDoc) {
         appendConsole("consoleError", "Error loading " + this.src, true);
         appendConsole(
@@ -633,7 +637,7 @@ require({
     };
 
     // Load each script after the previous one has loaded.
-    var loadScript = function () {
+    const loadScript = function () {
       if (bucketFrame.contentDocument !== bucketDoc) {
         // A newer reload has happened, abort this.
         return;
@@ -641,15 +645,15 @@ require({
       if (nodes.length > 0) {
         while (nodes.length > 0) {
           node = nodes.shift();
-          var scriptElement = bucketDoc.createElement("script");
-          var hasSrc = false;
+          const scriptElement = bucketDoc.createElement("script");
+          let hasSrc = false;
           for (
-            var j = 0, numAttrs = node.attributes.length;
+            let j = 0, numAttrs = node.attributes.length;
             j < numAttrs;
             ++j
           ) {
-            var name = node.attributes[j].name;
-            var val = node.attributes[j].value;
+            const name = node.attributes[j].name;
+            const val = node.attributes[j].value;
             scriptElement.setAttribute(name, val);
             if (name === "src" && val) {
               hasSrc = true;
@@ -667,10 +671,10 @@ require({
         }
       } else {
         // Apply user JS to bucket
-        var element = bucketDoc.createElement("script");
+        const element = bucketDoc.createElement("script");
 
         // Firefox line numbers are zero-based, not one-based.
-        var isFirefox = navigator.userAgent.indexOf("Firefox/") >= 0;
+        const isFirefox = navigator.userAgent.indexOf("Firefox/") >= 0;
 
         element.textContent = embedInSandcastleTemplate(
           jsEditor.getValue(),
@@ -690,7 +694,7 @@ require({
       typeof bucketTypes[local.bucketName] === "string"
     ) {
       bucketWaiting = false;
-      var bucketDoc = bucketFrame.contentDocument;
+      const bucketDoc = bucketFrame.contentDocument;
       if (
         local.headers.substring(0, local.emptyBucket.length) !==
         local.emptyBucket
@@ -703,15 +707,15 @@ require({
           true
         );
       } else {
-        var bodyAttributes = local.headers.match(/<body([^>]*?)>/)[1];
-        var attributeRegex = /([-a-z_]+)\s*="([^"]*?)"/gi;
+        const bodyAttributes = local.headers.match(/<body([^>]*?)>/)[1];
+        const attributeRegex = /([-a-z_]+)\s*="([^"]*?)"/gi;
         //group 1 attribute name, group 2 attribute value.  Assumes double-quoted attributes.
-        var attributeMatch;
+        let attributeMatch;
         while (
           (attributeMatch = attributeRegex.exec(bodyAttributes)) !== null
         ) {
-          var attributeName = attributeMatch[1];
-          var attributeValue = attributeMatch[2];
+          const attributeName = attributeMatch[1];
+          const attributeValue = attributeMatch[2];
           if (attributeName === "class") {
             bucketDoc.body.className = attributeValue;
           } else {
@@ -719,8 +723,8 @@ require({
           }
         }
 
-        var pos = local.headers.indexOf("</head>");
-        var extraHeaders = local.headers.substring(
+        const pos = local.headers.indexOf("</head>");
+        const extraHeaders = local.headers.substring(
           local.emptyBucket.length,
           pos
         );
@@ -744,7 +748,7 @@ require({
       handleAs: "text",
     })
     .then(function (value) {
-      var pos = value.indexOf("</head>");
+      const pos = value.indexOf("</head>");
       local.emptyBucket = value.substring(0, pos);
       applyBucketIfWaiting();
     });
@@ -763,7 +767,7 @@ require({
             handleAs: "text",
           })
           .then(function (value) {
-            var pos = value.indexOf("<body");
+            let pos = value.indexOf("<body");
             pos = value.indexOf(">", pos);
             bucketTypes[bucketName] = value.substring(0, pos + 1);
             if (local.bucketName === bucketName) {
@@ -775,7 +779,7 @@ require({
     }
   }
 
-  var queryObject = {};
+  let queryObject = {};
   if (window.location.search) {
     queryObject = ioQuery.queryToObject(window.location.search.substring(1));
   }
@@ -814,17 +818,17 @@ require({
         clearRun();
       }
 
-      var json, code, html;
+      let json, code, html;
       if (defined(queryObject.gist)) {
         dojoscript
           .get("https://api.github.com/gists/" + queryObject.gist, {
             jsonp: "callback",
           })
           .then(function (data) {
-            var files = data.data.files;
-            var code = files["Cesium-Sandcastle.js"].content;
-            var htmlFile = files["Cesium-Sandcastle.html"];
-            var html = defined(htmlFile) ? htmlFile.content : defaultHtml; // Use the default html for old gists
+            const files = data.data.files;
+            const code = files["Cesium-Sandcastle.js"].content;
+            const htmlFile = files["Cesium-Sandcastle.html"];
+            const html = defined(htmlFile) ? htmlFile.content : defaultHtml; // Use the default html for old gists
             applyLoadedDemo(code, html);
           })
           .otherwise(function (error) {
@@ -844,17 +848,19 @@ require({
 
         applyLoadedDemo(code, html);
       } else if (window.location.hash.indexOf("#c=") === 0) {
-        var base64String = window.location.hash.substr(3);
-        var data = decodeBase64Data(base64String, pako);
+        const base64String = window.location.hash.substr(3);
+        const data = decodeBase64Data(base64String, pako);
         code = data.code;
         html = data.html;
 
         applyLoadedDemo(code, html);
       } else {
-        var parser = new DOMParser();
-        var doc = parser.parseFromString(demo.code, "text/html");
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(demo.code, "text/html");
 
-        var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
+        const script = doc.querySelector(
+          'script[id="cesium_sandcastle_script"]'
+        );
         if (!script) {
           appendConsole(
             "consoleError",
@@ -864,7 +870,7 @@ require({
           return;
         }
 
-        var scriptMatch = scriptCodeRegex.exec(script.textContent);
+        const scriptMatch = scriptCodeRegex.exec(script.textContent);
         if (!scriptMatch) {
           appendConsole(
             "consoleError",
@@ -874,12 +880,12 @@ require({
           return;
         }
 
-        var scriptCode = scriptMatch[1];
+        let scriptCode = scriptMatch[1];
         scriptCode = scriptCode.replace(/^ {8}/gm, ""); //Account for Prettier spacing
 
-        var htmlText = "";
-        var childIndex = 0;
-        var childNode = doc.body.childNodes[childIndex];
+        let htmlText = "";
+        let childIndex = 0;
+        let childNode = doc.body.childNodes[childIndex];
         while (
           childIndex < doc.body.childNodes.length &&
           childNode !== script
@@ -911,11 +917,11 @@ require({
   window.addEventListener(
     "message",
     function (e) {
-      var line;
+      let line;
       // The iframe (bucket.html) sends this message on load.
       // This triggers the code to be injected into the iframe.
       if (e.data === "reload") {
-        var bucketDoc = bucketFrame.contentDocument;
+        const bucketDoc = bucketFrame.contentDocument;
         if (!local.bucketName) {
           // Reload fired, bucket not specified yet.
           return;
@@ -958,8 +964,8 @@ require({
         appendConsole("consoleLog", e.data.log, false);
       } else if (defined(e.data.error)) {
         // Console error messages from the iframe display in Sandcastle
-        var errorMsg = e.data.error;
-        var lineNumber = e.data.lineNumber;
+        let errorMsg = e.data.error;
+        let lineNumber = e.data.lineNumber;
         if (defined(lineNumber)) {
           errorMsg += " (on line ";
 
@@ -1003,14 +1009,14 @@ require({
   registry.byId("search").on("change", function () {
     searchTerm = this.get("value");
     searchRegExp = new RegExp(searchTerm, "i");
-    var numDemosShown = 0;
+    let numDemosShown = 0;
     if (searchTerm !== "") {
       showSearchContainer();
-      var innerPanel = registry.byId("innerPanel");
+      const innerPanel = registry.byId("innerPanel");
       innerPanel.selectChild(registry.byId("searchContainer"));
-      for (var i = 0; i < gallery_demos.length; i++) {
-        var demo = gallery_demos[i];
-        var demoName = demo.name;
+      for (let i = 0; i < gallery_demos.length; i++) {
+        const demo = gallery_demos[i];
+        const demoName = demo.name;
         if (searchRegExp.test(demoName) || searchRegExp.test(demo.code)) {
           document.getElementById(demoName + "searchDemo").style.display =
             "inline-block";
@@ -1034,18 +1040,18 @@ require({
     scheduleHintNoChange();
   });
 
-  var searchContainer;
+  let searchContainer;
 
   function hideSearchContainer() {
     if (dom.byId("searchContainer")) {
-      var innerPanel = registry.byId("innerPanel");
+      const innerPanel = registry.byId("innerPanel");
       innerPanel.removeChild(searchContainer);
     }
   }
 
   function showSearchContainer() {
     if (!dom.byId("searchContainer")) {
-      var innerPanel = registry.byId("innerPanel");
+      const innerPanel = registry.byId("innerPanel");
       innerPanel.addChild(searchContainer);
     }
   }
@@ -1058,10 +1064,10 @@ require({
   function makeCompressedBase64String(data) {
     // data stored in the hash as:
     // Base64 encoded, raw DEFLATE compressed JSON array where index 0 is code, index 1 is html
-    var jsonString = JSON.stringify(data);
+    let jsonString = JSON.stringify(data);
     // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
     jsonString = jsonString.substr(2, jsonString.length - 4);
-    var base64String = btoa(
+    let base64String = btoa(
       pako.deflate(jsonString, { raw: true, to: "string", level: 9 })
     );
     base64String = base64String.replace(/\=+$/, ""); // remove padding
@@ -1070,20 +1076,20 @@ require({
   }
 
   registry.byId("buttonShareDrop").on("click", function () {
-    var code = jsEditor.getValue();
-    var html = htmlEditor.getValue();
+    const code = jsEditor.getValue();
+    const html = htmlEditor.getValue();
 
-    var base64String = makeCompressedBase64String([code, html]);
+    const base64String = makeCompressedBase64String([code, html]);
 
-    var shareUrlBox = document.getElementById("shareUrl");
+    const shareUrlBox = document.getElementById("shareUrl");
     shareUrlBox.value = getBaseUrl() + "#c=" + base64String;
     shareUrlBox.select();
   });
 
   registry.byId("buttonImport").on("click", function () {
-    var gistId = document.getElementById("gistId").value;
-    var gistParameter = "&gist=";
-    var gistIndex = gistId.indexOf(gistParameter);
+    let gistId = document.getElementById("gistId").value;
+    const gistParameter = "&gist=";
+    const gistIndex = gistId.indexOf(gistParameter);
     if (gistIndex !== -1) {
       gistId = gistId.substring(gistIndex + gistParameter.length);
     }
@@ -1091,21 +1097,21 @@ require({
   });
 
   function getPushStateUrl(demo) {
-    var obj = {};
+    const obj = {};
     if (demo.name !== defaultDemo) {
       obj.src = demo.name + ".html";
     }
     if (currentTab !== defaultLabel) {
       obj.label = currentTab;
     }
-    var query = ioQuery.objectToQuery(obj);
+    const query = ioQuery.objectToQuery(obj);
     return query === "" ? query : "?" + query;
   }
 
   registry.byId("buttonNew").on("click", function () {
-    var htmlText = htmlEditor.getValue().replace(/\s/g, "");
-    var jsText = jsEditor.getValue().replace(/\s/g, "");
-    var confirmChange = true;
+    const htmlText = htmlEditor.getValue().replace(/\s/g, "");
+    const jsText = jsEditor.getValue().replace(/\s/g, "");
+    let confirmChange = true;
     if (demoHtml !== htmlText || demoCode !== jsText) {
       confirmChange = window.confirm(
         "You have unsaved changes. Are you sure you want to navigate away from this demo?"
@@ -1141,16 +1147,16 @@ require({
   }
 
   registry.byId("dropDownSaveAs").on("show", function () {
-    var currentDemoName = queryObject.src;
+    let currentDemoName = queryObject.src;
     currentDemoName = currentDemoName.replace(".html", "");
-    var description = encodeHTML(
+    const description = encodeHTML(
       registry.byId("description").get("value").replace(/\n/g, "\\n")
     ).replace(/\"/g, "&quot;");
-    var label = encodeHTML(
+    const label = encodeHTML(
       registry.byId("label").get("value").replace(/\n/g, "\\n")
     ).replace(/\"/g, "&quot;");
 
-    var html = getDemoHtml();
+    let html = getDemoHtml();
     html = html.replace(
       "<title>",
       '<meta name="description" content="' + description + '">\n    <title>'
@@ -1162,26 +1168,26 @@ require({
         '">\n    <title>'
     );
 
-    var octetBlob = new Blob([html], {
+    const octetBlob = new Blob([html], {
       type: "application/octet-stream",
       endings: "native",
     });
-    var octetBlobURL = URL.createObjectURL(octetBlob);
+    const octetBlobURL = URL.createObjectURL(octetBlob);
     dom.byId("saveAsFile").href = octetBlobURL;
   });
 
   registry.byId("buttonNewWindow").on("click", function () {
     //Handle case where demo is in a sub-directory by modifying
     //the demo's HTML to add a base href.
-    var baseHref = getBaseUrl();
-    var pos = baseHref.lastIndexOf("/");
+    let baseHref = getBaseUrl();
+    const pos = baseHref.lastIndexOf("/");
     baseHref = baseHref.substring(0, pos) + "/gallery/";
 
-    var code = jsEditor.getValue();
-    var html = htmlEditor.getValue();
-    var data = makeCompressedBase64String([code, html, baseHref]);
+    const code = jsEditor.getValue();
+    const html = htmlEditor.getValue();
+    const data = makeCompressedBase64String([code, html, baseHref]);
 
-    var url = getBaseUrl();
+    let url = getBaseUrl();
     url = url.replace("index.html", "") + "standalone.html" + "#c=" + data;
 
     window.open(url, "_blank");
@@ -1196,16 +1202,16 @@ require({
     }
   });
 
-  var demoContainers = query(".demosContainer");
+  const demoContainers = query(".demosContainer");
   demoContainers.forEach(function (demoContainer) {
     registerScroll(demoContainer);
   });
 
-  var galleryContainer = registry.byId("innerPanel");
+  const galleryContainer = registry.byId("innerPanel");
   galleryContainer.demoTileHeightRule = demoTileHeightRule;
   galleryContainer.originalResize = galleryContainer.resize;
   galleryContainer.resize = function (changeSize, resultSize) {
-    var newSize = changeSize.h - 88;
+    const newSize = changeSize.h - 88;
     if (newSize < 20) {
       demoTileHeightRule.style.display = "none";
     } else {
@@ -1227,27 +1233,27 @@ require({
     });
   }
 
-  var newInLabel = "New in " + VERSION;
+  const newInLabel = "New in " + VERSION;
   function loadDemoFromFile(demo) {
     return requestDemo(demo.name).then(function (value) {
       // Store the file contents for later searching.
       demo.code = value;
 
-      var parser = new DOMParser();
-      var doc = parser.parseFromString(value, "text/html");
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(value, "text/html");
 
-      var bucket = doc.body.getAttribute("data-sandcastle-bucket");
+      const bucket = doc.body.getAttribute("data-sandcastle-bucket");
       demo.bucket = bucket ? bucket : "bucket-requirejs.html";
 
-      var descriptionMeta = doc.querySelector('meta[name="description"]');
-      var description =
+      const descriptionMeta = doc.querySelector('meta[name="description"]');
+      const description =
         descriptionMeta && descriptionMeta.getAttribute("content");
       demo.description = description ? description : "";
 
-      var labelsMeta = doc.querySelector(
+      const labelsMeta = doc.querySelector(
         'meta[name="cesium-sandcastle-labels"]'
       );
-      var labels = labelsMeta && labelsMeta.getAttribute("content");
+      const labels = labelsMeta && labelsMeta.getAttribute("content");
       if (demo.isNew) {
         demo.label = labels ? labels + "," + newInLabel : newInLabel;
       } else {
@@ -1280,7 +1286,7 @@ require({
     });
   }
 
-  var loading = true;
+  let loading = true;
   function setSubtab(tabName) {
     currentTab = defined(tabName) && !loading ? tabName : queryObject.label;
     queryObject.label = tabName;
@@ -1288,7 +1294,7 @@ require({
   }
 
   function insertSortedById(parentTab, galleryButton) {
-    var child;
+    let child;
     for (
       child = parentTab.lastChild;
       child !== null;
@@ -1303,7 +1309,7 @@ require({
   }
 
   function addFileToGallery(demo) {
-    var searchDemos = dom.byId("searchDemos");
+    const searchDemos = dom.byId("searchDemos");
     insertSortedById(searchDemos, createGalleryButton(demo, "searchDemo"));
     return loadDemoFromFile(demo);
   }
@@ -1316,12 +1322,12 @@ require({
 
   function addFileToTab(demo) {
     if (demo.label !== "") {
-      var labels = demo.label.split(",");
-      for (var j = 0; j < labels.length; j++) {
-        var label = labels[j];
+      const labels = demo.label.split(",");
+      for (let j = 0; j < labels.length; j++) {
+        let label = labels[j];
         label = label.trim();
         if (!dom.byId(label + "Demos")) {
-          var cp = new ContentPane({
+          const cp = new ContentPane({
             content:
               '<div id="' +
               label +
@@ -1334,20 +1340,20 @@ require({
           subtabs[label] = cp;
           registerScroll(dom.byId(label + "Container"));
         }
-        var tabName = label + "Demos";
-        var tab = dom.byId(tabName);
+        const tabName = label + "Demos";
+        const tab = dom.byId(tabName);
         insertSortedById(tab, createGalleryButton(demo, tabName));
       }
     }
   }
 
   function createGalleryButton(demo, tabName) {
-    var imgSrc = "templates/Gallery_tile.jpg";
+    let imgSrc = "templates/Gallery_tile.jpg";
     if (defined(demo.img)) {
       imgSrc = "gallery/" + demo.img;
     }
 
-    var demoLink = document.createElement("a");
+    const demoLink = document.createElement("a");
     demoLink.id = demo.name + tabName;
     demoLink.className = "linkButton";
     demoLink.href = "gallery/" + encodeURIComponent(demo.name) + ".html";
@@ -1359,9 +1365,9 @@ require({
       if (mouse.isMiddle(e)) {
         window.open("gallery/" + demo.name + ".html");
       } else {
-        var htmlText = htmlEditor.getValue().replace(/\s/g, "");
-        var jsText = jsEditor.getValue().replace(/\s/g, "");
-        var confirmChange = true;
+        const htmlText = htmlEditor.getValue().replace(/\s/g, "");
+        const jsText = jsEditor.getValue().replace(/\s/g, "");
+        let confirmChange = true;
         if (demoHtml !== htmlText || demoCode !== jsText) {
           confirmChange = window.confirm(
             "You have unsaved changes. Are you sure you want to navigate away from this demo?"
@@ -1401,14 +1407,14 @@ require({
     return demoLink;
   }
 
-  var promise;
+  let promise;
   if (!defined(gallery_demos)) {
     galleryErrorMsg.textContent =
       "No demos found, please run the build script.";
     galleryErrorMsg.style.display = "inline-block";
   } else {
-    var label = "Showcases";
-    var cp = new ContentPane({
+    let label = "Showcases";
+    let cp = new ContentPane({
       content:
         '<div id="showcasesContainer" class="demosContainer"><div class="demos" id="ShowcasesDemos"></div></div>',
       title: "Showcases",
@@ -1420,7 +1426,7 @@ require({
     registerScroll(dom.byId("showcasesContainer"));
 
     if (has_new_gallery_demos) {
-      var name = "New in " + VERSION;
+      const name = "New in " + VERSION;
       subtabs[name] = new ContentPane({
         content:
           '<div id="' +
@@ -1436,18 +1442,18 @@ require({
       registerScroll(dom.byId(name + "Container"));
     }
 
-    var i;
-    var len = gallery_demos.length;
+    let i;
+    const len = gallery_demos.length;
 
-    var queryInGalleryIndex = false;
-    var queryName = queryObject.src.replace(".html", "");
-    var promises = [];
+    let queryInGalleryIndex = false;
+    const queryName = queryObject.src.replace(".html", "");
+    const promises = [];
     for (i = 0; i < len; ++i) {
       promises.push(addFileToGallery(gallery_demos[i]));
     }
 
     promise = all(promises).then(function (results) {
-      var resultsLength = results.length;
+      const resultsLength = results.length;
       for (i = 0; i < resultsLength; ++i) {
         if (results[i].name === queryName) {
           queryInGalleryIndex = true;
@@ -1466,16 +1472,16 @@ require({
       subtabs[label] = cp;
       registerScroll(dom.byId("allContainer"));
 
-      var demos = dom.byId("allDemos");
+      const demos = dom.byId("allDemos");
       for (i = 0; i < len; ++i) {
-        var demo = gallery_demos[i];
+        const demo = gallery_demos[i];
         if (!/Development/i.test(demo.label)) {
           insertSortedById(demos, createGalleryButton(demo, "all"));
         }
       }
 
       if (!queryInGalleryIndex) {
-        var emptyDemo = {
+        const emptyDemo = {
           name: queryName,
           description: "",
         };
