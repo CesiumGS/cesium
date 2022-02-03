@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.91 - 2022-03-01
+
+##### Additions :tada:
+
+- glTF contents now use `ModelExperimental` by default. [#10055](https://github.com/CesiumGS/cesium/pull/10055)
+
 ### 1.90 - 2022-02-01
 
 ##### Additions :tada:
