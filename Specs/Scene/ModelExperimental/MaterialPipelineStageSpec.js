@@ -501,7 +501,7 @@ describe(
       });
     });
 
-    it("disables back-face culling if model options specify", function () {
+    it("disables back-face culling if model.backFaceCulling is false", function () {
       return loadGltf(boxUnlit).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];

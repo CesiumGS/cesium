@@ -5,6 +5,7 @@
 ##### Additions :tada:
 
 - glTF contents now use `ModelExperimental` by default. [#10055](https://github.com/CesiumGS/cesium/pull/10055)
+- Added the ability to toggle back-face culling in `ModelExperimental`. [#10070](https://github.com/CesiumGS/cesium/pull/10070)
 
 ### 1.90 - 2022-02-01
 

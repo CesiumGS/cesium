@@ -424,9 +424,13 @@ function forEachRuntimePrimitive(sceneGraph, callback) {
 /**
  * Traverses through all draw commands and changes the back-face cull setting.
  *
+ * @param {Boolean} backFaceCulling The new value for the back-face cull setting.
+ *
  * @private
  */
-ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (value) {
+ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (
+  backFaceCulling
+) {
   const model = this._model;
   forEachRuntimePrimitive(this, function (runtimePrimitive) {
     for (let k = 0; k < runtimePrimitive.drawCommands.length; k++) {
@@ -434,7 +438,8 @@ ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (value) {
       const renderState = clone(drawCommand.renderState, true);
       const doubleSided = runtimePrimitive.primitive.material.doubleSided;
       const translucent = defined(model.color) && model.color.alpha < 1.0;
-      renderState.cull.enabled = value && !doubleSided && !translucent;
+      renderState.cull.enabled =
+        backFaceCulling && !doubleSided && !translucent;
       drawCommand.renderState = RenderState.fromCache(renderState);
     }
   });
