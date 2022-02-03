@@ -26,7 +26,7 @@ function getPosition(screenSpaceEventHandler, event, result) {
 function getInputEventKey(type, modifier) {
   let key = type;
   if (defined(modifier)) {
-    key += "+" + modifier;
+    key += `+${modifier}`;
   }
   return key;
 }

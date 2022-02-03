@@ -231,6 +231,6 @@ HeadingPitchRoll.prototype.equalsEpsilon = function (
  * @returns {String} A string representing the provided HeadingPitchRoll in the format '(heading, pitch, roll)'.
  */
 HeadingPitchRoll.prototype.toString = function () {
-  return "(" + this.heading + ", " + this.pitch + ", " + this.roll + ")";
+  return `(${this.heading}, ${this.pitch}, ${this.roll})`;
 };
 export default HeadingPitchRoll;

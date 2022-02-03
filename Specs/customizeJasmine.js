@@ -44,7 +44,7 @@ function customizeJasmine(
             done();
           },
           function (e) {
-            done.fail("promise rejected: " + e.toString());
+            done.fail(`promise rejected: ${e.toString()}`);
           }
         );
       },
@@ -64,7 +64,7 @@ function customizeJasmine(
           done();
         },
         function (e) {
-          done.fail("promise rejected: " + e.toString());
+          done.fail(`promise rejected: ${e.toString()}`);
         }
       );
     });
@@ -81,7 +81,7 @@ function customizeJasmine(
           done();
         },
         function (e) {
-          done.fail("promise rejected: " + e.toString());
+          done.fail(`promise rejected: ${e.toString()}`);
         }
       );
     });
@@ -98,7 +98,7 @@ function customizeJasmine(
           done();
         },
         function (e) {
-          done.fail("promise rejected: " + e.toString());
+          done.fail(`promise rejected: ${e.toString()}`);
         }
       );
     });
@@ -115,7 +115,7 @@ function customizeJasmine(
           done();
         },
         function (e) {
-          done.fail("promise rejected: " + e.toString());
+          done.fail(`promise rejected: ${e.toString()}`);
         }
       );
     });

@@ -50,8 +50,7 @@
         data = window.decodeBase64Data(base64String, pako);
         //Handle case where demo is in a sub-directory by modifying
         //the HTML to add a base href.
-        document.head.innerHTML =
-          document.head.innerHTML + '<base href="' + data.baseHref + '" />';
+        document.head.innerHTML = `${document.head.innerHTML}<base href="${data.baseHref}" />`;
         window.sandcastleData = data;
       }
 

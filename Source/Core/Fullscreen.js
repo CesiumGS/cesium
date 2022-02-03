@@ -141,12 +141,12 @@ Fullscreen.supportsFullscreen = function () {
     const prefix = prefixes[i];
 
     // casing of Fullscreen differs across browsers
-    name = prefix + "RequestFullscreen";
+    name = `${prefix}RequestFullscreen`;
     if (typeof body[name] === "function") {
       _names.requestFullscreen = name;
       _supportsFullscreen = true;
     } else {
-      name = prefix + "RequestFullScreen";
+      name = `${prefix}RequestFullScreen`;
       if (typeof body[name] === "function") {
         _names.requestFullscreen = name;
         _supportsFullscreen = true;
@@ -154,42 +154,42 @@ Fullscreen.supportsFullscreen = function () {
     }
 
     // disagreement about whether it's "exit" as per spec, or "cancel"
-    name = prefix + "ExitFullscreen";
+    name = `${prefix}ExitFullscreen`;
     if (typeof document[name] === "function") {
       _names.exitFullscreen = name;
     } else {
-      name = prefix + "CancelFullScreen";
+      name = `${prefix}CancelFullScreen`;
       if (typeof document[name] === "function") {
         _names.exitFullscreen = name;
       }
     }
 
     // casing of Fullscreen differs across browsers
-    name = prefix + "FullscreenEnabled";
+    name = `${prefix}FullscreenEnabled`;
     if (document[name] !== undefined) {
       _names.fullscreenEnabled = name;
     } else {
-      name = prefix + "FullScreenEnabled";
+      name = `${prefix}FullScreenEnabled`;
       if (document[name] !== undefined) {
         _names.fullscreenEnabled = name;
       }
     }
 
     // casing of Fullscreen differs across browsers
-    name = prefix + "FullscreenElement";
+    name = `${prefix}FullscreenElement`;
     if (document[name] !== undefined) {
       _names.fullscreenElement = name;
     } else {
-      name = prefix + "FullScreenElement";
+      name = `${prefix}FullScreenElement`;
       if (document[name] !== undefined) {
         _names.fullscreenElement = name;
       }
     }
 
     // thankfully, event names are all lowercase per spec
-    name = prefix + "fullscreenchange";
+    name = `${prefix}fullscreenchange`;
     // event names do not have 'on' in the front, but the property on the document does
-    if (document["on" + name] !== undefined) {
+    if (document[`on${name}`] !== undefined) {
       //except on IE
       if (prefix === "ms") {
         name = "MSFullscreenChange";
@@ -197,8 +197,8 @@ Fullscreen.supportsFullscreen = function () {
       _names.fullscreenchange = name;
     }
 
-    name = prefix + "fullscreenerror";
-    if (document["on" + name] !== undefined) {
+    name = `${prefix}fullscreenerror`;
+    if (document[`on${name}`] !== undefined) {
       //except on IE
       if (prefix === "ms") {
         name = "MSFullscreenError";

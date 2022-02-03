@@ -3142,7 +3142,7 @@ describe(
           "    czm_old_main();\n" +
           "    v_color = a_color;\n" +
           "}";
-        return renamedSource + "\n" + newMain;
+        return `${renamedSource}\n${newMain}`;
       }
 
       function fragmentShaderLoaded(fs) {

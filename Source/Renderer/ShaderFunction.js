@@ -33,7 +33,7 @@ export default function ShaderFunction(signature) {
  */
 ShaderFunction.prototype.addLines = function (lines) {
   const paddedLines = lines.map(function (line) {
-    return "    " + line;
+    return `    ${line}`;
   });
   Array.prototype.push.apply(this.body, paddedLines);
 };

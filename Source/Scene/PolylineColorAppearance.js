@@ -6,13 +6,11 @@ import PolylineColorAppearanceVS from "../Shaders/Appearances/PolylineColorAppea
 import PolylineCommon from "../Shaders/PolylineCommon.js";
 import Appearance from "./Appearance.js";
 
-let defaultVertexShaderSource =
-  PolylineCommon + "\n" + PolylineColorAppearanceVS;
+let defaultVertexShaderSource = `${PolylineCommon}\n${PolylineColorAppearanceVS}`;
 const defaultFragmentShaderSource = PerInstanceFlatColorAppearanceFS;
 
 if (!FeatureDetection.isInternetExplorer()) {
-  defaultVertexShaderSource =
-    "#define CLIP_POLYLINE \n" + defaultVertexShaderSource;
+  defaultVertexShaderSource = `#define CLIP_POLYLINE \n${defaultVertexShaderSource}`;
 }
 
 /**

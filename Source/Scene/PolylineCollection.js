@@ -1148,7 +1148,7 @@ function createMaterialId(material) {
     index += 2;
   }
 
-  return material.type + ":" + JSON.stringify(scratchUniformArray, replacer);
+  return `${material.type}:${JSON.stringify(scratchUniformArray, replacer)}`;
 }
 
 function sortPolylinesIntoBuckets(collection) {

@@ -291,7 +291,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     patchRequestScheduler(validSampleXmlString);
     const baseUrl = "made/up/tms/server/";
     const provider = new TileMapServiceImageryProvider({
-      url: baseUrl + "?a=some&b=query",
+      url: `${baseUrl}?a=some&b=query`,
     });
 
     return pollToPromise(function () {

@@ -95,7 +95,7 @@ function PolylineGeometryUpdater(entity, scene) {
   this._depthFailMaterialProperty = undefined;
   this._geometryOptions = new GeometryOptions();
   this._groundGeometryOptions = new GroundGeometryOptions();
-  this._id = "polyline-" + entity.id;
+  this._id = `polyline-${entity.id}`;
   this._clampToGround = false;
   this._supportsPolylinesOnTerrain = Entity.supportsPolylinesOnTerrain(scene);
 

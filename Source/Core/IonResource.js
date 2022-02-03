@@ -197,7 +197,7 @@ IonResource.prototype._makeRequest = function (options) {
   if (!defined(options.headers)) {
     options.headers = {};
   }
-  options.headers.Authorization = "Bearer " + this._ionEndpoint.accessToken;
+  options.headers.Authorization = `Bearer ${this._ionEndpoint.accessToken}`;
 
   return Resource.prototype._makeRequest.call(this, options);
 };
@@ -216,7 +216,7 @@ IonResource._createEndpointResource = function (assetId, options) {
   server = Resource.createIfNeeded(server);
 
   const resourceOptions = {
-    url: "v1/assets/" + assetId + "/endpoint",
+    url: `v1/assets/${assetId}/endpoint`,
   };
 
   if (defined(accessToken)) {

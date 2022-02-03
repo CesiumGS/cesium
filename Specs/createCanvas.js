@@ -7,7 +7,7 @@ function createCanvas(width, height) {
   height = defaultValue(height, 1);
 
   const canvas = document.createElement("canvas");
-  canvas.id = "canvas" + canvasCount++;
+  canvas.id = `canvas${canvasCount++}`;
   canvas.setAttribute("width", width);
   canvas.setAttribute("clientWidth", width);
   canvas.setAttribute("height", height);

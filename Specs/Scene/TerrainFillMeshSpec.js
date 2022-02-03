@@ -1250,7 +1250,7 @@ describe("Scene/TerrainFillMesh", function () {
       }
     }
 
-    fail("Vertex with u=" + u + ", v=" + v + " does not exist.");
+    fail(`Vertex with u=${u}, v=${v} does not exist.`);
   }
 
   function expectVertex(fill, u, v, height) {

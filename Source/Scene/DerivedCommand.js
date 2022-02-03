@@ -286,16 +286,15 @@ function getPickShaderProgram(context, shaderProgram, pickId) {
     const length = sources.length;
 
     const newMain =
-      "void main() \n" +
-      "{ \n" +
-      "    czm_non_pick_main(); \n" +
-      "    if (gl_FragColor.a == 0.0) { \n" +
-      "        discard; \n" +
-      "    } \n" +
-      "    gl_FragColor = " +
-      pickId +
-      "; \n" +
-      "} \n";
+      `${
+        "void main() \n" +
+        "{ \n" +
+        "    czm_non_pick_main(); \n" +
+        "    if (gl_FragColor.a == 0.0) { \n" +
+        "        discard; \n" +
+        "    } \n" +
+        "    gl_FragColor = "
+      }${pickId}; \n` + `} \n`;
     const newSources = new Array(length + 1);
     for (let i = 0; i < length; ++i) {
       newSources[i] = ShaderSource.replaceMain(sources[i], "czm_non_pick_main");

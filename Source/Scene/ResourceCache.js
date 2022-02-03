@@ -85,7 +85,7 @@ ResourceCache.load = function (options) {
 
   if (defined(ResourceCache.cacheEntries[cacheKey])) {
     throw new DeveloperError(
-      "Resource with this cacheKey is already in the cache: " + cacheKey
+      `Resource with this cacheKey is already in the cache: ${cacheKey}`
     );
   }
   //>>includeEnd('debug');
@@ -115,7 +115,7 @@ ResourceCache.unload = function (resourceLoader) {
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(cacheEntry)) {
-    throw new DeveloperError("Resource is not in the cache: " + cacheKey);
+    throw new DeveloperError(`Resource is not in the cache: ${cacheKey}`);
   }
   //>>includeEnd('debug');
 

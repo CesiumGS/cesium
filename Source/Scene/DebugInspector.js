@@ -52,10 +52,8 @@ function createDebugShowFrustumsShaderProgram(scene, shaderProgram) {
   let i;
   if (length > 0) {
     for (i = 0; i < length; ++i) {
-      newMain +=
-        "    gl_FragData[" + targets[i] + "].rgb *= debugShowCommandsColor;\n";
-      newMain +=
-        "    gl_FragData[" + targets[i] + "].rgb *= debugShowFrustumsColor;\n";
+      newMain += `    gl_FragData[${targets[i]}].rgb *= debugShowCommandsColor;\n`;
+      newMain += `    gl_FragData[${targets[i]}].rgb *= debugShowFrustumsColor;\n`;
     }
   } else {
     newMain += "    gl_FragColor.rgb *= debugShowCommandsColor;\n";

@@ -62,7 +62,7 @@ function OpenStreetMapImageryProvider(options) {
     defaultValue(options.url, "https://a.tile.openstreetmap.org/")
   );
   resource.appendForwardSlash();
-  resource.url += "{z}/{x}/{y}." + defaultValue(options.fileExtension, "png");
+  resource.url += `{z}/{x}/{y}.${defaultValue(options.fileExtension, "png")}`;
 
   const tilingScheme = new WebMercatorTilingScheme({
     ellipsoid: options.ellipsoid,
@@ -92,9 +92,7 @@ function OpenStreetMapImageryProvider(options) {
   //>>includeStart('debug', pragmas.debug);
   if (tileCount > 4) {
     throw new DeveloperError(
-      "The rectangle and minimumLevel indicate that there are " +
-        tileCount +
-        " tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported."
+      `The rectangle and minimumLevel indicate that there are ${tileCount} tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.`
     );
   }
   //>>includeEnd('debug');

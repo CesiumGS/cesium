@@ -133,12 +133,7 @@
         function colorByDistanceToCoordinate(pickedLatitude, pickedLongitude) {
           osmBuildingsTileset.style = new Cesium.Cesium3DTileStyle({
             defines: {
-              distance:
-                "distance(vec2(${feature['cesium#longitude']}, ${feature['cesium#latitude']}), vec2(" +
-                pickedLongitude +
-                "," +
-                pickedLatitude +
-                "))",
+              distance: `distance(vec2(\${feature['cesium#longitude']}, \${feature['cesium#latitude']}), vec2(${pickedLongitude},${pickedLatitude}))`,
             },
             color: {
               conditions: [

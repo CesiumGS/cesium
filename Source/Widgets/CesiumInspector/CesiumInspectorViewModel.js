@@ -34,10 +34,10 @@ function frustumStatisticsToString(statistics) {
           }
           s = f.reverse().join(" and ");
         }
-        str += "<br>&nbsp;&nbsp;&nbsp;&nbsp;" + com[n] + " in frustum " + s;
+        str += `<br>&nbsp;&nbsp;&nbsp;&nbsp;${com[n]} in frustum ${s}`;
       }
     }
-    str += "<br>Total: " + statistics.totalCommands;
+    str += `<br>Total: ${statistics.totalCommands}`;
   }
 
   return str;
@@ -895,25 +895,12 @@ Object.defineProperties(CesiumInspectorViewModel.prototype, {
         this.hasPickedTile = true;
         const oldTile = this._tile;
         if (newTile !== oldTile) {
-          this.tileText =
-            "L: " + newTile.level + " X: " + newTile.x + " Y: " + newTile.y;
-          this.tileText +=
-            "<br>SW corner: " +
-            newTile.rectangle.west +
-            ", " +
-            newTile.rectangle.south;
-          this.tileText +=
-            "<br>NE corner: " +
-            newTile.rectangle.east +
-            ", " +
-            newTile.rectangle.north;
+          this.tileText = `L: ${newTile.level} X: ${newTile.x} Y: ${newTile.y}`;
+          this.tileText += `<br>SW corner: ${newTile.rectangle.west}, ${newTile.rectangle.south}`;
+          this.tileText += `<br>NE corner: ${newTile.rectangle.east}, ${newTile.rectangle.north}`;
           const data = newTile.data;
           if (defined(data) && defined(data.tileBoundingRegion)) {
-            this.tileText +=
-              "<br>Min: " +
-              data.tileBoundingRegion.minimumHeight +
-              " Max: " +
-              data.tileBoundingRegion.maximumHeight;
+            this.tileText += `<br>Min: ${data.tileBoundingRegion.minimumHeight} Max: ${data.tileBoundingRegion.maximumHeight}`;
           } else {
             this.tileText += "<br>(Tile is not loaded)";
           }
@@ -946,7 +933,7 @@ CesiumInspectorViewModel.prototype._update = function () {
   // Bound the frustum to be displayed.
   this.depthFrustum = boundDepthFrustum(1, numberOfFrustums, this.depthFrustum);
   // Update the displayed text.
-  this.depthFrustumText = this.depthFrustum + " of " + numberOfFrustums;
+  this.depthFrustumText = `${this.depthFrustum} of ${numberOfFrustums}`;
 
   if (this.performance) {
     this._performanceDisplay.update();
@@ -955,8 +942,7 @@ CesiumInspectorViewModel.prototype._update = function () {
     this._modelMatrixPrimitive.modelMatrix = this._primitive.modelMatrix;
   }
 
-  this.shaderCacheText =
-    "Cached shaders: " + this._scene.context.shaderCache.numberOfShaders;
+  this.shaderCacheText = `Cached shaders: ${this._scene.context.shaderCache.numberOfShaders}`;
 };
 
 /**

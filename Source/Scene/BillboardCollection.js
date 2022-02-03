@@ -954,7 +954,7 @@ function writeCompressedAttrib0(
 
     //>>includeStart('debug', pragmas.debug);
     if (!defined(imageRectangle)) {
-      throw new DeveloperError("Invalid billboard image index: " + index);
+      throw new DeveloperError(`Invalid billboard image index: ${index}`);
     }
     //>>includeEnd('debug');
 
@@ -1088,7 +1088,7 @@ function writeCompressedAttrib1(
 
     //>>includeStart('debug', pragmas.debug);
     if (!defined(imageRectangle)) {
-      throw new DeveloperError("Invalid billboard image index: " + index);
+      throw new DeveloperError(`Invalid billboard image index: ${index}`);
     }
     //>>includeEnd('debug');
 
@@ -1164,7 +1164,7 @@ function writeCompressedAttrib2(
 
     //>>includeStart('debug', pragmas.debug);
     if (!defined(imageRectangle)) {
-      throw new DeveloperError("Invalid billboard image index: " + index);
+      throw new DeveloperError(`Invalid billboard image index: ${index}`);
     }
     //>>includeEnd('debug');
 
@@ -1245,7 +1245,7 @@ function writeEyeOffset(
 
       //>>includeStart('debug', pragmas.debug);
       if (!defined(imageRectangle)) {
-        throw new DeveloperError("Invalid billboard image index: " + index);
+        throw new DeveloperError(`Invalid billboard image index: ${index}`);
       }
       //>>includeEnd('debug');
 
@@ -1401,7 +1401,7 @@ function writeCompressedAttribute3(
 
       //>>includeStart('debug', pragmas.debug);
       if (!defined(imageRectangle)) {
-        throw new DeveloperError("Invalid billboard image index: " + index);
+        throw new DeveloperError(`Invalid billboard image index: ${index}`);
       }
       //>>includeEnd('debug');
 
@@ -1495,7 +1495,7 @@ function writeTextureCoordinateBoundsOrLabelTranslate(
 
     //>>includeStart('debug', pragmas.debug);
     if (!defined(imageRectangle)) {
-      throw new DeveloperError("Invalid billboard image index: " + index);
+      throw new DeveloperError(`Invalid billboard image index: ${index}`);
     }
     //>>includeEnd('debug');
 
@@ -2205,7 +2205,7 @@ BillboardCollection.prototype.update = function (frameState) {
 
       if (this._sdf) {
         fs.defines.push("SDF");
-        fs.defines.push("SDF_EDGE " + sdfEdge);
+        fs.defines.push(`SDF_EDGE ${sdfEdge}`);
       }
 
       this._sp = ShaderProgram.replaceCache({
@@ -2229,7 +2229,7 @@ BillboardCollection.prototype.update = function (frameState) {
       }
       if (this._sdf) {
         fs.defines.push("SDF");
-        fs.defines.push("SDF_EDGE " + sdfEdge);
+        fs.defines.push(`SDF_EDGE ${sdfEdge}`);
       }
       this._spTranslucent = ShaderProgram.replaceCache({
         context: context,
@@ -2254,7 +2254,7 @@ BillboardCollection.prototype.update = function (frameState) {
       }
       if (this._sdf) {
         fs.defines.push("SDF");
-        fs.defines.push("SDF_EDGE " + sdfEdge);
+        fs.defines.push(`SDF_EDGE ${sdfEdge}`);
       }
       this._sp = ShaderProgram.replaceCache({
         context: context,
@@ -2279,7 +2279,7 @@ BillboardCollection.prototype.update = function (frameState) {
       }
       if (this._sdf) {
         fs.defines.push("SDF");
-        fs.defines.push("SDF_EDGE " + sdfEdge);
+        fs.defines.push(`SDF_EDGE ${sdfEdge}`);
       }
       this._spTranslucent = ShaderProgram.replaceCache({
         context: context,

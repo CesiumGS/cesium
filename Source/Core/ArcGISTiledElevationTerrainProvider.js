@@ -185,8 +185,7 @@ function ArcGISTiledElevationTerrainProvider(options) {
       return true;
     })
     .otherwise(function (error) {
-      const message =
-        "An error occurred while accessing " + that._resource.url + ".";
+      const message = `An error occurred while accessing ${that._resource.url}.`;
       TileProviderError.handleError(undefined, that, that._errorEvent, message);
       return when.reject(error);
     });
@@ -351,7 +350,7 @@ ArcGISTiledElevationTerrainProvider.prototype.requestTileGeometry = function (
   //>>includeEnd('debug');
 
   const tileResource = this._resource.getDerivedResource({
-    url: "tile/" + level + "/" + y + "/" + x,
+    url: `tile/${level}/${y}/${x}`,
     request: request,
   });
 
@@ -634,8 +633,7 @@ function requestAvailability(that, level, x, y) {
   const yOffset = Math.floor(y / 128) * 128;
 
   const dim = Math.min(1 << level, 128);
-  const url =
-    "tilemap/" + level + "/" + yOffset + "/" + xOffset + "/" + dim + "/" + dim;
+  const url = `tilemap/${level}/${yOffset}/${xOffset}/${dim}/${dim}`;
 
   const availableCache = that._availableCache;
   if (defined(availableCache[url])) {

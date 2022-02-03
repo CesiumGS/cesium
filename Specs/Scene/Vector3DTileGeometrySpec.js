@@ -331,7 +331,7 @@ describe(
         });
       }
 
-      it("renders a single box" + webglMessage, function () {
+      it(`renders a single box${webglMessage}`, function () {
         const dimensions = new Cartesian3(1000000.0, 1000000.0, 1000000.0);
         const boxes = packBoxes([
           {
@@ -351,7 +351,7 @@ describe(
         });
       });
 
-      it("renders multiple boxes" + webglMessage, function () {
+      it(`renders multiple boxes${webglMessage}`, function () {
         const dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
         const modelMatrices = [
           Matrix4.fromTranslation(new Cartesian3(dimensions.x, 0.0, 0.0)),
@@ -379,7 +379,7 @@ describe(
         });
       });
 
-      it("renders a single cylinder" + webglMessage, function () {
+      it(`renders a single cylinder${webglMessage}`, function () {
         const radius = 1000000.0;
         const length = 1000000.0;
         const cylinders = packCylinders([
@@ -401,7 +401,7 @@ describe(
         });
       });
 
-      it("renders multiple cylinders" + webglMessage, function () {
+      it(`renders multiple cylinders${webglMessage}`, function () {
         const radius = 500000.0;
         const length = 500000.0;
         const modelMatrices = [
@@ -432,7 +432,7 @@ describe(
         });
       });
 
-      it("renders a single ellipsoid" + webglMessage, function () {
+      it(`renders a single ellipsoid${webglMessage}`, function () {
         const radii = new Cartesian3(500000.0, 500000.0, 500000.0);
         const ellipsoid = packEllipsoids([
           {
@@ -452,7 +452,7 @@ describe(
         });
       });
 
-      it("renders multiple ellipsoids" + webglMessage, function () {
+      it(`renders multiple ellipsoids${webglMessage}`, function () {
         const radii = new Cartesian3(500000.0, 500000.0, 500000.0);
         const modelMatrices = [
           Matrix4.fromTranslation(new Cartesian3(radii.x, 0.0, 0.0)),
@@ -480,7 +480,7 @@ describe(
         });
       });
 
-      it("renders a single sphere" + webglMessage, function () {
+      it(`renders a single sphere${webglMessage}`, function () {
         const radius = 500000.0;
         const sphere = packSpheres([
           {
@@ -497,7 +497,7 @@ describe(
         });
       });
 
-      it("renders multiple spheres" + webglMessage, function () {
+      it(`renders multiple spheres${webglMessage}`, function () {
         const radius = 500000.0;
         const modelMatrices = [
           Matrix4.fromTranslation(new Cartesian3(radius, 0.0, 0.0)),
@@ -522,193 +522,187 @@ describe(
         });
       });
 
-      it(
-        "renders with multiple types of each geometry" + webglMessage,
-        function () {
-          const dimensions = new Cartesian3(125000.0, 125000.0, 125000.0);
-          const modelMatrices = [
-            Matrix4.fromTranslation(new Cartesian3(dimensions.x, 0.0, 0.0)),
-            Matrix4.fromTranslation(new Cartesian3(-dimensions.x, 0.0, 0.0)),
-          ];
-          const boxes = packBoxes([
-            {
-              modelMatrix: modelMatrices[0],
-              dimensions: dimensions,
-            },
-            {
-              modelMatrix: modelMatrices[1],
-              dimensions: dimensions,
-            },
-          ]);
-          const boxBatchIds = new Uint16Array([0, 1]);
+      it(`renders with multiple types of each geometry${webglMessage}`, function () {
+        const dimensions = new Cartesian3(125000.0, 125000.0, 125000.0);
+        const modelMatrices = [
+          Matrix4.fromTranslation(new Cartesian3(dimensions.x, 0.0, 0.0)),
+          Matrix4.fromTranslation(new Cartesian3(-dimensions.x, 0.0, 0.0)),
+        ];
+        const boxes = packBoxes([
+          {
+            modelMatrix: modelMatrices[0],
+            dimensions: dimensions,
+          },
+          {
+            modelMatrix: modelMatrices[1],
+            dimensions: dimensions,
+          },
+        ]);
+        const boxBatchIds = new Uint16Array([0, 1]);
 
-          const radius = 125000.0;
-          const length = 125000.0;
-          modelMatrices.push(
-            Matrix4.fromTranslation(new Cartesian3(radius, 0.0, 0.0)),
-            Matrix4.fromTranslation(new Cartesian3(-radius, 0.0, 0.0))
-          );
-          const cylinders = packCylinders([
-            {
-              modelMatrix: modelMatrices[2],
-              radius: radius,
-              length: length,
-            },
-            {
-              modelMatrix: modelMatrices[3],
-              radius: radius,
-              length: length,
-            },
-          ]);
-          const cylinderBatchIds = new Uint16Array([2, 3]);
+        const radius = 125000.0;
+        const length = 125000.0;
+        modelMatrices.push(
+          Matrix4.fromTranslation(new Cartesian3(radius, 0.0, 0.0)),
+          Matrix4.fromTranslation(new Cartesian3(-radius, 0.0, 0.0))
+        );
+        const cylinders = packCylinders([
+          {
+            modelMatrix: modelMatrices[2],
+            radius: radius,
+            length: length,
+          },
+          {
+            modelMatrix: modelMatrices[3],
+            radius: radius,
+            length: length,
+          },
+        ]);
+        const cylinderBatchIds = new Uint16Array([2, 3]);
 
-          const radii = new Cartesian3(125000.0, 125000.0, 125000.0);
-          modelMatrices.push(
-            Matrix4.fromTranslation(new Cartesian3(radii.x, 0.0, 0.0)),
-            Matrix4.fromTranslation(new Cartesian3(-radii.x, 0.0, 0.0))
-          );
-          const ellipsoids = packEllipsoids([
-            {
-              modelMatrix: modelMatrices[4],
-              radii: radii,
-            },
-            {
-              modelMatrix: modelMatrices[5],
-              radii: radii,
-            },
-          ]);
-          const ellipsoidBatchIds = new Uint16Array([4, 5]);
+        const radii = new Cartesian3(125000.0, 125000.0, 125000.0);
+        modelMatrices.push(
+          Matrix4.fromTranslation(new Cartesian3(radii.x, 0.0, 0.0)),
+          Matrix4.fromTranslation(new Cartesian3(-radii.x, 0.0, 0.0))
+        );
+        const ellipsoids = packEllipsoids([
+          {
+            modelMatrix: modelMatrices[4],
+            radii: radii,
+          },
+          {
+            modelMatrix: modelMatrices[5],
+            radii: radii,
+          },
+        ]);
+        const ellipsoidBatchIds = new Uint16Array([4, 5]);
 
-          modelMatrices.push(
-            Matrix4.fromTranslation(new Cartesian3(radius, 0.0, 0.0)),
-            Matrix4.fromTranslation(new Cartesian3(-radius, 0.0, 0.0))
-          );
-          const spheres = packSpheres([
-            {
-              modelMatrix: modelMatrices[6],
-              radius: radius,
-            },
-            {
-              modelMatrix: modelMatrices[7],
-              radius: radius,
-            },
-          ]);
-          const sphereBatchIds = new Uint16Array([6, 7]);
+        modelMatrices.push(
+          Matrix4.fromTranslation(new Cartesian3(radius, 0.0, 0.0)),
+          Matrix4.fromTranslation(new Cartesian3(-radius, 0.0, 0.0))
+        );
+        const spheres = packSpheres([
+          {
+            modelMatrix: modelMatrices[6],
+            radius: radius,
+          },
+          {
+            modelMatrix: modelMatrices[7],
+            radius: radius,
+          },
+        ]);
+        const sphereBatchIds = new Uint16Array([6, 7]);
 
-          const bv = new BoundingSphere(undefined, 50000000.0);
+        const bv = new BoundingSphere(undefined, 50000000.0);
 
-          return verifyMultipleRender(modelMatrices, {
+        return verifyMultipleRender(modelMatrices, {
+          boxes: boxes,
+          boxBatchIds: boxBatchIds,
+          cylinders: cylinders,
+          cylinderBatchIds: cylinderBatchIds,
+          ellipsoids: ellipsoids,
+          ellipsoidBatchIds: ellipsoidBatchIds,
+          spheres: spheres,
+          sphereBatchIds: sphereBatchIds,
+          boundingVolume: bv,
+        });
+      });
+
+      it(`renders multiple geometries after a re-batch${webglMessage}`, function () {
+        const dimensions = new Cartesian3(125000.0, 125000.0, 125000.0);
+        const modelMatrices = [
+          Matrix4.fromTranslation(new Cartesian3(dimensions.x, 0.0, 0.0)),
+          Matrix4.fromTranslation(new Cartesian3(-dimensions.x, 0.0, 0.0)),
+        ];
+        const boxes = packBoxes([
+          {
+            modelMatrix: modelMatrices[0],
+            dimensions: dimensions,
+          },
+          {
+            modelMatrix: modelMatrices[1],
+            dimensions: dimensions,
+          },
+        ]);
+        const boxBatchIds = new Uint16Array([0, 1]);
+
+        const radius = 125000.0;
+        let length = 125000.0;
+        modelMatrices.push(
+          Matrix4.fromTranslation(new Cartesian3(radius, 0.0, 0.0)),
+          Matrix4.fromTranslation(new Cartesian3(-radius, 0.0, 0.0))
+        );
+        const cylinders = packCylinders([
+          {
+            modelMatrix: modelMatrices[2],
+            radius: radius,
+            length: length,
+          },
+          {
+            modelMatrix: modelMatrices[3],
+            radius: radius,
+            length: length,
+          },
+        ]);
+        const cylinderBatchIds = new Uint16Array([2, 3]);
+
+        const origin = Rectangle.center(rectangle);
+        const center = ellipsoid.cartographicToCartesian(origin);
+        const modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+
+        const bv = new BoundingSphere(center, 50000000.0);
+
+        length = modelMatrices.length;
+        const batchTable = new Cesium3DTileBatchTable(mockTileset, length);
+        batchTable.update(mockTileset, scene.frameState);
+
+        scene.primitives.add(globePrimitive);
+
+        geometry = scene.primitives.add(
+          new Vector3DTileGeometry({
             boxes: boxes,
             boxBatchIds: boxBatchIds,
             cylinders: cylinders,
             cylinderBatchIds: cylinderBatchIds,
-            ellipsoids: ellipsoids,
-            ellipsoidBatchIds: ellipsoidBatchIds,
-            spheres: spheres,
-            sphereBatchIds: sphereBatchIds,
+            center: center,
+            modelMatrix: modelMatrix,
+            batchTable: batchTable,
             boundingVolume: bv,
-          });
-        }
-      );
+          })
+        );
+        geometry.forceRebatch = true;
+        return loadGeometries(geometry).then(function () {
+          let i;
+          for (i = 0; i < length; ++i) {
+            batchTable.setShow(i, false);
+          }
 
-      it(
-        "renders multiple geometries after a re-batch" + webglMessage,
-        function () {
-          const dimensions = new Cartesian3(125000.0, 125000.0, 125000.0);
-          const modelMatrices = [
-            Matrix4.fromTranslation(new Cartesian3(dimensions.x, 0.0, 0.0)),
-            Matrix4.fromTranslation(new Cartesian3(-dimensions.x, 0.0, 0.0)),
-          ];
-          const boxes = packBoxes([
-            {
-              modelMatrix: modelMatrices[0],
-              dimensions: dimensions,
-            },
-            {
-              modelMatrix: modelMatrices[1],
-              dimensions: dimensions,
-            },
-          ]);
-          const boxBatchIds = new Uint16Array([0, 1]);
+          for (i = 0; i < length; ++i) {
+            const transform = Matrix4.multiply(
+              modelMatrix,
+              modelMatrices[i],
+              new Matrix4()
+            );
+            scene.camera.lookAtTransform(
+              transform,
+              new Cartesian3(0.0, 0.0, 10.0)
+            );
 
-          const radius = 125000.0;
-          let length = 125000.0;
-          modelMatrices.push(
-            Matrix4.fromTranslation(new Cartesian3(radius, 0.0, 0.0)),
-            Matrix4.fromTranslation(new Cartesian3(-radius, 0.0, 0.0))
-          );
-          const cylinders = packCylinders([
-            {
-              modelMatrix: modelMatrices[2],
-              radius: radius,
-              length: length,
-            },
-            {
-              modelMatrix: modelMatrices[3],
-              radius: radius,
-              length: length,
-            },
-          ]);
-          const cylinderBatchIds = new Uint16Array([2, 3]);
+            batchTable.setShow(i, true);
+            batchTable.update(mockTileset, scene.frameState);
+            expect(scene).toRender([255, 255, 255, 255]);
 
-          const origin = Rectangle.center(rectangle);
-          const center = ellipsoid.cartographicToCartesian(origin);
-          const modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+            batchTable.setColor(i, Color.BLUE);
+            geometry.updateCommands(i, Color.BLUE);
+            batchTable.update(mockTileset, scene.frameState);
+            expect(scene).toRender([0, 0, 255, 255]);
 
-          const bv = new BoundingSphere(center, 50000000.0);
+            batchTable.setShow(i, false);
+          }
+        });
+      });
 
-          length = modelMatrices.length;
-          const batchTable = new Cesium3DTileBatchTable(mockTileset, length);
-          batchTable.update(mockTileset, scene.frameState);
-
-          scene.primitives.add(globePrimitive);
-
-          geometry = scene.primitives.add(
-            new Vector3DTileGeometry({
-              boxes: boxes,
-              boxBatchIds: boxBatchIds,
-              cylinders: cylinders,
-              cylinderBatchIds: cylinderBatchIds,
-              center: center,
-              modelMatrix: modelMatrix,
-              batchTable: batchTable,
-              boundingVolume: bv,
-            })
-          );
-          geometry.forceRebatch = true;
-          return loadGeometries(geometry).then(function () {
-            let i;
-            for (i = 0; i < length; ++i) {
-              batchTable.setShow(i, false);
-            }
-
-            for (i = 0; i < length; ++i) {
-              const transform = Matrix4.multiply(
-                modelMatrix,
-                modelMatrices[i],
-                new Matrix4()
-              );
-              scene.camera.lookAtTransform(
-                transform,
-                new Cartesian3(0.0, 0.0, 10.0)
-              );
-
-              batchTable.setShow(i, true);
-              batchTable.update(mockTileset, scene.frameState);
-              expect(scene).toRender([255, 255, 255, 255]);
-
-              batchTable.setColor(i, Color.BLUE);
-              geometry.updateCommands(i, Color.BLUE);
-              batchTable.update(mockTileset, scene.frameState);
-              expect(scene).toRender([0, 0, 255, 255]);
-
-              batchTable.setShow(i, false);
-            }
-          });
-        }
-      );
-
-      it("renders with inverted classification" + webglMessage, function () {
+      it(`renders with inverted classification${webglMessage}`, function () {
         const radii = new Cartesian3(100.0, 100.0, 1000.0);
         const ellipsoids = packEllipsoids([
           {
@@ -763,7 +757,7 @@ describe(
         });
       });
 
-      it("renders wireframe" + webglMessage, function () {
+      it(`renders wireframe${webglMessage}`, function () {
         const origin = Rectangle.center(rectangle);
         const center = ellipsoid.cartographicToCartesian(origin);
         const modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
@@ -803,7 +797,7 @@ describe(
         });
       });
 
-      it("renders based on classificationType" + webglMessage, function () {
+      it(`renders based on classificationType${webglMessage}`, function () {
         const radii = new Cartesian3(100.0, 100.0, 1000.0);
         const ellipsoids = packEllipsoids([
           {
@@ -873,7 +867,7 @@ describe(
         });
       });
 
-      it("picks geometry" + webglMessage, function () {
+      it(`picks geometry${webglMessage}`, function () {
         const origin = Rectangle.center(rectangle);
         const center = ellipsoid.cartographicToCartesian(origin);
         const modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
@@ -921,7 +915,7 @@ describe(
         });
       });
 
-      it("isDestroyed" + webglMessage, function () {
+      it(`isDestroyed${webglMessage}`, function () {
         geometry = new Vector3DTileGeometry({});
         expect(geometry.isDestroyed()).toEqual(false);
         geometry.destroy();
