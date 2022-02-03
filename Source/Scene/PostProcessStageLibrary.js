@@ -674,7 +674,6 @@ PostProcessStageLibrary.isAmbientOcclusionSupported = function (scene) {
  * @param {Number} [lightSteps=4] The number of steps along the light ray, more looks better but is slower
  * @return {PostProcessStage} A post-process stage that applies atmosphere light scattering.
  *
- * @private
  */
 PostProcessStageLibrary.createAtmosphereScatteringStage = function (
   primarySteps,
