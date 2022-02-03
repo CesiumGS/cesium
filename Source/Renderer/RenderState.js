@@ -349,16 +349,12 @@ function RenderState(renderState) {
 
     if (this.viewport.width > ContextLimits.maximumViewportWidth) {
       throw new DeveloperError(
-        "renderState.viewport.width must be less than or equal to the maximum viewport width (" +
-          ContextLimits.maximumViewportWidth.toString() +
-          ").  Check maximumViewportWidth."
+        `renderState.viewport.width must be less than or equal to the maximum viewport width (${ContextLimits.maximumViewportWidth.toString()}).  Check maximumViewportWidth.`
       );
     }
     if (this.viewport.height > ContextLimits.maximumViewportHeight) {
       throw new DeveloperError(
-        "renderState.viewport.height must be less than or equal to the maximum viewport height (" +
-          ContextLimits.maximumViewportHeight.toString() +
-          ").  Check maximumViewportHeight."
+        `renderState.viewport.height must be less than or equal to the maximum viewport height (${ContextLimits.maximumViewportHeight.toString()}).  Check maximumViewportHeight.`
       );
     }
   }

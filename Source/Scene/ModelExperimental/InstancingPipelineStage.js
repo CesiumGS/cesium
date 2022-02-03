@@ -328,7 +328,7 @@ function processFeatureIdAttributes(
 
     shaderBuilder.addAttribute(
       "float",
-      "a_instanceFeatureId_" + attribute.setIndex
+      `a_instanceFeatureId_${attribute.setIndex}`
     );
   }
 }

@@ -38,13 +38,7 @@ export default function ImplicitAvailabilityBitstream(options) {
     const expectedLength = Math.ceil(lengthBits / 8);
     if (bitstream.length !== expectedLength) {
       throw new RuntimeError(
-        "Availability bitstream must be exactly " +
-          expectedLength +
-          " bytes long to store " +
-          lengthBits +
-          " bits. Actual bitstream was " +
-          bitstream.length +
-          " bytes long."
+        `Availability bitstream must be exactly ${expectedLength} bytes long to store ${lengthBits} bits. Actual bitstream was ${bitstream.length} bytes long.`
       );
     }
 

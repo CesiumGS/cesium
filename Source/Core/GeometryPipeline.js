@@ -180,9 +180,7 @@ GeometryPipeline.createLineSegmentsForVectors = function (
   }
   if (!defined(geometry.attributes[attributeName])) {
     throw new DeveloperError(
-      "geometry.attributes must have an attribute with the same name as the attributeName parameter, " +
-        attributeName +
-        "."
+      `geometry.attributes must have an attribute with the same name as the attributeName parameter, ${attributeName}.`
     );
   }
   //>>includeEnd('debug');
@@ -638,9 +636,7 @@ GeometryPipeline.projectTo2D = function (
   }
   if (!defined(geometry.attributes[attributeName])) {
     throw new DeveloperError(
-      "geometry must have attribute matching the attributeName argument: " +
-        attributeName +
-        "."
+      `geometry must have attribute matching the attributeName argument: ${attributeName}.`
     );
   }
   if (
@@ -676,13 +672,7 @@ GeometryPipeline.projectTo2D = function (
     //>>includeStart('debug', pragmas.debug);
     if (!defined(lonLat)) {
       throw new DeveloperError(
-        "Could not project point (" +
-          value.x +
-          ", " +
-          value.y +
-          ", " +
-          value.z +
-          ") to 2D."
+        `Could not project point (${value.x}, ${value.y}, ${value.z}) to 2D.`
       );
     }
     //>>includeEnd('debug');
@@ -756,9 +746,7 @@ GeometryPipeline.encodeAttribute = function (
   }
   if (!defined(geometry.attributes[attributeName])) {
     throw new DeveloperError(
-      "geometry must have attribute matching the attributeName argument: " +
-        attributeName +
-        "."
+      `geometry must have attribute matching the attributeName argument: ${attributeName}.`
     );
   }
   if (

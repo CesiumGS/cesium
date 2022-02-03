@@ -95,10 +95,9 @@ ImageryLayerFeatureInfo.prototype.configureDescriptionFromProperties = function 
         const value = properties[key];
         if (defined(value)) {
           if (typeof value === "object") {
-            html +=
-              "<tr><td>" + key + "</td><td>" + describe(value) + "</td></tr>";
+            html += `<tr><td>${key}</td><td>${describe(value)}</td></tr>`;
           } else {
-            html += "<tr><td>" + key + "</td><td>" + value + "</td></tr>";
+            html += `<tr><td>${key}</td><td>${value}</td></tr>`;
           }
         }
       }

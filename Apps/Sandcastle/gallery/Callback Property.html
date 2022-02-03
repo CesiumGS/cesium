@@ -85,7 +85,7 @@
 
           geodesic.setEndPoints(startCartographic, endCartographic);
           const lengthInMeters = Math.round(geodesic.surfaceDistance);
-          return (lengthInMeters / 1000).toFixed(1) + " km";
+          return `${(lengthInMeters / 1000).toFixed(1)} km`;
         }
 
         function getMidpoint(time, result) {

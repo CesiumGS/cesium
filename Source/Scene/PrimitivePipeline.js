@@ -176,8 +176,8 @@ function geometryPipeline(parameters) {
           attributes.hasOwnProperty(name) &&
           attributes[name].componentDatatype === ComponentDatatype.DOUBLE
         ) {
-          const name3D = name + "3D";
-          const name2D = name + "2D";
+          const name3D = `${name}3D`;
+          const name2D = `${name}2D`;
 
           // Compute 2D positions
           GeometryPipeline.projectTo2D(
@@ -196,14 +196,14 @@ function geometryPipeline(parameters) {
           GeometryPipeline.encodeAttribute(
             geometry,
             name3D,
-            name3D + "High",
-            name3D + "Low"
+            `${name3D}High`,
+            `${name3D}Low`
           );
           GeometryPipeline.encodeAttribute(
             geometry,
             name2D,
-            name2D + "High",
-            name2D + "Low"
+            `${name2D}High`,
+            `${name2D}Low`
           );
         }
       }
@@ -216,8 +216,8 @@ function geometryPipeline(parameters) {
           GeometryPipeline.encodeAttribute(
             geometry,
             name,
-            name + "3DHigh",
-            name + "3DLow"
+            `${name}3DHigh`,
+            `${name}3DLow`
           );
         }
       }

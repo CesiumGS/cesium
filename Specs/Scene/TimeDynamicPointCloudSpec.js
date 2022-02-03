@@ -155,7 +155,7 @@ describe(
 
       const uris = [];
       for (let i = 0; i < 5; ++i) {
-        uris.push(folderName + i + ".pnts");
+        uris.push(`${folderName + i}.pnts`);
       }
 
       function dataCallback(interval, index) {
@@ -800,7 +800,7 @@ describe(
       for (i = 0; i < 5; ++i) {
         const arg = spyUpdate.calls.argsFor(i)[0];
         expect(arg).toBeDefined();
-        expect(arg.uri).toContain(i + ".pnts");
+        expect(arg.uri).toContain(`${i}.pnts`);
         expect(arg.message).toBe("404");
       }
     });

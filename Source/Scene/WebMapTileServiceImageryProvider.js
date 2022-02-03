@@ -305,9 +305,7 @@ function WebMapTileServiceImageryProvider(options) {
   //>>includeStart('debug', pragmas.debug);
   if (tileCount > 4) {
     throw new DeveloperError(
-      "The imagery provider's rectangle and minimumLevel indicate that there are " +
-        tileCount +
-        " tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported."
+      `The imagery provider's rectangle and minimumLevel indicate that there are ${tileCount} tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.`
     );
   }
   //>>includeEnd('debug');

@@ -236,12 +236,7 @@ function generateVertexShaderLines(
       // Initializing attribute structs are just a matter of copying the
       // attribute or varying: E.g.:
       // "    vsInput.attributes.position = a_position;"
-      vertexInitialization =
-        "vsInput.attributes." +
-        variableName +
-        " = attributes." +
-        variableName +
-        ";";
+      vertexInitialization = `vsInput.attributes.${variableName} = attributes.${variableName};`;
       initializationLines.push(vertexInitialization);
     }
   }
@@ -252,9 +247,7 @@ function generateVertexShaderLines(
     if (!defined(attributeDefaults)) {
       CustomShaderPipelineStage._oneTimeWarning(
         "CustomShaderPipelineStage.incompatiblePrimitiveVS",
-        "Primitive is missing attribute " +
-          variableName +
-          ", disabling custom vertex shader"
+        `Primitive is missing attribute ${variableName}, disabling custom vertex shader`
       );
       // This primitive isn't compatible with the shader. Return early
       // to skip the vertex shader
@@ -262,12 +255,7 @@ function generateVertexShaderLines(
     }
 
     attributeFields.push(attributeDefaults.attributeField);
-    vertexInitialization =
-      "vsInput.attributes." +
-      variableName +
-      " = " +
-      attributeDefaults.value +
-      ";";
+    vertexInitialization = `vsInput.attributes.${variableName} = ${attributeDefaults.value};`;
     initializationLines.push(vertexInitialization);
   }
 
@@ -334,12 +322,7 @@ function generateFragmentShaderLines(
       // Initializing attribute structs are just a matter of copying the
       // value from the processed attributes
       // "    fsInput.attributes.positionMC = attributes.positionMC;"
-      fragmentInitialization =
-        "fsInput.attributes." +
-        variableName +
-        " = attributes." +
-        variableName +
-        ";";
+      fragmentInitialization = `fsInput.attributes.${variableName} = attributes.${variableName};`;
       initializationLines.push(fragmentInitialization);
     }
   }
@@ -350,9 +333,7 @@ function generateFragmentShaderLines(
     if (!defined(attributeDefaults)) {
       CustomShaderPipelineStage._oneTimeWarning(
         "CustomShaderPipelineStage.incompatiblePrimitiveFS",
-        "Primitive is missing attribute " +
-          variableName +
-          ", disabling custom fragment shader."
+        `Primitive is missing attribute ${variableName}, disabling custom fragment shader.`
       );
 
       // This primitive isn't compatible with the shader. Return early
@@ -361,12 +342,7 @@ function generateFragmentShaderLines(
     }
 
     attributeFields.push(attributeDefaults.attributeField);
-    fragmentInitialization =
-      "fsInput.attributes." +
-      variableName +
-      " = " +
-      attributeDefaults.value +
-      ";";
+    fragmentInitialization = `fsInput.attributes.${variableName} = ${attributeDefaults.value};`;
     initializationLines.push(fragmentInitialization);
   }
 

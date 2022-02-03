@@ -52,7 +52,7 @@ describe("Core/FeatureDetection", function () {
       const chromeVersion = FeatureDetection.chromeVersion();
       checkVersionArray(chromeVersion);
 
-      console.log("detected Chrome " + chromeVersion.join("."));
+      console.log(`detected Chrome ${chromeVersion.join(".")}`);
     }
   });
 
@@ -64,7 +64,7 @@ describe("Core/FeatureDetection", function () {
       const safariVersion = FeatureDetection.safariVersion();
       checkVersionArray(safariVersion);
 
-      console.log("detected Safari " + safariVersion.join("."));
+      console.log(`detected Safari ${safariVersion.join(".")}`);
     }
   });
 
@@ -78,9 +78,9 @@ describe("Core/FeatureDetection", function () {
       expect(typeof webkitVersion.isNightly).toEqual("boolean");
 
       console.log(
-        "detected Webkit " +
-          webkitVersion.join(".") +
-          (webkitVersion.isNightly ? " (Nightly)" : "")
+        `detected Webkit ${webkitVersion.join(".")}${
+          webkitVersion.isNightly ? " (Nightly)" : ""
+        }`
       );
     }
   });
@@ -94,7 +94,7 @@ describe("Core/FeatureDetection", function () {
       checkVersionArray(internetExplorerVersion);
 
       console.log(
-        "detected Internet Explorer " + internetExplorerVersion.join(".")
+        `detected Internet Explorer ${internetExplorerVersion.join(".")}`
       );
     }
   });
@@ -107,7 +107,7 @@ describe("Core/FeatureDetection", function () {
       const edgeVersion = FeatureDetection.edgeVersion();
       checkVersionArray(edgeVersion);
 
-      console.log("detected Edge " + edgeVersion.join("."));
+      console.log(`detected Edge ${edgeVersion.join(".")}`);
     }
   });
 
@@ -120,7 +120,7 @@ describe("Core/FeatureDetection", function () {
 
       checkVersionArray(firefoxVersion);
 
-      console.log("detected Firefox " + firefoxVersion.join("."));
+      console.log(`detected Firefox ${firefoxVersion.join(".")}`);
     }
   });
 

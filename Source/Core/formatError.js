@@ -15,14 +15,14 @@ function formatError(object) {
   const name = object.name;
   const message = object.message;
   if (defined(name) && defined(message)) {
-    result = name + ": " + message;
+    result = `${name}: ${message}`;
   } else {
     result = object.toString();
   }
 
   const stack = object.stack;
   if (defined(stack)) {
-    result += "\n" + stack;
+    result += `\n${stack}`;
   }
 
   return result;

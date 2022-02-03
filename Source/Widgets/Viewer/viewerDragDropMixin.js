@@ -276,7 +276,7 @@ function createOnLoadCallback(viewer, file, proxy, clampToGround) {
         viewer.dropError.raiseEvent(
           viewer,
           fileName,
-          "Unrecognized file: " + fileName
+          `Unrecognized file: ${fileName}`
         );
         return;
       }

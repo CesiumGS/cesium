@@ -471,7 +471,7 @@ function geocode(viewModel, geocoderServices, geocodeType) {
       viewModel.destinationFound(viewModel, geocoderResults[0].destination);
       return;
     }
-    viewModel._searchText = query + " (not found)";
+    viewModel._searchText = `${query} (not found)`;
   });
 }
 

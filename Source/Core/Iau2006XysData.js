@@ -260,9 +260,7 @@ function requestXysChunk(xysData, chunkIndex) {
     });
   } else {
     chunkUrl = new Resource({
-      url: buildModuleUrl(
-        "Assets/IAU2006_XYS/IAU2006_XYS_" + chunkIndex + ".json"
-      ),
+      url: buildModuleUrl(`Assets/IAU2006_XYS/IAU2006_XYS_${chunkIndex}.json`),
     });
   }
 

@@ -242,7 +242,7 @@ function decodePointCloud(parameters) {
   );
   if (!decodingStatus.ok() || dracoPointCloud.ptr === 0) {
     throw new RuntimeError(
-      "Error decoding draco point cloud: " + decodingStatus.error_msg()
+      `Error decoding draco point cloud: ${decodingStatus.error_msg()}`
     );
   }
 
@@ -318,7 +318,7 @@ function decodePrimitive(parameters) {
   const decodingStatus = dracoDecoder.DecodeBufferToMesh(buffer, dracoGeometry);
   if (!decodingStatus.ok() || dracoGeometry.ptr === 0) {
     throw new RuntimeError(
-      "Error decoding draco mesh geometry: " + decodingStatus.error_msg()
+      `Error decoding draco mesh geometry: ${decodingStatus.error_msg()}`
     );
   }
 

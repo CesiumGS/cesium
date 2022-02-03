@@ -34,13 +34,13 @@ function objectToQuery(obj) {
     if (obj.hasOwnProperty(propName)) {
       const value = obj[propName];
 
-      const part = encodeURIComponent(propName) + "=";
+      const part = `${encodeURIComponent(propName)}=`;
       if (Array.isArray(value)) {
         for (let i = 0, len = value.length; i < len; ++i) {
-          result += part + encodeURIComponent(value[i]) + "&";
+          result += `${part + encodeURIComponent(value[i])}&`;
         }
       } else {
-        result += part + encodeURIComponent(value) + "&";
+        result += `${part + encodeURIComponent(value)}&`;
       }
     }
   }

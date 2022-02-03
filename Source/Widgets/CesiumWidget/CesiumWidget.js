@@ -22,9 +22,7 @@ import Sun from "../../Scene/Sun.js";
 import getElement from "../getElement.js";
 
 function getDefaultSkyBoxUrl(suffix) {
-  return buildModuleUrl(
-    "Assets/Textures/SkyBox/tycho2t3_80_" + suffix + ".jpg"
-  );
+  return buildModuleUrl(`Assets/Textures/SkyBox/tycho2t3_80_${suffix}.jpg`);
 }
 
 function startRenderLoop(widget) {
@@ -653,8 +651,10 @@ CesiumWidget.prototype.showErrorPanel = function (title, message, error) {
   errorPanelScroller.className = "cesium-widget-errorPanel-scroll";
   content.appendChild(errorPanelScroller);
   function resizeCallback() {
-    errorPanelScroller.style.maxHeight =
-      Math.max(Math.round(element.clientHeight * 0.9 - 100), 30) + "px";
+    errorPanelScroller.style.maxHeight = `${Math.max(
+      Math.round(element.clientHeight * 0.9 - 100),
+      30
+    )}px`;
   }
   resizeCallback();
   if (defined(window.addEventListener)) {
@@ -685,7 +685,7 @@ CesiumWidget.prototype.showErrorPanel = function (title, message, error) {
 
       //IE8 does not have a console object unless the dev tools are open.
       if (typeof console !== "undefined") {
-        console.error(title + "\n" + message + "\n" + errorDetails);
+        console.error(`${title}\n${message}\n${errorDetails}`);
       }
 
       const errorMessageDetails = document.createElement("div");
@@ -709,7 +709,7 @@ CesiumWidget.prototype.showErrorPanel = function (title, message, error) {
       errorPanelScroller.appendChild(errorMessageDetails);
     }
 
-    errorMessage.innerHTML = "<p>" + message + "</p>";
+    errorMessage.innerHTML = `<p>${message}</p>`;
   }
 
   const buttonPanel = document.createElement("div");

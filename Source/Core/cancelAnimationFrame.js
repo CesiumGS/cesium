@@ -12,9 +12,9 @@ if (typeof cancelAnimationFrame !== "undefined") {
     let i = 0;
     const len = vendors.length;
     while (i < len && !defined(implementation)) {
-      implementation = window[vendors[i] + "CancelAnimationFrame"];
+      implementation = window[`${vendors[i]}CancelAnimationFrame`];
       if (!defined(implementation)) {
-        implementation = window[vendors[i] + "CancelRequestAnimationFrame"];
+        implementation = window[`${vendors[i]}CancelRequestAnimationFrame`];
       }
       ++i;
     }

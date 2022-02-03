@@ -120,7 +120,7 @@
           const singleDigitPins = new Array(8);
           for (let i = 0; i < singleDigitPins.length; ++i) {
             singleDigitPins[i] = pinBuilder
-              .fromText("" + (i + 2), Cesium.Color.VIOLET, 48)
+              .fromText(`${i + 2}`, Cesium.Color.VIOLET, 48)
               .toDataURL();
           }
 

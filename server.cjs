@@ -111,7 +111,7 @@
     if (remoteUrl) {
       // add http:// to the URL if no protocol is present
       if (!/^https?:\/\//.test(remoteUrl)) {
-        remoteUrl = "http://" + remoteUrl;
+        remoteUrl = `http://${remoteUrl}`;
       }
       remoteUrl = url.parse(remoteUrl);
       // copy query string

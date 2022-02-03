@@ -792,6 +792,6 @@ Cartesian2.prototype.equalsEpsilon = function (
  * @returns {String} A string representing the provided Cartesian in the format '(x, y)'.
  */
 Cartesian2.prototype.toString = function () {
-  return "(" + this.x + ", " + this.y + ")";
+  return `(${this.x}, ${this.y})`;
 };
 export default Cartesian2;

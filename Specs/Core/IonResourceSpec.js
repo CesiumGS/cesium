@@ -9,7 +9,7 @@ describe("Core/IonResource", function () {
   const assetId = 123890213;
   const endpoint = {
     type: "3DTILES",
-    url: "https://assets.cesium.com/" + assetId + "/tileset.json",
+    url: `https://assets.cesium.com/${assetId}/tileset.json`,
     accessToken: "not_really_a_refresh_token",
     attributions: [],
   };
@@ -54,7 +54,7 @@ describe("Core/IonResource", function () {
     const tilesAssetId = 123890213;
     const tilesEndpoint = {
       type: "3DTILES",
-      url: "https://assets.cesium.com/" + tilesAssetId + "/tileset.json",
+      url: `https://assets.cesium.com/${tilesAssetId}/tileset.json`,
       accessToken: "not_really_a_refresh_token",
       attributions: [],
     };
@@ -135,11 +135,7 @@ describe("Core/IonResource", function () {
     const assetId = 2348234;
     const resource = IonResource._createEndpointResource(assetId);
     expect(resource.url).toBe(
-      Ion.defaultServer.url +
-        "v1/assets/" +
-        assetId +
-        "/endpoint?access_token=" +
-        Ion.defaultAccessToken
+      `${Ion.defaultServer.url}v1/assets/${assetId}/endpoint?access_token=${Ion.defaultAccessToken}`
     );
   });
 
@@ -153,11 +149,7 @@ describe("Core/IonResource", function () {
       accessToken: accessToken,
     });
     expect(resource.url).toBe(
-      serverUrl +
-        "v1/assets/" +
-        assetId +
-        "/endpoint?access_token=" +
-        accessToken
+      `${serverUrl}v1/assets/${assetId}/endpoint?access_token=${accessToken}`
     );
   });
 
@@ -171,11 +163,7 @@ describe("Core/IonResource", function () {
     const assetId = 2348234;
     const resource = IonResource._createEndpointResource(assetId);
     expect(resource.url).toBe(
-      Ion.defaultServer.url +
-        "v1/assets/" +
-        assetId +
-        "/endpoint?access_token=" +
-        Ion.defaultAccessToken
+      `${Ion.defaultServer.url}v1/assets/${assetId}/endpoint?access_token=${Ion.defaultAccessToken}`
     );
 
     Ion.defaultServer = defaultServer;
@@ -186,7 +174,7 @@ describe("Core/IonResource", function () {
     const originalOptions = {};
     const expectedOptions = {
       headers: {
-        Authorization: "Bearer " + endpoint.accessToken,
+        Authorization: `Bearer ${endpoint.accessToken}`,
       },
     };
 
@@ -201,7 +189,7 @@ describe("Core/IonResource", function () {
     const originalOptions = {};
     const expectedOptions = {
       headers: {
-        Authorization: "Bearer " + endpoint.accessToken,
+        Authorization: `Bearer ${endpoint.accessToken}`,
       },
     };
 
@@ -310,7 +298,7 @@ describe("Core/IonResource", function () {
 
       const newEndpoint = {
         type: "3DTILES",
-        url: "https://assets.cesium.com/" + assetId,
+        url: `https://assets.cesium.com/${assetId}`,
         accessToken: "not_not_really_a_refresh_token",
       };
 
