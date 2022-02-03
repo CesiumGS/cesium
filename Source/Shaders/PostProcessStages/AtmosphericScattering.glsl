@@ -179,8 +179,7 @@ void main() {
     vec4 color = texture2D(colorTexture, v_textureCoordinates);
     vec4 rawDepthColor = texture2D(depthTexture, v_textureCoordinates);
 
-    //float depth = czm_unpackDepth(rawDepthColor); // depth packing appears to be buggy on mobile
-    float depth = rawDepthColor.r; // so only use the most significant depth element for now
+    float depth = rawDepthColor.r; // depth packing problem (#7743): only use the most significant depth element for now
 
     // calculate world position from view/depth
     vec4 positionEC = czm_windowToEyeCoordinates(gl_FragCoord.xy, depth);
