@@ -11,7 +11,7 @@
       name="description"
       content="Apply an atmosphere light scattering post processing stage."
     />
-    <meta name="cesium-sandcastle-labels" content="Showcases" />
+    <meta name="cesium-sandcastle-labels" content="Post Processing" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -59,7 +59,7 @@
         viewer.scene.skyAtmosphere.show = false;
         viewer.scene.globe.showGroundAtmosphere = false;
 
-        // add post processing stage for astmosphere light scattering
+        // add post processing stage for atmosphere light scattering
         viewer.scene.postProcessStages.add(
           Cesium.PostProcessStageLibrary.createAtmosphereScatteringStage()
         );
