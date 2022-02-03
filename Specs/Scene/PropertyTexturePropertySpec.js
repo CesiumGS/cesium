@@ -178,46 +178,68 @@ describe("Scene/PropertyTextureProperty", function () {
       texCoord: 0,
     };
 
-    const uint8Property = new PropertyTextureProperty({
-      textureInfo: textureInfo,
-      classProperty: unpackingClass.properties.uint8,
-      channels: [0],
-      texture: texture,
+    let context;
+    let texture;
+    const properties = {};
+    beforeAll(function () {
+      context = createContext();
+      texture = new Texture({
+        context: context,
+        pixelFormat: PixelFormat.RGBA,
+        pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
+        source: {
+          arrayBufferView: new Uint8Array([1, 2, 3, 4]),
+          width: 1,
+          height: 1,
+        },
+      });
+
+      properties.uint8Property = new PropertyTextureProperty({
+        textureInfo: textureInfo,
+        classProperty: unpackingClass.properties.uint8,
+        channels: [0],
+        texture: texture,
+      });
+
+      properties.normalizedUint8Property = new PropertyTextureProperty({
+        textureInfo: textureInfo,
+        classProperty: unpackingClass.properties.normalizedUint8,
+        channels: [0],
+        texture: texture,
+      });
+
+      properties.vec2Property = new PropertyTextureProperty({
+        textureInfo: textureInfo,
+        classProperty: unpackingClass.properties.vec2,
+        channels: [1, 2],
+        texture: texture,
+      });
+
+      properties.ivec3Property = new PropertyTextureProperty({
+        textureInfo: textureInfo,
+        classProperty: unpackingClass.properties.ivec3,
+        channels: [0, 1, 2],
+        texture: texture,
+      });
+
+      properties.unsupportedProperty = new PropertyTextureProperty({
+        textureInfo: textureInfo,
+        classProperty: unpackingClass.properties.unsupportedType,
+        channels: [0],
+        texture: texture,
+      });
+
+      properties.tooManyComponentsProperty = new PropertyTextureProperty({
+        textureInfo: textureInfo,
+        classProperty: unpackingClass.properties.tooManyComponents,
+        channels: [0, 1, 2, 3, 4, 5, 6],
+        texture: texture,
+      });
     });
 
-    const normalizedUint8Property = new PropertyTextureProperty({
-      textureInfo: textureInfo,
-      classProperty: unpackingClass.properties.normalizedUint8,
-      channels: [0],
-      texture: texture,
-    });
-
-    const vec2Property = new PropertyTextureProperty({
-      textureInfo: textureInfo,
-      classProperty: unpackingClass.properties.vec2,
-      channels: [1, 2],
-      texture: texture,
-    });
-
-    const ivec3Property = new PropertyTextureProperty({
-      textureInfo: textureInfo,
-      classProperty: unpackingClass.properties.ivec3,
-      channels: [0, 1, 2],
-      texture: texture,
-    });
-
-    const unsupportedProperty = new PropertyTextureProperty({
-      textureInfo: textureInfo,
-      classProperty: unpackingClass.properties.unsupportedType,
-      channels: [0],
-      texture: texture,
-    });
-
-    const tooManyComponentsProperty = new PropertyTextureProperty({
-      textureInfo: textureInfo,
-      classProperty: unpackingClass.properties.tooManyComponents,
-      channels: [0, 1, 2, 3, 4, 5, 6],
-      texture: texture,
+    afterAll(function () {
+      texture.destroy();
+      context.destroyForSpecs();
     });
 
     function applyUnpackingSteps(expression, unpackingSteps) {
@@ -230,48 +252,50 @@ describe("Scene/PropertyTextureProperty", function () {
 
     it("getUnpackingSteps throws for too many components", function () {
       expect(function () {
-        return tooManyComponentsProperty.getUnpackingSteps();
+        return properties.tooManyComponentsProperty.getUnpackingSteps();
       }).toThrowDeveloperError();
     });
 
     it("getUnpackingSteps throws for invalid type", function () {
       expect(function () {
-        return unsupportedProperty.getUnpackingSteps();
+        return properties.unsupportedProperty.getUnpackingSteps();
       }).toThrowDeveloperError();
     });
 
     it("getUnpackingSteps works", function () {
-      expect(normalizedUint8Property.getUnpackingSteps()).toEqual([]);
-      expect(vec2Property.getUnpackingSteps()).toEqual([]);
+      expect(properties.normalizedUint8Property.getUnpackingSteps()).toEqual(
+        []
+      );
+      expect(properties.vec2Property.getUnpackingSteps()).toEqual([]);
 
       // Because int casts involve an anonymous function, apply the steps
       // to an expression
-      let steps = uint8Property.getUnpackingSteps();
+      let steps = properties.uint8Property.getUnpackingSteps();
       let expression = applyUnpackingSteps("x", steps);
       expect(expression).toEqual("int(255.0 * (x))");
 
-      steps = ivec3Property.getUnpackingSteps();
+      steps = properties.ivec3Property.getUnpackingSteps();
       expression = applyUnpackingSteps("x", steps);
       expect(expression).toEqual("ivec3(255.0 * (x))");
     });
 
     it("getGlslType throws for too many components", function () {
       expect(function () {
-        return tooManyComponentsProperty.getGlslType();
+        return properties.tooManyComponentsProperty.getGlslType();
       }).toThrowDeveloperError();
     });
 
     it("getGlslType throws for invalid type", function () {
       expect(function () {
-        return unsupportedProperty.getGlslType();
+        return properties.unsupportedProperty.getGlslType();
       }).toThrowDeveloperError();
     });
 
     it("getGlslType works", function () {
-      expect(normalizedUint8Property.getGlslType()).toEqual("float");
-      expect(vec2Property.getUnpackingSteps()).toEqual("vec2");
-      expect(uint8Property.getGlslType()).toEqual("int");
-      expect(ivec3Property.getUnpackingSteps()).toEqual("ivec3");
+      expect(properties.normalizedUint8Property.getGlslType()).toEqual("float");
+      expect(properties.vec2Property.getUnpackingSteps()).toEqual("vec2");
+      expect(properties.uint8Property.getGlslType()).toEqual("int");
+      expect(properties.ivec3Property.getUnpackingSteps()).toEqual("ivec3");
     });
   });
 });

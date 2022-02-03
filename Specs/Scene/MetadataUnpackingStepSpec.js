@@ -20,7 +20,7 @@ describe("Scene/MetadataUnpackingStep", function () {
   });
 
   it("unnormalizeU8 works", function () {
-    expect(MetadataUnpackingStep.unnormalize("x")).toEqual("255.0 * (x)");
+    expect(MetadataUnpackingStep.unnormalizeU8("x")).toEqual("255.0 * (x)");
   });
 
   it("cast throws for undefined castType", function () {
@@ -31,7 +31,7 @@ describe("Scene/MetadataUnpackingStep", function () {
 
   it("cast result throws for undefined expression", function () {
     expect(function () {
-      return MetadataUnpackingStep.cast("int");
+      return MetadataUnpackingStep.cast("int")();
     }).toThrowDeveloperError();
   });
 
