@@ -107,6 +107,7 @@ describe(
       "Data/Cesium3DTiles/Instanced/InstancedAnimated/tileset.json";
 
     const gltfContentUrl = "Data/Cesium3DTiles/GltfContent/glTF/tileset.json";
+    const glbContentUrl = "Data/Cesium3DTiles/GltfContent/glb/tileset.json";
 
     // 1 tile where each feature is a different source color
     const colorsUrl = "Data/Cesium3DTiles/Batched/BatchedColors/tileset.json";
@@ -1961,9 +1962,15 @@ describe(
       return checkDebugColorizeTiles(pointCloudUrl);
     });
 
-    it("debugColorizeTiles for glTF", function () {
+    // see https://github.com/CesiumGS/cesium/issues/10061
+    xit("debugColorizeTiles for glTF", function () {
       viewGltfContent();
       return checkDebugColorizeTiles(gltfContentUrl);
+    });
+
+    xit("debugColorizeTiles for glb", function () {
+      viewGltfContent();
+      return checkDebugColorizeTiles(glbContentUrl);
     });
 
     it("debugWireframe", function () {
@@ -2577,7 +2584,8 @@ describe(
       return testBackFaceCulling(withoutBatchTableUrl, setViewOptions);
     });
 
-    it("renders glTF tileset when back face culling is disabled", function () {
+    // see https://github.com/CesiumGS/cesium/issues/10056
+    xit("renders glTF tileset when back face culling is disabled", function () {
       const setViewOptions = {
         destination: new Cartesian3(
           1215012.6853779217,
@@ -2593,6 +2601,24 @@ describe(
       };
 
       return testBackFaceCulling(gltfContentUrl, setViewOptions);
+    });
+
+    xit("renders glb tileset when back face culling is disabled", function () {
+      const setViewOptions = {
+        destination: new Cartesian3(
+          1215012.6853779217,
+          -4736313.101374343,
+          4081603.4657718465
+        ),
+        orientation: new HeadingPitchRoll(
+          6.283185307179584,
+          -0.49999825387267993,
+          6.283185307179586
+        ),
+        endTransform: Matrix4.IDENTITY,
+      };
+
+      return testBackFaceCulling(glbContentUrl, setViewOptions);
     });
 
     it("renders i3dm tileset when back face culling is disabled", function () {
@@ -2686,6 +2712,21 @@ describe(
       );
     });
 
+    it("applies show style to a tileset with glb content", function () {
+      return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(
+        function (tileset) {
+          viewGltfContent();
+          const hideStyle = new Cesium3DTileStyle({ show: "false" });
+          tileset.style = hideStyle;
+          expect(tileset.style).toBe(hideStyle);
+          expect(scene).toRender([0, 0, 0, 255]);
+
+          tileset.style = new Cesium3DTileStyle({ show: "true" });
+          expect(scene).notToRender([0, 0, 0, 255]);
+        }
+      );
+    });
+
     function expectColorStyle(tileset) {
       let color;
       expect(scene).toRenderAndCall(function (rgba) {
@@ -2752,6 +2793,15 @@ describe(
 
     it("applies color style to tileset with glTF content", function () {
       return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
+        function (tileset) {
+          viewGltfContent();
+          expectColorStyle(tileset);
+        }
+      );
+    });
+
+    it("applies color style to tileset with glb content", function () {
+      return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(
         function (tileset) {
           viewGltfContent();
           expectColorStyle(tileset);
