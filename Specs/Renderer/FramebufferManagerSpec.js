@@ -310,6 +310,22 @@ describe(
       context._webgl2 = webgl2;
     });
 
+    it("doesn't create multisample resources if msaa is unsupported", function () {
+      fbm = new FramebufferManager({
+        depth: true,
+        supportsDepthTexture: true,
+      });
+      // Disable extensions
+      const webgl2 = context._webgl2;
+      context._webgl2 = false;
+
+      fbm.update(context, 1, 1, 4);
+      expect(fbm._multisampleFramebuffer).toBeUndefined();
+
+      // Re-enable extensions
+      context._webgl2 = webgl2;
+    });
+
     it("destroys attachments and framebuffer", function () {
       if (!context.drawBuffers) {
         return;
