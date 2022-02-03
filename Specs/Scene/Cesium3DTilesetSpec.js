@@ -1959,13 +1959,12 @@ describe(
       return checkDebugColorizeTiles(pointCloudUrl);
     });
 
-    // see https://github.com/CesiumGS/cesium/issues/10061
-    xit("debugColorizeTiles for glTF", function () {
+    it("debugColorizeTiles for glTF", function () {
       viewGltfContent();
       return checkDebugColorizeTiles(gltfContentUrl);
     });
 
-    xit("debugColorizeTiles for glb", function () {
+    it("debugColorizeTiles for glb", function () {
       viewGltfContent();
       return checkDebugColorizeTiles(glbContentUrl);
     });
