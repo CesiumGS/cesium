@@ -411,15 +411,12 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
   }
 };
 
-function forEachDrawCommand(sceneGraph, callback) {
+function forEachRuntimePrimitive(sceneGraph, callback) {
   for (let i = 0; i < sceneGraph._runtimeNodes.length; i++) {
     const runtimeNode = sceneGraph._runtimeNodes[i];
     for (let j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
       const runtimePrimitive = runtimeNode.runtimePrimitives[j];
-      for (let k = 0; k < runtimePrimitive.drawCommands.length; k++) {
-        const drawCommands = runtimePrimitive.drawCommands;
-        callback(drawCommands[i]);
-      }
+      callback(runtimePrimitive);
     }
   }
 }
@@ -430,21 +427,17 @@ function forEachDrawCommand(sceneGraph, callback) {
  * @private
  */
 ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (value) {
-  for (let i = 0; i < this._runtimeNodes.length; i++) {
-    const runtimeNode = this._runtimeNodes[i];
-    for (let j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
-      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
-      for (let k = 0; k < runtimePrimitive.drawCommands.length; k++) {
-        const drawCommand = runtimePrimitive.drawCommands[k];
-        const renderState = clone(drawCommand.renderState, true);
-        const doubleSided = runtimePrimitive.primitive.material.doubleSided;
-        const color = this._model.color;
-        const translucent = defined(color) && color.alpha < 1.0;
-        renderState.cull.enabled = value && !doubleSided && !translucent;
-        drawCommand.renderState = RenderState.fromCache(renderState);
-      }
+  const model = this._model;
+  forEachRuntimePrimitive(this, function (runtimePrimitive) {
+    for (let k = 0; k < runtimePrimitive.drawCommands.length; k++) {
+      const drawCommand = runtimePrimitive.drawCommands[k];
+      const renderState = clone(drawCommand.renderState, true);
+      const doubleSided = runtimePrimitive.primitive.material.doubleSided;
+      const translucent = defined(model.color) && model.color.alpha < 1.0;
+      renderState.cull.enabled = value && !doubleSided && !translucent;
+      drawCommand.renderState = RenderState.fromCache(renderState);
     }
-  }
+  });
 };
 
 /**
@@ -455,12 +448,8 @@ ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (value) {
  */
 ModelExperimentalSceneGraph.prototype.getDrawCommands = function () {
   const drawCommands = [];
-  for (let i = 0; i < this._runtimeNodes.length; i++) {
-    const runtimeNode = this._runtimeNodes[i];
-    for (let j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
-      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
-      drawCommands.push.apply(drawCommands, runtimePrimitive.drawCommands);
-    }
-  }
+  forEachRuntimePrimitive(this, function (runtimePrimitive) {
+    drawCommands.push.apply(drawCommands, runtimePrimitive.drawCommands);
+  });
   return drawCommands;
 };
