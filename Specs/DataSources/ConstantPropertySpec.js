@@ -13,7 +13,7 @@ describe("DataSources/ConstantProperty", function () {
     expect(property.valueOf()).toBe(expected);
     expect(property.toString()).toBe(expected.toString());
     expect(0 + property).toBe(expected);
-    expect("0" + property).toBe("0" + expected);
+    expect(`0${property}`).toBe(`0${expected}`);
   });
 
   it("works with objects", function () {
@@ -72,7 +72,7 @@ describe("DataSources/ConstantProperty", function () {
 
     expect(property.valueOf()).toBeUndefined();
     expect(0 + property).toBeNaN();
-    expect("0" + property).toBe("0" + "undefined");
+    expect(`0${property}`).toBe("0" + "undefined");
   });
 
   it('equals works for object types with "equals" function', function () {

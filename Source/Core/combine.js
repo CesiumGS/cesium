@@ -7,16 +7,16 @@ import defined from "./defined.js";
  * it will be treated as an empty object.
  *
  * @example
- * var object1 = {
+ * const object1 = {
  *     propOne : 1,
  *     propTwo : {
  *         value1 : 10
  *     }
  * }
- * var object2 = {
+ * const object2 = {
  *     propTwo : 2
  * }
- * var final = Cesium.combine(object1, object2);
+ * const final = Cesium.combine(object1, object2);
  *
  * // final === {
  * //     propOne : 1,

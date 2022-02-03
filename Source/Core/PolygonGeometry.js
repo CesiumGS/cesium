@@ -704,7 +704,7 @@ function createGeometryFromPositionsExtruded(
  *
  * @example
  * // 1. create a polygon from points
- * var polygon = new Cesium.PolygonGeometry({
+ * const polygon = new Cesium.PolygonGeometry({
  *   polygonHierarchy : new Cesium.PolygonHierarchy(
  *     Cesium.Cartesian3.fromDegreesArray([
  *       -72.0, 40.0,
@@ -715,10 +715,10 @@ function createGeometryFromPositionsExtruded(
  *     ])
  *   )
  * });
- * var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
+ * const geometry = Cesium.PolygonGeometry.createGeometry(polygon);
  *
  * // 2. create a nested polygon with holes
- * var polygonWithHole = new Cesium.PolygonGeometry({
+ * const polygonWithHole = new Cesium.PolygonGeometry({
  *   polygonHierarchy : new Cesium.PolygonHierarchy(
  *     Cesium.Cartesian3.fromDegreesArray([
  *       -109.0, 30.0,
@@ -752,10 +752,10 @@ function createGeometryFromPositionsExtruded(
  *     )]
  *   )
  * });
- * var geometry = Cesium.PolygonGeometry.createGeometry(polygonWithHole);
+ * const geometry = Cesium.PolygonGeometry.createGeometry(polygonWithHole);
  *
  * // 3. create extruded polygon
- * var extrudedPolygon = new Cesium.PolygonGeometry({
+ * const extrudedPolygon = new Cesium.PolygonGeometry({
  *   polygonHierarchy : new Cesium.PolygonHierarchy(
  *     Cesium.Cartesian3.fromDegreesArray([
  *       -72.0, 40.0,
@@ -767,7 +767,7 @@ function createGeometryFromPositionsExtruded(
  *   ),
  *   extrudedHeight: 300000
  * });
- * var geometry = Cesium.PolygonGeometry.createGeometry(extrudedPolygon);
+ * const geometry = Cesium.PolygonGeometry.createGeometry(extrudedPolygon);
  */
 function PolygonGeometry(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -863,7 +863,7 @@ function PolygonGeometry(options) {
  *
  * @example
  * // create a polygon from points
- * var polygon = Cesium.PolygonGeometry.fromPositions({
+ * const polygon = Cesium.PolygonGeometry.fromPositions({
  *   positions : Cesium.Cartesian3.fromDegreesArray([
  *     -72.0, 40.0,
  *     -70.0, 35.0,
@@ -872,7 +872,7 @@ function PolygonGeometry(options) {
  *     -68.0, 40.0
  *   ])
  * });
- * var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
+ * const geometry = Cesium.PolygonGeometry.createGeometry(polygon);
  *
  * @see PolygonGeometry#createGeometry
  */

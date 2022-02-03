@@ -888,13 +888,13 @@ Quaternion.computeInnerQuadrangle = function (q0, q1, q2, result) {
  *
  * @example
  * // 1. compute the squad interpolation between two quaternions on a curve
- * var s0 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[i - 1], quaternions[i], quaternions[i + 1], new Cesium.Quaternion());
- * var s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[i], quaternions[i + 1], quaternions[i + 2], new Cesium.Quaternion());
- * var q = Cesium.Quaternion.squad(quaternions[i], quaternions[i + 1], s0, s1, t, new Cesium.Quaternion());
+ * const s0 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[i - 1], quaternions[i], quaternions[i + 1], new Cesium.Quaternion());
+ * const s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[i], quaternions[i + 1], quaternions[i + 2], new Cesium.Quaternion());
+ * const q = Cesium.Quaternion.squad(quaternions[i], quaternions[i + 1], s0, s1, t, new Cesium.Quaternion());
  *
  * // 2. compute the squad interpolation as above but where the first quaternion is a end point.
- * var s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[0], quaternions[1], quaternions[2], new Cesium.Quaternion());
- * var q = Cesium.Quaternion.squad(quaternions[0], quaternions[1], quaternions[0], s1, t, new Cesium.Quaternion());
+ * const s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[0], quaternions[1], quaternions[2], new Cesium.Quaternion());
+ * const q = Cesium.Quaternion.squad(quaternions[0], quaternions[1], quaternions[0], s1, t, new Cesium.Quaternion());
  *
  * @see Quaternion#computeInnerQuadrangle
  */
@@ -1136,6 +1136,6 @@ Quaternion.prototype.equalsEpsilon = function (right, epsilon) {
  * @returns {String} A string representing this Quaternion.
  */
 Quaternion.prototype.toString = function () {
-  return "(" + this.x + ", " + this.y + ", " + this.z + ", " + this.w + ")";
+  return `(${this.x}, ${this.y}, ${this.z}, ${this.w})`;
 };
 export default Quaternion;

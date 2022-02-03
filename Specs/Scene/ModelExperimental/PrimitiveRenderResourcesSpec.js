@@ -50,8 +50,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
       count: 6,
     },
     primitiveType: PrimitiveType.TRIANGLES,
-    featureIdAttributes: [],
-    featureIdTextures: [],
+    featureIds: [],
     attributes: [
       {
         semantic: VertexAttributeSemantic.POSITION,
@@ -66,7 +65,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
 
   const primitiveWithoutIndices = {
     primitiveType: PrimitiveType.POINTS,
-    featureIdAttributes: [],
+    featureIds: [],
     featureIdTextures: [],
     attributes: [
       {
@@ -180,8 +179,13 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
   it("inherits from model render resources", function () {
     const modelResources = new ModelRenderResources(mockModel);
     modelResources.shaderBuilder.addDefine("MODEL");
+    modelResources.renderStateOptions.cull = {
+      enabled: true,
+    };
+
     const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
     nodeResources.shaderBuilder.addDefine("NODE");
+
     const primitiveResources = new PrimitiveRenderResources(
       nodeResources,
       runtimePrimitive
@@ -198,6 +202,11 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
       modelResources.shaderBuilder
     );
 
+    // The primitive should have inherited the renderStateOptions of the model's
+    expect(primitiveResources.renderStateOptions.cull).toEqual({
+      enabled: true,
+    });
+
     // The defines should cascade through the three levels
     checkShaderDefines(modelResources.shaderBuilder, ["MODEL"]);
     checkShaderDefines(nodeResources.shaderBuilder, ["MODEL", "NODE"]);
@@ -211,14 +220,29 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
   it("inherits from node render resources", function () {
     const modelResources = new ModelRenderResources(mockModel);
     modelResources.shaderBuilder.addDefine("MODEL");
+    modelResources.renderStateOptions.cull = {
+      enabled: true,
+    };
+
     const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
     nodeResources.shaderBuilder.addDefine("NODE");
+    nodeResources.renderStateOptions.blending = BlendingState.ALPHA_BLEND;
+
     const primitiveResources = new PrimitiveRenderResources(
       nodeResources,
       runtimePrimitive
     );
+
     expect(primitiveResources.runtimeNode).toBe(runtimeNode);
     expect(primitiveResources.modelMatrix).toEqual(runtimeNode.modelMatrix);
     expect(primitiveResources.attributes).toEqual([]);
+
+    // The primitive should have inherited the renderStateOptions of the node's
+    expect(primitiveResources.renderStateOptions.cull).toEqual({
+      enabled: true,
+    });
+    expect(primitiveResources.renderStateOptions.blending).toEqual(
+      BlendingState.ALPHA_BLEND
+    );
   });
 });

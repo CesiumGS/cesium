@@ -189,10 +189,9 @@ describe("Core/sampleTerrain", function () {
         // it's a whitelist - meaning you have to proxy every request explicitly
         if (!defined(proxiedUrl)) {
           throw new Error(
-            "Unexpected XHR load to url: " +
-              url +
-              "; spec includes: " +
-              availablePaths.join(", ")
+            `Unexpected XHR load to url: ${url}; spec includes: ${availablePaths.join(
+              ", "
+            )}`
           );
         }
 

@@ -669,18 +669,13 @@ describe("Scene/UrlTemplateImageryProvider", function () {
         deferred
       ) {
         expect(request.url).toEqual(
-          "-90 " +
-            (-Math.PI * Ellipsoid.WGS84.maximumRadius) / 2.0 +
-            " " +
-            "0 " +
-            "0 " +
-            "0 " +
-            "0 " +
-            CesiumMath.toDegrees(
+          `-90 ${(-Math.PI * Ellipsoid.WGS84.maximumRadius) / 2.0} ` +
+            `0 ` +
+            `0 ` +
+            `0 ` +
+            `0 ${CesiumMath.toDegrees(
               WebMercatorProjection.mercatorAngleToGeodeticLatitude(Math.PI / 2)
-            ) +
-            " " +
-            (Math.PI * Ellipsoid.WGS84.maximumRadius) / 2.0
+            )} ${(Math.PI * Ellipsoid.WGS84.maximumRadius) / 2.0}`
         );
 
         // Just return any old image.

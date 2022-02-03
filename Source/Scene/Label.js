@@ -1380,7 +1380,7 @@ Label.prototype.isDestroyed = function () {
  * // Example 1.
  * // Set a label's rightToLeft before init
  * Cesium.Label.enableRightToLeftDetection = true;
- * var myLabelEntity = viewer.entities.add({
+ * const myLabelEntity = viewer.entities.add({
  *   label: {
  *     id: 'my label',
  *     text: 'זה טקסט בעברית \n ועכשיו יורדים שורה',
@@ -1389,7 +1389,7 @@ Label.prototype.isDestroyed = function () {
  *
  * @example
  * // Example 2.
- * var myLabelEntity = viewer.entities.add({
+ * const myLabelEntity = viewer.entities.add({
  *   label: {
  *     id: 'my label',
  *     text: 'English text'
@@ -1471,7 +1471,7 @@ function reverseBrackets(bracket) {
 //To add another language, simply add its Unicode block range(s) to the below regex.
 const hebrew = "\u05D0-\u05EA";
 const arabic = "\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF";
-const rtlChars = new RegExp("[" + hebrew + arabic + "]");
+const rtlChars = new RegExp(`[${hebrew}${arabic}]`);
 
 /**
  *

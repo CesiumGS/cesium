@@ -264,7 +264,7 @@ describe("ResourceCacheKey", function () {
       resource: schemaResource,
     });
 
-    expect(cacheKey).toBe("external-schema:" + schemaUri);
+    expect(cacheKey).toBe(`external-schema:${schemaUri}`);
   });
 
   it("getSchemaCacheKey works for JSON schemas", function () {
@@ -272,7 +272,7 @@ describe("ResourceCacheKey", function () {
       schema: schemaJson,
     });
 
-    expect(cacheKey).toBe("embedded-schema:" + JSON.stringify(schemaJson));
+    expect(cacheKey).toBe(`embedded-schema:${JSON.stringify(schemaJson)}`);
   });
 
   it("getSchemaCacheKey throws if neither options.schema nor options.resource are defined", function () {
@@ -295,7 +295,7 @@ describe("ResourceCacheKey", function () {
       resource: bufferResource,
     });
 
-    expect(cacheKey).toBe("external-buffer:" + bufferUri);
+    expect(cacheKey).toBe(`external-buffer:${bufferUri}`);
   });
 
   it("getExternalBufferCacheKey throws if resource is undefined", function () {
@@ -310,7 +310,7 @@ describe("ResourceCacheKey", function () {
       bufferId: bufferId,
     });
 
-    expect(cacheKey).toBe("embedded-buffer:" + gltfUri + "-buffer-id-0");
+    expect(cacheKey).toBe(`embedded-buffer:${gltfUri}-buffer-id-0`);
   });
 
   it("getEmbeddedBufferCacheKey throws if parentResource is undefined", function () {
@@ -334,7 +334,7 @@ describe("ResourceCacheKey", function () {
       gltfResource: gltfResource,
     });
 
-    expect(cacheKey).toBe("gltf:" + gltfUri);
+    expect(cacheKey).toBe(`gltf:${gltfUri}`);
   });
 
   it("getGltfCacheKey throws if gltfResource is undefined", function () {
@@ -351,9 +351,7 @@ describe("ResourceCacheKey", function () {
       baseResource: baseResource,
     });
 
-    expect(cacheKey).toBe(
-      "buffer-view:" + gltfUri + "-buffer-id-0-range-0-100"
-    );
+    expect(cacheKey).toBe(`buffer-view:${gltfUri}-buffer-id-0-range-0-100`);
   });
 
   it("getBufferViewCacheKey works with external buffer", function () {
@@ -377,9 +375,7 @@ describe("ResourceCacheKey", function () {
       baseResource: baseResource,
     });
 
-    expect(cacheKey).toBe(
-      "buffer-view:" + gltfUri + "-buffer-id-1-range-25-75"
-    );
+    expect(cacheKey).toBe(`buffer-view:${gltfUri}-buffer-id-1-range-25-75`);
   });
 
   it("getBufferViewCacheKey throws if gltf is undefined", function () {

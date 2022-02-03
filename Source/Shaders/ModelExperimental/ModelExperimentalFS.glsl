@@ -31,7 +31,7 @@ vec4 handleAlpha(vec3 color, float alpha)
     #endif
 }
 
-Feature feature;
+SelectedFeature selectedFeature;
 
 void main() 
 {
@@ -40,23 +40,25 @@ void main()
     ProcessedAttributes attributes;
     geometryStage(attributes);
 
-    #ifdef HAS_FEATURES
-    featureStage(feature);
+    FeatureIds featureIds;
+    featureIdStage(featureIds, attributes);
+
+    #ifdef HAS_SELECTED_FEATURE_ID
+    selectedFeatureIdStage(selectedFeature, featureIds);
     #endif
 
-
     #ifndef CUSTOM_SHADER_REPLACE_MATERIAL
-    materialStage(material, attributes, feature);
+    materialStage(material, attributes, selectedFeature);
     #endif
 
     #ifdef HAS_CUSTOM_FRAGMENT_SHADER
-    customShaderStage(material, attributes);
+    customShaderStage(material, attributes, featureIds);
     #endif
 
     lightingStage(material);
 
-    #ifdef HAS_FEATURES
-    cpuStylingStage(material, feature);
+    #ifdef HAS_SELECTED_FEATURE_ID
+    cpuStylingStage(material, selectedFeature);
     #endif
     
     #ifdef HAS_MODEL_COLOR

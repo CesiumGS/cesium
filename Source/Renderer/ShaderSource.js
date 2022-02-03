@@ -128,7 +128,7 @@ function sortDependencies(dependencyNodes) {
     let message =
       "A circular dependency was found in the following built-in functions/structs/constants: \n";
     for (let k = 0; k < badNodes.length; ++k) {
-      message = message + badNodes[k].name + "\n";
+      message = `${message + badNodes[k].name}\n`;
     }
     throw new DeveloperError(message);
   }
@@ -146,7 +146,7 @@ function getBuiltinsAndAutomaticUniforms(shaderSource) {
   // Iterate in reverse so that dependent items are declared before they are used.
   let builtinsSource = "";
   for (let i = dependencyNodes.length - 1; i >= 0; --i) {
-    builtinsSource = builtinsSource + dependencyNodes[i].glslSource + "\n";
+    builtinsSource = `${builtinsSource + dependencyNodes[i].glslSource}\n`;
   }
 
   return builtinsSource.replace(root.glslSource, "");
@@ -162,7 +162,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
   if (defined(sources)) {
     for (i = 0, length = sources.length; i < length; ++i) {
       // #line needs to be on its own line.
-      combinedSources += "\n#line 0\n" + sources[i];
+      combinedSources += `\n#line 0\n${sources[i]}`;
     }
   }
 
@@ -177,7 +177,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
     //>>includeStart('debug', pragmas.debug);
     if (defined(version) && version !== group1) {
       throw new DeveloperError(
-        "inconsistent versions found: " + version + " and " + group1
+        `inconsistent versions found: ${version} and ${group1}`
       );
     }
     //>>includeEnd('debug');
@@ -226,7 +226,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
   // #version must be first
   // defaults to #version 100 if not specified
   if (defined(version)) {
-    result = "#version " + version + "\n";
+    result = `#version ${version}\n`;
   }
 
   const extensionsLength = extensions.length;
@@ -254,7 +254,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
     for (i = 0, length = defines.length; i < length; ++i) {
       const define = defines[i];
       if (define.length !== 0) {
-        result += "#define " + define + "\n";
+        result += `#define ${define}\n`;
       }
     }
   }
@@ -307,13 +307,13 @@ function combineShader(shaderSource, isFragmentShader, context) {
  *
  * @example
  * // 1. Prepend #defines to a shader
- * var source = new Cesium.ShaderSource({
+ * const source = new Cesium.ShaderSource({
  *   defines : ['WHITE'],
  *   sources : ['void main() { \n#ifdef WHITE\n gl_FragColor = vec4(1.0); \n#else\n gl_FragColor = vec4(0.0); \n#endif\n }']
  * });
  *
  * // 2. Modify a fragment shader for picking
- * var source = new Cesium.ShaderSource({
+ * const source2 = new Cesium.ShaderSource({
  *   sources : ['void main() { gl_FragColor = vec4(1.0); }'],
  *   pickColorQualifier : 'uniform'
  * });
@@ -352,7 +352,7 @@ ShaderSource.prototype.clone = function () {
 };
 
 ShaderSource.replaceMain = function (source, renamedMain) {
-  renamedMain = "void " + renamedMain + "()";
+  renamedMain = `void ${renamedMain}()`;
   return source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, renamedMain);
 };
 
@@ -416,7 +416,7 @@ ShaderSource.createPickVertexShaderSource = function (vertexShaderSource) {
     "    czm_pickColor = pickColor; \n" +
     "}";
 
-  return renamedVS + "\n" + pickMain;
+  return `${renamedVS}\n${pickMain}`;
 };
 
 ShaderSource.createPickFragmentShaderSource = function (
@@ -428,18 +428,17 @@ ShaderSource.createPickFragmentShaderSource = function (
     "czm_old_main"
   );
   const pickMain =
-    pickColorQualifier +
-    " vec4 czm_pickColor; \n" +
-    "void main() \n" +
-    "{ \n" +
-    "    czm_old_main(); \n" +
-    "    if (gl_FragColor.a == 0.0) { \n" +
-    "       discard; \n" +
-    "    } \n" +
-    "    gl_FragColor = czm_pickColor; \n" +
-    "}";
+    `${pickColorQualifier} vec4 czm_pickColor; \n` +
+    `void main() \n` +
+    `{ \n` +
+    `    czm_old_main(); \n` +
+    `    if (gl_FragColor.a == 0.0) { \n` +
+    `       discard; \n` +
+    `    } \n` +
+    `    gl_FragColor = czm_pickColor; \n` +
+    `}`;
 
-  return renamedFS + "\n" + pickMain;
+  return `${renamedFS}\n${pickMain}`;
 };
 
 ShaderSource.findVarying = function (shaderSource, names) {

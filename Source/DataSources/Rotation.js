@@ -13,11 +13,11 @@ import CesiumMath from "../Core/Math.js";
  *
  *
  * @example
- * var time1 = Cesium.JulianDate.fromIso8601('2010-05-07T00:00:00');
- * var time2 = Cesium.JulianDate.fromIso8601('2010-05-07T00:01:00');
- * var time3 = Cesium.JulianDate.fromIso8601('2010-05-07T00:02:00');
+ * const time1 = Cesium.JulianDate.fromIso8601('2010-05-07T00:00:00');
+ * const time2 = Cesium.JulianDate.fromIso8601('2010-05-07T00:01:00');
+ * const time3 = Cesium.JulianDate.fromIso8601('2010-05-07T00:02:00');
  *
- * var property = new Cesium.SampledProperty(Cesium.Rotation);
+ * const property = new Cesium.SampledProperty(Cesium.Rotation);
  * property.addSample(time1, 0);
  * property.addSample(time3, Cesium.Math.toRadians(350));
  *

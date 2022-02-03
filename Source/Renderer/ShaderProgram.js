@@ -163,9 +163,9 @@ function handleUniformPrecisionMismatches(
       for (j = 0; j < fragmentUniformsCount; j++) {
         if (vertexShaderUniforms[i] === fragmentShaderUniforms[j]) {
           uniformName = vertexShaderUniforms[i];
-          duplicateName = "czm_mediump_" + uniformName;
+          duplicateName = `czm_mediump_${uniformName}`;
           // Update fragmentShaderText with renamed uniforms
-          const re = new RegExp(uniformName + "\\b", "g");
+          const re = new RegExp(`${uniformName}\\b`, "g");
           fragmentShaderText = fragmentShaderText.replace(re, duplicateName);
           duplicateUniformNames[duplicateName] = uniformName;
         }
@@ -222,69 +222,65 @@ function createAndLinkProgram(gl, shader) {
     // For performance, only check compile errors if there is a linker error.
     if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
       log = gl.getShaderInfoLog(fragmentShader);
-      console.error(consolePrefix + "Fragment shader compile log: " + log);
+      console.error(`${consolePrefix}Fragment shader compile log: ${log}`);
       if (defined(debugShaders)) {
         const fragmentSourceTranslation = debugShaders.getTranslatedShaderSource(
           fragmentShader
         );
         if (fragmentSourceTranslation !== "") {
           console.error(
-            consolePrefix +
-              "Translated fragment shader source:\n" +
-              fragmentSourceTranslation
+            `${consolePrefix}Translated fragment shader source:\n${fragmentSourceTranslation}`
           );
         } else {
-          console.error(consolePrefix + "Fragment shader translation failed.");
+          console.error(`${consolePrefix}Fragment shader translation failed.`);
         }
       }
 
       gl.deleteProgram(program);
       throw new RuntimeError(
-        "Fragment shader failed to compile.  Compile log: " + log
+        `Fragment shader failed to compile.  Compile log: ${log}`
       );
     }
 
     if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
       log = gl.getShaderInfoLog(vertexShader);
-      console.error(consolePrefix + "Vertex shader compile log: " + log);
+      console.error(`${consolePrefix}Vertex shader compile log: ${log}`);
       if (defined(debugShaders)) {
         const vertexSourceTranslation = debugShaders.getTranslatedShaderSource(
           vertexShader
         );
         if (vertexSourceTranslation !== "") {
           console.error(
-            consolePrefix +
-              "Translated vertex shader source:\n" +
-              vertexSourceTranslation
+            `${consolePrefix}Translated vertex shader source:\n${vertexSourceTranslation}`
           );
         } else {
-          console.error(consolePrefix + "Vertex shader translation failed.");
+          console.error(`${consolePrefix}Vertex shader translation failed.`);
         }
       }
 
       gl.deleteProgram(program);
       throw new RuntimeError(
-        "Vertex shader failed to compile.  Compile log: " + log
+        `Vertex shader failed to compile.  Compile log: ${log}`
       );
     }
 
     log = gl.getProgramInfoLog(program);
-    console.error(consolePrefix + "Shader program link log: " + log);
+    console.error(`${consolePrefix}Shader program link log: ${log}`);
     if (defined(debugShaders)) {
       console.error(
-        consolePrefix +
-          "Translated vertex shader source:\n" +
-          debugShaders.getTranslatedShaderSource(vertexShader)
+        `${consolePrefix}Translated vertex shader source:\n${debugShaders.getTranslatedShaderSource(
+          vertexShader
+        )}`
       );
       console.error(
-        consolePrefix +
-          "Translated fragment shader source:\n" +
-          debugShaders.getTranslatedShaderSource(fragmentShader)
+        `${consolePrefix}Translated fragment shader source:\n${debugShaders.getTranslatedShaderSource(
+          fragmentShader
+        )}`
       );
     }
 
     gl.deleteProgram(program);
-    throw new RuntimeError("Program failed to link.  Link log: " + log);
+    throw new RuntimeError(`Program failed to link.  Link log: ${log}`);
   }
 
   const logShaderCompilation = shader._logShaderCompilation;
@@ -292,21 +288,21 @@ function createAndLinkProgram(gl, shader) {
   if (logShaderCompilation) {
     log = gl.getShaderInfoLog(vertexShader);
     if (defined(log) && log.length > 0) {
-      console.log(consolePrefix + "Vertex shader compile log: " + log);
+      console.log(`${consolePrefix}Vertex shader compile log: ${log}`);
     }
   }
 
   if (logShaderCompilation) {
     log = gl.getShaderInfoLog(fragmentShader);
     if (defined(log) && log.length > 0) {
-      console.log(consolePrefix + "Fragment shader compile log: " + log);
+      console.log(`${consolePrefix}Fragment shader compile log: ${log}`);
     }
   }
 
   if (logShaderCompilation) {
     log = gl.getProgramInfoLog(program);
     if (defined(log) && log.length > 0) {
-      console.log(consolePrefix + "Shader program link log: " + log);
+      console.log(`${consolePrefix}Shader program link log: ${log}`);
     }
   }
 
@@ -410,7 +406,7 @@ function findUniforms(gl, program) {
         } else {
           locations = [];
           for (let j = 0; j < activeUniform.size; ++j) {
-            loc = gl.getUniformLocation(program, uniformName + "[" + j + "]");
+            loc = gl.getUniformLocation(program, `${uniformName}[${j}]`);
 
             // Workaround for IE 11.0.9.  See above.
             if (loc !== null) {
@@ -620,8 +616,9 @@ ShaderProgram.prototype._setUniforms = function (
     //>>includeStart('debug', pragmas.debug);
     if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
       throw new DeveloperError(
-        "Program validation failed.  Program info log: " +
-          gl.getProgramInfoLog(program)
+        `Program validation failed.  Program info log: ${gl.getProgramInfoLog(
+          program
+        )}`
       );
     }
     //>>includeEnd('debug');

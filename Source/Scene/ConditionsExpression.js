@@ -19,7 +19,7 @@ import Expression from "./Expression.js";
  * @param {Object} [defines] Defines in the style.
  *
  * @example
- * var expression = new Cesium.ConditionsExpression({
+ * const expression = new Cesium.ConditionsExpression({
  *     conditions : [
  *         ['${Area} > 10, 'color("#FF0000")'],
  *         ['${id} !== "1"', 'color("#00FF00")'],
@@ -171,29 +171,16 @@ ConditionsExpression.prototype.getShaderFunction = function (
 
     // Build the if/else chain from the list of conditions
     shaderFunction +=
-      "    " +
-      (i === 0 ? "if" : "else if") +
-      " (" +
-      condition +
-      ")\n" +
-      "    {\n" +
-      "        return " +
-      expression +
-      ";\n" +
-      "    }\n";
+      `    ${i === 0 ? "if" : "else if"} (${condition})\n` +
+      `    {\n` +
+      `        return ${expression};\n` +
+      `    }\n`;
   }
 
   shaderFunction =
-    returnType +
-    " " +
-    functionSignature +
-    "\n" +
-    "{\n" +
-    shaderFunction +
-    "    return " +
-    returnType +
-    "(1.0);\n" + // Return a default value if no conditions are met
-    "}\n";
+    `${returnType} ${functionSignature}\n` +
+    `{\n${shaderFunction}    return ${returnType}(1.0);\n` + // Return a default value if no conditions are met
+    `}\n`;
 
   return shaderFunction;
 };

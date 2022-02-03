@@ -1,5 +1,6 @@
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
+import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import BlendingState from "../BlendingState.js";
@@ -77,7 +78,8 @@ export default function PrimitiveRenderResources(
     nodeRenderResources.featureIdVertexAttributeSetIndex;
 
   /**
-   * Whether or not this primitive has feature IDs (at the node's instance or through primitive's feature ID attribute or texture).
+   * Whether or not this primitive has a property table for storing metadata.
+   * When present, picking and styling can use this
    *
    * @type {Boolean}
    * @default false
@@ -85,7 +87,7 @@ export default function PrimitiveRenderResources(
    *
    * @private
    */
-  this.hasFeatureIds = false;
+  this.hasPropertyTable = false;
 
   /**
    * A dictionary mapping uniform name to functions that return the uniform
@@ -235,13 +237,13 @@ export default function PrimitiveRenderResources(
    *
    * @private
    */
-  this.renderStateOptions = {
+  this.renderStateOptions = combine(nodeRenderResources.renderStateOptions, {
     depthTest: {
       enabled: true,
       func: DepthFunction.LESS_OR_EQUAL,
     },
     blending: BlendingState.DISABLED,
-  };
+  });
 
   /**
    * An enum describing the types of draw commands needed, based on the style.

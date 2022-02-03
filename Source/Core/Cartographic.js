@@ -297,6 +297,6 @@ Cartographic.prototype.equalsEpsilon = function (right, epsilon) {
  * @returns {String} A string representing the provided cartographic in the format '(longitude, latitude, height)'.
  */
 Cartographic.prototype.toString = function () {
-  return "(" + this.longitude + ", " + this.latitude + ", " + this.height + ")";
+  return `(${this.longitude}, ${this.latitude}, ${this.height})`;
 };
 export default Cartographic;

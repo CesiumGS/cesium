@@ -122,7 +122,7 @@ function loadExternalBuffer(bufferLoader) {
         return;
       }
       bufferLoader._state = ResourceLoaderState.FAILED;
-      const errorMessage = "Failed to load external buffer: " + resource.url;
+      const errorMessage = `Failed to load external buffer: ${resource.url}`;
       bufferLoader._promise.reject(bufferLoader.getError(errorMessage, error));
     });
 }

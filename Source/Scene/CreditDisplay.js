@@ -128,24 +128,26 @@ function styleLightboxContainer(that) {
     } else {
       lightboxCredits.className =
         "cesium-credit-lightbox cesium-credit-lightbox-expanded";
-      lightboxCredits.style.marginTop =
-        Math.floor((height - lightboxCredits.clientHeight) * 0.5) + "px";
+      lightboxCredits.style.marginTop = `${Math.floor(
+        (height - lightboxCredits.clientHeight) * 0.5
+      )}px`;
     }
     that._lastViewportWidth = width;
   }
 
   if (width >= mobileWidth && height !== that._lastViewportHeight) {
-    lightboxCredits.style.marginTop =
-      Math.floor((height - lightboxCredits.clientHeight) * 0.5) + "px";
+    lightboxCredits.style.marginTop = `${Math.floor(
+      (height - lightboxCredits.clientHeight) * 0.5
+    )}px`;
     that._lastViewportHeight = height;
   }
 }
 
 function addStyle(selector, styles) {
-  let style = selector + " {";
+  let style = `${selector} {`;
   for (const attribute in styles) {
     if (styles.hasOwnProperty(attribute)) {
-      style += attribute + ": " + styles[attribute] + "; ";
+      style += `${attribute}: ${styles[attribute]}; `;
     }
   }
   style += " }\n";
@@ -169,7 +171,7 @@ function appendCss() {
     "background-color": "#303336",
     color: textColor,
     position: "relative",
-    "min-height": lightboxHeight + "px",
+    "min-height": `${lightboxHeight}px`,
     margin: "auto",
   });
 
@@ -265,7 +267,7 @@ function appendCss() {
  * @constructor
  *
  * @example
- * var creditDisplay = new Cesium.CreditDisplay(creditContainer);
+ * const creditDisplay = new Cesium.CreditDisplay(creditContainer);
  */
 function CreditDisplay(container, delimiter, viewport) {
   //>>includeStart('debug', pragmas.debug);
@@ -526,9 +528,7 @@ function getDefaultCredit() {
     }
 
     defaultCredit = new Credit(
-      '<a href="https://cesium.com/" target="_blank"><img src="' +
-        logo +
-        '" title="Cesium ion"/></a>',
+      `<a href="https://cesium.com/" target="_blank"><img src="${logo}" title="Cesium ion"/></a>`,
       true
     );
   }

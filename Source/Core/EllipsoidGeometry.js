@@ -49,11 +49,11 @@ const sin = Math.sin;
  * @see EllipsoidGeometry#createGeometry
  *
  * @example
- * var ellipsoid = new Cesium.EllipsoidGeometry({
+ * const ellipsoid = new Cesium.EllipsoidGeometry({
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
  *   radii : new Cesium.Cartesian3(1000000.0, 500000.0, 500000.0)
  * });
- * var geometry = Cesium.EllipsoidGeometry.createGeometry(ellipsoid);
+ * const geometry = Cesium.EllipsoidGeometry.createGeometry(ellipsoid);
  */
 function EllipsoidGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

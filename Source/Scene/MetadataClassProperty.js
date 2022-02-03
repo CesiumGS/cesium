@@ -433,45 +433,45 @@ function validateArray(classProperty, value, componentCount) {
 
 function validateVectorOrMatrix(value, type, componentType) {
   if (!MetadataComponentType.isVectorCompatible(componentType)) {
-    const message = "componentType " + componentType + " is incompatible with ";
+    const message = `componentType ${componentType} is incompatible with `;
     if (MetadataType.isVectorType(type)) {
-      return message + "vector type " + type;
+      return `${message}vector type ${type}`;
     }
 
-    return message + "matrix type " + type;
+    return `${message}matrix type ${type}`;
   }
 
   if (type === MetadataType.VEC2 && !(value instanceof Cartesian2)) {
-    return "vector value " + value + " must be a Cartesian2";
+    return `vector value ${value} must be a Cartesian2`;
   }
 
   if (type === MetadataType.VEC3 && !(value instanceof Cartesian3)) {
-    return "vector value " + value + " must be a Cartesian3";
+    return `vector value ${value} must be a Cartesian3`;
   }
 
   if (type === MetadataType.VEC4 && !(value instanceof Cartesian4)) {
-    return "vector value " + value + " must be a Cartesian4";
+    return `vector value ${value} must be a Cartesian4`;
   }
 
   if (type === MetadataType.MAT2 && !(value instanceof Matrix2)) {
-    return "matrix value " + value + " must be a Matrix2";
+    return `matrix value ${value} must be a Matrix2`;
   }
 
   if (type === MetadataType.MAT3 && !(value instanceof Matrix3)) {
-    return "matrix value " + value + " must be a Matrix3";
+    return `matrix value ${value} must be a Matrix3`;
   }
 
   if (type === MetadataType.MAT4 && !(value instanceof Matrix4)) {
-    return "matrix value " + value + " must be a Matrix4";
+    return `matrix value ${value} must be a Matrix4`;
   }
 }
 
 function getTypeErrorMessage(value, type) {
-  return "value " + value + " does not match type " + type;
+  return `value ${value} does not match type ${type}`;
 }
 
 function getOutOfRangeErrorMessage(value, type, normalized) {
-  let errorMessage = "value " + value + " is out of range for type " + type;
+  let errorMessage = `value ${value} is out of range for type ${type}`;
   if (normalized) {
     errorMessage += " (normalized)";
   }
@@ -499,7 +499,7 @@ function checkInRange(value, componentType, normalized) {
 }
 
 function getNonFiniteErrorMessage(value, type) {
-  return "value " + value + " of type " + type + " must be finite";
+  return `value ${value} of type ${type} must be finite`;
 }
 
 function checkValue(classProperty, value) {
@@ -508,7 +508,7 @@ function checkValue(classProperty, value) {
   const enumType = classProperty._enumType;
   if (defined(enumType)) {
     if (javascriptType !== "string" || !defined(enumType.valuesByName[value])) {
-      return "value " + value + " is not a valid enum name for " + enumType.id;
+      return `value ${value} is not a valid enum name for ${enumType.id}`;
     }
     return;
   }

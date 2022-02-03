@@ -124,9 +124,9 @@ function svgText(x, y, msg) {
 function setShuttleRingPointer(shuttleRingPointer, knobOuter, angle) {
   shuttleRingPointer.setAttribute(
     "transform",
-    "translate(100,100) rotate(" + angle + ")"
+    `translate(100,100) rotate(${angle})`
   );
-  knobOuter.setAttribute("transform", "rotate(" + angle + ")");
+  knobOuter.setAttribute("transform", `rotate(${angle})`);
 }
 
 const makeColorStringScratch = new Color();
@@ -148,7 +148,7 @@ function rectButton(x, y, path) {
   const button = {
     tagName: "g",
     class: "cesium-animation-rectButton",
-    transform: "translate(" + x + "," + y + ")",
+    transform: `translate(${x},${y})`,
     children: [
       {
         tagName: "rect",
@@ -189,7 +189,7 @@ function wingButton(x, y, path) {
   const button = {
     tagName: "g",
     class: "cesium-animation-rectButton",
-    transform: "translate(" + x + "," + y + ")",
+    transform: `translate(${x},${y})`,
     children: [
       {
         class: "cesium-animation-buttonGlow",
@@ -417,10 +417,10 @@ SvgButton.prototype.setTooltip = function (tooltip) {
  * // In HTML head, include a link to Animation.css stylesheet,
  * // and in the body, include: <div id="animationContainer"></div>
  *
- * var clock = new Cesium.Clock();
- * var clockViewModel = new Cesium.ClockViewModel(clock);
- * var viewModel = new Cesium.AnimationViewModel(clockViewModel);
- * var widget = new Cesium.Animation('animationContainer', viewModel);
+ * const clock = new Cesium.Clock();
+ * const clockViewModel = new Cesium.ClockViewModel(clock);
+ * const viewModel = new Cesium.AnimationViewModel(clockViewModel);
+ * const widget = new Cesium.Animation('animationContainer', viewModel);
  *
  * function tick() {
  *     clock.tick();
@@ -840,17 +840,12 @@ Animation.prototype.resize = function () {
   const scaleX = width / baseWidth;
   const scaleY = height / baseHeight;
 
-  svg.style.cssText =
-    "width: " +
-    width +
-    "px; height: " +
-    height +
-    "px; position: absolute; bottom: 0; left: 0; overflow: hidden;";
+  svg.style.cssText = `width: ${width}px; height: ${height}px; position: absolute; bottom: 0; left: 0; overflow: hidden;`;
   svg.setAttribute("width", width);
   svg.setAttribute("height", height);
-  svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
 
-  this._topG.setAttribute("transform", "scale(" + scaleX + "," + scaleY + ")");
+  this._topG.setAttribute("transform", `scale(${scaleX},${scaleY})`);
 
   this._centerX = Math.max(1, 100.0 * scaleX);
   this._centerY = Math.max(1, 100.0 * scaleY);

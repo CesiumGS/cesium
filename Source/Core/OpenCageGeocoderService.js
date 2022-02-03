@@ -30,7 +30,7 @@ import Resource from "./Resource.js";
  *
  * @example
  * // Configure a Viewer to use the OpenCage Geocoder
- * var viewer = new Cesium.Viewer('cesiumContainer', {
+ * const viewer = new Cesium.Viewer('cesiumContainer', {
  *   geocoder: new Cesium.OpenCageGeocoderService('https://api.opencagedata.com/geocode/v1/', '<API key>')
  * });
  */

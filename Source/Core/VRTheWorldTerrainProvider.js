@@ -34,7 +34,7 @@ function DataRectangle(rectangle, maxLevel) {
  *
  *
  * @example
- * var terrainProvider = new Cesium.VRTheWorldTerrainProvider({
+ * const terrainProvider = new Cesium.VRTheWorldTerrainProvider({
  *   url : 'https://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/'
  * });
  * viewer.terrainProvider = terrainProvider;
@@ -86,7 +86,7 @@ function VRTheWorldTerrainProvider(options) {
     if (srs === "EPSG:4326") {
       that._tilingScheme = new GeographicTilingScheme({ ellipsoid: ellipsoid });
     } else {
-      metadataFailure("SRS " + srs + " is not supported.");
+      metadataFailure(`SRS ${srs} is not supported.`);
       return;
     }
 
@@ -130,7 +130,7 @@ function VRTheWorldTerrainProvider(options) {
   function metadataFailure(e) {
     const message = defaultValue(
       e,
-      "An error occurred while accessing " + that._resource.url + "."
+      `An error occurred while accessing ${that._resource.url}.`
     );
     metadataError = TileProviderError.handleError(
       metadataError,
@@ -296,7 +296,7 @@ VRTheWorldTerrainProvider.prototype.requestTileGeometry = function (
 
   const yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
   const resource = this._resource.getDerivedResource({
-    url: level + "/" + x + "/" + (yTiles - y - 1) + ".tif",
+    url: `${level}/${x}/${yTiles - y - 1}.tif`,
     queryParameters: {
       cesium: true,
     },

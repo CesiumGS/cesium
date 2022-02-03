@@ -134,6 +134,7 @@ const requestRenderAfterFrame = function (scene) {
  * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
  * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {Number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+ * @param {Number} [depthPlaneEllipsoidOffset=0.0] Adjust the DepthPlane to address rendering artefacts below ellipsoid zero elevation.
  * @param {Number} [options.msaaSamples=1] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.
  *
  * @see CesiumWidget
@@ -143,7 +144,7 @@ const requestRenderAfterFrame = function (scene) {
  *
  * @example
  * // Create scene without anisotropic texture filtering
- * var scene = new Cesium.Scene({
+ * const scene = new Cesium.Scene({
  *   canvas : canvas,
  *   contextOptions : {
  *     allowTextureFilterAnisotropic : false
@@ -226,7 +227,7 @@ function Scene(options) {
   this._useOIT = defaultValue(options.orderIndependentTranslucency, true);
   this._executeOITFunction = undefined;
 
-  this._depthPlane = new DepthPlane();
+  this._depthPlane = new DepthPlane(options.depthPlaneEllipsoidOffset);
 
   this._clearColorCommand = new ClearCommand({
     color: new Color(),
@@ -423,7 +424,7 @@ function Scene(options) {
    * };
    *
    * // Execute only the billboard's commands.  That is, only draw the billboard.
-   * var billboards = new Cesium.BillboardCollection();
+   * const billboards = new Cesium.BillboardCollection();
    * scene.debugCommandFilter = function(command) {
    *     return command.owner === billboards;
    * };
@@ -518,12 +519,12 @@ function Scene(options) {
    * @example
    * // picking the position of a translucent primitive
    * viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
-   *      var pickedFeature = viewer.scene.pick(movement.position);
+   *      const pickedFeature = viewer.scene.pick(movement.position);
    *      if (!Cesium.defined(pickedFeature)) {
    *          // nothing picked
    *          return;
    *      }
-   *      var worldPosition = viewer.scene.pickPosition(movement.position);
+   *      const worldPosition = viewer.scene.pickPosition(movement.position);
    * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
    *
    * @type {Boolean}
@@ -3940,7 +3941,7 @@ Scene.prototype.clampLineWidth = function (width) {
  * @example
  * // On mouse over, color the feature yellow.
  * handler.setInputAction(function(movement) {
- *     var feature = scene.pick(movement.endPosition);
+ *     const feature = scene.pick(movement.endPosition);
  *     if (feature instanceof Cesium.Cesium3DTileFeature) {
  *         feature.color = Cesium.Color.YELLOW;
  *     }
@@ -4020,7 +4021,7 @@ Scene.prototype.pickPosition = function (windowPosition, result) {
  * @exception {DeveloperError} windowPosition is undefined.
  *
  * @example
- * var pickedObjects = scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
+ * const pickedObjects = scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
  *
  * @see Scene#pick
  */
@@ -4189,8 +4190,8 @@ Scene.prototype.drillPickFromRayMostDetailed = function (
  * @returns {Number} The height. This may be <code>undefined</code> if there was no scene geometry to sample height from.
  *
  * @example
- * var position = new Cesium.Cartographic(-1.31968, 0.698874);
- * var height = viewer.scene.sampleHeight(position);
+ * const position = new Cesium.Cartographic(-1.31968, 0.698874);
+ * const height = viewer.scene.sampleHeight(position);
  * console.log(height);
  *
  * @see Scene#clampToHeight
@@ -4221,7 +4222,7 @@ Scene.prototype.sampleHeight = function (position, objectsToExclude, width) {
  *
  * @example
  * // Clamp an entity to the underlying scene geometry
- * var position = entity.position.getValue(Cesium.JulianDate.now());
+ * const position = entity.position.getValue(Cesium.JulianDate.now());
  * entity.position = viewer.scene.clampToHeight(position);
  *
  * @see Scene#sampleHeight
@@ -4259,11 +4260,11 @@ Scene.prototype.clampToHeight = function (
  * @returns {Promise.<Cartographic[]>} A promise that resolves to the provided list of positions when the query has completed.
  *
  * @example
- * var positions = [
+ * const positions = [
  *     new Cesium.Cartographic(-1.31968, 0.69887),
  *     new Cesium.Cartographic(-1.10489, 0.83923)
  * ];
- * var promise = viewer.scene.sampleHeightMostDetailed(positions);
+ * const promise = viewer.scene.sampleHeightMostDetailed(positions);
  * promise.then(function(updatedPosition) {
  *     // positions[0].height and positions[1].height have been updated.
  *     // updatedPositions is just a reference to positions.
@@ -4299,11 +4300,11 @@ Scene.prototype.sampleHeightMostDetailed = function (
  * @returns {Promise.<Cartesian3[]>} A promise that resolves to the provided list of positions when the query has completed.
  *
  * @example
- * var cartesians = [
+ * const cartesians = [
  *     entities[0].position.getValue(Cesium.JulianDate.now()),
  *     entities[1].position.getValue(Cesium.JulianDate.now())
  * ];
- * var promise = viewer.scene.clampToHeightMostDetailed(cartesians);
+ * const promise = viewer.scene.clampToHeightMostDetailed(cartesians);
  * promise.then(function(updatedCartesians) {
  *     entities[0].position = updatedCartesians[0];
  *     entities[1].position = updatedCartesians[1];
@@ -4337,10 +4338,10 @@ Scene.prototype.clampToHeightMostDetailed = function (
  *
  * @example
  * // Output the canvas position of longitude/latitude (0, 0) every time the mouse moves.
- * var scene = widget.scene;
- * var ellipsoid = scene.globe.ellipsoid;
- * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
- * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+ * const scene = widget.scene;
+ * const ellipsoid = scene.globe.ellipsoid;
+ * const position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+ * const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
  * handler.setInputAction(function(movement) {
  *     console.log(scene.cartesianToCanvasCoordinates(position));
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);

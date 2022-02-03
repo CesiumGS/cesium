@@ -204,14 +204,7 @@ function rebindAllGlyphs(labelCollection, label) {
 
     let glyphTextureInfo = glyphTextureCache[id];
     if (!defined(glyphTextureInfo)) {
-      const glyphFont =
-        label._fontStyle +
-        " " +
-        label._fontWeight +
-        " " +
-        SDFSettings.FONT_SIZE +
-        "px " +
-        label._fontFamily;
+      const glyphFont = `${label._fontStyle} ${label._fontWeight} ${SDFSettings.FONT_SIZE}px ${label._fontFamily}`;
 
       const canvas = createGlyphCanvas(
         character,
@@ -590,7 +583,7 @@ function destroyLabel(labelCollection, label) {
  *
  * @example
  * // Create a label collection with two labels
- * var labels = scene.primitives.add(new Cesium.LabelCollection());
+ * const labels = scene.primitives.add(new Cesium.LabelCollection());
  * labels.add({
  *   position : new Cesium.Cartesian3(1.0, 2.0, 3.0),
  *   text : 'A label'
@@ -648,7 +641,7 @@ function LabelCollection(options) {
    * @default {@link Matrix4.IDENTITY}
    *
    * @example
-   * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+   * const center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
    * labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
    * labels.add({
    *   position : new Cesium.Cartesian3(0.0, 0.0, 0.0),
@@ -732,7 +725,7 @@ Object.defineProperties(LabelCollection.prototype, {
  *
  * @example
  * // Example 1:  Add a label, specifying all the default values.
- * var l = labels.add({
+ * const l = labels.add({
  *   show : true,
  *   position : Cesium.Cartesian3.ZERO,
  *   text : '',
@@ -758,7 +751,7 @@ Object.defineProperties(LabelCollection.prototype, {
  * @example
  * // Example 2:  Specify only the label's cartographic position,
  * // text, and font.
- * var l = labels.add({
+ * const l = labels.add({
  *   position : Cesium.Cartesian3.fromRadians(longitude, latitude, height),
  *   text : 'Hello World',
  *   font : '24px Helvetica',
@@ -792,7 +785,7 @@ LabelCollection.prototype.add = function (options) {
  *
  *
  * @example
- * var l = labels.add(...);
+ * const l = labels.add(...);
  * labels.remove(l);  // Returns true
  *
  * @see LabelCollection#add
@@ -871,9 +864,9 @@ LabelCollection.prototype.contains = function (label) {
  *
  * @example
  * // Toggle the show property of every label in the collection
- * var len = labels.length;
- * for (var i = 0; i < len; ++i) {
- *   var l = billboards.get(i);
+ * const len = labels.length;
+ * for (let i = 0; i < len; ++i) {
+ *   const l = billboards.get(i);
  *   l.show = !l.show;
  * }
  *

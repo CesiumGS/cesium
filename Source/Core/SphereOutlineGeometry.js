@@ -21,12 +21,12 @@ import EllipsoidOutlineGeometry from "./EllipsoidOutlineGeometry.js";
  * @exception {DeveloperError} options.subdivisions must be greater than or equal to zero.
  *
  * @example
- * var sphere = new Cesium.SphereOutlineGeometry({
+ * const sphere = new Cesium.SphereOutlineGeometry({
  *   radius : 100.0,
  *   stackPartitions : 6,
  *   slicePartitions: 5
  * });
- * var geometry = Cesium.SphereOutlineGeometry.createGeometry(sphere);
+ * const geometry = Cesium.SphereOutlineGeometry.createGeometry(sphere);
  */
 function SphereOutlineGeometry(options) {
   const radius = defaultValue(options.radius, 1.0);

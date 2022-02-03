@@ -278,9 +278,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   const version = view.getUint32(byteOffset, true);
   if (version !== 1) {
     throw new RuntimeError(
-      "Only Vector tile version 1 is supported.  Version " +
-        version +
-        " is not."
+      `Only Vector tile version 1 is supported.  Version ${version} is not.`
     );
   }
   byteOffset += sizeOfUint32;
@@ -643,9 +641,9 @@ Vector3DTileContent.prototype.getFeature = function (batchId) {
   const featuresLength = this.featuresLength;
   if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
     throw new DeveloperError(
-      "batchId is required and between zero and featuresLength - 1 (" +
-        (featuresLength - 1) +
-        ")."
+      `batchId is required and between zero and featuresLength - 1 (${
+        featuresLength - 1
+      }).`
     );
   }
   //>>includeEnd('debug');

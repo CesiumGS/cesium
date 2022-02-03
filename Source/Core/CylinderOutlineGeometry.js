@@ -40,12 +40,12 @@ const radiusScratch = new Cartesian2();
  *
  * @example
  * // create cylinder geometry
- * var cylinder = new Cesium.CylinderOutlineGeometry({
+ * const cylinder = new Cesium.CylinderOutlineGeometry({
  *     length: 200000,
  *     topRadius: 80000,
  *     bottomRadius: 200000,
  * });
- * var geometry = Cesium.CylinderOutlineGeometry.createGeometry(cylinder);
+ * const geometry = Cesium.CylinderOutlineGeometry.createGeometry(cylinder);
  */
 function CylinderOutlineGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

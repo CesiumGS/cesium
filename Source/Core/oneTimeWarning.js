@@ -15,7 +15,7 @@ const warnings = {};
  * @param {String} [message=identifier] The message to log to the console.
  *
  * @example
- * for(var i=0;i<foo.length;++i) {
+ * for(let i=0;i<foo.length;++i) {
  *    if (!defined(foo[i].bar)) {
  *       // Something that can be recovered from but may happen a lot
  *       oneTimeWarning('foo.bar undefined', 'foo.bar is undefined. Setting to 0.');

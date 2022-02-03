@@ -92,7 +92,7 @@ PerformanceDisplay.prototype.update = function (renderedThisFrame) {
       fps = ((this._fpsFrameCount * 1000) / fpsElapsedTime) | 0;
     }
 
-    this._fpsText.nodeValue = fps + " FPS";
+    this._fpsText.nodeValue = `${fps} FPS`;
     this._lastFpsSampleTime = time;
     this._fpsFrameCount = 0;
   }
@@ -105,7 +105,7 @@ PerformanceDisplay.prototype.update = function (renderedThisFrame) {
       ms = (msElapsedTime / this._msFrameCount).toFixed(2);
     }
 
-    this._msText.nodeValue = ms + " MS";
+    this._msText.nodeValue = `${ms} MS`;
     this._lastMsSampleTime = time;
     this._msFrameCount = 0;
   }

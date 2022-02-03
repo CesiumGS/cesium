@@ -326,8 +326,8 @@ function Indices() {
 }
 
 /**
- * Maps per-vertex or per-instance feature IDs to a feature table. Feature IDs
- * may be stored in an attribute or implicitly defined by a constant and stride.
+ * Maps per-vertex or per-instance feature IDs to a feature table. Feature
+ * IDs are stored in an accessor.
  *
  * @alias ModelComponents.FeatureIdAttribute
  * @constructor
@@ -352,6 +352,27 @@ function FeatureIdAttribute() {
    * @private
    */
   this.setIndex = undefined;
+}
+
+/**
+ * Defines a range of implicitly-defined feature IDs, one for each vertex or
+ * instance. Such feature IDs may optionally be associated with a property table
+ * storing metadata
+ *
+ * @alias ModelComponents.FeatureIdImplicitRange
+ * @constructor
+ *
+ * @private
+ */
+function FeatureIdImplicitRange() {
+  /**
+   * The ID of the feature table that feature IDs index into. If undefined,
+   * feature IDs are used for classification, but no metadata is associated.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.propertyTableId = undefined;
 
   /**
    * The first feature ID to use when setIndex is undefined
@@ -473,29 +494,22 @@ function Primitive() {
   this.primitiveType = undefined;
 
   /**
-   * The feature ID attributes.
+   * The feature IDs associated with this primitive. Feature ID types may
+   * be interleaved
    *
-   * @type {ModelComponents.FeatureIdAttribute[]}
+   * @type {Array.<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange|ModelComponents.FeatureIdTexture>}
    * @private
    */
-  this.featureIdAttributes = [];
+  this.featureIds = [];
 
   /**
-   * The feature ID textures.
-   *
-   * @type {ModelComponents.FeatureIdTexture[]}
-   * @private
-   */
-  this.featureIdTextures = [];
-
-  /**
-   * The feature texture IDs. These indices correspond to the array of
-   * feature textures.
+   * The property texture IDs. These indices correspond to the array of
+   * property textures.
    *
    * @type {Number[]}
    * @private
    */
-  this.featureTextureIds = [];
+  this.propertyTextureIds = [];
 }
 
 /**
@@ -516,12 +530,13 @@ function Instances() {
   this.attributes = [];
 
   /**
-   * The feature ID attributes.
+   * The feature ID attributes associated with this set of instances.
+   * Feature ID attribute types may be interleaved.
    *
-   * @type {ModelComponents.FeatureIdAttribute[]}
+   * @type {Array.<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange>}
    * @private
    */
-  this.featureIdAttributes = [];
+  this.featureIds = [];
 
   /**
    * Whether the instancing transforms are applied in world space. For glTF models that
@@ -1000,6 +1015,7 @@ ModelComponents.Attribute = Attribute;
 ModelComponents.Indices = Indices;
 ModelComponents.FeatureIdAttribute = FeatureIdAttribute;
 ModelComponents.FeatureIdTexture = FeatureIdTexture;
+ModelComponents.FeatureIdImplicitRange = FeatureIdImplicitRange;
 ModelComponents.MorphTarget = MorphTarget;
 ModelComponents.Primitive = Primitive;
 ModelComponents.Instances = Instances;

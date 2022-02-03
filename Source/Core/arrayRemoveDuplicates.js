@@ -16,35 +16,35 @@ const removeDuplicatesEpsilon = CesiumMath.EPSILON10;
  *
  * @example
  * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0), (3.0, 3.0, 3.0), (1.0, 1.0, 1.0)]
- * var values = [
+ * const values = [
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
  *     new Cesium.Cartesian3(2.0, 2.0, 2.0),
  *     new Cesium.Cartesian3(3.0, 3.0, 3.0),
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0)];
- * var nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3.equalsEpsilon);
+ * const nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3.equalsEpsilon);
  *
  * @example
  * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0), (3.0, 3.0, 3.0)]
- * var values = [
+ * const values = [
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
  *     new Cesium.Cartesian3(2.0, 2.0, 2.0),
  *     new Cesium.Cartesian3(3.0, 3.0, 3.0),
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0)];
- * var nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3.equalsEpsilon, true);
+ * const nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3.equalsEpsilon, true);
  *
  * @example
  * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0), (3.0, 3.0, 3.0)]
  * // removedIndices will be equal to [1, 3, 5]
- * var values = [
+ * const values = [
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
  *     new Cesium.Cartesian3(2.0, 2.0, 2.0),
  *     new Cesium.Cartesian3(2.0, 2.0, 2.0),
  *     new Cesium.Cartesian3(3.0, 3.0, 3.0),
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0)];
- * var nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3.equalsEpsilon, true);
+ * const nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3.equalsEpsilon, true);
  * @private
  */
 function arrayRemoveDuplicates(

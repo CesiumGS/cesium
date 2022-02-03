@@ -1,9 +1,21 @@
 # Change Log
 
+### 1.91 - 2022-03-01
+
+##### Additions :tada:
+
+- glTF contents now use `ModelExperimental` by default. [#10055](https://github.com/CesiumGS/cesium/pull/10055)
+- Added the ability to toggle back-face culling in `ModelExperimental`. [#10070](https://github.com/CesiumGS/cesium/pull/10070)
+- Added `depthPlaneEllipsoidOffset` to Viewer and Scene constructors to address rendering artefacts below ellipsoid zero elevation. [#9200](https://github.com/CesiumGS/cesium/pull/9200)
+- Added support for `debugColorTiles` in `ModelExperimental`. [#10071](https://github.com/CesiumGS/cesium/pull/10071)
+
 ### 1.90 - 2022-02-01
 
 ##### Additions :tada:
 
+- Feature IDs for styling and picking in `ModelExperimental` can now be selected via `(tileset|model).featureIdIndex` and `(tileset|model).instanceFeatureIdIndex`. [#10018](https://github.com/CesiumGS/cesium/pull/10018)
+- Added support for all types of feature IDs in `CustomShader`. [#10018](https://github.com/CesiumGS/cesium/pull/10018)
+- Moved documentation for `CustomShader` into `Documentation/CustomShaderGuide/` to make it more discoverable. [#10054](https://github.com/CesiumGS/cesium/pull/10054)
 - Added getters `Cesium3DTileFeature.featureId` and `ModelFeature.featureId` so the feature ID or batch ID can be accessed from a picked feature. [#10022](https://github.com/CesiumGS/cesium/pull/10022)
 - Added `I3dmLoader` to transcode .i3dm to `ModelExperimental`. [#9968](https://github.com/CesiumGS/cesium/pull/9968)
 - Added `PntsLoader` to transcode .pnts to `ModelExperimental`. [#9978](https://github.com/CesiumGS/cesium/pull/9978)
@@ -18,6 +30,7 @@
 - Fixed path entity being drawn when data is unavailable [#1704](https://github.com/CesiumGS/cesium/pull/1704)
 - Fixed setting `tileset.imageBasedLightingFactor` has no effect on i3dm tile content. [#10020](https://github.com/CesiumGS/cesium/pull/10020)
 - Zooming out is no longer sluggish when close to `screenSpaceCameraController.minimumDistance`. [#9932](https://github.com/CesiumGS/cesium/pull/9932)
+- Fixed Particle System Weather sandcastle demo to work with new ES6 rules. [#10045](https://github.com/CesiumGS/cesium/pull/10045)
 
 ### 1.89 - 2022-01-03
 

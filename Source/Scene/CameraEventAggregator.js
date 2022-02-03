@@ -11,7 +11,7 @@ import CameraEventType from "./CameraEventType.js";
 function getKey(type, modifier) {
   let key = type;
   if (defined(modifier)) {
-    key += "+" + modifier;
+    key += `+${modifier}`;
   }
   return key;
 }

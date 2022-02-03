@@ -199,9 +199,7 @@ function initialize(content, arrayBuffer, byteOffset, factory) {
   const version = view.getUint32(byteOffset, true);
   if (version !== 1) {
     throw new RuntimeError(
-      "Only Composite Tile version 1 is supported. Version " +
-        version +
-        " is not."
+      `Only Composite Tile version 1 is supported. Version ${version} is not.`
     );
   }
   byteOffset += sizeOfUint32;
@@ -234,7 +232,7 @@ function initialize(content, arrayBuffer, byteOffset, factory) {
       contentPromises.push(innerContent.readyPromise);
     } else {
       throw new RuntimeError(
-        "Unknown tile content type, " + tileType + ", inside Composite tile"
+        `Unknown tile content type, ${tileType}, inside Composite tile`
       );
     }
 

@@ -195,12 +195,12 @@ function bind(gl, attributes, indexBuffer) {
  * @example
  * // Example 1. Create a vertex array with vertices made up of three floating point
  * // values, e.g., a position, from a single vertex buffer.  No index buffer is used.
- * var positionBuffer = Buffer.createVertexBuffer({
+ * const positionBuffer = Buffer.createVertexBuffer({
  *     context : context,
  *     sizeInBytes : 12,
  *     usage : BufferUsage.STATIC_DRAW
  * });
- * var attributes = [
+ * const attributes = [
  *     {
  *         index                  : 0,
  *         enabled                : true,
@@ -213,7 +213,7 @@ function bind(gl, attributes, indexBuffer) {
  *         instanceDivisor        : 0 // not instanced
  *     }
  * ];
- * var va = new VertexArray({
+ * const va = new VertexArray({
  *     context : context,
  *     attributes : attributes
  * });
@@ -221,17 +221,17 @@ function bind(gl, attributes, indexBuffer) {
  * @example
  * // Example 2. Create a vertex array with vertices from two different vertex buffers.
  * // Each vertex has a three-component position and three-component normal.
- * var positionBuffer = Buffer.createVertexBuffer({
+ * const positionBuffer = Buffer.createVertexBuffer({
  *     context : context,
  *     sizeInBytes : 12,
  *     usage : BufferUsage.STATIC_DRAW
  * });
- * var normalBuffer = Buffer.createVertexBuffer({
+ * const normalBuffer = Buffer.createVertexBuffer({
  *     context : context,
  *     sizeInBytes : 12,
  *     usage : BufferUsage.STATIC_DRAW
  * });
- * var attributes = [
+ * const attributes = [
  *     {
  *         index                  : 0,
  *         vertexBuffer           : positionBuffer,
@@ -245,7 +245,7 @@ function bind(gl, attributes, indexBuffer) {
  *         componentDatatype      : ComponentDatatype.FLOAT
  *     }
  * ];
- * var va = new VertexArray({
+ * const va = new VertexArray({
  *     context : context,
  *     attributes : attributes
  * });
@@ -253,12 +253,12 @@ function bind(gl, attributes, indexBuffer) {
  * @example
  * // Example 3. Creates the same vertex layout as Example 2 using a single
  * // vertex buffer, instead of two.
- * var buffer = Buffer.createVertexBuffer({
+ * const buffer = Buffer.createVertexBuffer({
  *     context : context,
  *     sizeInBytes : 24,
  *     usage : BufferUsage.STATIC_DRAW
  * });
- * var attributes = [
+ * const attributes = [
  *     {
  *         vertexBuffer           : buffer,
  *         componentsPerAttribute : 3,
@@ -275,7 +275,7 @@ function bind(gl, attributes, indexBuffer) {
  *         strideInBytes          : 24
  *     }
  * ];
- * var va = new VertexArray({
+ * const va = new VertexArray({
  *     context : context,
  *     attributes : attributes
  * });
@@ -341,7 +341,7 @@ function VertexArray(options) {
     const index = vaAttributes[i].index;
     if (uniqueIndices[index]) {
       throw new DeveloperError(
-        "Index " + index + " is used by more than one attribute."
+        `Index ${index} is used by more than one attribute.`
       );
     }
     uniqueIndices[index] = true;
@@ -419,18 +419,12 @@ function interleaveAttributes(attributes) {
 
       if (currentNumberOfVertices !== numberOfVertices) {
         throw new RuntimeError(
-          "Each attribute list must have the same number of vertices.  " +
-            "Attribute " +
-            names[j] +
-            " has a different number of vertices " +
-            "(" +
-            currentNumberOfVertices.toString() +
-            ")" +
-            " than attribute " +
-            names[0] +
-            " (" +
-            numberOfVertices.toString() +
-            ")."
+          `${
+            "Each attribute list must have the same number of vertices.  " +
+            "Attribute "
+          }${names[j]} has a different number of vertices ` +
+            `(${currentNumberOfVertices.toString()})` +
+            ` than attribute ${names[0]} (${numberOfVertices.toString()}).`
         );
       }
     }
@@ -548,8 +542,8 @@ function interleaveAttributes(attributes) {
  * // Example 1. Creates a vertex array for rendering a box.  The default dynamic draw
  * // usage is used for the created vertex and index buffer.  The attributes are not
  * // interleaved by default.
- * var geometry = new BoxGeometry();
- * var va = VertexArray.fromGeometry({
+ * const geometry = new BoxGeometry();
+ * const va = VertexArray.fromGeometry({
  *     context            : context,
  *     geometry           : geometry,
  *     attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
@@ -558,7 +552,7 @@ function interleaveAttributes(attributes) {
  * @example
  * // Example 2. Creates a vertex array with interleaved attributes in a
  * // single vertex buffer.  The vertex and index buffer have static draw usage.
- * var va = VertexArray.fromGeometry({
+ * const va = VertexArray.fromGeometry({
  *     context            : context,
  *     geometry           : geometry,
  *     attributeLocations : GeometryPipeline.createAttributeLocations(geometry),

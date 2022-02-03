@@ -27,11 +27,11 @@ import ExpressionNodeType from "./ExpressionNodeType.js";
  * @param {Object} [defines] Defines in the style.
  *
  * @example
- * var expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');
+ * const expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');
  * expression.evaluate(feature); // returns true or false depending on the feature's properties
  *
  * @example
- * var expression = new Cesium.Expression('(${Temperature} > 90) ? color("red") : color("white")');
+ * const expression = new Cesium.Expression('(${Temperature} > 90) ? color("red") : color("white")');
  * expression.evaluateColor(feature, result); // returns a Cesium.Color object
  */
 function Expression(expression, defines) {
@@ -191,15 +191,10 @@ Expression.prototype.getShaderFunction = function (
   );
 
   shaderExpression =
-    returnType +
-    " " +
-    functionSignature +
-    "\n" +
-    "{\n" +
-    "    return " +
-    shaderExpression +
-    ";\n" +
-    "}\n";
+    `${returnType} ${functionSignature}\n` +
+    `{\n` +
+    `    return ${shaderExpression};\n` +
+    `}\n`;
 
   return shaderExpression;
 };
@@ -349,11 +344,7 @@ function getEvaluateUnaryComponentwise(operation) {
       );
     }
     throw new RuntimeError(
-      'Function "' +
-        call +
-        '" requires a vector or number argument. Argument is ' +
-        left +
-        "."
+      `Function "${call}" requires a vector or number argument. Argument is ${left}.`
     );
   };
 }
@@ -413,13 +404,7 @@ function getEvaluateBinaryComponentwise(operation, allowScalar) {
     }
 
     throw new RuntimeError(
-      'Function "' +
-        call +
-        '" requires vector or number arguments of matching types. Arguments are ' +
-        left +
-        " and " +
-        right +
-        "."
+      `Function "${call}" requires vector or number arguments of matching types. Arguments are ${left} and ${right}.`
     );
   };
 }
@@ -495,15 +480,7 @@ function getEvaluateTernaryComponentwise(operation, allowScalar) {
     }
 
     throw new RuntimeError(
-      'Function "' +
-        call +
-        '" requires vector or number arguments of matching types. Arguments are ' +
-        left +
-        ", " +
-        right +
-        ", and " +
-        test +
-        "."
+      `Function "${call}" requires vector or number arguments of matching types. Arguments are ${left}, ${right}, and ${test}.`
     );
   };
 }
@@ -520,11 +497,7 @@ function length(call, left) {
   }
 
   throw new RuntimeError(
-    'Function "' +
-      call +
-      '" requires a vector or number argument. Argument is ' +
-      left +
-      "."
+    `Function "${call}" requires a vector or number argument. Argument is ${left}.`
   );
 }
 
@@ -540,11 +513,7 @@ function normalize(call, left) {
   }
 
   throw new RuntimeError(
-    'Function "' +
-      call +
-      '" requires a vector or number argument. Argument is ' +
-      left +
-      "."
+    `Function "${call}" requires a vector or number argument. Argument is ${left}.`
   );
 }
 
@@ -560,13 +529,7 @@ function distance(call, left, right) {
   }
 
   throw new RuntimeError(
-    'Function "' +
-      call +
-      '" requires vector or number arguments of matching types. Arguments are ' +
-      left +
-      " and " +
-      right +
-      "."
+    `Function "${call}" requires vector or number arguments of matching types. Arguments are ${left} and ${right}.`
   );
 }
 
@@ -582,13 +545,7 @@ function dot(call, left, right) {
   }
 
   throw new RuntimeError(
-    'Function "' +
-      call +
-      '" requires vector or number arguments of matching types. Arguments are ' +
-      left +
-      " and " +
-      right +
-      "."
+    `Function "${call}" requires vector or number arguments of matching types. Arguments are ${left} and ${right}.`
   );
 }
 
@@ -598,13 +555,7 @@ function cross(call, left, right) {
   }
 
   throw new RuntimeError(
-    'Function "' +
-      call +
-      '" requires vec3 arguments. Arguments are ' +
-      left +
-      " and " +
-      right +
-      "."
+    `Function "${call}" requires vec3 arguments. Arguments are ${left} and ${right}.`
   );
 }
 
@@ -625,8 +576,8 @@ function replaceDefines(expression, defines) {
   }
   for (const key in defines) {
     if (defines.hasOwnProperty(key)) {
-      const definePlaceholder = new RegExp("\\$\\{" + key + "\\}", "g");
-      const defineReplace = "(" + defines[key] + ")";
+      const definePlaceholder = new RegExp(`\\$\\{${key}\\}`, "g");
+      const defineReplace = `(${defines[key]})`;
       if (defined(defineReplace)) {
         expression = expression.replace(definePlaceholder, defineReplace);
       }
@@ -668,7 +619,7 @@ function replaceVariables(expression) {
       if (j < 0) {
         throw new RuntimeError("Unmatched {.");
       }
-      result += "czm_" + exp.substr(i + 2, j - (i + 2));
+      result += `czm_${exp.substr(i + 2, j - (i + 2))}`;
       exp = exp.substr(j + 1);
       i = exp.indexOf("${");
     }
@@ -709,7 +660,7 @@ function parseCall(expression, ast) {
     if (call === "test" || call === "exec") {
       // Make sure this is called on a valid type
       if (object.callee.name !== "regExp") {
-        throw new RuntimeError(call + " is not a function.");
+        throw new RuntimeError(`${call} is not a function.`);
       }
       if (argsLength === 0) {
         if (call === "test") {
@@ -725,7 +676,7 @@ function parseCall(expression, ast) {
       return new Node(ExpressionNodeType.FUNCTION_CALL, call, val);
     }
 
-    throw new RuntimeError('Unexpected function call "' + call + '".');
+    throw new RuntimeError(`Unexpected function call "${call}".`);
   }
 
   // Non-member function calls
@@ -742,7 +693,7 @@ function parseCall(expression, ast) {
     return new Node(ExpressionNodeType.LITERAL_COLOR, call, [val]);
   } else if (call === "rgb" || call === "hsl") {
     if (argsLength < 3) {
-      throw new RuntimeError(call + " requires three arguments.");
+      throw new RuntimeError(`${call} requires three arguments.`);
     }
     val = [
       createRuntimeAst(expression, args[0]),
@@ -752,7 +703,7 @@ function parseCall(expression, ast) {
     return new Node(ExpressionNodeType.LITERAL_COLOR, call, val);
   } else if (call === "rgba" || call === "hsla") {
     if (argsLength < 4) {
-      throw new RuntimeError(call + " requires four arguments.");
+      throw new RuntimeError(`${call} requires four arguments.`);
     }
     val = [
       createRuntimeAst(expression, args[0]),
@@ -779,31 +730,31 @@ function parseCall(expression, ast) {
     return new Node(ExpressionNodeType.UNARY, call, val);
   } else if (call === "isExactClass" || call === "isClass") {
     if (argsLength < 1 || argsLength > 1) {
-      throw new RuntimeError(call + " requires exactly one argument.");
+      throw new RuntimeError(`${call} requires exactly one argument.`);
     }
     val = createRuntimeAst(expression, args[0]);
     return new Node(ExpressionNodeType.UNARY, call, val);
   } else if (call === "getExactClassName") {
     if (argsLength > 0) {
-      throw new RuntimeError(call + " does not take any argument.");
+      throw new RuntimeError(`${call} does not take any argument.`);
     }
     return new Node(ExpressionNodeType.UNARY, call);
   } else if (defined(unaryFunctions[call])) {
     if (argsLength !== 1) {
-      throw new RuntimeError(call + " requires exactly one argument.");
+      throw new RuntimeError(`${call} requires exactly one argument.`);
     }
     val = createRuntimeAst(expression, args[0]);
     return new Node(ExpressionNodeType.UNARY, call, val);
   } else if (defined(binaryFunctions[call])) {
     if (argsLength !== 2) {
-      throw new RuntimeError(call + " requires exactly two arguments.");
+      throw new RuntimeError(`${call} requires exactly two arguments.`);
     }
     left = createRuntimeAst(expression, args[0]);
     right = createRuntimeAst(expression, args[1]);
     return new Node(ExpressionNodeType.BINARY, call, left, right);
   } else if (defined(ternaryFunctions[call])) {
     if (argsLength !== 3) {
-      throw new RuntimeError(call + " requires exactly three arguments.");
+      throw new RuntimeError(`${call} requires exactly three arguments.`);
     }
     left = createRuntimeAst(expression, args[0]);
     right = createRuntimeAst(expression, args[1]);
@@ -831,7 +782,7 @@ function parseCall(expression, ast) {
     return parseRegex(expression, ast);
   }
 
-  throw new RuntimeError('Unexpected function call "' + call + '".');
+  throw new RuntimeError(`Unexpected function call "${call}".`);
 }
 
 function parseRegex(expression, ast) {
@@ -888,7 +839,7 @@ function parseKeywordsAndVariables(ast) {
     return new Node(ExpressionNodeType.LITERAL_UNDEFINED, undefined);
   }
 
-  throw new RuntimeError(ast.name + " is not defined.");
+  throw new RuntimeError(`${ast.name} is not defined.`);
 }
 
 function parseMathConstant(ast) {
@@ -958,7 +909,7 @@ function createRuntimeAst(expression, ast) {
     if (unaryOperators.indexOf(op) > -1) {
       node = new Node(ExpressionNodeType.UNARY, op, child);
     } else {
-      throw new RuntimeError('Unexpected operator "' + op + '".');
+      throw new RuntimeError(`Unexpected operator "${op}".`);
     }
   } else if (ast.type === "BinaryExpression") {
     op = ast.operator;
@@ -967,7 +918,7 @@ function createRuntimeAst(expression, ast) {
     if (binaryOperators.indexOf(op) > -1) {
       node = new Node(ExpressionNodeType.BINARY, op, left, right);
     } else {
-      throw new RuntimeError('Unexpected operator "' + op + '".');
+      throw new RuntimeError(`Unexpected operator "${op}".`);
     }
   } else if (ast.type === "LogicalExpression") {
     op = ast.operator;
@@ -1226,10 +1177,7 @@ Node.prototype._evaluateLiteralVector = function (feature) {
       components.push(value.x, value.y, value.z, value.w);
     } else {
       throw new RuntimeError(
-        call +
-          " argument must be a vector or number. Argument is " +
-          value +
-          "."
+        `${call} argument must be a vector or number. Argument is ${value}.`
       );
     }
   }
@@ -1238,17 +1186,13 @@ Node.prototype._evaluateLiteralVector = function (feature) {
   const vectorLength = parseInt(call.charAt(3));
 
   if (componentsLength === 0) {
-    throw new RuntimeError(
-      "Invalid " + call + " constructor. No valid arguments."
-    );
+    throw new RuntimeError(`Invalid ${call} constructor. No valid arguments.`);
   } else if (componentsLength < vectorLength && componentsLength > 1) {
     throw new RuntimeError(
-      "Invalid " + call + " constructor. Not enough arguments."
+      `Invalid ${call} constructor. Not enough arguments.`
     );
   } else if (componentsLength > vectorLength && argsLength > 1) {
-    throw new RuntimeError(
-      "Invalid " + call + " constructor. Too many arguments."
-    );
+    throw new RuntimeError(`Invalid ${call} constructor. Too many arguments.`);
   }
 
   if (componentsLength === 1) {
@@ -1370,7 +1314,7 @@ Node.prototype._evaluateNot = function (feature) {
   const left = this._left.evaluate(feature);
   if (typeof left !== "boolean") {
     throw new RuntimeError(
-      'Operator "!" requires a boolean argument. Argument is ' + left + "."
+      `Operator "!" requires a boolean argument. Argument is ${left}.`
     );
   }
   return !left;
@@ -1389,9 +1333,7 @@ Node.prototype._evaluateNegative = function (feature) {
   }
 
   throw new RuntimeError(
-    'Operator "-" requires a vector or number argument. Argument is ' +
-      left +
-      "."
+    `Operator "-" requires a vector or number argument. Argument is ${left}.`
   );
 };
 
@@ -1407,9 +1349,7 @@ Node.prototype._evaluatePositive = function (feature) {
     )
   ) {
     throw new RuntimeError(
-      'Operator "+" requires a vector or number argument. Argument is ' +
-        left +
-        "."
+      `Operator "+" requires a vector or number argument. Argument is ${left}.`
     );
   }
 
@@ -1422,11 +1362,7 @@ Node.prototype._evaluateLessThan = function (feature) {
 
   if (typeof left !== "number" || typeof right !== "number") {
     throw new RuntimeError(
-      'Operator "<" requires number arguments. Arguments are ' +
-        left +
-        " and " +
-        right +
-        "."
+      `Operator "<" requires number arguments. Arguments are ${left} and ${right}.`
     );
   }
 
@@ -1439,11 +1375,7 @@ Node.prototype._evaluateLessThanOrEquals = function (feature) {
 
   if (typeof left !== "number" || typeof right !== "number") {
     throw new RuntimeError(
-      'Operator "<=" requires number arguments. Arguments are ' +
-        left +
-        " and " +
-        right +
-        "."
+      `Operator "<=" requires number arguments. Arguments are ${left} and ${right}.`
     );
   }
 
@@ -1456,11 +1388,7 @@ Node.prototype._evaluateGreaterThan = function (feature) {
 
   if (typeof left !== "number" || typeof right !== "number") {
     throw new RuntimeError(
-      'Operator ">" requires number arguments. Arguments are ' +
-        left +
-        " and " +
-        right +
-        "."
+      `Operator ">" requires number arguments. Arguments are ${left} and ${right}.`
     );
   }
 
@@ -1473,11 +1401,7 @@ Node.prototype._evaluateGreaterThanOrEquals = function (feature) {
 
   if (typeof left !== "number" || typeof right !== "number") {
     throw new RuntimeError(
-      'Operator ">=" requires number arguments. Arguments are ' +
-        left +
-        " and " +
-        right +
-        "."
+      `Operator ">=" requires number arguments. Arguments are ${left} and ${right}.`
     );
   }
 
@@ -1488,9 +1412,7 @@ Node.prototype._evaluateOr = function (feature) {
   const left = this._left.evaluate(feature);
   if (typeof left !== "boolean") {
     throw new RuntimeError(
-      'Operator "||" requires boolean arguments. First argument is ' +
-        left +
-        "."
+      `Operator "||" requires boolean arguments. First argument is ${left}.`
     );
   }
 
@@ -1502,9 +1424,7 @@ Node.prototype._evaluateOr = function (feature) {
   const right = this._right.evaluate(feature);
   if (typeof right !== "boolean") {
     throw new RuntimeError(
-      'Operator "||" requires boolean arguments. Second argument is ' +
-        right +
-        "."
+      `Operator "||" requires boolean arguments. Second argument is ${right}.`
     );
   }
 
@@ -1515,9 +1435,7 @@ Node.prototype._evaluateAnd = function (feature) {
   const left = this._left.evaluate(feature);
   if (typeof left !== "boolean") {
     throw new RuntimeError(
-      'Operator "&&" requires boolean arguments. First argument is ' +
-        left +
-        "."
+      `Operator "&&" requires boolean arguments. First argument is ${left}.`
     );
   }
 
@@ -1529,9 +1447,7 @@ Node.prototype._evaluateAnd = function (feature) {
   const right = this._right.evaluate(feature);
   if (typeof right !== "boolean") {
     throw new RuntimeError(
-      'Operator "&&" requires boolean arguments. Second argument is ' +
-        right +
-        "."
+      `Operator "&&" requires boolean arguments. Second argument is ${right}.`
     );
   }
 
@@ -1555,11 +1471,7 @@ Node.prototype._evaluatePlus = function (feature) {
   }
 
   throw new RuntimeError(
-    'Operator "+" requires vector or number arguments of matching types, or at least one string argument. Arguments are ' +
-      left +
-      " and " +
-      right +
-      "."
+    `Operator "+" requires vector or number arguments of matching types, or at least one string argument. Arguments are ${left} and ${right}.`
   );
 };
 
@@ -1577,11 +1489,7 @@ Node.prototype._evaluateMinus = function (feature) {
   }
 
   throw new RuntimeError(
-    'Operator "-" requires vector or number arguments of matching types. Arguments are ' +
-      left +
-      " and " +
-      right +
-      "."
+    `Operator "-" requires vector or number arguments of matching types. Arguments are ${left} and ${right}.`
   );
 };
 
@@ -1647,11 +1555,7 @@ Node.prototype._evaluateTimes = function (feature) {
   }
 
   throw new RuntimeError(
-    'Operator "*" requires vector or number arguments. If both arguments are vectors they must be matching types. Arguments are ' +
-      left +
-      " and " +
-      right +
-      "."
+    `Operator "*" requires vector or number arguments. If both arguments are vectors they must be matching types. Arguments are ${left} and ${right}.`
   );
 };
 
@@ -1699,11 +1603,7 @@ Node.prototype._evaluateDivide = function (feature) {
   }
 
   throw new RuntimeError(
-    'Operator "/" requires vector or number arguments of matching types, or a number as the second argument. Arguments are ' +
-      left +
-      " and " +
-      right +
-      "."
+    `Operator "/" requires vector or number arguments of matching types, or a number as the second argument. Arguments are ${left} and ${right}.`
   );
 };
 
@@ -1736,11 +1636,7 @@ Node.prototype._evaluateMod = function (feature) {
   }
 
   throw new RuntimeError(
-    'Operator "%" requires vector or number arguments of matching types. Arguments are ' +
-      left +
-      " and " +
-      right +
-      "."
+    `Operator "%" requires vector or number arguments of matching types. Arguments are ${left} and ${right}.`
   );
 };
 
@@ -1775,9 +1671,7 @@ Node.prototype._evaluateConditional = function (feature) {
 
   if (typeof test !== "boolean") {
     throw new RuntimeError(
-      "Conditional argument of conditional expression must be a boolean. Argument is " +
-        test +
-        "."
+      `Conditional argument of conditional expression must be a boolean. Argument is ${test}.`
     );
   }
 
@@ -1850,11 +1744,7 @@ Node.prototype._evaluateRegExpTest = function (feature) {
 
   if (!(left instanceof RegExp && typeof right === "string")) {
     throw new RuntimeError(
-      "RegExp.test requires the first argument to be a RegExp and the second argument to be a string. Arguments are " +
-        left +
-        " and " +
-        right +
-        "."
+      `RegExp.test requires the first argument to be a RegExp and the second argument to be a string. Arguments are ${left} and ${right}.`
     );
   }
 
@@ -1872,11 +1762,7 @@ Node.prototype._evaluateRegExpMatch = function (feature) {
   }
 
   throw new RuntimeError(
-    'Operator "=~" requires one RegExp argument and one string argument. Arguments are ' +
-      left +
-      " and " +
-      right +
-      "."
+    `Operator "=~" requires one RegExp argument and one string argument. Arguments are ${left} and ${right}.`
   );
 };
 
@@ -1891,11 +1777,7 @@ Node.prototype._evaluateRegExpNotMatch = function (feature) {
   }
 
   throw new RuntimeError(
-    'Operator "!~" requires one RegExp argument and one string argument. Arguments are ' +
-      left +
-      " and " +
-      right +
-      "."
+    `Operator "!~" requires one RegExp argument and one string argument. Arguments are ${left} and ${right}.`
   );
 };
 
@@ -1905,11 +1787,7 @@ Node.prototype._evaluateRegExpExec = function (feature) {
 
   if (!(left instanceof RegExp && typeof right === "string")) {
     throw new RuntimeError(
-      "RegExp.exec requires the first argument to be a RegExp and the second argument to be a string. Arguments are " +
-        left +
-        " and " +
-        right +
-        "."
+      `RegExp.exec requires the first argument to be a RegExp and the second argument to be a string. Arguments are ${left} and ${right}.`
     );
   }
 
@@ -1931,7 +1809,7 @@ Node.prototype._evaluateToString = function (feature) {
     return String(left);
   }
 
-  throw new RuntimeError('Unexpected function call "' + this._value + '".');
+  throw new RuntimeError(`Unexpected function call "${this._value}".`);
 };
 
 function convertHSLToRGB(ast) {
@@ -1982,7 +1860,7 @@ function colorToVec3(color) {
   const r = numberToString(color.red);
   const g = numberToString(color.green);
   const b = numberToString(color.blue);
-  return "vec3(" + r + ", " + g + ", " + b + ")";
+  return `vec3(${r}, ${g}, ${b})`;
 }
 
 function colorToVec4(color) {
@@ -1990,7 +1868,7 @@ function colorToVec4(color) {
   const g = numberToString(color.green);
   const b = numberToString(color.blue);
   const a = numberToString(color.alpha);
-  return "vec4(" + r + ", " + g + ", " + b + ", " + a + ")";
+  return `vec4(${r}, ${g}, ${b}, ${a})`;
 }
 
 function getExpressionArray(
@@ -2093,19 +1971,19 @@ Node.prototype.getShaderExpression = function (
     case ExpressionNodeType.UNARY:
       // Supported types: +, -, !, Boolean, Number
       if (value === "Boolean") {
-        return "bool(" + left + ")";
+        return `bool(${left})`;
       } else if (value === "Number") {
-        return "float(" + left + ")";
+        return `float(${left})`;
       } else if (value === "round") {
-        return "floor(" + left + " + 0.5)";
+        return `floor(${left} + 0.5)`;
       } else if (defined(unaryFunctions[value])) {
-        return value + "(" + left + ")";
+        return `${value}(${left})`;
       } else if (value === "isNaN") {
         // In GLSL 2.0 use isnan instead
-        return "(" + left + " != " + left + ")";
+        return `(${left} != ${left})`;
       } else if (value === "isFinite") {
         // In GLSL 2.0 use isinf instead. GLSL doesn't have an infinity constant so use czm_infinity which is an arbitrarily big enough number.
-        return "(abs(" + left + ") < czm_infinity)";
+        return `(abs(${left}) < czm_infinity)`;
       } else if (
         value === "String" ||
         value === "isExactClass" ||
@@ -2113,31 +1991,31 @@ Node.prototype.getShaderExpression = function (
         value === "getExactClassName"
       ) {
         throw new RuntimeError(
-          'Error generating style shader: "' + value + '" is not supported.'
+          `Error generating style shader: "${value}" is not supported.`
         );
       }
       return value + left;
     case ExpressionNodeType.BINARY:
       // Supported types: ||, &&, ===, !==, <, >, <=, >=, +, -, *, /, %
       if (value === "%") {
-        return "mod(" + left + ", " + right + ")";
+        return `mod(${left}, ${right})`;
       } else if (value === "===") {
-        return "(" + left + " == " + right + ")";
+        return `(${left} == ${right})`;
       } else if (value === "!==") {
-        return "(" + left + " != " + right + ")";
+        return `(${left} != ${right})`;
       } else if (value === "atan2") {
-        return "atan(" + left + ", " + right + ")";
+        return `atan(${left}, ${right})`;
       } else if (defined(binaryFunctions[value])) {
-        return value + "(" + left + ", " + right + ")";
+        return `${value}(${left}, ${right})`;
       }
-      return "(" + left + " " + value + " " + right + ")";
+      return `(${left} ${value} ${right})`;
     case ExpressionNodeType.TERNARY:
       if (defined(ternaryFunctions[value])) {
-        return value + "(" + left + ", " + right + ", " + test + ")";
+        return `${value}(${left}, ${right}, ${test})`;
       }
       break;
     case ExpressionNodeType.CONDITIONAL:
-      return "(" + test + " ? " + left + " : " + right + ")";
+      return `(${test} ? ${left} : ${right})`;
     case ExpressionNodeType.MEMBER:
       if (checkFeature(this._left)) {
         return getVariableName(right, variableSubstitutionMap);
@@ -2145,36 +2023,26 @@ Node.prototype.getShaderExpression = function (
       // This is intended for accessing the components of vector properties. String members aren't supported.
       // Check for 0.0 rather than 0 because all numbers are previously converted to decimals.
       if (right === "r" || right === "x" || right === "0.0") {
-        return left + "[0]";
+        return `${left}[0]`;
       } else if (right === "g" || right === "y" || right === "1.0") {
-        return left + "[1]";
+        return `${left}[1]`;
       } else if (right === "b" || right === "z" || right === "2.0") {
-        return left + "[2]";
+        return `${left}[2]`;
       } else if (right === "a" || right === "w" || right === "3.0") {
-        return left + "[3]";
+        return `${left}[3]`;
       }
-      return left + "[int(" + right + ")]";
+      return `${left}[int(${right})]`;
     case ExpressionNodeType.FUNCTION_CALL:
       throw new RuntimeError(
-        'Error generating style shader: "' + value + '" is not supported.'
+        `Error generating style shader: "${value}" is not supported.`
       );
     case ExpressionNodeType.ARRAY:
       if (value.length === 4) {
-        return (
-          "vec4(" +
-          value[0] +
-          ", " +
-          value[1] +
-          ", " +
-          value[2] +
-          ", " +
-          value[3] +
-          ")"
-        );
+        return `vec4(${value[0]}, ${value[1]}, ${value[2]}, ${value[3]})`;
       } else if (value.length === 3) {
-        return "vec3(" + value[0] + ", " + value[1] + ", " + value[2] + ")";
+        return `vec3(${value[0]}, ${value[1]}, ${value[2]})`;
       } else if (value.length === 2) {
-        return "vec2(" + value[0] + ", " + value[1] + ")";
+        return `vec2(${value[0]}, ${value[1]})`;
       }
       throw new RuntimeError(
         "Error generating style shader: Invalid array length. Array length should be 2, 3, or 4."
@@ -2228,23 +2096,15 @@ Node.prototype.getShaderExpression = function (
           if (alpha !== "1.0") {
             shaderState.translucent = true;
           }
-          return "vec4(" + rgb + ", " + alpha + ")";
+          return `vec4(${rgb}, ${alpha})`;
         }
-        return "vec4(" + args[0] + ", 1.0)";
+        return `vec4(${args[0]}, 1.0)`;
       } else if (value === "rgb") {
         color = convertRGBToColor(this);
         if (defined(color)) {
           return colorToVec4(color);
         }
-        return (
-          "vec4(" +
-          args[0] +
-          " / 255.0, " +
-          args[1] +
-          " / 255.0, " +
-          args[2] +
-          " / 255.0, 1.0)"
-        );
+        return `vec4(${args[0]} / 255.0, ${args[1]} / 255.0, ${args[2]} / 255.0, 1.0)`;
       } else if (value === "rgba") {
         if (args[3] !== "1.0") {
           shaderState.translucent = true;
@@ -2253,31 +2113,13 @@ Node.prototype.getShaderExpression = function (
         if (defined(color)) {
           return colorToVec4(color);
         }
-        return (
-          "vec4(" +
-          args[0] +
-          " / 255.0, " +
-          args[1] +
-          " / 255.0, " +
-          args[2] +
-          " / 255.0, " +
-          args[3] +
-          ")"
-        );
+        return `vec4(${args[0]} / 255.0, ${args[1]} / 255.0, ${args[2]} / 255.0, ${args[3]})`;
       } else if (value === "hsl") {
         color = convertHSLToRGB(this);
         if (defined(color)) {
           return colorToVec4(color);
         }
-        return (
-          "vec4(czm_HSLToRGB(vec3(" +
-          args[0] +
-          ", " +
-          args[1] +
-          ", " +
-          args[2] +
-          ")), 1.0)"
-        );
+        return `vec4(czm_HSLToRGB(vec3(${args[0]}, ${args[1]}, ${args[2]})), 1.0)`;
       } else if (value === "hsla") {
         color = convertHSLToRGB(this);
         if (defined(color)) {
@@ -2289,17 +2131,7 @@ Node.prototype.getShaderExpression = function (
         if (args[3] !== "1.0") {
           shaderState.translucent = true;
         }
-        return (
-          "vec4(czm_HSLToRGB(vec3(" +
-          args[0] +
-          ", " +
-          args[1] +
-          ", " +
-          args[2] +
-          ")), " +
-          args[3] +
-          ")"
-        );
+        return `vec4(czm_HSLToRGB(vec3(${args[0]}, ${args[1]}, ${args[2]})), ${args[3]})`;
       }
       break;
     case ExpressionNodeType.LITERAL_VECTOR:
@@ -2311,7 +2143,7 @@ Node.prototype.getShaderExpression = function (
       }
       //>>includeEnd('debug');
       length = left.length;
-      vectorExpression = value + "(";
+      vectorExpression = `${value}(`;
       for (let i = 0; i < length; ++i) {
         vectorExpression += left[i];
         if (i < length - 1) {

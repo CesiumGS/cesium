@@ -280,14 +280,11 @@ function createShaders(primitive, context) {
       "czm_non_pick_main"
     );
     fragmentShaderSource =
-      fragmentShaderSource +
-      "void main() \n" +
-      "{ \n" +
-      "    czm_non_pick_main(); \n" +
-      "    gl_FragColor = " +
-      pickId +
-      "; \n" +
-      "} \n";
+      `${fragmentShaderSource}void main() \n` +
+      `{ \n` +
+      `    czm_non_pick_main(); \n` +
+      `    gl_FragColor = ${pickId}; \n` +
+      `} \n`;
     primitive._spPick = ShaderProgram.fromCache({
       context: context,
       vertexShaderSource: vertexShaderSource,
@@ -342,15 +339,12 @@ function createShaders(primitive, context) {
 
   fsSource = ShaderSource.replaceMain(fsSource, "czm_non_pick_main");
   fsSource =
-    fsSource +
-    "\n" +
-    "void main() \n" +
-    "{ \n" +
-    "    czm_non_pick_main(); \n" +
-    "    gl_FragColor = " +
-    pickId +
-    "; \n" +
-    "} \n";
+    `${fsSource}\n` +
+    `void main() \n` +
+    `{ \n` +
+    `    czm_non_pick_main(); \n` +
+    `    gl_FragColor = ${pickId}; \n` +
+    `} \n`;
 
   const pickVS = new ShaderSource({
     sources: [vsSource],

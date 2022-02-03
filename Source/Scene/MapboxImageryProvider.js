@@ -38,7 +38,7 @@ const defaultCredit = new Credit(
  *
  * @example
  * // Mapbox tile provider
- * var mapbox = new Cesium.MapboxImageryProvider({
+ * const mapbox = new Cesium.MapboxImageryProvider({
  *     mapId: 'mapbox.streets',
  *     accessToken: 'thisIsMyAccessToken'
  * });
@@ -157,7 +157,7 @@ function MapboxImageryProvider(options) {
 
   let format = defaultValue(options.format, "png");
   if (!/\./.test(format)) {
-    format = "." + format;
+    format = `.${format}`;
   }
   this._format = format;
 
@@ -165,7 +165,7 @@ function MapboxImageryProvider(options) {
   if (!trailingSlashRegex.test(templateUrl)) {
     templateUrl += "/";
   }
-  templateUrl += mapId + "/{z}/{x}/{y}" + this._format;
+  templateUrl += `${mapId}/{z}/{x}/{y}${this._format}`;
   resource.url = templateUrl;
 
   resource.setQueryParameters({

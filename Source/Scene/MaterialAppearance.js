@@ -32,7 +32,7 @@ import Material from "./Material.js";
      * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Material Appearance Demo}
      *
      * @example
-     * var primitive = new Cesium.Primitive({
+     * const primitive = new Cesium.Primitive({
      *   geometryInstances : new Cesium.GeometryInstance({
      *     geometry : new Cesium.WallGeometry({
             materialSupport :  Cesium.MaterialAppearance.MaterialSupport.BASIC.vertexFormat,

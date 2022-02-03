@@ -82,7 +82,7 @@ import ShadowMode from "./ShadowMode.js";
  *
  * @example
  * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
- * var instance = new Cesium.GeometryInstance({
+ * const instance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.EllipseGeometry({
  *       center : Cesium.Cartesian3.fromDegrees(-100.0, 20.0),
  *       semiMinorAxis : 500000.0,
@@ -101,7 +101,7 @@ import ShadowMode from "./ShadowMode.js";
  *
  * @example
  * // 2. Draw different instances each with a unique color
- * var rectangleInstance = new Cesium.GeometryInstance({
+ * const rectangleInstance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.RectangleGeometry({
  *     rectangle : Cesium.Rectangle.fromDegrees(-140.0, 30.0, -100.0, 40.0),
  *     vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
@@ -111,7 +111,7 @@ import ShadowMode from "./ShadowMode.js";
  *     color : new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5)
  *   }
  * });
- * var ellipsoidInstance = new Cesium.GeometryInstance({
+ * const ellipsoidInstance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.EllipsoidGeometry({
  *     radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0),
  *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL
@@ -222,7 +222,7 @@ function Primitive(options) {
    * @default Matrix4.IDENTITY
    *
    * @example
-   * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+   * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
    * p.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
    */
   this.modelMatrix = Matrix4.clone(
@@ -575,7 +575,7 @@ function createBatchTable(primitive, context) {
 
     attributeIndices[name] = i;
     attributes.push({
-      functionName: "czm_batchTable_" + name,
+      functionName: `czm_batchTable_${name}`,
       componentDatatype: attribute.componentDatatype,
       componentsPerAttribute: attribute.componentsPerAttribute,
       normalize: attribute.normalize,
@@ -743,74 +743,48 @@ Primitive._modifyShaderPosition = function (
   while ((match = positionRegex.exec(vertexShaderSource)) !== null) {
     const name = match[1];
 
-    const functionName =
-      "vec4 czm_compute" + name[0].toUpperCase() + name.substr(1) + "()";
+    const functionName = `vec4 czm_compute${name[0].toUpperCase()}${name.substr(
+      1
+    )}()`;
 
     // Don't forward-declare czm_computePosition because computePosition.glsl already does.
     if (functionName !== "vec4 czm_computePosition()") {
-      forwardDecl += functionName + ";\n";
+      forwardDecl += `${functionName};\n`;
     }
 
     if (!defined(primitive.rtcCenter)) {
       // Use GPU RTE
       if (!scene3DOnly) {
         attributes +=
-          "attribute vec3 " +
-          name +
-          "2DHigh;\n" +
-          "attribute vec3 " +
-          name +
-          "2DLow;\n";
+          `attribute vec3 ${name}2DHigh;\n` + `attribute vec3 ${name}2DLow;\n`;
 
         computeFunctions +=
-          functionName +
-          "\n" +
-          "{\n" +
-          "    vec4 p;\n" +
-          "    if (czm_morphTime == 1.0)\n" +
-          "    {\n" +
-          "        p = czm_translateRelativeToEye(" +
-          name +
-          "3DHigh, " +
-          name +
-          "3DLow);\n" +
-          "    }\n" +
-          "    else if (czm_morphTime == 0.0)\n" +
-          "    {\n" +
-          "        p = czm_translateRelativeToEye(" +
-          name +
-          "2DHigh.zxy, " +
-          name +
-          "2DLow.zxy);\n" +
-          "    }\n" +
-          "    else\n" +
-          "    {\n" +
-          "        p = czm_columbusViewMorph(\n" +
-          "                czm_translateRelativeToEye(" +
-          name +
-          "2DHigh.zxy, " +
-          name +
-          "2DLow.zxy),\n" +
-          "                czm_translateRelativeToEye(" +
-          name +
-          "3DHigh, " +
-          name +
-          "3DLow),\n" +
-          "                czm_morphTime);\n" +
-          "    }\n" +
-          "    return p;\n" +
-          "}\n\n";
+          `${functionName}\n` +
+          `{\n` +
+          `    vec4 p;\n` +
+          `    if (czm_morphTime == 1.0)\n` +
+          `    {\n` +
+          `        p = czm_translateRelativeToEye(${name}3DHigh, ${name}3DLow);\n` +
+          `    }\n` +
+          `    else if (czm_morphTime == 0.0)\n` +
+          `    {\n` +
+          `        p = czm_translateRelativeToEye(${name}2DHigh.zxy, ${name}2DLow.zxy);\n` +
+          `    }\n` +
+          `    else\n` +
+          `    {\n` +
+          `        p = czm_columbusViewMorph(\n` +
+          `                czm_translateRelativeToEye(${name}2DHigh.zxy, ${name}2DLow.zxy),\n` +
+          `                czm_translateRelativeToEye(${name}3DHigh, ${name}3DLow),\n` +
+          `                czm_morphTime);\n` +
+          `    }\n` +
+          `    return p;\n` +
+          `}\n\n`;
       } else {
         computeFunctions +=
-          functionName +
-          "\n" +
-          "{\n" +
-          "    return czm_translateRelativeToEye(" +
-          name +
-          "3DHigh, " +
-          name +
-          "3DLow);\n" +
-          "}\n\n";
+          `${functionName}\n` +
+          `{\n` +
+          `    return czm_translateRelativeToEye(${name}3DHigh, ${name}3DLow);\n` +
+          `}\n\n`;
       }
     } else {
       // Use RTC
@@ -827,11 +801,10 @@ Primitive._modifyShaderPosition = function (
       attributes += "attribute vec4 position;\n";
 
       computeFunctions +=
-        functionName +
-        "\n" +
-        "{\n" +
-        "    return u_modifiedModelView * position;\n" +
-        "}\n\n";
+        `${functionName}\n` +
+        `{\n` +
+        `    return u_modifiedModelView * position;\n` +
+        `}\n\n`;
 
       vertexShaderSource = vertexShaderSource.replace(
         /czm_modelViewRelativeToEye\s+\*\s+/g,
@@ -865,7 +838,7 @@ Primitive._appendShowToShader = function (primitive, vertexShaderSource) {
     "    gl_Position *= czm_batchTable_show(batchId); \n" +
     "}";
 
-  return renamedVS + "\n" + showMain;
+  return `${renamedVS}\n${showMain}`;
 };
 
 Primitive._updateColorAttribute = function (
@@ -923,11 +896,11 @@ function appendPickToVertexShader(source) {
     "    v_pickColor = czm_batchTable_pickColor(batchId); \n" +
     "}";
 
-  return renamedVS + "\n" + pickMain;
+  return `${renamedVS}\n${pickMain}`;
 }
 
 function appendPickToFragmentShader(source) {
-  return "varying vec4 v_pickColor;\n" + source;
+  return `varying vec4 v_pickColor;\n${source}`;
 }
 
 Primitive._updatePickColorAttribute = function (source) {
@@ -1035,7 +1008,7 @@ Primitive._appendDistanceDisplayConditionToShader = function (
     "    float show = (distanceSq >= nearSq && distanceSq <= farSq) ? 1.0 : 0.0; \n" +
     "    gl_Position *= show; \n" +
     "}";
-  return renamedVS + "\n" + distanceDisplayConditionMain;
+  return `${renamedVS}\n${distanceDisplayConditionMain}`;
 };
 
 function modifyForEncodedNormals(primitive, vertexShaderSource) {
@@ -1059,10 +1032,10 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
   let numComponents = containsSt && containsNormal ? 2.0 : 1.0;
   numComponents += containsTangent || containsBitangent ? 1 : 0;
 
-  const type = numComponents > 1 ? "vec" + numComponents : "float";
+  const type = numComponents > 1 ? `vec${numComponents}` : "float";
 
   const attributeName = "compressedAttributes";
-  const attributeDecl = "attribute " + type + " " + attributeName + ";";
+  const attributeDecl = `attribute ${type} ${attributeName};`;
 
   let globalDecl = "";
   let decode = "";
@@ -1070,47 +1043,35 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
   if (containsSt) {
     globalDecl += "vec2 st;\n";
     const stComponent =
-      numComponents > 1 ? attributeName + ".x" : attributeName;
-    decode +=
-      "    st = czm_decompressTextureCoordinates(" + stComponent + ");\n";
+      numComponents > 1 ? `${attributeName}.x` : attributeName;
+    decode += `    st = czm_decompressTextureCoordinates(${stComponent});\n`;
   }
 
   if (containsNormal && containsTangent && containsBitangent) {
     globalDecl += "vec3 normal;\n" + "vec3 tangent;\n" + "vec3 bitangent;\n";
-    decode +=
-      "    czm_octDecode(" +
-      attributeName +
-      "." +
-      (containsSt ? "yz" : "xy") +
-      ", normal, tangent, bitangent);\n";
+    decode += `    czm_octDecode(${attributeName}.${
+      containsSt ? "yz" : "xy"
+    }, normal, tangent, bitangent);\n`;
   } else {
     if (containsNormal) {
       globalDecl += "vec3 normal;\n";
-      decode +=
-        "    normal = czm_octDecode(" +
-        attributeName +
-        (numComponents > 1 ? "." + (containsSt ? "y" : "x") : "") +
-        ");\n";
+      decode += `    normal = czm_octDecode(${attributeName}${
+        numComponents > 1 ? `.${containsSt ? "y" : "x"}` : ""
+      });\n`;
     }
 
     if (containsTangent) {
       globalDecl += "vec3 tangent;\n";
-      decode +=
-        "    tangent = czm_octDecode(" +
-        attributeName +
-        "." +
-        (containsSt && containsNormal ? "z" : "y") +
-        ");\n";
+      decode += `    tangent = czm_octDecode(${attributeName}.${
+        containsSt && containsNormal ? "z" : "y"
+      });\n`;
     }
 
     if (containsBitangent) {
       globalDecl += "vec3 bitangent;\n";
-      decode +=
-        "    bitangent = czm_octDecode(" +
-        attributeName +
-        "." +
-        (containsSt && containsNormal ? "z" : "y") +
-        ");\n";
+      decode += `    bitangent = czm_octDecode(${attributeName}.${
+        containsSt && containsNormal ? "z" : "y"
+      });\n`;
     }
   }
 
@@ -1121,11 +1082,8 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
   modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+bitangent;/g, "");
   modifiedVS = ShaderSource.replaceMain(modifiedVS, "czm_non_compressed_main");
   const compressedMain =
-    "void main() \n" +
-    "{ \n" +
-    decode +
-    "    czm_non_compressed_main(); \n" +
-    "}";
+    `${"void main() \n" + "{ \n"}${decode}    czm_non_compressed_main(); \n` +
+    `}`;
 
   return [attributeDecl, globalDecl, modifiedVS, compressedMain].join("\n");
 }
@@ -1159,11 +1117,11 @@ function depthClampFS(fragmentShaderSource) {
     "    #endif\n" +
     "#endif\n" +
     "}\n";
-  modifiedFS =
+  modifiedFS = `${
     "#ifdef GL_EXT_frag_depth\n" +
     "#extension GL_EXT_frag_depth : enable\n" +
-    "#endif\n" +
-    modifiedFS;
+    "#endif\n"
+  }${modifiedFS}`;
   return modifiedFS;
 }
 
@@ -1184,9 +1142,7 @@ function validateShaderMatching(shaderProgram, attributeLocations) {
     if (shaderAttributes.hasOwnProperty(name)) {
       if (!defined(attributeLocations[name])) {
         throw new DeveloperError(
-          "Appearance/Geometry mismatch.  The appearance requires vertex shader attribute input '" +
-            name +
-            "', which was not computed as part of the Geometry.  Use the appearance's vertexFormat property when constructing the geometry."
+          `Appearance/Geometry mismatch.  The appearance requires vertex shader attribute input '${name}', which was not computed as part of the Geometry.  Use the appearance's vertexFormat property when constructing the geometry.`
         );
       }
     }
@@ -1854,7 +1810,7 @@ function getUniforms(primitive, appearance, material, frameState) {
         if (defined(materialUniformMap) && defined(materialUniformMap[name])) {
           // Later, we could rename uniforms behind-the-scenes if needed.
           throw new DeveloperError(
-            "Appearance and material have a uniform with the same name: " + name
+            `Appearance and material have a uniform with the same name: ${name}`
           );
         }
         //>>includeEnd('debug');
@@ -2425,7 +2381,7 @@ function createPickIdProperty(primitive, properties, index) {
  * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
  *
  * @example
- * var attributes = primitive.getGeometryInstanceAttributes('an id');
+ * const attributes = primitive.getGeometryInstanceAttributes('an id');
  * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
  * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
  * attributes.distanceDisplayCondition = Cesium.DistanceDisplayConditionGeometryInstanceAttribute.toValue(100.0, 10000.0);

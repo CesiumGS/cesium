@@ -226,7 +226,7 @@ function loadFromUri(imageLoader) {
       if (imageLoader.isDestroyed()) {
         return;
       }
-      handleError(imageLoader, error, "Failed to load image: " + uri);
+      handleError(imageLoader, error, `Failed to load image: ${uri}`);
     });
 }
 

@@ -68,7 +68,7 @@ const GroundPrimitiveUniformMap = {
  *
  * @example
  * // Example 1: Create primitive with a single instance
- * var rectangleInstance = new Cesium.GeometryInstance({
+ * const rectangleInstance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.RectangleGeometry({
  *     rectangle : Cesium.Rectangle.fromDegrees(-140.0, 30.0, -100.0, 40.0)
  *   }),
@@ -82,8 +82,8 @@ const GroundPrimitiveUniformMap = {
  * }));
  *
  * // Example 2: Batch instances
- * var color = new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5); // Both instances must have the same color.
- * var rectangleInstance = new Cesium.GeometryInstance({
+ * const color = new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5); // Both instances must have the same color.
+ * const rectangleInstance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.RectangleGeometry({
  *     rectangle : Cesium.Rectangle.fromDegrees(-140.0, 30.0, -100.0, 40.0)
  *   }),
@@ -92,7 +92,7 @@ const GroundPrimitiveUniformMap = {
  *     color : color
  *   }
  * });
- * var ellipseInstance = new Cesium.GeometryInstance({
+ * const ellipseInstance = new Cesium.GeometryInstance({
  *     geometry : new Cesium.EllipseGeometry({
  *         center : Cesium.Cartesian3.fromDegrees(-105.0, 40.0),
  *         semiMinorAxis : 300000.0,
@@ -949,7 +949,7 @@ GroundPrimitive.prototype.getBoundingSphere = function (id) {
  * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
  *
  * @example
- * var attributes = primitive.getGeometryInstanceAttributes('an id');
+ * const attributes = primitive.getGeometryInstanceAttributes('an id');
  * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
  * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
  */

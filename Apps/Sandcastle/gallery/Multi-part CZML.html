@@ -77,7 +77,7 @@
         function updateStatusDisplay() {
           let msg = "";
           partsToLoad.forEach(function (part) {
-            msg += part.url + " - ";
+            msg += `${part.url} - `;
             if (part.loaded) {
               msg += "Loaded.<br/>";
             } else if (part.requested) {
@@ -139,7 +139,7 @@
               clock.currentTime
             );
             if (Cesium.defined(fuel)) {
-              fuelDisplay.textContent = "Fuel: " + fuel.toFixed(2) + " gal";
+              fuelDisplay.textContent = `Fuel: ${fuel.toFixed(2)} gal`;
             }
           }
         });

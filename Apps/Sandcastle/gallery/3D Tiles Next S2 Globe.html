@@ -46,7 +46,6 @@
         //Sandcastle_Begin
 
         // One World Terrain Base Globe provided by Maxar
-        Cesium.ExperimentalFeatures.enableModelExperimental = true;
 
         const viewer = new Cesium.Viewer("cesiumContainer", {
           globe: false,
@@ -105,8 +104,7 @@
           fragmentShaderText: [
             "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
             "{",
-            "  // NOTE: this is exposing internal details of the shader.",
-            "  float featureId = floor(texture2D(FEATURE_ID_TEXTURE, FEATURE_ID_TEXCOORD).FEATURE_ID_CHANNEL * 255.0 + 0.5);",
+            "  float featureId = fsInput.featureIds.featureId_0;",
             "  // Use cartesian coordinates but scale to be roughly [-1, 1]",
             "  vec3 positionWC = fsInput.attributes.positionWC / 6.3e6;",
             "  if (featureId == 60.0)",
@@ -158,9 +156,10 @@
             const feature = scene.pick(movement.endPosition);
             if (feature instanceof Cesium.Cesium3DTileFeature) {
               metadataOverlay.style.display = "block";
-              metadataOverlay.style.bottom =
-                viewer.canvas.clientHeight - movement.endPosition.y + "px";
-              metadataOverlay.style.left = movement.endPosition.x + "px";
+              metadataOverlay.style.bottom = `${
+                viewer.canvas.clientHeight - movement.endPosition.y
+              }px`;
+              metadataOverlay.style.left = `${movement.endPosition.x}px`;
 
               tableHtmlScratch =
                 "<table><thead><tr><th><tt>Property</tt></th><th><tt>Value</tt></th></tr></thead><tbody>";
@@ -170,12 +169,7 @@
               for (let i = 0; i < length; ++i) {
                 const propertyName = propertyNames[i];
                 const propertyValue = feature.getProperty(propertyName);
-                tableHtmlScratch +=
-                  "<tr><td><tt>" +
-                  propertyName +
-                  "</tt></td><td><tt>" +
-                  propertyValue +
-                  "</tt></td></tr>";
+                tableHtmlScratch += `<tr><td><tt>${propertyName}</tt></td><td><tt>${propertyValue}</tt></td></tr>`;
               }
               tableHtmlScratch += "</tbody></table>";
               metadataOverlay.innerHTML = tableHtmlScratch;

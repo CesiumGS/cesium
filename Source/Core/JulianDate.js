@@ -786,40 +786,30 @@ JulianDate.toIso8601 = function (julianDate, precision) {
   if (!defined(precision) && millisecond !== 0) {
     //Forces milliseconds into a number with at least 3 digits to whatever the default toString() precision is.
     millisecondStr = (millisecond * 0.01).toString().replace(".", "");
-    return (
-      year.toString().padStart(4, "0") +
-      "-" +
-      month.toString().padStart(2, "0") +
-      "-" +
-      day.toString().padStart(2, "0") +
-      "T" +
-      hour.toString().padStart(2, "0") +
-      ":" +
-      minute.toString().padStart(2, "0") +
-      ":" +
-      second.toString().padStart(2, "0") +
-      "." +
-      millisecondStr +
-      "Z"
-    );
+    return `${year.toString().padStart(4, "0")}-${month
+      .toString()
+      .padStart(2, "0")}-${day
+      .toString()
+      .padStart(2, "0")}T${hour
+      .toString()
+      .padStart(2, "0")}:${minute
+      .toString()
+      .padStart(2, "0")}:${second
+      .toString()
+      .padStart(2, "0")}.${millisecondStr}Z`;
   }
 
   //Precision is either 0 or milliseconds is 0 with undefined precision, in either case, leave off milliseconds entirely
   if (!defined(precision) || precision === 0) {
-    return (
-      year.toString().padStart(4, "0") +
-      "-" +
-      month.toString().padStart(2, "0") +
-      "-" +
-      day.toString().padStart(2, "0") +
-      "T" +
-      hour.toString().padStart(2, "0") +
-      ":" +
-      minute.toString().padStart(2, "0") +
-      ":" +
-      second.toString().padStart(2, "0") +
-      "Z"
-    );
+    return `${year.toString().padStart(4, "0")}-${month
+      .toString()
+      .padStart(2, "0")}-${day
+      .toString()
+      .padStart(2, "0")}T${hour
+      .toString()
+      .padStart(2, "0")}:${minute
+      .toString()
+      .padStart(2, "0")}:${second.toString().padStart(2, "0")}Z`;
   }
 
   //Forces milliseconds into a number with at least 3 digits to whatever the specified precision is.
@@ -827,22 +817,17 @@ JulianDate.toIso8601 = function (julianDate, precision) {
     .toFixed(precision)
     .replace(".", "")
     .slice(0, precision);
-  return (
-    year.toString().padStart(4, "0") +
-    "-" +
-    month.toString().padStart(2, "0") +
-    "-" +
-    day.toString().padStart(2, "0") +
-    "T" +
-    hour.toString().padStart(2, "0") +
-    ":" +
-    minute.toString().padStart(2, "0") +
-    ":" +
-    second.toString().padStart(2, "0") +
-    "." +
-    millisecondStr +
-    "Z"
-  );
+  return `${year.toString().padStart(4, "0")}-${month
+    .toString()
+    .padStart(2, "0")}-${day
+    .toString()
+    .padStart(2, "0")}T${hour
+    .toString()
+    .padStart(2, "0")}:${minute
+    .toString()
+    .padStart(2, "0")}:${second
+    .toString()
+    .padStart(2, "0")}.${millisecondStr}Z`;
 };
 
 /**

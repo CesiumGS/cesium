@@ -133,8 +133,8 @@ function generateNatural(points) {
  *
  * @example
  * // Create a G<sup>1</sup> continuous Hermite spline
- * var times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
- * var spline = new Cesium.HermiteSpline({
+ * const times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
+ * const spline = new Cesium.HermiteSpline({
  *     times : times,
  *     points : [
  *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
@@ -157,7 +157,7 @@ function generateNatural(points) {
  *     ]
  * });
  *
- * var p0 = spline.evaluate(times[0]);
+ * const p0 = spline.evaluate(times[0]);
  *
  * @see CatmullRomSpline
  * @see LinearSpline
@@ -282,7 +282,7 @@ Object.defineProperties(HermiteSpline.prototype, {
  * @exception {DeveloperError} times, points and tangents must have the same length.
  *
  * @example
- * var points = [
+ * const points = [
  *     new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
  *     new Cesium.Cartesian3(1372574.0, -5345182.0, 4606657.0),
  *     new Cesium.Cartesian3(-757983.0, -5542796.0, 4514323.0),
@@ -291,15 +291,15 @@ Object.defineProperties(HermiteSpline.prototype, {
  * ];
  *
  * // Add tangents
- * var tangents = new Array(points.length);
+ * const tangents = new Array(points.length);
  * tangents[0] = new Cesium.Cartesian3(1125196, -161816, 270551);
- * var temp = new Cesium.Cartesian3();
- * for (var i = 1; i < tangents.length - 1; ++i) {
+ * const temp = new Cesium.Cartesian3();
+ * for (let i = 1; i < tangents.length - 1; ++i) {
  *     tangents[i] = Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.subtract(points[i + 1], points[i - 1], temp), 0.5, new Cesium.Cartesian3());
  * }
  * tangents[tangents.length - 1] = new Cesium.Cartesian3(1165345, 112641, 47281);
  *
- * var spline = Cesium.HermiteSpline.createC1({
+ * const spline = Cesium.HermiteSpline.createC1({
  *     times : times,
  *     points : points,
  *     tangents : tangents
@@ -354,7 +354,7 @@ HermiteSpline.createC1 = function (options) {
  *
  * @example
  * // Create a natural cubic spline above the earth from Philadelphia to Los Angeles.
- * var spline = Cesium.HermiteSpline.createNaturalCubic({
+ * const spline = Cesium.HermiteSpline.createNaturalCubic({
  *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
  *     points : [
  *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
@@ -421,7 +421,7 @@ HermiteSpline.createNaturalCubic = function (options) {
  *
  * @example
  * // Create a clamped cubic spline above the earth from Philadelphia to Los Angeles.
- * var spline = Cesium.HermiteSpline.createClampedCubic({
+ * const spline = Cesium.HermiteSpline.createClampedCubic({
  *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
  *     points : [
  *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),

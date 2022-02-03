@@ -146,7 +146,7 @@ function ClassificationModel(options) {
    * @default {@link Matrix4.IDENTITY}
    *
    * @example
-   * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
+   * const origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
    * m.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
    */
   this.modelMatrix = Matrix4.clone(
@@ -262,7 +262,7 @@ Object.defineProperties(ClassificationModel.prototype, {
    *
    * @example
    * // Center in WGS84 coordinates
-   * var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
+   * const center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
    */
   boundingSphere: {
     get: function () {
@@ -598,38 +598,19 @@ function createProgram(model) {
     }
 
     uniformDecl =
-      "uniform mat4 " +
-      modelViewName +
-      ";\n" +
-      "uniform mat4 " +
-      projectionName +
-      ";\n";
-    toClip =
-      projectionName +
-      " * " +
-      modelViewName +
-      " * vec4(" +
-      positionName +
-      ", 1.0)";
+      `uniform mat4 ${modelViewName};\n` + `uniform mat4 ${projectionName};\n`;
+    toClip = `${projectionName} * ${modelViewName} * vec4(${positionName}, 1.0)`;
   } else {
-    uniformDecl = "uniform mat4 " + modelViewProjectionName + ";\n";
-    toClip = modelViewProjectionName + " * vec4(" + positionName + ", 1.0)";
+    uniformDecl = `uniform mat4 ${modelViewProjectionName};\n`;
+    toClip = `${modelViewProjectionName} * vec4(${positionName}, 1.0)`;
   }
 
-  const computePosition = "    vec4 positionInClipCoords = " + toClip + ";\n";
+  const computePosition = `    vec4 positionInClipCoords = ${toClip};\n`;
 
   let vs =
-    "attribute vec3 " +
-    positionName +
-    ";\n" +
-    "attribute float " +
-    batchIdName +
-    ";\n" +
-    uniformDecl +
-    "void main() {\n" +
-    computePosition +
-    "    gl_Position = czm_depthClamp(positionInClipCoords);\n" +
-    "}\n";
+    `attribute vec3 ${positionName};\n` +
+    `attribute float ${batchIdName};\n${uniformDecl}void main() {\n${computePosition}    gl_Position = czm_depthClamp(positionInClipCoords);\n` +
+    `}\n`;
   const fs =
     "#ifdef GL_EXT_frag_depth\n" +
     "#extension GL_EXT_frag_depth : enable\n" +

@@ -67,7 +67,7 @@ function addDequantizationUniforms(renderResources, attributeInfo) {
   const quantization = attributeInfo.attribute.quantization;
 
   if (quantization.octEncoded) {
-    const normalizationRange = "model_normalizationRange_" + variableName;
+    const normalizationRange = `model_normalizationRange_${variableName}`;
     shaderBuilder.addUniform(
       "float",
       normalizationRange,
@@ -77,8 +77,8 @@ function addDequantizationUniforms(renderResources, attributeInfo) {
       return quantization.normalizationRange;
     };
   } else {
-    const offset = "model_quantizedVolumeOffset_" + variableName;
-    const stepSize = "model_quantizedVolumeStepSize_" + variableName;
+    const offset = `model_quantizedVolumeOffset_${variableName}`;
+    const stepSize = `model_quantizedVolumeStepSize_${variableName}`;
     const glslType = attributeInfo.glslType;
     shaderBuilder.addUniform(glslType, offset, ShaderDestination.VERTEX);
     shaderBuilder.addUniform(glslType, stepSize, ShaderDestination.VERTEX);
@@ -131,10 +131,10 @@ function updateDequantizationFunction(shaderBuilder, attributeInfo) {
 }
 
 function generateOctDecodeLine(variableName, quantization) {
-  const structField = "attributes." + variableName;
+  const structField = `attributes.${variableName}`;
 
-  const quantizedAttribute = "a_quantized_" + variableName;
-  const normalizationRange = "model_normalizationRange_" + variableName;
+  const quantizedAttribute = `a_quantized_${variableName}`;
+  const normalizationRange = `model_normalizationRange_${variableName}`;
 
   // Draco stores things as .zxy instead of xyz, so be explicit about the
   // swizzle to avoid confusion
@@ -142,36 +142,18 @@ function generateOctDecodeLine(variableName, quantization) {
 
   // This generates lines such as:
   // attributes.normal = czm_octDecode(a_quantized_normal, model_normalizationRange_normal).zxy;
-  return (
-    structField +
-    " = czm_octDecode(" +
-    quantizedAttribute +
-    ", " +
-    normalizationRange +
-    ")" +
-    swizzle +
-    ";"
-  );
+  return `${structField} = czm_octDecode(${quantizedAttribute}, ${normalizationRange})${swizzle};`;
 }
 
 function generateDequantizeLine(variableName) {
-  const structField = "attributes." + variableName;
-  const quantizedAttribute = "a_quantized_" + variableName;
-  const offset = "model_quantizedVolumeOffset_" + variableName;
-  const stepSize = "model_quantizedVolumeStepSize_" + variableName;
+  const structField = `attributes.${variableName}`;
+  const quantizedAttribute = `a_quantized_${variableName}`;
+  const offset = `model_quantizedVolumeOffset_${variableName}`;
+  const stepSize = `model_quantizedVolumeStepSize_${variableName}`;
 
   // This generates lines such as:
   // attributes.texCoord_0 = model_quantizedVolumeOffset_texCoord_0 + a_quantized_texCoord_0 * model_quantizedVolumeStepSize;
-  return (
-    structField +
-    " = " +
-    offset +
-    " + " +
-    quantizedAttribute +
-    " * " +
-    stepSize +
-    ";"
-  );
+  return `${structField} = ${offset} + ${quantizedAttribute} * ${stepSize};`;
 }
 
 export default DequantizationPipelineStage;

@@ -55,8 +55,8 @@
             scratch
           );
           if (Cesium.defined(canvasPosition)) {
-            htmlOverlay.style.top = canvasPosition.y + "px";
-            htmlOverlay.style.left = canvasPosition.x + "px";
+            htmlOverlay.style.top = `${canvasPosition.y}px`;
+            htmlOverlay.style.left = `${canvasPosition.x}px`;
           }
         });
         //Sandcastle_End

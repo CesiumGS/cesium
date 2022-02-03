@@ -22,7 +22,7 @@ function createMaterialProperty(value) {
   }
 
   //>>includeStart('debug', pragmas.debug);
-  throw new DeveloperError("Unable to infer material type: " + value);
+  throw new DeveloperError(`Unable to infer material type: ${value}`);
   //>>includeEnd('debug');
 }
 

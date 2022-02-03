@@ -58,7 +58,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  * @see UrlTemplateImageryProvider
  *
  * @example
- * var tms = new Cesium.TileMapServiceImageryProvider({
+ * const tms = new Cesium.TileMapServiceImageryProvider({
  *    url : '../images/cesium_maptiler/Cesium_Logo_Color',
  *    fileExtension: 'png',
  *    maximumLevel: 4,
@@ -205,10 +205,7 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (xml) {
 
   let message;
   if (!defined(tilesets) || !defined(bbox)) {
-    message =
-      "Unable to find expected tilesets or bbox attributes in " +
-      xmlResource.url +
-      ".";
+    message = `Unable to find expected tilesets or bbox attributes in ${xmlResource.url}.`;
     metadataError = TileProviderError.handleError(
       metadataError,
       this,
@@ -266,11 +263,7 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (xml) {
         ellipsoid: options.ellipsoid,
       });
     } else {
-      message =
-        xmlResource.url +
-        "specifies an unsupported profile attribute, " +
-        tilingSchemeName +
-        ".";
+      message = `${xmlResource.url}specifies an unsupported profile attribute, ${tilingSchemeName}.`;
       metadataError = TileProviderError.handleError(
         metadataError,
         this,
@@ -357,7 +350,7 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (xml) {
   );
 
   const templateResource = this._tmsResource.getDerivedResource({
-    url: "{z}/{x}/{reverseY}." + fileExtension,
+    url: `{z}/{x}/{reverseY}.${fileExtension}`,
   });
 
   deferred.resolve({
@@ -396,7 +389,7 @@ TileMapServiceImageryProvider.prototype._metadataFailure = function (error) {
   );
 
   const templateResource = this._tmsResource.getDerivedResource({
-    url: "{z}/{x}/{reverseY}." + fileExtension,
+    url: `{z}/{x}/{reverseY}.${fileExtension}`,
   });
 
   this._deferred.resolve({

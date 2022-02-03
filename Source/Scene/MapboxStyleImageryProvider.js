@@ -40,7 +40,7 @@ const defaultCredit = new Credit(
  *
  * @example
  * // Mapbox style provider
- * var mapbox = new Cesium.MapboxStyleImageryProvider({
+ * const mapbox = new Cesium.MapboxStyleImageryProvider({
  *     styleId: 'streets-v11',
  *     accessToken: 'thisIsMyAccessToken'
  * });
@@ -169,14 +169,7 @@ function MapboxStyleImageryProvider(options) {
   if (!trailingSlashRegex.test(templateUrl)) {
     templateUrl += "/";
   }
-  templateUrl +=
-    this._username +
-    "/" +
-    styleId +
-    "/tiles/" +
-    this._tilesize +
-    "/{z}/{x}/{y}" +
-    scaleFactor;
+  templateUrl += `${this._username}/${styleId}/tiles/${this._tilesize}/{z}/{x}/{y}${scaleFactor}`;
   resource.url = templateUrl;
 
   resource.setQueryParameters({

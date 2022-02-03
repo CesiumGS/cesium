@@ -229,7 +229,7 @@ function getParameterStub(options) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(value)) {
       throw new DeveloperError(
-        "A WebGL parameter stub for " + pname + " is not defined. Add it."
+        `A WebGL parameter stub for ${pname} is not defined. Add it.`
       );
     }
     //>>includeEnd('debug');
@@ -255,7 +255,7 @@ function getProgramParameterStub(program, pname) {
 
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    "A WebGL parameter stub for " + pname + " is not defined. Add it."
+    `A WebGL parameter stub for ${pname} is not defined. Add it.`
   );
   //>>includeEnd('debug');
 }
@@ -264,7 +264,7 @@ function getShaderParameterStub(shader, pname) {
   //>>includeStart('debug', pragmas.debug);
   if (pname !== WebGLConstants.COMPILE_STATUS) {
     throw new DeveloperError(
-      "A WebGL parameter stub for " + pname + " is not defined. Add it."
+      `A WebGL parameter stub for ${pname} is not defined. Add it.`
     );
   }
   //>>includeEnd('debug');

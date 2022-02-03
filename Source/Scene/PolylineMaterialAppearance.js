@@ -8,13 +8,11 @@ import PolylineFS from "../Shaders/PolylineFS.js";
 import Appearance from "./Appearance.js";
 import Material from "./Material.js";
 
-let defaultVertexShaderSource =
-  PolylineCommon + "\n" + PolylineMaterialAppearanceVS;
+let defaultVertexShaderSource = `${PolylineCommon}\n${PolylineMaterialAppearanceVS}`;
 const defaultFragmentShaderSource = PolylineFS;
 
 if (!FeatureDetection.isInternetExplorer()) {
-  defaultVertexShaderSource =
-    "#define CLIP_POLYLINE \n" + defaultVertexShaderSource;
+  defaultVertexShaderSource = `#define CLIP_POLYLINE \n${defaultVertexShaderSource}`;
 }
 
 /**
@@ -33,7 +31,7 @@ if (!FeatureDetection.isInternetExplorer()) {
  * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
  *
  * @example
- * var primitive = new Cesium.Primitive({
+ * const primitive = new Cesium.Primitive({
  *   geometryInstances : new Cesium.GeometryInstance({
  *     geometry : new Cesium.PolylineGeometry({
  *       positions : Cesium.Cartesian3.fromDegreesArray([
@@ -117,7 +115,7 @@ Object.defineProperties(PolylineMaterialAppearance.prototype, {
           /varying\s+float\s+v_polylineAngle;/g
         ) !== -1
       ) {
-        vs = "#define POLYLINE_DASH\n" + vs;
+        vs = `#define POLYLINE_DASH\n${vs}`;
       }
       return vs;
     },

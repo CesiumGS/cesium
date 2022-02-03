@@ -148,11 +148,9 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
     if (header.refine === "replace" || header.refine === "add") {
       Cesium3DTile._deprecationWarning(
         "lowercase-refine",
-        'This tile uses a lowercase refine "' +
-          header.refine +
-          '". Instead use "' +
-          header.refine.toUpperCase() +
-          '".'
+        `This tile uses a lowercase refine "${
+          header.refine
+        }". Instead use "${header.refine.toUpperCase()}".`
       );
     }
     refine =

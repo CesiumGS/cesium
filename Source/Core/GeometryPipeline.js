@@ -162,7 +162,7 @@ GeometryPipeline.toWireframe = function (geometry) {
  * @exception {DeveloperError} geometry.attributes must have an attribute with the same name as the attributeName parameter.
  *
  * @example
- * var geometry = Cesium.GeometryPipeline.createLineSegmentsForVectors(instance.geometry, 'bitangent', 100000.0);
+ * const geometry = Cesium.GeometryPipeline.createLineSegmentsForVectors(instance.geometry, 'bitangent', 100000.0);
  */
 GeometryPipeline.createLineSegmentsForVectors = function (
   geometry,
@@ -180,9 +180,7 @@ GeometryPipeline.createLineSegmentsForVectors = function (
   }
   if (!defined(geometry.attributes[attributeName])) {
     throw new DeveloperError(
-      "geometry.attributes must have an attribute with the same name as the attributeName parameter, " +
-        attributeName +
-        "."
+      `geometry.attributes must have an attribute with the same name as the attributeName parameter, ${attributeName}.`
     );
   }
   //>>includeEnd('debug');
@@ -233,7 +231,7 @@ GeometryPipeline.createLineSegmentsForVectors = function (
  * @returns {Object} An object with attribute name / index pairs.
  *
  * @example
- * var attributeLocations = Cesium.GeometryPipeline.createAttributeLocations(geometry);
+ * const attributeLocations = Cesium.GeometryPipeline.createAttributeLocations(geometry);
  * // Example output
  * // {
  * //   'position' : 0,
@@ -493,7 +491,7 @@ function copyVertex(destinationAttributes, sourceAttributes, index) {
  * @exception {DeveloperError} All geometry attribute lists must have the same number of attributes.
  *
  * @example
- * var geometries = Cesium.GeometryPipeline.fitToUnsignedShortIndices(geometry);
+ * const geometries = Cesium.GeometryPipeline.fitToUnsignedShortIndices(geometry);
  */
 GeometryPipeline.fitToUnsignedShortIndices = function (geometry) {
   //>>includeStart('debug', pragmas.debug);
@@ -638,9 +636,7 @@ GeometryPipeline.projectTo2D = function (
   }
   if (!defined(geometry.attributes[attributeName])) {
     throw new DeveloperError(
-      "geometry must have attribute matching the attributeName argument: " +
-        attributeName +
-        "."
+      `geometry must have attribute matching the attributeName argument: ${attributeName}.`
     );
   }
   if (
@@ -676,13 +672,7 @@ GeometryPipeline.projectTo2D = function (
     //>>includeStart('debug', pragmas.debug);
     if (!defined(lonLat)) {
       throw new DeveloperError(
-        "Could not project point (" +
-          value.x +
-          ", " +
-          value.y +
-          ", " +
-          value.z +
-          ") to 2D."
+        `Could not project point (${value.x}, ${value.y}, ${value.z}) to 2D.`
       );
     }
     //>>includeEnd('debug');
@@ -756,9 +746,7 @@ GeometryPipeline.encodeAttribute = function (
   }
   if (!defined(geometry.attributes[attributeName])) {
     throw new DeveloperError(
-      "geometry must have attribute matching the attributeName argument: " +
-        attributeName +
-        "."
+      `geometry must have attribute matching the attributeName argument: ${attributeName}.`
     );
   }
   if (
@@ -1104,10 +1092,10 @@ function combineGeometries(instances, propertyName) {
  *
  *
  * @example
- * for (var i = 0; i < instances.length; ++i) {
+ * for (let i = 0; i < instances.length; ++i) {
  *   Cesium.GeometryPipeline.transformToWorldCoordinates(instances[i]);
  * }
- * var geometries = Cesium.GeometryPipeline.combineInstances(instances);
+ * const geometries = Cesium.GeometryPipeline.combineInstances(instances);
  *
  * @see GeometryPipeline.transformToWorldCoordinates
  */

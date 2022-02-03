@@ -479,11 +479,10 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
     const attributeName = "compressedAttributes";
 
     //only shadow volumes use extrudeDirection, and shadow volumes use vertexFormat: POSITION_ONLY so we don't need to check other attributes
-    const attributeDecl = "attribute vec2 " + attributeName + ";";
+    const attributeDecl = `attribute vec2 ${attributeName};`;
 
     const globalDecl = "vec3 extrudeDirection;\n";
-    const decode =
-      "    extrudeDirection = czm_octDecode(" + attributeName + ", 65535.0);\n";
+    const decode = `    extrudeDirection = czm_octDecode(${attributeName}, 65535.0);\n`;
 
     let modifiedVS = vertexShaderSource;
     modifiedVS = modifiedVS.replace(
@@ -495,11 +494,8 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
       "czm_non_compressed_main"
     );
     const compressedMain =
-      "void main() \n" +
-      "{ \n" +
-      decode +
-      "    czm_non_compressed_main(); \n" +
-      "}";
+      `${"void main() \n" + "{ \n"}${decode}    czm_non_compressed_main(); \n` +
+      `}`;
 
     return [attributeDecl, globalDecl, modifiedVS, compressedMain].join("\n");
   }
@@ -1363,7 +1359,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
  * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
  *
  * @example
- * var attributes = primitive.getGeometryInstanceAttributes('an id');
+ * const attributes = primitive.getGeometryInstanceAttributes('an id');
  * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
  * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
  */

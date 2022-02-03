@@ -453,12 +453,10 @@ S2Cell.fromFacePositionLevel = function (face, position, level) {
 
   // eslint-disable-next-line
   var cellId = BigInt(
-    "0b" +
-      faceBitString +
-      positionPrefixPadding +
-      positionBitString +
-      "1" + // Adding the sentinel bit that always follows the position bits.
+    `0b${faceBitString}${positionPrefixPadding}${positionBitString}1${
+      // Adding the sentinel bit that always follows the position bits.
       positionSuffixPadding
+    }`
   );
   return new S2Cell(cellId);
 };

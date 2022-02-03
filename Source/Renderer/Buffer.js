@@ -90,7 +90,7 @@ function Buffer(options) {
  *
  * @example
  * // Example 1. Create a dynamic vertex buffer 16 bytes in size.
- * var buffer = Buffer.createVertexBuffer({
+ * const buffer = Buffer.createVertexBuffer({
  *     context : context,
  *     sizeInBytes : 16,
  *     usage : BufferUsage.DYNAMIC_DRAW
@@ -100,7 +100,7 @@ function Buffer(options) {
  * // Example 2. Create a dynamic vertex buffer from three floating-point values.
  * // The data copied to the vertex buffer is considered raw bytes until it is
  * // interpreted as vertices using a vertex array.
- * var positionBuffer = buffer.createVertexBuffer({
+ * const positionBuffer = buffer.createVertexBuffer({
  *     context : context,
  *     typedArray : new Float32Array([0, 0, 0]),
  *     usage : BufferUsage.STATIC_DRAW
@@ -149,7 +149,7 @@ Buffer.createVertexBuffer = function (options) {
  * @example
  * // Example 1. Create a stream index buffer of unsigned shorts that is
  * // 16 bytes in size.
- * var buffer = Buffer.createIndexBuffer({
+ * const buffer = Buffer.createIndexBuffer({
  *     context : context,
  *     sizeInBytes : 16,
  *     usage : BufferUsage.STREAM_DRAW,
@@ -158,7 +158,7 @@ Buffer.createVertexBuffer = function (options) {
  *
  * @example
  * // Example 2. Create a static index buffer containing three unsigned shorts.
- * var buffer = Buffer.createIndexBuffer({
+ * const buffer = Buffer.createIndexBuffer({
  *     context : context,
  *     typedArray : new Uint16Array([0, 1, 2]),
  *     usage : BufferUsage.STATIC_DRAW,

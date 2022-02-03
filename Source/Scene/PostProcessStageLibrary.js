@@ -39,9 +39,9 @@ function createBlur(name) {
   const sigma = 2.0;
   const stepSize = 1.0;
 
-  const blurShader = "#define USE_STEP_SIZE\n" + GaussianBlur1D;
+  const blurShader = `#define USE_STEP_SIZE\n${GaussianBlur1D}`;
   const blurX = new PostProcessStage({
-    name: name + "_x_direction",
+    name: `${name}_x_direction`,
     fragmentShader: blurShader,
     uniforms: {
       delta: delta,
@@ -52,7 +52,7 @@ function createBlur(name) {
     sampleMode: PostProcessStageSampleMode.LINEAR,
   });
   const blurY = new PostProcessStage({
-    name: name + "_y_direction",
+    name: `${name}_y_direction`,
     fragmentShader: blurShader,
     uniforms: {
       delta: delta,
@@ -241,7 +241,7 @@ PostProcessStageLibrary.createEdgeDetectionStage = function () {
   // unique name generated on call so more than one effect can be added
   const name = createGuid();
   return new PostProcessStage({
-    name: "czm_edge_detection_" + name,
+    name: `czm_edge_detection_${name}`,
     fragmentShader: EdgeDetection,
     uniforms: {
       length: 0.25,
@@ -281,38 +281,25 @@ function getSilhouetteEdgeDetection(edgeDetectionStages) {
   let fsDecl = "";
   let fsLoop = "";
   for (let i = 0; i < edgeDetectionStages.length; ++i) {
-    fsDecl += "uniform sampler2D edgeTexture" + i + "; \n";
+    fsDecl += `uniform sampler2D edgeTexture${i}; \n`;
     fsLoop +=
-      "        vec4 edge" +
-      i +
-      " = texture2D(edgeTexture" +
-      i +
-      ", v_textureCoordinates); \n" +
-      "        if (edge" +
-      i +
-      ".a > 0.0) \n" +
-      "        { \n" +
-      "            color = edge" +
-      i +
-      "; \n" +
-      "            break; \n" +
-      "        } \n";
-    compositeUniforms["edgeTexture" + i] = edgeDetectionStages[i].name;
+      `        vec4 edge${i} = texture2D(edgeTexture${i}, v_textureCoordinates); \n` +
+      `        if (edge${i}.a > 0.0) \n` +
+      `        { \n` +
+      `            color = edge${i}; \n` +
+      `            break; \n` +
+      `        } \n`;
+    compositeUniforms[`edgeTexture${i}`] = edgeDetectionStages[i].name;
   }
 
   const fs =
-    fsDecl +
-    "varying vec2 v_textureCoordinates; \n" +
-    "void main() { \n" +
-    "    vec4 color = vec4(0.0); \n" +
-    "    for (int i = 0; i < " +
-    edgeDetectionStages.length +
-    "; i++) \n" +
-    "    { \n" +
-    fsLoop +
-    "    } \n" +
-    "    gl_FragColor = color; \n" +
-    "} \n";
+    `${fsDecl}varying vec2 v_textureCoordinates; \n` +
+    `void main() { \n` +
+    `    vec4 color = vec4(0.0); \n` +
+    `    for (int i = 0; i < ${edgeDetectionStages.length}; i++) \n` +
+    `    { \n${fsLoop}    } \n` +
+    `    gl_FragColor = color; \n` +
+    `} \n`;
 
   const edgeComposite = new PostProcessStage({
     name: "czm_edge_detection_combine",
@@ -650,7 +637,7 @@ PostProcessStageLibrary.isAmbientOcclusionSupported = function (scene) {
   return scene.context.depthTexture;
 };
 
-const fxaaFS = "#define FXAA_QUALITY_PRESET 39 \n" + FXAA3_11 + "\n" + FXAA;
+const fxaaFS = `#define FXAA_QUALITY_PRESET 39 \n${FXAA3_11}\n${FXAA}`;
 
 /**
  * Creates a post-process stage that applies Fast Approximate Anti-aliasing (FXAA) to the input texture.

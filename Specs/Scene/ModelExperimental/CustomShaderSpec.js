@@ -166,12 +166,14 @@ describe("Scene/ModelExperimental/CustomShader", function () {
       vertexShaderText: [
         "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
         "{",
+        "    float value = vsInput.featureIds.featureId_0;",
         "    positionMC += vsInput.attributes.expansion * vsInput.attributes.normalMC;",
         "}",
       ].join("\n"),
       fragmentShaderText: [
         "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
         "{",
+        "    float value = fsInput.featureIds.featureId_1 + fsInput.featureIds.instanceFeatureId_0;",
         "    material.normalEC = normalize(fsInput.attributes.normalEC);",
         "    material.diffuse = fsInput.attributes.color_0;",
         "    material.specular = fsInput.attributes.positionWC / 1.0e6;",
@@ -184,6 +186,9 @@ describe("Scene/ModelExperimental/CustomShader", function () {
         expansion: true,
         normalMC: true,
       },
+      featureIdSet: {
+        featureId_0: true,
+      },
     };
     const expectedFragmentVariables = {
       attributeSet: {
@@ -195,6 +200,10 @@ describe("Scene/ModelExperimental/CustomShader", function () {
         normalEC: true,
         diffuse: true,
         specular: true,
+      },
+      featureIdSet: {
+        featureId_1: true,
+        instanceFeatureId_0: true,
       },
     };
 
@@ -210,7 +219,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
         vertexShaderText: [
           "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
           "{",
-          "    vsOutput.positionMC = vsInput.attributes." + variableName + ";",
+          `    vsOutput.positionMC = vsInput.attributes.${variableName};`,
           "}",
         ].join("\n"),
       });
@@ -221,7 +230,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
         fragmentShaderText: [
           "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
           "{",
-          "    material.diffuse = fsInput.attributes." + variableName + ";",
+          `    material.diffuse = fsInput.attributes.${variableName};`,
           "}",
         ].join("\n"),
       });

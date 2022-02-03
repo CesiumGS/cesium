@@ -28,11 +28,11 @@ import Ellipsoid from "./Ellipsoid.js";
  *
  * @example
  * // Create a circle.
- * var circle = new Cesium.CircleOutlineGeometry({
+ * const circle = new Cesium.CircleOutlineGeometry({
  *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
  *   radius : 100000.0
  * });
- * var geometry = Cesium.CircleOutlineGeometry.createGeometry(circle);
+ * const geometry = Cesium.CircleOutlineGeometry.createGeometry(circle);
  */
 function CircleOutlineGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

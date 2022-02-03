@@ -41,12 +41,12 @@ const positionScratch = new Cartesian3();
  *
  * @example
  * // create cylinder geometry
- * var cylinder = new Cesium.CylinderGeometry({
+ * const cylinder = new Cesium.CylinderGeometry({
  *     length: 200000,
  *     topRadius: 80000,
  *     bottomRadius: 200000,
  * });
- * var geometry = Cesium.CylinderGeometry.createGeometry(cylinder);
+ * const geometry = Cesium.CylinderGeometry.createGeometry(cylinder);
  */
 function CylinderGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

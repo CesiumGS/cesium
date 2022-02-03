@@ -20,7 +20,7 @@ import VertexFormat from "./VertexFormat.js";
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  *
  * @example
- * var planeGeometry = new Cesium.PlaneGeometry({
+ * const planeGeometry = new Cesium.PlaneGeometry({
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY
  * });
  */

@@ -371,7 +371,7 @@ function computePositionsExtruded(params) {
  * @see CorridorOutlineGeometry.createGeometry
  *
  * @example
- * var corridor = new Cesium.CorridorOutlineGeometry({
+ * const corridor = new Cesium.CorridorOutlineGeometry({
  *   positions : Cesium.Cartesian3.fromDegreesArray([-72.0, 40.0, -70.0, 35.0]),
  *   width : 100000
  * });

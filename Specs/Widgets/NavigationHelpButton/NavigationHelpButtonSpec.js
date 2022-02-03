@@ -38,29 +38,26 @@ describe("Widgets/NavigationHelpButton/NavigationHelpButton", function () {
   });
 
   function addCloseOnInputSpec(name, func) {
-    it(
-      name + " event closes dropdown if target is not inside container",
-      function () {
-        const container = document.createElement("span");
-        container.id = "testContainer";
-        document.body.appendChild(container);
+    it(`${name} event closes dropdown if target is not inside container`, function () {
+      const container = document.createElement("span");
+      container.id = "testContainer";
+      document.body.appendChild(container);
 
-        const widget = new NavigationHelpButton({
-          container: "testContainer",
-        });
+      const widget = new NavigationHelpButton({
+        container: "testContainer",
+      });
 
-        widget.viewModel.showInstructions = true;
-        func(document.body);
-        expect(widget.viewModel.showInstructions).toEqual(false);
+      widget.viewModel.showInstructions = true;
+      func(document.body);
+      expect(widget.viewModel.showInstructions).toEqual(false);
 
-        widget.viewModel.showInstructions = true;
-        func(container.firstChild);
-        expect(widget.viewModel.showInstructions).toEqual(true);
+      widget.viewModel.showInstructions = true;
+      func(container.firstChild);
+      expect(widget.viewModel.showInstructions).toEqual(true);
 
-        widget.destroy();
-        document.body.removeChild(container);
-      }
-    );
+      widget.destroy();
+      document.body.removeChild(container);
+    });
   }
 
   if (FeatureDetection.supportsPointerEvents()) {

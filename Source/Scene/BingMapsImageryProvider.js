@@ -56,7 +56,7 @@ import ImageryProvider from "./ImageryProvider.js";
  *
  *
  * @example
- * var bing = new Cesium.BingMapsImageryProvider({
+ * const bing = new Cesium.BingMapsImageryProvider({
  *     url : 'https://dev.virtualearth.net',
  *     key : 'get-yours-at-https://www.bingmapsportal.com/',
  *     mapStyle : Cesium.BingMapsStyle.AERIAL
@@ -178,9 +178,7 @@ function BingMapsImageryProvider(options) {
 
   this._proxy = options.proxy;
   this._credit = new Credit(
-    '<a href="http://www.bing.com"><img src="' +
-      BingMapsImageryProvider.logoUrl +
-      '" title="Bing Imagery"/></a>'
+    `<a href="http://www.bing.com"><img src="${BingMapsImageryProvider.logoUrl}" title="Bing Imagery"/></a>`
   );
 
   this._tilingScheme = new WebMercatorTilingScheme({
@@ -218,7 +216,7 @@ function BingMapsImageryProvider(options) {
   }
 
   const metadataResource = this._resource.getDerivedResource({
-    url: "REST/v1/Imagery/Metadata/" + this._mapStyle,
+    url: `REST/v1/Imagery/Metadata/${this._mapStyle}`,
     queryParameters: {
       incl: "ImageryProviders",
       key: this._key,
@@ -285,8 +283,7 @@ function BingMapsImageryProvider(options) {
   }
 
   function metadataFailure(e) {
-    const message =
-      "An error occurred while accessing " + metadataResource.url + ".";
+    const message = `An error occurred while accessing ${metadataResource.url}.`;
     metadataError = TileProviderError.handleError(
       metadataError,
       that,

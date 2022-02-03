@@ -78,14 +78,11 @@ describe(
       const x = textureCoordinates.x + textureCoordinates.width / 2.0;
       const y = textureCoordinates.y + textureCoordinates.height / 2.0;
       const fs =
-        "uniform sampler2D u_texture;" +
-        "void main() {" +
-        "  gl_FragColor = texture2D(u_texture, vec2(" +
-        x +
-        ", " +
-        y +
-        "));" +
-        "}";
+        `${
+          "uniform sampler2D u_texture;" +
+          "void main() {" +
+          "  gl_FragColor = texture2D(u_texture, vec2("
+        }${x}, ${y}));` + `}`;
       const uniformMap = {
         u_texture: function () {
           return texture;
