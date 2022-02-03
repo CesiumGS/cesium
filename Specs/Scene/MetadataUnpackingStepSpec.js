@@ -8,8 +8,8 @@ describe("Scene/MetadataUnpackingStep", function () {
   });
 
   it("unsignedToSigned works", function () {
-    expect(MetadataUnpackingStep.unsignedToSigned("0.0")).toEqual(
-      "2.0 * (0.0) - 1.0"
+    expect(MetadataUnpackingStep.unsignedToSigned("x")).toEqual(
+      "2.0 * (x) - 1.0"
     );
   });
 
@@ -20,19 +20,7 @@ describe("Scene/MetadataUnpackingStep", function () {
   });
 
   it("unnormalizeU8 works", function () {
-    expect(MetadataUnpackingStep.unnormalize("1.0")).toEqual("255.0 * (1.0)");
-  });
-
-  it("unnormalizeI8 throws for undefined expression", function () {
-    expect(function () {
-      return MetadataUnpackingStep.unnormalizeI8();
-    }).toThrowDeveloperError();
-  });
-
-  it("unnormalizeI8 works", function () {
-    expect(MetadataUnpackingStep.unnormalize("1.0")).toEqual(
-      "255.0 * (1.0) - 128.0"
-    );
+    expect(MetadataUnpackingStep.unnormalize("x")).toEqual("255.0 * (x)");
   });
 
   it("cast throws for undefined castType", function () {
@@ -48,6 +36,6 @@ describe("Scene/MetadataUnpackingStep", function () {
   });
 
   it("cast works", function () {
-    expect(MetadataUnpackingStep.cast("int")("1.0")).toEqual("int(1.0)");
+    expect(MetadataUnpackingStep.cast("int")("x")).toEqual("int(x)");
   });
 });

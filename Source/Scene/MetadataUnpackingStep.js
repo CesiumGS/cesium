@@ -38,19 +38,6 @@ MetadataUnpackingStep.unnormalizeU8 = function (expression) {
 };
 
 /**
- * Convert a floating point value in the range [0, 1] to [-128, 127]. This is
- * used when reading signed byte values from a texture
- * @param {String} expression The GLSL float expression
- * @returns A new expression in the range [-128, 127]
- */
-MetadataUnpackingStep.unnormalizeI8 = function (expression) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("expression", expression);
-  //>>includeEnd('debug');
-  return "255.0 * (" + expression + ") - 128.0";
-};
-
-/**
  * Create an unpacking step that casts a GLSL expression to a new type.
  * @param {String} castType The type to cast to
  * @returns An unpacking step function that will perform the type cast.

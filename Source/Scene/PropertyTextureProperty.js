@@ -1,5 +1,7 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
+import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import MetadataUnpackingStep from "./MetadataUnpackingStep.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
@@ -72,44 +74,68 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
  */
 PropertyTextureProperty.prototype.getUnpackingSteps = function () {
   const classProperty = this._classProperty;
-  const valueType = classProperty.valueType;
-  const normalized = classProperty.normalized;
   const glslType = this.getGlslType();
 
-  const isInt8 = valueType === MetadataComponentType.INT8;
-  const isUint8 = valueType === MetadataComponentType.UINT8;
+  const isUint8 = classProperty.valueType === MetadataComponentType.UINT8;
+  const isNormalized = classProperty.normalized;
 
-  if (isInt8 && normalized) {
-    return [MetadataUnpackingStep.unsignedToSigned];
-  } else if (isInt8 && !normalized) {
-    return [
-      MetadataUnpackingStep.unnormalizeI8,
-      MetadataUnpackingStep.cast(glslType),
-    ];
-  } else if (isUint8 && normalized) {
-    // no unpacking needed
+  // No unpacking needed
+  if (isUint8 && isNormalized) {
     return [];
-  } else if (isUint8 && !normalized) {
+  }
+
+  // for UINT8s that are not normalized, we need to un-normalize and cast to
+  // an int after the texture read
+  if (isUint8) {
     return [
       MetadataUnpackingStep.unnormalizeU8,
       MetadataUnpackingStep.cast(glslType),
     ];
   }
 
-  // Otherwise, use the value from the texture read directly.
-  return [];
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError(
+    "Only property types [UINT8, normalized UINT8] are supported in property textures"
+  );
+  //>>includeEnd('debug');
 };
 
-const vectorTypes = ["float", "vec2", "vec3", "vec4"];
+const floatTypesByComponentCount = ["float", "vec2", "vec3", "vec4"];
+const intTypesByComponentCount = ["int", "ivec2", "ivec3", "ivec4"];
 
 /**
  * @private
  */
 PropertyTextureProperty.prototype.getGlslType = function () {
   const classProperty = this._classProperty;
+  const componentCount = classProperty.componentCount;
 
-  // get float or a vector type
-  return vectorTypes[classProperty.componentCount - 1];
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(componentCount) || componentCount > 4) {
+    throw new DeveloperError(
+      "Only types with 1-4 components are supported in property textures"
+    );
+  }
+  //>>includeEnd('debug');
+
+  const isUint8 = classProperty.valueType === MetadataComponentType.UINT8;
+  const isNormalized = classProperty.normalized;
+
+  // normalized UINT8 values will be represented as float types in the shader
+  if (isUint8 && isNormalized) {
+    return floatTypesByComponentCount[componentCount - 1];
+  }
+
+  // UINT8 values will otherwise be converted to an int in the shader.
+  if (isUint8) {
+    return intTypesByComponentCount[componentCount - 1];
+  }
+
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError(
+    "Only property types [UINT8, normalized UINT8] are supported in property textures"
+  );
+  //>>includeEnd('debug');
 };
 
 /**
