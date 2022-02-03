@@ -694,7 +694,7 @@ PostProcessStageLibrary.createAtmosphereScatteringStage = function (
 };
 
 /**
- * Whether or not a Atmosphere scattering stage is supported.
+ * Whether or not the atmosphere scattering stage is supported.
  * <p>
  * This stage requires the WEBGL_depth_texture extension.
  * </p>
