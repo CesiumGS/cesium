@@ -16,15 +16,17 @@
  * @see JulianDate#toGregorianDate
  */
 function GregorianDate(
-  year,
-  month,
-  day,
-  hour,
-  minute,
-  second,
-  millisecond,
-  isLeapSecond
+  year = 1,
+  month = 1,
+  day = 1,
+  hour = 0,
+  minute = 0,
+  second = 0,
+  millisecond = 0,
+  isLeapSecond = false
 ) {
+  validateRange();
+
   /**
    * Gets or sets the year as a whole number.
    * @type {Number}
@@ -56,7 +58,7 @@ function GregorianDate(
    */
   this.second = second;
   /**
-   * Gets or sets the millisecond of the second as a floating point number with range [0.0, 1000.0).
+   * Gets or sets the millisecond of the second as a floating point number with range [0.0, 1000.0]).
    * @type {Number}
    */
   this.millisecond = millisecond;
@@ -65,5 +67,24 @@ function GregorianDate(
    * @type {Boolean}
    */
   this.isLeapSecond = isLeapSecond;
+
+  function validateRange() {
+    if (year < 1 || year > 9999)
+      throw "Year parameter represent an invalid date";
+    if (month < 1 || month > 12)
+      throw "Month parameter represent an invalid date";
+    if (day < 1 || day > 31) throw "Day parameter represent an invalid date";
+    if (hour < 0 || hour > 23) throw "Hour parameter represent an invalid date";
+    if (minute < 0 || minute > 59)
+      throw "Combination of Minute and IsLeapSecond parameters represent an invalid date";
+    if (
+      second < 0 ||
+      (second > 59 && !isLeapSecond) ||
+      (second > 60 && isLeapSecond)
+    )
+      throw "Second parameter represent an invalid date";
+    if (millisecond < 0 || millisecond >= 1000)
+      throw "Millisecond parameter represent an invalid date";
+  }
 }
 export default GregorianDate;
