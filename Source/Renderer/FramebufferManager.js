@@ -185,11 +185,12 @@ FramebufferManager.prototype.update = function (
           sampler: Sampler.NEAREST,
         });
         if (this._numSamples > 1) {
+          const format = RenderbufferFormat.getColorFormat(pixelDatatype);
           this._colorRenderbuffers[i] = new Renderbuffer({
             context: context,
             width: width,
             height: height,
-            format: RenderbufferFormat.RGBA8,
+            format: format,
             numSamples: this._numSamples,
           });
         }
