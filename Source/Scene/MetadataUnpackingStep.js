@@ -21,7 +21,7 @@ MetadataUnpackingStep.unsignedToSigned = function (expression) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("expression", expression);
   //>>includeEnd('debug');
-  return "2.0 * (" + expression + ") - 1.0";
+  return `2.0 * (${expression}) - 1.0`;
 };
 
 /**
@@ -34,7 +34,7 @@ MetadataUnpackingStep.unnormalizeU8 = function (expression) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("expression", expression);
   //>>includeEnd('debug');
-  return "255.0 * (" + expression + ")";
+  return `255.0 * (${expression})`;
 };
 
 /**
@@ -54,7 +54,7 @@ MetadataUnpackingStep.cast = function (castType) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.string("expression", expression);
     //>>includeEnd('debug');
-    return castType + "(" + expression + ")";
+    return `${castType}(${expression})`;
   };
 };
 

@@ -87,7 +87,7 @@ function processPropertyTextures(renderResources, featureMetadata) {
   for (let i = 0; i < propertyTextures.length; i++) {
     const propertyTexture = propertyTextures[i];
     // example: u_propertyTexture_0
-    const uniformName = "u_propertyTexture_" + i;
+    const uniformName = `u_propertyTexture_${i}`;
     addPropertyTextureUniform(renderResources, uniformName, propertyTexture);
 
     // need to add a uniform
@@ -147,19 +147,10 @@ function addPropertyTextureProperty(
   // metadata.<property> = texture2D(u_propertyTexture_<n>, <texCoords>).<channels>;
   const textureReader = property.textureReader;
   const texCoord = textureReader.texCoord;
-  const texCoordVariable = "attributes.texCoord_" + texCoord;
+  const texCoordVariable = `attributes.texCoord_${texCoord}`;
   const channels = textureReader.channels;
 
-  let initializationLine =
-    "metadata." +
-    glslPropertyId +
-    " = texture2D(" +
-    uniformName +
-    ", " +
-    texCoordVariable +
-    ")." +
-    channels +
-    ";";
+  let initializationLine = `metadata.${glslPropertyId} = texture2D(${uniformName}, ${texCoordVariable}).${channels};`;
 
   // Sometimes initialization will be need to be wrapped in an unpacking
   // function (e.g. convert from unsigned to signed)
