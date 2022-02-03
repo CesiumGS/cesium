@@ -422,9 +422,9 @@ function forEachRuntimePrimitive(sceneGraph, callback) {
 }
 
 /**
- * Traverses through all draw commands and changes the back-face cull setting.
+ * Traverses through all draw commands and changes the back-face culling setting.
  *
- * @param {Boolean} backFaceCulling The new value for the back-face cull setting.
+ * @param {Boolean} backFaceCulling The new value for the back-face culling setting.
  *
  * @private
  */
