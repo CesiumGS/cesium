@@ -61,11 +61,7 @@ function createUniformArray(gl, activeUniform, uniformName, locations) {
       return new UniformArrayMat4(gl, activeUniform, uniformName, locations);
     default:
       throw new RuntimeError(
-        "Unrecognized uniform type: " +
-          activeUniform.type +
-          ' for uniform "' +
-          uniformName +
-          '".'
+        `Unrecognized uniform type: ${activeUniform.type} for uniform "${uniformName}".`
       );
   }
 }

@@ -124,10 +124,9 @@ function GoogleEarthEnterpriseMetadata(resourceOrUrl) {
       return true;
     })
     .otherwise(function (e) {
-      const message =
-        "An error occurred while accessing " +
-        getMetadataResource(that, "", 1).url +
-        ".";
+      const message = `An error occurred while accessing ${
+        getMetadataResource(that, "", 1).url
+      }.`;
       return when.reject(new RuntimeError(message));
     });
 }
@@ -430,7 +429,7 @@ function populateSubtree(that, quadKey, request) {
   //   undefined so no parent exists - this shouldn't ever happen once the provider is ready
   if (!defined(t) || !t.hasSubtree()) {
     return when.reject(
-      new RuntimeError("Couldn't load metadata for tile " + quadKey)
+      new RuntimeError(`Couldn't load metadata for tile ${quadKey}`)
     );
   }
 
@@ -494,7 +493,7 @@ GoogleEarthEnterpriseMetadata.prototype.getTileInformationFromQuadKey = function
 
 function getMetadataResource(that, quadKey, version, request) {
   return that._resource.getDerivedResource({
-    url: "flatfile?q2-0" + quadKey + "-q." + version.toString(),
+    url: `flatfile?q2-0${quadKey}-q.${version.toString()}`,
     request: request,
   });
 }
@@ -592,7 +591,7 @@ function requestDbRoot(that) {
     })
     .otherwise(function () {
       // Just eat the error and use the default values.
-      console.log("Failed to retrieve " + resource.url + ". Using defaults.");
+      console.log(`Failed to retrieve ${resource.url}. Using defaults.`);
       that.key = defaultKey;
     });
 }

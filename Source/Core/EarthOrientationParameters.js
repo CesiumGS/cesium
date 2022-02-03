@@ -87,10 +87,7 @@ function EarthOrientationParameters(options) {
         onDataReady(that, eopData);
       })
       .otherwise(function () {
-        that._dataError =
-          "An error occurred while retrieving the EOP data from the URL " +
-          resource.url +
-          ".";
+        that._dataError = `An error occurred while retrieving the EOP data from the URL ${resource.url}.`;
       });
   } else {
     // Use all zeros for EOP data.

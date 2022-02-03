@@ -929,6 +929,16 @@ describe(
       );
     });
 
+    it("can set depthPlaneEllipsoidOffset", function () {
+      viewer = createViewer(container, {
+        depthPlaneEllipsoidOffset: Number.POSITIVE_INFINITY,
+      });
+
+      expect(viewer.scene._depthPlane._ellipsoidOffset).toBe(
+        Number.POSITIVE_INFINITY
+      );
+    });
+
     it("can get and set trackedEntity", function () {
       viewer = createViewer(container);
 

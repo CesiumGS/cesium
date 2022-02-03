@@ -234,7 +234,7 @@ GltfPrimitiveBuilder.prototype.attribute = function (semantic, accessorName) {
   const gltf = this.gltfMeshBuilder.gltfBuilder.gltf;
   const accessorId = findAccessorByName(gltf, accessorName);
   if (accessorId < 0) {
-    throw new RuntimeError("Accessor named " + accessorName + " not found.");
+    throw new RuntimeError(`Accessor named ${accessorName} not found.`);
   }
 
   this.primitive.attributes[semantic] = accessorId;
@@ -250,7 +250,7 @@ GltfPrimitiveBuilder.prototype.indices = function (accessorName) {
   const gltf = this.gltfMeshBuilder.gltfBuilder.gltf;
   const accessorId = findAccessorByName(gltf, accessorName);
   if (accessorId < 0) {
-    throw new RuntimeError("Accessor named " + accessorName + " not found.");
+    throw new RuntimeError(`Accessor named ${accessorName} not found.`);
   }
 
   this.primitive.indices = accessorId;
@@ -281,7 +281,7 @@ GltfPrimitiveBuilder.prototype.material = function (materialName) {
     }
   }
 
-  throw new RuntimeError("Material named " + materialName + " not found.");
+  throw new RuntimeError(`Material named ${materialName} not found.`);
 };
 
 /**

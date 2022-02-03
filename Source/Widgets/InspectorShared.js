@@ -28,9 +28,9 @@ InspectorShared.createCheckbox = function (
   const checkboxInput = document.createElement("input");
   checkboxInput.type = "checkbox";
 
-  let binding = "checked: " + checkedBinding;
+  let binding = `checked: ${checkedBinding}`;
   if (defined(enableBinding)) {
-    binding += ", enable: " + enableBinding;
+    binding += `, enable: ${enableBinding}`;
   }
   checkboxInput.setAttribute("data-bind", binding);
   checkboxLabel.appendChild(checkboxInput);
@@ -66,9 +66,7 @@ InspectorShared.createSection = function (
   section.className = "cesium-cesiumInspector-section";
   section.setAttribute(
     "data-bind",
-    'css: { "cesium-cesiumInspector-section-collapsed": !' +
-      sectionVisibleBinding +
-      " }"
+    `css: { "cesium-cesiumInspector-section-collapsed": !${sectionVisibleBinding} }`
   );
   panel.appendChild(section);
 
@@ -77,7 +75,7 @@ InspectorShared.createSection = function (
   sectionHeader.appendChild(document.createTextNode(headerText));
   sectionHeader.setAttribute(
     "data-bind",
-    "click: " + toggleSectionVisibilityBinding
+    `click: ${toggleSectionVisibilityBinding}`
   );
   section.appendChild(sectionHeader);
 

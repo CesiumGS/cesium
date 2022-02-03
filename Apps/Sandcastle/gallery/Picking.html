@@ -82,12 +82,8 @@
                 entity.position = cartesian;
                 entity.label.show = true;
                 entity.label.text =
-                  "Lon: " +
-                  ("   " + longitudeString).slice(-7) +
-                  "\u00B0" +
-                  "\nLat: " +
-                  ("   " + latitudeString).slice(-7) +
-                  "\u00B0";
+                  `Lon: ${`   ${longitudeString}`.slice(-7)}\u00B0` +
+                  `\nLat: ${`   ${latitudeString}`.slice(-7)}\u00B0`;
               } else {
                 entity.label.show = false;
               }
@@ -258,15 +254,9 @@
                   labelEntity.position = cartesian;
                   labelEntity.label.show = true;
                   labelEntity.label.text =
-                    "Lon: " +
-                    ("   " + longitudeString).slice(-7) +
-                    "\u00B0" +
-                    "\nLat: " +
-                    ("   " + latitudeString).slice(-7) +
-                    "\u00B0" +
-                    "\nAlt: " +
-                    ("   " + heightString).slice(-7) +
-                    "m";
+                    `Lon: ${`   ${longitudeString}`.slice(-7)}\u00B0` +
+                    `\nLat: ${`   ${latitudeString}`.slice(-7)}\u00B0` +
+                    `\nAlt: ${`   ${heightString}`.slice(-7)}m`;
 
                   labelEntity.label.eyeOffset = new Cesium.Cartesian3(
                     0.0,

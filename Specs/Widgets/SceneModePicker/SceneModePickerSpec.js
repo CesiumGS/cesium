@@ -32,27 +32,24 @@ describe(
     });
 
     function addCloseOnInputSpec(name, func) {
-      it(
-        name + " event closes dropdown if target is not inside container",
-        function () {
-          const container = document.createElement("span");
-          container.id = "testContainer";
-          document.body.appendChild(container);
+      it(`${name} event closes dropdown if target is not inside container`, function () {
+        const container = document.createElement("span");
+        container.id = "testContainer";
+        document.body.appendChild(container);
 
-          const widget = new SceneModePicker("testContainer", scene);
+        const widget = new SceneModePicker("testContainer", scene);
 
-          widget.viewModel.dropDownVisible = true;
-          func(document.body);
-          expect(widget.viewModel.dropDownVisible).toEqual(false);
+        widget.viewModel.dropDownVisible = true;
+        func(document.body);
+        expect(widget.viewModel.dropDownVisible).toEqual(false);
 
-          widget.viewModel.dropDownVisible = true;
-          func(container.firstChild);
-          expect(widget.viewModel.dropDownVisible).toEqual(true);
+        widget.viewModel.dropDownVisible = true;
+        func(container.firstChild);
+        expect(widget.viewModel.dropDownVisible).toEqual(true);
 
-          widget.destroy();
-          document.body.removeChild(container);
-        }
-      );
+        widget.destroy();
+        document.body.removeChild(container);
+      });
     }
 
     if (FeatureDetection.supportsPointerEvents()) {

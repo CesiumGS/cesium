@@ -135,7 +135,7 @@ click: function () { closeClicked.raiseEvent(this); }"
 
         // Measure and set the new custom height, based on text wrapped above.
         const height = frameContent.getBoundingClientRect().height;
-        frame.style.height = height + "px";
+        frame.style.height = `${height}px`;
       }
     );
   });

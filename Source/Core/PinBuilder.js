@@ -85,7 +85,7 @@ PinBuilder.prototype.fromMakiIconId = function (id, color, size) {
   }
   //>>includeEnd('debug');
   return createPin(
-    buildModuleUrl("Assets/Textures/maki/" + encodeURIComponent(id) + ".png"),
+    buildModuleUrl(`Assets/Textures/maki/${encodeURIComponent(id)}.png`),
     undefined,
     color,
     size,
@@ -223,7 +223,7 @@ function createPin(url, label, color, size, cache) {
   } else if (defined(label)) {
     //If we have a label, write it to a canvas and then stamp the pin.
     const image = writeTextToCanvas(label, {
-      font: "bold " + size + "px sans-serif",
+      font: `bold ${size}px sans-serif`,
     });
     drawIcon(context2D, image, size);
   }

@@ -283,7 +283,7 @@ EntityCollection.prototype.add = function (entity) {
   const entities = this._entities;
   if (entities.contains(id)) {
     throw new RuntimeError(
-      "An entity with id " + id + " already exists in this collection."
+      `An entity with id ${id} already exists in this collection.`
     );
   }
 

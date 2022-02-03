@@ -1947,7 +1947,7 @@ function parseArticulations(model) {
       const stage = articulation.stages[s];
       stage.currentValue = stage.initialValue;
 
-      const stageKey = articulation.name + " " + stage.name;
+      const stageKey = `${articulation.name} ${stage.name}`;
       articulationsByStageKey[stageKey] = articulation;
       runtimeStagesByKey[stageKey] = stage;
     }
@@ -2202,7 +2202,7 @@ function parseMeshes(model) {
           programPrimitives = {};
           model._programPrimitives[programId] = programPrimitives;
         }
-        programPrimitives[meshId + ".primitive." + primitiveId] = primitive;
+        programPrimitives[`${meshId}.primitive.${primitiveId}`] = primitive;
       });
     }
   });
@@ -2473,29 +2473,28 @@ function createProgram(programToCreate, model, context) {
   let drawFS = modifyShader(fs, programId, model._fragmentShaderLoaded);
 
   if (!defined(model._uniformMapLoaded)) {
-    drawFS = "uniform vec4 czm_pickColor;\n" + drawFS;
+    drawFS = `uniform vec4 czm_pickColor;\n${drawFS}`;
   }
 
   const useIBL =
     model._imageBasedLightingFactor.x > 0.0 ||
     model._imageBasedLightingFactor.y > 0.0;
   if (useIBL) {
-    drawFS = "#define USE_IBL_LIGHTING \n\n" + drawFS;
+    drawFS = `#define USE_IBL_LIGHTING \n\n${drawFS}`;
   }
 
   if (defined(model._lightColor)) {
-    drawFS = "#define USE_CUSTOM_LIGHT_COLOR \n\n" + drawFS;
+    drawFS = `#define USE_CUSTOM_LIGHT_COLOR \n\n${drawFS}`;
   }
 
   if (model._sourceVersion !== "2.0" || model._sourceKHRTechniquesWebGL) {
     drawFS = ShaderSource.replaceMain(drawFS, "non_gamma_corrected_main");
     drawFS =
-      drawFS +
-      "\n" +
-      "void main() { \n" +
-      "    non_gamma_corrected_main(); \n" +
-      "    gl_FragColor = czm_gammaCorrect(gl_FragColor); \n" +
-      "} \n";
+      `${drawFS}\n` +
+      `void main() { \n` +
+      `    non_gamma_corrected_main(); \n` +
+      `    gl_FragColor = czm_gammaCorrect(gl_FragColor); \n` +
+      `} \n`;
   }
 
   if (OctahedralProjectedCubeMap.isSupported(context)) {
@@ -2508,40 +2507,39 @@ function createProgram(programToCreate, model, context) {
       model._useDefaultSpecularMaps;
     const addMatrix = usesSH || usesSM || useIBL;
     if (addMatrix) {
-      drawFS = "uniform mat3 gltf_iblReferenceFrameMatrix; \n" + drawFS;
+      drawFS = `uniform mat3 gltf_iblReferenceFrameMatrix; \n${drawFS}`;
     }
 
     if (defined(model._sphericalHarmonicCoefficients)) {
-      drawFS =
+      drawFS = `${
         "#define DIFFUSE_IBL \n" +
         "#define CUSTOM_SPHERICAL_HARMONICS \n" +
-        "uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n" +
-        drawFS;
+        "uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n"
+      }${drawFS}`;
     } else if (model._useDefaultSphericalHarmonics) {
-      drawFS = "#define DIFFUSE_IBL \n" + drawFS;
+      drawFS = `#define DIFFUSE_IBL \n${drawFS}`;
     }
 
     if (
       defined(model._specularEnvironmentMapAtlas) &&
       model._specularEnvironmentMapAtlas.ready
     ) {
-      drawFS =
+      drawFS = `${
         "#define SPECULAR_IBL \n" +
         "#define CUSTOM_SPECULAR_IBL \n" +
         "uniform sampler2D gltf_specularMap; \n" +
         "uniform vec2 gltf_specularMapSize; \n" +
-        "uniform float gltf_maxSpecularLOD; \n" +
-        drawFS;
+        "uniform float gltf_maxSpecularLOD; \n"
+      }${drawFS}`;
     } else if (model._useDefaultSpecularMaps) {
-      drawFS = "#define SPECULAR_IBL \n" + drawFS;
+      drawFS = `#define SPECULAR_IBL \n${drawFS}`;
     }
   }
 
   if (defined(model._luminanceAtZenith)) {
-    drawFS =
-      "#define USE_SUN_LUMINANCE \n" +
-      "uniform float gltf_luminanceAtZenith;\n" +
-      drawFS;
+    drawFS = `${
+      "#define USE_SUN_LUMINANCE \n" + "uniform float gltf_luminanceAtZenith;\n"
+    }${drawFS}`;
   }
 
   createAttributesAndProgram(
@@ -2591,29 +2589,28 @@ function recreateProgram(programToCreate, model, context) {
   let drawFS = modifyShader(finalFS, programId, model._fragmentShaderLoaded);
 
   if (!defined(model._uniformMapLoaded)) {
-    drawFS = "uniform vec4 czm_pickColor;\n" + drawFS;
+    drawFS = `uniform vec4 czm_pickColor;\n${drawFS}`;
   }
 
   const useIBL =
     model._imageBasedLightingFactor.x > 0.0 ||
     model._imageBasedLightingFactor.y > 0.0;
   if (useIBL) {
-    drawFS = "#define USE_IBL_LIGHTING \n\n" + drawFS;
+    drawFS = `#define USE_IBL_LIGHTING \n\n${drawFS}`;
   }
 
   if (defined(model._lightColor)) {
-    drawFS = "#define USE_CUSTOM_LIGHT_COLOR \n\n" + drawFS;
+    drawFS = `#define USE_CUSTOM_LIGHT_COLOR \n\n${drawFS}`;
   }
 
   if (model._sourceVersion !== "2.0" || model._sourceKHRTechniquesWebGL) {
     drawFS = ShaderSource.replaceMain(drawFS, "non_gamma_corrected_main");
     drawFS =
-      drawFS +
-      "\n" +
-      "void main() { \n" +
-      "    non_gamma_corrected_main(); \n" +
-      "    gl_FragColor = czm_gammaCorrect(gl_FragColor); \n" +
-      "} \n";
+      `${drawFS}\n` +
+      `void main() { \n` +
+      `    non_gamma_corrected_main(); \n` +
+      `    gl_FragColor = czm_gammaCorrect(gl_FragColor); \n` +
+      `} \n`;
   }
 
   if (OctahedralProjectedCubeMap.isSupported(context)) {
@@ -2626,40 +2623,39 @@ function recreateProgram(programToCreate, model, context) {
       model._useDefaultSpecularMaps;
     const addMatrix = usesSH || usesSM || useIBL;
     if (addMatrix) {
-      drawFS = "uniform mat3 gltf_iblReferenceFrameMatrix; \n" + drawFS;
+      drawFS = `uniform mat3 gltf_iblReferenceFrameMatrix; \n${drawFS}`;
     }
 
     if (defined(model._sphericalHarmonicCoefficients)) {
-      drawFS =
+      drawFS = `${
         "#define DIFFUSE_IBL \n" +
         "#define CUSTOM_SPHERICAL_HARMONICS \n" +
-        "uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n" +
-        drawFS;
+        "uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n"
+      }${drawFS}`;
     } else if (model._useDefaultSphericalHarmonics) {
-      drawFS = "#define DIFFUSE_IBL \n" + drawFS;
+      drawFS = `#define DIFFUSE_IBL \n${drawFS}`;
     }
 
     if (
       defined(model._specularEnvironmentMapAtlas) &&
       model._specularEnvironmentMapAtlas.ready
     ) {
-      drawFS =
+      drawFS = `${
         "#define SPECULAR_IBL \n" +
         "#define CUSTOM_SPECULAR_IBL \n" +
         "uniform sampler2D gltf_specularMap; \n" +
         "uniform vec2 gltf_specularMapSize; \n" +
-        "uniform float gltf_maxSpecularLOD; \n" +
-        drawFS;
+        "uniform float gltf_maxSpecularLOD; \n"
+      }${drawFS}`;
     } else if (model._useDefaultSpecularMaps) {
-      drawFS = "#define SPECULAR_IBL \n" + drawFS;
+      drawFS = `#define SPECULAR_IBL \n${drawFS}`;
     }
   }
 
   if (defined(model._luminanceAtZenith)) {
-    drawFS =
-      "#define USE_SUN_LUMINANCE \n" +
-      "uniform float gltf_luminanceAtZenith;\n" +
-      drawFS;
+    drawFS = `${
+      "#define USE_SUN_LUMINANCE \n" + "uniform float gltf_luminanceAtZenith;\n"
+    }${drawFS}`;
   }
 
   createAttributesAndProgram(
@@ -2762,7 +2758,7 @@ function loadTexturesFromBufferViews(model) {
     const onerror = ModelUtility.getFailedLoadFunction(
       model,
       "image",
-      "id: " + gltfTexture.id + ", bufferView: " + gltfTexture.bufferView
+      `id: ${gltfTexture.id}, bufferView: ${gltfTexture.bufferView}`
     );
 
     if (gltfTexture.mimeType === "image/ktx2") {
@@ -3259,7 +3255,7 @@ function createVertexArrays(model, context) {
       let attributeLocation;
       const attributeLocations = getAttributeLocations(model, primitive);
       const decodedData =
-        model._decodedData[meshId + ".primitive." + primitiveId];
+        model._decodedData[`${meshId}.primitive.${primitiveId}`];
       ForEach.meshPrimitiveAttribute(primitive, function (
         accessorId,
         attributeName
@@ -3331,7 +3327,7 @@ function createVertexArrays(model, context) {
         indexBuffer = rendererBuffers[bufferView];
       }
       rendererVertexArrays[
-        meshId + ".primitive." + primitiveId
+        `${meshId}.primitive.${primitiveId}`
       ] = new VertexArray({
         context: context,
         attributes: attributes,
@@ -3842,7 +3838,7 @@ function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
     const ix = accessors[primitive.indices];
     const material = model._runtime.materialsById[primitive.material];
     const programId = material._program;
-    const decodedData = model._decodedData[id + ".primitive." + i];
+    const decodedData = model._decodedData[`${id}.primitive.${i}`];
 
     let boundingSphere;
     const positionAccessor = primitive.attributes.POSITION;
@@ -3854,7 +3850,7 @@ function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
       );
     }
 
-    const vertexArray = rendererVertexArrays[id + ".primitive." + i];
+    const vertexArray = rendererVertexArrays[`${id}.primitive.${i}`];
     let offset;
     let count;
 
@@ -4658,19 +4654,19 @@ function createSilhouetteProgram(model, program, frameState) {
   // Modified from http://forum.unity3d.com/threads/toon-outline-but-with-diffuse-surface.24668/
   vs = ShaderSource.replaceMain(vs, "gltf_silhouette_main");
   vs +=
-    "uniform float gltf_silhouetteSize; \n" +
-    "void main() \n" +
-    "{ \n" +
-    "    gltf_silhouette_main(); \n" +
-    "    vec3 n = normalize(czm_normal3D * " +
-    normalAttributeName +
-    "); \n" +
-    "    n.x *= czm_projection[0][0]; \n" +
-    "    n.y *= czm_projection[1][1]; \n" +
-    "    vec4 clip = gl_Position; \n" +
-    "    clip.xy += n.xy * clip.w * gltf_silhouetteSize * czm_pixelRatio / czm_viewport.z; \n" +
-    "    gl_Position = clip; \n" +
-    "}";
+    `${
+      "uniform float gltf_silhouetteSize; \n" +
+      "void main() \n" +
+      "{ \n" +
+      "    gltf_silhouette_main(); \n" +
+      "    vec3 n = normalize(czm_normal3D * "
+    }${normalAttributeName}); \n` +
+    `    n.x *= czm_projection[0][0]; \n` +
+    `    n.y *= czm_projection[1][1]; \n` +
+    `    vec4 clip = gl_Position; \n` +
+    `    clip.xy += n.xy * clip.w * gltf_silhouetteSize * czm_pixelRatio / czm_viewport.z; \n` +
+    `    gl_Position = clip; \n` +
+    `}`;
 
   const fs =
     "uniform vec4 gltf_silhouetteColor; \n" +
@@ -4863,20 +4859,19 @@ function modifyShaderForClippingPlanes(
   context
 ) {
   shader = ShaderSource.replaceMain(shader, "gltf_clip_main");
-  shader += Model._getClippingFunction(clippingPlaneCollection, context) + "\n";
-  shader +=
+  shader += `${Model._getClippingFunction(clippingPlaneCollection, context)}\n`;
+  shader += `${
     "uniform highp sampler2D gltf_clippingPlanes; \n" +
     "uniform mat4 gltf_clippingPlanesMatrix; \n" +
     "uniform vec4 gltf_clippingPlanesEdgeStyle; \n" +
     "void main() \n" +
     "{ \n" +
-    "    gltf_clip_main(); \n" +
-    getClipAndStyleCode(
-      "gltf_clippingPlanes",
-      "gltf_clippingPlanesMatrix",
-      "gltf_clippingPlanesEdgeStyle"
-    ) +
-    "} \n";
+    "    gltf_clip_main(); \n"
+  }${getClipAndStyleCode(
+    "gltf_clippingPlanes",
+    "gltf_clippingPlanesMatrix",
+    "gltf_clippingPlanesEdgeStyle"
+  )}} \n`;
   return shader;
 }
 
@@ -5433,7 +5428,7 @@ Model.prototype.update = function (frameState) {
           that._shouldRegenerateShaders = true;
         })
         .otherwise(function (error) {
-          console.error("Error loading specularEnvironmentMaps: " + error);
+          console.error(`Error loading specularEnvironmentMaps: ${error}`);
         });
     }
 

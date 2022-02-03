@@ -725,11 +725,11 @@ describe("DataSources/CzmlDataSource", function () {
       expect(
         imageProperty.getValue(JulianDate.fromIso8601("2013-01-01T00:00:00Z"))
           .url
-      ).toEqual(source + "image.png");
+      ).toEqual(`${source}image.png`);
       expect(
         imageProperty.getValue(JulianDate.fromIso8601("2013-01-01T01:00:00Z"))
           .url
-      ).toEqual(source + "image2.png");
+      ).toEqual(`${source}image2.png`);
     });
   });
 

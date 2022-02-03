@@ -333,11 +333,11 @@
             const id = classificationDictionary[key];
 
             const colorCondition = [
-              "${Classification} === " + id,
+              `\${Classification} === ${id}`,
               styles[key].color,
             ];
             const showCondition = [
-              "${Classification} === " + id,
+              `\${Classification} === ${id}`,
               styles[key].show,
             ];
 

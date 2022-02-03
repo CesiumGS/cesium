@@ -227,7 +227,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
             deferred
           );
         } else {
-          expect(url).toEqual(getAbsoluteUri(baseUrl + "tile/0/0/0"));
+          expect(url).toEqual(getAbsoluteUri(`${baseUrl}tile/0/0/0`));
 
           // Just return any old image.
           Resource._DefaultImplementations.createImage(
@@ -247,7 +247,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         deferred,
         overrideMimeType
       ) {
-        expect(url).toEqual(getAbsoluteUri(baseUrl + "tile/0/0/0"));
+        expect(url).toEqual(getAbsoluteUri(`${baseUrl}tile/0/0/0`));
 
         // Just return any old image.
         Resource._DefaultImplementations.loadWithXhr(
@@ -343,7 +343,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
             true
           );
         } else {
-          expect(url).toEqual(getAbsoluteUri(baseUrl + "tile/0/0/0"));
+          expect(url).toEqual(getAbsoluteUri(`${baseUrl}tile/0/0/0`));
 
           // Just return any old image.
           Resource._DefaultImplementations.createImage(
@@ -363,7 +363,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         deferred,
         overrideMimeType
       ) {
-        expect(url).toEqual(getAbsoluteUri(baseUrl + "tile/0/0/0"));
+        expect(url).toEqual(getAbsoluteUri(`${baseUrl}tile/0/0/0`));
 
         // Just return any old image.
         Resource._DefaultImplementations.loadWithXhr(
@@ -423,7 +423,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         uriWithoutQuery.query("");
 
         expect(uriWithoutQuery.toString()).toEqual(
-          getAbsoluteUri(baseUrl + "export")
+          getAbsoluteUri(`${baseUrl}export`)
         );
 
         expect(params.f).toEqual("image");
@@ -502,7 +502,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         uriWithoutQuery.query("");
 
         expect(uriWithoutQuery.toString()).toEqual(
-          getAbsoluteUri(baseUrl + "export")
+          getAbsoluteUri(`${baseUrl}export`)
         );
 
         expect(params.f).toEqual("image");
@@ -540,11 +540,9 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     });
 
     const expectedTileUrl = getAbsoluteUri(
-      baseUrl +
-        "tile/0/0/0?" +
-        objectToQuery({
-          token: token,
-        })
+      `${baseUrl}tile/0/0/0?${objectToQuery({
+        token: token,
+      })}`
     );
 
     expect(provider.url).toEqual(baseUrl);

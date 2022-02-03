@@ -204,7 +204,7 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
 
     vs.defines.push(quantizationDefine);
     fs.defines.push(
-      "TEXTURE_UNITS " + numberOfDayTextures,
+      `TEXTURE_UNITS ${numberOfDayTextures}`,
       cartographicLimitRectangleDefine,
       imageryCutoutDefine
     );
@@ -320,62 +320,32 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
 
     for (let i = 0; i < numberOfDayTextures; ++i) {
       if (hasImageryLayerCutout) {
-        computeDayColor +=
-          "\
-        cutoutAndColorResult = u_dayTextureCutoutRectangles[" +
-          i +
-          "];\n\
+        computeDayColor += `\
+        cutoutAndColorResult = u_dayTextureCutoutRectangles[${i}];\n\
         texelUnclipped = v_textureCoordinates.x < cutoutAndColorResult.x || cutoutAndColorResult.z < v_textureCoordinates.x || v_textureCoordinates.y < cutoutAndColorResult.y || cutoutAndColorResult.w < v_textureCoordinates.y;\n\
-        cutoutAndColorResult = sampleAndBlend(\n";
+        cutoutAndColorResult = sampleAndBlend(\n`;
       } else {
         computeDayColor += "\
         color = sampleAndBlend(\n";
       }
-      computeDayColor +=
-        "\
+      computeDayColor += `\
             color,\n\
-            u_dayTextures[" +
-        i +
-        "],\n\
-            u_dayTextureUseWebMercatorT[" +
-        i +
-        "] ? textureCoordinates.xz : textureCoordinates.xy,\n\
-            u_dayTextureTexCoordsRectangle[" +
-        i +
-        "],\n\
-            u_dayTextureTranslationAndScale[" +
-        i +
-        "],\n\
-            " +
-        (applyAlpha ? "u_dayTextureAlpha[" + i + "]" : "1.0") +
-        ",\n\
-            " +
-        (applyDayNightAlpha ? "u_dayTextureNightAlpha[" + i + "]" : "1.0") +
-        ",\n" +
-        (applyDayNightAlpha ? "u_dayTextureDayAlpha[" + i + "]" : "1.0") +
-        ",\n" +
-        (applyBrightness ? "u_dayTextureBrightness[" + i + "]" : "0.0") +
-        ",\n\
-            " +
-        (applyContrast ? "u_dayTextureContrast[" + i + "]" : "0.0") +
-        ",\n\
-            " +
-        (applyHue ? "u_dayTextureHue[" + i + "]" : "0.0") +
-        ",\n\
-            " +
-        (applySaturation ? "u_dayTextureSaturation[" + i + "]" : "0.0") +
-        ",\n\
-            " +
-        (applyGamma ? "u_dayTextureOneOverGamma[" + i + "]" : "0.0") +
-        ",\n\
-            " +
-        (applySplit ? "u_dayTextureSplit[" + i + "]" : "0.0") +
-        ",\n\
-            " +
-        (colorToAlpha ? "u_colorsToAlpha[" + i + "]" : "vec4(0.0)") +
-        ",\n\
+            u_dayTextures[${i}],\n\
+            u_dayTextureUseWebMercatorT[${i}] ? textureCoordinates.xz : textureCoordinates.xy,\n\
+            u_dayTextureTexCoordsRectangle[${i}],\n\
+            u_dayTextureTranslationAndScale[${i}],\n\
+            ${applyAlpha ? `u_dayTextureAlpha[${i}]` : "1.0"},\n\
+            ${applyDayNightAlpha ? `u_dayTextureNightAlpha[${i}]` : "1.0"},\n${
+        applyDayNightAlpha ? `u_dayTextureDayAlpha[${i}]` : "1.0"
+      },\n${applyBrightness ? `u_dayTextureBrightness[${i}]` : "0.0"},\n\
+            ${applyContrast ? `u_dayTextureContrast[${i}]` : "0.0"},\n\
+            ${applyHue ? `u_dayTextureHue[${i}]` : "0.0"},\n\
+            ${applySaturation ? `u_dayTextureSaturation[${i}]` : "0.0"},\n\
+            ${applyGamma ? `u_dayTextureOneOverGamma[${i}]` : "0.0"},\n\
+            ${applySplit ? `u_dayTextureSplit[${i}]` : "0.0"},\n\
+            ${colorToAlpha ? `u_colorsToAlpha[${i}]` : "vec4(0.0)"},\n\
         nightBlend\
-        );\n";
+        );\n`;
       if (hasImageryLayerCutout) {
         computeDayColor +=
           "\

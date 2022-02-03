@@ -160,7 +160,7 @@
             const cartesian = scene.pickPosition(movement.position);
             if (Cesium.defined(cartesian)) {
               const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-              const height = cartographic.height.toFixed(2) + " m";
+              const height = `${cartographic.height.toFixed(2)} m`;
 
               annotations.add({
                 position: cartesian,
@@ -182,13 +182,13 @@
           for (let i = 0; i < length; ++i) {
             const propertyName = propertyNames[i];
             console.log(
-              "  " + propertyName + ": " + feature.getProperty(propertyName)
+              `  ${propertyName}: ${feature.getProperty(propertyName)}`
             );
           }
 
           // Evaluate feature description
           console.log(
-            "Description : " + tileset.style.meta.description.evaluate(feature)
+            `Description : ${tileset.style.meta.description.evaluate(feature)}`
           );
         }
 

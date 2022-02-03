@@ -123,6 +123,7 @@ describe(
       expect(contextAttributes.stencil).toEqual(true);
       expect(contextAttributes.premultipliedAlpha).toEqual(true);
       expect(contextAttributes.preserveDrawingBuffer).toEqual(false);
+      expect(scene._depthPlane._ellipsoidOffset).toEqual(0);
     });
 
     it("constructor sets options", function () {
@@ -141,6 +142,7 @@ describe(
           webgl: webglOptions,
         },
         mapProjection: mapProjection,
+        depthPlaneEllipsoidOffset: Number.POSITIVE_INFINITY,
       });
 
       const contextAttributes = s.context._gl.getContextAttributes();
@@ -155,6 +157,7 @@ describe(
         webglOptions.preserveDrawingBuffer
       );
       expect(s.mapProjection).toEqual(mapProjection);
+      expect(s._depthPlane._ellipsoidOffset).toEqual(Number.POSITIVE_INFINITY);
 
       s.destroyForSpecs();
     });

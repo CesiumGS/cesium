@@ -39,7 +39,7 @@
         const toDegrees = Cesium.Math.toDegrees;
 
         function parallel(latitude, color, granularity) {
-          const name = "Parallel " + latitude;
+          const name = `Parallel ${latitude}`;
           return viewer.entities.add({
             name: name,
             polyline: {
@@ -64,7 +64,7 @@
         }
 
         function meridian(longitude, color, granularity) {
-          const name = "Meridian " + longitude;
+          const name = `Meridian ${longitude}`;
           return viewer.entities.add({
             name: name,
             polyline: {
@@ -88,7 +88,7 @@
           const position = Cesium.Cartographic.toCartesian(cartographic);
           const latitude = toDegrees(cartographic.latitude).toFixed(4);
           const longitude = toDegrees(cartographic.longitude).toFixed(4);
-          const label = "lat: " + latitude + "°\nlon: " + longitude + "°";
+          const label = `lat: ${latitude}°\nlon: ${longitude}°`;
 
           return viewer.entities.add({
             position: position,

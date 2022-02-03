@@ -233,7 +233,7 @@ describe(
         };
       }
 
-      it("renders a single polygon" + webglMessage, function () {
+      it(`renders a single polygon${webglMessage}`, function () {
         const rectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
         const polygonOptions = createPolygon(rectangle);
 
@@ -273,7 +273,7 @@ describe(
         });
       });
 
-      it("renders multiple polygons" + webglMessage, function () {
+      it(`renders multiple polygons${webglMessage}`, function () {
         const rectangle1 = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
         const rectangle2 = Rectangle.fromDegrees(1.0, -1.0, 2.0, 1.0);
         const cartographicPositions = [
@@ -337,141 +337,134 @@ describe(
         });
       });
 
-      it(
-        "renders multiple polygons after re-batch" + webglMessage,
-        function () {
-          const rectangle1 = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
-          const rectangle2 = Rectangle.fromDegrees(1.0, -1.0, 2.0, 1.0);
-          const cartographicPositions = [
-            Rectangle.northwest(rectangle1),
-            Rectangle.southwest(rectangle1),
-            Rectangle.southeast(rectangle1),
-            Rectangle.northeast(rectangle1),
-            Rectangle.northwest(rectangle2),
-            Rectangle.southwest(rectangle2),
-            Rectangle.southeast(rectangle2),
-            Rectangle.northeast(rectangle2),
-          ];
-          const rectangle = Rectangle.fromDegrees(-1.0, -1.0, 2.0, 1.0);
+      it(`renders multiple polygons after re-batch${webglMessage}`, function () {
+        const rectangle1 = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+        const rectangle2 = Rectangle.fromDegrees(1.0, -1.0, 2.0, 1.0);
+        const cartographicPositions = [
+          Rectangle.northwest(rectangle1),
+          Rectangle.southwest(rectangle1),
+          Rectangle.southeast(rectangle1),
+          Rectangle.northeast(rectangle1),
+          Rectangle.northwest(rectangle2),
+          Rectangle.southwest(rectangle2),
+          Rectangle.southeast(rectangle2),
+          Rectangle.northeast(rectangle2),
+        ];
+        const rectangle = Rectangle.fromDegrees(-1.0, -1.0, 2.0, 1.0);
 
-          const batchTable = new Cesium3DTileBatchTable(mockTileset, 2);
-          batchTable.update(mockTileset, scene.frameState);
+        const batchTable = new Cesium3DTileBatchTable(mockTileset, 2);
+        batchTable.update(mockTileset, scene.frameState);
 
-          scene.primitives.add(globePrimitive);
+        scene.primitives.add(globePrimitive);
 
-          const center = ellipsoid.cartographicToCartesian(
-            Rectangle.center(rectangle)
-          );
-          polygons = scene.primitives.add(
-            new Vector3DTilePolygons({
-              positions: encodePositions(rectangle, cartographicPositions),
-              indices: new Uint16Array([0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7]),
-              counts: new Uint32Array([4, 4]),
-              indexCounts: new Uint32Array([6, 6]),
-              minimumHeight: -10000.0,
-              maximumHeight: 10000.0,
-              center: center,
-              rectangle: rectangle,
-              boundingVolume: new BoundingSphere(center, 10000.0),
-              batchTable: batchTable,
-              batchIds: new Uint32Array([0, 1]),
-              isCartographic: true,
-            })
-          );
-          polygons.forceRebatch = true;
-          return loadPolygons(polygons).then(function () {
-            scene.camera.setView({
-              destination: rectangle1,
-            });
-
-            expect(scene).toRender([255, 255, 255, 255]);
-
-            batchTable.setColor(0, Color.BLUE);
-            polygons.updateCommands(0, Color.BLUE);
-            batchTable.update(mockTileset, scene.frameState);
-            expect(scene).toRender([0, 0, 255, 255]);
-
-            scene.camera.setView({
-              destination: rectangle2,
-            });
-
-            expect(scene).toRender([255, 255, 255, 255]);
-
-            batchTable.setColor(1, Color.BLUE);
-            polygons.updateCommands(1, Color.BLUE);
-            batchTable.update(mockTileset, scene.frameState);
-            expect(scene).toRender([0, 0, 255, 255]);
+        const center = ellipsoid.cartographicToCartesian(
+          Rectangle.center(rectangle)
+        );
+        polygons = scene.primitives.add(
+          new Vector3DTilePolygons({
+            positions: encodePositions(rectangle, cartographicPositions),
+            indices: new Uint16Array([0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7]),
+            counts: new Uint32Array([4, 4]),
+            indexCounts: new Uint32Array([6, 6]),
+            minimumHeight: -10000.0,
+            maximumHeight: 10000.0,
+            center: center,
+            rectangle: rectangle,
+            boundingVolume: new BoundingSphere(center, 10000.0),
+            batchTable: batchTable,
+            batchIds: new Uint32Array([0, 1]),
+            isCartographic: true,
+          })
+        );
+        polygons.forceRebatch = true;
+        return loadPolygons(polygons).then(function () {
+          scene.camera.setView({
+            destination: rectangle1,
           });
-        }
-      );
 
-      it(
-        "renders multiple polygons with different minimum and maximum heights" +
-          webglMessage,
-        function () {
-          const rectangle1 = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
-          const rectangle2 = Rectangle.fromDegrees(1.0, -1.0, 2.0, 1.0);
-          const cartographicPositions = [
-            Rectangle.northwest(rectangle1),
-            Rectangle.southwest(rectangle1),
-            Rectangle.southeast(rectangle1),
-            Rectangle.northeast(rectangle1),
-            Rectangle.northwest(rectangle2),
-            Rectangle.southwest(rectangle2),
-            Rectangle.southeast(rectangle2),
-            Rectangle.northeast(rectangle2),
-          ];
-          const rectangle = Rectangle.fromDegrees(-1.0, -1.0, 2.0, 1.0);
+          expect(scene).toRender([255, 255, 255, 255]);
 
-          const batchTable = new Cesium3DTileBatchTable(mockTileset, 2);
+          batchTable.setColor(0, Color.BLUE);
+          polygons.updateCommands(0, Color.BLUE);
           batchTable.update(mockTileset, scene.frameState);
+          expect(scene).toRender([0, 0, 255, 255]);
 
-          scene.primitives.add(globePrimitive);
-
-          const center = ellipsoid.cartographicToCartesian(
-            Rectangle.center(rectangle)
-          );
-          polygons = scene.primitives.add(
-            new Vector3DTilePolygons({
-              positions: encodePositions(rectangle, cartographicPositions),
-              indices: new Uint16Array([0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7]),
-              counts: new Uint32Array([4, 4]),
-              indexCounts: new Uint32Array([6, 6]),
-              minimumHeight: -10000.0,
-              maximumHeight: 10000.0,
-              polygonMinimumHeights: new Float32Array([-10000.0, 10.0]),
-              polygonMaximumHeights: new Float32Array([10000.0, 100.0]),
-              center: center,
-              rectangle: rectangle,
-              boundingVolume: new BoundingSphere(center, 10000.0),
-              batchTable: batchTable,
-              batchIds: new Uint32Array([0, 1]),
-              isCartographic: true,
-            })
-          );
-          polygons.forceRebatch = true;
-          return loadPolygons(polygons).then(function () {
-            scene.camera.setView({
-              destination: rectangle1,
-            });
-
-            expect(scene).toRender([255, 255, 255, 255]);
-
-            batchTable.setColor(0, Color.BLUE);
-            polygons.updateCommands(0, Color.BLUE);
-            batchTable.update(mockTileset, scene.frameState);
-            expect(scene).toRender([0, 0, 255, 255]);
-
-            scene.camera.setView({
-              destination: rectangle2,
-            });
-
-            expect(scene).toRender([255, 0, 0, 255]);
+          scene.camera.setView({
+            destination: rectangle2,
           });
-        }
-      );
 
-      it("renders with inverted classification" + webglMessage, function () {
+          expect(scene).toRender([255, 255, 255, 255]);
+
+          batchTable.setColor(1, Color.BLUE);
+          polygons.updateCommands(1, Color.BLUE);
+          batchTable.update(mockTileset, scene.frameState);
+          expect(scene).toRender([0, 0, 255, 255]);
+        });
+      });
+
+      it(`renders multiple polygons with different minimum and maximum heights${webglMessage}`, function () {
+        const rectangle1 = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+        const rectangle2 = Rectangle.fromDegrees(1.0, -1.0, 2.0, 1.0);
+        const cartographicPositions = [
+          Rectangle.northwest(rectangle1),
+          Rectangle.southwest(rectangle1),
+          Rectangle.southeast(rectangle1),
+          Rectangle.northeast(rectangle1),
+          Rectangle.northwest(rectangle2),
+          Rectangle.southwest(rectangle2),
+          Rectangle.southeast(rectangle2),
+          Rectangle.northeast(rectangle2),
+        ];
+        const rectangle = Rectangle.fromDegrees(-1.0, -1.0, 2.0, 1.0);
+
+        const batchTable = new Cesium3DTileBatchTable(mockTileset, 2);
+        batchTable.update(mockTileset, scene.frameState);
+
+        scene.primitives.add(globePrimitive);
+
+        const center = ellipsoid.cartographicToCartesian(
+          Rectangle.center(rectangle)
+        );
+        polygons = scene.primitives.add(
+          new Vector3DTilePolygons({
+            positions: encodePositions(rectangle, cartographicPositions),
+            indices: new Uint16Array([0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7]),
+            counts: new Uint32Array([4, 4]),
+            indexCounts: new Uint32Array([6, 6]),
+            minimumHeight: -10000.0,
+            maximumHeight: 10000.0,
+            polygonMinimumHeights: new Float32Array([-10000.0, 10.0]),
+            polygonMaximumHeights: new Float32Array([10000.0, 100.0]),
+            center: center,
+            rectangle: rectangle,
+            boundingVolume: new BoundingSphere(center, 10000.0),
+            batchTable: batchTable,
+            batchIds: new Uint32Array([0, 1]),
+            isCartographic: true,
+          })
+        );
+        polygons.forceRebatch = true;
+        return loadPolygons(polygons).then(function () {
+          scene.camera.setView({
+            destination: rectangle1,
+          });
+
+          expect(scene).toRender([255, 255, 255, 255]);
+
+          batchTable.setColor(0, Color.BLUE);
+          polygons.updateCommands(0, Color.BLUE);
+          batchTable.update(mockTileset, scene.frameState);
+          expect(scene).toRender([0, 0, 255, 255]);
+
+          scene.camera.setView({
+            destination: rectangle2,
+          });
+
+          expect(scene).toRender([255, 0, 0, 255]);
+        });
+      });
+
+      it(`renders with inverted classification${webglMessage}`, function () {
         const rectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
         const polygonOptions = createPolygon(rectangle);
 
@@ -518,7 +511,7 @@ describe(
         });
       });
 
-      it("renders wireframe" + webglMessage, function () {
+      it(`renders wireframe${webglMessage}`, function () {
         const rectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
         const polygonOptions = createPolygon(rectangle);
 
@@ -559,7 +552,7 @@ describe(
         });
       });
 
-      it("renders based on classificationType" + webglMessage, function () {
+      it(`renders based on classificationType${webglMessage}`, function () {
         const rectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
         const polygonOptions = createPolygon(rectangle);
 
@@ -620,7 +613,7 @@ describe(
         });
       });
 
-      it("picks polygons" + webglMessage, function () {
+      it(`picks polygons${webglMessage}`, function () {
         const rectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
         const polygonOptions = createPolygon(rectangle);
 
@@ -669,7 +662,7 @@ describe(
         });
       });
 
-      it("isDestroyed" + webglMessage, function () {
+      it(`isDestroyed${webglMessage}`, function () {
         polygons = new Vector3DTilePolygons({});
         expect(polygons.isDestroyed()).toEqual(false);
         polygons.destroy();

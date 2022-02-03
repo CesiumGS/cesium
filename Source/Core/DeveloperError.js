@@ -55,10 +55,10 @@ if (defined(Object.create)) {
 }
 
 DeveloperError.prototype.toString = function () {
-  let str = this.name + ": " + this.message;
+  let str = `${this.name}: ${this.message}`;
 
   if (defined(this.stack)) {
-    str += "\n" + this.stack.toString();
+    str += `\n${this.stack.toString()}`;
   }
 
   return str;

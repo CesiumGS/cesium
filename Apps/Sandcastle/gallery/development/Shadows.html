@@ -641,7 +641,7 @@
           // Update biases
           for (let i = 0; i < viewModel.biasModes.length; ++i) {
             const biasMode = viewModel.biasModes[i];
-            const bias = shadowMap["_" + biasMode.type + "Bias"];
+            const bias = shadowMap[`_${biasMode.type}Bias`];
             bias.polygonOffset =
               !shadowMap._isPointLight &&
               shadowMap._polygonOffsetSupported &&
@@ -734,9 +734,9 @@
             if (
               uiOptions.disable[viewModel.lightSource].indexOf(setting) > -1
             ) {
-              viewModel[setting + "Enabled"] = false;
+              viewModel[`${setting}Enabled`] = false;
             } else {
-              viewModel[setting + "Enabled"] = true;
+              viewModel[`${setting}Enabled`] = true;
             }
           });
         }

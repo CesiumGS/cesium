@@ -63,15 +63,12 @@ function getCesium3DTileFeatureDescription(feature) {
   propertyNames.forEach(function (propertyName) {
     const value = feature.getProperty(propertyName);
     if (defined(value)) {
-      html += "<tr><th>" + propertyName + "</th><td>" + value + "</td></tr>";
+      html += `<tr><th>${propertyName}</th><td>${value}</td></tr>`;
     }
   });
 
   if (html.length > 0) {
-    html =
-      '<table class="cesium-infoBox-defaultTable"><tbody>' +
-      html +
-      "</tbody></table>";
+    html = `<table class="cesium-infoBox-defaultTable"><tbody>${html}</tbody></table>`;
   }
 
   return html;
@@ -285,7 +282,7 @@ function enableVRUI(viewer, enabled) {
       enabled || !defined(fullscreenButton)
         ? 0
         : fullscreenButton.container.clientWidth;
-    viewer._vrButton.container.style.right = right + "px";
+    viewer._vrButton.container.style.right = `${right}px`;
 
     viewer.forceResize();
   }
@@ -340,6 +337,7 @@ function enableVRUI(viewer, enabled) {
  * @property {Boolean} [projectionPicker=false] If set to true, the ProjectionPicker widget will be created.
  * @property {Boolean} [requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling reduces the CPU/GPU usage of your application and uses less battery on mobile, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @property {Number} [maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+ * @property {Number} [depthPlaneEllipsoidOffset=0.0] Adjust the DepthPlane to address rendering artefacts below ellipsoid zero elevation.
  */
 
 /**
@@ -504,6 +502,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     mapMode2D: options.mapMode2D,
     requestRenderMode: options.requestRenderMode,
     maximumRenderTimeChange: options.maximumRenderTimeChange,
+    depthPlaneEllipsoidOffset: options.depthPlaneEllipsoidOffset,
   });
 
   let dataSourceCollection = options.dataSources;
@@ -763,8 +762,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
           ? "block"
           : "none";
         if (defined(timeline)) {
-          timeline.container.style.right =
-            fullscreenContainer.clientWidth + "px";
+          timeline.container.style.right = `${fullscreenContainer.clientWidth}px`;
           timeline.resize();
         }
       }
@@ -787,10 +785,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
       function (isVREnabled) {
         vrContainer.style.display = isVREnabled ? "block" : "none";
         if (defined(fullscreenButton)) {
-          vrContainer.style.right = fullscreenContainer.clientWidth + "px";
+          vrContainer.style.right = `${fullscreenContainer.clientWidth}px`;
         }
         if (defined(timeline)) {
-          timeline.container.style.right = vrContainer.clientWidth + "px";
+          timeline.container.style.right = `${vrContainer.clientWidth}px`;
           timeline.resize();
         }
       }
@@ -1568,12 +1566,12 @@ Viewer.prototype.resize = function () {
   const baseLayerPickerDropDown = this._baseLayerPickerDropDown;
 
   if (defined(baseLayerPickerDropDown)) {
-    baseLayerPickerDropDown.style.maxHeight = panelMaxHeight + "px";
+    baseLayerPickerDropDown.style.maxHeight = `${panelMaxHeight}px`;
   }
 
   if (defined(this._geocoder)) {
     const geocoderSuggestions = this._geocoder.searchSuggestionsContainer;
-    geocoderSuggestions.style.maxHeight = panelMaxHeight + "px";
+    geocoderSuggestions.style.maxHeight = `${panelMaxHeight}px`;
   }
 
   if (defined(this._infoBox)) {
@@ -1627,7 +1625,7 @@ Viewer.prototype.resize = function () {
     const timelineStyle = timelineContainer.style;
 
     creditBottom = timelineContainer.clientHeight + 3;
-    timelineStyle.left = animationWidth + "px";
+    timelineStyle.left = `${animationWidth}px`;
 
     let pixels = 0;
     if (defined(fullscreenButton)) {
@@ -1637,12 +1635,12 @@ Viewer.prototype.resize = function () {
       pixels += vrButton.container.clientWidth;
     }
 
-    timelineStyle.right = pixels + "px";
+    timelineStyle.right = `${pixels}px`;
     timeline.resize();
   }
 
-  this._bottomContainer.style.left = creditLeft + "px";
-  this._bottomContainer.style.bottom = creditBottom + "px";
+  this._bottomContainer.style.left = `${creditLeft}px`;
+  this._bottomContainer.style.bottom = `${creditBottom}px`;
 
   this._lastWidth = width;
   this._lastHeight = height;

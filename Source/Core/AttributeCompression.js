@@ -121,7 +121,7 @@ AttributeCompression.octDecodeInRange = function (x, y, rangeMax, result) {
   Check.defined("result", result);
   if (x < 0 || x > rangeMax || y < 0 || y > rangeMax) {
     throw new DeveloperError(
-      "x and y must be unsigned normalized integers between 0 and " + rangeMax
+      `x and y must be unsigned normalized integers between 0 and ${rangeMax}`
     );
   }
   //>>includeEnd('debug');
@@ -456,7 +456,7 @@ AttributeCompression.dequantize = function (
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError(
-        "Cannot dequantize component datatype: " + componentDatatype
+        `Cannot dequantize component datatype: ${componentDatatype}`
       );
     //>>includeEnd('debug');
   }

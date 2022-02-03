@@ -861,17 +861,6 @@ Matrix2.prototype.equalsEpsilon = function (right, epsilon) {
  * @returns {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1)'.
  */
 Matrix2.prototype.toString = function () {
-  return (
-    "(" +
-    this[0] +
-    ", " +
-    this[2] +
-    ")\n" +
-    "(" +
-    this[1] +
-    ", " +
-    this[3] +
-    ")"
-  );
+  return `(${this[0]}, ${this[2]})\n` + `(${this[1]}, ${this[3]})`;
 };
 export default Matrix2;
