@@ -64,7 +64,12 @@ export default function ModelExperimentalSceneGraph(options) {
   this._pipelineStages = [];
 
   /**
-   * Update stages to across the model.
+   * Update stages to apply across the model.
+   *
+   * @type {Object[]}
+   * @readonly
+   *
+   * @private
    */
   this._updateStages = [];
 

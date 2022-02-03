@@ -1,5 +1,6 @@
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
+import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import BlendingState from "../BlendingState.js";
@@ -236,13 +237,13 @@ export default function PrimitiveRenderResources(
    *
    * @private
    */
-  this.renderStateOptions = {
+  this.renderStateOptions = combine(nodeRenderResources.renderStateOptions, {
     depthTest: {
       enabled: true,
       func: DepthFunction.LESS_OR_EQUAL,
     },
     blending: BlendingState.DISABLED,
-  };
+  });
 
   /**
    * An enum describing the types of draw commands needed, based on the style.
