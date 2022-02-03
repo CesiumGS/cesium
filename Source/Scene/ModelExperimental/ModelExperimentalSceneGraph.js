@@ -1,6 +1,7 @@
 import buildDrawCommands from "./buildDrawCommands.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Check from "../../Core/Check.js";
+import clone from "../../Core/clone.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
@@ -11,6 +12,7 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelRenderResources from "./ModelRenderResources.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
+import RenderState from "../../Renderer/RenderState.js";
 
 /**
  * An in memory representation of the scene graph for a {@link ModelExperimental}
@@ -409,6 +411,40 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
   }
 };
 
+function forEachRuntimePrimitive(sceneGraph, callback) {
+  for (let i = 0; i < sceneGraph._runtimeNodes.length; i++) {
+    const runtimeNode = sceneGraph._runtimeNodes[i];
+    for (let j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
+      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
+      callback(runtimePrimitive);
+    }
+  }
+}
+
+/**
+ * Traverses through all draw commands and changes the back-face culling setting.
+ *
+ * @param {Boolean} backFaceCulling The new value for the back-face culling setting.
+ *
+ * @private
+ */
+ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (
+  backFaceCulling
+) {
+  const model = this._model;
+  forEachRuntimePrimitive(this, function (runtimePrimitive) {
+    for (let k = 0; k < runtimePrimitive.drawCommands.length; k++) {
+      const drawCommand = runtimePrimitive.drawCommands[k];
+      const renderState = clone(drawCommand.renderState, true);
+      const doubleSided = runtimePrimitive.primitive.material.doubleSided;
+      const translucent = defined(model.color) && model.color.alpha < 1.0;
+      renderState.cull.enabled =
+        backFaceCulling && !doubleSided && !translucent;
+      drawCommand.renderState = RenderState.fromCache(renderState);
+    }
+  });
+};
+
 /**
  * Returns an array of draw commands, obtained by traversing through the scene graph and collecting
  * the draw commands associated with each primitive.
@@ -417,12 +453,8 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
  */
 ModelExperimentalSceneGraph.prototype.getDrawCommands = function () {
   const drawCommands = [];
-  for (let i = 0; i < this._runtimeNodes.length; i++) {
-    const runtimeNode = this._runtimeNodes[i];
-    for (let j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
-      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
-      drawCommands.push.apply(drawCommands, runtimePrimitive.drawCommands);
-    }
-  }
+  forEachRuntimePrimitive(this, function (runtimePrimitive) {
+    drawCommands.push.apply(drawCommands, runtimePrimitive.drawCommands);
+  });
   return drawCommands;
 };
