@@ -18,6 +18,7 @@ import {
   Color,
   StyleCommandsNeeded,
   ModelExperimentalSceneGraph,
+  DirectionalLight,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import loadAndZoomToModelExperimental from "./loadAndZoomToModelExperimental.js";
@@ -39,6 +40,10 @@ describe(
     const boxBackFaceCullingUrl =
       "./Data/Models/Box-Back-Face-Culling/Box-Back-Face-Culling.gltf";
     const boxBackFaceCullingOffset = new HeadingPitchRange(Math.PI / 2, 0, 2.0);
+    const boxShadowsUrl = "./Data/Models/Shadows/Box.gltf";
+    const boxShadowsOffset = new HeadingPitchRange(Math.PI / 2, 0, 2.0);
+    const boxShadowsLightDirection = new Cartesian3(1.0, 0.0, 0.0);
+
     let scene;
 
     beforeAll(function () {
@@ -607,6 +612,27 @@ describe(
 
         expect(renderOptions).toRenderAndCall(function (rgba) {
           expect(rgba).not.toEqual([0, 0, 0, 255]);
+        });
+      });
+    });
+
+    it("enables shadows", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxShadowsUrl,
+          shadows: true,
+          offset: boxShadowsOffset,
+        },
+        scene
+      ).then(function (model) {
+        scene.light = new DirectionalLight(boxShadowsLightDirection);
+        const renderOptions = {
+          scene: scene,
+          time: new JulianDate(2456659.0004050927),
+        };
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual([0, 0, 0, 255]);
         });
       });
     });

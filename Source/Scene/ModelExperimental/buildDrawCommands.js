@@ -12,6 +12,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import VertexArray from "../../Renderer/VertexArray.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import ShadowMode from "../ShadowMode.js";
 
 /**
  * Builds the DrawCommands for a {@link ModelExperimentalPrimitive} using its render resources.
@@ -87,6 +88,8 @@ export default function buildDrawCommands(
     instanceCount: primitiveRenderResources.instanceCount,
     primitiveType: primitiveRenderResources.primitiveType,
     debugShowBoundingVolume: model.debugShowBoundingVolume,
+    castShadows: ShadowMode.castShadows(model.shadows),
+    receiveShadows: ShadowMode.receiveShadows(model.shadows),
   });
 
   const styleCommandsNeeded = primitiveRenderResources.styleCommandsNeeded;
