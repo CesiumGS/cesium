@@ -178,6 +178,7 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.pointCloudShading = tileset.pointCloudShading;
   model.featureIdIndex = tileset.featureIdIndex;
   model.instanceFeatureIdIndex = tileset.instanceFeatureIdIndex;
+  model.backFaceCulling = tileset.backFaceCulling;
 
   model.update(frameState);
 };
@@ -213,6 +214,7 @@ ModelExperimental3DTileContent.fromGltf = function (
     content: content,
     colorBlendMode: tileset.colorBlendMode,
     colorBlendAmount: tileset.colorBlendAmount,
+    backFaceCulling: tileset.backFaceCulling,
   };
   content._model = ModelExperimental.fromGltf(modelOptions);
   return content;

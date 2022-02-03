@@ -2556,17 +2556,22 @@ describe(
         tileset
       ) {
         scene.camera.setView(setViewOptions);
+        // In the glTF and glb tests, the back-face of the model is black,
+        // so the background color is set to a different color to distinguish
+        // between the results.
+        scene.backgroundColor = new Color(0.0, 0.0, 1.0, 1.0);
         expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).toEqual([0, 0, 0, 255]);
+          expect(rgba).toEqual([0, 0, 255, 255]);
           tileset.backFaceCulling = false;
           expect(renderOptions).toRenderAndCall(function (rgba2) {
             expect(rgba2).not.toEqual(rgba);
           });
         });
+        scene.backgroundColor = new Color(0.0, 0.0, 0.0, 1.0);
       });
     }
 
-    it("renders b3dm tileset when back face culling is disabled", function () {
+    it("renders b3dm tileset when back-face culling is disabled", function () {
       const setViewOptions = {
         destination: new Cartesian3(
           1215012.6853779217,
@@ -2584,8 +2589,7 @@ describe(
       return testBackFaceCulling(withoutBatchTableUrl, setViewOptions);
     });
 
-    // see https://github.com/CesiumGS/cesium/issues/10056
-    xit("renders glTF tileset when back face culling is disabled", function () {
+    it("renders glTF tileset when back-face culling is disabled", function () {
       const setViewOptions = {
         destination: new Cartesian3(
           1215012.6853779217,
@@ -2603,7 +2607,7 @@ describe(
       return testBackFaceCulling(gltfContentUrl, setViewOptions);
     });
 
-    xit("renders glb tileset when back face culling is disabled", function () {
+    it("renders glb tileset when back-face culling is disabled", function () {
       const setViewOptions = {
         destination: new Cartesian3(
           1215012.6853779217,
@@ -2621,7 +2625,7 @@ describe(
       return testBackFaceCulling(glbContentUrl, setViewOptions);
     });
 
-    it("renders i3dm tileset when back face culling is disabled", function () {
+    it("renders i3dm tileset when back-face culling is disabled", function () {
       const setViewOptions = {
         destination: new Cartesian3(
           1215015.8599828142,

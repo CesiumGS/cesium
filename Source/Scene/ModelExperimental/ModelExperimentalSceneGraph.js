@@ -437,10 +437,11 @@ ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (value) {
       for (let k = 0; k < runtimePrimitive.drawCommands.length; k++) {
         const drawCommand = runtimePrimitive.drawCommands[k];
         const renderState = clone(drawCommand.renderState, true);
-        renderState.cull.enabled = value;
+        const doubleSided = runtimePrimitive.primitive.material.doubleSided;
+        const color = this._model.color;
+        const translucent = defined(color) && color.alpha < 1.0;
+        renderState.cull.enabled = value && !doubleSided && !translucent;
         drawCommand.renderState = RenderState.fromCache(renderState);
-        //const doubleSided = runtimePrimitive.primitive.material.doubleSided;
-        // wanted to avoid derivedcommands
       }
     }
   }
