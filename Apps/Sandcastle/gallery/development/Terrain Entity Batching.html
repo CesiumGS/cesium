@@ -128,7 +128,7 @@
             const cornerLat = latitude + 0.01 * x;
             const cornerLon = longitude + 0.01 * y;
             viewer.entities.add({
-              id: x + " " + y,
+              id: `${x} ${y}`,
               rectangle: {
                 coordinates: Cesium.Rectangle.fromDegrees(
                   cornerLon,

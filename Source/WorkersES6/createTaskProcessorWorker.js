@@ -88,11 +88,9 @@ function createTaskProcessorWorker(workerFunction) {
           // something went wrong trying to post the message, post a simpler
           // error that we can be sure will be cloneable
           responseMessage.result = undefined;
-          responseMessage.error =
-            "postMessage failed with error: " +
-            formatError(e) +
-            "\n  with responseMessage: " +
-            JSON.stringify(responseMessage);
+          responseMessage.error = `postMessage failed with error: ${formatError(
+            e
+          )}\n  with responseMessage: ${JSON.stringify(responseMessage)}`;
           postMessage(responseMessage);
         }
       });
@@ -111,7 +109,7 @@ function createTaskProcessorWorker(workerFunction) {
  * @example
  * function calculate(parameters, transferableObjects) {
  *   // perform whatever calculation is necessary.
- *   var typedArray = new Float32Array(0);
+ *   const typedArray = new Float32Array(0);
  *
  *   // typed arrays are transferable
  *   transferableObjects.push(typedArray)

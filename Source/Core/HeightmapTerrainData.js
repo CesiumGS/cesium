@@ -78,11 +78,11 @@ import TerrainProvider from "./TerrainProvider.js";
  *
  *
  * @example
- * var buffer = ...
- * var heightBuffer = new Uint16Array(buffer, 0, that._heightmapWidth * that._heightmapWidth);
- * var childTileMask = new Uint8Array(buffer, heightBuffer.byteLength, 1)[0];
- * var waterMask = new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1);
- * var terrainData = new Cesium.HeightmapTerrainData({
+ * const buffer = ...
+ * const heightBuffer = new Uint16Array(buffer, 0, that._heightmapWidth * that._heightmapWidth);
+ * const childTileMask = new Uint8Array(buffer, heightBuffer.byteLength, 1)[0];
+ * const waterMask = new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1);
+ * const terrainData = new Cesium.HeightmapTerrainData({
  *   buffer : heightBuffer,
  *   width : 65,
  *   height : 65,

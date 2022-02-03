@@ -369,7 +369,7 @@ Timeline.prototype.zoomFrom = function (amount) {
 };
 
 function twoDigits(num) {
-  return num < 10 ? "0" + num.toString() : num.toString();
+  return num < 10 ? `0${num.toString()}` : num.toString();
 }
 
 /**
@@ -382,25 +382,16 @@ Timeline.prototype.makeLabel = function (time) {
   if (millisecond > 0 && this._timeBarSecondsSpan < 3600) {
     millisecondString = Math.floor(millisecond).toString();
     while (millisecondString.length < 3) {
-      millisecondString = "0" + millisecondString;
+      millisecondString = `0${millisecondString}`;
     }
-    millisecondString = "." + millisecondString;
+    millisecondString = `.${millisecondString}`;
   }
 
-  return (
-    timelineMonthNames[gregorian.month - 1] +
-    " " +
-    gregorian.day +
-    " " +
-    gregorian.year +
-    " " +
-    twoDigits(gregorian.hour) +
-    ":" +
-    twoDigits(gregorian.minute) +
-    ":" +
-    twoDigits(gregorian.second) +
-    millisecondString
-  );
+  return `${timelineMonthNames[gregorian.month - 1]} ${gregorian.day} ${
+    gregorian.year
+  } ${twoDigits(gregorian.hour)}:${twoDigits(gregorian.minute)}:${twoDigits(
+    gregorian.second
+  )}${millisecondString}`;
 };
 
 /**
@@ -425,7 +416,7 @@ Timeline.prototype._makeTics = function () {
   let tic;
   const widget = this;
 
-  this._needleEle.style.left = xPos.toString() + "px";
+  this._needleEle.style.left = `${xPos.toString()}px`;
 
   let tics = "";
 
@@ -622,10 +613,9 @@ Timeline.prototype._makeTics = function () {
       tic <= endTime;
       tic = getNextTic(tic, tinyTic)
     ) {
-      tics +=
-        '<span class="cesium-timeline-ticTiny" style="left: ' +
-        Math.round(timeBarWidth * getAlpha(tic)).toString() +
-        'px;"></span>';
+      tics += `<span class="cesium-timeline-ticTiny" style="left: ${Math.round(
+        timeBarWidth * getAlpha(tic)
+      ).toString()}px;"></span>`;
     }
   }
   if (timeBarWidth * (subTic / this._timeBarSecondsSpan) >= 3.0) {
@@ -634,10 +624,9 @@ Timeline.prototype._makeTics = function () {
       tic <= endTime;
       tic = getNextTic(tic, subTic)
     ) {
-      tics +=
-        '<span class="cesium-timeline-ticSub" style="left: ' +
-        Math.round(timeBarWidth * getAlpha(tic)).toString() +
-        'px;"></span>';
+      tics += `<span class="cesium-timeline-ticSub" style="left: ${Math.round(
+        timeBarWidth * getAlpha(tic)
+      ).toString()}px;"></span>`;
     }
   }
   if (timeBarWidth * (mainTic / this._timeBarSecondsSpan) >= 2.0) {
@@ -674,19 +663,10 @@ Timeline.prototype._makeTics = function () {
       if (labelLeft > lastTextLeft) {
         lastTextLeft = labelLeft + textWidth + 5;
         tics +=
-          '<span class="cesium-timeline-ticMain" style="left: ' +
-          ticLeft.toString() +
-          'px;"></span>' +
-          '<span class="cesium-timeline-ticLabel" style="left: ' +
-          labelLeft.toString() +
-          'px;">' +
-          ticLabel +
-          "</span>";
+          `<span class="cesium-timeline-ticMain" style="left: ${ticLeft.toString()}px;"></span>` +
+          `<span class="cesium-timeline-ticLabel" style="left: ${labelLeft.toString()}px;">${ticLabel}</span>`;
       } else {
-        tics +=
-          '<span class="cesium-timeline-ticSub" style="left: ' +
-          ticLeft.toString() +
-          'px;"></span>';
+        tics += `<span class="cesium-timeline-ticSub" style="left: ${ticLeft.toString()}px;"></span>`;
       }
       tic = getNextTic(tic, mainTic);
     }
@@ -694,10 +674,7 @@ Timeline.prototype._makeTics = function () {
     this._mainTicSpan = -1;
   }
 
-  tics +=
-    '<span class="cesium-timeline-icon16" style="left:' +
-    scrubX +
-    'px;bottom:0;background-position: 0 0;"></span>';
+  tics += `<span class="cesium-timeline-icon16" style="left:${scrubX}px;bottom:0;background-position: 0 0;"></span>`;
   timeBar.innerHTML = tics;
   this._scrubElement = timeBar.lastChild;
 
@@ -734,8 +711,8 @@ Timeline.prototype.updateFromClock = function () {
     if (this._lastXPos !== xPos) {
       this._lastXPos = xPos;
 
-      scrubElement.style.left = xPos - 8 + "px";
-      this._needleEle.style.left = xPos + "px";
+      scrubElement.style.left = `${xPos - 8}px`;
+      this._needleEle.style.left = `${xPos}px`;
     }
   }
   if (defined(this._timelineDragLocation)) {
@@ -771,8 +748,8 @@ Timeline.prototype._setTimeBarTime = function (xPos, seconds) {
   );
   if (this._scrubElement) {
     const scrubX = xPos - 8;
-    this._scrubElement.style.left = scrubX.toString() + "px";
-    this._needleEle.style.left = xPos.toString() + "px";
+    this._scrubElement.style.left = `${scrubX.toString()}px`;
+    this._needleEle.style.left = `${xPos.toString()}px`;
   }
 
   const evt = document.createEvent("Event");
@@ -1015,13 +992,13 @@ Timeline.prototype.resize = function () {
     return;
   }
 
-  this._trackContainer.style.height = height + "px";
+  this._trackContainer.style.height = `${height}px`;
 
   let trackListHeight = 1;
   this._trackList.forEach(function (track) {
     trackListHeight += track.height;
   });
-  this._trackListEle.style.height = trackListHeight.toString() + "px";
+  this._trackListEle.style.height = `${trackListHeight.toString()}px`;
   this._trackListEle.width = this._trackListEle.clientWidth;
   this._trackListEle.height = trackListHeight;
   this._makeTics();

@@ -241,8 +241,9 @@
             percentage
           ) {
             ++i;
-            cameraChanged.innerText =
-              "Camera Changed: " + i + ", " + percentage.toFixed(6);
+            cameraChanged.innerText = `Camera Changed: ${i}, ${percentage.toFixed(
+              6
+            )}`;
             cameraChanged.style.display = "block";
           });
         }

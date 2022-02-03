@@ -14,6 +14,7 @@ import {
   PointCloudAttenuationPipelineStage,
   PointCloudShading,
   PrimitiveType,
+  SelectedFeatureIdPipelineStage,
   VertexAttributeSemantic,
   BatchTexturePipelineStage,
   ModelExperimentalPrimitive,
@@ -21,15 +22,14 @@ import {
 
 describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   const mockPrimitive = {
-    featureIdAttributes: [],
-    featureIdTextures: [],
+    featureIds: [],
     attributes: [],
   };
   const mockNode = {};
   const mockModel = {
     type: ModelExperimentalType.GLTF,
     allowPicking: true,
-    featureIdAttributeIndex: 0,
+    featureIdIndex: 0,
   };
 
   const emptyVertexShader =
@@ -96,6 +96,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     let expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
+      FeatureIdPipelineStage,
       LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
@@ -116,6 +117,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
+      FeatureIdPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -128,19 +130,25 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       primitive: mockPrimitive,
       node: {
         instances: {
-          featureIdAttributes: [{}],
+          featureIds: [{}, { propertyTableId: 0 }],
         },
       },
-      model: mockModel,
+      model: {
+        type: ModelExperimentalType.GLTF,
+        allowPicking: true,
+        instanceFeatureIdIndex: 1,
+        content: {},
+      },
     });
 
     const expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
-      LightingPipelineStage,
       FeatureIdPipelineStage,
+      SelectedFeatureIdPipelineStage,
       BatchTexturePipelineStage,
       CPUStylingPipelineStage,
+      LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -151,8 +159,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   it("configures the pipeline stages for feature picking", function () {
     let primitive = new ModelExperimentalPrimitive({
       primitive: {
-        featureIdAttributes: [{}, {}],
-        featureIdTextures: [],
+        featureIds: [{}, { propertyTableId: 0 }],
         attributes: [
           {
             semantic: VertexAttributeSemantic.FEATURE_ID,
@@ -163,7 +170,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       model: {
         type: ModelExperimentalType.GLTF,
         allowPicking: true,
-        featureIdAttributeIndex: 1,
+        featureIdIndex: 1,
         content: {},
       },
     });
@@ -171,10 +178,11 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     const expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
-      LightingPipelineStage,
       FeatureIdPipelineStage,
+      SelectedFeatureIdPipelineStage,
       BatchTexturePipelineStage,
       CPUStylingPipelineStage,
+      LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -183,15 +191,14 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
 
     primitive = new ModelExperimentalPrimitive({
       primitive: {
-        featureIdAttributes: [],
-        featureIdTextures: [{}, {}],
+        featureIds: [{}, { propertyTableId: 0 }],
         attributes: [],
       },
       node: {},
       model: {
         type: ModelExperimentalType.GLTF,
         allowPicking: true,
-        featureIdTextureIndex: 1,
+        featureIdIndex: 1,
         content: {},
       },
     });
@@ -202,7 +209,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   it("configures dequantization", function () {
     const primitive = new ModelExperimentalPrimitive({
       primitive: {
-        featureIdAttributes: [],
+        featureIds: [],
         featureIdTextures: [],
         attributes: [
           {
@@ -222,6 +229,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       DequantizationPipelineStage,
       MaterialPipelineStage,
+      FeatureIdPipelineStage,
       LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
@@ -246,6 +254,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     const expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
+      FeatureIdPipelineStage,
       CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
@@ -272,6 +281,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
 
     const expectedStages = [
       GeometryPipelineStage,
+      FeatureIdPipelineStage,
       CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
@@ -298,6 +308,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     const expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
+      FeatureIdPipelineStage,
       CustomShaderPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
@@ -312,7 +323,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     });
     const primitive = new ModelExperimentalPrimitive({
       primitive: {
-        featureIdAttributes: [],
+        featureIds: [],
         featureIdTextures: [],
         attributes: [],
         primitiveType: PrimitiveType.POINTS,
@@ -320,7 +331,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       node: mockNode,
       model: {
         type: ModelExperimentalType.TILE_PNTS,
-        featureIdAttributeIndex: 0,
+        featureIdIndex: 0,
         pointCloudShading: pointCloudShading,
         content: {
           tileset: {
@@ -334,6 +345,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       PointCloudAttenuationPipelineStage,
       MaterialPipelineStage,
+      FeatureIdPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -347,7 +359,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     });
     const primitive = new ModelExperimentalPrimitive({
       primitive: {
-        featureIdAttributes: [],
+        featureIds: [],
         featureIdTextures: [],
         attributes: [],
         primitiveType: PrimitiveType.POINTS,
@@ -355,7 +367,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       node: mockNode,
       model: {
         type: ModelExperimentalType.GLTF,
-        featureIdAttributeIndex: 0,
+        featureIdIndex: 0,
         pointCloudShading: pointCloudShading,
       },
     });
@@ -364,6 +376,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       GeometryPipelineStage,
       PointCloudAttenuationPipelineStage,
       MaterialPipelineStage,
+      FeatureIdPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -377,7 +390,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     });
     const primitive = new ModelExperimentalPrimitive({
       primitive: {
-        featureIdAttributes: [],
+        featureIds: [],
         featureIdTextures: [],
         attributes: [],
         primitiveType: PrimitiveType.POINTS,
@@ -385,7 +398,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       node: mockNode,
       model: {
         type: ModelExperimentalType.GLTF,
-        featureIdAttributeIndex: 0,
+        featureIdIndex: 0,
         pointCloudShading: pointCloudShading,
       },
     });
@@ -393,6 +406,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     const expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
+      FeatureIdPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];
@@ -403,7 +417,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   it("skips point cloud attenuation if point cloud shading is not set", function () {
     const primitive = new ModelExperimentalPrimitive({
       primitive: {
-        featureIdAttributes: [],
+        featureIds: [],
         featureIdTextures: [],
         attributes: [],
         primitiveType: PrimitiveType.POINTS,
@@ -411,7 +425,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       node: mockNode,
       model: {
         type: ModelExperimentalType.GLTF,
-        featureIdAttributeIndex: 0,
+        featureIdIndex: 0,
         pointCloudShading: undefined,
       },
     });
@@ -419,6 +433,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
     const expectedStages = [
       GeometryPipelineStage,
       MaterialPipelineStage,
+      FeatureIdPipelineStage,
       LightingPipelineStage,
       AlphaPipelineStage,
     ];

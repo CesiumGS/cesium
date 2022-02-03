@@ -54,8 +54,9 @@ DracoLoader.hasExtension = function (model) {
 
 function addBufferToLoadResources(loadResources, typedArray) {
   // Create a new id to differentiate from original glTF bufferViews
-  const bufferViewId =
-    "runtime." + Object.keys(loadResources.createdBufferViews).length;
+  const bufferViewId = `runtime.${
+    Object.keys(loadResources.createdBufferViews).length
+  }`;
 
   const loadResourceBuffers = loadResources.buffers;
   const id = Object.keys(loadResourceBuffers).length;
@@ -146,7 +147,7 @@ function scheduleDecodingTask(
       }
     }
 
-    model._decodedData[taskData.mesh + ".primitive." + taskData.primitive] = {
+    model._decodedData[`${taskData.mesh}.primitive.${taskData.primitive}`] = {
       bufferView: decodedIndexBuffer.bufferViewId,
       numberOfIndices: decodedIndexBuffer.numberOfIndices,
       attributes: attributes,

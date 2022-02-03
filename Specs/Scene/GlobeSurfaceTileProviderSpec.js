@@ -820,7 +820,7 @@ describe(
 
           if (command.owner instanceof QuadtreeTile) {
             const tile = command.owner;
-            const key = "L" + tile.level + "X" + tile.x + "Y" + tile.y;
+            const key = `L${tile.level}X${tile.x}Y${tile.y}`;
             if (!defined(drawCommandsPerTile[key])) {
               drawCommandsPerTile[key] = 0;
 

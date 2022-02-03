@@ -4,7 +4,7 @@ import AttributeType from "../AttributeType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import GeometryStageFS from "../../Shaders/ModelExperimental/GeometryStageFS.js";
 import GeometryStageVS from "../../Shaders/ModelExperimental/GeometryStageVS.js";
-import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
+import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelExperimentalType from "./ModelExperimentalType.js";
@@ -68,8 +68,8 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
 
   // The Feature struct is always added since it's required for compilation. It may be unused if features are not present.
   shaderBuilder.addStruct(
-    FeatureIdPipelineStage.STRUCT_ID_FEATURE,
-    FeatureIdPipelineStage.STRUCT_NAME_FEATURE,
+    SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE,
+    SelectedFeatureIdPipelineStage.STRUCT_NAME_SELECTED_FEATURE,
     ShaderDestination.BOTH
   );
 
@@ -175,7 +175,7 @@ function addSemanticDefine(shaderBuilder, attribute) {
     case VertexAttributeSemantic.FEATURE_ID:
     case VertexAttributeSemantic.TEXCOORD:
     case VertexAttributeSemantic.COLOR:
-      shaderBuilder.addDefine("HAS_" + semantic + "_" + setIndex);
+      shaderBuilder.addDefine(`HAS_${semantic}_${setIndex}`);
   }
 }
 
@@ -220,7 +220,7 @@ function addAttributeToRenderResources(
 
 function addVaryingDeclaration(shaderBuilder, attributeInfo) {
   const variableName = attributeInfo.variableName;
-  let varyingName = "v_" + variableName;
+  let varyingName = `v_${variableName}`;
 
   let glslType;
   if (variableName === "normalMC") {
@@ -248,10 +248,10 @@ function addAttributeDeclaration(shaderBuilder, attributeInfo) {
   let attributeName;
   let glslType;
   if (attributeInfo.isQuantized) {
-    attributeName = "a_quantized_" + variableName;
+    attributeName = `a_quantized_${variableName}`;
     glslType = attributeInfo.quantizedGlslType;
   } else {
-    attributeName = "a_" + variableName;
+    attributeName = `a_${variableName}`;
     glslType = attributeInfo.glslType;
   }
 
@@ -304,7 +304,7 @@ function updateInitialzeAttributesFunction(shaderBuilder, attributeInfo) {
   if (variableName === "tangentMC") {
     line = "attributes.tangentMC = a_tangentMC.xyz;";
   } else {
-    line = "attributes." + variableName + " = a_" + variableName + ";";
+    line = `attributes.${variableName} = a_${variableName};`;
   }
   shaderBuilder.addFunctionLines(functionId, [line]);
 }
@@ -322,13 +322,13 @@ function updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo) {
   // v_texCoord_1 = attributes.texCoord_1;
   let functionId = GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS;
   const variableName = attributeInfo.variableName;
-  let line = "v_" + variableName + " = attributes." + variableName + ";";
+  let line = `v_${variableName} = attributes.${variableName};`;
   shaderBuilder.addFunctionLines(functionId, [line]);
 
   // In the fragment shader, we do the opposite:
   // attributes.texCoord_1 = v_texCoord_1;
   functionId = GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS;
-  line = "attributes." + variableName + " = v_" + variableName + ";";
+  line = `attributes.${variableName} = v_${variableName};`;
   shaderBuilder.addFunctionLines(functionId, [line]);
 }
 

@@ -15,7 +15,7 @@ import MaterialPipelineStage from "./MaterialPipelineStage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
 import PointCloudAttenuationPipelineStage from "./PointCloudAttenuationPipelineStage.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -133,6 +133,10 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
   const hasAttenuation =
     defined(pointCloudShading) && pointCloudShading.attenuation;
 
+  const featureIdFlags = inspectFeatureIds(model, node, primitive);
+
+  // Start of pipeline -----------------------------------------------------
+
   pipelineStages.push(GeometryPipelineStage);
 
   if (hasAttenuation && primitive.primitiveType === PrimitiveType.POINTS) {
@@ -147,48 +151,19 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
     pipelineStages.push(MaterialPipelineStage);
   }
 
-  if (defined(model.customShader)) {
+  pipelineStages.push(FeatureIdPipelineStage);
+
+  if (featureIdFlags.hasPropertyTable) {
+    pipelineStages.push(SelectedFeatureIdPipelineStage);
+    pipelineStages.push(BatchTexturePipelineStage);
+    pipelineStages.push(CPUStylingPipelineStage);
+  }
+
+  if (hasCustomShader) {
     pipelineStages.push(CustomShaderPipelineStage);
   }
 
   pipelineStages.push(LightingPipelineStage);
-
-  // Add the FeatureIdPipelineStage and BatchTexturePipelineStage when the primitive has features, i.e. when at least one of the following conditions exists:
-  // - the node is instanced and has feature ID attributes
-  // - the primitive has a feature ID vertex attributes
-  // - the primitive has a feature ID texture
-  // It must be noted that we check for the presence of feature ID vertex attributes, and not feature ID attributes, because it is possible to have features in a model
-  // without a feature table (for example, in 3D Tiles 1.0, where batch length > 0 but a batch table is not defined.)
-  const featureIdAttributeIndex = model.featureIdAttributeIndex;
-  const featureIdTextureIndex = model.featureIdTextureIndex;
-  let hasInstancedFeatureIdAttribute;
-  if (
-    defined(node.instances) &&
-    node.instances.featureIdAttributes.length > 0
-  ) {
-    const featureIdAttributes = node.instances.featureIdAttributes;
-    if (defined(featureIdAttributes[featureIdAttributeIndex])) {
-      hasInstancedFeatureIdAttribute = true;
-    }
-  }
-  const hasFeatureIdVertexAttribute = defined(
-    ModelExperimentalUtility.getAttributeBySemantic(
-      primitive,
-      VertexAttributeSemantic.FEATURE_ID
-    )
-  );
-  const hasFeatureIdTexture = defined(
-    primitive.featureIdTextures[featureIdTextureIndex]
-  );
-  const hasFeatureIds =
-    hasInstancedFeatureIdAttribute ||
-    hasFeatureIdVertexAttribute ||
-    hasFeatureIdTexture;
-  if (hasInstancedFeatureIdAttribute || hasFeatureIds) {
-    pipelineStages.push(FeatureIdPipelineStage);
-    pipelineStages.push(BatchTexturePipelineStage);
-    pipelineStages.push(CPUStylingPipelineStage);
-  }
 
   if (model.allowPicking) {
     pipelineStages.push(PickingPipelineStage);
@@ -198,3 +173,32 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
 
   return;
 };
+
+function inspectFeatureIds(model, node, primitive) {
+  let featureIds;
+  // Check instances first, as this is the most specific type of
+  // feature ID
+  if (defined(node.instances)) {
+    featureIds = node.instances.featureIds[model.instanceFeatureIdIndex];
+
+    if (defined(featureIds)) {
+      return {
+        hasFeatureIds: true,
+        hasPropertyTable: defined(featureIds.propertyTableId),
+      };
+    }
+  }
+
+  featureIds = primitive.featureIds[model.featureIdIndex];
+  if (defined(featureIds)) {
+    return {
+      hasFeatureIds: true,
+      hasPropertyTable: defined(featureIds.propertyTableId),
+    };
+  }
+
+  return {
+    hasFeatureIds: false,
+    hasPropertyTable: false,
+  };
+}

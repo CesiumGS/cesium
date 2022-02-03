@@ -124,7 +124,7 @@ Color.fromBytes = function (red, green, blue, alpha, result) {
  * @param {Color} [result] The object onto which to store the result.
  * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
  *
- * @example var translucentRed = Cesium.Color.fromAlpha(Cesium.Color.RED, 0.9);
+ * @example const translucentRed = Cesium.Color.fromAlpha(Cesium.Color.RED, 0.9);
  */
 Color.fromAlpha = function (color, alpha, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -161,7 +161,7 @@ if (FeatureDetection.supportsTypedArrays()) {
  * @returns {Color} The color object.
  *
  * @example
- * var color = Cesium.Color.fromRgba(0x67ADDFFF);
+ * const color = Cesium.Color.fromRgba(0x67ADDFFF);
  *
  * @see Color#toRgba
  */
@@ -251,17 +251,17 @@ Color.fromHsl = function (hue, saturation, lightness, alpha, result) {
  *
  * @example
  * //Create a completely random color
- * var color = Cesium.Color.fromRandom();
+ * const color = Cesium.Color.fromRandom();
  *
  * //Create a random shade of yellow.
- * var color = Cesium.Color.fromRandom({
+ * const color1 = Cesium.Color.fromRandom({
  *     red : 1.0,
  *     green : 1.0,
  *     alpha : 1.0
  * });
  *
  * //Create a random bright color.
- * var color = Cesium.Color.fromRandom({
+ * const color2 = Cesium.Color.fromRandom({
  *     minimumRed : 0.75,
  *     minimumGreen : 0.75,
  *     minimumBlue : 0.75,
@@ -365,8 +365,8 @@ const hslParenthesesMatcher = /^hsla?\(\s*([0-9.]+)\s*,\s*([0-9.]+%)\s*,\s*([0-9
  *
  *
  * @example
- * var cesiumBlue = Cesium.Color.fromCssColorString('#67ADDF');
- * var green = Cesium.Color.fromCssColorString('green');
+ * const cesiumBlue = Cesium.Color.fromCssColorString('#67ADDF');
+ * const green = Cesium.Color.fromCssColorString('green');
  *
  * @see {@link http://www.w3.org/TR/css3-color|CSS color values}
  */
@@ -605,17 +605,7 @@ Color.prototype.equalsEpsilon = function (other, epsilon) {
  * @returns {String} A string representing this Color in the format '(red, green, blue, alpha)'.
  */
 Color.prototype.toString = function () {
-  return (
-    "(" +
-    this.red +
-    ", " +
-    this.green +
-    ", " +
-    this.blue +
-    ", " +
-    this.alpha +
-    ")"
-  );
+  return `(${this.red}, ${this.green}, ${this.blue}, ${this.alpha})`;
 };
 
 /**
@@ -630,9 +620,9 @@ Color.prototype.toCssColorString = function () {
   const green = Color.floatToByte(this.green);
   const blue = Color.floatToByte(this.blue);
   if (this.alpha === 1) {
-    return "rgb(" + red + "," + green + "," + blue + ")";
+    return `rgb(${red},${green},${blue})`;
   }
-  return "rgba(" + red + "," + green + "," + blue + "," + this.alpha + ")";
+  return `rgba(${red},${green},${blue},${this.alpha})`;
 };
 
 /**
@@ -643,24 +633,24 @@ Color.prototype.toCssColorString = function () {
 Color.prototype.toCssHexString = function () {
   let r = Color.floatToByte(this.red).toString(16);
   if (r.length < 2) {
-    r = "0" + r;
+    r = `0${r}`;
   }
   let g = Color.floatToByte(this.green).toString(16);
   if (g.length < 2) {
-    g = "0" + g;
+    g = `0${g}`;
   }
   let b = Color.floatToByte(this.blue).toString(16);
   if (b.length < 2) {
-    b = "0" + b;
+    b = `0${b}`;
   }
   if (this.alpha < 1) {
     let hexAlpha = Color.floatToByte(this.alpha).toString(16);
     if (hexAlpha.length < 2) {
-      hexAlpha = "0" + hexAlpha;
+      hexAlpha = `0${hexAlpha}`;
     }
-    return "#" + r + g + b + hexAlpha;
+    return `#${r}${g}${b}${hexAlpha}`;
   }
-  return "#" + r + g + b;
+  return `#${r}${g}${b}`;
 };
 
 /**
@@ -694,7 +684,7 @@ Color.prototype.toBytes = function (result) {
  *
  *
  * @example
- * var rgba = Cesium.Color.BLUE.toRgba();
+ * const rgba = Cesium.Color.BLUE.toRgba();
  *
  * @see Color.fromRgba
  */
@@ -715,7 +705,7 @@ Color.prototype.toRgba = function () {
  * @returns {Color} The modified result parameter.
  *
  * @example
- * var brightBlue = Cesium.Color.BLUE.brighten(0.5, new Cesium.Color());
+ * const brightBlue = Cesium.Color.BLUE.brighten(0.5, new Cesium.Color());
  */
 Color.prototype.brighten = function (magnitude, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -740,7 +730,7 @@ Color.prototype.brighten = function (magnitude, result) {
  * @returns {Color} The modified result parameter.
  *
  * @example
- * var darkBlue = Cesium.Color.BLUE.darken(0.5, new Cesium.Color());
+ * const darkBlue = Cesium.Color.BLUE.darken(0.5, new Cesium.Color());
  */
 Color.prototype.darken = function (magnitude, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -765,7 +755,7 @@ Color.prototype.darken = function (magnitude, result) {
  * @param {Color} [result] The object onto which to store the result.
  * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
  *
- * @example var translucentRed = Cesium.Color.RED.withAlpha(0.9);
+ * @example const translucentRed = Cesium.Color.RED.withAlpha(0.9);
  */
 Color.prototype.withAlpha = function (alpha, result) {
   return Color.fromAlpha(this, alpha, result);

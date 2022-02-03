@@ -100,6 +100,8 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
  * @param {Boolean} [options.vectorClassificationOnly=false] Indicates that only the tileset's vector tiles should be used for classification.
  * @param {Boolean} [options.vectorKeepDecodedPositions=false] Whether vector tiles should keep decoded positions in memory. This is used with {@link Cesium3DTileFeature.getPolylinePositions}.
+ * @param {Number} [options.featureIdIndex=0] The index into the list of primitive feature IDs used for picking and styling. For EXT_feature_metadata, feature ID attributes are listed before feature ID textures. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {Number} [options.instanceFeatureIdIndex=0] The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
@@ -115,13 +117,13 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
  *
  * @example
- * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
+ * const tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
  *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json'
  * }));
  *
  * @example
  * // Common setting for the skipLevelOfDetail optimization
- * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
+ * const tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
  *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json',
  *      skipLevelOfDetail : true,
  *      baseScreenSpaceError : 1024,
@@ -134,7 +136,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  *
  * @example
  * // Common settings for the dynamicScreenSpaceError optimization
- * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
+ * const tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
  *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json',
  *      dynamicScreenSpaceError : true,
  *      dynamicScreenSpaceErrorDensity : 0.00278,
@@ -620,9 +622,9 @@ function Cesium3DTileset(options) {
    *     color : 'color("red")'
    * });
    * tileset.tileVisible.addEventListener(function(tile) {
-   *     var content = tile.content;
-   *     var featuresLength = content.featuresLength;
-   *     for (var i = 0; i < featuresLength; i+=2) {
+   *     const content = tile.content;
+   *     const featuresLength = content.featuresLength;
+   *     for (let i = 0; i < featuresLength; i+=2) {
    *         content.getFeature(i).color = Cesium.Color.fromRandom();
    *     }
    * });
@@ -963,6 +965,27 @@ function Cesium3DTileset(options) {
     ExperimentalFeatures.enableModelExperimental
   );
 
+  /**
+   * The index into the list of primitive feature IDs used for picking and
+   * styling. For EXT_feature_metadata, feature ID attributes are listed before
+   * feature ID textures. If both per-primitive and per-instance feature IDs are
+   * present, the instance feature IDs take priority.
+   *
+   * @type {Number}
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  this.featureIdIndex = defaultValue(options.featureIdIndex, 0);
+
+  /**
+   * The index into the list of instance feature IDs used for picking and
+   * styling. If both per-primitive and per-instance feature IDs are present,
+   * the instance feature IDs take priority.
+   *
+   * @type {Number}
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  this.instanceFeatureIdIndex = defaultValue(options.instanceFeatureIdIndex, 0);
+
   this._schemaLoader = undefined;
 
   const that = this;
@@ -1205,9 +1228,9 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * @example
    * tileset.readyPromise.then(function(tileset) {
    *     // tile.properties is not defined until readyPromise resolves.
-   *     var properties = tileset.properties;
+   *     const properties = tileset.properties;
    *     if (Cesium.defined(properties)) {
-   *         for (var name in properties) {
+   *         for (const name in properties) {
    *             console.log(properties[name]);
    *         }
    *     }
@@ -1481,7 +1504,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
    *
    * @example
-   * var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+   * const tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
    *     url : 'http://localhost:8002/tilesets/Seattle/tileset.json'
    * }));
    *
@@ -1515,12 +1538,12 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    *
    * @example
    * // Adjust a tileset's height from the globe's surface.
-   * var heightOffset = 20.0;
-   * var boundingSphere = tileset.boundingSphere;
-   * var cartographic = Cesium.Cartographic.fromCartesian(boundingSphere.center);
-   * var surface = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0);
-   * var offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, heightOffset);
-   * var translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
+   * const heightOffset = 20.0;
+   * const boundingSphere = tileset.boundingSphere;
+   * const cartographic = Cesium.Cartographic.fromCartesian(boundingSphere.center);
+   * const surface = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0);
+   * const offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, heightOffset);
+   * const translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
    * tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
    */
   modelMatrix: {
@@ -1859,7 +1882,7 @@ Cesium3DTileset.prototype.loadTileset = function (
   const tilesetVersion = asset.tilesetVersion;
   if (defined(tilesetVersion)) {
     // Append the tileset version to the resource
-    this._basePath += "?v=" + tilesetVersion;
+    this._basePath += `?v=${tilesetVersion}`;
     resource = resource.clone();
     resource.setQueryParameters({ v: tilesetVersion });
   }
@@ -2260,8 +2283,8 @@ function handleTileFailure(tileset, tile) {
         message: message,
       });
     } else {
-      console.log("A 3D tile failed to load: " + url);
-      console.log("Error: " + message);
+      console.log(`A 3D tile failed to load: ${url}`);
+      console.log(`Error: ${message}`);
     }
   };
 }
@@ -2356,38 +2379,38 @@ function addTileDebugLabel(tile, tileset, position) {
   let attributes = 0;
 
   if (tileset.debugShowGeometricError) {
-    labelString += "\nGeometric error: " + tile.geometricError;
+    labelString += `\nGeometric error: ${tile.geometricError}`;
     attributes++;
   }
 
   if (tileset.debugShowRenderingStatistics) {
-    labelString += "\nCommands: " + tile.commandsLength;
+    labelString += `\nCommands: ${tile.commandsLength}`;
     attributes++;
 
     // Don't display number of points or triangles if 0.
     const numberOfPoints = tile.content.pointsLength;
     if (numberOfPoints > 0) {
-      labelString += "\nPoints: " + tile.content.pointsLength;
+      labelString += `\nPoints: ${tile.content.pointsLength}`;
       attributes++;
     }
 
     const numberOfTriangles = tile.content.trianglesLength;
     if (numberOfTriangles > 0) {
-      labelString += "\nTriangles: " + tile.content.trianglesLength;
+      labelString += `\nTriangles: ${tile.content.trianglesLength}`;
       attributes++;
     }
 
-    labelString += "\nFeatures: " + tile.content.featuresLength;
+    labelString += `\nFeatures: ${tile.content.featuresLength}`;
     attributes++;
   }
 
   if (tileset.debugShowMemoryUsage) {
-    labelString +=
-      "\nTexture Memory: " +
-      formatMemoryString(tile.content.texturesByteLength);
-    labelString +=
-      "\nGeometry Memory: " +
-      formatMemoryString(tile.content.geometryByteLength);
+    labelString += `\nTexture Memory: ${formatMemoryString(
+      tile.content.texturesByteLength
+    )}`;
+    labelString += `\nGeometry Memory: ${formatMemoryString(
+      tile.content.geometryByteLength
+    )}`;
     attributes += 2;
   }
 
@@ -2396,11 +2419,11 @@ function addTileDebugLabel(tile, tileset, position) {
       labelString += "\nUrls:";
       const urls = tile.content.innerContentUrls;
       for (let i = 0; i < urls.length; i++) {
-        labelString += "\n- " + urls[i];
+        labelString += `\n- ${urls[i]}`;
       }
       attributes += urls.length;
     } else {
-      labelString += "\nUrl: " + tile._header.content.uri;
+      labelString += `\nUrl: ${tile._header.content.uri}`;
       attributes++;
     }
   }
@@ -2408,7 +2431,7 @@ function addTileDebugLabel(tile, tileset, position) {
   const newLabel = {
     text: labelString.substring(1),
     position: position,
-    font: 19 - attributes + "px sans-serif",
+    font: `${19 - attributes}px sans-serif`,
     showBackground: true,
     disableDepthTestDistance: Number.POSITIVE_INFINITY,
   };
@@ -2933,7 +2956,7 @@ Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
   for (let i = 0; i < extensionsRequired.length; i++) {
     if (!Cesium3DTileset.supportedExtensions[extensionsRequired[i]]) {
       throw new RuntimeError(
-        "Unsupported 3D Tiles Extension: " + extensionsRequired[i]
+        `Unsupported 3D Tiles Extension: ${extensionsRequired[i]}`
       );
     }
   }

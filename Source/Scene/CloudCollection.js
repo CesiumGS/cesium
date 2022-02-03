@@ -91,7 +91,7 @@ const COLOR_INDEX = CumulusCloud.COLOR_INDEX;
  *
  * @example
  * // Create a cloud collection with two cumulus clouds
- * var clouds = scene.primitives.add(new Cesium.CloudCollection());
+ * const clouds = scene.primitives.add(new Cesium.CloudCollection());
  * clouds.add({
  *   position : new Cesium.Cartesian3(1.0, 2.0, 3.0),
  *   maximumSize: new Cesium.Cartesian3(20.0, 12.0, 8.0)
@@ -279,7 +279,7 @@ function destroyClouds(clouds) {
  *
  * @example
  * // Example 1:  Add a cumulus cloud, specifying all the default values.
- * var c = clouds.add({
+ * const c = clouds.add({
  *   show : true,
  *   position : Cesium.Cartesian3.ZERO,
  *   scale : new Cesium.Cartesian2(20.0, 12.0),
@@ -290,7 +290,7 @@ function destroyClouds(clouds) {
  *
  * @example
  * // Example 2:  Specify only the cloud's cartographic position.
- * var c = clouds.add({
+ * const c = clouds.add({
  *   position : Cesium.Cartesian3.fromDegrees(longitude, latitude, height)
  * });
  *
@@ -327,7 +327,7 @@ CloudCollection.prototype.add = function (options) {
  *
  *
  * @example
- * var c = clouds.add(...);
+ * const c = clouds.add(...);
  * clouds.remove(c);  // Returns true
  *
  * @see CloudCollection#add
@@ -429,9 +429,9 @@ CloudCollection.prototype.contains = function (cloud) {
  *
  * @example
  * // Toggle the show property of every cloud in the collection
- * var len = clouds.length;
- * for (var i = 0; i < len; ++i) {
- *   var c = clouds.get(i);
+ * const len = clouds.length;
+ * for (let i = 0; i < len; ++i) {
+ *   const c = clouds.get(i);
  *   c.show = !c.show;
  * }
  *

@@ -132,7 +132,7 @@ function createSpecializedProperty(type, entityCollection, packetData) {
     }
   }
 
-  throw new RuntimeError(JSON.stringify(packetData) + " is not valid CZML.");
+  throw new RuntimeError(`${JSON.stringify(packetData)} is not valid CZML.`);
 }
 
 function createAdapterProperty(property, adapterFunction) {
@@ -380,7 +380,7 @@ function unwrapCartesianInterval(czmlInterval) {
   }
 
   throw new RuntimeError(
-    JSON.stringify(czmlInterval) + " is not a valid CZML interval."
+    `${JSON.stringify(czmlInterval)} is not a valid CZML interval.`
   );
 }
 

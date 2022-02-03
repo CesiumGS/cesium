@@ -81,10 +81,12 @@ describe("Scene/ShadowVolumeAppearance", function () {
     eastMostCartesian.x,
     longitudeExtentsEncodeScratch
   );
-  const eastMostYhighDefine =
-    "EAST_MOST_X_HIGH " + encoded.high.toFixed((encoded.high + "").length + 1);
-  const eastMostYlowDefine =
-    "EAST_MOST_X_LOW " + encoded.low.toFixed((encoded.low + "").length + 1);
+  const eastMostYhighDefine = `EAST_MOST_X_HIGH ${encoded.high.toFixed(
+    `${encoded.high}`.length + 1
+  )}`;
+  const eastMostYlowDefine = `EAST_MOST_X_LOW ${encoded.low.toFixed(
+    `${encoded.low}`.length + 1
+  )}`;
 
   const westMostCartographic = new Cartographic();
   westMostCartographic.longitude = -CesiumMath.PI;
@@ -95,10 +97,12 @@ describe("Scene/ShadowVolumeAppearance", function () {
     westMostCartesian.x,
     longitudeExtentsEncodeScratch
   );
-  const westMostYhighDefine =
-    "WEST_MOST_X_HIGH " + encoded.high.toFixed((encoded.high + "").length + 1);
-  const westMostYlowDefine =
-    "WEST_MOST_X_LOW " + encoded.low.toFixed((encoded.low + "").length + 1);
+  const westMostYhighDefine = `WEST_MOST_X_HIGH ${encoded.high.toFixed(
+    `${encoded.high}`.length + 1
+  )}`;
+  const westMostYlowDefine = `WEST_MOST_X_LOW ${encoded.low.toFixed(
+    `${encoded.low}`.length + 1
+  )}`;
 
   it("provides attributes for computing texture coordinates from Spherical extents", function () {
     const attributes = largeRectangleAttributes;

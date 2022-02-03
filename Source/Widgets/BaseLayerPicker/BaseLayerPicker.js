@@ -40,7 +40,7 @@ import BaseLayerPickerViewModel from "./BaseLayerPickerViewModel.js";
  *
  * //Create the list of available providers we would like the user to select from.
  * //This example uses 3, OpenStreetMap, The Black Marble, and a single, non-streaming world image.
- * var imageryViewModels = [];
+ * const imageryViewModels = [];
  * imageryViewModels.push(new Cesium.ProviderViewModel({
  *      name : 'Open\u00adStreet\u00adMap',
  *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/openStreetMap.png'),
@@ -75,11 +75,11 @@ import BaseLayerPickerViewModel from "./BaseLayerPickerViewModel.js";
  *  }));
  *
  * //Create a CesiumWidget without imagery, if you haven't already done so.
- * var cesiumWidget = new Cesium.CesiumWidget('cesiumContainer', { imageryProvider: false });
+ * const cesiumWidget = new Cesium.CesiumWidget('cesiumContainer', { imageryProvider: false });
  *
  * //Finally, create the baseLayerPicker widget using our view models.
- * var layers = cesiumWidget.imageryLayers;
- * var baseLayerPicker = new Cesium.BaseLayerPicker('baseLayerPickerContainer', {
+ * const layers = cesiumWidget.imageryLayers;
+ * const baseLayerPicker = new Cesium.BaseLayerPicker('baseLayerPickerContainer', {
  *     globe : cesiumWidget.scene.globe,
  *     imageryProviderViewModels : imageryViewModels
  * });

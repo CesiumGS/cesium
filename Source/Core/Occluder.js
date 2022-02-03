@@ -22,9 +22,9 @@ import Visibility from "./Visibility.js";
  *
  * @example
  * // Construct an occluder one unit away from the origin with a radius of one.
- * var cameraPosition = Cesium.Cartesian3.ZERO;
- * var occluderBoundingSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 1);
- * var occluder = new Cesium.Occluder(occluderBoundingSphere, cameraPosition);
+ * const cameraPosition = Cesium.Cartesian3.ZERO;
+ * const occluderBoundingSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 1);
+ * const occluder = new Cesium.Occluder(occluderBoundingSphere, cameraPosition);
  */
 function Occluder(occluderBoundingSphere, cameraPosition) {
   //>>includeStart('debug', pragmas.debug);
@@ -179,10 +179,10 @@ const tempVecScratch = new Cartesian3();
  *
  *
  * @example
- * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
- * var littleSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 0.25);
- * var occluder = new Cesium.Occluder(littleSphere, cameraPosition);
- * var point = new Cesium.Cartesian3(0, 0, -3);
+ * const cameraPosition = new Cesium.Cartesian3(0, 0, 0);
+ * const littleSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 0.25);
+ * const occluder = new Cesium.Occluder(littleSphere, cameraPosition);
+ * const point = new Cesium.Cartesian3(0, 0, -3);
  * occluder.isPointVisible(point); //returns true
  *
  * @see Occluder#computeVisibility
@@ -215,10 +215,10 @@ const occludeePositionScratch = new Cartesian3();
  *
  *
  * @example
- * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
- * var littleSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 0.25);
- * var occluder = new Cesium.Occluder(littleSphere, cameraPosition);
- * var bigSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -3), 1);
+ * const cameraPosition = new Cesium.Cartesian3(0, 0, 0);
+ * const littleSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 0.25);
+ * const occluder = new Cesium.Occluder(littleSphere, cameraPosition);
+ * const bigSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -3), 1);
  * occluder.isBoundingSphereVisible(bigSphere); //returns true
  *
  * @see Occluder#computeVisibility
@@ -296,10 +296,10 @@ const tempScratch = new Cartesian3();
  *
  *
  * @example
- * var sphere1 = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1.5), 0.5);
- * var sphere2 = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -2.5), 0.5);
- * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
- * var occluder = new Cesium.Occluder(sphere1, cameraPosition);
+ * const sphere1 = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1.5), 0.5);
+ * const sphere2 = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -2.5), 0.5);
+ * const cameraPosition = new Cesium.Cartesian3(0, 0, 0);
+ * const occluder = new Cesium.Occluder(sphere1, cameraPosition);
  * occluder.computeVisibility(sphere2); //returns Visibility.NONE
  *
  * @see Occluder#isVisible
@@ -396,13 +396,13 @@ const occludeePointScratch = new Cartesian3();
  * @exception {DeveloperError} <code>occludeePosition</code> must have a value other than <code>occluderBoundingSphere.center</code>.
  *
  * @example
- * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
- * var occluderBoundingSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -8), 2);
- * var occluder = new Cesium.Occluder(occluderBoundingSphere, cameraPosition);
- * var positions = [new Cesium.Cartesian3(-0.25, 0, -5.3), new Cesium.Cartesian3(0.25, 0, -5.3)];
- * var tileOccluderSphere = Cesium.BoundingSphere.fromPoints(positions);
- * var occludeePosition = tileOccluderSphere.center;
- * var occludeePt = Cesium.Occluder.computeOccludeePoint(occluderBoundingSphere, occludeePosition, positions);
+ * const cameraPosition = new Cesium.Cartesian3(0, 0, 0);
+ * const occluderBoundingSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -8), 2);
+ * const occluder = new Cesium.Occluder(occluderBoundingSphere, cameraPosition);
+ * const positions = [new Cesium.Cartesian3(-0.25, 0, -5.3), new Cesium.Cartesian3(0.25, 0, -5.3)];
+ * const tileOccluderSphere = Cesium.BoundingSphere.fromPoints(positions);
+ * const occludeePosition = tileOccluderSphere.center;
+ * const occludeePt = Cesium.Occluder.computeOccludeePoint(occluderBoundingSphere, occludeePosition, positions);
  */
 Occluder.computeOccludeePoint = function (
   occluderBoundingSphere,

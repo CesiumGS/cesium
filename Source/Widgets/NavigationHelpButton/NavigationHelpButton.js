@@ -25,7 +25,7 @@ import NavigationHelpButtonViewModel from "./NavigationHelpButtonViewModel.js";
  * // In HTML head, include a link to the NavigationHelpButton.css stylesheet,
  * // and in the body, include: <div id="navigationHelpButtonContainer"></div>
  *
- * var navigationHelpButton = new Cesium.NavigationHelpButton({
+ * const navigationHelpButton = new Cesium.NavigationHelpButton({
  *     container : 'navigationHelpButtonContainer'
  * });
  */
@@ -116,22 +116,21 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
     "data-bind",
     'css: { "cesium-click-navigation-help-visible" : !_touch}'
   );
-  clickInstructions.innerHTML =
-    '\
+  clickInstructions.innerHTML = `\
             <table>\
                 <tr>\
-                    <td><img src="' +
-    buildModuleUrl("Widgets/Images/NavigationHelp/MouseLeft.svg") +
-    '" width="48" height="48" /></td>\
+                    <td><img src="${buildModuleUrl(
+                      "Widgets/Images/NavigationHelp/MouseLeft.svg"
+                    )}" width="48" height="48" /></td>\
                     <td>\
                         <div class="cesium-navigation-help-pan">Pan view</div>\
                         <div class="cesium-navigation-help-details">Left click + drag</div>\
                     </td>\
                 </tr>\
                 <tr>\
-                    <td><img src="' +
-    buildModuleUrl("Widgets/Images/NavigationHelp/MouseRight.svg") +
-    '" width="48" height="48" /></td>\
+                    <td><img src="${buildModuleUrl(
+                      "Widgets/Images/NavigationHelp/MouseRight.svg"
+                    )}" width="48" height="48" /></td>\
                     <td>\
                         <div class="cesium-navigation-help-zoom">Zoom view</div>\
                         <div class="cesium-navigation-help-details">Right click + drag, or</div>\
@@ -139,16 +138,16 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
                     </td>\
                 </tr>\
                 <tr>\
-                    <td><img src="' +
-    buildModuleUrl("Widgets/Images/NavigationHelp/MouseMiddle.svg") +
-    '" width="48" height="48" /></td>\
+                    <td><img src="${buildModuleUrl(
+                      "Widgets/Images/NavigationHelp/MouseMiddle.svg"
+                    )}" width="48" height="48" /></td>\
                     <td>\
                         <div class="cesium-navigation-help-rotate">Rotate view</div>\
                         <div class="cesium-navigation-help-details">Middle click + drag, or</div>\
                         <div class="cesium-navigation-help-details">CTRL + Left/Right click + drag</div>\
                     </td>\
                 </tr>\
-            </table>';
+            </table>`;
 
   instructionContainer.appendChild(clickInstructions);
 
@@ -159,46 +158,45 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }"
     "data-bind",
     'css: { "cesium-touch-navigation-help-visible" : _touch}'
   );
-  touchInstructions.innerHTML =
-    '\
+  touchInstructions.innerHTML = `\
             <table>\
                 <tr>\
-                    <td><img src="' +
-    buildModuleUrl("Widgets/Images/NavigationHelp/TouchDrag.svg") +
-    '" width="70" height="48" /></td>\
+                    <td><img src="${buildModuleUrl(
+                      "Widgets/Images/NavigationHelp/TouchDrag.svg"
+                    )}" width="70" height="48" /></td>\
                     <td>\
                         <div class="cesium-navigation-help-pan">Pan view</div>\
                         <div class="cesium-navigation-help-details">One finger drag</div>\
                     </td>\
                 </tr>\
                 <tr>\
-                    <td><img src="' +
-    buildModuleUrl("Widgets/Images/NavigationHelp/TouchZoom.svg") +
-    '" width="70" height="48" /></td>\
+                    <td><img src="${buildModuleUrl(
+                      "Widgets/Images/NavigationHelp/TouchZoom.svg"
+                    )}" width="70" height="48" /></td>\
                     <td>\
                         <div class="cesium-navigation-help-zoom">Zoom view</div>\
                         <div class="cesium-navigation-help-details">Two finger pinch</div>\
                     </td>\
                 </tr>\
                 <tr>\
-                    <td><img src="' +
-    buildModuleUrl("Widgets/Images/NavigationHelp/TouchTilt.svg") +
-    '" width="70" height="48" /></td>\
+                    <td><img src="${buildModuleUrl(
+                      "Widgets/Images/NavigationHelp/TouchTilt.svg"
+                    )}" width="70" height="48" /></td>\
                     <td>\
                         <div class="cesium-navigation-help-rotate">Tilt view</div>\
                         <div class="cesium-navigation-help-details">Two finger drag, same direction</div>\
                     </td>\
                 </tr>\
                 <tr>\
-                    <td><img src="' +
-    buildModuleUrl("Widgets/Images/NavigationHelp/TouchRotate.svg") +
-    '" width="70" height="48" /></td>\
+                    <td><img src="${buildModuleUrl(
+                      "Widgets/Images/NavigationHelp/TouchRotate.svg"
+                    )}" width="70" height="48" /></td>\
                     <td>\
                         <div class="cesium-navigation-help-tilt">Rotate view</div>\
                         <div class="cesium-navigation-help-details">Two finger drag, opposite direction</div>\
                     </td>\
                 </tr>\
-            </table>';
+            </table>`;
 
   instructionContainer.appendChild(touchInstructions);
 

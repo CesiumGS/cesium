@@ -243,12 +243,12 @@ Cartesian3.unpackArray = function (array, result) {
  *
  * @example
  * // Create a Cartesian3 with (1.0, 2.0, 3.0)
- * var v = [1.0, 2.0, 3.0];
- * var p = Cesium.Cartesian3.fromArray(v);
+ * const v = [1.0, 2.0, 3.0];
+ * const p = Cesium.Cartesian3.fromArray(v);
  *
  * // Create a Cartesian3 with (1.0, 2.0, 3.0) using an offset into an array
- * var v2 = [0.0, 0.0, 1.0, 2.0, 3.0];
- * var p2 = Cesium.Cartesian3.fromArray(v2, 2);
+ * const v2 = [0.0, 0.0, 1.0, 2.0, 3.0];
+ * const p2 = Cesium.Cartesian3.fromArray(v2, 2);
  */
 Cartesian3.fromArray = Cartesian3.unpack;
 
@@ -362,7 +362,7 @@ const distanceScratch = new Cartesian3();
  *
  * @example
  * // Returns 1.0
- * var d = Cesium.Cartesian3.distance(new Cesium.Cartesian3(1.0, 0.0, 0.0), new Cesium.Cartesian3(2.0, 0.0, 0.0));
+ * const d = Cesium.Cartesian3.distance(new Cesium.Cartesian3(1.0, 0.0, 0.0), new Cesium.Cartesian3(2.0, 0.0, 0.0));
  */
 Cartesian3.distance = function (left, right) {
   //>>includeStart('debug', pragmas.debug);
@@ -384,7 +384,7 @@ Cartesian3.distance = function (left, right) {
  *
  * @example
  * // Returns 4.0, not 2.0
- * var d = Cesium.Cartesian3.distanceSquared(new Cesium.Cartesian3(1.0, 0.0, 0.0), new Cesium.Cartesian3(3.0, 0.0, 0.0));
+ * const d = Cesium.Cartesian3.distanceSquared(new Cesium.Cartesian3(1.0, 0.0, 0.0), new Cesium.Cartesian3(3.0, 0.0, 0.0));
  */
 Cartesian3.distanceSquared = function (left, right) {
   //>>includeStart('debug', pragmas.debug);
@@ -841,7 +841,7 @@ Cartesian3.midpoint = function (left, right, result) {
  * @returns {Cartesian3} The position
  *
  * @example
- * var position = Cesium.Cartesian3.fromDegrees(-115.0, 37.0);
+ * const position = Cesium.Cartesian3.fromDegrees(-115.0, 37.0);
  */
 Cartesian3.fromDegrees = function (
   longitude,
@@ -879,7 +879,7 @@ const wgs84RadiiSquared = new Cartesian3(
  * @returns {Cartesian3} The position
  *
  * @example
- * var position = Cesium.Cartesian3.fromRadians(-2.007, 0.645);
+ * const position = Cesium.Cartesian3.fromRadians(-2.007, 0.645);
  */
 Cartesian3.fromRadians = function (
   longitude,
@@ -924,7 +924,7 @@ Cartesian3.fromRadians = function (
  * @returns {Cartesian3[]} The array of positions.
  *
  * @example
- * var positions = Cesium.Cartesian3.fromDegreesArray([-115.0, 37.0, -107.0, 33.0]);
+ * const positions = Cesium.Cartesian3.fromDegreesArray([-115.0, 37.0, -107.0, 33.0]);
  */
 Cartesian3.fromDegreesArray = function (coordinates, ellipsoid, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -968,7 +968,7 @@ Cartesian3.fromDegreesArray = function (coordinates, ellipsoid, result) {
  * @returns {Cartesian3[]} The array of positions.
  *
  * @example
- * var positions = Cesium.Cartesian3.fromRadiansArray([-2.007, 0.645, -1.867, .575]);
+ * const positions = Cesium.Cartesian3.fromRadiansArray([-2.007, 0.645, -1.867, .575]);
  */
 Cartesian3.fromRadiansArray = function (coordinates, ellipsoid, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -1012,7 +1012,7 @@ Cartesian3.fromRadiansArray = function (coordinates, ellipsoid, result) {
  * @returns {Cartesian3[]} The array of positions.
  *
  * @example
- * var positions = Cesium.Cartesian3.fromDegreesArrayHeights([-115.0, 37.0, 100000.0, -107.0, 33.0, 150000.0]);
+ * const positions = Cesium.Cartesian3.fromDegreesArrayHeights([-115.0, 37.0, 100000.0, -107.0, 33.0, 150000.0]);
  */
 Cartesian3.fromDegreesArrayHeights = function (coordinates, ellipsoid, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -1057,7 +1057,7 @@ Cartesian3.fromDegreesArrayHeights = function (coordinates, ellipsoid, result) {
  * @returns {Cartesian3[]} The array of positions.
  *
  * @example
- * var positions = Cesium.Cartesian3.fromRadiansArrayHeights([-2.007, 0.645, 100000.0, -1.867, .575, 150000.0]);
+ * const positions = Cesium.Cartesian3.fromRadiansArrayHeights([-2.007, 0.645, 100000.0, -1.867, .575, 150000.0]);
  */
 Cartesian3.fromRadiansArrayHeights = function (coordinates, ellipsoid, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -1183,6 +1183,6 @@ Cartesian3.prototype.equalsEpsilon = function (
  * @returns {String} A string representing this Cartesian in the format '(x, y, z)'.
  */
 Cartesian3.prototype.toString = function () {
-  return "(" + this.x + ", " + this.y + ", " + this.z + ")";
+  return `(${this.x}, ${this.y}, ${this.z})`;
 };
 export default Cartesian3;

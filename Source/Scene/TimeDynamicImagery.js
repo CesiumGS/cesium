@@ -215,7 +215,7 @@ TimeDynamicImagery.prototype._clockOnTick = function (clock) {
 };
 
 function getKey(x, y, level) {
-  return x + "-" + y + "-" + level;
+  return `${x}-${y}-${level}`;
 }
 
 function getKeyElements(key) {

@@ -66,10 +66,10 @@ loadKTX2.setKTX2SupportedFormats = function (
  * @example
  * // load a single URL asynchronously
  * Cesium.loadKTX2('some/url').then(function (ktx2Data) {
- *     var width = ktx2Data.width;
- *     var height = ktx2Data.height;
- *     var format = ktx2Data.internalFormat;
- *     var arrayBufferView = ktx2Data.bufferView;
+ *     const width = ktx2Data.width;
+ *     const height = ktx2Data.height;
+ *     const format = ktx2Data.internalFormat;
+ *     const arrayBufferView = ktx2Data.bufferView;
  *     // use the data to create a texture
  * }).otherwise(function (error) {
  *     // an error occurred.

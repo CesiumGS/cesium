@@ -89,7 +89,7 @@
           const splitPosition =
             (slider.offsetLeft + relativeOffset) /
             slider.parentElement.offsetWidth;
-          slider.style.left = 100.0 * splitPosition + "%";
+          slider.style.left = `${100.0 * splitPosition}%`;
           viewer.scene.imagerySplitPosition = splitPosition;
         }
 

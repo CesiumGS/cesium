@@ -23,7 +23,7 @@ import PerspectiveOffCenterFrustum from "./PerspectiveOffCenterFrustum.js";
  * @param {Number} [options.yOffset=0.0] The offset in the y direction.
  *
  * @example
- * var frustum = new Cesium.PerspectiveFrustum({
+ * const frustum = new Cesium.PerspectiveFrustum({
  *     fov : Cesium.Math.PI_OVER_THREE,
  *     aspectRatio : canvas.clientWidth / canvas.clientHeight
  *     near : 1.0,
@@ -286,8 +286,8 @@ Object.defineProperties(PerspectiveFrustum.prototype, {
  *
  * @example
  * // Check if a bounding volume intersects the frustum.
- * var cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
- * var intersect = cullingVolume.computeVisibility(boundingVolume);
+ * const cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
+ * const intersect = cullingVolume.computeVisibility(boundingVolume);
  */
 PerspectiveFrustum.prototype.computeCullingVolume = function (
   position,
@@ -315,18 +315,18 @@ PerspectiveFrustum.prototype.computeCullingVolume = function (
  * @example
  * // Example 1
  * // Get the width and height of a pixel.
- * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 1.0, scene.pixelRatio, new Cesium.Cartesian2());
+ * const pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 1.0, scene.pixelRatio, new Cesium.Cartesian2());
  *
  * @example
  * // Example 2
  * // Get the width and height of a pixel if the near plane was set to 'distance'.
  * // For example, get the size of a pixel of an image on a billboard.
- * var position = camera.position;
- * var direction = camera.direction;
- * var toCenter = Cesium.Cartesian3.subtract(primitive.boundingVolume.center, position, new Cesium.Cartesian3());      // vector from camera to a primitive
- * var toCenterProj = Cesium.Cartesian3.multiplyByScalar(direction, Cesium.Cartesian3.dot(direction, toCenter), new Cesium.Cartesian3()); // project vector onto camera direction vector
- * var distance = Cesium.Cartesian3.magnitude(toCenterProj);
- * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, distance, scene.pixelRatio, new Cesium.Cartesian2());
+ * const position = camera.position;
+ * const direction = camera.direction;
+ * const toCenter = Cesium.Cartesian3.subtract(primitive.boundingVolume.center, position, new Cesium.Cartesian3());      // vector from camera to a primitive
+ * const toCenterProj = Cesium.Cartesian3.multiplyByScalar(direction, Cesium.Cartesian3.dot(direction, toCenter), new Cesium.Cartesian3()); // project vector onto camera direction vector
+ * const distance = Cesium.Cartesian3.magnitude(toCenterProj);
+ * const pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, distance, scene.pixelRatio, new Cesium.Cartesian2());
  */
 PerspectiveFrustum.prototype.getPixelDimensions = function (
   drawingBufferWidth,

@@ -40,12 +40,12 @@ const sin = Math.sin;
  * @exception {DeveloperError} options.subdivisions must be greater than or equal to zero.
  *
  * @example
- * var ellipsoid = new Cesium.EllipsoidOutlineGeometry({
+ * const ellipsoid = new Cesium.EllipsoidOutlineGeometry({
  *   radii : new Cesium.Cartesian3(1000000.0, 500000.0, 500000.0),
  *   stackPartitions: 6,
  *   slicePartitions: 5
  * });
- * var geometry = Cesium.EllipsoidOutlineGeometry.createGeometry(ellipsoid);
+ * const geometry = Cesium.EllipsoidOutlineGeometry.createGeometry(ellipsoid);
  */
 function EllipsoidOutlineGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

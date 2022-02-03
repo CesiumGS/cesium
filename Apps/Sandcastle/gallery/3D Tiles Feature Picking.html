@@ -129,9 +129,10 @@
 
             // A feature was picked, so show it's overlay content
             nameOverlay.style.display = "block";
-            nameOverlay.style.bottom =
-              viewer.canvas.clientHeight - movement.endPosition.y + "px";
-            nameOverlay.style.left = movement.endPosition.x + "px";
+            nameOverlay.style.bottom = `${
+              viewer.canvas.clientHeight - movement.endPosition.y
+            }px`;
+            nameOverlay.style.left = `${movement.endPosition.x}px`;
             const name = pickedFeature.getProperty("BIN");
             nameOverlay.textContent = name;
 
@@ -177,17 +178,17 @@
               'Loading <div class="cesium-infoBox-loading"></div>';
             viewer.selectedEntity = selectedEntity;
             selectedEntity.description =
-              '<table class="cesium-infoBox-defaultTable"><tbody>' +
-              "<tr><th>BIN</th><td>" +
-              pickedFeature.getProperty("BIN") +
-              "</td></tr>" +
-              "<tr><th>DOITT ID</th><td>" +
-              pickedFeature.getProperty("DOITT_ID") +
-              "</td></tr>" +
-              "<tr><th>SOURCE ID</th><td>" +
-              pickedFeature.getProperty("SOURCE_ID") +
-              "</td></tr>" +
-              "</tbody></table>";
+              `${
+                '<table class="cesium-infoBox-defaultTable"><tbody>' +
+                "<tr><th>BIN</th><td>"
+              }${pickedFeature.getProperty("BIN")}</td></tr>` +
+              `<tr><th>DOITT ID</th><td>${pickedFeature.getProperty(
+                "DOITT_ID"
+              )}</td></tr>` +
+              `<tr><th>SOURCE ID</th><td>${pickedFeature.getProperty(
+                "SOURCE_ID"
+              )}</td></tr>` +
+              `</tbody></table>`;
           },
           Cesium.ScreenSpaceEventType.LEFT_CLICK);
         } else {
@@ -216,9 +217,10 @@
             }
             // A feature was picked, so show it's overlay content
             nameOverlay.style.display = "block";
-            nameOverlay.style.bottom =
-              viewer.canvas.clientHeight - movement.endPosition.y + "px";
-            nameOverlay.style.left = movement.endPosition.x + "px";
+            nameOverlay.style.bottom = `${
+              viewer.canvas.clientHeight - movement.endPosition.y
+            }px`;
+            nameOverlay.style.left = `${movement.endPosition.x}px`;
             let name = pickedFeature.getProperty("name");
             if (!Cesium.defined(name)) {
               name = pickedFeature.getProperty("id");
@@ -275,29 +277,29 @@
               'Loading <div class="cesium-infoBox-loading"></div>';
             viewer.selectedEntity = selectedEntity;
             selectedEntity.description =
-              '<table class="cesium-infoBox-defaultTable"><tbody>' +
-              "<tr><th>BIN</th><td>" +
-              pickedFeature.getProperty("BIN") +
-              "</td></tr>" +
-              "<tr><th>DOITT ID</th><td>" +
-              pickedFeature.getProperty("DOITT_ID") +
-              "</td></tr>" +
-              "<tr><th>SOURCE ID</th><td>" +
-              pickedFeature.getProperty("SOURCE_ID") +
-              "</td></tr>" +
-              "<tr><th>Longitude</th><td>" +
-              pickedFeature.getProperty("longitude") +
-              "</td></tr>" +
-              "<tr><th>Latitude</th><td>" +
-              pickedFeature.getProperty("latitude") +
-              "</td></tr>" +
-              "<tr><th>Height</th><td>" +
-              pickedFeature.getProperty("height") +
-              "</td></tr>" +
-              "<tr><th>Terrain Height (Ellipsoid)</th><td>" +
-              pickedFeature.getProperty("TerrainHeight") +
-              "</td></tr>" +
-              "</tbody></table>";
+              `${
+                '<table class="cesium-infoBox-defaultTable"><tbody>' +
+                "<tr><th>BIN</th><td>"
+              }${pickedFeature.getProperty("BIN")}</td></tr>` +
+              `<tr><th>DOITT ID</th><td>${pickedFeature.getProperty(
+                "DOITT_ID"
+              )}</td></tr>` +
+              `<tr><th>SOURCE ID</th><td>${pickedFeature.getProperty(
+                "SOURCE_ID"
+              )}</td></tr>` +
+              `<tr><th>Longitude</th><td>${pickedFeature.getProperty(
+                "longitude"
+              )}</td></tr>` +
+              `<tr><th>Latitude</th><td>${pickedFeature.getProperty(
+                "latitude"
+              )}</td></tr>` +
+              `<tr><th>Height</th><td>${pickedFeature.getProperty(
+                "height"
+              )}</td></tr>` +
+              `<tr><th>Terrain Height (Ellipsoid)</th><td>${pickedFeature.getProperty(
+                "TerrainHeight"
+              )}</td></tr>` +
+              `</tbody></table>`;
           },
           Cesium.ScreenSpaceEventType.LEFT_CLICK);
         }

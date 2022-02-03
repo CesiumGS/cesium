@@ -377,7 +377,7 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
     });
     frameState.commandList.push(command);
 
-    uniformMap["texture" + i] = createUniformTexture(mipTexture);
+    uniformMap[`texture${i}`] = createUniformTexture(mipTexture);
   }
 
   this._texture = new Texture({

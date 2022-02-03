@@ -2,12 +2,12 @@ import {
   AttributeType,
   combine,
   ComponentDatatype,
-  FeatureIdPipelineStage,
   GltfLoader,
   GeometryPipelineStage,
   ModelExperimentalType,
   Resource,
   ResourceCache,
+  SelectedFeatureIdPipelineStage,
   ShaderBuilder,
   VertexAttributeSemantic,
 } from "../../../Source/Cesium.js";
@@ -93,14 +93,14 @@ describe(
     function verifyFeatureStruct(shaderBuilder) {
       ShaderBuilderTester.expectHasVertexStruct(
         shaderBuilder,
-        FeatureIdPipelineStage.STRUCT_ID_FEATURE,
-        FeatureIdPipelineStage.STRUCT_NAME_FEATURE,
+        SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE,
+        SelectedFeatureIdPipelineStage.STRUCT_NAME_SELECTED_FEATURE,
         []
       );
       ShaderBuilderTester.expectHasFragmentStruct(
         shaderBuilder,
-        FeatureIdPipelineStage.STRUCT_ID_FEATURE,
-        FeatureIdPipelineStage.STRUCT_NAME_FEATURE,
+        SelectedFeatureIdPipelineStage.STRUCT_ID_SELECTED_FEATURE,
+        SelectedFeatureIdPipelineStage.STRUCT_NAME_SELECTED_FEATURE,
         []
       );
     }

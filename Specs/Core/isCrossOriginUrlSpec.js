@@ -30,7 +30,7 @@ describe("Core/isCrossOriginUrl", function () {
 
     // so does a different port
     pageUri = new Uri(location.href);
-    pageUri.authority(location.hostname + ":" + (+location.port + 1));
+    pageUri.authority(`${location.hostname}:${+location.port + 1}`);
 
     absoluteUrl = pageUri.toString();
     expect(isCrossOriginUrl(absoluteUrl)).toEqual(true);

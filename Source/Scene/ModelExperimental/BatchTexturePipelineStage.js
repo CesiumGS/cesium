@@ -30,6 +30,7 @@ BatchTexturePipelineStage.process = function (
   const batchTextureUniforms = {};
 
   const model = renderResources.model;
+
   const featureTable = model.featureTables[model.featureTableId];
 
   // Number of features in the feature table.

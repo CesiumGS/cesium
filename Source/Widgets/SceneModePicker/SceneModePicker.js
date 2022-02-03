@@ -40,7 +40,7 @@ const columbusViewPath =
  * // and in the body, include: <div id="sceneModePickerContainer"></div>
  * // Note: This code assumes you already have a Scene instance.
  *
- * var sceneModePicker = new Cesium.SceneModePicker('sceneModePickerContainer', scene);
+ * const sceneModePicker = new Cesium.SceneModePicker('sceneModePickerContainer', scene);
  */
 function SceneModePicker(container, scene, duration) {
   //>>includeStart('debug', pragmas.debug);

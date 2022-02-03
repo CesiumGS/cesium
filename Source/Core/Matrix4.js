@@ -233,12 +233,12 @@ Matrix4.clone = function (matrix, result) {
  * // [1.0, 2.0, 3.0, 4.0]
  * // [1.0, 2.0, 3.0, 4.0]
  *
- * var v = [1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 4.0, 4.0, 4.0, 4.0];
- * var m = Cesium.Matrix4.fromArray(v);
+ * const v = [1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 4.0, 4.0, 4.0, 4.0];
+ * const m = Cesium.Matrix4.fromArray(v);
  *
  * // Create same Matrix4 with using an offset into an array
- * var v2 = [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 4.0, 4.0, 4.0, 4.0];
- * var m2 = Cesium.Matrix4.fromArray(v2, 2);
+ * const v2 = [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 4.0, 4.0, 4.0, 4.0];
+ * const m2 = Cesium.Matrix4.fromArray(v2, 2);
  */
 Matrix4.fromArray = Matrix4.unpack;
 
@@ -376,7 +376,7 @@ Matrix4.fromRotationTranslation = function (rotation, translation, result) {
  * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
  *
  * @example
- * var result = Cesium.Matrix4.fromTranslationQuaternionRotationScale(
+ * const result = Cesium.Matrix4.fromTranslationQuaternionRotationScale(
  *   new Cesium.Cartesian3(1.0, 2.0, 3.0), // translation
  *   Cesium.Quaternion.IDENTITY,           // rotation
  *   new Cesium.Cartesian3(7.0, 8.0, 9.0), // scale
@@ -498,7 +498,7 @@ Matrix4.fromTranslation = function (translation, result) {
  * //   [0.0, 8.0, 0.0, 0.0]
  * //   [0.0, 0.0, 9.0, 0.0]
  * //   [0.0, 0.0, 0.0, 1.0]
- * var m = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(7.0, 8.0, 9.0));
+ * const m = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(7.0, 8.0, 9.0));
  */
 Matrix4.fromScale = function (scale, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -558,7 +558,7 @@ Matrix4.fromScale = function (scale, result) {
  * //   [0.0, 2.0, 0.0, 0.0]
  * //   [0.0, 0.0, 2.0, 0.0]
  * //   [0.0, 0.0, 0.0, 1.0]
- * var m = Cesium.Matrix4.fromUniformScale(2.0);
+ * const m = Cesium.Matrix4.fromUniformScale(2.0);
  */
 Matrix4.fromUniformScale = function (scale, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -661,12 +661,12 @@ Matrix4.fromCamera = function (camera, result) {
   // version of the commented lines.
   // Rather that create two matrices and then multiply,
   // we just bake in the multiplcation as part of creation.
-  // var rotation = new Matrix4(
+  // const rotation = new Matrix4(
   //                 sX,  sY,  sZ, 0.0,
   //                 uX,  uY,  uZ, 0.0,
   //                -fX, -fY, -fZ, 0.0,
   //                 0.0,  0.0,  0.0, 1.0);
-  // var translation = new Matrix4(
+  // const translation = new Matrix4(
   //                 1.0, 0.0, 0.0, -position.x,
   //                 0.0, 1.0, 0.0, -position.y,
   //                 0.0, 0.0, 1.0, -position.z,
@@ -952,7 +952,7 @@ Matrix4.computeInfinitePerspectiveOffCenter = function (
  *
  * @example
  * // Create viewport transformation using an explicit viewport and depth range.
- * var m = Cesium.Matrix4.computeViewportTransformation({
+ * const m = Cesium.Matrix4.computeViewportTransformation({
  *     x : 0.0,
  *     y : 0.0,
  *     width : 1024.0,
@@ -1060,7 +1060,7 @@ Matrix4.computeView = function (position, direction, up, right, result) {
  * //     [11.0, 15.0, 19.0, 23.0]
  * //     [12.0, 16.0, 20.0, 24.0]
  * //     [13.0, 17.0, 21.0, 25.0]
- * var a = Cesium.Matrix4.toArray(m);
+ * const a = Cesium.Matrix4.toArray(m);
  *
  * // m remains the same
  * //creates a = [10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0, 25.0]
@@ -1120,9 +1120,9 @@ Matrix4.toArray = function (matrix, result) {
  * @exception {DeveloperError} column must be 0, 1, 2, or 3.
  *
  * @example
- * var myMatrix = new Cesium.Matrix4();
- * var column1Row0Index = Cesium.Matrix4.getElementIndex(1, 0);
- * var column1Row0 = myMatrix[column1Row0Index];
+ * const myMatrix = new Cesium.Matrix4();
+ * const column1Row0Index = Cesium.Matrix4.getElementIndex(1, 0);
+ * const column1Row0 = myMatrix[column1Row0Index];
  * myMatrix[column1Row0Index] = 10.0;
  */
 Matrix4.getElementIndex = function (column, row) {
@@ -1155,11 +1155,11 @@ Matrix4.getElementIndex = function (column, row) {
  * //     [22.0, 23.0, 24.0, 25.0]
  *
  * //Example 1: Creates an instance of Cartesian
- * var a = Cesium.Matrix4.getColumn(m, 2, new Cesium.Cartesian4());
+ * const a = Cesium.Matrix4.getColumn(m, 2, new Cesium.Cartesian4());
  *
  * @example
  * //Example 2: Sets values for Cartesian instance
- * var a = new Cesium.Cartesian4();
+ * const a = new Cesium.Cartesian4();
  * Cesium.Matrix4.getColumn(m, 2, a);
  *
  * // a.x = 12.0; a.y = 16.0; a.z = 20.0; a.w = 24.0;
@@ -1205,7 +1205,7 @@ Matrix4.getColumn = function (matrix, index, result) {
  * //     [18.0, 19.0, 20.0, 21.0]
  * //     [22.0, 23.0, 24.0, 25.0]
  *
- * var a = Cesium.Matrix4.setColumn(m, 2, new Cesium.Cartesian4(99.0, 98.0, 97.0, 96.0), new Cesium.Matrix4());
+ * const a = Cesium.Matrix4.setColumn(m, 2, new Cesium.Cartesian4(99.0, 98.0, 97.0, 96.0), new Cesium.Matrix4());
  *
  * // m remains the same
  * // a = [10.0, 11.0, 99.0, 13.0]
@@ -1316,11 +1316,11 @@ Matrix4.setScale = function (matrix, scale, result) {
  * //     [22.0, 23.0, 24.0, 25.0]
  *
  * //Example 1: Returns an instance of Cartesian
- * var a = Cesium.Matrix4.getRow(m, 2, new Cesium.Cartesian4());
+ * const a = Cesium.Matrix4.getRow(m, 2, new Cesium.Cartesian4());
  *
  * @example
  * //Example 2: Sets values for a Cartesian instance
- * var a = new Cesium.Cartesian4();
+ * const a = new Cesium.Cartesian4();
  * Cesium.Matrix4.getRow(m, 2, a);
  *
  * // a.x = 18.0; a.y = 19.0; a.z = 20.0; a.w = 21.0;
@@ -1365,7 +1365,7 @@ Matrix4.getRow = function (matrix, index, result) {
  * //     [18.0, 19.0, 20.0, 21.0]
  * //     [22.0, 23.0, 24.0, 25.0]
  *
- * var a = Cesium.Matrix4.setRow(m, 2, new Cesium.Cartesian4(99.0, 98.0, 97.0, 96.0), new Cesium.Matrix4());
+ * const a = Cesium.Matrix4.setRow(m, 2, new Cesium.Cartesian4(99.0, 98.0, 97.0, 96.0), new Cesium.Matrix4());
  *
  * // m remains the same
  * // a = [10.0, 11.0, 12.0, 13.0]
@@ -1621,9 +1621,9 @@ Matrix4.subtract = function (left, right, result) {
  * @returns {Matrix4} The modified result parameter.
  *
  * @example
- * var m1 = new Cesium.Matrix4(1.0, 6.0, 7.0, 0.0, 2.0, 5.0, 8.0, 0.0, 3.0, 4.0, 9.0, 0.0, 0.0, 0.0, 0.0, 1.0);
- * var m2 = Cesium.Transforms.eastNorthUpToFixedFrame(new Cesium.Cartesian3(1.0, 1.0, 1.0));
- * var m3 = Cesium.Matrix4.multiplyTransformation(m1, m2, new Cesium.Matrix4());
+ * const m1 = new Cesium.Matrix4(1.0, 6.0, 7.0, 0.0, 2.0, 5.0, 8.0, 0.0, 3.0, 4.0, 9.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+ * const m2 = Cesium.Transforms.eastNorthUpToFixedFrame(new Cesium.Cartesian3(1.0, 1.0, 1.0));
+ * const m3 = Cesium.Matrix4.multiplyTransformation(m1, m2, new Cesium.Matrix4());
  */
 Matrix4.multiplyTransformation = function (left, right, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -1948,8 +1948,8 @@ Matrix4.multiplyByVector = function (matrix, cartesian, result) {
  * @returns {Cartesian3} The modified result parameter.
  *
  * @example
- * var p = new Cesium.Cartesian3(1.0, 2.0, 3.0);
- * var result = Cesium.Matrix4.multiplyByPointAsVector(matrix, p, new Cesium.Cartesian3());
+ * const p = new Cesium.Cartesian3(1.0, 2.0, 3.0);
+ * const result = Cesium.Matrix4.multiplyByPointAsVector(matrix, p, new Cesium.Cartesian3());
  * // A shortcut for
  * //   Cartesian3 p = ...
  * //   Cesium.Matrix4.multiplyByVector(matrix, new Cesium.Cartesian4(p.x, p.y, p.z, 0.0), result);
@@ -1985,8 +1985,8 @@ Matrix4.multiplyByPointAsVector = function (matrix, cartesian, result) {
  * @returns {Cartesian3} The modified result parameter.
  *
  * @example
- * var p = new Cesium.Cartesian3(1.0, 2.0, 3.0);
- * var result = Cesium.Matrix4.multiplyByPoint(matrix, p, new Cesium.Cartesian3());
+ * const p = new Cesium.Cartesian3(1.0, 2.0, 3.0);
+ * const result = Cesium.Matrix4.multiplyByPoint(matrix, p, new Cesium.Cartesian3());
  */
 Matrix4.multiplyByPoint = function (matrix, cartesian, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -2024,7 +2024,7 @@ Matrix4.multiplyByPoint = function (matrix, cartesian, result) {
  * //     [18.0, 19.0, 20.0, 21.0]
  * //     [22.0, 23.0, 24.0, 25.0]
  *
- * var a = Cesium.Matrix4.multiplyByScalar(m, -2, new Cesium.Matrix4());
+ * const a = Cesium.Matrix4.multiplyByScalar(m, -2, new Cesium.Matrix4());
  *
  * // m remains the same
  * // a = [-20.0, -22.0, -24.0, -26.0]
@@ -2072,7 +2072,7 @@ Matrix4.multiplyByScalar = function (matrix, scalar, result) {
  * //     [18.0, 19.0, 20.0, 21.0]
  * //     [22.0, 23.0, 24.0, 25.0]
  *
- * var a = Cesium.Matrix4.negate(m, new Cesium.Matrix4());
+ * const a = Cesium.Matrix4.negate(m, new Cesium.Matrix4());
  *
  * // m remains the same
  * // a = [-10.0, -11.0, -12.0, -13.0]
@@ -2119,7 +2119,7 @@ Matrix4.negate = function (matrix, result) {
  * //     [18.0, 19.0, 20.0, 21.0]
  * //     [22.0, 23.0, 24.0, 25.0]
  *
- * var a = Cesium.Matrix4.transpose(m, new Cesium.Matrix4());
+ * const a = Cesium.Matrix4.transpose(m, new Cesium.Matrix4());
  *
  * // m remains the same
  * // a = [10.0, 14.0, 18.0, 22.0]
@@ -2343,7 +2343,7 @@ Matrix4.getTranslation = function (matrix, result) {
  * //     [12.0, 16.0, 20.0, 24.0]
  * //     [13.0, 17.0, 21.0, 25.0]
  *
- * var b = new Cesium.Matrix3();
+ * const b = new Cesium.Matrix3();
  * Cesium.Matrix4.getMatrix3(m,b);
  *
  * // b = [10.0, 14.0, 18.0]
@@ -2606,9 +2606,9 @@ Matrix4.inverseTransformation = function (matrix, result) {
   //>>includeEnd('debug');
 
   //This function is an optimized version of the below 4 lines.
-  //var rT = Matrix3.transpose(Matrix4.getMatrix3(matrix));
-  //var rTN = Matrix3.negate(rT);
-  //var rTT = Matrix3.multiplyByVector(rTN, Matrix4.getTranslation(matrix));
+  //const rT = Matrix3.transpose(Matrix4.getMatrix3(matrix));
+  //const rTN = Matrix3.negate(rT);
+  //const rTT = Matrix3.multiplyByVector(rTN, Matrix4.getTranslation(matrix));
   //return Matrix4.fromRotationTranslation(rT, rTT, result);
 
   const matrix0 = matrix[0];
@@ -2931,42 +2931,10 @@ Matrix4.prototype.equalsEpsilon = function (right, epsilon) {
  */
 Matrix4.prototype.toString = function () {
   return (
-    "(" +
-    this[0] +
-    ", " +
-    this[4] +
-    ", " +
-    this[8] +
-    ", " +
-    this[12] +
-    ")\n" +
-    "(" +
-    this[1] +
-    ", " +
-    this[5] +
-    ", " +
-    this[9] +
-    ", " +
-    this[13] +
-    ")\n" +
-    "(" +
-    this[2] +
-    ", " +
-    this[6] +
-    ", " +
-    this[10] +
-    ", " +
-    this[14] +
-    ")\n" +
-    "(" +
-    this[3] +
-    ", " +
-    this[7] +
-    ", " +
-    this[11] +
-    ", " +
-    this[15] +
-    ")"
+    `(${this[0]}, ${this[4]}, ${this[8]}, ${this[12]})\n` +
+    `(${this[1]}, ${this[5]}, ${this[9]}, ${this[13]})\n` +
+    `(${this[2]}, ${this[6]}, ${this[10]}, ${this[14]})\n` +
+    `(${this[3]}, ${this[7]}, ${this[11]}, ${this[15]})`
   );
 };
 export default Matrix4;

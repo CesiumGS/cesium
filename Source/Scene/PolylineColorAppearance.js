@@ -6,13 +6,11 @@ import PolylineColorAppearanceVS from "../Shaders/Appearances/PolylineColorAppea
 import PolylineCommon from "../Shaders/PolylineCommon.js";
 import Appearance from "./Appearance.js";
 
-let defaultVertexShaderSource =
-  PolylineCommon + "\n" + PolylineColorAppearanceVS;
+let defaultVertexShaderSource = `${PolylineCommon}\n${PolylineColorAppearanceVS}`;
 const defaultFragmentShaderSource = PerInstanceFlatColorAppearanceFS;
 
 if (!FeatureDetection.isInternetExplorer()) {
-  defaultVertexShaderSource =
-    "#define CLIP_POLYLINE \n" + defaultVertexShaderSource;
+  defaultVertexShaderSource = `#define CLIP_POLYLINE \n${defaultVertexShaderSource}`;
 }
 
 /**
@@ -32,7 +30,7 @@ if (!FeatureDetection.isInternetExplorer()) {
  *
  * @example
  * // A solid white line segment
- * var primitive = new Cesium.Primitive({
+ * const primitive = new Cesium.Primitive({
  *   geometryInstances : new Cesium.GeometryInstance({
  *     geometry : new Cesium.PolylineGeometry({
  *       positions : Cesium.Cartesian3.fromDegreesArray([

@@ -281,14 +281,9 @@ function getCheckUniformSemanticFunction(
         uniformMap[uniformName] = semantic;
       } else {
         throw new RuntimeError(
-          "Shader program cannot be optimized for instancing. " +
-            'Uniform "' +
-            uniformName +
-            '" in program "' +
-            programId +
-            '" uses unsupported semantic "' +
-            semantic +
-            '"'
+          `${
+            "Shader program cannot be optimized for instancing. " + 'Uniform "'
+          }${uniformName}" in program "${programId}" uses unsupported semantic "${semantic}"`
         );
       }
     }
@@ -377,11 +372,11 @@ function getVertexShaderCallback(collection) {
         }
 
         // Remove the uniform declaration
-        let regex = new RegExp("uniform.*" + uniform + ".*");
+        let regex = new RegExp(`uniform.*${uniform}.*`);
         renamedSource = renamedSource.replace(regex, "");
 
         // Replace all occurrences of the uniform with the global variable
-        regex = new RegExp(uniform + "\\b", "g");
+        regex = new RegExp(`${uniform}\\b`, "g");
         renamedSource = renamedSource.replace(regex, varName);
       }
     }
@@ -409,23 +404,13 @@ function getVertexShaderCallback(collection) {
     }
 
     let instancedSource =
-      uniforms +
-      globalVarsHeader +
-      "mat4 czm_instanced_modelView;\n" +
-      "attribute vec4 czm_modelMatrixRow0;\n" +
-      "attribute vec4 czm_modelMatrixRow1;\n" +
-      "attribute vec4 czm_modelMatrixRow2;\n" +
-      batchIdAttribute +
-      pickAttribute +
-      renamedSource +
-      "void main()\n" +
-      "{\n" +
-      "    mat4 czm_instanced_model = mat4(czm_modelMatrixRow0.x, czm_modelMatrixRow1.x, czm_modelMatrixRow2.x, 0.0, czm_modelMatrixRow0.y, czm_modelMatrixRow1.y, czm_modelMatrixRow2.y, 0.0, czm_modelMatrixRow0.z, czm_modelMatrixRow1.z, czm_modelMatrixRow2.z, 0.0, czm_modelMatrixRow0.w, czm_modelMatrixRow1.w, czm_modelMatrixRow2.w, 1.0);\n" +
-      "    czm_instanced_modelView = czm_instanced_modifiedModelView * czm_instanced_model * czm_instanced_nodeTransform;\n" +
-      globalVarsMain +
-      "    czm_instancing_main();\n" +
-      pickVarying +
-      "}\n";
+      `${uniforms + globalVarsHeader}mat4 czm_instanced_modelView;\n` +
+      `attribute vec4 czm_modelMatrixRow0;\n` +
+      `attribute vec4 czm_modelMatrixRow1;\n` +
+      `attribute vec4 czm_modelMatrixRow2;\n${batchIdAttribute}${pickAttribute}${renamedSource}void main()\n` +
+      `{\n` +
+      `    mat4 czm_instanced_model = mat4(czm_modelMatrixRow0.x, czm_modelMatrixRow1.x, czm_modelMatrixRow2.x, 0.0, czm_modelMatrixRow0.y, czm_modelMatrixRow1.y, czm_modelMatrixRow2.y, 0.0, czm_modelMatrixRow0.z, czm_modelMatrixRow1.z, czm_modelMatrixRow2.z, 0.0, czm_modelMatrixRow0.w, czm_modelMatrixRow1.w, czm_modelMatrixRow2.w, 1.0);\n` +
+      `    czm_instanced_modelView = czm_instanced_modifiedModelView * czm_instanced_model * czm_instanced_nodeTransform;\n${globalVarsMain}    czm_instancing_main();\n${pickVarying}}\n`;
 
     if (usesBatchTable) {
       const gltf = collection._model.gltf;
@@ -459,7 +444,7 @@ function getFragmentShaderCallback(collection) {
         false
       )(fs);
     } else {
-      fs = "varying vec4 v_pickColor;\n" + fs;
+      fs = `varying vec4 v_pickColor;\n${fs}`;
     }
     return fs;
   };
@@ -520,7 +505,7 @@ function getVertexShaderNonInstancedCallback(collection) {
         diffuseAttributeOrUniformName
       )(vs);
       // Treat a_batchId as a uniform rather than a vertex attribute
-      vs = "uniform float a_batchId\n;" + vs;
+      vs = `uniform float a_batchId\n;${vs}`;
     }
     return vs;
   };
@@ -541,7 +526,7 @@ function getFragmentShaderNonInstancedCallback(collection) {
         false
       )(fs);
     } else {
-      fs = "uniform vec4 czm_pickColor;\n" + fs;
+      fs = `uniform vec4 czm_pickColor;\n${fs}`;
     }
     return fs;
   };
@@ -775,7 +760,7 @@ function createModel(collection, context) {
     modelOptions.uniformMapLoaded = getUniformMapCallback(collection, context);
 
     if (defined(collection._url)) {
-      modelOptions.cacheKey = collection._url.getUrlComponent() + "#instanced";
+      modelOptions.cacheKey = `${collection._url.getUrlComponent()}#instanced`;
     }
   } else {
     modelOptions.vertexShaderLoaded = getVertexShaderNonInstancedCallback(

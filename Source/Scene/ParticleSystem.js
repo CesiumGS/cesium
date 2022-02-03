@@ -901,8 +901,8 @@ ParticleSystem.prototype.destroy = function () {
  *
  * @example
  * function applyGravity(particle, dt) {
- *    var position = particle.position;
- *    var gravityVector = Cesium.Cartesian3.normalize(position, new Cesium.Cartesian3());
+ *    const position = particle.position;
+ *    const gravityVector = Cesium.Cartesian3.normalize(position, new Cesium.Cartesian3());
  *    Cesium.Cartesian3.multiplyByScalar(gravityVector, GRAVITATIONAL_CONSTANT * dt, gravityVector);
  *    particle.velocity = Cesium.Cartesian3.add(particle.velocity, gravityVector, particle.velocity);
  * }

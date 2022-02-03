@@ -46,7 +46,7 @@ import TimeStandard from "./TimeStandard.js";
  *
  * @example
  * // Loading the EOP data
- * var eop = new Cesium.EarthOrientationParameters({ url : 'Data/EOP.json' });
+ * const eop = new Cesium.EarthOrientationParameters({ url : 'Data/EOP.json' });
  * Cesium.Transforms.earthOrientationParameters = eop;
  *
  * @private
@@ -87,10 +87,7 @@ function EarthOrientationParameters(options) {
         onDataReady(that, eopData);
       })
       .otherwise(function () {
-        that._dataError =
-          "An error occurred while retrieving the EOP data from the URL " +
-          resource.url +
-          ".";
+        that._dataError = `An error occurred while retrieving the EOP data from the URL ${resource.url}.`;
       });
   } else {
     // Use all zeros for EOP data.

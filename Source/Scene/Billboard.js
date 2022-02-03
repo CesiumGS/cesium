@@ -1179,7 +1179,7 @@ Billboard.prototype._loadImage = function () {
       makeDirty(that, IMAGE_INDEX_INDEX);
     })
     .otherwise(function (error) {
-      console.error("Error loading image for billboard: " + error);
+      console.error(`Error loading image for billboard: ${error}`);
       that._imageIndexPromise = undefined;
     });
 };
@@ -1206,8 +1206,8 @@ Billboard.prototype._loadImage = function () {
  * // create a billboard image dynamically
  * function drawImage(id) {
  *   // create and draw an image using a canvas
- *   var canvas = document.createElement('canvas');
- *   var context2D = canvas.getContext('2d');
+ *   const canvas = document.createElement('canvas');
+ *   const context2D = canvas.getContext('2d');
  *   // ... draw image
  *   return canvas;
  * }

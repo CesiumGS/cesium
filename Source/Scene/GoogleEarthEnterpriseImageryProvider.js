@@ -80,8 +80,8 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
  *
  *
  * @example
- * var geeMetadata = new GoogleEarthEnterpriseMetadata('http://www.earthenterprise.org/3d');
- * var gee = new Cesium.GoogleEarthEnterpriseImageryProvider({
+ * const geeMetadata = new GoogleEarthEnterpriseMetadata('http://www.earthenterprise.org/3d');
+ * const gee = new Cesium.GoogleEarthEnterpriseImageryProvider({
  *     metadata : geeMetadata
  * });
  *
@@ -228,7 +228,7 @@ function GoogleEarthEnterpriseImageryProvider(options) {
     .then(function (result) {
       if (!metadata.imageryPresent) {
         const e = new RuntimeError(
-          "The server " + metadata.url + " doesn't have imagery"
+          `The server ${metadata.url} doesn't have imagery`
         );
         metadataError = TileProviderError.handleError(
           metadataError,
@@ -663,7 +663,7 @@ function buildImageResource(imageryProvider, info, x, y, level, request) {
   version = defined(version) && version > 0 ? version : 1;
 
   return imageryProvider._metadata.resource.getDerivedResource({
-    url: "flatfile?f1-0" + quadKey + "-i." + version.toString(),
+    url: `flatfile?f1-0${quadKey}-i.${version.toString()}`,
     request: request,
   });
 }

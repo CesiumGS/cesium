@@ -39,9 +39,7 @@ B3dmParser.parse = function (arrayBuffer, byteOffset) {
   const version = view.getUint32(byteOffset, true);
   if (version !== 1) {
     throw new RuntimeError(
-      "Only Batched 3D Model version 1 is supported.  Version " +
-        version +
-        " is not."
+      `Only Batched 3D Model version 1 is supported.  Version ${version} is not.`
     );
   }
   byteOffset += sizeOfUint32;

@@ -1171,7 +1171,7 @@ describe("Core/Resource", function () {
     let headerString = "";
     for (const key in expectedResult) {
       if (expectedResult.hasOwnProperty(key)) {
-        headerString += key + ": " + expectedResult[key] + "\r\n";
+        headerString += `${key}: ${expectedResult[key]}\r\n`;
       }
     }
     const fakeXHR = {
@@ -1255,7 +1255,7 @@ describe("Core/Resource", function () {
     let headerString = "";
     for (const key in expectedResult) {
       if (expectedResult.hasOwnProperty(key)) {
-        headerString += key + ": " + expectedResult[key] + "\r\n";
+        headerString += `${key}: ${expectedResult[key]}\r\n`;
       }
     }
     const fakeXHR = {

@@ -216,12 +216,12 @@ Cartesian2.unpackArray = function (array, result) {
  *
  * @example
  * // Create a Cartesian2 with (1.0, 2.0)
- * var v = [1.0, 2.0];
- * var p = Cesium.Cartesian2.fromArray(v);
+ * const v = [1.0, 2.0];
+ * const p = Cesium.Cartesian2.fromArray(v);
  *
  * // Create a Cartesian2 with (1.0, 2.0) using an offset into an array
- * var v2 = [0.0, 0.0, 1.0, 2.0];
- * var p2 = Cesium.Cartesian2.fromArray(v2, 2);
+ * const v2 = [0.0, 0.0, 1.0, 2.0];
+ * const p2 = Cesium.Cartesian2.fromArray(v2, 2);
  */
 Cartesian2.fromArray = Cartesian2.unpack;
 
@@ -329,7 +329,7 @@ const distanceScratch = new Cartesian2();
  *
  * @example
  * // Returns 1.0
- * var d = Cesium.Cartesian2.distance(new Cesium.Cartesian2(1.0, 0.0), new Cesium.Cartesian2(2.0, 0.0));
+ * const d = Cesium.Cartesian2.distance(new Cesium.Cartesian2(1.0, 0.0), new Cesium.Cartesian2(2.0, 0.0));
  */
 Cartesian2.distance = function (left, right) {
   //>>includeStart('debug', pragmas.debug);
@@ -351,7 +351,7 @@ Cartesian2.distance = function (left, right) {
  *
  * @example
  * // Returns 4.0, not 2.0
- * var d = Cesium.Cartesian2.distance(new Cesium.Cartesian2(1.0, 0.0), new Cesium.Cartesian2(3.0, 0.0));
+ * const d = Cesium.Cartesian2.distance(new Cesium.Cartesian2(1.0, 0.0), new Cesium.Cartesian2(3.0, 0.0));
  */
 Cartesian2.distanceSquared = function (left, right) {
   //>>includeStart('debug', pragmas.debug);
@@ -792,6 +792,6 @@ Cartesian2.prototype.equalsEpsilon = function (
  * @returns {String} A string representing the provided Cartesian in the format '(x, y)'.
  */
 Cartesian2.prototype.toString = function () {
-  return "(" + this.x + ", " + this.y + ")";
+  return `(${this.x}, ${this.y})`;
 };
 export default Cartesian2;

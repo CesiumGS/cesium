@@ -18,7 +18,7 @@ const creditToId = {};
  *
  * @example
  * //Create a credit with a tooltip, image and link
- * var credit = new Cesium.Credit('<a href="https://cesium.com/" target="_blank"><img src="/images/cesium_logo.png" title="Cesium"/></a>');
+ * const credit = new Cesium.Credit('<a href="https://cesium.com/" target="_blank"><img src="/images/cesium_logo.png" title="Cesium"/></a>');
  */
 function Credit(html, showOnScreen) {
   //>>includeStart('debug', pragmas.debug);

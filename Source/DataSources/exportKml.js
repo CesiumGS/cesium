@@ -58,9 +58,9 @@ ExternalFileHandler.prototype.texture = function (texture) {
 
     // If its a data URI try and get the correct extension and then fetch the blob
     const regexResult = texture.url.match(imageTypeRegex);
-    filename = "texture_" + ++this._count;
+    filename = `texture_${++this._count}`;
     if (defined(regexResult)) {
-      filename += "." + regexResult[1];
+      filename += `.${regexResult[1]}`;
     }
 
     const promise = texture.fetchBlob().then(function (blob) {
@@ -76,7 +76,7 @@ ExternalFileHandler.prototype.texture = function (texture) {
     const deferred = when.defer();
     this._promises.push(deferred.promise);
 
-    filename = "texture_" + ++this._count + ".png";
+    filename = `texture_${++this._count}.png`;
     texture.toBlob(function (blob) {
       that._files[filename] = blob;
       deferred.resolve();
@@ -180,11 +180,11 @@ StyleCache.prototype.get = function (element) {
     return ids[key];
   }
 
-  let styleId = "style-" + ++this._count;
+  let styleId = `style-${++this._count}`;
   element.setAttribute("id", styleId);
 
   // Store with #
-  styleId = "#" + styleId;
+  styleId = `#${styleId}`;
   ids[key] = styleId;
   this._styles[key] = element;
 
@@ -220,7 +220,7 @@ IdManager.prototype.get = function (id) {
     return id;
   }
 
-  return id.toString() + "-" + ++ids[id];
+  return `${id.toString()}-${++ids[id]}`;
 };
 
 /**
@@ -266,8 +266,8 @@ IdManager.prototype.get = function (id) {
  *   .then(function(result) {
  *     // The XML string is in result.kml
  *
- *     var externalFiles = result.externalFiles
- *     for(var file in externalFiles) {
+ *     const externalFiles = result.externalFiles
+ *     for(const file in externalFiles) {
  *       // file is the name of the file used in the KML document as the href
  *       // externalFiles[file] is a blob with the contents of the file
  *     }
@@ -1030,11 +1030,9 @@ function getRectangleBoundaries(state, rectangleGraphics, extrudedHeight) {
   for (let i = 0; i < 4; ++i) {
     cornerFunction[i](rectangle, scratchCartographic);
     coordinateStrings.push(
-      CesiumMath.toDegrees(scratchCartographic.longitude) +
-        "," +
-        CesiumMath.toDegrees(scratchCartographic.latitude) +
-        "," +
-        height
+      `${CesiumMath.toDegrees(
+        scratchCartographic.longitude
+      )},${CesiumMath.toDegrees(scratchCartographic.latitude)},${height}`
     );
   }
 
@@ -1061,11 +1059,11 @@ function getLinearRing(state, positions, height, perPositionHeight) {
   for (let i = 0; i < positionCount; ++i) {
     Cartographic.fromCartesian(positions[i], ellipsoid, scratchCartographic);
     coordinateStrings.push(
-      CesiumMath.toDegrees(scratchCartographic.longitude) +
-        "," +
-        CesiumMath.toDegrees(scratchCartographic.latitude) +
-        "," +
-        (perPositionHeight ? scratchCartographic.height : height)
+      `${CesiumMath.toDegrees(
+        scratchCartographic.longitude
+      )},${CesiumMath.toDegrees(scratchCartographic.latitude)},${
+        perPositionHeight ? scratchCartographic.height : height
+      }`
     );
   }
 
@@ -1455,11 +1453,11 @@ function getCoordinates(coordinates, ellipsoid) {
   for (let i = 0; i < count; ++i) {
     Cartographic.fromCartesian(coordinates[i], ellipsoid, scratchCartographic);
     coordinateStrings.push(
-      CesiumMath.toDegrees(scratchCartographic.longitude) +
-        "," +
-        CesiumMath.toDegrees(scratchCartographic.latitude) +
-        "," +
+      `${CesiumMath.toDegrees(
+        scratchCartographic.longitude
+      )},${CesiumMath.toDegrees(scratchCartographic.latitude)},${
         scratchCartographic.height
+      }`
     );
   }
 
@@ -1499,7 +1497,7 @@ function colorToString(color) {
   const bytes = color.toBytes();
   for (let i = 3; i >= 0; --i) {
     result +=
-      bytes[i] < 16 ? "0" + bytes[i].toString(16) : bytes[i].toString(16);
+      bytes[i] < 16 ? `0${bytes[i].toString(16)}` : bytes[i].toString(16);
   }
 
   return result;

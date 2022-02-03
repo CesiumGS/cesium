@@ -23,11 +23,11 @@ import VertexFormat from "./VertexFormat.js";
  * @see SphereGeometry#createGeometry
  *
  * @example
- * var sphere = new Cesium.SphereGeometry({
+ * const sphere = new Cesium.SphereGeometry({
  *   radius : 100.0,
  *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY
  * });
- * var geometry = Cesium.SphereGeometry.createGeometry(sphere);
+ * const geometry = Cesium.SphereGeometry.createGeometry(sphere);
  */
 function SphereGeometry(options) {
   const radius = defaultValue(options.radius, 1.0);

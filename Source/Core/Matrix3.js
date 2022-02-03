@@ -169,12 +169,12 @@ Matrix3.clone = function (matrix, result) {
  * // [1.0, 2.0, 3.0]
  * // [1.0, 2.0, 3.0]
  *
- * var v = [1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
- * var m = Cesium.Matrix3.fromArray(v);
+ * const v = [1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
+ * const m = Cesium.Matrix3.fromArray(v);
  *
  * // Create same Matrix3 with using an offset into an array
- * var v2 = [0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
- * var m2 = Cesium.Matrix3.fromArray(v2, 2);
+ * const v2 = [0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
+ * const m2 = Cesium.Matrix3.fromArray(v2, 2);
  */
 Matrix3.fromArray = function (array, startingIndex, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -360,7 +360,7 @@ Matrix3.fromHeadingPitchRoll = function (headingPitchRoll, result) {
  * //   [7.0, 0.0, 0.0]
  * //   [0.0, 8.0, 0.0]
  * //   [0.0, 0.0, 9.0]
- * var m = Cesium.Matrix3.fromScale(new Cesium.Cartesian3(7.0, 8.0, 9.0));
+ * const m = Cesium.Matrix3.fromScale(new Cesium.Cartesian3(7.0, 8.0, 9.0));
  */
 Matrix3.fromScale = function (scale, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -395,7 +395,7 @@ Matrix3.fromScale = function (scale, result) {
  * //   [2.0, 0.0, 0.0]
  * //   [0.0, 2.0, 0.0]
  * //   [0.0, 0.0, 2.0]
- * var m = Cesium.Matrix3.fromUniformScale(2.0);
+ * const m = Cesium.Matrix3.fromUniformScale(2.0);
  */
 Matrix3.fromUniformScale = function (scale, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -430,7 +430,7 @@ Matrix3.fromUniformScale = function (scale, result) {
  * //   [0.0, -9.0,  8.0]
  * //   [9.0,  0.0, -7.0]
  * //   [-8.0, 7.0,  0.0]
- * var m = Cesium.Matrix3.fromCrossProduct(new Cesium.Cartesian3(7.0, 8.0, 9.0));
+ * const m = Cesium.Matrix3.fromCrossProduct(new Cesium.Cartesian3(7.0, 8.0, 9.0));
  */
 Matrix3.fromCrossProduct = function (vector, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -472,9 +472,9 @@ Matrix3.fromCrossProduct = function (vector, result) {
  *
  * @example
  * // Rotate a point 45 degrees counterclockwise around the x-axis.
- * var p = new Cesium.Cartesian3(5, 6, 7);
- * var m = Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(45.0));
- * var rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
+ * const p = new Cesium.Cartesian3(5, 6, 7);
+ * const m = Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(45.0));
+ * const rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
  */
 Matrix3.fromRotationX = function (angle, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -520,9 +520,9 @@ Matrix3.fromRotationX = function (angle, result) {
  *
  * @example
  * // Rotate a point 45 degrees counterclockwise around the y-axis.
- * var p = new Cesium.Cartesian3(5, 6, 7);
- * var m = Cesium.Matrix3.fromRotationY(Cesium.Math.toRadians(45.0));
- * var rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
+ * const p = new Cesium.Cartesian3(5, 6, 7);
+ * const m = Cesium.Matrix3.fromRotationY(Cesium.Math.toRadians(45.0));
+ * const rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
  */
 Matrix3.fromRotationY = function (angle, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -568,9 +568,9 @@ Matrix3.fromRotationY = function (angle, result) {
  *
  * @example
  * // Rotate a point 45 degrees counterclockwise around the z-axis.
- * var p = new Cesium.Cartesian3(5, 6, 7);
- * var m = Cesium.Matrix3.fromRotationZ(Cesium.Math.toRadians(45.0));
- * var rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
+ * const p = new Cesium.Cartesian3(5, 6, 7);
+ * const m = Cesium.Matrix3.fromRotationZ(Cesium.Math.toRadians(45.0));
+ * const rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
  */
 Matrix3.fromRotationZ = function (angle, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -656,9 +656,9 @@ Matrix3.toArray = function (matrix, result) {
  * @exception {DeveloperError} column must be 0, 1, or 2.
  *
  * @example
- * var myMatrix = new Cesium.Matrix3();
- * var column1Row0Index = Cesium.Matrix3.getElementIndex(1, 0);
- * var column1Row0 = myMatrix[column1Row0Index]
+ * const myMatrix = new Cesium.Matrix3();
+ * const column1Row0Index = Cesium.Matrix3.getElementIndex(1, 0);
+ * const column1Row0 = myMatrix[column1Row0Index]
  * myMatrix[column1Row0Index] = 10.0;
  */
 Matrix3.getElementIndex = function (column, row) {
@@ -1207,20 +1207,20 @@ const jMatrixTranspose = new Matrix3();
  * @returns {Object} An object with unitary and diagonal properties which are the unitary and diagonal matrices, respectively.
  *
  * @example
- * var a = //... symetric matrix
- * var result = {
+ * const a = //... symetric matrix
+ * const result = {
  *     unitary : new Cesium.Matrix3(),
  *     diagonal : new Cesium.Matrix3()
  * };
  * Cesium.Matrix3.computeEigenDecomposition(a, result);
  *
- * var unitaryTranspose = Cesium.Matrix3.transpose(result.unitary, new Cesium.Matrix3());
- * var b = Cesium.Matrix3.multiply(result.unitary, result.diagonal, new Cesium.Matrix3());
+ * const unitaryTranspose = Cesium.Matrix3.transpose(result.unitary, new Cesium.Matrix3());
+ * const b = Cesium.Matrix3.multiply(result.unitary, result.diagonal, new Cesium.Matrix3());
  * Cesium.Matrix3.multiply(b, unitaryTranspose, b); // b is now equal to a
  *
- * var lambda = Cesium.Matrix3.getColumn(result.diagonal, 0, new Cesium.Cartesian3()).x;  // first eigenvalue
- * var v = Cesium.Matrix3.getColumn(result.unitary, 0, new Cesium.Cartesian3());          // first eigenvector
- * var c = Cesium.Cartesian3.multiplyByScalar(v, lambda, new Cesium.Cartesian3());        // equal to Cesium.Matrix3.multiplyByVector(a, v)
+ * const lambda = Cesium.Matrix3.getColumn(result.diagonal, 0, new Cesium.Cartesian3()).x;  // first eigenvalue
+ * const v = Cesium.Matrix3.getColumn(result.unitary, 0, new Cesium.Cartesian3());          // first eigenvector
+ * const c = Cesium.Cartesian3.multiplyByScalar(v, lambda, new Cesium.Cartesian3());        // equal to Cesium.Matrix3.multiplyByVector(a, v)
  */
 Matrix3.computeEigenDecomposition = function (matrix, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -1605,27 +1605,9 @@ Matrix3.prototype.equalsEpsilon = function (right, epsilon) {
  */
 Matrix3.prototype.toString = function () {
   return (
-    "(" +
-    this[0] +
-    ", " +
-    this[3] +
-    ", " +
-    this[6] +
-    ")\n" +
-    "(" +
-    this[1] +
-    ", " +
-    this[4] +
-    ", " +
-    this[7] +
-    ")\n" +
-    "(" +
-    this[2] +
-    ", " +
-    this[5] +
-    ", " +
-    this[8] +
-    ")"
+    `(${this[0]}, ${this[3]}, ${this[6]})\n` +
+    `(${this[1]}, ${this[4]}, ${this[7]})\n` +
+    `(${this[2]}, ${this[5]}, ${this[8]})`
   );
 };
 export default Matrix3;

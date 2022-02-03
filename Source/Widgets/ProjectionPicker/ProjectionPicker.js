@@ -27,7 +27,7 @@ const orthographicPath =
  * // and in the body, include: <div id="projectionPickerContainer"></div>
  * // Note: This code assumes you already have a Scene instance.
  *
- * var projectionPicker = new Cesium.ProjectionPicker('projectionPickerContainer', scene);
+ * const projectionPicker = new Cesium.ProjectionPicker('projectionPickerContainer', scene);
  */
 function ProjectionPicker(container, scene) {
   //>>includeStart('debug', pragmas.debug);

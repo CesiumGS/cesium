@@ -965,14 +965,7 @@ ImageryLayer.prototype._requestImagery = function (imagery) {
     imagery.state = ImageryState.FAILED;
     imagery.request = undefined;
 
-    const message =
-      "Failed to obtain image tile X: " +
-      imagery.x +
-      " Y: " +
-      imagery.y +
-      " Level: " +
-      imagery.level +
-      ".";
+    const message = `Failed to obtain image tile X: ${imagery.x} Y: ${imagery.y} Level: ${imagery.level}.`;
     that._requestImageError = TileProviderError.handleError(
       that._requestImageError,
       imageryProvider,
@@ -1114,9 +1107,7 @@ function getSamplerKey(
   magnificationFilter,
   maximumAnisotropy
 ) {
-  return (
-    minificationFilter + ":" + magnificationFilter + ":" + maximumAnisotropy
-  );
+  return `${minificationFilter}:${magnificationFilter}:${maximumAnisotropy}`;
 }
 
 ImageryLayer.prototype._finalizeReprojectTexture = function (context, texture) {

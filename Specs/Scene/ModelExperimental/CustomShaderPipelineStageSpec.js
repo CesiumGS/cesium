@@ -285,13 +285,13 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
       "VertexInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
 
     ShaderBuilderTester.expectHasVertexFunction(
@@ -365,13 +365,13 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
       "VertexInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
 
     ShaderBuilderTester.expectHasVertexFunction(
@@ -446,13 +446,13 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
       "VertexInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
 
     ShaderBuilderTester.expectHasVertexFunction(
@@ -523,13 +523,13 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
       "VertexInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
 
     ShaderBuilderTester.expectHasVertexFunction(
@@ -600,7 +600,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
   });
 
@@ -650,13 +650,13 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
       "VertexInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
 
     ShaderBuilderTester.expectHasVertexFunction(
@@ -721,13 +721,13 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
       "VertexInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
 
     ShaderBuilderTester.expectHasVertexFunction(
@@ -897,7 +897,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
 
     expect(shaderBuilder._vertexShaderParts.functionIds).toEqual([]);
