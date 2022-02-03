@@ -256,9 +256,7 @@ function Context(canvas, options) {
     gl.MAX_VERTEX_UNIFORM_VECTORS
   ); // min: 128
 
-  ContextLimits._maximumSamples = gl.getParameter(
-    gl.MAX_SAMPLES
-  );
+  ContextLimits._maximumSamples = gl.getParameter(gl.MAX_SAMPLES);
 
   const aliasedLineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE); // must include 1
   ContextLimits._minimumAliasedLineWidth = aliasedLineWidthRange[0];
@@ -608,7 +606,7 @@ Object.defineProperties(Context.prototype, {
    * @memberof Context.prototype
    * @type {Boolean}
    */
-   msaa: {
+  msaa: {
     get: function () {
       return this._webgl2;
     },

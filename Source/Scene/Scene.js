@@ -1603,7 +1603,7 @@ Object.defineProperties(Scene.prototype, {
    * @readonly
    * @default false
    */
-   msaaSamples: {
+  msaaSamples: {
     get: function () {
       return this._msaaSamples;
     },
@@ -1619,7 +1619,7 @@ Object.defineProperties(Scene.prototype, {
    * @type {Boolean}
    * @readonly
    */
-   msaaSupported: {
+  msaaSupported: {
     get: function () {
       return this._context.msaa;
     },
