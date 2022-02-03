@@ -653,7 +653,7 @@ PostProcessStageLibrary.isAmbientOcclusionSupported = function (scene) {
 };
 
 /**
- * Creates a post-process stage that renders Atmospheric light scattering.
+ * Creates a post-process stage that renders atmospheric light scattering.
  * <p>
  * Shader by Dimas Leenman, Shared under the MIT license
  * https://github.com/Dimev/Realistic-Atmosphere-Godot-and-UE4/blob/master/godot/shader/atmosphere.shade
@@ -674,7 +674,6 @@ PostProcessStageLibrary.isAmbientOcclusionSupported = function (scene) {
  * @param {Number} [lightSteps=4] The number of steps along the light ray, more looks better but is slower
  * @return {PostProcessStage} A post-process stage that applies atmosphere light scattering.
  *
- * @private
  */
 PostProcessStageLibrary.createAtmosphereScatteringStage = function (
   primarySteps,
