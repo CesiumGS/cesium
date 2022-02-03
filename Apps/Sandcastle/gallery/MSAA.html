@@ -110,14 +110,18 @@
                 })
               );
               viewer.camera.setView({
-                destination: new Cesium.Cartesian3(1234138.7804841248, -5086063.633843134, 3633284.606361642),
+                destination: new Cesium.Cartesian3(
+                  1234138.7804841248,
+                  -5086063.633843134,
+                  3633284.606361642
+                ),
                 orientation: {
                   heading: 0.4304630387656614,
                   pitch: -0.16969316864215878,
-                  roll: 6.283184816241989
+                  roll: 6.283184816241989,
                 },
               });
-            }
+            },
           },
           {
             text: "Hot Air Balloon",
@@ -137,25 +141,25 @@
             text: "MSAA off",
             onselect: function () {
               scene.msaaSamples = 1;
-            }
+            },
           },
           {
             text: "MSAA 2x",
             onselect: function () {
               scene.msaaSamples = 2;
-            }
+            },
           },
           {
             text: "MSAA 4x",
             onselect: function () {
               scene.msaaSamples = 4;
-            }
+            },
           },
           {
             text: "MSAA 8x",
             onselect: function () {
               scene.msaaSamples = 8;
-            }
+            },
           },
         ];
 
