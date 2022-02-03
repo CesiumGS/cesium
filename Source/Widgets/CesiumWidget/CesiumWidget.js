@@ -272,6 +272,7 @@ function CesiumWidget(container, options) {
       mapMode2D: options.mapMode2D,
       requestRenderMode: options.requestRenderMode,
       maximumRenderTimeChange: options.maximumRenderTimeChange,
+      depthPlaneEllipsoidOffset: options.depthPlaneEllipsoidOffset,
     });
     this._scene = scene;
 
