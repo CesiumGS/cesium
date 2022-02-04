@@ -8,6 +8,7 @@
 - Added the ability to toggle back-face culling in `ModelExperimental`. [#10070](https://github.com/CesiumGS/cesium/pull/10070)
 - Added `depthPlaneEllipsoidOffset` to Viewer and Scene constructors to address rendering artefacts below ellipsoid zero elevation. [#9200](https://github.com/CesiumGS/cesium/pull/9200)
 - Added support for `debugColorTiles` in `ModelExperimental`. [#10071](https://github.com/CesiumGS/cesium/pull/10071)
+- Added `GeoJsonSource.process` to support adding features without removing existing entities, similar to `CzmlDataSource.process`. [#9275](https://github.com/CesiumGS/cesium/issues/9275)
 
 ### 1.90 - 2022-02-01
 
@@ -273,10 +274,6 @@
 ##### Fixes :wrench:
 
 - Fixed an issue where changing a model or tileset's `color`, `backFaceCulling`, or `silhouetteSize` would trigger an error. [#9271](https://github.com/CesiumGS/cesium/pull/9271)
-
-##### Additions :tada:
-
-- Added `GeoJsonSource.process` to support adding features without removing existing entities, similar to `CzmlDataSource.process`. [#9275](https://github.com/CesiumGS/cesium/issues/9275)
 
 ##### Deprecated :hourglass_flowing_sand:
 
