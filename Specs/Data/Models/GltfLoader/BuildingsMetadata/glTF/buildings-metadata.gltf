@@ -235,10 +235,10 @@
           "building": {
             "properties": {
               "height": {
-                "type": "FLOAT32"
+                "componentType": "FLOAT32"
               },
               "id": {
-                "type": "INT32"
+                "componentType": "INT32"
               }
             }
           }

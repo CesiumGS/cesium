@@ -113,7 +113,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
         if (
           !Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(
@@ -126,7 +126,7 @@
         }
 
         // Power Plant design model provided by Bentley Systems
-        var tileset = new Cesium.Cesium3DTileset({
+        const tileset = new Cesium.Cesium3DTileset({
           url: Cesium.IonResource.fromAssetId(8564),
         });
         tileset.readyPromise
@@ -137,7 +137,7 @@
             console.log(error);
           });
 
-        var viewModel = {
+        const viewModel = {
           show: true,
           ambientOcclusionOnly: false,
           intensity: 3.0,
@@ -148,9 +148,9 @@
         };
 
         Cesium.knockout.track(viewModel);
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
-        for (var name in viewModel) {
+        for (const name in viewModel) {
           if (viewModel.hasOwnProperty(name)) {
             Cesium.knockout
               .getObservable(viewModel, name)
@@ -159,7 +159,7 @@
         }
 
         function updatePostProcess() {
-          var ambientOcclusion =
+          const ambientOcclusion =
             viewer.scene.postProcessStages.ambientOcclusion;
           ambientOcclusion.enabled =
             Boolean(viewModel.show) || Boolean(viewModel.ambientOcclusionOnly);
@@ -176,7 +176,7 @@
         }
         updatePostProcess();
 
-        var camera = viewer.scene.camera;
+        const camera = viewer.scene.camera;
         camera.position = new Cesium.Cartesian3(
           1234127.2294710164,
           -5086011.666443127,

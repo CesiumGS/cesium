@@ -30,12 +30,12 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  */
 export default function GltfImageLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var resourceCache = options.resourceCache;
-  var gltf = options.gltf;
-  var imageId = options.imageId;
-  var gltfResource = options.gltfResource;
-  var baseResource = options.baseResource;
-  var cacheKey = options.cacheKey;
+  const resourceCache = options.resourceCache;
+  const gltf = options.gltf;
+  const imageId = options.imageId;
+  const gltfResource = options.gltfResource;
+  const baseResource = options.baseResource;
+  const cacheKey = options.cacheKey;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("options.resourceCache", resourceCache);
@@ -45,9 +45,9 @@ export default function GltfImageLoader(options) {
   Check.typeOf.object("options.baseResource", baseResource);
   //>>includeEnd('debug');
 
-  var image = gltf.images[imageId];
-  var bufferViewId = image.bufferView;
-  var uri = image.uri;
+  const image = gltf.images[imageId];
+  const bufferViewId = image.bufferView;
+  const uri = image.uri;
 
   this._resourceCache = resourceCache;
   this._gltfResource = gltfResource;
@@ -142,7 +142,7 @@ GltfImageLoader.prototype.load = function () {
 function getImageAndMipLevels(image) {
   // Images transcoded from KTX2 can contain multiple mip levels:
   // https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_texture_basisu
-  var mipLevels;
+  let mipLevels;
   if (Array.isArray(image)) {
     // highest detail mip should be level 0
     mipLevels = image.slice(1, image.length).map(function (mipLevel) {
@@ -157,8 +157,8 @@ function getImageAndMipLevels(image) {
 }
 
 function loadFromBufferView(imageLoader) {
-  var resourceCache = imageLoader._resourceCache;
-  var bufferViewLoader = resourceCache.loadBufferView({
+  const resourceCache = imageLoader._resourceCache;
+  const bufferViewLoader = resourceCache.loadBufferView({
     gltf: imageLoader._gltf,
     bufferViewId: imageLoader._bufferViewId,
     gltfResource: imageLoader._gltfResource,
@@ -174,13 +174,13 @@ function loadFromBufferView(imageLoader) {
         return;
       }
 
-      var typedArray = bufferViewLoader.typedArray;
+      const typedArray = bufferViewLoader.typedArray;
       return loadImageFromBufferTypedArray(typedArray).then(function (image) {
         if (imageLoader.isDestroyed()) {
           return;
         }
 
-        var imageAndMipLevels = getImageAndMipLevels(image);
+        const imageAndMipLevels = getImageAndMipLevels(image);
 
         // Unload everything except the image
         imageLoader.unload();
@@ -200,9 +200,9 @@ function loadFromBufferView(imageLoader) {
 }
 
 function loadFromUri(imageLoader) {
-  var baseResource = imageLoader._baseResource;
-  var uri = imageLoader._uri;
-  var resource = baseResource.getDerivedResource({
+  const baseResource = imageLoader._baseResource;
+  const uri = imageLoader._uri;
+  const resource = baseResource.getDerivedResource({
     url: uri,
   });
   imageLoader._state = ResourceLoaderState.LOADING;
@@ -212,7 +212,7 @@ function loadFromUri(imageLoader) {
         return;
       }
 
-      var imageAndMipLevels = getImageAndMipLevels(image);
+      const imageAndMipLevels = getImageAndMipLevels(image);
 
       // Unload everything except the image
       imageLoader.unload();
@@ -226,7 +226,7 @@ function loadFromUri(imageLoader) {
       if (imageLoader.isDestroyed()) {
         return;
       }
-      handleError(imageLoader, error, "Failed to load image: " + uri);
+      handleError(imageLoader, error, `Failed to load image: ${uri}`);
     });
 }
 
@@ -237,9 +237,9 @@ function handleError(imageLoader, error, errorMessage) {
 }
 
 function getMimeTypeFromTypedArray(typedArray) {
-  var header = typedArray.subarray(0, 2);
-  var webpHeaderRIFFChars = typedArray.subarray(0, 4);
-  var webpHeaderWEBPChars = typedArray.subarray(8, 12);
+  const header = typedArray.subarray(0, 2);
+  const webpHeaderRIFFChars = typedArray.subarray(0, 4);
+  const webpHeaderWEBPChars = typedArray.subarray(8, 12);
 
   if (header[0] === 0xff && header[1] === 0xd8) {
     // See https://en.wikipedia.org/wiki/JPEG_File_Interchange_Format
@@ -268,13 +268,13 @@ function getMimeTypeFromTypedArray(typedArray) {
 }
 
 function loadImageFromBufferTypedArray(typedArray) {
-  var mimeType = getMimeTypeFromTypedArray(typedArray);
+  const mimeType = getMimeTypeFromTypedArray(typedArray);
   if (mimeType === "image/ktx2") {
     // Need to make a copy of the embedded KTX2 buffer otherwise the underlying
     // ArrayBuffer may be accessed on both the worker and the main thread and
     // throw an error like "Cannot perform Construct on a detached ArrayBuffer".
     // Look into SharedArrayBuffer at some point to get around this.
-    var ktxBuffer = new Uint8Array(typedArray);
+    const ktxBuffer = new Uint8Array(typedArray);
 
     // Resolves to a CompressedTextureBuffer
     return loadKTX2(ktxBuffer);
@@ -288,10 +288,10 @@ function loadImageFromBufferTypedArray(typedArray) {
   });
 }
 
-var ktx2Regex = /(^data:image\/ktx2)|(\.ktx2$)/i;
+const ktx2Regex = /(^data:image\/ktx2)|(\.ktx2$)/i;
 
 function loadImageFromUri(resource) {
-  var uri = resource.url;
+  const uri = resource.url;
   if (ktx2Regex.test(uri)) {
     // Resolves to a CompressedTextureBuffer
     return loadKTX2(resource);

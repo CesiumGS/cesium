@@ -32,7 +32,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
         function addBillboardAndRectangle() {
           Sandcastle.declare(addBillboardAndRectangle);
@@ -67,14 +67,14 @@
         function addPointAndModel() {
           Sandcastle.declare(addPointAndModel);
 
-          var position = Cesium.Cartesian3.fromDegrees(
+          const position = Cesium.Cartesian3.fromDegrees(
             -75.59777,
             40.03883,
             0.0
           );
-          var heading = Cesium.Math.toRadians(135);
-          var hpr = new Cesium.HeadingPitchRoll(heading, 0.0, 0.0);
-          var orientation = Cesium.Transforms.headingPitchRollQuaternion(
+          const heading = Cesium.Math.toRadians(135);
+          const hpr = new Cesium.HeadingPitchRoll(heading, 0.0, 0.0);
+          const orientation = Cesium.Transforms.headingPitchRollQuaternion(
             position,
             hpr
           );

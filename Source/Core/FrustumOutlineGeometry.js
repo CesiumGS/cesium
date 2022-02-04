@@ -13,8 +13,8 @@ import PerspectiveFrustum from "./PerspectiveFrustum.js";
 import PrimitiveType from "./PrimitiveType.js";
 import Quaternion from "./Quaternion.js";
 
-var PERSPECTIVE = 0;
-var ORTHOGRAPHIC = 1;
+const PERSPECTIVE = 0;
+const ORTHOGRAPHIC = 1;
 
 /**
  * A description of the outline of a frustum with the given the origin and orientation.
@@ -35,17 +35,17 @@ function FrustumOutlineGeometry(options) {
   Check.typeOf.object("options.orientation", options.orientation);
   //>>includeEnd('debug');
 
-  var frustum = options.frustum;
-  var orientation = options.orientation;
-  var origin = options.origin;
+  const frustum = options.frustum;
+  const orientation = options.orientation;
+  const origin = options.origin;
 
   // This is private because it is used by DebugCameraPrimitive to draw a multi-frustum by
   // creating multiple FrustumOutlineGeometrys. This way the near plane of one frustum doesn't overlap
   // the far plane of another.
-  var drawNearPlane = defaultValue(options._drawNearPlane, true);
+  const drawNearPlane = defaultValue(options._drawNearPlane, true);
 
-  var frustumType;
-  var frustumPackedLength;
+  let frustumType;
+  let frustumPackedLength;
   if (frustum instanceof PerspectiveFrustum) {
     frustumType = PERSPECTIVE;
     frustumPackedLength = PerspectiveFrustum.packedLength;
@@ -86,8 +86,8 @@ FrustumOutlineGeometry.pack = function (value, array, startingIndex) {
 
   startingIndex = defaultValue(startingIndex, 0);
 
-  var frustumType = value._frustumType;
-  var frustum = value._frustum;
+  const frustumType = value._frustumType;
+  const frustum = value._frustum;
 
   array[startingIndex++] = frustumType;
 
@@ -108,10 +108,10 @@ FrustumOutlineGeometry.pack = function (value, array, startingIndex) {
   return array;
 };
 
-var scratchPackPerspective = new PerspectiveFrustum();
-var scratchPackOrthographic = new OrthographicFrustum();
-var scratchPackQuaternion = new Quaternion();
-var scratchPackorigin = new Cartesian3();
+const scratchPackPerspective = new PerspectiveFrustum();
+const scratchPackOrthographic = new OrthographicFrustum();
+const scratchPackQuaternion = new Quaternion();
+const scratchPackorigin = new Cartesian3();
 
 /**
  * Retrieves an instance from a packed array.
@@ -127,9 +127,9 @@ FrustumOutlineGeometry.unpack = function (array, startingIndex, result) {
 
   startingIndex = defaultValue(startingIndex, 0);
 
-  var frustumType = array[startingIndex++];
+  const frustumType = array[startingIndex++];
 
-  var frustum;
+  let frustum;
   if (frustumType === PERSPECTIVE) {
     frustum = PerspectiveFrustum.unpack(
       array,
@@ -146,15 +146,15 @@ FrustumOutlineGeometry.unpack = function (array, startingIndex, result) {
     startingIndex += OrthographicFrustum.packedLength;
   }
 
-  var origin = Cartesian3.unpack(array, startingIndex, scratchPackorigin);
+  const origin = Cartesian3.unpack(array, startingIndex, scratchPackorigin);
   startingIndex += Cartesian3.packedLength;
-  var orientation = Quaternion.unpack(
+  const orientation = Quaternion.unpack(
     array,
     startingIndex,
     scratchPackQuaternion
   );
   startingIndex += Quaternion.packedLength;
-  var drawNearPlane = array[startingIndex] === 1.0;
+  const drawNearPlane = array[startingIndex] === 1.0;
 
   if (!defined(result)) {
     return new FrustumOutlineGeometry({
@@ -165,7 +165,7 @@ FrustumOutlineGeometry.unpack = function (array, startingIndex, result) {
     });
   }
 
-  var frustumResult =
+  const frustumResult =
     frustumType === result._frustumType ? result._frustum : undefined;
   result._frustum = frustum.clone(frustumResult);
 
@@ -184,13 +184,13 @@ FrustumOutlineGeometry.unpack = function (array, startingIndex, result) {
  * @returns {Geometry|undefined} The computed vertices and indices.
  */
 FrustumOutlineGeometry.createGeometry = function (frustumGeometry) {
-  var frustumType = frustumGeometry._frustumType;
-  var frustum = frustumGeometry._frustum;
-  var origin = frustumGeometry._origin;
-  var orientation = frustumGeometry._orientation;
-  var drawNearPlane = frustumGeometry._drawNearPlane;
+  const frustumType = frustumGeometry._frustumType;
+  const frustum = frustumGeometry._frustum;
+  const origin = frustumGeometry._origin;
+  const orientation = frustumGeometry._orientation;
+  const drawNearPlane = frustumGeometry._drawNearPlane;
 
-  var positions = new Float64Array(3 * 4 * 2);
+  const positions = new Float64Array(3 * 4 * 2);
   FrustumGeometry._computeNearFarPlanes(
     origin,
     orientation,
@@ -199,7 +199,7 @@ FrustumOutlineGeometry.createGeometry = function (frustumGeometry) {
     positions
   );
 
-  var attributes = new GeometryAttributes({
+  const attributes = new GeometryAttributes({
     position: new GeometryAttribute({
       componentDatatype: ComponentDatatype.DOUBLE,
       componentsPerAttribute: 3,
@@ -207,14 +207,14 @@ FrustumOutlineGeometry.createGeometry = function (frustumGeometry) {
     }),
   });
 
-  var offset;
-  var index;
+  let offset;
+  let index;
 
-  var numberOfPlanes = drawNearPlane ? 2 : 1;
-  var indices = new Uint16Array(8 * (numberOfPlanes + 1));
+  const numberOfPlanes = drawNearPlane ? 2 : 1;
+  const indices = new Uint16Array(8 * (numberOfPlanes + 1));
 
   // Build the near/far planes
-  var i = drawNearPlane ? 0 : 1;
+  let i = drawNearPlane ? 0 : 1;
   for (; i < 2; ++i) {
     offset = drawNearPlane ? i * 8 : 0;
     index = i * 4;

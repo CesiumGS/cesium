@@ -2,12 +2,12 @@ import { createGuid } from "../../Source/Cesium.js";
 
 describe("Core/createGuid", function () {
   it("creates GUIDs", function () {
-    var isGuidRegex = /^(\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1}$/;
+    const isGuidRegex = /^(\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1}$/;
 
     //Create three GUIDs
-    var guid1 = createGuid();
-    var guid2 = createGuid();
-    var guid3 = createGuid();
+    const guid1 = createGuid();
+    const guid2 = createGuid();
+    const guid3 = createGuid();
 
     //Make sure they are all unique
     expect(guid1).not.toEqual(guid2);

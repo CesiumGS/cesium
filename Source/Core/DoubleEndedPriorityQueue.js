@@ -119,18 +119,18 @@ Object.defineProperties(DoubleEndedPriorityQueue.prototype, {
  * @returns {DoubleEndedPriorityQueue} The cloned double ended priority queue.
  */
 DoubleEndedPriorityQueue.prototype.clone = function () {
-  var maximumLength = this._maximumLength;
-  var comparator = this._comparator;
-  var array = this._array;
-  var length = this._length;
+  const maximumLength = this._maximumLength;
+  const comparator = this._comparator;
+  const array = this._array;
+  const length = this._length;
 
-  var result = new DoubleEndedPriorityQueue({
+  const result = new DoubleEndedPriorityQueue({
     comparator: comparator,
     maximumLength: maximumLength,
   });
 
   result._length = length;
-  for (var i = 0; i < length; i++) {
+  for (let i = 0; i < length; i++) {
     result._array[i] = array[i];
   }
 
@@ -144,10 +144,10 @@ DoubleEndedPriorityQueue.prototype.reset = function () {
   this._length = 0;
 
   // Dereference elements
-  var maximumLength = this._maximumLength;
+  const maximumLength = this._maximumLength;
   if (defined(maximumLength)) {
     // Dereference all elements but keep the array the same size
-    for (var i = 0; i < maximumLength; i++) {
+    for (let i = 0; i < maximumLength; i++) {
       this._array[i] = undefined;
     }
   } else {
@@ -160,10 +160,10 @@ DoubleEndedPriorityQueue.prototype.reset = function () {
  * Resort the queue.
  */
 DoubleEndedPriorityQueue.prototype.resort = function () {
-  var length = this._length;
+  const length = this._length;
 
   // Fix the queue from the top-down
-  for (var i = 0; i < length; i++) {
+  for (let i = 0; i < length; i++) {
     pushUp(this, i);
   }
 };
@@ -177,16 +177,16 @@ DoubleEndedPriorityQueue.prototype.resort = function () {
  * @returns {*|undefined} The minimum element if the queue is at full capacity. Returns undefined if there is no maximum length.
  */
 DoubleEndedPriorityQueue.prototype.insert = function (element) {
-  var removedElement;
+  let removedElement;
 
-  var maximumLength = this._maximumLength;
+  const maximumLength = this._maximumLength;
   if (defined(maximumLength)) {
     if (maximumLength === 0) {
       return undefined;
     } else if (this._length === maximumLength) {
       // It's faster to access the minimum directly instead of calling the getter
       // because it avoids the length === 0 check.
-      var minimumElement = this._array[0];
+      const minimumElement = this._array[0];
       if (this._comparator(element, minimumElement) <= 0.0) {
         // The element that is being inserted is less than or equal to
         // the minimum element, so don't insert anything and exit early.
@@ -196,7 +196,7 @@ DoubleEndedPriorityQueue.prototype.insert = function (element) {
     }
   }
 
-  var index = this._length;
+  const index = this._length;
   this._array[index] = element;
   this._length++;
   pushUp(this, index);
@@ -211,7 +211,7 @@ DoubleEndedPriorityQueue.prototype.insert = function (element) {
  * @returns {*|undefined} The minimum element, or undefined if the queue is empty.
  */
 DoubleEndedPriorityQueue.prototype.removeMinimum = function () {
-  var length = this._length;
+  const length = this._length;
   if (length === 0) {
     return undefined;
   }
@@ -219,7 +219,7 @@ DoubleEndedPriorityQueue.prototype.removeMinimum = function () {
   this._length--;
 
   // The minimum element is always the root
-  var minimumElement = this._array[0];
+  const minimumElement = this._array[0];
 
   if (length >= 2) {
     this._array[0] = this._array[length - 1];
@@ -239,13 +239,13 @@ DoubleEndedPriorityQueue.prototype.removeMinimum = function () {
  * @returns {*|undefined} The maximum element, or undefined if the queue is empty.
  */
 DoubleEndedPriorityQueue.prototype.removeMaximum = function () {
-  var length = this._length;
+  const length = this._length;
   if (length === 0) {
     return undefined;
   }
 
   this._length--;
-  var maximumElement;
+  let maximumElement;
 
   // If the root has no children, the maximum is the root.
   // If the root has one child, the maximum is the child.
@@ -253,7 +253,7 @@ DoubleEndedPriorityQueue.prototype.removeMaximum = function () {
     maximumElement = this._array[length - 1];
   } else {
     // Otherwise, the maximum is the larger of the root's two children.
-    var maximumElementIndex = greaterThan(this, 1, 2) ? 1 : 2;
+    const maximumElementIndex = greaterThan(this, 1, 2) ? 1 : 2;
     maximumElement = this._array[maximumElementIndex];
 
     // Re-balance the heap
@@ -277,7 +277,7 @@ DoubleEndedPriorityQueue.prototype.removeMaximum = function () {
  */
 
 DoubleEndedPriorityQueue.prototype.getMinimum = function () {
-  var length = this._length;
+  const length = this._length;
   if (length === 0) {
     return undefined;
   }
@@ -293,7 +293,7 @@ DoubleEndedPriorityQueue.prototype.getMinimum = function () {
  * @returns {*|undefined} element
  */
 DoubleEndedPriorityQueue.prototype.getMaximum = function () {
-  var length = this._length;
+  const length = this._length;
   if (length === 0) {
     return undefined;
   }
@@ -311,8 +311,8 @@ DoubleEndedPriorityQueue.prototype.getMaximum = function () {
 // Helper functions
 
 function swap(that, indexA, indexB) {
-  var array = that._array;
-  var temp = array[indexA];
+  const array = that._array;
+  const temp = array[indexA];
   array[indexA] = array[indexB];
   array[indexB] = temp;
 }
@@ -329,9 +329,9 @@ function pushUp(that, index) {
   if (index === 0) {
     return;
   }
-  var onMinLevel = Math.floor(CesiumMath.log2(index + 1)) % 2 === 0;
-  var parentIndex = Math.floor((index - 1) / 2);
-  var lessThanParent = lessThan(that, index, parentIndex);
+  const onMinLevel = Math.floor(CesiumMath.log2(index + 1)) % 2 === 0;
+  const parentIndex = Math.floor((index - 1) / 2);
+  const lessThanParent = lessThan(that, index, parentIndex);
 
   // Get the element onto the correct level if it's not already
   if (lessThanParent !== onMinLevel) {
@@ -344,7 +344,7 @@ function pushUp(that, index) {
   // 2A) is less than the grandparent when on a min level
   // 2B) is greater than the grandparent when on a max level
   while (index >= 3) {
-    var grandparentIndex = Math.floor((index - 3) / 4);
+    const grandparentIndex = Math.floor((index - 3) / 4);
     if (lessThan(that, index, grandparentIndex) !== lessThanParent) {
       break;
     }
@@ -354,23 +354,26 @@ function pushUp(that, index) {
 }
 
 function pushDown(that, index) {
-  var length = that._length;
-  var onMinLevel = Math.floor(CesiumMath.log2(index + 1)) % 2 === 0;
+  const length = that._length;
+  const onMinLevel = Math.floor(CesiumMath.log2(index + 1)) % 2 === 0;
 
   // Loop as long as there is a left child.
-  var leftChildIndex;
+  let leftChildIndex;
   while ((leftChildIndex = 2 * index + 1) < length) {
     // Find the minimum (or maximum) child or grandchild
-    var target = leftChildIndex;
-    var rightChildIndex = leftChildIndex + 1;
+    let target = leftChildIndex;
+    const rightChildIndex = leftChildIndex + 1;
     if (rightChildIndex < length) {
       if (lessThan(that, rightChildIndex, target) === onMinLevel) {
         target = rightChildIndex;
       }
-      var grandChildStart = 2 * leftChildIndex + 1;
-      var grandChildCount = Math.max(Math.min(length - grandChildStart, 4), 0);
-      for (var i = 0; i < grandChildCount; i++) {
-        var grandChildIndex = grandChildStart + i;
+      const grandChildStart = 2 * leftChildIndex + 1;
+      const grandChildCount = Math.max(
+        Math.min(length - grandChildStart, 4),
+        0
+      );
+      for (let i = 0; i < grandChildCount; i++) {
+        const grandChildIndex = grandChildStart + i;
         if (lessThan(that, grandChildIndex, target) === onMinLevel) {
           target = grandChildIndex;
         }
@@ -381,7 +384,7 @@ function pushDown(that, index) {
     if (lessThan(that, target, index) === onMinLevel) {
       swap(that, target, index);
       if (target !== leftChildIndex && target !== rightChildIndex) {
-        var parentOfGrandchildIndex = Math.floor((target - 1) / 2);
+        const parentOfGrandchildIndex = Math.floor((target - 1) / 2);
         if (greaterThan(that, target, parentOfGrandchildIndex) === onMinLevel) {
           swap(that, target, parentOfGrandchildIndex);
         }

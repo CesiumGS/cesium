@@ -10,24 +10,26 @@ import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 import createScene from "../../createScene.js";
 
 describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
-  var gltfContentUrl = "./Data/Cesium3DTiles/GltfContent/glTF/tileset.json";
-  var glbContentUrl = "./Data/Cesium3DTiles/GltfContent/glb/tileset.json";
-  var buildingsMetadataUrl =
+  const gltfContentUrl = "./Data/Cesium3DTiles/GltfContent/glTF/tileset.json";
+  const glbContentUrl = "./Data/Cesium3DTiles/GltfContent/glb/tileset.json";
+  const buildingsMetadataUrl =
     "./Data/Cesium3DTiles/Metadata/FeatureMetadata/tileset.json";
-  var withBatchTableUrl =
+  const withBatchTableUrl =
     "./Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json";
-  var withoutBatchTableUrl =
+  const withoutBatchTableUrl =
     "./Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json";
-  var noBatchIdsUrl =
+  const noBatchIdsUrl =
     "Data/Cesium3DTiles/Batched/BatchedNoBatchIds/tileset.json";
+  const InstancedWithBatchTableUrl =
+    "./Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json";
 
-  var scene;
-  var centerLongitude = -1.31968;
-  var centerLatitude = 0.698874;
+  let scene;
+  const centerLongitude = -1.31968;
+  const centerLatitude = 0.698874;
 
   function setCamera(longitude, latitude, height) {
     // One feature is located at the center, point the camera there
-    var center = Cartesian3.fromRadians(longitude, latitude);
+    const center = Cartesian3.fromRadians(longitude, latitude);
     scene.camera.lookAt(
       center,
       new HeadingPitchRange(0.0, -1.57, defined(height) ? height : 100.0)
@@ -60,9 +62,29 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     return Cesium3DTilesTester.resolvesReadyPromise(scene, gltfContentUrl);
   });
 
-  it("resolves readyPromise with B3DM", function () {
+  it("resolves readyPromise with b3dm", function () {
     setCamera(centerLongitude, centerLatitude, 15.0);
     return Cesium3DTilesTester.resolvesReadyPromise(scene, withBatchTableUrl);
+  });
+
+  it("resolves readyPromise with i3dm", function () {
+    if (!scene.context.instancedArrays) {
+      return;
+    }
+
+    setCamera(centerLongitude, centerLatitude, 15.0);
+    return Cesium3DTilesTester.resolvesReadyPromise(
+      scene,
+      InstancedWithBatchTableUrl
+    );
+  });
+
+  it("renders glb content", function () {
+    return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(function (
+      tileset
+    ) {
+      Cesium3DTilesTester.expectRender(scene, tileset);
+    });
   });
 
   it("renders glTF content", function () {
@@ -73,7 +95,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     );
   });
 
-  it("renders B3DM content", function () {
+  it("renders b3dm content", function () {
     setCamera(centerLongitude, centerLatitude, 15.0);
     return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
       function (tileset) {
@@ -82,7 +104,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     );
   });
 
-  it("renders B3DM content without features", function () {
+  it("renders b3dm content without features", function () {
     setCamera(centerLongitude, centerLatitude, 15.0);
     return Cesium3DTilesTester.loadTileset(scene, noBatchIdsUrl).then(function (
       tileset
@@ -91,10 +113,24 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     });
   });
 
+  it("renders I3DM content", function () {
+    if (!scene.context.instancedArrays) {
+      return;
+    }
+
+    setCamera(centerLongitude, centerLatitude, 25.0);
+    return Cesium3DTilesTester.loadTileset(
+      scene,
+      InstancedWithBatchTableUrl
+    ).then(function (tileset) {
+      Cesium3DTilesTester.expectRender(scene, tileset);
+    });
+  });
+
   it("picks from glTF", function () {
     return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
       function (tileset) {
-        var content = tileset.root.content;
+        const content = tileset.root.content;
         tileset.show = false;
         expect(scene).toPickPrimitive(undefined);
         tileset.show = true;
@@ -102,6 +138,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
           expect(result).toBeDefined();
           expect(result.primitive).toBe(tileset);
           expect(result.content).toBe(content);
+          expect(result.featureId).toBeUndefined();
           expect(content.hasProperty(0, "id")).toBe(false);
           expect(content.getFeature(0)).toBeUndefined();
         });
@@ -109,11 +146,11 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     );
   });
 
-  it("picks from B3DM", function () {
+  it("picks from b3dm", function () {
     setCamera(centerLongitude, centerLatitude, 15.0);
     return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
       function (tileset) {
-        var content = tileset.root.content;
+        const content = tileset.root.content;
         tileset.show = false;
         expect(scene).toPickPrimitive(undefined);
         tileset.show = true;
@@ -121,8 +158,10 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
           expect(result).toBeDefined();
           expect(result.primitive).toBe(tileset);
           expect(result.content).toBe(content);
-          expect(content.hasProperty(0, "id")).toBe(false);
-          expect(content.getFeature(0)).toBeDefined();
+          const featureId = result.featureId;
+          expect(featureId).toBe(0);
+          expect(content.hasProperty(featureId, "id")).toBe(false);
+          expect(content.getFeature(featureId)).toBeDefined();
         });
       }
     );
@@ -131,7 +170,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
   it("picks from glTF feature table", function () {
     return Cesium3DTilesTester.loadTileset(scene, buildingsMetadataUrl).then(
       function (tileset) {
-        var content = tileset.root.content;
+        const content = tileset.root.content;
         tileset.show = false;
         expect(scene).toPickPrimitive(undefined);
         tileset.show = true;
@@ -139,19 +178,21 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
           expect(result).toBeDefined();
           expect(result.primitive).toBe(tileset);
           expect(result.content).toBe(content);
+          const featureId = result.featureId;
+          expect(featureId).toBe(0);
           expect(content.batchTable).toBeDefined();
-          expect(content.hasProperty(0, "id")).toBe(true);
-          expect(content.getFeature(0)).toBeDefined();
+          expect(content.hasProperty(featureId, "id")).toBe(true);
+          expect(content.getFeature(featureId)).toBeDefined();
         });
       }
     );
   });
 
-  it("picks from B3DM batch table", function () {
+  it("picks from b3dm batch table", function () {
     setCamera(centerLongitude, centerLatitude, 15.0);
     return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
       function (tileset) {
-        var content = tileset.root.content;
+        const content = tileset.root.content;
         tileset.show = false;
         expect(scene).toPickPrimitive(undefined);
         tileset.show = true;
@@ -159,12 +200,40 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
           expect(result).toBeDefined();
           expect(result.primitive).toBe(tileset);
           expect(result.content).toBe(content);
+          const featureId = result.featureId;
+          expect(featureId).toBe(0);
           expect(content.batchTable).toBeDefined();
-          expect(content.hasProperty(0, "id")).toBe(true);
-          expect(content.getFeature(0)).toBeDefined();
+          expect(content.hasProperty(featureId, "id")).toBe(true);
+          expect(content.getFeature(featureId)).toBeDefined();
         });
       }
     );
+  });
+
+  it("picks from i3dm batch table", function () {
+    if (!scene.context.instancedArrays) {
+      return;
+    }
+
+    setCamera(centerLongitude, centerLatitude, 25.0);
+    return Cesium3DTilesTester.loadTileset(
+      scene,
+      InstancedWithBatchTableUrl
+    ).then(function (tileset) {
+      const content = tileset.root.content;
+      tileset.show = false;
+      expect(scene).toPickPrimitive(undefined);
+      tileset.show = true;
+      expect(scene).toPickAndCall(function (result) {
+        expect(result).toBeDefined();
+        expect(result.primitive).toBe(tileset);
+        expect(result.content).toBe(content);
+        const featureId = result.featureId;
+        expect(featureId).toBe(12);
+        expect(content.hasProperty(featureId, "Height")).toBe(true);
+        expect(content.getFeature(featureId)).toBeDefined();
+      });
+    });
   });
 
   it("destroys", function () {
@@ -172,20 +241,20 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
   });
 
   describe("3DTILES_metadata", function () {
-    var metadataClass = new MetadataClass({
+    const metadataClass = new MetadataClass({
       id: "test",
       class: {
         properties: {
           name: {
-            type: "STRING",
+            componentType: "STRING",
           },
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
         },
       },
     });
-    var groupMetadata = new GroupMetadata({
+    const groupMetadata = new GroupMetadata({
       id: "testGroup",
       group: {
         properties: {
@@ -200,7 +269,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
       setCamera(centerLongitude, centerLatitude, 15.0);
       return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
         function (tileset) {
-          var content = tileset.root.content;
+          const content = tileset.root.content;
           content.groupMetadata = groupMetadata;
           expect(content.groupMetadata).toBe(groupMetadata);
         }

@@ -37,7 +37,7 @@ import PropertyBag from "./PropertyBag.js";
 import RectangleGraphics from "./RectangleGraphics.js";
 import WallGraphics from "./WallGraphics.js";
 
-var cartoScratch = new Cartographic();
+const cartoScratch = new Cartographic();
 
 function createConstantPositionProperty(value) {
   return new ConstantPositionProperty(value);
@@ -108,7 +108,7 @@ function createPropertyTypeDescriptor(name, Type) {
 function Entity(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var id = options.id;
+  let id = options.id;
   if (!defined(id)) {
     id = createGuid();
   }
@@ -201,12 +201,12 @@ function Entity(options) {
 }
 
 function updateShow(entity, children, isShowing) {
-  var length = children.length;
-  for (var i = 0; i < length; i++) {
-    var child = children[i];
-    var childShow = child._show;
-    var oldValue = !isShowing && childShow;
-    var newValue = isShowing && childShow;
+  const length = children.length;
+  for (let i = 0; i < length; i++) {
+    const child = children[i];
+    const childShow = child._show;
+    const oldValue = !isShowing && childShow;
+    const newValue = isShowing && childShow;
     if (oldValue !== newValue) {
       updateShow(child, child._children, isShowing);
     }
@@ -280,9 +280,9 @@ Object.defineProperties(Entity.prototype, {
         return;
       }
 
-      var wasShowing = this.isShowing;
+      const wasShowing = this.isShowing;
       this._show = value;
-      var isShowing = this.isShowing;
+      const isShowing = this.isShowing;
 
       if (wasShowing !== isShowing) {
         updateShow(this, this._children, isShowing);
@@ -316,15 +316,15 @@ Object.defineProperties(Entity.prototype, {
       return this._parent;
     },
     set: function (value) {
-      var oldValue = this._parent;
+      const oldValue = this._parent;
 
       if (oldValue === value) {
         return;
       }
 
-      var wasShowing = this.isShowing;
+      const wasShowing = this.isShowing;
       if (defined(oldValue)) {
-        var index = oldValue._children.indexOf(this);
+        const index = oldValue._children.indexOf(this);
         oldValue._children.splice(index, 1);
       }
 
@@ -333,7 +333,7 @@ Object.defineProperties(Entity.prototype, {
         value._children.push(this);
       }
 
-      var isShowing = this.isShowing;
+      const isShowing = this.isShowing;
 
       if (wasShowing !== isShowing) {
         updateShow(this, this._children, isShowing);
@@ -504,7 +504,7 @@ Entity.prototype.isAvailable = function (time) {
   }
   //>>includeEnd('debug');
 
-  var availability = this._availability;
+  const availability = this._availability;
   return !defined(availability) || availability.contains(time);
 };
 
@@ -519,7 +519,7 @@ Entity.prototype.isAvailable = function (time) {
  * @exception {DeveloperError} "propertyName" is already a registered property.
  */
 Entity.prototype.addProperty = function (propertyName) {
-  var propertyNames = this._propertyNames;
+  const propertyNames = this._propertyNames;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(propertyName)) {
@@ -527,11 +527,11 @@ Entity.prototype.addProperty = function (propertyName) {
   }
   if (propertyNames.indexOf(propertyName) !== -1) {
     throw new DeveloperError(
-      propertyName + " is already a registered property."
+      `${propertyName} is already a registered property.`
     );
   }
   if (propertyName in this) {
-    throw new DeveloperError(propertyName + " is a reserved property name.");
+    throw new DeveloperError(`${propertyName} is a reserved property name.`);
   }
   //>>includeEnd('debug');
 
@@ -552,15 +552,15 @@ Entity.prototype.addProperty = function (propertyName) {
  * @exception {DeveloperError} "propertyName" is not a registered property.
  */
 Entity.prototype.removeProperty = function (propertyName) {
-  var propertyNames = this._propertyNames;
-  var index = propertyNames.indexOf(propertyName);
+  const propertyNames = this._propertyNames;
+  const index = propertyNames.indexOf(propertyName);
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(propertyName)) {
     throw new DeveloperError("propertyName is required.");
   }
   if (index === -1) {
-    throw new DeveloperError(propertyName + " is not a registered property.");
+    throw new DeveloperError(`${propertyName} is not a registered property.`);
   }
   //>>includeEnd('debug');
 
@@ -586,13 +586,13 @@ Entity.prototype.merge = function (source) {
   this.name = defaultValue(this.name, source.name);
   this.availability = defaultValue(this.availability, source.availability);
 
-  var propertyNames = this._propertyNames;
-  var sourcePropertyNames = defined(source._propertyNames)
+  const propertyNames = this._propertyNames;
+  const sourcePropertyNames = defined(source._propertyNames)
     ? source._propertyNames
     : Object.keys(source);
-  var propertyNamesLength = sourcePropertyNames.length;
-  for (var i = 0; i < propertyNamesLength; i++) {
-    var name = sourcePropertyNames[i];
+  const propertyNamesLength = sourcePropertyNames.length;
+  for (let i = 0; i < propertyNamesLength; i++) {
+    const name = sourcePropertyNames[i];
 
     //While source is required by the API to be an Entity, we internally call this method from the
     //constructor with an options object to configure initial custom properties.
@@ -601,8 +601,8 @@ Entity.prototype.merge = function (source) {
       continue;
     }
 
-    var targetProperty = this[name];
-    var sourceProperty = source[name];
+    const targetProperty = this[name];
+    const sourceProperty = source[name];
 
     //Custom properties that are registered on the source entity must also
     //get registered on this entity.
@@ -627,9 +627,9 @@ Entity.prototype.merge = function (source) {
   }
 };
 
-var matrix3Scratch = new Matrix3();
-var positionScratch = new Cartesian3();
-var orientationScratch = new Quaternion();
+const matrix3Scratch = new Matrix3();
+const positionScratch = new Cartesian3();
+const orientationScratch = new Quaternion();
 
 /**
  * Computes the model matrix for the entity's transform at specified time. Returns undefined if orientation or position
@@ -644,7 +644,7 @@ Entity.prototype.computeModelMatrix = function (time, result) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("time", time);
   //>>includeEnd('debug');
-  var position = Property.getValueOrUndefined(
+  const position = Property.getValueOrUndefined(
     this._position,
     time,
     positionScratch
@@ -653,7 +653,7 @@ Entity.prototype.computeModelMatrix = function (time, result) {
     return undefined;
   }
 
-  var orientation = Property.getValueOrUndefined(
+  const orientation = Property.getValueOrUndefined(
     this._orientation,
     time,
     orientationScratch
@@ -683,12 +683,12 @@ Entity.prototype.computeModelMatrixForHeightReference = function (
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("time", time);
   //>>includeEnd('debug');
-  var heightReference = Property.getValueOrDefault(
+  const heightReference = Property.getValueOrDefault(
     heightReferenceProperty,
     time,
     HeightReference.NONE
   );
-  var position = Property.getValueOrUndefined(
+  let position = Property.getValueOrUndefined(
     this._position,
     time,
     positionScratch
@@ -701,7 +701,7 @@ Entity.prototype.computeModelMatrixForHeightReference = function (
     return this.computeModelMatrix(time, result);
   }
 
-  var carto = ellipsoid.cartesianToCartographic(position, cartoScratch);
+  const carto = ellipsoid.cartesianToCartographic(position, cartoScratch);
   if (heightReference === HeightReference.CLAMP_TO_GROUND) {
     carto.height = heightOffset;
   } else {
@@ -709,7 +709,7 @@ Entity.prototype.computeModelMatrixForHeightReference = function (
   }
   position = ellipsoid.cartographicToCartesian(carto, position);
 
-  var orientation = Property.getValueOrUndefined(
+  const orientation = Property.getValueOrUndefined(
     this._orientation,
     time,
     orientationScratch

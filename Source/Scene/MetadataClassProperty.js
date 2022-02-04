@@ -25,21 +25,21 @@ import MetadataComponentType from "./MetadataComponentType.js";
  */
 function MetadataClassProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var id = options.id;
-  var property = options.property;
+  const id = options.id;
+  const property = options.property;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("options.id", id);
   Check.typeOf.object("options.property", property);
   //>>includeEnd('debug');
 
-  var enumType;
+  let enumType;
   if (defined(property.enumType)) {
     enumType = options.enums[property.enumType];
   }
 
-  var type = property.type;
-  var componentType;
+  let type = property.type;
+  let componentType;
   if (MetadataComponentType.hasOwnProperty(type)) {
     // For EXT_feature_metadata, single values were part of type, not
     // componentType. Transcode to the newer format.
@@ -49,13 +49,13 @@ function MetadataClassProperty(options) {
     type = defaultValue(MetadataType[type], MetadataType.SINGLE);
     componentType = MetadataComponentType[property.componentType];
   }
-  var valueType = getValueType(componentType, enumType);
+  const valueType = getValueType(componentType, enumType);
 
-  var normalized =
+  const normalized =
     MetadataComponentType.isIntegerType(componentType) &&
     defaultValue(property.normalized, false);
 
-  var componentCount =
+  const componentCount =
     type === MetadataType.ARRAY
       ? property.componentCount
       : MetadataType.getComponentCount(type);
@@ -403,8 +403,8 @@ MetadataClassProperty.prototype.packVectorAndMatrixTypes = function (value) {
  * @private
  */
 MetadataClassProperty.prototype.validate = function (value) {
-  var type = this._type;
-  var componentType = this._componentType;
+  const type = this._type;
+  const componentType = this._componentType;
 
   if (MetadataType.isVectorType(type) || MetadataType.isMatrixType(type)) {
     return validateVectorOrMatrix(value, type, componentType);
@@ -419,12 +419,12 @@ function validateArray(classProperty, value, componentCount) {
   if (!Array.isArray(value)) {
     return getTypeErrorMessage(value, MetadataType.ARRAY);
   }
-  var length = value.length;
+  const length = value.length;
   if (defined(componentCount) && componentCount !== length) {
     return "Array length does not match componentCount";
   }
-  for (var i = 0; i < length; ++i) {
-    var message = checkValue(classProperty, value[i]);
+  for (let i = 0; i < length; ++i) {
+    const message = checkValue(classProperty, value[i]);
     if (defined(message)) {
       return message;
     }
@@ -433,45 +433,45 @@ function validateArray(classProperty, value, componentCount) {
 
 function validateVectorOrMatrix(value, type, componentType) {
   if (!MetadataComponentType.isVectorCompatible(componentType)) {
-    var message = "componentType " + componentType + " is incompatible with ";
+    const message = `componentType ${componentType} is incompatible with `;
     if (MetadataType.isVectorType(type)) {
-      return message + "vector type " + type;
+      return `${message}vector type ${type}`;
     }
 
-    return message + "matrix type " + type;
+    return `${message}matrix type ${type}`;
   }
 
   if (type === MetadataType.VEC2 && !(value instanceof Cartesian2)) {
-    return "vector value " + value + " must be a Cartesian2";
+    return `vector value ${value} must be a Cartesian2`;
   }
 
   if (type === MetadataType.VEC3 && !(value instanceof Cartesian3)) {
-    return "vector value " + value + " must be a Cartesian3";
+    return `vector value ${value} must be a Cartesian3`;
   }
 
   if (type === MetadataType.VEC4 && !(value instanceof Cartesian4)) {
-    return "vector value " + value + " must be a Cartesian4";
+    return `vector value ${value} must be a Cartesian4`;
   }
 
   if (type === MetadataType.MAT2 && !(value instanceof Matrix2)) {
-    return "matrix value " + value + " must be a Matrix2";
+    return `matrix value ${value} must be a Matrix2`;
   }
 
   if (type === MetadataType.MAT3 && !(value instanceof Matrix3)) {
-    return "matrix value " + value + " must be a Matrix3";
+    return `matrix value ${value} must be a Matrix3`;
   }
 
   if (type === MetadataType.MAT4 && !(value instanceof Matrix4)) {
-    return "matrix value " + value + " must be a Matrix4";
+    return `matrix value ${value} must be a Matrix4`;
   }
 }
 
 function getTypeErrorMessage(value, type) {
-  return "value " + value + " does not match type " + type;
+  return `value ${value} does not match type ${type}`;
 }
 
 function getOutOfRangeErrorMessage(value, type, normalized) {
-  var errorMessage = "value " + value + " is out of range for type " + type;
+  let errorMessage = `value ${value} is out of range for type ${type}`;
   if (normalized) {
     errorMessage += " (normalized)";
   }
@@ -480,10 +480,10 @@ function getOutOfRangeErrorMessage(value, type, normalized) {
 
 function checkInRange(value, componentType, normalized) {
   if (normalized) {
-    var min = MetadataComponentType.isUnsignedIntegerType(componentType)
+    const min = MetadataComponentType.isUnsignedIntegerType(componentType)
       ? 0.0
       : -1.0;
-    var max = 1.0;
+    const max = 1.0;
     if (value < min || value > max) {
       return getOutOfRangeErrorMessage(value, componentType, normalized);
     }
@@ -499,22 +499,22 @@ function checkInRange(value, componentType, normalized) {
 }
 
 function getNonFiniteErrorMessage(value, type) {
-  return "value " + value + " of type " + type + " must be finite";
+  return `value ${value} of type ${type} must be finite`;
 }
 
 function checkValue(classProperty, value) {
-  var javascriptType = typeof value;
+  const javascriptType = typeof value;
 
-  var enumType = classProperty._enumType;
+  const enumType = classProperty._enumType;
   if (defined(enumType)) {
     if (javascriptType !== "string" || !defined(enumType.valuesByName[value])) {
-      return "value " + value + " is not a valid enum name for " + enumType.id;
+      return `value ${value} is not a valid enum name for ${enumType.id}`;
     }
     return;
   }
 
-  var valueType = classProperty._valueType;
-  var normalized = classProperty._normalized;
+  const valueType = classProperty._valueType;
+  const normalized = classProperty._normalized;
 
   switch (valueType) {
     case MetadataComponentType.INT8:
@@ -563,16 +563,16 @@ function checkValue(classProperty, value) {
 }
 
 function normalize(classProperty, value, normalizeFunction) {
-  var normalized = classProperty._normalized;
+  const normalized = classProperty._normalized;
   if (!normalized) {
     return value;
   }
 
-  var type = classProperty._type;
-  var valueType = classProperty._valueType;
+  const type = classProperty._type;
+  const valueType = classProperty._valueType;
 
-  var i;
-  var length;
+  let i;
+  let length;
   if (type === MetadataType.ARRAY) {
     length = value.length;
     for (i = 0; i < length; ++i) {

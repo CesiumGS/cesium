@@ -2,16 +2,16 @@ import { Empty3DTileContent } from "../../Source/Cesium.js";
 
 describe("Scene/Empty3DTileContent", function () {
   it("destroys", function () {
-    var content = new Empty3DTileContent();
+    const content = new Empty3DTileContent();
     expect(content.isDestroyed()).toEqual(false);
     content.destroy();
     expect(content.isDestroyed()).toEqual(true);
   });
 
   it("gets properties", function () {
-    var mockTileset = {};
-    var mockTile = {};
-    var content = new Empty3DTileContent(mockTileset, mockTile);
+    const mockTileset = {};
+    const mockTile = {};
+    const content = new Empty3DTileContent(mockTileset, mockTile);
     expect(content.featuresLength).toBe(0);
     expect(content.pointsLength).toBe(0);
     expect(content.trianglesLength).toBe(0);
@@ -28,17 +28,17 @@ describe("Scene/Empty3DTileContent", function () {
 
   describe("3DTILES_metadata", function () {
     it("groupMetadata returns undefined", function () {
-      var mockTileset = {};
-      var mockTile = {};
-      var content = new Empty3DTileContent(mockTileset, mockTile);
+      const mockTileset = {};
+      const mockTile = {};
+      const content = new Empty3DTileContent(mockTileset, mockTile);
       expect(content.groupMetadata).not.toBeDefined();
     });
 
     it("assigning groupMetadata throws", function () {
       expect(function () {
-        var mockTileset = {};
-        var mockTile = {};
-        var content = new Empty3DTileContent(mockTileset, mockTile);
+        const mockTileset = {};
+        const mockTile = {};
+        const content = new Empty3DTileContent(mockTileset, mockTile);
         content.groupMetadata = {};
       }).toThrowDeveloperError();
     });

@@ -5,7 +5,7 @@
  *
  * @see ImageryLayer#splitDirection
  */
-var ImagerySplitDirection = {
+const ImagerySplitDirection = {
   /**
    * Display the ImageryLayer to the left of the {@link Scene#imagerySplitPosition}.
    *

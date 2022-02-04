@@ -36,13 +36,13 @@
         "use strict";
         //Sandcastle_Begin
         // Create the viewer.
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         // Example 1: Draw a red circle on the globe surface.
 
         // Create the circle geometry.
-        var circleGeometry = new Cesium.CircleGeometry({
+        let circleGeometry = new Cesium.CircleGeometry({
           center: Cesium.Cartesian3.fromDegrees(-95.0, 43.0),
           radius: 250000.0,
           vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -50,7 +50,7 @@
         // Create a geometry instance using the circle geometry
         // created above. We can also specify a color attribute,
         // in this case, we're creating a translucent red color.
-        var redCircleInstance = new Cesium.GeometryInstance({
+        const redCircleInstance = new Cesium.GeometryInstance({
           geometry: circleGeometry,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(
@@ -81,7 +81,7 @@
         // Create a geometry instance using the circle geometry
         // created above. Set the color attribute to a
         // translucent green.
-        var greenCircleInstance = new Cesium.GeometryInstance({
+        const greenCircleInstance = new Cesium.GeometryInstance({
           geometry: circleGeometry,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(
@@ -111,7 +111,7 @@
         });
         // Create a geometry instance using the circle geometry
         // created above. Set the color attribute to a solid blue.
-        var blueCircleInstance = new Cesium.GeometryInstance({
+        const blueCircleInstance = new Cesium.GeometryInstance({
           geometry: circleGeometry,
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(

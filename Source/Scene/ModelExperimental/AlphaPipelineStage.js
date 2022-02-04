@@ -11,26 +11,26 @@ import Pass from "../../Renderer/Pass.js";
  *
  * @private
  */
-var AlphaPipelineStage = {};
+const AlphaPipelineStage = {};
 AlphaPipelineStage.name = "AlphaPipelineStage"; // Helps with debugging
 
 AlphaPipelineStage.process = function (renderResources, primitive, frameState) {
-  var alphaOptions = renderResources.alphaOptions;
+  const alphaOptions = renderResources.alphaOptions;
 
   // Ensure the pass is defined
-  var model = renderResources.model;
+  const model = renderResources.model;
   alphaOptions.pass = defaultValue(alphaOptions.pass, model.opaquePass);
 
-  var renderStateOptions = renderResources.renderStateOptions;
+  const renderStateOptions = renderResources.renderStateOptions;
   if (alphaOptions.pass === Pass.TRANSLUCENT) {
     renderStateOptions.blending = BlendingState.ALPHA_BLEND;
   } else {
     renderStateOptions.blending = BlendingState.DISABLED;
   }
 
-  var shaderBuilder = renderResources.shaderBuilder;
-  var uniformMap = renderResources.uniformMap;
-  var alphaMode = alphaOptions.alphaMode;
+  const shaderBuilder = renderResources.shaderBuilder;
+  const uniformMap = renderResources.uniformMap;
+  const alphaMode = alphaOptions.alphaMode;
 
   if (alphaMode === AlphaMode.MASK) {
     shaderBuilder.addDefine(

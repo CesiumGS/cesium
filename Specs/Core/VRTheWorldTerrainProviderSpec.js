@@ -11,7 +11,7 @@ import pollToPromise from "../pollToPromise.js";
 import { when } from "../../Source/Cesium.js";
 
 describe("Core/VRTheWorldTerrainProvider", function () {
-  var imageUrl = "Data/Images/Red16x16.png";
+  const imageUrl = "Data/Images/Red16x16.png";
 
   beforeEach(function () {
     RequestScheduler.clearForSpecs();
@@ -38,8 +38,8 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       }
 
       setTimeout(function () {
-        var parser = new DOMParser();
-        var xmlString =
+        const parser = new DOMParser();
+        const xmlString =
           '<TileMap version="1.0.0" tilemapservice="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/">' +
           "<!--  Additional data: tms_type is default  -->" +
           "<Title>Hawaii World elev</Title>" +
@@ -59,7 +59,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
           '<DataExtent minx="24.999584" miny="-0.000417" maxx="30.000417" maxy="5.000417" minlevel="0" maxlevel="13"/>' +
           "</DataExtents>" +
           "</TileMap>";
-        var xml = parser.parseFromString(xmlString, "text/xml");
+        const xml = parser.parseFromString(xmlString, "text/xml");
         deferred.resolve(xml);
       }, 1);
     };
@@ -93,7 +93,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
   });
 
   it("resolves readyPromise", function () {
-    var provider = new VRTheWorldTerrainProvider({
+    const provider = new VRTheWorldTerrainProvider({
       url: "made/up/url",
     });
 
@@ -104,11 +104,11 @@ describe("Core/VRTheWorldTerrainProvider", function () {
   });
 
   it("resolves readyPromise with Resource", function () {
-    var resource = new Resource({
+    const resource = new Resource({
       url: "made/up/url",
     });
 
-    var provider = new VRTheWorldTerrainProvider({
+    const provider = new VRTheWorldTerrainProvider({
       url: resource,
     });
 
@@ -119,7 +119,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
   });
 
   it("has error event", function () {
-    var provider = new VRTheWorldTerrainProvider({
+    const provider = new VRTheWorldTerrainProvider({
       url: "made/up/url",
     });
     expect(provider.errorEvent).toBeDefined();
@@ -127,7 +127,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
   });
 
   it("returns reasonable geometric error for various levels", function () {
-    var provider = new VRTheWorldTerrainProvider({
+    const provider = new VRTheWorldTerrainProvider({
       url: "made/up/url",
     });
 
@@ -147,7 +147,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
   });
 
   it("getLevelMaximumGeometricError must not be called before isReady returns true", function () {
-    var provider = new VRTheWorldTerrainProvider({
+    const provider = new VRTheWorldTerrainProvider({
       url: "made/up/url",
     });
 
@@ -157,7 +157,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
   });
 
   it("getTilingScheme must not be called before isReady returns true", function () {
-    var provider = new VRTheWorldTerrainProvider({
+    const provider = new VRTheWorldTerrainProvider({
       url: "made/up/url",
     });
 
@@ -167,14 +167,14 @@ describe("Core/VRTheWorldTerrainProvider", function () {
   });
 
   it("logo is undefined if credit is not provided", function () {
-    var provider = new VRTheWorldTerrainProvider({
+    const provider = new VRTheWorldTerrainProvider({
       url: "made/up/url",
     });
     expect(provider.credit).toBeUndefined();
   });
 
   it("logo is defined if credit is provided", function () {
-    var provider = new VRTheWorldTerrainProvider({
+    const provider = new VRTheWorldTerrainProvider({
       url: "made/up/url",
       credit: "thanks to our awesome made up contributors!",
     });
@@ -182,14 +182,14 @@ describe("Core/VRTheWorldTerrainProvider", function () {
   });
 
   it("does not have a water mask", function () {
-    var provider = new VRTheWorldTerrainProvider({
+    const provider = new VRTheWorldTerrainProvider({
       url: "made/up/url",
     });
     expect(provider.hasWaterMask).toBe(false);
   });
 
   it("is not ready immediately", function () {
-    var provider = new VRTheWorldTerrainProvider({
+    const provider = new VRTheWorldTerrainProvider({
       url: "made/up/url",
     });
     expect(provider.ready).toBe(false);
@@ -206,8 +206,8 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       overrideMimeType
     ) {
       setTimeout(function () {
-        var parser = new DOMParser();
-        var xmlString =
+        const parser = new DOMParser();
+        const xmlString =
           '<TileMap version="1.0.0" tilemapservice="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/">' +
           "<!--  Additional data: tms_type is default  -->" +
           "<Title>Hawaii World elev</Title>" +
@@ -227,16 +227,16 @@ describe("Core/VRTheWorldTerrainProvider", function () {
           '<DataExtent minx="24.999584" miny="-0.000417" maxx="30.000417" maxy="5.000417" minlevel="0" maxlevel="13"/>' +
           "</DataExtents>" +
           "</TileMap>";
-        var xml = parser.parseFromString(xmlString, "text/xml");
+        const xml = parser.parseFromString(xmlString, "text/xml");
         deferred.resolve(xml);
       }, 1);
     };
 
-    var terrainProvider = new VRTheWorldTerrainProvider({
+    const terrainProvider = new VRTheWorldTerrainProvider({
       url: "made/up/url",
     });
 
-    var deferred = when.defer();
+    const deferred = when.defer();
 
     terrainProvider.errorEvent.addEventListener(function () {
       deferred.resolve();
@@ -247,7 +247,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
 
   describe("requestTileGeometry", function () {
     it("must not be called before isReady returns true", function () {
-      var terrainProvider = new VRTheWorldTerrainProvider({
+      const terrainProvider = new VRTheWorldTerrainProvider({
         url: "made/up/url",
         proxy: new DefaultProxy("/proxy/"),
       });
@@ -258,7 +258,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
     });
 
     it("provides HeightmapTerrainData", function () {
-      var baseUrl = "made/up/url";
+      const baseUrl = "made/up/url";
 
       Resource._Implementations.createImage = function (
         request,
@@ -277,7 +277,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
         );
       };
 
-      var terrainProvider = new VRTheWorldTerrainProvider({
+      const terrainProvider = new VRTheWorldTerrainProvider({
         url: baseUrl,
       });
 
@@ -296,9 +296,9 @@ describe("Core/VRTheWorldTerrainProvider", function () {
     });
 
     it("returns undefined if too many requests are already in progress", function () {
-      var baseUrl = "made/up/url";
+      const baseUrl = "made/up/url";
 
-      var deferreds = [];
+      const deferreds = [];
 
       Resource._Implementations.createImage = function (
         request,
@@ -309,15 +309,15 @@ describe("Core/VRTheWorldTerrainProvider", function () {
         deferreds.push(deferred);
       };
 
-      var terrainProvider = new VRTheWorldTerrainProvider({
+      const terrainProvider = new VRTheWorldTerrainProvider({
         url: baseUrl,
       });
 
       return pollToPromise(function () {
         return terrainProvider.ready;
       }).then(function () {
-        var promise;
-        var i;
+        let promise;
+        let i;
         for (i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
           promise = terrainProvider.requestTileGeometry(
             0,

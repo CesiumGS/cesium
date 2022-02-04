@@ -26,20 +26,20 @@ import { when } from "../../Source/Cesium.js";
 describe(
   "Scene/TimeDynamicPointCloud",
   function () {
-    var scene;
+    let scene;
 
-    var center = new Cartesian3(
+    const center = new Cartesian3(
       1215012.8828876738,
       -4736313.051199594,
       4081605.22126042
     );
 
-    var clock = new Clock({
+    const clock = new Clock({
       clockStep: ClockStep.TICK_DEPENDENT,
       shouldAnimate: true,
     });
 
-    var dates = [
+    const dates = [
       JulianDate.fromIso8601("2018-07-19T15:18:00Z"),
       JulianDate.fromIso8601("2018-07-19T15:18:00.5Z"),
       JulianDate.fromIso8601("2018-07-19T15:18:01Z"),
@@ -48,7 +48,7 @@ describe(
       JulianDate.fromIso8601("2018-07-19T15:18:02.5Z"),
     ];
 
-    var transforms = [
+    const transforms = [
       Matrix4.fromColumnMajorArray([
         0.968635634376879,
         0.24848542777253735,
@@ -142,7 +142,7 @@ describe(
     ];
 
     function createIntervals(useTransforms, useDraco) {
-      var folderName;
+      let folderName;
       if (useTransforms) {
         folderName =
           "Data/Cesium3DTiles/PointCloud/PointCloudTimeDynamicWithTransform/";
@@ -153,9 +153,9 @@ describe(
         folderName = "Data/Cesium3DTiles/PointCloud/PointCloudTimeDynamic/";
       }
 
-      var uris = [];
-      for (var i = 0; i < 5; ++i) {
-        uris.push(folderName + i + ".pnts");
+      const uris = [];
+      for (let i = 0; i < 5; ++i) {
+        uris.push(`${folderName + i}.pnts`);
       }
 
       function dataCallback(interval, index) {
@@ -173,8 +173,8 @@ describe(
 
     function createTimeDynamicPointCloud(options) {
       options = defaultValue(options, {});
-      var useTransforms = defaultValue(options.useTransforms, false);
-      var useDraco = defaultValue(options.useDraco, false);
+      const useTransforms = defaultValue(options.useTransforms, false);
+      const useDraco = defaultValue(options.useDraco, false);
       options.intervals = createIntervals(useTransforms, useDraco);
       options.clock = clock;
       if (!defined(options.style)) {
@@ -195,8 +195,8 @@ describe(
       goToFrame(index);
       return pollToPromise(function () {
         scene.renderForSpecs();
-        var frame = pointCloud._frames[index];
-        var ready = defined(frame) && frame.ready;
+        const frame = pointCloud._frames[index];
+        const ready = defined(frame) && frame.ready;
         if (ready) {
           scene.renderForSpecs();
         }
@@ -211,9 +211,9 @@ describe(
     }
 
     function loadFrames(pointCloud, indexes) {
-      var length = indexes.length;
-      var promise = getLoadFrameFunction(pointCloud, indexes[0])();
-      for (var i = 1; i < length; ++i) {
+      const length = indexes.length;
+      let promise = getLoadFrameFunction(pointCloud, indexes[0])();
+      for (let i = 1; i < length; ++i) {
         promise = promise.then(getLoadFrameFunction(pointCloud, indexes[i]));
       }
       return promise.then(function () {
@@ -253,7 +253,7 @@ describe(
     });
 
     it("throws if options.clock is undefined", function () {
-      var intervals = createIntervals();
+      const intervals = createIntervals();
       expect(function () {
         return new TimeDynamicPointCloud({
           intervals: intervals,
@@ -270,7 +270,7 @@ describe(
     });
 
     it("renders in 3D", function () {
-      var pointCloud = createTimeDynamicPointCloud();
+      const pointCloud = createTimeDynamicPointCloud();
       return loadFrame(pointCloud).then(function () {
         scene.morphTo3D(0.0);
         expect(scene).toRender([255, 0, 0, 255]);
@@ -282,7 +282,7 @@ describe(
     });
 
     it("renders in 2D", function () {
-      var pointCloud = createTimeDynamicPointCloud();
+      const pointCloud = createTimeDynamicPointCloud();
       return loadFrame(pointCloud).then(function () {
         scene.morphTo2D(0.0);
         expect(scene).toRender([255, 0, 0, 255]);
@@ -294,7 +294,7 @@ describe(
     });
 
     it("renders in CV", function () {
-      var pointCloud = createTimeDynamicPointCloud();
+      const pointCloud = createTimeDynamicPointCloud();
       return loadFrame(pointCloud).then(function () {
         scene.morphToColumbusView(0.0);
         expect(scene).toRender([255, 0, 0, 255]);
@@ -306,16 +306,16 @@ describe(
     });
 
     it("gets bounding sphere of the rendered frame", function () {
-      var pointCloud = createTimeDynamicPointCloud({
+      const pointCloud = createTimeDynamicPointCloud({
         useTransforms: true,
       });
       expect(pointCloud.boundingSphere).toBeUndefined(); // Undefined until a frame is rendered
       return loadAllFrames(pointCloud).then(function () {
-        var boundingSphereFrame0 = pointCloud.boundingSphere;
+        const boundingSphereFrame0 = pointCloud.boundingSphere;
         expect(boundingSphereFrame0).toBeDefined();
         goToFrame(1);
         scene.renderForSpecs();
-        var boundingSphereFrame1 = pointCloud.boundingSphere;
+        const boundingSphereFrame1 = pointCloud.boundingSphere;
         expect(boundingSphereFrame1).toBeDefined();
         expect(
           BoundingSphere.equals(boundingSphereFrame0, boundingSphereFrame1)
@@ -324,7 +324,7 @@ describe(
     });
 
     it("resolves ready promise", function () {
-      var pointCloud = createTimeDynamicPointCloud();
+      const pointCloud = createTimeDynamicPointCloud();
       return loadFrame(pointCloud).then(function () {
         return pointCloud.readyPromise.then(function (pointCloud) {
           expect(pointCloud.boundingSphere).toBeDefined();
@@ -333,7 +333,7 @@ describe(
     });
 
     it("sets show", function () {
-      var pointCloud = createTimeDynamicPointCloud();
+      const pointCloud = createTimeDynamicPointCloud();
 
       return loadFrame(pointCloud).then(function () {
         expect(scene).toRender([255, 0, 0, 255]);
@@ -343,10 +343,10 @@ describe(
     });
 
     it("sets model matrix", function () {
-      var translation = new Cartesian3(10000, 2000, 100);
-      var modelMatrix = Matrix4.fromTranslation(translation);
-      var newCenter = Cartesian3.add(center, translation, new Cartesian3());
-      var pointCloud = createTimeDynamicPointCloud({
+      const translation = new Cartesian3(10000, 2000, 100);
+      const modelMatrix = Matrix4.fromTranslation(translation);
+      const newCenter = Cartesian3.add(center, translation, new Cartesian3());
+      const pointCloud = createTimeDynamicPointCloud({
         modelMatrix: modelMatrix,
       });
       return loadFrame(pointCloud).then(function () {
@@ -361,7 +361,7 @@ describe(
     });
 
     it("sets shadows", function () {
-      var pointCloud = createTimeDynamicPointCloud({
+      const pointCloud = createTimeDynamicPointCloud({
         shadows: ShadowMode.DISABLED,
       });
       return loadFrame(pointCloud).then(function () {
@@ -376,11 +376,11 @@ describe(
     });
 
     it("honors maximumMemoryUsage by unloading all frames not currently being loaded or rendered", function () {
-      var pointCloud = createTimeDynamicPointCloud();
+      const pointCloud = createTimeDynamicPointCloud();
       return loadAllFrames(pointCloud).then(function () {
-        var singleFrameMemoryUsage = 33000;
-        var frames = pointCloud._frames;
-        var framesLength = frames.length;
+        const singleFrameMemoryUsage = 33000;
+        const frames = pointCloud._frames;
+        const framesLength = frames.length;
         expect(pointCloud.totalMemoryUsageInBytes).toBe(
           singleFrameMemoryUsage * framesLength
         );
@@ -390,7 +390,7 @@ describe(
         scene.renderForSpecs();
         expect(pointCloud.totalMemoryUsageInBytes).toBe(singleFrameMemoryUsage);
         expect(frames[0].ready).toBe(true);
-        for (var i = 1; i < length; ++i) {
+        for (let i = 1; i < length; ++i) {
           expect(frames[i]).toBeUndefined();
         }
 
@@ -413,13 +413,13 @@ describe(
     });
 
     it("enables attenuation and eye dome lighting", function () {
-      var oldScene = scene;
+      const oldScene = scene;
       scene = createScene({
         canvas: createCanvas(100, 100),
       });
       initializeScene();
 
-      var pointCloud = createTimeDynamicPointCloud({
+      const pointCloud = createTimeDynamicPointCloud({
         shading: {
           attenuation: true,
           eyeDomeLighting: false,
@@ -428,7 +428,7 @@ describe(
       });
 
       return loadFrame(pointCloud).then(function () {
-        var attenuationPixelCount;
+        let attenuationPixelCount;
         expect(scene).toRenderPixelCountAndCall(function (pixelCount) {
           attenuationPixelCount = pixelCount;
         });
@@ -449,7 +449,7 @@ describe(
         return;
       }
 
-      var pointCloud = createTimeDynamicPointCloud();
+      const pointCloud = createTimeDynamicPointCloud();
       return loadFrame(pointCloud).then(function () {
         expect(scene.frameState.commandList.length).toBe(1);
         pointCloud.shading.attenuation = true;
@@ -460,7 +460,7 @@ describe(
     });
 
     it("sets style", function () {
-      var pointCloud = createTimeDynamicPointCloud({
+      const pointCloud = createTimeDynamicPointCloud({
         style: new Cesium3DTileStyle({
           color: 'color("blue")',
           pointSize: 10,
@@ -479,7 +479,7 @@ describe(
     });
 
     it("make style dirty", function () {
-      var pointCloud = createTimeDynamicPointCloud({
+      const pointCloud = createTimeDynamicPointCloud({
         style: new Cesium3DTileStyle({
           color: 'color("blue")',
           pointSize: 10,
@@ -496,20 +496,20 @@ describe(
     });
 
     it("sets clipping planes", function () {
-      var modelMatrix = new Transforms.headingPitchRollToFixedFrame(
+      const modelMatrix = new Transforms.headingPitchRollToFixedFrame(
         center,
         new HeadingPitchRoll(0, 0, 0)
       );
-      var clippingPlanesX = new ClippingPlaneCollection({
+      const clippingPlanesX = new ClippingPlaneCollection({
         modelMatrix: modelMatrix,
         planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
       });
-      var clippingPlanesY = new ClippingPlaneCollection({
+      const clippingPlanesY = new ClippingPlaneCollection({
         modelMatrix: modelMatrix,
         planes: [new ClippingPlane(Cartesian3.UNIT_Y, 0.0)],
       });
 
-      var pointCloud = createTimeDynamicPointCloud({
+      const pointCloud = createTimeDynamicPointCloud({
         clippingPlanes: clippingPlanesX,
       });
       return loadAllFrames(pointCloud).then(function () {
@@ -554,7 +554,7 @@ describe(
     });
 
     it("works with frame transforms", function () {
-      var pointCloud = createTimeDynamicPointCloud({
+      const pointCloud = createTimeDynamicPointCloud({
         useTransforms: true,
       });
       return loadAllFrames(pointCloud).then(function () {
@@ -569,7 +569,7 @@ describe(
     });
 
     it("does not render during morph", function () {
-      var pointCloud = createTimeDynamicPointCloud();
+      const pointCloud = createTimeDynamicPointCloud();
       return loadFrame(pointCloud).then(function () {
         scene.renderForSpecs();
         expect(scene.frameState.commandList.length).toBeGreaterThan(0);
@@ -580,7 +580,7 @@ describe(
     });
 
     it("renders frames using Draco compression", function () {
-      var pointCloud = createTimeDynamicPointCloud({
+      const pointCloud = createTimeDynamicPointCloud({
         useDraco: true,
       });
       return loadFrame(pointCloud).then(function () {
@@ -589,7 +589,7 @@ describe(
     });
 
     it("picks", function () {
-      var pointCloud = createTimeDynamicPointCloud();
+      const pointCloud = createTimeDynamicPointCloud();
       return loadFrame(pointCloud).then(function () {
         pointCloud.show = false;
         expect(scene).toPickPrimitive(undefined);
@@ -599,7 +599,7 @@ describe(
     });
 
     it("does not render if current time is out of range", function () {
-      var pointCloud = createTimeDynamicPointCloud();
+      const pointCloud = createTimeDynamicPointCloud();
       return loadFrame(pointCloud).then(function () {
         // Before
         clock.currentTime = JulianDate.addSeconds(
@@ -625,7 +625,7 @@ describe(
     });
 
     it("prefetches different frame when clock multiplier changes", function () {
-      var pointCloud = createTimeDynamicPointCloud();
+      const pointCloud = createTimeDynamicPointCloud();
       spyOn(pointCloud, "_getAverageLoadTime").and.returnValue(0.5);
       return loadFrame(pointCloud).then(function () {
         expect(pointCloud._frames[1]).toBeUndefined();
@@ -641,15 +641,15 @@ describe(
     });
 
     it("renders last rendered frame while new frame loads", function () {
-      var pointCloud = createTimeDynamicPointCloud();
+      const pointCloud = createTimeDynamicPointCloud();
       return loadFrame(pointCloud).then(function () {
-        var commandList = scene.frameState.commandList;
-        var firstFrameCommand = commandList[0];
+        const commandList = scene.frameState.commandList;
+        const firstFrameCommand = commandList[0];
         goToFrame(4);
         return pollToPromise(function () {
           scene.renderForSpecs();
-          var frame = pointCloud._frames[4];
-          var ready = defined(frame) && frame.ready;
+          const frame = pointCloud._frames[4];
+          const ready = defined(frame) && frame.ready;
           if (!ready) {
             expect(commandList[0]).toBe(firstFrameCommand);
           }
@@ -663,7 +663,7 @@ describe(
     });
 
     it("skips frames based on average load time and clock multiplier", function () {
-      var pointCloud = createTimeDynamicPointCloud();
+      const pointCloud = createTimeDynamicPointCloud();
       spyOn(pointCloud, "_getAverageLoadTime").and.returnValue(2.0);
       scene.renderForSpecs(); // at 0.0 seconds - loads frame 0
       clock.multiplier = 0.6;
@@ -677,7 +677,7 @@ describe(
       clock.tick();
       scene.renderForSpecs(); // at 2.4 seconds
 
-      var frames = pointCloud._frames;
+      const frames = pointCloud._frames;
       expect(frames[0]).toBeDefined();
       expect(frames[1]).toBeUndefined();
       expect(frames[2]).toBeDefined();
@@ -686,7 +686,7 @@ describe(
     });
 
     it("does not skip frames if clock multiplier is sufficiently slow", function () {
-      var pointCloud = createTimeDynamicPointCloud();
+      const pointCloud = createTimeDynamicPointCloud();
       spyOn(pointCloud, "_getAverageLoadTime").and.returnValue(0.5);
       scene.renderForSpecs(); // at 0.0 seconds - loads frame 0
       clock.multiplier = 0.6;
@@ -700,7 +700,7 @@ describe(
       clock.tick();
       scene.renderForSpecs(); // at 2.4 seconds
 
-      var frames = pointCloud._frames;
+      const frames = pointCloud._frames;
       expect(frames[0]).toBeDefined();
       expect(frames[1]).toBeDefined();
       expect(frames[2]).toBeDefined();
@@ -709,9 +709,9 @@ describe(
     });
 
     it("renders loaded frames between the previous frame and next frame", function () {
-      var pointCloud = createTimeDynamicPointCloud();
+      const pointCloud = createTimeDynamicPointCloud();
       spyOn(pointCloud, "_getAverageLoadTime").and.returnValue(3.4);
-      var frames = pointCloud._frames;
+      const frames = pointCloud._frames;
       return loadFrames(pointCloud, [0, 2]).then(function () {
         clock.multiplier = 0.6;
         scene.renderForSpecs(); // at 0.0 seconds - preloads frame 4 at 2.04 seconds - renders frame 0
@@ -729,7 +729,7 @@ describe(
     });
 
     it("works with negative clock multiplier", function () {
-      var pointCloud = createTimeDynamicPointCloud();
+      const pointCloud = createTimeDynamicPointCloud();
       spyOn(pointCloud, "_getAverageLoadTime").and.returnValue(2.0);
       goToFrame(4);
       scene.renderForSpecs(); // at 2.0 seconds - loads frame 4
@@ -744,7 +744,7 @@ describe(
       clock.tick();
       scene.renderForSpecs(); // at -0.4 seconds
 
-      var frames = pointCloud._frames;
+      const frames = pointCloud._frames;
       expect(frames[0]).toBeUndefined();
       expect(frames[1]).toBeDefined();
       expect(frames[2]).toBeUndefined();
@@ -753,7 +753,7 @@ describe(
     });
 
     it("frames not loaded in sequential updates do not impact average load time", function () {
-      var pointCloud = createTimeDynamicPointCloud();
+      const pointCloud = createTimeDynamicPointCloud();
       expect(pointCloud._runningAverage).toBe(0.0);
       return loadFrame(pointCloud).then(function () {
         expect(pointCloud._frames[0].sequential).toBe(true);
@@ -762,7 +762,7 @@ describe(
         goToFrame(2); // Start loading frame 2, but don't finish loading it now
         scene.renderForSpecs();
         return loadFrame(pointCloud, 1).then(function () {
-          var twoFrameAverage = pointCloud._runningAverage;
+          const twoFrameAverage = pointCloud._runningAverage;
           expect(pointCloud._frames[1].sequential).toBe(true);
           expect(pointCloud._runningLength).toBe(2);
           expect(pointCloud._runningAverage).toBeGreaterThan(0.0);
@@ -776,7 +776,7 @@ describe(
     });
 
     it("frame failed event is raised from request failure", function () {
-      var pointCloud = createTimeDynamicPointCloud();
+      const pointCloud = createTimeDynamicPointCloud();
       spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
         request,
         responseType,
@@ -788,40 +788,40 @@ describe(
       ) {
         deferred.reject("404");
       });
-      var spyUpdate = jasmine.createSpy("listener");
+      const spyUpdate = jasmine.createSpy("listener");
       pointCloud.frameFailed.addEventListener(spyUpdate);
 
-      var i;
+      let i;
       for (i = 0; i < 5; ++i) {
         goToFrame(i);
         scene.renderForSpecs();
       }
 
       for (i = 0; i < 5; ++i) {
-        var arg = spyUpdate.calls.argsFor(i)[0];
+        const arg = spyUpdate.calls.argsFor(i)[0];
         expect(arg).toBeDefined();
-        expect(arg.uri).toContain(i + ".pnts");
+        expect(arg.uri).toContain(`${i}.pnts`);
         expect(arg.message).toBe("404");
       }
     });
 
     it("failed frame event is raised from Draco failure", function () {
-      var pointCloud = createTimeDynamicPointCloud({
+      const pointCloud = createTimeDynamicPointCloud({
         useDraco: true,
       });
       return loadFrame(pointCloud).then(function () {
-        var decoder = DracoLoader._getDecoderTaskProcessor();
+        const decoder = DracoLoader._getDecoderTaskProcessor();
         spyOn(decoder, "scheduleTask").and.returnValue(
           when.reject({ message: "my error" })
         );
-        var spyUpdate = jasmine.createSpy("listener");
+        const spyUpdate = jasmine.createSpy("listener");
         pointCloud.frameFailed.addEventListener(spyUpdate);
         goToFrame(1);
         scene.renderForSpecs();
-        var failedPromise;
-        var frameFailed = false;
+        let failedPromise;
+        let frameFailed = false;
         return pollToPromise(function () {
-          var contents = pointCloud._frames[1].pointCloud;
+          const contents = pointCloud._frames[1].pointCloud;
           if (defined(contents) && !defined(failedPromise)) {
             failedPromise = contents.readyPromise.otherwise(function () {
               frameFailed = true;
@@ -830,7 +830,7 @@ describe(
           scene.renderForSpecs();
           return frameFailed;
         }).then(function () {
-          var arg = spyUpdate.calls.argsFor(0)[0];
+          const arg = spyUpdate.calls.argsFor(0)[0];
           expect(arg).toBeDefined();
           expect(arg.uri).toContain("1.pnts");
           expect(arg.message).toBe("my error");
@@ -839,8 +839,8 @@ describe(
     });
 
     it("raises frame changed event", function () {
-      var pointCloud = createTimeDynamicPointCloud();
-      var spyFrameChanged = jasmine.createSpy("listener");
+      const pointCloud = createTimeDynamicPointCloud();
+      const spyFrameChanged = jasmine.createSpy("listener");
       pointCloud.frameChanged.addEventListener(spyFrameChanged);
 
       return loadAllFrames(pointCloud).then(function () {
@@ -869,7 +869,7 @@ describe(
     });
 
     it("destroys", function () {
-      var pointCloud = createTimeDynamicPointCloud();
+      const pointCloud = createTimeDynamicPointCloud();
       return loadAllFrames(pointCloud).then(function () {
         expect(pointCloud.isDestroyed()).toEqual(false);
         scene.primitives.remove(pointCloud);

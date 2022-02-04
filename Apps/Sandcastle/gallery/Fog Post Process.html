@@ -30,7 +30,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
         });
 
@@ -38,7 +38,7 @@
           window.alert("This browser does not support the fog post process.");
         }
 
-        var tileset = new Cesium.Cesium3DTileset({
+        const tileset = new Cesium.Cesium3DTileset({
           url: Cesium.IonResource.fromAssetId(40866),
         });
 
@@ -58,7 +58,7 @@
           endTransform: Cesium.Matrix4.IDENTITY,
         });
 
-        var fragmentShaderSource =
+        const fragmentShaderSource =
           "float getDistance(sampler2D depthTexture, vec2 texCoords) \n" +
           "{ \n" +
           "    float depth = czm_unpackDepth(texture2D(depthTexture, texCoords)); \n" +
@@ -95,8 +95,8 @@
           "    gl_FragColor = alphaBlend(finalFogColor, sceneColor); \n" +
           "} \n";
 
-        var ellipsoid = viewer.scene.globe.ellipsoid;
-        var postProcessStage = viewer.scene.postProcessStages.add(
+        const ellipsoid = viewer.scene.globe.ellipsoid;
+        const postProcessStage = viewer.scene.postProcessStages.add(
           new Cesium.PostProcessStage({
             fragmentShader: fragmentShaderSource,
             uniforms: {

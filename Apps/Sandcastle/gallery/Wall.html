@@ -32,9 +32,9 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
-        var redWall = viewer.entities.add({
+        const redWall = viewer.entities.add({
           name: "Red wall at height",
           wall: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights([
@@ -50,7 +50,7 @@
           },
         });
 
-        var greenWall = viewer.entities.add({
+        const greenWall = viewer.entities.add({
           name: "Green wall from surface with outline",
           wall: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights([
@@ -75,7 +75,7 @@
           },
         });
 
-        var blueWall = viewer.entities.add({
+        const blueWall = viewer.entities.add({
           name: "Blue wall with sawtooth heights and outline",
           wall: {
             positions: Cesium.Cartesian3.fromDegreesArray([

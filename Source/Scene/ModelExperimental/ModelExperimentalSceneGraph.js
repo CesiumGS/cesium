@@ -1,11 +1,10 @@
 import buildDrawCommands from "./buildDrawCommands.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Check from "../../Core/Check.js";
+import clone from "../../Core/clone.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import CustomShaderPipelineStage from "./CustomShaderPipelineStage.js";
-import LightingPipelineStage from "./LightingPipelineStage.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelExperimentalPrimitive from "./ModelExperimentalPrimitive.js";
 import ModelExperimentalNode from "./ModelExperimentalNode.js";
@@ -13,6 +12,7 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelRenderResources from "./ModelRenderResources.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
+import RenderState from "../../Renderer/RenderState.js";
 
 /**
  * An in memory representation of the scene graph for a {@link ModelExperimental}
@@ -64,6 +64,16 @@ export default function ModelExperimentalSceneGraph(options) {
   this._pipelineStages = [];
 
   /**
+   * Update stages to apply across the model.
+   *
+   * @type {Object[]}
+   * @readonly
+   *
+   * @private
+   */
+  this._updateStages = [];
+
+  /**
    * The runtime nodes that make up the scene graph
    *
    * @type {ModelExperimentalNode[]}
@@ -72,6 +82,16 @@ export default function ModelExperimentalSceneGraph(options) {
    * @private
    */
   this._runtimeNodes = [];
+
+  /**
+   * The indices of the root nodes in the runtime nodes array.
+   *
+   * @type {Number[]}
+   * @readonly
+   *
+   * @private
+   */
+  this._rootNodes = [];
 
   /**
    * Once computed, the {@link DrawCommand}s that are used to render this
@@ -85,16 +105,6 @@ export default function ModelExperimentalSceneGraph(options) {
   this._drawCommands = [];
 
   /**
-   * The bounding sphere containing all the primitives in the scene graph.
-   *
-   * @type {BoundingSphere}
-   * @readonly
-   *
-   * @private
-   */
-  this._boundingSphere = undefined;
-
-  /**
    * The array of bounding spheres of all the primitives in the scene graph.
    *
    * @type {BoundingSphere[]}
@@ -104,29 +114,97 @@ export default function ModelExperimentalSceneGraph(options) {
    */
   this._boundingSpheres = [];
 
+  /**
+   * Pipeline stages to apply to this model. This
+   * is an array of classes, each with a static method called
+   * <code>process()</code>
+   *
+   * @type {Object[]}
+   * @readonly
+   *
+   * @private
+   */
+  this.modelPipelineStages = [];
+
+  this._boundingSphere = undefined;
+  this._computedModelMatrix = Matrix4.clone(this._model.modelMatrix);
+
   initialize(this);
 }
 
-function initialize(sceneGraph) {
-  var modelMatrix = Matrix4.clone(sceneGraph._model.modelMatrix);
-  var scene = sceneGraph._modelComponents.scene;
+Object.defineProperties(ModelExperimentalSceneGraph.prototype, {
+  /**
+   * The model components this scene graph represents.
+   *
+   * @type {ModelComponents}
+   * @readonly
+   *
+   * @private
+   */
+  components: {
+    get: function () {
+      return this._modelComponents;
+    },
+  },
 
-  ModelExperimentalUtility.correctModelMatrix(
-    modelMatrix,
-    scene.upAxis,
-    scene.forwardAxis
+  /**
+   * The axis-corrected model matrix.
+   *
+   * @type {Matrix4}
+   * @readonly
+   *
+   * @private
+   */
+  computedModelMatrix: {
+    get: function () {
+      return this._computedModelMatrix;
+    },
+  },
+  /**
+   * The bounding sphere containing all the primitives in the scene graph.
+   *
+   * @type {BoundingSphere}
+   * @readonly
+   *
+   * @private
+   */
+  boundingSphere: {
+    get: function () {
+      return this._boundingSphere;
+    },
+  },
+});
+
+function initialize(sceneGraph) {
+  const components = sceneGraph._modelComponents;
+  const scene = components.scene;
+  const model = sceneGraph._model;
+
+  sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
+    model.modelMatrix,
+    components.transform,
+    new Matrix4()
   );
 
-  var rootNodes = sceneGraph._modelComponents.scene.nodes;
-  for (var i = 0; i < rootNodes.length; i++) {
-    var rootNode = sceneGraph._modelComponents.scene.nodes[i];
-    var rootNodeModelMatrix = Matrix4.multiply(
-      modelMatrix,
-      ModelExperimentalUtility.getNodeTransform(rootNode),
-      new Matrix4()
+  ModelExperimentalUtility.correctModelMatrix(
+    sceneGraph._computedModelMatrix,
+    components.upAxis,
+    components.forwardAxis
+  );
+
+  const rootNodes = scene.nodes;
+  for (let i = 0; i < rootNodes.length; i++) {
+    const rootNode = scene.nodes[i];
+    const rootNodeTransform = ModelExperimentalUtility.getNodeTransform(
+      rootNode
+    );
+    const rootNodeIndex = traverseSceneGraph(
+      sceneGraph,
+      rootNode,
+      rootNodeTransform
     );
 
-    traverseSceneGraph(sceneGraph, rootNode, rootNodeModelMatrix);
+    sceneGraph._rootNodes.push(rootNodeIndex);
   }
 }
 
@@ -136,35 +214,42 @@ function initialize(sceneGraph) {
  *
  * @param {ModelSceneGraph} sceneGraph The scene graph
  * @param {ModelComponents.Node} node The current node
- * @param {Matrix4} modelMatrix The current computed model matrix for this node.
+ * @param {Matrix4} transform The current computed transform for this node.
+ *
+ * @returns {Number} The index of this node in the runtimeNodes array.
  *
  * @private
  */
-function traverseSceneGraph(sceneGraph, node, modelMatrix) {
-  // No processing needs to happen if node has no children and no mesh primitives.
-  if (!defined(node.children) && !defined(node.primitives)) {
-    return;
-  }
+function traverseSceneGraph(sceneGraph, node, transform) {
+  // The indices of the children of this node in the runtimeNodes array.
+  const childrenIndices = [];
 
   // Traverse through scene graph.
-  var i;
+  let i;
   if (defined(node.children)) {
     for (i = 0; i < node.children.length; i++) {
-      var childNode = node.children[i];
-      var childNodeModelMatrix = Matrix4.multiply(
-        modelMatrix,
+      const childNode = node.children[i];
+      const childNodeTransform = Matrix4.multiply(
+        transform,
         ModelExperimentalUtility.getNodeTransform(childNode),
         new Matrix4()
       );
 
-      traverseSceneGraph(sceneGraph, childNode, childNodeModelMatrix);
+      const childIndex = traverseSceneGraph(
+        sceneGraph,
+        childNode,
+        childNodeTransform
+      );
+      childrenIndices.push(childIndex);
     }
   }
 
   // Process node and mesh primitives.
-  var runtimeNode = new ModelExperimentalNode({
+  const runtimeNode = new ModelExperimentalNode({
     node: node,
-    modelMatrix: modelMatrix,
+    transform: transform,
+    children: childrenIndices,
+    sceneGraph: sceneGraph,
   });
 
   if (defined(node.primitives)) {
@@ -180,6 +265,9 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
   }
 
   sceneGraph._runtimeNodes.push(runtimeNode);
+
+  // The position of the runtime node in the array.
+  return sceneGraph._runtimeNodes.length - 1;
 }
 
 /**
@@ -193,30 +281,30 @@ function traverseSceneGraph(sceneGraph, node, modelMatrix) {
 ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   frameState
 ) {
-  var modelRenderResources = new ModelRenderResources(this._model);
+  const model = this._model;
+  const modelRenderResources = new ModelRenderResources(model);
 
-  var modelPipelineStages = [];
-  var model = this._model;
-  if (defined(model.color)) {
-    modelPipelineStages.push(ModelColorPipelineStage);
-  }
+  this.configurePipeline();
+  const modelPipelineStages = this.modelPipelineStages;
 
-  var i, j, k;
+  let i, j, k;
   for (i = 0; i < modelPipelineStages.length; i++) {
-    var modelPipelineStage = modelPipelineStages[i];
+    const modelPipelineStage = modelPipelineStages[i];
     modelPipelineStage.process(modelRenderResources, model, frameState);
   }
 
   for (i = 0; i < this._runtimeNodes.length; i++) {
-    var runtimeNode = this._runtimeNodes[i];
+    const runtimeNode = this._runtimeNodes[i];
+    runtimeNode.configurePipeline();
+    const nodePipelineStages = runtimeNode.pipelineStages;
 
-    var nodeRenderResources = new NodeRenderResources(
+    const nodeRenderResources = new NodeRenderResources(
       modelRenderResources,
       runtimeNode
     );
 
-    for (j = 0; j < runtimeNode.pipelineStages.length; j++) {
-      var nodePipelineStage = runtimeNode.pipelineStages[j];
+    for (j = 0; j < nodePipelineStages.length; j++) {
+      const nodePipelineStage = nodePipelineStages[j];
 
       nodePipelineStage.process(
         nodeRenderResources,
@@ -226,30 +314,18 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     }
 
     for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
-      var runtimePrimitive = runtimeNode.runtimePrimitives[j];
+      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
 
-      // The pipeline stage array is copied because we don't want dynamic stages to be added to the primitive's default stages.
-      var primitivePipelineStages = runtimePrimitive.pipelineStages.slice();
+      runtimePrimitive.configurePipeline();
+      const primitivePipelineStages = runtimePrimitive.pipelineStages;
 
-      if (defined(model.customShader)) {
-        // The custom shader stage needs to go before the lighting stage.
-        var lightingStageIndex = primitivePipelineStages.indexOf(
-          LightingPipelineStage
-        );
-        primitivePipelineStages.splice(
-          lightingStageIndex,
-          0,
-          CustomShaderPipelineStage
-        );
-      }
-
-      var primitiveRenderResources = new PrimitiveRenderResources(
+      const primitiveRenderResources = new PrimitiveRenderResources(
         nodeRenderResources,
         runtimePrimitive
       );
 
       for (k = 0; k < primitivePipelineStages.length; k++) {
-        var primitivePipelineStage = primitivePipelineStages[k];
+        const primitivePipelineStage = primitivePipelineStages[k];
 
         primitivePipelineStage.process(
           primitiveRenderResources,
@@ -258,16 +334,127 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
         );
       }
 
+      runtimePrimitive.boundingSphere = BoundingSphere.clone(
+        primitiveRenderResources.boundingSphere
+      );
       this._boundingSpheres.push(primitiveRenderResources.boundingSphere);
 
-      var drawCommands = buildDrawCommands(
+      const drawCommands = buildDrawCommands(
         primitiveRenderResources,
         frameState
       );
-      this._drawCommands.push.apply(this._drawCommands, drawCommands);
+
+      runtimePrimitive.drawCommands = drawCommands;
     }
   }
   this._boundingSphere = BoundingSphere.fromBoundingSpheres(
     this._boundingSpheres
   );
+};
+
+/**
+ * Configure the model pipeline stages. If the pipeline needs to be re-run, call
+ * this method again to ensure the correct sequence of pipeline stages are
+ * used.
+ *
+ * @private
+ */
+ModelExperimentalSceneGraph.prototype.configurePipeline = function () {
+  const modelPipelineStages = this.modelPipelineStages;
+  modelPipelineStages.length = 0;
+
+  const model = this._model;
+  if (defined(model.color)) {
+    modelPipelineStages.push(ModelColorPipelineStage);
+  }
+};
+
+ModelExperimentalSceneGraph.prototype.update = function (frameState) {
+  let i, j, k;
+
+  for (i = 0; i < this._runtimeNodes.length; i++) {
+    const runtimeNode = this._runtimeNodes[i];
+
+    for (j = 0; j < runtimeNode.updateStages.length; j++) {
+      const nodeUpdateStage = runtimeNode.updateStages[j];
+      nodeUpdateStage.update(runtimeNode, this, frameState);
+    }
+
+    for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
+      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
+      for (k = 0; k < runtimePrimitive.updateStages.length; k++) {
+        const stage = runtimePrimitive.updateStages[k];
+        stage.update(runtimePrimitive);
+      }
+    }
+  }
+};
+
+ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
+  this._computedModelMatrix = Matrix4.clone(this._model.modelMatrix);
+  Matrix4.multiply(
+    this._computedModelMatrix,
+    this._modelComponents.transform,
+    this._computedModelMatrix
+  );
+
+  ModelExperimentalUtility.correctModelMatrix(
+    this._computedModelMatrix,
+    this._modelComponents.upAxis,
+    this._modelComponents.forwardAxis
+  );
+
+  const rootNodes = this._rootNodes;
+  for (let i = 0; i < rootNodes.length; i++) {
+    const node = this._runtimeNodes[rootNodes[i]];
+    node.updateModelMatrix();
+  }
+};
+
+function forEachRuntimePrimitive(sceneGraph, callback) {
+  for (let i = 0; i < sceneGraph._runtimeNodes.length; i++) {
+    const runtimeNode = sceneGraph._runtimeNodes[i];
+    for (let j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
+      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
+      callback(runtimePrimitive);
+    }
+  }
+}
+
+/**
+ * Traverses through all draw commands and changes the back-face culling setting.
+ *
+ * @param {Boolean} backFaceCulling The new value for the back-face culling setting.
+ *
+ * @private
+ */
+ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (
+  backFaceCulling
+) {
+  const model = this._model;
+  forEachRuntimePrimitive(this, function (runtimePrimitive) {
+    for (let k = 0; k < runtimePrimitive.drawCommands.length; k++) {
+      const drawCommand = runtimePrimitive.drawCommands[k];
+      const renderState = clone(drawCommand.renderState, true);
+      const doubleSided = runtimePrimitive.primitive.material.doubleSided;
+      const translucent = defined(model.color) && model.color.alpha < 1.0;
+      renderState.cull.enabled =
+        backFaceCulling && !doubleSided && !translucent;
+      drawCommand.renderState = RenderState.fromCache(renderState);
+    }
+  });
+};
+
+/**
+ * Returns an array of draw commands, obtained by traversing through the scene graph and collecting
+ * the draw commands associated with each primitive.
+ *
+ * @private
+ */
+ModelExperimentalSceneGraph.prototype.getDrawCommands = function () {
+  const drawCommands = [];
+  forEachRuntimePrimitive(this, function (runtimePrimitive) {
+    drawCommands.push.apply(drawCommands, runtimePrimitive.drawCommands);
+  });
+  return drawCommands;
 };

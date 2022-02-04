@@ -5,7 +5,7 @@ import { DeveloperError } from "../Source/Cesium.js";
 import { WebGLConstants } from "../Source/Cesium.js";
 
 function getWebGLStub(canvas, options) {
-  var stub = clone(WebGLConstants);
+  const stub = clone(WebGLConstants);
 
   stub.canvas = canvas;
   stub.drawingBufferWidth = Math.max(canvas.width, 1);
@@ -174,7 +174,7 @@ function checkFramebufferStatusStub(target) {
 }
 
 function getContextAttributesStub(options) {
-  var contextAttributes = {
+  const contextAttributes = {
     alpha: defaultValue(options.alpha, true),
     depth: defaultValue(options.depth, true),
     stencil: defaultValue(options.stencil, false),
@@ -204,7 +204,7 @@ function getExtensionStub(name) {
 
 function getParameterStub(options) {
   // These are not the minimum maximum; instead, they are typical maximums.
-  var parameterStubValues = {};
+  const parameterStubValues = {};
   parameterStubValues[WebGLConstants.STENCIL_BITS] = options.stencil ? 8 : 0;
   parameterStubValues[WebGLConstants.MAX_COMBINED_TEXTURE_IMAGE_UNITS] = 32;
   parameterStubValues[WebGLConstants.MAX_CUBE_MAP_TEXTURE_SIZE] = 16384;
@@ -224,12 +224,12 @@ function getParameterStub(options) {
   parameterStubValues[WebGLConstants.MAX_COLOR_ATTACHMENTS] = 8; // Assuming extension
 
   return function (pname) {
-    var value = parameterStubValues[pname];
+    const value = parameterStubValues[pname];
 
     //>>includeStart('debug', pragmas.debug);
     if (!defined(value)) {
       throw new DeveloperError(
-        "A WebGL parameter stub for " + pname + " is not defined. Add it."
+        `A WebGL parameter stub for ${pname} is not defined. Add it.`
       );
     }
     //>>includeEnd('debug');
@@ -255,7 +255,7 @@ function getProgramParameterStub(program, pname) {
 
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    "A WebGL parameter stub for " + pname + " is not defined. Add it."
+    `A WebGL parameter stub for ${pname} is not defined. Add it.`
   );
   //>>includeEnd('debug');
 }
@@ -264,7 +264,7 @@ function getShaderParameterStub(shader, pname) {
   //>>includeStart('debug', pragmas.debug);
   if (pname !== WebGLConstants.COMPILE_STATUS) {
     throw new DeveloperError(
-      "A WebGL parameter stub for " + pname + " is not defined. Add it."
+      `A WebGL parameter stub for ${pname} is not defined. Add it.`
     );
   }
   //>>includeEnd('debug');

@@ -25,9 +25,9 @@ describe("Core/IndexDatatype", function () {
   });
 
   it("IndexDatatype.createTypedArrayFromArrayBuffer creates Uint16Array", function () {
-    var sourceArray = new Uint16Array(10);
+    const sourceArray = new Uint16Array(10);
     sourceArray.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    var indexBuffer = IndexDatatype.createTypedArrayFromArrayBuffer(
+    const indexBuffer = IndexDatatype.createTypedArrayFromArrayBuffer(
       3,
       sourceArray.buffer,
       0,
@@ -41,9 +41,9 @@ describe("Core/IndexDatatype", function () {
   });
 
   it("IndexDatatype.createTypedArrayFromArrayBuffer creates Uint16Array with offset", function () {
-    var sourceArray = new Uint16Array(10);
+    const sourceArray = new Uint16Array(10);
     sourceArray.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    var indexBuffer = IndexDatatype.createTypedArrayFromArrayBuffer(
+    const indexBuffer = IndexDatatype.createTypedArrayFromArrayBuffer(
       3,
       sourceArray.buffer,
       Uint16Array.BYTES_PER_ELEMENT * 5,
@@ -57,9 +57,9 @@ describe("Core/IndexDatatype", function () {
   });
 
   it("IndexDatatype.createTypedArrayFromArrayBuffer creates Uint32Array", function () {
-    var sourceArray = new Uint32Array(10);
+    const sourceArray = new Uint32Array(10);
     sourceArray.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    var indexBuffer = IndexDatatype.createTypedArrayFromArrayBuffer(
+    const indexBuffer = IndexDatatype.createTypedArrayFromArrayBuffer(
       CesiumMath.SIXTY_FOUR_KILOBYTES + 1,
       sourceArray.buffer,
       0,
@@ -73,9 +73,9 @@ describe("Core/IndexDatatype", function () {
   });
 
   it("IndexDatatype.createTypedArrayFromArrayBuffer creates Uint32Array with offset", function () {
-    var sourceArray = new Uint32Array(10);
+    const sourceArray = new Uint32Array(10);
     sourceArray.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    var indexBuffer = IndexDatatype.createTypedArrayFromArrayBuffer(
+    const indexBuffer = IndexDatatype.createTypedArrayFromArrayBuffer(
       CesiumMath.SIXTY_FOUR_KILOBYTES + 1,
       sourceArray.buffer,
       Uint32Array.BYTES_PER_ELEMENT * 5,
@@ -101,7 +101,7 @@ describe("Core/IndexDatatype", function () {
   });
 
   it("IndexDatatype.createTypedArrayFromArrayBuffer throws without byteOffset", function () {
-    var sourceArray = new Uint16Array(5);
+    const sourceArray = new Uint16Array(5);
     expect(function () {
       IndexDatatype.createTypedArrayFromArrayBuffer(
         3,

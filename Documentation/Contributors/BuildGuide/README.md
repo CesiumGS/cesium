@@ -150,7 +150,7 @@ It is possible to configure your `travis.yml` and `gulpfile.cjs` to deploy to a 
 - In `gulpfile.cjs`, edit the following line:
 
 ```
-var travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
+const travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
 ```
 
 - Edit the URL to match the URL of the S3 bucket specified in `travis.yml`

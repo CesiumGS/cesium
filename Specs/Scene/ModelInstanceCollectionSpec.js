@@ -19,14 +19,14 @@ import { when } from "../../Source/Cesium.js";
 describe(
   "Scene/ModelInstanceCollection",
   function () {
-    var boxUrl = "./Data/Models/Box/CesiumBoxTest.gltf";
-    var cesiumAirUrl = "./Data/Models/CesiumAir/Cesium_Air.gltf";
-    var riggedFigureUrl =
+    const boxUrl = "./Data/Models/Box/CesiumBoxTest.gltf";
+    const cesiumAirUrl = "./Data/Models/CesiumAir/Cesium_Air.gltf";
+    const riggedFigureUrl =
       "./Data/Models/rigged-figure-test/rigged-figure-test.gltf";
-    var movingBoxUrl = "./Data/Models/moving-box/moving-box.gltf";
+    const movingBoxUrl = "./Data/Models/moving-box/moving-box.gltf";
 
-    var scene;
-    var boxRadius;
+    let scene;
+    let boxRadius;
 
     beforeAll(function () {
       scene = createScene();
@@ -50,7 +50,7 @@ describe(
     });
 
     function loadModel(url) {
-      var model = scene.primitives.add(
+      const model = scene.primitives.add(
         Model.fromGltf({
           url: url,
         })
@@ -66,7 +66,7 @@ describe(
     }
 
     function loadCollection(options) {
-      var collection = scene.primitives.add(
+      const collection = scene.primitives.add(
         new ModelInstanceCollection(options)
       );
 
@@ -83,24 +83,24 @@ describe(
     function createInstances(count, heightOffset) {
       heightOffset = defaultValue(heightOffset, 0.0);
 
-      var spacing = 20.0;
-      var centerLongitude = -123.0744619;
-      var centerLatitude = 44.0503706;
-      var height = 5000.0 + heightOffset;
+      const spacing = 20.0;
+      const centerLongitude = -123.0744619;
+      const centerLatitude = 44.0503706;
+      const height = 5000.0 + heightOffset;
 
-      var instances = [];
-      for (var i = 0; i < count; ++i) {
-        var instanceHeight = height + spacing * i;
-        var position = Cartesian3.fromDegrees(
+      const instances = [];
+      for (let i = 0; i < count; ++i) {
+        const instanceHeight = height + spacing * i;
+        const position = Cartesian3.fromDegrees(
           centerLongitude,
           centerLatitude,
           instanceHeight
         );
-        var heading = Math.PI / 2.0;
-        var pitch = 0.0;
-        var roll = 0.0;
-        var hpr = new HeadingPitchRoll(heading, pitch, roll);
-        var modelMatrix = Transforms.headingPitchRollToFixedFrame(
+        const heading = Math.PI / 2.0;
+        const pitch = 0.0;
+        const roll = 0.0;
+        const hpr = new HeadingPitchRoll(heading, pitch, roll);
+        const modelMatrix = Transforms.headingPitchRollToFixedFrame(
           position,
           hpr
         );
@@ -113,27 +113,27 @@ describe(
     }
 
     function getBoundingSphere(instances, modelRadius) {
-      var length = instances.length;
-      var points = new Array(length);
-      for (var i = 0; i < length; ++i) {
-        var translation = new Cartesian3();
+      const length = instances.length;
+      const points = new Array(length);
+      for (let i = 0; i < length; ++i) {
+        const translation = new Cartesian3();
         Matrix4.getTranslation(instances[i].modelMatrix, translation);
         points[i] = translation;
       }
-      var boundingSphere = new BoundingSphere();
+      const boundingSphere = new BoundingSphere();
       BoundingSphere.fromPoints(points, boundingSphere);
       boundingSphere.radius += modelRadius;
       return boundingSphere;
     }
 
-    var centerScratch = new Cartesian3();
+    const centerScratch = new Cartesian3();
 
     function zoomTo(collection, instance) {
-      var center = Matrix4.getTranslation(
+      const center = Matrix4.getTranslation(
         collection._instances[instance].modelMatrix,
         centerScratch
       );
-      var camera = scene.camera;
+      const camera = scene.camera;
       camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, 10.0));
     }
 
@@ -145,8 +145,8 @@ describe(
       collection.show = true;
 
       // Verify each instance
-      var length = collection.length;
-      for (var i = 0; i < length; ++i) {
+      const length = collection.length;
+      for (let i = 0; i < length; ++i) {
         zoomTo(collection, i);
         if (expectColor) {
           expect({
@@ -177,8 +177,8 @@ describe(
       collection.show = true;
 
       // Verify each instance
-      var length = collection.length;
-      for (var i = 0; i < length; ++i) {
+      const length = collection.length;
+      for (let i = 0; i < length; ++i) {
         zoomTo(collection, i);
         expect(scene).toPickAndCall(verifyPickedInstance(collection, i));
       }
@@ -218,7 +218,7 @@ describe(
         expect(collection._model.ready).toEqual(true);
 
         if (collection._instancingSupported) {
-          expect(collection._model.cacheKey).toEqual(boxUrl + "#instanced");
+          expect(collection._model.cacheKey).toEqual(`${boxUrl}#instanced`);
         }
       });
     });
@@ -233,7 +233,7 @@ describe(
     });
 
     it("renders from Resource", function () {
-      var resource = new Resource({
+      const resource = new Resource({
         url: boxUrl,
       });
 
@@ -255,7 +255,7 @@ describe(
     });
 
     it("resolves readyPromise", function () {
-      var collection = scene.primitives.add(
+      const collection = scene.primitives.add(
         new ModelInstanceCollection({
           url: boxUrl,
           instances: createInstances(4),
@@ -276,7 +276,7 @@ describe(
 
     it("rejects readyPromise on error", function () {
       // Expect promise to be rejected in Model, then in ModelInstanceCollection.
-      var collection = scene.primitives.add(
+      const collection = scene.primitives.add(
         new ModelInstanceCollection({
           url: "invalid.gltf",
           instances: createInstances(4),
@@ -304,7 +304,7 @@ describe(
     });
 
     it("renders zero instances", function () {
-      var collection = scene.primitives.add(
+      const collection = scene.primitives.add(
         new ModelInstanceCollection({
           url: boxUrl,
           instances: createInstances(0),
@@ -312,7 +312,7 @@ describe(
       );
 
       // Collection never reaches the ready state due to returning early
-      for (var i = 0; i < 10; ++i) {
+      for (let i = 0; i < 10; ++i) {
         expectRender(collection, false);
         expect(collection.ready).toBe(false);
       }
@@ -341,9 +341,9 @@ describe(
         url: riggedFigureUrl,
         instances: createInstances(4),
       }).then(function (collection) {
-        var instances = collection._instances;
+        const instances = collection._instances;
         // Rotate instances to account for empty space between legs of rigged model.
-        for (var i = 0; i < instances.length; ++i) {
+        for (let i = 0; i < instances.length; ++i) {
           instances[i].modelMatrix = Matrix4.multiply(
             instances[i].modelMatrix,
             Axis.Y_UP_TO_X_UP,
@@ -357,7 +357,7 @@ describe(
 
     it("renders when instancing is disabled", function () {
       // Disable extension
-      var instancedArrays = scene.context._instancedArrays;
+      const instancedArrays = scene.context._instancedArrays;
       scene.context._instancedArrays = undefined;
 
       return loadCollection({
@@ -381,12 +381,12 @@ describe(
     });
 
     it("verify bounding volume", function () {
-      var instances = createInstances(4);
+      const instances = createInstances(4);
       return loadCollection({
         url: boxUrl,
         instances: instances,
       }).then(function (collection) {
-        var boundingSphere = getBoundingSphere(instances, boxRadius);
+        const boundingSphere = getBoundingSphere(instances, boxRadius);
         expect(collection._boundingSphere.center).toEqual(
           boundingSphere.center
         );
@@ -429,7 +429,7 @@ describe(
         collection.activeAnimations.addAll();
 
         // Render when animation is in view
-        var time = JulianDate.now();
+        let time = JulianDate.now();
         expectRender(collection, true, time);
 
         // Render when animation is out of view
@@ -442,7 +442,7 @@ describe(
       // Instance transforms are updated differently when instancing is disabled
 
       // Disable extension
-      var instancedArrays = scene.context._instancedArrays;
+      const instancedArrays = scene.context._instancedArrays;
       scene.context._instancedArrays = undefined;
 
       return loadCollection({
@@ -452,7 +452,7 @@ describe(
         collection.activeAnimations.addAll();
 
         // Render when animation is in view
-        var time = JulianDate.now();
+        let time = JulianDate.now();
         expectRender(collection, true, time);
 
         // Render when animation is out of view
@@ -465,8 +465,8 @@ describe(
     });
 
     it("renders two model instance collections that use the same cache key", function () {
-      var collections = [];
-      var promises = [];
+      const collections = [];
+      const promises = [];
 
       promises.push(
         loadCollection({
@@ -487,9 +487,9 @@ describe(
       );
 
       return when.all(promises).then(function () {
-        var resourcesFirst = collections[0]._model._rendererResources;
-        var resourcesSecond = collections[1]._model._rendererResources;
-        var name;
+        const resourcesFirst = collections[0]._model._rendererResources;
+        const resourcesSecond = collections[1]._model._rendererResources;
+        let name;
 
         expect(collections[0]._model.cacheKey).toEqual(
           collections[1]._model.cacheKey
@@ -571,7 +571,7 @@ describe(
       }).then(function (collection) {
         scene.renderForSpecs();
         expect(collection._shadows).toBe(ShadowMode.ENABLED);
-        var drawCommand = collection._drawCommands[0];
+        let drawCommand = collection._drawCommands[0];
         expect(drawCommand.castShadows).toBe(true);
         expect(drawCommand.receiveShadows).toBe(true);
         collection.shadows = ShadowMode.DISABLED;
@@ -595,7 +595,7 @@ describe(
 
     it("picks when instancing is disabled", function () {
       // Disable extension
-      var instancedArrays = scene.context._instancedArrays;
+      const instancedArrays = scene.context._instancedArrays;
       scene.context._instancedArrays = undefined;
 
       return loadCollection({
@@ -614,7 +614,7 @@ describe(
         instances: createInstances(4),
       }).then(function (collection) {
         expect(scene).toPickAndCall(function (result) {
-          var originalMatrix = result.modelMatrix;
+          const originalMatrix = result.modelMatrix;
           result.modelMatrix = Matrix4.IDENTITY;
           expect(scene).notToPick();
           result.modelMatrix = originalMatrix;
@@ -625,7 +625,7 @@ describe(
 
     it("moves instance when instancing is disabled", function () {
       // Disable extension
-      var instancedArrays = scene.context._instancedArrays;
+      const instancedArrays = scene.context._instancedArrays;
       scene.context._instancedArrays = undefined;
 
       return loadCollection({
@@ -633,8 +633,8 @@ describe(
         instances: createInstances(4),
       }).then(function (collection) {
         expect(scene).toPickAndCall(function (result) {
-          var originalMatrix = result.modelMatrix;
-          var originalRadius = collection._boundingSphere.radius;
+          const originalMatrix = result.modelMatrix;
+          const originalRadius = collection._boundingSphere.radius;
           result.modelMatrix = Matrix4.IDENTITY;
           expect(scene).notToPick();
           expect(collection._boundingSphere.radius).toBeGreaterThan(
@@ -661,7 +661,7 @@ describe(
 
     it("renders in 2D when instancing is disabled", function () {
       // Disable extension
-      var instancedArrays = scene.context._instancedArrays;
+      const instancedArrays = scene.context._instancedArrays;
       scene.context._instancedArrays = undefined;
 
       return loadCollection({
@@ -690,7 +690,7 @@ describe(
 
     it("renders in CV when instancing is disabled", function () {
       // Disable extension
-      var instancedArrays = scene.context._instancedArrays;
+      const instancedArrays = scene.context._instancedArrays;
       scene.context._instancedArrays = undefined;
 
       return loadCollection({
@@ -712,7 +712,7 @@ describe(
         instances: createInstances(4),
         cull: false,
       }).then(function () {
-        var commandList = scene.frameState.commandList;
+        const commandList = scene.frameState.commandList;
         scene.renderForSpecs();
         expect(commandList.length).toBeGreaterThan(0);
         scene.morphToColumbusView(1.0);

@@ -32,20 +32,20 @@ TimelineHighlightRange.prototype.setRange = function (start, stop) {
 };
 
 TimelineHighlightRange.prototype.render = function (renderState) {
-  var range = "";
+  let range = "";
   if (this._start && this._stop && this._color) {
-    var highlightStart = JulianDate.secondsDifference(
+    const highlightStart = JulianDate.secondsDifference(
       this._start,
       renderState.epochJulian
     );
-    var highlightLeft = Math.round(
+    let highlightLeft = Math.round(
       renderState.timeBarWidth * renderState.getAlpha(highlightStart)
     );
-    var highlightStop = JulianDate.secondsDifference(
+    const highlightStop = JulianDate.secondsDifference(
       this._stop,
       renderState.epochJulian
     );
-    var highlightWidth =
+    let highlightWidth =
       Math.round(
         renderState.timeBarWidth * renderState.getAlpha(highlightStop)
       ) - highlightLeft;
@@ -57,18 +57,9 @@ TimelineHighlightRange.prototype.render = function (renderState) {
       highlightWidth = renderState.timeBarWidth - highlightLeft;
     }
     if (highlightWidth > 0) {
-      range =
-        '<span class="cesium-timeline-highlight" style="left: ' +
-        highlightLeft.toString() +
-        "px; width: " +
-        highlightWidth.toString() +
-        "px; bottom: " +
-        this._base.toString() +
-        "px; height: " +
-        this._height +
-        "px; background-color: " +
-        this._color +
-        ';"></span>';
+      range = `<span class="cesium-timeline-highlight" style="left: ${highlightLeft.toString()}px; width: ${highlightWidth.toString()}px; bottom: ${this._base.toString()}px; height: ${
+        this._height
+      }px; background-color: ${this._color};"></span>`;
     }
   }
   return range;

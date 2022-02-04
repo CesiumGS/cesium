@@ -1,5 +1,6 @@
 import {
   Buffer,
+  clone,
   ComponentDatatype,
   DracoLoader,
   GltfBufferViewLoader,
@@ -18,34 +19,43 @@ import waitForLoaderProcess from "../waitForLoaderProcess.js";
 describe(
   "Scene/GltfIndexBufferLoader",
   function () {
-    var dracoBufferTypedArray = new Uint8Array([1, 3, 7, 15, 31, 63, 127, 255]);
-    var dracoArrayBuffer = dracoBufferTypedArray.buffer;
+    const dracoBufferTypedArray = new Uint8Array([
+      1,
+      3,
+      7,
+      15,
+      31,
+      63,
+      127,
+      255,
+    ]);
+    const dracoArrayBuffer = dracoBufferTypedArray.buffer;
 
-    var decodedPositions = new Uint16Array([0, 0, 0, 65535, 65535, 65535, 0, 65535, 0]); // prettier-ignore
-    var decodedNormals = new Uint8Array([0, 255, 128, 128, 255, 0]);
-    var decodedIndices = new Uint16Array([0, 1, 2]);
+    const decodedPositions = new Uint16Array([0, 0, 0, 65535, 65535, 65535, 0, 65535, 0]); // prettier-ignore
+    const decodedNormals = new Uint8Array([0, 255, 128, 128, 255, 0]);
+    const decodedIndices = new Uint16Array([0, 1, 2]);
 
-    var positions = new Float32Array([-1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0]); // prettier-ignore
-    var normals = new Float32Array([-1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]); // prettier-ignore
-    var indicesUint32 = new Uint32Array([0, 1, 2]);
-    var indicesUint16 = new Uint16Array([0, 1, 2]);
-    var indicesUint8 = new Uint8Array([0, 1, 2]);
+    const positions = new Float32Array([-1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0]); // prettier-ignore
+    const normals = new Float32Array([-1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]); // prettier-ignore
+    const indicesUint32 = new Uint32Array([0, 1, 2]);
+    const indicesUint16 = new Uint16Array([0, 1, 2]);
+    const indicesUint8 = new Uint8Array([0, 1, 2]);
 
-    var bufferViewTypedArray = concatTypedArrays([
+    const bufferViewTypedArray = concatTypedArrays([
       positions,
       normals,
       indicesUint32,
       indicesUint16,
       indicesUint8,
     ]);
-    var arrayBuffer = bufferViewTypedArray.buffer;
+    const arrayBuffer = bufferViewTypedArray.buffer;
 
-    var gltfUri = "https://example.com/model.glb";
-    var gltfResource = new Resource({
+    const gltfUri = "https://example.com/model.glb";
+    const gltfResource = new Resource({
       url: gltfUri,
     });
 
-    var decodeDracoResults = {
+    const decodeDracoResults = {
       indexArray: {
         typedArray: decodedIndices,
         numberOfIndices: decodedIndices.length,
@@ -84,7 +94,7 @@ describe(
       },
     };
 
-    var gltfDraco = {
+    const gltfDraco = {
       buffers: [
         {
           uri: "external.bin",
@@ -141,10 +151,10 @@ describe(
       ],
     };
 
-    var dracoExtension =
+    const dracoExtension =
       gltfDraco.meshes[0].primitives[0].extensions.KHR_draco_mesh_compression;
 
-    var gltfUncompressed = {
+    const gltfUncompressed = {
       buffers: [
         {
           uri: "external.bin",
@@ -246,7 +256,7 @@ describe(
       ],
     };
 
-    var scene;
+    let scene;
 
     beforeAll(function () {
       scene = createScene();
@@ -321,12 +331,12 @@ describe(
     });
 
     it("rejects promise if buffer view fails to load", function () {
-      var error = new Error("404 Not Found");
+      const error = new Error("404 Not Found");
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         when.reject(error)
       );
 
-      var indexBufferLoader = new GltfIndexBufferLoader({
+      const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
         gltf: gltfUncompressed,
         accessorId: 3,
@@ -352,12 +362,12 @@ describe(
         when.resolve(dracoArrayBuffer)
       );
 
-      var error = new Error("Draco decode failed");
+      const error = new Error("Draco decode failed");
       spyOn(DracoLoader, "decodeBufferView").and.returnValue(
         when.reject(error)
       );
 
-      var indexBufferLoader = new GltfIndexBufferLoader({
+      const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
         accessorId: 2,
@@ -385,10 +395,10 @@ describe(
       );
 
       // Simulate JobScheduler not being ready for a few frames
-      var processCallsTotal = 3;
-      var processCallsCount = 0;
-      var jobScheduler = scene.frameState.jobScheduler;
-      var originalJobSchedulerExecute = jobScheduler.execute;
+      const processCallsTotal = 3;
+      let processCallsCount = 0;
+      const jobScheduler = scene.frameState.jobScheduler;
+      const originalJobSchedulerExecute = jobScheduler.execute;
       spyOn(JobScheduler.prototype, "execute").and.callFake(function (
         job,
         jobType
@@ -399,7 +409,7 @@ describe(
         return false;
       });
 
-      var indexBufferLoader = new GltfIndexBufferLoader({
+      const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
         gltf: gltfUncompressed,
         accessorId: 3,
@@ -413,9 +423,10 @@ describe(
         indexBufferLoader
       ) {
         loaderProcess(indexBufferLoader, scene); // Check that calling process after load doesn't break anything
-        expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
+        expect(indexBufferLoader.buffer.sizeInBytes).toBe(
           indicesUint16.byteLength
         );
+        expect(indexBufferLoader.typedArray).toBeUndefined();
       });
     });
 
@@ -424,7 +435,7 @@ describe(
         when.resolve(arrayBuffer)
       );
 
-      var indexBufferLoader = new GltfIndexBufferLoader({
+      const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
         gltf: gltfUncompressed,
         accessorId: 3,
@@ -438,9 +449,38 @@ describe(
       return waitForLoaderProcess(indexBufferLoader, scene).then(function (
         indexBufferLoader
       ) {
-        expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
+        expect(indexBufferLoader.buffer.sizeInBytes).toBe(
           indicesUint16.byteLength
         );
+      });
+    });
+
+    it("loads as typed array", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        when.resolve(arrayBuffer)
+      );
+
+      spyOn(Buffer, "createIndexBuffer").and.callThrough();
+
+      const indexBufferLoader = new GltfIndexBufferLoader({
+        resourceCache: ResourceCache,
+        gltf: gltfUncompressed,
+        accessorId: 3,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        loadAsTypedArray: true,
+      });
+
+      indexBufferLoader.load();
+
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.typedArray.byteLength).toBe(
+          indicesUint16.byteLength
+        );
+        expect(indexBufferLoader.buffer).toBeUndefined();
+        expect(Buffer.createIndexBuffer.calls.count()).toBe(0);
       });
     });
 
@@ -449,7 +489,7 @@ describe(
         when.resolve(arrayBuffer)
       );
 
-      var indexBufferLoader = new GltfIndexBufferLoader({
+      const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
         gltf: gltfUncompressed,
         accessorId: accessorId,
@@ -462,9 +502,7 @@ describe(
       return waitForLoaderProcess(indexBufferLoader, scene).then(function (
         indexBufferLoader
       ) {
-        expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
-          expectedByteLength
-        );
+        expect(indexBufferLoader.buffer.sizeInBytes).toBe(expectedByteLength);
       });
     }
 
@@ -490,8 +528,8 @@ describe(
       );
 
       // Simulate decodeBufferView not being ready for a few frames
-      var processCallsTotal = 3;
-      var processCallsCount = 0;
+      const processCallsTotal = 3;
+      let processCallsCount = 0;
       spyOn(DracoLoader, "decodeBufferView").and.callFake(function () {
         if (processCallsCount++ === processCallsTotal) {
           return when.resolve(decodeDracoResults);
@@ -499,7 +537,7 @@ describe(
         return undefined;
       });
 
-      var indexBufferLoader = new GltfIndexBufferLoader({
+      const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
         accessorId: 2,
@@ -514,9 +552,40 @@ describe(
         indexBufferLoader
       ) {
         loaderProcess(indexBufferLoader, scene); // Check that calling process after load doesn't break anything
-        expect(indexBufferLoader.indexBuffer.sizeInBytes).toBe(
+        expect(indexBufferLoader.buffer.sizeInBytes).toBe(
           decodedIndices.byteLength
         );
+      });
+    });
+
+    it("uses the decoded data's type instead of the accessor component type", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        when.resolve(arrayBuffer)
+      );
+
+      spyOn(DracoLoader, "decodeBufferView").and.returnValue(
+        when.resolve(decodeDracoResults)
+      );
+
+      const clonedGltf = clone(gltfDraco, true);
+      clonedGltf.accessors[2].componentType = 5125;
+
+      const indexBufferLoader = new GltfIndexBufferLoader({
+        resourceCache: ResourceCache,
+        gltf: clonedGltf,
+        accessorId: 2,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        draco: dracoExtension,
+      });
+
+      indexBufferLoader.load();
+
+      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
+        indexBufferLoader
+      ) {
+        expect(indexBufferLoader.indexDatatype).toBe(5123);
+        expect(indexBufferLoader.buffer.indexDatatype).toBe(5123);
       });
     });
 
@@ -525,17 +594,17 @@ describe(
         when.resolve(arrayBuffer)
       );
 
-      var unloadBufferView = spyOn(
+      const unloadBufferView = spyOn(
         GltfBufferViewLoader.prototype,
         "unload"
       ).and.callThrough();
 
-      var destroyIndexBuffer = spyOn(
+      const destroyIndexBuffer = spyOn(
         Buffer.prototype,
         "destroy"
       ).and.callThrough();
 
-      var indexBufferLoader = new GltfIndexBufferLoader({
+      const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
         gltf: gltfUncompressed,
         accessorId: 3,
@@ -548,12 +617,12 @@ describe(
       return waitForLoaderProcess(indexBufferLoader, scene).then(function (
         indexBufferLoader
       ) {
-        expect(indexBufferLoader.indexBuffer).toBeDefined();
+        expect(indexBufferLoader.buffer).toBeDefined();
         expect(indexBufferLoader.isDestroyed()).toBe(false);
 
         indexBufferLoader.destroy();
 
-        expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+        expect(indexBufferLoader.buffer).not.toBeDefined();
         expect(indexBufferLoader.isDestroyed()).toBe(true);
         expect(unloadBufferView).toHaveBeenCalled();
         expect(destroyIndexBuffer).toHaveBeenCalled();
@@ -569,17 +638,17 @@ describe(
         when.resolve(decodeDracoResults)
       );
 
-      var unloadDraco = spyOn(
+      const unloadDraco = spyOn(
         GltfDracoLoader.prototype,
         "unload"
       ).and.callThrough();
 
-      var destroyIndexBuffer = spyOn(
+      const destroyIndexBuffer = spyOn(
         Buffer.prototype,
         "destroy"
       ).and.callThrough();
 
-      var indexBufferLoader = new GltfIndexBufferLoader({
+      const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
         accessorId: 2,
@@ -593,12 +662,12 @@ describe(
       return waitForLoaderProcess(indexBufferLoader, scene).then(function (
         indexBufferLoader
       ) {
-        expect(indexBufferLoader.indexBuffer).toBeDefined();
+        expect(indexBufferLoader.buffer).toBeDefined();
         expect(indexBufferLoader.isDestroyed()).toBe(false);
 
         indexBufferLoader.destroy();
 
-        expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+        expect(indexBufferLoader.buffer).not.toBeDefined();
         expect(indexBufferLoader.isDestroyed()).toBe(true);
         expect(unloadDraco).toHaveBeenCalled();
         expect(destroyIndexBuffer).toHaveBeenCalled();
@@ -606,21 +675,21 @@ describe(
     });
 
     function resolveBufferViewAfterDestroy(reject) {
-      var deferredPromise = when.defer();
+      const deferredPromise = when.defer();
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         deferredPromise.promise
       );
 
       // Load a copy of the buffer view into the cache so that the buffer view
       // promise resolves even if the index buffer loader is destroyed
-      var bufferViewLoaderCopy = ResourceCache.loadBufferView({
+      const bufferViewLoaderCopy = ResourceCache.loadBufferView({
         gltf: gltfUncompressed,
         bufferViewId: 3,
         gltfResource: gltfResource,
         baseResource: gltfResource,
       });
 
-      var indexBufferLoader = new GltfIndexBufferLoader({
+      const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
         gltf: gltfUncompressed,
         accessorId: 3,
@@ -628,7 +697,7 @@ describe(
         baseResource: gltfResource,
       });
 
-      expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+      expect(indexBufferLoader.buffer).not.toBeDefined();
 
       indexBufferLoader.load();
       indexBufferLoader.destroy();
@@ -639,7 +708,7 @@ describe(
         deferredPromise.resolve(arrayBuffer);
       }
 
-      expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+      expect(indexBufferLoader.buffer).not.toBeDefined();
       expect(indexBufferLoader.isDestroyed()).toBe(true);
 
       ResourceCache.unload(bufferViewLoaderCopy);
@@ -658,8 +727,8 @@ describe(
         when.resolve(arrayBuffer)
       );
 
-      var deferredPromise = when.defer();
-      var decodeBufferView = spyOn(
+      const deferredPromise = when.defer();
+      const decodeBufferView = spyOn(
         DracoLoader,
         "decodeBufferView"
       ).and.callFake(function () {
@@ -668,14 +737,14 @@ describe(
 
       // Load a copy of the draco loader into the cache so that the draco loader
       // promise resolves even if the index buffer loader is destroyed
-      var dracoLoaderCopy = ResourceCache.loadDraco({
+      const dracoLoaderCopy = ResourceCache.loadDraco({
         gltf: gltfDraco,
         draco: dracoExtension,
         gltfResource: gltfResource,
         baseResource: gltfResource,
       });
 
-      var indexBufferLoader = new GltfIndexBufferLoader({
+      const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
         accessorId: 2,
@@ -684,7 +753,7 @@ describe(
         draco: dracoExtension,
       });
 
-      expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+      expect(indexBufferLoader.buffer).not.toBeDefined();
 
       indexBufferLoader.load();
       loaderProcess(indexBufferLoader, scene);
@@ -698,7 +767,7 @@ describe(
         deferredPromise.resolve(decodeDracoResults);
       }
 
-      expect(indexBufferLoader.indexBuffer).not.toBeDefined();
+      expect(indexBufferLoader.buffer).not.toBeDefined();
       expect(indexBufferLoader.isDestroyed()).toBe(true);
 
       ResourceCache.unload(dracoLoaderCopy);

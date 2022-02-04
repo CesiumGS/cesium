@@ -1,6 +1,7 @@
 import {
   Cartesian2,
   Cartesian3,
+  Cartesian4,
   combine,
   DequantizationPipelineStage,
   GltfLoader,
@@ -14,15 +15,17 @@ import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
-  var boxUncompressed =
+  const boxUncompressed =
     "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
-  var boxWithLines =
+  const boxWithLines =
     "./Data/Models/DracoCompression/BoxWithLines/BoxWithLines.gltf";
-  var milkTruck =
+  const milkTruck =
     "./Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf";
+  const boxDracoRGBColors =
+    "./Data/Models/DracoCompression/BoxVertexColorsDracoRGB.gltf";
 
-  var scene;
-  var gltfLoaders = [];
+  let scene;
+  const gltfLoaders = [];
 
   beforeAll(function () {
     scene = createScene();
@@ -33,9 +36,9 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
   });
 
   afterEach(function () {
-    var gltfLoadersLength = gltfLoaders.length;
-    for (var i = 0; i < gltfLoadersLength; ++i) {
-      var gltfLoader = gltfLoaders[i];
+    const gltfLoadersLength = gltfLoaders.length;
+    for (let i = 0; i < gltfLoadersLength; ++i) {
+      const gltfLoader = gltfLoaders[i];
       if (!gltfLoader.isDestroyed()) {
         gltfLoader.destroy();
       }
@@ -45,7 +48,7 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
   });
 
   function getOptions(gltfPath, options) {
-    var resource = new Resource({
+    const resource = new Resource({
       url: gltfPath,
     });
 
@@ -56,7 +59,7 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
   }
 
   function loadGltf(gltfPath, options) {
-    var gltfLoader = new GltfLoader(getOptions(gltfPath, options));
+    const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
     gltfLoaders.push(gltfLoader);
     gltfLoader.load();
 
@@ -64,15 +67,15 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
   }
 
   it("adds a dequantization function", function () {
-    var uniformMap = {};
-    var shaderBuilder = new ShaderBuilder();
-    var renderResources = {
+    const uniformMap = {};
+    const shaderBuilder = new ShaderBuilder();
+    const renderResources = {
       uniformMap: uniformMap,
       shaderBuilder: shaderBuilder,
     };
     return loadGltf(boxWithLines).then(function (gltfLoader) {
-      var components = gltfLoader.components;
-      var primitive = components.nodes[1].primitives[0];
+      const components = gltfLoader.components;
+      const primitive = components.nodes[1].primitives[0];
       DequantizationPipelineStage.process(renderResources, primitive);
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -93,16 +96,16 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
   });
 
   it("adds dequantization uniforms", function () {
-    var uniformMap = {};
-    var shaderBuilder = new ShaderBuilder();
-    var renderResources = {
+    const uniformMap = {};
+    const shaderBuilder = new ShaderBuilder();
+    const renderResources = {
       uniformMap: uniformMap,
       shaderBuilder: shaderBuilder,
     };
 
     return loadGltf(milkTruck).then(function (gltfLoader) {
-      var components = gltfLoader.components;
-      var primitive = components.nodes[0].primitives[0];
+      const components = gltfLoader.components;
+      const primitive = components.nodes[0].primitives[0];
       DequantizationPipelineStage.process(renderResources, primitive);
 
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
@@ -114,7 +117,7 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
       ]);
       ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
 
-      var uniformValues = {
+      const uniformValues = {
         normalRange: uniformMap.model_normalizationRange_normalMC(),
         positionOffset: uniformMap.model_quantizedVolumeOffset_positionMC(),
         positionStepSize: uniformMap.model_quantizedVolumeStepSize_positionMC(),
@@ -122,7 +125,7 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
         texCoordStepSize: uniformMap.model_quantizedVolumeStepSize_texCoord_0(),
       };
 
-      var expected = {
+      const expected = {
         normalRange: 1023,
         positionOffset: new Cartesian3(
           -2.430910110473633,
@@ -148,17 +151,82 @@ describe("Scene/ModelExperimental/DequantizationPipelineStage", function () {
     });
   });
 
+  it("promotes vertex color dequantization uniforms to vec4", function () {
+    const uniformMap = {};
+    const shaderBuilder = new ShaderBuilder();
+    const renderResources = {
+      uniformMap: uniformMap,
+      shaderBuilder: shaderBuilder,
+    };
+
+    return loadGltf(boxDracoRGBColors).then(function (gltfLoader) {
+      const components = gltfLoader.components;
+      const primitive = components.nodes[2].primitives[0];
+      DequantizationPipelineStage.process(renderResources, primitive);
+
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform float model_normalizationRange_normalMC;",
+        "uniform vec2 model_quantizedVolumeOffset_texCoord_0;",
+        "uniform vec2 model_quantizedVolumeStepSize_texCoord_0;",
+        "uniform vec3 model_quantizedVolumeOffset_positionMC;",
+        "uniform vec3 model_quantizedVolumeStepSize_positionMC;",
+        "uniform vec4 model_quantizedVolumeOffset_color_0;",
+        "uniform vec4 model_quantizedVolumeStepSize_color_0;",
+      ]);
+      ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
+
+      const uniformValues = {
+        normalRange: uniformMap.model_normalizationRange_normalMC(),
+        texCoordOffset: uniformMap.model_quantizedVolumeOffset_texCoord_0(),
+        texCoordStepSize: uniformMap.model_quantizedVolumeStepSize_texCoord_0(),
+        positionOffset: uniformMap.model_quantizedVolumeOffset_positionMC(),
+        positionStepSize: uniformMap.model_quantizedVolumeStepSize_positionMC(),
+        colorOffset: uniformMap.model_quantizedVolumeOffset_color_0(),
+        colorStepSize: uniformMap.model_quantizedVolumeStepSize_color_0(),
+      };
+
+      const expected = {
+        normalRange: 1023,
+        positionOffset: new Cartesian3(-0.5, -0.5, -0.5),
+        positionStepSize: new Cartesian3(
+          0.00006103888176768602,
+          0.00006103888176768602,
+          0.00006103888176768602
+        ),
+        texCoordOffset: new Cartesian2(0, 0),
+        texCoordStepSize: new Cartesian2(
+          0.0002442002442002442,
+          0.0002442002442002442
+        ),
+        colorOffset: new Cartesian4(
+          4.908018991223173e-10,
+          0.0006933663971722126,
+          0.000028382812160998583,
+          0
+        ),
+        colorStepSize: new Cartesian4(
+          0.00392145689795999,
+          0.00392145689795999,
+          0.00392145689795999,
+          1
+        ),
+      };
+
+      expect(uniformValues).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+  });
+
   it("skips non-quantized attributes", function () {
-    var uniformMap = {};
-    var shaderBuilder = new ShaderBuilder();
-    var renderResources = {
+    const uniformMap = {};
+    const shaderBuilder = new ShaderBuilder();
+    const renderResources = {
       uniformMap: uniformMap,
       shaderBuilder: shaderBuilder,
     };
 
     return loadGltf(boxUncompressed).then(function (gltfLoader) {
-      var components = gltfLoader.components;
-      var primitive = components.nodes[1].primitives[0];
+      const components = gltfLoader.components;
+      const primitive = components.nodes[1].primitives[0];
       DequantizationPipelineStage.process(renderResources, primitive);
 
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);

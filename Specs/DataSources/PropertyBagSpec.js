@@ -4,16 +4,16 @@ import { PropertyBag } from "../../Source/Cesium.js";
 import { SampledProperty } from "../../Source/Cesium.js";
 
 describe("DataSources/PropertyBag", function () {
-  var time = JulianDate.now();
+  const time = JulianDate.now();
 
   it("sets correct values when constructed with no arguments", function () {
-    var property = new PropertyBag();
+    const property = new PropertyBag();
     expect(property.isConstant).toBe(true);
     expect(property.getValue(time)).toEqual({});
   });
 
   it("sets correct values when constructed with arguments", function () {
-    var property = new PropertyBag({
+    const property = new PropertyBag({
       a: new ConstantProperty(1),
       b: new ConstantProperty(2),
     });
@@ -35,15 +35,15 @@ describe("DataSources/PropertyBag", function () {
   });
 
   it("works with result parameter", function () {
-    var property = new PropertyBag({
+    const property = new PropertyBag({
       a: new ConstantProperty(1),
       b: new ConstantProperty(2),
     });
 
-    var expectedResult = {
+    const expectedResult = {
       a: -1,
     };
-    var result = property.getValue(time, expectedResult);
+    const result = property.getValue(time, expectedResult);
     expect(result).toEqual({
       a: 1,
       b: 2,
@@ -52,14 +52,14 @@ describe("DataSources/PropertyBag", function () {
   });
 
   it("leaves extra properties in result object in place", function () {
-    var property = new PropertyBag({
+    const property = new PropertyBag({
       a: new ConstantProperty(1),
     });
 
-    var expectedResult = {
+    const expectedResult = {
       q: -1,
     };
-    var result = property.getValue(time, expectedResult);
+    const result = property.getValue(time, expectedResult);
     expect(result).toEqual({
       a: 1,
       q: -1,
@@ -68,7 +68,7 @@ describe("DataSources/PropertyBag", function () {
   });
 
   it("converts raw values to properties when constructed", function () {
-    var property = new PropertyBag({
+    const property = new PropertyBag({
       a: 1,
       b: 2,
     });
@@ -96,7 +96,7 @@ describe("DataSources/PropertyBag", function () {
   }
 
   it("uses the provided function to convert raw values to properties when constructed", function () {
-    var property = new PropertyBag(
+    const property = new PropertyBag(
       {
         a: 1,
         b: 2,
@@ -119,14 +119,14 @@ describe("DataSources/PropertyBag", function () {
   });
 
   it("returns correct results from hasProperty", function () {
-    var property = new PropertyBag();
+    const property = new PropertyBag();
     expect(property.hasProperty("a")).toEqual(false);
     property.addProperty("a");
     expect(property.hasProperty("a")).toEqual(true);
   });
 
   it("allows adding a property without a value", function () {
-    var property = new PropertyBag();
+    const property = new PropertyBag();
     property.addProperty("a");
 
     expect(property.propertyNames).toEqual(["a"]);
@@ -139,7 +139,7 @@ describe("DataSources/PropertyBag", function () {
   });
 
   it("allows adding a property with a value", function () {
-    var property = new PropertyBag();
+    const property = new PropertyBag();
     property.addProperty("a", new ConstantProperty(1));
 
     expect(property.propertyNames).toEqual(["a"]);
@@ -151,7 +151,7 @@ describe("DataSources/PropertyBag", function () {
   });
 
   it("uses the provided function to convert raw values to properties when added with a value", function () {
-    var property = new PropertyBag();
+    const property = new PropertyBag();
     property.addProperty("a", 1, createFakeProperty);
 
     expect(property.propertyNames).toEqual(["a"]);
@@ -163,7 +163,7 @@ describe("DataSources/PropertyBag", function () {
   });
 
   it("uses the provided function to convert raw values to properties when added without a value", function () {
-    var property = new PropertyBag();
+    const property = new PropertyBag();
     property.addProperty("a", undefined, createFakeProperty);
 
     expect(property.propertyNames).toEqual(["a"]);
@@ -178,7 +178,7 @@ describe("DataSources/PropertyBag", function () {
   });
 
   it("allows removing a property that was previously added", function () {
-    var property = new PropertyBag();
+    const property = new PropertyBag();
 
     property.addProperty("a", new ConstantProperty(1));
     expect(property.hasProperty("a")).toEqual(true);
@@ -193,52 +193,52 @@ describe("DataSources/PropertyBag", function () {
   });
 
   it("throws when removing a property that was not added", function () {
-    var property = new PropertyBag();
+    const property = new PropertyBag();
     expect(function () {
       property.removeProperty("a");
     }).toThrowDeveloperError();
   });
 
   it("raises definitionChanged event when addProperty is called", function () {
-    var property = new PropertyBag();
-    var listener = jasmine.createSpy("listener");
+    const property = new PropertyBag();
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
     property.addProperty("a");
     expect(listener).toHaveBeenCalledWith(property);
   });
 
   it("raises definitionChanged event when properties are changed", function () {
-    var property = new PropertyBag();
+    const property = new PropertyBag();
     property.addProperty("a");
 
-    var listener = jasmine.createSpy("listener");
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
-    var a = new ConstantProperty(1);
+    const a = new ConstantProperty(1);
     property.a = a;
 
     expect(listener).toHaveBeenCalledWith(property, "a", a, undefined);
   });
 
   it("requires propertyName in addProperty", function () {
-    var property = new PropertyBag();
+    const property = new PropertyBag();
     expect(function () {
       property.addProperty();
     }).toThrowDeveloperError();
   });
 
   it("requires propertyName in removeProperty", function () {
-    var property = new PropertyBag();
+    const property = new PropertyBag();
     expect(function () {
       property.removeProperty();
     }).toThrowDeveloperError();
   });
 
   it("has working equals function", function () {
-    var left = new PropertyBag({
+    let left = new PropertyBag({
       a: new ConstantProperty(1),
     });
-    var right = new PropertyBag({
+    let right = new PropertyBag({
       a: new ConstantProperty(1),
     });
 
@@ -266,12 +266,12 @@ describe("DataSources/PropertyBag", function () {
   });
 
   it("returns true from isConstant only if all members are constant", function () {
-    var property = new PropertyBag();
+    const property = new PropertyBag();
 
     property.addProperty("a", new ConstantProperty(2));
     expect(property.isConstant).toBe(true);
 
-    var sampledProperty = new SampledProperty(Number);
+    const sampledProperty = new SampledProperty(Number);
     sampledProperty.addSample(time, 1);
     property.addProperty("b", sampledProperty);
 

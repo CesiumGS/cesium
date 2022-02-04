@@ -24,9 +24,9 @@ import RequestState from "./RequestState.js";
 import RuntimeError from "./RuntimeError.js";
 import TrustedServers from "./TrustedServers.js";
 
-var xhrBlobSupported = (function () {
+const xhrBlobSupported = (function () {
   try {
-    var xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequest();
     xhr.open("GET", "#", true);
     xhr.responseType = "blob";
     return xhr.responseType === "blob";
@@ -46,15 +46,15 @@ var xhrBlobSupported = (function () {
  * @private
  */
 function parseQuery(uri, resource, merge, preserveQueryParameters) {
-  var queryString = uri.query();
+  const queryString = uri.query();
   if (queryString.length === 0) {
     return {};
   }
 
-  var query;
+  let query;
   // Special case we run into where the querystring is just a string, not key/value pairs
   if (queryString.indexOf("=") === -1) {
-    var result = {};
+    const result = {};
     result[queryString] = undefined;
     query = result;
   } else {
@@ -82,9 +82,9 @@ function parseQuery(uri, resource, merge, preserveQueryParameters) {
  * @private
  */
 function stringifyQuery(uri, resource) {
-  var queryObject = resource._queryParameters;
+  const queryObject = resource._queryParameters;
 
-  var keys = Object.keys(queryObject);
+  const keys = Object.keys(queryObject);
 
   // We have 1 key with an undefined value, so this is just a string, not key/value pairs
   if (keys.length === 1 && !defined(queryObject[keys[0]])) {
@@ -141,15 +141,15 @@ function checkAndResetRequest(request) {
  * @returns {Object} The combined map of query parameters.
  *
  * @example
- * var q1 = {
+ * const q1 = {
  *   a: 1,
  *   b: 2
  * };
- * var q2 = {
+ * const q2 = {
  *   a: 3,
  *   c: 4
  * };
- * var q3 = {
+ * const q3 = {
  *   b: [5, 6],
  *   d: 7
  * }
@@ -193,11 +193,11 @@ function combineQueryParameters(q1, q2, preserveQueryParameters) {
     return combine(q1, q2);
   }
 
-  var result = clone(q1, true);
-  for (var param in q2) {
+  const result = clone(q1, true);
+  for (const param in q2) {
     if (q2.hasOwnProperty(param)) {
-      var value = result[param];
-      var q2Value = q2[param];
+      let value = result[param];
+      const q2Value = q2[param];
       if (defined(value)) {
         if (!Array.isArray(value)) {
           value = result[param] = [value];
@@ -246,7 +246,7 @@ function combineQueryParameters(q1, q2, preserveQueryParameters) {
  *   return false;
  * }
  *
- * var resource = new Resource({
+ * const resource = new Resource({
  *    url: 'http://server.com/path/to/resource.json',
  *    proxy: new DefaultProxy('/proxy/'),
  *    headers: {
@@ -311,7 +311,7 @@ function Resource(options) {
   this.retryAttempts = defaultValue(options.retryAttempts, 0);
   this._retryCount = 0;
 
-  var uri = new Uri(options.url);
+  const uri = new Uri(options.url);
   parseQuery(uri, this, true, true);
 
   // Remove the fragment as it's not sent with a request
@@ -349,7 +349,7 @@ Resource.createIfNeeded = function (resource) {
   });
 };
 
-var supportsImageBitmapOptionsPromise;
+let supportsImageBitmapOptionsPromise;
 /**
  * A helper function to check whether createImageBitmap supports passing ImageBitmapOptions.
  *
@@ -370,7 +370,7 @@ Resource.supportsImageBitmapOptions = function () {
     return supportsImageBitmapOptionsPromise;
   }
 
-  var imageDataUri =
+  const imageDataUri =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWP4////fwAJ+wP9CNHoHgAAAABJRU5ErkJggg==";
 
   supportsImageBitmapOptionsPromise = Resource.fetchBlob({
@@ -449,7 +449,7 @@ Object.defineProperties(Resource.prototype, {
       return this.getUrlComponent(true, true);
     },
     set: function (value) {
-      var uri = new Uri(value);
+      const uri = new Uri(value);
 
       parseQuery(uri, this, false);
 
@@ -546,18 +546,18 @@ Resource.prototype.getUrlComponent = function (query, proxy) {
     return this._url;
   }
 
-  var uri = new Uri(this._url);
+  const uri = new Uri(this._url);
 
   if (query) {
     stringifyQuery(uri, this);
   }
 
   // objectToQuery escapes the placeholders.  Undo that.
-  var url = uri.toString().replace(/%7B/g, "{").replace(/%7D/g, "}");
+  let url = uri.toString().replace(/%7B/g, "{").replace(/%7D/g, "}");
 
-  var templateValues = this._templateValues;
+  const templateValues = this._templateValues;
   url = url.replace(/{(.*?)}/g, function (match, key) {
-    var replacement = templateValues[key];
+    const replacement = templateValues[key];
     if (defined(replacement)) {
       // use the replacement value from templateValues if there is one...
       return encodeURIComponent(replacement);
@@ -641,13 +641,13 @@ Resource.prototype.setTemplateValues = function (template, useAsDefault) {
  * @returns {Resource} The resource derived from the current one.
  */
 Resource.prototype.getDerivedResource = function (options) {
-  var resource = this.clone();
+  const resource = this.clone();
   resource._retryCount = 0;
 
   if (defined(options.url)) {
-    var uri = new Uri(options.url);
+    const uri = new Uri(options.url);
 
-    var preserveQueryParameters = defaultValue(
+    const preserveQueryParameters = defaultValue(
       options.preserveQueryParameters,
       false
     );
@@ -706,7 +706,7 @@ Resource.prototype.getDerivedResource = function (options) {
  * @private
  */
 Resource.prototype.retryOnError = function (error) {
-  var retryCallback = this.retryCallback;
+  const retryCallback = this.retryCallback;
   if (
     typeof retryCallback !== "function" ||
     this._retryCount >= this.retryAttempts
@@ -714,7 +714,7 @@ Resource.prototype.retryOnError = function (error) {
     return when(false);
   }
 
-  var that = this;
+  const that = this;
   return when(retryCallback(this, error)).then(function (result) {
     ++that._retryCount;
 
@@ -807,7 +807,7 @@ Resource.prototype.fetchArrayBuffer = function () {
  * @returns {Promise.<ArrayBuffer>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetchArrayBuffer = function (options) {
-  var resource = new Resource(options);
+  const resource = new Resource(options);
   return resource.fetchArrayBuffer();
 };
 
@@ -851,7 +851,7 @@ Resource.prototype.fetchBlob = function () {
  * @returns {Promise.<Blob>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetchBlob = function (options) {
-  var resource = new Resource(options);
+  const resource = new Resource(options);
   return resource.fetchBlob();
 };
 
@@ -886,10 +886,10 @@ Resource.fetchBlob = function (options) {
  */
 Resource.prototype.fetchImage = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var preferImageBitmap = defaultValue(options.preferImageBitmap, false);
-  var preferBlob = defaultValue(options.preferBlob, false);
-  var flipY = defaultValue(options.flipY, false);
-  var skipColorSpaceConversion = defaultValue(
+  const preferImageBitmap = defaultValue(options.preferImageBitmap, false);
+  const preferBlob = defaultValue(options.preferBlob, false);
+  const flipY = defaultValue(options.flipY, false);
+  const skipColorSpaceConversion = defaultValue(
     options.skipColorSpaceConversion,
     false
   );
@@ -914,15 +914,15 @@ Resource.prototype.fetchImage = function (options) {
     });
   }
 
-  var blobPromise = this.fetchBlob();
+  const blobPromise = this.fetchBlob();
   if (!defined(blobPromise)) {
     return;
   }
 
-  var supportsImageBitmap;
-  var useImageBitmap;
-  var generatedBlobResource;
-  var generatedBlob;
+  let supportsImageBitmap;
+  let useImageBitmap;
+  let generatedBlobResource;
+  let generatedBlob;
   return Resource.supportsImageBitmapOptions()
     .then(function (result) {
       supportsImageBitmap = result;
@@ -941,7 +941,7 @@ Resource.prototype.fetchImage = function (options) {
           skipColorSpaceConversion: skipColorSpaceConversion,
         });
       }
-      var blobUrl = window.URL.createObjectURL(blob);
+      const blobUrl = window.URL.createObjectURL(blob);
       generatedBlobResource = new Resource({
         url: blobUrl,
       });
@@ -995,22 +995,22 @@ Resource.prototype.fetchImage = function (options) {
  * @private
  */
 function fetchImage(options) {
-  var resource = options.resource;
-  var flipY = options.flipY;
-  var skipColorSpaceConversion = options.skipColorSpaceConversion;
-  var preferImageBitmap = options.preferImageBitmap;
+  const resource = options.resource;
+  const flipY = options.flipY;
+  const skipColorSpaceConversion = options.skipColorSpaceConversion;
+  const preferImageBitmap = options.preferImageBitmap;
 
-  var request = resource.request;
+  const request = resource.request;
   request.url = resource.url;
   request.requestFunction = function () {
-    var crossOrigin = false;
+    let crossOrigin = false;
 
     // data URIs can't have crossorigin set.
     if (!resource.isDataUri && !resource.isBlobUri) {
       crossOrigin = resource.isCrossOriginUrl;
     }
 
-    var deferred = when.defer();
+    const deferred = when.defer();
     Resource._Implementations.createImage(
       request,
       crossOrigin,
@@ -1023,7 +1023,7 @@ function fetchImage(options) {
     return deferred.promise;
   };
 
-  var promise = RequestScheduler.request(request);
+  const promise = RequestScheduler.request(request);
   if (!defined(promise)) {
     return;
   }
@@ -1070,7 +1070,7 @@ function fetchImage(options) {
  * @returns {Promise.<ImageBitmap>|Promise.<HTMLImageElement>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetchImage = function (options) {
-  var resource = new Resource(options);
+  const resource = new Resource(options);
   return resource.fetchImage({
     flipY: options.flipY,
     skipColorSpaceConversion: options.skipColorSpaceConversion,
@@ -1089,7 +1089,7 @@ Resource.fetchImage = function (options) {
  *
  * @example
  * // load text from a URL, setting a custom header
- * var resource = new Resource({
+ * const resource = new Resource({
  *   url: 'http://someUrl.com/someJson.txt',
  *   headers: {
  *     'X-Custom-Header' : 'some value'
@@ -1126,7 +1126,7 @@ Resource.prototype.fetchText = function () {
  * @returns {Promise.<String>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetchText = function (options) {
-  var resource = new Resource(options);
+  const resource = new Resource(options);
   return resource.fetchText();
 };
 
@@ -1153,7 +1153,7 @@ Resource.fetchText = function (options) {
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
  */
 Resource.prototype.fetchJson = function () {
-  var promise = this.fetch({
+  const promise = this.fetch({
     responseType: "text",
     headers: {
       Accept: "application/json,*/*;q=0.01",
@@ -1187,7 +1187,7 @@ Resource.prototype.fetchJson = function () {
  * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetchJson = function (options) {
-  var resource = new Resource(options);
+  const resource = new Resource(options);
   return resource.fetchJson();
 };
 
@@ -1236,7 +1236,7 @@ Resource.prototype.fetchXML = function () {
  * @returns {Promise.<XMLDocument>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetchXML = function (options) {
-  var resource = new Resource(options);
+  const resource = new Resource(options);
   return resource.fetchXML();
 };
 
@@ -1263,24 +1263,25 @@ Resource.prototype.fetchJsonp = function (callbackParameterName) {
   checkAndResetRequest(this.request);
 
   //generate a unique function name
-  var functionName;
+  let functionName;
   do {
-    functionName =
-      "loadJsonp" + CesiumMath.nextRandomNumber().toString().substring(2, 8);
+    functionName = `loadJsonp${CesiumMath.nextRandomNumber()
+      .toString()
+      .substring(2, 8)}`;
   } while (defined(window[functionName]));
 
   return fetchJsonp(this, callbackParameterName, functionName);
 };
 
 function fetchJsonp(resource, callbackParameterName, functionName) {
-  var callbackQuery = {};
+  const callbackQuery = {};
   callbackQuery[callbackParameterName] = functionName;
   resource.setQueryParameters(callbackQuery);
 
-  var request = resource.request;
+  const request = resource.request;
   request.url = resource.url;
   request.requestFunction = function () {
-    var deferred = when.defer();
+    const deferred = when.defer();
 
     //assign a function with that name in the global scope
     window[functionName] = function (data) {
@@ -1301,7 +1302,7 @@ function fetchJsonp(resource, callbackParameterName, functionName) {
     return deferred.promise;
   };
 
-  var promise = RequestScheduler.request(request);
+  const promise = RequestScheduler.request(request);
   if (!defined(promise)) {
     return;
   }
@@ -1341,7 +1342,7 @@ function fetchJsonp(resource, callbackParameterName, functionName) {
  * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetchJsonp = function (options) {
-  var resource = new Resource(options);
+  const resource = new Resource(options);
   return resource.fetchJsonp(options.callbackParameterName);
 };
 
@@ -1349,20 +1350,20 @@ Resource.fetchJsonp = function (options) {
  * @private
  */
 Resource.prototype._makeRequest = function (options) {
-  var resource = this;
+  const resource = this;
   checkAndResetRequest(resource.request);
 
-  var request = resource.request;
+  const request = resource.request;
   request.url = resource.url;
 
   request.requestFunction = function () {
-    var responseType = options.responseType;
-    var headers = combine(options.headers, resource.headers);
-    var overrideMimeType = options.overrideMimeType;
-    var method = options.method;
-    var data = options.data;
-    var deferred = when.defer();
-    var xhr = Resource._Implementations.loadWithXhr(
+    const responseType = options.responseType;
+    const headers = combine(options.headers, resource.headers);
+    const overrideMimeType = options.overrideMimeType;
+    const method = options.method;
+    const data = options.data;
+    const deferred = when.defer();
+    const xhr = Resource._Implementations.loadWithXhr(
       resource.url,
       responseType,
       method,
@@ -1379,7 +1380,7 @@ Resource.prototype._makeRequest = function (options) {
     return deferred.promise;
   };
 
-  var promise = RequestScheduler.request(request);
+  const promise = RequestScheduler.request(request);
   if (!defined(promise)) {
     return;
   }
@@ -1410,10 +1411,10 @@ Resource.prototype._makeRequest = function (options) {
     });
 };
 
-var dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
+const dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
 
 function decodeDataUriText(isBase64, data) {
-  var result = decodeURIComponent(data);
+  const result = decodeURIComponent(data);
   if (isBase64) {
     return atob(result);
   }
@@ -1421,10 +1422,10 @@ function decodeDataUriText(isBase64, data) {
 }
 
 function decodeDataUriArrayBuffer(isBase64, data) {
-  var byteString = decodeDataUriText(isBase64, data);
-  var buffer = new ArrayBuffer(byteString.length);
-  var view = new Uint8Array(buffer);
-  for (var i = 0; i < byteString.length; i++) {
+  const byteString = decodeDataUriText(isBase64, data);
+  const buffer = new ArrayBuffer(byteString.length);
+  const view = new Uint8Array(buffer);
+  for (let i = 0; i < byteString.length; i++) {
     view[i] = byteString.charCodeAt(i);
   }
   return buffer;
@@ -1432,9 +1433,11 @@ function decodeDataUriArrayBuffer(isBase64, data) {
 
 function decodeDataUri(dataUriRegexResult, responseType) {
   responseType = defaultValue(responseType, "");
-  var mimeType = dataUriRegexResult[1];
-  var isBase64 = !!dataUriRegexResult[2];
-  var data = dataUriRegexResult[3];
+  const mimeType = dataUriRegexResult[1];
+  const isBase64 = !!dataUriRegexResult[2];
+  const data = dataUriRegexResult[3];
+  let buffer;
+  let parser;
 
   switch (responseType) {
     case "":
@@ -1443,12 +1446,12 @@ function decodeDataUri(dataUriRegexResult, responseType) {
     case "arraybuffer":
       return decodeDataUriArrayBuffer(isBase64, data);
     case "blob":
-      var buffer = decodeDataUriArrayBuffer(isBase64, data);
+      buffer = decodeDataUriArrayBuffer(isBase64, data);
       return new Blob([buffer], {
         type: mimeType,
       });
     case "document":
-      var parser = new DOMParser();
+      parser = new DOMParser();
       return parser.parseFromString(
         decodeDataUriText(isBase64, data),
         mimeType
@@ -1457,7 +1460,7 @@ function decodeDataUri(dataUriRegexResult, responseType) {
       return JSON.parse(decodeDataUriText(isBase64, data));
     default:
       //>>includeStart('debug', pragmas.debug);
-      throw new DeveloperError("Unhandled responseType: " + responseType);
+      throw new DeveloperError(`Unhandled responseType: ${responseType}`);
     //>>includeEnd('debug');
   }
 }
@@ -1511,7 +1514,7 @@ Resource.prototype.fetch = function (options) {
  * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetch = function (options) {
-  var resource = new Resource(options);
+  const resource = new Resource(options);
   return resource.fetch({
     // Make copy of just the needed fields because headers can be passed to both the constructor and to fetch
     responseType: options.responseType,
@@ -1568,7 +1571,7 @@ Resource.prototype.delete = function (options) {
  * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.delete = function (options) {
-  var resource = new Resource(options);
+  const resource = new Resource(options);
   return resource.delete({
     // Make copy of just the needed fields because headers can be passed to both the constructor and to fetch
     responseType: options.responseType,
@@ -1625,7 +1628,7 @@ Resource.prototype.head = function (options) {
  * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.head = function (options) {
-  var resource = new Resource(options);
+  const resource = new Resource(options);
   return resource.head({
     // Make copy of just the needed fields because headers can be passed to both the constructor and to fetch
     responseType: options.responseType,
@@ -1681,7 +1684,7 @@ Resource.prototype.options = function (options) {
  * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.options = function (options) {
-  var resource = new Resource(options);
+  const resource = new Resource(options);
   return resource.options({
     // Make copy of just the needed fields because headers can be passed to both the constructor and to fetch
     responseType: options.responseType,
@@ -1743,7 +1746,7 @@ Resource.prototype.post = function (data, options) {
  * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.post = function (options) {
-  var resource = new Resource(options);
+  const resource = new Resource(options);
   return resource.post(options.data, {
     // Make copy of just the needed fields because headers can be passed to both the constructor and to post
     responseType: options.responseType,
@@ -1804,7 +1807,7 @@ Resource.prototype.put = function (data, options) {
  * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.put = function (options) {
-  var resource = new Resource(options);
+  const resource = new Resource(options);
   return resource.put(options.data, {
     // Make copy of just the needed fields because headers can be passed to both the constructor and to post
     responseType: options.responseType,
@@ -1865,7 +1868,7 @@ Resource.prototype.patch = function (data, options) {
  * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.patch = function (options) {
-  var resource = new Resource(options);
+  const resource = new Resource(options);
   return resource.patch(options.data, {
     // Make copy of just the needed fields because headers can be passed to both the constructor and to post
     responseType: options.responseType,
@@ -1881,7 +1884,7 @@ Resource.patch = function (options) {
 Resource._Implementations = {};
 
 function loadImageElement(url, crossOrigin, deferred) {
-  var image = new Image();
+  const image = new Image();
 
   image.onload = function () {
     deferred.resolve(image);
@@ -1910,7 +1913,7 @@ Resource._Implementations.createImage = function (
   skipColorSpaceConversion,
   preferImageBitmap
 ) {
-  var url = request.url;
+  const url = request.url;
   // Passing an Image to createImageBitmap will force it to run on the main thread
   // since DOM elements don't exist on workers. We convert it to a blob so it's non-blocking.
   // See:
@@ -1924,10 +1927,10 @@ Resource._Implementations.createImage = function (
         loadImageElement(url, crossOrigin, deferred);
         return;
       }
-      var responseType = "blob";
-      var method = "GET";
-      var xhrDeferred = when.defer();
-      var xhr = Resource._Implementations.loadWithXhr(
+      const responseType = "blob";
+      const method = "GET";
+      const xhrDeferred = when.defer();
+      const xhr = Resource._Implementations.loadWithXhr(
         url,
         responseType,
         method,
@@ -1949,9 +1952,7 @@ Resource._Implementations.createImage = function (
           if (!defined(blob)) {
             deferred.reject(
               new RuntimeError(
-                "Successfully retrieved " +
-                  url +
-                  " but it contained no content."
+                `Successfully retrieved ${url} but it contained no content.`
               )
             );
             return;
@@ -2011,12 +2012,12 @@ function loadWithHttpRequest(
 ) {
   // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
   /* eslint-disable no-undef */
-  var URL = require("url").parse(url);
-  var http = URL.protocol === "https:" ? require("https") : require("http");
-  var zlib = require("zlib");
+  const URL = require("url").parse(url);
+  const http = URL.protocol === "https:" ? require("https") : require("http");
+  const zlib = require("zlib");
   /* eslint-enable no-undef */
 
-  var options = {
+  const options = {
     protocol: URL.protocol,
     hostname: URL.hostname,
     port: URL.port,
@@ -2036,14 +2037,14 @@ function loadWithHttpRequest(
         return;
       }
 
-      var chunkArray = [];
+      const chunkArray = [];
       res.on("data", function (chunk) {
         chunkArray.push(chunk);
       });
 
       res.on("end", function () {
         // eslint-disable-next-line no-undef
-        var result = Buffer.concat(chunkArray);
+        const result = Buffer.concat(chunkArray);
         if (res.headers["content-encoding"] === "gzip") {
           zlib.gunzip(result, function (error, resultUnzipped) {
             if (error) {
@@ -2065,7 +2066,7 @@ function loadWithHttpRequest(
     .end();
 }
 
-var noXMLHttpRequest = typeof XMLHttpRequest === "undefined";
+const noXMLHttpRequest = typeof XMLHttpRequest === "undefined";
 Resource._Implementations.loadWithXhr = function (
   url,
   responseType,
@@ -2075,7 +2076,7 @@ Resource._Implementations.loadWithXhr = function (
   deferred,
   overrideMimeType
 ) {
-  var dataUriRegexResult = dataUriRegex.exec(url);
+  const dataUriRegexResult = dataUriRegex.exec(url);
   if (dataUriRegexResult !== null) {
     deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
     return;
@@ -2094,7 +2095,7 @@ Resource._Implementations.loadWithXhr = function (
     return;
   }
 
-  var xhr = new XMLHttpRequest();
+  const xhr = new XMLHttpRequest();
 
   if (TrustedServers.contains(url)) {
     xhr.withCredentials = true;
@@ -2107,7 +2108,7 @@ Resource._Implementations.loadWithXhr = function (
   }
 
   if (defined(headers)) {
-    for (var key in headers) {
+    for (const key in headers) {
       if (headers.hasOwnProperty(key)) {
         xhr.setRequestHeader(key, headers[key]);
       }
@@ -2119,7 +2120,7 @@ Resource._Implementations.loadWithXhr = function (
   }
 
   // While non-standard, file protocol always returns a status of 0 on success
-  var localFile = false;
+  let localFile = false;
   if (typeof url === "string") {
     localFile =
       url.indexOf("file://") === 0 ||
@@ -2141,17 +2142,17 @@ Resource._Implementations.loadWithXhr = function (
       return;
     }
 
-    var response = xhr.response;
-    var browserResponseType = xhr.responseType;
+    const response = xhr.response;
+    const browserResponseType = xhr.responseType;
 
     if (method === "HEAD" || method === "OPTIONS") {
-      var responseHeaderString = xhr.getAllResponseHeaders();
-      var splitHeaders = responseHeaderString.trim().split(/[\r\n]+/);
+      const responseHeaderString = xhr.getAllResponseHeaders();
+      const splitHeaders = responseHeaderString.trim().split(/[\r\n]+/);
 
-      var responseHeaders = {};
+      const responseHeaders = {};
       splitHeaders.forEach(function (line) {
-        var parts = line.split(": ");
-        var header = parts.shift();
+        const parts = line.split(": ");
+        const header = parts.shift();
         responseHeaders[header] = parts.join(": ");
       });
 

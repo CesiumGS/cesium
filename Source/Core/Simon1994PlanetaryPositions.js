@@ -13,7 +13,7 @@ import TimeStandard from "./TimeStandard.js";
  *
  * @namespace Simon1994PlanetaryPositions
  */
-var Simon1994PlanetaryPositions = {};
+const Simon1994PlanetaryPositions = {};
 
 function computeTdbMinusTtSpice(daysSinceJ2000InTerrestrialTime) {
   /* STK Comments ------------------------------------------------------
@@ -37,30 +37,30 @@ function computeTdbMinusTtSpice(daysSinceJ2000InTerrestrialTime) {
   //* http://www.cv.nrao.edu/~rfisher/Ephemerides/times.html#TDB
   //* ftp://ssd.jpl.nasa.gov/pub/eph/planets/ioms/ExplSupplChap8.pdf
 
-  var g = 6.239996 + 0.0172019696544 * daysSinceJ2000InTerrestrialTime;
+  const g = 6.239996 + 0.0172019696544 * daysSinceJ2000InTerrestrialTime;
   return 1.657e-3 * Math.sin(g + 1.671e-2 * Math.sin(g));
 }
 
-var TdtMinusTai = 32.184;
-var J2000d = 2451545;
+const TdtMinusTai = 32.184;
+const J2000d = 2451545;
 function taiToTdb(date, result) {
   //Converts TAI to TT
   result = JulianDate.addSeconds(date, TdtMinusTai, result);
 
   //Converts TT to TDB
-  var days = JulianDate.totalDays(result) - J2000d;
+  const days = JulianDate.totalDays(result) - J2000d;
   result = JulianDate.addSeconds(result, computeTdbMinusTtSpice(days), result);
 
   return result;
 }
 
-var epoch = new JulianDate(2451545, 0, TimeStandard.TAI); //Actually TDB (not TAI)
-var MetersPerKilometer = 1000.0;
-var RadiansPerDegree = CesiumMath.RADIANS_PER_DEGREE;
-var RadiansPerArcSecond = CesiumMath.RADIANS_PER_ARCSECOND;
-var MetersPerAstronomicalUnit = 1.4959787e11; // IAU 1976 value
+const epoch = new JulianDate(2451545, 0, TimeStandard.TAI); //Actually TDB (not TAI)
+const MetersPerKilometer = 1000.0;
+const RadiansPerDegree = CesiumMath.RADIANS_PER_DEGREE;
+const RadiansPerArcSecond = CesiumMath.RADIANS_PER_ARCSECOND;
+const MetersPerAstronomicalUnit = 1.4959787e11; // IAU 1976 value
 
-var perifocalToEquatorial = new Matrix3();
+const perifocalToEquatorial = new Matrix3();
 function elementsToCartesian(
   semimajorAxis,
   eccentricity,
@@ -83,14 +83,14 @@ function elementsToCartesian(
   }
   //>>includeEnd('debug')
 
-  var radiusOfPeriapsis = semimajorAxis * (1.0 - eccentricity);
-  var argumentOfPeriapsis = longitudeOfPerigee - longitudeOfNode;
-  var rightAscensionOfAscendingNode = longitudeOfNode;
-  var trueAnomaly = meanAnomalyToTrueAnomaly(
+  const radiusOfPeriapsis = semimajorAxis * (1.0 - eccentricity);
+  const argumentOfPeriapsis = longitudeOfPerigee - longitudeOfNode;
+  const rightAscensionOfAscendingNode = longitudeOfNode;
+  const trueAnomaly = meanAnomalyToTrueAnomaly(
     meanLongitude - longitudeOfPerigee,
     eccentricity
   );
-  var type = chooseOrbit(eccentricity, 0.0);
+  const type = chooseOrbit(eccentricity, 0.0);
 
   //>>includeStart('debug', pragmas.debug);
   if (
@@ -110,11 +110,11 @@ function elementsToCartesian(
     rightAscensionOfAscendingNode,
     perifocalToEquatorial
   );
-  var semilatus = radiusOfPeriapsis * (1.0 + eccentricity);
-  var costheta = Math.cos(trueAnomaly);
-  var sintheta = Math.sin(trueAnomaly);
+  const semilatus = radiusOfPeriapsis * (1.0 + eccentricity);
+  const costheta = Math.cos(trueAnomaly);
+  const sintheta = Math.sin(trueAnomaly);
 
-  var denom = 1.0 + eccentricity * costheta;
+  const denom = 1.0 + eccentricity * costheta;
 
   //>>includeStart('debug', pragmas.debug);
   if (denom <= CesiumMath.Epsilon10) {
@@ -122,7 +122,7 @@ function elementsToCartesian(
   }
   //>>includeEnd('debug')
 
-  var radius = semilatus / denom;
+  const radius = semilatus / denom;
   if (!defined(result)) {
     result = new Cartesian3(radius * costheta, radius * sintheta, 0.0);
   } else {
@@ -159,15 +159,15 @@ function meanAnomalyToTrueAnomaly(meanAnomaly, eccentricity) {
   }
   //>>includeEnd('debug')
 
-  var eccentricAnomaly = meanAnomalyToEccentricAnomaly(
+  const eccentricAnomaly = meanAnomalyToEccentricAnomaly(
     meanAnomaly,
     eccentricity
   );
   return eccentricAnomalyToTrueAnomaly(eccentricAnomaly, eccentricity);
 }
 
-var maxIterationCount = 50;
-var keplerEqConvergence = CesiumMath.EPSILON8;
+const maxIterationCount = 50;
+const keplerEqConvergence = CesiumMath.EPSILON8;
 // Calculates the eccentric anomaly given the mean anomaly and the eccentricity.
 function meanAnomalyToEccentricAnomaly(meanAnomaly, eccentricity) {
   //>>includeStart('debug', pragmas.debug);
@@ -176,21 +176,21 @@ function meanAnomalyToEccentricAnomaly(meanAnomaly, eccentricity) {
   }
   //>>includeEnd('debug')
 
-  var revs = Math.floor(meanAnomaly / CesiumMath.TWO_PI);
+  const revs = Math.floor(meanAnomaly / CesiumMath.TWO_PI);
 
   // Find angle in current revolution
   meanAnomaly -= revs * CesiumMath.TWO_PI;
 
   // calculate starting value for iteration sequence
-  var iterationValue =
+  let iterationValue =
     meanAnomaly +
     (eccentricity * Math.sin(meanAnomaly)) /
       (1.0 - Math.sin(meanAnomaly + eccentricity) + Math.sin(meanAnomaly));
 
   // Perform Newton-Raphson iteration on Kepler's equation
-  var eccentricAnomaly = Number.MAX_VALUE;
+  let eccentricAnomaly = Number.MAX_VALUE;
 
-  var count;
+  let count;
   for (
     count = 0;
     count < maxIterationCount &&
@@ -198,11 +198,11 @@ function meanAnomalyToEccentricAnomaly(meanAnomaly, eccentricity) {
     ++count
   ) {
     eccentricAnomaly = iterationValue;
-    var NRfunction =
+    const NRfunction =
       eccentricAnomaly -
       eccentricity * Math.sin(eccentricAnomaly) -
       meanAnomaly;
-    var dNRfunction = 1 - eccentricity * Math.cos(eccentricAnomaly);
+    const dNRfunction = 1 - eccentricity * Math.cos(eccentricAnomaly);
     iterationValue = eccentricAnomaly - NRfunction / dNRfunction;
   }
 
@@ -227,17 +227,17 @@ function eccentricAnomalyToTrueAnomaly(eccentricAnomaly, eccentricity) {
   //>>includeEnd('debug')
 
   // Calculate the number of previous revolutions
-  var revs = Math.floor(eccentricAnomaly / CesiumMath.TWO_PI);
+  const revs = Math.floor(eccentricAnomaly / CesiumMath.TWO_PI);
 
   // Find angle in current revolution
   eccentricAnomaly -= revs * CesiumMath.TWO_PI;
 
   // Calculate true anomaly from eccentric anomaly
-  var trueAnomalyX = Math.cos(eccentricAnomaly) - eccentricity;
-  var trueAnomalyY =
+  const trueAnomalyX = Math.cos(eccentricAnomaly) - eccentricity;
+  const trueAnomalyY =
     Math.sin(eccentricAnomaly) * Math.sqrt(1 - eccentricity * eccentricity);
 
-  var trueAnomaly = Math.atan2(trueAnomalyY, trueAnomalyX);
+  let trueAnomaly = Math.atan2(trueAnomalyY, trueAnomalyX);
 
   // Ensure the correct quadrant
   trueAnomaly = CesiumMath.zeroToTwoPi(trueAnomaly);
@@ -265,14 +265,14 @@ function perifocalToCartesianMatrix(
   }
   //>>includeEnd('debug')
 
-  var cosap = Math.cos(argumentOfPeriapsis);
-  var sinap = Math.sin(argumentOfPeriapsis);
+  const cosap = Math.cos(argumentOfPeriapsis);
+  const sinap = Math.sin(argumentOfPeriapsis);
 
-  var cosi = Math.cos(inclination);
-  var sini = Math.sin(inclination);
+  const cosi = Math.cos(inclination);
+  const sini = Math.sin(inclination);
 
-  var cosraan = Math.cos(rightAscension);
-  var sinraan = Math.sin(rightAscension);
+  const cosraan = Math.cos(rightAscension);
+  const sinraan = Math.sin(rightAscension);
   if (!defined(result)) {
     result = new Matrix3(
       cosraan * cosap - sinraan * sinap * cosi,
@@ -302,79 +302,79 @@ function perifocalToCartesianMatrix(
 }
 
 // From section 5.8
-var semiMajorAxis0 = 1.0000010178 * MetersPerAstronomicalUnit;
-var meanLongitude0 = 100.46645683 * RadiansPerDegree;
-var meanLongitude1 = 1295977422.83429 * RadiansPerArcSecond;
+const semiMajorAxis0 = 1.0000010178 * MetersPerAstronomicalUnit;
+const meanLongitude0 = 100.46645683 * RadiansPerDegree;
+const meanLongitude1 = 1295977422.83429 * RadiansPerArcSecond;
 
 // From table 6
-var p1u = 16002;
-var p2u = 21863;
-var p3u = 32004;
-var p4u = 10931;
-var p5u = 14529;
-var p6u = 16368;
-var p7u = 15318;
-var p8u = 32794;
+const p1u = 16002;
+const p2u = 21863;
+const p3u = 32004;
+const p4u = 10931;
+const p5u = 14529;
+const p6u = 16368;
+const p7u = 15318;
+const p8u = 32794;
 
-var Ca1 = 64 * 1e-7 * MetersPerAstronomicalUnit;
-var Ca2 = -152 * 1e-7 * MetersPerAstronomicalUnit;
-var Ca3 = 62 * 1e-7 * MetersPerAstronomicalUnit;
-var Ca4 = -8 * 1e-7 * MetersPerAstronomicalUnit;
-var Ca5 = 32 * 1e-7 * MetersPerAstronomicalUnit;
-var Ca6 = -41 * 1e-7 * MetersPerAstronomicalUnit;
-var Ca7 = 19 * 1e-7 * MetersPerAstronomicalUnit;
-var Ca8 = -11 * 1e-7 * MetersPerAstronomicalUnit;
+const Ca1 = 64 * 1e-7 * MetersPerAstronomicalUnit;
+const Ca2 = -152 * 1e-7 * MetersPerAstronomicalUnit;
+const Ca3 = 62 * 1e-7 * MetersPerAstronomicalUnit;
+const Ca4 = -8 * 1e-7 * MetersPerAstronomicalUnit;
+const Ca5 = 32 * 1e-7 * MetersPerAstronomicalUnit;
+const Ca6 = -41 * 1e-7 * MetersPerAstronomicalUnit;
+const Ca7 = 19 * 1e-7 * MetersPerAstronomicalUnit;
+const Ca8 = -11 * 1e-7 * MetersPerAstronomicalUnit;
 
-var Sa1 = -150 * 1e-7 * MetersPerAstronomicalUnit;
-var Sa2 = -46 * 1e-7 * MetersPerAstronomicalUnit;
-var Sa3 = 68 * 1e-7 * MetersPerAstronomicalUnit;
-var Sa4 = 54 * 1e-7 * MetersPerAstronomicalUnit;
-var Sa5 = 14 * 1e-7 * MetersPerAstronomicalUnit;
-var Sa6 = 24 * 1e-7 * MetersPerAstronomicalUnit;
-var Sa7 = -28 * 1e-7 * MetersPerAstronomicalUnit;
-var Sa8 = 22 * 1e-7 * MetersPerAstronomicalUnit;
+const Sa1 = -150 * 1e-7 * MetersPerAstronomicalUnit;
+const Sa2 = -46 * 1e-7 * MetersPerAstronomicalUnit;
+const Sa3 = 68 * 1e-7 * MetersPerAstronomicalUnit;
+const Sa4 = 54 * 1e-7 * MetersPerAstronomicalUnit;
+const Sa5 = 14 * 1e-7 * MetersPerAstronomicalUnit;
+const Sa6 = 24 * 1e-7 * MetersPerAstronomicalUnit;
+const Sa7 = -28 * 1e-7 * MetersPerAstronomicalUnit;
+const Sa8 = 22 * 1e-7 * MetersPerAstronomicalUnit;
 
-var q1u = 10;
-var q2u = 16002;
-var q3u = 21863;
-var q4u = 10931;
-var q5u = 1473;
-var q6u = 32004;
-var q7u = 4387;
-var q8u = 73;
+const q1u = 10;
+const q2u = 16002;
+const q3u = 21863;
+const q4u = 10931;
+const q5u = 1473;
+const q6u = 32004;
+const q7u = 4387;
+const q8u = 73;
 
-var Cl1 = -325 * 1e-7;
-var Cl2 = -322 * 1e-7;
-var Cl3 = -79 * 1e-7;
-var Cl4 = 232 * 1e-7;
-var Cl5 = -52 * 1e-7;
-var Cl6 = 97 * 1e-7;
-var Cl7 = 55 * 1e-7;
-var Cl8 = -41 * 1e-7;
+const Cl1 = -325 * 1e-7;
+const Cl2 = -322 * 1e-7;
+const Cl3 = -79 * 1e-7;
+const Cl4 = 232 * 1e-7;
+const Cl5 = -52 * 1e-7;
+const Cl6 = 97 * 1e-7;
+const Cl7 = 55 * 1e-7;
+const Cl8 = -41 * 1e-7;
 
-var Sl1 = -105 * 1e-7;
-var Sl2 = -137 * 1e-7;
-var Sl3 = 258 * 1e-7;
-var Sl4 = 35 * 1e-7;
-var Sl5 = -116 * 1e-7;
-var Sl6 = -88 * 1e-7;
-var Sl7 = -112 * 1e-7;
-var Sl8 = -80 * 1e-7;
+const Sl1 = -105 * 1e-7;
+const Sl2 = -137 * 1e-7;
+const Sl3 = 258 * 1e-7;
+const Sl4 = 35 * 1e-7;
+const Sl5 = -116 * 1e-7;
+const Sl6 = -88 * 1e-7;
+const Sl7 = -112 * 1e-7;
+const Sl8 = -80 * 1e-7;
 
-var scratchDate = new JulianDate(0, 0.0, TimeStandard.TAI);
+const scratchDate = new JulianDate(0, 0.0, TimeStandard.TAI);
 // Gets a point describing the motion of the Earth-Moon barycenter according to the equations described in section 6.
 function computeSimonEarthMoonBarycenter(date, result) {
   // t is thousands of years from J2000 TDB
   taiToTdb(date, scratchDate);
-  var x =
+  const x =
     scratchDate.dayNumber -
     epoch.dayNumber +
     (scratchDate.secondsOfDay - epoch.secondsOfDay) /
       TimeConstants.SECONDS_PER_DAY;
-  var t = x / (TimeConstants.DAYS_PER_JULIAN_CENTURY * 10.0);
+  const t = x / (TimeConstants.DAYS_PER_JULIAN_CENTURY * 10.0);
 
-  var u = 0.3595362 * t;
-  var semimajorAxis =
+  const u = 0.3595362 * t;
+  const semimajorAxis =
     semiMajorAxis0 +
     Ca1 * Math.cos(p1u * u) +
     Sa1 * Math.sin(p1u * u) +
@@ -392,7 +392,7 @@ function computeSimonEarthMoonBarycenter(date, result) {
     Sa7 * Math.sin(p7u * u) +
     Ca8 * Math.cos(p8u * u) +
     Sa8 * Math.sin(p8u * u);
-  var meanLongitude =
+  const meanLongitude =
     meanLongitude0 +
     meanLongitude1 * t +
     Cl1 * Math.cos(q1u * u) +
@@ -413,11 +413,11 @@ function computeSimonEarthMoonBarycenter(date, result) {
     Sl8 * Math.sin(q8u * u);
 
   // All constants in this part are from section 5.8
-  var eccentricity = 0.0167086342 - 0.0004203654 * t;
-  var longitudeOfPerigee =
+  const eccentricity = 0.0167086342 - 0.0004203654 * t;
+  const longitudeOfPerigee =
     102.93734808 * RadiansPerDegree + 11612.3529 * RadiansPerArcSecond * t;
-  var inclination = 469.97289 * RadiansPerArcSecond * t;
-  var longitudeOfNode =
+  const inclination = 469.97289 * RadiansPerArcSecond * t;
+  const longitudeOfNode =
     174.87317577 * RadiansPerDegree - 8679.27034 * RadiansPerArcSecond * t;
 
   return elementsToCartesian(
@@ -434,62 +434,62 @@ function computeSimonEarthMoonBarycenter(date, result) {
 // Gets a point describing the position of the moon according to the equations described in section 4.
 function computeSimonMoon(date, result) {
   taiToTdb(date, scratchDate);
-  var x =
+  const x =
     scratchDate.dayNumber -
     epoch.dayNumber +
     (scratchDate.secondsOfDay - epoch.secondsOfDay) /
       TimeConstants.SECONDS_PER_DAY;
-  var t = x / TimeConstants.DAYS_PER_JULIAN_CENTURY;
-  var t2 = t * t;
-  var t3 = t2 * t;
-  var t4 = t3 * t;
+  const t = x / TimeConstants.DAYS_PER_JULIAN_CENTURY;
+  const t2 = t * t;
+  const t3 = t2 * t;
+  const t4 = t3 * t;
 
   // Terms from section 3.4 (b.1)
-  var semimajorAxis = 383397.7725 + 0.004 * t;
-  var eccentricity = 0.055545526 - 0.000000016 * t;
-  var inclinationConstant = 5.15668983 * RadiansPerDegree;
-  var inclinationSecPart =
+  let semimajorAxis = 383397.7725 + 0.004 * t;
+  let eccentricity = 0.055545526 - 0.000000016 * t;
+  const inclinationConstant = 5.15668983 * RadiansPerDegree;
+  let inclinationSecPart =
     -0.00008 * t + 0.02966 * t2 - 0.000042 * t3 - 0.00000013 * t4;
-  var longitudeOfPerigeeConstant = 83.35324312 * RadiansPerDegree;
-  var longitudeOfPerigeeSecPart =
+  const longitudeOfPerigeeConstant = 83.35324312 * RadiansPerDegree;
+  let longitudeOfPerigeeSecPart =
     14643420.2669 * t - 38.2702 * t2 - 0.045047 * t3 + 0.00021301 * t4;
-  var longitudeOfNodeConstant = 125.04455501 * RadiansPerDegree;
-  var longitudeOfNodeSecPart =
+  const longitudeOfNodeConstant = 125.04455501 * RadiansPerDegree;
+  let longitudeOfNodeSecPart =
     -6967919.3631 * t + 6.3602 * t2 + 0.007625 * t3 - 0.00003586 * t4;
-  var meanLongitudeConstant = 218.31664563 * RadiansPerDegree;
-  var meanLongitudeSecPart =
+  const meanLongitudeConstant = 218.31664563 * RadiansPerDegree;
+  let meanLongitudeSecPart =
     1732559343.4847 * t - 6.391 * t2 + 0.006588 * t3 - 0.00003169 * t4;
 
   // Delaunay arguments from section 3.5 b
-  var D =
+  const D =
     297.85019547 * RadiansPerDegree +
     RadiansPerArcSecond *
       (1602961601.209 * t - 6.3706 * t2 + 0.006593 * t3 - 0.00003169 * t4);
-  var F =
+  const F =
     93.27209062 * RadiansPerDegree +
     RadiansPerArcSecond *
       (1739527262.8478 * t - 12.7512 * t2 - 0.001037 * t3 + 0.00000417 * t4);
-  var l =
+  const l =
     134.96340251 * RadiansPerDegree +
     RadiansPerArcSecond *
       (1717915923.2178 * t + 31.8792 * t2 + 0.051635 * t3 - 0.0002447 * t4);
-  var lprime =
+  const lprime =
     357.52910918 * RadiansPerDegree +
     RadiansPerArcSecond *
       (129596581.0481 * t - 0.5532 * t2 + 0.000136 * t3 - 0.00001149 * t4);
-  var psi =
+  const psi =
     310.17137918 * RadiansPerDegree -
     RadiansPerArcSecond *
       (6967051.436 * t + 6.2068 * t2 + 0.007618 * t3 - 0.00003219 * t4);
 
   // Add terms from Table 4
-  var twoD = 2.0 * D;
-  var fourD = 4.0 * D;
-  var sixD = 6.0 * D;
-  var twol = 2.0 * l;
-  var threel = 3.0 * l;
-  var fourl = 4.0 * l;
-  var twoF = 2.0 * F;
+  const twoD = 2.0 * D;
+  const fourD = 4.0 * D;
+  const sixD = 6.0 * D;
+  const twol = 2.0 * l;
+  const threel = 3.0 * l;
+  const fourl = 4.0 * l;
+  const twoF = 2.0 * F;
   semimajorAxis +=
     3400.4 * Math.cos(twoD) -
     635.6 * Math.cos(twoD - l) -
@@ -548,8 +548,8 @@ function computeSimonMoon(date, result) {
     218.0 * Math.sin(twoD - lprime);
 
   // Add terms from Table 5
-  var twoPsi = 2.0 * psi;
-  var threePsi = 3.0 * psi;
+  const twoPsi = 2.0 * psi;
+  const threePsi = 3.0 * psi;
   inclinationSecPart +=
     46.997 * Math.cos(psi) * t -
     0.614 * Math.cos(twoD - twoF + psi) * t +
@@ -560,7 +560,7 @@ function computeSimonMoon(date, result) {
     0.00016 * Math.cos(psi) * t3 +
     0.00004 * Math.cos(threePsi) * t3 +
     0.00004 * Math.cos(twoPsi) * t3;
-  var perigeeAndMean =
+  const perigeeAndMean =
     2.116 * Math.sin(psi) * t -
     0.111 * Math.sin(twoD - twoF - psi) * t -
     0.0015 * Math.sin(psi) * t2;
@@ -581,14 +581,14 @@ function computeSimonMoon(date, result) {
 
   // Add constants and convert units
   semimajorAxis *= MetersPerKilometer;
-  var inclination =
+  const inclination =
     inclinationConstant + inclinationSecPart * RadiansPerArcSecond;
-  var longitudeOfPerigee =
+  const longitudeOfPerigee =
     longitudeOfPerigeeConstant +
     longitudeOfPerigeeSecPart * RadiansPerArcSecond;
-  var meanLongitude =
+  const meanLongitude =
     meanLongitudeConstant + meanLongitudeSecPart * RadiansPerArcSecond;
-  var longitudeOfNode =
+  const longitudeOfNode =
     longitudeOfNodeConstant + longitudeOfNodeSecPart * RadiansPerArcSecond;
 
   return elementsToCartesian(
@@ -605,8 +605,8 @@ function computeSimonMoon(date, result) {
 // Gets a point describing the motion of the Earth.  This point uses the Moon point and
 // the 1992 mu value (ratio between Moon and Earth masses) in Table 2 of the paper in order
 // to determine the position of the Earth relative to the Earth-Moon barycenter.
-var moonEarthMassRatio = 0.012300034; // From 1992 mu value in Table 2
-var factor = (moonEarthMassRatio / (moonEarthMassRatio + 1.0)) * -1;
+const moonEarthMassRatio = 0.012300034; // From 1992 mu value in Table 2
+const factor = (moonEarthMassRatio / (moonEarthMassRatio + 1.0)) * -1;
 function computeSimonEarth(date, result) {
   result = computeSimonMoon(date, result);
   return Cartesian3.multiplyByScalar(result, factor, result);
@@ -615,7 +615,7 @@ function computeSimonEarth(date, result) {
 // Values for the <code>axesTransformation</code> needed for the rotation were found using the STK Components
 // GreographicTransformer on the position of the sun center of mass point and the earth J2000 frame.
 
-var axesTransformation = new Matrix3(
+const axesTransformation = new Matrix3(
   1.0000000000000002,
   5.619723173785822e-16,
   4.690511510146299e-19,
@@ -626,7 +626,7 @@ var axesTransformation = new Matrix3(
   0.39777715593191376,
   0.9174820620691819
 );
-var translation = new Cartesian3();
+let translation = new Cartesian3();
 /**
  * Computes the position of the Sun in the Earth-centered inertial frame
  *

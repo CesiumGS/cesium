@@ -3,7 +3,7 @@ import CesiumMath from "./Math.js";
 /**
  * @private
  */
-var CylinderGeometryLibrary = {};
+const CylinderGeometryLibrary = {};
 
 /**
  * @private
@@ -15,26 +15,26 @@ CylinderGeometryLibrary.computePositions = function (
   slices,
   fill
 ) {
-  var topZ = length * 0.5;
-  var bottomZ = -topZ;
+  const topZ = length * 0.5;
+  const bottomZ = -topZ;
 
-  var twoSlice = slices + slices;
-  var size = fill ? 2 * twoSlice : twoSlice;
-  var positions = new Float64Array(size * 3);
-  var i;
-  var index = 0;
-  var tbIndex = 0;
-  var bottomOffset = fill ? twoSlice * 3 : 0;
-  var topOffset = fill ? (twoSlice + slices) * 3 : slices * 3;
+  const twoSlice = slices + slices;
+  const size = fill ? 2 * twoSlice : twoSlice;
+  const positions = new Float64Array(size * 3);
+  let i;
+  let index = 0;
+  let tbIndex = 0;
+  const bottomOffset = fill ? twoSlice * 3 : 0;
+  const topOffset = fill ? (twoSlice + slices) * 3 : slices * 3;
 
   for (i = 0; i < slices; i++) {
-    var angle = (i / slices) * CesiumMath.TWO_PI;
-    var x = Math.cos(angle);
-    var y = Math.sin(angle);
-    var bottomX = x * bottomRadius;
-    var bottomY = y * bottomRadius;
-    var topX = x * topRadius;
-    var topY = y * topRadius;
+    const angle = (i / slices) * CesiumMath.TWO_PI;
+    const x = Math.cos(angle);
+    const y = Math.sin(angle);
+    const bottomX = x * bottomRadius;
+    const bottomY = y * bottomRadius;
+    const topX = x * topRadius;
+    const topY = y * topRadius;
 
     positions[tbIndex + bottomOffset] = bottomX;
     positions[tbIndex + bottomOffset + 1] = bottomY;

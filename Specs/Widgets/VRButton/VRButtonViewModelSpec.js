@@ -3,7 +3,7 @@ import createScene from "../../createScene.js";
 import { VRButtonViewModel } from "../../../Source/Cesium.js";
 
 describe("Widgets/VRButton/VRButtonViewModel", function () {
-  var scene;
+  let scene;
 
   beforeEach(function () {
     scene = createScene();
@@ -14,7 +14,7 @@ describe("Widgets/VRButton/VRButtonViewModel", function () {
   });
 
   it("constructor sets default values", function () {
-    var viewModel = new VRButtonViewModel(scene);
+    const viewModel = new VRButtonViewModel(scene);
     expect(viewModel.vrElement).toBe(document.body);
     expect(viewModel.isDestroyed()).toEqual(false);
     viewModel.destroy();
@@ -22,24 +22,24 @@ describe("Widgets/VRButton/VRButtonViewModel", function () {
   });
 
   it("constructor sets expected values", function () {
-    var testElement = document.createElement("span");
-    var viewModel = new VRButtonViewModel(scene, testElement);
+    const testElement = document.createElement("span");
+    const viewModel = new VRButtonViewModel(scene, testElement);
     expect(viewModel.vrElement).toBe(testElement);
     viewModel.destroy();
   });
 
   it("constructor can take an element id", function () {
-    var testElement = document.createElement("span");
+    const testElement = document.createElement("span");
     testElement.id = "testElement";
     document.body.appendChild(testElement);
-    var viewModel = new VRButtonViewModel(scene, "testElement");
+    const viewModel = new VRButtonViewModel(scene, "testElement");
     expect(viewModel.vrElement).toBe(testElement);
     viewModel.destroy();
     document.body.removeChild(testElement);
   });
 
   it("isVREnabled work as expected", function () {
-    var viewModel = new VRButtonViewModel(scene);
+    const viewModel = new VRButtonViewModel(scene);
     expect(viewModel.isVREnabled).toEqual(Fullscreen.enabled);
     viewModel.isVREnabled = false;
     expect(viewModel.isVREnabled).toEqual(false);
@@ -47,8 +47,8 @@ describe("Widgets/VRButton/VRButtonViewModel", function () {
   });
 
   it("can get and set vrElement", function () {
-    var testElement = document.createElement("span");
-    var viewModel = new VRButtonViewModel(scene);
+    const testElement = document.createElement("span");
+    const viewModel = new VRButtonViewModel(scene);
     expect(viewModel.vrElement).not.toBe(testElement);
     viewModel.vrElement = testElement;
     expect(viewModel.vrElement).toBe(testElement);
@@ -61,7 +61,7 @@ describe("Widgets/VRButton/VRButtonViewModel", function () {
   });
 
   it("throws is setting vrElement is not an Element", function () {
-    var viewModel = new VRButtonViewModel(scene);
+    const viewModel = new VRButtonViewModel(scene);
     expect(function () {
       viewModel.vrElement = {};
     }).toThrowDeveloperError();

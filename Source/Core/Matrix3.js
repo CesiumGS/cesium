@@ -169,12 +169,12 @@ Matrix3.clone = function (matrix, result) {
  * // [1.0, 2.0, 3.0]
  * // [1.0, 2.0, 3.0]
  *
- * var v = [1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
- * var m = Cesium.Matrix3.fromArray(v);
+ * const v = [1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
+ * const m = Cesium.Matrix3.fromArray(v);
  *
  * // Create same Matrix3 with using an offset into an array
- * var v2 = [0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
- * var m2 = Cesium.Matrix3.fromArray(v2, 2);
+ * const v2 = [0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
+ * const m2 = Cesium.Matrix3.fromArray(v2, 2);
  */
 Matrix3.fromArray = function (array, startingIndex, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -264,28 +264,28 @@ Matrix3.fromQuaternion = function (quaternion, result) {
   Check.typeOf.object("quaternion", quaternion);
   //>>includeEnd('debug');
 
-  var x2 = quaternion.x * quaternion.x;
-  var xy = quaternion.x * quaternion.y;
-  var xz = quaternion.x * quaternion.z;
-  var xw = quaternion.x * quaternion.w;
-  var y2 = quaternion.y * quaternion.y;
-  var yz = quaternion.y * quaternion.z;
-  var yw = quaternion.y * quaternion.w;
-  var z2 = quaternion.z * quaternion.z;
-  var zw = quaternion.z * quaternion.w;
-  var w2 = quaternion.w * quaternion.w;
+  const x2 = quaternion.x * quaternion.x;
+  const xy = quaternion.x * quaternion.y;
+  const xz = quaternion.x * quaternion.z;
+  const xw = quaternion.x * quaternion.w;
+  const y2 = quaternion.y * quaternion.y;
+  const yz = quaternion.y * quaternion.z;
+  const yw = quaternion.y * quaternion.w;
+  const z2 = quaternion.z * quaternion.z;
+  const zw = quaternion.z * quaternion.w;
+  const w2 = quaternion.w * quaternion.w;
 
-  var m00 = x2 - y2 - z2 + w2;
-  var m01 = 2.0 * (xy - zw);
-  var m02 = 2.0 * (xz + yw);
+  const m00 = x2 - y2 - z2 + w2;
+  const m01 = 2.0 * (xy - zw);
+  const m02 = 2.0 * (xz + yw);
 
-  var m10 = 2.0 * (xy + zw);
-  var m11 = -x2 + y2 - z2 + w2;
-  var m12 = 2.0 * (yz - xw);
+  const m10 = 2.0 * (xy + zw);
+  const m11 = -x2 + y2 - z2 + w2;
+  const m12 = 2.0 * (yz - xw);
 
-  var m20 = 2.0 * (xz - yw);
-  var m21 = 2.0 * (yz + xw);
-  var m22 = -x2 - y2 + z2 + w2;
+  const m20 = 2.0 * (xz - yw);
+  const m21 = 2.0 * (yz + xw);
+  const m22 = -x2 - y2 + z2 + w2;
 
   if (!defined(result)) {
     return new Matrix3(m00, m01, m02, m10, m11, m12, m20, m21, m22);
@@ -314,24 +314,24 @@ Matrix3.fromHeadingPitchRoll = function (headingPitchRoll, result) {
   Check.typeOf.object("headingPitchRoll", headingPitchRoll);
   //>>includeEnd('debug');
 
-  var cosTheta = Math.cos(-headingPitchRoll.pitch);
-  var cosPsi = Math.cos(-headingPitchRoll.heading);
-  var cosPhi = Math.cos(headingPitchRoll.roll);
-  var sinTheta = Math.sin(-headingPitchRoll.pitch);
-  var sinPsi = Math.sin(-headingPitchRoll.heading);
-  var sinPhi = Math.sin(headingPitchRoll.roll);
+  const cosTheta = Math.cos(-headingPitchRoll.pitch);
+  const cosPsi = Math.cos(-headingPitchRoll.heading);
+  const cosPhi = Math.cos(headingPitchRoll.roll);
+  const sinTheta = Math.sin(-headingPitchRoll.pitch);
+  const sinPsi = Math.sin(-headingPitchRoll.heading);
+  const sinPhi = Math.sin(headingPitchRoll.roll);
 
-  var m00 = cosTheta * cosPsi;
-  var m01 = -cosPhi * sinPsi + sinPhi * sinTheta * cosPsi;
-  var m02 = sinPhi * sinPsi + cosPhi * sinTheta * cosPsi;
+  const m00 = cosTheta * cosPsi;
+  const m01 = -cosPhi * sinPsi + sinPhi * sinTheta * cosPsi;
+  const m02 = sinPhi * sinPsi + cosPhi * sinTheta * cosPsi;
 
-  var m10 = cosTheta * sinPsi;
-  var m11 = cosPhi * cosPsi + sinPhi * sinTheta * sinPsi;
-  var m12 = -sinPhi * cosPsi + cosPhi * sinTheta * sinPsi;
+  const m10 = cosTheta * sinPsi;
+  const m11 = cosPhi * cosPsi + sinPhi * sinTheta * sinPsi;
+  const m12 = -sinPhi * cosPsi + cosPhi * sinTheta * sinPsi;
 
-  var m20 = -sinTheta;
-  var m21 = sinPhi * cosTheta;
-  var m22 = cosPhi * cosTheta;
+  const m20 = -sinTheta;
+  const m21 = sinPhi * cosTheta;
+  const m22 = cosPhi * cosTheta;
 
   if (!defined(result)) {
     return new Matrix3(m00, m01, m02, m10, m11, m12, m20, m21, m22);
@@ -360,7 +360,7 @@ Matrix3.fromHeadingPitchRoll = function (headingPitchRoll, result) {
  * //   [7.0, 0.0, 0.0]
  * //   [0.0, 8.0, 0.0]
  * //   [0.0, 0.0, 9.0]
- * var m = Cesium.Matrix3.fromScale(new Cesium.Cartesian3(7.0, 8.0, 9.0));
+ * const m = Cesium.Matrix3.fromScale(new Cesium.Cartesian3(7.0, 8.0, 9.0));
  */
 Matrix3.fromScale = function (scale, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -395,7 +395,7 @@ Matrix3.fromScale = function (scale, result) {
  * //   [2.0, 0.0, 0.0]
  * //   [0.0, 2.0, 0.0]
  * //   [0.0, 0.0, 2.0]
- * var m = Cesium.Matrix3.fromUniformScale(2.0);
+ * const m = Cesium.Matrix3.fromUniformScale(2.0);
  */
 Matrix3.fromUniformScale = function (scale, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -430,7 +430,7 @@ Matrix3.fromUniformScale = function (scale, result) {
  * //   [0.0, -9.0,  8.0]
  * //   [9.0,  0.0, -7.0]
  * //   [-8.0, 7.0,  0.0]
- * var m = Cesium.Matrix3.fromCrossProduct(new Cesium.Cartesian3(7.0, 8.0, 9.0));
+ * const m = Cesium.Matrix3.fromCrossProduct(new Cesium.Cartesian3(7.0, 8.0, 9.0));
  */
 Matrix3.fromCrossProduct = function (vector, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -472,17 +472,17 @@ Matrix3.fromCrossProduct = function (vector, result) {
  *
  * @example
  * // Rotate a point 45 degrees counterclockwise around the x-axis.
- * var p = new Cesium.Cartesian3(5, 6, 7);
- * var m = Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(45.0));
- * var rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
+ * const p = new Cesium.Cartesian3(5, 6, 7);
+ * const m = Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(45.0));
+ * const rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
  */
 Matrix3.fromRotationX = function (angle, result) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("angle", angle);
   //>>includeEnd('debug');
 
-  var cosAngle = Math.cos(angle);
-  var sinAngle = Math.sin(angle);
+  const cosAngle = Math.cos(angle);
+  const sinAngle = Math.sin(angle);
 
   if (!defined(result)) {
     return new Matrix3(
@@ -520,17 +520,17 @@ Matrix3.fromRotationX = function (angle, result) {
  *
  * @example
  * // Rotate a point 45 degrees counterclockwise around the y-axis.
- * var p = new Cesium.Cartesian3(5, 6, 7);
- * var m = Cesium.Matrix3.fromRotationY(Cesium.Math.toRadians(45.0));
- * var rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
+ * const p = new Cesium.Cartesian3(5, 6, 7);
+ * const m = Cesium.Matrix3.fromRotationY(Cesium.Math.toRadians(45.0));
+ * const rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
  */
 Matrix3.fromRotationY = function (angle, result) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("angle", angle);
   //>>includeEnd('debug');
 
-  var cosAngle = Math.cos(angle);
-  var sinAngle = Math.sin(angle);
+  const cosAngle = Math.cos(angle);
+  const sinAngle = Math.sin(angle);
 
   if (!defined(result)) {
     return new Matrix3(
@@ -568,17 +568,17 @@ Matrix3.fromRotationY = function (angle, result) {
  *
  * @example
  * // Rotate a point 45 degrees counterclockwise around the z-axis.
- * var p = new Cesium.Cartesian3(5, 6, 7);
- * var m = Cesium.Matrix3.fromRotationZ(Cesium.Math.toRadians(45.0));
- * var rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
+ * const p = new Cesium.Cartesian3(5, 6, 7);
+ * const m = Cesium.Matrix3.fromRotationZ(Cesium.Math.toRadians(45.0));
+ * const rotated = Cesium.Matrix3.multiplyByVector(m, p, new Cesium.Cartesian3());
  */
 Matrix3.fromRotationZ = function (angle, result) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("angle", angle);
   //>>includeEnd('debug');
 
-  var cosAngle = Math.cos(angle);
-  var sinAngle = Math.sin(angle);
+  const cosAngle = Math.cos(angle);
+  const sinAngle = Math.sin(angle);
 
   if (!defined(result)) {
     return new Matrix3(
@@ -648,17 +648,17 @@ Matrix3.toArray = function (matrix, result) {
 /**
  * Computes the array index of the element at the provided row and column.
  *
- * @param {Number} row The zero-based index of the row.
  * @param {Number} column The zero-based index of the column.
+ * @param {Number} row The zero-based index of the row.
  * @returns {Number} The index of the element at the provided row and column.
  *
  * @exception {DeveloperError} row must be 0, 1, or 2.
  * @exception {DeveloperError} column must be 0, 1, or 2.
  *
  * @example
- * var myMatrix = new Cesium.Matrix3();
- * var column1Row0Index = Cesium.Matrix3.getElementIndex(1, 0);
- * var column1Row0 = myMatrix[column1Row0Index]
+ * const myMatrix = new Cesium.Matrix3();
+ * const column1Row0Index = Cesium.Matrix3.getElementIndex(1, 0);
+ * const column1Row0 = myMatrix[column1Row0Index]
  * myMatrix[column1Row0Index] = 10.0;
  */
 Matrix3.getElementIndex = function (column, row) {
@@ -690,10 +690,10 @@ Matrix3.getColumn = function (matrix, index, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var startIndex = index * 3;
-  var x = matrix[startIndex];
-  var y = matrix[startIndex + 1];
-  var z = matrix[startIndex + 2];
+  const startIndex = index * 3;
+  const x = matrix[startIndex];
+  const y = matrix[startIndex + 1];
+  const z = matrix[startIndex + 2];
 
   result.x = x;
   result.y = y;
@@ -722,7 +722,7 @@ Matrix3.setColumn = function (matrix, index, cartesian, result) {
   //>>includeEnd('debug');
 
   result = Matrix3.clone(matrix, result);
-  var startIndex = index * 3;
+  const startIndex = index * 3;
   result[startIndex] = cartesian.x;
   result[startIndex + 1] = cartesian.y;
   result[startIndex + 2] = cartesian.z;
@@ -747,9 +747,9 @@ Matrix3.getRow = function (matrix, index, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var x = matrix[index];
-  var y = matrix[index + 3];
-  var z = matrix[index + 6];
+  const x = matrix[index];
+  const y = matrix[index + 3];
+  const z = matrix[index + 6];
 
   result.x = x;
   result.y = y;
@@ -784,7 +784,7 @@ Matrix3.setRow = function (matrix, index, cartesian, result) {
   return result;
 };
 
-var scratchColumn = new Cartesian3();
+const scratchColumn = new Cartesian3();
 
 /**
  * Extracts the non-uniform scale assuming the matrix is an affine transformation.
@@ -811,7 +811,7 @@ Matrix3.getScale = function (matrix, result) {
   return result;
 };
 
-var scratchScale = new Cartesian3();
+const scratchScale = new Cartesian3();
 
 /**
  * Computes the maximum scale assuming the matrix is an affine transformation.
@@ -840,25 +840,25 @@ Matrix3.multiply = function (left, right, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var column0Row0 =
+  const column0Row0 =
     left[0] * right[0] + left[3] * right[1] + left[6] * right[2];
-  var column0Row1 =
+  const column0Row1 =
     left[1] * right[0] + left[4] * right[1] + left[7] * right[2];
-  var column0Row2 =
+  const column0Row2 =
     left[2] * right[0] + left[5] * right[1] + left[8] * right[2];
 
-  var column1Row0 =
+  const column1Row0 =
     left[0] * right[3] + left[3] * right[4] + left[6] * right[5];
-  var column1Row1 =
+  const column1Row1 =
     left[1] * right[3] + left[4] * right[4] + left[7] * right[5];
-  var column1Row2 =
+  const column1Row2 =
     left[2] * right[3] + left[5] * right[4] + left[8] * right[5];
 
-  var column2Row0 =
+  const column2Row0 =
     left[0] * right[6] + left[3] * right[7] + left[6] * right[8];
-  var column2Row1 =
+  const column2Row1 =
     left[1] * right[6] + left[4] * right[7] + left[7] * right[8];
-  var column2Row2 =
+  const column2Row2 =
     left[2] * right[6] + left[5] * right[7] + left[8] * right[8];
 
   result[0] = column0Row0;
@@ -942,13 +942,13 @@ Matrix3.multiplyByVector = function (matrix, cartesian, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var vX = cartesian.x;
-  var vY = cartesian.y;
-  var vZ = cartesian.z;
+  const vX = cartesian.x;
+  const vY = cartesian.y;
+  const vZ = cartesian.z;
 
-  var x = matrix[0] * vX + matrix[3] * vY + matrix[6] * vZ;
-  var y = matrix[1] * vX + matrix[4] * vY + matrix[7] * vZ;
-  var z = matrix[2] * vX + matrix[5] * vY + matrix[8] * vZ;
+  const x = matrix[0] * vX + matrix[3] * vY + matrix[6] * vZ;
+  const y = matrix[1] * vX + matrix[4] * vY + matrix[7] * vZ;
+  const z = matrix[2] * vX + matrix[5] * vY + matrix[8] * vZ;
 
   result.x = x;
   result.y = y;
@@ -1071,15 +1071,15 @@ Matrix3.transpose = function (matrix, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var column0Row0 = matrix[0];
-  var column0Row1 = matrix[3];
-  var column0Row2 = matrix[6];
-  var column1Row0 = matrix[1];
-  var column1Row1 = matrix[4];
-  var column1Row2 = matrix[7];
-  var column2Row0 = matrix[2];
-  var column2Row1 = matrix[5];
-  var column2Row2 = matrix[8];
+  const column0Row0 = matrix[0];
+  const column0Row1 = matrix[3];
+  const column0Row2 = matrix[6];
+  const column1Row0 = matrix[1];
+  const column1Row1 = matrix[4];
+  const column1Row2 = matrix[7];
+  const column2Row0 = matrix[2];
+  const column2Row1 = matrix[5];
+  const column2Row2 = matrix[8];
 
   result[0] = column0Row0;
   result[1] = column0Row1;
@@ -1093,7 +1093,7 @@ Matrix3.transpose = function (matrix, result) {
   return result;
 };
 
-var UNIT = new Cartesian3(1, 1, 1);
+const UNIT = new Cartesian3(1, 1, 1);
 
 /**
  * Extracts the rotation assuming the matrix is an affine transformation.
@@ -1108,7 +1108,7 @@ Matrix3.getRotation = function (matrix, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var inverseScale = Cartesian3.divideComponents(
+  const inverseScale = Cartesian3.divideComponents(
     UNIT,
     Matrix3.getScale(matrix, scratchScale),
     scratchScale
@@ -1119,25 +1119,25 @@ Matrix3.getRotation = function (matrix, result) {
 };
 
 function computeFrobeniusNorm(matrix) {
-  var norm = 0.0;
-  for (var i = 0; i < 9; ++i) {
-    var temp = matrix[i];
+  let norm = 0.0;
+  for (let i = 0; i < 9; ++i) {
+    const temp = matrix[i];
     norm += temp * temp;
   }
 
   return Math.sqrt(norm);
 }
 
-var rowVal = [1, 0, 0];
-var colVal = [2, 2, 1];
+const rowVal = [1, 0, 0];
+const colVal = [2, 2, 1];
 
 function offDiagonalFrobeniusNorm(matrix) {
   // Computes the "off-diagonal" Frobenius norm.
   // Assumes matrix is symmetric.
 
-  var norm = 0.0;
-  for (var i = 0; i < 3; ++i) {
-    var temp = matrix[Matrix3.getElementIndex(colVal[i], rowVal[i])];
+  let norm = 0.0;
+  for (let i = 0; i < 3; ++i) {
+    const temp = matrix[Matrix3.getElementIndex(colVal[i], rowVal[i])];
     norm += 2.0 * temp * temp;
   }
 
@@ -1152,33 +1152,35 @@ function shurDecomposition(matrix, result) {
   // finds the largest off-diagonal term, and then creates
   // a matrix (result) which can be used to help reduce it
 
-  var tolerance = CesiumMath.EPSILON15;
+  const tolerance = CesiumMath.EPSILON15;
 
-  var maxDiagonal = 0.0;
-  var rotAxis = 1;
+  let maxDiagonal = 0.0;
+  let rotAxis = 1;
 
   // find pivot (rotAxis) based on max diagonal of matrix
-  for (var i = 0; i < 3; ++i) {
-    var temp = Math.abs(matrix[Matrix3.getElementIndex(colVal[i], rowVal[i])]);
+  for (let i = 0; i < 3; ++i) {
+    const temp = Math.abs(
+      matrix[Matrix3.getElementIndex(colVal[i], rowVal[i])]
+    );
     if (temp > maxDiagonal) {
       rotAxis = i;
       maxDiagonal = temp;
     }
   }
 
-  var c = 1.0;
-  var s = 0.0;
+  let c = 1.0;
+  let s = 0.0;
 
-  var p = rowVal[rotAxis];
-  var q = colVal[rotAxis];
+  const p = rowVal[rotAxis];
+  const q = colVal[rotAxis];
 
   if (Math.abs(matrix[Matrix3.getElementIndex(q, p)]) > tolerance) {
-    var qq = matrix[Matrix3.getElementIndex(q, q)];
-    var pp = matrix[Matrix3.getElementIndex(p, p)];
-    var qp = matrix[Matrix3.getElementIndex(q, p)];
+    const qq = matrix[Matrix3.getElementIndex(q, q)];
+    const pp = matrix[Matrix3.getElementIndex(p, p)];
+    const qp = matrix[Matrix3.getElementIndex(q, p)];
 
-    var tau = (qq - pp) / 2.0 / qp;
-    var t;
+    const tau = (qq - pp) / 2.0 / qp;
+    let t;
 
     if (tau < 0.0) {
       t = -1.0 / (-tau + Math.sqrt(1.0 + tau * tau));
@@ -1201,8 +1203,8 @@ function shurDecomposition(matrix, result) {
   return result;
 }
 
-var jMatrix = new Matrix3();
-var jMatrixTranspose = new Matrix3();
+const jMatrix = new Matrix3();
+const jMatrixTranspose = new Matrix3();
 
 /**
  * Computes the eigenvectors and eigenvalues of a symmetric matrix.
@@ -1220,20 +1222,20 @@ var jMatrixTranspose = new Matrix3();
  * @returns {Object} An object with unitary and diagonal properties which are the unitary and diagonal matrices, respectively.
  *
  * @example
- * var a = //... symetric matrix
- * var result = {
+ * const a = //... symetric matrix
+ * const result = {
  *     unitary : new Cesium.Matrix3(),
  *     diagonal : new Cesium.Matrix3()
  * };
  * Cesium.Matrix3.computeEigenDecomposition(a, result);
  *
- * var unitaryTranspose = Cesium.Matrix3.transpose(result.unitary, new Cesium.Matrix3());
- * var b = Cesium.Matrix3.multiply(result.unitary, result.diagonal, new Cesium.Matrix3());
+ * const unitaryTranspose = Cesium.Matrix3.transpose(result.unitary, new Cesium.Matrix3());
+ * const b = Cesium.Matrix3.multiply(result.unitary, result.diagonal, new Cesium.Matrix3());
  * Cesium.Matrix3.multiply(b, unitaryTranspose, b); // b is now equal to a
  *
- * var lambda = Cesium.Matrix3.getColumn(result.diagonal, 0, new Cesium.Cartesian3()).x;  // first eigenvalue
- * var v = Cesium.Matrix3.getColumn(result.unitary, 0, new Cesium.Cartesian3());          // first eigenvector
- * var c = Cesium.Cartesian3.multiplyByScalar(v, lambda, new Cesium.Cartesian3());        // equal to Cesium.Matrix3.multiplyByVector(a, v)
+ * const lambda = Cesium.Matrix3.getColumn(result.diagonal, 0, new Cesium.Cartesian3()).x;  // first eigenvalue
+ * const v = Cesium.Matrix3.getColumn(result.unitary, 0, new Cesium.Cartesian3());          // first eigenvector
+ * const c = Cesium.Cartesian3.multiplyByScalar(v, lambda, new Cesium.Cartesian3());        // equal to Cesium.Matrix3.multiplyByVector(a, v)
  */
 Matrix3.computeEigenDecomposition = function (matrix, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -1243,23 +1245,23 @@ Matrix3.computeEigenDecomposition = function (matrix, result) {
   // This routine was created based upon Matrix Computations, 3rd ed., by Golub and Van Loan,
   // section 8.4.3 The Classical Jacobi Algorithm
 
-  var tolerance = CesiumMath.EPSILON20;
-  var maxSweeps = 10;
+  const tolerance = CesiumMath.EPSILON20;
+  const maxSweeps = 10;
 
-  var count = 0;
-  var sweep = 0;
+  let count = 0;
+  let sweep = 0;
 
   if (!defined(result)) {
     result = {};
   }
 
-  var unitaryMatrix = (result.unitary = Matrix3.clone(
+  const unitaryMatrix = (result.unitary = Matrix3.clone(
     Matrix3.IDENTITY,
     result.unitary
   ));
-  var diagMatrix = (result.diagonal = Matrix3.clone(matrix, result.diagonal));
+  const diagMatrix = (result.diagonal = Matrix3.clone(matrix, result.diagonal));
 
-  var epsilon = tolerance * computeFrobeniusNorm(diagMatrix);
+  const epsilon = tolerance * computeFrobeniusNorm(diagMatrix);
 
   while (sweep < maxSweeps && offDiagonalFrobeniusNorm(diagMatrix) > epsilon) {
     shurDecomposition(diagMatrix, jMatrix);
@@ -1314,15 +1316,15 @@ Matrix3.determinant = function (matrix) {
   Check.typeOf.object("matrix", matrix);
   //>>includeEnd('debug');
 
-  var m11 = matrix[0];
-  var m21 = matrix[3];
-  var m31 = matrix[6];
-  var m12 = matrix[1];
-  var m22 = matrix[4];
-  var m32 = matrix[7];
-  var m13 = matrix[2];
-  var m23 = matrix[5];
-  var m33 = matrix[8];
+  const m11 = matrix[0];
+  const m21 = matrix[3];
+  const m31 = matrix[6];
+  const m12 = matrix[1];
+  const m22 = matrix[4];
+  const m32 = matrix[7];
+  const m13 = matrix[2];
+  const m23 = matrix[5];
+  const m33 = matrix[8];
 
   return (
     m11 * (m22 * m33 - m23 * m32) +
@@ -1346,17 +1348,17 @@ Matrix3.inverse = function (matrix, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var m11 = matrix[0];
-  var m21 = matrix[1];
-  var m31 = matrix[2];
-  var m12 = matrix[3];
-  var m22 = matrix[4];
-  var m32 = matrix[5];
-  var m13 = matrix[6];
-  var m23 = matrix[7];
-  var m33 = matrix[8];
+  const m11 = matrix[0];
+  const m21 = matrix[1];
+  const m31 = matrix[2];
+  const m12 = matrix[3];
+  const m22 = matrix[4];
+  const m32 = matrix[5];
+  const m13 = matrix[6];
+  const m23 = matrix[7];
+  const m33 = matrix[8];
 
-  var determinant = Matrix3.determinant(matrix);
+  const determinant = Matrix3.determinant(matrix);
 
   //>>includeStart('debug', pragmas.debug);
   if (Math.abs(determinant) <= CesiumMath.EPSILON15) {
@@ -1374,11 +1376,11 @@ Matrix3.inverse = function (matrix, result) {
   result[7] = m13 * m21 - m11 * m23;
   result[8] = m11 * m22 - m12 * m21;
 
-  var scale = 1.0 / determinant;
+  const scale = 1.0 / determinant;
   return Matrix3.multiplyByScalar(result, scale, result);
 };
 
-var scratchTransposeMatrix = new Matrix3();
+const scratchTransposeMatrix = new Matrix3();
 
 /**
  * Computes the inverse transpose of a matrix.
@@ -1618,27 +1620,9 @@ Matrix3.prototype.equalsEpsilon = function (right, epsilon) {
  */
 Matrix3.prototype.toString = function () {
   return (
-    "(" +
-    this[0] +
-    ", " +
-    this[3] +
-    ", " +
-    this[6] +
-    ")\n" +
-    "(" +
-    this[1] +
-    ", " +
-    this[4] +
-    ", " +
-    this[7] +
-    ")\n" +
-    "(" +
-    this[2] +
-    ", " +
-    this[5] +
-    ", " +
-    this[8] +
-    ")"
+    `(${this[0]}, ${this[3]}, ${this[6]})\n` +
+    `(${this[1]}, ${this[4]}, ${this[7]})\n` +
+    `(${this[2]}, ${this[5]}, ${this[8]})`
   );
 };
 export default Matrix3;

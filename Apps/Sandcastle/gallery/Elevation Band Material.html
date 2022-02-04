@@ -118,7 +118,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain({
             requestVertexNormals: true, //Needed to visualize slope
           }),
@@ -137,7 +137,7 @@
           },
         });
 
-        var viewModel = {
+        const viewModel = {
           gradient: false,
           band1Position: 7000.0,
           band2Position: 7500.0,
@@ -148,9 +148,9 @@
         };
 
         Cesium.knockout.track(viewModel);
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
-        for (var name in viewModel) {
+        for (const name in viewModel) {
           if (viewModel.hasOwnProperty(name)) {
             Cesium.knockout
               .getObservable(viewModel, name)
@@ -159,16 +159,18 @@
         }
 
         function updateMaterial() {
-          var gradient = Boolean(viewModel.gradient);
-          var band1Position = Number(viewModel.band1Position);
-          var band2Position = Number(viewModel.band2Position);
-          var band3Position = Number(viewModel.band3Position);
-          var bandThickness = Number(viewModel.bandThickness);
-          var bandTransparency = Number(viewModel.bandTransparency);
-          var backgroundTransparency = Number(viewModel.backgroundTransparency);
+          const gradient = Boolean(viewModel.gradient);
+          const band1Position = Number(viewModel.band1Position);
+          const band2Position = Number(viewModel.band2Position);
+          const band3Position = Number(viewModel.band3Position);
+          const bandThickness = Number(viewModel.bandThickness);
+          const bandTransparency = Number(viewModel.bandTransparency);
+          const backgroundTransparency = Number(
+            viewModel.backgroundTransparency
+          );
 
-          var layers = [];
-          var backgroundLayer = {
+          const layers = [];
+          const backgroundLayer = {
             entries: [
               {
                 height: 4200.0,
@@ -188,18 +190,18 @@
           };
           layers.push(backgroundLayer);
 
-          var gridStartHeight = 4200.0;
-          var gridEndHeight = 8848.0;
-          var gridCount = 50;
-          for (var i = 0; i < gridCount; i++) {
-            var lerper = i / (gridCount - 1);
-            var heightBelow = Cesium.Math.lerp(
+          const gridStartHeight = 4200.0;
+          const gridEndHeight = 8848.0;
+          const gridCount = 50;
+          for (let i = 0; i < gridCount; i++) {
+            const lerper = i / (gridCount - 1);
+            const heightBelow = Cesium.Math.lerp(
               gridStartHeight,
               gridEndHeight,
               lerper
             );
-            var heightAbove = heightBelow + 10.0;
-            var alpha =
+            const heightAbove = heightBelow + 10.0;
+            const alpha =
               Cesium.Math.lerp(0.2, 0.4, lerper) * backgroundTransparency;
             layers.push({
               entries: [
@@ -215,10 +217,10 @@
             });
           }
 
-          var antialias = Math.min(10.0, bandThickness * 0.1);
+          const antialias = Math.min(10.0, bandThickness * 0.1);
 
           if (!gradient) {
-            var band1 = {
+            const band1 = {
               entries: [
                 {
                   height: band1Position - bandThickness * 0.5 - antialias,
@@ -239,7 +241,7 @@
               ],
             };
 
-            var band2 = {
+            const band2 = {
               entries: [
                 {
                   height: band2Position - bandThickness * 0.5 - antialias,
@@ -260,7 +262,7 @@
               ],
             };
 
-            var band3 = {
+            const band3 = {
               entries: [
                 {
                   height: band3Position - bandThickness * 0.5 - antialias,
@@ -285,7 +287,7 @@
             layers.push(band2);
             layers.push(band3);
           } else {
-            var combinedBand = {
+            const combinedBand = {
               entries: [
                 {
                   height: band1Position - bandThickness * 0.5,
@@ -305,7 +307,7 @@
             layers.push(combinedBand);
           }
 
-          var material = Cesium.createElevationBandMaterial({
+          const material = Cesium.createElevationBandMaterial({
             scene: viewer.scene,
             layers: layers,
           });

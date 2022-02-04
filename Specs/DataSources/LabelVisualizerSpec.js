@@ -21,9 +21,9 @@ import createScene from "../createScene.js";
 describe(
   "DataSources/LabelVisualizer",
   function () {
-    var scene;
-    var entityCluster;
-    var visualizer;
+    let scene;
+    let entityCluster;
+    let visualizer;
 
     beforeAll(function () {
       scene = createScene();
@@ -53,7 +53,7 @@ describe(
     });
 
     it("update throws if no time specified.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new LabelVisualizer(entityCluster, entityCollection);
       expect(function () {
         visualizer.update();
@@ -61,7 +61,7 @@ describe(
     });
 
     it("isDestroy returns false until destroyed.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new LabelVisualizer(entityCluster, entityCollection);
       expect(visualizer.isDestroyed()).toEqual(false);
       visualizer.destroy();
@@ -70,7 +70,7 @@ describe(
     });
 
     it("removes the listener from the entity collection when destroyed", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new LabelVisualizer(entityCluster, entityCollection);
       expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
       visualizer.destroy();
@@ -79,10 +79,10 @@ describe(
     });
 
     it("object with no label does not create a label.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new LabelVisualizer(entityCluster, entityCollection);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantProperty(
         new Cartesian3(1234, 5678, 9101112)
       );
@@ -91,11 +91,11 @@ describe(
     });
 
     it("object with no position does not create a label.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new LabelVisualizer(entityCluster, entityCollection);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
-      var label = (testObject.label = new LabelGraphics());
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const label = (testObject.label = new LabelGraphics());
       label.show = new ConstantProperty(true);
       label.text = new ConstantProperty("lorum ipsum");
 
@@ -104,14 +104,14 @@ describe(
     });
 
     it("object with no text does not create a label.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new LabelVisualizer(entityCluster, entityCollection);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantProperty(
         new Cartesian3(1234, 5678, 9101112)
       );
-      var label = (testObject.label = new LabelGraphics());
+      const label = (testObject.label = new LabelGraphics());
       label.show = new ConstantProperty(true);
 
       visualizer.update(JulianDate.now());
@@ -119,14 +119,13 @@ describe(
     });
 
     it("A LabelGraphics causes a label to be created and updated.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new LabelVisualizer(entityCluster, entityCollection);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const testObject = entityCollection.getOrCreateEntity("test");
 
-      var time = JulianDate.now();
-      var label = (testObject.label = new LabelGraphics());
-      var l;
+      const time = JulianDate.now();
+      const label = (testObject.label = new LabelGraphics());
 
       testObject.position = new ConstantProperty(
         new Cartesian3(1234, 5678, 9101112)
@@ -155,10 +154,10 @@ describe(
 
       visualizer.update(time);
 
-      var labelCollection = entityCluster._labelCollection;
+      const labelCollection = entityCluster._labelCollection;
       expect(labelCollection.length).toEqual(1);
 
-      l = labelCollection.get(0);
+      const l = labelCollection.get(0);
 
       visualizer.update(time);
       expect(l.position).toEqual(testObject.position.getValue(time));
@@ -270,11 +269,11 @@ describe(
     });
 
     it("Reuses primitives when hiding one and showing another", function () {
-      var time = JulianDate.now();
-      var entityCollection = new EntityCollection();
+      const time = JulianDate.now();
+      const entityCollection = new EntityCollection();
       visualizer = new LabelVisualizer(entityCluster, entityCollection);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantProperty(
         new Cartesian3(1234, 5678, 9101112)
       );
@@ -284,7 +283,7 @@ describe(
 
       visualizer.update(time);
 
-      var labelCollection = entityCluster._labelCollection;
+      const labelCollection = entityCluster._labelCollection;
       expect(labelCollection.length).toEqual(1);
 
       testObject.label.show = new ConstantProperty(false);
@@ -293,7 +292,7 @@ describe(
 
       expect(labelCollection.length).toEqual(1);
 
-      var testObject2 = entityCollection.getOrCreateEntity("test2");
+      const testObject2 = entityCollection.getOrCreateEntity("test2");
       testObject2.position = new ConstantProperty(
         new Cartesian3(1234, 5678, 9101112)
       );
@@ -306,12 +305,12 @@ describe(
     });
 
     it("clear hides labels.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new LabelVisualizer(entityCluster, entityCollection);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
-      var time = JulianDate.now();
-      var label = (testObject.label = new LabelGraphics());
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const time = JulianDate.now();
+      const label = (testObject.label = new LabelGraphics());
 
       testObject.position = new ConstantProperty(
         new Cartesian3(1234, 5678, 9101112)
@@ -320,9 +319,9 @@ describe(
       label.text = new ConstantProperty("lorum ipsum");
       visualizer.update(time);
 
-      var labelCollection = entityCluster._labelCollection;
+      const labelCollection = entityCluster._labelCollection;
       expect(labelCollection.length).toEqual(1);
-      var l = labelCollection.get(0);
+      const l = labelCollection.get(0);
       expect(l.show).toEqual(true);
 
       //Clearing won't actually remove the label because of the
@@ -334,12 +333,12 @@ describe(
     });
 
     it("Visualizer sets entity property.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new LabelVisualizer(entityCluster, entityCollection);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
-      var time = JulianDate.now();
-      var label = (testObject.label = new LabelGraphics());
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const time = JulianDate.now();
+      const label = (testObject.label = new LabelGraphics());
 
       testObject.position = new ConstantProperty(
         new Cartesian3(1234, 5678, 9101112)
@@ -348,19 +347,19 @@ describe(
       label.text = new ConstantProperty("lorum ipsum");
       visualizer.update(time);
 
-      var labelCollection = entityCluster._labelCollection;
+      const labelCollection = entityCluster._labelCollection;
       expect(labelCollection.length).toEqual(1);
-      var l = labelCollection.get(0);
+      const l = labelCollection.get(0);
       expect(l.id).toEqual(testObject);
     });
 
     it("Computes bounding sphere.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new LabelVisualizer(entityCluster, entityCollection);
 
-      var testObject = entityCollection.getOrCreateEntity("test");
-      var time = JulianDate.now();
-      var label = (testObject.label = new LabelGraphics());
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const time = JulianDate.now();
+      const label = (testObject.label = new LabelGraphics());
 
       testObject.position = new ConstantProperty(
         new Cartesian3(1234, 5678, 9101112)
@@ -369,8 +368,8 @@ describe(
       label.text = new ConstantProperty("lorum ipsum");
       visualizer.update(time);
 
-      var result = new BoundingSphere();
-      var state = visualizer.getBoundingSphere(testObject, result);
+      const result = new BoundingSphere();
+      const state = visualizer.getBoundingSphere(testObject, result);
 
       expect(state).toBe(BoundingSphereState.DONE);
       expect(result.center).toEqual(testObject.position.getValue());
@@ -378,27 +377,27 @@ describe(
     });
 
     it("Fails bounding sphere for entity without billboard.", function () {
-      var entityCollection = new EntityCollection();
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const entityCollection = new EntityCollection();
+      const testObject = entityCollection.getOrCreateEntity("test");
       visualizer = new LabelVisualizer(entityCluster, entityCollection);
       visualizer.update(JulianDate.now());
-      var result = new BoundingSphere();
-      var state = visualizer.getBoundingSphere(testObject, result);
+      const result = new BoundingSphere();
+      const state = visualizer.getBoundingSphere(testObject, result);
       expect(state).toBe(BoundingSphereState.FAILED);
     });
 
     it("Compute bounding sphere throws without entity.", function () {
-      var entityCollection = new EntityCollection();
+      const entityCollection = new EntityCollection();
       visualizer = new LabelVisualizer(entityCluster, entityCollection);
-      var result = new BoundingSphere();
+      const result = new BoundingSphere();
       expect(function () {
         visualizer.getBoundingSphere(undefined, result);
       }).toThrowDeveloperError();
     });
 
     it("Compute bounding sphere throws without result.", function () {
-      var entityCollection = new EntityCollection();
-      var testObject = entityCollection.getOrCreateEntity("test");
+      const entityCollection = new EntityCollection();
+      const testObject = entityCollection.getOrCreateEntity("test");
       visualizer = new LabelVisualizer(entityCluster, entityCollection);
       expect(function () {
         visualizer.getBoundingSphere(testObject, undefined);

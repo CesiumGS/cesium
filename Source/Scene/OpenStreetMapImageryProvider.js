@@ -7,7 +7,7 @@ import Resource from "../Core/Resource.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
-var defaultCredit = new Credit(
+const defaultCredit = new Credit(
   "MapQuest, Open Street Map and contributors, CC-BY-SA"
 );
 
@@ -48,7 +48,7 @@ var defaultCredit = new Credit(
  * @see UrlTemplateImageryProvider
  *
  * @example
- * var osm = new Cesium.OpenStreetMapImageryProvider({
+ * const osm = new Cesium.OpenStreetMapImageryProvider({
  *     url : 'https://a.tile.openstreetmap.org/'
  * });
  *
@@ -58,48 +58,46 @@ var defaultCredit = new Credit(
 function OpenStreetMapImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var resource = Resource.createIfNeeded(
+  const resource = Resource.createIfNeeded(
     defaultValue(options.url, "https://a.tile.openstreetmap.org/")
   );
   resource.appendForwardSlash();
-  resource.url += "{z}/{x}/{y}." + defaultValue(options.fileExtension, "png");
+  resource.url += `{z}/{x}/{y}.${defaultValue(options.fileExtension, "png")}`;
 
-  var tilingScheme = new WebMercatorTilingScheme({
+  const tilingScheme = new WebMercatorTilingScheme({
     ellipsoid: options.ellipsoid,
   });
 
-  var tileWidth = 256;
-  var tileHeight = 256;
+  const tileWidth = 256;
+  const tileHeight = 256;
 
-  var minimumLevel = defaultValue(options.minimumLevel, 0);
-  var maximumLevel = options.maximumLevel;
+  const minimumLevel = defaultValue(options.minimumLevel, 0);
+  const maximumLevel = options.maximumLevel;
 
-  var rectangle = defaultValue(options.rectangle, tilingScheme.rectangle);
+  const rectangle = defaultValue(options.rectangle, tilingScheme.rectangle);
 
   // Check the number of tiles at the minimum level.  If it's more than four,
   // throw an exception, because starting at the higher minimum
   // level will cause too many tiles to be downloaded and rendered.
-  var swTile = tilingScheme.positionToTileXY(
+  const swTile = tilingScheme.positionToTileXY(
     Rectangle.southwest(rectangle),
     minimumLevel
   );
-  var neTile = tilingScheme.positionToTileXY(
+  const neTile = tilingScheme.positionToTileXY(
     Rectangle.northeast(rectangle),
     minimumLevel
   );
-  var tileCount =
+  const tileCount =
     (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
   //>>includeStart('debug', pragmas.debug);
   if (tileCount > 4) {
     throw new DeveloperError(
-      "The rectangle and minimumLevel indicate that there are " +
-        tileCount +
-        " tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported."
+      `The rectangle and minimumLevel indicate that there are ${tileCount} tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.`
     );
   }
   //>>includeEnd('debug');
 
-  var credit = defaultValue(options.credit, defaultCredit);
+  let credit = defaultValue(options.credit, defaultCredit);
   if (typeof credit === "string") {
     credit = new Credit(credit);
   }

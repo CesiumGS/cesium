@@ -2,7 +2,7 @@ import { freezeRenderState } from "../../Source/Cesium.js";
 
 describe("Renderer/freezeRenderState", function () {
   it("works as expected", function () {
-    var fresh = {
+    const fresh = {
       a: 1,
       b: {
         c: "c",
@@ -10,7 +10,7 @@ describe("Renderer/freezeRenderState", function () {
       _applyFunctions: [function () {}],
     };
 
-    var frozen = freezeRenderState(fresh);
+    const frozen = freezeRenderState(fresh);
     expect(Object.isFrozen(frozen)).toBe(true);
     expect(Object.isFrozen(frozen.a)).toBe(true);
     expect(Object.isFrozen(frozen.b)).toBe(true);

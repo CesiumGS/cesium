@@ -86,12 +86,12 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
         // A ~10 billion point 3D Tileset of the city of Montreal, Canada captured in 2015 with a resolution of 20 cm. Tiled and hosted by Cesium ion.
-        var tileset = viewer.scene.primitives.add(
+        const tileset = viewer.scene.primitives.add(
           new Cesium.Cesium3DTileset({
             url: Cesium.IonResource.fromAssetId(28945),
             pointCloudShading: {
@@ -253,7 +253,7 @@
         ]);
 
         // Set up checkboxes for toggling the various classification settings.
-        var viewModel = {
+        const viewModel = {
           ground: true,
           other: true,
           buildings: true,
@@ -263,7 +263,7 @@
         };
 
         // Assign colors to each classification type.
-        var pointStyles = {
+        const pointStyles = {
           unclassified: {
             color: "color('#808080')",
             show: true,
@@ -302,7 +302,7 @@
           },
         };
 
-        var classificationDictionary = {
+        const classificationDictionary = {
           not_awarded: 1,
           ground: 2,
           low_vegetation: 3,
@@ -316,8 +316,8 @@
 
         // This is a helper function to re-apply the styles each time the UI/checkboxes are updated.
         function applyStyle(tileset, styles) {
-          var styleObject = {};
-          var styleKeys = Object.keys(styles);
+          const styleObject = {};
+          const styleKeys = Object.keys(styles);
 
           styleObject.color = {
             conditions: [],
@@ -326,18 +326,18 @@
             conditions: [],
           };
 
-          var finalCondition;
+          let finalCondition;
 
-          for (var i = 0; i < styleKeys.length; ++i) {
-            var key = styleKeys[i];
-            var id = classificationDictionary[key];
+          for (let i = 0; i < styleKeys.length; ++i) {
+            const key = styleKeys[i];
+            const id = classificationDictionary[key];
 
-            var colorCondition = [
-              "${Classification} === " + id,
+            const colorCondition = [
+              `\${Classification} === ${id}`,
               styles[key].color,
             ];
-            var showCondition = [
-              "${Classification} === " + id,
+            const showCondition = [
+              `\${Classification} === ${id}`,
               styles[key].show,
             ];
 
@@ -368,7 +368,7 @@
 
         Cesium.knockout.track(viewModel);
 
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
         // Set up the checkboxes.

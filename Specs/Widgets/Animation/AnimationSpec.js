@@ -5,8 +5,8 @@ import { AnimationViewModel } from "../../../Source/Cesium.js";
 import { ClockViewModel } from "../../../Source/Cesium.js";
 
 describe("Widgets/Animation/Animation", function () {
-  var container;
-  var animation;
+  let container;
+  let animation;
   afterEach(function () {
     if (defined(animation)) {
       animation = animation.destroy();
@@ -17,16 +17,16 @@ describe("Widgets/Animation/Animation", function () {
   });
 
   it("Can create and destroy", function () {
-    var clockViewModel = new ClockViewModel();
-    var animationViewModel = new AnimationViewModel(clockViewModel);
+    const clockViewModel = new ClockViewModel();
+    const animationViewModel = new AnimationViewModel(clockViewModel);
     animation = new Animation(document.body, animationViewModel);
   });
 
   it("Can create with container not in the DOM", function () {
     container = document.createElement("div");
-    var clockViewModel = new ClockViewModel();
-    var animationViewModel = new AnimationViewModel(clockViewModel);
-    var animation = new Animation(container, animationViewModel);
+    const clockViewModel = new ClockViewModel();
+    const animationViewModel = new AnimationViewModel(clockViewModel);
+    const animation = new Animation(container, animationViewModel);
 
     //Verify applyThemeChanges is called when we add the container to the DOM.
     spyOn(animation, "applyThemeChanges").and.callThrough();
@@ -41,8 +41,8 @@ describe("Widgets/Animation/Animation", function () {
 
   it("Can destroy without container ever being in the DOM", function () {
     container = document.createElement("div");
-    var clockViewModel = new ClockViewModel();
-    var animationViewModel = new AnimationViewModel(clockViewModel);
+    const clockViewModel = new ClockViewModel();
+    const animationViewModel = new AnimationViewModel(clockViewModel);
     animation = new Animation(container, animationViewModel);
   });
 });

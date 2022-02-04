@@ -12,24 +12,24 @@ import {
 
 describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
   it("getNodeTransform works when node has a matrix", function () {
-    var nodeWithMatrix = {
+    const nodeWithMatrix = {
       matrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
     };
 
-    var computedTransform = ModelExperimentalUtility.getNodeTransform(
+    const computedTransform = ModelExperimentalUtility.getNodeTransform(
       nodeWithMatrix
     );
     expect(Matrix4.equals(computedTransform, Matrix4.IDENTITY)).toEqual(true);
   });
 
   it("getNodeTransform works when node has translation, rotation, scale", function () {
-    var nodeWithTRS = {
+    const nodeWithTRS = {
       translation: new Cartesian3(0, 0, 0),
       rotation: new Quaternion(0, 0, 0, 1),
       scale: new Cartesian3(1, 1, 1),
     };
 
-    var computedTransform = ModelExperimentalUtility.getNodeTransform(
+    const computedTransform = ModelExperimentalUtility.getNodeTransform(
       nodeWithTRS
     );
     expect(Matrix4.equals(computedTransform, Matrix4.IDENTITY)).toEqual(true);
@@ -40,7 +40,7 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
   });
 
   it("hasQuantizedAttributes detects quantized attributes", function () {
-    var attributes = [
+    const attributes = [
       {
         semantic: "POSITION",
         max: new Cartesian3(0.5, 0.5, 0.5),
@@ -62,7 +62,7 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
   });
 
   it("getAttributeInfo works for built-in attributes", function () {
-    var attribute = {
+    const attribute = {
       semantic: "POSITION",
       type: AttributeType.VEC3,
       max: new Cartesian3(0.5, 0.5, 0.5),
@@ -80,7 +80,7 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
   });
 
   it("getAttributeInfo works for attributes with a set index", function () {
-    var attribute = {
+    const attribute = {
       semantic: "TEXCOORD",
       setIndex: 0,
       type: AttributeType.VEC2,
@@ -96,8 +96,25 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
     });
   });
 
+  it("getAttributeInfo promotes vertex colors to vec4 for GLSL", function () {
+    const attribute = {
+      semantic: "COLOR",
+      setIndex: 0,
+      type: AttributeType.VEC3,
+    };
+
+    expect(ModelExperimentalUtility.getAttributeInfo(attribute)).toEqual({
+      attribute: attribute,
+      isQuantized: false,
+      variableName: "color_0",
+      hasSemantic: true,
+      glslType: "vec4",
+      quantizedGlslType: undefined,
+    });
+  });
+
   it("getAttributeInfo works for custom attributes", function () {
-    var attribute = {
+    const attribute = {
       name: "_TEMPERATURE",
       type: AttributeType.SCALAR,
     };
@@ -113,7 +130,7 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
   });
 
   it("getAttributeInfo works for quantized attributes", function () {
-    var attribute = {
+    let attribute = {
       semantic: "POSITION",
       type: AttributeType.VEC3,
       max: new Cartesian3(0.5, 0.5, 0.5),
@@ -150,8 +167,28 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
     });
   });
 
+  it("getAttributeInfo handles quantized vertex colors correctly", function () {
+    const attribute = {
+      semantic: "COLOR",
+      setIndex: 0,
+      type: AttributeType.VEC3,
+      quantization: {
+        type: AttributeType.VEC3,
+      },
+    };
+
+    expect(ModelExperimentalUtility.getAttributeInfo(attribute)).toEqual({
+      attribute: attribute,
+      isQuantized: true,
+      variableName: "color_0",
+      hasSemantic: true,
+      glslType: "vec4",
+      quantizedGlslType: "vec4",
+    });
+  });
+
   it("createBoundingSphere works", function () {
-    var mockPrimitive = {
+    const mockPrimitive = {
       attributes: [
         {
           semantic: "POSITION",
@@ -160,16 +197,16 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
         },
       ],
     };
-    var translation = new Cartesian3(50, 50, 50);
+    const translation = new Cartesian3(50, 50, 50);
 
-    var modelMatrix = Matrix4.fromTranslationRotationScale(
+    const modelMatrix = Matrix4.fromTranslationRotationScale(
       new TranslationRotationScale(
         translation,
         Quaternion.IDENTITY,
         new Cartesian3(1, 1, 1)
       )
     );
-    var boundingSphere = ModelExperimentalUtility.createBoundingSphere(
+    const boundingSphere = ModelExperimentalUtility.createBoundingSphere(
       mockPrimitive,
       modelMatrix
     );
@@ -182,7 +219,7 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
   });
 
   it("createBoundingSphere works with instancing", function () {
-    var mockPrimitive = {
+    const mockPrimitive = {
       attributes: [
         {
           semantic: "POSITION",
@@ -191,16 +228,16 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
         },
       ],
     };
-    var translation = new Cartesian3(50, 50, 50);
+    const translation = new Cartesian3(50, 50, 50);
 
-    var modelMatrix = Matrix4.fromTranslationRotationScale(
+    const modelMatrix = Matrix4.fromTranslationRotationScale(
       new TranslationRotationScale(
         translation,
         Quaternion.IDENTITY,
         new Cartesian3(1, 1, 1)
       )
     );
-    var boundingSphere = ModelExperimentalUtility.createBoundingSphere(
+    const boundingSphere = ModelExperimentalUtility.createBoundingSphere(
       mockPrimitive,
       modelMatrix,
       new Cartesian3(5, 5, 5),
@@ -215,7 +252,7 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
   });
 
   it("getAttributeBySemantic works", function () {
-    var nodeIntanceAttributes = {
+    const nodeIntanceAttributes = {
       attributes: [
         { semantic: InstanceAttributeSemantic.TRANSLATION },
         { semantic: InstanceAttributeSemantic.ROTATION },
@@ -255,7 +292,7 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
       )
     ).toBeUndefined();
 
-    var primitiveAttributes = {
+    const primitiveAttributes = {
       attributes: [
         { semantic: VertexAttributeSemantic.POSITION },
         { semantic: VertexAttributeSemantic.NORMAL },

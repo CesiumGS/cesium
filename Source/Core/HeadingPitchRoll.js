@@ -51,14 +51,14 @@ HeadingPitchRoll.fromQuaternion = function (quaternion, result) {
   if (!defined(result)) {
     result = new HeadingPitchRoll();
   }
-  var test = 2 * (quaternion.w * quaternion.y - quaternion.z * quaternion.x);
-  var denominatorRoll =
+  const test = 2 * (quaternion.w * quaternion.y - quaternion.z * quaternion.x);
+  const denominatorRoll =
     1 - 2 * (quaternion.x * quaternion.x + quaternion.y * quaternion.y);
-  var numeratorRoll =
+  const numeratorRoll =
     2 * (quaternion.w * quaternion.x + quaternion.y * quaternion.z);
-  var denominatorHeading =
+  const denominatorHeading =
     1 - 2 * (quaternion.y * quaternion.y + quaternion.z * quaternion.z);
-  var numeratorHeading =
+  const numeratorHeading =
     2 * (quaternion.w * quaternion.z + quaternion.x * quaternion.y);
   result.heading = -Math.atan2(numeratorHeading, denominatorHeading);
   result.roll = Math.atan2(numeratorRoll, denominatorRoll);
@@ -231,6 +231,6 @@ HeadingPitchRoll.prototype.equalsEpsilon = function (
  * @returns {String} A string representing the provided HeadingPitchRoll in the format '(heading, pitch, roll)'.
  */
 HeadingPitchRoll.prototype.toString = function () {
-  return "(" + this.heading + ", " + this.pitch + ", " + this.roll + ")";
+  return `(${this.heading}, ${this.pitch}, ${this.roll})`;
 };
 export default HeadingPitchRoll;

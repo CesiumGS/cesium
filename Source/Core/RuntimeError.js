@@ -33,7 +33,7 @@ function RuntimeError(message) {
   this.message = message;
 
   //Browsers such as IE don't have a stack property until you actually throw the error.
-  var stack;
+  let stack;
   try {
     throw new Error();
   } catch (e) {
@@ -54,10 +54,10 @@ if (defined(Object.create)) {
 }
 
 RuntimeError.prototype.toString = function () {
-  var str = this.name + ": " + this.message;
+  let str = `${this.name}: ${this.message}`;
 
   if (defined(this.stack)) {
-    str += "\n" + this.stack.toString();
+    str += `\n${this.stack.toString()}`;
   }
 
   return str;

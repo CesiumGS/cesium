@@ -10,7 +10,7 @@ import MetadataType from "./MetadataType.js";
  * used for representing binary properties of a batch table, as well as binary
  * metadata in 3D Tiles next extensions.
  * <p>
- * For 3D Tiles Next details, see the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
+ * For 3D Tiles Next details, see the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
  * </p>
  *
  * @param {Object} options Object with the following properties:
@@ -27,15 +27,15 @@ import MetadataType from "./MetadataType.js";
  */
 function MetadataTable(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var count = options.count;
+  const count = options.count;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThan("options.count", count, 0);
   //>>includeEnd('debug');
 
-  var properties = {};
+  const properties = {};
   if (defined(options.properties)) {
-    for (var propertyId in options.properties) {
+    for (const propertyId in options.properties) {
       if (options.properties.hasOwnProperty(propertyId)) {
         properties[propertyId] = new MetadataTableProperty({
           count: count,
@@ -149,9 +149,9 @@ MetadataTable.prototype.getProperty = function (index, propertyId) {
   Check.typeOf.string("propertyId", propertyId);
   //>>includeEnd('debug');
 
-  var property = this._properties[propertyId];
+  const property = this._properties[propertyId];
 
-  var value;
+  let value;
   if (defined(property)) {
     value = property.get(index);
   } else {
@@ -196,7 +196,7 @@ MetadataTable.prototype.setProperty = function (index, propertyId, value) {
   Check.typeOf.string("propertyId", propertyId);
   //>>includeEnd('debug');
 
-  var property = this._properties[propertyId];
+  const property = this._properties[propertyId];
   if (defined(property)) {
     property.set(index, value);
     return true;
@@ -221,7 +221,7 @@ MetadataTable.prototype.getPropertyBySemantic = function (index, semantic) {
   //>>includeEnd('debug');
 
   if (defined(this._class)) {
-    var property = this._class.propertiesBySemantic[semantic];
+    const property = this._class.propertiesBySemantic[semantic];
     if (defined(property)) {
       return this.getProperty(index, property.id);
     }
@@ -253,7 +253,7 @@ MetadataTable.prototype.setPropertyBySemantic = function (
   //>>includeEnd('debug');
 
   if (defined(this._class)) {
-    var property = this._class.propertiesBySemantic[semantic];
+    const property = this._class.propertiesBySemantic[semantic];
     if (defined(property)) {
       return this.setProperty(index, property.id, value);
     }
@@ -275,7 +275,7 @@ MetadataTable.prototype.getPropertyTypedArray = function (propertyId) {
   Check.typeOf.string("propertyId", propertyId);
   //>>includeEnd('debug');
 
-  var property = this._properties[propertyId];
+  const property = this._properties[propertyId];
 
   if (defined(property)) {
     return property.getTypedArray();
@@ -298,7 +298,7 @@ MetadataTable.prototype.getPropertyTypedArrayBySemantic = function (semantic) {
   //>>includeEnd('debug');
 
   if (defined(this._class)) {
-    var property = this._class.propertiesBySemantic[semantic];
+    const property = this._class.propertiesBySemantic[semantic];
     if (defined(property)) {
       return this.getPropertyTypedArray(property.id);
     }
@@ -309,9 +309,9 @@ MetadataTable.prototype.getPropertyTypedArrayBySemantic = function (semantic) {
 
 function getDefault(classDefinition, propertyId) {
   if (defined(classDefinition)) {
-    var classProperty = classDefinition.properties[propertyId];
+    const classProperty = classDefinition.properties[propertyId];
     if (defined(classProperty) && defined(classProperty.default)) {
-      var value = classProperty.default;
+      let value = classProperty.default;
       if (classProperty.type === MetadataType.ARRAY) {
         value = value.slice(); // clone
       }

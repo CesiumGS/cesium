@@ -115,11 +115,11 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var imageryLayers = viewer.imageryLayers;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const imageryLayers = viewer.imageryLayers;
 
         // The viewModel tracks the state of our mini application.
-        var viewModel = {
+        const viewModel = {
           brightness: 0,
           contrast: 0,
           hue: 0,
@@ -130,7 +130,7 @@
         Cesium.knockout.track(viewModel);
 
         // Bind the viewModel to the DOM elements of the UI that call for it.
-        var toolbar = document.getElementById("toolbar");
+        const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
         // Make the active imagery layer a subscriber of the viewModel.
@@ -139,7 +139,7 @@
             .getObservable(viewModel, name)
             .subscribe(function (newValue) {
               if (imageryLayers.length > 0) {
-                var layer = imageryLayers.get(0);
+                const layer = imageryLayers.get(0);
                 layer[name] = newValue;
               }
             });
@@ -153,7 +153,7 @@
         // Make the viewModel react to base layer changes.
         function updateViewModel() {
           if (imageryLayers.length > 0) {
-            var layer = imageryLayers.get(0);
+            const layer = imageryLayers.get(0);
             viewModel.brightness = layer.brightness;
             viewModel.contrast = layer.contrast;
             viewModel.hue = layer.hue;

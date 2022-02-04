@@ -27,9 +27,9 @@ export default function ModelExperimentalUtility() {}
  */
 ModelExperimentalUtility.getFailedLoadFunction = function (model, type, path) {
   return function (error) {
-    var message = "Failed to load " + type + ": " + path;
+    let message = `Failed to load ${type}: ${path}`;
     if (defined(error)) {
-      message += "\n" + error.message;
+      message += `\n${error.message}`;
     }
     model._readyPromise.reject(new RuntimeError(message));
   };
@@ -70,11 +70,11 @@ ModelExperimentalUtility.getAttributeBySemantic = function (
   semantic,
   setIndex
 ) {
-  var attributes = object.attributes;
-  var attributesLength = attributes.length;
-  for (var i = 0; i < attributesLength; ++i) {
-    var attribute = attributes[i];
-    var matchesSetIndex = defined(setIndex)
+  const attributes = object.attributes;
+  const attributesLength = attributes.length;
+  for (let i = 0; i < attributesLength; ++i) {
+    const attribute = attributes[i];
+    const matchesSetIndex = defined(setIndex)
       ? attribute.setIndex === setIndex
       : true;
     if (attribute.semantic === semantic && matchesSetIndex) {
@@ -88,8 +88,8 @@ ModelExperimentalUtility.hasQuantizedAttributes = function (attributes) {
     return false;
   }
 
-  for (var i = 0; i < attributes.length; i++) {
-    var attribute = attributes[i];
+  for (let i = 0; i < attributes.length; i++) {
+    const attribute = attributes[i];
     if (defined(attribute.quantization)) {
       return true;
     }
@@ -103,11 +103,11 @@ ModelExperimentalUtility.hasQuantizedAttributes = function (attributes) {
  * @private
  */
 ModelExperimentalUtility.getAttributeInfo = function (attribute) {
-  var semantic = attribute.semantic;
-  var setIndex = attribute.setIndex;
+  const semantic = attribute.semantic;
+  const setIndex = attribute.setIndex;
 
-  var variableName;
-  var hasSemantic = false;
+  let variableName;
+  let hasSemantic = false;
   if (defined(semantic)) {
     variableName = VertexAttributeSemantic.getVariableName(semantic, setIndex);
     hasSemantic = true;
@@ -119,13 +119,24 @@ ModelExperimentalUtility.getAttributeInfo = function (attribute) {
     variableName = variableName.toLowerCase();
   }
 
-  var attributeType = attribute.type;
-  var glslType = AttributeType.getGlslType(attributeType);
+  const isVertexColor = /^color_\d+$/.test(variableName);
+  const attributeType = attribute.type;
+  let glslType = AttributeType.getGlslType(attributeType);
 
-  var isQuantized = defined(attribute.quantization);
-  var quantizedGlslType;
+  // color_n can be either a vec3 or a vec4. But in GLSL we can always use
+  // attribute vec4 since GLSL promotes vec3 attribute data to vec4 with
+  // the .a channel set to 1.0.
+  if (isVertexColor) {
+    glslType = "vec4";
+  }
+
+  const isQuantized = defined(attribute.quantization);
+  let quantizedGlslType;
   if (isQuantized) {
-    quantizedGlslType = AttributeType.getGlslType(attribute.quantization.type);
+    // The quantized color_n attribute also is promoted to a vec4 in the shader
+    quantizedGlslType = isVertexColor
+      ? "vec4"
+      : AttributeType.getGlslType(attribute.quantization.type);
   }
 
   return {
@@ -138,8 +149,8 @@ ModelExperimentalUtility.getAttributeInfo = function (attribute) {
   };
 };
 
-var cartesianMaxScratch = new Cartesian3();
-var cartesianMinScratch = new Cartesian3();
+const cartesianMaxScratch = new Cartesian3();
+const cartesianMinScratch = new Cartesian3();
 /**
  * Create a bounding sphere from a primitive's POSITION attribute and model
  * matrix.
@@ -155,22 +166,22 @@ ModelExperimentalUtility.createBoundingSphere = function (
   instancingTranslationMax,
   instancingTranslationMin
 ) {
-  var positionGltfAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+  const positionGltfAttribute = ModelExperimentalUtility.getAttributeBySemantic(
     primitive,
     "POSITION"
   );
 
-  var positionMax = positionGltfAttribute.max;
-  var positionMin = positionGltfAttribute.min;
+  const positionMax = positionGltfAttribute.max;
+  const positionMin = positionGltfAttribute.min;
 
-  var boundingSphere;
+  let boundingSphere;
   if (defined(instancingTranslationMax) && defined(instancingTranslationMin)) {
-    var computedMin = Cartesian3.add(
+    const computedMin = Cartesian3.add(
       positionMin,
       instancingTranslationMin,
       cartesianMinScratch
     );
-    var computedMax = Cartesian3.add(
+    const computedMax = Cartesian3.add(
       positionMax,
       instancingTranslationMax,
       cartesianMaxScratch

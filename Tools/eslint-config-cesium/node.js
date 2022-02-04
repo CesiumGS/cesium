@@ -15,5 +15,6 @@ module.exports = {
     "no-new-require": "error",
     "no-var": "error",
     "prefer-const": "error",
+    "prefer-template": "error",
   },
 };

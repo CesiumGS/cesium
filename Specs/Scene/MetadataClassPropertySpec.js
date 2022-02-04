@@ -14,7 +14,7 @@ import {
 
 describe("Scene/MetadataClassProperty", function () {
   it("creates property with default values", function () {
-    var property = new MetadataClassProperty({
+    const property = new MetadataClassProperty({
       id: "height",
       property: {
         componentType: "FLOAT32",
@@ -40,17 +40,17 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("creates property", function () {
-    var max = [32767, 0, 100];
-    var min = [-32768, 0, -100];
-    var propertyDefault = [0, 0, 0];
-    var extras = {
+    const max = [32767, 0, 100];
+    const min = [-32768, 0, -100];
+    const propertyDefault = [0, 0, 0];
+    const extras = {
       coordinates: [0, 1, 2],
     };
-    var extensions = {
+    const extensions = {
       EXT_other_extension: {},
     };
 
-    var property = new MetadataClassProperty({
+    const property = new MetadataClassProperty({
       id: "position",
       property: {
         name: "Position",
@@ -88,17 +88,17 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("transcodes single properties from EXT_feature_metadata", function () {
-    var max = [32767, 0, 100];
-    var min = [-32768, 0, -100];
-    var propertyDefault = 0;
-    var extras = {
+    const max = [32767, 0, 100];
+    const min = [-32768, 0, -100];
+    const propertyDefault = 0;
+    const extras = {
       coordinates: [0, 1, 2],
     };
-    var extensions = {
+    const extensions = {
       EXT_other_extension: {},
     };
 
-    var property = new MetadataClassProperty({
+    const property = new MetadataClassProperty({
       id: "population",
       property: {
         name: "Population",
@@ -134,7 +134,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("creates enum property", function () {
-    var colorEnum = new MetadataEnum({
+    const colorEnum = new MetadataEnum({
       id: "color",
       enum: {
         values: [
@@ -146,11 +146,11 @@ describe("Scene/MetadataClassProperty", function () {
       },
     });
 
-    var enums = {
+    const enums = {
       color: colorEnum,
     };
 
-    var property = new MetadataClassProperty({
+    const property = new MetadataClassProperty({
       id: "color",
       property: {
         componentType: "ENUM",
@@ -166,7 +166,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("creates vector and matrix types", function () {
-    var property = new MetadataClassProperty({
+    let property = new MetadataClassProperty({
       id: "speed",
       property: {
         type: "VEC2",
@@ -199,7 +199,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(function () {
       return new MetadataClassProperty({
         property: {
-          type: "FLOAT32",
+          componentType: "FLOAT32",
         },
       });
     }).toThrowDeveloperError();
@@ -218,7 +218,7 @@ describe("Scene/MetadataClassProperty", function () {
       return;
     }
 
-    var properties = {
+    const properties = {
       propertyInt8: {
         type: "SINGLE",
         componentType: "INT8",
@@ -255,7 +255,7 @@ describe("Scene/MetadataClassProperty", function () {
       },
     };
 
-    var propertyValues = {
+    const propertyValues = {
       propertyInt8: [-128, 0, 127],
       propertyUint8: [0, 51, 255],
       propertyInt16: [-32768, 0, 32767],
@@ -274,7 +274,7 @@ describe("Scene/MetadataClassProperty", function () {
       ],
     };
 
-    var normalizedValues = {
+    const normalizedValues = {
       propertyInt8: [-1.0, 0, 1.0],
       propertyUint8: [0.0, 0.2, 1.0],
       propertyInt16: [-1.0, 0, 1.0],
@@ -285,16 +285,16 @@ describe("Scene/MetadataClassProperty", function () {
       propertyUint64: [0.0, 0.2, 1.0],
     };
 
-    for (var propertyId in properties) {
+    for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        var property = new MetadataClassProperty({
+        const property = new MetadataClassProperty({
           id: propertyId,
           property: properties[propertyId],
         });
-        var length = normalizedValues[propertyId].length;
-        for (var i = 0; i < length; ++i) {
-          var value = propertyValues[propertyId][i];
-          var normalizedValue = property.normalize(value);
+        const length = normalizedValues[propertyId].length;
+        for (let i = 0; i < length; ++i) {
+          const value = propertyValues[propertyId][i];
+          const normalizedValue = property.normalize(value);
           expect(normalizedValue).toEqual(normalizedValues[propertyId][i]);
         }
       }
@@ -302,7 +302,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("normalize array values", function () {
-    var properties = {
+    const properties = {
       propertyInt8: {
         type: "ARRAY",
         componentType: "INT8",
@@ -316,7 +316,7 @@ describe("Scene/MetadataClassProperty", function () {
       },
     };
 
-    var propertyValues = {
+    const propertyValues = {
       propertyInt8: [[-128, 0], [127], []],
       propertyUint8: [
         [0, 255],
@@ -325,7 +325,7 @@ describe("Scene/MetadataClassProperty", function () {
       ],
     };
 
-    var normalizedValues = {
+    const normalizedValues = {
       propertyInt8: [[-1.0, 0.0], [1.0], []],
       propertyUint8: [
         [0.0, 1.0],
@@ -334,16 +334,16 @@ describe("Scene/MetadataClassProperty", function () {
       ],
     };
 
-    for (var propertyId in properties) {
+    for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        var property = new MetadataClassProperty({
+        const property = new MetadataClassProperty({
           id: propertyId,
           property: properties[propertyId],
         });
-        var length = normalizedValues[propertyId].length;
-        for (var i = 0; i < length; ++i) {
-          var value = propertyValues[propertyId][i];
-          var normalizedValue = property.normalize(value);
+        const length = normalizedValues[propertyId].length;
+        for (let i = 0; i < length; ++i) {
+          const value = propertyValues[propertyId][i];
+          const normalizedValue = property.normalize(value);
           expect(normalizedValue).toEqual(normalizedValues[propertyId][i]);
         }
       }
@@ -351,7 +351,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("normalize vector and matrix values", function () {
-    var properties = {
+    const properties = {
       vec4Int8: {
         type: "VEC4",
         componentType: "INT8",
@@ -364,7 +364,7 @@ describe("Scene/MetadataClassProperty", function () {
       },
     };
 
-    var propertyValues = {
+    const propertyValues = {
       vec4Int8: [
         [-128, 0, 127, 0],
         [-128, -128, -128, 0],
@@ -377,7 +377,7 @@ describe("Scene/MetadataClassProperty", function () {
       ],
     };
 
-    var normalizedValues = {
+    const normalizedValues = {
       vec4Int8: [
         [-1.0, 0.0, 1.0, 0],
         [-1.0, -1.0, -1.0, 0],
@@ -390,16 +390,16 @@ describe("Scene/MetadataClassProperty", function () {
       ],
     };
 
-    for (var propertyId in properties) {
+    for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        var property = new MetadataClassProperty({
+        const property = new MetadataClassProperty({
           id: propertyId,
           property: properties[propertyId],
         });
-        var length = normalizedValues[propertyId].length;
-        for (var i = 0; i < length; ++i) {
-          var value = propertyValues[propertyId][i];
-          var normalizedValue = property.normalize(value);
+        const length = normalizedValues[propertyId].length;
+        for (let i = 0; i < length; ++i) {
+          const value = propertyValues[propertyId][i];
+          const normalizedValue = property.normalize(value);
           expect(normalizedValue).toEqual(normalizedValues[propertyId][i]);
         }
       }
@@ -407,7 +407,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("does not normalize non integer types", function () {
-    var myEnum = new MetadataEnum({
+    const myEnum = new MetadataEnum({
       id: "myEnum",
       enum: {
         values: [
@@ -427,7 +427,7 @@ describe("Scene/MetadataClassProperty", function () {
       },
     });
 
-    var properties = {
+    const properties = {
       propertyEnum: {
         componentType: "ENUM",
         enumType: "myEnum",
@@ -449,26 +449,26 @@ describe("Scene/MetadataClassProperty", function () {
       },
     };
 
-    var propertyValues = {
+    const propertyValues = {
       propertyEnum: ["Other", "ValueA", "ValueB"],
       propertyEnumArray: [["Other", "ValueA"], ["ValueB"], []],
       propertyString: ["a", "bc", ""],
       propertyBoolean: [true, false, false],
     };
 
-    for (var propertyId in properties) {
+    for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        var property = new MetadataClassProperty({
+        const property = new MetadataClassProperty({
           id: propertyId,
           property: properties[propertyId],
           enums: {
             myEnum: myEnum,
           },
         });
-        var length = propertyValues[propertyId].length;
-        for (var i = 0; i < length; ++i) {
-          var value = propertyValues[propertyId][i];
-          var normalizeValue = property.normalize(value);
+        const length = propertyValues[propertyId].length;
+        for (let i = 0; i < length; ++i) {
+          const value = propertyValues[propertyId][i];
+          const normalizeValue = property.normalize(value);
           expect(normalizeValue).toEqual(value);
         }
       }
@@ -476,7 +476,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("packVectorAndMatrixTypes packs vectors and matrices", function () {
-    var properties = {
+    const properties = {
       propertyVec2: {
         type: "VEC2",
         componentType: "FLOAT32",
@@ -503,7 +503,7 @@ describe("Scene/MetadataClassProperty", function () {
       },
     };
 
-    var propertyValues = {
+    const propertyValues = {
       propertyVec2: [
         new Cartesian2(0.1, 0.8),
         new Cartesian2(0.3, 0.5),
@@ -536,7 +536,7 @@ describe("Scene/MetadataClassProperty", function () {
       ],
     };
 
-    var packedValues = {
+    const packedValues = {
       propertyVec2: [
         [0.1, 0.8],
         [0.3, 0.5],
@@ -571,16 +571,16 @@ describe("Scene/MetadataClassProperty", function () {
       ],
     };
 
-    for (var propertyId in properties) {
+    for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        var property = new MetadataClassProperty({
+        const property = new MetadataClassProperty({
           id: propertyId,
           property: properties[propertyId],
         });
-        var length = propertyValues[propertyId].length;
-        for (var i = 0; i < length; ++i) {
-          var value = propertyValues[propertyId][i];
-          var packed = property.packVectorAndMatrixTypes(value);
+        const length = propertyValues[propertyId].length;
+        for (let i = 0; i < length; ++i) {
+          const value = propertyValues[propertyId][i];
+          const packed = property.packVectorAndMatrixTypes(value);
           expect(packed).toEqual(packedValues[propertyId][i]);
         }
       }
@@ -592,7 +592,7 @@ describe("Scene/MetadataClassProperty", function () {
       return;
     }
 
-    var properties = {
+    const properties = {
       propertyString: {
         componentType: "STRING",
       },
@@ -611,7 +611,7 @@ describe("Scene/MetadataClassProperty", function () {
       },
     };
 
-    var propertyValues = {
+    const propertyValues = {
       propertyString: ["a", "bc", ""],
       propertyBoolean: [true, false, false],
       propertyArray: [
@@ -626,16 +626,16 @@ describe("Scene/MetadataClassProperty", function () {
       ],
     };
 
-    for (var propertyId in properties) {
+    for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        var property = new MetadataClassProperty({
+        const property = new MetadataClassProperty({
           id: propertyId,
           property: properties[propertyId],
         });
-        var length = propertyValues[propertyId].length;
-        for (var i = 0; i < length; ++i) {
-          var value = propertyValues[propertyId][i];
-          var packed = property.packVectorAndMatrixTypes(value);
+        const length = propertyValues[propertyId].length;
+        for (let i = 0; i < length; ++i) {
+          const value = propertyValues[propertyId][i];
+          const packed = property.packVectorAndMatrixTypes(value);
           expect(packed).toEqual(value);
         }
       }
@@ -643,7 +643,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("unpackVectorAndMatrixTypes unpacks vectors and matrices", function () {
-    var properties = {
+    const properties = {
       propertyVec2: {
         type: "VEC2",
         componentType: "FLOAT32",
@@ -670,7 +670,7 @@ describe("Scene/MetadataClassProperty", function () {
       },
     };
 
-    var propertyValues = {
+    const propertyValues = {
       propertyVec2: [
         new Cartesian2(0.1, 0.8),
         new Cartesian2(0.3, 0.5),
@@ -703,7 +703,7 @@ describe("Scene/MetadataClassProperty", function () {
       ],
     };
 
-    var packedValues = {
+    const packedValues = {
       propertyVec2: [
         [0.1, 0.8],
         [0.3, 0.5],
@@ -738,16 +738,16 @@ describe("Scene/MetadataClassProperty", function () {
       ],
     };
 
-    for (var propertyId in properties) {
+    for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        var property = new MetadataClassProperty({
+        const property = new MetadataClassProperty({
           id: propertyId,
           property: properties[propertyId],
         });
-        var length = propertyValues[propertyId].length;
-        for (var i = 0; i < length; ++i) {
-          var value = packedValues[propertyId][i];
-          var unpacked = property.unpackVectorAndMatrixTypes(value);
+        const length = propertyValues[propertyId].length;
+        for (let i = 0; i < length; ++i) {
+          const value = packedValues[propertyId][i];
+          const unpacked = property.unpackVectorAndMatrixTypes(value);
           expect(unpacked).toEqual(propertyValues[propertyId][i]);
         }
       }
@@ -759,7 +759,7 @@ describe("Scene/MetadataClassProperty", function () {
       return;
     }
 
-    var properties = {
+    const properties = {
       propertyString: {
         componentType: "STRING",
       },
@@ -778,7 +778,7 @@ describe("Scene/MetadataClassProperty", function () {
       },
     };
 
-    var propertyValues = {
+    const propertyValues = {
       propertyString: ["a", "bc", ""],
       propertyBoolean: [true, false, false],
       propertyArray: [
@@ -793,16 +793,16 @@ describe("Scene/MetadataClassProperty", function () {
       ],
     };
 
-    for (var propertyId in properties) {
+    for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        var property = new MetadataClassProperty({
+        const property = new MetadataClassProperty({
           id: propertyId,
           property: properties[propertyId],
         });
-        var length = propertyValues[propertyId].length;
-        for (var i = 0; i < length; ++i) {
-          var value = propertyValues[propertyId][i];
-          var unpacked = property.unpackVectorAndMatrixTypes(value);
+        const length = propertyValues[propertyId].length;
+        for (let i = 0; i < length; ++i) {
+          const value = propertyValues[propertyId][i];
+          const unpacked = property.unpackVectorAndMatrixTypes(value);
           expect(unpacked).toEqual(value);
         }
       }
@@ -810,7 +810,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns undefined if the value is valid", function () {
-    var property = new MetadataClassProperty({
+    const property = new MetadataClassProperty({
       id: "position",
       property: {
         type: "VEC3",
@@ -822,7 +822,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message if type is ARRAY and value is not an array", function () {
-    var property = new MetadataClassProperty({
+    const property = new MetadataClassProperty({
       id: "position",
       property: {
         type: "ARRAY",
@@ -835,7 +835,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message if type is a vector or matrix and the component type is not vector-compatibile", function () {
-    var property = new MetadataClassProperty({
+    let property = new MetadataClassProperty({
       id: "position",
       property: {
         type: "VEC2",
@@ -861,7 +861,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message if type is a vector and value is not a Cartesian", function () {
-    var property = new MetadataClassProperty({
+    let property = new MetadataClassProperty({
       id: "position",
       property: {
         type: "VEC2",
@@ -893,7 +893,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message if type is a matrix and value is not a Matrix", function () {
-    var property = new MetadataClassProperty({
+    let property = new MetadataClassProperty({
       id: "position",
       property: {
         type: "MAT2",
@@ -925,7 +925,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message if type is ARRAY and the array length does not match componentCount", function () {
-    var property = new MetadataClassProperty({
+    const property = new MetadataClassProperty({
       id: "position",
       property: {
         type: "ARRAY",
@@ -940,7 +940,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message if enum name is invalid", function () {
-    var myEnum = new MetadataEnum({
+    const myEnum = new MetadataEnum({
       id: "myEnum",
       enum: {
         values: [
@@ -960,7 +960,7 @@ describe("Scene/MetadataClassProperty", function () {
       },
     });
 
-    var property = new MetadataClassProperty({
+    const property = new MetadataClassProperty({
       id: "myEnum",
       property: {
         componentType: "ENUM",
@@ -980,7 +980,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message if value does not match the type", function () {
-    var types = [
+    const types = [
       "INT8",
       "UINT8",
       "INT16",
@@ -995,15 +995,15 @@ describe("Scene/MetadataClassProperty", function () {
       "STRING",
     ];
 
-    for (var i = 0; i < types.length; ++i) {
-      var property = new MetadataClassProperty({
+    for (let i = 0; i < types.length; ++i) {
+      const property = new MetadataClassProperty({
         id: "property",
         property: {
           componentType: types[i],
         },
       });
       expect(property.validate({})).toBe(
-        "value [object Object] does not match type " + types[i]
+        `value [object Object] does not match type ${types[i]}`
       );
     }
   });
@@ -1013,7 +1013,7 @@ describe("Scene/MetadataClassProperty", function () {
       return;
     }
 
-    var outOfRangeValues = {
+    const outOfRangeValues = {
       INT8: [-129, 128],
       UINT8: [-1, 256],
       INT16: [-32769, 32768],
@@ -1031,18 +1031,18 @@ describe("Scene/MetadataClassProperty", function () {
       FLOAT32: [-Number.MAX_VALUE, Number.MAX_VALUE],
     };
 
-    for (var type in outOfRangeValues) {
+    for (const type in outOfRangeValues) {
       if (outOfRangeValues.hasOwnProperty(type)) {
-        var values = outOfRangeValues[type];
-        var property = new MetadataClassProperty({
+        const values = outOfRangeValues[type];
+        const property = new MetadataClassProperty({
           id: "property",
           property: {
             componentType: type,
           },
         });
-        for (var i = 0; i < values.length; ++i) {
+        for (let i = 0; i < values.length; ++i) {
           expect(property.validate(values[i])).toBe(
-            "value " + values[i] + " is out of range for type " + type
+            `value ${values[i]} is out of range for type ${type}`
           );
         }
       }
@@ -1054,7 +1054,7 @@ describe("Scene/MetadataClassProperty", function () {
       return;
     }
 
-    var outOfRangeValues = {
+    const outOfRangeValues = {
       INT8: [-129, 128],
       UINT8: [-1, 256],
       INT16: [-32769, 32768],
@@ -1072,19 +1072,19 @@ describe("Scene/MetadataClassProperty", function () {
       FLOAT32: [-Number.MAX_VALUE, Number.MAX_VALUE],
     };
 
-    for (var componentType in outOfRangeValues) {
+    for (const componentType in outOfRangeValues) {
       if (outOfRangeValues.hasOwnProperty(componentType)) {
-        var values = outOfRangeValues[componentType];
-        var property = new MetadataClassProperty({
+        const values = outOfRangeValues[componentType];
+        const property = new MetadataClassProperty({
           id: "property",
           property: {
             type: "ARRAY",
             componentType: componentType,
           },
         });
-        for (var i = 0; i < values.length; ++i) {
+        for (let i = 0; i < values.length; ++i) {
           expect(property.validate(values)).toBe(
-            "value " + values[0] + " is out of range for type " + componentType
+            `value ${values[0]} is out of range for type ${componentType}`
           );
         }
       }
@@ -1092,7 +1092,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message if value is outside the normalized range", function () {
-    var propertyInt8 = new MetadataClassProperty({
+    const propertyInt8 = new MetadataClassProperty({
       id: "property",
       property: {
         componentType: "INT8",
@@ -1100,7 +1100,7 @@ describe("Scene/MetadataClassProperty", function () {
       },
     });
 
-    var propertyUint8 = new MetadataClassProperty({
+    const propertyUint8 = new MetadataClassProperty({
       id: "property",
       property: {
         componentType: "UINT8",

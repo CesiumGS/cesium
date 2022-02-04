@@ -15,7 +15,7 @@ import Ray from "./Ray.js";
  *
  * @namespace IntersectionTests
  */
-var IntersectionTests = {};
+const IntersectionTests = {};
 
 /**
  * Computes the intersection of a ray and a plane.
@@ -39,17 +39,17 @@ IntersectionTests.rayPlane = function (ray, plane, result) {
     result = new Cartesian3();
   }
 
-  var origin = ray.origin;
-  var direction = ray.direction;
-  var normal = plane.normal;
-  var denominator = Cartesian3.dot(normal, direction);
+  const origin = ray.origin;
+  const direction = ray.direction;
+  const normal = plane.normal;
+  const denominator = Cartesian3.dot(normal, direction);
 
   if (Math.abs(denominator) < CesiumMath.EPSILON15) {
     // Ray is parallel to plane.  The ray may be in the polygon's plane.
     return undefined;
   }
 
-  var t = (-plane.distance - Cartesian3.dot(normal, origin)) / denominator;
+  const t = (-plane.distance - Cartesian3.dot(normal, origin)) / denominator;
 
   if (t < 0) {
     return undefined;
@@ -59,11 +59,11 @@ IntersectionTests.rayPlane = function (ray, plane, result) {
   return Cartesian3.add(origin, result, result);
 };
 
-var scratchEdge0 = new Cartesian3();
-var scratchEdge1 = new Cartesian3();
-var scratchPVec = new Cartesian3();
-var scratchTVec = new Cartesian3();
-var scratchQVec = new Cartesian3();
+const scratchEdge0 = new Cartesian3();
+const scratchEdge1 = new Cartesian3();
+const scratchPVec = new Cartesian3();
+const scratchTVec = new Cartesian3();
+const scratchQVec = new Cartesian3();
 
 /**
  * Computes the intersection of a ray and a triangle as a parametric distance along the input ray. The result is negative when the triangle is behind the ray.
@@ -105,21 +105,21 @@ IntersectionTests.rayTriangleParametric = function (
 
   cullBackFaces = defaultValue(cullBackFaces, false);
 
-  var origin = ray.origin;
-  var direction = ray.direction;
+  const origin = ray.origin;
+  const direction = ray.direction;
 
-  var edge0 = Cartesian3.subtract(p1, p0, scratchEdge0);
-  var edge1 = Cartesian3.subtract(p2, p0, scratchEdge1);
+  const edge0 = Cartesian3.subtract(p1, p0, scratchEdge0);
+  const edge1 = Cartesian3.subtract(p2, p0, scratchEdge1);
 
-  var p = Cartesian3.cross(direction, edge1, scratchPVec);
-  var det = Cartesian3.dot(edge0, p);
+  const p = Cartesian3.cross(direction, edge1, scratchPVec);
+  const det = Cartesian3.dot(edge0, p);
 
-  var tvec;
-  var q;
+  let tvec;
+  let q;
 
-  var u;
-  var v;
-  var t;
+  let u;
+  let v;
+  let t;
 
   if (cullBackFaces) {
     if (det < CesiumMath.EPSILON6) {
@@ -144,7 +144,7 @@ IntersectionTests.rayTriangleParametric = function (
     if (Math.abs(det) < CesiumMath.EPSILON6) {
       return undefined;
     }
-    var invDet = 1.0 / det;
+    const invDet = 1.0 / det;
 
     tvec = Cartesian3.subtract(origin, p0, scratchTVec);
     u = Cartesian3.dot(tvec, p) * invDet;
@@ -190,7 +190,7 @@ IntersectionTests.rayTriangle = function (
   cullBackFaces,
   result
 ) {
-  var t = IntersectionTests.rayTriangleParametric(
+  const t = IntersectionTests.rayTriangleParametric(
     ray,
     p0,
     p1,
@@ -209,7 +209,7 @@ IntersectionTests.rayTriangle = function (
   return Cartesian3.add(ray.origin, result, result);
 };
 
-var scratchLineSegmentTriangleRay = new Ray();
+const scratchLineSegmentTriangleRay = new Ray();
 
 /**
  * Computes the intersection of a line segment and a triangle.
@@ -252,12 +252,12 @@ IntersectionTests.lineSegmentTriangle = function (
   }
   //>>includeEnd('debug');
 
-  var ray = scratchLineSegmentTriangleRay;
+  const ray = scratchLineSegmentTriangleRay;
   Cartesian3.clone(v0, ray.origin);
   Cartesian3.subtract(v1, v0, ray.direction);
   Cartesian3.normalize(ray.direction, ray.direction);
 
-  var t = IntersectionTests.rayTriangleParametric(
+  const t = IntersectionTests.rayTriangleParametric(
     ray,
     p0,
     p1,
@@ -277,14 +277,14 @@ IntersectionTests.lineSegmentTriangle = function (
 };
 
 function solveQuadratic(a, b, c, result) {
-  var det = b * b - 4.0 * a * c;
+  const det = b * b - 4.0 * a * c;
   if (det < 0.0) {
     return undefined;
   } else if (det > 0.0) {
-    var denom = 1.0 / (2.0 * a);
-    var disc = Math.sqrt(det);
-    var root0 = (-b + disc) * denom;
-    var root1 = (-b - disc) * denom;
+    const denom = 1.0 / (2.0 * a);
+    const disc = Math.sqrt(det);
+    const root0 = (-b + disc) * denom;
+    const root1 = (-b - disc) * denom;
 
     if (root0 < root1) {
       result.root0 = root0;
@@ -297,7 +297,7 @@ function solveQuadratic(a, b, c, result) {
     return result;
   }
 
-  var root = -b / (2.0 * a);
+  const root = -b / (2.0 * a);
   if (root === 0.0) {
     return undefined;
   }
@@ -306,7 +306,7 @@ function solveQuadratic(a, b, c, result) {
   return result;
 }
 
-var raySphereRoots = {
+const raySphereRoots = {
   root0: 0.0,
   root1: 0.0,
 };
@@ -316,19 +316,19 @@ function raySphere(ray, sphere, result) {
     result = new Interval();
   }
 
-  var origin = ray.origin;
-  var direction = ray.direction;
+  const origin = ray.origin;
+  const direction = ray.direction;
 
-  var center = sphere.center;
-  var radiusSquared = sphere.radius * sphere.radius;
+  const center = sphere.center;
+  const radiusSquared = sphere.radius * sphere.radius;
 
-  var diff = Cartesian3.subtract(origin, center, scratchPVec);
+  const diff = Cartesian3.subtract(origin, center, scratchPVec);
 
-  var a = Cartesian3.dot(direction, direction);
-  var b = 2.0 * Cartesian3.dot(direction, diff);
-  var c = Cartesian3.magnitudeSquared(diff) - radiusSquared;
+  const a = Cartesian3.dot(direction, direction);
+  const b = 2.0 * Cartesian3.dot(direction, diff);
+  const c = Cartesian3.magnitudeSquared(diff) - radiusSquared;
 
-  var roots = solveQuadratic(a, b, c, raySphereRoots);
+  const roots = solveQuadratic(a, b, c, raySphereRoots);
   if (!defined(roots)) {
     return undefined;
   }
@@ -366,7 +366,7 @@ IntersectionTests.raySphere = function (ray, sphere, result) {
   return result;
 };
 
-var scratchLineSegmentRay = new Ray();
+const scratchLineSegmentRay = new Ray();
 
 /**
  * Computes the intersection points of a line segment with a sphere.
@@ -391,11 +391,11 @@ IntersectionTests.lineSegmentSphere = function (p0, p1, sphere, result) {
   }
   //>>includeEnd('debug');
 
-  var ray = scratchLineSegmentRay;
+  const ray = scratchLineSegmentRay;
   Cartesian3.clone(p0, ray.origin);
-  var direction = Cartesian3.subtract(p1, p0, ray.direction);
+  const direction = Cartesian3.subtract(p1, p0, ray.direction);
 
-  var maxT = Cartesian3.magnitude(direction);
+  const maxT = Cartesian3.magnitude(direction);
   Cartesian3.normalize(direction, direction);
 
   result = raySphere(ray, sphere, result);
@@ -408,8 +408,8 @@ IntersectionTests.lineSegmentSphere = function (p0, p1, sphere, result) {
   return result;
 };
 
-var scratchQ = new Cartesian3();
-var scratchW = new Cartesian3();
+const scratchQ = new Cartesian3();
+const scratchW = new Cartesian3();
 
 /**
  * Computes the intersection points of a ray with an ellipsoid.
@@ -428,14 +428,18 @@ IntersectionTests.rayEllipsoid = function (ray, ellipsoid) {
   }
   //>>includeEnd('debug');
 
-  var inverseRadii = ellipsoid.oneOverRadii;
-  var q = Cartesian3.multiplyComponents(inverseRadii, ray.origin, scratchQ);
-  var w = Cartesian3.multiplyComponents(inverseRadii, ray.direction, scratchW);
+  const inverseRadii = ellipsoid.oneOverRadii;
+  const q = Cartesian3.multiplyComponents(inverseRadii, ray.origin, scratchQ);
+  const w = Cartesian3.multiplyComponents(
+    inverseRadii,
+    ray.direction,
+    scratchW
+  );
 
-  var q2 = Cartesian3.magnitudeSquared(q);
-  var qw = Cartesian3.dot(q, w);
+  const q2 = Cartesian3.magnitudeSquared(q);
+  const qw = Cartesian3.dot(q, w);
 
-  var difference, w2, product, discriminant, temp;
+  let difference, w2, product, discriminant, temp;
 
   if (q2 > 1.0) {
     // Outside ellipsoid.
@@ -445,7 +449,7 @@ IntersectionTests.rayEllipsoid = function (ray, ellipsoid) {
     }
 
     // qw < 0.0.
-    var qw2 = qw * qw;
+    const qw2 = qw * qw;
     difference = q2 - 1.0; // Positively valued.
     w2 = Cartesian3.magnitudeSquared(w);
     product = w2 * difference;
@@ -457,8 +461,8 @@ IntersectionTests.rayEllipsoid = function (ray, ellipsoid) {
       // Distinct roots (2 intersections).
       discriminant = qw * qw - product;
       temp = -qw + Math.sqrt(discriminant); // Avoid cancellation.
-      var root0 = temp / w2;
-      var root1 = difference / temp;
+      const root0 = temp / w2;
+      const root1 = difference / temp;
       if (root0 < root1) {
         return new Interval(root0, root1);
       }
@@ -469,7 +473,7 @@ IntersectionTests.rayEllipsoid = function (ray, ellipsoid) {
       };
     }
     // qw2 == product.  Repeated roots (2 intersections).
-    var root = Math.sqrt(difference / w2);
+    const root = Math.sqrt(difference / w2);
     return new Interval(root, root);
   } else if (q2 < 1.0) {
     // Inside ellipsoid (2 intersections).
@@ -493,7 +497,7 @@ IntersectionTests.rayEllipsoid = function (ray, ellipsoid) {
 };
 
 function addWithCancellationCheck(left, right, tolerance) {
-  var difference = left + right;
+  const difference = left + right;
   if (
     CesiumMath.sign(left) !== CesiumMath.sign(right) &&
     Math.abs(difference / Math.max(Math.abs(left), Math.abs(right))) < tolerance
@@ -505,11 +509,11 @@ function addWithCancellationCheck(left, right, tolerance) {
 }
 
 function quadraticVectorExpression(A, b, c, x, w) {
-  var xSquared = x * x;
-  var wSquared = w * w;
+  const xSquared = x * x;
+  const wSquared = w * w;
 
-  var l2 = (A[Matrix3.COLUMN1ROW1] - A[Matrix3.COLUMN2ROW2]) * wSquared;
-  var l1 =
+  const l2 = (A[Matrix3.COLUMN1ROW1] - A[Matrix3.COLUMN2ROW2]) * wSquared;
+  const l1 =
     w *
     (x *
       addWithCancellationCheck(
@@ -518,41 +522,41 @@ function quadraticVectorExpression(A, b, c, x, w) {
         CesiumMath.EPSILON15
       ) +
       b.y);
-  var l0 =
+  const l0 =
     A[Matrix3.COLUMN0ROW0] * xSquared +
     A[Matrix3.COLUMN2ROW2] * wSquared +
     x * b.x +
     c;
 
-  var r1 =
+  const r1 =
     wSquared *
     addWithCancellationCheck(
       A[Matrix3.COLUMN2ROW1],
       A[Matrix3.COLUMN1ROW2],
       CesiumMath.EPSILON15
     );
-  var r0 =
+  const r0 =
     w *
     (x *
       addWithCancellationCheck(A[Matrix3.COLUMN2ROW0], A[Matrix3.COLUMN0ROW2]) +
       b.z);
 
-  var cosines;
-  var solutions = [];
+  let cosines;
+  const solutions = [];
   if (r0 === 0.0 && r1 === 0.0) {
     cosines = QuadraticRealPolynomial.computeRealRoots(l2, l1, l0);
     if (cosines.length === 0) {
       return solutions;
     }
 
-    var cosine0 = cosines[0];
-    var sine0 = Math.sqrt(Math.max(1.0 - cosine0 * cosine0, 0.0));
+    const cosine0 = cosines[0];
+    const sine0 = Math.sqrt(Math.max(1.0 - cosine0 * cosine0, 0.0));
     solutions.push(new Cartesian3(x, w * cosine0, w * -sine0));
     solutions.push(new Cartesian3(x, w * cosine0, w * sine0));
 
     if (cosines.length === 2) {
-      var cosine1 = cosines[1];
-      var sine1 = Math.sqrt(Math.max(1.0 - cosine1 * cosine1, 0.0));
+      const cosine1 = cosines[1];
+      const sine1 = Math.sqrt(Math.max(1.0 - cosine1 * cosine1, 0.0));
       solutions.push(new Cartesian3(x, w * cosine1, w * -sine1));
       solutions.push(new Cartesian3(x, w * cosine1, w * sine1));
     }
@@ -560,35 +564,35 @@ function quadraticVectorExpression(A, b, c, x, w) {
     return solutions;
   }
 
-  var r0Squared = r0 * r0;
-  var r1Squared = r1 * r1;
-  var l2Squared = l2 * l2;
-  var r0r1 = r0 * r1;
+  const r0Squared = r0 * r0;
+  const r1Squared = r1 * r1;
+  const l2Squared = l2 * l2;
+  const r0r1 = r0 * r1;
 
-  var c4 = l2Squared + r1Squared;
-  var c3 = 2.0 * (l1 * l2 + r0r1);
-  var c2 = 2.0 * l0 * l2 + l1 * l1 - r1Squared + r0Squared;
-  var c1 = 2.0 * (l0 * l1 - r0r1);
-  var c0 = l0 * l0 - r0Squared;
+  const c4 = l2Squared + r1Squared;
+  const c3 = 2.0 * (l1 * l2 + r0r1);
+  const c2 = 2.0 * l0 * l2 + l1 * l1 - r1Squared + r0Squared;
+  const c1 = 2.0 * (l0 * l1 - r0r1);
+  const c0 = l0 * l0 - r0Squared;
 
   if (c4 === 0.0 && c3 === 0.0 && c2 === 0.0 && c1 === 0.0) {
     return solutions;
   }
 
   cosines = QuarticRealPolynomial.computeRealRoots(c4, c3, c2, c1, c0);
-  var length = cosines.length;
+  const length = cosines.length;
   if (length === 0) {
     return solutions;
   }
 
-  for (var i = 0; i < length; ++i) {
-    var cosine = cosines[i];
-    var cosineSquared = cosine * cosine;
-    var sineSquared = Math.max(1.0 - cosineSquared, 0.0);
-    var sine = Math.sqrt(sineSquared);
+  for (let i = 0; i < length; ++i) {
+    const cosine = cosines[i];
+    const cosineSquared = cosine * cosine;
+    const sineSquared = Math.max(1.0 - cosineSquared, 0.0);
+    const sine = Math.sqrt(sineSquared);
 
-    //var left = l2 * cosineSquared + l1 * cosine + l0;
-    var left;
+    //const left = l2 * cosineSquared + l1 * cosine + l0;
+    let left;
     if (CesiumMath.sign(l2) === CesiumMath.sign(l0)) {
       left = addWithCancellationCheck(
         l2 * cosineSquared + l0,
@@ -609,8 +613,12 @@ function quadraticVectorExpression(A, b, c, x, w) {
       );
     }
 
-    var right = addWithCancellationCheck(r1 * cosine, r0, CesiumMath.EPSILON15);
-    var product = left * right;
+    const right = addWithCancellationCheck(
+      r1 * cosine,
+      r0,
+      CesiumMath.EPSILON15
+    );
+    const product = left * right;
 
     if (product < 0.0) {
       solutions.push(new Cartesian3(x, w * cosine, w * sine));
@@ -628,21 +636,21 @@ function quadraticVectorExpression(A, b, c, x, w) {
   return solutions;
 }
 
-var firstAxisScratch = new Cartesian3();
-var secondAxisScratch = new Cartesian3();
-var thirdAxisScratch = new Cartesian3();
-var referenceScratch = new Cartesian3();
-var bCart = new Cartesian3();
-var bScratch = new Matrix3();
-var btScratch = new Matrix3();
-var diScratch = new Matrix3();
-var dScratch = new Matrix3();
-var cScratch = new Matrix3();
-var tempMatrix = new Matrix3();
-var aScratch = new Matrix3();
-var sScratch = new Cartesian3();
-var closestScratch = new Cartesian3();
-var surfPointScratch = new Cartographic();
+const firstAxisScratch = new Cartesian3();
+const secondAxisScratch = new Cartesian3();
+const thirdAxisScratch = new Cartesian3();
+const referenceScratch = new Cartesian3();
+const bCart = new Cartesian3();
+const bScratch = new Matrix3();
+const btScratch = new Matrix3();
+const diScratch = new Matrix3();
+const dScratch = new Matrix3();
+const cScratch = new Matrix3();
+const tempMatrix = new Matrix3();
+const aScratch = new Matrix3();
+const sScratch = new Cartesian3();
+const closestScratch = new Cartesian3();
+const surfPointScratch = new Cartographic();
 
 /**
  * Provides the point along the ray which is nearest to the ellipsoid.
@@ -661,34 +669,37 @@ IntersectionTests.grazingAltitudeLocation = function (ray, ellipsoid) {
   }
   //>>includeEnd('debug');
 
-  var position = ray.origin;
-  var direction = ray.direction;
+  const position = ray.origin;
+  const direction = ray.direction;
 
   if (!Cartesian3.equals(position, Cartesian3.ZERO)) {
-    var normal = ellipsoid.geodeticSurfaceNormal(position, firstAxisScratch);
+    const normal = ellipsoid.geodeticSurfaceNormal(position, firstAxisScratch);
     if (Cartesian3.dot(direction, normal) >= 0.0) {
       // The location provided is the closest point in altitude
       return position;
     }
   }
 
-  var intersects = defined(this.rayEllipsoid(ray, ellipsoid));
+  const intersects = defined(this.rayEllipsoid(ray, ellipsoid));
 
   // Compute the scaled direction vector.
-  var f = ellipsoid.transformPositionToScaledSpace(direction, firstAxisScratch);
+  const f = ellipsoid.transformPositionToScaledSpace(
+    direction,
+    firstAxisScratch
+  );
 
   // Constructs a basis from the unit scaled direction vector. Construct its rotation and transpose.
-  var firstAxis = Cartesian3.normalize(f, f);
-  var reference = Cartesian3.mostOrthogonalAxis(f, referenceScratch);
-  var secondAxis = Cartesian3.normalize(
+  const firstAxis = Cartesian3.normalize(f, f);
+  const reference = Cartesian3.mostOrthogonalAxis(f, referenceScratch);
+  const secondAxis = Cartesian3.normalize(
     Cartesian3.cross(reference, firstAxis, secondAxisScratch),
     secondAxisScratch
   );
-  var thirdAxis = Cartesian3.normalize(
+  const thirdAxis = Cartesian3.normalize(
     Cartesian3.cross(firstAxis, secondAxis, thirdAxisScratch),
     thirdAxisScratch
   );
-  var B = bScratch;
+  const B = bScratch;
   B[0] = firstAxis.x;
   B[1] = firstAxis.y;
   B[2] = firstAxis.z;
@@ -699,13 +710,13 @@ IntersectionTests.grazingAltitudeLocation = function (ray, ellipsoid) {
   B[7] = thirdAxis.y;
   B[8] = thirdAxis.z;
 
-  var B_T = Matrix3.transpose(B, btScratch);
+  const B_T = Matrix3.transpose(B, btScratch);
 
   // Get the scaling matrix and its inverse.
-  var D_I = Matrix3.fromScale(ellipsoid.radii, diScratch);
-  var D = Matrix3.fromScale(ellipsoid.oneOverRadii, dScratch);
+  const D_I = Matrix3.fromScale(ellipsoid.radii, diScratch);
+  const D = Matrix3.fromScale(ellipsoid.oneOverRadii, dScratch);
 
-  var C = cScratch;
+  const C = cScratch;
   C[0] = 0.0;
   C[1] = -direction.z;
   C[2] = direction.y;
@@ -716,16 +727,20 @@ IntersectionTests.grazingAltitudeLocation = function (ray, ellipsoid) {
   C[7] = direction.x;
   C[8] = 0.0;
 
-  var temp = Matrix3.multiply(
+  const temp = Matrix3.multiply(
     Matrix3.multiply(B_T, D, tempMatrix),
     C,
     tempMatrix
   );
-  var A = Matrix3.multiply(Matrix3.multiply(temp, D_I, aScratch), B, aScratch);
-  var b = Matrix3.multiplyByVector(temp, position, bCart);
+  const A = Matrix3.multiply(
+    Matrix3.multiply(temp, D_I, aScratch),
+    B,
+    aScratch
+  );
+  const b = Matrix3.multiplyByVector(temp, position, bCart);
 
   // Solve for the solutions to the expression in standard form:
-  var solutions = quadraticVectorExpression(
+  const solutions = quadraticVectorExpression(
     A,
     Cartesian3.negate(b, firstAxisScratch),
     0.0,
@@ -733,24 +748,24 @@ IntersectionTests.grazingAltitudeLocation = function (ray, ellipsoid) {
     1.0
   );
 
-  var s;
-  var altitude;
-  var length = solutions.length;
+  let s;
+  let altitude;
+  const length = solutions.length;
   if (length > 0) {
-    var closest = Cartesian3.clone(Cartesian3.ZERO, closestScratch);
-    var maximumValue = Number.NEGATIVE_INFINITY;
+    let closest = Cartesian3.clone(Cartesian3.ZERO, closestScratch);
+    let maximumValue = Number.NEGATIVE_INFINITY;
 
-    for (var i = 0; i < length; ++i) {
+    for (let i = 0; i < length; ++i) {
       s = Matrix3.multiplyByVector(
         D_I,
         Matrix3.multiplyByVector(B, solutions[i], sScratch),
         sScratch
       );
-      var v = Cartesian3.normalize(
+      const v = Cartesian3.normalize(
         Cartesian3.subtract(s, position, referenceScratch),
         referenceScratch
       );
-      var dotProduct = Cartesian3.dot(v, direction);
+      const dotProduct = Cartesian3.dot(v, direction);
 
       if (dotProduct > maximumValue) {
         maximumValue = dotProduct;
@@ -758,7 +773,7 @@ IntersectionTests.grazingAltitudeLocation = function (ray, ellipsoid) {
       }
     }
 
-    var surfacePoint = ellipsoid.cartesianToCartographic(
+    const surfacePoint = ellipsoid.cartesianToCartographic(
       closest,
       surfPointScratch
     );
@@ -775,7 +790,7 @@ IntersectionTests.grazingAltitudeLocation = function (ray, ellipsoid) {
   return undefined;
 };
 
-var lineSegmentPlaneDifference = new Cartesian3();
+const lineSegmentPlaneDifference = new Cartesian3();
 
 /**
  * Computes the intersection of a line segment and a plane.
@@ -787,15 +802,15 @@ var lineSegmentPlaneDifference = new Cartesian3();
  * @returns {Cartesian3} The intersection point or undefined if there is no intersection.
  *
  * @example
- * var origin = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
- * var normal = ellipsoid.geodeticSurfaceNormal(origin);
- * var plane = Cesium.Plane.fromPointNormal(origin, normal);
+ * const origin = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+ * const normal = ellipsoid.geodeticSurfaceNormal(origin);
+ * const plane = Cesium.Plane.fromPointNormal(origin, normal);
  *
- * var p0 = new Cesium.Cartesian3(...);
- * var p1 = new Cesium.Cartesian3(...);
+ * const p0 = new Cesium.Cartesian3(...);
+ * const p1 = new Cesium.Cartesian3(...);
  *
  * // find the intersection of the line segment from p0 to p1 and the tangent plane at origin.
- * var intersection = Cesium.IntersectionTests.lineSegmentPlane(p0, p1, plane);
+ * const intersection = Cesium.IntersectionTests.lineSegmentPlane(p0, p1, plane);
  */
 IntersectionTests.lineSegmentPlane = function (
   endPoint0,
@@ -819,21 +834,21 @@ IntersectionTests.lineSegmentPlane = function (
     result = new Cartesian3();
   }
 
-  var difference = Cartesian3.subtract(
+  const difference = Cartesian3.subtract(
     endPoint1,
     endPoint0,
     lineSegmentPlaneDifference
   );
-  var normal = plane.normal;
-  var nDotDiff = Cartesian3.dot(normal, difference);
+  const normal = plane.normal;
+  const nDotDiff = Cartesian3.dot(normal, difference);
 
   // check if the segment and plane are parallel
   if (Math.abs(nDotDiff) < CesiumMath.EPSILON6) {
     return undefined;
   }
 
-  var nDotP0 = Cartesian3.dot(normal, endPoint0);
-  var t = -(plane.distance + nDotP0) / nDotDiff;
+  const nDotP0 = Cartesian3.dot(normal, endPoint0);
+  const t = -(plane.distance + nDotP0) / nDotDiff;
 
   // intersection only if t is in [0, 1]
   if (t < 0.0 || t > 1.0) {
@@ -856,16 +871,16 @@ IntersectionTests.lineSegmentPlane = function (
  * @returns {Object} An object with properties <code>positions</code> and <code>indices</code>, which are arrays that represent three triangles that do not cross the plane. (Undefined if no intersection exists)
  *
  * @example
- * var origin = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
- * var normal = ellipsoid.geodeticSurfaceNormal(origin);
- * var plane = Cesium.Plane.fromPointNormal(origin, normal);
+ * const origin = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+ * const normal = ellipsoid.geodeticSurfaceNormal(origin);
+ * const plane = Cesium.Plane.fromPointNormal(origin, normal);
  *
- * var p0 = new Cesium.Cartesian3(...);
- * var p1 = new Cesium.Cartesian3(...);
- * var p2 = new Cesium.Cartesian3(...);
+ * const p0 = new Cesium.Cartesian3(...);
+ * const p1 = new Cesium.Cartesian3(...);
+ * const p2 = new Cesium.Cartesian3(...);
  *
  * // convert the triangle composed of points (p0, p1, p2) to three triangles that don't cross the plane
- * var triangles = Cesium.IntersectionTests.trianglePlaneIntersection(p0, p1, p2, plane);
+ * const triangles = Cesium.IntersectionTests.trianglePlaneIntersection(p0, p1, p2, plane);
  */
 IntersectionTests.trianglePlaneIntersection = function (p0, p1, p2, plane) {
   //>>includeStart('debug', pragmas.debug);
@@ -874,20 +889,20 @@ IntersectionTests.trianglePlaneIntersection = function (p0, p1, p2, plane) {
   }
   //>>includeEnd('debug');
 
-  var planeNormal = plane.normal;
-  var planeD = plane.distance;
-  var p0Behind = Cartesian3.dot(planeNormal, p0) + planeD < 0.0;
-  var p1Behind = Cartesian3.dot(planeNormal, p1) + planeD < 0.0;
-  var p2Behind = Cartesian3.dot(planeNormal, p2) + planeD < 0.0;
+  const planeNormal = plane.normal;
+  const planeD = plane.distance;
+  const p0Behind = Cartesian3.dot(planeNormal, p0) + planeD < 0.0;
+  const p1Behind = Cartesian3.dot(planeNormal, p1) + planeD < 0.0;
+  const p2Behind = Cartesian3.dot(planeNormal, p2) + planeD < 0.0;
   // Given these dots products, the calls to lineSegmentPlaneIntersection
   // always have defined results.
 
-  var numBehind = 0;
+  let numBehind = 0;
   numBehind += p0Behind ? 1 : 0;
   numBehind += p1Behind ? 1 : 0;
   numBehind += p2Behind ? 1 : 0;
 
-  var u1, u2;
+  let u1, u2;
   if (numBehind === 1 || numBehind === 2) {
     u1 = new Cartesian3();
     u2 = new Cartesian3();

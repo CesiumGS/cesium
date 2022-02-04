@@ -85,8 +85,8 @@ Property.arrayEquals = function (left, right) {
   if (!defined(left) || !defined(right) || left.length !== right.length) {
     return false;
   }
-  var length = left.length;
-  for (var i = 0; i < length; i++) {
+  const length = left.length;
+  for (let i = 0; i < length; i++) {
     if (!Property.equals(left[i], right[i])) {
       return false;
     }
@@ -126,7 +126,7 @@ Property.getValueOrClonedDefault = function (
   valueDefault,
   result
 ) {
-  var value;
+  let value;
   if (defined(property)) {
     value = property.getValue(time, result);
   }

@@ -44,29 +44,28 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        Cesium.ExperimentalFeatures.enableModelExperimental = true;
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {});
+        const viewer = new Cesium.Viewer("cesiumContainer", {});
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
           "2021-11-09T07:27:37.016064475348684937Z"
         );
-        var scene = viewer.scene;
+        const scene = viewer.scene;
         scene.light.intensity = 7.0;
 
         // 3D Tiles Next converted from CDB of Aden, Yemen (CDB provided by Presagis)
-        var terrainTileset = viewer.scene.primitives.add(
+        const terrainTileset = viewer.scene.primitives.add(
           new Cesium.Cesium3DTileset({
             url: Cesium.IonResource.fromAssetId(667809),
           })
         );
-        var buildingsTileset = viewer.scene.primitives.add(
+        const buildingsTileset = viewer.scene.primitives.add(
           new Cesium.Cesium3DTileset({
             url: Cesium.IonResource.fromAssetId(666747),
             maximumScreenSpaceError: 12,
           })
         );
 
-        var cameraTransforms = {
+        const cameraTransforms = {
           tileset: {
             destination: new Cesium.Cartesian3(
               4397999.822774582,
@@ -151,17 +150,21 @@
         }
 
         buildingsTileset.readyPromise.then(function (tileset) {
-          var center = Cesium.Cartesian3.fromDegrees(45.04192, 12.753525, 2000);
-          var heading = Cesium.Math.toRadians(50.0);
-          var pitch = Cesium.Math.toRadians(-20.0);
-          var range = 5000.0;
+          const center = Cesium.Cartesian3.fromDegrees(
+            45.04192,
+            12.753525,
+            2000
+          );
+          const heading = Cesium.Math.toRadians(50.0);
+          const pitch = Cesium.Math.toRadians(-20.0);
+          const range = 5000.0;
 
           flyCameraTo(cameraTransforms.tileset);
         });
 
         // --- Style ---
 
-        var buildingStyle = new Cesium.Cesium3DTileStyle({
+        const buildingStyle = new Cesium.Cesium3DTileStyle({
           color: {
             conditions: [
               ["${HGT} !== undefined && ${HGT} < 5", "color('#f5fd2d')"],
@@ -183,7 +186,7 @@
           },
         });
 
-        var terrainStyle = new Cesium.Cesium3DTileStyle({
+        const terrainStyle = new Cesium.Cesium3DTileStyle({
           color: {
             conditions: [
               ["${name} === 'OCEAN'", "color('#436d9d')"],
@@ -205,10 +208,10 @@
 
         // --- Picking ---
 
-        var enablePicking = true;
-        var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+        let enablePicking = true;
+        const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
 
-        var metadataOverlay = document.createElement("div");
+        const metadataOverlay = document.createElement("div");
         viewer.container.appendChild(metadataOverlay);
         metadataOverlay.className = "backdrop";
         metadataOverlay.style.display = "none";
@@ -222,17 +225,17 @@
         metadataOverlay.style.fontSize = "16px";
         metadataOverlay.style.borderRadius = "4px";
 
-        var tableHtmlScratch;
-        var materialsScratch;
-        var weightsScratch;
-        var i;
+        let tableHtmlScratch;
+        let materialsScratch;
+        let weightsScratch;
+        let i;
 
-        var highlighted = {
+        const highlighted = {
           feature: undefined,
           originalColor: new Cesium.Color(),
         };
 
-        var selected = {
+        const selected = {
           feature: undefined,
           originalColor: new Cesium.Color(),
         };
@@ -245,23 +248,24 @@
               highlighted.feature = undefined;
             }
 
-            var feature = scene.pick(movement.endPosition);
-            var featurePicked = feature instanceof Cesium.Cesium3DTileFeature;
+            const feature = scene.pick(movement.endPosition);
+            const featurePicked = feature instanceof Cesium.Cesium3DTileFeature;
 
-            var isTerrainFeature =
+            const isTerrainFeature =
               featurePicked && feature.hasProperty("substrates");
-            var isBuildingFeature = featurePicked && feature.hasProperty("HGT");
+            const isBuildingFeature =
+              featurePicked && feature.hasProperty("HGT");
 
             if (isTerrainFeature) {
               metadataOverlay.style.display = "block";
-              metadataOverlay.style.bottom =
-                viewer.canvas.clientHeight - movement.endPosition.y + "px";
-              metadataOverlay.style.left = movement.endPosition.x + "px";
+              metadataOverlay.style.bottom = `${
+                viewer.canvas.clientHeight - movement.endPosition.y
+              }px`;
+              metadataOverlay.style.left = `${movement.endPosition.x}px`;
 
-              tableHtmlScratch =
-                "<table><thead><tr><td>Material:</td><th><tt>" +
-                feature.getProperty("name") +
-                "</tt></tr></thead><tbody>";
+              tableHtmlScratch = `<table><thead><tr><td>Material:</td><th><tt>${feature.getProperty(
+                "name"
+              )}</tt></tr></thead><tbody>`;
 
               materialsScratch = feature.getProperty("substrates");
               weightsScratch = feature.getProperty("weights");
@@ -269,12 +273,11 @@
                 "<tr><td colspan='2' style='text-align: center;'><b>Substrates</b></td></tr>";
 
               for (i = 0; i < materialsScratch.length; i++) {
-                tableHtmlScratch +=
-                  "<tr><td><tt>" +
-                  materialsScratch[i].slice(3) +
-                  "</tt></td><td style='text-align: right;'><tt>" +
-                  weightsScratch[i] +
-                  "%</tt></td></tr>";
+                tableHtmlScratch += `<tr><td><tt>${materialsScratch[i].slice(
+                  3
+                )}</tt></td><td style='text-align: right;'><tt>${
+                  weightsScratch[i]
+                }%</tt></td></tr>`;
               }
               tableHtmlScratch += "</tbody></table>";
               metadataOverlay.innerHTML = tableHtmlScratch;
@@ -300,9 +303,9 @@
             selected.feature = undefined;
           }
 
-          var feature = scene.pick(movement.position);
-          var featurePicked = feature instanceof Cesium.Cesium3DTileFeature;
-          var isBuildingFeature = featurePicked && feature.hasProperty("HGT");
+          const feature = scene.pick(movement.position);
+          const featurePicked = feature instanceof Cesium.Cesium3DTileFeature;
+          const isBuildingFeature = featurePicked && feature.hasProperty("HGT");
 
           if (isBuildingFeature) {
             // Select the feature if it's not already selected
@@ -325,12 +328,13 @@
 
             tableHtmlScratch = "<table class='cesium-infoBox-defaultTable'>";
             tableHtmlScratch +=
-              "<tr><th colspan=2>Property Name</th><th>ID</th><th>Type</th><th>Value</th></tr><tbody>";
-            var metadataClass = feature.content.batchTable._propertyTable.class;
-            var propertyNames = feature.getPropertyNames();
-            var length = propertyNames.length;
-            for (var i = 0; i < length; ++i) {
-              var propertyName = propertyNames[i];
+              "<tr><th>Property Name</th><th>ID</th><th>Type</th><th>Value</th></tr><tbody>";
+            const metadataClass =
+              feature.content.batchTable._propertyTable.class;
+            const propertyNames = feature.getPropertyNames();
+            const length = propertyNames.length;
+            for (let i = 0; i < length; ++i) {
+              const propertyName = propertyNames[i];
 
               // Skip these properties, since they are always empty.
               if (
@@ -341,30 +345,28 @@
                 continue;
               }
 
-              var propertyValue = feature.getProperty(propertyName);
-              var property = metadataClass.properties[propertyName];
+              const propertyValue = feature.getProperty(propertyName);
+              const property = metadataClass.properties[propertyName];
 
-              tableHtmlScratch +=
-                "<tr style='font-family: monospace'><th style='min-width:200px'><a href='' style='text-decoration:none'>" +
-                property.name +
-                "</a></th><th><a href='' title='" +
-                property.description +
-                "' style='text-decoration:none'>ℹ️</a></th><th><b>" +
-                property.id +
-                "</b></th><td>" +
-                property.componentType +
-                "</td><td>" +
-                propertyValue +
-                "</td></tr>";
+              tableHtmlScratch += `<tr style='font-family: monospace;' title='${property.description}'><th>${property.name}</th><th><b>${property.id}</b></th><td>${property.componentType}</td><td>${propertyValue}</td></tr>`;
             }
-            tableHtmlScratch += "</tbody></table>";
+            tableHtmlScratch +=
+              "<tr><th colspan='4'><i style='font-size:10px'>Hover on a row for description</i></th></tr></tbody></table>";
             viewer.selectedEntity.description = tableHtmlScratch;
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
+        // Hide the terrain metadata overlay when the mouse is over the info box, to prevent overlaps.
+        const infoBoxContainer = document
+          .getElementsByClassName("cesium-viewer-infoBoxContainer")
+          .item(0);
+        infoBoxContainer.onmouseover = function (e) {
+          metadataOverlay.style.display = "none";
+        };
+
         // --- UI ---
 
-        var locations = [
+        const locations = [
           {
             text: "Overview",
             onselect: function () {
@@ -402,7 +404,7 @@
           }
         }
 
-        var modes = [
+        const modes = [
           {
             text: "No style",
             onselect: function () {

@@ -1,6 +1,7 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Matrix3 from "../Core/Matrix3.js";
+import Matrix4 from "../Core/Matrix4.js";
 import AlphaMode from "./AlphaMode.js";
 
 /**
@@ -10,7 +11,7 @@ import AlphaMode from "./AlphaMode.js";
  *
  * @private
  */
-var ModelComponents = {};
+const ModelComponents = {};
 
 /**
  * Information about the quantized attribute.
@@ -68,7 +69,7 @@ function Quantization() {
 
   /**
    * The step size of the quantization volume, equal to
-   * quantizedVolumeDimensions / quantizedVolumeOffset (component-wise).
+   * quantizedVolumeDimensions / normalizationRange (component-wise).
    * Not applicable for oct encoded attributes.
    * The type should match the attribute type - e.g. if the attribute type
    * is AttributeType.VEC4 the dimensions should be a Cartesian4.
@@ -246,15 +247,23 @@ function Attribute() {
    * @type {Uint8Array|Int8Array|Uint16Array|Int16Array|Uint32Array|Int32Array|Float32Array}
    * @private
    */
-  this.typedArray = undefined;
+  this.packedTypedArray = undefined;
 
   /**
-   * A vertex buffer containing attribute values. Attribute values are accessed using byteOffset and byteStride.
+   * A vertex buffer. Attribute values are accessed using byteOffset and byteStride.
    *
    * @type {Buffer}
    * @private
    */
   this.buffer = undefined;
+
+  /**
+   * A typed array containing vertex buffer data. Attribute values are accessed using byteOffset and byteStride.
+   *
+   * @type {Uint8Array}
+   * @private
+   */
+  this.typedArray = undefined;
 
   /**
    * The byte offset of elements in the buffer.
@@ -306,11 +315,19 @@ function Indices() {
    * @private
    */
   this.buffer = undefined;
+
+  /**
+   * A typed array containing indices.
+   *
+   * @type {Uint8Array|Uint16Array|Uint32Array}
+   * @private
+   */
+  this.typedArray = undefined;
 }
 
 /**
- * Maps per-vertex or per-instance feature IDs to a feature table. Feature IDs
- * may be stored in an attribute or implicitly defined by a constant and stride.
+ * Maps per-vertex or per-instance feature IDs to a feature table. Feature
+ * IDs are stored in an accessor.
  *
  * @alias ModelComponents.FeatureIdAttribute
  * @constructor
@@ -335,6 +352,27 @@ function FeatureIdAttribute() {
    * @private
    */
   this.setIndex = undefined;
+}
+
+/**
+ * Defines a range of implicitly-defined feature IDs, one for each vertex or
+ * instance. Such feature IDs may optionally be associated with a property table
+ * storing metadata
+ *
+ * @alias ModelComponents.FeatureIdImplicitRange
+ * @constructor
+ *
+ * @private
+ */
+function FeatureIdImplicitRange() {
+  /**
+   * The ID of the feature table that feature IDs index into. If undefined,
+   * feature IDs are used for classification, but no metadata is associated.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.propertyTableId = undefined;
 
   /**
    * The first feature ID to use when setIndex is undefined
@@ -456,29 +494,22 @@ function Primitive() {
   this.primitiveType = undefined;
 
   /**
-   * The feature ID attributes.
+   * The feature IDs associated with this primitive. Feature ID types may
+   * be interleaved
    *
-   * @type {ModelComponents.FeatureIdAttribute[]}
+   * @type {Array.<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange|ModelComponents.FeatureIdTexture>}
    * @private
    */
-  this.featureIdAttributes = [];
+  this.featureIds = [];
 
   /**
-   * The feature ID textures.
-   *
-   * @type {ModelComponents.FeatureIdTexture[]}
-   * @private
-   */
-  this.featureIdTextures = [];
-
-  /**
-   * The feature texture IDs. These indices correspond to the array of
-   * feature textures.
+   * The property texture IDs. These indices correspond to the array of
+   * property textures.
    *
    * @type {Number[]}
    * @private
    */
-  this.featureTextureIds = [];
+  this.propertyTextureIds = [];
 }
 
 /**
@@ -499,12 +530,23 @@ function Instances() {
   this.attributes = [];
 
   /**
-   * The feature ID attributes.
+   * The feature ID attributes associated with this set of instances.
+   * Feature ID attribute types may be interleaved.
    *
-   * @type {ModelComponents.FeatureIdAttribute[]}
+   * @type {Array.<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange>}
    * @private
    */
-  this.featureIdAttributes = [];
+  this.featureIds = [];
+
+  /**
+   * Whether the instancing transforms are applied in world space. For glTF models that
+   * use EXT_mesh_gpu_instancing, the transform is applied in object space. For i3dm files,
+   * the instance transform is in world space.
+   *
+   * @type {Boolean}
+   * @private
+   */
+  this.transformInWorldSpace = false;
 }
 
 /**
@@ -625,22 +667,6 @@ function Scene() {
    * @private
    */
   this.nodes = [];
-
-  /**
-   * The scene's up axis.
-   *
-   * @type {Axis}
-   * @private
-   */
-  this.upAxis = undefined;
-
-  /**
-   * The scene's forward axis.
-   *
-   * @type {Axis}
-   * @private
-   */
-  this.forwardAxis = undefined;
 }
 
 /**
@@ -674,6 +700,30 @@ function Components() {
    * @private
    */
   this.featureMetadata = undefined;
+
+  /**
+   * The model's up axis.
+   *
+   * @type {Axis}
+   * @private
+   */
+  this.upAxis = undefined;
+
+  /**
+   * The model's forward axis.
+   *
+   * @type {Axis}
+   * @private
+   */
+  this.forwardAxis = undefined;
+
+  /**
+   * A world-space transform to apply to the primitives.
+   *
+   * @type {Matrix4}
+   * @private
+   */
+  this.transform = Matrix4.clone(Matrix4.IDENTITY);
 }
 
 /**
@@ -965,6 +1015,7 @@ ModelComponents.Attribute = Attribute;
 ModelComponents.Indices = Indices;
 ModelComponents.FeatureIdAttribute = FeatureIdAttribute;
 ModelComponents.FeatureIdTexture = FeatureIdTexture;
+ModelComponents.FeatureIdImplicitRange = FeatureIdImplicitRange;
 ModelComponents.MorphTarget = MorphTarget;
 ModelComponents.Primitive = Primitive;
 ModelComponents.Instances = Instances;

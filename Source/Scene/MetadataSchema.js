@@ -6,7 +6,7 @@ import MetadataEnum from "./MetadataEnum.js";
 /**
  * A schema containing classes and enums.
  * <p>
- * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
  *
  * @param {Object} schema The schema JSON object.
@@ -21,9 +21,9 @@ function MetadataSchema(schema) {
   Check.typeOf.object("schema", schema);
   //>>includeEnd('debug');
 
-  var enums = {};
+  const enums = {};
   if (defined(schema.enums)) {
-    for (var enumId in schema.enums) {
+    for (const enumId in schema.enums) {
       if (schema.enums.hasOwnProperty(enumId)) {
         enums[enumId] = new MetadataEnum({
           id: enumId,
@@ -33,9 +33,9 @@ function MetadataSchema(schema) {
     }
   }
 
-  var classes = {};
+  const classes = {};
   if (defined(schema.classes)) {
-    for (var classId in schema.classes) {
+    for (const classId in schema.classes) {
       if (schema.classes.hasOwnProperty(classId)) {
         classes[classId] = new MetadataClass({
           id: classId,
@@ -48,6 +48,7 @@ function MetadataSchema(schema) {
 
   this._classes = classes;
   this._enums = enums;
+  this._id = schema.id;
   this._name = schema.name;
   this._description = schema.description;
   this._version = schema.version;
@@ -81,6 +82,20 @@ Object.defineProperties(MetadataSchema.prototype, {
   enums: {
     get: function () {
       return this._enums;
+    },
+  },
+
+  /**
+   * The ID of the schema.
+   *
+   * @memberof MetadataSchema.prototype
+   * @type {String}
+   * @readonly
+   * @private
+   */
+  id: {
+    get: function () {
+      return this._id;
     },
   },
 

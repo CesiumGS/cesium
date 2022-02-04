@@ -53,7 +53,7 @@ ResourceCache.get = function (cacheKey) {
   Check.typeOf.string("cacheKey", cacheKey);
   //>>includeEnd('debug');
 
-  var cacheEntry = ResourceCache.cacheEntries[cacheKey];
+  const cacheEntry = ResourceCache.cacheEntries[cacheKey];
   if (defined(cacheEntry)) {
     ++cacheEntry.referenceCount;
     return cacheEntry.resourceLoader;
@@ -72,20 +72,20 @@ ResourceCache.get = function (cacheKey) {
  */
 ResourceCache.load = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var resourceLoader = options.resourceLoader;
+  const resourceLoader = options.resourceLoader;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.resourceLoader", resourceLoader);
   //>>includeEnd('debug');
 
-  var cacheKey = resourceLoader.cacheKey;
+  const cacheKey = resourceLoader.cacheKey;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("options.resourceLoader.cacheKey", cacheKey);
 
   if (defined(ResourceCache.cacheEntries[cacheKey])) {
     throw new DeveloperError(
-      "Resource with this cacheKey is already in the cache: " + cacheKey
+      `Resource with this cacheKey is already in the cache: ${cacheKey}`
     );
   }
   //>>includeEnd('debug');
@@ -110,12 +110,12 @@ ResourceCache.unload = function (resourceLoader) {
   Check.typeOf.object("resourceLoader", resourceLoader);
   //>>includeEnd('debug');
 
-  var cacheKey = resourceLoader.cacheKey;
-  var cacheEntry = ResourceCache.cacheEntries[cacheKey];
+  const cacheKey = resourceLoader.cacheKey;
+  const cacheEntry = ResourceCache.cacheEntries[cacheKey];
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(cacheEntry)) {
-    throw new DeveloperError("Resource is not in the cache: " + cacheKey);
+    throw new DeveloperError(`Resource is not in the cache: ${cacheKey}`);
   }
   //>>includeEnd('debug');
 
@@ -141,8 +141,8 @@ ResourceCache.unload = function (resourceLoader) {
  */
 ResourceCache.loadSchema = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var schema = options.schema;
-  var resource = options.resource;
+  const schema = options.schema;
+  const resource = options.resource;
 
   //>>includeStart('debug', pragmas.debug);
   if (defined(schema) === defined(resource)) {
@@ -152,12 +152,12 @@ ResourceCache.loadSchema = function (options) {
   }
   //>>includeEnd('debug');
 
-  var cacheKey = ResourceCacheKey.getSchemaCacheKey({
+  const cacheKey = ResourceCacheKey.getSchemaCacheKey({
     schema: schema,
     resource: resource,
   });
 
-  var schemaLoader = ResourceCache.get(cacheKey);
+  let schemaLoader = ResourceCache.get(cacheKey);
   if (defined(schemaLoader)) {
     return schemaLoader;
   }
@@ -188,21 +188,21 @@ ResourceCache.loadSchema = function (options) {
  */
 ResourceCache.loadEmbeddedBuffer = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var parentResource = options.parentResource;
-  var bufferId = options.bufferId;
-  var typedArray = options.typedArray;
+  const parentResource = options.parentResource;
+  const bufferId = options.bufferId;
+  const typedArray = options.typedArray;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.parentResource", parentResource);
   Check.typeOf.number("options.bufferId", bufferId);
   //>>includeEnd('debug');
 
-  var cacheKey = ResourceCacheKey.getEmbeddedBufferCacheKey({
+  const cacheKey = ResourceCacheKey.getEmbeddedBufferCacheKey({
     parentResource: parentResource,
     bufferId: bufferId,
   });
 
-  var bufferLoader = ResourceCache.get(cacheKey);
+  let bufferLoader = ResourceCache.get(cacheKey);
   if (defined(bufferLoader)) {
     return bufferLoader;
   }
@@ -234,17 +234,17 @@ ResourceCache.loadEmbeddedBuffer = function (options) {
  */
 ResourceCache.loadExternalBuffer = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var resource = options.resource;
+  const resource = options.resource;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.resource", resource);
   //>>includeEnd('debug');
 
-  var cacheKey = ResourceCacheKey.getExternalBufferCacheKey({
+  const cacheKey = ResourceCacheKey.getExternalBufferCacheKey({
     resource: resource,
   });
 
-  var bufferLoader = ResourceCache.get(cacheKey);
+  let bufferLoader = ResourceCache.get(cacheKey);
   if (defined(bufferLoader)) {
     return bufferLoader;
   }
@@ -275,21 +275,21 @@ ResourceCache.loadExternalBuffer = function (options) {
  */
 ResourceCache.loadGltfJson = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var gltfResource = options.gltfResource;
-  var baseResource = options.baseResource;
-  var typedArray = options.typedArray;
-  var gltfJson = options.gltfJson;
+  const gltfResource = options.gltfResource;
+  const baseResource = options.baseResource;
+  const typedArray = options.typedArray;
+  const gltfJson = options.gltfJson;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
   //>>includeEnd('debug');
 
-  var cacheKey = ResourceCacheKey.getGltfCacheKey({
+  const cacheKey = ResourceCacheKey.getGltfCacheKey({
     gltfResource: gltfResource,
   });
 
-  var gltfJsonLoader = ResourceCache.get(cacheKey);
+  let gltfJsonLoader = ResourceCache.get(cacheKey);
   if (defined(gltfJsonLoader)) {
     return gltfJsonLoader;
   }
@@ -324,10 +324,10 @@ ResourceCache.loadGltfJson = function (options) {
  */
 ResourceCache.loadBufferView = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var gltf = options.gltf;
-  var bufferViewId = options.bufferViewId;
-  var gltfResource = options.gltfResource;
-  var baseResource = options.baseResource;
+  const gltf = options.gltf;
+  const bufferViewId = options.bufferViewId;
+  const gltfResource = options.gltfResource;
+  const baseResource = options.baseResource;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -336,14 +336,14 @@ ResourceCache.loadBufferView = function (options) {
   Check.typeOf.object("options.baseResource", baseResource);
   //>>includeEnd('debug');
 
-  var cacheKey = ResourceCacheKey.getBufferViewCacheKey({
+  const cacheKey = ResourceCacheKey.getBufferViewCacheKey({
     gltf: gltf,
     bufferViewId: bufferViewId,
     gltfResource: gltfResource,
     baseResource: baseResource,
   });
 
-  var bufferViewLoader = ResourceCache.get(cacheKey);
+  let bufferViewLoader = ResourceCache.get(cacheKey);
   if (defined(bufferViewLoader)) {
     return bufferViewLoader;
   }
@@ -378,10 +378,10 @@ ResourceCache.loadBufferView = function (options) {
  */
 ResourceCache.loadDraco = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var gltf = options.gltf;
-  var draco = options.draco;
-  var gltfResource = options.gltfResource;
-  var baseResource = options.baseResource;
+  const gltf = options.gltf;
+  const draco = options.draco;
+  const gltfResource = options.gltfResource;
+  const baseResource = options.baseResource;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -390,14 +390,14 @@ ResourceCache.loadDraco = function (options) {
   Check.typeOf.object("options.baseResource", baseResource);
   //>>includeEnd('debug');
 
-  var cacheKey = ResourceCacheKey.getDracoCacheKey({
+  const cacheKey = ResourceCacheKey.getDracoCacheKey({
     gltf: gltf,
     draco: draco,
     gltfResource: gltfResource,
     baseResource: baseResource,
   });
 
-  var dracoLoader = ResourceCache.get(cacheKey);
+  let dracoLoader = ResourceCache.get(cacheKey);
   if (defined(dracoLoader)) {
     return dracoLoader;
   }
@@ -431,6 +431,7 @@ ResourceCache.loadDraco = function (options) {
  * @param {Number} [options.accessorId] The accessor ID.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {Boolean} [dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
+ * @param {Boolean} [loadAsTypedArray=false] Load vertex buffer as a typed array instead of a GPU vertex buffer.
  *
  * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
  * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
@@ -441,25 +442,26 @@ ResourceCache.loadDraco = function (options) {
  */
 ResourceCache.loadVertexBuffer = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var gltf = options.gltf;
-  var gltfResource = options.gltfResource;
-  var baseResource = options.baseResource;
-  var bufferViewId = options.bufferViewId;
-  var draco = options.draco;
-  var attributeSemantic = options.attributeSemantic;
-  var accessorId = options.accessorId;
-  var asynchronous = defaultValue(options.asynchronous, true);
-  var dequantize = defaultValue(options.dequantize, false);
+  const gltf = options.gltf;
+  const gltfResource = options.gltfResource;
+  const baseResource = options.baseResource;
+  const bufferViewId = options.bufferViewId;
+  const draco = options.draco;
+  const attributeSemantic = options.attributeSemantic;
+  const accessorId = options.accessorId;
+  const asynchronous = defaultValue(options.asynchronous, true);
+  const dequantize = defaultValue(options.dequantize, false);
+  const loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
 
-  var hasBufferViewId = defined(bufferViewId);
-  var hasDraco = defined(draco);
-  var hasAttributeSemantic = defined(attributeSemantic);
-  var hasAccessorId = defined(accessorId);
+  const hasBufferViewId = defined(bufferViewId);
+  const hasDraco = defined(draco);
+  const hasAttributeSemantic = defined(attributeSemantic);
+  const hasAccessorId = defined(accessorId);
 
   if (hasBufferViewId === hasDraco) {
     throw new DeveloperError(
@@ -486,16 +488,18 @@ ResourceCache.loadVertexBuffer = function (options) {
   }
   //>>includeEnd('debug');
 
-  var cacheKey = ResourceCacheKey.getVertexBufferCacheKey({
+  const cacheKey = ResourceCacheKey.getVertexBufferCacheKey({
     gltf: gltf,
     gltfResource: gltfResource,
     baseResource: baseResource,
     bufferViewId: bufferViewId,
     draco: draco,
     attributeSemantic: attributeSemantic,
+    dequantize: dequantize,
+    loadAsTypedArray: loadAsTypedArray,
   });
 
-  var vertexBufferLoader = ResourceCache.get(cacheKey);
+  let vertexBufferLoader = ResourceCache.get(cacheKey);
   if (defined(vertexBufferLoader)) {
     return vertexBufferLoader;
   }
@@ -512,6 +516,7 @@ ResourceCache.loadVertexBuffer = function (options) {
     cacheKey: cacheKey,
     asynchronous: asynchronous,
     dequantize: dequantize,
+    loadAsTypedArray: loadAsTypedArray,
   });
 
   ResourceCache.load({
@@ -531,18 +536,20 @@ ResourceCache.loadVertexBuffer = function (options) {
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Object} [options.draco] The Draco extension object.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ * @param {Boolean} [loadAsTypedArray=false] Load index buffer as a typed array instead of a GPU index buffer.
  *
  * @returns {GltfIndexBufferLoader} The index buffer loader.
  * @private
  */
 ResourceCache.loadIndexBuffer = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var gltf = options.gltf;
-  var accessorId = options.accessorId;
-  var gltfResource = options.gltfResource;
-  var baseResource = options.baseResource;
-  var draco = options.draco;
-  var asynchronous = defaultValue(options.asynchronous, true);
+  const gltf = options.gltf;
+  const accessorId = options.accessorId;
+  const gltfResource = options.gltfResource;
+  const baseResource = options.baseResource;
+  const draco = options.draco;
+  const asynchronous = defaultValue(options.asynchronous, true);
+  const loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -551,15 +558,16 @@ ResourceCache.loadIndexBuffer = function (options) {
   Check.typeOf.object("options.baseResource", baseResource);
   //>>includeEnd('debug');
 
-  var cacheKey = ResourceCacheKey.getIndexBufferCacheKey({
+  const cacheKey = ResourceCacheKey.getIndexBufferCacheKey({
     gltf: gltf,
     accessorId: accessorId,
     gltfResource: gltfResource,
     baseResource: baseResource,
     draco: draco,
+    loadAsTypedArray: loadAsTypedArray,
   });
 
-  var indexBufferLoader = ResourceCache.get(cacheKey);
+  let indexBufferLoader = ResourceCache.get(cacheKey);
   if (defined(indexBufferLoader)) {
     return indexBufferLoader;
   }
@@ -573,6 +581,7 @@ ResourceCache.loadIndexBuffer = function (options) {
     draco: draco,
     cacheKey: cacheKey,
     asynchronous: asynchronous,
+    loadAsTypedArray: loadAsTypedArray,
   });
 
   ResourceCache.load({
@@ -596,10 +605,10 @@ ResourceCache.loadIndexBuffer = function (options) {
  */
 ResourceCache.loadImage = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var gltf = options.gltf;
-  var imageId = options.imageId;
-  var gltfResource = options.gltfResource;
-  var baseResource = options.baseResource;
+  const gltf = options.gltf;
+  const imageId = options.imageId;
+  const gltfResource = options.gltfResource;
+  const baseResource = options.baseResource;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -608,14 +617,14 @@ ResourceCache.loadImage = function (options) {
   Check.typeOf.object("options.baseResource", baseResource);
   //>>includeEnd('debug');
 
-  var cacheKey = ResourceCacheKey.getImageCacheKey({
+  const cacheKey = ResourceCacheKey.getImageCacheKey({
     gltf: gltf,
     imageId: imageId,
     gltfResource: gltfResource,
     baseResource: baseResource,
   });
 
-  var imageLoader = ResourceCache.get(cacheKey);
+  let imageLoader = ResourceCache.get(cacheKey);
   if (defined(imageLoader)) {
     return imageLoader;
   }
@@ -652,12 +661,12 @@ ResourceCache.loadImage = function (options) {
  */
 ResourceCache.loadTexture = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var gltf = options.gltf;
-  var textureInfo = options.textureInfo;
-  var gltfResource = options.gltfResource;
-  var baseResource = options.baseResource;
-  var supportedImageFormats = options.supportedImageFormats;
-  var asynchronous = defaultValue(options.asynchronous, true);
+  const gltf = options.gltf;
+  const textureInfo = options.textureInfo;
+  const gltfResource = options.gltfResource;
+  const baseResource = options.baseResource;
+  const supportedImageFormats = options.supportedImageFormats;
+  const asynchronous = defaultValue(options.asynchronous, true);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -666,7 +675,7 @@ ResourceCache.loadTexture = function (options) {
   Check.typeOf.object("options.baseResource", baseResource);
   //>>includeEnd('debug');
 
-  var cacheKey = ResourceCacheKey.getTextureCacheKey({
+  const cacheKey = ResourceCacheKey.getTextureCacheKey({
     gltf: gltf,
     textureInfo: textureInfo,
     gltfResource: gltfResource,
@@ -674,7 +683,7 @@ ResourceCache.loadTexture = function (options) {
     supportedImageFormats: supportedImageFormats,
   });
 
-  var textureLoader = ResourceCache.get(cacheKey);
+  let textureLoader = ResourceCache.get(cacheKey);
   if (defined(textureLoader)) {
     return textureLoader;
   }
@@ -705,7 +714,7 @@ ResourceCache.loadTexture = function (options) {
 ResourceCache.clearForSpecs = function () {
   // Unload in the order below. This prevents an unload function from unloading
   // a resource that has already been unloaded.
-  var precedence = [
+  const precedence = [
     GltfVertexBufferLoader,
     GltfIndexBufferLoader,
     GltfDracoLoader,
@@ -717,10 +726,10 @@ ResourceCache.clearForSpecs = function () {
     GltfJsonLoader,
   ];
 
-  var cacheKey;
-  var cacheEntries = ResourceCache.cacheEntries;
+  let cacheKey;
+  const cacheEntries = ResourceCache.cacheEntries;
 
-  var cacheEntriesSorted = [];
+  const cacheEntriesSorted = [];
   for (cacheKey in cacheEntries) {
     if (cacheEntries.hasOwnProperty(cacheKey)) {
       cacheEntriesSorted.push(cacheEntries[cacheKey]);
@@ -728,14 +737,14 @@ ResourceCache.clearForSpecs = function () {
   }
 
   cacheEntriesSorted.sort(function (a, b) {
-    var indexA = precedence.indexOf(a.resourceLoader.constructor);
-    var indexB = precedence.indexOf(b.resourceLoader.constructor);
+    const indexA = precedence.indexOf(a.resourceLoader.constructor);
+    const indexB = precedence.indexOf(b.resourceLoader.constructor);
     return indexA - indexB;
   });
 
-  var cacheEntriesLength = cacheEntriesSorted.length;
-  for (var i = 0; i < cacheEntriesLength; ++i) {
-    var cacheEntry = cacheEntriesSorted[i];
+  const cacheEntriesLength = cacheEntriesSorted.length;
+  for (let i = 0; i < cacheEntriesLength; ++i) {
+    const cacheEntry = cacheEntriesSorted[i];
     cacheKey = cacheEntry.resourceLoader.cacheKey;
     if (defined(cacheEntries[cacheKey])) {
       cacheEntry.resourceLoader.destroy();

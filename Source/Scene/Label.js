@@ -14,13 +14,13 @@ import LabelStyle from "./LabelStyle.js";
 import SDFSettings from "./SDFSettings.js";
 import VerticalOrigin from "./VerticalOrigin.js";
 
-var fontInfoCache = {};
-var fontInfoCacheLength = 0;
-var fontInfoCacheMaxSize = 256;
-var defaultBackgroundColor = new Color(0.165, 0.165, 0.165, 0.8);
-var defaultBackgroundPadding = new Cartesian2(7, 5);
+const fontInfoCache = {};
+let fontInfoCacheLength = 0;
+const fontInfoCacheMaxSize = 256;
+const defaultBackgroundColor = new Color(0.165, 0.165, 0.165, 0.8);
+const defaultBackgroundPadding = new Cartesian2(7, 5);
 
-var textTypes = Object.freeze({
+const textTypes = Object.freeze({
   LTR: 0,
   RTL: 1,
   WEAK: 2,
@@ -50,15 +50,15 @@ function getCSSValue(element, property) {
 }
 
 function parseFont(label) {
-  var fontInfo = fontInfoCache[label._font];
+  let fontInfo = fontInfoCache[label._font];
   if (!defined(fontInfo)) {
-    var div = document.createElement("div");
+    const div = document.createElement("div");
     div.style.position = "absolute";
     div.style.opacity = 0;
     div.style.font = label._font;
     document.body.appendChild(div);
 
-    var lineHeight = parseFloat(getCSSValue(div, "line-height"));
+    let lineHeight = parseFloat(getCSSValue(div, "line-height"));
     if (isNaN(lineHeight)) {
       // line-height isn't a number, i.e. 'normal'; apply default line-spacing
       lineHeight = undefined;
@@ -116,10 +116,10 @@ function Label(options, labelCollection) {
   }
   //>>includeEnd('debug');
 
-  var translucencyByDistance = options.translucencyByDistance;
-  var pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
-  var scaleByDistance = options.scaleByDistance;
-  var distanceDisplayCondition = options.distanceDisplayCondition;
+  let translucencyByDistance = options.translucencyByDistance;
+  let pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
+  let scaleByDistance = options.scaleByDistance;
+  let distanceDisplayCondition = options.distanceDisplayCondition;
   if (defined(translucencyByDistance)) {
     //>>includeStart('debug', pragmas.debug);
     if (translucencyByDistance.far <= translucencyByDistance.near) {
@@ -256,14 +256,14 @@ Object.defineProperties(Label.prototype, {
       if (this._show !== value) {
         this._show = value;
 
-        var glyphs = this._glyphs;
-        for (var i = 0, len = glyphs.length; i < len; i++) {
-          var billboard = glyphs[i].billboard;
+        const glyphs = this._glyphs;
+        for (let i = 0, len = glyphs.length; i < len; i++) {
+          const billboard = glyphs[i].billboard;
           if (defined(billboard)) {
             billboard.show = value;
           }
         }
-        var backgroundBillboard = this._backgroundBillboard;
+        const backgroundBillboard = this._backgroundBillboard;
         if (defined(backgroundBillboard)) {
           backgroundBillboard.show = value;
         }
@@ -287,18 +287,18 @@ Object.defineProperties(Label.prototype, {
       }
       //>>includeEnd('debug');
 
-      var position = this._position;
+      const position = this._position;
       if (!Cartesian3.equals(position, value)) {
         Cartesian3.clone(value, position);
 
-        var glyphs = this._glyphs;
-        for (var i = 0, len = glyphs.length; i < len; i++) {
-          var billboard = glyphs[i].billboard;
+        const glyphs = this._glyphs;
+        for (let i = 0, len = glyphs.length; i < len; i++) {
+          const billboard = glyphs[i].billboard;
           if (defined(billboard)) {
             billboard.position = value;
           }
         }
-        var backgroundBillboard = this._backgroundBillboard;
+        const backgroundBillboard = this._backgroundBillboard;
         if (defined(backgroundBillboard)) {
           backgroundBillboard.position = value;
         }
@@ -328,14 +328,14 @@ Object.defineProperties(Label.prototype, {
       if (value !== this._heightReference) {
         this._heightReference = value;
 
-        var glyphs = this._glyphs;
-        for (var i = 0, len = glyphs.length; i < len; i++) {
-          var billboard = glyphs[i].billboard;
+        const glyphs = this._glyphs;
+        for (let i = 0, len = glyphs.length; i < len; i++) {
+          const billboard = glyphs[i].billboard;
           if (defined(billboard)) {
             billboard.heightReference = value;
           }
         }
-        var backgroundBillboard = this._backgroundBillboard;
+        const backgroundBillboard = this._backgroundBillboard;
         if (defined(backgroundBillboard)) {
           backgroundBillboard.heightReference = value;
         }
@@ -367,7 +367,7 @@ Object.defineProperties(Label.prototype, {
         this._text = value;
 
         // Strip soft-hyphen (auto-wrap) characters from input string
-        var renderedValue = value.replace(/\u00ad/g, "");
+        const renderedValue = value.replace(/\u00ad/g, "");
         this._renderedText = Label.enableRightToLeftDetection
           ? reverseRtl(renderedValue)
           : renderedValue;
@@ -420,7 +420,7 @@ Object.defineProperties(Label.prototype, {
       }
       //>>includeEnd('debug');
 
-      var fillColor = this._fillColor;
+      const fillColor = this._fillColor;
       if (!Color.equals(fillColor, value)) {
         Color.clone(value, fillColor);
         rebindAllGlyphs(this);
@@ -446,7 +446,7 @@ Object.defineProperties(Label.prototype, {
       }
       //>>includeEnd('debug');
 
-      var outlineColor = this._outlineColor;
+      const outlineColor = this._outlineColor;
       if (!Color.equals(outlineColor, value)) {
         Color.clone(value, outlineColor);
         rebindAllGlyphs(this);
@@ -520,11 +520,11 @@ Object.defineProperties(Label.prototype, {
       }
       //>>includeEnd('debug');
 
-      var backgroundColor = this._backgroundColor;
+      const backgroundColor = this._backgroundColor;
       if (!Color.equals(backgroundColor, value)) {
         Color.clone(value, backgroundColor);
 
-        var backgroundBillboard = this._backgroundBillboard;
+        const backgroundBillboard = this._backgroundBillboard;
         if (defined(backgroundBillboard)) {
           backgroundBillboard.color = backgroundColor;
         }
@@ -550,7 +550,7 @@ Object.defineProperties(Label.prototype, {
       }
       //>>includeEnd('debug');
 
-      var backgroundPadding = this._backgroundPadding;
+      const backgroundPadding = this._backgroundPadding;
       if (!Cartesian2.equals(backgroundPadding, value)) {
         Cartesian2.clone(value, backgroundPadding);
         repositionAllGlyphs(this);
@@ -610,18 +610,18 @@ Object.defineProperties(Label.prototype, {
       }
       //>>includeEnd('debug');
 
-      var pixelOffset = this._pixelOffset;
+      const pixelOffset = this._pixelOffset;
       if (!Cartesian2.equals(pixelOffset, value)) {
         Cartesian2.clone(value, pixelOffset);
 
-        var glyphs = this._glyphs;
-        for (var i = 0, len = glyphs.length; i < len; i++) {
-          var glyph = glyphs[i];
+        const glyphs = this._glyphs;
+        for (let i = 0, len = glyphs.length; i < len; i++) {
+          const glyph = glyphs[i];
           if (defined(glyph.billboard)) {
             glyph.billboard.pixelOffset = value;
           }
         }
-        var backgroundBillboard = this._backgroundBillboard;
+        const backgroundBillboard = this._backgroundBillboard;
         if (defined(backgroundBillboard)) {
           backgroundBillboard.pixelOffset = value;
         }
@@ -664,21 +664,21 @@ Object.defineProperties(Label.prototype, {
       }
       //>>includeEnd('debug');
 
-      var translucencyByDistance = this._translucencyByDistance;
+      const translucencyByDistance = this._translucencyByDistance;
       if (!NearFarScalar.equals(translucencyByDistance, value)) {
         this._translucencyByDistance = NearFarScalar.clone(
           value,
           translucencyByDistance
         );
 
-        var glyphs = this._glyphs;
-        for (var i = 0, len = glyphs.length; i < len; i++) {
-          var glyph = glyphs[i];
+        const glyphs = this._glyphs;
+        for (let i = 0, len = glyphs.length; i < len; i++) {
+          const glyph = glyphs[i];
           if (defined(glyph.billboard)) {
             glyph.billboard.translucencyByDistance = value;
           }
         }
-        var backgroundBillboard = this._backgroundBillboard;
+        const backgroundBillboard = this._backgroundBillboard;
         if (defined(backgroundBillboard)) {
           backgroundBillboard.translucencyByDistance = value;
         }
@@ -722,21 +722,21 @@ Object.defineProperties(Label.prototype, {
       }
       //>>includeEnd('debug');
 
-      var pixelOffsetScaleByDistance = this._pixelOffsetScaleByDistance;
+      const pixelOffsetScaleByDistance = this._pixelOffsetScaleByDistance;
       if (!NearFarScalar.equals(pixelOffsetScaleByDistance, value)) {
         this._pixelOffsetScaleByDistance = NearFarScalar.clone(
           value,
           pixelOffsetScaleByDistance
         );
 
-        var glyphs = this._glyphs;
-        for (var i = 0, len = glyphs.length; i < len; i++) {
-          var glyph = glyphs[i];
+        const glyphs = this._glyphs;
+        for (let i = 0, len = glyphs.length; i < len; i++) {
+          const glyph = glyphs[i];
           if (defined(glyph.billboard)) {
             glyph.billboard.pixelOffsetScaleByDistance = value;
           }
         }
-        var backgroundBillboard = this._backgroundBillboard;
+        const backgroundBillboard = this._backgroundBillboard;
         if (defined(backgroundBillboard)) {
           backgroundBillboard.pixelOffsetScaleByDistance = value;
         }
@@ -779,18 +779,18 @@ Object.defineProperties(Label.prototype, {
       }
       //>>includeEnd('debug');
 
-      var scaleByDistance = this._scaleByDistance;
+      const scaleByDistance = this._scaleByDistance;
       if (!NearFarScalar.equals(scaleByDistance, value)) {
         this._scaleByDistance = NearFarScalar.clone(value, scaleByDistance);
 
-        var glyphs = this._glyphs;
-        for (var i = 0, len = glyphs.length; i < len; i++) {
-          var glyph = glyphs[i];
+        const glyphs = this._glyphs;
+        for (let i = 0, len = glyphs.length; i < len; i++) {
+          const glyph = glyphs[i];
           if (defined(glyph.billboard)) {
             glyph.billboard.scaleByDistance = value;
           }
         }
-        var backgroundBillboard = this._backgroundBillboard;
+        const backgroundBillboard = this._backgroundBillboard;
         if (defined(backgroundBillboard)) {
           backgroundBillboard.scaleByDistance = value;
         }
@@ -832,18 +832,18 @@ Object.defineProperties(Label.prototype, {
       }
       //>>includeEnd('debug');
 
-      var eyeOffset = this._eyeOffset;
+      const eyeOffset = this._eyeOffset;
       if (!Cartesian3.equals(eyeOffset, value)) {
         Cartesian3.clone(value, eyeOffset);
 
-        var glyphs = this._glyphs;
-        for (var i = 0, len = glyphs.length; i < len; i++) {
-          var glyph = glyphs[i];
+        const glyphs = this._glyphs;
+        for (let i = 0, len = glyphs.length; i < len; i++) {
+          const glyph = glyphs[i];
           if (defined(glyph.billboard)) {
             glyph.billboard.eyeOffset = value;
           }
         }
-        var backgroundBillboard = this._backgroundBillboard;
+        const backgroundBillboard = this._backgroundBillboard;
         if (defined(backgroundBillboard)) {
           backgroundBillboard.eyeOffset = value;
         }
@@ -913,14 +913,14 @@ Object.defineProperties(Label.prototype, {
       if (this._verticalOrigin !== value) {
         this._verticalOrigin = value;
 
-        var glyphs = this._glyphs;
-        for (var i = 0, len = glyphs.length; i < len; i++) {
-          var glyph = glyphs[i];
+        const glyphs = this._glyphs;
+        for (let i = 0, len = glyphs.length; i < len; i++) {
+          const glyph = glyphs[i];
           if (defined(glyph.billboard)) {
             glyph.billboard.verticalOrigin = value;
           }
         }
-        var backgroundBillboard = this._backgroundBillboard;
+        const backgroundBillboard = this._backgroundBillboard;
         if (defined(backgroundBillboard)) {
           backgroundBillboard.verticalOrigin = value;
         }
@@ -962,14 +962,14 @@ Object.defineProperties(Label.prototype, {
       if (this._scale !== value) {
         this._scale = value;
 
-        var glyphs = this._glyphs;
-        for (var i = 0, len = glyphs.length; i < len; i++) {
-          var glyph = glyphs[i];
+        const glyphs = this._glyphs;
+        for (let i = 0, len = glyphs.length; i < len; i++) {
+          const glyph = glyphs[i];
           if (defined(glyph.billboard)) {
             glyph.billboard.scale = value * this._relativeSize;
           }
         }
-        var backgroundBillboard = this._backgroundBillboard;
+        const backgroundBillboard = this._backgroundBillboard;
         if (defined(backgroundBillboard)) {
           backgroundBillboard.scale = value * this._relativeSize;
         }
@@ -1016,14 +1016,14 @@ Object.defineProperties(Label.prototype, {
           this._distanceDisplayCondition
         );
 
-        var glyphs = this._glyphs;
-        for (var i = 0, len = glyphs.length; i < len; i++) {
-          var glyph = glyphs[i];
+        const glyphs = this._glyphs;
+        for (let i = 0, len = glyphs.length; i < len; i++) {
+          const glyph = glyphs[i];
           if (defined(glyph.billboard)) {
             glyph.billboard.distanceDisplayCondition = value;
           }
         }
-        var backgroundBillboard = this._backgroundBillboard;
+        const backgroundBillboard = this._backgroundBillboard;
         if (defined(backgroundBillboard)) {
           backgroundBillboard.distanceDisplayCondition = value;
         }
@@ -1052,14 +1052,14 @@ Object.defineProperties(Label.prototype, {
         //>>includeEnd('debug');
         this._disableDepthTestDistance = value;
 
-        var glyphs = this._glyphs;
-        for (var i = 0, len = glyphs.length; i < len; i++) {
-          var glyph = glyphs[i];
+        const glyphs = this._glyphs;
+        for (let i = 0, len = glyphs.length; i < len; i++) {
+          const glyph = glyphs[i];
           if (defined(glyph.billboard)) {
             glyph.billboard.disableDepthTestDistance = value;
           }
         }
-        var backgroundBillboard = this._backgroundBillboard;
+        const backgroundBillboard = this._backgroundBillboard;
         if (defined(backgroundBillboard)) {
           backgroundBillboard.disableDepthTestDistance = value;
         }
@@ -1080,14 +1080,14 @@ Object.defineProperties(Label.prototype, {
       if (this._id !== value) {
         this._id = value;
 
-        var glyphs = this._glyphs;
-        for (var i = 0, len = glyphs.length; i < len; i++) {
-          var glyph = glyphs[i];
+        const glyphs = this._glyphs;
+        for (let i = 0, len = glyphs.length; i < len; i++) {
+          const glyph = glyphs[i];
           if (defined(glyph.billboard)) {
             glyph.billboard.id = value;
           }
         }
-        var backgroundBillboard = this._backgroundBillboard;
+        const backgroundBillboard = this._backgroundBillboard;
         if (defined(backgroundBillboard)) {
           backgroundBillboard.id = value;
         }
@@ -1123,16 +1123,16 @@ Object.defineProperties(Label.prototype, {
         this._actualClampedPosition
       );
 
-      var glyphs = this._glyphs;
-      for (var i = 0, len = glyphs.length; i < len; i++) {
-        var glyph = glyphs[i];
+      const glyphs = this._glyphs;
+      for (let i = 0, len = glyphs.length; i < len; i++) {
+        const glyph = glyphs[i];
         if (defined(glyph.billboard)) {
           // Set all the private values here, because we already clamped to ground
           //  so we don't want to do it again for every glyph
           glyph.billboard._clampedPosition = value;
         }
       }
-      var backgroundBillboard = this._backgroundBillboard;
+      const backgroundBillboard = this._backgroundBillboard;
       if (defined(backgroundBillboard)) {
         backgroundBillboard._clampedPosition = value;
       }
@@ -1154,14 +1154,14 @@ Object.defineProperties(Label.prototype, {
       if (this._clusterShow !== value) {
         this._clusterShow = value;
 
-        var glyphs = this._glyphs;
-        for (var i = 0, len = glyphs.length; i < len; i++) {
-          var glyph = glyphs[i];
+        const glyphs = this._glyphs;
+        for (let i = 0, len = glyphs.length; i < len; i++) {
+          const glyph = glyphs[i];
           if (defined(glyph.billboard)) {
             glyph.billboard.clusterShow = value;
           }
         }
-        var backgroundBillboard = this._backgroundBillboard;
+        const backgroundBillboard = this._backgroundBillboard;
         if (defined(backgroundBillboard)) {
           backgroundBillboard.clusterShow = value;
         }
@@ -1201,13 +1201,13 @@ Label.prototype.computeScreenSpacePosition = function (scene, result) {
     result = new Cartesian2();
   }
 
-  var labelCollection = this._labelCollection;
-  var modelMatrix = labelCollection.modelMatrix;
-  var actualPosition = defined(this._actualClampedPosition)
+  const labelCollection = this._labelCollection;
+  const modelMatrix = labelCollection.modelMatrix;
+  const actualPosition = defined(this._actualClampedPosition)
     ? this._actualClampedPosition
     : this._position;
 
-  var windowCoordinates = Billboard._computeScreenSpacePosition(
+  const windowCoordinates = Billboard._computeScreenSpacePosition(
     modelMatrix,
     actualPosition,
     this._eyeOffset,
@@ -1232,13 +1232,13 @@ Label.getScreenSpaceBoundingBox = function (
   screenSpacePosition,
   result
 ) {
-  var x = 0;
-  var y = 0;
-  var width = 0;
-  var height = 0;
-  var scale = label.totalScale;
+  let x = 0;
+  let y = 0;
+  let width = 0;
+  let height = 0;
+  const scale = label.totalScale;
 
-  var backgroundBillboard = label._backgroundBillboard;
+  const backgroundBillboard = label._backgroundBillboard;
   if (defined(backgroundBillboard)) {
     x = screenSpacePosition.x + backgroundBillboard._translate.x;
     y = screenSpacePosition.y - backgroundBillboard._translate.y;
@@ -1256,21 +1256,21 @@ Label.getScreenSpaceBoundingBox = function (
   } else {
     x = Number.POSITIVE_INFINITY;
     y = Number.POSITIVE_INFINITY;
-    var maxX = 0;
-    var maxY = 0;
-    var glyphs = label._glyphs;
-    var length = glyphs.length;
-    for (var i = 0; i < length; ++i) {
-      var glyph = glyphs[i];
-      var billboard = glyph.billboard;
+    let maxX = 0;
+    let maxY = 0;
+    const glyphs = label._glyphs;
+    const length = glyphs.length;
+    for (let i = 0; i < length; ++i) {
+      const glyph = glyphs[i];
+      const billboard = glyph.billboard;
       if (!defined(billboard)) {
         continue;
       }
 
-      var glyphX = screenSpacePosition.x + billboard._translate.x;
-      var glyphY = screenSpacePosition.y - billboard._translate.y;
-      var glyphWidth = glyph.dimensions.width * scale;
-      var glyphHeight = glyph.dimensions.height * scale;
+      const glyphX = screenSpacePosition.x + billboard._translate.x;
+      let glyphY = screenSpacePosition.y - billboard._translate.y;
+      const glyphWidth = glyph.dimensions.width * scale;
+      const glyphHeight = glyph.dimensions.height * scale;
 
       if (
         label.verticalOrigin === VerticalOrigin.BOTTOM ||
@@ -1380,7 +1380,7 @@ Label.prototype.isDestroyed = function () {
  * // Example 1.
  * // Set a label's rightToLeft before init
  * Cesium.Label.enableRightToLeftDetection = true;
- * var myLabelEntity = viewer.entities.add({
+ * const myLabelEntity = viewer.entities.add({
  *   label: {
  *     id: 'my label',
  *     text: 'זה טקסט בעברית \n ועכשיו יורדים שורה',
@@ -1389,7 +1389,7 @@ Label.prototype.isDestroyed = function () {
  *
  * @example
  * // Example 2.
- * var myLabelEntity = viewer.entities.add({
+ * const myLabelEntity = viewer.entities.add({
  *   label: {
  *     id: 'my label',
  *     text: 'English text'
@@ -1402,15 +1402,15 @@ Label.prototype.isDestroyed = function () {
 Label.enableRightToLeftDetection = false;
 
 function convertTextToTypes(text, rtlChars) {
-  var ltrChars = /[a-zA-Z0-9]/;
-  var bracketsChars = /[()[\]{}<>]/;
-  var parsedText = [];
-  var word = "";
-  var lastType = textTypes.LTR;
-  var currentType = "";
-  var textLength = text.length;
-  for (var textIndex = 0; textIndex < textLength; ++textIndex) {
-    var character = text.charAt(textIndex);
+  const ltrChars = /[a-zA-Z0-9]/;
+  const bracketsChars = /[()[\]{}<>]/;
+  const parsedText = [];
+  let word = "";
+  let lastType = textTypes.LTR;
+  let currentType = "";
+  const textLength = text.length;
+  for (let textIndex = 0; textIndex < textLength; ++textIndex) {
+    const character = text.charAt(textIndex);
     if (rtlChars.test(character)) {
       currentType = textTypes.RTL;
     } else if (ltrChars.test(character)) {
@@ -1469,9 +1469,9 @@ function reverseBrackets(bracket) {
 }
 
 //To add another language, simply add its Unicode block range(s) to the below regex.
-var hebrew = "\u05D0-\u05EA";
-var arabic = "\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF";
-var rtlChars = new RegExp("[" + hebrew + arabic + "]");
+const hebrew = "\u05D0-\u05EA";
+const arabic = "\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF";
+const rtlChars = new RegExp(`[${hebrew}${arabic}]`);
 
 /**
  *
@@ -1480,19 +1480,19 @@ var rtlChars = new RegExp("[" + hebrew + arabic + "]");
  * @private
  */
 function reverseRtl(value) {
-  var texts = value.split("\n");
-  var result = "";
-  for (var i = 0; i < texts.length; i++) {
-    var text = texts[i];
+  const texts = value.split("\n");
+  let result = "";
+  for (let i = 0; i < texts.length; i++) {
+    const text = texts[i];
     // first character of the line is a RTL character, so need to manage different cases
-    var rtlDir = rtlChars.test(text.charAt(0));
-    var parsedText = convertTextToTypes(text, rtlChars);
+    const rtlDir = rtlChars.test(text.charAt(0));
+    const parsedText = convertTextToTypes(text, rtlChars);
 
-    var splicePointer = 0;
-    var line = "";
-    for (var wordIndex = 0; wordIndex < parsedText.length; ++wordIndex) {
-      var subText = parsedText[wordIndex];
-      var reverse =
+    let splicePointer = 0;
+    let line = "";
+    for (let wordIndex = 0; wordIndex < parsedText.length; ++wordIndex) {
+      const subText = parsedText[wordIndex];
+      const reverse =
         subText.Type === textTypes.BRACKETS
           ? reverseBrackets(subText.Word)
           : reverseWord(subText.Word);
