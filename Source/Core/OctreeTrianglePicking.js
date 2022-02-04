@@ -7,7 +7,7 @@ import Ray from "./Ray.js";
 
 // TODO: need to handle 2d picking somehow
 
-var invalidIntersection = Number.MAX_VALUE;
+const invalidIntersection = Number.MAX_VALUE;
 
 /**
  * @param {Ray} ray
@@ -18,19 +18,19 @@ var invalidIntersection = Number.MAX_VALUE;
  * @returns {Number} t
  */
 function rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces) {
-  var t = IntersectionTests.rayTriangleParametric(
+  const t = IntersectionTests.rayTriangleParametric(
     ray,
     v0,
     v1,
     v2,
     cullBackFaces
   );
-  var valid = defined(t) && t >= 0.0;
+  const valid = defined(t) && t >= 0.0;
   return valid ? t : invalidIntersection;
 }
 
 function onTheFlyNodeAABB(level, x, y, z) {
-  var sizeAtLevel = 1.0 / Math.pow(2, level);
+  const sizeAtLevel = 1.0 / Math.pow(2, level);
   return {
     aabbMinX: x * sizeAtLevel - 0.5,
     aabbMaxX: (x + 1) * sizeAtLevel - 0.5,
@@ -54,10 +54,10 @@ function Node(x, y, z, level) {
 }
 
 function isRayIntersectAABB(ray, minX, minY, minZ, maxX, maxY, maxZ) {
-  var tmp;
+  let tmp;
   /* X */
-  var txMin = (minX - ray.origin.x) / ray.direction.x;
-  var txMax = (maxX - ray.origin.x) / ray.direction.x;
+  let txMin = (minX - ray.origin.x) / ray.direction.x;
+  let txMax = (maxX - ray.origin.x) / ray.direction.x;
   if (txMax < txMin) {
     tmp = txMax;
     txMax = txMin;
@@ -65,8 +65,8 @@ function isRayIntersectAABB(ray, minX, minY, minZ, maxX, maxY, maxZ) {
   }
 
   /* Y */
-  var tyMin = (minY - ray.origin.y) / ray.direction.y;
-  var tyMax = (maxY - ray.origin.y) / ray.direction.y;
+  let tyMin = (minY - ray.origin.y) / ray.direction.y;
+  let tyMax = (maxY - ray.origin.y) / ray.direction.y;
   if (tyMax < tyMin) {
     tmp = tyMax;
     tyMax = tyMin;
@@ -74,16 +74,16 @@ function isRayIntersectAABB(ray, minX, minY, minZ, maxX, maxY, maxZ) {
   }
 
   /* Z */
-  var tzMin = (minZ - ray.origin.z) / ray.direction.z;
-  var tzMax = (maxZ - ray.origin.z) / ray.direction.z;
+  let tzMin = (minZ - ray.origin.z) / ray.direction.z;
+  let tzMax = (maxZ - ray.origin.z) / ray.direction.z;
   if (tzMax < tzMin) {
     tmp = tzMax;
     tzMax = tzMin;
     tzMin = tmp;
   }
 
-  var tMin = txMin > tyMin ? txMin : tyMin; //Get Greatest Min
-  var tMax = txMax < tyMax ? txMax : tyMax; //Get Smallest Max
+  let tMin = txMin > tyMin ? txMin : tyMin; //Get Greatest Min
+  let tMax = txMax < tyMax ? txMax : tyMax; //Get Smallest Max
 
   if (txMin > tyMax || tyMin > txMax) {
     return { intersection: false, tMin: tMin, tMax: tMax };
@@ -108,19 +108,19 @@ function isNodeIntersection(
   triangleVerticesCallback,
   traceDetails
 ) {
-  var result = {
+  const result = {
     t: Number.MAX_VALUE,
     triangleIndex: -1,
     triangleTestCount: 0,
   };
-  for (var i = 0; i < (node.intersectingTriangles || []).length; i++) {
-    var triIndex = node.intersectingTriangles[i];
+  for (let i = 0; i < (node.intersectingTriangles || []).length; i++) {
+    const triIndex = node.intersectingTriangles[i];
     result.triangleTestCount++;
-    var v0 = new Cartesian3();
-    var v1 = new Cartesian3();
-    var v2 = new Cartesian3();
+    const v0 = new Cartesian3();
+    const v1 = new Cartesian3();
+    const v2 = new Cartesian3();
     triangleVerticesCallback(triIndex, v0, v1, v2, traceDetails);
-    var triT = rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces);
+    const triT = rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces);
     if (triT !== invalidIntersection && triT < result.t) {
       result.t = triT;
       // don't need this?
@@ -140,14 +140,14 @@ function rayIntersectOctree(
 ) {
   // from here: http://publications.lib.chalmers.se/records/fulltext/250170/250170.pdf
   // find all the nodes which intersect the ray
-  var hits = [];
+  const hits = [];
 
-  var queue = [node];
-  var intersections = [];
+  const queue = [node];
+  const intersections = [];
   while (queue.length) {
-    var n = queue.pop();
-    var aabb = onTheFlyNodeAABB(n.level, n.x, n.y, n.z);
-    var intersection = isRayIntersectAABB(
+    const n = queue.pop();
+    const aabb = onTheFlyNodeAABB(n.level, n.x, n.y, n.z);
+    const intersection = isRayIntersectAABB(
       transformedRay,
       aabb.aabbMinX,
       aabb.aabbMinY,
@@ -161,7 +161,7 @@ function rayIntersectOctree(
         n.isHit = true;
         hits.push({ level: n.level, x: n.x, y: n.y, z: n.z });
       }
-      var isLeaf = !n.children;
+      const isLeaf = !n.children;
       if (isLeaf) {
         intersections.push({
           node: n,
@@ -175,17 +175,17 @@ function rayIntersectOctree(
   }
 
   // sort each intersection node by tMin ascending
-  var sortedTests = intersections.sort(function (a, b) {
+  const sortedTests = intersections.sort(function (a, b) {
     return a.tMin - b.tMin;
   });
 
-  var triangleTestCount = 0;
+  let triangleTestCount = 0;
 
-  var minT = Number.MAX_VALUE;
+  let minT = Number.MAX_VALUE;
   // for each intersected node - test every triangle which falls in that node
-  for (var ii = 0; ii < sortedTests.length; ii++) {
-    var test = sortedTests[ii];
-    var intersectionResult = isNodeIntersection(
+  for (let ii = 0; ii < sortedTests.length; ii++) {
+    const test = sortedTests[ii];
+    const intersectionResult = isNodeIntersection(
       ray,
       test.node,
       cullBackFaces,
@@ -272,23 +272,23 @@ function isAABBContainsAABB(
 }
 
 function createOctree(triangles) {
-  var rootNode = new Node(0, 0, 0, 0);
-  var nodes = [rootNode];
+  const rootNode = new Node(0, 0, 0, 0);
+  const nodes = [rootNode];
   //>>includeStart('debug', pragmas.debug);
   console.time("creating actual octree");
-  var triangleCount = triangles.length / 6;
+  const triangleCount = triangles.length / 6;
 
   // we can build a more spread out octree
   //  for smaller tiles because it'll be quicker
-  var maxLevels = 2;
+  const maxLevels = 2;
 
-  var quickMatchSuccess = 0;
-  var quickMatchFailure = 0;
+  let quickMatchSuccess = 0;
+  let quickMatchFailure = 0;
 
-  var lastMatch;
-  for (var x = 0; x < triangleCount; x++) {
+  let lastMatch;
+  for (let x = 0; x < triangleCount; x++) {
     if (lastMatch) {
-      var isTriangleContainedWithinLastMatchedNode = isNodeContainsTriangle(
+      const isTriangleContainedWithinLastMatchedNode = isNodeContainsTriangle(
         lastMatch.level,
         lastMatch.x,
         lastMatch.y,
@@ -324,7 +324,7 @@ function createOctree(triangles) {
 
 function isNodeContainsTriangle(level, x, y, z, triangles, triangleIdx) {
   // todo(dan) inline all this
-  var aabb = onTheFlyNodeAABB(level, x, y, z);
+  const aabb = onTheFlyNodeAABB(level, x, y, z);
   return isAABBContainsAABB(
     triangles[triangleIdx * 6], // triangle aabb min x
     triangles[triangleIdx * 6 + 1], // triangle aabb max x
@@ -352,8 +352,8 @@ function nodeAddTriangle(
   triangles,
   nodes
 ) {
-  var aabb = onTheFlyNodeAABB(level, x, y, z);
-  var isIntersection = isAABBIntersectsAABB(
+  const aabb = onTheFlyNodeAABB(level, x, y, z);
+  const isIntersection = isAABBIntersectsAABB(
     triangles[triangleIdx * 6], // triangle aabb min x
     triangles[triangleIdx * 6 + 1], // triangle aabb max x
     triangles[triangleIdx * 6 + 2], // triangle aabb min y
@@ -368,7 +368,7 @@ function nodeAddTriangle(
     aabb.aabbMaxZ
   );
 
-  var isMaxLevel = level === maxLevels;
+  const isMaxLevel = level === maxLevels;
   if (isIntersection) {
     if (isMaxLevel) {
       node.intersectingTriangles = node.intersectingTriangles || [];
@@ -404,13 +404,13 @@ function nodeAddTriangle(
     ];
   }
 
-  var childMatchCount = 0;
-  var lastChildMatch = null;
-  for (var childIdx = 0; childIdx < node.children.length; childIdx++) {
-    var childNode = node.children[childIdx];
-    var _x;
-    var _y;
-    var _z;
+  let childMatchCount = 0;
+  let lastChildMatch = null;
+  for (let childIdx = 0; childIdx < node.children.length; childIdx++) {
+    const childNode = node.children[childIdx];
+    let _x;
+    let _y;
+    let _z;
     if (childIdx === 0) {
       {
         // 000
@@ -468,7 +468,7 @@ function nodeAddTriangle(
         _z = z * 2 + 1;
       }
     }
-    var match = nodeAddTriangle(
+    const match = nodeAddTriangle(
       maxLevels,
       childNode,
       level + 1,
@@ -512,7 +512,7 @@ function OctreeTrianglePicking(packedOctree, triangleVerticesCallback) {
   this._triangleVerticesCallback = triangleVerticesCallback;
 }
 
-var scratchTransformedRay = new Ray();
+const scratchTransformedRay = new Ray();
 
 /**
  * @param {Ray} ray
@@ -527,9 +527,9 @@ OctreeTrianglePicking.prototype.rayIntersect = function (
   result,
   trace
 ) {
-  var invTransform = this._inverseTransform;
+  const invTransform = this._inverseTransform;
 
-  var transformedRay = scratchTransformedRay;
+  const transformedRay = scratchTransformedRay;
   transformedRay.origin = Matrix4.multiplyByPoint(
     invTransform,
     ray.origin,
@@ -564,7 +564,7 @@ OctreeTrianglePicking.createPackedOctree = function (
   transform,
   obb
 ) {
-  var nodes = createOctree(triangles);
+  const nodes = createOctree(triangles);
   return {
     triangles: triangles,
     unpackedOctree: nodes,

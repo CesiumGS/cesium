@@ -43,15 +43,15 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           infoBox: false,
           selectionIndicator: false,
         });
 
-        var polylineCollection = new Cesium.PolylineCollection();
+        const polylineCollection = new Cesium.PolylineCollection();
         viewer.scene.primitives.add(polylineCollection);
 
-        var axis = new Cesium.DebugModelMatrixPrimitive({
+        const axis = new Cesium.DebugModelMatrixPrimitive({
           // modelMatrix: transform,
           length: 10000000.0,
           width: 2.0,
@@ -60,21 +60,21 @@
 
         function createROIFromRotation(cartesianPosition, rotation) {
           rotation.heading = rotation.heading - Cesium.Math.toRadians(90);
-          var referenceFrame1 = Cesium.Transforms.headingPitchRollQuaternion(
+          const referenceFrame1 = Cesium.Transforms.headingPitchRollQuaternion(
             cartesianPosition,
             rotation
           );
-          var rotationMatrix = Cesium.Matrix3.fromQuaternion(
+          const rotationMatrix = Cesium.Matrix3.fromQuaternion(
             referenceFrame1,
             new Cesium.Matrix3()
           );
           // Replace 1000 for changing the distance
-          var rotationScaled = Cesium.Matrix3.multiplyByVector(
+          const rotationScaled = Cesium.Matrix3.multiplyByVector(
             rotationMatrix,
             new Cesium.Cartesian3(1000000, 0, 0),
             new Cesium.Cartesian3()
           );
-          var roiPos = Cesium.Cartesian3.add(
+          const roiPos = Cesium.Cartesian3.add(
             cartesianPosition,
             rotationScaled,
             new Cesium.Cartesian3()
@@ -82,19 +82,19 @@
           return roiPos;
         }
 
-        var polylines = [];
+        const polylines = [];
 
-        for (var lon = -180; lon < 180; lon += 20) {
-          for (var lat = -90; lat < 90; lat += 20) {
-            var tail = Cesium.Cartesian3.fromDegrees(lon, lat);
-            var e = viewer.entities.add({
+        for (let lon = -180; lon < 180; lon += 20) {
+          for (let lat = -90; lat < 90; lat += 20) {
+            const tail = Cesium.Cartesian3.fromDegrees(lon, lat);
+            const e = viewer.entities.add({
               position: tail,
               point: {
                 pixelSize: 10,
               },
             });
 
-            var polyline = polylineCollection.add({
+            const polyline = polylineCollection.add({
               show: true,
               positions: [tail, tail],
               width: 10,
@@ -110,23 +110,23 @@
         }
 
         function watchChanges(id, onChange) {
-          var el = document.getElementById(id);
+          const el = document.getElementById(id);
           el.addEventListener("input", function (e) {
-            var value = e.target.value;
+            const value = e.target.value;
             onChange(parseFloat(value));
           });
           el.value = 0;
         }
 
-        var heading = 0,
+        let heading = 0,
           pitch = 0,
           roll = 0;
 
         function update(heading, pitch, roll) {
-          for (var i = 0; i < polylines.length; i++) {
-            var poly = polylines[i];
-            var tail = poly.positions[0];
-            var head = createROIFromRotation(
+          for (let i = 0; i < polylines.length; i++) {
+            const poly = polylines[i];
+            const tail = poly.positions[0];
+            const head = createROIFromRotation(
               tail,
               Cesium.HeadingPitchRoll.fromDegrees(heading, pitch, roll)
             );

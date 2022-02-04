@@ -42,19 +42,19 @@
           "use strict";
 
           //Sandcastle_Begin
-          var worldTerrain = Cesium.createWorldTerrain({
+          const worldTerrain = Cesium.createWorldTerrain({
             requestWaterMask: true,
             requestVertexNormals: true,
           });
 
-          var arcGisTerrainProvider = new Cesium.ArcGISTiledElevationTerrainProvider(
+          const arcGisTerrainProvider = new Cesium.ArcGISTiledElevationTerrainProvider(
             {
               url:
                 "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
             }
           );
 
-          var locationOptions = [
+          const locationOptions = [
             {
               name: "Mount Everest",
               target: new Cesium.Cartesian3(
@@ -96,7 +96,7 @@
             },
           ];
 
-          var viewer = new Cesium.Viewer("cesiumContainer", {
+          const viewer = new Cesium.Viewer("cesiumContainer", {
             // terrainProvider: worldTerrain,
             terrainProvider: arcGisTerrainProvider,
           });
@@ -107,19 +107,19 @@
 
           window.viewer = viewer;
 
-          var selectedOctreeLevel = null;
-          var showTestedTriangles = false;
-          var selectedShowOBB = false;
+          let selectedOctreeLevel = null;
+          let showTestedTriangles = false;
+          let selectedShowOBB = false;
 
-          var intersectedTriangleDataSource = new Cesium.CustomDataSource(
+          const intersectedTriangleDataSource = new Cesium.CustomDataSource(
             "intersectedTriangleDataSource"
           );
-          var testedTrianglesDataSource = new Cesium.CustomDataSource(
+          const testedTrianglesDataSource = new Cesium.CustomDataSource(
             "testedTrianglesDataSource"
           );
-          var obbDataSource = new Cesium.CustomDataSource("obbDataSource");
-          var axisPrimitiveCollection = new Cesium.PrimitiveCollection();
-          var octreePrimitives = new Cesium.PrimitiveCollection();
+          const obbDataSource = new Cesium.CustomDataSource("obbDataSource");
+          const axisPrimitiveCollection = new Cesium.PrimitiveCollection();
+          const octreePrimitives = new Cesium.PrimitiveCollection();
 
           viewer.dataSources.add(intersectedTriangleDataSource);
           viewer.dataSources.add(testedTrianglesDataSource);
@@ -136,7 +136,7 @@
           }
 
           function onTheFlyNodeAABB(level, x, y, z) {
-            var sizeAtLevel = 1.0 / Math.pow(2, level);
+            const sizeAtLevel = 1.0 / Math.pow(2, level);
             return {
               aabbMinX: x * sizeAtLevel - 0.5,
               aabbMaxX: (x + 1) * sizeAtLevel - 0.5,
@@ -150,7 +150,7 @@
             };
           }
 
-          var colors = [
+          const colors = [
             "#e6194B",
             "#3cb44b",
             "#ffe119",
@@ -170,22 +170,22 @@
             triangleVerticesCallback,
             isSpecial
           ) {
-            var aabb = onTheFlyNodeAABB(node.level, node.x, node.y, node.z);
-            var min = new Cesium.Cartesian3(
+            const aabb = onTheFlyNodeAABB(node.level, node.x, node.y, node.z);
+            const min = new Cesium.Cartesian3(
               aabb.aabbMinX,
               aabb.aabbMinY,
               aabb.aabbMinZ
             );
-            var max = new Cesium.Cartesian3(
+            const max = new Cesium.Cartesian3(
               aabb.aabbMaxX,
               aabb.aabbMaxY,
               aabb.aabbMaxZ
             );
-            var box = new Cesium.BoxGeometry({
+            const box = new Cesium.BoxGeometry({
               maximum: max,
               minimum: min,
             });
-            var outline = new Cesium.BoxOutlineGeometry({
+            const outline = new Cesium.BoxOutlineGeometry({
               maximum: max,
               minimum: min,
             });
@@ -230,20 +230,20 @@
               })
             );
 
-            var trianglePolygons = [];
-            var trianglePolygonOutlines = [];
+            const trianglePolygons = [];
+            const trianglePolygonOutlines = [];
             triangles = triangles || [];
-            for (var triangleIdx of triangles) {
-              var v0 = new Cesium.Cartesian3();
-              var v1 = new Cesium.Cartesian3();
-              var v2 = new Cesium.Cartesian3();
+            for (const triangleIdx of triangles) {
+              const v0 = new Cesium.Cartesian3();
+              const v1 = new Cesium.Cartesian3();
+              const v2 = new Cesium.Cartesian3();
               triangleVerticesCallback(triangleIdx, v0, v1, v2);
 
-              var outlineGeometry = new Cesium.PolygonOutlineGeometry({
+              const outlineGeometry = new Cesium.PolygonOutlineGeometry({
                 polygonHierarchy: new Cesium.PolygonHierarchy([v0, v1, v2]),
                 perPositionHeight: true,
               });
-              var outlineInstance = new Cesium.GeometryInstance({
+              const outlineInstance = new Cesium.GeometryInstance({
                 geometry: outlineGeometry,
                 attributes: {
                   color: Cesium.ColorGeometryInstanceAttribute.fromColor(
@@ -253,11 +253,11 @@
               });
               trianglePolygonOutlines.push(outlineInstance);
 
-              var geometry = new Cesium.PolygonGeometry({
+              const geometry = new Cesium.PolygonGeometry({
                 polygonHierarchy: new Cesium.PolygonHierarchy([v0, v1, v2]),
                 perPositionHeight: true,
               });
-              var instance = new Cesium.GeometryInstance({
+              const instance = new Cesium.GeometryInstance({
                 geometry: geometry,
                 attributes: {
                   color: Cesium.ColorGeometryInstanceAttribute.fromColor(
@@ -289,21 +289,12 @@
             );
           }
 
-          function n(x, y, z, level) {
-            return {
-              x,
-              y,
-              z,
-              level,
-            };
-          }
-
           function drawOctreeLayer(prims, level) {
             prims.removeAll();
             if (level == null) {
               return;
             }
-            var root =
+            const root =
               window.lastPickDetails &&
               window.lastPickDetails.mesh &&
               window.lastPickDetails.mesh._octreeTrianglePicking;
@@ -311,27 +302,30 @@
               return;
             }
 
-            var nodeHits =
+            const nodeHits =
               (window.lastPickDetails.traceDetails &&
                 window.lastPickDetails.traceDetails.hits) ||
               [];
 
-            var unpackedOctreeNodes = root._unpackedOctree;
-            var transform = root._transform;
+            const unpackedOctreeNodes = root._unpackedOctree;
+            const transform = root._transform;
             const allNodes = flattenOctree(unpackedOctreeNodes[0]);
-            var nodesToDraw = allNodes.filter((n) => n.level === level);
+            const nodesToDraw = allNodes.filter(function (n) {
+              return n.level === level;
+            });
 
-            var i = 0;
-            for (var n of nodesToDraw) {
-              var color = Cesium.Color.fromCssColorString(colors[i % 8]);
+            let i = 0;
+            for (const n of nodesToDraw) {
+              const color = Cesium.Color.fromCssColorString(colors[i % 8]);
 
-              const isSpecial = nodeHits.some(
-                (h) =>
+              const isSpecial = nodeHits.some(function (h) {
+                return (
                   h.level === n.level &&
                   h.x === n.x &&
                   h.y === n.y &&
                   h.z === n.z
-              );
+                );
+              });
 
               drawOctreeNode(
                 n,
@@ -348,7 +342,7 @@
 
           function addDot(transform, local, color, radius, dataSource) {
             radius = radius || 50;
-            var point = localToWorld(transform, local);
+            const point = localToWorld(transform, local);
             dataSource.entities.add({
               position: point,
               ellipsoid: {
@@ -386,8 +380,8 @@
 
           function drawTriangleList(color, dataSource, triangles) {
             if (triangles && triangles.length) {
-              for (var i = 0; i < triangles.length; i++) {
-                var tri = triangles[i];
+              for (let i = 0; i < triangles.length; i++) {
+                const tri = triangles[i];
                 dataSource.entities.add({
                   polygon: {
                     hierarchy: tri.positions,
@@ -421,11 +415,11 @@
 
           function showIntersectedTriangles() {
             intersectedTriangleDataSource.entities.removeAll();
-            var oldTriangle =
+            const oldTriangle =
               window.lastPickDetails &&
               window.lastPickDetails.traceDetails &&
               window.lastPickDetails.traceDetails.oldIntersectedTriangle;
-            var newTriangle =
+            const newTriangle =
               window.lastPickDetails &&
               window.lastPickDetails.traceDetails &&
               window.lastPickDetails.traceDetails.newIntersectedTriangle;
@@ -459,7 +453,7 @@
             testedTrianglesDataSource.entities.removeAll();
 
             if (value) {
-              var triangles =
+              const triangles =
                 (window.lastPickDetails &&
                   window.lastPickDetails.traceDetails &&
                   window.lastPickDetails.traceDetails.trianglesTested) ||
@@ -473,7 +467,7 @@
           }
 
           function showOBB(show, dataSource) {
-            var transform =
+            const transform =
               window.lastPickDetails &&
               window.lastPickDetails.mesh &&
               window.lastPickDetails.mesh._octreeTrianglePicking &&
@@ -488,18 +482,18 @@
               return new Cesium.Cartesian3(x, y, z);
             }
 
-            var C = Cesium.Color;
-            var radius =
+            const C = Cesium.Color;
+            const radius =
               window.lastPickDetails.mesh.boundingSphere3D.radius / 50;
 
-            var x;
-            var y;
-            var z;
-            var amount = 0.2;
+            let x;
+            let y;
+            let z;
+            const amount = 0.2;
             for (x = -0.5; x <= 0.5; x += amount) {
               for (y = -0.5; y <= 0.5; y += amount) {
                 for (z = -0.5; z <= 0.5; z += amount) {
-                  var color = C.VIOLET;
+                  let color = C.VIOLET;
                   if (x < 0 && y < 0) {
                     // TOP LEFT
                     color = C.BLUE;
@@ -527,16 +521,16 @@
             drawOctreeLayer(octreePrimitives, selectedOctreeLevel);
           }
 
-          var showOctreeOptions = [
+          const showOctreeOptions = [
             {
               text: "Hide Octree",
               onselect: onSelectShowOctree.bind(this, null),
             },
           ];
-          var optionLevel = 0;
+          let optionLevel = 0;
           while (optionLevel <= 2) {
             showOctreeOptions.push({
-              text: "Octree Level " + optionLevel,
+              text: `Octree Level ${optionLevel}`,
               onselect: onSelectShowOctree.bind(this, optionLevel),
             });
             optionLevel++;
@@ -621,29 +615,29 @@
             "showOBB"
           );
 
-          var scene = viewer.scene;
-          var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+          const scene = viewer.scene;
+          const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
 
           handler.setInputAction(function (movement) {
             window.showPickDetails = true;
-            var scene = viewer.scene;
-            var camera = scene.camera;
+            const scene = viewer.scene;
+            const camera = scene.camera;
 
-            var ray = camera.getPickRay(movement.position);
-            var pickPosition = scene.globe.pick(ray, scene);
+            const ray = camera.getPickRay(movement.position);
+            const pickPosition = scene.globe.pick(ray, scene);
 
             window.showPickDetails = false;
 
-            var details = window.lastPickDetails;
+            const details = window.lastPickDetails;
             console.trace("stack trace here to debug the sandcastle script");
 
             if (details) {
               viewer.entities.removeAll();
 
-              var transform = details.traceDetails.transform;
-              var inverseTransform = details.traceDetails.inverseTransform;
+              const transform = details.traceDetails.transform;
+              const inverseTransform = details.traceDetails.inverseTransform;
 
-              var axis = new Cesium.DebugModelMatrixPrimitive({
+              const axis = new Cesium.DebugModelMatrixPrimitive({
                 modelMatrix: transform,
                 length: 100000.0,
                 width: 2.0,

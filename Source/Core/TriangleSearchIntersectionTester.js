@@ -5,14 +5,14 @@ import Ray from "./Ray.js";
 import SceneMode from "../Scene/SceneMode.js";
 import Cartographic from "./Cartographic.js";
 
-var scratchCartographic = new Cartographic();
+const scratchCartographic = new Cartographic();
 
 function getPosition(encoding, mode, projection, vertices, index, result) {
-  var position = encoding.getExaggeratedPosition(vertices, index, result);
+  let position = encoding.getExaggeratedPosition(vertices, index, result);
 
   if (defined(mode) && mode !== SceneMode.SCENE3D) {
-    var ellipsoid = projection.ellipsoid;
-    var positionCartographic = ellipsoid.cartesianToCartographic(
+    const ellipsoid = projection.ellipsoid;
+    const positionCartographic = ellipsoid.cartesianToCartographic(
       position,
       scratchCartographic
     );
@@ -48,26 +48,26 @@ TriangleSearchIntersectionTester.prototype.rayIntersect = function (
   projection,
   traceDetails
 ) {
-  var indicesLength = this._indices.length;
-  var vertices = this._vertices;
-  var encoding = this._encoding;
+  const indicesLength = this._indices.length;
+  const vertices = this._vertices;
+  const encoding = this._encoding;
 
-  var scratchV0 = new Cartesian3();
-  var scratchV1 = new Cartesian3();
-  var scratchV2 = new Cartesian3();
+  const scratchV0 = new Cartesian3();
+  const scratchV1 = new Cartesian3();
+  const scratchV2 = new Cartesian3();
 
-  var minT = Number.MAX_VALUE;
+  let minT = Number.MAX_VALUE;
 
-  for (var i = 0; i < indicesLength; i += 3) {
-    var i0 = this._indices[i];
-    var i1 = this._indices[i + 1];
-    var i2 = this._indices[i + 2];
+  for (let i = 0; i < indicesLength; i += 3) {
+    const i0 = this._indices[i];
+    const i1 = this._indices[i + 1];
+    const i2 = this._indices[i + 2];
 
-    var v0 = getPosition(encoding, mode, projection, vertices, i0, scratchV0);
-    var v1 = getPosition(encoding, mode, projection, vertices, i1, scratchV1);
-    var v2 = getPosition(encoding, mode, projection, vertices, i2, scratchV2);
+    const v0 = getPosition(encoding, mode, projection, vertices, i0, scratchV0);
+    const v1 = getPosition(encoding, mode, projection, vertices, i1, scratchV1);
+    const v2 = getPosition(encoding, mode, projection, vertices, i2, scratchV2);
 
-    var t = IntersectionTests.rayTriangleParametric(
+    const t = IntersectionTests.rayTriangleParametric(
       ray,
       v0,
       v1,

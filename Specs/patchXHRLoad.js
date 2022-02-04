@@ -26,11 +26,11 @@ export function patchXHRLoad(proxySpec) {
     overrideMimeType
   ) {
     // find a key (source path) path in the spec which matches (ends with) the requested url
-    var availablePaths = Object.keys(proxySpec);
-    var proxiedUrl;
+    const availablePaths = Object.keys(proxySpec);
+    let proxiedUrl;
 
-    for (var i = 0; i < availablePaths.length; i++) {
-      var srcPath = availablePaths[i];
+    for (let i = 0; i < availablePaths.length; i++) {
+      const srcPath = availablePaths[i];
       if (endsWith(url, srcPath)) {
         proxiedUrl = proxySpec[availablePaths[i]];
         break;
@@ -40,10 +40,9 @@ export function patchXHRLoad(proxySpec) {
     // it's a whitelist - meaning you have to proxy every request explicitly
     if (!defined(proxiedUrl)) {
       throw new Error(
-        "Unexpected XHR load to url: " +
-          url +
-          "; spec includes: " +
-          availablePaths.join(", ")
+        `Unexpected XHR load to url: ${url}; spec includes: ${availablePaths.join(
+          ", "
+        )}`
       );
     }
 

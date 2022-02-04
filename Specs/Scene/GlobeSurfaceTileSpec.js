@@ -524,9 +524,9 @@ describe("Scene/GlobeSurfaceTile", function () {
             height: null,
           };
         }
-        var cartographic = Cartographic.fromCartesian(pickResult);
-        var latitude = CesiumMath.toDegrees(cartographic.latitude);
-        var longitude = CesiumMath.toDegrees(cartographic.longitude);
+        const cartographic = Cartographic.fromCartesian(pickResult);
+        const latitude = CesiumMath.toDegrees(cartographic.latitude);
+        const longitude = CesiumMath.toDegrees(cartographic.longitude);
         return {
           longitude: longitude,
           latitude: latitude,
@@ -534,11 +534,11 @@ describe("Scene/GlobeSurfaceTile", function () {
         };
       }
 
-      var frameState;
-      var imageryLayerCollection;
-      var processor;
+      let frameState;
+      let imageryLayerCollection;
+      let processor;
 
-      var scene;
+      let scene;
 
       beforeAll(function () {
         scene = createScene();
@@ -569,7 +569,7 @@ describe("Scene/GlobeSurfaceTile", function () {
             "Data/CesiumTerrainTileJson/9_759_335/9_759_335.terrain",
         });
 
-        var terrainProvider = new CesiumTerrainProvider({
+        const terrainProvider = new CesiumTerrainProvider({
           url: "made/up/url",
         });
 
@@ -581,7 +581,7 @@ describe("Scene/GlobeSurfaceTile", function () {
         processor.mockWebGL();
         processor.frameState = scene.frameState;
 
-        var tile = new QuadtreeTile({
+        const tile = new QuadtreeTile({
           tilingScheme: new GeographicTilingScheme({
             numberOfLevelZeroTilesX: 2,
             numberOfLevelZeroTilesY: 1,
@@ -593,15 +593,15 @@ describe("Scene/GlobeSurfaceTile", function () {
         });
 
         return processor.process([tile]).then(function () {
-          var direction = new Cartesian3(
+          const direction = new Cartesian3(
             0.04604903643932318,
             0.8821324224085892,
             0.46874500059047475
           );
-          var origin = new Cartesian3(0, 0, -20029.056425910585);
-          var ray = new Ray(origin, direction);
-          var cullBackFaces = false;
-          var pickResult = tile.data.pick(
+          const origin = new Cartesian3(0, 0, -20029.056425910585);
+          const ray = new Ray(origin, direction);
+          const cullBackFaces = false;
+          const pickResult = tile.data.pick(
             ray,
             SceneMode.SCENE3D,
             undefined,
@@ -616,7 +616,7 @@ describe("Scene/GlobeSurfaceTile", function () {
 
       it("should pick a few points on a ArcGIS tile", function () {
         patchXHRLoadForArcGISTerrainDataSet();
-        var terrainProvider = new ArcGISTiledElevationTerrainProvider({
+        const terrainProvider = new ArcGISTiledElevationTerrainProvider({
           url: "made/up/url",
         });
 
@@ -629,28 +629,28 @@ describe("Scene/GlobeSurfaceTile", function () {
         processor.frameState = scene.frameState;
 
         return terrainProvider.readyPromise.then(function () {
-          var tile = new QuadtreeTile({
+          const tile = new QuadtreeTile({
             tilingScheme: terrainProvider.tilingScheme,
             level: 9,
             x: 379,
             y: 214,
           });
           return processor.process([tile]).then(function () {
-            var direction = new Cartesian3(
+            const direction = new Cartesian3(
               0.04604903643932318,
               0.8821324224085892,
               0.46874500059047475
             );
-            var origin = new Cartesian3(0, 0, -20029.056425910585);
-            var ray = new Ray(origin, direction);
-            var cullBackFaces = false;
-            var pickResult = tile.data.pick(
+            const origin = new Cartesian3(0, 0, -20029.056425910585);
+            const ray = new Ray(origin, direction);
+            const cullBackFaces = false;
+            const pickResult = tile.data.pick(
               ray,
               SceneMode.SCENE3D,
               undefined,
               cullBackFaces
             );
-            var location = pickResultToLocation(pickResult);
+            const location = pickResultToLocation(pickResult);
             expect(location.latitude).toBeCloseTo(27.952862605533163, 10);
             expect(location.longitude).toBeCloseTo(87.01176072534257, 10);
             expect(location.height).toBeCloseTo(6372, 0);
@@ -660,13 +660,13 @@ describe("Scene/GlobeSurfaceTile", function () {
 
       it("should do a lot more points", function () {
         // pick a point 10km above sea level (~4k above the terrain at this location)
-        var position = {
+        const position = {
           longitude: 87.01176072534257,
           latitude: 27.952862605533163,
         };
 
-        var ray = new Ray();
-        var cartesian = Cartesian3.fromDegrees(
+        const ray = new Ray();
+        const cartesian = Cartesian3.fromDegrees(
           position.longitude,
           position.latitude,
           // calculating the normal requires ground level
@@ -683,7 +683,7 @@ describe("Scene/GlobeSurfaceTile", function () {
         );
 
         patchXHRLoadForArcGISTerrainDataSet();
-        var terrainProvider = new ArcGISTiledElevationTerrainProvider({
+        const terrainProvider = new ArcGISTiledElevationTerrainProvider({
           url: "made/up/url",
         });
 
@@ -696,21 +696,21 @@ describe("Scene/GlobeSurfaceTile", function () {
         processor.frameState = scene.frameState;
 
         return terrainProvider.readyPromise.then(function () {
-          var tile = new QuadtreeTile({
+          const tile = new QuadtreeTile({
             tilingScheme: terrainProvider.tilingScheme,
             level: 9,
             x: 379,
             y: 214,
           });
           return processor.process([tile]).then(function () {
-            var cullBackFaces = false;
-            var pickResult = tile.data.pick(
+            const cullBackFaces = false;
+            const pickResult = tile.data.pick(
               ray,
               SceneMode.SCENE3D,
               undefined,
               cullBackFaces
             );
-            var location = pickResultToLocation(pickResult);
+            const location = pickResultToLocation(pickResult);
             expect(location.latitude).toBeCloseTo(27.952862605533163, 10);
             expect(location.longitude).toBeCloseTo(87.01176072534257, 10);
             expect(location.height).toBeCloseTo(6372, 0);
@@ -721,7 +721,7 @@ describe("Scene/GlobeSurfaceTile", function () {
       it("special point that returned null", function () {
         patchXHRLoadForArcGISTerrainDataSet();
 
-        var ray = new Ray(
+        const ray = new Ray(
           new Cartesian3(0, 0, -20055.701538655045),
           new Cartesian3(
             0.046566275697934596,
@@ -729,7 +729,7 @@ describe("Scene/GlobeSurfaceTile", function () {
             0.4693676637498234
           )
         );
-        var terrainProvider = new ArcGISTiledElevationTerrainProvider({
+        const terrainProvider = new ArcGISTiledElevationTerrainProvider({
           url: "made/up/url",
         });
 
@@ -742,21 +742,21 @@ describe("Scene/GlobeSurfaceTile", function () {
         processor.frameState = scene.frameState;
 
         return terrainProvider.readyPromise.then(function () {
-          var tile = new QuadtreeTile({
+          const tile = new QuadtreeTile({
             tilingScheme: terrainProvider.tilingScheme,
             level: 9,
             x: 379,
             y: 214,
           });
           return processor.process([tile]).then(function () {
-            var cullBackFaces = false;
-            var pickResult = tile.data.pick(
+            const cullBackFaces = false;
+            const pickResult = tile.data.pick(
               ray,
               SceneMode.SCENE3D,
               undefined,
               cullBackFaces
             );
-            var location = pickResultToLocation(pickResult);
+            const location = pickResultToLocation(pickResult);
             expect(location.latitude).toBeCloseTo(27.993258048265453, 10);
             expect(location.longitude).toBeCloseTo(86.97703198692928, 10);
             expect(location.height).toBeCloseTo(5587.6, 0);
