@@ -1,3 +1,4 @@
+import BoundingSphere from "../../Core/BoundingSphere.js";
 import Check from "../../Core/Check.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import defined from "../../Core/defined.js";
@@ -133,8 +134,6 @@ export default function ModelExperimental(options) {
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._resources = [];
-
-  this._boundingSphere = undefined;
 
   const pointCloudShading = new PointCloudShading(options.pointCloudShading);
   this._attenuation = pointCloudShading.attenuation;
@@ -534,7 +533,10 @@ Object.defineProperties(ModelExperimental.prototype, {
       }
       //>>includeEnd('debug');
 
-      return this._sceneGraph.boundingSphere;
+      return BoundingSphere.transform(
+        this._sceneGraph.boundingSphere,
+        this.modelMatrix
+      );
     },
   },
 

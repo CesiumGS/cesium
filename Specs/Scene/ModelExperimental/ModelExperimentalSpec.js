@@ -485,6 +485,26 @@ describe(
       });
     });
 
+    it("changing model matrix affects bounding sphere", function () {
+      const translation = new Cartesian3(10, 0, 0);
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl, upAxis: Axis.Z, forwardAxis: Axis.X },
+        scene
+      ).then(function (model) {
+        const transform = Matrix4.fromTranslation(translation);
+        expect(model.boundingSphere.center).toEqual(new Cartesian3());
+
+        Matrix4.multiplyTransformation(
+          model.modelMatrix,
+          transform,
+          model.modelMatrix
+        );
+        scene.renderForSpecs();
+
+        expect(model.boundingSphere.center).toEqual(translation);
+      });
+    });
+
     it("enables back-face culling", function () {
       return loadAndZoomToModelExperimental(
         {

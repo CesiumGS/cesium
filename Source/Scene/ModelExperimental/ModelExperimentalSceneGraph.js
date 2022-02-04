@@ -105,16 +105,6 @@ export default function ModelExperimentalSceneGraph(options) {
   this._drawCommands = [];
 
   /**
-   * The array of bounding spheres of all the primitives in the scene graph.
-   *
-   * @type {BoundingSphere[]}
-   * @readonly
-   *
-   * @private
-   */
-  this._boundingSpheres = [];
-
-  /**
    * Pipeline stages to apply to this model. This
    * is an array of classes, each with a static method called
    * <code>process()</code>
@@ -293,6 +283,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     modelPipelineStage.process(modelRenderResources, model, frameState);
   }
 
+  const boundingSpheres = [];
   for (i = 0; i < this._runtimeNodes.length; i++) {
     const runtimeNode = this._runtimeNodes[i];
     runtimeNode.configurePipeline();
@@ -337,7 +328,8 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       runtimePrimitive.boundingSphere = BoundingSphere.clone(
         primitiveRenderResources.boundingSphere
       );
-      this._boundingSpheres.push(primitiveRenderResources.boundingSphere);
+
+      boundingSpheres.push(primitiveRenderResources.boundingSphere);
 
       const drawCommands = buildDrawCommands(
         primitiveRenderResources,
@@ -347,9 +339,8 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       runtimePrimitive.drawCommands = drawCommands;
     }
   }
-  this._boundingSphere = BoundingSphere.fromBoundingSpheres(
-    this._boundingSpheres
-  );
+
+  this._boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
 };
 
 /**
