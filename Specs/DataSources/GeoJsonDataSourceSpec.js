@@ -420,7 +420,7 @@ describe("DataSources/GeoJsonDataSource", function () {
   });
 
   it("Adds a feature without removing existing entities", function () {
-    var dataSource = new GeoJsonDataSource();
+    const dataSource = new GeoJsonDataSource();
     return dataSource.load(feature).then(function () {
       return dataSource.process(mixedGeometries).then(function () {
         // `feature` has one Entity, `mixedGeometries` has 3

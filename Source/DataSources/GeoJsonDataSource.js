@@ -931,8 +931,8 @@ function preload(that, data, options, clear) {
     sourceUri = defaultValue(sourceUri, data.getUrlComponent());
 
     // Add resource credits to our list of credits to display
-    var resourceCredits = that._resourceCredits;
-    var credits = data.credits;
+    const resourceCredits = that._resourceCredits;
+    const credits = data.credits;
     if (defined(credits)) {
       const length = credits.length;
       for (let i = 0; i < length; i++) {
@@ -958,7 +958,6 @@ function preload(that, data, options, clear) {
     clampToGround: defaultValue(options.clampToGround, defaultClampToGround),
   };
 
-  const that = this;
   return when(promise, function (geoJson) {
     return load(that, geoJson, options, sourceUri, clear);
   }).otherwise(function (error) {
@@ -983,7 +982,7 @@ GeoJsonDataSource.prototype.update = function (time) {
 };
 
 function load(that, geoJson, options, sourceUri, clear) {
-  var name;
+  let name;
   if (defined(sourceUri)) {
     name = getFilenameFromUri(sourceUri);
   }
