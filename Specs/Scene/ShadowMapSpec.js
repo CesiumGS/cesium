@@ -11,6 +11,7 @@ import { HeadingPitchRoll } from "../../Source/Cesium.js";
 import { HeightmapTerrainData } from "../../Source/Cesium.js";
 import { JulianDate } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Matrix4 } from "../../Source/Cesium.js";
 import { OrthographicOffCenterFrustum } from "../../Source/Cesium.js";
 import { PixelFormat } from "../../Source/Cesium.js";
 import { Transforms } from "../../Source/Cesium.js";
@@ -23,6 +24,7 @@ import { Camera } from "../../Source/Cesium.js";
 import { DirectionalLight } from "../../Source/Cesium.js";
 import { Globe } from "../../Source/Cesium.js";
 import { Model } from "../../Source/Cesium.js";
+import { ModelExperimental } from "../../Source/Cesium.js";
 import { PerInstanceColorAppearance } from "../../Source/Cesium.js";
 import { Primitive } from "../../Source/Cesium.js";
 import { ShadowMap } from "../../Source/Cesium.js";
@@ -52,6 +54,10 @@ describe(
     let box;
     let boxTranslucent;
     let boxCutout;
+
+    let boxExperimental;
+    let boxTranslucentExperimental;
+
     let room;
     let floor;
     let floorTranslucent;
@@ -79,6 +85,15 @@ describe(
         new HeadingPitchRoll()
       );
 
+      const boxScale = 0.5;
+      const boxScaleCartesian = new Cartesian3(boxScale, boxScale, boxScale);
+      const boxTransformExperimental = new Matrix4();
+      Matrix4.setScale(
+        boxTransform,
+        boxScaleCartesian,
+        boxTransformExperimental
+      );
+
       const floorOrigin = new Cartesian3.fromRadians(
         longitude,
         latitude,
@@ -104,7 +119,7 @@ describe(
         loadModel({
           url: boxUrl,
           modelMatrix: boxTransform,
-          scale: 0.5,
+          scale: boxScale,
           show: false,
         }).then(function (model) {
           box = model;
@@ -114,7 +129,7 @@ describe(
         loadModel({
           url: boxTranslucentUrl,
           modelMatrix: boxTransform,
-          scale: 0.5,
+          scale: boxScale,
           show: false,
         }).then(function (model) {
           boxTranslucent = model;
@@ -124,11 +139,29 @@ describe(
         loadModel({
           url: boxCutoutUrl,
           modelMatrix: boxTransform,
-          scale: 0.5,
+          scale: boxScale,
           incrementallyLoadTextures: false,
           show: false,
         }).then(function (model) {
           boxCutout = model;
+        })
+      );
+      modelPromises.push(
+        loadModelExperimental({
+          gltf: boxUrl,
+          modelMatrix: boxTransformExperimental,
+          show: false,
+        }).then(function (model) {
+          boxExperimental = model;
+        })
+      );
+      modelPromises.push(
+        loadModelExperimental({
+          gltf: boxTranslucentUrl,
+          modelMatrix: boxTransformExperimental,
+          show: false,
+        }).then(function (model) {
+          boxTranslucentExperimental = model;
         })
       );
       modelPromises.push(
@@ -246,6 +279,20 @@ describe(
 
     function loadModel(options) {
       const model = scene.primitives.add(Model.fromGltf(options));
+      return pollToPromise(
+        function () {
+          // Render scene to progressively load the model
+          scene.render();
+          return model.ready;
+        },
+        { timeout: 10000 }
+      ).then(function () {
+        return model;
+      });
+    }
+
+    function loadModelExperimental(options) {
+      const model = scene.primitives.add(ModelExperimental.fromGltf(options));
       return pollToPromise(
         function () {
           // Render scene to progressively load the model
@@ -507,11 +554,25 @@ describe(
       verifyShadows(box, floor);
     });
 
+    it("model experimental casts shadows onto another model", function () {
+      boxExperimental.show = true;
+      floor.show = true;
+      createCascadedShadowMap();
+      verifyShadows(boxExperimental, floor);
+    });
+
     it("translucent model casts shadows onto another model", function () {
       boxTranslucent.show = true;
       floor.show = true;
       createCascadedShadowMap();
       verifyShadows(boxTranslucent, floor);
+    });
+
+    it("translucent model experimental casts shadows onto another model", function () {
+      boxTranslucentExperimental.show = true;
+      floor.show = true;
+      createCascadedShadowMap();
+      verifyShadows(boxTranslucentExperimental, floor);
     });
 
     it("model with cutout texture casts shadows onto another model", function () {
