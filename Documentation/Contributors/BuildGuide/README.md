@@ -13,7 +13,7 @@
 2. [Build](#build-the-code)
 
    ```
-    npm install \
+    npm install
     npm run build
    ```
 
