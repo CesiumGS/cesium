@@ -1,3 +1,7 @@
+import defaultValue from "./defaultValue.js";
+import DeveloperError from "./DeveloperError.js";
+import isLeapYear from "./isLeapYear.js";
+
 /**
  * Represents a Gregorian date in a more precise format than the JavaScript Date object.
  * In addition to submillisecond precision, this object can also represent leap seconds.
@@ -25,21 +29,21 @@ function GregorianDate(
   millisecond,
   isLeapSecond
 ) {
-  const minYear = 1;
-  const minMonth = 1;
-  const minDay = 1;
-  const minHour = 0;
-  const minMinute = 0;
-  const minSecond = 0;
-  const minMillisecond = 0;
+  const minimumYear = 1;
+  const minimumMonth = 1;
+  const minimumDay = 1;
+  const minimumHour = 0;
+  const minimumMinute = 0;
+  const minimumSecond = 0;
+  const minimumMillisecond = 0;
 
-  if (!year) year = minYear;
-  if (!month) month = minMonth;
-  if (!day) day = minDay;
-  if (!hour) hour = minHour;
-  if (!minute) minute = minMinute;
-  if (!second) second = minSecond;
-  if (!millisecond) millisecond = minMillisecond;
+  year = defaultValue(year, minimumYear);
+  month = defaultValue(month, minimumMonth);
+  day = defaultValue(day, minimumDay);
+  hour = defaultValue(hour, minimumHour);
+  minute = defaultValue(minute, minimumMinute);
+  second = defaultValue(second, minimumSecond);
+  millisecond = defaultValue(millisecond, minimumMillisecond);
   validateRange();
   validateDate();
 
@@ -85,13 +89,13 @@ function GregorianDate(
   this.isLeapSecond = isLeapSecond;
 
   function validateRange() {
-    const maxYear = 9999;
-    const maxMonth = 12;
-    const maxDay = 31;
-    const maxHour = 23;
-    const maxMinute = 59;
-    const maxSecond = 59;
-    const excludedMaxMilisecond = 1000;
+    const maximumYear = 9999;
+    const maximumMonth = 12;
+    const maximumDay = 31;
+    const maximumHour = 23;
+    const maximumMinute = 59;
+    const maximumSecond = 59;
+    const excludedMaximumMilisecond = 1000;
 
     if (
       isNaN(year) ||
@@ -102,44 +106,48 @@ function GregorianDate(
       isNaN(second) ||
       isNaN(millisecond)
     )
-      throw "Invalid value passed in parameter";
+      throw new DeveloperError("Invalid value passed in parameter");
 
-    if (year < minYear || year > maxYear)
-      throw "Year parameter represent an invalid date";
-    if (month < minMonth || month > maxMonth)
-      throw "Month parameter represent an invalid date";
-    if (day < minDay || day > maxDay)
-      throw "Day parameter represent an invalid date";
-    if (hour < minHour || hour > maxHour)
-      throw "Hour parameter represent an invalid date";
-    if (minute < minMinute || minute > maxMinute)
-      throw "Combination of Minute and IsLeapSecond parameters represent an invalid date";
+    if (year < minimumYear || year > maximumYear)
+      throw new DeveloperError("Year parameter represent an invalid date");
+    if (month < minimumMonth || month > maximumMonth)
+      throw new DeveloperError("Month parameter represent an invalid date");
+    if (day < minimumDay || day > maximumDay)
+      throw new DeveloperError("Day parameter represent an invalid date");
+    if (hour < minimumHour || hour > maximumHour)
+      throw new DeveloperError("Hour parameter represent an invalid date");
+    if (minute < minimumMinute || minute > maximumMinute)
+      throw new DeveloperError(
+        "Combination of Minute and IsLeapSecond parameters represent an invalid date"
+      );
     if (
-      second < minSecond ||
-      (second > maxSecond && !isLeapSecond) ||
-      (second > maxSecond + 1 && isLeapSecond)
+      second < minimumSecond ||
+      (second > maximumSecond && !isLeapSecond) ||
+      (second > maximumSecond + 1 && isLeapSecond)
     )
-      throw "Second parameter represent an invalid date";
-    if (millisecond < minMillisecond || millisecond >= excludedMaxMilisecond)
-      throw "Millisecond parameter represent an invalid date";
+      throw new DeveloperError("Second parameter represent an invalid date");
+    if (
+      millisecond < minimumMillisecond ||
+      millisecond >= excludedMaximumMilisecond
+    )
+      throw new DeveloperError(
+        "Millisecond parameter represent an invalid date"
+      );
   }
 
   // Javascript date object supports only dates greater than 1901. Thus validating with custom logic
   function validateDate() {
-    const minNumberOfDaysInMonth = 28;
-    const monthsWith31Days = [1, 3, 5, 7, 8, 10, 12];
+    const minimumDaysInMonth = 28;
+    const daysInYear = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
     if (
       month === 2 &&
-      ((year % 4 === 0 && day > minNumberOfDaysInMonth + 1) ||
-        (year % 4 !== 0 && day > minNumberOfDaysInMonth))
+      ((isLeapYear(year) && day > minimumDaysInMonth + 1) ||
+        (!isLeapYear(year) && day > minimumDaysInMonth))
     )
-      throw "Year, Month and Day represents invalid date";
-    else if (
-      monthsWith31Days.indexOf(month) === -1 &&
-      day > minNumberOfDaysInMonth + 2
-    )
-      throw "Month and Day represents invalid date";
+      throw new DeveloperError("Year, Month and Day represents invalid date");
+    else if (month !== 2 && day > daysInYear[month - 1])
+      throw new DeveloperError("Month and Day represents invalid date");
   }
 }
 export default GregorianDate;
