@@ -191,17 +191,17 @@ TerrainMesh.prototype.pickRay = function (
   frameState,
   projection
 ) {
-  var trace = window.showPickDetails;
+  const trace = window.showPickDetails;
 
-  var traceDetails;
+  let traceDetails;
   if (trace) {
     traceDetails = {};
   }
 
-  var newPickValue, oldPickValue;
+  let newPickValue, oldPickValue;
 
-  var hasOctree = !!this._octreeTrianglePicking;
-  var canUseOctree =
+  const hasOctree = !!this._octreeTrianglePicking;
+  const canUseOctree =
     frameState /* not always passed in */ &&
     frameState.mode === SceneMode.SCENE3D /* 3d mode only*/ &&
     frameState.terrainExaggeration ===
@@ -233,13 +233,13 @@ TerrainMesh.prototype.pickRay = function (
     !isCartesianAlmostEqual(newPickValue, oldPickValue)
   ) {
     console.error("pick values are different", newPickValue, oldPickValue);
-    var newPickAgain = this._octreeTrianglePicking.rayIntersect(
+    const newPickAgain = this._octreeTrianglePicking.rayIntersect(
       ray,
       cullBackFaces,
       null,
       traceDetails
     );
-    var oldPickAgain = this._defaultPickStrategy.rayIntersect(
+    const oldPickAgain = this._defaultPickStrategy.rayIntersect(
       ray,
       cullBackFaces,
       frameState.mode,

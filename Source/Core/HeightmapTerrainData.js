@@ -291,10 +291,10 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
 
     const vertexCountWithoutSkirts = result.gridWidth * result.gridHeight;
 
-    var encoding = TerrainEncoding.clone(result.encoding);
-    var vertices = new Float32Array(result.vertices);
+    const encoding = TerrainEncoding.clone(result.encoding);
+    const vertices = new Float32Array(result.vertices);
 
-    var octreeTrianglePicker = null;
+    let octreeTrianglePicker = null;
     if (encoding.exaggeration === 1 && result.octree) {
       // ahhh, sorry, the octree data structure is built off non-exaggerated triangles
       octreeTrianglePicker = new OctreeTrianglePicking(

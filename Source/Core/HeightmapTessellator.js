@@ -554,7 +554,7 @@ HeightmapTessellator.computeVertices = function (options) {
     console.timeEnd("creating oriented bounding box");
 
     console.time("making packed triangles");
-    var packedTriangles = createPackedTriangles(
+    const packedTriangles = createPackedTriangles(
       positions,
       inverseTransform,
       width,

@@ -372,7 +372,7 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
     const stride = result.vertexStride;
     const terrainEncoding = TerrainEncoding.clone(result.encoding);
 
-    var trianglePicking = new OctreeTrianglePicking(
+    const trianglePicking = new OctreeTrianglePicking(
       result.packedOctree,
       createTriangleVerticesCallback(
         vertices,

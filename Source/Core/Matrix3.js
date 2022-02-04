@@ -1018,7 +1018,7 @@ Matrix3.multiplyByScale = function (matrix, scale, result) {
   return result;
 };
 
-var uniformScaleScratch = new Cartesian3();
+const uniformScaleScratch = new Cartesian3();
 
 Matrix3.multiplyByUniformScale = function (matrix, scale, result) {
   //>>includeStart('debug', pragmas.debug);

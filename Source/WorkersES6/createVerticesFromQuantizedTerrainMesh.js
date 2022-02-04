@@ -26,12 +26,12 @@ const cartographicScratch = new Cartographic();
 const toPack = new Cartesian2();
 
 function createPackedTrianglesFromIndices(indices, positions, invTrans) {
-  var v0 = new Cartesian3();
-  var v1 = new Cartesian3();
-  var v2 = new Cartesian3();
-  var triangleCount = indices.length / 3;
-  var i;
-  var triangles = []; // new Float32Array(triangleCount * 6);
+  const v0 = new Cartesian3();
+  const v1 = new Cartesian3();
+  const v2 = new Cartesian3();
+  const triangleCount = indices.length / 3;
+  let i;
+  const triangles = []; // new Float32Array(triangleCount * 6);
 
   for (i = 0; i < triangleCount; i++) {
     Matrix4.multiplyByPoint(invTrans, positions[indices[i * 3]], v0);

@@ -50,7 +50,7 @@ Ray.clone = function (ray, result) {
   return result;
 };
 
-var scratchCartesian = new Cartesian3();
+const scratchCartesian = new Cartesian3();
 
 /**
  * Computes the point along the ray given by r(t) = o + t*d,
@@ -76,7 +76,11 @@ Ray.getPoint = function (ray, t, result) {
     result = new Cartesian3();
   }
 
-  var offset = Cartesian3.multiplyByScalar(ray.direction, t, scratchCartesian);
+  const offset = Cartesian3.multiplyByScalar(
+    ray.direction,
+    t,
+    scratchCartesian
+  );
   return Cartesian3.add(ray.origin, offset, result);
 };
 export default Ray;
