@@ -9,6 +9,10 @@
 - Added `depthPlaneEllipsoidOffset` to Viewer and Scene constructors to address rendering artefacts below ellipsoid zero elevation. [#9200](https://github.com/CesiumGS/cesium/pull/9200)
 - Added support for `debugColorTiles` in `ModelExperimental`. [#10071](https://github.com/CesiumGS/cesium/pull/10071)
 
+##### Fixes :wrench:
+
+- Fixed a bug where updating `ModelExperimental`'s model matrix would not update its bounding sphere. [#10078](https://github.com/CesiumGS/cesium/pull/10078)
+
 ### 1.90 - 2022-02-01
 
 ##### Additions :tada:
