@@ -26,6 +26,7 @@ function GregorianDate(
   isLeapSecond = false
 ) {
   validateRange();
+  validateDate();
 
   /**
    * Gets or sets the year as a whole number.
@@ -69,22 +70,57 @@ function GregorianDate(
   this.isLeapSecond = isLeapSecond;
 
   function validateRange() {
-    if (year < 1 || year > 9999)
+    const maxYear = 9999;
+    const minYear = 1;
+    const minMonth = 1;
+    const maxMonth = 12;
+    const maxDay = 31;
+    const minDay = 1;
+    const minHour = 0;
+    const maxHour = 23;
+    const maxMinute = 59;
+    const minMinute = 0;
+    const minSecond = 0;
+    const maxSecond = 59;
+    const minMilisecond = 0;
+    const excludedMaxMilisecond = 1000;
+
+    if (year < minYear || year > maxYear)
       throw "Year parameter represent an invalid date";
-    if (month < 1 || month > 12)
+    if (month < minMonth || month > maxMonth)
       throw "Month parameter represent an invalid date";
-    if (day < 1 || day > 31) throw "Day parameter represent an invalid date";
-    if (hour < 0 || hour > 23) throw "Hour parameter represent an invalid date";
-    if (minute < 0 || minute > 59)
+    if (day < minDay || day > maxDay)
+      throw "Day parameter represent an invalid date";
+    if (hour < minHour || hour > maxHour)
+      throw "Hour parameter represent an invalid date";
+    if (minute < minMinute || minute > maxMinute)
       throw "Combination of Minute and IsLeapSecond parameters represent an invalid date";
     if (
-      second < 0 ||
-      (second > 59 && !isLeapSecond) ||
-      (second > 60 && isLeapSecond)
+      second < minSecond ||
+      (second > maxSecond && !isLeapSecond) ||
+      (second > maxSecond + 1 && isLeapSecond)
     )
       throw "Second parameter represent an invalid date";
-    if (millisecond < 0 || millisecond >= 1000)
+    if (millisecond < minMilisecond || millisecond >= excludedMaxMilisecond)
       throw "Millisecond parameter represent an invalid date";
+  }
+
+  // Javascript date object supports only dates greater than 1901. Thus validating with custom logic
+  function validateDate() {
+    const minNumberOfDaysInMonth = 28;
+    const monthsWith31Days = [1, 3, 5, 7, 8, 10, 12];
+
+    if (
+      month === 2 &&
+      ((year % 4 === 0 && day > minNumberOfDaysInMonth + 1) ||
+        (year % 4 !== 0 && day > minNumberOfDaysInMonth))
+    )
+      throw "Year, Month and Day represents invalid date";
+    else if (
+      monthsWith31Days.indexOf(month) === -1 &&
+      day > minNumberOfDaysInMonth + 2
+    )
+      throw "Month and Day represents invalid date";
   }
 }
 export default GregorianDate;
