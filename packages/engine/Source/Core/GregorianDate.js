@@ -16,15 +16,30 @@
  * @see JulianDate#toGregorianDate
  */
 function GregorianDate(
-  year = 1,
-  month = 1,
-  day = 1,
-  hour = 0,
-  minute = 0,
-  second = 0,
-  millisecond = 0,
-  isLeapSecond = false
+  year,
+  month,
+  day,
+  hour,
+  minute,
+  second,
+  millisecond,
+  isLeapSecond
 ) {
+  const minYear = 1;
+  const minMonth = 1;
+  const minDay = 1;
+  const minHour = 0;
+  const minMinute = 0;
+  const minSecond = 0;
+  const minMillisecond = 0;
+
+  if (!year) year = minYear;
+  if (!month) month = minMonth;
+  if (!day) day = minDay;
+  if (!hour) hour = minHour;
+  if (!minute) minute = minMinute;
+  if (!second) second = minSecond;
+  if (!millisecond) millisecond = minMillisecond;
   validateRange();
   validateDate();
 
@@ -71,19 +86,23 @@ function GregorianDate(
 
   function validateRange() {
     const maxYear = 9999;
-    const minYear = 1;
-    const minMonth = 1;
     const maxMonth = 12;
     const maxDay = 31;
-    const minDay = 1;
-    const minHour = 0;
     const maxHour = 23;
     const maxMinute = 59;
-    const minMinute = 0;
-    const minSecond = 0;
     const maxSecond = 59;
-    const minMilisecond = 0;
     const excludedMaxMilisecond = 1000;
+
+    if (
+      isNaN(year) ||
+      isNaN(month) ||
+      isNaN(day) ||
+      isNaN(hour) ||
+      isNaN(minute) ||
+      isNaN(second) ||
+      isNaN(millisecond)
+    )
+      throw "Invalid value passed in parameter";
 
     if (year < minYear || year > maxYear)
       throw "Year parameter represent an invalid date";
@@ -101,7 +120,7 @@ function GregorianDate(
       (second > maxSecond + 1 && isLeapSecond)
     )
       throw "Second parameter represent an invalid date";
-    if (millisecond < minMilisecond || millisecond >= excludedMaxMilisecond)
+    if (millisecond < minMillisecond || millisecond >= excludedMaxMilisecond)
       throw "Millisecond parameter represent an invalid date";
   }
 
