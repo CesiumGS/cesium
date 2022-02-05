@@ -1,3 +1,4 @@
+import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import DeveloperError from "./DeveloperError.js";
 import isLeapYear from "./isLeapYear.js";
@@ -44,8 +45,11 @@ function GregorianDate(
   minute = defaultValue(minute, minimumMinute);
   second = defaultValue(second, minimumSecond);
   millisecond = defaultValue(millisecond, minimumMillisecond);
+  isLeapSecond = defaultValue(isLeapSecond, false);
+  //>>includeStart('debug', pragmas.debug);
   validateRange();
   validateDate();
+  //>>includeEnd('debug');
 
   /**
    * Gets or sets the year as a whole number.
@@ -97,56 +101,49 @@ function GregorianDate(
     const maximumSecond = 59;
     const excludedMaximumMilisecond = 1000;
 
-    if (
-      isNaN(year) ||
-      isNaN(month) ||
-      isNaN(day) ||
-      isNaN(hour) ||
-      isNaN(minute) ||
-      isNaN(second) ||
-      isNaN(millisecond)
-    )
-      throw new DeveloperError("Invalid value passed in parameter");
+    Check.typeOf.number.greaterThanOrEquals("Year", year, minimumYear);
+    Check.typeOf.number.lessThanOrEquals("Year", year, maximumYear);
 
-    if (year < minimumYear || year > maximumYear)
-      throw new DeveloperError("Year parameter represent an invalid date");
-    if (month < minimumMonth || month > maximumMonth)
-      throw new DeveloperError("Month parameter represent an invalid date");
-    if (day < minimumDay || day > maximumDay)
-      throw new DeveloperError("Day parameter represent an invalid date");
-    if (hour < minimumHour || hour > maximumHour)
-      throw new DeveloperError("Hour parameter represent an invalid date");
-    if (minute < minimumMinute || minute > maximumMinute)
-      throw new DeveloperError(
-        "Combination of Minute and IsLeapSecond parameters represent an invalid date"
-      );
-    if (
-      second < minimumSecond ||
-      (second > maximumSecond && !isLeapSecond) ||
-      (second > maximumSecond + 1 && isLeapSecond)
-    )
-      throw new DeveloperError("Second parameter represent an invalid date");
-    if (
-      millisecond < minimumMillisecond ||
-      millisecond >= excludedMaximumMilisecond
-    )
-      throw new DeveloperError(
-        "Millisecond parameter represent an invalid date"
-      );
+    Check.typeOf.number.greaterThanOrEquals("Month", month, minimumMonth);
+    Check.typeOf.number.lessThanOrEquals("Month", month, maximumMonth);
+
+    Check.typeOf.number.greaterThanOrEquals("Day", day, minimumDay);
+    Check.typeOf.number.lessThanOrEquals("Day", day, maximumDay);
+
+    Check.typeOf.number.greaterThanOrEquals("Hour", hour, minimumHour);
+    Check.typeOf.number.lessThanOrEquals("Hour", hour, maximumHour);
+
+    Check.typeOf.number.greaterThanOrEquals("Minute", minute, minimumMinute);
+    Check.typeOf.number.lessThanOrEquals("Minute", minute, maximumMinute);
+
+    Check.typeOf.bool("IsLeapSecond", isLeapSecond);
+
+    Check.typeOf.number.greaterThanOrEquals("Second", second, minimumSecond);
+    Check.typeOf.number.lessThanOrEquals(
+      "Second",
+      second,
+      isLeapSecond ? maximumSecond + 1 : maximumSecond
+    );
+
+    Check.typeOf.number.greaterThanOrEquals(
+      "Millisecond",
+      millisecond,
+      minimumMillisecond
+    );
+    Check.typeOf.number.lessThan(
+      "Millisecond",
+      millisecond,
+      excludedMaximumMilisecond
+    );
   }
 
   // Javascript date object supports only dates greater than 1901. Thus validating with custom logic
   function validateDate() {
-    const minimumDaysInMonth = 28;
     const daysInYear = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-    if (
-      month === 2 &&
-      ((isLeapYear(year) && day > minimumDaysInMonth + 1) ||
-        (!isLeapYear(year) && day > minimumDaysInMonth))
-    )
-      throw new DeveloperError("Year, Month and Day represents invalid date");
-    else if (month !== 2 && day > daysInYear[month - 1])
+    if (month === 2 && isLeapYear(year)) daysInYear[month - 1] += 1;
+
+    if (day > daysInYear[month - 1])
       throw new DeveloperError("Month and Day represents invalid date");
   }
 }
