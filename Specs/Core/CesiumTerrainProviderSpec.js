@@ -1168,46 +1168,9 @@ describe("Core/CesiumTerrainProvider", function () {
       });
     });
 
-    // it("Uses query parameter extensions for ion resource", async function(){
-    //   let terrainProvider = new CesiumTerrainProvider({
-    //     url: IonResource.fromAssetId(1),
-    //     requestVertexNormals: true,
-    //     requestWaterMask: true,
-    //   });
-
-    //   const promisedPoll = await pollToPromise(function () { return terrainProvider.ready;});
-
-    //   promisedPoll
-    //     .then(function () {
-    //         runTest(terrainProvider);
-    //       })
-    //       .catch( function (e){
-    //         console.error("Async Error: " + e);
-    //         // Move terrainProvider local
-    //         terrainProvider = new CesiumTerrainProvider({
-    //           url: "/Specs/testLayer",
-    //           requestVertexNormals: true,
-    //           requestWaterMask: true,
-    //           });
-    //         runTest(terrainProvider);
-    //       })
-    //       .finally(function(){
-    //          console.warn('All objects localized');
-    //       });
-
-    //       function runTest(terrainProvider){
-    //         const getDerivedResource = spyOn( IonResource.prototype, "getDerivedResource").and.callThrough();
-    //         terrainProvider.requestTileGeometry(0, 0, 0);
-    //         const options = getDerivedResource.calls.argsFor(0)[0]; //<= Options is not resolving to anything
-    //         //==options captured== //
-    //         // const options = {"url":"{z}/{x}/{y}.terrain?v={version}","templateValues":{"version":"1.2.0","z":0,"x":0,"y":0},"queryParameters":{"extensions":"octvertexnormals-watermask-metadata"},"headers":{"Accept":"application/vnd.quantized-mesh,application/octet-stream;q=0.9,*/*;q=0.01"}}
-    //         expect(options.queryParameters.extensions).toEqual("octvertexnormals-watermask-metadata");
-    //       }
-    // });
-
     it("Uses query parameter extensions for ion resource", function () {
       const terrainProvider = new CesiumTerrainProvider({
-        url: "/Specs/testLayer",
+        url: "/Specs/Mocks/CesiumTerrainProvider", // Mock payload from Ion
         requestVertexNormals: true,
         requestWaterMask: true,
         ready: true,
