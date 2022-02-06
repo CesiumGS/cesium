@@ -347,7 +347,7 @@
 
               //The polyline instance itself needs to be on an entity.
               const entity = new Cesium.Entity({
-                id: seriesName + " index " + i.toString(),
+                id: `${seriesName} index ${i.toString()}`,
                 show: show,
                 polyline: polyline,
                 seriesName: seriesName, //Custom property to indicate series name

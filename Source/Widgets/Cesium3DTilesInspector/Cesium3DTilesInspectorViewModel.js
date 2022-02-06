@@ -65,90 +65,58 @@ function getStatistics(tileset, isPick) {
   let s = '<ul class="cesium-cesiumInspector-statistics">';
   s +=
     // --- Rendering statistics
-    "<li><strong>Visited: </strong>" +
-    statistics.visited.toLocaleString() +
-    "</li>" +
+    `<li><strong>Visited: </strong>${statistics.visited.toLocaleString()}</li>` +
     // Number of commands returned is likely to be higher than the number of tiles selected
     // because of tiles that create multiple commands.
-    "<li><strong>Selected: </strong>" +
-    statistics.selected.toLocaleString() +
-    "</li>" +
+    `<li><strong>Selected: </strong>${statistics.selected.toLocaleString()}</li>` +
     // Number of commands executed is likely to be higher because of commands overlapping
     // multiple frustums.
-    "<li><strong>Commands: </strong>" +
-    statistics.numberOfCommands.toLocaleString() +
-    "</li>";
+    `<li><strong>Commands: </strong>${statistics.numberOfCommands.toLocaleString()}</li>`;
   s += "</ul>";
   if (!isPick) {
     s += '<ul class="cesium-cesiumInspector-statistics">';
     s +=
       // --- Cache/loading statistics
-      "<li><strong>Requests: </strong>" +
-      statistics.numberOfPendingRequests.toLocaleString() +
-      "</li>" +
-      "<li><strong>Attempted: </strong>" +
-      statistics.numberOfAttemptedRequests.toLocaleString() +
-      "</li>" +
-      "<li><strong>Processing: </strong>" +
-      statistics.numberOfTilesProcessing.toLocaleString() +
-      "</li>" +
-      "<li><strong>Content Ready: </strong>" +
-      statistics.numberOfTilesWithContentReady.toLocaleString() +
-      "</li>" +
+      `<li><strong>Requests: </strong>${statistics.numberOfPendingRequests.toLocaleString()}</li>` +
+      `<li><strong>Attempted: </strong>${statistics.numberOfAttemptedRequests.toLocaleString()}</li>` +
+      `<li><strong>Processing: </strong>${statistics.numberOfTilesProcessing.toLocaleString()}</li>` +
+      `<li><strong>Content Ready: </strong>${statistics.numberOfTilesWithContentReady.toLocaleString()}</li>` +
       // Total number of tiles includes tiles without content, so "Ready" may never reach
       // "Total."  Total also will increase when a tile with a tileset JSON content is loaded.
-      "<li><strong>Total: </strong>" +
-      statistics.numberOfTilesTotal.toLocaleString() +
-      "</li>";
+      `<li><strong>Total: </strong>${statistics.numberOfTilesTotal.toLocaleString()}</li>`;
     s += "</ul>";
     s += '<ul class="cesium-cesiumInspector-statistics">';
     s +=
       // --- Features statistics
-      "<li><strong>Features Selected: </strong>" +
-      statistics.numberOfFeaturesSelected.toLocaleString() +
-      "</li>" +
-      "<li><strong>Features Loaded: </strong>" +
-      statistics.numberOfFeaturesLoaded.toLocaleString() +
-      "</li>" +
-      "<li><strong>Points Selected: </strong>" +
-      statistics.numberOfPointsSelected.toLocaleString() +
-      "</li>" +
-      "<li><strong>Points Loaded: </strong>" +
-      statistics.numberOfPointsLoaded.toLocaleString() +
-      "</li>" +
-      "<li><strong>Triangles Selected: </strong>" +
-      statistics.numberOfTrianglesSelected.toLocaleString() +
-      "</li>";
+      `<li><strong>Features Selected: </strong>${statistics.numberOfFeaturesSelected.toLocaleString()}</li>` +
+      `<li><strong>Features Loaded: </strong>${statistics.numberOfFeaturesLoaded.toLocaleString()}</li>` +
+      `<li><strong>Points Selected: </strong>${statistics.numberOfPointsSelected.toLocaleString()}</li>` +
+      `<li><strong>Points Loaded: </strong>${statistics.numberOfPointsLoaded.toLocaleString()}</li>` +
+      `<li><strong>Triangles Selected: </strong>${statistics.numberOfTrianglesSelected.toLocaleString()}</li>`;
     s += "</ul>";
     s += '<ul class="cesium-cesiumInspector-statistics">';
     s +=
       // --- Styling statistics
-      "<li><strong>Tiles styled: </strong>" +
-      statistics.numberOfTilesStyled.toLocaleString() +
-      "</li>" +
-      "<li><strong>Features styled: </strong>" +
-      statistics.numberOfFeaturesStyled.toLocaleString() +
-      "</li>";
+      `<li><strong>Tiles styled: </strong>${statistics.numberOfTilesStyled.toLocaleString()}</li>` +
+      `<li><strong>Features styled: </strong>${statistics.numberOfFeaturesStyled.toLocaleString()}</li>`;
     s += "</ul>";
     s += '<ul class="cesium-cesiumInspector-statistics">';
     s +=
       // --- Optimization statistics
-      "<li><strong>Children Union Culled: </strong>" +
-      statistics.numberOfTilesCulledWithChildrenUnion.toLocaleString() +
-      "</li>";
+      `<li><strong>Children Union Culled: </strong>${statistics.numberOfTilesCulledWithChildrenUnion.toLocaleString()}</li>`;
     s += "</ul>";
     s += '<ul class="cesium-cesiumInspector-statistics">';
     s +=
       // --- Memory statistics
-      "<li><strong>Geometry Memory (MB): </strong>" +
-      formatMemoryString(statistics.geometryByteLength) +
-      "</li>" +
-      "<li><strong>Texture Memory (MB): </strong>" +
-      formatMemoryString(statistics.texturesByteLength) +
-      "</li>" +
-      "<li><strong>Batch Table Memory (MB): </strong>" +
-      formatMemoryString(statistics.batchTableByteLength) +
-      "</li>";
+      `<li><strong>Geometry Memory (MB): </strong>${formatMemoryString(
+        statistics.geometryByteLength
+      )}</li>` +
+      `<li><strong>Texture Memory (MB): </strong>${formatMemoryString(
+        statistics.texturesByteLength
+      )}</li>` +
+      `<li><strong>Batch Table Memory (MB): </strong>${formatMemoryString(
+        statistics.batchTableByteLength
+      )}</li>`;
     s += "</ul>";
   }
   return s;
@@ -1477,7 +1445,7 @@ Cesium3DTilesInspectorViewModel.prototype.styleEditorKeyPress = function (
     let i;
     if (!event.shiftKey) {
       for (i = 0; i < length; ++i) {
-        lines[i] = "  " + lines[i];
+        lines[i] = `  ${lines[i]}`;
         newEnd += 2;
       }
     } else {

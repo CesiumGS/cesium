@@ -128,7 +128,7 @@ function loadExternalSchema(schemaLoader) {
         return;
       }
       schemaLoader._state = ResourceLoaderState.FAILED;
-      const errorMessage = "Failed to load schema: " + resource.url;
+      const errorMessage = `Failed to load schema: ${resource.url}`;
       schemaLoader._promise.reject(schemaLoader.getError(errorMessage, error));
     });
 }

@@ -192,14 +192,14 @@
           if (!Cesium.defined(feature)) {
             return;
           }
-          console.log("Class: " + feature.getExactClassName());
+          console.log(`Class: ${feature.getExactClassName()}`);
           console.log("Properties:");
           const propertyNames = feature.getPropertyNames();
           const length = propertyNames.length;
           for (let i = 0; i < length; ++i) {
             const name = propertyNames[i];
             const value = feature.getProperty(name);
-            console.log("  " + name + ": " + value);
+            console.log(`  ${name}: ${value}`);
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 

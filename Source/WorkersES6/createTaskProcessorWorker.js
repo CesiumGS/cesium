@@ -88,11 +88,9 @@ function createTaskProcessorWorker(workerFunction) {
           // something went wrong trying to post the message, post a simpler
           // error that we can be sure will be cloneable
           responseMessage.result = undefined;
-          responseMessage.error =
-            "postMessage failed with error: " +
-            formatError(e) +
-            "\n  with responseMessage: " +
-            JSON.stringify(responseMessage);
+          responseMessage.error = `postMessage failed with error: ${formatError(
+            e
+          )}\n  with responseMessage: ${JSON.stringify(responseMessage)}`;
           postMessage(responseMessage);
         }
       });

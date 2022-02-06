@@ -724,7 +724,7 @@ describe(
             const deferred = when.defer();
             setTimeout(function () {
               const featureInfo = new ImageryLayerFeatureInfo();
-              featureInfo.name = "L" + level + "X" + x + "Y" + y;
+              featureInfo.name = `L${level}X${x}Y${y}`;
               deferred.resolve([featureInfo]);
             }, 1);
             return deferred.promise;

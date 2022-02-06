@@ -76,24 +76,16 @@ function defaultDescribe(properties, nameProperty) {
       const value = properties[key];
       if (defined(value)) {
         if (typeof value === "object") {
-          html +=
-            "<tr><th>" +
-            key +
-            "</th><td>" +
-            defaultDescribe(value) +
-            "</td></tr>";
+          html += `<tr><th>${key}</th><td>${defaultDescribe(value)}</td></tr>`;
         } else {
-          html += "<tr><th>" + key + "</th><td>" + value + "</td></tr>";
+          html += `<tr><th>${key}</th><td>${value}</td></tr>`;
         }
       }
     }
   }
 
   if (html.length > 0) {
-    html =
-      '<table class="cesium-infoBox-defaultTable"><tbody>' +
-      html +
-      "</tbody></table>";
+    html = `<table class="cesium-infoBox-defaultTable"><tbody>${html}</tbody></table>`;
   }
 
   return html;
@@ -127,7 +119,7 @@ function createObject(geoJson, entityCollection, describe) {
     let i = 2;
     let finalId = id;
     while (defined(entityCollection.getById(finalId))) {
-      finalId = id + "_" + i;
+      finalId = `${id}_${i}`;
       i++;
     }
     id = finalId;
@@ -235,7 +227,7 @@ function processFeature(dataSource, feature, notUsed, crsFunction, options) {
   const geometryType = feature.geometry.type;
   const geometryHandler = geometryTypes[geometryType];
   if (!defined(geometryHandler)) {
-    throw new RuntimeError("Unknown geometry type: " + geometryType);
+    throw new RuntimeError(`Unknown geometry type: ${geometryType}`);
   }
   geometryHandler(dataSource, feature, feature.geometry, crsFunction, options);
 }
@@ -266,7 +258,7 @@ function processGeometryCollection(
     const geometryType = geometry.type;
     const geometryHandler = geometryTypes[geometryType];
     if (!defined(geometryHandler)) {
-      throw new RuntimeError("Unknown geometry type: " + geometryType);
+      throw new RuntimeError(`Unknown geometry type: ${geometryType}`);
     }
     geometryHandler(dataSource, geoJson, geometry, crsFunction, options);
   }
@@ -998,7 +990,7 @@ function load(that, geoJson, options, sourceUri) {
 
   const typeHandler = geoJsonObjectTypes[geoJson.type];
   if (!defined(typeHandler)) {
-    throw new RuntimeError("Unsupported GeoJSON object type: " + geoJson.type);
+    throw new RuntimeError(`Unsupported GeoJSON object type: ${geoJson.type}`);
   }
 
   //Check for a Coordinate Reference System.
@@ -1014,7 +1006,7 @@ function load(that, geoJson, options, sourceUri) {
     if (crs.type === "name") {
       crsFunction = crsNames[properties.name];
       if (!defined(crsFunction)) {
-        throw new RuntimeError("Unknown crs name: " + properties.name);
+        throw new RuntimeError(`Unknown crs name: ${properties.name}`);
       }
     } else if (crs.type === "link") {
       let handler = crsLinkHrefs[properties.href];
@@ -1024,18 +1016,18 @@ function load(that, geoJson, options, sourceUri) {
 
       if (!defined(handler)) {
         throw new RuntimeError(
-          "Unable to resolve crs link: " + JSON.stringify(properties)
+          `Unable to resolve crs link: ${JSON.stringify(properties)}`
         );
       }
 
       crsFunction = handler(properties);
     } else if (crs.type === "EPSG") {
-      crsFunction = crsNames["EPSG:" + properties.code];
+      crsFunction = crsNames[`EPSG:${properties.code}`];
       if (!defined(crsFunction)) {
-        throw new RuntimeError("Unknown crs EPSG code: " + properties.code);
+        throw new RuntimeError(`Unknown crs EPSG code: ${properties.code}`);
       }
     } else {
-      throw new RuntimeError("Unknown crs type: " + crs.type);
+      throw new RuntimeError(`Unknown crs type: ${crs.type}`);
     }
   }
 

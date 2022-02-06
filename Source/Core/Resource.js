@@ -1265,8 +1265,9 @@ Resource.prototype.fetchJsonp = function (callbackParameterName) {
   //generate a unique function name
   let functionName;
   do {
-    functionName =
-      "loadJsonp" + CesiumMath.nextRandomNumber().toString().substring(2, 8);
+    functionName = `loadJsonp${CesiumMath.nextRandomNumber()
+      .toString()
+      .substring(2, 8)}`;
   } while (defined(window[functionName]));
 
   return fetchJsonp(this, callbackParameterName, functionName);
@@ -1459,7 +1460,7 @@ function decodeDataUri(dataUriRegexResult, responseType) {
       return JSON.parse(decodeDataUriText(isBase64, data));
     default:
       //>>includeStart('debug', pragmas.debug);
-      throw new DeveloperError("Unhandled responseType: " + responseType);
+      throw new DeveloperError(`Unhandled responseType: ${responseType}`);
     //>>includeEnd('debug');
   }
 }
@@ -1951,9 +1952,7 @@ Resource._Implementations.createImage = function (
           if (!defined(blob)) {
             deferred.reject(
               new RuntimeError(
-                "Successfully retrieved " +
-                  url +
-                  " but it contained no content."
+                `Successfully retrieved ${url} but it contained no content.`
               )
             );
             return;

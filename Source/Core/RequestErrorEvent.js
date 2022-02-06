@@ -51,7 +51,7 @@ function RequestErrorEvent(statusCode, response, responseHeaders) {
 RequestErrorEvent.prototype.toString = function () {
   let str = "Request has failed.";
   if (defined(this.statusCode)) {
-    str += " Status Code: " + this.statusCode;
+    str += ` Status Code: ${this.statusCode}`;
   }
   return str;
 };

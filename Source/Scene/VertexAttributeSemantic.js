@@ -266,7 +266,7 @@ VertexAttributeSemantic.getVariableName = function (semantic, setIndex) {
 
   let variableName = semanticToVariableName(semantic);
   if (defined(setIndex)) {
-    variableName += "_" + setIndex;
+    variableName += `_${setIndex}`;
   }
   return variableName;
 };

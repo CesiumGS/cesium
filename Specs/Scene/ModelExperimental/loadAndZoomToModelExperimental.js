@@ -20,6 +20,7 @@ function loadAndZoomToModelExperimental(options, scene) {
       featureIdIndex: options.featureIdIndex,
       instanceFeatureIdIndex: options.instanceFeatureIdIndex,
       incrementallyLoadTextures: options.incrementallyLoadTextures,
+      backFaceCulling: options.backFaceCulling,
     });
   } catch (error) {
     return when.reject(error);

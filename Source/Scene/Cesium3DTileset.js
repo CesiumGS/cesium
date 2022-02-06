@@ -1882,7 +1882,7 @@ Cesium3DTileset.prototype.loadTileset = function (
   const tilesetVersion = asset.tilesetVersion;
   if (defined(tilesetVersion)) {
     // Append the tileset version to the resource
-    this._basePath += "?v=" + tilesetVersion;
+    this._basePath += `?v=${tilesetVersion}`;
     resource = resource.clone();
     resource.setQueryParameters({ v: tilesetVersion });
   }
@@ -2283,8 +2283,8 @@ function handleTileFailure(tileset, tile) {
         message: message,
       });
     } else {
-      console.log("A 3D tile failed to load: " + url);
-      console.log("Error: " + message);
+      console.log(`A 3D tile failed to load: ${url}`);
+      console.log(`Error: ${message}`);
     }
   };
 }
@@ -2379,38 +2379,38 @@ function addTileDebugLabel(tile, tileset, position) {
   let attributes = 0;
 
   if (tileset.debugShowGeometricError) {
-    labelString += "\nGeometric error: " + tile.geometricError;
+    labelString += `\nGeometric error: ${tile.geometricError}`;
     attributes++;
   }
 
   if (tileset.debugShowRenderingStatistics) {
-    labelString += "\nCommands: " + tile.commandsLength;
+    labelString += `\nCommands: ${tile.commandsLength}`;
     attributes++;
 
     // Don't display number of points or triangles if 0.
     const numberOfPoints = tile.content.pointsLength;
     if (numberOfPoints > 0) {
-      labelString += "\nPoints: " + tile.content.pointsLength;
+      labelString += `\nPoints: ${tile.content.pointsLength}`;
       attributes++;
     }
 
     const numberOfTriangles = tile.content.trianglesLength;
     if (numberOfTriangles > 0) {
-      labelString += "\nTriangles: " + tile.content.trianglesLength;
+      labelString += `\nTriangles: ${tile.content.trianglesLength}`;
       attributes++;
     }
 
-    labelString += "\nFeatures: " + tile.content.featuresLength;
+    labelString += `\nFeatures: ${tile.content.featuresLength}`;
     attributes++;
   }
 
   if (tileset.debugShowMemoryUsage) {
-    labelString +=
-      "\nTexture Memory: " +
-      formatMemoryString(tile.content.texturesByteLength);
-    labelString +=
-      "\nGeometry Memory: " +
-      formatMemoryString(tile.content.geometryByteLength);
+    labelString += `\nTexture Memory: ${formatMemoryString(
+      tile.content.texturesByteLength
+    )}`;
+    labelString += `\nGeometry Memory: ${formatMemoryString(
+      tile.content.geometryByteLength
+    )}`;
     attributes += 2;
   }
 
@@ -2419,11 +2419,11 @@ function addTileDebugLabel(tile, tileset, position) {
       labelString += "\nUrls:";
       const urls = tile.content.innerContentUrls;
       for (let i = 0; i < urls.length; i++) {
-        labelString += "\n- " + urls[i];
+        labelString += `\n- ${urls[i]}`;
       }
       attributes += urls.length;
     } else {
-      labelString += "\nUrl: " + tile._header.content.uri;
+      labelString += `\nUrl: ${tile._header.content.uri}`;
       attributes++;
     }
   }
@@ -2431,7 +2431,7 @@ function addTileDebugLabel(tile, tileset, position) {
   const newLabel = {
     text: labelString.substring(1),
     position: position,
-    font: 19 - attributes + "px sans-serif",
+    font: `${19 - attributes}px sans-serif`,
     showBackground: true,
     disableDepthTestDistance: Number.POSITIVE_INFINITY,
   };
@@ -2956,7 +2956,7 @@ Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
   for (let i = 0; i < extensionsRequired.length; i++) {
     if (!Cesium3DTileset.supportedExtensions[extensionsRequired[i]]) {
       throw new RuntimeError(
-        "Unsupported 3D Tiles Extension: " + extensionsRequired[i]
+        `Unsupported 3D Tiles Extension: ${extensionsRequired[i]}`
       );
     }
   }

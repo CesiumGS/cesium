@@ -204,14 +204,7 @@ function rebindAllGlyphs(labelCollection, label) {
 
     let glyphTextureInfo = glyphTextureCache[id];
     if (!defined(glyphTextureInfo)) {
-      const glyphFont =
-        label._fontStyle +
-        " " +
-        label._fontWeight +
-        " " +
-        SDFSettings.FONT_SIZE +
-        "px " +
-        label._fontFamily;
+      const glyphFont = `${label._fontStyle} ${label._fontWeight} ${SDFSettings.FONT_SIZE}px ${label._fontFamily}`;
 
       const canvas = createGlyphCanvas(
         character,

@@ -36,10 +36,10 @@ function getBaseUri(uri, includeQuery) {
 
   uri = new Uri(uri);
   if (uri.query().length !== 0) {
-    basePath += "?" + uri.query();
+    basePath += `?${uri.query()}`;
   }
   if (uri.fragment().length !== 0) {
-    basePath += "#" + uri.fragment();
+    basePath += `#${uri.fragment()}`;
   }
 
   return basePath;

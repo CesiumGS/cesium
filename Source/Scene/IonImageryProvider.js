@@ -176,9 +176,7 @@ function IonImageryProvider(options) {
   this._readyPromise = promise.then(function (endpoint) {
     if (endpoint.type !== "IMAGERY") {
       return when.reject(
-        new RuntimeError(
-          "Cesium ion asset " + assetId + " is not an imagery asset."
-        )
+        new RuntimeError(`Cesium ion asset ${assetId} is not an imagery asset.`)
       );
     }
 
@@ -194,7 +192,7 @@ function IonImageryProvider(options) {
       if (!defined(factory)) {
         return when.reject(
           new RuntimeError(
-            "Unrecognized Cesium ion imagery type: " + externalType
+            `Unrecognized Cesium ion imagery type: ${externalType}`
           )
         );
       }

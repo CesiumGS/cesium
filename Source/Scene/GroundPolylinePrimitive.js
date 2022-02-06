@@ -377,8 +377,9 @@ function createShaderProgram(groundPolylinePrimitive, frameState, appearance) {
   );
 
   const vsDefines = [
-    "GLOBE_MINIMUM_ALTITUDE " +
-      frameState.mapProjection.ellipsoid.minimumRadius.toFixed(1),
+    `GLOBE_MINIMUM_ALTITUDE ${frameState.mapProjection.ellipsoid.minimumRadius.toFixed(
+      1
+    )}`,
   ];
   let colorDefine = "";
   let materialShaderSource = "";
@@ -454,8 +455,9 @@ function createShaderProgram(groundPolylinePrimitive, frameState, appearance) {
   if (!defined(colorProgramMorph)) {
     const vsColorMorph = new ShaderSource({
       defines: vsDefines.concat([
-        "MAX_TERRAIN_HEIGHT " +
-          ApproximateTerrainHeights._defaultMaxTerrainHeight.toFixed(1),
+        `MAX_TERRAIN_HEIGHT ${ApproximateTerrainHeights._defaultMaxTerrainHeight.toFixed(
+          1
+        )}`,
       ]),
       sources: [vsMorph],
     });

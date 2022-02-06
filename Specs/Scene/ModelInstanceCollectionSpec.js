@@ -218,7 +218,7 @@ describe(
         expect(collection._model.ready).toEqual(true);
 
         if (collection._instancingSupported) {
-          expect(collection._model.cacheKey).toEqual(boxUrl + "#instanced");
+          expect(collection._model.cacheKey).toEqual(`${boxUrl}#instanced`);
         }
       });
     });

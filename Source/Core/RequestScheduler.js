@@ -359,7 +359,7 @@ RequestScheduler.getServerKey = function (url) {
   let serverKey = uri.authority();
   if (!/:/.test(serverKey)) {
     // If the authority does not contain a port number, add port 443 for https or port 80 for http
-    serverKey = serverKey + ":" + (uri.scheme() === "https" ? "443" : "80");
+    serverKey = `${serverKey}:${uri.scheme() === "https" ? "443" : "80"}`;
   }
 
   const length = numberOfActiveRequestsByServer[serverKey];
@@ -445,29 +445,28 @@ function updateStatistics() {
   ) {
     if (statistics.numberOfAttemptedRequests > 0) {
       console.log(
-        "Number of attempted requests: " + statistics.numberOfAttemptedRequests
+        `Number of attempted requests: ${statistics.numberOfAttemptedRequests}`
       );
       statistics.numberOfAttemptedRequests = 0;
     }
 
     if (statistics.numberOfCancelledRequests > 0) {
       console.log(
-        "Number of cancelled requests: " + statistics.numberOfCancelledRequests
+        `Number of cancelled requests: ${statistics.numberOfCancelledRequests}`
       );
       statistics.numberOfCancelledRequests = 0;
     }
 
     if (statistics.numberOfCancelledActiveRequests > 0) {
       console.log(
-        "Number of cancelled active requests: " +
-          statistics.numberOfCancelledActiveRequests
+        `Number of cancelled active requests: ${statistics.numberOfCancelledActiveRequests}`
       );
       statistics.numberOfCancelledActiveRequests = 0;
     }
 
     if (statistics.numberOfFailedRequests > 0) {
       console.log(
-        "Number of failed requests: " + statistics.numberOfFailedRequests
+        `Number of failed requests: ${statistics.numberOfFailedRequests}`
       );
       statistics.numberOfFailedRequests = 0;
     }

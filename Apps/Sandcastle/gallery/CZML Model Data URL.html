@@ -133,7 +133,7 @@
 
         const encoded = btoa(JSON.stringify(gltf));
 
-        const dataUrl = "data:application/json;charset=utf-8;base64," + encoded;
+        const dataUrl = `data:application/json;charset=utf-8;base64,${encoded}`;
 
         const czml = [
           {

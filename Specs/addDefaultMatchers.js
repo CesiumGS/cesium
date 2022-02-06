@@ -20,15 +20,7 @@ function createMissingFunctionMessageFunction(
   expectedInterfacePrototype
 ) {
   return function () {
-    return (
-      "Expected function '" +
-      item +
-      "' to exist on " +
-      actualPrototype.constructor.name +
-      " because it should implement interface " +
-      expectedInterfacePrototype.constructor.name +
-      "."
-    );
+    return `Expected function '${item}' to exist on ${actualPrototype.constructor.name} because it should implement interface ${expectedInterfacePrototype.constructor.name}.`;
   };
 }
 
@@ -58,11 +50,11 @@ function makeThrowFunction(debug, Type, name) {
           let message;
           if (result) {
             message = [
-              "Expected function not to throw " + name + " , but it threw",
+              `Expected function not to throw ${name} , but it threw`,
               exception.message || exception,
             ].join(" ");
           } else {
-            message = "Expected function to throw " + name + ".";
+            message = `Expected function to throw ${name}.`;
           }
 
           return {
@@ -249,13 +241,11 @@ function createDefaultMatchers(debug) {
           } else {
             result.pass = actual instanceof expectedConstructor;
           }
-          result.message =
-            "Expected " +
-            Object.prototype.toString.call(actual) +
-            " to be instance of " +
-            expectedConstructor.name +
-            ", but was instance of " +
-            (actual && actual.constructor.name);
+          result.message = `Expected ${Object.prototype.toString.call(
+            actual
+          )} to be instance of ${
+            expectedConstructor.name
+          }, but was instance of ${actual && actual.constructor.name}`;
           return result;
         },
       };
@@ -573,19 +563,9 @@ function createDefaultMatchers(debug) {
             ) {
               pass = false;
               if (epsilon === 0) {
-                message =
-                  "Expected context to render " +
-                  expected +
-                  ", but rendered: " +
-                  rgba;
+                message = `Expected context to render ${expected}, but rendered: ${rgba}`;
               } else {
-                message =
-                  "Expected context to render " +
-                  expected +
-                  " with epsilon = " +
-                  epsilon +
-                  ", but rendered: " +
-                  rgba;
+                message = `Expected context to render ${expected} with epsilon = ${epsilon}, but rendered: ${rgba}`;
               }
             }
           }
@@ -616,11 +596,7 @@ function createDefaultMatchers(debug) {
               rgba[3] === expected[3]
             ) {
               pass = false;
-              message =
-                "Expected context not to render " +
-                expected +
-                ", but rendered: " +
-                rgba;
+              message = `Expected context not to render ${expected}, but rendered: ${rgba}`;
             }
           }
 
@@ -771,14 +747,11 @@ function renderEquals(
 
   let message;
   if (!pass) {
-    message =
-      "Expected " +
-      (expectEqual ? "" : "not ") +
-      "to render [" +
-      typedArrayToArray(expected) +
-      "], but actually rendered [" +
-      typedArrayToArray(actualRgba) +
-      "].";
+    message = `Expected ${
+      expectEqual ? "" : "not "
+    }to render [${typedArrayToArray(
+      expected
+    )}], but actually rendered [${typedArrayToArray(actualRgba)}].`;
   }
 
   return {
@@ -808,7 +781,7 @@ function pickPrimitiveEquals(actual, expected, x, y, width, height) {
   }
 
   if (!pass) {
-    message = "Expected to pick " + expected + ", but picked: " + result;
+    message = `Expected to pick ${expected}, but picked: ${result}`;
   }
 
   return {
@@ -838,7 +811,7 @@ function drillPickPrimitiveEquals(actual, expected, x, y, width, height) {
   }
 
   if (!pass) {
-    message = "Expected to pick " + expected + ", but picked: " + result;
+    message = `Expected to pick ${expected}, but picked: ${result}`;
   }
 
   return {
@@ -961,11 +934,7 @@ function expectContextToRender(actual, expected, expectEqual) {
       ) {
         return {
           pass: false,
-          message:
-            "After clearing the framebuffer, expected context to render [0, 0, 0, " +
-            expectedAlpha +
-            "], but rendered: " +
-            clearedRgba,
+          message: `After clearing the framebuffer, expected context to render [0, 0, 0, ${expectedAlpha}], but rendered: ${clearedRgba}`,
         };
       }
     }
@@ -983,11 +952,7 @@ function expectContextToRender(actual, expected, expectEqual) {
       ) {
         return {
           pass: false,
-          message:
-            "Expected context to render " +
-            expected +
-            ", but rendered: " +
-            rgba,
+          message: `Expected context to render ${expected}, but rendered: ${rgba}`,
         };
       }
     } else if (
@@ -998,11 +963,7 @@ function expectContextToRender(actual, expected, expectEqual) {
     ) {
       return {
         pass: false,
-        message:
-          "Expected context not to render " +
-          expected +
-          ", but rendered: " +
-          rgba,
+        message: `Expected context not to render ${expected}, but rendered: ${rgba}`,
       };
     }
   }

@@ -551,8 +551,8 @@ function handleInnerContentFailed(multipleContents, index, error) {
       message: message,
     });
   } else {
-    console.log("A content failed to load: " + url);
-    console.log("Error: " + message);
+    console.log(`A content failed to load: ${url}`);
+    console.log(`Error: ${message}`);
   }
 }
 

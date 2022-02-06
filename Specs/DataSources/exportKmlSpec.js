@@ -111,10 +111,10 @@ describe("DataSources/exportKml", function () {
   function createEntity(properties) {
     ++counter;
     const options = {
-      id: "e" + counter,
-      name: "entity" + counter,
+      id: `e${counter}`,
+      name: `entity${counter}`,
       show: true,
-      description: "This is entity number " + counter,
+      description: `This is entity number ${counter}`,
       position: pointPosition,
     };
 

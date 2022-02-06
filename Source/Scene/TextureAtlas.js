@@ -434,9 +434,7 @@ TextureAtlas.prototype.addSubRegion = function (id, subRegion) {
 
   const indexPromise = this._idHash[id];
   if (!defined(indexPromise)) {
-    throw new RuntimeError(
-      'image with id "' + id + '" not found in the atlas.'
-    );
+    throw new RuntimeError(`image with id "${id}" not found in the atlas.`);
   }
 
   const that = this;

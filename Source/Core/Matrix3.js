@@ -1605,27 +1605,9 @@ Matrix3.prototype.equalsEpsilon = function (right, epsilon) {
  */
 Matrix3.prototype.toString = function () {
   return (
-    "(" +
-    this[0] +
-    ", " +
-    this[3] +
-    ", " +
-    this[6] +
-    ")\n" +
-    "(" +
-    this[1] +
-    ", " +
-    this[4] +
-    ", " +
-    this[7] +
-    ")\n" +
-    "(" +
-    this[2] +
-    ", " +
-    this[5] +
-    ", " +
-    this[8] +
-    ")"
+    `(${this[0]}, ${this[3]}, ${this[6]})\n` +
+    `(${this[1]}, ${this[4]}, ${this[7]})\n` +
+    `(${this[2]}, ${this[5]}, ${this[8]})`
   );
 };
 export default Matrix3;
