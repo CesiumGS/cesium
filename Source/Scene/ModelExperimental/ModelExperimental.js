@@ -46,6 +46,9 @@ import I3dmLoader from "./I3dmLoader.js";
  * @param {Number} [options.instanceFeatureIdIndex=0] The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
+ * @param {Number} [options.scale=1.0]
+ * @param {Number} [options.minimumPixelSize=0.0]
+ * @param {Number} [options.maximumScale]
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
@@ -95,6 +98,11 @@ export default function ModelExperimental(options) {
     defaultValue(options.modelMatrix, Matrix4.IDENTITY)
   );
   this._modelMatrix = Matrix4.clone(this.modelMatrix);
+
+  this._scale = defaultValue(options.scale, 1.0);
+  this._minimumPixelSize = defaultValue(options.minimumPixelSize, 0.0);
+  this._maximumScale = options.maximumScale;
+  this._scaleDirty = false;
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -652,6 +660,43 @@ Object.defineProperties(ModelExperimental.prototype, {
       this._backFaceCulling = value;
     },
   },
+
+  scale: {
+    get: function () {
+      return this._scale;
+    },
+    set: function (value) {
+      if (value !== this._scale) {
+        this._scaleDirty = true;
+      }
+
+      this._scale = value;
+    },
+  },
+
+  minimumPixelSize: {
+    get: function () {
+      return this._minimumPixelSize;
+    },
+    set: function (value) {
+      if (value !== this._minimumPixelSize) {
+        this._scaleDirty = true;
+      }
+      this._minimumPixelSize = value;
+    },
+  },
+
+  maximumScale: {
+    get: function () {
+      return this._maximumScale;
+    },
+    set: function (value) {
+      if (value !== this._maximumScale) {
+        this._scaleDirty = true;
+      }
+      this._maximumScale = value;
+    },
+  },
 });
 
 /**
@@ -741,8 +786,13 @@ ModelExperimental.prototype.update = function (frameState) {
     this._debugShowBoundingVolumeDirty = false;
   }
 
+  if (this._scaleDirty) {
+    this._scale = getScale(this, frameState);
+    this._scaleDirty = false;
+  }
+
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
-    this._sceneGraph.updateModelMatrix(this);
+    this._sceneGraph.updateModelMatrix(this, this._scale);
   }
 
   if (this._backFaceCullingDirty) {
@@ -770,6 +820,60 @@ function updateFeatureTableId(model) {
     // This in turn triggers a rebuild of the draw commands.
     model.applyStyle(model._style);
   }
+}
+
+const scratchBoundingSphere = new BoundingSphere();
+
+function scaleInPixels(positionWC, radius, frameState) {
+  scratchBoundingSphere.center = positionWC;
+  scratchBoundingSphere.radius = radius;
+  return frameState.camera.getPixelSize(
+    scratchBoundingSphere,
+    frameState.context.drawingBufferWidth,
+    frameState.context.drawingBufferHeight
+  );
+}
+
+const scratchPosition = new Cartesian3();
+
+function getScale(model, frameState) {
+  let scale = model.scale;
+
+  if (model.minimumPixelSize !== 0.0) {
+    // Compute size of bounding sphere in pixels
+    const context = frameState.context;
+    const maxPixelSize = Math.max(
+      context.drawingBufferWidth,
+      context.drawingBufferHeight
+    );
+    const m = defined(model._clampedModelMatrix)
+      ? model._clampedModelMatrix
+      : model.modelMatrix;
+    scratchPosition.x = m[12];
+    scratchPosition.y = m[13];
+    scratchPosition.z = m[14];
+
+    const radius = model.boundingSphere.radius;
+    const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
+
+    // metersPerPixel is always > 0.0
+    const pixelsPerMeter = 1.0 / metersPerPixel;
+    const diameterInPixels = Math.min(
+      pixelsPerMeter * (2.0 * radius),
+      maxPixelSize
+    );
+
+    // Maintain model's minimum pixel size
+    if (diameterInPixels < model.minimumPixelSize) {
+      scale =
+        (model.minimumPixelSize * metersPerPixel) /
+        (2.0 * model._initialRadius);
+    }
+  }
+
+  return defined(model.maximumScale)
+    ? Math.min(model.maximumScale, scale)
+    : scale;
 }
 
 /**
@@ -862,6 +966,9 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Number} [options.instanceFeatureIdIndex=0] The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
+ * @param {Number} [options.scale=1.0]
+ * @param {Number} [options.minimumPixelSize=0.0]
+ * @param {Number} [options.maximumScale]
  *
  * @returns {ModelExperimental} The newly created model.
  */
@@ -921,6 +1028,9 @@ ModelExperimental.fromGltf = function (options) {
     instanceFeatureIdIndex: options.instanceFeatureIdIndex,
     pointCloudShading: options.pointCloudShading,
     backFaceCulling: options.backFaceCulling,
+    scale: options.scale,
+    minimumPixelSize: options.minimumPixelSize,
+    maximumScale: options.maximumScale,
   };
   const model = new ModelExperimental(modelOptions);
 
@@ -1036,7 +1146,7 @@ ModelExperimental.fromI3dm = function (options) {
 
 function updateShowBoundingVolume(sceneGraph, debugShowBoundingVolume) {
   const drawCommands = sceneGraph._drawCommands;
-  for (let i = 0; i < drawCommands.length; i++) {
+  for (let i = 0; i < drawCommands.length; i++) https://github.com/CesiumGS/cesium/pull/new/model-experimental-minimum-pixel-size{
     drawCommands[i].debugShowBoundingVolume = debugShowBoundingVolume;
   }
 }
