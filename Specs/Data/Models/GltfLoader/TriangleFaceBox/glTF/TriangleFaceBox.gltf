@@ -72,7 +72,7 @@
           {
             "attributes": {
               "POSITION": 0,
-              "FEATURE_ID_0": 2
+              "_FEATURE_ID_0": 2
             },
             "indices": 1,
             "mode": 4,

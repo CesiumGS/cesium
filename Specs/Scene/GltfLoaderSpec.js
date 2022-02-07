@@ -1002,7 +1002,7 @@ describe(
         expect(positionAttribute).toBeDefined();
         expect(normalAttribute).toBeDefined();
 
-        expect(featureIdAttribute.name).toBe("FEATURE_ID_0");
+        expect(featureIdAttribute.name).toBe("_FEATURE_ID_0");
         expect(featureIdAttribute.semantic).toBe(
           VertexAttributeSemantic.FEATURE_ID
         );
@@ -1685,7 +1685,7 @@ describe(
           );
           const featureIdAttribute = getAttribute(
             instancedAttributes,
-            InstanceAttributeSemantic.FEATURE_ID_0
+            InstanceAttributeSemantic.FEATURE_ID
           );
 
           expect(positionAttribute).toBeDefined();
@@ -1804,7 +1804,7 @@ describe(
           );
           const featureIdAttribute = getAttribute(
             instancedAttributes,
-            InstanceAttributeSemantic.FEATURE_ID_0
+            InstanceAttributeSemantic.FEATURE_ID
           );
 
           expect(positionAttribute).toBeDefined();

@@ -71,7 +71,7 @@ const GltfLoaderState = {
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  * @param {Boolean} [options.loadAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers.
- * @param {Boolean} [options.renameBatchIdSemantic=false] If true, rename _BATCHID or BATCHID to FEATURE_ID_0. This is used for .b3dm models
+ * @param {Boolean} [options.renameBatchIdSemantic=false] If true, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
  *
  * @private
  */
@@ -511,14 +511,14 @@ function loadAttribute(
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
 
-  // For .b3dm, rename _BATCHID (or the legacy BATCHID) to FEATURE_ID_0
+  // For .b3dm, rename _BATCHID (or the legacy BATCHID) to _FEATURE_ID_0
   // in the generated model components for compatibility with EXT_mesh_features
   let renamedSemantic = gltfSemantic;
   if (
     loader._renameBatchIdSemantic &&
     (gltfSemantic === "_BATCHID" || gltfSemantic === "BATCHID")
   ) {
-    renamedSemantic = "FEATURE_ID_0";
+    renamedSemantic = "_FEATURE_ID_0";
   }
 
   const name = gltfSemantic;

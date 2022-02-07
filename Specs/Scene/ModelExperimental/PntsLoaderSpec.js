@@ -239,7 +239,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
   }
 
   function expectBatchId(attribute, componentDatatype) {
-    expect(attribute.name).toBe("FEATURE_ID");
+    expect(attribute.name).toBe("_FEATURE_ID");
     expect(attribute.semantic).toBe(VertexAttributeSemantic.FEATURE_ID);
     expect(attribute.componentDatatype).toBe(componentDatatype);
     expect(attribute.type).toBe(AttributeType.SCALAR);

@@ -84,7 +84,7 @@
             "TRANSLATION": 3,
             "ROTATION": 4,
             "SCALE": 5,
-            "FEATURE_ID_0": 6
+            "_FEATURE_ID_0": 6
           },
           "extensions": {
             "EXT_mesh_features": {

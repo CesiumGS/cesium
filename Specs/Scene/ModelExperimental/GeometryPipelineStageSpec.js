@@ -914,7 +914,7 @@ describe(
       verifyFeatureStruct(shaderBuilder);
     });
 
-    it("processes POSITION, NORMAL and FEATURE_ID attributes from primitive", function () {
+    it("processes POSITION, NORMAL and _FEATURE_ID_n attributes from primitive", function () {
       const renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),

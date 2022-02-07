@@ -139,7 +139,7 @@
           "attributes": {
             "POSITION": 0,
             "NORMAL": 1,
-            "FEATURE_ID_0": 2
+            "_FEATURE_ID_0": 2
           },
           "indices": 3,
           "material": 0,

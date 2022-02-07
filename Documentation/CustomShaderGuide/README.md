@@ -303,7 +303,7 @@ For example, suppose we had a glTF primitive with the following feature IDs:
       "EXT_mesh_gpu_instancing": {
         "attributes": {
           "TRANSLATION": 3,
-          "FEATURE_ID_0": 4
+          "_FEATURE_ID_0": 4
         }
       },
       "EXT_mesh_features": {
@@ -318,7 +318,7 @@ For example, suppose we had a glTF primitive with the following feature IDs:
             "repeat": 1
           },
           {
-            // Feature ID attribute. This corresponds to FEATURE_ID_0 from the
+            // Feature ID attribute. This corresponds to _FEATURE_ID_0 from the
             // instancing extension above. Note that this is
             // labeled as instanceFeatureId_1 since it is the second feature ID
             // set in the featureIds array
@@ -338,8 +338,8 @@ For example, suppose we had a glTF primitive with the following feature IDs:
       {
         "attributes": {
           "POSITION": 0,
-          "FEATURE_ID_0": 1,
-          "FEATURE_ID_1": 2
+          "_FEATURE_ID_0": 1,
+          "_FEATURE_ID_1": 2
         },
         "extensions": {
           "EXT_mesh_features": {
@@ -363,7 +363,7 @@ For example, suppose we had a glTF primitive with the following feature IDs:
                 "repeat": 3
               },
               {
-                // Feature ID Attribute (FEATURE_ID_0). Note that this
+                // Feature ID Attribute (_FEATURE_ID_0). Note that this
                 // is labeled featureId_2 for its index in the featureIds
                 // array
                 //
@@ -372,7 +372,7 @@ For example, suppose we had a glTF primitive with the following feature IDs:
                 "attribute": 0
               },
               {
-                // Feature ID Attribute (FEATURE_ID_1). Note that this
+                // Feature ID Attribute (_FEATURE_ID_1). Note that this
                 // is labeled featureId_3 for its index in the featureIds
                 // array
                 //
@@ -434,7 +434,7 @@ to the `EXT_feature_metadata` extension:
                 }
               },
               {
-                // Feature ID attribute. This corresponds to FEATURE_ID_0 from the
+                // Feature ID attribute. This corresponds to _FEATURE_ID_0 from the
                 // instancing extension above. Note that this is
                 // labeled as instanceFeatureId_1 since it is the second feature ID
                 // set in the featureIds array
@@ -477,7 +477,7 @@ to the `EXT_feature_metadata` extension:
                 }
               },
               {
-                // Feature ID Attribute (FEATURE_ID_0). Note that this
+                // Feature ID Attribute (_FEATURE_ID_0). Note that this
                 // is labeled featureId_1 for its index in the featureIds
                 // array
                 //
@@ -489,7 +489,7 @@ to the `EXT_feature_metadata` extension:
                 }
               },
               {
-                // Feature ID Attribute (FEATURE_ID_1). Note that this
+                // Feature ID Attribute (_FEATURE_ID_1). Note that this
                 // is labeled featureId_2 for its index in the featureIds
                 // array
                 //
