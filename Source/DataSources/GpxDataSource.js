@@ -71,7 +71,7 @@ function readBlobAsText(blob) {
     deferred.reject(reader.error);
   });
   reader.readAsText(blob);
-  return deferred;
+  return deferred.promise;
 }
 
 function getOrCreateEntity(node, entityCollection) {
@@ -275,8 +275,8 @@ function processDescription(node, entity) {
     links[i].setAttribute("target", "_blank");
   }
 
-  const background = Color.WHITE;
-  const foreground = Color.BLACK;
+  const background = entity.balloonStyle.bgColor;
+  const foreground = entity.balloonStyle.textColor;
   let tmp = '<div class="cesium-infoBox-description-lighter" style="';
   tmp += "overflow:auto;";
   tmp += "word-wrap:break-word;";
@@ -297,8 +297,8 @@ function processWpt(dataSource, geometryNode, entityCollection, options) {
   entity.position = position;
 
   // Get billboard image
-  const image = defined(options.wptImage)
-    ? options.wptImage
+  const image = defined(options.waypointImage)
+    ? options.waypointImage
     : dataSource._pinBuilder.fromMakiIconId(
         "marker",
         Color.RED,
@@ -323,14 +323,14 @@ function processRte(dataSource, geometryNode, entityCollection, options) {
   const entity = getOrCreateEntity(geometryNode, entityCollection);
   entity.description = processDescription(geometryNode, entity);
 
-  // a list of wpt
+  // a list of waypoint
   const routePoints = queryNodes(geometryNode, "rtept", namespaces.gpx);
   const coordinateTuples = new Array(routePoints.length);
   for (let i = 0; i < routePoints.length; i++) {
     processWpt(dataSource, routePoints[i], entityCollection, options);
     coordinateTuples[i] = readCoordinateFromNode(routePoints[i]);
   }
-  entity.polyline = createDefaultPolyline(options.trkColor);
+  entity.polyline = createDefaultPolyline(options.routeColor);
   if (options.clampToGround) {
     entity.polyline.clampToGround = true;
   }
@@ -362,8 +362,8 @@ function processTrk(dataSource, geometryNode, entityCollection, options) {
   }
   if (isTimeDynamic) {
     // Assign billboard image
-    const image = defined(options.wptImage)
-      ? options.wptImage
+    const image = defined(options.waypointImage)
+      ? options.waypointImage
       : dataSource._pinBuilder.fromMakiIconId(
           "marker",
           Color.RED,
@@ -382,7 +382,7 @@ function processTrk(dataSource, geometryNode, entityCollection, options) {
       })
     );
   }
-  entity.polyline = createDefaultPolyline(options.trkColor);
+  entity.polyline = createDefaultPolyline(options.trackColor);
   entity.polyline.positions = positions;
   if (options.clampToGround) {
     entity.polyline.clampToGround = true;
@@ -771,9 +771,10 @@ function GpxDataSource() {
  * @param {String|Document|Blob} data A url, parsed GPX document, or Blob containing binary GPX data.
  * @param {Object} [options] An object with the following properties:
  * @param {Boolean} [options.clampToGround] True if the symbols should be rendered at the same height as the terrain
- * @param {String} [options.wptImage] Image to use for waypoint billboards.
- * @param {String} [options.trkImage] Image to use for track billboards.
- * @param {String} [options.trkColor] Color to use for track lines.
+ * @param {String} [options.waypointImage] Image to use for waypoint billboards.
+ * @param {String} [options.trackImage] Image to use for track billboards.
+ * @param {String} [options.trackColor] Color to use for track lines.
+ * @param {String} [options.routeColor] Color to use for route lines.
  * @returns {Promise.<GpxDataSource>} A promise that will resolve to a new GpxDataSource instance once the gpx is loaded.
  */
 GpxDataSource.load = function (data, options) {
@@ -938,9 +939,10 @@ GpxDataSource.prototype.update = function (time) {
  * @param {String|Document|Blob} data A url, parsed GPX document, or Blob containing binary GPX data or a parsed GPX document.
  * @param {Object} [options] An object with the following properties:
  * @param {Boolean} [options.clampToGround] True if the symbols should be rendered at the same height as the terrain
- * @param {String} [options.wptImage] Image to use for waypoint billboards.
- * @param {String} [options.trkImage] Image to use for track billboards.
- * @param {String} [options.trkColor] Color to use for track lines.
+ * @param {String} [options.waypointImage] Image to use for waypoint billboards.
+ * @param {String} [options.trackImage] Image to use for track billboards.
+ * @param {String} [options.trackColor] Color to use for track lines.
+ * @param {String} [options.routeColor] Color to use for route lines.
  * @returns {Promise.<GpxDataSource>} A promise that will resolve to this instances once the GPX is loaded.
  */
 GpxDataSource.prototype.load = function (data, options) {
