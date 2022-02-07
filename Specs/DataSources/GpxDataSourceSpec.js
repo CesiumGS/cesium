@@ -374,7 +374,7 @@ describe("DataSources/GpxDataSource", function () {
     image.name = "wpt";
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml"), {
       clampToGround: true,
-      wptImage: image,
+      waypointImage: image,
     }).then(function (dataSource) {
       const entities = dataSource.entities.values;
       const image = entities[0].billboard.image;
@@ -768,7 +768,7 @@ describe("DataSources/GpxDataSource", function () {
     );
   });
 
-  it("Track: uses custom polyline color", function () {
+  it("Track: uses custom polyline color for tracks", function () {
     const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
             <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
@@ -787,10 +787,44 @@ describe("DataSources/GpxDataSource", function () {
                 </trk>\
             </gpx>';
     return GpxDataSource.load(parser.parseFromString(gpx, "text/xml"), {
-      trkColor: Color.BLUE,
+      trackColor: Color.BLUE,
     }).then(function (dataSource) {
       const entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
+      const entity = entities[0];
+      expect(entity.polyline.material.color.getValue()).toEqual(Color.BLUE);
+      expect(entity.polyline.clampToGround).toBeUndefined();
+    });
+  });
+
+  it("Track: uses custom polyline color for routes", function () {
+    const gpx =
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
+        <gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="andre">\
+          <rte>\
+            <rtept lon="9.860624216140083" lat="54.9328621088893">\
+                <ele>0.0</ele>\
+                <name>Position 1</name>\
+            </rtept>\
+            <rtept lon="9.86092208681491" lat="54.93293237320851">\
+                <ele>0.0</ele>\
+                <name>Position 2</name>\
+            </rtept>\
+            <rtept lon="9.86187816543752" lat="54.93327743521187">\
+                <ele>0.0</ele>\
+                <name>Position 3</name>\
+            </rtept>\
+            <rtept lon="9.862439849679859" lat="54.93342326167919">\
+                <ele>0.0</ele>\
+                <name>Position 4</name>\
+            </rtept>\
+          </rte>\
+        </gpx>';
+    return GpxDataSource.load(parser.parseFromString(gpx, "text/xml"), {
+      routeColor: Color.BLUE,
+    }).then(function (dataSource) {
+      const entities = dataSource.entities.values;
+      expect(entities.length).toEqual(5); // 4 waypoints + 1 polyline
       const entity = entities[0];
       expect(entity.polyline.material.color.getValue()).toEqual(Color.BLUE);
       expect(entity.polyline.clampToGround).toBeUndefined();

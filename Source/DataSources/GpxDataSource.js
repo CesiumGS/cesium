@@ -275,8 +275,8 @@ function processDescription(node, entity) {
     links[i].setAttribute("target", "_blank");
   }
 
-  const background = entity.balloonStyle.bgColor;
-  const foreground = entity.balloonStyle.textColor;
+  const background = Color.WHITE;
+  const foreground = Color.BLACK;
   let tmp = '<div class="cesium-infoBox-description-lighter" style="';
   tmp += "overflow:auto;";
   tmp += "word-wrap:break-word;";
