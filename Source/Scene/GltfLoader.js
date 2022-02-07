@@ -878,7 +878,11 @@ function loadFeatureIdTexture(
   // Though the new channel index is more future-proof, this implementation
   // only supports RGBA textures. At least for now, the string representation
   // is more useful for generating shader code.
-  const channelString = "rgba".charAt(gltfFeatureIdTexture.channel);
+  const channelString = gltfFeatureIdTexture.channels
+    .map(function (channelIndex) {
+      return "rgba".charAt(channelIndex);
+    })
+    .join("");
   featureIdTexture.textureReader.channels = channelString;
 
   return featureIdTexture;
@@ -1026,7 +1030,7 @@ function loadPrimitiveMetadata(
     const propertyTableId = propertyTables[i];
 
     let featureIdComponent;
-    if (defined(featureIds.channel)) {
+    if (defined(featureIds.channels)) {
       featureIdComponent = loadFeatureIdTexture(
         loader,
         gltf,

@@ -108,7 +108,7 @@
                 {
                   "index": 2,
                   "texCoord": 0,
-                  "channel": 0
+                  "channels": [0]
                 }
               ],
               "propertyTextures": [
