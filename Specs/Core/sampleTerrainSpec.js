@@ -14,7 +14,7 @@ describe("Core/sampleTerrain", function () {
     return worldTerrain.readyPromise;
   });
 
-  xit("queries heights", function () {
+  it("queries heights", function () {
     const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(87.0, 28.0),

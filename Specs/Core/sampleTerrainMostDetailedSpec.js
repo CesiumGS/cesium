@@ -5,9 +5,20 @@ import { sampleTerrainMostDetailed } from "../../Source/Cesium.js";
 
 describe("Core/sampleTerrainMostDetailed", function () {
   let worldTerrain;
+  // beforeAll(function () {
+  //   worldTerrain = createWorldTerrain();
+  //   return worldTerrain.readyPromise;
+  // });
+
   beforeAll(function () {
-    worldTerrain = createWorldTerrain();
-    return worldTerrain.readyPromise;
+    //Repplicates the same as function createWorldTerrain()
+    worldTerrain = new CesiumTerrainProvider({
+      url: "/Specs/Mocks/CesiumTerrainProvider", // Mock payload from Ion
+      requestVertexNormals: false,
+      requestWaterMask: false,
+      ready: true,
+    });
+    return worldTerrain._readyPromise;
   });
 
   it("queries heights", function () {
@@ -29,7 +40,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
 
   it("should throw querying heights from Small Terrain", function () {
     const terrainProvider = new CesiumTerrainProvider({
-      url: "https://s3.amazonaws.com/cesiumjs/smallTerrain",
+      url: "/Specs/Mocks/sampleTerrainMostDetailed", // Mock payload from AWS
     });
 
     const positions = [
