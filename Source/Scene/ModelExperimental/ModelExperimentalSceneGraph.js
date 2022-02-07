@@ -13,6 +13,7 @@ import ModelRenderResources from "./ModelRenderResources.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
 import RenderState from "../../Renderer/RenderState.js";
+import ShadowMode from "../ShadowMode.js";
 
 /**
  * An in memory representation of the scene graph for a {@link ModelExperimental}
@@ -441,6 +442,26 @@ ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (
       renderState.cull.enabled =
         backFaceCulling && !doubleSided && !translucent;
       drawCommand.renderState = RenderState.fromCache(renderState);
+    }
+  });
+};
+
+/**
+ * Traverses through all draw commands and changes the shadow settings.
+ *
+ * @param {ShadowMode} shadowMode The new shadow settings.
+ *
+ * @private
+ */
+ModelExperimentalSceneGraph.prototype.updateShadows = function (shadowMode) {
+  const model = this._model;
+  const castShadows = ShadowMode.castShadows(model.shadows);
+  const receiveShadows = ShadowMode.receiveShadows(model.shadows);
+  forEachRuntimePrimitive(this, function (runtimePrimitive) {
+    for (let k = 0; k < runtimePrimitive.drawCommands.length; k++) {
+      const drawCommand = runtimePrimitive.drawCommands[k];
+      drawCommand.castShadows = castShadows;
+      drawCommand.receiveShadows = receiveShadows;
     }
   });
 };

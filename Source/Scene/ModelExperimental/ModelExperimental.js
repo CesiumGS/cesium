@@ -18,6 +18,7 @@ import B3dmLoader from "./B3dmLoader.js";
 import PntsLoader from "./PntsLoader.js";
 import Color from "../../Core/Color.js";
 import I3dmLoader from "./I3dmLoader.js";
+import ShadowMode from "../ShadowMode.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
@@ -46,6 +47,7 @@ import I3dmLoader from "./I3dmLoader.js";
  * @param {Number} [options.instanceFeatureIdIndex=0] The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
+ * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
@@ -142,6 +144,9 @@ export default function ModelExperimental(options) {
 
   this._backFaceCulling = defaultValue(options.backFaceCulling, true);
   this._backFaceCullingDirty = false;
+
+  this._shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
+  this._shadowsDirty = false;
 
   this._debugShowBoundingVolumeDirty = false;
   this._debugShowBoundingVolume = defaultValue(
@@ -652,6 +657,26 @@ Object.defineProperties(ModelExperimental.prototype, {
       this._backFaceCulling = value;
     },
   },
+
+  /**
+   * Determines whether the model casts or receives shadows from light sources.
+   *
+   * @type {ShadowMode}
+   *
+   * @default ShadowMode.ENABLED
+   */
+  shadows: {
+    get: function () {
+      return this._shadows;
+    },
+    set: function (value) {
+      if (value !== this._shadows) {
+        this._shadowsDirty = true;
+      }
+
+      this._shadows = value;
+    },
+  },
 });
 
 /**
@@ -748,6 +773,11 @@ ModelExperimental.prototype.update = function (frameState) {
   if (this._backFaceCullingDirty) {
     this.sceneGraph.updateBackFaceCulling(this._backFaceCulling);
     this._backFaceCullingDirty = false;
+  }
+
+  if (this._shadowsDirty) {
+    this.sceneGraph.updateShadows(this._shadows);
+    this._shadowsDirty = false;
   }
 
   this._sceneGraph.update(frameState);
@@ -862,7 +892,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Number} [options.instanceFeatureIdIndex=0] The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
- *
+ * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @returns {ModelExperimental} The newly created model.
  */
 ModelExperimental.fromGltf = function (options) {
@@ -921,6 +951,7 @@ ModelExperimental.fromGltf = function (options) {
     instanceFeatureIdIndex: options.instanceFeatureIdIndex,
     pointCloudShading: options.pointCloudShading,
     backFaceCulling: options.backFaceCulling,
+    shadows: options.shadows,
   };
   const model = new ModelExperimental(modelOptions);
 
