@@ -107,6 +107,7 @@ describe(
       "Data/Cesium3DTiles/Instanced/InstancedAnimated/tileset.json";
 
     const gltfContentUrl = "Data/Cesium3DTiles/GltfContent/glTF/tileset.json";
+    const glbContentUrl = "Data/Cesium3DTiles/GltfContent/glb/tileset.json";
 
     // 1 tile where each feature is a different source color
     const colorsUrl = "Data/Cesium3DTiles/Batched/BatchedColors/tileset.json";
@@ -281,7 +282,7 @@ describe(
         },
       };
 
-      const uri = "data:text/plain;base64," + btoa(JSON.stringify(tilesetJson));
+      const uri = `data:text/plain;base64,${btoa(JSON.stringify(tilesetJson))}`;
 
       Cesium3DTileset.loadJson(uri)
         .then(function (result) {
@@ -364,7 +365,7 @@ describe(
         },
       };
 
-      const uri = "data:text/plain;base64," + btoa(JSON.stringify(tilesetJson));
+      const uri = `data:text/plain;base64,${btoa(JSON.stringify(tilesetJson))}`;
 
       options.url = uri;
       const tileset = scene.primitives.add(new Cesium3DTileset(options));
@@ -386,7 +387,7 @@ describe(
         extensionsRequired: ["unsupported_extension"],
       };
 
-      const uri = "data:text/plain;base64," + btoa(JSON.stringify(tilesetJson));
+      const uri = `data:text/plain;base64,${btoa(JSON.stringify(tilesetJson))}`;
 
       options.url = uri;
       const tileset = scene.primitives.add(new Cesium3DTileset(options));
@@ -1819,12 +1820,10 @@ describe(
       spyOn(Resource._Implementations, "loadWithXhr").and.callThrough();
 
       const queryParams = "a=1&b=boy";
-      let expectedUrl =
-        "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json?" +
-        queryParams;
+      let expectedUrl = `Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json?${queryParams}`;
       return Cesium3DTilesTester.loadTileset(
         scene,
-        tilesetOfTilesetsUrl + "?" + queryParams
+        `${tilesetOfTilesetsUrl}?${queryParams}`
       )
         .then(function (tileset) {
           //Make sure tileset JSON file was requested with query parameters
@@ -1843,8 +1842,7 @@ describe(
         .then(function () {
           //Make sure tileset2.json was requested with query parameters and does not use parent tilesetVersion
           expectedUrl = getAbsoluteUri(
-            "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset2.json?v=1.2.3&" +
-              queryParams
+            `Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset2.json?v=1.2.3&${queryParams}`
           );
           expect(
             Resource._Implementations.loadWithXhr.calls.argsFor(0)[0]
@@ -1966,6 +1964,11 @@ describe(
       return checkDebugColorizeTiles(gltfContentUrl);
     });
 
+    it("debugColorizeTiles for glb", function () {
+      viewGltfContent();
+      return checkDebugColorizeTiles(glbContentUrl);
+    });
+
     it("debugWireframe", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset
@@ -2052,19 +2055,19 @@ describe(
 
         const root = tileset.root;
         expect(tileset._tileDebugLabels._labels[0].text).toEqual(
-          "Geometric error: " + root.geometricError
+          `Geometric error: ${root.geometricError}`
         );
         expect(tileset._tileDebugLabels._labels[1].text).toEqual(
-          "Geometric error: " + root.children[0].geometricError
+          `Geometric error: ${root.children[0].geometricError}`
         );
         expect(tileset._tileDebugLabels._labels[2].text).toEqual(
-          "Geometric error: " + root.children[1].geometricError
+          `Geometric error: ${root.children[1].geometricError}`
         );
         expect(tileset._tileDebugLabels._labels[3].text).toEqual(
-          "Geometric error: " + root.children[2].geometricError
+          `Geometric error: ${root.children[2].geometricError}`
         );
         expect(tileset._tileDebugLabels._labels[4].text).toEqual(
-          "Geometric error: " + root.children[3].geometricError
+          `Geometric error: ${root.children[3].geometricError}`
         );
 
         tileset.debugShowGeometricError = false;
@@ -2086,10 +2089,10 @@ describe(
 
         const root = tileset.root;
         expect(tileset._tileDebugLabels._labels[0].text).toEqual(
-          "Geometric error: " + root.geometricError
+          `Geometric error: ${root.geometricError}`
         );
         expect(tileset._tileDebugLabels._labels[1].text).toEqual(
-          "Geometric error: " + root.children[0].geometricError
+          `Geometric error: ${root.children[0].geometricError}`
         );
 
         tileset.debugShowGeometricError = false;
@@ -2113,7 +2116,7 @@ describe(
 
         for (let i = 0; i < length; ++i) {
           expect(tileset._tileDebugLabels._labels[i].text).toEqual(
-            "Geometric error: " + tileset._selectedTiles[i].geometricError
+            `Geometric error: ${tileset._selectedTiles[i].geometricError}`
           );
         }
 
@@ -2136,14 +2139,9 @@ describe(
 
         const content = tileset.root.content;
         const expected =
-          "Commands: " +
-          tileset.root.commandsLength +
-          "\n" +
-          "Triangles: " +
-          content.trianglesLength +
-          "\n" +
-          "Features: " +
-          content.featuresLength;
+          `Commands: ${tileset.root.commandsLength}\n` +
+          `Triangles: ${content.trianglesLength}\n` +
+          `Features: ${content.featuresLength}`;
 
         expect(tileset._tileDebugLabels._labels[0].text).toEqual(expected);
 
@@ -2549,17 +2547,22 @@ describe(
         tileset
       ) {
         scene.camera.setView(setViewOptions);
+        // In the glTF and glb tests, the back-face of the model is black,
+        // so the background color is set to a different color to distinguish
+        // between the results.
+        scene.backgroundColor = new Color(0.0, 0.0, 1.0, 1.0);
         expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).toEqual([0, 0, 0, 255]);
+          expect(rgba).toEqual([0, 0, 255, 255]);
           tileset.backFaceCulling = false;
           expect(renderOptions).toRenderAndCall(function (rgba2) {
             expect(rgba2).not.toEqual(rgba);
           });
         });
+        scene.backgroundColor = new Color(0.0, 0.0, 0.0, 1.0);
       });
     }
 
-    it("renders b3dm tileset when back face culling is disabled", function () {
+    it("renders b3dm tileset when back-face culling is disabled", function () {
       const setViewOptions = {
         destination: new Cartesian3(
           1215012.6853779217,
@@ -2577,7 +2580,7 @@ describe(
       return testBackFaceCulling(withoutBatchTableUrl, setViewOptions);
     });
 
-    it("renders glTF tileset when back face culling is disabled", function () {
+    it("renders glTF tileset when back-face culling is disabled", function () {
       const setViewOptions = {
         destination: new Cartesian3(
           1215012.6853779217,
@@ -2595,7 +2598,25 @@ describe(
       return testBackFaceCulling(gltfContentUrl, setViewOptions);
     });
 
-    it("renders i3dm tileset when back face culling is disabled", function () {
+    it("renders glb tileset when back-face culling is disabled", function () {
+      const setViewOptions = {
+        destination: new Cartesian3(
+          1215012.6853779217,
+          -4736313.101374343,
+          4081603.4657718465
+        ),
+        orientation: new HeadingPitchRoll(
+          6.283185307179584,
+          -0.49999825387267993,
+          6.283185307179586
+        ),
+        endTransform: Matrix4.IDENTITY,
+      };
+
+      return testBackFaceCulling(glbContentUrl, setViewOptions);
+    });
+
+    it("renders i3dm tileset when back-face culling is disabled", function () {
       const setViewOptions = {
         destination: new Cartesian3(
           1215015.8599828142,
@@ -2686,6 +2707,21 @@ describe(
       );
     });
 
+    it("applies show style to a tileset with glb content", function () {
+      return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(
+        function (tileset) {
+          viewGltfContent();
+          const hideStyle = new Cesium3DTileStyle({ show: "false" });
+          tileset.style = hideStyle;
+          expect(tileset.style).toBe(hideStyle);
+          expect(scene).toRender([0, 0, 0, 255]);
+
+          tileset.style = new Cesium3DTileStyle({ show: "true" });
+          expect(scene).notToRender([0, 0, 0, 255]);
+        }
+      );
+    });
+
     function expectColorStyle(tileset) {
       let color;
       expect(scene).toRenderAndCall(function (rgba) {
@@ -2752,6 +2788,15 @@ describe(
 
     it("applies color style to tileset with glTF content", function () {
       return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
+        function (tileset) {
+          viewGltfContent();
+          expectColorStyle(tileset);
+        }
+      );
+    });
+
+    it("applies color style to tileset with glb content", function () {
+      return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(
         function (tileset) {
           viewGltfContent();
           expectColorStyle(tileset);

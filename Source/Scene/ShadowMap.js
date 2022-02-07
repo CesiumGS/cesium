@@ -815,15 +815,16 @@ function createDebugShadowViewCommand(shadowMap, context) {
       "} \n";
   } else {
     fs =
-      "uniform sampler2D shadowMap_texture; \n" +
-      "varying vec2 v_textureCoordinates; \n" +
-      "void main() \n" +
-      "{ \n" +
-      (shadowMap._usesDepthTexture
-        ? "    float shadow = texture2D(shadowMap_texture, v_textureCoordinates).r; \n"
-        : "    float shadow = czm_unpackDepth(texture2D(shadowMap_texture, v_textureCoordinates)); \n") +
-      "    gl_FragColor = vec4(vec3(shadow), 1.0); \n" +
-      "} \n";
+      `${
+        "uniform sampler2D shadowMap_texture; \n" +
+        "varying vec2 v_textureCoordinates; \n" +
+        "void main() \n" +
+        "{ \n"
+      }${
+        shadowMap._usesDepthTexture
+          ? "    float shadow = texture2D(shadowMap_texture, v_textureCoordinates).r; \n"
+          : "    float shadow = czm_unpackDepth(texture2D(shadowMap_texture, v_textureCoordinates)); \n"
+      }    gl_FragColor = vec4(vec3(shadow), 1.0); \n` + `} \n`;
   }
 
   const drawCommand = context.createViewportQuadCommand(fs, {

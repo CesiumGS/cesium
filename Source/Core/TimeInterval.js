@@ -183,11 +183,10 @@ TimeInterval.toIso8601 = function (timeInterval, precision) {
   Check.typeOf.object("timeInterval", timeInterval);
   //>>includeEnd('debug');
 
-  return (
-    JulianDate.toIso8601(timeInterval.start, precision) +
-    "/" +
-    JulianDate.toIso8601(timeInterval.stop, precision)
-  );
+  return `${JulianDate.toIso8601(
+    timeInterval.start,
+    precision
+  )}/${JulianDate.toIso8601(timeInterval.stop, precision)}`;
 };
 
 /**

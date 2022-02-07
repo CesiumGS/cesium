@@ -65,25 +65,25 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
       "getQuadTreePacket"
     ).and.callFake(function (quadKey, version) {
       quadKey = defaultValue(quadKey, "");
-      this._tileInfo[quadKey + "0"] = new GoogleEarthEnterpriseTileInformation(
+      this._tileInfo[`${quadKey}0`] = new GoogleEarthEnterpriseTileInformation(
         0xff,
         1,
         1,
         1
       );
-      this._tileInfo[quadKey + "1"] = new GoogleEarthEnterpriseTileInformation(
+      this._tileInfo[`${quadKey}1`] = new GoogleEarthEnterpriseTileInformation(
         0xff,
         1,
         1,
         1
       );
-      this._tileInfo[quadKey + "2"] = new GoogleEarthEnterpriseTileInformation(
+      this._tileInfo[`${quadKey}2`] = new GoogleEarthEnterpriseTileInformation(
         0xff,
         1,
         1,
         1
       );
-      this._tileInfo[quadKey + "3"] = new GoogleEarthEnterpriseTileInformation(
+      this._tileInfo[`${quadKey}3`] = new GoogleEarthEnterpriseTileInformation(
         0xff,
         1,
         1,

@@ -14,35 +14,37 @@ This guide applies to CesiumJS and all parts of the Cesium ecosystem written in 
 
 To some extent, this guide can be summarized as _make new code similar to existing code_.
 
-- [Naming](#naming)
-- [Formatting](#formatting)
-- [Linting](#linting)
-- [Units](#units)
-- [Basic Code Construction](#basic-code-construction)
-- [Functions](#functions)
-  - [`options` Parameters](#options-parameters)
-  - [Default Parameter Values](#default-parameter-values)
-  - [Throwing Exceptions](#throwing-exceptions)
-  - [`result` Parameters and Scratch Variables](#result-parameters-and-scratch-variables)
-- [Classes](#classes)
-  - [Constructor Functions](#constructor-functions)
-  - [`from` Constructors](#from-constructors)
-  - [`to` Functions](#to-functions)
-  - [Use Prototype Functions for Fundamental Classes Sparingly](#use-prototype-functions-for-fundamental-classes-sparingly)
-  - [Static Constants](#static-constants)
-  - [Private Functions](#private-functions)
-  - [Property Getter/Setters](#property-gettersetters)
-  - [Shadowed Property](#shadowed-property)
-  - [Put the Constructor Function at the Top of the File](#put-the-constructor-function-at-the-top-of-the-file)
-- [Design](#design)
-  - [Deprecation and Breaking Changes](#deprecation-and-breaking-changes)
-- [Third-Party Libraries](#third-party-libraries)
-- [Widgets](#widgets)
-- [GLSL](#glsl)
-  - [Naming](#naming-1)
-  - [Formatting](#formatting-1)
-  - [Performance](#performance)
-- [Resources](#resources)
+- [Coding Guide](#coding-guide)
+  - [Naming](#naming)
+  - [Formatting](#formatting)
+  - [Linting](#linting)
+  - [Units](#units)
+  - [Basic Code Construction](#basic-code-construction)
+  - [Functions](#functions)
+    - [`options` Parameters](#options-parameters)
+    - [Default Parameter Values](#default-parameter-values)
+    - [Throwing Exceptions](#throwing-exceptions)
+    - [`result` Parameters and Scratch Variables](#result-parameters-and-scratch-variables)
+  - [Classes](#classes)
+    - [Constructor Functions](#constructor-functions)
+    - [`from` Constructors](#from-constructors)
+    - [`to` Functions](#to-functions)
+    - [Use Prototype Functions for Fundamental Classes Sparingly](#use-prototype-functions-for-fundamental-classes-sparingly)
+    - [Static Constants](#static-constants)
+    - [Private Functions](#private-functions)
+    - [Property Getter/Setters](#property-gettersetters)
+    - [Shadowed Property](#shadowed-property)
+    - [Put the Constructor Function at the Top of the File](#put-the-constructor-function-at-the-top-of-the-file)
+  - [Design](#design)
+    - [Deprecation and Breaking Changes](#deprecation-and-breaking-changes)
+  - [Third-Party Libraries](#third-party-libraries)
+  - [Widgets](#widgets)
+    - [Knockout subscriptions](#knockout-subscriptions)
+  - [GLSL](#glsl)
+    - [Naming](#naming-1)
+    - [Formatting](#formatting-1)
+    - [Performance](#performance)
+  - [Resources](#resources)
 
 ## Naming
 
@@ -670,7 +672,7 @@ Functions that start with `to` return a new type of object, e.g.,
 
 ```javascript
 Cartesian3.prototype.toString = function () {
-  return "(" + this.x + ", " + this.y + ", " + this.z + ")";
+  return "(${this.x}, ${this.y}, ${this.z})";
 };
 ```
 

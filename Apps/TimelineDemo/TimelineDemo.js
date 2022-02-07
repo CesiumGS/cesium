@@ -21,8 +21,9 @@ define(["dijit/dijit", "dojo"], function (dijit, dojo) {
     animation;
 
   function updateScrubTime(julianDate) {
-    document.getElementById("mousePos").innerHTML =
-      timeline.makeLabel(julianDate) + " UTC";
+    document.getElementById("mousePos").innerHTML = `${timeline.makeLabel(
+      julianDate
+    )} UTC`;
   }
 
   function handleSetTime(e) {
@@ -55,22 +56,17 @@ define(["dijit/dijit", "dojo"], function (dijit, dojo) {
       span /= 60;
       spanUnits = "minutes";
     }
-    return span.toString() + " " + spanUnits;
+    return `${span.toString()} ${spanUnits}`;
   }
 
   function handleSetZoom(e) {
     dojo.byId("formatted").innerHTML =
       //'<br/>Epoch: ' + timeline.makeLabel(e.epochJulian) + ' UTC' +
-      "<br/>Start: " +
-      timeline.makeLabel(e.startJulian) +
-      " UTC" +
-      "<br/>&nbsp;Stop: " +
-      timeline.makeLabel(e.endJulian) +
-      " UTC" +
-      "<br/>&nbsp;Span: " +
-      spanToString(e.totalSpan) +
-      "<br/>&nbsp;&nbsp;Tic: " +
-      spanToString(e.mainTicSpan);
+      `<br/>Start: ${timeline.makeLabel(e.startJulian)} UTC` +
+      `<br/>&nbsp;Stop: ${timeline.makeLabel(e.endJulian)} UTC` +
+      `<br/>&nbsp;Span: ${spanToString(
+        e.totalSpan
+      )}<br/>&nbsp;&nbsp;Tic: ${spanToString(e.mainTicSpan)}`;
     updateScrubTime(clock.currentTime);
   }
 
@@ -136,10 +132,10 @@ define(["dijit/dijit", "dojo"], function (dijit, dojo) {
     let startJulian, endJulian;
 
     if (startDatePart && startTimePart) {
-      startJulian = JulianDate.fromIso8601(startDatePart + startTimePart + "Z"); // + 'Z' for UTC
+      startJulian = JulianDate.fromIso8601(`${startDatePart + startTimePart}Z`); // + 'Z' for UTC
     }
     if (endDatePart && endTimePart) {
-      endJulian = JulianDate.fromIso8601(endDatePart + endTimePart + "Z");
+      endJulian = JulianDate.fromIso8601(`${endDatePart + endTimePart}Z`);
     }
 
     if (startJulian && endJulian) {
@@ -178,12 +174,12 @@ define(["dijit/dijit", "dojo"], function (dijit, dojo) {
   //
   function getTimePart(newTime) {
     let h = newTime.getHours().toString();
-    h = h.length < 2 ? "0" + h : h;
+    h = h.length < 2 ? `0${h}` : h;
     let m = newTime.getMinutes().toString();
-    m = m.length < 2 ? "0" + m : m;
+    m = m.length < 2 ? `0${m}` : m;
     let s = newTime.getSeconds().toString();
-    s = s.length < 2 ? "0" + s : s;
-    return "T" + h + ":" + m + ":" + s;
+    s = s.length < 2 ? `0${s}` : s;
+    return `T${h}:${m}:${s}`;
   }
   function newStartTimeSelected(newTime) {
     startTimePart = getTimePart(newTime);

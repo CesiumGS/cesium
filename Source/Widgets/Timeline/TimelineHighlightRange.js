@@ -57,18 +57,9 @@ TimelineHighlightRange.prototype.render = function (renderState) {
       highlightWidth = renderState.timeBarWidth - highlightLeft;
     }
     if (highlightWidth > 0) {
-      range =
-        '<span class="cesium-timeline-highlight" style="left: ' +
-        highlightLeft.toString() +
-        "px; width: " +
-        highlightWidth.toString() +
-        "px; bottom: " +
-        this._base.toString() +
-        "px; height: " +
-        this._height +
-        "px; background-color: " +
-        this._color +
-        ';"></span>';
+      range = `<span class="cesium-timeline-highlight" style="left: ${highlightLeft.toString()}px; width: ${highlightWidth.toString()}px; bottom: ${this._base.toString()}px; height: ${
+        this._height
+      }px; background-color: ${this._color};"></span>`;
     }
   }
   return range;

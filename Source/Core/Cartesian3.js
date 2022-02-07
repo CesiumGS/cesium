@@ -1183,6 +1183,6 @@ Cartesian3.prototype.equalsEpsilon = function (
  * @returns {String} A string representing this Cartesian in the format '(x, y, z)'.
  */
 Cartesian3.prototype.toString = function () {
-  return "(" + this.x + ", " + this.y + ", " + this.z + ")";
+  return `(${this.x}, ${this.y}, ${this.z})`;
 };
 export default Cartesian3;

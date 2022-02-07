@@ -45,7 +45,7 @@ import I3dmLoader from "./I3dmLoader.js";
  * @param {Number} [options.featureIdIndex=0] The index into the list of primitive feature IDs used for picking and styling. For EXT_feature_metadata, feature ID attributes are listed before feature ID textures. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Number} [options.instanceFeatureIdIndex=0] The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
- *
+ * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
@@ -139,6 +139,9 @@ export default function ModelExperimental(options) {
   const pointCloudShading = new PointCloudShading(options.pointCloudShading);
   this._attenuation = pointCloudShading.attenuation;
   this._pointCloudShading = pointCloudShading;
+
+  this._backFaceCulling = defaultValue(options.backFaceCulling, true);
+  this._backFaceCullingDirty = false;
 
   this._debugShowBoundingVolumeDirty = false;
   this._debugShowBoundingVolume = defaultValue(
@@ -626,6 +629,29 @@ Object.defineProperties(ModelExperimental.prototype, {
       this._instanceFeatureIdIndex = value;
     },
   },
+
+  /**
+   * Whether to cull back-facing geometry. When true, back face culling is
+   * determined by the material's doubleSided property; when false, back face
+   * culling is disabled. Back faces are not culled if the model's color is
+   * translucent.
+   *
+   * @type {Boolean}
+   *
+   * @default true
+   */
+  backFaceCulling: {
+    get: function () {
+      return this._backFaceCulling;
+    },
+    set: function (value) {
+      if (value !== this._backFaceCulling) {
+        this._backFaceCullingDirty = true;
+      }
+
+      this._backFaceCulling = value;
+    },
+  },
 });
 
 /**
@@ -717,6 +743,11 @@ ModelExperimental.prototype.update = function (frameState) {
 
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
     this._sceneGraph.updateModelMatrix(this);
+  }
+
+  if (this._backFaceCullingDirty) {
+    this.sceneGraph.updateBackFaceCulling(this._backFaceCulling);
+    this._backFaceCullingDirty = false;
   }
 
   this._sceneGraph.update(frameState);
@@ -830,6 +861,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Number} [options.featureIdIndex=0] The index into the list of primitive feature IDs used for picking and styling. For EXT_feature_metadata, feature ID attributes are listed before feature ID textures. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Number} [options.instanceFeatureIdIndex=0] The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
+ * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  *
  * @returns {ModelExperimental} The newly created model.
  */
@@ -888,6 +920,7 @@ ModelExperimental.fromGltf = function (options) {
     featureIdIndex: options.featureIdIndex,
     instanceFeatureIdIndex: options.instanceFeatureIdIndex,
     pointCloudShading: options.pointCloudShading,
+    backFaceCulling: options.backFaceCulling,
   };
   const model = new ModelExperimental(modelOptions);
 

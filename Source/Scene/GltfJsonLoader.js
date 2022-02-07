@@ -160,8 +160,7 @@ function loadFromUri(gltfJsonLoader) {
 function handleError(gltfJsonLoader, error) {
   gltfJsonLoader.unload();
   gltfJsonLoader._state = ResourceLoaderState.FAILED;
-  const errorMessage =
-    "Failed to load glTF: " + gltfJsonLoader._gltfResource.url;
+  const errorMessage = `Failed to load glTF: ${gltfJsonLoader._gltfResource.url}`;
   gltfJsonLoader._promise.reject(gltfJsonLoader.getError(errorMessage, error));
 }
 

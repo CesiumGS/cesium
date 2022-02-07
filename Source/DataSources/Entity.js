@@ -527,11 +527,11 @@ Entity.prototype.addProperty = function (propertyName) {
   }
   if (propertyNames.indexOf(propertyName) !== -1) {
     throw new DeveloperError(
-      propertyName + " is already a registered property."
+      `${propertyName} is already a registered property.`
     );
   }
   if (propertyName in this) {
-    throw new DeveloperError(propertyName + " is a reserved property name.");
+    throw new DeveloperError(`${propertyName} is a reserved property name.`);
   }
   //>>includeEnd('debug');
 
@@ -560,7 +560,7 @@ Entity.prototype.removeProperty = function (propertyName) {
     throw new DeveloperError("propertyName is required.");
   }
   if (index === -1) {
-    throw new DeveloperError(propertyName + " is not a registered property.");
+    throw new DeveloperError(`${propertyName} is not a registered property.`);
   }
   //>>includeEnd('debug');
 

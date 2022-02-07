@@ -79,7 +79,7 @@ function SelectionIndicatorViewModel(
 
   knockout.defineProperty(this, "_transform", {
     get: function () {
-      return "scale(" + this._scale + ")";
+      return `scale(${this._scale})`;
     },
   });
 
@@ -131,8 +131,8 @@ SelectionIndicatorViewModel.prototype.update = function () {
           containerHeight + indicatorSize
         ) - halfSize;
 
-      this._screenPositionX = Math.floor(screenPosition.x + 0.25) + "px";
-      this._screenPositionY = Math.floor(screenPosition.y + 0.25) + "px";
+      this._screenPositionX = `${Math.floor(screenPosition.x + 0.25)}px`;
+      this._screenPositionY = `${Math.floor(screenPosition.y + 0.25)}px`;
     }
   }
 };

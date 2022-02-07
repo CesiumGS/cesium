@@ -62,9 +62,7 @@ function Texture(options) {
 
   if (width > ContextLimits.maximumTextureSize) {
     throw new DeveloperError(
-      "Width must be less than or equal to the maximum texture size (" +
-        ContextLimits.maximumTextureSize +
-        ").  Check maximumTextureSize."
+      `Width must be less than or equal to the maximum texture size (${ContextLimits.maximumTextureSize}).  Check maximumTextureSize.`
     );
   }
 
@@ -72,9 +70,7 @@ function Texture(options) {
 
   if (height > ContextLimits.maximumTextureSize) {
     throw new DeveloperError(
-      "Height must be less than or equal to the maximum texture size (" +
-        ContextLimits.maximumTextureSize +
-        ").  Check maximumTextureSize."
+      `Height must be less than or equal to the maximum texture size (${ContextLimits.maximumTextureSize}).  Check maximumTextureSize.`
     );
   }
 

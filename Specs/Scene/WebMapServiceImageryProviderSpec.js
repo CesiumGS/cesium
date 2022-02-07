@@ -637,7 +637,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
 
         const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
         expect(params.bbox).toEqual(
-          rect.west + "," + rect.south + "," + rect.east + "," + rect.north
+          `${rect.west},${rect.south},${rect.east},${rect.north}`
         );
 
         Resource._DefaultImplementations.createImage(
@@ -692,7 +692,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
 
         const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
         expect(params.bbox).toEqual(
-          rect.west + "," + rect.south + "," + rect.east + "," + rect.north
+          `${rect.west},${rect.south},${rect.east},${rect.north}`
         );
 
         Resource._DefaultImplementations.createImage(
@@ -744,7 +744,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
 
         const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
         expect(params.bbox).toEqual(
-          rect.west + "," + rect.south + "," + rect.east + "," + rect.north
+          `${rect.west},${rect.south},${rect.east},${rect.north}`
         );
 
         Resource._DefaultImplementations.createImage(
@@ -799,7 +799,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
 
         const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
         expect(params.bbox).toEqual(
-          rect.west + "," + rect.south + "," + rect.east + "," + rect.north
+          `${rect.west},${rect.south},${rect.east},${rect.north}`
         );
 
         Resource._DefaultImplementations.createImage(
@@ -854,7 +854,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
 
         const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
         expect(params.bbox).toEqual(
-          rect.west + "," + rect.south + "," + rect.east + "," + rect.north
+          `${rect.west},${rect.south},${rect.east},${rect.north}`
         );
 
         Resource._DefaultImplementations.createImage(
@@ -909,7 +909,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
 
         const rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
         expect(params.bbox).toEqual(
-          rect.west + "," + rect.south + "," + rect.east + "," + rect.north
+          `${rect.west},${rect.south},${rect.east},${rect.north}`
         );
 
         Resource._DefaultImplementations.createImage(

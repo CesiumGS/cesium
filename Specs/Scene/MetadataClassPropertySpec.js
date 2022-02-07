@@ -1003,7 +1003,7 @@ describe("Scene/MetadataClassProperty", function () {
         },
       });
       expect(property.validate({})).toBe(
-        "value [object Object] does not match type " + types[i]
+        `value [object Object] does not match type ${types[i]}`
       );
     }
   });
@@ -1042,7 +1042,7 @@ describe("Scene/MetadataClassProperty", function () {
         });
         for (let i = 0; i < values.length; ++i) {
           expect(property.validate(values[i])).toBe(
-            "value " + values[i] + " is out of range for type " + type
+            `value ${values[i]} is out of range for type ${type}`
           );
         }
       }
@@ -1084,7 +1084,7 @@ describe("Scene/MetadataClassProperty", function () {
         });
         for (let i = 0; i < values.length; ++i) {
           expect(property.validate(values)).toBe(
-            "value " + values[0] + " is out of range for type " + componentType
+            `value ${values[0]} is out of range for type ${componentType}`
           );
         }
       }

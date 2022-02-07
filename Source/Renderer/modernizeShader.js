@@ -38,8 +38,8 @@ function modernizeShader(source, isFragmentShader) {
   const outputVariables = [];
 
   for (i = 0; i < 10; i++) {
-    const fragDataString = "gl_FragData\\[" + i + "\\]";
-    const newOutput = "czm_out" + i;
+    const fragDataString = `gl_FragData\\[${i}\\]`;
+    const newOutput = `czm_out${i}`;
     const regex = new RegExp(fragDataString, "g");
     if (regex.test(source)) {
       setAdd(newOutput, outputVariables);
@@ -47,7 +47,7 @@ function modernizeShader(source, isFragmentShader) {
       splitSource.splice(
         outputDeclarationLine,
         0,
-        "layout(location = " + i + ") out vec4 " + newOutput + ";"
+        `layout(location = ${i}) out vec4 ${newOutput};`
       );
       outputDeclarationLine += 1;
     }
@@ -75,7 +75,7 @@ function modernizeShader(source, isFragmentShader) {
     for (const variable in variableMap) {
       if (variableMap.hasOwnProperty(variable)) {
         const matchVar = new RegExp(
-          "(layout)[^]+(out)[^]+(" + variable + ")[^]+",
+          `(layout)[^]+(out)[^]+(${variable})[^]+`,
           "g"
         );
         if (matchVar.test(line)) {
@@ -96,13 +96,13 @@ function modernizeShader(source, isFragmentShader) {
       }
       lineNumber += depth + 1;
       for (let d = depth - 1; d >= 0; d--) {
-        splitSource.splice(lineNumber, 0, "#endif //" + entry[d]);
+        splitSource.splice(lineNumber, 0, `#endif //${entry[d]}`);
       }
     }
   }
 
   const webgl2UniqueID = "WEBGL_2";
-  const webgl2DefineMacro = "#define " + webgl2UniqueID;
+  const webgl2DefineMacro = `#define ${webgl2UniqueID}`;
   const versionThree = "#version 300 es";
   let foundVersion = false;
   for (i = 0; i < splitSource.length; i++) {
@@ -141,13 +141,13 @@ function modernizeShader(source, isFragmentShader) {
 // Note that this fails if your string looks like
 // searchString[singleCharacter]searchString
 function replaceInSourceString(str, replacement, splitSource) {
-  const regexStr = "(^|[^\\w])(" + str + ")($|[^\\w])";
+  const regexStr = `(^|[^\\w])(${str})($|[^\\w])`;
   const regex = new RegExp(regexStr, "g");
 
   const splitSourceLength = splitSource.length;
   for (let i = 0; i < splitSourceLength; ++i) {
     const line = splitSource[i];
-    splitSource[i] = line.replace(regex, "$1" + replacement + "$3");
+    splitSource[i] = line.replace(regex, `$1${replacement}$3`);
   }
 }
 
@@ -160,7 +160,7 @@ function replaceInSourceRegex(regex, replacement, splitSource) {
 }
 
 function findInSource(str, splitSource) {
-  const regexStr = "(^|[^\\w])(" + str + ")($|[^\\w])";
+  const regexStr = `(^|[^\\w])(${str})($|[^\\w])`;
   const regex = new RegExp(regexStr, "g");
 
   const splitSourceLength = splitSource.length;
@@ -178,7 +178,7 @@ function compileSource(splitSource) {
 
   const splitSourceLength = splitSource.length;
   for (let i = 0; i < splitSourceLength; ++i) {
-    wholeSource += splitSource[i] + "\n";
+    wholeSource += `${splitSource[i]}\n`;
   }
   return wholeSource;
 }
@@ -233,10 +233,10 @@ function getVariablePreprocessorBranch(layoutVariables, splitSource) {
 }
 
 function removeExtension(name, webgl2UniqueID, splitSource) {
-  const regex = "#extension\\s+GL_" + name + "\\s+:\\s+[a-zA-Z0-9]+\\s*$";
+  const regex = `#extension\\s+GL_${name}\\s+:\\s+[a-zA-Z0-9]+\\s*$`;
   replaceInSourceRegex(new RegExp(regex, "g"), "", splitSource);
 
   // replace any possible directive #ifdef (GL_EXT_extension) with WEBGL_2 unique directive
-  replaceInSourceString("GL_" + name, webgl2UniqueID, splitSource);
+  replaceInSourceString(`GL_${name}`, webgl2UniqueID, splitSource);
 }
 export default modernizeShader;

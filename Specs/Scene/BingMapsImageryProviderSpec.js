@@ -122,10 +122,7 @@ describe("Scene/BingMapsImageryProvider", function () {
               __type:
                 "ImageryMetadata:http://schemas.microsoft.com/search/local/ws/rest/v1",
               imageHeight: 256,
-              imageUrl:
-                "http://ecn.{subdomain}.tiles.virtualearth.net.fake.invalid/tiles/" +
-                stylePrefix +
-                "{quadkey}.jpeg?g=3031&mkt={culture}",
+              imageUrl: `http://ecn.{subdomain}.tiles.virtualearth.net.fake.invalid/tiles/${stylePrefix}{quadkey}.jpeg?g=3031&mkt={culture}`,
               imageUrlSubdomains: ["t0", "t1", "t2", "t3"],
               imageWidth: 256,
               imageryProviders: [
@@ -177,7 +174,7 @@ describe("Scene/BingMapsImageryProvider", function () {
   function installFakeMetadataRequest(url, mapStyle, proxy) {
     const baseUri = new Uri(appendForwardSlash(url));
     const expectedUri = new Uri(
-      "REST/v1/Imagery/Metadata/" + mapStyle
+      `REST/v1/Imagery/Metadata/${mapStyle}`
     ).absoluteTo(baseUri);
 
     Resource._Implementations.loadAndExecuteScript = function (

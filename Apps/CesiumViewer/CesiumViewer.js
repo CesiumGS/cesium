@@ -84,7 +84,7 @@ function main() {
   }
 
   const showLoadError = function (name, error) {
-    const title = "An error occurred while loading the file: " + name;
+    const title = `An error occurred while loading the file: ${name}`;
     const message =
       "An error occurred while loading the file, which may indicate that it is invalid.  A detailed error report is below:";
     viewer.cesiumWidget.showErrorPanel(title, message, error);
@@ -151,10 +151,7 @@ function main() {
             if (defined(entity)) {
               viewer.trackedEntity = entity;
             } else {
-              const error =
-                'No entity with id "' +
-                lookAt +
-                '" exists in the provided data source.';
+              const error = `No entity with id "${lookAt}" exists in the provided data source.`;
               showLoadError(source, error);
             }
           } else if (!defined(view) && endUserOptions.flyTo !== "false") {
@@ -177,7 +174,7 @@ function main() {
       document.body.classList.add("cesium-lighter");
       viewer.animation.applyThemeChanges();
     } else {
-      const error = "Unknown theme: " + theme;
+      const error = `Unknown theme: ${theme}`;
       viewer.cesiumWidget.showErrorPanel(error, "");
     }
   }
@@ -220,22 +217,14 @@ function main() {
     const position = camera.positionCartographic;
     let hpr = "";
     if (defined(camera.heading)) {
-      hpr =
-        "," +
-        CesiumMath.toDegrees(camera.heading) +
-        "," +
-        CesiumMath.toDegrees(camera.pitch) +
-        "," +
-        CesiumMath.toDegrees(camera.roll);
+      hpr = `,${CesiumMath.toDegrees(camera.heading)},${CesiumMath.toDegrees(
+        camera.pitch
+      )},${CesiumMath.toDegrees(camera.roll)}`;
     }
-    endUserOptions.view =
-      CesiumMath.toDegrees(position.longitude) +
-      "," +
-      CesiumMath.toDegrees(position.latitude) +
-      "," +
-      position.height +
-      hpr;
-    history.replaceState(undefined, "", "?" + objectToQuery(endUserOptions));
+    endUserOptions.view = `${CesiumMath.toDegrees(
+      position.longitude
+    )},${CesiumMath.toDegrees(position.latitude)},${position.height}${hpr}`;
+    history.replaceState(undefined, "", `?${objectToQuery(endUserOptions)}`);
   }
 
   let timeout;

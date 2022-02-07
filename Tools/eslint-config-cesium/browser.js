@@ -13,5 +13,6 @@ module.exports = {
     "no-implicit-globals": "error",
     "no-var": "error",
     "prefer-const": "error",
+    "prefer-template": "error",
   },
 };

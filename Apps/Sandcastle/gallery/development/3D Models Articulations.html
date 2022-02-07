@@ -165,7 +165,7 @@
                     .getObservable(stageModel, "current")
                     .subscribe(function (newValue) {
                       model.setArticulationStage(
-                        articulationName + " " + stage.name,
+                        `${articulationName} ${stage.name}`,
                         +stageModel.current
                       );
                       model.applyArticulations();

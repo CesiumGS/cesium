@@ -171,29 +171,16 @@ ConditionsExpression.prototype.getShaderFunction = function (
 
     // Build the if/else chain from the list of conditions
     shaderFunction +=
-      "    " +
-      (i === 0 ? "if" : "else if") +
-      " (" +
-      condition +
-      ")\n" +
-      "    {\n" +
-      "        return " +
-      expression +
-      ";\n" +
-      "    }\n";
+      `    ${i === 0 ? "if" : "else if"} (${condition})\n` +
+      `    {\n` +
+      `        return ${expression};\n` +
+      `    }\n`;
   }
 
   shaderFunction =
-    returnType +
-    " " +
-    functionSignature +
-    "\n" +
-    "{\n" +
-    shaderFunction +
-    "    return " +
-    returnType +
-    "(1.0);\n" + // Return a default value if no conditions are met
-    "}\n";
+    `${returnType} ${functionSignature}\n` +
+    `{\n${shaderFunction}    return ${returnType}(1.0);\n` + // Return a default value if no conditions are met
+    `}\n`;
 
   return shaderFunction;
 };

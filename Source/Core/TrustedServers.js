@@ -33,7 +33,7 @@ TrustedServers.add = function (host, port) {
   }
   //>>includeEnd('debug');
 
-  const authority = host.toLowerCase() + ":" + port;
+  const authority = `${host.toLowerCase()}:${port}`;
   if (!defined(_servers[authority])) {
     _servers[authority] = true;
   }
@@ -59,7 +59,7 @@ TrustedServers.remove = function (host, port) {
   }
   //>>includeEnd('debug');
 
-  const authority = host.toLowerCase() + ":" + port;
+  const authority = `${host.toLowerCase()}:${port}`;
   if (defined(_servers[authority])) {
     delete _servers[authority];
   }

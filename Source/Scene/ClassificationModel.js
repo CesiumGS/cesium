@@ -598,38 +598,19 @@ function createProgram(model) {
     }
 
     uniformDecl =
-      "uniform mat4 " +
-      modelViewName +
-      ";\n" +
-      "uniform mat4 " +
-      projectionName +
-      ";\n";
-    toClip =
-      projectionName +
-      " * " +
-      modelViewName +
-      " * vec4(" +
-      positionName +
-      ", 1.0)";
+      `uniform mat4 ${modelViewName};\n` + `uniform mat4 ${projectionName};\n`;
+    toClip = `${projectionName} * ${modelViewName} * vec4(${positionName}, 1.0)`;
   } else {
-    uniformDecl = "uniform mat4 " + modelViewProjectionName + ";\n";
-    toClip = modelViewProjectionName + " * vec4(" + positionName + ", 1.0)";
+    uniformDecl = `uniform mat4 ${modelViewProjectionName};\n`;
+    toClip = `${modelViewProjectionName} * vec4(${positionName}, 1.0)`;
   }
 
-  const computePosition = "    vec4 positionInClipCoords = " + toClip + ";\n";
+  const computePosition = `    vec4 positionInClipCoords = ${toClip};\n`;
 
   let vs =
-    "attribute vec3 " +
-    positionName +
-    ";\n" +
-    "attribute float " +
-    batchIdName +
-    ";\n" +
-    uniformDecl +
-    "void main() {\n" +
-    computePosition +
-    "    gl_Position = czm_depthClamp(positionInClipCoords);\n" +
-    "}\n";
+    `attribute vec3 ${positionName};\n` +
+    `attribute float ${batchIdName};\n${uniformDecl}void main() {\n${computePosition}    gl_Position = czm_depthClamp(positionInClipCoords);\n` +
+    `}\n`;
   const fs =
     "#ifdef GL_EXT_frag_depth\n" +
     "#extension GL_EXT_frag_depth : enable\n" +

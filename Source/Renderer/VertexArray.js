@@ -341,7 +341,7 @@ function VertexArray(options) {
     const index = vaAttributes[i].index;
     if (uniqueIndices[index]) {
       throw new DeveloperError(
-        "Index " + index + " is used by more than one attribute."
+        `Index ${index} is used by more than one attribute.`
       );
     }
     uniqueIndices[index] = true;
@@ -419,18 +419,12 @@ function interleaveAttributes(attributes) {
 
       if (currentNumberOfVertices !== numberOfVertices) {
         throw new RuntimeError(
-          "Each attribute list must have the same number of vertices.  " +
-            "Attribute " +
-            names[j] +
-            " has a different number of vertices " +
-            "(" +
-            currentNumberOfVertices.toString() +
-            ")" +
-            " than attribute " +
-            names[0] +
-            " (" +
-            numberOfVertices.toString() +
-            ")."
+          `${
+            "Each attribute list must have the same number of vertices.  " +
+            "Attribute "
+          }${names[j]} has a different number of vertices ` +
+            `(${currentNumberOfVertices.toString()})` +
+            ` than attribute ${names[0]} (${numberOfVertices.toString()}).`
         );
       }
     }
