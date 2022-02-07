@@ -254,7 +254,7 @@ function processDescription(node, entity) {
       ""
     );
     if (defined(infoType.value) && infoType.value !== "") {
-      text = text + "<p>" + infoType.text + ": " + infoType.value + "</p>";
+      text = `${text}<p>${infoType.text}: ${infoType.value}</p>`;
     }
   }
 
@@ -280,10 +280,10 @@ function processDescription(node, entity) {
   let tmp = '<div class="cesium-infoBox-description-lighter" style="';
   tmp += "overflow:auto;";
   tmp += "word-wrap:break-word;";
-  tmp += "background-color:" + background.toCssColorString() + ";";
-  tmp += "color:" + foreground.toCssColorString() + ";";
+  tmp += `background-color:${background.toCssColorString()};`;
+  tmp += `color:${foreground.toCssColorString()};`;
   tmp += '">';
-  tmp += scratchDiv.innerHTML + "</div>";
+  tmp += `${scratchDiv.innerHTML}</div>`;
   scratchDiv.innerHTML = "";
 
   // return the final HTML as the description.
@@ -463,7 +463,7 @@ function getEmail(node) {
   if (defined(emailNode)) {
     const id = queryStringValue(emailNode, "id", namespaces.gpx);
     const domain = queryStringValue(emailNode, "domain", namespaces.gpx);
-    return id + "@" + domain;
+    return `${id}@${domain}`;
   }
   return undefined;
 }
@@ -575,7 +575,7 @@ function loadGpx(dataSource, gpx, options) {
   if (element.localName === "gpx") {
     processGpx(dataSource, element, entityCollection, options);
   } else {
-    console.log("GPX - Unsupported node: " + element.localName);
+    console.log(`GPX - Unsupported node: ${element.localName}`);
   }
 
   let clock;
