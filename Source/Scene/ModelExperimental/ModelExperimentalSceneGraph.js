@@ -341,6 +341,10 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   }
 
   this._boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
+  this._model._boundingSphere = BoundingSphere.transform(
+    this._boundingSphere,
+    this._model.modelMatrix
+  );
 };
 
 /**
