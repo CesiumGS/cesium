@@ -40,6 +40,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
 
   it("should throw querying heights from Small Terrain", function () {
     const terrainProvider = new CesiumTerrainProvider({
+      // url: "https://s3.amazonaws.com/cesiumjs/smallTerrain",
       url: "/Specs/Mocks/sampleTerrainMostDetailed", // Mock payload from AWS
     });
 
