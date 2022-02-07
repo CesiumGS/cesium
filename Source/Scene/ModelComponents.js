@@ -336,6 +336,39 @@ function Indices() {
  */
 function FeatureIdAttribute() {
   /**
+   * The name of this set of feature IDs for display purposes
+   *
+   * @type {String}
+   * @private
+   */
+  this.name = undefined;
+
+  /**
+   * The identifier for selecting this set of feature IDs. This must be unique
+   * among the feature IDs in a single primitive.
+   *
+   * @type {String}
+   * @private
+   */
+  this.id = undefined;
+
+  /**
+   * How many unique features are defined in this set of feature IDs
+   *
+   * @type {Number}
+   * @private
+   */
+  this.featureCount = undefined;
+
+  /**
+   * This value indicates that no feature is indicated with this vertex
+   *
+   * @type {Number}
+   * @private
+   */
+  this.nullFeatureId = undefined;
+
+  /**
    * The ID of the feature table that feature IDs index into. If undefined,
    * feature IDs are used for classification, but no metadata is associated.
    *
@@ -365,6 +398,39 @@ function FeatureIdAttribute() {
  * @private
  */
 function FeatureIdImplicitRange() {
+  /**
+   * The name of this set of feature IDs for display purposes
+   *
+   * @type {String}
+   * @private
+   */
+  this.name = undefined;
+
+  /**
+   * The identifier for selecting this set of feature IDs. This must be unique
+   * among the feature IDs in a single primitive.
+   *
+   * @type {String}
+   * @private
+   */
+  this.id = undefined;
+
+  /**
+   * How many unique features are defined in this set of feature IDs
+   *
+   * @type {Number}
+   * @private
+   */
+  this.featureCount = undefined;
+
+  /**
+   * This value indicates that no feature is indicated with this vertex
+   *
+   * @type {Number}
+   * @private
+   */
+  this.nullFeatureId = undefined;
+
   /**
    * The ID of the feature table that feature IDs index into. If undefined,
    * feature IDs are used for classification, but no metadata is associated.
@@ -402,7 +468,41 @@ function FeatureIdImplicitRange() {
  */
 function FeatureIdTexture() {
   /**
-   * The ID of the feature table that feature IDs index into.
+   * The name of this set of feature IDs for display purposes
+   *
+   * @type {String}
+   * @private
+   */
+  this.name = undefined;
+
+  /**
+   * The identifier for selecting this set of feature IDs. This must be unique
+   * among the feature IDs in a single primitive.
+   *
+   * @type {String}
+   * @private
+   */
+  this.id = undefined;
+
+  /**
+   * How many unique features are defined in this set of feature IDs
+   *
+   * @type {Number}
+   * @private
+   */
+  this.featureCount = undefined;
+
+  /**
+   * This value indicates that no feature is indicated with this texel
+   *
+   * @type {Number}
+   * @private
+   */
+  this.nullFeatureId = undefined;
+
+  /**
+   * The ID of the feature table that feature IDs index into. If undefined,
+   * feature IDs are used for classification, but no metadata is associated.
    *
    * @type {String}
    * @private
