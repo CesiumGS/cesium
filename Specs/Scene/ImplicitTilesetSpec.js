@@ -26,7 +26,7 @@ describe("Scene/ImplicitTileset", function () {
       "3DTILES_implicit_tiling": {
         subdivisionScheme: "QUADTREE",
         subtreeLevels: 3,
-        availableLevels: 4,
+        availableLevels: 5,
         subtrees: {
           uri: subtreeUriPattern,
         },
@@ -36,6 +36,34 @@ describe("Scene/ImplicitTileset", function () {
       creationDate: "2021-02-22",
     },
   };
+
+  const implicitTileJsonMaximumLevel = {
+    geometricError: 500,
+    refine: "ADD",
+    boundingVolume: {
+      region: [0, 0, Math.PI / 24, Math.PI / 24, 0, 1000.0],
+    },
+    content: {
+      uri: contentUriPattern,
+      extras: {
+        author: "Cesium",
+      },
+    },
+    extensions: {
+      "3DTILES_implicit_tiling": {
+        subdivisionScheme: "QUADTREE",
+        subtreeLevels: 3,
+        maximumLevel: 4,
+        subtrees: {
+          uri: subtreeUriPattern,
+        },
+      },
+    },
+    extras: {
+      creationDate: "2021-02-22",
+    },
+  };
+
   const baseResource = new Resource("https://example.com/tileset.json");
   const contentUriTemplate = new Resource(contentUriPattern);
   const subtreeUriTemplate = new Resource(subtreeUriPattern);
@@ -49,7 +77,7 @@ describe("Scene/ImplicitTileset", function () {
     );
     expect(implicitTileset.metadataSchema).toBeUndefined();
     expect(implicitTileset.subtreeLevels).toEqual(3);
-    expect(implicitTileset.availableLevels).toEqual(4);
+    expect(implicitTileset.availableLevels).toEqual(5);
     expect(implicitTileset.subdivisionScheme).toEqual(
       ImplicitSubdivisionScheme.QUADTREE
     );
@@ -60,6 +88,16 @@ describe("Scene/ImplicitTileset", function () {
     expect(implicitTileset.geometricError).toEqual(500);
     expect(implicitTileset.contentUriTemplates).toEqual([contentUriTemplate]);
     expect(implicitTileset.subtreeUriTemplate).toEqual(subtreeUriTemplate);
+  });
+
+  it("is backwards compatible with maximumLevel parameter in tile JSON", function () {
+    let metadataSchema; // intentionally left undefined
+    const implicitTileset = new ImplicitTileset(
+      baseResource,
+      implicitTileJsonMaximumLevel,
+      metadataSchema
+    );
+    expect(implicitTileset.availableLevels).toEqual(5);
   });
 
   it("stores a template of the tile JSON structure", function () {
@@ -169,7 +207,7 @@ describe("Scene/ImplicitTileset", function () {
         "3DTILES_implicit_tiling": {
           subdivisionScheme: "QUADTREE",
           subtreeLevels: 3,
-          availableLevels: 4,
+          availableLevels: 5,
           subtrees: {
             uri: subtreeUriPattern,
           },

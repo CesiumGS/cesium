@@ -206,7 +206,11 @@ export default function ImplicitTileset(
    * @readonly
    * @private
    */
-  this.availableLevels = extension.availableLevels;
+  if (defined(extension.availableLevels)) {
+    this.availableLevels = extension.availableLevels;
+  } else {
+    this.availableLevels = extension.maximumLevel + 1;
+  }
 }
 
 /**
