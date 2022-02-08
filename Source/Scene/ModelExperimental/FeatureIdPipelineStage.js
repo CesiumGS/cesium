@@ -318,6 +318,15 @@ function processImplicitRange(
   );
 }
 
+const shiftsByChannelCount = [
+  "1.0",
+  "vec2(1.0, 256.0)",
+  "vec3(1.0, 256.0, 65536.0)",
+  "vec4(1.0, 256.0, 16777216.0)",
+];
+
+const glslTypeByChannelCount = ["float", "vec2", "vec3", "vec4"];
+
 function processTexture(
   renderResources,
   featureIdTexture,
@@ -337,17 +346,21 @@ function processTexture(
     );
   };
 
+  const channels = textureReader.channels;
+  const channelCount = channels.length;
+  const idType = glslTypeByChannelCount[channelCount - 1];
+
   // Add a field to the FeatureIds struct in the fragment shader only
   // Example:
   // struct FeatureIds {
   //   ...
-  //   float featureId_n;
+  //   {idType} featureId_n;
   //   ...
   // }
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
-    "float",
+    idType,
     variableName
   );
 
@@ -358,22 +371,34 @@ function processTexture(
     ShaderDestination.FRAGMENT
   );
 
-  // vec4 featureId_n_bytes = floor(texture2D(u_featureIdTexture_m, attributes.texCoord_p) * 255.0 + 0.5);
-  // featureIds.featureId_n = dot(featureId_n_bytes, vec4());
-
-  // Initialize the FeatureIds struct in the fragment shader.
-  // Example:
-  // featureIds.featureId_n = floor(texture2D(u_featureIdTexture_m, attributes.texCoord_p).r * 255.0 + 0.5);
-
+  // Read one or more channels from the texture
+  // example: texture2D(u_featureIdTexture_0, v_texCoord_1).rg
   const texCoord = `v_texCoord_${textureReader.texCoord}`;
+  const textureRead = `texture2D(${uniformName}, ${texCoord}).${channels}`;
 
-  // The current EXT_mesh_features spec requires a single channel.
-  const channel = textureReader.channels;
-  const textureRead = `texture2D(${uniformName}, ${texCoord}).${channel}`;
+  // Round off the result
   const rounded = `floor(${textureRead} * 255.0 + 0.5)`;
+
+  // The ID may be split across multiple channels, unpack by dotting with
+  // a vector of shifts. e.g. for a vec2 ID:
+  //
+  // dot(textureRead, vec2(1.0, 256.0)).
+  //
+  // This similar to doing (textureRead.y << 256 | textureRead.x)
+  //
+  // NOTE: in WebGL 1, floats will only support 23 bits of precision, so
+  // larger ranges of feature IDs will have undefined behavior. highp ints
+  // are not used because they are only guaranteed to have 17 bits precision.
+  const shiftCoefficients = shiftsByChannelCount[channelCount - 1];
+  const unpacked = `dot(${rounded}, ${shiftCoefficients})`;
+
+  // Finally, assign to the struct field. Example:
+  // featureIds.featureId_0 = unpacked;
+  const initializationLine = `featureIds.${variableName} = ${unpacked};`;
+
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,
-    [`featureIds.${variableName} = ${rounded};`]
+    [initializationLine]
   );
 }
 

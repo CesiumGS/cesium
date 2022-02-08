@@ -395,7 +395,7 @@ describe(
           FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,
           FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_IDS,
           [
-            "    featureIds.featureId_0 = floor(texture2D(u_featureIdTexture_0, v_texCoord_0).r * 255.0 + 0.5);",
+            "    featureIds.featureId_0 = dot(floor(texture2D(u_featureIdTexture_0, v_texCoord_0).r * 255.0 + 0.5), 1.0);",
           ]
         );
         ShaderBuilderTester.expectHasVertexFunction(
