@@ -334,8 +334,10 @@ describe("Scene/GlobeSurfaceTile", function () {
       });
 
       // Mock here
-      xit("gets correct results even when the mesh includes normals", function () {
+
+      it("gets correct results even when the mesh includes normals", function () {
         const terrainProvider = createWorldTerrain({
+          url: "/Specs/Mocks/GlobeSurfaceTile", // Mock payload from Ion
           requestVertexNormals: true,
           requestWaterMask: false,
         });
@@ -350,6 +352,8 @@ describe("Scene/GlobeSurfaceTile", function () {
         processor.frameState = scene.frameState;
         processor.terrainProvider = terrainProvider;
 
+        //TODO: make spy
+        spyOn();
         return processor.process([tile]).then(function () {
           const ray = new Ray(
             new Cartesian3(
