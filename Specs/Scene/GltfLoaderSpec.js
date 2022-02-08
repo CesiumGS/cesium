@@ -868,6 +868,7 @@ describe(
         expect(featureIdTexture).toBeInstanceOf(
           ModelComponents.FeatureIdTexture
         );
+        expect(featureIdTexture.featureCount).toEqual(256);
         expect(featureIdTexture.propertyTableId).toBe(0);
         expect(featureIdTexture.textureReader.channels).toBe("r");
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
@@ -932,6 +933,7 @@ describe(
         expect(featureIdTexture).toBeInstanceOf(
           ModelComponents.FeatureIdTexture
         );
+        expect(featureIdTexture.featureCount).toEqual(256);
         expect(featureIdTexture.propertyTableId).toBe(0);
         expect(featureIdTexture.textureReader.channels).toBe("r");
         expect(featureIdTexture.textureReader.texCoord).toBe(0);

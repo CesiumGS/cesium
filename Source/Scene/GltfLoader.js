@@ -813,6 +813,8 @@ function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
 // for EXT_mesh_features
 function loadFeatureIdAttribute(featureIds, propertyTableId) {
   const featureIdAttribute = new FeatureIdAttribute();
+  featureIdAttribute.featureCount = featureIds.featureCount;
+  featureIdAttribute.nullFeatureId = featureIds.nullFeatureId;
   featureIdAttribute.propertyTableId = propertyTableId;
   featureIdAttribute.setIndex = featureIds.attribute;
   return featureIdAttribute;
@@ -822,11 +824,17 @@ function loadFeatureIdAttribute(featureIds, propertyTableId) {
 function loadFeatureIdAttributeLegacy(gltfFeatureIdAttribute, featureTableId) {
   const featureIdAttribute = new FeatureIdAttribute();
   const featureIds = gltfFeatureIdAttribute.featureIds;
+
+  // TODO: where to get featureCount?
+  // should nullFeatureId be set to featureCount + 1 or
+  // undefined?
+
   featureIdAttribute.propertyTableId = featureTableId;
   featureIdAttribute.setIndex = getSetIndex(featureIds.attribute);
   return featureIdAttribute;
 }
 
+// TODO: Remove this function
 // for EXT_mesh_features
 function loadFeatureIdImplicitRange(featureIds, propertyTableId) {
   const featureIdAttribute = new FeatureIdImplicitRange();
@@ -844,6 +852,10 @@ function loadFeatureIdImplicitRangeLegacy(
   const featureIdAttribute = new FeatureIdImplicitRange();
   const featureIds = gltfFeatureIdAttribute.featureIds;
   featureIdAttribute.propertyTableId = featureTableId;
+
+  // TODO: where to get featureCount?
+  // TODO: should nullFeatureId be set to featureCount + 1 or undefined?
+
   // constant/divisor was renamed to offset/repeat
   featureIdAttribute.offset = defaultValue(featureIds.constant, 0);
   // The default is now undefined
@@ -865,7 +877,8 @@ function loadFeatureIdTexture(
   // The schema for feature ID textures is essential a subclass of glTF
   // textureInfo
   const textureInfo = gltfFeatureIdTexture;
-
+  featureIdTexture.featureCount = gltfFeatureIdTexture.featureCount;
+  featureIdTexture.nullFeatureId = gltfFeatureIdTexture.nullFeatureId;
   featureIdTexture.propertyTableId = propertyTableId;
   featureIdTexture.textureReader = loadTexture(
     loader,
@@ -899,6 +912,9 @@ function loadFeatureIdTextureLegacy(
   const featureIdTexture = new FeatureIdTexture();
   const featureIds = gltfFeatureIdTexture.featureIds;
   const textureInfo = featureIds.texture;
+
+  // TODO: where to get featureCount?
+  // TODO: should nullFeatureId be set to featureCount + 1 or be undefined?
 
   featureIdTexture.propertyTableId = featureTableId;
   featureIdTexture.textureReader = loadTexture(

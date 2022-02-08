@@ -336,23 +336,6 @@ function Indices() {
  */
 function FeatureIdAttribute() {
   /**
-   * The name of this set of feature IDs for display purposes
-   *
-   * @type {String}
-   * @private
-   */
-  this.name = undefined;
-
-  /**
-   * The identifier for selecting this set of feature IDs. This must be unique
-   * among the feature IDs in a single primitive.
-   *
-   * @type {String}
-   * @private
-   */
-  this.id = undefined;
-
-  /**
    * How many unique features are defined in this set of feature IDs
    *
    * @type {Number}
@@ -398,23 +381,6 @@ function FeatureIdAttribute() {
  * @private
  */
 function FeatureIdImplicitRange() {
-  /**
-   * The name of this set of feature IDs for display purposes
-   *
-   * @type {String}
-   * @private
-   */
-  this.name = undefined;
-
-  /**
-   * The identifier for selecting this set of feature IDs. This must be unique
-   * among the feature IDs in a single primitive.
-   *
-   * @type {String}
-   * @private
-   */
-  this.id = undefined;
-
   /**
    * How many unique features are defined in this set of feature IDs
    *
@@ -467,23 +433,6 @@ function FeatureIdImplicitRange() {
  * @private
  */
 function FeatureIdTexture() {
-  /**
-   * The name of this set of feature IDs for display purposes
-   *
-   * @type {String}
-   * @private
-   */
-  this.name = undefined;
-
-  /**
-   * The identifier for selecting this set of feature IDs. This must be unique
-   * among the feature IDs in a single primitive.
-   *
-   * @type {String}
-   * @private
-   */
-  this.id = undefined;
-
   /**
    * How many unique features are defined in this set of feature IDs
    *

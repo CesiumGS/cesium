@@ -108,6 +108,7 @@
                 {
                   "index": 2,
                   "texCoord": 0,
+                  "featureCount": 256,
                   "channels": [0]
                 }
               ],
