@@ -200,13 +200,17 @@ export default function ImplicitTileset(
   this.subtreeLevels = extension.subtreeLevels;
 
   /**
-   * The deepest level of any available tile in the entire tileset.
+   * The number of levels containing available tiles in the tileset.
    *
    * @type {Number}
    * @readonly
    * @private
    */
-  this.maximumLevel = extension.maximumLevel;
+  if (defined(extension.availableLevels)) {
+    this.availableLevels = extension.availableLevels;
+  } else {
+    this.availableLevels = extension.maximumLevel + 1;
+  }
 }
 
 /**
