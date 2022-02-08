@@ -358,6 +358,9 @@ function processTexture(
     ShaderDestination.FRAGMENT
   );
 
+  // vec4 featureId_n_bytes = floor(texture2D(u_featureIdTexture_m, attributes.texCoord_p) * 255.0 + 0.5);
+  // featureIds.featureId_n = dot(featureId_n_bytes, vec4());
+
   // Initialize the FeatureIds struct in the fragment shader.
   // Example:
   // featureIds.featureId_n = floor(texture2D(u_featureIdTexture_m, attributes.texCoord_p).r * 255.0 + 0.5);

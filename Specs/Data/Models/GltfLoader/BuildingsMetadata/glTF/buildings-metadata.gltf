@@ -152,14 +152,17 @@
               ],
               "featureIds": [
                 {
-                  "attribute": 0
+                  "attribute": 0,
+                  "featureCount": 10
                 },
                 {
                   "offset": 0,
-                  "repeat": 2
+                  "repeat": 2,
+                  "featureCount": 5
                 },
                 {
-                  "offset": 3
+                  "offset": 3,
+                  "featureCount": 1
                 }
               ]
             }

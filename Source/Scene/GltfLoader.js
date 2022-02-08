@@ -821,24 +821,25 @@ function loadFeatureIdAttribute(featureIds, propertyTableId) {
 }
 
 // for backwards compatibility with EXT_feature_metadata
-function loadFeatureIdAttributeLegacy(gltfFeatureIdAttribute, featureTableId) {
+function loadFeatureIdAttributeLegacy(
+  gltfFeatureIdAttribute,
+  featureTableId,
+  featureCount
+) {
   const featureIdAttribute = new FeatureIdAttribute();
   const featureIds = gltfFeatureIdAttribute.featureIds;
-
-  // TODO: where to get featureCount?
-  // should nullFeatureId be set to featureCount + 1 or
-  // undefined?
-
+  featureIdAttribute.featureCount = featureCount;
   featureIdAttribute.propertyTableId = featureTableId;
   featureIdAttribute.setIndex = getSetIndex(featureIds.attribute);
   return featureIdAttribute;
 }
 
-// TODO: Remove this function
 // for EXT_mesh_features
 function loadFeatureIdImplicitRange(featureIds, propertyTableId) {
   const featureIdAttribute = new FeatureIdImplicitRange();
   featureIdAttribute.propertyTableId = propertyTableId;
+  featureIdAttribute.featureCount = featureIds.featureCount;
+  featureIdAttribute.nullFeatureId = featureIds.nullFeatureId;
   featureIdAttribute.offset = defaultValue(featureIds.offset, 0);
   featureIdAttribute.repeat = featureIds.repeat;
   return featureIdAttribute;
@@ -847,14 +848,13 @@ function loadFeatureIdImplicitRange(featureIds, propertyTableId) {
 // for backwards compatibility with EXT_feature_metadata
 function loadFeatureIdImplicitRangeLegacy(
   gltfFeatureIdAttribute,
-  featureTableId
+  featureTableId,
+  featureCount
 ) {
   const featureIdAttribute = new FeatureIdImplicitRange();
   const featureIds = gltfFeatureIdAttribute.featureIds;
   featureIdAttribute.propertyTableId = featureTableId;
-
-  // TODO: where to get featureCount?
-  // TODO: should nullFeatureId be set to featureCount + 1 or undefined?
+  featureIdAttribute.featureCount = featureCount;
 
   // constant/divisor was renamed to offset/repeat
   featureIdAttribute.offset = defaultValue(featureIds.constant, 0);
@@ -907,15 +907,13 @@ function loadFeatureIdTextureLegacy(
   gltf,
   gltfFeatureIdTexture,
   featureTableId,
-  supportedImageFormats
+  supportedImageFormats,
+  featureCount
 ) {
   const featureIdTexture = new FeatureIdTexture();
   const featureIds = gltfFeatureIdTexture.featureIds;
   const textureInfo = featureIds.texture;
-
-  // TODO: where to get featureCount?
-  // TODO: should nullFeatureId be set to featureCount + 1 or be undefined?
-
+  featureIdTexture.featureCount = featureCount;
   featureIdTexture.propertyTableId = featureTableId;
   featureIdTexture.textureReader = loadTexture(
     loader,
@@ -1079,29 +1077,33 @@ function loadPrimitiveMetadataLegacy(
   metadataExtension,
   supportedImageFormats
 ) {
-  let i;
-  let featureIdComponent;
-  let featureTableId;
-  let propertyTableId;
+  // For looking up the featureCount for each set of feature IDs
+  const featureTables = gltf.extensions.EXT_feature_metadata.featureTables;
 
   // Feature ID Attributes
   const featureIdAttributes = metadataExtension.featureIdAttributes;
   if (defined(featureIdAttributes)) {
     const featureIdAttributesLength = featureIdAttributes.length;
-    for (i = 0; i < featureIdAttributesLength; ++i) {
+    for (let i = 0; i < featureIdAttributesLength; ++i) {
       const featureIdAttribute = featureIdAttributes[i];
-      featureTableId = featureIdAttribute.featureTable;
-      propertyTableId = loader._sortedPropertyTableIds.indexOf(featureTableId);
+      const featureTableId = featureIdAttribute.featureTable;
+      const propertyTableId = loader._sortedPropertyTableIds.indexOf(
+        featureTableId
+      );
+      const featureCount = featureTables[featureTableId].count;
 
+      let featureIdComponent;
       if (defined(featureIdAttribute.featureIds.attribute)) {
         featureIdComponent = loadFeatureIdAttributeLegacy(
           featureIdAttribute,
-          propertyTableId
+          propertyTableId,
+          featureCount
         );
       } else {
         featureIdComponent = loadFeatureIdImplicitRangeLegacy(
           featureIdAttribute,
-          propertyTableId
+          propertyTableId,
+          featureCount
         );
       }
       primitive.featureIds.push(featureIdComponent);
@@ -1112,16 +1114,20 @@ function loadPrimitiveMetadataLegacy(
   const featureIdTextures = metadataExtension.featureIdTextures;
   if (defined(featureIdTextures)) {
     const featureIdTexturesLength = featureIdTextures.length;
-    for (i = 0; i < featureIdTexturesLength; ++i) {
+    for (let i = 0; i < featureIdTexturesLength; ++i) {
       const featureIdTexture = featureIdTextures[i];
-      featureTableId = featureIdTexture.featureTable;
-      propertyTableId = loader._sortedPropertyTableIds.indexOf(featureTableId);
-      featureIdComponent = loadFeatureIdTextureLegacy(
+      const featureTableId = featureIdTexture.featureTable;
+      const propertyTableId = loader._sortedPropertyTableIds.indexOf(
+        featureTableId
+      );
+      const featureCount = featureTables[featureTableId].count;
+      const featureIdComponent = loadFeatureIdTextureLegacy(
         loader,
         gltf,
         featureIdTexture,
         propertyTableId,
-        supportedImageFormats
+        supportedImageFormats,
+        featureCount
       );
       // Feature ID textures are added after feature ID attributes in the list
       primitive.featureIds.push(featureIdComponent);
@@ -1196,6 +1202,7 @@ function loadInstances(loader, gltf, nodeExtensions, frameState) {
     loadInstanceMetadata(instances, featureMetadata);
   } else if (defined(featureMetadataLegacy)) {
     loadInstanceMetadataLegacy(
+      gltf,
       instances,
       featureMetadataLegacy,
       loader._sortedPropertyTableIds
@@ -1232,10 +1239,14 @@ function loadInstanceMetadata(instances, metadataExtension) {
 
 // For backwards-compatibility with EXT_feature_metadata
 function loadInstanceMetadataLegacy(
+  gltf,
   instances,
   metadataExtension,
   sortedPropertyTableIds
 ) {
+  // For looking up the featureCount for each set of feature IDs
+  const featureTables = gltf.extensions.EXT_feature_metadata.featureTables;
+
   const featureIdAttributes = metadataExtension.featureIdAttributes;
   if (defined(featureIdAttributes)) {
     const featureIdAttributesLength = featureIdAttributes.length;
@@ -1243,17 +1254,20 @@ function loadInstanceMetadataLegacy(
       const featureIdAttribute = featureIdAttributes[i];
       const featureTableId = featureIdAttribute.featureTable;
       const propertyTableId = sortedPropertyTableIds.indexOf(featureTableId);
+      const featureCount = featureTables[featureTableId].count;
 
       let featureIdComponent;
       if (defined(featureIdAttribute.featureIds.attribute)) {
         featureIdComponent = loadFeatureIdAttributeLegacy(
           featureIdAttribute,
-          propertyTableId
+          propertyTableId,
+          featureCount
         );
       } else {
         featureIdComponent = loadFeatureIdImplicitRangeLegacy(
           featureIdAttribute,
-          propertyTableId
+          propertyTableId,
+          featureCount
         );
       }
       instances.featureIds.push(featureIdComponent);

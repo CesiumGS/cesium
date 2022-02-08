@@ -97,10 +97,12 @@
           "featureIds": [
             {
               "offset": 0,
-              "repeat": 1
+              "repeat": 1,
+              "featureCount": 4
             },
             {
-              "attribute": 0
+              "attribute": 0,
+              "featureCount": 2
             }
           ]
         }

@@ -110,10 +110,12 @@
               "featureIds": [
                 {
                   "offset": 0,
-                  "repeat": 1
+                  "repeat": 1,
+                  "featureCount": 1000
                 },
                 {
-                  "attribute": 0
+                  "attribute": 0,
+                  "featureCount": 3
                 }
               ]
             }

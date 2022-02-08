@@ -869,6 +869,7 @@ describe(
           ModelComponents.FeatureIdTexture
         );
         expect(featureIdTexture.featureCount).toEqual(256);
+        expect(featureIdTexture.nullFeatureId).not.toBeDefined();
         expect(featureIdTexture.propertyTableId).toBe(0);
         expect(featureIdTexture.textureReader.channels).toBe("r");
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
@@ -934,6 +935,7 @@ describe(
           ModelComponents.FeatureIdTexture
         );
         expect(featureIdTexture.featureCount).toEqual(256);
+        expect(featureIdTexture.nullFeatureId).not.toBeDefined();
         expect(featureIdTexture.propertyTableId).toBe(0);
         expect(featureIdTexture.textureReader.channels).toBe("r");
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
@@ -1032,6 +1034,8 @@ describe(
         expect(featureIdAccessor).toBeInstanceOf(
           ModelComponents.FeatureIdAttribute
         );
+        expect(featureIdAccessor.featureCount).toEqual(10);
+        expect(featureIdAccessor.nullFeatureId).not.toBeDefined();
         expect(featureIdAccessor.propertyTableId).toBe(0);
         expect(featureIdAccessor.setIndex).toBe(0);
 
@@ -1040,6 +1044,8 @@ describe(
         expect(featureIdImplicit).toBeInstanceOf(
           ModelComponents.FeatureIdImplicitRange
         );
+        expect(featureIdImplicit.featureCount).toEqual(5);
+        expect(featureIdImplicit.nullFeatureId).not.toBeDefined();
         expect(featureIdImplicit.propertyTableId).toBe(0);
         expect(featureIdImplicit.setIndex).not.toBeDefined();
         expect(featureIdImplicit.offset).toBe(0);
@@ -1050,6 +1056,8 @@ describe(
         expect(featureIdConstant).toBeInstanceOf(
           ModelComponents.FeatureIdImplicitRange
         );
+        expect(featureIdConstant.featureCount).toEqual(1);
+        expect(featureIdConstant.nullFeatureId).not.toBeDefined();
         expect(featureIdConstant.propertyTableId).not.toBeDefined();
         expect(featureIdConstant.offset).toBe(3);
         expect(featureIdConstant.repeat).not.toBeDefined();
@@ -1102,6 +1110,8 @@ describe(
         expect(featureIdAttributeMapping0).toBeInstanceOf(
           ModelComponents.FeatureIdImplicitRange
         );
+        expect(featureIdAttributeMapping0.featureCount).toEqual(1000);
+        expect(featureIdAttributeMapping0.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping0.propertyTableId).toBe(1);
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
@@ -1110,6 +1120,8 @@ describe(
         expect(featureIdAttributeMapping1).toBeInstanceOf(
           ModelComponents.FeatureIdAttribute
         );
+        expect(featureIdAttributeMapping1.featureCount).toEqual(3);
+        expect(featureIdAttributeMapping1.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping1.propertyTableId).toBe(0);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
 
@@ -1203,6 +1215,8 @@ describe(
         expect(featureIdAttributeMapping0).toBeInstanceOf(
           ModelComponents.FeatureIdImplicitRange
         );
+        expect(featureIdAttributeMapping0.featureCount).toEqual(1000);
+        expect(featureIdAttributeMapping0.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping0.propertyTableId).toBe(1);
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
@@ -1211,6 +1225,8 @@ describe(
         expect(featureIdAttributeMapping1).toBeInstanceOf(
           ModelComponents.FeatureIdAttribute
         );
+        expect(featureIdAttributeMapping1.featureCount).toEqual(3);
+        expect(featureIdAttributeMapping1.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping1.propertyTableId).toBe(0);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
 
@@ -1410,6 +1426,8 @@ describe(
         expect(featureIdAttributeMapping0).toBeInstanceOf(
           ModelComponents.FeatureIdImplicitRange
         );
+        expect(featureIdAttributeMapping0.featureCount).toEqual(4);
+        expect(featureIdAttributeMapping0.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping0.propertyTableId).toBe(0);
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
@@ -1418,6 +1436,8 @@ describe(
         expect(featureIdAttributeMapping1).toBeInstanceOf(
           ModelComponents.FeatureIdAttribute
         );
+        expect(featureIdAttributeMapping1.featureCount).toEqual(2);
+        expect(featureIdAttributeMapping1.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping1.propertyTableId).toBe(1);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
 
@@ -1598,6 +1618,8 @@ describe(
         expect(featureIdAttributeMapping0).toBeInstanceOf(
           ModelComponents.FeatureIdImplicitRange
         );
+        expect(featureIdAttributeMapping0.featureCount).toEqual(4);
+        expect(featureIdAttributeMapping0.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping0.propertyTableId).toBe(0);
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
@@ -1606,6 +1628,8 @@ describe(
         expect(featureIdAttributeMapping1).toBeInstanceOf(
           ModelComponents.FeatureIdAttribute
         );
+        expect(featureIdAttributeMapping1.featureCount).toEqual(2);
+        expect(featureIdAttributeMapping1.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping1.propertyTableId).toBe(1);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
 
