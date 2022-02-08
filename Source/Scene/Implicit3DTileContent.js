@@ -34,8 +34,9 @@ import parseBoundingVolumeSemantics from "./parseBoundingVolumeSemantics.js";
  * @param {Cesium3DTileset} tileset The tileset this content belongs to
  * @param {Cesium3DTile} tile The tile this content belongs to.
  * @param {Resource} resource The resource for the tileset
- * @param {ArrayBuffer} arrayBuffer The array buffer that stores the content payload
- * @param {Number} [byteOffset=0] The offset into the array buffer
+ * @param {Object} json The JSON object containing the subtree. If parsing a binary subtree file, leave this undefined.
+ * @param {ArrayBuffer} [arrayBuffer] The array buffer that stores the content payload
+ * @param {Number} [byteOffset=0] The offset into the array buffer, if one was provided
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -43,6 +44,7 @@ export default function Implicit3DTileContent(
   tileset,
   tile,
   resource,
+  json,
   arrayBuffer,
   byteOffset
 ) {
@@ -73,7 +75,7 @@ export default function Implicit3DTileContent(
   );
   this._url = subtreeResource.getUrlComponent(true);
 
-  initialize(this, arrayBuffer, byteOffset);
+  initialize(this, json, arrayBuffer, byteOffset);
 }
 
 Object.defineProperties(Implicit3DTileContent.prototype, {
@@ -164,22 +166,23 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
  * up a promise chain to expand the immediate subtree.
  *
  * @param {Implicit3DTileContent} content The implicit content
+ * @param {Object} json The JSON containing the subtree. If parsing a binary subtree file, this will be undefined.
  * @param {ArrayBuffer} arrayBuffer The ArrayBuffer containing a subtree binary
  * @param {Number} [byteOffset=0] The byte offset into the arrayBuffer
  * @private
  */
-function initialize(content, arrayBuffer, byteOffset) {
-  // Parse the subtree file
+function initialize(content, json, arrayBuffer, byteOffset) {
   byteOffset = defaultValue(byteOffset, 0);
   const uint8Array = new Uint8Array(arrayBuffer, byteOffset);
   const subtree = new ImplicitSubtree(
     content._resource,
+    json,
     uint8Array,
     content._implicitTileset,
     content._implicitCoordinates
   );
-  content._implicitSubtree = subtree;
 
+  content._implicitSubtree = subtree;
   subtree.readyPromise
     .then(function () {
       expandSubtree(content, subtree);

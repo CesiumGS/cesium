@@ -208,6 +208,7 @@ describe("Scene/ImplicitSubtree", function () {
       );
       return new ImplicitSubtree(
         undefined,
+        undefined,
         results.subtreeBuffer,
         implicitQuadtree,
         quadtreeCoordinates
@@ -215,10 +216,11 @@ describe("Scene/ImplicitSubtree", function () {
     }).toThrowDeveloperError();
   });
 
-  it("throws without subtreeView", function () {
+  it("throws without json or subtreeView", function () {
     expect(function () {
       return new ImplicitSubtree(
         subtreeResource,
+        undefined,
         undefined,
         implicitQuadtree,
         quadtreeCoordinates
@@ -233,6 +235,7 @@ describe("Scene/ImplicitSubtree", function () {
       );
       return new ImplicitSubtree(
         subtreeResource,
+        undefined,
         results.subtreeBuffer,
         undefined,
         quadtreeCoordinates
@@ -247,6 +250,7 @@ describe("Scene/ImplicitSubtree", function () {
       );
       return new ImplicitSubtree(
         subtreeResource,
+        undefined,
         results.subtreeBuffer,
         implicitQuadtree,
         undefined
@@ -260,6 +264,7 @@ describe("Scene/ImplicitSubtree", function () {
     );
     const subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       results.subtreeBuffer,
       implicitQuadtree,
       quadtreeCoordinates
@@ -276,6 +281,7 @@ describe("Scene/ImplicitSubtree", function () {
     );
     const subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       results.subtreeBuffer,
       implicitQuadtree,
       quadtreeCoordinates
@@ -324,6 +330,7 @@ describe("Scene/ImplicitSubtree", function () {
     );
     const subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       results.subtreeBuffer,
       implicitQuadtree,
       quadtreeCoordinates
@@ -378,6 +385,7 @@ describe("Scene/ImplicitSubtree", function () {
 
     const subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       subtreeView,
       implicitQuadtree,
       quadtreeCoordinates
@@ -425,6 +433,7 @@ describe("Scene/ImplicitSubtree", function () {
     );
     const subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       results.subtreeBuffer,
       implicitQuadtree,
       quadtreeCoordinates
@@ -472,6 +481,7 @@ describe("Scene/ImplicitSubtree", function () {
     );
     const subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       results.subtreeBuffer,
       implicitQuadtree,
       quadtreeCoordinates
@@ -516,6 +526,7 @@ describe("Scene/ImplicitSubtree", function () {
     ).and.returnValue(when.resolve(results.externalBuffer));
     const subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       results.subtreeBuffer,
       implicitQuadtree,
       quadtreeCoordinates
@@ -550,6 +561,7 @@ describe("Scene/ImplicitSubtree", function () {
 
     const subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       results.subtreeBuffer,
       implicitQuadtree,
       quadtreeCoordinates
@@ -590,6 +602,7 @@ describe("Scene/ImplicitSubtree", function () {
     );
     const subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       results.subtreeBuffer,
       implicitQuadtree,
       quadtreeCoordinates
@@ -632,6 +645,7 @@ describe("Scene/ImplicitSubtree", function () {
     );
     const subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       results.subtreeBuffer,
       implicitOctree,
       octreeCoordinates
@@ -674,6 +688,7 @@ describe("Scene/ImplicitSubtree", function () {
 
     const subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       results.subtreeBuffer,
       implicitQuadtree,
       deeperQuadtreeCoordinates
@@ -733,6 +748,7 @@ describe("Scene/ImplicitSubtree", function () {
     });
     const subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       results.subtreeBuffer,
       implicitQuadtree,
       subtreeCoordinates
@@ -809,6 +825,7 @@ describe("Scene/ImplicitSubtree", function () {
     });
     const subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       results.subtreeBuffer,
       implicitQuadtree,
       deeperQuadtreeCoordinates
@@ -868,6 +885,7 @@ describe("Scene/ImplicitSubtree", function () {
     });
     const subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       results.subtreeBuffer,
       implicitQuadtree,
       subtreeCoordinates
@@ -931,6 +949,7 @@ describe("Scene/ImplicitSubtree", function () {
     );
     const subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       results.subtreeBuffer,
       implicitOctree,
       octreeCoordinates
@@ -967,6 +986,7 @@ describe("Scene/ImplicitSubtree", function () {
     );
     const subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       results.subtreeBuffer,
       implicitOctree,
       octreeCoordinates
@@ -1012,6 +1032,7 @@ describe("Scene/ImplicitSubtree", function () {
     );
     const subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       results.subtreeBuffer,
       implicitOctree,
       octreeCoordinates
@@ -1057,6 +1078,7 @@ describe("Scene/ImplicitSubtree", function () {
     );
     const subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       results.subtreeBuffer,
       implicitQuadtree,
       quadtreeCoordinates
@@ -1097,6 +1119,7 @@ describe("Scene/ImplicitSubtree", function () {
     const unload = spyOn(ResourceCache, "unload");
     const subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       results.subtreeBuffer,
       implicitQuadtree,
       quadtreeCoordinates
@@ -1177,6 +1200,7 @@ describe("Scene/ImplicitSubtree", function () {
       );
       const subtree = new ImplicitSubtree(
         subtreeResource,
+        undefined,
         results.subtreeBuffer,
         multipleContentsQuadtree,
         quadtreeCoordinates
@@ -1223,6 +1247,7 @@ describe("Scene/ImplicitSubtree", function () {
       );
       const subtree = new ImplicitSubtree(
         subtreeResource,
+        undefined,
         results.subtreeBuffer,
         multipleContentsQuadtree,
         quadtreeCoordinates
@@ -1315,6 +1340,7 @@ describe("Scene/ImplicitSubtree", function () {
       );
       const subtree = new ImplicitSubtree(
         subtreeResource,
+        undefined,
         results.subtreeBuffer,
         metadataQuadtree,
         quadtreeCoordinates
@@ -1372,6 +1398,7 @@ describe("Scene/ImplicitSubtree", function () {
       );
       const subtree = new ImplicitSubtree(
         subtreeResource,
+        undefined,
         results.subtreeBuffer,
         metadataQuadtree,
         quadtreeCoordinates
@@ -1429,6 +1456,7 @@ describe("Scene/ImplicitSubtree", function () {
       );
       const subtree = new ImplicitSubtree(
         subtreeResource,
+        undefined,
         results.subtreeBuffer,
         metadataQuadtree,
         quadtreeCoordinates
@@ -1478,6 +1506,7 @@ describe("Scene/ImplicitSubtree", function () {
       );
       const subtree = new ImplicitSubtree(
         subtreeResource,
+        undefined,
         results.subtreeBuffer,
         implicitQuadtree,
         quadtreeCoordinates
@@ -1523,6 +1552,7 @@ describe("Scene/ImplicitSubtree", function () {
       );
       const subtree = new ImplicitSubtree(
         subtreeResource,
+        undefined,
         results.subtreeBuffer,
         metadataQuadtree,
         quadtreeCoordinates
@@ -1571,6 +1601,7 @@ describe("Scene/ImplicitSubtree", function () {
       );
       const subtree = new ImplicitSubtree(
         subtreeResource,
+        undefined,
         results.subtreeBuffer,
         metadataQuadtree,
         quadtreeCoordinates
@@ -1617,6 +1648,7 @@ describe("Scene/ImplicitSubtree", function () {
       );
       const subtree = new ImplicitSubtree(
         subtreeResource,
+        undefined,
         results.subtreeBuffer,
         metadataQuadtree,
         quadtreeCoordinates
@@ -1684,6 +1716,7 @@ describe("Scene/ImplicitSubtree", function () {
       );
       const subtree = new ImplicitSubtree(
         subtreeResource,
+        undefined,
         results.subtreeBuffer,
         metadataQuadtree,
         quadtreeCoordinates
@@ -1793,6 +1826,7 @@ describe("Scene/ImplicitSubtree", function () {
       );
       const subtree = new ImplicitSubtree(
         subtreeResource,
+        undefined,
         results.subtreeBuffer,
         arrayQuadtree,
         quadtreeCoordinates

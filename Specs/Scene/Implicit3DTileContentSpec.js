@@ -158,6 +158,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -178,6 +179,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -224,6 +226,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -274,6 +277,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -287,6 +291,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -300,6 +305,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -323,6 +329,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -344,6 +351,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -363,6 +371,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -385,6 +394,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -396,6 +406,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -437,6 +448,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -484,6 +496,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -506,6 +519,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -528,6 +542,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
@@ -576,6 +591,7 @@ describe(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
+        undefined,
         quadtreeBuffer,
         0
       );
