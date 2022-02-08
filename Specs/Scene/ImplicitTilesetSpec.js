@@ -26,7 +26,7 @@ describe("Scene/ImplicitTileset", function () {
       "3DTILES_implicit_tiling": {
         subdivisionScheme: "QUADTREE",
         subtreeLevels: 3,
-        maximumLevel: 4,
+        availableLevels: 4,
         subtrees: {
           uri: subtreeUriPattern,
         },
@@ -49,7 +49,7 @@ describe("Scene/ImplicitTileset", function () {
     );
     expect(implicitTileset.metadataSchema).toBeUndefined();
     expect(implicitTileset.subtreeLevels).toEqual(3);
-    expect(implicitTileset.maximumLevel).toEqual(4);
+    expect(implicitTileset.availableLevels).toEqual(4);
     expect(implicitTileset.subdivisionScheme).toEqual(
       ImplicitSubdivisionScheme.QUADTREE
     );
@@ -169,7 +169,7 @@ describe("Scene/ImplicitTileset", function () {
         "3DTILES_implicit_tiling": {
           subdivisionScheme: "QUADTREE",
           subtreeLevels: 3,
-          maximumLevel: 4,
+          availableLevels: 4,
           subtrees: {
             uri: subtreeUriPattern,
           },
