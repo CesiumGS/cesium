@@ -455,12 +455,12 @@ describe(
           FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
           FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
           [
-            "    vec4 featureId_0;",
-            "    vec3 featureId_1;",
+            "    float featureId_0;",
+            "    float featureId_1;",
             "    float featureId_2;",
-            "    vec2 featureId_3;",
-            "    vec2 featureId_4;",
-            "    vec4 featureId_5;",
+            "    float featureId_3;",
+            "    float featureId_4;",
+            "    float featureId_5;",
             "    float featureId_6;",
           ]
         );

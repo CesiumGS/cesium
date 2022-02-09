@@ -325,8 +325,6 @@ const shiftsByChannelCount = [
   "vec4(1.0, 256.0, 65536.0, 16777216.0)",
 ];
 
-const glslTypeByChannelCount = ["float", "vec2", "vec3", "vec4"];
-
 function processTexture(
   renderResources,
   featureIdTexture,
@@ -348,19 +346,18 @@ function processTexture(
 
   const channels = textureReader.channels;
   const channelCount = channels.length;
-  const idType = glslTypeByChannelCount[channelCount - 1];
 
   // Add a field to the FeatureIds struct in the fragment shader only
   // Example:
   // struct FeatureIds {
   //   ...
-  //   {idType} featureId_n;
+  //   float featureId_n;
   //   ...
   // }
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
-    idType,
+    "float",
     variableName
   );
 
