@@ -874,12 +874,11 @@ function loadFeatureIdTexture(
 ) {
   const featureIdTexture = new FeatureIdTexture();
 
-  // The schema for feature ID textures is essential a subclass of glTF
-  // textureInfo
-  const textureInfo = gltfFeatureIdTexture;
   featureIdTexture.featureCount = gltfFeatureIdTexture.featureCount;
   featureIdTexture.nullFeatureId = gltfFeatureIdTexture.nullFeatureId;
   featureIdTexture.propertyTableId = propertyTableId;
+
+  const textureInfo = gltfFeatureIdTexture.texture;
   featureIdTexture.textureReader = loadTexture(
     loader,
     gltf,
@@ -891,7 +890,7 @@ function loadFeatureIdTexture(
   // Though the new channel index is more future-proof, this implementation
   // only supports RGBA textures. At least for now, the string representation
   // is more useful for generating shader code.
-  const channelString = gltfFeatureIdTexture.channels
+  const channelString = textureInfo.channels
     .map(function (channelIndex) {
       return "rgba".charAt(channelIndex);
     })
@@ -1044,7 +1043,7 @@ function loadPrimitiveMetadata(
     const propertyTableId = propertyTables[i];
 
     let featureIdComponent;
-    if (defined(featureIds.channels)) {
+    if (defined(featureIds.texture)) {
       featureIdComponent = loadFeatureIdTexture(
         loader,
         gltf,

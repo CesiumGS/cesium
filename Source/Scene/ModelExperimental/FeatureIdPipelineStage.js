@@ -322,7 +322,7 @@ const shiftsByChannelCount = [
   "1.0",
   "vec2(1.0, 256.0)",
   "vec3(1.0, 256.0, 65536.0)",
-  "vec4(1.0, 256.0, 16777216.0)",
+  "vec4(1.0, 256.0, 65536.0, 16777216.0)",
 ];
 
 const glslTypeByChannelCount = ["float", "vec2", "vec3", "vec4"];

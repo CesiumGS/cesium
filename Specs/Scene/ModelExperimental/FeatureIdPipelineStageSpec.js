@@ -25,6 +25,8 @@ describe(
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
     const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
     const weather = "./Data/Models/GltfLoader/Weather/glTF/weather.gltf";
+    const largeFeatureIdTexture =
+      "./Data/Models/GltfLoader/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
 
     let scene;
     const gltfLoaders = [];
@@ -428,6 +430,101 @@ describe(
         expect(uniformMap.u_featureIdTexture_0()).toBe(
           featureIdTexture.textureReader.texture
         );
+      });
+    });
+
+    it("processes feature ID textures with multiple channels", function () {
+      return loadGltf(largeFeatureIdTexture).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const node = components.nodes[0];
+        const primitive = node.primitives[0];
+        const frameState = scene.frameState;
+        const renderResources = mockRenderResources(node);
+
+        FeatureIdPipelineStage.process(renderResources, primitive, frameState);
+
+        const shaderBuilder = renderResources.shaderBuilder;
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
+          FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
+          []
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
+          FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
+          [
+            "    vec4 featureId_0;",
+            "    vec3 featureId_1;",
+            "    float featureId_2;",
+            "    vec2 featureId_3;",
+            "    vec2 featureId_4;",
+            "    vec4 featureId_5;",
+            "    float featureId_6;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_VS,
+          FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_IDS,
+          []
+        );
+        ShaderBuilderTester.expectHasFragmentFunction(
+          shaderBuilder,
+          FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,
+          FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_IDS,
+          [
+            "    featureIds.featureId_0 = dot(floor(texture2D(u_featureIdTexture_0, v_texCoord_0).rgba * 255.0 + 0.5), vec4(1.0, 256.0, 65536.0, 16777216.0));",
+            "    featureIds.featureId_1 = dot(floor(texture2D(u_featureIdTexture_1, v_texCoord_0).rgb * 255.0 + 0.5), vec3(1.0, 256.0, 65536.0));",
+            "    featureIds.featureId_2 = dot(floor(texture2D(u_featureIdTexture_2, v_texCoord_0).g * 255.0 + 0.5), 1.0);",
+            "    featureIds.featureId_3 = dot(floor(texture2D(u_featureIdTexture_3, v_texCoord_0).ba * 255.0 + 0.5), vec2(1.0, 256.0));",
+            "    featureIds.featureId_4 = dot(floor(texture2D(u_featureIdTexture_4, v_texCoord_0).gr * 255.0 + 0.5), vec2(1.0, 256.0));",
+            "    featureIds.featureId_5 = dot(floor(texture2D(u_featureIdTexture_5, v_texCoord_0).agbb * 255.0 + 0.5), vec4(1.0, 256.0, 65536.0, 16777216.0));",
+            "    featureIds.featureId_6 = dot(floor(texture2D(u_featureIdTexture_6, v_texCoord_0).g * 255.0 + 0.5), 1.0);",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          FeatureIdPipelineStage.FUNCTION_ID_SET_FEATURE_ID_VARYINGS,
+          FeatureIdPipelineStage.FUNCTION_SIGNATURE_SET_FEATURE_ID_VARYINGS,
+          []
+        );
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
+        ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, []);
+        ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+          "uniform sampler2D u_featureIdTexture_0;",
+          "uniform sampler2D u_featureIdTexture_1;",
+          "uniform sampler2D u_featureIdTexture_2;",
+          "uniform sampler2D u_featureIdTexture_3;",
+          "uniform sampler2D u_featureIdTexture_4;",
+          "uniform sampler2D u_featureIdTexture_5;",
+          "uniform sampler2D u_featureIdTexture_6;",
+        ]);
+        ShaderBuilderTester.expectHasVaryings(shaderBuilder, []);
+        ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
+          _shadersFeatureIdStageVS,
+        ]);
+        ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
+          _shadersFeatureIdStageFS,
+        ]);
+
+        expect(resources).toEqual([]);
+        expect(renderResources.attributes.length).toBe(1);
+
+        const uniformMap = renderResources.uniformMap;
+        const featureIdTexture = primitive.featureIds[0];
+        // In this model, all the feature ID textures use the same PNG file
+        const texture = featureIdTexture.textureReader.texture;
+        expect(uniformMap.u_featureIdTexture_0()).toBe(texture);
+        expect(uniformMap.u_featureIdTexture_1()).toBe(texture);
+        expect(uniformMap.u_featureIdTexture_2()).toBe(texture);
+        expect(uniformMap.u_featureIdTexture_3()).toBe(texture);
+        expect(uniformMap.u_featureIdTexture_4()).toBe(texture);
+        expect(uniformMap.u_featureIdTexture_5()).toBe(texture);
+        expect(uniformMap.u_featureIdTexture_6()).toBe(texture);
       });
     });
 

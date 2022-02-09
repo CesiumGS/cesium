@@ -106,10 +106,12 @@
               ],
               "featureIds": [
                 {
-                  "index": 2,
-                  "texCoord": 0,
                   "featureCount": 256,
-                  "channels": [0]
+                  "texture": {
+                    "index": 2,
+                    "texCoord": 0,
+                    "channels": [0] 
+                  }
                 }
               ],
               "propertyTextures": [
