@@ -318,13 +318,6 @@ function processImplicitRange(
   );
 }
 
-const shiftsByChannelCount = [
-  "1.0",
-  "vec2(1.0, 256.0)",
-  "vec3(1.0, 256.0, 65536.0)",
-  "vec4(1.0, 256.0, 65536.0, 16777216.0)",
-];
-
 function processTexture(
   renderResources,
   featureIdTexture,
@@ -345,19 +338,18 @@ function processTexture(
   };
 
   const channels = textureReader.channels;
-  const channelCount = channels.length;
 
   // Add a field to the FeatureIds struct in the fragment shader only
   // Example:
   // struct FeatureIds {
   //   ...
-  //   float featureId_n;
+  //   int featureId_n;
   //   ...
   // }
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
-    "float",
+    "int",
     variableName
   );
 
@@ -373,25 +365,9 @@ function processTexture(
   const texCoord = `v_texCoord_${textureReader.texCoord}`;
   const textureRead = `texture2D(${uniformName}, ${texCoord}).${channels}`;
 
-  // Round off the result
-  const rounded = `floor(${textureRead} * 255.0 + 0.5)`;
-
-  // The ID may be split across multiple channels, unpack by dotting with
-  // a vector of shifts. e.g. for a vec2 ID:
-  //
-  // dot(textureRead, vec2(1.0, 256.0)).
-  //
-  // This similar to doing (textureRead.y << 256 | textureRead.x)
-  //
-  // NOTE: in WebGL 1, floats will only support 23 bits of precision, so
-  // larger ranges of feature IDs will have undefined behavior. highp ints
-  // are not used because they are only guaranteed to have 17 bits precision.
-  const shiftCoefficients = shiftsByChannelCount[channelCount - 1];
-  const unpacked = `dot(${rounded}, ${shiftCoefficients})`;
-
   // Finally, assign to the struct field. Example:
   // featureIds.featureId_0 = unpacked;
-  const initializationLine = `featureIds.${variableName} = ${unpacked};`;
+  const initializationLine = `featureIds.${variableName} = czm_unpackUint(${textureRead});`;
 
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,

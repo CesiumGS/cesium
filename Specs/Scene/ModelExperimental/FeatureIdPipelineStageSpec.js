@@ -384,7 +384,7 @@ describe(
           shaderBuilder,
           FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
           FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
-          ["    float featureId_0;"]
+          ["    int featureId_0;"]
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
@@ -397,7 +397,7 @@ describe(
           FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,
           FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_IDS,
           [
-            "    featureIds.featureId_0 = dot(floor(texture2D(u_featureIdTexture_0, v_texCoord_0).r * 255.0 + 0.5), 1.0);",
+            "    featureIds.featureId_0 = czm_unpackUint(texture2D(u_featureIdTexture_0, v_texCoord_0).r);",
           ]
         );
         ShaderBuilderTester.expectHasVertexFunction(
@@ -455,13 +455,13 @@ describe(
           FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
           FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
           [
-            "    float featureId_0;",
-            "    float featureId_1;",
-            "    float featureId_2;",
-            "    float featureId_3;",
-            "    float featureId_4;",
-            "    float featureId_5;",
-            "    float featureId_6;",
+            "    int featureId_0;",
+            "    int featureId_1;",
+            "    int featureId_2;",
+            "    int featureId_3;",
+            "    int featureId_4;",
+            "    int featureId_5;",
+            "    int featureId_6;",
           ]
         );
         ShaderBuilderTester.expectHasVertexFunction(
@@ -475,13 +475,13 @@ describe(
           FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,
           FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_IDS,
           [
-            "    featureIds.featureId_0 = dot(floor(texture2D(u_featureIdTexture_0, v_texCoord_0).rgba * 255.0 + 0.5), vec4(1.0, 256.0, 65536.0, 16777216.0));",
-            "    featureIds.featureId_1 = dot(floor(texture2D(u_featureIdTexture_1, v_texCoord_0).rgb * 255.0 + 0.5), vec3(1.0, 256.0, 65536.0));",
-            "    featureIds.featureId_2 = dot(floor(texture2D(u_featureIdTexture_2, v_texCoord_0).g * 255.0 + 0.5), 1.0);",
-            "    featureIds.featureId_3 = dot(floor(texture2D(u_featureIdTexture_3, v_texCoord_0).ba * 255.0 + 0.5), vec2(1.0, 256.0));",
-            "    featureIds.featureId_4 = dot(floor(texture2D(u_featureIdTexture_4, v_texCoord_0).gr * 255.0 + 0.5), vec2(1.0, 256.0));",
-            "    featureIds.featureId_5 = dot(floor(texture2D(u_featureIdTexture_5, v_texCoord_0).agbb * 255.0 + 0.5), vec4(1.0, 256.0, 65536.0, 16777216.0));",
-            "    featureIds.featureId_6 = dot(floor(texture2D(u_featureIdTexture_6, v_texCoord_0).g * 255.0 + 0.5), 1.0);",
+            "    featureIds.featureId_0 = czm_unpackUint(texture2D(u_featureIdTexture_0, v_texCoord_0).rgba);",
+            "    featureIds.featureId_1 = czm_unpackUint(texture2D(u_featureIdTexture_1, v_texCoord_0).rgb);",
+            "    featureIds.featureId_2 = czm_unpackUint(texture2D(u_featureIdTexture_2, v_texCoord_0).g);",
+            "    featureIds.featureId_3 = czm_unpackUint(texture2D(u_featureIdTexture_3, v_texCoord_0).ba);",
+            "    featureIds.featureId_4 = czm_unpackUint(texture2D(u_featureIdTexture_4, v_texCoord_0).gr);",
+            "    featureIds.featureId_5 = czm_unpackUint(texture2D(u_featureIdTexture_5, v_texCoord_0).agbb);",
+            "    featureIds.featureId_6 = czm_unpackUint(texture2D(u_featureIdTexture_6, v_texCoord_0).g);",
           ]
         );
         ShaderBuilderTester.expectHasVertexFunction(

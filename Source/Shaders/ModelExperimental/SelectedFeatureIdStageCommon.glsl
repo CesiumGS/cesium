@@ -20,6 +20,11 @@ void selectedFeatureIdStage(out SelectedFeature feature, FeatureIds featureIds)
 {   
     float featureId = featureIds.SELECTED_FEATURE_ID;
 
+    #ifdef HAS_NULL_FEATURE_ID
+    // if featureID == nullFeatureID { do whatever the null case did }
+    #endif
+
+
     if (featureId < model_featuresLength)
     {
         vec2 featureSt = computeSt(featureId);
