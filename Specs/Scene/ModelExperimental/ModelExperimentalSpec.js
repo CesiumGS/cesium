@@ -265,6 +265,48 @@ describe(
       });
     });
 
+    it("boundingSphere returns the bounding sphere when scaled", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          { gltf: new Uint8Array(buffer), debugShowBoundingVolume: true, scale: 10, maximumScale: 20 },
+          scene
+        ).then(function (model) {
+          scene.renderForSpecs();
+
+          const boundingSphere = model.boundingSphere;
+          expect(boundingSphere).toBeDefined();
+          expect(boundingSphere.center).toEqual(new Cartesian3());
+          expect(boundingSphere.radius).toEqualEpsilon(
+            8.660254037844386,
+            CesiumMath.EPSILON8
+          );
+        });
+      });
+    });
+
+    it("boundingSphere returns the bounding sphere when maximumScale is reached", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          { gltf: new Uint8Array(buffer), debugShowBoundingVolume: true, scale: 20, maximumScale: 10 },
+          scene
+        ).then(function (model) {
+          scene.renderForSpecs();
+
+          const boundingSphere = model.boundingSphere;
+          expect(boundingSphere).toBeDefined();
+          expect(boundingSphere.center).toEqual(new Cartesian3());
+          expect(boundingSphere.radius).toEqualEpsilon(
+            8.660254037844386,
+            CesiumMath.EPSILON8
+          );
+        });
+      });
+    });
+
     it("renders model with style", function () {
       return loadAndZoomToModelExperimental(
         { gltf: buildingsMetadata },

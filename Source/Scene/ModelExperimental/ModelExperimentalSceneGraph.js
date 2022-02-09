@@ -1,5 +1,6 @@
 import buildDrawCommands from "./buildDrawCommands.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
 import defaultValue from "../../Core/defaultValue.js";
@@ -347,9 +348,18 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       runtimePrimitive.drawCommands = drawCommands;
     }
   }
-  this._boundingSphere = BoundingSphere.fromBoundingSpheres(
+
+  const scaledBoundingSphere = BoundingSphere.fromBoundingSpheres(
     this._boundingSpheres
   );
+  scaledBoundingSphere.center = Cartesian3.multiplyByScalar(
+      scaledBoundingSphere.center,
+      this._model.scale,
+      scaledBoundingSphere.center
+    );
+  scaledBoundingSphere.radius = this._model.scale * scaledBoundingSphere.radius;
+
+  this._boundingSphere = scaledBoundingSphere;
 };
 
 /**
@@ -390,7 +400,8 @@ ModelExperimentalSceneGraph.prototype.update = function (frameState) {
   }
 };
 
-ModelExperimentalSceneGraph.prototype.updateModelMatrix = function (model, scale) {
+ModelExperimentalSceneGraph.prototype.updateModelMatrix = function (scale) {
+  const model = this._model;
   this._computedModelMatrix = Matrix4.clone(model.modelMatrix);
 
   Matrix4.multiplyByUniformScale(

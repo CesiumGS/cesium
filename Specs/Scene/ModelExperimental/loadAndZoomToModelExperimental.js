@@ -21,6 +21,9 @@ function loadAndZoomToModelExperimental(options, scene) {
       instanceFeatureIdIndex: options.instanceFeatureIdIndex,
       incrementallyLoadTextures: options.incrementallyLoadTextures,
       backFaceCulling: options.backFaceCulling,
+      minimumPixelSize: options.minimumPixelSize,
+      scale: options.scale,
+      maximumScale: options.maximumScale,
     });
   } catch (error) {
     return when.reject(error);
