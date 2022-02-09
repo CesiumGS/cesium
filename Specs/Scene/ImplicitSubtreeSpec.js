@@ -68,6 +68,7 @@ describe("Scene/ImplicitSubtree", function () {
       }
     }
   }
+
   function expectChildSubtreeAvailability(subtree, availability) {
     const expectedAvailability = availabilityToBooleanArray(availability);
     for (let i = 0; i < availability.lengthBits; i++) {
@@ -108,6 +109,18 @@ describe("Scene/ImplicitSubtree", function () {
   });
   let metadataSchema; // intentionally left undefined
 
+  const subtreeJson = {
+    tileAvailability: {
+      constant: 1,
+    },
+    contentAvailability: {
+      constant: 1,
+    },
+    childSubtreeAvailability: {
+      constant: 0,
+    },
+  };
+
   const implicitQuadtreeJson = {
     geometricError: 500,
     refine: "ADD",
@@ -123,7 +136,7 @@ describe("Scene/ImplicitSubtree", function () {
         subtreeLevels: 2,
         // This is artificially high for ease of testing. This field is
         // not validated at runtime.
-        maximumLevel: 3,
+        availableLevels: 4,
         subtrees: {
           uri: "https://example.com/{level}/{x}/{y}.subtree",
         },
@@ -158,7 +171,7 @@ describe("Scene/ImplicitSubtree", function () {
       "3DTILES_implicit_tiling": {
         subdivisionScheme: "OCTREE",
         subtreeLevels: 2,
-        maximumLevel: 3,
+        availableLevels: 4,
         subtrees: {
           uri: "https://example.com/{level}/{x}_{y}_{z}.subtree",
         },
@@ -198,6 +211,26 @@ describe("Scene/ImplicitSubtree", function () {
       descriptor: "1111000010100000",
       lengthBits: 16,
       isInternal: true,
+    },
+  };
+
+  const jsonQuadtreeDescription = {
+    tileAvailability: {
+      descriptor: "11111",
+      lengthBits: 5,
+      isInternal: false,
+    },
+    contentAvailability: [
+      {
+        descriptor: "11111",
+        lengthBits: 5,
+        isInternal: false,
+      },
+    ],
+    childSubtreeAvailability: {
+      descriptor: "0000000000000000",
+      lengthBits: 16,
+      isInternal: false,
     },
   };
 
@@ -347,6 +380,28 @@ describe("Scene/ImplicitSubtree", function () {
       );
 
       expect(fetchExternal.calls.count()).toEqual(1);
+    });
+  });
+
+  it("gets availability from JSON", function () {
+    const subtree = new ImplicitSubtree(
+      subtreeResource,
+      subtreeJson,
+      undefined,
+      implicitQuadtree,
+      quadtreeCoordinates
+    );
+
+    return subtree.readyPromise.then(function () {
+      expectTileAvailability(subtree, jsonQuadtreeDescription.tileAvailability);
+      expectContentAvailability(
+        subtree,
+        jsonQuadtreeDescription.contentAvailability
+      );
+      expectChildSubtreeAvailability(
+        subtree,
+        jsonQuadtreeDescription.childSubtreeAvailability
+      );
     });
   });
 

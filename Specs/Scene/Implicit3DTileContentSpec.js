@@ -69,6 +69,18 @@ describe(
       metadataSchema
     );
 
+    const quadtreeJson = {
+      tileAvailability: {
+        constant: 1,
+      },
+      contentAvailability: {
+        constant: 1,
+      },
+      childSubtreeAvailability: {
+        constant: 0,
+      },
+    };
+
     const quadtreeBuffer = ImplicitTilingTester.generateSubtreeBuffers({
       tileAvailability: {
         descriptor: "11010",
@@ -151,6 +163,25 @@ describe(
 
     afterEach(function () {
       scene.primitives.removeAll();
+    });
+
+    it("loads subtree using JSON", function () {
+      const content = new Implicit3DTileContent(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        quadtreeJson
+      );
+      return content.readyPromise.then(function () {
+        const expectedChildrenCounts = [4, 0, 0, 0, 0];
+        const tiles = [];
+        const subtreeRootTile = mockPlaceholderTile.children[0];
+        gatherTilesPreorder(subtreeRootTile, 0, 1, tiles);
+        expect(expectedChildrenCounts.length).toEqual(tiles.length);
+        for (let i = 0; i < tiles.length; i++) {
+          expect(tiles[i].children.length).toEqual(expectedChildrenCounts[i]);
+        }
+      });
     });
 
     it("expands subtree", function () {
