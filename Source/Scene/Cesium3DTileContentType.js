@@ -97,6 +97,16 @@ const Cesium3DTileContentType = {
    */
   IMPLICIT_SUBTREE: "subt",
   /**
+   * For the <code>3DTILES_implicit_tiling</code> extension.
+   * Subtrees can also be represented as JSON files.
+   *
+   * @type {String}
+   * @constant
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  IMPLICIT_SUBTREE_JSON: "subtreeJson",
+  /**
    * Contents can reference another tileset.json to use
    * as an external tileset. This is a JSON-based format.
    *

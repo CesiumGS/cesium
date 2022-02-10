@@ -4930,6 +4930,8 @@ describe(
     describe("3DTILES_implicit_tiling", function () {
       const implicitTilesetUrl =
         "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset.json";
+      const implicitTilesetWithJsonUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitTilesetWithJsonSubtree/tileset.json";
       const implicitRootUrl =
         "Data/Cesium3DTiles/Implicit/ImplicitRootTile/tileset.json";
       const implicitChildUrl =
@@ -4945,6 +4947,19 @@ describe(
             expect(statistics.numberOfCommands).toEqual(5);
           }
         );
+      });
+
+      it("renders tileset with JSON subtree file", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitTilesetWithJsonUrl
+        ).then(function (tileset) {
+          const statistics = tileset._statistics;
+          // root + implicit placeholder + 4 child tiles
+          expect(statistics.visited).toEqual(6);
+          // the implicit placeholder tile is not rendered
+          expect(statistics.numberOfCommands).toEqual(5);
+        });
       });
 
       it("detects and initializes an implicit tileset in root tile", function () {

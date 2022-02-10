@@ -25,21 +25,28 @@ import when from "../ThirdParty/when.js";
  * @constructor
  *
  * @param {Resource} resource The resource for this subtree. This is used for fetching external buffers as needed.
- * @param {Uint8Array} subtreeView The contents of a subtree binary in a Uint8Array.
+ * @param {Object} [json] The JSON object for this subtree. Mutually exclusive with subtreeView.
+ * @param {Uint8Array} [subtreeView] The contents of a subtree binary in a Uint8Array. Mutually exclusive with json.
  * @param {ImplicitTileset} implicitTileset The implicit tileset. This includes information about the size of subtrees
  * @param {ImplicitTileCoordinates} implicitCoordinates The coordinates of the subtree's root tile.
+ *
+ * @exception {DeveloperError} One of json and subtreeView must be defined.
+ *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ImplicitSubtree(
   resource,
+  json,
   subtreeView,
   implicitTileset,
   implicitCoordinates
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("resource", resource);
-  Check.typeOf.object("subtreeView", subtreeView);
+  if (defined(json) === defined(subtreeView)) {
+    throw new DeveloperError("One of json and subtreeView must be defined.");
+  }
   Check.typeOf.object("implicitTileset", implicitTileset);
   Check.typeOf.object("implicitCoordinates", implicitCoordinates);
   //>>includeEnd('debug');
@@ -62,7 +69,7 @@ export default function ImplicitSubtree(
   // Map of availability bit index to entity ID
   this._jumpBuffer = undefined;
 
-  initialize(this, subtreeView, implicitTileset);
+  initialize(this, json, subtreeView, implicitTileset);
 }
 
 Object.defineProperties(ImplicitSubtree.prototype, {
@@ -256,12 +263,22 @@ ImplicitSubtree.prototype.getParentMortonIndex = function (mortonIndex) {
  * it resolves/rejects subtree.readyPromise.
  *
  * @param {ImplicitSubtree} subtree The subtree
+ * @param {Object} json The JSON object for this subtree. If parsing from a binary subtree file, this will be undefined.
  * @param {Uint8Array} subtreeView The contents of the subtree binary
  * @param {ImplicitTileset} implicitTileset The implicit tileset this subtree belongs to.
  * @private
  */
-function initialize(subtree, subtreeView, implicitTileset) {
-  const chunks = parseSubtreeChunks(subtreeView);
+function initialize(subtree, json, subtreeView, implicitTileset) {
+  let chunks;
+  if (defined(json)) {
+    chunks = {
+      json: json,
+      binary: undefined,
+    };
+  } else {
+    chunks = parseSubtreeChunks(subtreeView);
+  }
+
   const subtreeJson = chunks.json;
   subtree._subtreeJson = subtreeJson;
 

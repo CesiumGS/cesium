@@ -147,6 +147,7 @@ describe("Scene/ImplicitTileMetadata", function () {
   beforeAll(function () {
     subtree = new ImplicitSubtree(
       subtreeResource,
+      undefined,
       bufferResults.subtreeBuffer,
       metadataQuadtree,
       rootCoordinates
