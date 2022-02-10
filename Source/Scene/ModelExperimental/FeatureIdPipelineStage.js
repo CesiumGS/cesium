@@ -282,17 +282,17 @@ function processImplicitRange(
   // Example:
   // struct FeatureIds {
   //   ...
-  //   float featureId_n;
+  //   int featureId_n;
   //   ...
   // }
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
-    "float",
+    "int",
     variableName
   );
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
-    "float",
+    "int",
     variableName
   );
 
@@ -310,11 +310,11 @@ function processImplicitRange(
   // featureIds.featureId_n = v_implicit_featureId_n; (FS)
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_VS,
-    [`featureIds.${variableName} = ${implicitAttributeName};`]
+    [`featureIds.${variableName} = int(czm_round(${implicitAttributeName}));`]
   );
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,
-    [`featureIds.${variableName} = ${implicitVaryingName};`]
+    [`featureIds.${variableName} = int(czm_round(${implicitVaryingName}));`]
   );
 }
 
