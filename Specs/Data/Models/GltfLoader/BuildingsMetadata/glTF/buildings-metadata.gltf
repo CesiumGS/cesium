@@ -146,16 +146,14 @@
           "mode": 4,
           "extensions": {
             "EXT_mesh_features": {
-              "propertyTables": [
-                0,
-                0
-              ],
               "featureIds": [
                 {
+                  "propertyTable": 0,
                   "attribute": 0,
                   "featureCount": 10
                 },
                 {
+                  "propertyTable": 0,
                   "offset": 0,
                   "repeat": 2,
                   "featureCount": 5

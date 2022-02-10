@@ -101,12 +101,10 @@
           "material": 0,
           "extensions": {
             "EXT_mesh_features": {
-              "propertyTables": [
-                0
-              ],
               "featureIds": [
                 {
                   "featureCount": 256,
+                  "propertyTable": 0,
                   "texture": {
                     "index": 2,
                     "texCoord": 0,

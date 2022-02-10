@@ -811,11 +811,11 @@ function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
 }
 
 // for EXT_mesh_features
-function loadFeatureIdAttribute(featureIds, propertyTableId) {
+function loadFeatureIdAttribute(featureIds) {
   const featureIdAttribute = new FeatureIdAttribute();
   featureIdAttribute.featureCount = featureIds.featureCount;
   featureIdAttribute.nullFeatureId = featureIds.nullFeatureId;
-  featureIdAttribute.propertyTableId = propertyTableId;
+  featureIdAttribute.propertyTableId = featureIds.propertyTable;
   featureIdAttribute.setIndex = featureIds.attribute;
   return featureIdAttribute;
 }
@@ -835,9 +835,9 @@ function loadFeatureIdAttributeLegacy(
 }
 
 // for EXT_mesh_features
-function loadFeatureIdImplicitRange(featureIds, propertyTableId) {
+function loadFeatureIdImplicitRange(featureIds) {
   const featureIdAttribute = new FeatureIdImplicitRange();
-  featureIdAttribute.propertyTableId = propertyTableId;
+  featureIdAttribute.propertyTableId = featureIds.propertyTable;
   featureIdAttribute.featureCount = featureIds.featureCount;
   featureIdAttribute.nullFeatureId = featureIds.nullFeatureId;
   featureIdAttribute.offset = defaultValue(featureIds.offset, 0);
@@ -869,14 +869,13 @@ function loadFeatureIdTexture(
   loader,
   gltf,
   gltfFeatureIdTexture,
-  propertyTableId,
   supportedImageFormats
 ) {
   const featureIdTexture = new FeatureIdTexture();
 
   featureIdTexture.featureCount = gltfFeatureIdTexture.featureCount;
   featureIdTexture.nullFeatureId = gltfFeatureIdTexture.nullFeatureId;
-  featureIdTexture.propertyTableId = propertyTableId;
+  featureIdTexture.propertyTableId = gltfFeatureIdTexture.propertyTable;
 
   const textureInfo = gltfFeatureIdTexture.texture;
   featureIdTexture.textureReader = loadTexture(
@@ -1032,15 +1031,9 @@ function loadPrimitiveMetadata(
   const featureIdsArray = defined(metadataExtension.featureIds)
     ? metadataExtension.featureIds
     : [];
-  const propertyTables = defined(metadataExtension.propertyTables)
-    ? metadataExtension.propertyTables
-    : [];
 
   for (let i = 0; i < featureIdsArray.length; i++) {
     const featureIds = featureIdsArray[i];
-    // This may be undefined, as feature IDs are not required to have
-    // associated metadata.
-    const propertyTableId = propertyTables[i];
 
     let featureIdComponent;
     if (defined(featureIds.texture)) {
@@ -1048,16 +1041,12 @@ function loadPrimitiveMetadata(
         loader,
         gltf,
         featureIds,
-        propertyTableId,
         supportedImageFormats
       );
     } else if (defined(featureIds.attribute)) {
-      featureIdComponent = loadFeatureIdAttribute(featureIds, propertyTableId);
+      featureIdComponent = loadFeatureIdAttribute(featureIds);
     } else {
-      featureIdComponent = loadFeatureIdImplicitRange(
-        featureIds,
-        propertyTableId
-      );
+      featureIdComponent = loadFeatureIdImplicitRange(featureIds);
     }
 
     primitive.featureIds.push(featureIdComponent);
@@ -1215,22 +1204,15 @@ function loadInstances(loader, gltf, nodeExtensions, frameState) {
 function loadInstanceMetadata(instances, metadataExtension) {
   // feature IDs are required in EXT_mesh_features
   const featureIdsArray = metadataExtension.featureIds;
-  const propertyTables = defined(metadataExtension.propertyTables)
-    ? metadataExtension.propertyTables
-    : [];
 
   for (let i = 0; i < featureIdsArray.length; i++) {
     const featureIds = featureIdsArray[i];
-    const propertyTableId = propertyTables[i];
 
     let featureIdComponent;
     if (defined(featureIds.attribute)) {
-      featureIdComponent = loadFeatureIdAttribute(featureIds, propertyTableId);
+      featureIdComponent = loadFeatureIdAttribute(featureIds);
     } else {
-      featureIdComponent = loadFeatureIdImplicitRange(
-        featureIds,
-        propertyTableId
-      );
+      featureIdComponent = loadFeatureIdImplicitRange(featureIds);
     }
     instances.featureIds.push(featureIdComponent);
   }

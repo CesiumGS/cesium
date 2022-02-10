@@ -103,17 +103,15 @@
           "mode": 0,
           "extensions": {
             "EXT_mesh_features": {
-              "propertyTables": [
-                1,
-                0
-              ],
               "featureIds": [
                 {
+                  "propertyTable": 1,
                   "offset": 0,
                   "repeat": 1,
                   "featureCount": 1000
                 },
                 {
+                  "propertyTable": 0,
                   "attribute": 0,
                   "featureCount": 3
                 }
