@@ -1,0 +1,68 @@
+{
+  "asset": {
+    "version": "1.0"
+  },
+  "extensionsUsed": [
+    "3DTILES_implicit_tiling",
+    "3DTILES_metadata"
+  ],
+  "extensionsRequired": [
+    "3DTILES_implicit_tiling"
+  ],
+  "extras": {
+    "name": "Sample Implicit Tileset"
+  },
+  "geometricError": 240,
+  "root": {
+    "boundingVolume": {
+      "region": [
+        -1.3197209591796106,
+        0.6988424218,
+        -1.3196390408203893,
+        0.6989055782,
+        0,
+        88
+      ]
+    },
+    "content": {
+      "uri": "content/{level}/{x}/{y}.b3dm"
+    },
+    "extensions": {
+      "3DTILES_implicit_tiling": {
+        "subdivisionScheme": "QUADTREE",
+        "subtreeLevels": 2,
+        "maximumLevel": 1,
+        "subtrees": {
+          "uri": "subtrees/{level}.{x}.{y}.json"
+        }
+      },
+      "3DTILES_metadata": {
+        "schema": {
+          "classes": {
+            "subtree": {
+              "properties": {
+                "author": {
+                  "description": "The person or entity that made the subtree",
+                  "componentType": "STRING",
+                  "semantic": "AUTHOR"
+                },
+                "date": {
+                  "description": "Date of subtree generation in YYYY-MM-DD format",
+                  "componentType": "STRING",
+                  "semantic": "DATE_ISO_8601"
+                },
+                "credits": {
+                  "description": "A list of copyright strings relevant to this subtree",
+                  "type": "ARRAY",
+                  "componentType": "STRING"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "geometricError": 70,
+    "refine": "ADD"
+  }
+}

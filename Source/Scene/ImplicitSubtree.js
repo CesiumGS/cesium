@@ -8,6 +8,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import hasExtension from "./hasExtension.js";
 import ImplicitAvailabilityBitstream from "./ImplicitAvailabilityBitstream.js";
 import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
+import ImplicitSubtreeMetadata from "./ImplicitSubtreeMetadata.js";
 import MetadataTable from "./MetadataTable.js";
 import ResourceCache from "./ResourceCache.js";
 import when from "../ThirdParty/when.js";
@@ -64,6 +65,7 @@ export default function ImplicitSubtree(
   this._readyPromise = when.defer();
 
   // properties for 3DTILES_metadata
+  this._metadata = undefined;
   this._metadataTable = undefined;
   this._metadataExtension = undefined;
   // Map of availability bit index to entity ID
@@ -89,6 +91,20 @@ Object.defineProperties(ImplicitSubtree.prototype, {
 
   /**
    * When the <code>3DTILES_metadata</code> extension is used, this property stores
+   * an {@link ImplicitSubtreeMetadata} instance
+   *
+   * @type {ImplicitSubtreeMetadata}
+   * @readonly
+   * @private
+   */
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+  },
+
+  /**
+   * When the <code>3DTILES_metadata</code> extension is used, this property stores
    * a {@link MetadataTable} instance
    *
    * @type {MetadataTable}
@@ -106,7 +122,7 @@ Object.defineProperties(ImplicitSubtree.prototype, {
    * stores the JSON from the extension. This is used by {@link TileMetadata}
    * to get the extras and extensions.
    *
-   * @type {MetadataTable}
+   * @type {Object}
    * @readonly
    * @private
    */
@@ -263,8 +279,8 @@ ImplicitSubtree.prototype.getParentMortonIndex = function (mortonIndex) {
  * it resolves/rejects subtree.readyPromise.
  *
  * @param {ImplicitSubtree} subtree The subtree
- * @param {Object} json The JSON object for this subtree. If parsing from a binary subtree file, this will be undefined.
- * @param {Uint8Array} subtreeView The contents of the subtree binary
+ * @param {Object} [json] The JSON object for this subtree. If parsing from a binary subtree file, this will be undefined.
+ * @param {Uint8Array} [subtreeView] The contents of the subtree binary
  * @param {ImplicitTileset} implicitTileset The implicit tileset this subtree belongs to.
  * @private
  */
@@ -286,6 +302,20 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
   if (hasExtension(subtreeJson, "3DTILES_metadata")) {
     metadataExtension = subtreeJson.extensions["3DTILES_metadata"];
   }
+
+  let metadata;
+  const schema = implicitTileset.metadataSchema;
+  const subtreeMetadata = subtreeJson.subtreeMetadata;
+  if (defined(subtreeMetadata)) {
+    const metadataClass = subtreeMetadata.class;
+    const subtreeMetadataClass = schema.classes[metadataClass];
+    metadata = new ImplicitSubtreeMetadata({
+      subtree: subtreeMetadata,
+      class: subtreeMetadataClass,
+    });
+  }
+
+  subtree._metadata = metadata;
   subtree._metadataExtension = metadataExtension;
 
   // if no contentAvailability is specified, no tile in the subtree has

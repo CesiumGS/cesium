@@ -1315,7 +1315,7 @@ describe("Scene/ImplicitSubtree", function () {
   });
 
   describe("3DTILES_metadata", function () {
-    const schema = {
+    const tileSchema = {
       classes: {
         tile: {
           properties: {
@@ -1325,6 +1325,22 @@ describe("Scene/ImplicitSubtree", function () {
             },
             buildingCount: {
               componentType: "UINT16",
+            },
+          },
+        },
+      },
+    };
+
+    const subtreeSchema = {
+      classes: {
+        subtree: {
+          properties: {
+            author: {
+              componentType: "STRING",
+            },
+            credits: {
+              type: "ARRAY",
+              componentType: "STRING",
             },
           },
         },
@@ -1349,17 +1365,64 @@ describe("Scene/ImplicitSubtree", function () {
     };
 
     const propertyTablesDescription = {
-      schema: schema,
+      schema: tileSchema,
       propertyTables: [tileTableDescription],
     };
 
-    const metadataSchema = new MetadataSchema(schema);
+    const tileMetadataSchema = new MetadataSchema(tileSchema);
+    const subtreeMetadataSchema = new MetadataSchema(subtreeSchema);
 
-    const metadataQuadtree = new ImplicitTileset(
+    const tileMetadataQuadtree = new ImplicitTileset(
       tilesetResource,
       implicitQuadtreeJson,
-      metadataSchema
+      tileMetadataSchema
     );
+
+    const subtreeMetadataQuadtree = new ImplicitTileset(
+      tilesetResource,
+      implicitQuadtreeJson,
+      subtreeMetadataSchema
+    );
+
+    const metadataSubtreeJson = {
+      tileAvailability: {
+        constant: 1,
+      },
+      contentAvailability: {
+        constant: 1,
+      },
+      childSubtreeAvailability: {
+        constant: 0,
+      },
+      subtreeMetadata: {
+        class: "subtree",
+        properties: {
+          author: "Cesium",
+          credits: ["A", "B", "C"],
+        },
+      },
+    };
+
+    it("creates metadata from JSON", function () {
+      const subtree = new ImplicitSubtree(
+        subtreeResource,
+        metadataSubtreeJson,
+        undefined,
+        subtreeMetadataQuadtree,
+        quadtreeCoordinates
+      );
+
+      return subtree.readyPromise.then(function () {
+        const metadata = subtree.metadata;
+        expect(metadata).toBeDefined();
+
+        expect(metadata.hasProperty("author")).toBe(true);
+        expect(metadata.hasProperty("credits")).toBe(true);
+
+        expect(metadata.getProperty("author")).toEqual("Cesium");
+        expect(metadata.getProperty("credits")).toEqual(["A", "B", "C"]);
+      });
+    });
 
     it("creates a metadata table from internal metadata", function () {
       const subtreeDescription = {
@@ -1397,7 +1460,7 @@ describe("Scene/ImplicitSubtree", function () {
         subtreeResource,
         undefined,
         results.subtreeBuffer,
-        metadataQuadtree,
+        tileMetadataQuadtree,
         quadtreeCoordinates
       );
 
@@ -1455,7 +1518,7 @@ describe("Scene/ImplicitSubtree", function () {
         subtreeResource,
         undefined,
         results.subtreeBuffer,
-        metadataQuadtree,
+        tileMetadataQuadtree,
         quadtreeCoordinates
       );
 
@@ -1513,7 +1576,7 @@ describe("Scene/ImplicitSubtree", function () {
         subtreeResource,
         undefined,
         results.subtreeBuffer,
-        metadataQuadtree,
+        tileMetadataQuadtree,
         quadtreeCoordinates
       );
 
@@ -1609,14 +1672,14 @@ describe("Scene/ImplicitSubtree", function () {
         subtreeResource,
         undefined,
         results.subtreeBuffer,
-        metadataQuadtree,
+        tileMetadataQuadtree,
         quadtreeCoordinates
       );
 
       expect(function () {
         const coordinates = new ImplicitTileCoordinates({
-          subdivisionScheme: metadataQuadtree.subdivisionScheme,
-          subtreeLevels: metadataQuadtree.subtreeLevels,
+          subdivisionScheme: tileMetadataQuadtree.subdivisionScheme,
+          subtreeLevels: tileMetadataQuadtree.subtreeLevels,
           level: 4,
           x: 1,
           y: 1,
@@ -1658,13 +1721,13 @@ describe("Scene/ImplicitSubtree", function () {
         subtreeResource,
         undefined,
         results.subtreeBuffer,
-        metadataQuadtree,
+        tileMetadataQuadtree,
         quadtreeCoordinates
       );
 
       const coordinates = new ImplicitTileCoordinates({
-        subdivisionScheme: metadataQuadtree.subdivisionScheme,
-        subtreeLevels: metadataQuadtree.subtreeLevels,
+        subdivisionScheme: tileMetadataQuadtree.subdivisionScheme,
+        subtreeLevels: tileMetadataQuadtree.subtreeLevels,
         level: 1,
         x: 1,
         y: 1,
@@ -1705,13 +1768,13 @@ describe("Scene/ImplicitSubtree", function () {
         subtreeResource,
         undefined,
         results.subtreeBuffer,
-        metadataQuadtree,
+        tileMetadataQuadtree,
         quadtreeCoordinates
       );
 
       const coordinates = new ImplicitTileCoordinates({
-        subdivisionScheme: metadataQuadtree.subdivisionScheme,
-        subtreeLevels: metadataQuadtree.subtreeLevels,
+        subdivisionScheme: tileMetadataQuadtree.subdivisionScheme,
+        subtreeLevels: tileMetadataQuadtree.subtreeLevels,
         level: 1,
         x: 1,
         y: 0,
@@ -1737,7 +1800,7 @@ describe("Scene/ImplicitSubtree", function () {
       };
 
       const propertyTablesDescription = {
-        schema: schema,
+        schema: tileSchema,
         propertyTables: [tileTableDescription],
       };
 
@@ -1773,7 +1836,7 @@ describe("Scene/ImplicitSubtree", function () {
         subtreeResource,
         undefined,
         results.subtreeBuffer,
-        metadataQuadtree,
+        tileMetadataQuadtree,
         quadtreeCoordinates
       );
       return subtree.readyPromise.then(function () {
