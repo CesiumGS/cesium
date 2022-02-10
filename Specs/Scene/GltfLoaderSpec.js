@@ -85,6 +85,8 @@ describe(
     const duckDraco = "./Data/Models/GltfLoader/Duck/glTF-Draco/Duck.gltf";
     const boomBoxSpecularGlossiness =
       "./Data/Models/GltfLoader/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
+    const largeFeatureIdTexture =
+      "./Data/Models/GltfLoader/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
 
     let scene;
     const gltfLoaders = [];
@@ -977,6 +979,104 @@ describe(
 
         expect(vegetationProperty.textureReader.texture.width).toBe(256);
         expect(vegetationProperty.textureReader.texture.height).toBe(256);
+      });
+    });
+
+    it("Loads model with multi-channel feature ID textures", function () {
+      return loadGltf(largeFeatureIdTexture).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const material = primitive.material;
+        const baseColorTexture = material.metallicRoughness.baseColorTexture;
+        const featureMetadata = components.featureMetadata;
+        expect(featureMetadata).not.toBeDefined();
+
+        expect(baseColorTexture.texCoord).toBe(0);
+        expect(primitive.featureIds.length).toBe(7);
+        expect(primitive.propertyTextureIds).toEqual([]);
+
+        let featureIdTexture = primitive.featureIds[0];
+        expect(featureIdTexture).toBeInstanceOf(
+          ModelComponents.FeatureIdTexture
+        );
+        expect(featureIdTexture.featureCount).toEqual(1048576);
+        expect(featureIdTexture.nullFeatureId).not.toBeDefined();
+        expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.textureReader.channels).toBe("rgba");
+        expect(featureIdTexture.textureReader.texCoord).toBe(0);
+        const texture = featureIdTexture.textureReader.texture;
+        expect(texture.width).toBe(1024);
+        expect(texture.height).toBe(1024);
+        expect(texture.sampler).toBe(Sampler.NEAREST);
+
+        featureIdTexture = primitive.featureIds[1];
+        expect(featureIdTexture).toBeInstanceOf(
+          ModelComponents.FeatureIdTexture
+        );
+        expect(featureIdTexture.featureCount).toEqual(1048576);
+        expect(featureIdTexture.nullFeatureId).not.toBeDefined();
+        expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.textureReader.channels).toBe("rgb");
+        expect(featureIdTexture.textureReader.texCoord).toBe(0);
+        // All the feature ID textures use the same glTF texture
+        expect(featureIdTexture.textureReader.texture).toBe(texture);
+
+        featureIdTexture = primitive.featureIds[2];
+        expect(featureIdTexture).toBeInstanceOf(
+          ModelComponents.FeatureIdTexture
+        );
+        expect(featureIdTexture.featureCount).toEqual(256);
+        expect(featureIdTexture.nullFeatureId).not.toBeDefined();
+        expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.textureReader.channels).toBe("g");
+        expect(featureIdTexture.textureReader.texCoord).toBe(0);
+        expect(featureIdTexture.textureReader.texture).toBe(texture);
+
+        featureIdTexture = primitive.featureIds[3];
+        expect(featureIdTexture).toBeInstanceOf(
+          ModelComponents.FeatureIdTexture
+        );
+        expect(featureIdTexture.featureCount).toEqual(65536);
+        expect(featureIdTexture.nullFeatureId).not.toBeDefined();
+        expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.textureReader.channels).toBe("ba");
+        expect(featureIdTexture.textureReader.texCoord).toBe(0);
+        expect(featureIdTexture.textureReader.texture).toBe(texture);
+
+        featureIdTexture = primitive.featureIds[4];
+        expect(featureIdTexture).toBeInstanceOf(
+          ModelComponents.FeatureIdTexture
+        );
+        expect(featureIdTexture.featureCount).toEqual(65536);
+        expect(featureIdTexture.nullFeatureId).not.toBeDefined();
+        expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.textureReader.channels).toBe("gr");
+        expect(featureIdTexture.textureReader.texCoord).toBe(0);
+        expect(featureIdTexture.textureReader.texture).toBe(texture);
+
+        featureIdTexture = primitive.featureIds[5];
+        expect(featureIdTexture).toBeInstanceOf(
+          ModelComponents.FeatureIdTexture
+        );
+        expect(featureIdTexture.featureCount).toEqual(1048576);
+        expect(featureIdTexture.nullFeatureId).not.toBeDefined();
+        expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.textureReader.channels).toBe("agbb");
+        expect(featureIdTexture.textureReader.texCoord).toBe(0);
+        expect(featureIdTexture.textureReader.texture).toBe(texture);
+
+        featureIdTexture = primitive.featureIds[6];
+        expect(featureIdTexture).toBeInstanceOf(
+          ModelComponents.FeatureIdTexture
+        );
+        expect(featureIdTexture.featureCount).toEqual(255);
+        expect(featureIdTexture.nullFeatureId).toBe(10);
+        expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.textureReader.channels).toBe("g");
+        expect(featureIdTexture.textureReader.texCoord).toBe(0);
+        expect(featureIdTexture.textureReader.texture).toBe(texture);
       });
     });
 
