@@ -265,6 +265,13 @@ This struct is dynamically generated to gather all the various feature IDs into
 a single collection, regardless of whether the value came from an attribute,
 texture or varying.
 
+Feature IDs are represented as a GLSL `int`, though in WebGL 1 this has a couple
+limitations:
+
+- Above `2^24`, values may have a loss of precision since WebGL 1 implements
+  `highp int` as a floating point value.
+- Ideally the type would be `uint` but this is not available until WebGL 2
+
 ### 3D Tiles 1.0 Batch IDs
 
 In 3D Tiles 1.0, the same concept of identifying features within a primitive
