@@ -104,10 +104,6 @@ export default function ModelExperimental(options) {
   this._scale = defaultValue(options.scale, 1.0);
   this._minimumPixelSize = defaultValue(options.minimumPixelSize, 0.0);
   this._maximumScale = options.maximumScale;
-  if (defined(this._maximumScale) && this._scale > this._maximumScale) {
-    this._scale = this._maximumScale;
-  }
-  this._scaleDirty = true;
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -666,41 +662,56 @@ Object.defineProperties(ModelExperimental.prototype, {
     },
   },
 
+  /**
+   * A uniform scale applied to this model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Number}
+   *
+   * @default 1.0
+   */
   scale: {
     get: function () {
       return this._scale;
     },
     set: function (value) {
-      if (value !== this._scale) {
-        this._scaleDirty = true;
-      }
-
-      this._scale = defined(model.maximumScale)
-          ? Math.min(model.maximumScale, scale)
-          : scale;
+      this._scale = value;
     },
   },
 
+
+  /**
+   * The approximate minimum pixelsize of the model regardless of zoom.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Number}
+   *
+   * @default 0.0
+   */
   minimumPixelSize: {
     get: function () {
       return this._minimumPixelSize;
     },
     set: function (value) {
-      if (value !== this._minimumPixelSize) {
-        this._scaleDirty = true;
-      }
       this._minimumPixelSize = value;
     },
   },
 
+
+  /**
+   * The maximum scale size of a model. An upper limit for minimumPixelSize.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Number}
+   */
   maximumScale: {
     get: function () {
       return this._maximumScale;
     },
     set: function (value) {
-      if (value !== this._maximumScale) {
-        this._scaleDirty = true;
-      }
       this._maximumScale = value;
     },
   },
