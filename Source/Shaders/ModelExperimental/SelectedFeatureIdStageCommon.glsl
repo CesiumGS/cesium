@@ -20,10 +20,6 @@ void selectedFeatureIdStage(out SelectedFeature feature, FeatureIds featureIds)
 {   
     int featureId = featureIds.SELECTED_FEATURE_ID;
 
-    #ifdef HAS_NULL_FEATURE_ID
-    // if featureID == nullFeatureID { do whatever the null case did }
-    #endif
-
 
     if (featureId < model_featuresLength)
     {
@@ -44,4 +40,12 @@ void selectedFeatureIdStage(out SelectedFeature feature, FeatureIds featureIds)
         feature.st = vec2(0.0);
         feature.color = vec4(1.0);
     }
+
+    #ifdef HAS_NULL_FEATURE_ID
+    if (featureId == model_nullFeatureId) {
+        feature.id = featureId;
+        feature.st = vec2(0.0);
+        feature.color = vec4(1.0);
+    }
+    #endif
 }

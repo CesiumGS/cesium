@@ -20,6 +20,8 @@ describe(
     const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
     const boxInstanced =
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
+    const largeFeatureIdTexture =
+      "./Data/Models/GltfLoader/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
 
     let scene;
     const gltfLoaders = [];
@@ -99,6 +101,7 @@ describe(
           featureIdIndex: 0,
           instanceFeatureIdIndex: 0,
         },
+        uniformMap: {},
         hasPropertyTable: false,
       };
     }
@@ -206,6 +209,41 @@ describe(
         ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
           _shadersSelectedFeatureIdStageCommon,
         ]);
+      });
+    });
+
+    it("handles null feature ID when present", function () {
+      return loadGltf(largeFeatureIdTexture).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const node = components.nodes[0];
+        const primitive = node.primitives[0];
+        const frameState = scene.frameState;
+        const renderResources = mockRenderResources(node);
+        renderResources.model.featureIdIndex = 6;
+
+        SelectedFeatureIdPipelineStage.process(
+          renderResources,
+          primitive,
+          frameState
+        );
+        expect(renderResources.hasPropertyTable).toBe(true);
+
+        const shaderBuilder = renderResources.shaderBuilder;
+        verifyFeatureStruct(shaderBuilder);
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_NULL_FEATURE_ID",
+          "HAS_SELECTED_FEATURE_ID",
+          "HAS_SELECTED_FEATURE_ID_TEXTURE",
+          "SELECTED_FEATURE_ID featureId_6",
+        ]);
+        ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, []);
+        ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
+          _shadersSelectedFeatureIdStageCommon,
+        ]);
+
+        const uniformMap = renderResources.uniformMap;
+        expect(uniformMap.model_nullFeatureId()).toBe(10);
       });
     });
   },
