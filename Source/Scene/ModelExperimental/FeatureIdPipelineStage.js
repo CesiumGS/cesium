@@ -163,30 +163,30 @@ function processInstanceAttribute(
   // Example:
   // struct FeatureIds {
   //   ...
-  //   float instanceFeatureId_n;
+  //   int instanceFeatureId_n;
   //   ...
   // }
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
-    "float",
+    "int",
     variableName
   );
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
-    "float",
+    "int",
     variableName
   );
 
   // Initialize the field from the corresponding attribute.
-  // Example: featureIds.instanceFeatureId_n = attributes.instanceFeatureId_0;
+  // Example: featureIds.instanceFeatureId_n = int(czm_round(attributes.instanceFeatureId_0));
   const setIndex = featureIdAttribute.setIndex;
   const prefix = variableName.replace(/_\d+$/, "_");
 
   const attributeName = `a_${prefix}${setIndex}`;
   const varyingName = `v_${prefix}${setIndex}`;
-  const vertexLine = `featureIds.${variableName} = ${attributeName};`;
-  const fragmentLine = `featureIds.${variableName} = ${varyingName};`;
+  const vertexLine = `featureIds.${variableName} = int(czm_round(${attributeName}));`;
+  const fragmentLine = `featureIds.${variableName} = int(czm_round(${varyingName}));`;
 
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_VS,
@@ -214,18 +214,18 @@ function processAttribute(renderResources, featureIdAttribute, variableName) {
   // Example:
   // struct FeatureIds {
   //   ...
-  //   float featureId_n;
+  //   int featureId_n;
   //   ...
   // }
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
-    "float",
+    "int",
     variableName
   );
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
-    "float",
+    "int",
     variableName
   );
 
@@ -237,7 +237,7 @@ function processAttribute(renderResources, featureIdAttribute, variableName) {
   const prefix = variableName.replace(/_\d+$/, "_");
 
   const initializationLines = [
-    `featureIds.${variableName} = attributes.${prefix}${setIndex};`,
+    `featureIds.${variableName} = int(czm_round(attributes.${prefix}${setIndex}));`,
   ];
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_VS,
