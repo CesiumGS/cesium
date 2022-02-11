@@ -203,7 +203,6 @@ describe(
       });
 
       describe("3DTILES_implicit_tiling", function () {
-        // TODO
         const tilesetWithSubtreeMetadataUrl =
           "Data/Cesium3DTiles/Metadata/ImplicitSubtreeMetadata/tileset.json";
 

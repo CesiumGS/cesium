@@ -3,7 +3,7 @@ import { MetadataClass, ImplicitSubtreeMetadata } from "../../Source/Cesium.js";
 describe("Scene/ImplicitSubtreeMetadata", function () {
   it("creates subtree metadata with default values", function () {
     const subtreeMetadata = new ImplicitSubtreeMetadata({
-      subtree: {},
+      subtreeMetadata: {},
       class: {},
     });
 
@@ -38,7 +38,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
     const subtreeMetadata = new ImplicitSubtreeMetadata({
       class: subtreeClass,
-      subtree: {
+      subtreeMetadata: {
         class: "subtree",
         properties: properties,
         extensions: extensions,
@@ -61,14 +61,14 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
   it("constructor throws without class", function () {
     expect(function () {
       return new ImplicitSubtreeMetadata({
-        subtree: {},
+        subtreeMetadata: {},
       });
     }).toThrowDeveloperError();
   });
 
   it("hasProperty returns false when there's no properties", function () {
     const subtreeMetadata = new ImplicitSubtreeMetadata({
-      subtree: {},
+      subtreeMetadata: {},
       class: {
         properties: {},
       },
@@ -91,7 +91,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
     const subtreeMetadata = new ImplicitSubtreeMetadata({
       class: subtreeClass,
-      subtree: {
+      subtreeMetadata: {
         properties: {
           credits: ["A", "B", "C"],
         },
@@ -115,7 +115,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
     const subtreeMetadata = new ImplicitSubtreeMetadata({
       class: subtreeClass,
-      subtree: {
+      subtreeMetadata: {
         properties: {
           credits: ["A", "B", "C"],
         },
@@ -140,7 +140,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
     });
     const subtreeMetadata = new ImplicitSubtreeMetadata({
       class: subtreeClass,
-      subtree: {},
+      subtreeMetadata: {},
     });
 
     expect(subtreeMetadata.hasProperty("credits")).toBe(true);
@@ -148,7 +148,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
   it("hasProperty throws without propertyId", function () {
     const subtreeMetadata = new ImplicitSubtreeMetadata({
-      subtree: {},
+      subtreeMetadata: {},
       class: {
         properties: {},
       },
@@ -175,7 +175,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
     const subtreeMetadata = new ImplicitSubtreeMetadata({
       class: subtreeClass,
-      subtree: {
+      subtreeMetadata: {
         properties: {
           credits: ["A", "B", "C"],
         },
@@ -200,7 +200,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
     const subtreeMetadata = new ImplicitSubtreeMetadata({
       class: subtreeClass,
-      subtree: {
+      subtreeMetadata: {
         properties: {
           credits: ["A", "B", "C"],
         },
@@ -226,7 +226,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
     const subtreeMetadata = new ImplicitSubtreeMetadata({
       class: subtreeClass,
-      subtree: {},
+      subtreeMetadata: {},
     });
 
     expect(subtreeMetadata.hasPropertyBySemantic("CREDITS")).toBe(true);
@@ -234,7 +234,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
   it("hasPropertyBySemantic throws without semantic", function () {
     const subtreeMetadata = new ImplicitSubtreeMetadata({
-      subtree: {},
+      subtreeMetadata: {},
       class: {
         properties: {},
       },
@@ -247,7 +247,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
   it("getPropertyIds returns empty array when there are no properties", function () {
     const subtreeMetadata = new ImplicitSubtreeMetadata({
-      subtree: {},
+      subtreeMetadata: {},
       class: {
         properties: {},
       },
@@ -277,7 +277,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
     const subtreeMetadata = new ImplicitSubtreeMetadata({
       class: subtreeClass,
-      subtree: {
+      subtreeMetadata: {
         properties: {
           author: "Cesium",
           date: "2022-02-10",
@@ -315,7 +315,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
     });
     const subtreeMetadata = new ImplicitSubtreeMetadata({
       class: subtreeClass,
-      subtree: {
+      subtreeMetadata: {
         properties: {
           author: "Cesium",
           date: "2022-02-10",
@@ -351,7 +351,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
     const subtreeMetadata = new ImplicitSubtreeMetadata({
       class: subtreeClass,
-      subtree: {
+      subtreeMetadata: {
         properties: {
           author: "Cesium",
           date: "2022-02-10",
@@ -369,7 +369,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
   it("getProperty returns undefined when there's no properties", function () {
     const subtreeMetadata = new ImplicitSubtreeMetadata({
-      subtree: {},
+      subtreeMetadata: {},
       class: {
         properties: {},
       },
@@ -391,7 +391,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
     const subtreeMetadata = new ImplicitSubtreeMetadata({
       class: subtreeClass,
-      subtree: {
+      subtreeMetadata: {
         properties: {
           author: "Cesium",
         },
@@ -415,7 +415,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
     const author = "Cesium";
     const subtreeMetadata = new ImplicitSubtreeMetadata({
       class: subtreeClass,
-      subtree: {
+      subtreeMetadata: {
         properties: {
           author: author,
         },
@@ -443,7 +443,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
     const subtreeMetadata = new ImplicitSubtreeMetadata({
       class: subtreeClass,
-      subtree: {},
+      subtreeMetadata: {},
     });
 
     const value = subtreeMetadata.getProperty("author");
@@ -452,7 +452,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
   it("getProperty throws without propertyId", function () {
     const subtreeMetadata = new ImplicitSubtreeMetadata({
-      subtree: {},
+      subtreeMetadata: {},
       class: {
         properties: {},
       },
@@ -465,7 +465,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
   it("setProperty returns false if property doesn't exist", function () {
     const subtreeMetadata = new ImplicitSubtreeMetadata({
-      subtree: {},
+      subtreeMetadata: {},
       class: {
         properties: {},
       },
@@ -489,7 +489,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
     const subtreeMetadata = new ImplicitSubtreeMetadata({
       class: subtreeClass,
-      subtree: {
+      subtreeMetadata: {
         properties: {
           author: "None",
         },
@@ -503,7 +503,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
   it("setProperty throws without propertyId", function () {
     const subtreeMetadata = new ImplicitSubtreeMetadata({
-      subtree: {},
+      subtreeMetadata: {},
       class: {
         properties: {},
       },
@@ -516,7 +516,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
   it("setProperty throws without value", function () {
     const subtreeMetadata = new ImplicitSubtreeMetadata({
-      subtree: {},
+      subtreeMetadata: {},
       class: {
         properties: {},
       },
@@ -542,7 +542,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
     const subtreeMetadata = new ImplicitSubtreeMetadata({
       class: subtreeClass,
-      subtree: {
+      subtreeMetadata: {
         properties: {
           author: "Cesium",
         },
@@ -567,7 +567,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
     const subtreeMetadata = new ImplicitSubtreeMetadata({
       class: subtreeClass,
-      subtree: {
+      subtreeMetadata: {
         properties: {
           author: "Cesium",
         },
@@ -579,7 +579,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
   it("getPropertyBySemantic throws without semantic", function () {
     const subtreeMetadata = new ImplicitSubtreeMetadata({
-      subtree: {},
+      subtreeMetadata: {},
       class: {
         properties: {},
       },
@@ -605,7 +605,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
     const subtreeMetadata = new ImplicitSubtreeMetadata({
       class: subtreeClass,
-      subtree: {
+      subtreeMetadata: {
         properties: {
           author: "None",
         },
@@ -632,7 +632,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
     const subtreeMetadata = new ImplicitSubtreeMetadata({
       class: subtreeClass,
-      subtree: {
+      subtreeMetadata: {
         properties: {
           author: "Cesium",
         },
@@ -644,7 +644,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
   it("setPropertyBySemantic throws without semantic", function () {
     const subtreeMetadata = new ImplicitSubtreeMetadata({
-      subtree: {},
+      subtreeMetadata: {},
       class: {
         properties: {},
       },
@@ -670,7 +670,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
     const subtreeMetadata = new ImplicitSubtreeMetadata({
       class: subtreeClass,
-      subtree: {
+      subtreeMetadata: {
         properties: {
           author: "None",
         },

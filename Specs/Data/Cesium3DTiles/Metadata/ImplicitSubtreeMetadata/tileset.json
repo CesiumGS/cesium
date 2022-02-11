@@ -31,7 +31,7 @@
                 "componentType": "STRING"
               },
               "Height": {
-                "description": "The height of the subtree. Intentionally capitalized so it conflicts with the property in the b3dm file.",
+                "description": "The height of the subtree. Intentionally capitalized so it conflicts with the Height property in the b3dm files.",
                 "componentType": "FLOAT32",
                 "semantic": "HEIGHT"
               }
@@ -63,7 +63,7 @@
       "3DTILES_implicit_tiling": {
         "subdivisionScheme": "QUADTREE",
         "subtreeLevels": 2,
-        "maximumLevel": 1,
+        "availableLevels": 2,
         "subtrees": {
           "uri": "subtrees/{level}.{x}.{y}.json"
         }

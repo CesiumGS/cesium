@@ -10,7 +10,7 @@ import MetadataEntity from "./MetadataEntity.js";
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.subtree The subtree metadata JSON object.
+ * @param {Object} options.subtreeMetadata The subtree metadata JSON object.
  * @param {MetadataClass} options.class The class that subtree metadata conforms to.
  *
  * @alias ImplicitSubtreeMetadata
@@ -20,20 +20,22 @@ import MetadataEntity from "./MetadataEntity.js";
  */
 function ImplicitSubtreeMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const subtree = options.subtree;
+  const subtreeMetadata = options.subtreeMetadata;
   const metadataClass = options.class;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.subtree", subtree);
+  Check.typeOf.object("options.subtreeMetadata", subtreeMetadata);
   Check.typeOf.object("options.class", metadataClass);
   //>>includeEnd('debug');
 
-  const properties = defined(subtree.properties) ? subtree.properties : {};
+  const properties = defined(subtreeMetadata.properties)
+    ? subtreeMetadata.properties
+    : {};
 
   this._class = metadataClass;
   this._properties = properties;
-  this._extras = subtree.extras;
-  this._extensions = subtree.extensions;
+  this._extras = subtreeMetadata.extras;
+  this._extensions = subtreeMetadata.extensions;
 }
 
 Object.defineProperties(ImplicitSubtreeMetadata.prototype, {
@@ -55,7 +57,7 @@ Object.defineProperties(ImplicitSubtreeMetadata.prototype, {
    * Extras in the JSON object.
    *
    * @memberof ImplicitSubtreeMetadata.prototype
-   * @type {*}
+   * @type {Object}
    * @readonly
    * @private
    */

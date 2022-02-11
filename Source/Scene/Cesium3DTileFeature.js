@@ -291,18 +291,20 @@ Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
     }
   }
 
+  let subtreeMetadata;
   if (defined(tile.implicitSubtree)) {
-    const subtreeMetadata = tile.implicitSubtree.metadata;
-    if (defined(subtreeMetadata)) {
-      value = subtreeMetadata.getPropertyBySemantic(name);
-      if (defined(value)) {
-        return value;
-      }
+    subtreeMetadata = tile.implicitSubtree.metadata;
+  }
 
-      value = subtreeMetadata.getProperty(name);
-      if (defined(value)) {
-        return value;
-      }
+  if (defined(subtreeMetadata)) {
+    value = subtreeMetadata.getPropertyBySemantic(name);
+    if (defined(value)) {
+      return value;
+    }
+
+    value = subtreeMetadata.getProperty(name);
+    if (defined(value)) {
+      return value;
     }
   }
 

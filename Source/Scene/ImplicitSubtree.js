@@ -310,7 +310,7 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
     const metadataClass = subtreeMetadata.class;
     const subtreeMetadataClass = schema.classes[metadataClass];
     metadata = new ImplicitSubtreeMetadata({
-      subtree: subtreeMetadata,
+      subtreeMetadata: subtreeMetadata,
       class: subtreeMetadataClass,
     });
   }
