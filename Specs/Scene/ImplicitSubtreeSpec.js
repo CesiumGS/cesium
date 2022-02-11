@@ -1471,7 +1471,7 @@ describe("Scene/ImplicitSubtree", function () {
       return subtree.readyPromise.then(function () {
         expect(fetchExternal).not.toHaveBeenCalled();
 
-        const metadataTable = subtree.metadataTable;
+        const metadataTable = subtree.tileMetadataTable;
         expect(metadataTable).toBeDefined();
         expect(metadataTable.count).toBe(5);
 
@@ -1529,7 +1529,7 @@ describe("Scene/ImplicitSubtree", function () {
       return subtree.readyPromise.then(function () {
         expect(fetchExternal).toHaveBeenCalled();
 
-        const metadataTable = subtree.metadataTable;
+        const metadataTable = subtree.tileMetadataTable;
         expect(metadataTable).toBeDefined();
         expect(metadataTable.count).toBe(5);
 
@@ -1587,7 +1587,7 @@ describe("Scene/ImplicitSubtree", function () {
       return subtree.readyPromise.then(function () {
         expect(fetchExternal).not.toHaveBeenCalled();
 
-        const metadataTable = subtree.metadataTable;
+        const metadataTable = subtree.tileMetadataTable;
         expect(metadataTable).toBeDefined();
         expect(metadataTable.count).toBe(5);
 
@@ -1846,7 +1846,7 @@ describe("Scene/ImplicitSubtree", function () {
       return subtree.readyPromise.then(function () {
         expect(subtree._jumpBuffer).toEqual(new Uint8Array([0, 0, 0, 1, 2]));
 
-        const metadataTable = subtree.metadataTable;
+        const metadataTable = subtree.tileMetadataTable;
         expect(metadataTable).toBeDefined();
         expect(metadataTable.count).toBe(3);
 
@@ -1954,7 +1954,7 @@ describe("Scene/ImplicitSubtree", function () {
         quadtreeCoordinates
       );
       return subtree.readyPromise.then(function () {
-        const metadataTable = subtree.metadataTable;
+        const metadataTable = subtree.tileMetadataTable;
         expect(metadataTable).toBeDefined();
         expect(metadataTable.count).toBe(5);
 
