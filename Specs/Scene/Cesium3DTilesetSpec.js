@@ -5484,7 +5484,7 @@ describe(
           const subtree = transcodedRoot.implicitSubtree;
           expect(subtree).toBeDefined();
 
-          const metadataTable = subtree.metadataTable;
+          const metadataTable = subtree.tileMetadataTable;
           expect(metadataTable).toBeDefined();
           expect(metadataTable.count).toBe(4);
           expect(metadataTable.hasProperty("color")).toBe(true);

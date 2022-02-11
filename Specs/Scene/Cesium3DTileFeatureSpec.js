@@ -94,6 +94,7 @@ describe(
 
       let scene;
       let tileset;
+
       beforeAll(function () {
         scene = createScene();
 
@@ -199,6 +200,94 @@ describe(
         // group metadata is more specific than tileset metadata, so this returns
         // 2 not 5
         expect(feature.getPropertyInherited("tileCount")).toEqual(2);
+      });
+
+      describe("3DTILES_implicit_tiling", function () {
+        const tilesetWithSubtreeMetadataUrl =
+          "Data/Cesium3DTiles/Metadata/ImplicitSubtreeMetadata/tileset.json";
+
+        let tilesetWithSubtree;
+        beforeAll(function () {
+          return Cesium3DTilesTester.loadTileset(
+            scene,
+            tilesetWithSubtreeMetadataUrl
+          ).then(function (result) {
+            tilesetWithSubtree = result;
+          });
+        });
+
+        let subtreeRootContent;
+        const subtreeChildContents = {};
+        beforeEach(function () {
+          const rootChildren = tilesetWithSubtree.root.children;
+          const rootChild = rootChildren[0];
+          subtreeRootContent = rootChild.content;
+
+          const children = rootChild.children;
+          children.forEach(function (child) {
+            const uri = child._header.content.uri;
+            subtreeChildContents[uri] = child.content;
+          });
+        });
+
+        it("getPropertyInherited returns subtree property by semantic at root level", function () {
+          const feature = new Cesium3DTileFeature(subtreeRootContent, 0);
+          expect(feature.getPropertyInherited("AUTHOR")).toEqual("Cesium");
+        });
+
+        it("getPropertyInherited returns subtree property at root level", function () {
+          const feature = new Cesium3DTileFeature(subtreeRootContent, 0);
+          expect(feature.getPropertyInherited("author")).toEqual("Cesium");
+          expect(feature.getPropertyInherited("credits")).toEqual([
+            "Data Company 1",
+            "Data Company 2",
+            "Data Company 3",
+          ]);
+        });
+
+        it("getPropertyInherited returns subtree property by semantic at child level", function () {
+          const feature = new Cesium3DTileFeature(
+            subtreeChildContents["content/1/0/0.b3dm"],
+            0
+          );
+          expect(feature.getPropertyInherited("AUTHOR")).toEqual("Cesium");
+        });
+
+        it("getPropertyInherited returns subtree property at root level", function () {
+          const feature = new Cesium3DTileFeature(
+            subtreeChildContents["content/1/0/0.b3dm"],
+            0
+          );
+          expect(feature.getPropertyInherited("author")).toEqual("Cesium");
+          expect(feature.getPropertyInherited("credits")).toEqual([
+            "Data Company 1",
+            "Data Company 2",
+            "Data Company 3",
+          ]);
+        });
+
+        it("getPropertyInherited returns tile property that is shared by subtree at root level", function () {
+          const feature = new Cesium3DTileFeature(subtreeRootContent, 0);
+          expect(feature.getPropertyInherited("Height")).toBeInstanceOf(Number);
+          expect(feature.getPropertyInherited("Height")).not.toEqual(1000);
+        });
+
+        it("getPropertyInherited returns tile property that is shared by subtree at child level", function () {
+          const childFeature = new Cesium3DTileFeature(
+            subtreeChildContents["content/1/0/0.b3dm"],
+            0
+          );
+          const rootFeature = new Cesium3DTileFeature(subtreeRootContent, 0);
+
+          const childHeight = childFeature.getPropertyInherited("Height");
+          const rootHeight = rootFeature.getPropertyInherited("Height");
+
+          expect(rootHeight).toBeInstanceOf(Number);
+          expect(childHeight).toBeInstanceOf(Number);
+
+          expect(childHeight).not.toEqual(1000);
+          expect(childHeight).not.toEqual(rootHeight);
+        });
       });
     });
   },
