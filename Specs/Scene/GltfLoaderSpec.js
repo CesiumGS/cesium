@@ -85,6 +85,8 @@ describe(
     const duckDraco = "./Data/Models/GltfLoader/Duck/glTF-Draco/Duck.gltf";
     const boomBoxSpecularGlossiness =
       "./Data/Models/GltfLoader/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
+    const largeFeatureIdTexture =
+      "./Data/Models/GltfLoader/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
 
     let scene;
     const gltfLoaders = [];
@@ -868,6 +870,8 @@ describe(
         expect(featureIdTexture).toBeInstanceOf(
           ModelComponents.FeatureIdTexture
         );
+        expect(featureIdTexture.featureCount).toEqual(256);
+        expect(featureIdTexture.nullFeatureId).not.toBeDefined();
         expect(featureIdTexture.propertyTableId).toBe(0);
         expect(featureIdTexture.textureReader.channels).toBe("r");
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
@@ -932,6 +936,8 @@ describe(
         expect(featureIdTexture).toBeInstanceOf(
           ModelComponents.FeatureIdTexture
         );
+        expect(featureIdTexture.featureCount).toEqual(256);
+        expect(featureIdTexture.nullFeatureId).not.toBeDefined();
         expect(featureIdTexture.propertyTableId).toBe(0);
         expect(featureIdTexture.textureReader.channels).toBe("r");
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
@@ -976,6 +982,104 @@ describe(
       });
     });
 
+    it("Loads model with multi-channel feature ID textures", function () {
+      return loadGltf(largeFeatureIdTexture).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const material = primitive.material;
+        const baseColorTexture = material.metallicRoughness.baseColorTexture;
+        const featureMetadata = components.featureMetadata;
+        expect(featureMetadata).not.toBeDefined();
+
+        expect(baseColorTexture.texCoord).toBe(0);
+        expect(primitive.featureIds.length).toBe(7);
+        expect(primitive.propertyTextureIds).toEqual([]);
+
+        let featureIdTexture = primitive.featureIds[0];
+        expect(featureIdTexture).toBeInstanceOf(
+          ModelComponents.FeatureIdTexture
+        );
+        expect(featureIdTexture.featureCount).toEqual(1048576);
+        expect(featureIdTexture.nullFeatureId).not.toBeDefined();
+        expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.textureReader.channels).toBe("rgba");
+        expect(featureIdTexture.textureReader.texCoord).toBe(0);
+        const texture = featureIdTexture.textureReader.texture;
+        expect(texture.width).toBe(1024);
+        expect(texture.height).toBe(1024);
+        expect(texture.sampler).toBe(Sampler.NEAREST);
+
+        featureIdTexture = primitive.featureIds[1];
+        expect(featureIdTexture).toBeInstanceOf(
+          ModelComponents.FeatureIdTexture
+        );
+        expect(featureIdTexture.featureCount).toEqual(1048576);
+        expect(featureIdTexture.nullFeatureId).not.toBeDefined();
+        expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.textureReader.channels).toBe("rgb");
+        expect(featureIdTexture.textureReader.texCoord).toBe(0);
+        // All the feature ID textures use the same glTF texture
+        expect(featureIdTexture.textureReader.texture).toBe(texture);
+
+        featureIdTexture = primitive.featureIds[2];
+        expect(featureIdTexture).toBeInstanceOf(
+          ModelComponents.FeatureIdTexture
+        );
+        expect(featureIdTexture.featureCount).toEqual(256);
+        expect(featureIdTexture.nullFeatureId).not.toBeDefined();
+        expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.textureReader.channels).toBe("g");
+        expect(featureIdTexture.textureReader.texCoord).toBe(0);
+        expect(featureIdTexture.textureReader.texture).toBe(texture);
+
+        featureIdTexture = primitive.featureIds[3];
+        expect(featureIdTexture).toBeInstanceOf(
+          ModelComponents.FeatureIdTexture
+        );
+        expect(featureIdTexture.featureCount).toEqual(65536);
+        expect(featureIdTexture.nullFeatureId).not.toBeDefined();
+        expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.textureReader.channels).toBe("ba");
+        expect(featureIdTexture.textureReader.texCoord).toBe(0);
+        expect(featureIdTexture.textureReader.texture).toBe(texture);
+
+        featureIdTexture = primitive.featureIds[4];
+        expect(featureIdTexture).toBeInstanceOf(
+          ModelComponents.FeatureIdTexture
+        );
+        expect(featureIdTexture.featureCount).toEqual(65536);
+        expect(featureIdTexture.nullFeatureId).not.toBeDefined();
+        expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.textureReader.channels).toBe("gr");
+        expect(featureIdTexture.textureReader.texCoord).toBe(0);
+        expect(featureIdTexture.textureReader.texture).toBe(texture);
+
+        featureIdTexture = primitive.featureIds[5];
+        expect(featureIdTexture).toBeInstanceOf(
+          ModelComponents.FeatureIdTexture
+        );
+        expect(featureIdTexture.featureCount).toEqual(1048576);
+        expect(featureIdTexture.nullFeatureId).not.toBeDefined();
+        expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.textureReader.channels).toBe("agbb");
+        expect(featureIdTexture.textureReader.texCoord).toBe(0);
+        expect(featureIdTexture.textureReader.texture).toBe(texture);
+
+        featureIdTexture = primitive.featureIds[6];
+        expect(featureIdTexture).toBeInstanceOf(
+          ModelComponents.FeatureIdTexture
+        );
+        expect(featureIdTexture.featureCount).toEqual(255);
+        expect(featureIdTexture.nullFeatureId).toBe(10);
+        expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.textureReader.channels).toBe("g");
+        expect(featureIdTexture.textureReader.texCoord).toBe(0);
+        expect(featureIdTexture.textureReader.texture).toBe(texture);
+      });
+    });
+
     it("loads BuildingsMetadata", function () {
       return loadGltf(buildingsMetadata).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -1002,7 +1106,7 @@ describe(
         expect(positionAttribute).toBeDefined();
         expect(normalAttribute).toBeDefined();
 
-        expect(featureIdAttribute.name).toBe("FEATURE_ID_0");
+        expect(featureIdAttribute.name).toBe("_FEATURE_ID_0");
         expect(featureIdAttribute.semantic).toBe(
           VertexAttributeSemantic.FEATURE_ID
         );
@@ -1030,6 +1134,8 @@ describe(
         expect(featureIdAccessor).toBeInstanceOf(
           ModelComponents.FeatureIdAttribute
         );
+        expect(featureIdAccessor.featureCount).toEqual(10);
+        expect(featureIdAccessor.nullFeatureId).not.toBeDefined();
         expect(featureIdAccessor.propertyTableId).toBe(0);
         expect(featureIdAccessor.setIndex).toBe(0);
 
@@ -1038,6 +1144,8 @@ describe(
         expect(featureIdImplicit).toBeInstanceOf(
           ModelComponents.FeatureIdImplicitRange
         );
+        expect(featureIdImplicit.featureCount).toEqual(5);
+        expect(featureIdImplicit.nullFeatureId).not.toBeDefined();
         expect(featureIdImplicit.propertyTableId).toBe(0);
         expect(featureIdImplicit.setIndex).not.toBeDefined();
         expect(featureIdImplicit.offset).toBe(0);
@@ -1048,6 +1156,8 @@ describe(
         expect(featureIdConstant).toBeInstanceOf(
           ModelComponents.FeatureIdImplicitRange
         );
+        expect(featureIdConstant.featureCount).toEqual(1);
+        expect(featureIdConstant.nullFeatureId).not.toBeDefined();
         expect(featureIdConstant.propertyTableId).not.toBeDefined();
         expect(featureIdConstant.offset).toBe(3);
         expect(featureIdConstant.repeat).not.toBeDefined();
@@ -1100,6 +1210,8 @@ describe(
         expect(featureIdAttributeMapping0).toBeInstanceOf(
           ModelComponents.FeatureIdImplicitRange
         );
+        expect(featureIdAttributeMapping0.featureCount).toEqual(1000);
+        expect(featureIdAttributeMapping0.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping0.propertyTableId).toBe(1);
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
@@ -1108,6 +1220,8 @@ describe(
         expect(featureIdAttributeMapping1).toBeInstanceOf(
           ModelComponents.FeatureIdAttribute
         );
+        expect(featureIdAttributeMapping1.featureCount).toEqual(3);
+        expect(featureIdAttributeMapping1.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping1.propertyTableId).toBe(0);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
 
@@ -1201,6 +1315,8 @@ describe(
         expect(featureIdAttributeMapping0).toBeInstanceOf(
           ModelComponents.FeatureIdImplicitRange
         );
+        expect(featureIdAttributeMapping0.featureCount).toEqual(1000);
+        expect(featureIdAttributeMapping0.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping0.propertyTableId).toBe(1);
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
@@ -1209,6 +1325,8 @@ describe(
         expect(featureIdAttributeMapping1).toBeInstanceOf(
           ModelComponents.FeatureIdAttribute
         );
+        expect(featureIdAttributeMapping1.featureCount).toEqual(3);
+        expect(featureIdAttributeMapping1.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping1.propertyTableId).toBe(0);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
 
@@ -1408,6 +1526,8 @@ describe(
         expect(featureIdAttributeMapping0).toBeInstanceOf(
           ModelComponents.FeatureIdImplicitRange
         );
+        expect(featureIdAttributeMapping0.featureCount).toEqual(4);
+        expect(featureIdAttributeMapping0.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping0.propertyTableId).toBe(0);
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
@@ -1416,6 +1536,8 @@ describe(
         expect(featureIdAttributeMapping1).toBeInstanceOf(
           ModelComponents.FeatureIdAttribute
         );
+        expect(featureIdAttributeMapping1.featureCount).toEqual(2);
+        expect(featureIdAttributeMapping1.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping1.propertyTableId).toBe(1);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
 
@@ -1596,6 +1718,8 @@ describe(
         expect(featureIdAttributeMapping0).toBeInstanceOf(
           ModelComponents.FeatureIdImplicitRange
         );
+        expect(featureIdAttributeMapping0.featureCount).toEqual(4);
+        expect(featureIdAttributeMapping0.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping0.propertyTableId).toBe(0);
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
@@ -1604,6 +1728,8 @@ describe(
         expect(featureIdAttributeMapping1).toBeInstanceOf(
           ModelComponents.FeatureIdAttribute
         );
+        expect(featureIdAttributeMapping1.featureCount).toEqual(2);
+        expect(featureIdAttributeMapping1.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping1.propertyTableId).toBe(1);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
 
@@ -1685,7 +1811,7 @@ describe(
           );
           const featureIdAttribute = getAttribute(
             instancedAttributes,
-            InstanceAttributeSemantic.FEATURE_ID_0
+            InstanceAttributeSemantic.FEATURE_ID
           );
 
           expect(positionAttribute).toBeDefined();
@@ -1804,7 +1930,7 @@ describe(
           );
           const featureIdAttribute = getAttribute(
             instancedAttributes,
-            InstanceAttributeSemantic.FEATURE_ID_0
+            InstanceAttributeSemantic.FEATURE_ID
           );
 
           expect(positionAttribute).toBeDefined();

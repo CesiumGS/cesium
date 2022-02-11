@@ -284,7 +284,7 @@ function processDracoAttributes(loader, draco, result) {
   if (defined(result.BATCH_ID)) {
     const batchIds = result.BATCH_ID.array;
     parsedContent.batchIds = {
-      name: "FEATURE_ID",
+      name: "_FEATURE_ID",
       semantic: VertexAttributeSemantic.FEATURE_ID,
       setIndex: 0,
       typedArray: batchIds,

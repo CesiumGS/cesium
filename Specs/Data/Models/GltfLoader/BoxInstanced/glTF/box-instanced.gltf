@@ -86,21 +86,21 @@
             "TRANSLATION": 3,
             "ROTATION": 4,
             "SCALE": 5,
-            "FEATURE_ID_0": 6
+            "_FEATURE_ID_0": 6
           }
         },
         "EXT_mesh_features": {
-          "propertyTables": [
-            0,
-            1
-          ],
           "featureIds": [
             {
+              "propertyTable": 0,
               "offset": 0,
-              "repeat": 1
+              "repeat": 1,
+              "featureCount": 4
             },
             {
-              "attribute": 0
+              "propertyTable": 1,
+              "attribute": 0,
+              "featureCount": 2
             }
           ]
         }

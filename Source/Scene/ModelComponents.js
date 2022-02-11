@@ -336,6 +336,22 @@ function Indices() {
  */
 function FeatureIdAttribute() {
   /**
+   * How many unique features are defined in this set of feature IDs
+   *
+   * @type {Number}
+   * @private
+   */
+  this.featureCount = undefined;
+
+  /**
+   * This value indicates that no feature is indicated with this vertex
+   *
+   * @type {Number}
+   * @private
+   */
+  this.nullFeatureId = undefined;
+
+  /**
    * The ID of the feature table that feature IDs index into. If undefined,
    * feature IDs are used for classification, but no metadata is associated.
    *
@@ -365,6 +381,22 @@ function FeatureIdAttribute() {
  * @private
  */
 function FeatureIdImplicitRange() {
+  /**
+   * How many unique features are defined in this set of feature IDs
+   *
+   * @type {Number}
+   * @private
+   */
+  this.featureCount = undefined;
+
+  /**
+   * This value indicates that no feature is indicated with this vertex
+   *
+   * @type {Number}
+   * @private
+   */
+  this.nullFeatureId = undefined;
+
   /**
    * The ID of the feature table that feature IDs index into. If undefined,
    * feature IDs are used for classification, but no metadata is associated.
@@ -402,7 +434,24 @@ function FeatureIdImplicitRange() {
  */
 function FeatureIdTexture() {
   /**
-   * The ID of the feature table that feature IDs index into.
+   * How many unique features are defined in this set of feature IDs
+   *
+   * @type {Number}
+   * @private
+   */
+  this.featureCount = undefined;
+
+  /**
+   * This value indicates that no feature is indicated with this texel
+   *
+   * @type {Number}
+   * @private
+   */
+  this.nullFeatureId = undefined;
+
+  /**
+   * The ID of the feature table that feature IDs index into. If undefined,
+   * feature IDs are used for classification, but no metadata is associated.
    *
    * @type {String}
    * @private

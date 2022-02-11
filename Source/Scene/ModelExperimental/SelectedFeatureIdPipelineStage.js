@@ -45,11 +45,12 @@ SelectedFeatureIdPipelineStage.process = function (
   const model = renderResources.model;
   const node = renderResources.runtimeNode.node;
   const selectedFeatureIds = getSelectedFeatureIds(model, node, primitive);
+  const shaderDestination = selectedFeatureIds.shaderDestination;
 
   shaderBuilder.addDefine(
     "HAS_SELECTED_FEATURE_ID",
     undefined,
-    selectedFeatureIds.shaderDestination
+    shaderDestination
   );
 
   // Add a define to insert the variable to use.
@@ -58,7 +59,7 @@ SelectedFeatureIdPipelineStage.process = function (
   shaderBuilder.addDefine(
     "SELECTED_FEATURE_ID",
     selectedFeatureIds.variableName,
-    selectedFeatureIds.shaderDestination
+    shaderDestination
   );
 
   // Add a define to the shader to distinguish feature ID attributes from
@@ -67,10 +68,24 @@ SelectedFeatureIdPipelineStage.process = function (
   shaderBuilder.addDefine(
     selectedFeatureIds.featureIdDefine,
     undefined,
-    selectedFeatureIds.shaderDestination
+    shaderDestination
   );
 
   updateFeatureStruct(shaderBuilder);
+
+  const nullFeatureId = selectedFeatureIds.featureIds.nullFeatureId;
+  const uniformMap = renderResources.uniformMap;
+  if (defined(nullFeatureId)) {
+    shaderBuilder.addDefine(
+      "HAS_NULL_FEATURE_ID",
+      undefined,
+      shaderDestination
+    );
+    shaderBuilder.addUniform("int", "model_nullFeatureId", shaderDestination);
+    uniformMap.model_nullFeatureId = function () {
+      return nullFeatureId;
+    };
+  }
 
   if (selectedFeatureIds.shaderDestination === ShaderDestination.BOTH) {
     shaderBuilder.addVertexLines([SelectedFeatureIdStageCommon]);

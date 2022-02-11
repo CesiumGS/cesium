@@ -265,6 +265,13 @@ This struct is dynamically generated to gather all the various feature IDs into
 a single collection, regardless of whether the value came from an attribute,
 texture or varying.
 
+Feature IDs are represented as a GLSL `int`, though in WebGL 1 this has a couple
+limitations:
+
+- Above `2^24`, values may have a loss of precision since WebGL 1 implements
+  `highp int` as a floating point value.
+- Ideally the type would be `uint` but this is not available until WebGL 2
+
 ### 3D Tiles 1.0 Batch IDs
 
 In 3D Tiles 1.0, the same concept of identifying features within a primitive
@@ -303,28 +310,29 @@ For example, suppose we had a glTF primitive with the following feature IDs:
       "EXT_mesh_gpu_instancing": {
         "attributes": {
           "TRANSLATION": 3,
-          "FEATURE_ID_0": 4
+          "_FEATURE_ID_0": 4
         }
       },
       "EXT_mesh_features": {
-        "propertyTables": [0, 1],
         "featureIds": [
           {
             // Feature ID attribute from implicit range
             //
             // Vertex Shader: vsInput.featureIds.instanceFeatureId_0
             // Fragment Shader: fsInput.featureIds.instanceFeatureId_0
+            "propertyTable": 0,
             "offset": 0,
             "repeat": 1
           },
           {
-            // Feature ID attribute. This corresponds to FEATURE_ID_0 from the
+            // Feature ID attribute. This corresponds to _FEATURE_ID_0 from the
             // instancing extension above. Note that this is
             // labeled as instanceFeatureId_1 since it is the second feature ID
             // set in the featureIds array
             //
             // Vertex Shader: vsInput.featureIds.instanceFeatureId_1
             // Fragment Shader: fsInput.featureIds.instanceFeatureId_1
+            "propertyTable": 1,
             "attribute": 0
           }
         ]
@@ -338,18 +346,18 @@ For example, suppose we had a glTF primitive with the following feature IDs:
       {
         "attributes": {
           "POSITION": 0,
-          "FEATURE_ID_0": 1,
-          "FEATURE_ID_1": 2
+          "_FEATURE_ID_0": 1,
+          "_FEATURE_ID_1": 2
         },
         "extensions": {
           "EXT_mesh_features": {
-            "propertyTables": [2, 3, 4, 5],
             "featureIds": [
               {
                 // Feature ID Texture
                 //
                 // Vertex Shader: (Not supported)
                 // Fragment Shader: fsInput.featureIds.featureId_0
+                "propertyTable": 2,
                 "index": 0,
                 "texCoord": 0,
                 "channel": 0
@@ -359,25 +367,28 @@ For example, suppose we had a glTF primitive with the following feature IDs:
                 //
                 // Vertex Shader: vsInput.featureIds.featureId_1
                 // Fragment Shader: fsInput.featureIds.featureId_1
+                "propertyTable": 3,
                 "offset": 0,
                 "repeat": 3
               },
               {
-                // Feature ID Attribute (FEATURE_ID_0). Note that this
+                // Feature ID Attribute (_FEATURE_ID_0). Note that this
                 // is labeled featureId_2 for its index in the featureIds
                 // array
                 //
                 // Vertex Shader: vsInput.featureIds.featureId_2
                 // Fragment Shader: fsInput.featureIds.featureId_2
+                "propertyTable": 4,
                 "attribute": 0
               },
               {
-                // Feature ID Attribute (FEATURE_ID_1). Note that this
+                // Feature ID Attribute (_FEATURE_ID_1). Note that this
                 // is labeled featureId_3 for its index in the featureIds
                 // array
                 //
                 // Vertex Shader: vsInput.featureIds.featureId_3
                 // Fragment Shader: fsInput.featureIds.featureId_3
+                "propertyTable": 5,
                 "attribute": 1
               }
             ]
@@ -434,7 +445,7 @@ to the `EXT_feature_metadata` extension:
                 }
               },
               {
-                // Feature ID attribute. This corresponds to FEATURE_ID_0 from the
+                // Feature ID attribute. This corresponds to _FEATURE_ID_0 from the
                 // instancing extension above. Note that this is
                 // labeled as instanceFeatureId_1 since it is the second feature ID
                 // set in the featureIds array
@@ -477,7 +488,7 @@ to the `EXT_feature_metadata` extension:
                 }
               },
               {
-                // Feature ID Attribute (FEATURE_ID_0). Note that this
+                // Feature ID Attribute (_FEATURE_ID_0). Note that this
                 // is labeled featureId_1 for its index in the featureIds
                 // array
                 //
@@ -489,7 +500,7 @@ to the `EXT_feature_metadata` extension:
                 }
               },
               {
-                // Feature ID Attribute (FEATURE_ID_1). Note that this
+                // Feature ID Attribute (_FEATURE_ID_1). Note that this
                 // is labeled featureId_2 for its index in the featureIds
                 // array
                 //

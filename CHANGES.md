@@ -11,6 +11,7 @@
 - Added support for shadows in `ModelExperimental`. [#10077](https://github.com/CesiumGS/cesium/pull/10077)
 - Added the ability to load implicit tiling subtree files from JSON. [#10086](https://github.com/CesiumGS/cesium/pull/10086)
 - Added support for subtree metadata in tilesets with implicit tiling. [#10093](https://github.com/CesiumGS/cesium/pull/10093)
+- Updated Feature ID parsing to match changes to the EXT_mesh_features specification. [#10087](https://github.com/CesiumGS/cesium/pull/10087)
 
 ##### Fixes :wrench:
 
