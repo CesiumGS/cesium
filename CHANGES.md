@@ -8,6 +8,7 @@
 - Added the ability to toggle back-face culling in `ModelExperimental`. [#10070](https://github.com/CesiumGS/cesium/pull/10070)
 - Added `depthPlaneEllipsoidOffset` to Viewer and Scene constructors to address rendering artefacts below ellipsoid zero elevation. [#9200](https://github.com/CesiumGS/cesium/pull/9200)
 - Added support for `debugColorTiles` in `ModelExperimental`. [#10071](https://github.com/CesiumGS/cesium/pull/10071)
+- Added `minimumPixelSize` to `ModelExperimental`. [#10092](https://github.com/CesiumGS/cesium/pull/10092)
 
 ### 1.90 - 2022-02-01
 
