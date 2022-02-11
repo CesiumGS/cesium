@@ -7,7 +7,7 @@
  * @see Clock
  * @see ClockStep
  */
-var ClockRange = {
+const ClockRange = {
   /**
    * {@link Clock#tick} will always advances the clock in its current direction.
    *

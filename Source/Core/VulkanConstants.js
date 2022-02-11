@@ -6,7 +6,7 @@
  * @enum {Number}
  * @private
  */
-var VulkanConstants = {
+const VulkanConstants = {
   VK_FORMAT_UNDEFINED: 0,
   VK_FORMAT_R4G4_UNORM_PACK8: 1,
   VK_FORMAT_R4G4B4A4_UNORM_PACK16: 2,

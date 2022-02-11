@@ -10,58 +10,56 @@ import RuntimeError from "../Core/RuntimeError.js";
  * @namespace B3dmParser
  * @private
  */
-var B3dmParser = {};
+const B3dmParser = {};
 B3dmParser._deprecationWarning = deprecationWarning;
 
-var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
 /**
  * Parses the contents of a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Batched3DModel|Batched 3D Model}.
  *
  * @private
  *
- * @param {ArrayBuffer} arrayBuffer The array buffer containing the B3DM.
- * @param {Number} [byteOffset=0] The byte offset of the beginning of the B3DM in the array buffer.
- * @returns {Object} Returns an object with the batch length, feature table (binary and json), batch table (binary and json) and glTF parts of the B3DM.
+ * @param {ArrayBuffer} arrayBuffer The array buffer containing the b3dm.
+ * @param {Number} [byteOffset=0] The byte offset of the beginning of the b3dm in the array buffer.
+ * @returns {Object} Returns an object with the batch length, feature table (binary and json), batch table (binary and json) and glTF parts of the b3dm.
  */
 B3dmParser.parse = function (arrayBuffer, byteOffset) {
-  var byteStart = defaultValue(byteOffset, 0);
+  const byteStart = defaultValue(byteOffset, 0);
   //>>includeStart('debug', pragmas.debug);
   Check.defined("arrayBuffer", arrayBuffer);
   //>>includeEnd('debug');
 
   byteOffset = byteStart;
 
-  var uint8Array = new Uint8Array(arrayBuffer);
-  var view = new DataView(arrayBuffer);
+  const uint8Array = new Uint8Array(arrayBuffer);
+  const view = new DataView(arrayBuffer);
   byteOffset += sizeOfUint32; // Skip magic
 
-  var version = view.getUint32(byteOffset, true);
+  const version = view.getUint32(byteOffset, true);
   if (version !== 1) {
     throw new RuntimeError(
-      "Only Batched 3D Model version 1 is supported.  Version " +
-        version +
-        " is not."
+      `Only Batched 3D Model version 1 is supported.  Version ${version} is not.`
     );
   }
   byteOffset += sizeOfUint32;
 
-  var byteLength = view.getUint32(byteOffset, true);
+  const byteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var featureTableJsonByteLength = view.getUint32(byteOffset, true);
+  let featureTableJsonByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var featureTableBinaryByteLength = view.getUint32(byteOffset, true);
+  let featureTableBinaryByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var batchTableJsonByteLength = view.getUint32(byteOffset, true);
+  let batchTableJsonByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
+  let batchTableBinaryByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var batchLength;
+  let batchLength;
 
   // Legacy header #1: [batchLength] [batchTableByteLength]
   // Legacy header #2: [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength]
@@ -95,7 +93,7 @@ B3dmParser.parse = function (arrayBuffer, byteOffset) {
     );
   }
 
-  var featureTableJson;
+  let featureTableJson;
   if (featureTableJsonByteLength === 0) {
     featureTableJson = {
       BATCH_LENGTH: defaultValue(batchLength, 0),
@@ -109,15 +107,15 @@ B3dmParser.parse = function (arrayBuffer, byteOffset) {
     byteOffset += featureTableJsonByteLength;
   }
 
-  var featureTableBinary = new Uint8Array(
+  const featureTableBinary = new Uint8Array(
     arrayBuffer,
     byteOffset,
     featureTableBinaryByteLength
   );
   byteOffset += featureTableBinaryByteLength;
 
-  var batchTableJson;
-  var batchTableBinary;
+  let batchTableJson;
+  let batchTableBinary;
   if (batchTableJsonByteLength > 0) {
     // PERFORMANCE_IDEA: is it possible to allocate this on-demand?  Perhaps keep the
     // arraybuffer/string compressed in memory and then decompress it when it is first accessed.
@@ -144,12 +142,12 @@ B3dmParser.parse = function (arrayBuffer, byteOffset) {
     }
   }
 
-  var gltfByteLength = byteStart + byteLength - byteOffset;
+  const gltfByteLength = byteStart + byteLength - byteOffset;
   if (gltfByteLength === 0) {
     throw new RuntimeError("glTF byte length must be greater than 0.");
   }
 
-  var gltfView;
+  let gltfView;
   if (byteOffset % 4 === 0) {
     gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
   } else {

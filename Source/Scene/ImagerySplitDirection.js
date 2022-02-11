@@ -8,7 +8,7 @@ import deprecationWarning from "../Core/deprecationWarning.js";
  *
  * @deprecated
  */
-var ImagerySplitDirection = {};
+const ImagerySplitDirection = {};
 
 function warnDeprecated() {
   deprecationWarning(

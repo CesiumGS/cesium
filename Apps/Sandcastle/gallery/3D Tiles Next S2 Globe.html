@@ -46,12 +46,11 @@
         //Sandcastle_Begin
 
         // One World Terrain Base Globe provided by Maxar
-        Cesium.ExperimentalFeatures.enableModelExperimental = true;
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           globe: false,
         });
-        var scene = viewer.scene;
+        const scene = viewer.scene;
 
         viewer.camera.flyTo({
           duration: 0,
@@ -76,7 +75,7 @@
         });
 
         // MAXAR OWT WFF 1.2 Base Globe
-        var tileset = viewer.scene.primitives.add(
+        const tileset = viewer.scene.primitives.add(
           new Cesium.Cesium3DTileset({
             url: Cesium.IonResource.fromAssetId(691510),
             maximumScreenSpaceError: 4,
@@ -85,7 +84,7 @@
 
         // --- Style ---
 
-        var style = new Cesium.Cesium3DTileStyle({
+        const style = new Cesium.Cesium3DTileStyle({
           defines: {
             LandCoverColor: "rgb(${color}[0], ${color}[1], ${color}[2])",
           },
@@ -95,35 +94,34 @@
 
         // --- Custom Shader ---
 
-        var customShader = new Cesium.CustomShader({
+        const customShader = new Cesium.CustomShader({
           uniforms: {
             u_time: {
               type: Cesium.UniformType.FLOAT,
               value: 0,
             },
           },
-          fragmentShaderText: [
-            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
-            "{",
-            "  // NOTE: this is exposing internal details of the shader.",
-            "  float featureId = floor(texture2D(FEATURE_ID_TEXTURE, FEATURE_ID_TEXCOORD).FEATURE_ID_CHANNEL * 255.0 + 0.5);",
-            "  // Use cartesian coordinates but scale to be roughly [-1, 1]",
-            "  vec3 positionWC = fsInput.attributes.positionWC / 6.3e6;",
-            "  if (featureId == 60.0)",
-            "  {",
-            "    // Something like FM synthesis to make irregularly spaced waves",
-            "    float wave = sin(14.0 * positionWC.z - u_time);",
-            "    wave = 0.5 + 0.5 * sin(10.0 * wave * positionWC.z - u_time);",
-            "    // mix in an over-saturated version of the diffuse to make shimmering bands of color",
-            "    material.diffuse = mix(material.diffuse, material.diffuse * 3.0, wave);",
-            "  }",
-            "}",
-          ].join("\n"),
+          fragmentShaderText: `
+            void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+            {
+              float featureId = fsInput.featureIds.featureId_0;
+              // Use cartesian coordinates but scale to be roughly [-1, 1]
+              vec3 positionWC = fsInput.attributes.positionWC / 6.3e6;
+              if (featureId == 60.0)
+              {
+                // Something like FM synthesis to make irregularly spaced waves
+                float wave = sin(14.0 * positionWC.z - u_time);
+                wave = 0.5 + 0.5 * sin(10.0 * wave * positionWC.z - u_time);
+                // mix in an over-saturated version of the diffuse to make shimmering bands of color
+                material.diffuse = mix(material.diffuse, material.diffuse * 3.0, wave);
+              }
+            }
+            `,
         });
 
-        var startTime = performance.now();
-        var customShaderUpdate = function () {
-          var elapsedTimeSeconds = (performance.now() - startTime) / 1000;
+        const startTime = performance.now();
+        const customShaderUpdate = function () {
+          const elapsedTimeSeconds = (performance.now() - startTime) / 1000;
           customShader.setUniform("u_time", elapsedTimeSeconds);
         };
 
@@ -133,10 +131,10 @@
 
         // --- Picking ---
 
-        var enablePicking = true;
-        var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+        let enablePicking = true;
+        const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
 
-        var metadataOverlay = document.createElement("div");
+        const metadataOverlay = document.createElement("div");
         viewer.container.appendChild(metadataOverlay);
         metadataOverlay.className = "backdrop";
         metadataOverlay.style.display = "none";
@@ -150,32 +148,28 @@
         metadataOverlay.style.fontSize = "16px";
         metadataOverlay.style.borderRadius = "4px";
 
-        var tableHtmlScratch;
-        var i;
+        let tableHtmlScratch;
+        let i;
 
         handler.setInputAction(function (movement) {
           if (enablePicking) {
-            var feature = scene.pick(movement.endPosition);
+            const feature = scene.pick(movement.endPosition);
             if (feature instanceof Cesium.Cesium3DTileFeature) {
               metadataOverlay.style.display = "block";
-              metadataOverlay.style.bottom =
-                viewer.canvas.clientHeight - movement.endPosition.y + "px";
-              metadataOverlay.style.left = movement.endPosition.x + "px";
+              metadataOverlay.style.bottom = `${
+                viewer.canvas.clientHeight - movement.endPosition.y
+              }px`;
+              metadataOverlay.style.left = `${movement.endPosition.x}px`;
 
               tableHtmlScratch =
                 "<table><thead><tr><th><tt>Property</tt></th><th><tt>Value</tt></th></tr></thead><tbody>";
 
-              var propertyNames = feature.getPropertyNames();
-              var length = propertyNames.length;
-              for (var i = 0; i < length; ++i) {
-                var propertyName = propertyNames[i];
-                var propertyValue = feature.getProperty(propertyName);
-                tableHtmlScratch +=
-                  "<tr><td><tt>" +
-                  propertyName +
-                  "</tt></td><td><tt>" +
-                  propertyValue +
-                  "</tt></td></tr>";
+              const propertyNames = feature.getPropertyNames();
+              const length = propertyNames.length;
+              for (let i = 0; i < length; ++i) {
+                const propertyName = propertyNames[i];
+                const propertyValue = feature.getProperty(propertyName);
+                tableHtmlScratch += `<tr><td><tt>${propertyName}</tt></td><td><tt>${propertyValue}</tt></td></tr>`;
               }
               tableHtmlScratch += "</tbody></table>";
               metadataOverlay.innerHTML = tableHtmlScratch;
@@ -187,7 +181,7 @@
 
         // --- UI ---
 
-        var modes = [
+        const modes = [
           {
             text: "Globe View",
             onselect: function () {

@@ -13,10 +13,12 @@ void filterByPassType(inout vec3 positionMC, vec4 featureColor)
     }
 }
 
-void cpuStylingStage(inout vec3 positionMC, inout Feature feature)
+void cpuStylingStage(inout vec3 positionMC, inout SelectedFeature feature)
 {
     float show = ceil(feature.color.a);
     positionMC *= show;
 
+    #ifdef HAS_SELECTED_FEATURE_ID_ATTRIBUTE
     filterByPassType(positionMC, feature.color);
+    #endif
 }

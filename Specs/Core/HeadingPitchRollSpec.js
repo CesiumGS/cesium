@@ -3,17 +3,17 @@ import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { Quaternion } from "../../Source/Cesium.js";
 
 describe("Core/HeadingPitchRoll", function () {
-  var deg2rad = CesiumMath.RADIANS_PER_DEGREE;
+  const deg2rad = CesiumMath.RADIANS_PER_DEGREE;
 
   it("construct with default values", function () {
-    var headingPitchRoll = new HeadingPitchRoll();
+    const headingPitchRoll = new HeadingPitchRoll();
     expect(headingPitchRoll.heading).toEqual(0.0);
     expect(headingPitchRoll.pitch).toEqual(0.0);
     expect(headingPitchRoll.roll).toEqual(0.0);
   });
 
   it("construct with all values", function () {
-    var headingPitchRoll = new HeadingPitchRoll(
+    const headingPitchRoll = new HeadingPitchRoll(
       1.0 * deg2rad,
       2.0 * deg2rad,
       3.0 * deg2rad
@@ -36,7 +36,7 @@ describe("Core/HeadingPitchRoll", function () {
   });
 
   it("conversion from quaternion", function () {
-    var testingTab = [
+    const testingTab = [
       [0, 0, 0],
       [90 * deg2rad, 0, 0],
       [-90 * deg2rad, 0, 0],
@@ -47,14 +47,14 @@ describe("Core/HeadingPitchRoll", function () {
       [30 * deg2rad, 30 * deg2rad, 30 * deg2rad],
       [-30 * deg2rad, -30 * deg2rad, 45 * deg2rad],
     ];
-    var hpr = new HeadingPitchRoll();
-    for (var i = 0; i < testingTab.length; i++) {
-      var init = testingTab[i];
+    const hpr = new HeadingPitchRoll();
+    for (let i = 0; i < testingTab.length; i++) {
+      const init = testingTab[i];
       hpr.heading = init[0];
       hpr.pitch = init[1];
       hpr.roll = init[2];
 
-      var result = HeadingPitchRoll.fromQuaternion(
+      const result = HeadingPitchRoll.fromQuaternion(
         Quaternion.fromHeadingPitchRoll(hpr)
       );
       expect(init[0]).toEqualEpsilon(result.heading, CesiumMath.EPSILON11);
@@ -64,18 +64,18 @@ describe("Core/HeadingPitchRoll", function () {
   });
 
   it("it should return the correct pitch, even with a quaternion rounding error", function () {
-    var q = new Quaternion(
+    const q = new Quaternion(
       8.801218199179452e-17,
       -0.7071067801637715,
       -8.801218315071006e-17,
       -0.7071067822093238
     );
-    var result = HeadingPitchRoll.fromQuaternion(q);
+    const result = HeadingPitchRoll.fromQuaternion(q);
     expect(result.pitch).toEqual(-(Math.PI / 2));
   });
 
   it("conversion from degrees", function () {
-    var testingTab = [
+    const testingTab = [
       [0, 0, 0],
       [90, 0, 0],
       [-90, 0, 0],
@@ -86,9 +86,9 @@ describe("Core/HeadingPitchRoll", function () {
       [30, 30, 30],
       [-30, -30, 45],
     ];
-    for (var i = 0; i < testingTab.length; i++) {
-      var init = testingTab[i];
-      var result = HeadingPitchRoll.fromDegrees(init[0], init[1], init[2]);
+    for (let i = 0; i < testingTab.length; i++) {
+      const init = testingTab[i];
+      const result = HeadingPitchRoll.fromDegrees(init[0], init[1], init[2]);
       expect(init[0] * deg2rad).toEqualEpsilon(
         result.heading,
         CesiumMath.EPSILON11
@@ -105,44 +105,44 @@ describe("Core/HeadingPitchRoll", function () {
   });
 
   it("fromDegrees with result", function () {
-    var headingDeg = -115;
-    var pitchDeg = 37;
-    var rollDeg = 40;
-    var headingRad = headingDeg * deg2rad;
-    var pitchRad = pitchDeg * deg2rad;
-    var rollRad = rollDeg * deg2rad;
-    var result = new HeadingPitchRoll();
-    var actual = HeadingPitchRoll.fromDegrees(
+    const headingDeg = -115;
+    const pitchDeg = 37;
+    const rollDeg = 40;
+    const headingRad = headingDeg * deg2rad;
+    const pitchRad = pitchDeg * deg2rad;
+    const rollRad = rollDeg * deg2rad;
+    const result = new HeadingPitchRoll();
+    const actual = HeadingPitchRoll.fromDegrees(
       headingDeg,
       pitchDeg,
       rollDeg,
       result
     );
-    var expected = new HeadingPitchRoll(headingRad, pitchRad, rollRad);
+    const expected = new HeadingPitchRoll(headingRad, pitchRad, rollRad);
     expect(actual).toEqual(expected);
     expect(actual).toBe(result);
   });
 
   it("clone with a result parameter", function () {
-    var headingPitchRoll = new HeadingPitchRoll(
+    const headingPitchRoll = new HeadingPitchRoll(
       1.0 * deg2rad,
       2.0 * deg2rad,
       3.0 * deg2rad
     );
-    var result = new HeadingPitchRoll();
-    var returnedResult = HeadingPitchRoll.clone(headingPitchRoll, result);
+    const result = new HeadingPitchRoll();
+    const returnedResult = HeadingPitchRoll.clone(headingPitchRoll, result);
     expect(headingPitchRoll).not.toBe(result);
     expect(result).toBe(returnedResult);
     expect(headingPitchRoll).toEqual(result);
   });
 
   it("clone works with a result parameter that is an input parameter", function () {
-    var headingPitchRoll = new HeadingPitchRoll(
+    const headingPitchRoll = new HeadingPitchRoll(
       1.0 * deg2rad,
       2.0 * deg2rad,
       3.0 * deg2rad
     );
-    var returnedResult = HeadingPitchRoll.clone(
+    const returnedResult = HeadingPitchRoll.clone(
       headingPitchRoll,
       headingPitchRoll
     );
@@ -150,7 +150,7 @@ describe("Core/HeadingPitchRoll", function () {
   });
 
   it("equals", function () {
-    var headingPitchRoll = new HeadingPitchRoll(1.0, 2.0, 3.0);
+    const headingPitchRoll = new HeadingPitchRoll(1.0, 2.0, 3.0);
     expect(
       HeadingPitchRoll.equals(
         headingPitchRoll,
@@ -179,7 +179,7 @@ describe("Core/HeadingPitchRoll", function () {
   });
 
   it("equalsEpsilon", function () {
-    var headingPitchRoll = new HeadingPitchRoll(1.0, 2.0, 3.0);
+    let headingPitchRoll = new HeadingPitchRoll(1.0, 2.0, 3.0);
     expect(
       headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(1.0, 2.0, 3.0), 0.0)
     ).toEqual(true);
@@ -260,7 +260,7 @@ describe("Core/HeadingPitchRoll", function () {
   });
 
   it("toString", function () {
-    var headingPitchRoll = new HeadingPitchRoll(1.123, 2.345, 6.789);
+    const headingPitchRoll = new HeadingPitchRoll(1.123, 2.345, 6.789);
     expect(headingPitchRoll.toString()).toEqual("(1.123, 2.345, 6.789)");
   });
 
@@ -270,7 +270,7 @@ describe("Core/HeadingPitchRoll", function () {
     }).toThrowDeveloperError();
   });
 
-  var scratchHeadingPitchRoll = new HeadingPitchRoll();
+  const scratchHeadingPitchRoll = new HeadingPitchRoll();
 
   it("fromDegrees throws with no heading parameter", function () {
     expect(function () {

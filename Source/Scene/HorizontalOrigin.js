@@ -13,7 +13,7 @@
  * @see Billboard#horizontalOrigin
  * @see Label#horizontalOrigin
  */
-var HorizontalOrigin = {
+const HorizontalOrigin = {
   /**
    * The origin is at the horizontal center of the object.
    *

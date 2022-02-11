@@ -29,16 +29,16 @@ function arrayFill(array, value, start, end) {
     return array.fill(value, start, end);
   }
 
-  var length = array.length >>> 0;
-  var relativeStart = defaultValue(start, 0);
+  const length = array.length >>> 0;
+  const relativeStart = defaultValue(start, 0);
   // If negative, find wrap around position
-  var k =
+  let k =
     relativeStart < 0
       ? Math.max(length + relativeStart, 0)
       : Math.min(relativeStart, length);
-  var relativeEnd = defaultValue(end, length);
+  const relativeEnd = defaultValue(end, length);
   // If negative, find wrap around position
-  var last =
+  const last =
     relativeEnd < 0
       ? Math.max(length + relativeEnd, 0)
       : Math.min(relativeEnd, length);

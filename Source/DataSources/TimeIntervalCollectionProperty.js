@@ -14,7 +14,7 @@ import Property from "./Property.js";
  * @example
  * //Create a Cartesian2 interval property which contains data on August 1st, 2012
  * //and uses a different value every 6 hours.
- * var composite = new Cesium.TimeIntervalCollectionProperty();
+ * const composite = new Cesium.TimeIntervalCollectionProperty();
  * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601({
  *     iso8601 : '2012-08-01T00:00:00.00Z/2012-08-01T06:00:00.00Z',
  *     isStartIncluded : true,
@@ -104,7 +104,7 @@ TimeIntervalCollectionProperty.prototype.getValue = function (time, result) {
   }
   //>>includeEnd('debug');
 
-  var value = this._intervals.findDataForIntervalContainingDate(time);
+  const value = this._intervals.findDataForIntervalContainingDate(time);
   if (defined(value) && typeof value.clone === "function") {
     return value.clone(result);
   }

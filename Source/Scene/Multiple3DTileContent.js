@@ -42,7 +42,7 @@ export default function Multiple3DTileContent(
   this._tilesetResource = tilesetResource;
   this._contents = [];
 
-  var contentHeaders = extensionJson.content;
+  const contentHeaders = extensionJson.content;
   this._innerContentHeaders = contentHeaders;
   this._requestsInFlight = 0;
 
@@ -50,19 +50,19 @@ export default function Multiple3DTileContent(
   // used to help short-circuit computations after a tile was canceled.
   this._cancelCount = 0;
 
-  var contentCount = this._innerContentHeaders.length;
+  const contentCount = this._innerContentHeaders.length;
   this._arrayFetchPromises = new Array(contentCount);
   this._requests = new Array(contentCount);
 
   this._innerContentResources = new Array(contentCount);
   this._serverKeys = new Array(contentCount);
 
-  for (var i = 0; i < contentCount; i++) {
-    var contentResource = tilesetResource.getDerivedResource({
+  for (let i = 0; i < contentCount; i++) {
+    const contentResource = tilesetResource.getDerivedResource({
       url: contentHeaders[i].uri,
     });
 
-    var serverKey = RequestScheduler.getServerKey(
+    const serverKey = RequestScheduler.getServerKey(
       contentResource.getUrlComponent()
     );
 
@@ -86,9 +86,9 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    */
   featurePropertiesDirty: {
     get: function () {
-      var contents = this._contents;
-      var length = contents.length;
-      for (var i = 0; i < length; ++i) {
+      const contents = this._contents;
+      const length = contents.length;
+      for (let i = 0; i < length; ++i) {
         if (contents[i].featurePropertiesDirty) {
           return true;
         }
@@ -97,9 +97,9 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
       return false;
     },
     set: function (value) {
-      var contents = this._contents;
-      var length = contents.length;
-      for (var i = 0; i < length; ++i) {
+      const contents = this._contents;
+      const length = contents.length;
+      for (let i = 0; i < length; ++i) {
         contents[i].featurePropertiesDirty = value;
       }
     },
@@ -300,7 +300,7 @@ function cancelPendingRequests(multipleContents, originalContentState) {
   multipleContents._requestsInFlight = 0;
 
   // Discard the request promises.
-  var contentCount = multipleContents._innerContentHeaders.length;
+  const contentCount = multipleContents._innerContentHeaders.length;
   multipleContents._arrayFetchPromises = new Array(contentCount);
 }
 
@@ -325,10 +325,10 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
     return this._serverKeys.length;
   }
 
-  var contentHeaders = this._innerContentHeaders;
+  const contentHeaders = this._innerContentHeaders;
   updatePendingRequests(this, contentHeaders.length);
 
-  for (var i = 0; i < contentHeaders.length; i++) {
+  for (let i = 0; i < contentHeaders.length; i++) {
     // The cancel count is needed to avoid a race condition where a content
     // is canceled multiple times.
     this._arrayFetchPromises[i] = requestInnerContent(
@@ -356,9 +356,9 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
  * @private
  */
 function canScheduleAllRequests(serverKeys) {
-  var requestCountsByServer = {};
-  for (var i = 0; i < serverKeys.length; i++) {
-    var serverKey = serverKeys[i];
+  const requestCountsByServer = {};
+  for (let i = 0; i < serverKeys.length; i++) {
+    const serverKey = serverKeys[i];
     if (defined(requestCountsByServer[serverKey])) {
       requestCountsByServer[serverKey]++;
     } else {
@@ -366,7 +366,7 @@ function canScheduleAllRequests(serverKeys) {
     }
   }
 
-  for (var key in requestCountsByServer) {
+  for (const key in requestCountsByServer) {
     if (
       requestCountsByServer.hasOwnProperty(key) &&
       !RequestScheduler.serverHasOpenSlots(key, requestCountsByServer[key])
@@ -385,16 +385,18 @@ function requestInnerContent(
 ) {
   // it is important to clone here. The fetchArrayBuffer() below here uses
   // throttling, but other uses of the resources do not.
-  var contentResource = multipleContents._innerContentResources[index].clone();
-  var tile = multipleContents.tile;
+  const contentResource = multipleContents._innerContentResources[
+    index
+  ].clone();
+  const tile = multipleContents.tile;
 
   // Always create a new request. If the tile gets canceled, this
   // avoids getting stuck in the canceled state.
-  var priorityFunction = function () {
+  const priorityFunction = function () {
     return tile._priority;
   };
-  var serverKey = multipleContents._serverKeys[index];
-  var request = new Request({
+  const serverKey = multipleContents._serverKeys[index];
+  const request = new Request({
     throttle: true,
     throttleByServer: true,
     type: RequestType.TILES3D,
@@ -433,7 +435,7 @@ function requestInnerContent(
 }
 
 function createInnerContents(multipleContents) {
-  var originalCancelCount = multipleContents._cancelCount;
+  const originalCancelCount = multipleContents._cancelCount;
   when
     .all(multipleContents._arrayFetchPromises)
     .then(function (arrayBuffers) {
@@ -483,7 +485,7 @@ function createInnerContents(multipleContents) {
 }
 
 function createInnerContent(multipleContents, arrayBuffer, index) {
-  var preprocessed = preprocess3DTileContent(arrayBuffer);
+  const preprocessed = preprocess3DTileContent(arrayBuffer);
 
   if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
     throw new RuntimeError(
@@ -496,11 +498,11 @@ function createInnerContent(multipleContents, arrayBuffer, index) {
     preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
     preprocessed.contentType === Cesium3DTileContentType.VECTOR;
 
-  var tileset = multipleContents._tileset;
-  var resource = multipleContents._innerContentResources[index];
+  const tileset = multipleContents._tileset;
+  const resource = multipleContents._innerContentResources[index];
 
-  var content;
-  var contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
+  let content;
+  const contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
   if (defined(preprocessed.binaryPayload)) {
     content = contentFactory(
       tileset,
@@ -519,13 +521,13 @@ function createInnerContent(multipleContents, arrayBuffer, index) {
     );
   }
 
-  var contentHeader = multipleContents._innerContentHeaders[index];
+  const contentHeader = multipleContents._innerContentHeaders[index];
   content.groupMetadata = findGroupMetadata(tileset, contentHeader);
   return content;
 }
 
 function awaitReadyPromises(multipleContents) {
-  var readyPromises = multipleContents._contents.map(function (content) {
+  const readyPromises = multipleContents._contents.map(function (content) {
     return content.readyPromise;
   });
 
@@ -540,17 +542,17 @@ function awaitReadyPromises(multipleContents) {
 }
 
 function handleInnerContentFailed(multipleContents, index, error) {
-  var tileset = multipleContents._tileset;
-  var url = multipleContents._innerContentResources[index].url;
-  var message = defined(error.message) ? error.message : error.toString();
+  const tileset = multipleContents._tileset;
+  const url = multipleContents._innerContentResources[index].url;
+  const message = defined(error.message) ? error.message : error.toString();
   if (tileset.tileFailed.numberOfListeners > 0) {
     tileset.tileFailed.raiseEvent({
       url: url,
       message: message,
     });
   } else {
-    console.log("A content failed to load: " + url);
-    console.log("Error: " + message);
+    console.log(`A content failed to load: ${url}`);
+    console.log(`Error: ${message}`);
   }
 }
 
@@ -561,8 +563,8 @@ function handleInnerContentFailed(multipleContents, index, error) {
  * @private
  */
 Multiple3DTileContent.prototype.cancelRequests = function () {
-  for (var i = 0; i < this._requests.length; i++) {
-    var request = this._requests[i];
+  for (let i = 0; i < this._requests.length; i++) {
+    const request = this._requests[i];
     if (defined(request)) {
       request.cancel();
     }
@@ -588,25 +590,25 @@ Multiple3DTileContent.prototype.getFeature = function (batchId) {
 };
 
 Multiple3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
-  var contents = this._contents;
-  var length = contents.length;
-  for (var i = 0; i < length; ++i) {
+  const contents = this._contents;
+  const length = contents.length;
+  for (let i = 0; i < length; ++i) {
     contents[i].applyDebugSettings(enabled, color);
   }
 };
 
 Multiple3DTileContent.prototype.applyStyle = function (style) {
-  var contents = this._contents;
-  var length = contents.length;
-  for (var i = 0; i < length; ++i) {
+  const contents = this._contents;
+  const length = contents.length;
+  for (let i = 0; i < length; ++i) {
     contents[i].applyStyle(style);
   }
 };
 
 Multiple3DTileContent.prototype.update = function (tileset, frameState) {
-  var contents = this._contents;
-  var length = contents.length;
-  for (var i = 0; i < length; ++i) {
+  const contents = this._contents;
+  const length = contents.length;
+  for (let i = 0; i < length; ++i) {
     contents[i].update(tileset, frameState);
   }
 };
@@ -616,9 +618,9 @@ Multiple3DTileContent.prototype.isDestroyed = function () {
 };
 
 Multiple3DTileContent.prototype.destroy = function () {
-  var contents = this._contents;
-  var length = contents.length;
-  for (var i = 0; i < length; ++i) {
+  const contents = this._contents;
+  const length = contents.length;
+  for (let i = 0; i < length; ++i) {
     contents[i].destroy();
   }
   return destroyObject(this);

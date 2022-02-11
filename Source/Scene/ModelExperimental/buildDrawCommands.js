@@ -7,8 +7,12 @@ import ModelExperimentalVS from "../../Shaders/ModelExperimental/ModelExperiment
 import Pass from "../../Renderer/Pass.js";
 import RenderState from "../../Renderer/RenderState.js";
 import RuntimeError from "../../Core/RuntimeError.js";
+import StencilConstants from "../StencilConstants.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import VertexArray from "../../Renderer/VertexArray.js";
+import BoundingSphere from "../../Core/BoundingSphere.js";
+import Matrix4 from "../../Core/Matrix4.js";
+import ShadowMode from "../ShadowMode.js";
 
 /**
  * Builds the DrawCommands for a {@link ModelExperimentalPrimitive} using its render resources.
@@ -24,31 +28,51 @@ export default function buildDrawCommands(
   primitiveRenderResources,
   frameState
 ) {
-  var shaderBuilder = primitiveRenderResources.shaderBuilder;
+  const shaderBuilder = primitiveRenderResources.shaderBuilder;
   shaderBuilder.addVertexLines([ModelExperimentalVS]);
   shaderBuilder.addFragmentLines([ModelExperimentalFS]);
 
-  var indexBuffer = defined(primitiveRenderResources.indices)
+  const indexBuffer = defined(primitiveRenderResources.indices)
     ? primitiveRenderResources.indices.buffer
     : undefined;
 
-  var vertexArray = new VertexArray({
+  const vertexArray = new VertexArray({
     context: frameState.context,
     indexBuffer: indexBuffer,
     attributes: primitiveRenderResources.attributes,
   });
 
-  var model = primitiveRenderResources.model;
+  const model = primitiveRenderResources.model;
   model._resources.push(vertexArray);
 
-  var renderState = RenderState.fromCache(
-    primitiveRenderResources.renderStateOptions
-  );
+  let renderState = primitiveRenderResources.renderStateOptions;
 
-  var shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
+  if (model.opaquePass === Pass.CESIUM_3D_TILE) {
+    // Set stencil values for classification on 3D Tiles
+    renderState = clone(renderState, true);
+    renderState.stencilTest = StencilConstants.setCesium3DTileBit();
+    renderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+  }
+
+  renderState = RenderState.fromCache(renderState);
+
+  const shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
   model._resources.push(shaderProgram);
 
-  var pass = primitiveRenderResources.alphaOptions.pass;
+  const pass = primitiveRenderResources.alphaOptions.pass;
+
+  const sceneGraph = model.sceneGraph;
+  const modelMatrix = Matrix4.multiply(
+    sceneGraph.computedModelMatrix,
+    primitiveRenderResources.transform,
+    new Matrix4()
+  );
+
+  BoundingSphere.transform(
+    primitiveRenderResources.boundingSphere,
+    modelMatrix,
+    primitiveRenderResources.boundingSphere
+  );
 
   var owner = model._pickObject;
   if (!defined(owner)) {
@@ -57,9 +81,9 @@ export default function buildDrawCommands(
     };
   }
 
-  var command = new DrawCommand({
+  const command = new DrawCommand({
     boundingVolume: primitiveRenderResources.boundingSphere,
-    modelMatrix: primitiveRenderResources.modelMatrix,
+    modelMatrix: modelMatrix,
     uniformMap: primitiveRenderResources.uniformMap,
     renderState: renderState,
     vertexArray: vertexArray,
@@ -71,15 +95,17 @@ export default function buildDrawCommands(
     instanceCount: primitiveRenderResources.instanceCount,
     primitiveType: primitiveRenderResources.primitiveType,
     debugShowBoundingVolume: model.debugShowBoundingVolume,
+    castShadows: ShadowMode.castShadows(model.shadows),
+    receiveShadows: ShadowMode.receiveShadows(model.shadows),
     owner: owner,
   });
 
-  var styleCommandsNeeded = primitiveRenderResources.styleCommandsNeeded;
+  const styleCommandsNeeded = primitiveRenderResources.styleCommandsNeeded;
 
-  var commandList = [];
+  const commandList = [];
 
   if (defined(styleCommandsNeeded)) {
-    var derivedCommands = createDerivedCommands(command);
+    const derivedCommands = createDerivedCommands(command);
 
     if (pass !== Pass.TRANSLUCENT) {
       switch (styleCommandsNeeded) {
@@ -116,7 +142,7 @@ export default function buildDrawCommands(
  * @private
  */
 function createDerivedCommands(command) {
-  var derivedCommands = {};
+  const derivedCommands = {};
   derivedCommands.translucent = deriveTranslucentCommand(command);
   return derivedCommands;
 }
@@ -125,9 +151,9 @@ function createDerivedCommands(command) {
  * @private
  */
 function deriveTranslucentCommand(command) {
-  var derivedCommand = DrawCommand.shallowClone(command);
+  const derivedCommand = DrawCommand.shallowClone(command);
   derivedCommand.pass = Pass.TRANSLUCENT;
-  var rs = clone(command.renderState, true);
+  const rs = clone(command.renderState, true);
   rs.cull.enabled = false;
   rs.depthTest.enabled = true;
   rs.depthMask = false;

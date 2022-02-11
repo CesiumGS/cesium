@@ -63,13 +63,11 @@ JsonMetadataTable.prototype.getProperty = function (index, propertyId) {
   Check.typeOf.string("propertyId", propertyId);
 
   if (index < 0 || index >= this._count) {
-    throw new DeveloperError(
-      "index must be in the range [0, " + this._count + ")"
-    );
+    throw new DeveloperError(`index must be in the range [0, ${this._count})`);
   }
   //>>includeEnd('debug');
 
-  var property = this._properties[propertyId];
+  const property = this._properties[propertyId];
   if (defined(property)) {
     return clone(property[index], true);
   }
@@ -94,13 +92,11 @@ JsonMetadataTable.prototype.setProperty = function (index, propertyId, value) {
   Check.typeOf.string("propertyId", propertyId);
 
   if (index < 0 || index >= this._count) {
-    throw new DeveloperError(
-      "index must be in the range [0, " + this._count + ")"
-    );
+    throw new DeveloperError(`index must be in the range [0, ${this._count})`);
   }
   //>>includeEnd('debug');
 
-  var property = this._properties[propertyId];
+  const property = this._properties[propertyId];
   if (defined(property)) {
     property[index] = clone(value, true);
     return true;

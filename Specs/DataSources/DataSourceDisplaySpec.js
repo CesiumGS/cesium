@@ -15,9 +15,9 @@ import { when } from "../../Source/Cesium.js";
 describe(
   "DataSources/DataSourceDisplay",
   function () {
-    var dataSourceCollection;
-    var scene;
-    var display;
+    let dataSourceCollection;
+    let scene;
+    let display;
     beforeAll(function () {
       scene = createScene();
       dataSourceCollection = new DataSourceCollection();
@@ -91,14 +91,14 @@ describe(
     });
 
     it("Computes complete bounding sphere.", function () {
-      var visualizer1 = new MockVisualizer();
+      const visualizer1 = new MockVisualizer();
       visualizer1.getBoundingSphereResult = new BoundingSphere(
         new Cartesian3(1, 2, 3),
         456
       );
       visualizer1.getBoundingSphereState = BoundingSphereState.DONE;
 
-      var visualizer2 = new MockVisualizer();
+      const visualizer2 = new MockVisualizer();
       visualizer2.getBoundingSphereResult = new BoundingSphere(
         new Cartesian3(7, 8, 9),
         1011
@@ -113,17 +113,17 @@ describe(
         },
       });
 
-      var entity = new Entity();
-      var dataSource = new MockDataSource();
+      const entity = new Entity();
+      const dataSource = new MockDataSource();
       dataSource.entities.add(entity);
       display.dataSources.add(dataSource);
 
       display.update(Iso8601.MINIMUM_VALUE);
 
-      var result = new BoundingSphere();
-      var state = display.getBoundingSphere(entity, true, result);
+      const result = new BoundingSphere();
+      const state = display.getBoundingSphere(entity, true, result);
 
-      var expected = BoundingSphere.union(
+      const expected = BoundingSphere.union(
         visualizer1.getBoundingSphereResult,
         visualizer2.getBoundingSphereResult
       );
@@ -133,14 +133,14 @@ describe(
     });
 
     it("Computes partial bounding sphere.", function () {
-      var visualizer1 = new MockVisualizer();
+      const visualizer1 = new MockVisualizer();
       visualizer1.getBoundingSphereResult = new BoundingSphere(
         new Cartesian3(1, 2, 3),
         456
       );
       visualizer1.getBoundingSphereState = BoundingSphereState.PENDING;
 
-      var visualizer2 = new MockVisualizer();
+      const visualizer2 = new MockVisualizer();
       visualizer2.getBoundingSphereResult = new BoundingSphere(
         new Cartesian3(7, 8, 9),
         1011
@@ -155,29 +155,29 @@ describe(
         },
       });
 
-      var entity = new Entity();
-      var dataSource = new MockDataSource();
+      const entity = new Entity();
+      const dataSource = new MockDataSource();
       dataSource.entities.add(entity);
       display.dataSources.add(dataSource);
 
       display.update(Iso8601.MINIMUM_VALUE);
 
-      var result = new BoundingSphere();
-      var state = display.getBoundingSphere(entity, true, result);
+      const result = new BoundingSphere();
+      const state = display.getBoundingSphere(entity, true, result);
 
       expect(state).toBe(BoundingSphereState.DONE);
       expect(result).toEqual(visualizer2.getBoundingSphereResult);
     });
 
     it("Fails complete bounding sphere if allowPartial false.", function () {
-      var visualizer1 = new MockVisualizer();
+      const visualizer1 = new MockVisualizer();
       visualizer1.getBoundingSphereResult = new BoundingSphere(
         new Cartesian3(1, 2, 3),
         456
       );
       visualizer1.getBoundingSphereState = BoundingSphereState.PENDING;
 
-      var visualizer2 = new MockVisualizer();
+      const visualizer2 = new MockVisualizer();
       visualizer2.getBoundingSphereResult = new BoundingSphere(
         new Cartesian3(7, 8, 9),
         1011
@@ -192,11 +192,11 @@ describe(
         },
       });
 
-      var entity = new Entity();
+      const entity = new Entity();
       display.defaultDataSource.entities.add(entity);
 
-      var result = new BoundingSphere();
-      var state = display.getBoundingSphere(entity, false, result);
+      const result = new BoundingSphere();
+      const state = display.getBoundingSphere(entity, false, result);
 
       expect(state).toBe(BoundingSphereState.PENDING);
     });
@@ -206,14 +206,14 @@ describe(
         dataSourceCollection: dataSourceCollection,
         scene: scene,
       });
-      var entity = new Entity();
-      var dataSource = new MockDataSource();
+      const entity = new Entity();
+      const dataSource = new MockDataSource();
       dataSource.entities.add(entity);
       display.dataSources.add(dataSource);
       display.update(Iso8601.MINIMUM_VALUE);
 
-      var result = new BoundingSphere();
-      var state = display.getBoundingSphere(entity, false, result);
+      const result = new BoundingSphere();
+      const state = display.getBoundingSphere(entity, false, result);
       expect(state).toBe(BoundingSphereState.FAILED);
       display.destroy();
     });
@@ -225,9 +225,9 @@ describe(
       });
       display.update(Iso8601.MINIMUM_VALUE);
 
-      var entity = new Entity();
-      var result = new BoundingSphere();
-      var state = display.getBoundingSphere(entity, false, result);
+      const entity = new Entity();
+      const result = new BoundingSphere();
+      const state = display.getBoundingSphere(entity, false, result);
       expect(state).toBe(BoundingSphereState.FAILED);
       display.destroy();
     });
@@ -237,7 +237,7 @@ describe(
         dataSourceCollection: dataSourceCollection,
         scene: scene,
       });
-      var result = new BoundingSphere();
+      const result = new BoundingSphere();
       expect(function () {
         display.getBoundingSphere(undefined, false, result);
       }).toThrowDeveloperError();
@@ -248,7 +248,7 @@ describe(
         dataSourceCollection: dataSourceCollection,
         scene: scene,
       });
-      var entity = new Entity();
+      const entity = new Entity();
       expect(function () {
         display.getBoundingSphere(entity, false, undefined);
       }).toThrowDeveloperError();
@@ -259,15 +259,15 @@ describe(
         dataSourceCollection: dataSourceCollection,
         scene: scene,
       });
-      var entity = new Entity();
-      var result = new BoundingSphere();
+      const entity = new Entity();
+      const result = new BoundingSphere();
       expect(function () {
         display.getBoundingSphere(entity, undefined, result);
       }).toThrowDeveloperError();
     });
 
     it("destroy does not destroy underlying data sources", function () {
-      var dataSource = new MockDataSource();
+      const dataSource = new MockDataSource();
       dataSourceCollection.add(dataSource);
 
       display = new DataSourceDisplay({
@@ -284,8 +284,8 @@ describe(
     });
 
     it("calling update updates data sources", function () {
-      var source1 = new MockDataSource();
-      var source2 = new MockDataSource();
+      const source1 = new MockDataSource();
+      const source2 = new MockDataSource();
 
       display = new DataSourceDisplay({
         scene: scene,
@@ -295,10 +295,10 @@ describe(
       dataSourceCollection.add(source1);
       dataSourceCollection.add(source2);
 
-      var source1Visualizer = source1._visualizers[0];
+      const source1Visualizer = source1._visualizers[0];
       expect(source1Visualizer).toBeInstanceOf(MockVisualizer);
 
-      var source2Visualizer = source2._visualizers[0];
+      const source2Visualizer = source2._visualizers[0];
       expect(source2Visualizer).toBeInstanceOf(MockVisualizer);
 
       //Nothing should have happened yet because we haven't called update.
@@ -314,8 +314,8 @@ describe(
     });
 
     it("ready is true when datasources are ready", function () {
-      var source1 = new MockDataSource();
-      var source2 = new MockDataSource();
+      const source1 = new MockDataSource();
+      const source2 = new MockDataSource();
 
       display = new DataSourceDisplay({
         scene: scene,
@@ -375,8 +375,8 @@ describe(
       ApproximateTerrainHeights._initPromise = undefined;
       ApproximateTerrainHeights._terrainHeights = undefined;
 
-      var source1 = new MockDataSource();
-      var source2 = new MockDataSource();
+      const source1 = new MockDataSource();
+      const source2 = new MockDataSource();
 
       display = new DataSourceDisplay({
         scene: scene,
@@ -395,7 +395,7 @@ describe(
     });
 
     it("sets dataSource primitives on add", function () {
-      var source = new MockDataSource();
+      const source = new MockDataSource();
 
       display = new DataSourceDisplay({
         scene: scene,
@@ -415,7 +415,7 @@ describe(
     });
 
     it("cleans up primitives on dataSource removed", function () {
-      var source = new MockDataSource();
+      const source = new MockDataSource();
 
       display = new DataSourceDisplay({
         scene: scene,
@@ -437,9 +437,9 @@ describe(
     });
 
     it("raises primitives on dataSource raise", function () {
-      var source1 = new MockDataSource();
-      var source2 = new MockDataSource();
-      var source3 = new MockDataSource();
+      const source1 = new MockDataSource();
+      const source2 = new MockDataSource();
+      const source3 = new MockDataSource();
 
       display = new DataSourceDisplay({
         scene: scene,
@@ -459,9 +459,9 @@ describe(
     });
 
     it("lowers primitives on dataSource lower", function () {
-      var source1 = new MockDataSource();
-      var source2 = new MockDataSource();
-      var source3 = new MockDataSource();
+      const source1 = new MockDataSource();
+      const source2 = new MockDataSource();
+      const source3 = new MockDataSource();
 
       display = new DataSourceDisplay({
         scene: scene,
@@ -481,9 +481,9 @@ describe(
     });
 
     it("raises primitives to top on dataSource raiseToTop", function () {
-      var source1 = new MockDataSource();
-      var source2 = new MockDataSource();
-      var source3 = new MockDataSource();
+      const source1 = new MockDataSource();
+      const source2 = new MockDataSource();
+      const source3 = new MockDataSource();
 
       display = new DataSourceDisplay({
         scene: scene,
@@ -503,9 +503,9 @@ describe(
     });
 
     it("lowers primitives to bottom on dataSource lowerToBottom", function () {
-      var source1 = new MockDataSource();
-      var source2 = new MockDataSource();
-      var source3 = new MockDataSource();
+      const source1 = new MockDataSource();
+      const source2 = new MockDataSource();
+      const source3 = new MockDataSource();
 
       display = new DataSourceDisplay({
         scene: scene,

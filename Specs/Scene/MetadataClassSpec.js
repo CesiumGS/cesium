@@ -7,7 +7,7 @@ import {
 
 describe("Scene/MetadataClass", function () {
   it("creates class with default values", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {},
     });
@@ -22,16 +22,16 @@ describe("Scene/MetadataClass", function () {
   });
 
   it("creates class", function () {
-    var extras = {
+    const extras = {
       cityInfo: {
         name: "city",
       },
     };
-    var extensions = {
+    const extensions = {
       EXT_other_extension: {},
     };
 
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         name: "Building",
@@ -62,10 +62,10 @@ describe("Scene/MetadataClass", function () {
     expect(buildingClass.extras).toBe(extras);
     expect(buildingClass.extensions).toBe(extensions);
 
-    var properties = buildingClass.properties;
-    var heightProperty = properties.height;
-    var positionProperty = properties.position;
-    var colorProperty = properties.color;
+    const properties = buildingClass.properties;
+    const heightProperty = properties.height;
+    const positionProperty = properties.position;
+    const colorProperty = properties.color;
 
     expect(heightProperty.type).toBe(MetadataType.SINGLE);
     expect(heightProperty.componentType).toBe(MetadataComponentType.FLOAT32);
@@ -79,7 +79,7 @@ describe("Scene/MetadataClass", function () {
       "position",
     ]);
 
-    var propertiesBySemantic = buildingClass.propertiesBySemantic;
+    const propertiesBySemantic = buildingClass.propertiesBySemantic;
     expect(propertiesBySemantic._COLOR).toBe(colorProperty);
     expect(propertiesBySemantic._POSITION).toBe(positionProperty);
     expect(Object.keys(propertiesBySemantic).sort()).toEqual([
@@ -89,7 +89,7 @@ describe("Scene/MetadataClass", function () {
   });
 
   it("creates class with enum property", function () {
-    var colorEnum = new MetadataEnum({
+    const colorEnum = new MetadataEnum({
       id: "color",
       enum: {
         values: [
@@ -101,11 +101,11 @@ describe("Scene/MetadataClass", function () {
       },
     });
 
-    var enums = {
+    const enums = {
       color: colorEnum,
     };
 
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {

@@ -19,7 +19,7 @@ function DefaultProxy(proxy) {
  * @returns {String} proxied resource
  */
 DefaultProxy.prototype.getURL = function (resource) {
-  var prefix = this.proxy.indexOf("?") === -1 ? "?" : "";
+  const prefix = this.proxy.indexOf("?") === -1 ? "?" : "";
   return this.proxy + prefix + encodeURIComponent(resource);
 };
 

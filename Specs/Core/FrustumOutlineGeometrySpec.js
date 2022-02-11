@@ -41,13 +41,13 @@ describe("Core/FrustumOutlineGeometry", function () {
   });
 
   it("constructor computes all vertex attributes", function () {
-    var frustum = new PerspectiveFrustum();
+    const frustum = new PerspectiveFrustum();
     frustum.fov = CesiumMath.toRadians(30.0);
     frustum.aspectRatio = 1920.0 / 1080.0;
     frustum.near = 1.0;
     frustum.far = 3.0;
 
-    var m = FrustumOutlineGeometry.createGeometry(
+    const m = FrustumOutlineGeometry.createGeometry(
       new FrustumOutlineGeometry({
         frustum: frustum,
         origin: Cartesian3.ZERO,
@@ -55,8 +55,8 @@ describe("Core/FrustumOutlineGeometry", function () {
       })
     );
 
-    var numVertices = 8;
-    var numLines = 12;
+    const numVertices = 8;
+    const numLines = 12;
     expect(m.attributes.position.values.length).toEqual(numVertices * 3);
     expect(m.indices.length).toEqual(numLines * 2);
 
@@ -65,7 +65,7 @@ describe("Core/FrustumOutlineGeometry", function () {
     expect(m.boundingSphere.radius).toBeLessThan(2.0);
   });
 
-  var packableFrustum = new PerspectiveFrustum();
+  const packableFrustum = new PerspectiveFrustum();
   packableFrustum.fov = 1.0;
   packableFrustum.aspectRatio = 2.0;
   packableFrustum.near = 3.0;

@@ -5,7 +5,7 @@ import { Axis } from "../../Source/Cesium.js";
 
 describe("Scene/Axis", function () {
   function convertUpAxis(upAxis, transformation, expected) {
-    var transformed = Matrix4.multiplyByVector(
+    const transformed = Matrix4.multiplyByVector(
       transformation,
       upAxis,
       new Cartesian4()

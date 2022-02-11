@@ -14,6 +14,7 @@ import {
   ShaderBuilder,
   Cartesian4,
   Cartesian3,
+  Color,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
@@ -21,8 +22,8 @@ import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 describe(
   "Scene/ModelExperimental/MaterialPipelineStage",
   function () {
-    var scene;
-    var gltfLoaders = [];
+    let scene;
+    const gltfLoaders = [];
 
     beforeAll(function () {
       scene = createScene();
@@ -32,7 +33,7 @@ describe(
       scene.destroyForSpecs();
     });
 
-    var mockFrameState = {
+    const mockFrameState = {
       context: {
         defaultTexture: {},
         defaultNormalTexture: {},
@@ -41,9 +42,9 @@ describe(
     };
 
     afterEach(function () {
-      var gltfLoadersLength = gltfLoaders.length;
-      for (var i = 0; i < gltfLoadersLength; ++i) {
-        var gltfLoader = gltfLoaders[i];
+      const gltfLoadersLength = gltfLoaders.length;
+      for (let i = 0; i < gltfLoadersLength; ++i) {
+        const gltfLoader = gltfLoaders[i];
         if (!gltfLoader.isDestroyed()) {
           gltfLoader.destroy();
         }
@@ -53,7 +54,7 @@ describe(
     });
 
     function getOptions(gltfPath, options) {
-      var resource = new Resource({
+      const resource = new Resource({
         url: gltfPath,
       });
 
@@ -64,29 +65,29 @@ describe(
     }
 
     function loadGltf(gltfPath, options) {
-      var gltfLoader = new GltfLoader(getOptions(gltfPath, options));
+      const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
       gltfLoaders.push(gltfLoader);
       gltfLoader.load();
 
       return waitForLoaderProcess(gltfLoader, scene);
     }
 
-    var boomBox = "./Data/Models/PBR/BoomBox/BoomBox.gltf";
-    var boomBoxSpecularGlossiness =
+    const boomBox = "./Data/Models/PBR/BoomBox/BoomBox.gltf";
+    const boomBoxSpecularGlossiness =
       "./Data/Models/PBR/BoomBoxSpecularGlossiness/BoomBox.gltf";
-    var boxUnlit = "./Data/Models/GltfLoader/UnlitTest/glTF/UnlitTest.gltf";
+    const boxUnlit = "./Data/Models/GltfLoader/UnlitTest/glTF/UnlitTest.gltf";
 
     function expectShaderLines(shaderLines, expected) {
-      for (var i = 0; i < expected.length; i++) {
+      for (let i = 0; i < expected.length; i++) {
         expect(shaderLines.indexOf(expected[i])).not.toBe(-1);
       }
     }
 
     function expectUniformMap(uniformMap, expected) {
-      for (var key in expected) {
+      for (const key in expected) {
         if (expected.hasOwnProperty(key)) {
-          var expectedValue = expected[key];
-          var uniformFunction = uniformMap[key];
+          const expectedValue = expected[key];
+          const uniformFunction = uniformMap[key];
           expect(uniformFunction).toBeDefined();
           expect(uniformFunction()).toEqual(expectedValue);
         }
@@ -95,16 +96,17 @@ describe(
 
     it("adds material uniforms", function () {
       return loadGltf(boomBox).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var primitive = components.nodes[0].primitives[0];
-        var shaderBuilder = new ShaderBuilder();
-        var uniformMap = {};
-        var renderResources = {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+        const shaderBuilder = new ShaderBuilder();
+        const uniformMap = {};
+        const renderResources = {
           shaderBuilder: shaderBuilder,
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         MaterialPipelineStage.process(
@@ -131,8 +133,8 @@ describe(
           "TEXCOORD_OCCLUSION v_texCoord_0",
         ]);
 
-        var material = primitive.material;
-        var expectedUniforms = {
+        const material = primitive.material;
+        const expectedUniforms = {
           u_emissiveTexture: material.emissiveTexture.texture,
           u_emissiveFactor: material.emissiveFactor,
           u_normalTexture: material.normalTexture.texture,
@@ -144,16 +146,17 @@ describe(
 
     it("adds metallic roughness uniforms", function () {
       return loadGltf(boomBox).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var primitive = components.nodes[0].primitives[0];
-        var shaderBuilder = new ShaderBuilder();
-        var uniformMap = {};
-        var renderResources = {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+        const shaderBuilder = new ShaderBuilder();
+        const uniformMap = {};
+        const renderResources = {
           shaderBuilder: shaderBuilder,
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         MaterialPipelineStage.process(
@@ -174,8 +177,8 @@ describe(
           "TEXCOORD_METALLIC_ROUGHNESS v_texCoord_0",
         ]);
 
-        var metallicRoughness = primitive.material.metallicRoughness;
-        var expectedUniforms = {
+        const metallicRoughness = primitive.material.metallicRoughness;
+        const expectedUniforms = {
           u_baseColorTexture: metallicRoughness.baseColorTexture.texture,
           u_metallicRoughnessTexture:
             metallicRoughness.metallicRoughnessTexture.texture,
@@ -186,23 +189,24 @@ describe(
 
     it("adds metallic roughness uniforms without defaults", function () {
       return loadGltf(boomBox).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var primitive = components.nodes[0].primitives[0];
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
 
         // Alter PBR parameters so that defaults are not used.
-        var metallicRoughness = primitive.material.metallicRoughness;
+        const metallicRoughness = primitive.material.metallicRoughness;
         metallicRoughness.baseColorFactor = new Cartesian4(0.5, 0.5, 0.5, 0.5);
         metallicRoughness.metallicFactor = 0.5;
         metallicRoughness.roughnessFactor = 0.5;
 
-        var shaderBuilder = new ShaderBuilder();
-        var uniformMap = {};
-        var renderResources = {
+        const shaderBuilder = new ShaderBuilder();
+        const uniformMap = {};
+        const renderResources = {
           shaderBuilder: shaderBuilder,
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         MaterialPipelineStage.process(
@@ -229,7 +233,7 @@ describe(
           "HAS_ROUGHNESS_FACTOR",
         ]);
 
-        var expectedUniforms = {
+        const expectedUniforms = {
           u_baseColorTexture: metallicRoughness.baseColorTexture.texture,
           u_baseColorFactor: metallicRoughness.baseColorFactor,
           u_metallicRoughnessTexture:
@@ -243,16 +247,17 @@ describe(
 
     it("adds specular glossiness uniforms", function () {
       return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var primitive = components.nodes[0].primitives[0];
-        var shaderBuilder = new ShaderBuilder();
-        var uniformMap = {};
-        var renderResources = {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+        const shaderBuilder = new ShaderBuilder();
+        const uniformMap = {};
+        const renderResources = {
           shaderBuilder: shaderBuilder,
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         MaterialPipelineStage.process(
@@ -275,8 +280,8 @@ describe(
           "HAS_GLOSSINESS_FACTOR",
         ]);
 
-        var specularGlossiness = primitive.material.specularGlossiness;
-        var expectedUniforms = {
+        const specularGlossiness = primitive.material.specularGlossiness;
+        const expectedUniforms = {
           u_diffuseTexture: specularGlossiness.diffuseTexture.texture,
           u_specularGlossinessTexture:
             specularGlossiness.specularGlossinessTexture.texture,
@@ -288,22 +293,23 @@ describe(
 
     it("adds specular glossiness uniforms without defaults", function () {
       return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var primitive = components.nodes[0].primitives[0];
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
 
         // Alter PBR parameters so that defaults are not used.
-        var specularGlossiness = primitive.material.specularGlossiness;
+        const specularGlossiness = primitive.material.specularGlossiness;
         specularGlossiness.diffuseFactor = new Cartesian4(0.5, 0.5, 0.5, 0.5);
         specularGlossiness.specularFactor = new Cartesian3(0.5, 0.5, 0.5);
 
-        var shaderBuilder = new ShaderBuilder();
-        var uniformMap = {};
-        var renderResources = {
+        const shaderBuilder = new ShaderBuilder();
+        const uniformMap = {};
+        const renderResources = {
           shaderBuilder: shaderBuilder,
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         MaterialPipelineStage.process(
@@ -330,7 +336,7 @@ describe(
           "HAS_GLOSSINESS_FACTOR",
         ]);
 
-        var expectedUniforms = {
+        const expectedUniforms = {
           u_diffuseTexture: specularGlossiness.diffuseTexture.texture,
           u_diffuseFactor: specularGlossiness.diffuseFactor,
           u_specularGlossinessTexture:
@@ -344,15 +350,16 @@ describe(
 
     it("enables PBR lighting for metallic roughness materials", function () {
       return loadGltf(boomBox).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var primitive = components.nodes[0].primitives[0];
-        var lightingOptions = new ModelLightingOptions();
-        var renderResources = {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+        const lightingOptions = new ModelLightingOptions();
+        const renderResources = {
           shaderBuilder: new ShaderBuilder(),
           uniformMap: {},
           lightingOptions: lightingOptions,
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         MaterialPipelineStage.process(
@@ -366,15 +373,16 @@ describe(
 
     it("enables PBR lighting for specular glossiness materials", function () {
       return loadGltf(boomBoxSpecularGlossiness).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var primitive = components.nodes[0].primitives[0];
-        var lightingOptions = new ModelLightingOptions();
-        var renderResources = {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+        const lightingOptions = new ModelLightingOptions();
+        const renderResources = {
           shaderBuilder: new ShaderBuilder(),
           uniformMap: {},
           lightingOptions: lightingOptions,
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         MaterialPipelineStage.process(
@@ -388,15 +396,16 @@ describe(
 
     it("enables unlit lighting when KHR_materials_unlit is present", function () {
       return loadGltf(boxUnlit).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var primitive = components.nodes[1].primitives[0];
-        var lightingOptions = new ModelLightingOptions();
-        var renderResources = {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[1].primitives[0];
+        const lightingOptions = new ModelLightingOptions();
+        const renderResources = {
           shaderBuilder: new ShaderBuilder(),
           uniformMap: {},
           lightingOptions: lightingOptions,
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         MaterialPipelineStage.process(
@@ -410,15 +419,16 @@ describe(
 
     it("handles alphaMode = OPAQUE", function () {
       return loadGltf(boomBox).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var primitive = components.nodes[0].primitives[0];
-        var shaderBuilder = new ShaderBuilder();
-        var renderResources = {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+        const shaderBuilder = new ShaderBuilder();
+        const renderResources = {
           shaderBuilder: shaderBuilder,
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         MaterialPipelineStage.process(
@@ -435,19 +445,20 @@ describe(
 
     it("handles alphaMode = MASK", function () {
       return loadGltf(boomBox).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var primitive = components.nodes[0].primitives[0];
-        var shaderBuilder = new ShaderBuilder();
-        var uniformMap = {};
-        var renderResources = {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+        const shaderBuilder = new ShaderBuilder();
+        const uniformMap = {};
+        const renderResources = {
           shaderBuilder: shaderBuilder,
           uniformMap: uniformMap,
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
-        var cutoff = 0.6;
+        const cutoff = 0.6;
         primitive.material.alphaMode = AlphaMode.MASK;
         primitive.material.alphaCutoff = cutoff;
         MaterialPipelineStage.process(
@@ -464,15 +475,16 @@ describe(
 
     it("handles alphaMode = BLEND", function () {
       return loadGltf(boomBox).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var primitive = components.nodes[0].primitives[0];
-        var shaderBuilder = new ShaderBuilder();
-        var renderResources = {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+        const shaderBuilder = new ShaderBuilder();
+        const renderResources = {
           shaderBuilder: shaderBuilder,
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
           pass: Pass.OPAQUE,
         };
 
@@ -489,17 +501,50 @@ describe(
       });
     });
 
-    it("enables back-face culling if material is not double-sided", function () {
+    it("disables back-face culling if model.backFaceCulling is false", function () {
       return loadGltf(boxUnlit).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var primitive = components.nodes[1].primitives[0];
-        var renderStateOptions = {};
-        var renderResources = {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[1].primitives[0];
+        const renderStateOptions = {};
+        const renderResources = {
           shaderBuilder: new ShaderBuilder(),
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: renderStateOptions,
+          model: {
+            backFaceCulling: false,
+          },
+          cull: true,
+        };
+
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
+        expect(renderStateOptions).toEqual({
+          cull: {
+            enabled: false,
+          },
+        });
+      });
+    });
+
+    it("enables back-face culling if material is not double-sided", function () {
+      return loadGltf(boxUnlit).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[1].primitives[0];
+        const renderStateOptions = {};
+        const renderResources = {
+          shaderBuilder: new ShaderBuilder(),
+          uniformMap: {},
+          lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
+          renderStateOptions: renderStateOptions,
+          model: {
+            backFaceCulling: true,
+          },
           cull: true,
         };
 
@@ -518,16 +563,18 @@ describe(
 
     it("disables back-face culling if material is double-sided", function () {
       return loadGltf(boxUnlit).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var primitive = components.nodes[1].primitives[0];
-        var renderStateOptions = {};
-        var renderResources = {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[1].primitives[0];
+        const renderStateOptions = {};
+        const renderResources = {
           shaderBuilder: new ShaderBuilder(),
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: renderStateOptions,
-          cull: true,
+          model: {
+            backFaceCulling: true,
+          },
         };
 
         primitive.material.doubleSided = true;
@@ -545,17 +592,49 @@ describe(
       });
     });
 
+    it("disables back-face culling if model color is translucent", function () {
+      return loadGltf(boxUnlit).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[1].primitives[0];
+        const renderStateOptions = {};
+        const renderResources = {
+          shaderBuilder: new ShaderBuilder(),
+          uniformMap: {},
+          lightingOptions: new ModelLightingOptions(),
+          alphaOptions: new ModelAlphaOptions(),
+          renderStateOptions: renderStateOptions,
+          model: {
+            color: new Color(0, 0, 1, 0.5),
+            backFaceCulling: true,
+          },
+          cull: true,
+        };
+
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
+        expect(renderStateOptions).toEqual({
+          cull: {
+            enabled: false,
+          },
+        });
+      });
+    });
+
     it("adds material stage functions to the fragment shader", function () {
       return loadGltf(boxUnlit).then(function (gltfLoader) {
-        var components = gltfLoader.components;
-        var primitive = components.nodes[1].primitives[0];
-        var shaderBuilder = new ShaderBuilder();
-        var renderResources = {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[1].primitives[0];
+        const shaderBuilder = new ShaderBuilder();
+        const renderResources = {
           shaderBuilder: shaderBuilder,
           uniformMap: {},
           lightingOptions: new ModelLightingOptions(),
           alphaOptions: new ModelAlphaOptions(),
           renderStateOptions: {},
+          model: {},
         };
 
         primitive.material.doubleSided = true;
@@ -573,10 +652,10 @@ describe(
     });
 
     it("_processTextureTransform updates the shader and uniform map", function () {
-      var shaderBuilder = new ShaderBuilder();
-      var uniformMap = {};
-      var matrix = new Matrix3(0.5, 0, 0.5, 0, 0.5, 0, 0, 0, 1);
-      var textureReader = {
+      const shaderBuilder = new ShaderBuilder();
+      const uniformMap = {};
+      const matrix = new Matrix3(0.5, 0, 0.5, 0, 0.5, 0, 0, 0, 1);
+      const textureReader = {
         transform: matrix,
       };
       MaterialPipelineStage._processTextureTransform(
@@ -599,11 +678,11 @@ describe(
     });
 
     it("_processTexture processes texture transforms if present", function () {
-      var shaderBuilder = new ShaderBuilder();
-      var uniformMap = {};
-      var matrix = new Matrix3(0.5, 0, 0.5, 0, 0.5, 0, 0, 0, 1);
-      var mockTexture = {};
-      var textureReader = {
+      const shaderBuilder = new ShaderBuilder();
+      const uniformMap = {};
+      const matrix = new Matrix3(0.5, 0, 0.5, 0, 0.5, 0, 0, 0, 1);
+      const mockTexture = {};
+      const textureReader = {
         transform: matrix,
         texture: mockTexture,
         texCoord: 1,
@@ -632,11 +711,11 @@ describe(
     });
 
     it("_processTexture creates texture uniforms with a default value", function () {
-      var shaderBuilder = new ShaderBuilder();
-      var uniformMap = {};
-      var matrix = new Matrix3(0.5, 0, 0.5, 0, 0.5, 0, 0, 0, 1);
-      var mockTexture = {};
-      var textureReader = {
+      const shaderBuilder = new ShaderBuilder();
+      const uniformMap = {};
+      const matrix = new Matrix3(0.5, 0, 0.5, 0, 0.5, 0, 0, 0, 1);
+      const mockTexture = {};
+      const textureReader = {
         transform: matrix,
         texture: mockTexture,
         texCoord: 1,
@@ -655,5 +734,5 @@ describe(
       });
     });
   },
-  "WEBGL"
+  "WebGL"
 );

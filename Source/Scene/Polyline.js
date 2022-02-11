@@ -45,7 +45,7 @@ function Polyline(options, polylineCollection) {
     });
   }
 
-  var positions = options.positions;
+  let positions = options.positions;
   if (!defined(positions)) {
     positions = [];
   }
@@ -66,7 +66,7 @@ function Polyline(options, polylineCollection) {
   this._length = this._actualPositions.length;
   this._id = options.id;
 
-  var modelMatrix;
+  let modelMatrix;
   if (defined(polylineCollection)) {
     modelMatrix = Matrix4.clone(polylineCollection.modelMatrix);
   }
@@ -92,17 +92,17 @@ function Polyline(options, polylineCollection) {
   this._boundingVolume2D = new BoundingSphere(); // modified in PolylineCollection
 }
 
-var POSITION_INDEX = (Polyline.POSITION_INDEX = 0);
-var SHOW_INDEX = (Polyline.SHOW_INDEX = 1);
-var WIDTH_INDEX = (Polyline.WIDTH_INDEX = 2);
-var MATERIAL_INDEX = (Polyline.MATERIAL_INDEX = 3);
-var POSITION_SIZE_INDEX = (Polyline.POSITION_SIZE_INDEX = 4);
-var DISTANCE_DISPLAY_CONDITION = (Polyline.DISTANCE_DISPLAY_CONDITION = 5);
-var NUMBER_OF_PROPERTIES = (Polyline.NUMBER_OF_PROPERTIES = 6);
+const POSITION_INDEX = (Polyline.POSITION_INDEX = 0);
+const SHOW_INDEX = (Polyline.SHOW_INDEX = 1);
+const WIDTH_INDEX = (Polyline.WIDTH_INDEX = 2);
+const MATERIAL_INDEX = (Polyline.MATERIAL_INDEX = 3);
+const POSITION_SIZE_INDEX = (Polyline.POSITION_SIZE_INDEX = 4);
+const DISTANCE_DISPLAY_CONDITION = (Polyline.DISTANCE_DISPLAY_CONDITION = 5);
+const NUMBER_OF_PROPERTIES = (Polyline.NUMBER_OF_PROPERTIES = 6);
 
 function makeDirty(polyline, propertyChanged) {
   ++polyline._propertiesChanged[propertyChanged];
-  var polylineCollection = polyline._polylineCollection;
+  const polylineCollection = polyline._polylineCollection;
   if (defined(polylineCollection)) {
     polylineCollection._updatePolyline(polyline, propertyChanged);
     polyline._dirty = true;
@@ -156,7 +156,7 @@ Object.defineProperties(Polyline.prototype, {
       }
       //>>includeEnd('debug');
 
-      var positions = arrayRemoveDuplicates(value, Cartesian3.equalsEpsilon);
+      let positions = arrayRemoveDuplicates(value, Cartesian3.equalsEpsilon);
 
       if (this._loop && positions.length > 2) {
         if (positions === value) {
@@ -230,7 +230,7 @@ Object.defineProperties(Polyline.prototype, {
       }
       //>>includeEnd('debug');
 
-      var width = this._width;
+      const width = this._width;
       if (value !== width) {
         this._width = value;
         makeDirty(this, WIDTH_INDEX);
@@ -255,7 +255,7 @@ Object.defineProperties(Polyline.prototype, {
       //>>includeEnd('debug');
 
       if (value !== this._loop) {
-        var positions = this._actualPositions;
+        let positions = this._actualPositions;
         if (value) {
           if (
             positions.length > 2 &&
@@ -357,15 +357,15 @@ Object.defineProperties(Polyline.prototype, {
  * @private
  */
 Polyline.prototype.update = function () {
-  var modelMatrix = Matrix4.IDENTITY;
+  let modelMatrix = Matrix4.IDENTITY;
   if (defined(this._polylineCollection)) {
     modelMatrix = this._polylineCollection.modelMatrix;
   }
 
-  var segmentPositionsLength = this._segments.positions.length;
-  var segmentLengths = this._segments.lengths;
+  const segmentPositionsLength = this._segments.positions.length;
+  const segmentLengths = this._segments.lengths;
 
-  var positionsChanged =
+  const positionsChanged =
     this._propertiesChanged[POSITION_INDEX] > 0 ||
     this._propertiesChanged[POSITION_SIZE_INDEX] > 0;
   if (!Matrix4.equals(modelMatrix, this._modelMatrix) || positionsChanged) {
@@ -386,8 +386,8 @@ Polyline.prototype.update = function () {
     // number of positions changed
     makeDirty(this, POSITION_SIZE_INDEX);
   } else {
-    var length = segmentLengths.length;
-    for (var i = 0; i < length; ++i) {
+    const length = segmentLengths.length;
+    for (let i = 0; i < length; ++i) {
       if (segmentLengths[i] !== this._segments.lengths[i]) {
         // indices changed
         makeDirty(this, POSITION_SIZE_INDEX);
@@ -413,8 +413,8 @@ Polyline.prototype.getPickId = function (context) {
 
 Polyline.prototype._clean = function () {
   this._dirty = false;
-  var properties = this._propertiesChanged;
-  for (var k = 0; k < NUMBER_OF_PROPERTIES - 1; ++k) {
+  const properties = this._propertiesChanged;
+  for (let k = 0; k < NUMBER_OF_PROPERTIES - 1; ++k) {
     properties[k] = 0;
   }
 };

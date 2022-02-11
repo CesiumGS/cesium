@@ -339,12 +339,12 @@ TileCoordinatesImageryProvider.prototype.requestImage = function (
   level,
   request
 ) {
-  var canvas = document.createElement("canvas");
+  const canvas = document.createElement("canvas");
   canvas.width = 256;
   canvas.height = 256;
-  var context = canvas.getContext("2d");
+  const context = canvas.getContext("2d");
 
-  var cssColor = this._color.toCssColorString();
+  const cssColor = this._color.toCssColorString();
 
   context.strokeStyle = cssColor;
   context.lineWidth = 2;
@@ -353,9 +353,9 @@ TileCoordinatesImageryProvider.prototype.requestImage = function (
   context.font = "bold 25px Arial";
   context.textAlign = "center";
   context.fillStyle = cssColor;
-  context.fillText("L: " + level, 124, 86);
-  context.fillText("X: " + x, 124, 136);
-  context.fillText("Y: " + y, 124, 186);
+  context.fillText(`L: ${level}`, 124, 86);
+  context.fillText(`X: ${x}`, 124, 136);
+  context.fillText(`Y: ${y}`, 124, 186);
 
   return canvas;
 };

@@ -18,7 +18,7 @@ import ResourceLoader from "../ResourceLoader.js";
 import when from "../../ThirdParty/when.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
-var B3dmLoaderState = {
+const B3dmLoaderState = {
   UNLOADED: 0,
   LOADING: 1,
   PROCESSING: 2,
@@ -26,7 +26,7 @@ var B3dmLoaderState = {
   FAILED: 4,
 };
 
-var FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
+const FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
 
 /**
  * Loads a Batched 3D Model.
@@ -40,9 +40,9 @@ var FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
  * @private
  *
  * @param {Object} options Object with the following properties:
- * @param {Resource} options.b3dmResource The {@link Resource} containing the B3DM.
- * @param {ArrayBuffer} options.arrayBuffer The array buffer of the B3DM contents.
- * @param {Number} [options.byteOffset] The byte offset to the beginning of the B3DM contents in the array buffer.
+ * @param {Resource} options.b3dmResource The {@link Resource} containing the b3dm.
+ * @param {ArrayBuffer} options.arrayBuffer The array buffer of the b3dm contents.
+ * @param {Number} [options.byteOffset] The byte offset to the beginning of the b3dm contents in the array buffer.
  * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
@@ -54,19 +54,19 @@ var FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
 function B3dmLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var b3dmResource = options.b3dmResource;
-  var baseResource = options.baseResource;
-  var arrayBuffer = options.arrayBuffer;
-  var byteOffset = defaultValue(options.byteOffset, 0);
-  var releaseGltfJson = defaultValue(options.releaseGltfJson, false);
-  var asynchronous = defaultValue(options.asynchronous, true);
-  var incrementallyLoadTextures = defaultValue(
+  const b3dmResource = options.b3dmResource;
+  let baseResource = options.baseResource;
+  const arrayBuffer = options.arrayBuffer;
+  const byteOffset = defaultValue(options.byteOffset, 0);
+  const releaseGltfJson = defaultValue(options.releaseGltfJson, false);
+  const asynchronous = defaultValue(options.asynchronous, true);
+  const incrementallyLoadTextures = defaultValue(
     options.incrementallyLoadTextures,
     true
   );
-  var upAxis = defaultValue(options.upAxis, Axis.Y);
-  var forwardAxis = defaultValue(options.forwardAxis, Axis.X);
-  var loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
+  const upAxis = defaultValue(options.upAxis, Axis.Y);
+  const forwardAxis = defaultValue(options.forwardAxis, Axis.X);
+  const loadAsTypedArray = defaultValue(options.loadAsTypedArray, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.b3dmResource", b3dmResource);
@@ -160,29 +160,12 @@ Object.defineProperties(B3dmLoader.prototype, {
    * @memberof B3dmLoader.prototype
    *
    * @type {ModelComponents.Components}
-   * @default {@link Matrix4.IDENTITY}
    * @readonly
    * @private
    */
   components: {
     get: function () {
       return this._components;
-    },
-  },
-
-  /**
-   * A world-space transform to apply to the primitives.
-   * See {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/Batched3DModel#global-semantics}
-   *
-   * @memberof B3dmLoader.prototype
-   *
-   * @type {Matrix4}
-   * @readonly
-   * @private
-   */
-  transform: {
-    get: function () {
-      return this._transform;
     },
   },
 });
@@ -192,15 +175,15 @@ Object.defineProperties(B3dmLoader.prototype, {
  * @private
  */
 B3dmLoader.prototype.load = function () {
-  var b3dm = B3dmParser.parse(this._arrayBuffer, this._byteOffset);
+  const b3dm = B3dmParser.parse(this._arrayBuffer, this._byteOffset);
 
-  var batchLength = b3dm.batchLength;
-  var featureTableJson = b3dm.featureTableJson;
-  var featureTableBinary = b3dm.featureTableBinary;
-  var batchTableJson = b3dm.batchTableJson;
-  var batchTableBinary = b3dm.batchTableBinary;
+  let batchLength = b3dm.batchLength;
+  const featureTableJson = b3dm.featureTableJson;
+  const featureTableBinary = b3dm.featureTableBinary;
+  const batchTableJson = b3dm.batchTableJson;
+  const batchTableBinary = b3dm.batchTableBinary;
 
-  var featureTable = new Cesium3DTileFeatureTable(
+  const featureTable = new Cesium3DTileFeatureTable(
     featureTableJson,
     featureTableBinary
   );
@@ -208,7 +191,7 @@ B3dmLoader.prototype.load = function () {
   // Set batch length.
   this._batchLength = batchLength;
   // Set the RTC Center transform, if present.
-  var rtcCenter = featureTable.getGlobalProperty(
+  const rtcCenter = featureTable.getGlobalProperty(
     "RTC_CENTER",
     ComponentDatatype.FLOAT,
     3
@@ -222,21 +205,22 @@ B3dmLoader.prototype.load = function () {
     binary: batchTableBinary,
   };
 
-  var gltfLoader = new GltfLoader({
-    upAxis: this._upAxis,
+  const gltfLoader = new GltfLoader({
     typedArray: b3dm.gltf,
+    upAxis: this._upAxis,
     forwardAxis: this._forwardAxis,
     gltfResource: this._b3dmResource,
     baseResource: this._baseResource,
     releaseGltfJson: this._releaseGltfJson,
     incrementallyLoadTextures: this._incrementallyLoadTextures,
     loadAsTypedArray: this._loadAsTypedArray,
+    renameBatchIdSemantic: true,
   });
 
   this._gltfLoader = gltfLoader;
   this._state = B3dmLoaderState.LOADING;
 
-  var that = this;
+  const that = this;
   gltfLoader.load();
   gltfLoader.promise
     .then(function () {
@@ -244,7 +228,8 @@ B3dmLoader.prototype.load = function () {
         return;
       }
 
-      var components = gltfLoader.components;
+      const components = gltfLoader.components;
+      components.transform = that._transform;
       createFeatureMetadata(that, components);
       that._components = components;
 
@@ -262,7 +247,7 @@ B3dmLoader.prototype.load = function () {
 function handleError(b3dmLoader, error) {
   b3dmLoader.unload();
   b3dmLoader._state = B3dmLoaderState.FAILED;
-  var errorMessage = "Failed to load B3DM";
+  const errorMessage = "Failed to load b3dm";
   error = b3dmLoader.getError(errorMessage, error);
   b3dmLoader._promise.reject(error);
 }
@@ -282,14 +267,14 @@ B3dmLoader.prototype.process = function (frameState) {
 };
 
 function createFeatureMetadata(loader, components) {
-  var batchTable = loader._batchTable;
-  var batchLength = loader._batchLength;
+  const batchTable = loader._batchTable;
+  const batchLength = loader._batchLength;
 
   if (batchLength === 0) {
     return;
   }
 
-  var featureMetadata;
+  let featureMetadata;
   if (defined(batchTable.json)) {
     // Add the feature metadata from the batch table to the model components.
     featureMetadata = parseBatchTable({
@@ -299,7 +284,7 @@ function createFeatureMetadata(loader, components) {
     });
   } else {
     // If batch table is not defined, create a property table without any properties.
-    var emptyPropertyTable = new PropertyTable({
+    const emptyPropertyTable = new PropertyTable({
       name: MetadataClass.BATCH_TABLE_CLASS_NAME,
       count: batchLength,
     });
@@ -310,8 +295,8 @@ function createFeatureMetadata(loader, components) {
   }
 
   // Add the feature ID attribute to the primitives.
-  var nodes = components.scene.nodes;
-  for (var i = 0; i < nodes.length; i++) {
+  const nodes = components.scene.nodes;
+  for (let i = 0; i < nodes.length; i++) {
     processNode(nodes[i]);
   }
   components.featureMetadata = featureMetadata;
@@ -323,7 +308,7 @@ function processNode(node) {
     return;
   }
 
-  var i;
+  let i;
   if (defined(node.children)) {
     for (i = 0; i < node.children.length; i++) {
       processNode(node.children[i]);
@@ -332,17 +317,17 @@ function processNode(node) {
 
   if (defined(node.primitives)) {
     for (i = 0; i < node.primitives.length; i++) {
-      var primitive = node.primitives[i];
-      var featureIdVertexAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+      const primitive = node.primitives[i];
+      const featureIdVertexAttribute = ModelExperimentalUtility.getAttributeBySemantic(
         primitive,
         VertexAttributeSemantic.FEATURE_ID
       );
       if (defined(featureIdVertexAttribute)) {
         featureIdVertexAttribute.setIndex = 0;
-        var featureIdAttribute = new FeatureIdAttribute();
+        const featureIdAttribute = new FeatureIdAttribute();
         featureIdAttribute.propertyTableId = 0;
         featureIdAttribute.setIndex = 0;
-        primitive.featureIdAttributes.push(featureIdAttribute);
+        primitive.featureIds.push(featureIdAttribute);
       }
     }
   }

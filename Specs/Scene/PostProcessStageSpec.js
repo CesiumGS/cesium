@@ -17,7 +17,7 @@ import { when } from "../../Source/Cesium.js";
 describe(
   "Scene/PostProcessStage",
   function () {
-    var scene;
+    let scene;
 
     beforeAll(function () {
       scene = createScene();
@@ -34,19 +34,19 @@ describe(
     });
 
     it("constructs", function () {
-      var fragmentShader =
+      const fragmentShader =
         "uniform vec4 color; void main() { gl_FragColor = color; }";
-      var uniforms = { color: Color.clone(Color.RED) };
-      var textureScale = 0.5;
-      var forcePowerOfTwo = true;
-      var sampleMode = PostProcessStageSampleMode.LINEAR;
-      var pixelFormat = PixelFormat.RGB;
-      var pixelDatatype = PixelDatatype.UNSIGNED_INT;
-      var clearColor = Color.clone(Color.BLUE);
-      var scissorRectangle = new BoundingRectangle(0, 0, 5, 5);
-      var name = "wonka vision";
+      const uniforms = { color: Color.clone(Color.RED) };
+      const textureScale = 0.5;
+      const forcePowerOfTwo = true;
+      const sampleMode = PostProcessStageSampleMode.LINEAR;
+      const pixelFormat = PixelFormat.RGB;
+      const pixelDatatype = PixelDatatype.UNSIGNED_INT;
+      const clearColor = Color.clone(Color.BLUE);
+      const scissorRectangle = new BoundingRectangle(0, 0, 5, 5);
+      const name = "wonka vision";
 
-      var stage = new PostProcessStage({
+      const stage = new PostProcessStage({
         fragmentShader: fragmentShader,
         uniforms: uniforms,
         textureScale: textureScale,
@@ -72,9 +72,9 @@ describe(
     });
 
     it("default constructs", function () {
-      var fragmentShader = "void main() { gl_FragColor = vec4(1.0); }";
+      const fragmentShader = "void main() { gl_FragColor = vec4(1.0); }";
 
-      var stage = new PostProcessStage({
+      const stage = new PostProcessStage({
         fragmentShader: fragmentShader,
       });
       expect(stage.fragmentShader).toEqual(fragmentShader);
@@ -97,7 +97,7 @@ describe(
     });
 
     it("throws with invalid texture scale", function () {
-      var fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { gl_FragColor = vec4(1.0); }";
       expect(function () {
         return new PostProcessStage({
           fragmentShader: fs,
@@ -135,7 +135,7 @@ describe(
 
     it("can use a texture uniform", function () {
       expect(scene).toRender([0, 0, 0, 255]);
-      var stage = scene.postProcessStages.add(
+      const stage = scene.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
             "uniform sampler2D texture; varying vec2 v_textureCoordinates; void main() { gl_FragColor = texture2D(texture, v_textureCoordinates); }",
@@ -160,8 +160,8 @@ describe(
     });
 
     it("can use a image uniform", function () {
-      var ready = false;
-      var image = new Image();
+      let ready = false;
+      const image = new Image();
       image.src = "./Data/Images/Blue2x2.png";
       image.onload = function () {
         ready = true;
@@ -171,7 +171,7 @@ describe(
         return ready;
       }).then(function () {
         expect(scene).toRender([0, 0, 0, 255]);
-        var stage = scene.postProcessStages.add(
+        const stage = scene.postProcessStages.add(
           new PostProcessStage({
             fragmentShader:
               "uniform sampler2D texture; void main() { gl_FragColor = texture2D(texture, vec2(0.5)); }",
@@ -190,7 +190,7 @@ describe(
     });
 
     it("does not run a stage that requires depth textures when depth textures are not supported", function () {
-      var s = createScene();
+      const s = createScene();
       s.context._depthTexture = false;
 
       if (defined(s._view.globeDepth)) {
@@ -204,17 +204,16 @@ describe(
 
       expect(s).toRender([0, 0, 0, 255]);
       // Dummy Stage
-      var bgColor = 51; // Choose a factor of 255 to make sure there aren't rounding issues
+      const bgColor = 51; // Choose a factor of 255 to make sure there aren't rounding issues
       s.postProcessStages.add(
         new PostProcessStage({
-          fragmentShader:
-            "void main() { gl_FragColor = vec4(vec3(" +
-            bgColor / 255 +
-            "), 1.0); }",
+          fragmentShader: `void main() { gl_FragColor = vec4(vec3(${
+            bgColor / 255
+          }), 1.0); }`,
         })
       );
 
-      var stage = s.postProcessStages.add(
+      const stage = s.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
             "uniform sampler2D depthTexture; void main() { gl_FragColor = vec4(1.0); }",
@@ -235,7 +234,7 @@ describe(
         });
     });
 
-    var model;
+    let model;
 
     function loadModel(url) {
       model = scene.primitives.add(
@@ -247,13 +246,13 @@ describe(
         })
       );
       model.zoomTo = function () {
-        var camera = scene.camera;
-        var center = Matrix4.multiplyByPoint(
+        const camera = scene.camera;
+        const center = Matrix4.multiplyByPoint(
           model.modelMatrix,
           model.boundingSphere.center,
           new Cartesian3()
         );
-        var r =
+        const r =
           4.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
         camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
       };
@@ -278,7 +277,7 @@ describe(
       return loadModel("./Data/Models/Box/CesiumBoxTest.gltf").then(
         function () {
           model.zoomTo();
-          var fs =
+          const fs =
             "uniform sampler2D colorTexture; \n" +
             "varying vec2 v_textureCoordinates; \n" +
             "void main() { \n" +
@@ -288,7 +287,7 @@ describe(
             "        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
             "    } \n" +
             "} \n";
-          var stage = scene.postProcessStages.add(
+          const stage = scene.postProcessStages.add(
             new PostProcessStage({
               fragmentShader: fs,
             })
@@ -309,7 +308,7 @@ describe(
     });
 
     it("destroys", function () {
-      var stage = new PostProcessStage({
+      const stage = new PostProcessStage({
         fragmentShader: "void main() { gl_FragColor = vec4(1.0); }",
       });
       expect(stage.isDestroyed()).toEqual(false);

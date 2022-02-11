@@ -61,8 +61,8 @@ Ray.clone = function (ray, result) {
  *
  * @example
  * //Get the first intersection point of a ray and an ellipsoid.
- * var intersection = Cesium.IntersectionTests.rayEllipsoid(ray, ellipsoid);
- * var point = Cesium.Ray.getPoint(ray, intersection.start);
+ * const intersection = Cesium.IntersectionTests.rayEllipsoid(ray, ellipsoid);
+ * const point = Cesium.Ray.getPoint(ray, intersection.start);
  */
 Ray.getPoint = function (ray, t, result) {
   //>>includeStart('debug', pragmas.debug);

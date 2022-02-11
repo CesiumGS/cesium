@@ -2,7 +2,7 @@ import { MetadataComponentType, MetadataEnum } from "../../Source/Cesium.js";
 
 describe("Scene/MetadataEnum", function () {
   it("creates enum with default values", function () {
-    var colorEnum = new MetadataEnum({
+    const colorEnum = new MetadataEnum({
       id: "color",
       enum: {
         values: [
@@ -34,15 +34,15 @@ describe("Scene/MetadataEnum", function () {
   });
 
   it("creates enum", function () {
-    var extras = {
+    const extras = {
       gain: 0.5,
       offset: 0.1,
     };
-    var extensions = {
+    const extensions = {
       EXT_other_extension: {},
     };
 
-    var colorEnum = new MetadataEnum({
+    const colorEnum = new MetadataEnum({
       id: "color",
       enum: {
         name: "Color",

@@ -8,14 +8,14 @@ import { TileOrientedBoundingBox } from "../../Source/Cesium.js";
 import createFrameState from "../createFrameState.js";
 
 describe("Scene/TileOrientedBoundingBox", function () {
-  var center = new Cartesian3(0.0, 0.0, 0.0);
-  var halfAxes = Matrix3.fromScale(
+  const center = new Cartesian3(0.0, 0.0, 0.0);
+  const halfAxes = Matrix3.fromScale(
     new Cartesian3(0.5, 0.5, 0.5),
     new Matrix3()
   );
-  var tileBoundingVolume = new TileOrientedBoundingBox(center, halfAxes);
+  const tileBoundingVolume = new TileOrientedBoundingBox(center, halfAxes);
 
-  var frameState = createFrameState();
+  const frameState = createFrameState();
 
   it("can be instantiated with center and half-axes", function () {
     expect(tileBoundingVolume.boundingVolume.center).toEqual(center);
@@ -52,7 +52,7 @@ describe("Scene/TileOrientedBoundingBox", function () {
   });
 
   it("has correct distance to camera if camera is slightly outside box", function () {
-    var eps6 = CesiumMath.EPSILON6;
+    const eps6 = CesiumMath.EPSILON6;
     frameState.camera.position = new Cartesian3(0.5 + eps6, 0.5, 0.5);
     expect(tileBoundingVolume.distanceToCamera(frameState)).not.toEqual(0.0);
     frameState.camera.position = new Cartesian3(-0.5, -0.5, -0.5 - eps6);
@@ -82,7 +82,7 @@ describe("Scene/TileOrientedBoundingBox", function () {
   });
 
   it("intersects plane", function () {
-    var plane = new Plane(Cartesian3.UNIT_X, 0.0);
+    let plane = new Plane(Cartesian3.UNIT_X, 0.0);
     expect(tileBoundingVolume.intersectPlane(plane)).toEqual(
       Intersect.INTERSECTING
     );
@@ -97,8 +97,8 @@ describe("Scene/TileOrientedBoundingBox", function () {
   });
 
   it("does not intersect plane", function () {
-    var eps6 = CesiumMath.EPSILON6;
-    var plane = new Plane(Cartesian3.UNIT_X, 0.5 + eps6);
+    const eps6 = CesiumMath.EPSILON6;
+    let plane = new Plane(Cartesian3.UNIT_X, 0.5 + eps6);
     expect(tileBoundingVolume.intersectPlane(plane)).toEqual(Intersect.INSIDE);
     plane = new Plane(Cartesian3.UNIT_Y, 0.5 + eps6);
     expect(tileBoundingVolume.intersectPlane(plane)).toEqual(Intersect.INSIDE);

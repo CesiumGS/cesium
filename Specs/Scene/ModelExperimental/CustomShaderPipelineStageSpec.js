@@ -16,7 +16,7 @@ import {
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
-  var primitive = {
+  const primitive = {
     attributes: [
       {
         semantic: "POSITION",
@@ -34,7 +34,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     ],
   };
 
-  var primitiveWithCustomAttributes = {
+  const primitiveWithCustomAttributes = {
     attributes: [
       {
         semantic: "POSITION",
@@ -47,7 +47,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     ],
   };
 
-  var primitiveWithColorAttributes = {
+  const primitiveWithColorAttributes = {
     attributes: [
       {
         semantic: "POSITION",
@@ -66,21 +66,21 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     ],
   };
 
-  var emptyVertexShader =
+  const emptyVertexShader =
     "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {}";
-  var emptyFragmentShader =
+  const emptyFragmentShader =
     "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}";
-  var emptyShader = new CustomShader({
+  const emptyShader = new CustomShader({
     vertexShaderText: emptyVertexShader,
     fragmentShaderText: emptyFragmentShader,
   });
 
   it("sets defines in the shader", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var model = {
+    const shaderBuilder = new ShaderBuilder();
+    const model = {
       customShader: emptyShader,
     };
-    var renderResources = {
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
@@ -99,7 +99,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   });
 
   it("adds uniforms from the custom shader", function () {
-    var uniforms = {
+    const uniforms = {
       u_time: {
         type: UniformType.FLOAT,
       },
@@ -107,18 +107,18 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         type: UniformType.BOOL,
       },
     };
-    var customShader = new CustomShader({
+    const customShader = new CustomShader({
       uniforms: uniforms,
       vertexShaderText: emptyVertexShader,
       fragmentShaderText: emptyFragmentShader,
     });
-    var model = {
+    const model = {
       customShader: customShader,
     };
-    var uniformMap = {};
-    var shaderBuilder = new ShaderBuilder();
+    const uniformMap = {};
+    const shaderBuilder = new ShaderBuilder();
 
-    var renderResources = {
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       uniformMap: uniformMap,
       model: model,
@@ -142,21 +142,21 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   });
 
   it("adds varying declarations from the custom shader", function () {
-    var varyings = {
+    const varyings = {
       v_distanceFromCenter: VaryingType.FLOAT,
       v_computedMatrix: VaryingType.MAT3,
     };
-    var customShader = new CustomShader({
+    const customShader = new CustomShader({
       vertexShaderText: emptyVertexShader,
       fragmentShaderText: emptyFragmentShader,
       varyings: varyings,
     });
-    var model = {
+    const model = {
       customShader: customShader,
     };
-    var shaderBuilder = new ShaderBuilder();
+    const shaderBuilder = new ShaderBuilder();
 
-    var renderResources = {
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
@@ -172,15 +172,15 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   });
 
   it("overrides the lighting model if specified in the custom shader", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var model = {
+    const shaderBuilder = new ShaderBuilder();
+    const model = {
       customShader: new CustomShader({
         vertexShaderText: emptyVertexShader,
         fragmentShaderText: emptyFragmentShader,
         lightingModel: LightingModel.PBR,
       }),
     };
-    var renderResources = {
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
@@ -195,14 +195,14 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   });
 
   it("sets alpha options", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var model = {
+    const shaderBuilder = new ShaderBuilder();
+    const model = {
       customShader: new CustomShader({
         vertexShaderText: emptyVertexShader,
         fragmentShaderText: emptyFragmentShader,
       }),
     };
-    var renderResources = {
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
@@ -216,15 +216,15 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   });
 
   it("sets alpha options for translucent custom shader", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var model = {
+    const shaderBuilder = new ShaderBuilder();
+    const model = {
       customShader: new CustomShader({
         vertexShaderText: emptyVertexShader,
         fragmentShaderText: emptyFragmentShader,
         isTranslucent: true,
       }),
     };
-    var renderResources = {
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
@@ -238,8 +238,8 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   });
 
   it("generates shader code from built-in attributes", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var model = {
+    const shaderBuilder = new ShaderBuilder();
+    const model = {
       customShader: new CustomShader({
         vertexShaderText: [
           "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
@@ -259,7 +259,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         ].join("\n"),
       }),
     };
-    var renderResources = {
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
@@ -285,13 +285,13 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
       "VertexInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
 
     ShaderBuilderTester.expectHasVertexFunction(
@@ -317,8 +317,8 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   });
 
   it("generates shader code for custom attributes", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var model = {
+    const shaderBuilder = new ShaderBuilder();
+    const model = {
       customShader: new CustomShader({
         vertexShaderText: [
           "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
@@ -336,7 +336,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         ].join("\n"),
       }),
     };
-    var renderResources = {
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
@@ -365,13 +365,13 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
       "VertexInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
 
     ShaderBuilderTester.expectHasVertexFunction(
@@ -395,8 +395,8 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   });
 
   it("treats COLOR attributes as vec4", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var model = {
+    const shaderBuilder = new ShaderBuilder();
+    const model = {
       customShader: new CustomShader({
         varyings: {
           v_color: VaryingType.FLOAT,
@@ -417,7 +417,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       }),
     };
 
-    var renderResources = {
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
@@ -446,13 +446,13 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
       "VertexInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
 
     ShaderBuilderTester.expectHasVertexFunction(
@@ -476,8 +476,8 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   });
 
   it("only generates input lines for attributes that are used", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var model = {
+    const shaderBuilder = new ShaderBuilder();
+    const model = {
       customShader: new CustomShader({
         vertexShaderText: [
           "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
@@ -494,7 +494,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         ].join("\n"),
       }),
     };
-    var renderResources = {
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
@@ -523,13 +523,13 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
       "VertexInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
 
     ShaderBuilderTester.expectHasVertexFunction(
@@ -547,11 +547,11 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   });
 
   it("generates the shader lines in the correct order", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var model = {
+    const shaderBuilder = new ShaderBuilder();
+    const model = {
       customShader: emptyShader,
     };
-    var renderResources = {
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
@@ -583,11 +583,11 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   });
 
   it("does not add positions in other coordinate systems if not needed", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var model = {
+    const shaderBuilder = new ShaderBuilder();
+    const model = {
       customShader: emptyShader,
     };
-    var renderResources = {
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
@@ -600,13 +600,13 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
   });
 
   it("configures positions in other coordinate systems when present in the shader", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var model = {
+    const shaderBuilder = new ShaderBuilder();
+    const model = {
       customShader: new CustomShader({
         vertexShaderText: emptyVertexShader,
         fragmentShaderText: [
@@ -619,7 +619,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         ].join("\n"),
       }),
     };
-    var renderResources = {
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
@@ -650,13 +650,13 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
       "VertexInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
 
     ShaderBuilderTester.expectHasVertexFunction(
@@ -678,8 +678,8 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   });
 
   it("infers default values for built-in attributes", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var model = {
+    const shaderBuilder = new ShaderBuilder();
+    const model = {
       customShader: new CustomShader({
         vertexShaderText: [
           "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
@@ -695,7 +695,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         ].join("\n"),
       }),
     };
-    var renderResources = {
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
@@ -721,13 +721,13 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_VERTEX_INPUT,
       "VertexInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
 
     ShaderBuilderTester.expectHasVertexFunction(
@@ -745,8 +745,8 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   });
 
   it("handles incompatible primitives gracefully", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var model = {
+    const shaderBuilder = new ShaderBuilder();
+    const model = {
       customShader: new CustomShader({
         vertexShaderText: [
           "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
@@ -762,7 +762,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         ].join("\n"),
       }),
     };
-    var renderResources = {
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
@@ -781,13 +781,13 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   });
 
   it("disables vertex shader if vertexShaderText is not provided", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var model = {
+    const shaderBuilder = new ShaderBuilder();
+    const model = {
       customShader: new CustomShader({
         fragmentShaderText: emptyFragmentShader,
       }),
     };
-    var renderResources = {
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
@@ -804,20 +804,20 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     ]);
 
     expect(shaderBuilder._vertexShaderParts.shaderLines).toEqual([]);
-    var fragmentShaderIndex = shaderBuilder._fragmentShaderParts.shaderLines.indexOf(
+    const fragmentShaderIndex = shaderBuilder._fragmentShaderParts.shaderLines.indexOf(
       emptyFragmentShader
     );
     expect(fragmentShaderIndex).not.toBe(-1);
   });
 
   it("disables fragment shader if fragmentShaderText is not provided", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var model = {
+    const shaderBuilder = new ShaderBuilder();
+    const model = {
       customShader: new CustomShader({
         vertexShaderText: emptyVertexShader,
       }),
     };
-    var renderResources = {
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
@@ -832,7 +832,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     ]);
     expect(shaderBuilder._fragmentShaderParts.defineLines).toEqual([]);
 
-    var vertexShaderIndex = shaderBuilder._vertexShaderParts.shaderLines.indexOf(
+    const vertexShaderIndex = shaderBuilder._vertexShaderParts.shaderLines.indexOf(
       emptyVertexShader
     );
     expect(vertexShaderIndex).not.toBe(-1);
@@ -840,11 +840,11 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   });
 
   it("disables custom shader if neither fragmentShaderText nor vertexShaderText are provided", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var model = {
+    const shaderBuilder = new ShaderBuilder();
+    const model = {
       customShader: new CustomShader(),
     };
-    var renderResources = {
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
@@ -861,8 +861,8 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
   });
 
   it("handles fragment-only custom shader that computes positionWC", function () {
-    var shaderBuilder = new ShaderBuilder();
-    var model = {
+    const shaderBuilder = new ShaderBuilder();
+    const model = {
       customShader: new CustomShader({
         fragmentShaderText: [
           "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
@@ -872,7 +872,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         ].join("\n"),
       }),
     };
-    var renderResources = {
+    const renderResources = {
       shaderBuilder: shaderBuilder,
       model: model,
       lightingOptions: new ModelLightingOptions(),
@@ -897,7 +897,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       shaderBuilder,
       CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT,
       "FragmentInput",
-      ["    Attributes attributes;"]
+      ["    Attributes attributes;", "    FeatureIds featureIds;"]
     );
 
     expect(shaderBuilder._vertexShaderParts.functionIds).toEqual([]);

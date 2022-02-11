@@ -28,7 +28,7 @@ import ModelUtility from "./ModelUtility.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
 
-var LoadState = {
+const LoadState = {
   NEEDS_LOAD: 0,
   LOADING: 1,
   LOADED: 2,
@@ -228,21 +228,21 @@ Object.defineProperties(ModelInstanceCollection.prototype, {
 
 function createInstances(collection, instancesOptions) {
   instancesOptions = defaultValue(instancesOptions, []);
-  var length = instancesOptions.length;
-  var instances = new Array(length);
-  for (var i = 0; i < length; ++i) {
-    var instanceOptions = instancesOptions[i];
-    var modelMatrix = instanceOptions.modelMatrix;
-    var instanceId = defaultValue(instanceOptions.batchId, i);
+  const length = instancesOptions.length;
+  const instances = new Array(length);
+  for (let i = 0; i < length; ++i) {
+    const instanceOptions = instancesOptions[i];
+    const modelMatrix = instanceOptions.modelMatrix;
+    const instanceId = defaultValue(instanceOptions.batchId, i);
     instances[i] = new ModelInstance(collection, modelMatrix, instanceId);
   }
   return instances;
 }
 
 function createBoundingSphere(collection) {
-  var instancesLength = collection.length;
-  var points = new Array(instancesLength);
-  for (var i = 0; i < instancesLength; ++i) {
+  const instancesLength = collection.length;
+  const points = new Array(instancesLength);
+  for (let i = 0; i < instancesLength; ++i) {
     points[i] = Matrix4.getTranslation(
       collection._instances[i]._modelMatrix,
       new Cartesian3()
@@ -252,13 +252,13 @@ function createBoundingSphere(collection) {
   return BoundingSphere.fromPoints(points);
 }
 
-var scratchCartesian = new Cartesian3();
-var scratchMatrix = new Matrix4();
+const scratchCartesian = new Cartesian3();
+const scratchMatrix = new Matrix4();
 
 ModelInstanceCollection.prototype.expandBoundingSphere = function (
   instanceModelMatrix
 ) {
-  var translation = Matrix4.getTranslation(
+  const translation = Matrix4.getTranslation(
     instanceModelMatrix,
     scratchCartesian
   );
@@ -276,20 +276,15 @@ function getCheckUniformSemanticFunction(
   uniformMap
 ) {
   return function (uniform, uniformName) {
-    var semantic = uniform.semantic;
+    const semantic = uniform.semantic;
     if (defined(semantic) && modelSemantics.indexOf(semantic) > -1) {
       if (supportedSemantics.indexOf(semantic) > -1) {
         uniformMap[uniformName] = semantic;
       } else {
         throw new RuntimeError(
-          "Shader program cannot be optimized for instancing. " +
-            'Uniform "' +
-            uniformName +
-            '" in program "' +
-            programId +
-            '" uses unsupported semantic "' +
-            semantic +
-            '"'
+          `${
+            "Shader program cannot be optimized for instancing. " + 'Uniform "'
+          }${uniformName}" in program "${programId}" uses unsupported semantic "${semantic}"`
         );
       }
     }
@@ -301,11 +296,11 @@ function getInstancedUniforms(collection, programId) {
     return collection._instancedUniformsByProgram[programId];
   }
 
-  var instancedUniformsByProgram = {};
+  const instancedUniformsByProgram = {};
   collection._instancedUniformsByProgram = instancedUniformsByProgram;
 
   // When using CESIUM_RTC_MODELVIEW the CESIUM_RTC center is ignored. Instances are always rendered relative-to-center.
-  var modelSemantics = [
+  const modelSemantics = [
     "MODEL",
     "MODELVIEW",
     "CESIUM_RTC_MODELVIEW",
@@ -316,23 +311,23 @@ function getInstancedUniforms(collection, programId) {
     "MODELINVERSETRANSPOSE",
     "MODELVIEWINVERSETRANSPOSE",
   ];
-  var supportedSemantics = [
+  const supportedSemantics = [
     "MODELVIEW",
     "CESIUM_RTC_MODELVIEW",
     "MODELVIEWPROJECTION",
     "MODELVIEWINVERSETRANSPOSE",
   ];
 
-  var techniques = collection._model._sourceTechniques;
-  for (var techniqueId in techniques) {
+  const techniques = collection._model._sourceTechniques;
+  for (const techniqueId in techniques) {
     if (techniques.hasOwnProperty(techniqueId)) {
-      var technique = techniques[techniqueId];
-      var program = technique.program;
+      const technique = techniques[techniqueId];
+      const program = technique.program;
 
       // Different techniques may share the same program, skip if already processed.
       // This assumes techniques that share a program do not declare different semantics for the same uniforms.
       if (!defined(instancedUniformsByProgram[program])) {
-        var uniformMap = {};
+        const uniformMap = {};
         instancedUniformsByProgram[program] = uniformMap;
         ForEach.techniqueUniform(
           technique,
@@ -352,17 +347,17 @@ function getInstancedUniforms(collection, programId) {
 
 function getVertexShaderCallback(collection) {
   return function (vs, programId) {
-    var instancedUniforms = getInstancedUniforms(collection, programId);
-    var usesBatchTable = defined(collection._batchTable);
+    const instancedUniforms = getInstancedUniforms(collection, programId);
+    const usesBatchTable = defined(collection._batchTable);
 
-    var renamedSource = ShaderSource.replaceMain(vs, "czm_instancing_main");
+    let renamedSource = ShaderSource.replaceMain(vs, "czm_instancing_main");
 
-    var globalVarsHeader = "";
-    var globalVarsMain = "";
-    for (var uniform in instancedUniforms) {
+    let globalVarsHeader = "";
+    let globalVarsMain = "";
+    for (const uniform in instancedUniforms) {
       if (instancedUniforms.hasOwnProperty(uniform)) {
-        var semantic = instancedUniforms[uniform];
-        var varName;
+        const semantic = instancedUniforms[uniform];
+        let varName;
         if (semantic === "MODELVIEW" || semantic === "CESIUM_RTC_MODELVIEW") {
           varName = "czm_instanced_modelView";
         } else if (semantic === "MODELVIEWPROJECTION") {
@@ -378,11 +373,11 @@ function getVertexShaderCallback(collection) {
         }
 
         // Remove the uniform declaration
-        var regex = new RegExp("uniform.*" + uniform + ".*");
+        let regex = new RegExp(`uniform.*${uniform}.*`);
         renamedSource = renamedSource.replace(regex, "");
 
         // Replace all occurrences of the uniform with the global variable
-        regex = new RegExp(uniform + "\\b", "g");
+        regex = new RegExp(`${uniform}\\b`, "g");
         renamedSource = renamedSource.replace(regex, varName);
       }
     }
@@ -390,13 +385,13 @@ function getVertexShaderCallback(collection) {
     // czm_instanced_model is the model matrix of the instance relative to center
     // czm_instanced_modifiedModelView is the transform from the center to view
     // czm_instanced_nodeTransform is the local offset of the node within the model
-    var uniforms =
+    const uniforms =
       "uniform mat4 czm_instanced_modifiedModelView;\n" +
       "uniform mat4 czm_instanced_nodeTransform;\n";
 
-    var batchIdAttribute;
-    var pickAttribute;
-    var pickVarying;
+    let batchIdAttribute;
+    let pickAttribute;
+    let pickVarying;
 
     if (usesBatchTable) {
       batchIdAttribute = "attribute float a_batchId;\n";
@@ -409,28 +404,18 @@ function getVertexShaderCallback(collection) {
       pickVarying = "    v_pickColor = pickColor;\n";
     }
 
-    var instancedSource =
-      uniforms +
-      globalVarsHeader +
-      "mat4 czm_instanced_modelView;\n" +
-      "attribute vec4 czm_modelMatrixRow0;\n" +
-      "attribute vec4 czm_modelMatrixRow1;\n" +
-      "attribute vec4 czm_modelMatrixRow2;\n" +
-      batchIdAttribute +
-      pickAttribute +
-      renamedSource +
-      "void main()\n" +
-      "{\n" +
-      "    mat4 czm_instanced_model = mat4(czm_modelMatrixRow0.x, czm_modelMatrixRow1.x, czm_modelMatrixRow2.x, 0.0, czm_modelMatrixRow0.y, czm_modelMatrixRow1.y, czm_modelMatrixRow2.y, 0.0, czm_modelMatrixRow0.z, czm_modelMatrixRow1.z, czm_modelMatrixRow2.z, 0.0, czm_modelMatrixRow0.w, czm_modelMatrixRow1.w, czm_modelMatrixRow2.w, 1.0);\n" +
-      "    czm_instanced_modelView = czm_instanced_modifiedModelView * czm_instanced_model * czm_instanced_nodeTransform;\n" +
-      globalVarsMain +
-      "    czm_instancing_main();\n" +
-      pickVarying +
-      "}\n";
+    let instancedSource =
+      `${uniforms + globalVarsHeader}mat4 czm_instanced_modelView;\n` +
+      `attribute vec4 czm_modelMatrixRow0;\n` +
+      `attribute vec4 czm_modelMatrixRow1;\n` +
+      `attribute vec4 czm_modelMatrixRow2;\n${batchIdAttribute}${pickAttribute}${renamedSource}void main()\n` +
+      `{\n` +
+      `    mat4 czm_instanced_model = mat4(czm_modelMatrixRow0.x, czm_modelMatrixRow1.x, czm_modelMatrixRow2.x, 0.0, czm_modelMatrixRow0.y, czm_modelMatrixRow1.y, czm_modelMatrixRow2.y, 0.0, czm_modelMatrixRow0.z, czm_modelMatrixRow1.z, czm_modelMatrixRow2.z, 0.0, czm_modelMatrixRow0.w, czm_modelMatrixRow1.w, czm_modelMatrixRow2.w, 1.0);\n` +
+      `    czm_instanced_modelView = czm_instanced_modifiedModelView * czm_instanced_model * czm_instanced_nodeTransform;\n${globalVarsMain}    czm_instancing_main();\n${pickVarying}}\n`;
 
     if (usesBatchTable) {
-      var gltf = collection._model.gltf;
-      var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
+      const gltf = collection._model.gltf;
+      const diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
         gltf,
         programId
       );
@@ -447,10 +432,10 @@ function getVertexShaderCallback(collection) {
 
 function getFragmentShaderCallback(collection) {
   return function (fs, programId) {
-    var batchTable = collection._batchTable;
+    const batchTable = collection._batchTable;
     if (defined(batchTable)) {
-      var gltf = collection._model.gltf;
-      var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
+      const gltf = collection._model.gltf;
+      const diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
         gltf,
         programId
       );
@@ -460,7 +445,7 @@ function getFragmentShaderCallback(collection) {
         false
       )(fs);
     } else {
-      fs = "varying vec4 v_pickColor;\n" + fs;
+      fs = `varying vec4 v_pickColor;\n${fs}`;
     }
     return fs;
   };
@@ -492,8 +477,8 @@ function getUniformMapCallback(collection, context) {
     uniformMap.czm_instanced_nodeTransform = createNodeTransformFunction(node);
 
     // Remove instanced uniforms from the uniform map
-    var instancedUniforms = getInstancedUniforms(collection, programId);
-    for (var uniform in instancedUniforms) {
+    const instancedUniforms = getInstancedUniforms(collection, programId);
+    for (const uniform in instancedUniforms) {
       if (instancedUniforms.hasOwnProperty(uniform)) {
         delete uniformMap[uniform];
       }
@@ -510,8 +495,8 @@ function getUniformMapCallback(collection, context) {
 function getVertexShaderNonInstancedCallback(collection) {
   return function (vs, programId) {
     if (defined(collection._batchTable)) {
-      var gltf = collection._model.gltf;
-      var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
+      const gltf = collection._model.gltf;
+      const diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
         gltf,
         programId
       );
@@ -521,7 +506,7 @@ function getVertexShaderNonInstancedCallback(collection) {
         diffuseAttributeOrUniformName
       )(vs);
       // Treat a_batchId as a uniform rather than a vertex attribute
-      vs = "uniform float a_batchId\n;" + vs;
+      vs = `uniform float a_batchId\n;${vs}`;
     }
     return vs;
   };
@@ -529,10 +514,10 @@ function getVertexShaderNonInstancedCallback(collection) {
 
 function getFragmentShaderNonInstancedCallback(collection) {
   return function (fs, programId) {
-    var batchTable = collection._batchTable;
+    const batchTable = collection._batchTable;
     if (defined(batchTable)) {
-      var gltf = collection._model.gltf;
-      var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
+      const gltf = collection._model.gltf;
+      const diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(
         gltf,
         programId
       );
@@ -542,7 +527,7 @@ function getFragmentShaderNonInstancedCallback(collection) {
         false
       )(fs);
     } else {
-      fs = "uniform vec4 czm_pickColor;\n" + fs;
+      fs = `uniform vec4 czm_pickColor;\n${fs}`;
     }
     return fs;
   };
@@ -559,12 +544,12 @@ function getUniformMapNonInstancedCallback(collection) {
 }
 
 function getVertexBufferTypedArray(collection) {
-  var instances = collection._instances;
-  var instancesLength = collection.length;
-  var collectionCenter = collection._center;
-  var vertexSizeInFloats = 12;
+  const instances = collection._instances;
+  const instancesLength = collection.length;
+  const collectionCenter = collection._center;
+  const vertexSizeInFloats = 12;
 
-  var bufferData = collection._vertexBufferTypedArray;
+  let bufferData = collection._vertexBufferTypedArray;
   if (!defined(bufferData)) {
     bufferData = new Float32Array(instancesLength * vertexSizeInFloats);
   }
@@ -573,16 +558,16 @@ function getVertexBufferTypedArray(collection) {
     collection._vertexBufferTypedArray = bufferData;
   }
 
-  for (var i = 0; i < instancesLength; ++i) {
-    var modelMatrix = instances[i]._modelMatrix;
+  for (let i = 0; i < instancesLength; ++i) {
+    const modelMatrix = instances[i]._modelMatrix;
 
     // Instance matrix is relative to center
-    var instanceMatrix = Matrix4.clone(modelMatrix, scratchMatrix);
+    const instanceMatrix = Matrix4.clone(modelMatrix, scratchMatrix);
     instanceMatrix[12] -= collectionCenter.x;
     instanceMatrix[13] -= collectionCenter.y;
     instanceMatrix[14] -= collectionCenter.z;
 
-    var offset = i * vertexSizeInFloats;
+    const offset = i * vertexSizeInFloats;
 
     // First three rows of the model matrix
     bufferData[offset + 0] = instanceMatrix[0];
@@ -603,14 +588,14 @@ function getVertexBufferTypedArray(collection) {
 }
 
 function createVertexBuffer(collection, context) {
-  var i;
-  var instances = collection._instances;
-  var instancesLength = collection.length;
-  var dynamic = collection._dynamic;
-  var usesBatchTable = defined(collection._batchTable);
+  let i;
+  const instances = collection._instances;
+  const instancesLength = collection.length;
+  const dynamic = collection._dynamic;
+  const usesBatchTable = defined(collection._batchTable);
 
   if (usesBatchTable) {
-    var batchIdBufferData = new Uint16Array(instancesLength);
+    const batchIdBufferData = new Uint16Array(instancesLength);
     for (i = 0; i < instancesLength; ++i) {
       batchIdBufferData[i] = instances[i]._instanceId;
     }
@@ -622,11 +607,11 @@ function createVertexBuffer(collection, context) {
   }
 
   if (!usesBatchTable) {
-    var pickIdBuffer = new Uint8Array(instancesLength * 4);
+    const pickIdBuffer = new Uint8Array(instancesLength * 4);
     for (i = 0; i < instancesLength; ++i) {
-      var pickId = collection._pickIds[i];
-      var pickColor = pickId.color;
-      var offset = i * 4;
+      const pickId = collection._pickIds[i];
+      const pickColor = pickId.color;
+      const offset = i * 4;
       pickIdBuffer[offset] = Color.floatToByte(pickColor.red);
       pickIdBuffer[offset + 1] = Color.floatToByte(pickColor.green);
       pickIdBuffer[offset + 2] = Color.floatToByte(pickColor.blue);
@@ -639,7 +624,7 @@ function createVertexBuffer(collection, context) {
     });
   }
 
-  var vertexBufferTypedArray = getVertexBufferTypedArray(collection);
+  const vertexBufferTypedArray = getVertexBufferTypedArray(collection);
   collection._vertexBuffer = Buffer.createVertexBuffer({
     context: context,
     typedArray: vertexBufferTypedArray,
@@ -648,7 +633,7 @@ function createVertexBuffer(collection, context) {
 }
 
 function updateVertexBuffer(collection) {
-  var vertexBufferTypedArray = getVertexBufferTypedArray(collection);
+  const vertexBufferTypedArray = getVertexBufferTypedArray(collection);
   collection._vertexBuffer.copyFromArrayView(vertexBufferTypedArray);
 }
 
@@ -657,21 +642,21 @@ function createPickIds(collection, context) {
   // a continuous range of pickIds and then converting the base pickId + batchId
   // to RGBA in the shader.  The only consider is precision issues, which might
   // not be an issue in WebGL 2.
-  var instances = collection._instances;
-  var instancesLength = instances.length;
-  var pickIds = new Array(instancesLength);
-  for (var i = 0; i < instancesLength; ++i) {
+  const instances = collection._instances;
+  const instancesLength = instances.length;
+  const pickIds = new Array(instancesLength);
+  for (let i = 0; i < instancesLength; ++i) {
     pickIds[i] = context.createPickId(instances[i]);
   }
   return pickIds;
 }
 
 function createModel(collection, context) {
-  var instancingSupported = collection._instancingSupported;
-  var usesBatchTable = defined(collection._batchTable);
-  var allowPicking = collection._allowPicking;
+  const instancingSupported = collection._instancingSupported;
+  const usesBatchTable = defined(collection._batchTable);
+  const allowPicking = collection._allowPicking;
 
-  var modelOptions = {
+  const modelOptions = {
     url: collection._url,
     requestType: collection._requestType,
     gltf: collection._gltf,
@@ -706,12 +691,12 @@ function createModel(collection, context) {
   if (instancingSupported) {
     createVertexBuffer(collection, context);
 
-    var vertexSizeInFloats = 12;
-    var componentSizeInBytes = ComponentDatatype.getSizeInBytes(
+    const vertexSizeInFloats = 12;
+    const componentSizeInBytes = ComponentDatatype.getSizeInBytes(
       ComponentDatatype.FLOAT
     );
 
-    var instancedAttributes = {
+    const instancedAttributes = {
       czm_modelMatrixRow0: {
         index: 0, // updated in Model
         vertexBuffer: collection._vertexBuffer,
@@ -777,7 +762,7 @@ function createModel(collection, context) {
     modelOptions.uniformMapLoaded = getUniformMapCallback(collection, context);
 
     if (defined(collection._url)) {
-      modelOptions.cacheKey = collection._url.getUrlComponent() + "#instanced";
+      modelOptions.cacheKey = `${collection._url.getUrlComponent()}#instanced`;
     }
   } else {
     modelOptions.vertexShaderLoaded = getVertexShaderNonInstancedCallback(
@@ -805,19 +790,19 @@ function updateWireframe(collection, force) {
 
     // This assumes the original primitive was TRIANGLES and that the triangles
     // are connected for the wireframe to look perfect.
-    var primitiveType = collection.debugWireframe
+    const primitiveType = collection.debugWireframe
       ? PrimitiveType.LINES
       : PrimitiveType.TRIANGLES;
-    var commands = collection._drawCommands;
-    var length = commands.length;
-    for (var i = 0; i < length; ++i) {
+    const commands = collection._drawCommands;
+    const length = commands.length;
+    for (let i = 0; i < length; ++i) {
       commands[i].primitiveType = primitiveType;
     }
   }
 }
 
 function getDisableCullingRenderState(renderState) {
-  var rs = clone(renderState, true);
+  const rs = clone(renderState, true);
   rs.cull.enabled = false;
   return RenderState.fromCache(rs);
 }
@@ -826,16 +811,16 @@ function updateBackFaceCulling(collection, force) {
   if (collection._backFaceCulling !== collection.backFaceCulling || force) {
     collection._backFaceCulling = collection.backFaceCulling;
 
-    var commands = collection._drawCommands;
-    var length = commands.length;
-    var i;
+    const commands = collection._drawCommands;
+    const length = commands.length;
+    let i;
 
     if (!defined(collection._disableCullingRenderStates)) {
       collection._disableCullingRenderStates = new Array(length);
       collection._renderStates = new Array(length);
       for (i = 0; i < length; ++i) {
-        var renderState = commands[i].renderState;
-        var derivedRenderState = getDisableCullingRenderState(renderState);
+        const renderState = commands[i].renderState;
+        const derivedRenderState = getDisableCullingRenderState(renderState);
         collection._disableCullingRenderStates[i] = derivedRenderState;
         collection._renderStates[i] = renderState;
       }
@@ -857,22 +842,22 @@ function updateShowBoundingVolume(collection, force) {
   ) {
     collection._debugShowBoundingVolume = collection.debugShowBoundingVolume;
 
-    var commands = collection._drawCommands;
-    var length = commands.length;
-    for (var i = 0; i < length; ++i) {
+    const commands = collection._drawCommands;
+    const length = commands.length;
+    for (let i = 0; i < length; ++i) {
       commands[i].debugShowBoundingVolume = collection.debugShowBoundingVolume;
     }
   }
 }
 
 function createCommands(collection, drawCommands) {
-  var commandsLength = drawCommands.length;
-  var instancesLength = collection.length;
-  var boundingSphere = collection._boundingSphere;
-  var cull = collection._cull;
+  const commandsLength = drawCommands.length;
+  const instancesLength = collection.length;
+  const boundingSphere = collection._boundingSphere;
+  const cull = collection._cull;
 
-  for (var i = 0; i < commandsLength; ++i) {
-    var drawCommand = DrawCommand.shallowClone(drawCommands[i]);
+  for (let i = 0; i < commandsLength; ++i) {
+    const drawCommand = DrawCommand.shallowClone(drawCommands[i]);
     drawCommand.instanceCount = instancesLength;
     drawCommand.boundingVolume = boundingSphere;
     drawCommand.cull = cull;
@@ -899,16 +884,16 @@ function createPickColorFunction(color) {
 
 function createCommandsNonInstanced(collection, drawCommands) {
   // When instancing is disabled, create commands for every instance.
-  var instances = collection._instances;
-  var commandsLength = drawCommands.length;
-  var instancesLength = collection.length;
-  var batchTable = collection._batchTable;
-  var usesBatchTable = defined(batchTable);
-  var cull = collection._cull;
+  const instances = collection._instances;
+  const commandsLength = drawCommands.length;
+  const instancesLength = collection.length;
+  const batchTable = collection._batchTable;
+  const usesBatchTable = defined(batchTable);
+  const cull = collection._cull;
 
-  for (var i = 0; i < commandsLength; ++i) {
-    for (var j = 0; j < instancesLength; ++j) {
-      var drawCommand = DrawCommand.shallowClone(drawCommands[i]);
+  for (let i = 0; i < commandsLength; ++i) {
+    for (let j = 0; j < instancesLength; ++j) {
+      const drawCommand = DrawCommand.shallowClone(drawCommands[i]);
       drawCommand.modelMatrix = new Matrix4(); // Updated in updateCommandsNonInstanced
       drawCommand.boundingVolume = new BoundingSphere(); // Updated in updateCommandsNonInstanced
       drawCommand.cull = cull;
@@ -918,7 +903,7 @@ function createCommandsNonInstanced(collection, drawCommands) {
           instances[j]._instanceId
         );
       } else {
-        var pickId = collection._pickIds[j];
+        const pickId = collection._pickIds[j];
         drawCommand.uniformMap.czm_pickColor = createPickColorFunction(
           pickId.color
         );
@@ -929,18 +914,18 @@ function createCommandsNonInstanced(collection, drawCommands) {
 }
 
 function updateCommandsNonInstanced(collection) {
-  var modelCommands = collection._modelCommands;
-  var commandsLength = modelCommands.length;
-  var instancesLength = collection.length;
-  var collectionTransform = collection._rtcTransform;
-  var collectionCenter = collection._center;
+  const modelCommands = collection._modelCommands;
+  const commandsLength = modelCommands.length;
+  const instancesLength = collection.length;
+  const collectionTransform = collection._rtcTransform;
+  const collectionCenter = collection._center;
 
-  for (var i = 0; i < commandsLength; ++i) {
-    var modelCommand = modelCommands[i];
-    for (var j = 0; j < instancesLength; ++j) {
-      var commandIndex = i * instancesLength + j;
-      var drawCommand = collection._drawCommands[commandIndex];
-      var instanceMatrix = Matrix4.clone(
+  for (let i = 0; i < commandsLength; ++i) {
+    const modelCommand = modelCommands[i];
+    for (let j = 0; j < instancesLength; ++j) {
+      const commandIndex = i * instancesLength + j;
+      const drawCommand = collection._drawCommands[commandIndex];
+      let instanceMatrix = Matrix4.clone(
         collection._instances[j]._modelMatrix,
         scratchMatrix
       );
@@ -952,12 +937,12 @@ function updateCommandsNonInstanced(collection) {
         instanceMatrix,
         scratchMatrix
       );
-      var nodeMatrix = modelCommand.modelMatrix;
-      var modelMatrix = drawCommand.modelMatrix;
+      const nodeMatrix = modelCommand.modelMatrix;
+      const modelMatrix = drawCommand.modelMatrix;
       Matrix4.multiply(instanceMatrix, nodeMatrix, modelMatrix);
 
-      var nodeBoundingSphere = modelCommand.boundingVolume;
-      var boundingSphere = drawCommand.boundingVolume;
+      const nodeBoundingSphere = modelCommand.boundingVolume;
+      const boundingSphere = drawCommand.boundingVolume;
       BoundingSphere.transform(
         nodeBoundingSphere,
         instanceMatrix,
@@ -968,13 +953,13 @@ function updateCommandsNonInstanced(collection) {
 }
 
 function getModelCommands(model) {
-  var nodeCommands = model._nodeCommands;
-  var length = nodeCommands.length;
+  const nodeCommands = model._nodeCommands;
+  const length = nodeCommands.length;
 
-  var drawCommands = [];
+  const drawCommands = [];
 
-  for (var i = 0; i < length; ++i) {
-    var nc = nodeCommands[i];
+  for (let i = 0; i < length; ++i) {
+    const nc = nodeCommands[i];
     if (nc.show) {
       drawCommands.push(nc.command);
     }
@@ -984,13 +969,13 @@ function getModelCommands(model) {
 }
 
 function commandsDirty(model) {
-  var nodeCommands = model._nodeCommands;
-  var length = nodeCommands.length;
+  const nodeCommands = model._nodeCommands;
+  const length = nodeCommands.length;
 
-  var commandsDirty = false;
+  let commandsDirty = false;
 
-  for (var i = 0; i < length; i++) {
-    var nc = nodeCommands[i];
+  for (let i = 0; i < length; i++) {
+    const nc = nodeCommands[i];
     if (nc.command.dirty) {
       nc.command.dirty = false;
       commandsDirty = true;
@@ -1002,7 +987,7 @@ function commandsDirty(model) {
 function generateModelCommands(modelInstanceCollection, instancingSupported) {
   modelInstanceCollection._drawCommands = [];
 
-  var modelCommands = getModelCommands(modelInstanceCollection._model);
+  const modelCommands = getModelCommands(modelInstanceCollection._model);
   if (instancingSupported) {
     createCommands(modelInstanceCollection, modelCommands);
   } else {
@@ -1015,13 +1000,13 @@ function updateShadows(collection, force) {
   if (collection.shadows !== collection._shadows || force) {
     collection._shadows = collection.shadows;
 
-    var castShadows = ShadowMode.castShadows(collection.shadows);
-    var receiveShadows = ShadowMode.receiveShadows(collection.shadows);
+    const castShadows = ShadowMode.castShadows(collection.shadows);
+    const receiveShadows = ShadowMode.receiveShadows(collection.shadows);
 
-    var drawCommands = collection._drawCommands;
-    var length = drawCommands.length;
-    for (var i = 0; i < length; ++i) {
-      var drawCommand = drawCommands[i];
+    const drawCommands = collection._drawCommands;
+    const length = drawCommands.length;
+    for (let i = 0; i < length; ++i) {
+      const drawCommand = drawCommands[i];
       drawCommand.castShadows = castShadows;
       drawCommand.receiveShadows = receiveShadows;
     }
@@ -1041,21 +1026,21 @@ ModelInstanceCollection.prototype.update = function (frameState) {
     return;
   }
 
-  var context = frameState.context;
+  const context = frameState.context;
 
   if (this._state === LoadState.NEEDS_LOAD) {
     this._state = LoadState.LOADING;
     this._instancingSupported = context.instancedArrays;
     createModel(this, context);
-    var that = this;
+    const that = this;
     this._model.readyPromise.otherwise(function (error) {
       that._state = LoadState.FAILED;
       that._readyPromise.reject(error);
     });
   }
 
-  var instancingSupported = this._instancingSupported;
-  var model = this._model;
+  const instancingSupported = this._instancingSupported;
+  const model = this._model;
 
   model.imageBasedLightingFactor = this.imageBasedLightingFactor;
   model.lightColor = this.lightColor;
@@ -1070,7 +1055,7 @@ ModelInstanceCollection.prototype.update = function (frameState) {
     this._ready = true;
 
     // Expand bounding volume to fit the radius of the loaded model including the model's offset from the center
-    var modelRadius =
+    const modelRadius =
       model.boundingSphere.radius +
       Cartesian3.magnitude(model.boundingSphere.center);
     this._boundingSphere.radius += modelRadius;
@@ -1086,14 +1071,14 @@ ModelInstanceCollection.prototype.update = function (frameState) {
     return;
   }
 
-  var modeChanged = frameState.mode !== this._mode;
-  var modelMatrix = this.modelMatrix;
-  var modelMatrixChanged = !Matrix4.equals(this._modelMatrix, modelMatrix);
+  const modeChanged = frameState.mode !== this._mode;
+  const modelMatrix = this.modelMatrix;
+  const modelMatrixChanged = !Matrix4.equals(this._modelMatrix, modelMatrix);
 
   if (modeChanged || modelMatrixChanged) {
     this._mode = frameState.mode;
     Matrix4.clone(modelMatrix, this._modelMatrix);
-    var rtcTransform = Matrix4.multiplyByTranslation(
+    let rtcTransform = Matrix4.multiplyByTranslation(
       this._modelMatrix,
       this._center,
       this._rtcTransform
@@ -1118,7 +1103,7 @@ ModelInstanceCollection.prototype.update = function (frameState) {
   }
 
   // If the model was set to rebuild shaders during update, rebuild instanced commands.
-  var modelCommandsDirty = commandsDirty(model);
+  const modelCommandsDirty = commandsDirty(model);
   if (modelCommandsDirty) {
     generateModelCommands(this, instancingSupported);
   }
@@ -1138,16 +1123,16 @@ ModelInstanceCollection.prototype.update = function (frameState) {
   updateBackFaceCulling(this, modelCommandsDirty);
   updateShowBoundingVolume(this, modelCommandsDirty);
 
-  var passes = frameState.passes;
+  const passes = frameState.passes;
   if (!passes.render && !passes.pick) {
     return;
   }
 
-  var commandList = frameState.commandList;
-  var commands = this._drawCommands;
-  var commandsLength = commands.length;
+  const commandList = frameState.commandList;
+  const commands = this._drawCommands;
+  const commandsLength = commands.length;
 
-  for (var i = 0; i < commandsLength; ++i) {
+  for (let i = 0; i < commandsLength; ++i) {
     commandList.push(commands[i]);
   }
 };
@@ -1159,10 +1144,10 @@ ModelInstanceCollection.prototype.isDestroyed = function () {
 ModelInstanceCollection.prototype.destroy = function () {
   this._model = this._model && this._model.destroy();
 
-  var pickIds = this._pickIds;
+  const pickIds = this._pickIds;
   if (defined(pickIds)) {
-    var length = pickIds.length;
-    for (var i = 0; i < length; ++i) {
+    const length = pickIds.length;
+    for (let i = 0; i < length; ++i) {
       pickIds[i].destroy();
     }
   }

@@ -2,7 +2,7 @@ import { getExtensionFromUri } from "../../Source/Cesium.js";
 
 describe("Core/getExtensionFromUri", function () {
   it("works as expected", function () {
-    var result = getExtensionFromUri(
+    let result = getExtensionFromUri(
       "http://www.mysite.com/awesome?makeitawesome=true"
     );
     expect(result).toEqual("");

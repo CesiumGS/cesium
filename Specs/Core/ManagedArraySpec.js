@@ -2,29 +2,29 @@ import { ManagedArray } from "../../Source/Cesium.js";
 
 describe("Core/ManagedArray", function () {
   function expectTrailingReferenceToBeRemoved(managedArray) {
-    var array = managedArray._array;
-    var length = managedArray._length;
-    var reservedLength = array.length;
-    for (var i = length; i < reservedLength; ++i) {
+    const array = managedArray._array;
+    const length = managedArray._length;
+    const reservedLength = array.length;
+    for (let i = length; i < reservedLength; ++i) {
       expect(array[i]).toBeUndefined();
     }
   }
 
   it("constructor has expected default values", function () {
-    var array = new ManagedArray();
+    const array = new ManagedArray();
     expect(array.length).toEqual(0);
   });
 
   it("constructor initializes length", function () {
-    var array = new ManagedArray(10);
+    const array = new ManagedArray(10);
     expect(array.length).toEqual(10);
     expect(array.values.length).toEqual(10);
   });
 
   it("can get and set values", function () {
-    var length = 10;
-    var array = new ManagedArray(length);
-    var i;
+    const length = 10;
+    const array = new ManagedArray(length);
+    let i;
     for (i = 0; i < length; ++i) {
       array.set(i, i * i);
     }
@@ -35,7 +35,7 @@ describe("Core/ManagedArray", function () {
   });
 
   it("get throws if index does not exist", function () {
-    var array = new ManagedArray();
+    const array = new ManagedArray();
     array.reserve(5);
     expect(array.values.length).toEqual(5);
     expect(function () {
@@ -44,7 +44,7 @@ describe("Core/ManagedArray", function () {
   });
 
   it("set throws if index invalid", function () {
-    var array = new ManagedArray();
+    const array = new ManagedArray();
     array.resize(10);
     expect(function () {
       array.set(undefined, 5);
@@ -52,14 +52,14 @@ describe("Core/ManagedArray", function () {
   });
 
   it("length setter throws if length is less than 0", function () {
-    var array = new ManagedArray();
+    const array = new ManagedArray();
     expect(function () {
       array.length = -1;
     }).toThrowDeveloperError();
   });
 
   it("set resizes array", function () {
-    var array = new ManagedArray();
+    const array = new ManagedArray();
     array.set(0, "a");
     expect(array.length).toEqual(1);
     array.set(5, "b");
@@ -69,7 +69,7 @@ describe("Core/ManagedArray", function () {
   });
 
   it("peeks at the last element of the array", function () {
-    var array = new ManagedArray();
+    const array = new ManagedArray();
     expect(array.peek()).toBeUndefined();
     array.push(0);
     expect(array.peek()).toBe(0);
@@ -79,10 +79,10 @@ describe("Core/ManagedArray", function () {
   });
 
   it("can push values", function () {
-    var array = new ManagedArray();
-    var length = 10;
-    for (var i = 0; i < length; ++i) {
-      var val = Math.random();
+    const array = new ManagedArray();
+    const length = 10;
+    for (let i = 0; i < length; ++i) {
+      const val = Math.random();
       array.push(val);
       expect(array.length).toEqual(i + 1);
       expect(array.values.length).toEqual(i + 1);
@@ -92,14 +92,14 @@ describe("Core/ManagedArray", function () {
   });
 
   it("can pop values", function () {
-    var length = 10;
-    var array = new ManagedArray(length);
-    var i;
+    const length = 10;
+    const array = new ManagedArray(length);
+    let i;
     for (i = 0; i < length; ++i) {
       array.set(i, Math.random());
     }
     for (i = length - 1; i >= 0; --i) {
-      var val = array.get(i);
+      const val = array.get(i);
       expect(array.pop()).toEqual(val);
       expect(array.length).toEqual(i);
       expect(array.values.length).toEqual(length);
@@ -107,8 +107,8 @@ describe("Core/ManagedArray", function () {
   });
 
   it("pop removes trailing references", function () {
-    var length = 10;
-    var array = new ManagedArray(length);
+    const length = 10;
+    const array = new ManagedArray(length);
     array.set(0, Math.random());
     array.set(1, Math.random());
     array.set(2, Math.random());
@@ -118,21 +118,21 @@ describe("Core/ManagedArray", function () {
   });
 
   it("pop returns undefined if array is empty", function () {
-    var array = new ManagedArray();
+    const array = new ManagedArray();
     array.push(1);
     expect(array.pop()).toBe(1);
     expect(array.pop()).toBeUndefined();
   });
 
   it("reserve throws if length is less than 0", function () {
-    var array = new ManagedArray();
+    const array = new ManagedArray();
     expect(function () {
       array.reserve(-1);
     }).toThrowDeveloperError();
   });
 
   it("reserve", function () {
-    var array = new ManagedArray(2);
+    const array = new ManagedArray(2);
     array.reserve(10);
     expect(array.values.length).toEqual(10);
     expect(array.length).toEqual(2);
@@ -145,14 +145,14 @@ describe("Core/ManagedArray", function () {
   });
 
   it("resize throws if length is less than 0", function () {
-    var array = new ManagedArray();
+    const array = new ManagedArray();
     expect(function () {
       array.resize(-1);
     }).toThrowDeveloperError();
   });
 
   it("resize", function () {
-    var array = new ManagedArray(2);
+    const array = new ManagedArray(2);
     array.resize(10);
     expect(array.values.length).toEqual(10);
     expect(array.length).toEqual(10);
@@ -165,8 +165,8 @@ describe("Core/ManagedArray", function () {
   });
 
   it("resize removes trailing references", function () {
-    var length = 10;
-    var array = new ManagedArray(length);
+    const length = 10;
+    const array = new ManagedArray(length);
     array.set(0, Math.random());
     array.set(1, Math.random());
     array.set(2, Math.random());
@@ -175,7 +175,7 @@ describe("Core/ManagedArray", function () {
   });
 
   it("trim", function () {
-    var array = new ManagedArray(2);
+    const array = new ManagedArray(2);
     array.reserve(10);
     expect(array.length).toEqual(2);
     expect(array.values.length).toEqual(10);

@@ -23,8 +23,8 @@ import createScene from "../createScene.js";
 describe(
   "DataSources/CorridorGeometryUpdater",
   function () {
-    var scene;
-    var time;
+    let scene;
+    let time;
 
     beforeAll(function () {
       scene = createScene();
@@ -41,19 +41,19 @@ describe(
     });
 
     function createBasicCorridor() {
-      var corridor = new CorridorGraphics();
+      const corridor = new CorridorGraphics();
       corridor.positions = new ConstantProperty(
         Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1, 0, 1])
       );
       corridor.width = new ConstantProperty(1);
       corridor.height = new ConstantProperty(0);
-      var entity = new Entity();
+      const entity = new Entity();
       entity.corridor = corridor;
       return entity;
     }
 
     function createDynamicCorridor() {
-      var entity = createBasicCorridor();
+      const entity = createBasicCorridor();
       entity.corridor.positions = createDynamicProperty(
         Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1, 0, 1])
       );
@@ -61,18 +61,18 @@ describe(
     }
 
     function createBasicCorridorWithoutHeight() {
-      var corridor = new CorridorGraphics();
+      const corridor = new CorridorGraphics();
       corridor.positions = new ConstantProperty(
         Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1, 0, 1])
       );
       corridor.width = new ConstantProperty(1);
-      var entity = new Entity();
+      const entity = new Entity();
       entity.corridor = corridor;
       return entity;
     }
 
     function createDynamicCorridorWithoutHeight() {
-      var entity = createBasicCorridorWithoutHeight();
+      const entity = createBasicCorridorWithoutHeight();
       entity.corridor.positions = createDynamicProperty(
         Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1, 0, 1])
       );
@@ -80,13 +80,13 @@ describe(
     }
 
     it("A time-varying positions causes geometry to be dynamic", function () {
-      var entity = createBasicCorridor();
-      var updater = new CorridorGeometryUpdater(entity, scene);
-      var point1 = new SampledPositionProperty();
+      const entity = createBasicCorridor();
+      const updater = new CorridorGeometryUpdater(entity, scene);
+      const point1 = new SampledPositionProperty();
       point1.addSample(time, new Cartesian3());
-      var point2 = new SampledPositionProperty();
+      const point2 = new SampledPositionProperty();
       point2.addSample(time, new Cartesian3());
-      var point3 = new SampledPositionProperty();
+      const point3 = new SampledPositionProperty();
       point3.addSample(time, new Cartesian3());
 
       entity.corridor.positions = new PropertyArray();
@@ -97,8 +97,8 @@ describe(
     });
 
     it("A time-varying height causes geometry to be dynamic", function () {
-      var entity = createBasicCorridor();
-      var updater = new CorridorGeometryUpdater(entity, scene);
+      const entity = createBasicCorridor();
+      const updater = new CorridorGeometryUpdater(entity, scene);
       entity.corridor.height = new SampledProperty(Number);
       entity.corridor.height.addSample(time, 1);
       updater._onEntityPropertyChanged(entity, "corridor");
@@ -107,8 +107,8 @@ describe(
     });
 
     it("A time-varying extrudedHeight causes geometry to be dynamic", function () {
-      var entity = createBasicCorridor();
-      var updater = new CorridorGeometryUpdater(entity, scene);
+      const entity = createBasicCorridor();
+      const updater = new CorridorGeometryUpdater(entity, scene);
       entity.corridor.extrudedHeight = new SampledProperty(Number);
       entity.corridor.extrudedHeight.addSample(time, 1);
       updater._onEntityPropertyChanged(entity, "corridor");
@@ -117,8 +117,8 @@ describe(
     });
 
     it("A time-varying granularity causes geometry to be dynamic", function () {
-      var entity = createBasicCorridor();
-      var updater = new CorridorGeometryUpdater(entity, scene);
+      const entity = createBasicCorridor();
+      const updater = new CorridorGeometryUpdater(entity, scene);
       entity.corridor.granularity = new SampledProperty(Number);
       entity.corridor.granularity.addSample(time, 1);
       updater._onEntityPropertyChanged(entity, "corridor");
@@ -127,8 +127,8 @@ describe(
     });
 
     it("A time-varying width causes geometry to be dynamic", function () {
-      var entity = createBasicCorridor();
-      var updater = new CorridorGeometryUpdater(entity, scene);
+      const entity = createBasicCorridor();
+      const updater = new CorridorGeometryUpdater(entity, scene);
       entity.corridor.width = new SampledProperty(Number);
       entity.corridor.width.addSample(time, 1);
       updater._onEntityPropertyChanged(entity, "corridor");
@@ -137,8 +137,8 @@ describe(
     });
 
     it("A time-varying cornerType causes geometry to be dynamic", function () {
-      var entity = createBasicCorridor();
-      var updater = new CorridorGeometryUpdater(entity, scene);
+      const entity = createBasicCorridor();
+      const updater = new CorridorGeometryUpdater(entity, scene);
       entity.corridor.cornerType = new TimeIntervalCollectionProperty();
       entity.corridor.cornerType.intervals.addInterval(
         new TimeInterval({
@@ -153,16 +153,16 @@ describe(
     });
 
     it("Creates geometry with expected properties", function () {
-      var options = {
+      const options = {
         height: 431,
         extrudedHeight: 123,
         granularity: 0.97,
         width: 12,
         cornerType: CornerType.MITERED,
       };
-      var entity = createBasicCorridor();
+      const entity = createBasicCorridor();
 
-      var corridor = entity.corridor;
+      const corridor = entity.corridor;
       corridor.outline = true;
       corridor.cornerType = new ConstantProperty(options.cornerType);
       corridor.width = new ConstantProperty(options.width);
@@ -170,10 +170,10 @@ describe(
       corridor.extrudedHeight = new ConstantProperty(options.extrudedHeight);
       corridor.granularity = new ConstantProperty(options.granularity);
 
-      var updater = new CorridorGeometryUpdater(entity, scene);
+      const updater = new CorridorGeometryUpdater(entity, scene);
 
-      var instance;
-      var geometry;
+      let instance;
+      let geometry;
       instance = updater.createFillGeometryInstance(time);
       geometry = instance.geometry;
       expect(geometry._width).toEqual(options.width);
@@ -194,7 +194,7 @@ describe(
     });
 
     it("dynamic updater sets properties", function () {
-      var corridor = new CorridorGraphics();
+      const corridor = new CorridorGraphics();
       corridor.positions = createDynamicProperty(
         Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1, 0, 1])
       );
@@ -207,17 +207,17 @@ describe(
       corridor.granularity = createDynamicProperty(2);
       corridor.cornerType = createDynamicProperty(CornerType.MITERED);
 
-      var entity = new Entity();
+      const entity = new Entity();
       entity.corridor = corridor;
 
-      var updater = new CorridorGeometryUpdater(entity, scene);
-      var dynamicUpdater = updater.createDynamicUpdater(
+      const updater = new CorridorGeometryUpdater(entity, scene);
+      const dynamicUpdater = updater.createDynamicUpdater(
         new PrimitiveCollection(),
         new PrimitiveCollection()
       );
       dynamicUpdater.update(time);
 
-      var options = dynamicUpdater._options;
+      const options = dynamicUpdater._options;
       expect(options.positions).toEqual(corridor.positions.getValue());
       expect(options.height).toEqual(corridor.height.getValue());
       expect(options.extrudedHeight).toEqual(
@@ -230,9 +230,9 @@ describe(
     });
 
     it("geometryChanged event is raised when expected", function () {
-      var entity = createBasicCorridor();
-      var updater = new CorridorGeometryUpdater(entity, scene);
-      var listener = jasmine.createSpy("listener");
+      const entity = createBasicCorridor();
+      const updater = new CorridorGeometryUpdater(entity, scene);
+      const listener = jasmine.createSpy("listener");
       updater.geometryChanged.addEventListener(listener);
 
       entity.corridor.positions = new ConstantProperty([]);
@@ -262,8 +262,8 @@ describe(
     });
 
     it("computes center", function () {
-      var entity = createBasicCorridor();
-      var updater = new CorridorGeometryUpdater(entity, scene);
+      const entity = createBasicCorridor();
+      const updater = new CorridorGeometryUpdater(entity, scene);
 
       expect(updater._computeCenter(time)).toEqualEpsilon(
         Cartesian3.fromDegrees(1.0, 1.0),

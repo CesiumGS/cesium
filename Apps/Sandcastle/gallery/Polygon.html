@@ -35,9 +35,9 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
-        var redPolygon = viewer.entities.add({
+        const redPolygon = viewer.entities.add({
           name: "Red polygon on surface",
           polygon: {
             hierarchy: Cesium.Cartesian3.fromDegreesArray([
@@ -56,7 +56,7 @@
           },
         });
 
-        var greenPolygon = viewer.entities.add({
+        const greenPolygon = viewer.entities.add({
           name: "Green extruded polygon",
           polygon: {
             hierarchy: Cesium.Cartesian3.fromDegreesArray([
@@ -74,7 +74,7 @@
           },
         });
 
-        var orangePolygon = viewer.entities.add({
+        const orangePolygon = viewer.entities.add({
           name: "Orange polygon with per-position heights and outline",
           polygon: {
             hierarchy: Cesium.Cartesian3.fromDegreesArrayHeights([
@@ -99,7 +99,7 @@
           },
         });
 
-        var bluePolygon = viewer.entities.add({
+        const bluePolygon = viewer.entities.add({
           name: "Blue polygon with holes",
           polygon: {
             hierarchy: {
@@ -162,7 +162,7 @@
           },
         });
 
-        var cyanPolygon = viewer.entities.add({
+        const cyanPolygon = viewer.entities.add({
           name: "Cyan vertical polygon with per-position heights and outline",
           polygon: {
             hierarchy: Cesium.Cartesian3.fromDegreesArrayHeights([
@@ -183,7 +183,7 @@
           },
         });
 
-        var purplePolygonUsingRhumbLines = viewer.entities.add({
+        const purplePolygonUsingRhumbLines = viewer.entities.add({
           name: "Purple polygon using rhumb lines with outline",
           polygon: {
             hierarchy: Cesium.Cartesian3.fromDegreesArray([

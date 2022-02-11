@@ -34,8 +34,8 @@
   >
     <script type="text/javascript">
       /*global pako */
-      var base64String;
-      var data;
+      let base64String;
+      let data;
 
       // Since we are setting the HTML base href below, we need to get the getCesiumBaseUrl
       // upfront so that the value is correct. It gets cached for future calls.
@@ -50,30 +50,29 @@
         data = window.decodeBase64Data(base64String, pako);
         //Handle case where demo is in a sub-directory by modifying
         //the HTML to add a base href.
-        document.head.innerHTML =
-          document.head.innerHTML + '<base href="' + data.baseHref + '" />';
+        document.head.innerHTML = `${document.head.innerHTML}<base href="${data.baseHref}" />`;
         window.sandcastleData = data;
       }
 
-      var code;
+      let code;
       if (window.sandcastleData) {
         base64String = window.location.hash.substr(3);
         data = window.sandcastleData;
-        var html = data.html;
+        let html = data.html;
         code = data.code;
-        var isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
+        const isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
         if (isIE11) {
           html = html.replace("../templates", "templates");
         }
 
         // Add the HTML content
-        var htmlElement = document.createElement("div");
+        const htmlElement = document.createElement("div");
         htmlElement.innerHTML = html;
         document.body.appendChild(htmlElement);
 
         // Add the JavaScript
-        var scriptElement = document.createElement("script");
-        var isFirefox = navigator.userAgent.indexOf("Firefox/") >= 0;
+        const scriptElement = document.createElement("script");
+        const isFirefox = navigator.userAgent.indexOf("Firefox/") >= 0;
         document.head.appendChild(scriptElement);
         scriptElement.innerHTML = window.embedInSandcastleTemplate(
           code,

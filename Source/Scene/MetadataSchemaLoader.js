@@ -28,9 +28,9 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  */
 export default function MetadataSchemaLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var schema = options.schema;
-  var resource = options.resource;
-  var cacheKey = options.cacheKey;
+  const schema = options.schema;
+  const resource = options.resource;
+  const cacheKey = options.cacheKey;
 
   //>>includeStart('debug', pragmas.debug);
   if (defined(schema) === defined(resource)) {
@@ -111,7 +111,7 @@ MetadataSchemaLoader.prototype.load = function () {
 };
 
 function loadExternalSchema(schemaLoader) {
-  var resource = schemaLoader._resource;
+  const resource = schemaLoader._resource;
   schemaLoader._state = ResourceLoaderState.LOADING;
   resource
     .fetchJson()
@@ -128,7 +128,7 @@ function loadExternalSchema(schemaLoader) {
         return;
       }
       schemaLoader._state = ResourceLoaderState.FAILED;
-      var errorMessage = "Failed to load schema: " + resource.url;
+      const errorMessage = `Failed to load schema: ${resource.url}`;
       schemaLoader._promise.reject(schemaLoader.getError(errorMessage, error));
     });
 }

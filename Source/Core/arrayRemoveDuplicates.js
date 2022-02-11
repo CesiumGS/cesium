@@ -3,7 +3,7 @@ import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import CesiumMath from "./Math.js";
 
-var removeDuplicatesEpsilon = CesiumMath.EPSILON10;
+const removeDuplicatesEpsilon = CesiumMath.EPSILON10;
 
 /**
  * Removes adjacent duplicate values in an array of values.
@@ -16,35 +16,35 @@ var removeDuplicatesEpsilon = CesiumMath.EPSILON10;
  *
  * @example
  * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0), (3.0, 3.0, 3.0), (1.0, 1.0, 1.0)]
- * var values = [
+ * const values = [
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
  *     new Cesium.Cartesian3(2.0, 2.0, 2.0),
  *     new Cesium.Cartesian3(3.0, 3.0, 3.0),
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0)];
- * var nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3.equalsEpsilon);
+ * const nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3.equalsEpsilon);
  *
  * @example
  * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0), (3.0, 3.0, 3.0)]
- * var values = [
+ * const values = [
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
  *     new Cesium.Cartesian3(2.0, 2.0, 2.0),
  *     new Cesium.Cartesian3(3.0, 3.0, 3.0),
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0)];
- * var nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3.equalsEpsilon, true);
+ * const nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3.equalsEpsilon, true);
  *
  * @example
  * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0), (3.0, 3.0, 3.0)]
  * // removedIndices will be equal to [1, 3, 5]
- * var values = [
+ * const values = [
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
  *     new Cesium.Cartesian3(2.0, 2.0, 2.0),
  *     new Cesium.Cartesian3(2.0, 2.0, 2.0),
  *     new Cesium.Cartesian3(3.0, 3.0, 3.0),
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0)];
- * var nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3.equalsEpsilon, true);
+ * const nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3.equalsEpsilon, true);
  * @private
  */
 function arrayRemoveDuplicates(
@@ -62,25 +62,25 @@ function arrayRemoveDuplicates(
   }
 
   wrapAround = defaultValue(wrapAround, false);
-  var storeRemovedIndices = defined(removedIndices);
+  const storeRemovedIndices = defined(removedIndices);
 
-  var length = values.length;
+  const length = values.length;
   if (length < 2) {
     return values;
   }
 
-  var i;
-  var v0 = values[0];
-  var v1;
+  let i;
+  let v0 = values[0];
+  let v1;
 
   // We only want to create a new array if there are duplicates in the array.
   // As such, cleanedValues is undefined until it encounters the first duplicate, if it exists.
-  var cleanedValues;
-  var lastCleanIndex = 0;
+  let cleanedValues;
+  let lastCleanIndex = 0;
 
   // removedIndexLCI keeps track of where lastCleanIndex would be if it were sorted into the removedIndices array.
   // In case of arrays such as [A, B, C, ..., A, A, A], removedIndices will not be sorted properly without this.
-  var removedIndexLCI = -1;
+  let removedIndexLCI = -1;
 
   for (i = 1; i < length; ++i) {
     v1 = values[i];

@@ -21,15 +21,15 @@ import MetadataEntity from "./MetadataEntity.js";
  */
 function GroupMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var id = options.id;
-  var group = options.group;
+  const id = options.id;
+  const group = options.group;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("options.id", id);
   Check.typeOf.object("options.group", group);
   //>>includeEnd('debug');
 
-  var properties = defined(group.properties) ? group.properties : {};
+  const properties = defined(group.properties) ? group.properties : {};
 
   this._class = options.class;
   this._properties = properties;

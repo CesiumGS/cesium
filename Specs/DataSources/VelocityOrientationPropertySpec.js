@@ -10,10 +10,10 @@ import { SampledPositionProperty } from "../../Source/Cesium.js";
 import { VelocityOrientationProperty } from "../../Source/Cesium.js";
 
 describe("DataSources/VelocityOrientationProperty", function () {
-  var time = JulianDate.now();
+  const time = JulianDate.now();
 
   it("can default construct", function () {
-    var property = new VelocityOrientationProperty();
+    const property = new VelocityOrientationProperty();
     expect(property.isConstant).toBe(true);
     expect(property.definitionChanged).toBeInstanceOf(Event);
     expect(property.position).toBeUndefined();
@@ -22,8 +22,8 @@ describe("DataSources/VelocityOrientationProperty", function () {
   });
 
   it("can construct with arguments", function () {
-    var position = new SampledPositionProperty();
-    var property = new VelocityOrientationProperty(
+    const position = new SampledPositionProperty();
+    const property = new VelocityOrientationProperty(
       position,
       Ellipsoid.UNIT_SPHERE
     );
@@ -35,21 +35,21 @@ describe("DataSources/VelocityOrientationProperty", function () {
   });
 
   it("setting position raises definitionChanged event", function () {
-    var property = new VelocityOrientationProperty();
+    const property = new VelocityOrientationProperty();
 
-    var listener = jasmine.createSpy("listener");
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
-    var position = new SampledPositionProperty();
+    const position = new SampledPositionProperty();
     property.position = position;
     expect(listener).toHaveBeenCalledWith(property);
   });
 
   it("subscribes/unsubscribes to position definitionChanged and propagates up", function () {
-    var position = new SampledPositionProperty();
-    var property = new VelocityOrientationProperty(position);
+    const position = new SampledPositionProperty();
+    const property = new VelocityOrientationProperty(position);
 
-    var listener = jasmine.createSpy("listener");
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
     //Position changing should raise out property change event
@@ -65,10 +65,10 @@ describe("DataSources/VelocityOrientationProperty", function () {
   });
 
   it("setting position does not raise definitionChanged event for same data", function () {
-    var position = new SampledPositionProperty();
-    var property = new VelocityOrientationProperty(position);
+    const position = new SampledPositionProperty();
+    const property = new VelocityOrientationProperty(position);
 
-    var listener = jasmine.createSpy("listener");
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
     property.position = position;
@@ -76,9 +76,9 @@ describe("DataSources/VelocityOrientationProperty", function () {
   });
 
   it("setting ellipsoid raises definitionChanged event", function () {
-    var property = new VelocityOrientationProperty();
+    const property = new VelocityOrientationProperty();
 
-    var listener = jasmine.createSpy("listener");
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
     property.ellipsoid = Ellipsoid.UNIT_SPHERE;
@@ -86,9 +86,9 @@ describe("DataSources/VelocityOrientationProperty", function () {
   });
 
   it("setting ellipsoid does not raise definitionChanged event for same data", function () {
-    var property = new VelocityOrientationProperty();
+    const property = new VelocityOrientationProperty();
 
-    var listener = jasmine.createSpy("listener");
+    const listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
     property.ellipsoid = Ellipsoid.WGS84;
@@ -96,20 +96,24 @@ describe("DataSources/VelocityOrientationProperty", function () {
   });
 
   it("works without result parameter", function () {
-    var times = [new JulianDate(0, 0), new JulianDate(0, 1.0 / 60.0)];
-    var values = [
+    const times = [new JulianDate(0, 0), new JulianDate(0, 1.0 / 60.0)];
+    const values = [
       Cartesian3.fromDegrees(0, 0, 0),
       Cartesian3.fromDegrees(1, 0, 0),
     ];
-    var velocity = Cartesian3.subtract(values[1], values[0], new Cartesian3());
+    const velocity = Cartesian3.subtract(
+      values[1],
+      values[0],
+      new Cartesian3()
+    );
     Cartesian3.normalize(velocity, velocity);
 
-    var position = new SampledPositionProperty();
+    const position = new SampledPositionProperty();
     position.addSamples(times, values);
 
-    var property = new VelocityOrientationProperty(position);
+    const property = new VelocityOrientationProperty(position);
 
-    var matrix = Transforms.rotationMatrixFromPositionVelocity(
+    let matrix = Transforms.rotationMatrixFromPositionVelocity(
       position.getValue(times[0]),
       velocity
     );
@@ -127,24 +131,28 @@ describe("DataSources/VelocityOrientationProperty", function () {
   });
 
   it("works with result parameter", function () {
-    var times = [new JulianDate(0, 0), new JulianDate(0, 1.0 / 60.0)];
-    var values = [
+    const times = [new JulianDate(0, 0), new JulianDate(0, 1.0 / 60.0)];
+    const values = [
       Cartesian3.fromDegrees(0, 0, 0),
       Cartesian3.fromDegrees(1, 0, 0),
     ];
-    var velocity = Cartesian3.subtract(values[1], values[0], new Cartesian3());
+    const velocity = Cartesian3.subtract(
+      values[1],
+      values[0],
+      new Cartesian3()
+    );
     Cartesian3.normalize(velocity, velocity);
 
-    var position = new SampledPositionProperty();
+    const position = new SampledPositionProperty();
     position.addSamples(times, values);
 
-    var property = new VelocityOrientationProperty(position);
+    const property = new VelocityOrientationProperty(position);
 
-    var expected = new Cartesian3();
-    var result = property.getValue(times[0], expected);
+    const expected = new Cartesian3();
+    const result = property.getValue(times[0], expected);
     expect(result).toBe(expected);
 
-    var matrix = Transforms.rotationMatrixFromPositionVelocity(
+    const matrix = Transforms.rotationMatrixFromPositionVelocity(
       position.getValue(times[0]),
       velocity
     );
@@ -152,43 +160,43 @@ describe("DataSources/VelocityOrientationProperty", function () {
   });
 
   it("is undefined at zero velocity", function () {
-    var position = new CallbackProperty(function () {
+    const position = new CallbackProperty(function () {
       return Cartesian3.fromDegrees(0, 0, 0);
     }, false);
 
-    var property = new VelocityOrientationProperty(position);
+    const property = new VelocityOrientationProperty(position);
     expect(property.getValue(new JulianDate())).toBeUndefined();
   });
 
   it("returns undefined when position value is undefined", function () {
-    var position = new SampledPositionProperty();
+    const position = new SampledPositionProperty();
     position.addSample(new JulianDate(1, 0), Cartesian3.fromDegrees(0, 0, 0));
     position.forwardExtrapolationType = ExtrapolationType.NONE;
     position.backwardExtrapolationType = ExtrapolationType.NONE;
 
-    var property = new VelocityOrientationProperty(position);
+    const property = new VelocityOrientationProperty(position);
 
-    var result = property.getValue(new JulianDate());
+    const result = property.getValue(new JulianDate());
     expect(result).toBeUndefined();
   });
 
   it("returns undefined when position has exactly one value", function () {
-    var position = new SampledPositionProperty();
+    const position = new SampledPositionProperty();
     position.addSample(new JulianDate(1, 0), Cartesian3.fromDegrees(0, 0, 0));
     position.forwardExtrapolationType = ExtrapolationType.NONE;
     position.backwardExtrapolationType = ExtrapolationType.NONE;
 
-    var property = new VelocityOrientationProperty(position);
+    const property = new VelocityOrientationProperty(position);
 
-    var result = property.getValue(new JulianDate(1, 0));
+    const result = property.getValue(new JulianDate(1, 0));
     expect(result).toBeUndefined();
   });
 
   it("equals works", function () {
-    var position = new SampledPositionProperty();
+    const position = new SampledPositionProperty();
 
-    var left = new VelocityOrientationProperty();
-    var right = new VelocityOrientationProperty();
+    const left = new VelocityOrientationProperty();
+    const right = new VelocityOrientationProperty();
 
     expect(left.equals(right)).toBe(true);
 
@@ -206,7 +214,7 @@ describe("DataSources/VelocityOrientationProperty", function () {
   });
 
   it("getValue throws without time", function () {
-    var property = new VelocityOrientationProperty();
+    const property = new VelocityOrientationProperty();
     expect(function () {
       property.getValue();
     }).toThrowDeveloperError();

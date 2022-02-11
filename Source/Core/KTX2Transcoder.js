@@ -18,7 +18,7 @@ KTX2Transcoder._transcodeTaskProcessor = new TaskProcessor(
 KTX2Transcoder._readyPromise = undefined;
 
 function makeReadyPromise() {
-  var readyPromise = KTX2Transcoder._transcodeTaskProcessor
+  const readyPromise = KTX2Transcoder._transcodeTaskProcessor
     .initWebAssemblyModule({
       modulePath: "ThirdParty/Workers/basis_transcoder.js",
       wasmBinaryFile: "ThirdParty/basis_transcoder.wasm",
@@ -40,9 +40,9 @@ KTX2Transcoder.transcode = function (ktx2Buffer, supportedTargetFormats) {
 
   return KTX2Transcoder._readyPromise
     .then(function (taskProcessor) {
-      var parameters;
+      let parameters;
       if (ktx2Buffer instanceof ArrayBuffer) {
-        var view = new Uint8Array(ktx2Buffer);
+        const view = new Uint8Array(ktx2Buffer);
         parameters = {
           supportedTargetFormats: supportedTargetFormats,
           ktx2Buffer: view,
@@ -56,15 +56,15 @@ KTX2Transcoder.transcode = function (ktx2Buffer, supportedTargetFormats) {
       return taskProcessor.scheduleTask(parameters, [ktx2Buffer.buffer]);
     })
     .then(function (result) {
-      var levelsLength = result.length;
-      var faceKeys = Object.keys(result[0]);
-      var faceKeysLength = faceKeys.length;
+      const levelsLength = result.length;
+      const faceKeys = Object.keys(result[0]);
+      const faceKeysLength = faceKeys.length;
 
-      var i;
+      let i;
       for (i = 0; i < levelsLength; i++) {
-        var faces = result[i];
-        for (var j = 0; j < faceKeysLength; j++) {
-          var face = faces[faceKeys[j]];
+        const faces = result[i];
+        for (let j = 0; j < faceKeysLength; j++) {
+          const face = faces[faceKeys[j]];
           faces[faceKeys[j]] = new CompressedTextureBuffer(
             face.internalFormat,
             face.datatype,

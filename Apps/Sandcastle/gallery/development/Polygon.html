@@ -36,14 +36,14 @@
         "use strict";
         //Sandcastle_Begin
         // Create the viewer.
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var scene = viewer.scene;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const scene = viewer.scene;
 
         // Example 1: Draw a red polygon on the globe surface.
 
         // Create the polygon geometry. The positions here are
         // in counter clockwise order.
-        var positions = Cesium.Cartesian3.fromDegreesArray([
+        let positions = Cesium.Cartesian3.fromDegreesArray([
           -115.0,
           37.0,
           -115.0,
@@ -56,7 +56,7 @@
           35.0,
         ]);
         // Create a geometry instance using the polygon geometry.
-        var redPolygonInstance = new Cesium.GeometryInstance({
+        const redPolygonInstance = new Cesium.GeometryInstance({
           geometry: Cesium.PolygonGeometry.fromPositions({
             positions: positions,
             vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -73,7 +73,7 @@
         // To draw a polygon with holes, create a nested position
         // hierarchy defining the positions of the polygon
         // edges and the positions of the holes.
-        var polygonHierarchy = {
+        const polygonHierarchy = {
           positions: Cesium.Cartesian3.fromDegreesArray([
             -99.0,
             30.0,
@@ -128,7 +128,7 @@
           ],
         };
         // Create a geometry instance using the polygon geometry.
-        var bluePolygonInstance = new Cesium.GeometryInstance({
+        const bluePolygonInstance = new Cesium.GeometryInstance({
           geometry: new Cesium.PolygonGeometry({
             polygonHierarchy: polygonHierarchy,
             vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -152,7 +152,7 @@
           -104.0,
           40.0,
         ]);
-        var greenPolygonInstance = new Cesium.GeometryInstance({
+        const greenPolygonInstance = new Cesium.GeometryInstance({
           geometry: Cesium.PolygonGeometry.fromPositions({
             positions: positions,
             extrudedHeight: 500000.0,
@@ -186,7 +186,7 @@
         // to use the heights each position.  In this case, we are
         // also seting extrudedHeight to zero for the polygon
         // to be extruded down to the globe surface.
-        var orangePolygonInstance = new Cesium.GeometryInstance({
+        const orangePolygonInstance = new Cesium.GeometryInstance({
           geometry: Cesium.PolygonGeometry.fromPositions({
             positions: positions,
             extrudedHeight: 0,

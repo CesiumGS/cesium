@@ -120,12 +120,12 @@ Matrix2.clone = function (matrix, result) {
  * // [1.0, 2.0]
  * // [1.0, 2.0]
  *
- * var v = [1.0, 1.0, 2.0, 2.0];
- * var m = Cesium.Matrix2.fromArray(v);
+ * const v = [1.0, 1.0, 2.0, 2.0];
+ * const m = Cesium.Matrix2.fromArray(v);
  *
  * // Create same Matrix2 with using an offset into an array
- * var v2 = [0.0, 0.0, 1.0, 1.0, 2.0, 2.0];
- * var m2 = Cesium.Matrix2.fromArray(v2, 2);
+ * const v2 = [0.0, 0.0, 1.0, 1.0, 2.0, 2.0];
+ * const m2 = Cesium.Matrix2.fromArray(v2, 2);
  */
 Matrix2.fromArray = function (array, startingIndex, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -194,7 +194,7 @@ Matrix2.fromRowMajorArray = function (values, result) {
  * // Creates
  * //   [7.0, 0.0]
  * //   [0.0, 8.0]
- * var m = Cesium.Matrix2.fromScale(new Cesium.Cartesian2(7.0, 8.0));
+ * const m = Cesium.Matrix2.fromScale(new Cesium.Cartesian2(7.0, 8.0));
  */
 Matrix2.fromScale = function (scale, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -223,7 +223,7 @@ Matrix2.fromScale = function (scale, result) {
  * // Creates
  * //   [2.0, 0.0]
  * //   [0.0, 2.0]
- * var m = Cesium.Matrix2.fromUniformScale(2.0);
+ * const m = Cesium.Matrix2.fromUniformScale(2.0);
  */
 Matrix2.fromUniformScale = function (scale, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -250,17 +250,17 @@ Matrix2.fromUniformScale = function (scale, result) {
  *
  * @example
  * // Rotate a point 45 degrees counterclockwise.
- * var p = new Cesium.Cartesian2(5, 6);
- * var m = Cesium.Matrix2.fromRotation(Cesium.Math.toRadians(45.0));
- * var rotated = Cesium.Matrix2.multiplyByVector(m, p, new Cesium.Cartesian2());
+ * const p = new Cesium.Cartesian2(5, 6);
+ * const m = Cesium.Matrix2.fromRotation(Cesium.Math.toRadians(45.0));
+ * const rotated = Cesium.Matrix2.multiplyByVector(m, p, new Cesium.Cartesian2());
  */
 Matrix2.fromRotation = function (angle, result) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("angle", angle);
   //>>includeEnd('debug');
 
-  var cosAngle = Math.cos(angle);
-  var sinAngle = Math.sin(angle);
+  const cosAngle = Math.cos(angle);
+  const sinAngle = Math.sin(angle);
 
   if (!defined(result)) {
     return new Matrix2(cosAngle, -sinAngle, sinAngle, cosAngle);
@@ -306,9 +306,9 @@ Matrix2.toArray = function (matrix, result) {
  * @exception {DeveloperError} column must be 0 or 1.
  *
  * @example
- * var myMatrix = new Cesium.Matrix2();
- * var column1Row0Index = Cesium.Matrix2.getElementIndex(1, 0);
- * var column1Row0 = myMatrix[column1Row0Index]
+ * const myMatrix = new Cesium.Matrix2();
+ * const column1Row0Index = Cesium.Matrix2.getElementIndex(1, 0);
+ * const column1Row0 = myMatrix[column1Row0Index]
  * myMatrix[column1Row0Index] = 10.0;
  */
 Matrix2.getElementIndex = function (column, row) {
@@ -343,9 +343,9 @@ Matrix2.getColumn = function (matrix, index, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var startIndex = index * 2;
-  var x = matrix[startIndex];
-  var y = matrix[startIndex + 1];
+  const startIndex = index * 2;
+  const x = matrix[startIndex];
+  const y = matrix[startIndex + 1];
 
   result.x = x;
   result.y = y;
@@ -375,7 +375,7 @@ Matrix2.setColumn = function (matrix, index, cartesian, result) {
   //>>includeEnd('debug');
 
   result = Matrix2.clone(matrix, result);
-  var startIndex = index * 2;
+  const startIndex = index * 2;
   result[startIndex] = cartesian.x;
   result[startIndex + 1] = cartesian.y;
   return result;
@@ -401,8 +401,8 @@ Matrix2.getRow = function (matrix, index, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var x = matrix[index];
-  var y = matrix[index + 2];
+  const x = matrix[index];
+  const y = matrix[index + 2];
 
   result.x = x;
   result.y = y;
@@ -437,7 +437,7 @@ Matrix2.setRow = function (matrix, index, cartesian, result) {
   return result;
 };
 
-var scratchColumn = new Cartesian2();
+const scratchColumn = new Cartesian2();
 
 /**
  * Extracts the non-uniform scale assuming the matrix is an affine transformation.
@@ -461,7 +461,7 @@ Matrix2.getScale = function (matrix, result) {
   return result;
 };
 
-var scratchScale = new Cartesian2();
+const scratchScale = new Cartesian2();
 
 /**
  * Computes the maximum scale assuming the matrix is an affine transformation.
@@ -490,10 +490,10 @@ Matrix2.multiply = function (left, right, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var column0Row0 = left[0] * right[0] + left[2] * right[1];
-  var column1Row0 = left[0] * right[2] + left[2] * right[3];
-  var column0Row1 = left[1] * right[0] + left[3] * right[1];
-  var column1Row1 = left[1] * right[2] + left[3] * right[3];
+  const column0Row0 = left[0] * right[0] + left[2] * right[1];
+  const column1Row0 = left[0] * right[2] + left[2] * right[3];
+  const column0Row1 = left[1] * right[0] + left[3] * right[1];
+  const column1Row1 = left[1] * right[2] + left[3] * right[3];
 
   result[0] = column0Row0;
   result[1] = column0Row1;
@@ -561,8 +561,8 @@ Matrix2.multiplyByVector = function (matrix, cartesian, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var x = matrix[0] * cartesian.x + matrix[2] * cartesian.y;
-  var y = matrix[1] * cartesian.x + matrix[3] * cartesian.y;
+  const x = matrix[0] * cartesian.x + matrix[2] * cartesian.y;
+  const y = matrix[1] * cartesian.x + matrix[3] * cartesian.y;
 
   result.x = x;
   result.y = y;
@@ -654,10 +654,10 @@ Matrix2.transpose = function (matrix, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var column0Row0 = matrix[0];
-  var column0Row1 = matrix[2];
-  var column1Row0 = matrix[1];
-  var column1Row1 = matrix[3];
+  const column0Row0 = matrix[0];
+  const column0Row1 = matrix[2];
+  const column1Row0 = matrix[1];
+  const column1Row1 = matrix[3];
 
   result[0] = column0Row0;
   result[1] = column0Row1;
@@ -765,7 +765,7 @@ Matrix2.ZERO = Object.freeze(new Matrix2(0.0, 0.0, 0.0, 0.0));
  * @constant
  *
  * @example
- * var matrix = new Cesium.Matrix2();
+ * const matrix = new Cesium.Matrix2();
  * matrix[Cesium.Matrix2.COLUMN0ROW0] = 5.0; // set column 0, row 0 to 5.0
  */
 Matrix2.COLUMN0ROW0 = 0;
@@ -777,7 +777,7 @@ Matrix2.COLUMN0ROW0 = 0;
  * @constant
  *
  * @example
- * var matrix = new Cesium.Matrix2();
+ * const matrix = new Cesium.Matrix2();
  * matrix[Cesium.Matrix2.COLUMN0ROW1] = 5.0; // set column 0, row 1 to 5.0
  */
 Matrix2.COLUMN0ROW1 = 1;
@@ -789,7 +789,7 @@ Matrix2.COLUMN0ROW1 = 1;
  * @constant
  *
  * @example
- * var matrix = new Cesium.Matrix2();
+ * const matrix = new Cesium.Matrix2();
  * matrix[Cesium.Matrix2.COLUMN1ROW0] = 5.0; // set column 1, row 0 to 5.0
  */
 Matrix2.COLUMN1ROW0 = 2;
@@ -801,7 +801,7 @@ Matrix2.COLUMN1ROW0 = 2;
  * @constant
  *
  * @example
- * var matrix = new Cesium.Matrix2();
+ * const matrix = new Cesium.Matrix2();
  * matrix[Cesium.Matrix2.COLUMN1ROW1] = 5.0; // set column 1, row 1 to 5.0
  */
 Matrix2.COLUMN1ROW1 = 3;
@@ -861,17 +861,6 @@ Matrix2.prototype.equalsEpsilon = function (right, epsilon) {
  * @returns {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1)'.
  */
 Matrix2.prototype.toString = function () {
-  return (
-    "(" +
-    this[0] +
-    ", " +
-    this[2] +
-    ")\n" +
-    "(" +
-    this[1] +
-    ", " +
-    this[3] +
-    ")"
-  );
+  return `(${this[0]}, ${this[2]})\n` + `(${this[1]}, ${this[3]})`;
 };
 export default Matrix2;

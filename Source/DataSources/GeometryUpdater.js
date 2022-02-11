@@ -15,16 +15,16 @@ import ConstantProperty from "./ConstantProperty.js";
 import Entity from "./Entity.js";
 import Property from "./Property.js";
 
-var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
-var defaultShow = new ConstantProperty(true);
-var defaultFill = new ConstantProperty(true);
-var defaultOutline = new ConstantProperty(false);
-var defaultOutlineColor = new ConstantProperty(Color.BLACK);
-var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
-var defaultDistanceDisplayCondition = new ConstantProperty(
+const defaultMaterial = new ColorMaterialProperty(Color.WHITE);
+const defaultShow = new ConstantProperty(true);
+const defaultFill = new ConstantProperty(true);
+const defaultOutline = new ConstantProperty(false);
+const defaultOutlineColor = new ConstantProperty(Color.BLACK);
+const defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
+const defaultDistanceDisplayCondition = new ConstantProperty(
   new DistanceDisplayCondition()
 );
-var defaultClassificationType = new ConstantProperty(ClassificationType.BOTH);
+const defaultClassificationType = new ConstantProperty(ClassificationType.BOTH);
 
 /**
  * An abstract class for updating geometry entities.
@@ -47,8 +47,8 @@ function GeometryUpdater(options) {
   Check.defined("options.observedPropertyNames", options.observedPropertyNames);
   //>>includeEnd('debug');
 
-  var entity = options.entity;
-  var geometryPropertyName = options.geometryPropertyName;
+  const entity = options.entity;
+  const geometryPropertyName = options.geometryPropertyName;
 
   this._entity = entity;
   this._scene = options.scene;
@@ -68,7 +68,7 @@ function GeometryUpdater(options) {
   this._classificationTypeProperty = undefined;
   this._options = options.geometryOptions;
   this._geometryPropertyName = geometryPropertyName;
-  this._id = geometryPropertyName + "-" + entity.id;
+  this._id = `${geometryPropertyName}-${entity.id}`;
   this._observedPropertyNames = options.observedPropertyNames;
   this._supportsMaterialsforEntitiesOnTerrain = Entity.supportsMaterialsforEntitiesOnTerrain(
     options.scene
@@ -292,8 +292,8 @@ Object.defineProperties(GeometryUpdater.prototype, {
  * @returns {Boolean} true if geometry is outlined at the provided time, false otherwise.
  */
 GeometryUpdater.prototype.isOutlineVisible = function (time) {
-  var entity = this._entity;
-  var visible =
+  const entity = this._entity;
+  const visible =
     this._outlineEnabled &&
     entity.isAvailable(time) &&
     this._showProperty.getValue(time) &&
@@ -308,8 +308,8 @@ GeometryUpdater.prototype.isOutlineVisible = function (time) {
  * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
  */
 GeometryUpdater.prototype.isFilled = function (time) {
-  var entity = this._entity;
-  var visible =
+  const entity = this._entity;
+  const visible =
     this._fillEnabled &&
     entity.isAvailable(time) &&
     this._showProperty.getValue(time) &&
@@ -364,7 +364,7 @@ GeometryUpdater.prototype.destroy = function () {
  * @private
  */
 GeometryUpdater.prototype._isHidden = function (entity, geometry) {
-  var show = geometry.show;
+  const show = geometry.show;
   return (
     defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)
   );
@@ -419,7 +419,7 @@ GeometryUpdater.prototype._onEntityPropertyChanged = function (
     return;
   }
 
-  var geometry = this._entity[this._geometryPropertyName];
+  const geometry = this._entity[this._geometryPropertyName];
 
   if (!defined(geometry)) {
     if (this._fillEnabled || this._outlineEnabled) {
@@ -430,14 +430,14 @@ GeometryUpdater.prototype._onEntityPropertyChanged = function (
     return;
   }
 
-  var fillProperty = geometry.fill;
-  var fillEnabled =
+  const fillProperty = geometry.fill;
+  const fillEnabled =
     defined(fillProperty) && fillProperty.isConstant
       ? fillProperty.getValue(Iso8601.MINIMUM_VALUE)
       : true;
 
-  var outlineProperty = geometry.outline;
-  var outlineEnabled = defined(outlineProperty);
+  const outlineProperty = geometry.outline;
+  let outlineEnabled = defined(outlineProperty);
   if (outlineEnabled && outlineProperty.isConstant) {
     outlineEnabled = outlineProperty.getValue(Iso8601.MINIMUM_VALUE);
   }
@@ -451,7 +451,7 @@ GeometryUpdater.prototype._onEntityPropertyChanged = function (
     return;
   }
 
-  var show = geometry.show;
+  const show = geometry.show;
   if (this._isHidden(entity, geometry)) {
     if (this._fillEnabled || this._outlineEnabled) {
       this._fillEnabled = false;
@@ -480,7 +480,7 @@ GeometryUpdater.prototype._onEntityPropertyChanged = function (
 
   this._fillEnabled = fillEnabled;
 
-  var onTerrain =
+  const onTerrain =
     this._isOnTerrain(entity, geometry) &&
     (this._supportsMaterialsforEntitiesOnTerrain ||
       this._materialProperty instanceof ColorMaterialProperty);
@@ -501,7 +501,7 @@ GeometryUpdater.prototype._onEntityPropertyChanged = function (
   } else {
     this._setStaticOptions(entity, geometry);
     this._isClosed = this._getIsClosed(this._options);
-    var outlineWidth = geometry.outlineWidth;
+    const outlineWidth = geometry.outlineWidth;
     this._outlineWidth = defined(outlineWidth)
       ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE)
       : 1.0;

@@ -5,7 +5,7 @@ import createPackableSpecs from "../createPackableSpecs.js";
 
 describe("Core/PlaneGeometry", function () {
   it("constructor creates optimized number of positions for VertexFormat.POSITIONS_ONLY", function () {
-    var m = PlaneGeometry.createGeometry(
+    const m = PlaneGeometry.createGeometry(
       new PlaneGeometry({
         vertexFormat: VertexFormat.POSITION_ONLY,
       })
@@ -16,14 +16,14 @@ describe("Core/PlaneGeometry", function () {
   });
 
   it("constructor computes all vertex attributes", function () {
-    var m = PlaneGeometry.createGeometry(
+    const m = PlaneGeometry.createGeometry(
       new PlaneGeometry({
         vertexFormat: VertexFormat.ALL,
       })
     );
 
-    var numVertices = 4;
-    var numTriangles = 2;
+    const numVertices = 4;
+    const numTriangles = 2;
     expect(m.attributes.position.values.length).toEqual(numVertices * 3);
     expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
     expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);

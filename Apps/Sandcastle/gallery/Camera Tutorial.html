@@ -57,15 +57,15 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
-        var scene = viewer.scene;
-        var canvas = viewer.canvas;
+        const scene = viewer.scene;
+        const canvas = viewer.canvas;
         canvas.setAttribute("tabindex", "0"); // needed to put focus on the canvas
         canvas.onclick = function () {
           canvas.focus();
         };
-        var ellipsoid = scene.globe.ellipsoid;
+        const ellipsoid = scene.globe.ellipsoid;
 
         // disable the default event handlers
         scene.screenSpaceCameraController.enableRotate = false;
@@ -74,9 +74,9 @@
         scene.screenSpaceCameraController.enableTilt = false;
         scene.screenSpaceCameraController.enableLook = false;
 
-        var startMousePosition;
-        var mousePosition;
-        var flags = {
+        let startMousePosition;
+        let mousePosition;
+        const flags = {
           looking: false,
           moveForward: false,
           moveBackward: false,
@@ -86,7 +86,7 @@
           moveRight: false,
         };
 
-        var handler = new Cesium.ScreenSpaceEventHandler(canvas);
+        const handler = new Cesium.ScreenSpaceEventHandler(canvas);
 
         handler.setInputAction(function (movement) {
           flags.looking = true;
@@ -125,7 +125,7 @@
         document.addEventListener(
           "keydown",
           function (e) {
-            var flagName = getFlagForKeyCode(e.keyCode);
+            const flagName = getFlagForKeyCode(e.keyCode);
             if (typeof flagName !== "undefined") {
               flags[flagName] = true;
             }
@@ -136,7 +136,7 @@
         document.addEventListener(
           "keyup",
           function (e) {
-            var flagName = getFlagForKeyCode(e.keyCode);
+            const flagName = getFlagForKeyCode(e.keyCode);
             if (typeof flagName !== "undefined") {
               flags[flagName] = false;
             }
@@ -145,25 +145,26 @@
         );
 
         viewer.clock.onTick.addEventListener(function (clock) {
-          var camera = viewer.camera;
+          const camera = viewer.camera;
 
           if (flags.looking) {
-            var width = canvas.clientWidth;
-            var height = canvas.clientHeight;
+            const width = canvas.clientWidth;
+            const height = canvas.clientHeight;
 
             // Coordinate (0.0, 0.0) will be where the mouse was clicked.
-            var x = (mousePosition.x - startMousePosition.x) / width;
-            var y = -(mousePosition.y - startMousePosition.y) / height;
+            const x = (mousePosition.x - startMousePosition.x) / width;
+            const y = -(mousePosition.y - startMousePosition.y) / height;
 
-            var lookFactor = 0.05;
+            const lookFactor = 0.05;
             camera.lookRight(x * lookFactor);
             camera.lookUp(y * lookFactor);
           }
 
           // Change movement speed based on the distance of the camera to the surface of the ellipsoid.
-          var cameraHeight = ellipsoid.cartesianToCartographic(camera.position)
-            .height;
-          var moveRate = cameraHeight / 100.0;
+          const cameraHeight = ellipsoid.cartesianToCartographic(
+            camera.position
+          ).height;
+          const moveRate = cameraHeight / 100.0;
 
           if (flags.moveForward) {
             camera.moveForward(moveRate);

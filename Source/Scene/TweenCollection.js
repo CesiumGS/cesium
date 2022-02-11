@@ -235,16 +235,16 @@ TweenCollection.prototype.add = function (options) {
     return new Tween(this);
   }
 
-  var duration = options.duration / TimeConstants.SECONDS_PER_MILLISECOND;
-  var delayInSeconds = defaultValue(options.delay, 0.0);
-  var delay = delayInSeconds / TimeConstants.SECONDS_PER_MILLISECOND;
-  var easingFunction = defaultValue(
+  const duration = options.duration / TimeConstants.SECONDS_PER_MILLISECOND;
+  const delayInSeconds = defaultValue(options.delay, 0.0);
+  const delay = delayInSeconds / TimeConstants.SECONDS_PER_MILLISECOND;
+  const easingFunction = defaultValue(
     options.easingFunction,
     EasingFunction.LINEAR_NONE
   );
 
-  var value = options.startObject;
-  var tweenjs = new TweenJS.Tween(value);
+  const value = options.startObject;
+  const tweenjs = new TweenJS.Tween(value);
   tweenjs.to(clone(options.stopObject), duration);
   tweenjs.delay(delay);
   tweenjs.easing(easingFunction);
@@ -256,7 +256,7 @@ TweenCollection.prototype.add = function (options) {
   tweenjs.onComplete(defaultValue(options.complete, null));
   tweenjs.repeat(defaultValue(options._repeat, 0.0));
 
-  var tween = new Tween(
+  const tween = new Tween(
     this,
     tweenjs,
     options.startObject,
@@ -295,10 +295,10 @@ TweenCollection.prototype.add = function (options) {
 TweenCollection.prototype.addProperty = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var object = options.object;
-  var property = options.property;
-  var startValue = options.startValue;
-  var stopValue = options.stopValue;
+  const object = options.object;
+  const property = options.property;
+  const startValue = options.startValue;
+  const stopValue = options.stopValue;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(object) || !defined(options.property)) {
@@ -361,7 +361,7 @@ TweenCollection.prototype.addProperty = function (options) {
 TweenCollection.prototype.addAlpha = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var material = options.material;
+  const material = options.material;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(material)) {
@@ -369,9 +369,9 @@ TweenCollection.prototype.addAlpha = function (options) {
   }
   //>>includeEnd('debug');
 
-  var properties = [];
+  const properties = [];
 
-  for (var property in material.uniforms) {
+  for (const property in material.uniforms) {
     if (
       material.uniforms.hasOwnProperty(property) &&
       defined(material.uniforms[property]) &&
@@ -390,8 +390,8 @@ TweenCollection.prototype.addAlpha = function (options) {
   //>>includeEnd('debug');
 
   function update(value) {
-    var length = properties.length;
-    for (var i = 0; i < length; ++i) {
+    const length = properties.length;
+    for (let i = 0; i < length; ++i) {
       material.uniforms[properties[i]].alpha = value.alpha;
     }
   }
@@ -433,7 +433,7 @@ TweenCollection.prototype.addAlpha = function (options) {
 TweenCollection.prototype.addOffsetIncrement = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var material = options.material;
+  const material = options.material;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(material)) {
@@ -444,7 +444,7 @@ TweenCollection.prototype.addOffsetIncrement = function (options) {
   }
   //>>includeEnd('debug');
 
-  var uniforms = material.uniforms;
+  const uniforms = material.uniforms;
   return this.addProperty({
     object: uniforms,
     property: "offset",
@@ -473,7 +473,7 @@ TweenCollection.prototype.remove = function (tween) {
     return false;
   }
 
-  var index = this._tweens.indexOf(tween);
+  const index = this._tweens.indexOf(tween);
   if (index !== -1) {
     tween.tweenjs.stop();
     if (defined(tween.cancel)) {
@@ -493,10 +493,10 @@ TweenCollection.prototype.remove = function (tween) {
  * </p>
  */
 TweenCollection.prototype.removeAll = function () {
-  var tweens = this._tweens;
+  const tweens = this._tweens;
 
-  for (var i = 0; i < tweens.length; ++i) {
-    var tween = tweens[i];
+  for (let i = 0; i < tweens.length; ++i) {
+    const tween = tweens[i];
     tween.tweenjs.stop();
     if (defined(tween.cancel)) {
       tween.cancel();
@@ -526,9 +526,9 @@ TweenCollection.prototype.contains = function (tween) {
  *
  * @example
  * // Output the duration of all the tweens in the collection.
- * var tweens = scene.tweens;
- * var length = tweens.length;
- * for (var i = 0; i < length; ++i) {
+ * const tweens = scene.tweens;
+ * const length = tweens.length;
+ * for (let i = 0; i < length; ++i) {
  *   console.log(tweens.get(i).duration);
  * }
  */
@@ -549,15 +549,15 @@ TweenCollection.prototype.get = function (index) {
  * @param {Number} [time=getTimestamp()] The time in seconds.  By default tweens are synced to the system clock.
  */
 TweenCollection.prototype.update = function (time) {
-  var tweens = this._tweens;
+  const tweens = this._tweens;
 
-  var i = 0;
+  let i = 0;
   time = defined(time)
     ? time / TimeConstants.SECONDS_PER_MILLISECOND
     : getTimestamp();
   while (i < tweens.length) {
-    var tween = tweens[i];
-    var tweenjs = tween.tweenjs;
+    const tween = tweens[i];
+    const tweenjs = tween.tweenjs;
 
     if (tween.needsStart) {
       tween.needsStart = false;

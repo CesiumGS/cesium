@@ -4,7 +4,7 @@ import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import sampleTerrain from "./sampleTerrain.js";
 
-var scratchCartesian2 = new Cartesian2();
+const scratchCartesian2 = new Cartesian2();
 
 /**
  * Initiates a sampleTerrain() request at the maximum available tile level for a terrain dataset.
@@ -18,12 +18,12 @@ var scratchCartesian2 = new Cartesian2();
  *
  * @example
  * // Query the terrain height of two Cartographic positions
- * var terrainProvider = Cesium.createWorldTerrain();
- * var positions = [
+ * const terrainProvider = Cesium.createWorldTerrain();
+ * const positions = [
  *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),
  *     Cesium.Cartographic.fromDegrees(87.0, 28.0)
  * ];
- * var promise = Cesium.sampleTerrainMostDetailed(terrainProvider, positions);
+ * const promise = Cesium.sampleTerrainMostDetailed(terrainProvider, positions);
  * Cesium.when(promise, function(updatedPositions) {
  *     // positions[0].height and positions[1].height have been updated.
  *     // updatedPositions is just a reference to positions.
@@ -40,10 +40,10 @@ function sampleTerrainMostDetailed(terrainProvider, positions) {
   //>>includeEnd('debug');
 
   return terrainProvider.readyPromise.then(function () {
-    var byLevel = [];
-    var maxLevels = [];
+    const byLevel = [];
+    const maxLevels = [];
 
-    var availability = terrainProvider.availability;
+    const availability = terrainProvider.availability;
 
     //>>includeStart('debug', pragmas.debug);
     if (!defined(availability)) {
@@ -53,10 +53,10 @@ function sampleTerrainMostDetailed(terrainProvider, positions) {
     }
     //>>includeEnd('debug');
 
-    var promises = [];
-    for (var i = 0; i < positions.length; ++i) {
-      var position = positions[i];
-      var maxLevel = availability.computeMaximumLevelAtPosition(position);
+    const promises = [];
+    for (let i = 0; i < positions.length; ++i) {
+      const position = positions[i];
+      const maxLevel = availability.computeMaximumLevelAtPosition(position);
       maxLevels[i] = maxLevel;
       if (maxLevel === 0) {
         // This is a special case where we have a parent terrain and we are requesting
@@ -67,7 +67,7 @@ function sampleTerrainMostDetailed(terrainProvider, positions) {
           1,
           scratchCartesian2
         );
-        var promise = terrainProvider.loadTileDataAvailability(
+        const promise = terrainProvider.loadTileDataAvailability(
           scratchCartesian2.x,
           scratchCartesian2.y,
           1
@@ -77,7 +77,7 @@ function sampleTerrainMostDetailed(terrainProvider, positions) {
         }
       }
 
-      var atLevel = byLevel[maxLevel];
+      let atLevel = byLevel[maxLevel];
       if (!defined(atLevel)) {
         byLevel[maxLevel] = atLevel = [];
       }
@@ -96,10 +96,10 @@ function sampleTerrainMostDetailed(terrainProvider, positions) {
         );
       })
       .then(function () {
-        var changedPositions = [];
-        for (var i = 0; i < positions.length; ++i) {
-          var position = positions[i];
-          var maxLevel = availability.computeMaximumLevelAtPosition(position);
+        const changedPositions = [];
+        for (let i = 0; i < positions.length; ++i) {
+          const position = positions[i];
+          const maxLevel = availability.computeMaximumLevelAtPosition(position);
 
           if (maxLevel !== maxLevels[i]) {
             // Now that we loaded the max availability, a higher level has become available

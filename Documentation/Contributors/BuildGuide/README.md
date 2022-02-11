@@ -1,9 +1,33 @@
 # Build Guide
 
+- [Quickstart](#quickstart)
 - [Get the Code](#get-the-code)
 - [Build the Code](#build-the-code)
 - [Build Scripts](#build-scripts)
 - [Travis and Continuous Integration](#travis-and-continuous-integration)
+
+## Quickstart
+
+1. [Clone the repository](#get-the-code)
+
+2. [Build](#build-the-code)
+
+   ```
+    npm install
+    npm run build
+   ```
+
+3. Start the server
+
+   ```
+   npm start
+   ```
+
+4. Navigate to : [` http://localhost:8080/`](http://localhost:8080)
+
+_NOTE: If you change branches, you might have to rebuild._
+
+---
 
 ## Get the Code
 
@@ -150,7 +174,7 @@ It is possible to configure your `travis.yml` and `gulpfile.cjs` to deploy to a 
 - In `gulpfile.cjs`, edit the following line:
 
 ```
-var travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
+const travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
 ```
 
 - Edit the URL to match the URL of the S3 bucket specified in `travis.yml`

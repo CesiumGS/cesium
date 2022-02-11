@@ -43,7 +43,7 @@
         "use strict";
         //Sandcastle_Begin
         Cesium.ExperimentalFeatures.enableModelExperimental = true;
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           orderIndependentTranslucency: false,
         });
 
@@ -53,13 +53,13 @@
 
         // Model positioning ===============================================
 
-        var position = Cesium.Cartesian3.fromDegrees(
+        const position = Cesium.Cartesian3.fromDegrees(
           -123.0744619,
           44.0503706,
           0
         );
-        var hpr = new Cesium.HeadingPitchRoll(0, 0, 0);
-        var fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
+        const hpr = new Cesium.HeadingPitchRoll(0, 0, 0);
+        const fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
           "north",
           "west"
         );
@@ -67,7 +67,7 @@
         // Custom Shader Definitions ========================================
 
         // Dragging the mouse will expand/shrink the model.
-        var expandModelShader = new Cesium.CustomShader({
+        const expandModelShader = new Cesium.CustomShader({
           uniforms: {
             // Vector from latest drag center to the mouse
             u_drag: {
@@ -75,17 +75,17 @@
               value: new Cesium.Cartesian2(0.0, 0.0),
             },
           },
-          vertexShaderText: [
+          vertexShaderText: `
             // If the mouse is dragged to the right, the model grows
             // If the mouse is dragged to the left, the model shrinks
-            "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
-            "{",
-            "    vsOutput.positionMC += 0.01 * u_drag.x * vsInput.attributes.normalMC;",
-            "}",
-          ].join("\n"),
+            void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)
+            {
+                vsOutput.positionMC += 0.01 * u_drag.x * vsInput.attributes.normalMC;
+            }
+            `,
         });
 
-        var textureUniformShader = new Cesium.CustomShader({
+        const textureUniformShader = new Cesium.CustomShader({
           uniforms: {
             // elapsed time in seconds for animation
             u_time: {
@@ -102,27 +102,27 @@
           },
           // Apply the texture to the model, but move the texture coordinates
           // a bit over time so it's animated.
-          fragmentShaderText: [
-            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
-            "{",
-            "    vec2 texCoord = fsInput.attributes.texCoord_0 + 0.1 * vec2(u_time, 0.0);",
-            "    material.diffuse = texture2D(u_stripes, texCoord).rgb;",
-            "}",
-          ].join("\n"),
+          fragmentShaderText: `
+            void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+            {
+                vec2 texCoord = fsInput.attributes.texCoord_0 + 0.1 * vec2(u_time, 0.0);
+                material.diffuse = texture2D(u_stripes, texCoord).rgb;
+            }
+            `,
         });
 
         // make a checkerboard texture with an alpha that increases with the
         // diagonal number
         function makeCheckerboardTexture(textureSize) {
-          var checkerboard = new Uint8Array(4 * textureSize * textureSize);
+          const checkerboard = new Uint8Array(4 * textureSize * textureSize);
 
-          var maxDiagonal = 2 * (textureSize - 1);
-          for (var i = 0; i < textureSize; i++) {
-            for (var j = 0; j < textureSize; j++) {
-              var index = i * textureSize + j;
+          const maxDiagonal = 2 * (textureSize - 1);
+          for (let i = 0; i < textureSize; i++) {
+            for (let j = 0; j < textureSize; j++) {
+              const index = i * textureSize + j;
               // Checking the parity of the diagonal number gives a checkerboard
               // pattern.
-              var diagonal = i + j;
+              const diagonal = i + j;
               if (diagonal % 2 === 0) {
                 // set the square red. We only need to set the red channel!
                 checkerboard[4 * index] = 255;
@@ -143,29 +143,29 @@
             magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
           });
         }
-        var checkerboardTexture = makeCheckerboardTexture(8);
+        const checkerboardTexture = makeCheckerboardTexture(8);
 
         // Use the checkerboard red channel as a mask
-        var checkerboardMaskShader = new Cesium.CustomShader({
+        const checkerboardMaskShader = new Cesium.CustomShader({
           uniforms: {
             u_checkerboard: {
               type: Cesium.UniformType.SAMPLER_2D,
               value: checkerboardTexture,
             },
           },
-          fragmentShaderText: [
-            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
-            "{",
-            "    vec2 texCoord = fsInput.attributes.texCoord_0;",
-            "    vec4 checkerboard = texture2D(u_checkerboard, texCoord);",
-            "    material.diffuse = mix(material.diffuse, vec3(0.0), checkerboard.r);",
-            "}",
-          ].join("\n"),
+          fragmentShaderText: `  
+            void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+            {
+                vec2 texCoord = fsInput.attributes.texCoord_0;
+                vec4 checkerboard = texture2D(u_checkerboard, texCoord);
+                material.diffuse = mix(material.diffuse, vec3(0.0), checkerboard.r);
+            }
+            `,
         });
 
         // Color like a checkerboard but make the transparency vary with
         // the diagonal
-        var checkerboardAlphaShader = new Cesium.CustomShader({
+        const checkerboardAlphaShader = new Cesium.CustomShader({
           uniforms: {
             u_checkerboard: {
               type: Cesium.UniformType.SAMPLER_2D,
@@ -174,35 +174,35 @@
           },
           // necessary when setting material.alpha
           isTranslucent: true,
-          fragmentShaderText: [
-            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
-            "{",
-            "    vec2 texCoord = fsInput.attributes.texCoord_0;",
-            "    vec4 checkerboard = texture2D(u_checkerboard, texCoord);",
-            "    material.diffuse = checkerboard.rgb;",
-            "    material.alpha = checkerboard.a;",
-            "}",
-          ].join("\n"),
+          fragmentShaderText: `
+            void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+            {
+                vec2 texCoord = fsInput.attributes.texCoord_0;
+                vec4 checkerboard = texture2D(u_checkerboard, texCoord);
+                material.diffuse = checkerboard.rgb;
+                material.alpha = checkerboard.a;
+            }
+            `,
         });
 
         // Use the checkerboard to cut holes in the model
-        var checkerboardHolesShader = new Cesium.CustomShader({
+        const checkerboardHolesShader = new Cesium.CustomShader({
           uniforms: {
             u_checkerboard: {
               type: Cesium.UniformType.SAMPLER_2D,
               value: checkerboardTexture,
             },
           },
-          fragmentShaderText: [
-            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
-            "{",
-            "    vec2 texCoord = fsInput.attributes.texCoord_0;",
-            "    vec4 checkerboard = texture2D(u_checkerboard, texCoord);",
-            "    if (checkerboard.r > 0.0) {",
-            "        discard;",
-            "    }",
-            "}",
-          ].join("\n"),
+          fragmentShaderText: `
+            void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+            {
+                vec2 texCoord = fsInput.attributes.texCoord_0;
+                vec4 checkerboard = texture2D(u_checkerboard, texCoord);
+                if (checkerboard.r > 0.0) {
+                    discard;
+                }
+            }
+            `,
         });
 
         // This example is to demonstrate the conventions used for orienting
@@ -212,11 +212,11 @@
         // This example also demonstrates how to use a different pixel format,
         // in this case, RGB.
         function makeGradientTexture() {
-          var size = 256;
-          var typedArray = new Uint8Array(3 * size * size);
-          for (var i = 0; i < size; i++) {
-            for (var j = 0; j < size; j++) {
-              var index = i * size + j;
+          const size = 256;
+          const typedArray = new Uint8Array(3 * size * size);
+          for (let i = 0; i < size; i++) {
+            for (let j = 0; j < size; j++) {
+              const index = i * size + j;
               // red increases in the +x direction (to the right)
               typedArray[3 * index + 0] = j;
               // Green increases in the +y direction (from bottom to top)
@@ -232,26 +232,26 @@
             pixelFormat: Cesium.PixelFormat.RGB,
           });
         }
-        var gradientTexture = makeGradientTexture();
+        const gradientTexture = makeGradientTexture();
 
         // Color the texture along its UV coordinates.
-        var gradientShader = new Cesium.CustomShader({
+        const gradientShader = new Cesium.CustomShader({
           uniforms: {
             u_gradient: {
               type: Cesium.UniformType.SAMPLER_2D,
               value: gradientTexture,
             },
           },
-          fragmentShaderText: [
-            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
-            "{",
-            "    material.diffuse = texture2D(u_gradient, fsInput.attributes.texCoord_0).rgb;",
-            "}",
-          ].join("\n"),
+          fragmentShaderText: `
+            void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+            {
+                material.diffuse = texture2D(u_gradient, fsInput.attributes.texCoord_0).rgb;
+            }
+            `,
         });
 
         // Dragging the mouse will modify the PBR values
-        var modifyPbrShader = new Cesium.CustomShader({
+        const modifyPbrShader = new Cesium.CustomShader({
           uniforms: {
             // Vector from latest drag center to the mouse
             u_drag: {
@@ -259,23 +259,23 @@
               value: new Cesium.Cartesian2(0.0, 0.0),
             },
           },
-          fragmentShaderText: [
+          fragmentShaderText: `
             // Click and drag to vary the PBR values
-            "void fragmentMain(FragmentInput vsInput, inout czm_modelMaterial material)",
-            "{",
-            "    float dragDistance = length(u_drag);",
-            "    float variation = smoothstep(0.0, 300.0, dragDistance);",
+            void fragmentMain(FragmentInput vsInput, inout czm_modelMaterial material)
+            {
+                float dragDistance = length(u_drag);
+                float variation = smoothstep(0.0, 300.0, dragDistance);
             // variation adds an golden tint to the specular highlights
-            "    material.specular = mix(material.specular, vec3(0.8, 0.5, 0.1), variation);",
+                material.specular = mix(material.specular, vec3(0.8, 0.5, 0.1), variation);
             // variation makes the material glossier
-            "    material.roughness = clamp(1.0 - variation, 0.01, 1.0);",
+                material.roughness = clamp(1.0 - variation, 0.01, 1.0);
             // variation mixes some red into the diffuse color
-            "    material.diffuse += vec3(0.5, 0.0, 0.0) * variation;",
-            "}",
-          ].join("\n"),
+                material.diffuse += vec3(0.5, 0.0, 0.0) * variation;
+            }
+            `,
         });
 
-        var pointCloudWaveShader = new Cesium.CustomShader({
+        const pointCloudWaveShader = new Cesium.CustomShader({
           uniforms: {
             // elapsed time in seconds for animation
             u_time: {
@@ -283,45 +283,45 @@
               value: 0,
             },
           },
-          vertexShaderText: [
-            "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
-            "{",
+          vertexShaderText: `
+            void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)
+            {
             // This model's x and y coordinates are in the range [0, 1], which
             // conveniently doubles as UV coordinates.
-            "    vec2 uv = vsInput.attributes.positionMC.xy;",
+                vec2 uv = vsInput.attributes.positionMC.xy;
             // Make the point cloud undulate in a complex wave that varies in
             // both space and time. The amplitude is based on the original shape
             // of the point cloud (which already is a wavy surface). The wave
             // is computed relative to the center of the model, hence the
             // transformations from [0, 1] -> [-1, 1] -> [0, 1]
-            "    float amplitude = 2.0 * vsInput.attributes.positionMC.z - 1.0;",
-            "    float wave = amplitude * sin(2.0 * czm_pi * uv.x - 2.0 * u_time) * sin(u_time);",
-            "    vsOutput.positionMC.z = 0.5 + 0.5 * wave;",
+                float amplitude = 2.0 * vsInput.attributes.positionMC.z - 1.0;
+                float wave = amplitude * sin(2.0 * czm_pi * uv.x - 2.0 * u_time) * sin(u_time);
+                vsOutput.positionMC.z = 0.5 + 0.5 * wave;
             // Make the points pulse in and out by changing their size
-            "    vsOutput.pointSize = 10.0 + 5.0 * sin(u_time);",
-            "}",
-          ].join("\n"),
-          fragmentShaderText: [
-            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
-            "{",
+                vsOutput.pointSize = 10.0 + 5.0 * sin(u_time);
+            }
+            `,
+          fragmentShaderText: `
+            void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+            {
             // Make the points circular instead of square
-            "    float distance = length(gl_PointCoord - 0.5);",
-            "    if (distance > 0.5) {",
-            "        discard;",
-            "    }",
+                float distance = length(gl_PointCoord - 0.5);
+                if (distance > 0.5) {
+                    discard;
+                }
             // Make a sinusoid color palette that moves in the general direction
             // of the wave, but at a different speed.
             // Coefficients were chosen arbitrarily
-            "    vec2 uv = fsInput.attributes.positionMC.xy;",
-            "    material.diffuse = 0.2 * fsInput.attributes.color_0.rgb;",
-            "    material.diffuse += vec3(0.2, 0.3, 0.4) + vec3(0.2, 0.3, 0.4) * sin(2.0 * czm_pi * vec3(3.0, 2.0, 1.0) * uv.x - 3.0 * u_time);",
-            "}",
-          ].join("\n"),
+                vec2 uv = fsInput.attributes.positionMC.xy;
+                material.diffuse = 0.2 * fsInput.attributes.color_0.rgb;
+                material.diffuse += vec3(0.2, 0.3, 0.4) + vec3(0.2, 0.3, 0.4) * sin(2.0 * czm_pi * vec3(3.0, 2.0, 1.0) * uv.x - 3.0 * u_time);
+            }
+            `,
         });
 
         // Demos ==============================================================
 
-        var models = {
+        const models = {
           balloon: "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb",
           drone: "../../SampleData/models/CesiumDrone/CesiumDrone.glb",
           pawns: "../../SampleData/models/CesiumDrone/Pawns.glb",
@@ -333,8 +333,8 @@
             "../../SampleData/models/PointCloudWave/PointCloudWave.glb",
         };
 
-        var needsDrag = false;
-        var demos = [
+        let needsDrag = false;
+        const demos = [
           {
             text: "Custom Texture",
             onselect: function () {
@@ -395,7 +395,7 @@
 
         function selectModel(url, customShader) {
           viewer.scene.primitives.removeAll();
-          var model = viewer.scene.primitives.add(
+          const model = viewer.scene.primitives.add(
             Cesium.ModelExperimental.fromGltf({
               gltf: url,
               customShader: customShader,
@@ -418,22 +418,22 @@
 
         // Event handlers =====================================================
 
-        var startTime = performance.now();
+        const startTime = performance.now();
         viewer.scene.postUpdate.addEventListener(function () {
-          var elapsedTimeSeconds = (performance.now() - startTime) / 1000;
+          const elapsedTimeSeconds = (performance.now() - startTime) / 1000;
           textureUniformShader.setUniform("u_time", elapsedTimeSeconds);
           pointCloudWaveShader.setUniform("u_time", elapsedTimeSeconds);
         });
 
-        var dragActive = false;
-        var dragCenter = new Cesium.Cartesian2();
+        let dragActive = false;
+        const dragCenter = new Cesium.Cartesian2();
 
         viewer.screenSpaceEventHandler.setInputAction(function (movement) {
           if (!needsDrag) {
             return;
           }
 
-          var pickedFeature = viewer.scene.pick(movement.position);
+          const pickedFeature = viewer.scene.pick(movement.position);
           if (!Cesium.defined(pickedFeature)) {
             return;
           }
@@ -445,7 +445,7 @@
           movement.position.clone(dragCenter);
         }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
 
-        var scratchDrag = new Cesium.Cartesian2();
+        const scratchDrag = new Cesium.Cartesian2();
         viewer.screenSpaceEventHandler.setInputAction(function (movement) {
           if (!needsDrag) {
             return;
@@ -453,7 +453,7 @@
 
           if (dragActive) {
             // get the mouse position relative to the center of the screen
-            var drag = Cesium.Cartesian3.subtract(
+            const drag = Cesium.Cartesian3.subtract(
               movement.endPosition,
               dragCenter,
               scratchDrag

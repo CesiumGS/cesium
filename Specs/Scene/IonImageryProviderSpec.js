@@ -25,9 +25,9 @@ describe("Scene/IonImageryProvider", function () {
       attributions: [],
     });
 
-    var assetId = 12335;
-    var options = { assetId: assetId };
-    var endpointResource = IonResource._createEndpointResource(
+    const assetId = 12335;
+    const options = { assetId: assetId };
+    const endpointResource = IonResource._createEndpointResource(
       assetId,
       options
     );
@@ -39,7 +39,7 @@ describe("Scene/IonImageryProvider", function () {
       when.resolve(endpointData)
     );
 
-    var provider = new IonImageryProvider(options);
+    const provider = new IonImageryProvider(options);
 
     expect(IonResource._createEndpointResource).toHaveBeenCalledWith(
       assetId,
@@ -64,7 +64,7 @@ describe("Scene/IonImageryProvider", function () {
   });
 
   it("readyPromise rejects with non-imagery asset", function (done) {
-    var provider = createTestProvider({
+    const provider = createTestProvider({
       type: "3DTILES",
       url: "http://test.invalid/layer",
       accessToken: "not_really_a_refresh_token",
@@ -82,7 +82,7 @@ describe("Scene/IonImageryProvider", function () {
   });
 
   it("readyPromise rejects with unknown external asset type", function (done) {
-    var provider = createTestProvider({
+    const provider = createTestProvider({
       type: "IMAGERY",
       externalType: "TUBELCANE",
       options: { url: "http://test.invalid/layer" },
@@ -100,7 +100,7 @@ describe("Scene/IonImageryProvider", function () {
   });
 
   it("readyPromise resolves when ready", function () {
-    var provider = createTestProvider();
+    const provider = createTestProvider();
     return provider.readyPromise.then(function () {
       expect(provider.errorEvent).toBeDefined();
       expect(provider.ready).toBe(true);
@@ -111,20 +111,20 @@ describe("Scene/IonImageryProvider", function () {
   });
 
   it("Uses previously fetched endpoint cache", function () {
-    var endpointData = {
+    const endpointData = {
       type: "IMAGERY",
       url: "http://test.invalid/layer",
       accessToken: "not_really_a_refresh_token",
       attributions: [],
     };
 
-    var assetId = 12335;
-    var options = {
+    const assetId = 12335;
+    const options = {
       assetId: assetId,
       accessToken: "token",
       server: "http://test.invalid",
     };
-    var endpointResource = IonResource._createEndpointResource(
+    const endpointResource = IonResource._createEndpointResource(
       assetId,
       options
     );
@@ -136,15 +136,15 @@ describe("Scene/IonImageryProvider", function () {
     );
 
     expect(endpointResource.fetchJson.calls.count()).toBe(0);
-    var provider = new IonImageryProvider(options);
-    var provider2;
+    const provider = new IonImageryProvider(options);
+    let provider2;
     return provider.readyPromise
       .then(function () {
         expect(provider.ready).toBe(true);
         expect(endpointResource.fetchJson.calls.count()).toBe(1);
 
         // Same as options but in a different order to verify cache is order independant.
-        var options2 = {
+        const options2 = {
           accessToken: "token",
           server: "http://test.invalid",
           assetId: assetId,
@@ -160,8 +160,8 @@ describe("Scene/IonImageryProvider", function () {
   });
 
   it("propagates called to underlying imagery provider resolves when ready", function () {
-    var provider = createTestProvider();
-    var internalProvider;
+    const provider = createTestProvider();
+    let internalProvider;
 
     return provider.readyPromise
       .then(function () {
@@ -178,8 +178,8 @@ describe("Scene/IonImageryProvider", function () {
         expect(provider.credit).toBe(internalProvider.credit);
         expect(provider.hasAlphaChannel).toBe(internalProvider.hasAlphaChannel);
 
-        var image = new Image();
-        var request = {};
+        const image = new Image();
+        const request = {};
         spyOn(internalProvider, "requestImage").and.returnValue(
           when.resolve(image)
         );
@@ -194,7 +194,7 @@ describe("Scene/IonImageryProvider", function () {
         });
       })
       .then(function () {
-        var info = {};
+        const info = {};
         spyOn(internalProvider, "pickFeatures").and.returnValue(
           when.resolve(info)
         );
@@ -210,18 +210,18 @@ describe("Scene/IonImageryProvider", function () {
         });
       })
       .then(function () {
-        var innerCredit = new Credit("Data provided");
+        const innerCredit = new Credit("Data provided");
         spyOn(internalProvider, "getTileCredits").and.returnValue([
           innerCredit,
         ]);
-        var credits = provider.getTileCredits(1, 2, 3);
+        const credits = provider.getTileCredits(1, 2, 3);
         expect(internalProvider.getTileCredits).toHaveBeenCalledWith(1, 2, 3);
         expect(credits).toContain(innerCredit);
       });
   });
 
   it("throws developer errors when not ready", function () {
-    var provider = createTestProvider();
+    const provider = createTestProvider();
     provider._ready = false;
 
     expect(function () {
@@ -263,11 +263,11 @@ describe("Scene/IonImageryProvider", function () {
   });
 
   it("handles server-sent credits", function () {
-    var serverCredit = {
+    const serverCredit = {
       html: '<a href="http://test.invalid/">Text</a>',
       collapsible: false,
     };
-    var provider = createTestProvider({
+    const provider = createTestProvider({
       type: "IMAGERY",
       url: "http://test.invalid/layer",
       accessToken: "not_really_a_refresh_token",
@@ -275,8 +275,8 @@ describe("Scene/IonImageryProvider", function () {
     });
 
     return provider.readyPromise.then(function () {
-      var credits = provider.getTileCredits(0, 0, 0);
-      var credit = credits[0];
+      const credits = provider.getTileCredits(0, 0, 0);
+      const credit = credits[0];
       expect(credit).toBeInstanceOf(Credit);
       expect(credit.html).toEqual(serverCredit.html);
       expect(credit.showOnScreen).toEqual(!serverCredit.collapsible);
@@ -284,7 +284,7 @@ describe("Scene/IonImageryProvider", function () {
   });
 
   function testExternalImagery(type, options, ImageryClass) {
-    var provider = createTestProvider({
+    const provider = createTestProvider({
       type: "IMAGERY",
       externalType: type,
       options: options,

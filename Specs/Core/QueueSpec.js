@@ -1,7 +1,7 @@
 import { Queue } from "../../Source/Cesium.js";
 
 describe("Core/Queue", function () {
-  var queue;
+  let queue;
   beforeEach(function () {
     queue = new Queue();
   });
@@ -31,7 +31,7 @@ describe("Core/Queue", function () {
   });
 
   it("compacts underlying array", function () {
-    var i;
+    let i;
     for (i = 0; i < 1000; i++) {
       queue.enqueue(i);
     }

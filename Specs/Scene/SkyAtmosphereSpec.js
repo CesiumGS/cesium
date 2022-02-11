@@ -8,7 +8,7 @@ import createScene from "../createScene.js";
 describe(
   "Scene/SkyAtmosphere",
   function () {
-    var scene;
+    let scene;
 
     beforeAll(function () {
       scene = createScene();
@@ -23,12 +23,12 @@ describe(
     });
 
     it("draws sky with camera in atmosphere", function () {
-      var s = new SkyAtmosphere();
+      const s = new SkyAtmosphere();
 
       expect(scene).toRender([0, 0, 0, 255]);
       scene.render();
 
-      var command = s.update(scene.frameState);
+      const command = s.update(scene.frameState);
       expect(command).toBeDefined();
       command.execute(scene.context); // Not reliable enough across browsers to test pixels
 
@@ -36,12 +36,12 @@ describe(
     });
 
     it("draws sky with camera in space", function () {
-      var s = new SkyAtmosphere();
+      const s = new SkyAtmosphere();
 
       expect(scene).toRender([0, 0, 0, 255]);
       scene.render();
 
-      var command = s.update(scene.frameState);
+      const command = s.update(scene.frameState);
       expect(command).toBeDefined();
       command.execute(scene.context); // Not reliable enough across browsers to test pixels
 
@@ -49,13 +49,13 @@ describe(
     });
 
     it("draws sky with setDynamicAtmosphereColor set to true", function () {
-      var s = new SkyAtmosphere();
+      const s = new SkyAtmosphere();
       s.setDynamicAtmosphereColor(true, false);
 
       expect(scene).toRender([0, 0, 0, 255]);
       scene.render();
 
-      var command = s.update(scene.frameState);
+      const command = s.update(scene.frameState);
       expect(command).toBeDefined();
       expect(s._radiiAndDynamicAtmosphereColor.z).toBe(1);
       command.execute(scene.context); // Not reliable enough across browsers to test pixels
@@ -64,13 +64,13 @@ describe(
     });
 
     it("draws sky with setDynamicAtmosphereColor set to true using the sun direction", function () {
-      var s = new SkyAtmosphere();
+      const s = new SkyAtmosphere();
       s.setDynamicAtmosphereColor(true, true);
 
       expect(scene).toRender([0, 0, 0, 255]);
       scene.render();
 
-      var command = s.update(scene.frameState);
+      const command = s.update(scene.frameState);
       expect(command).toBeDefined();
       expect(s._radiiAndDynamicAtmosphereColor.z).toBe(2);
       command.execute(scene.context); // Not reliable enough across browsers to test pixels
@@ -79,13 +79,13 @@ describe(
     });
 
     it("draws sky with setDynamicAtmosphereColor set to false", function () {
-      var s = new SkyAtmosphere();
+      const s = new SkyAtmosphere();
       s.setDynamicAtmosphereColor(false, false);
 
       expect(scene).toRender([0, 0, 0, 255]);
       scene.render();
 
-      var command = s.update(scene.frameState);
+      const command = s.update(scene.frameState);
       expect(command).toBeDefined();
       expect(s._radiiAndDynamicAtmosphereColor.z).toBe(0);
       command.execute(scene.context); // Not reliable enough across browsers to test pixels
@@ -94,8 +94,8 @@ describe(
     });
 
     it("draws sky with color correction active", function () {
-      var oldSkyAtmosphere = scene.skyAtmosphere;
-      var s = new SkyAtmosphere();
+      const oldSkyAtmosphere = scene.skyAtmosphere;
+      const s = new SkyAtmosphere();
 
       scene.skyAtmosphere = s;
       scene.environmentState.isReadyForAtmosphere = true;
@@ -109,7 +109,7 @@ describe(
         },
       });
 
-      var color;
+      let color;
       expect(scene).toRenderAndCall(function (rgba) {
         color = rgba;
         expect(color).not.toEqual([0, 0, 0, 255]);
@@ -126,43 +126,43 @@ describe(
     });
 
     it("does not render when show is false", function () {
-      var s = new SkyAtmosphere();
+      const s = new SkyAtmosphere();
       s.show = false;
 
       expect(scene).toRender([0, 0, 0, 255]);
       scene.render();
 
-      var command = s.update(scene.frameState);
+      const command = s.update(scene.frameState);
       expect(command).not.toBeDefined();
     });
 
     it("does not render in 2D", function () {
-      var s = new SkyAtmosphere();
+      const s = new SkyAtmosphere();
 
       expect(scene).toRender([0, 0, 0, 255]);
       scene.mode = SceneMode.SCENE2D;
       scene.render();
 
-      var command = s.update(scene.frameState);
+      const command = s.update(scene.frameState);
       expect(command).not.toBeDefined();
     });
 
     it("does not render without a color pass", function () {
-      var s = new SkyAtmosphere();
+      const s = new SkyAtmosphere();
 
       scene.frameState.passes.render = false;
 
-      var command = s.update(scene.frameState);
+      const command = s.update(scene.frameState);
       expect(command).not.toBeDefined();
     });
 
     it("gets ellipsoid", function () {
-      var s = new SkyAtmosphere(Ellipsoid.UNIT_SPHERE);
+      const s = new SkyAtmosphere(Ellipsoid.UNIT_SPHERE);
       expect(s.ellipsoid).toEqual(Ellipsoid.UNIT_SPHERE);
     });
 
     it("isDestroyed", function () {
-      var s = new SkyAtmosphere();
+      const s = new SkyAtmosphere();
       expect(s.isDestroyed()).toEqual(false);
       s.destroy();
       expect(s.isDestroyed()).toEqual(true);

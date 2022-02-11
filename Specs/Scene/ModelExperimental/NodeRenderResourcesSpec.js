@@ -1,4 +1,5 @@
 import {
+  Axis,
   Matrix4,
   ModelExperimentalNode,
   ModelRenderResources,
@@ -6,11 +7,21 @@ import {
 } from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/NodeRenderResources", function () {
-  var mockModel = {};
-  var mockNode = {};
-  var runtimeNode = new ModelExperimentalNode({
+  const mockModel = {};
+  const mockNode = {};
+  const mockSceneGraph = {
+    computedModelMatrix: Matrix4.IDENTITY,
+    components: {
+      upAxis: Axis.Y,
+      forwardAxis: Axis.Z,
+    },
+  };
+
+  const runtimeNode = new ModelExperimentalNode({
     node: mockNode,
-    modelMatrix: Matrix4.IDENTITY,
+    transform: Matrix4.IDENTITY,
+    sceneGraph: mockSceneGraph,
+    children: [],
   });
 
   function checkShaderDefines(shaderBuilder, expectedDefines) {
@@ -18,6 +29,7 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
       expectedDefines
     );
   }
+
   it("throws for undefined modelRenderResources", function () {
     expect(function () {
       return new NodeRenderResources(undefined, runtimeNode);
@@ -26,27 +38,40 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
 
   it("throws for undefined runtimeNode", function () {
     expect(function () {
-      var modelResources = new ModelRenderResources(mockModel);
+      const modelResources = new ModelRenderResources(mockModel);
       return new NodeRenderResources(modelResources, undefined);
     }).toThrowDeveloperError();
   });
 
   it("constructs", function () {
-    var modelResources = new ModelRenderResources(mockModel);
-    var nodeResources = new NodeRenderResources(modelResources, runtimeNode);
+    const modelResources = new ModelRenderResources(mockModel);
+    const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
 
     expect(nodeResources.runtimeNode).toBe(runtimeNode);
-    expect(nodeResources.modelMatrix).toBe(runtimeNode.modelMatrix);
+    expect(nodeResources.modelMatrix).toBe(runtimeNode.transform);
     expect(nodeResources.attributes).toEqual([]);
+    expect(nodeResources.renderStateOptions).toEqual({});
   });
 
   it("inherits from model render resources", function () {
-    var modelResources = new ModelRenderResources(mockModel);
+    const modelResources = new ModelRenderResources(mockModel);
     modelResources.shaderBuilder.addDefine("MODEL");
-    var nodeResources = new NodeRenderResources(modelResources, runtimeNode);
+    modelResources.renderStateOptions.cull = {
+      enabled: true,
+    };
+
+    const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
     nodeResources.shaderBuilder.addDefine("NODE");
 
     expect(nodeResources.model).toBe(mockModel);
+
+    // The node's render resources should be a clone of the model's.
+    expect(nodeResources.renderStateOptions).not.toBe(
+      modelResources.renderStateOptions
+    );
+    expect(nodeResources.renderStateOptions.cull).toEqual({
+      enabled: true,
+    });
 
     // The node's shader builder should be a clone of the model's
     expect(nodeResources.shaderBuilder).not.toBe(modelResources.shaderBuilder);

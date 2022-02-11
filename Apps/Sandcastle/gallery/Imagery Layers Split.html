@@ -56,7 +56,7 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
             url:
               "https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer",
@@ -65,31 +65,31 @@
           infoBox: false,
         });
 
-        var layers = viewer.imageryLayers;
-        var earthAtNight = layers.addImageryProvider(
+        const layers = viewer.imageryLayers;
+        const earthAtNight = layers.addImageryProvider(
           new Cesium.IonImageryProvider({ assetId: 3812 })
         );
         earthAtNight.splitDirection = Cesium.SplitDirection.LEFT; // Only show to the left of the slider.
 
         // Sync the position of the slider with the split position
-        var slider = document.getElementById("slider");
+        const slider = document.getElementById("slider");
         viewer.scene.imagerySplitPosition =
           slider.offsetLeft / slider.parentElement.offsetWidth;
 
-        var handler = new Cesium.ScreenSpaceEventHandler(slider);
+        const handler = new Cesium.ScreenSpaceEventHandler(slider);
 
-        var moveActive = false;
+        let moveActive = false;
 
         function move(movement) {
           if (!moveActive) {
             return;
           }
 
-          var relativeOffset = movement.endPosition.x;
-          var splitPosition =
+          const relativeOffset = movement.endPosition.x;
+          const splitPosition =
             (slider.offsetLeft + relativeOffset) /
             slider.parentElement.offsetWidth;
-          slider.style.left = 100.0 * splitPosition + "%";
+          slider.style.left = `${100.0 * splitPosition}%`;
           viewer.scene.imagerySplitPosition = splitPosition;
         }
 

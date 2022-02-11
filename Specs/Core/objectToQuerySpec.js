@@ -3,26 +3,26 @@ import { queryToObject } from "../../Source/Cesium.js";
 
 describe("Core/objectToQuery", function () {
   it("can encode data", function () {
-    var obj = {
+    const obj = {
       key1: "some value",
       key2: "a/b",
     };
 
-    var str = objectToQuery(obj);
+    const str = objectToQuery(obj);
     expect(str).toEqual("key1=some%20value&key2=a%2Fb");
   });
 
   it("can encode arrays of data", function () {
-    var obj = {
+    const obj = {
       key: ["a", "b"],
     };
 
-    var str = objectToQuery(obj);
+    const str = objectToQuery(obj);
     expect(str).toEqual("key=a&key=b");
   });
 
   it("runs example code from the documentation", function () {
-    var str = objectToQuery({
+    const str = objectToQuery({
       key1: "some value",
       key2: "a/b",
       key3: ["x", "y"],
@@ -31,12 +31,12 @@ describe("Core/objectToQuery", function () {
   });
 
   it("can round-trip", function () {
-    var obj = {
+    const obj = {
       foo: ["bar", "bar2"],
       bit: "byte",
     };
 
-    var obj2 = queryToObject(objectToQuery(obj));
+    const obj2 = queryToObject(objectToQuery(obj));
 
     expect(obj2).toEqual(obj);
   });

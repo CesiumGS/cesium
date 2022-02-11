@@ -25,22 +25,22 @@ import TilesetMetadata from "./TilesetMetadata.js";
  */
 function Cesium3DTilesetMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var extension = options.extension;
+  const extension = options.extension;
 
   // The calling code is responsible for loading the schema.
   // This keeps metadata parsing synchronous.
-  var schema = options.schema;
+  const schema = options.schema;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.extension", extension);
   Check.typeOf.object("options.schema", schema);
   //>>includeEnd('debug');
 
-  var groups = {};
+  const groups = {};
   if (defined(extension.groups)) {
-    for (var groupId in extension.groups) {
+    for (const groupId in extension.groups) {
       if (extension.groups.hasOwnProperty(groupId)) {
-        var group = extension.groups[groupId];
+        const group = extension.groups[groupId];
         groups[groupId] = new GroupMetadata({
           id: groupId,
           group: extension.groups[groupId],
@@ -50,7 +50,7 @@ function Cesium3DTilesetMetadata(options) {
     }
   }
 
-  var tileset;
+  let tileset;
   if (defined(extension.tileset)) {
     tileset = new TilesetMetadata({
       tileset: extension.tileset,

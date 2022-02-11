@@ -478,10 +478,10 @@ ImageryLayer.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-var imageryBoundsScratch = new Rectangle();
-var tileImageryBoundsScratch = new Rectangle();
-var clippedRectangleScratch = new Rectangle();
-var terrainRectangleScratch = new Rectangle();
+const imageryBoundsScratch = new Rectangle();
+const tileImageryBoundsScratch = new Rectangle();
+const clippedRectangleScratch = new Rectangle();
+const terrainRectangleScratch = new Rectangle();
 
 /**
  * Computes the intersection of this layer's rectangle with the imagery provider's availability rectangle,
@@ -498,8 +498,8 @@ var terrainRectangleScratch = new Rectangle();
  * });
  */
 ImageryLayer.prototype.getViewableRectangle = function () {
-  var imageryProvider = this._imageryProvider;
-  var rectangle = this._rectangle;
+  const imageryProvider = this._imageryProvider;
+  const rectangle = this._rectangle;
   return imageryProvider.readyPromise.then(function () {
     return Rectangle.intersection(imageryProvider.rectangle, rectangle);
   });
@@ -521,7 +521,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   terrainProvider,
   insertionPoint
 ) {
-  var surfaceTile = tile.data;
+  const surfaceTile = tile.data;
 
   if (
     defined(this._minimumTerrainLevel) &&
@@ -536,7 +536,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     return false;
   }
 
-  var imageryProvider = this._imageryProvider;
+  const imageryProvider = this._imageryProvider;
 
   if (!defined(insertionPoint)) {
     insertionPoint = surfaceTile.imagery.length;
@@ -554,7 +554,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   // Use Web Mercator for our texture coordinate computations if this imagery layer uses
   // that projection and the terrain tile falls entirely inside the valid bounds of the
   // projection.
-  var useWebMercatorT =
+  const useWebMercatorT =
     imageryProvider.tilingScheme.projection instanceof WebMercatorProjection &&
     tile.rectangle.north < WebMercatorProjection.MaximumLatitude &&
     tile.rectangle.south > -WebMercatorProjection.MaximumLatitude;
@@ -563,12 +563,12 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   // the geometry tile.  The ImageryProvider and ImageryLayer both have the
   // opportunity to constrain the rectangle.  The imagery TilingScheme's rectangle
   // always fully contains the ImageryProvider's rectangle.
-  var imageryBounds = Rectangle.intersection(
+  const imageryBounds = Rectangle.intersection(
     imageryProvider.rectangle,
     this._rectangle,
     imageryBoundsScratch
   );
-  var rectangle = Rectangle.intersection(
+  let rectangle = Rectangle.intersection(
     tile.rectangle,
     imageryBounds,
     tileImageryBoundsScratch
@@ -582,8 +582,8 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
       return false;
     }
 
-    var baseImageryRectangle = imageryBounds;
-    var baseTerrainRectangle = tile.rectangle;
+    const baseImageryRectangle = imageryBounds;
+    const baseTerrainRectangle = tile.rectangle;
     rectangle = tileImageryBoundsScratch;
 
     if (baseTerrainRectangle.south >= baseImageryRectangle.north) {
@@ -617,7 +617,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     }
   }
 
-  var latitudeClosestToEquator = 0.0;
+  let latitudeClosestToEquator = 0.0;
   if (rectangle.south > 0.0) {
     latitudeClosestToEquator = rectangle.south;
   } else if (rectangle.north < 0.0) {
@@ -628,33 +628,33 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   // The errorRatio should really be imagerySSE / terrainSSE rather than this hard-coded value.
   // But first we need configurable imagery SSE and we need the rendering to be able to handle more
   // images attached to a terrain tile than there are available texture units.  So that's for the future.
-  var errorRatio = 1.0;
-  var targetGeometricError =
+  const errorRatio = 1.0;
+  const targetGeometricError =
     errorRatio * terrainProvider.getLevelMaximumGeometricError(tile.level);
-  var imageryLevel = getLevelWithMaximumTexelSpacing(
+  let imageryLevel = getLevelWithMaximumTexelSpacing(
     this,
     targetGeometricError,
     latitudeClosestToEquator
   );
   imageryLevel = Math.max(0, imageryLevel);
-  var maximumLevel = imageryProvider.maximumLevel;
+  const maximumLevel = imageryProvider.maximumLevel;
   if (imageryLevel > maximumLevel) {
     imageryLevel = maximumLevel;
   }
 
   if (defined(imageryProvider.minimumLevel)) {
-    var minimumLevel = imageryProvider.minimumLevel;
+    const minimumLevel = imageryProvider.minimumLevel;
     if (imageryLevel < minimumLevel) {
       imageryLevel = minimumLevel;
     }
   }
 
-  var imageryTilingScheme = imageryProvider.tilingScheme;
-  var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(
+  const imageryTilingScheme = imageryProvider.tilingScheme;
+  const northwestTileCoordinates = imageryTilingScheme.positionToTileXY(
     Rectangle.northwest(rectangle),
     imageryLevel
   );
-  var southeastTileCoordinates = imageryTilingScheme.positionToTileXY(
+  const southeastTileCoordinates = imageryTilingScheme.positionToTileXY(
     Rectangle.southeast(rectangle),
     imageryLevel
   );
@@ -666,10 +666,10 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   // of the northwest tile, we don't actually need the northernmost or westernmost tiles.
 
   // We define "very close" as being within 1/512 of the width of the tile.
-  var veryCloseX = tile.rectangle.width / 512.0;
-  var veryCloseY = tile.rectangle.height / 512.0;
+  let veryCloseX = tile.rectangle.width / 512.0;
+  let veryCloseY = tile.rectangle.height / 512.0;
 
-  var northwestTileRectangle = imageryTilingScheme.tileXYToRectangle(
+  const northwestTileRectangle = imageryTilingScheme.tileXYToRectangle(
     northwestTileCoordinates.x,
     northwestTileCoordinates.y,
     imageryLevel
@@ -688,7 +688,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     ++northwestTileCoordinates.x;
   }
 
-  var southeastTileRectangle = imageryTilingScheme.tileXYToRectangle(
+  const southeastTileRectangle = imageryTilingScheme.tileXYToRectangle(
     southeastTileCoordinates.x,
     southeastTileCoordinates.y,
     imageryLevel
@@ -710,22 +710,22 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   // Create TileImagery instances for each imagery tile overlapping this terrain tile.
   // We need to do all texture coordinate computations in the imagery tile's tiling scheme.
 
-  var terrainRectangle = Rectangle.clone(
+  const terrainRectangle = Rectangle.clone(
     tile.rectangle,
     terrainRectangleScratch
   );
-  var imageryRectangle = imageryTilingScheme.tileXYToRectangle(
+  let imageryRectangle = imageryTilingScheme.tileXYToRectangle(
     northwestTileCoordinates.x,
     northwestTileCoordinates.y,
     imageryLevel
   );
-  var clippedImageryRectangle = Rectangle.intersection(
+  let clippedImageryRectangle = Rectangle.intersection(
     imageryRectangle,
     imageryBounds,
     clippedRectangleScratch
   );
 
-  var imageryTileXYToRectangle;
+  let imageryTileXYToRectangle;
   if (useWebMercatorT) {
     imageryTilingScheme.rectangleToNativeRectangle(
       terrainRectangle,
@@ -754,11 +754,11 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     );
   }
 
-  var minU;
-  var maxU = 0.0;
+  let minU;
+  let maxU = 0.0;
 
-  var minV = 1.0;
-  var maxV;
+  let minV = 1.0;
+  let maxV;
 
   // If this is the northern-most or western-most tile in the imagery tiling scheme,
   // it may not start at the northern or western edge of the terrain tile.
@@ -786,10 +786,10 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     );
   }
 
-  var initialMinV = minV;
+  const initialMinV = minV;
 
   for (
-    var i = northwestTileCoordinates.x;
+    let i = northwestTileCoordinates.x;
     i <= southeastTileCoordinates.x;
     i++
   ) {
@@ -832,7 +832,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     minV = initialMinV;
 
     for (
-      var j = northwestTileCoordinates.y;
+      let j = northwestTileCoordinates.y;
       j <= southeastTileCoordinates.y;
       j++
     ) {
@@ -868,8 +868,8 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
         minV = 0.0;
       }
 
-      var texCoordsRectangle = new Cartesian4(minU, minV, maxU, maxV);
-      var imagery = this.getImageryFromCache(i, j, imageryLevel);
+      const texCoordsRectangle = new Cartesian4(minU, minV, maxU, maxV);
+      const imagery = this.getImageryFromCache(i, j, imageryLevel);
       surfaceTile.imagery.splice(
         insertionPoint,
         0,
@@ -897,11 +897,11 @@ ImageryLayer.prototype._calculateTextureTranslationAndScale = function (
   tile,
   tileImagery
 ) {
-  var imageryRectangle = tileImagery.readyImagery.rectangle;
-  var terrainRectangle = tile.rectangle;
+  let imageryRectangle = tileImagery.readyImagery.rectangle;
+  let terrainRectangle = tile.rectangle;
 
   if (tileImagery.useWebMercatorT) {
-    var tilingScheme =
+    const tilingScheme =
       tileImagery.readyImagery.imageryLayer.imageryProvider.tilingScheme;
     imageryRectangle = tilingScheme.rectangleToNativeRectangle(
       imageryRectangle,
@@ -913,11 +913,11 @@ ImageryLayer.prototype._calculateTextureTranslationAndScale = function (
     );
   }
 
-  var terrainWidth = terrainRectangle.width;
-  var terrainHeight = terrainRectangle.height;
+  const terrainWidth = terrainRectangle.width;
+  const terrainHeight = terrainRectangle.height;
 
-  var scaleX = terrainWidth / imageryRectangle.width;
-  var scaleY = terrainHeight / imageryRectangle.height;
+  const scaleX = terrainWidth / imageryRectangle.width;
+  const scaleY = terrainHeight / imageryRectangle.height;
   return new Cartesian4(
     (scaleX * (terrainRectangle.west - imageryRectangle.west)) / terrainWidth,
     (scaleY * (terrainRectangle.south - imageryRectangle.south)) /
@@ -936,9 +936,9 @@ ImageryLayer.prototype._calculateTextureTranslationAndScale = function (
  * @param {Imagery} imagery The imagery to request.
  */
 ImageryLayer.prototype._requestImagery = function (imagery) {
-  var imageryProvider = this._imageryProvider;
+  const imageryProvider = this._imageryProvider;
 
-  var that = this;
+  const that = this;
 
   function success(image) {
     if (!defined(image)) {
@@ -965,14 +965,7 @@ ImageryLayer.prototype._requestImagery = function (imagery) {
     imagery.state = ImageryState.FAILED;
     imagery.request = undefined;
 
-    var message =
-      "Failed to obtain image tile X: " +
-      imagery.x +
-      " Y: " +
-      imagery.y +
-      " Level: " +
-      imagery.level +
-      ".";
+    const message = `Failed to obtain image tile X: ${imagery.x} Y: ${imagery.y} Level: ${imagery.level}.`;
     that._requestImageError = TileProviderError.handleError(
       that._requestImageError,
       imageryProvider,
@@ -987,14 +980,14 @@ ImageryLayer.prototype._requestImagery = function (imagery) {
   }
 
   function doRequest() {
-    var request = new Request({
+    const request = new Request({
       throttle: false,
       throttleByServer: true,
       type: RequestType.IMAGERY,
     });
     imagery.request = request;
     imagery.state = ImageryState.TRANSITIONING;
-    var imagePromise = imageryProvider.requestImage(
+    const imagePromise = imageryProvider.requestImage(
       imagery.x,
       imagery.y,
       imagery.level,
@@ -1023,12 +1016,12 @@ ImageryLayer.prototype._requestImagery = function (imagery) {
 };
 
 ImageryLayer.prototype._createTextureWebGL = function (context, imagery) {
-  var sampler = new Sampler({
+  const sampler = new Sampler({
     minificationFilter: this.minificationFilter,
     magnificationFilter: this.magnificationFilter,
   });
 
-  var image = imagery.image;
+  const image = imagery.image;
 
   if (defined(image.internalFormat)) {
     return new Texture({
@@ -1061,13 +1054,13 @@ ImageryLayer.prototype._createTextureWebGL = function (context, imagery) {
  * @param {Imagery} imagery The imagery for which to create a texture.
  */
 ImageryLayer.prototype._createTexture = function (context, imagery) {
-  var imageryProvider = this._imageryProvider;
-  var image = imagery.image;
+  const imageryProvider = this._imageryProvider;
+  const image = imagery.image;
 
   // If this imagery provider has a discard policy, use it to check if this
   // image should be discarded.
   if (defined(imageryProvider.tileDiscardPolicy)) {
-    var discardPolicy = imageryProvider.tileDiscardPolicy;
+    const discardPolicy = imageryProvider.tileDiscardPolicy;
     if (defined(discardPolicy)) {
       // If the discard policy is not ready yet, transition back to the
       // RECEIVED state and we'll try again next time.
@@ -1096,7 +1089,7 @@ ImageryLayer.prototype._createTexture = function (context, imagery) {
   //>>includeEnd('debug');
 
   // Imagery does not need to be discarded, so upload it to WebGL.
-  var texture = this._createTextureWebGL(context, imagery);
+  const texture = this._createTextureWebGL(context, imagery);
 
   if (
     imageryProvider.tilingScheme.projection instanceof WebMercatorProjection
@@ -1114,15 +1107,13 @@ function getSamplerKey(
   magnificationFilter,
   maximumAnisotropy
 ) {
-  return (
-    minificationFilter + ":" + magnificationFilter + ":" + maximumAnisotropy
-  );
+  return `${minificationFilter}:${magnificationFilter}:${maximumAnisotropy}`;
 }
 
 ImageryLayer.prototype._finalizeReprojectTexture = function (context, texture) {
-  var minificationFilter = this.minificationFilter;
-  var magnificationFilter = this.magnificationFilter;
-  var usesLinearTextureFilter =
+  let minificationFilter = this.minificationFilter;
+  const magnificationFilter = this.magnificationFilter;
+  const usesLinearTextureFilter =
     minificationFilter === TextureMinificationFilter.LINEAR &&
     magnificationFilter === TextureMagnificationFilter.LINEAR;
   // Use mipmaps if this texture has power-of-two dimensions.
@@ -1134,23 +1125,23 @@ ImageryLayer.prototype._finalizeReprojectTexture = function (context, texture) {
     CesiumMath.isPowerOfTwo(texture.height)
   ) {
     minificationFilter = TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
-    var maximumSupportedAnisotropy =
+    const maximumSupportedAnisotropy =
       ContextLimits.maximumTextureFilterAnisotropy;
-    var maximumAnisotropy = Math.min(
+    const maximumAnisotropy = Math.min(
       maximumSupportedAnisotropy,
       defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy)
     );
-    var mipmapSamplerKey = getSamplerKey(
+    const mipmapSamplerKey = getSamplerKey(
       minificationFilter,
       magnificationFilter,
       maximumAnisotropy
     );
-    var mipmapSamplers = context.cache.imageryLayerMipmapSamplers;
+    let mipmapSamplers = context.cache.imageryLayerMipmapSamplers;
     if (!defined(mipmapSamplers)) {
       mipmapSamplers = {};
       context.cache.imageryLayerMipmapSamplers = mipmapSamplers;
     }
-    var mipmapSampler = mipmapSamplers[mipmapSamplerKey];
+    let mipmapSampler = mipmapSamplers[mipmapSamplerKey];
     if (!defined(mipmapSampler)) {
       mipmapSampler = mipmapSamplers[mipmapSamplerKey] = new Sampler({
         wrapS: TextureWrap.CLAMP_TO_EDGE,
@@ -1163,17 +1154,17 @@ ImageryLayer.prototype._finalizeReprojectTexture = function (context, texture) {
     texture.generateMipmap(MipmapHint.NICEST);
     texture.sampler = mipmapSampler;
   } else {
-    var nonMipmapSamplerKey = getSamplerKey(
+    const nonMipmapSamplerKey = getSamplerKey(
       minificationFilter,
       magnificationFilter,
       0
     );
-    var nonMipmapSamplers = context.cache.imageryLayerNonMipmapSamplers;
+    let nonMipmapSamplers = context.cache.imageryLayerNonMipmapSamplers;
     if (!defined(nonMipmapSamplers)) {
       nonMipmapSamplers = {};
       context.cache.imageryLayerNonMipmapSamplers = nonMipmapSamplers;
     }
-    var nonMipmapSampler = nonMipmapSamplers[nonMipmapSamplerKey];
+    let nonMipmapSampler = nonMipmapSamplers[nonMipmapSamplerKey];
     if (!defined(nonMipmapSampler)) {
       nonMipmapSampler = nonMipmapSamplers[nonMipmapSamplerKey] = new Sampler({
         wrapS: TextureWrap.CLAMP_TO_EDGE,
@@ -1201,9 +1192,9 @@ ImageryLayer.prototype._reprojectTexture = function (
   imagery,
   needGeographicProjection
 ) {
-  var texture = imagery.textureWebMercator || imagery.texture;
-  var rectangle = imagery.rectangle;
-  var context = frameState.context;
+  const texture = imagery.textureWebMercator || imagery.texture;
+  const rectangle = imagery.rectangle;
+  const context = frameState.context;
 
   needGeographicProjection = defaultValue(needGeographicProjection, true);
 
@@ -1219,9 +1210,9 @@ ImageryLayer.prototype._reprojectTexture = function (
     ) &&
     rectangle.width / texture.width > 1e-5
   ) {
-    var that = this;
+    const that = this;
     imagery.addReference();
-    var computeCommand = new ComputeCommand({
+    const computeCommand = new ComputeCommand({
       persists: true,
       owner: this,
       // Update render resources right before execution instead of now.
@@ -1258,9 +1249,9 @@ ImageryLayer.prototype._reprojectTexture = function (
  * @param {FrameState} frameState The frameState.
  */
 ImageryLayer.prototype.queueReprojectionCommands = function (frameState) {
-  var computeCommands = this._reprojectComputeCommands;
-  var length = computeCommands.length;
-  for (var i = 0; i < length; ++i) {
+  const computeCommands = this._reprojectComputeCommands;
+  const length = computeCommands.length;
+  for (let i = 0; i < length; ++i) {
     frameState.commandList.push(computeCommands[i]);
   }
   computeCommands.length = 0;
@@ -1286,8 +1277,8 @@ ImageryLayer.prototype.getImageryFromCache = function (
   level,
   imageryRectangle
 ) {
-  var cacheKey = getImageryCacheKey(x, y, level);
-  var imagery = this._imageryCache[cacheKey];
+  const cacheKey = getImageryCacheKey(x, y, level);
+  let imagery = this._imageryCache[cacheKey];
 
   if (!defined(imagery)) {
     imagery = new Imagery(this, x, y, level, imageryRectangle);
@@ -1299,7 +1290,7 @@ ImageryLayer.prototype.getImageryFromCache = function (
 };
 
 ImageryLayer.prototype.removeImageryFromCache = function (imagery) {
-  var cacheKey = getImageryCacheKey(imagery.x, imagery.y, imagery.level);
+  const cacheKey = getImageryCacheKey(imagery.x, imagery.y, imagery.level);
   delete this._imageryCache[cacheKey];
 };
 
@@ -1307,7 +1298,7 @@ function getImageryCacheKey(x, y, level) {
   return JSON.stringify([x, y, level]);
 }
 
-var uniformMap = {
+const uniformMap = {
   u_textureDimensions: function () {
     return this.textureDimensions;
   },
@@ -1319,7 +1310,7 @@ var uniformMap = {
   texture: undefined,
 };
 
-var float32ArrayScratch = FeatureDetection.supportsTypedArrays()
+const float32ArrayScratch = FeatureDetection.supportsTypedArrays()
   ? new Float32Array(2 * 64)
   : undefined;
 
@@ -1359,7 +1350,7 @@ function reprojectToGeographic(command, context, texture, rectangle) {
   // doing a slightly less accurate reprojection than we were before, but we can't see the difference
   // so it's worth the 4x speedup.
 
-  var reproject = context.cache.imageryLayer_reproject;
+  let reproject = context.cache.imageryLayer_reproject;
 
   if (!defined(reproject)) {
     reproject = context.cache.imageryLayer_reproject = {
@@ -1379,23 +1370,23 @@ function reprojectToGeographic(command, context, texture, rectangle) {
       },
     };
 
-    var positions = new Float32Array(2 * 64 * 2);
-    var index = 0;
-    for (var j = 0; j < 64; ++j) {
-      var y = j / 63.0;
+    const positions = new Float32Array(2 * 64 * 2);
+    let index = 0;
+    for (let j = 0; j < 64; ++j) {
+      const y = j / 63.0;
       positions[index++] = 0.0;
       positions[index++] = y;
       positions[index++] = 1.0;
       positions[index++] = y;
     }
 
-    var reprojectAttributeIndices = {
+    const reprojectAttributeIndices = {
       position: 0,
       webMercatorT: 1,
     };
 
-    var indices = TerrainProvider.getRegularGridIndices(2, 64);
-    var indexBuffer = Buffer.createIndexBuffer({
+    const indices = TerrainProvider.getRegularGridIndices(2, 64);
+    const indexBuffer = Buffer.createIndexBuffer({
       context: context,
       typedArray: indices,
       usage: BufferUsage.STATIC_DRAW,
@@ -1427,7 +1418,7 @@ function reprojectToGeographic(command, context, texture, rectangle) {
       indexBuffer: indexBuffer,
     });
 
-    var vs = new ShaderSource({
+    const vs = new ShaderSource({
       sources: [ReprojectWebMercatorVS],
     });
 
@@ -1448,21 +1439,21 @@ function reprojectToGeographic(command, context, texture, rectangle) {
 
   texture.sampler = reproject.sampler;
 
-  var width = texture.width;
-  var height = texture.height;
+  const width = texture.width;
+  const height = texture.height;
 
   uniformMap.textureDimensions.x = width;
   uniformMap.textureDimensions.y = height;
   uniformMap.texture = texture;
 
-  var sinLatitude = Math.sin(rectangle.south);
-  var southMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+  let sinLatitude = Math.sin(rectangle.south);
+  const southMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
 
   sinLatitude = Math.sin(rectangle.north);
-  var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
-  var oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
+  const northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+  const oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
 
-  var outputTexture = new Texture({
+  const outputTexture = new Texture({
     context: context,
     width: width,
     height: height,
@@ -1479,18 +1470,19 @@ function reprojectToGeographic(command, context, texture, rectangle) {
     outputTexture.generateMipmap(MipmapHint.NICEST);
   }
 
-  var south = rectangle.south;
-  var north = rectangle.north;
+  const south = rectangle.south;
+  const north = rectangle.north;
 
-  var webMercatorT = float32ArrayScratch;
+  const webMercatorT = float32ArrayScratch;
 
-  var outputIndex = 0;
-  for (var webMercatorTIndex = 0; webMercatorTIndex < 64; ++webMercatorTIndex) {
-    var fraction = webMercatorTIndex / 63.0;
-    var latitude = CesiumMath.lerp(south, north, fraction);
+  let outputIndex = 0;
+  for (let webMercatorTIndex = 0; webMercatorTIndex < 64; ++webMercatorTIndex) {
+    const fraction = webMercatorTIndex / 63.0;
+    const latitude = CesiumMath.lerp(south, north, fraction);
     sinLatitude = Math.sin(latitude);
-    var mercatorY = 0.5 * Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude));
-    var mercatorFraction = (mercatorY - southMercatorY) * oneOverMercatorHeight;
+    const mercatorY = 0.5 * Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude));
+    const mercatorFraction =
+      (mercatorY - southMercatorY) * oneOverMercatorHeight;
     webMercatorT[outputIndex++] = mercatorFraction;
     webMercatorT[outputIndex++] = mercatorFraction;
   }
@@ -1520,23 +1512,23 @@ function getLevelWithMaximumTexelSpacing(
   latitudeClosestToEquator
 ) {
   // PERFORMANCE_IDEA: factor out the stuff that doesn't change.
-  var imageryProvider = layer._imageryProvider;
-  var tilingScheme = imageryProvider.tilingScheme;
-  var ellipsoid = tilingScheme.ellipsoid;
-  var latitudeFactor = !(
+  const imageryProvider = layer._imageryProvider;
+  const tilingScheme = imageryProvider.tilingScheme;
+  const ellipsoid = tilingScheme.ellipsoid;
+  const latitudeFactor = !(
     layer._imageryProvider.tilingScheme.projection instanceof
     GeographicProjection
   )
     ? Math.cos(latitudeClosestToEquator)
     : 1.0;
-  var tilingSchemeRectangle = tilingScheme.rectangle;
-  var levelZeroMaximumTexelSpacing =
+  const tilingSchemeRectangle = tilingScheme.rectangle;
+  const levelZeroMaximumTexelSpacing =
     (ellipsoid.maximumRadius * tilingSchemeRectangle.width * latitudeFactor) /
     (imageryProvider.tileWidth * tilingScheme.getNumberOfXTilesAtLevel(0));
 
-  var twoToTheLevelPower = levelZeroMaximumTexelSpacing / texelSpacing;
-  var level = Math.log(twoToTheLevelPower) / Math.log(2);
-  var rounded = Math.round(level);
+  const twoToTheLevelPower = levelZeroMaximumTexelSpacing / texelSpacing;
+  const level = Math.log(twoToTheLevelPower) / Math.log(2);
+  const rounded = Math.round(level);
   return rounded | 0;
 }
 export default ImageryLayer;

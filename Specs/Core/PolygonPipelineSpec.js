@@ -11,7 +11,7 @@ describe("Core/PolygonPipeline", function () {
   });
 
   it("computeArea2D computes a positive area", function () {
-    var area = PolygonPipeline.computeArea2D([
+    const area = PolygonPipeline.computeArea2D([
       new Cartesian2(0.0, 0.0),
       new Cartesian2(2.0, 0.0),
       new Cartesian2(2.0, 1.0),
@@ -22,7 +22,7 @@ describe("Core/PolygonPipeline", function () {
   });
 
   it("computeArea2D computes a negative area", function () {
-    var area = PolygonPipeline.computeArea2D([
+    const area = PolygonPipeline.computeArea2D([
       new Cartesian2(0.0, 0.0),
       new Cartesian2(0.0, 2.0),
       new Cartesian2(1.0, 2.0),
@@ -47,7 +47,7 @@ describe("Core/PolygonPipeline", function () {
   ///////////////////////////////////////////////////////////////////////
 
   it("computeWindingOrder2D computes counter-clockwise", function () {
-    var area = PolygonPipeline.computeWindingOrder2D([
+    const area = PolygonPipeline.computeWindingOrder2D([
       new Cartesian2(0.0, 0.0),
       new Cartesian2(2.0, 0.0),
       new Cartesian2(2.0, 1.0),
@@ -58,7 +58,7 @@ describe("Core/PolygonPipeline", function () {
   });
 
   it("computeWindingOrder2D computes clockwise", function () {
-    var area = PolygonPipeline.computeWindingOrder2D([
+    const area = PolygonPipeline.computeWindingOrder2D([
       new Cartesian2(0.0, 0.0),
       new Cartesian2(0.0, 2.0),
       new Cartesian2(1.0, 2.0),
@@ -91,42 +91,42 @@ describe("Core/PolygonPipeline", function () {
     });
 
     it("a triangle", function () {
-      var positions = [
+      const positions = [
         new Cartesian2(0.0, 0.0),
         new Cartesian2(1.0, 0.0),
         new Cartesian2(0.0, 1.0),
       ];
-      var indices = PolygonPipeline.triangulate(positions, []);
+      const indices = PolygonPipeline.triangulate(positions, []);
       expect(indices).toEqual([1, 2, 0]);
     });
 
     it("a square", function () {
-      var positions = [
+      const positions = [
         new Cartesian2(0.0, 0.0),
         new Cartesian2(1.0, 0.0),
         new Cartesian2(1.0, 1.0),
         new Cartesian2(0.0, 1.0),
       ];
-      var indices = PolygonPipeline.triangulate(positions, []);
+      const indices = PolygonPipeline.triangulate(positions, []);
       expect(indices).toEqual([2, 3, 0, 0, 1, 2]);
     });
 
     it("eliminates holes", function () {
-      var positions = [
+      const positions = [
         new Cartesian2(0.0, 0.0),
         new Cartesian2(3.0, 0.0),
         new Cartesian2(3.0, 3.0),
         new Cartesian2(0.0, 3.0),
       ];
-      var hole = [
+      const hole = [
         new Cartesian2(1.0, 1.0),
         new Cartesian2(2.0, 1.0),
         new Cartesian2(2.0, 2.0),
         new Cartesian2(1.0, 2.0),
       ];
 
-      var combinedPositions = positions.concat(hole);
-      var indices = PolygonPipeline.triangulate(combinedPositions, [4]);
+      const combinedPositions = positions.concat(hole);
+      const indices = PolygonPipeline.triangulate(combinedPositions, [4]);
 
       expect(indices).toEqual([
         3,
@@ -157,27 +157,27 @@ describe("Core/PolygonPipeline", function () {
     });
 
     it("eliminates multiple holes", function () {
-      var positions = [
+      const positions = [
         new Cartesian2(0.0, 0.0),
         new Cartesian2(3.0, 0.0),
         new Cartesian2(3.0, 5.0),
         new Cartesian2(0.0, 5.0),
       ];
-      var bottomHole = [
+      const bottomHole = [
         new Cartesian2(1.0, 1.0),
         new Cartesian2(2.0, 1.0),
         new Cartesian2(2.0, 2.0),
         new Cartesian2(1.0, 2.0),
       ];
-      var topHole = [
+      const topHole = [
         new Cartesian2(1.0, 3.0),
         new Cartesian2(2.0, 3.0),
         new Cartesian2(2.0, 4.0),
         new Cartesian2(1.0, 4.0),
       ];
 
-      var combinedPositions = positions.concat(bottomHole).concat(topHole);
-      var indices = PolygonPipeline.triangulate(combinedPositions, [4, 8]);
+      const combinedPositions = positions.concat(bottomHole).concat(topHole);
+      const indices = PolygonPipeline.triangulate(combinedPositions, [4, 8]);
 
       expect(indices).toEqual([
         0,
@@ -265,13 +265,13 @@ describe("Core/PolygonPipeline", function () {
   });
 
   it("computeSubdivision", function () {
-    var positions = [
+    const positions = [
       new Cartesian3(0.0, 0.0, 90.0),
       new Cartesian3(0.0, 90.0, 0.0),
       new Cartesian3(90.0, 0.0, 0.0),
     ];
-    var indices = [0, 1, 2];
-    var subdivision = PolygonPipeline.computeSubdivision(
+    const indices = [0, 1, 2];
+    const subdivision = PolygonPipeline.computeSubdivision(
       Ellipsoid.WGS84,
       positions,
       indices,
@@ -341,9 +341,9 @@ describe("Core/PolygonPipeline", function () {
   });
 
   it("computeRhumbLineSubdivision", function () {
-    var positions = Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1]);
-    var indices = [0, 1, 2];
-    var subdivision = PolygonPipeline.computeRhumbLineSubdivision(
+    const positions = Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1]);
+    const indices = [0, 1, 2];
+    const subdivision = PolygonPipeline.computeRhumbLineSubdivision(
       Ellipsoid.WGS84,
       positions,
       indices,
@@ -366,9 +366,9 @@ describe("Core/PolygonPipeline", function () {
   });
 
   it("computeRhumbLineSubdivision with subdivisions", function () {
-    var positions = Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1]);
-    var indices = [0, 1, 2];
-    var subdivision = PolygonPipeline.computeRhumbLineSubdivision(
+    const positions = Cartesian3.fromDegreesArray([0, 0, 1, 0, 1, 1]);
+    const indices = [0, 1, 2];
+    const subdivision = PolygonPipeline.computeRhumbLineSubdivision(
       Ellipsoid.WGS84,
       positions,
       indices,
@@ -380,9 +380,9 @@ describe("Core/PolygonPipeline", function () {
   });
 
   it("computeRhumbLineSubdivision with subdivisions across the IDL", function () {
-    var positions = Cartesian3.fromDegreesArray([178, 0, -178, 0, -178, 1]);
-    var indices = [0, 1, 2];
-    var subdivision = PolygonPipeline.computeRhumbLineSubdivision(
+    const positions = Cartesian3.fromDegreesArray([178, 0, -178, 0, -178, 1]);
+    const indices = [0, 1, 2];
+    const subdivision = PolygonPipeline.computeRhumbLineSubdivision(
       Ellipsoid.WGS84,
       positions,
       indices,

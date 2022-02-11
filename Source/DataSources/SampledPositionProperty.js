@@ -21,10 +21,10 @@ import SampledProperty from "./SampledProperty.js";
 function SampledPositionProperty(referenceFrame, numberOfDerivatives) {
   numberOfDerivatives = defaultValue(numberOfDerivatives, 0);
 
-  var derivativeTypes;
+  let derivativeTypes;
   if (numberOfDerivatives > 0) {
     derivativeTypes = new Array(numberOfDerivatives);
-    for (var i = 0; i < numberOfDerivatives; i++) {
+    for (let i = 0; i < numberOfDerivatives; i++) {
       derivativeTypes[i] = Cartesian3;
     }
   }
@@ -243,7 +243,7 @@ SampledPositionProperty.prototype.addSample = function (
   position,
   derivatives
 ) {
-  var numberOfDerivatives = this._numberOfDerivatives;
+  const numberOfDerivatives = this._numberOfDerivatives;
   //>>includeStart('debug', pragmas.debug);
   if (
     numberOfDerivatives > 0 &&

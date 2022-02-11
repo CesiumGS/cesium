@@ -32,13 +32,13 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
           infoBox: false,
           shouldAnimate: true,
         });
 
-        var scene = viewer.scene;
+        const scene = viewer.scene;
         scene.primitives.add(Cesium.createOsmBuildings());
 
         ///////////////////////////
@@ -52,7 +52,7 @@
           );
         }
 
-        var clouds = new Cesium.CloudCollection();
+        const clouds = new Cesium.CloudCollection();
 
         // manually position clouds in the mountains
         function createBackLayerClouds() {
@@ -106,7 +106,7 @@
           });
         }
 
-        var long,
+        let long,
           lat,
           height,
           scaleX,
@@ -126,9 +126,9 @@
           minHeight,
           maxHeight
         ) {
-          var rangeLong = stopLong - startLong;
-          var rangeLat = stopLat - startLat;
-          for (var i = 0; i < numClouds; i++) {
+          const rangeLong = stopLong - startLong;
+          const rangeLat = stopLat - startLat;
+          for (let i = 0; i < numClouds; i++) {
             long = startLong + getRandomNumberInRange(0, rangeLong);
             lat = startLat + getRandomNumberInRange(0, rangeLat);
             height = getRandomNumberInRange(minHeight, maxHeight);
@@ -152,7 +152,7 @@
         }
 
         // manually position clouds in front
-        var scratch = new Cesium.Cartesian3();
+        const scratch = new Cesium.Cartesian3();
         function createFrontLayerClouds() {
           clouds.add({
             position: Cesium.Cartesian3.fromDegrees(-122.666, 45.5126, 97),
@@ -179,39 +179,39 @@
         // Create hot air balloons
         ///////////////////////////
 
-        var start = Cesium.JulianDate.fromDate(new Date(2021, 7, 21, 12));
-        var stop = Cesium.JulianDate.addSeconds(
+        const start = Cesium.JulianDate.fromDate(new Date(2021, 7, 21, 12));
+        const stop = Cesium.JulianDate.addSeconds(
           start,
           90,
           new Cesium.JulianDate()
         );
 
         function computeBalloonFlight(long, lat, height0, height1) {
-          var property = new Cesium.SampledPositionProperty();
-          var time0 = start.clone();
-          var time1 = Cesium.JulianDate.addSeconds(
+          const property = new Cesium.SampledPositionProperty();
+          const time0 = start.clone();
+          const time1 = Cesium.JulianDate.addSeconds(
             time0,
             30,
             new Cesium.JulianDate()
           );
-          var time2 = Cesium.JulianDate.addSeconds(
+          const time2 = Cesium.JulianDate.addSeconds(
             time1,
             15,
             new Cesium.JulianDate()
           );
-          var time3 = Cesium.JulianDate.addSeconds(
+          const time3 = Cesium.JulianDate.addSeconds(
             time2,
             30,
             new Cesium.JulianDate()
           );
-          var time4 = Cesium.JulianDate.addSeconds(
+          const time4 = Cesium.JulianDate.addSeconds(
             time3,
             15,
             new Cesium.JulianDate()
           );
 
-          var position0 = Cesium.Cartesian3.fromDegrees(long, lat, height0);
-          var position1 = Cesium.Cartesian3.fromDegrees(long, lat, height1);
+          const position0 = Cesium.Cartesian3.fromDegrees(long, lat, height0);
+          const position1 = Cesium.Cartesian3.fromDegrees(long, lat, height1);
 
           property.addSample(time0, position0);
           property.addSample(time1, position1);
@@ -222,7 +222,7 @@
           return property;
         }
 
-        var balloon0 = viewer.entities.add({
+        const balloon0 = viewer.entities.add({
           position: computeBalloonFlight(-122.661, 45.524, 400, 500),
           model: {
             uri: "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb",
@@ -236,7 +236,7 @@
           interpolationAlgorithm: Cesium.HermitePolynomialApproximation,
         });
 
-        var balloon1 = viewer.entities.add({
+        const balloon1 = viewer.entities.add({
           position: computeBalloonFlight(-122.662, 45.517, 400, 300),
           model: {
             uri: "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb",

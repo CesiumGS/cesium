@@ -10,9 +10,9 @@ function BadGeometry() {
     typeof window.location !== "undefined" &&
     typeof window.location.search !== "undefined"
   ) {
-    var parameters = queryToObject(window.location.search.substring(1));
+    const parameters = queryToObject(window.location.search.substring(1));
     if (parameters.built) {
-      this._workerName = "../" + this._workerName;
+      this._workerName = `../${this._workerName}`;
     }
   }
 }
