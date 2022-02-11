@@ -59,7 +59,7 @@
           "3DTILES_implicit_tiling": {
             "subdivisionScheme": "OCTREE",
             "subtreeLevels": 4,
-            "maximumLevel": 3,
+            "availableLevels": 4,
             "subtrees": {
               "uri": "subtrees/{level}.{x}.{y}.subtree"
             }

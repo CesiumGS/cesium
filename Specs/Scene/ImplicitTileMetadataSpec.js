@@ -113,7 +113,7 @@ describe("Scene/ImplicitTileMetadata", function () {
       "3DTILES_implicit_tiling": {
         subdivisionScheme: "QUADTREE",
         subtreeLevels: 2,
-        maximumLevel: 1,
+        availableLevels: 2,
         subtrees: {
           uri: "https://example.com/{level}/{x}/{y}.subtree",
         },
