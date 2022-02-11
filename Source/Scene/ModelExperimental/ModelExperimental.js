@@ -673,7 +673,9 @@ Object.defineProperties(ModelExperimental.prototype, {
    */
   scale: {
     get: function () {
-      return this._scale;
+      return defined(this._maximumScale)
+          ? Math.min(this._maximumScale, this._scale)
+          : this._scale;
     },
     set: function (value) {
       this._scale = value;
