@@ -14,6 +14,7 @@ import ModelRenderResources from "./ModelRenderResources.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
 import RenderState from "../../Renderer/RenderState.js";
+import ShadowMode from "../ShadowMode.js";
 
 /**
  * An in memory representation of the scene graph for a {@link ModelExperimental}
@@ -104,16 +105,6 @@ export default function ModelExperimentalSceneGraph(options) {
    * @private
    */
   this._drawCommands = [];
-
-  /**
-   * The array of bounding spheres of all the primitives in the scene graph.
-   *
-   * @type {BoundingSphere[]}
-   * @readonly
-   *
-   * @private
-   */
-  this._boundingSpheres = [];
 
   /**
    * Pipeline stages to apply to this model. This
@@ -294,6 +285,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     modelPipelineStage.process(modelRenderResources, model, frameState);
   }
 
+  const boundingSpheres = [];
   for (i = 0; i < this._runtimeNodes.length; i++) {
     const runtimeNode = this._runtimeNodes[i];
     runtimeNode.configurePipeline();
@@ -338,7 +330,8 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       runtimePrimitive.boundingSphere = BoundingSphere.clone(
         primitiveRenderResources.boundingSphere
       );
-      this._boundingSpheres.push(primitiveRenderResources.boundingSphere);
+
+      boundingSpheres.push(primitiveRenderResources.boundingSphere);
 
       const drawCommands = buildDrawCommands(
         primitiveRenderResources,
@@ -351,6 +344,11 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 
   const scaledBoundingSphere = BoundingSphere.fromBoundingSpheres(
     this._boundingSpheres
+  );
+  BoundingSphere.transform(
+    scaledBoundingSphere,
+    this._model.modelMatrix,
+    this._model._boundingSphere
   );
   scaledBoundingSphere.center = Cartesian3.multiplyByScalar(
     scaledBoundingSphere.center,
@@ -459,6 +457,26 @@ ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (
       renderState.cull.enabled =
         backFaceCulling && !doubleSided && !translucent;
       drawCommand.renderState = RenderState.fromCache(renderState);
+    }
+  });
+};
+
+/**
+ * Traverses through all draw commands and changes the shadow settings.
+ *
+ * @param {ShadowMode} shadowMode The new shadow settings.
+ *
+ * @private
+ */
+ModelExperimentalSceneGraph.prototype.updateShadows = function (shadowMode) {
+  const model = this._model;
+  const castShadows = ShadowMode.castShadows(model.shadows);
+  const receiveShadows = ShadowMode.receiveShadows(model.shadows);
+  forEachRuntimePrimitive(this, function (runtimePrimitive) {
+    for (let k = 0; k < runtimePrimitive.drawCommands.length; k++) {
+      const drawCommand = runtimePrimitive.drawCommands[k];
+      drawCommand.castShadows = castShadows;
+      drawCommand.receiveShadows = receiveShadows;
     }
   });
 };

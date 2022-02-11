@@ -20,6 +20,7 @@ import B3dmLoader from "./B3dmLoader.js";
 import PntsLoader from "./PntsLoader.js";
 import Color from "../../Core/Color.js";
 import I3dmLoader from "./I3dmLoader.js";
+import ShadowMode from "../ShadowMode.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
@@ -51,6 +52,7 @@ import I3dmLoader from "./I3dmLoader.js";
  * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
  * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
+ * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
@@ -142,8 +144,7 @@ export default function ModelExperimental(options) {
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._resources = [];
-
-  this._boundingSphere = undefined;
+  this._boundingSphere = new BoundingSphere();
 
   const pointCloudShading = new PointCloudShading(options.pointCloudShading);
   this._attenuation = pointCloudShading.attenuation;
@@ -151,6 +152,9 @@ export default function ModelExperimental(options) {
 
   this._backFaceCulling = defaultValue(options.backFaceCulling, true);
   this._backFaceCullingDirty = false;
+
+  this._shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
+  this._shadowsDirty = false;
 
   this._debugShowBoundingVolumeDirty = false;
   this._debugShowBoundingVolume = defaultValue(
@@ -543,7 +547,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       }
       //>>includeEnd('debug');
 
-      return this._sceneGraph.boundingSphere;
+      return this._boundingSphere;
     },
   },
 
@@ -663,6 +667,7 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+<<<<<<< HEAD
    * A uniform scale applied to this model.
    *
    * @memberof ModelExperimental.prototype
@@ -713,6 +718,26 @@ Object.defineProperties(ModelExperimental.prototype, {
     },
     set: function (value) {
       this._maximumScale = value;
+    },
+  },
+
+  /**
+   * Determines whether the model casts or receives shadows from light sources.
+   *
+   * @type {ShadowMode}
+   *
+   * @default ShadowMode.ENABLED
+   */
+  shadows: {
+    get: function () {
+      return this._shadows;
+    },
+    set: function (value) {
+      if (value !== this._shadows) {
+        this._shadowsDirty = true;
+      }
+
+      this._shadows = value;
     },
   },
 });
@@ -807,9 +832,24 @@ ModelExperimental.prototype.update = function (frameState) {
   const scale = getScale(this, frameState);
   this._sceneGraph.updateModelMatrix(scale);
 
+  // This is done without a dirty flag so that the model matrix can be update in-place
+  // without needing to use a setter.
+  if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
+    BoundingSphere.transform(
+      this._sceneGraph.boundingSphere,
+      this.modelMatrix,
+      this._boundingSphere
+    );
+  }
+
   if (this._backFaceCullingDirty) {
     this.sceneGraph.updateBackFaceCulling(this._backFaceCulling);
     this._backFaceCullingDirty = false;
+  }
+
+  if (this._shadowsDirty) {
+    this.sceneGraph.updateShadows(this._shadows);
+    this._shadowsDirty = false;
   }
 
   this._sceneGraph.update(frameState);
@@ -983,6 +1023,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
  * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
+ * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  *
  * @returns {ModelExperimental} The newly created model.
  */
@@ -1045,6 +1086,7 @@ ModelExperimental.fromGltf = function (options) {
     scale: options.scale,
     minimumPixelSize: options.minimumPixelSize,
     maximumScale: options.maximumScale,
+    shadows: options.shadows,
   };
   const model = new ModelExperimental(modelOptions);
 

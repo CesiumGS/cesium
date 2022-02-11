@@ -39,6 +39,7 @@ describe(
     const boxBackFaceCullingUrl =
       "./Data/Models/Box-Back-Face-Culling/Box-Back-Face-Culling.gltf";
     const boxBackFaceCullingOffset = new HeadingPitchRange(Math.PI / 2, 0, 2.0);
+
     let scene;
 
     beforeAll(function () {
@@ -534,6 +535,26 @@ describe(
         expect(Matrix4.equals(sceneGraph.computedModelMatrix, transform)).toBe(
           true
         );
+      });
+    });
+
+    it("changing model matrix affects bounding sphere", function () {
+      const translation = new Cartesian3(10, 0, 0);
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl, upAxis: Axis.Z, forwardAxis: Axis.X },
+        scene
+      ).then(function (model) {
+        const transform = Matrix4.fromTranslation(translation);
+        expect(model.boundingSphere.center).toEqual(new Cartesian3());
+
+        Matrix4.multiplyTransformation(
+          model.modelMatrix,
+          transform,
+          model.modelMatrix
+        );
+        scene.renderForSpecs();
+
+        expect(model.boundingSphere.center).toEqual(translation);
       });
     });
 
