@@ -314,13 +314,13 @@ For example, suppose we had a glTF primitive with the following feature IDs:
         }
       },
       "EXT_mesh_features": {
-        "propertyTables": [0, 1],
         "featureIds": [
           {
             // Feature ID attribute from implicit range
             //
             // Vertex Shader: vsInput.featureIds.instanceFeatureId_0
             // Fragment Shader: fsInput.featureIds.instanceFeatureId_0
+            "propertyTable": 0,
             "offset": 0,
             "repeat": 1
           },
@@ -332,6 +332,7 @@ For example, suppose we had a glTF primitive with the following feature IDs:
             //
             // Vertex Shader: vsInput.featureIds.instanceFeatureId_1
             // Fragment Shader: fsInput.featureIds.instanceFeatureId_1
+            "propertyTable": 1,
             "attribute": 0
           }
         ]
@@ -350,13 +351,13 @@ For example, suppose we had a glTF primitive with the following feature IDs:
         },
         "extensions": {
           "EXT_mesh_features": {
-            "propertyTables": [2, 3, 4, 5],
             "featureIds": [
               {
                 // Feature ID Texture
                 //
                 // Vertex Shader: (Not supported)
                 // Fragment Shader: fsInput.featureIds.featureId_0
+                "propertyTable": 2,
                 "index": 0,
                 "texCoord": 0,
                 "channel": 0
@@ -366,6 +367,7 @@ For example, suppose we had a glTF primitive with the following feature IDs:
                 //
                 // Vertex Shader: vsInput.featureIds.featureId_1
                 // Fragment Shader: fsInput.featureIds.featureId_1
+                "propertyTable": 3,
                 "offset": 0,
                 "repeat": 3
               },
@@ -376,6 +378,7 @@ For example, suppose we had a glTF primitive with the following feature IDs:
                 //
                 // Vertex Shader: vsInput.featureIds.featureId_2
                 // Fragment Shader: fsInput.featureIds.featureId_2
+                "propertyTable": 4,
                 "attribute": 0
               },
               {
@@ -385,6 +388,7 @@ For example, suppose we had a glTF primitive with the following feature IDs:
                 //
                 // Vertex Shader: vsInput.featureIds.featureId_3
                 // Fragment Shader: fsInput.featureIds.featureId_3
+                "propertyTable": 5,
                 "attribute": 1
               }
             ]
