@@ -106,6 +106,7 @@ export default function ModelExperimental(options) {
   this._scale = defaultValue(options.scale, 1.0);
   this._minimumPixelSize = defaultValue(options.minimumPixelSize, 0.0);
   this._maximumScale = options.maximumScale;
+  this._initialRadius = undefined;
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -667,10 +668,9 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-<<<<<<< HEAD
-   * A uniform scale applied to this model.
-   *
-   * @memberof ModelExperimental.prototype
+   * A uniform scale applied to this model before the {@link Model#modelMatrix}.
+   * Values greater than <code>1.0</code> increase the size of the model; values
+   * less than <code>1.0</code> decrease.
    *
    * @type {Number}
    *
@@ -678,9 +678,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    */
   scale: {
     get: function () {
-      return defined(this._maximumScale)
-        ? Math.min(this._maximumScale, this._scale)
-        : this._scale;
+      return this._scale;
     },
     set: function (value) {
       this._scale = value;
@@ -688,9 +686,9 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * The approximate minimum pixelsize of the model regardless of zoom.
-   *
-   * @memberof ModelExperimental.prototype
+   * The approximate minimum pixel size of the model regardless of zoom.
+   * This can be used to ensure that a model is visible even when the viewer
+   * zooms out.  When <code>0.0</code>, no minimum size is enforced.
    *
    * @type {Number}
    *
@@ -706,9 +704,9 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * The maximum scale size of a model. An upper limit for minimumPixelSize.
-   *
-   * @memberof ModelExperimental.prototype
+   * The maximum scale size for a model. This can be used to give
+   * an upper limit to the {@link Model#minimumPixelSize}, ensuring that the model
+   * is never an unreasonable scale.
    *
    * @type {Number}
    */
