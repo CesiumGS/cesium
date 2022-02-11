@@ -5,6 +5,7 @@ import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import CesiumMath from "../Core/Math.js";
 import HilbertOrder from "../Core/HilbertOrder.js";
 import Matrix3 from "../Core/Matrix3.js";
@@ -34,8 +35,12 @@ import parseBoundingVolumeSemantics from "./parseBoundingVolumeSemantics.js";
  * @param {Cesium3DTileset} tileset The tileset this content belongs to
  * @param {Cesium3DTile} tile The tile this content belongs to.
  * @param {Resource} resource The resource for the tileset
- * @param {ArrayBuffer} arrayBuffer The array buffer that stores the content payload
- * @param {Number} [byteOffset=0] The offset into the array buffer
+ * @param {Object} [json] The JSON object containing the subtree. Mutually exclusive with arrayBuffer.
+ * @param {ArrayBuffer} [arrayBuffer] The array buffer that stores the content payload. Mutually exclusive with json.
+ * @param {Number} [byteOffset=0] The offset into the array buffer, if one was provided
+ *
+ * @exception {DeveloperError} One of json and arrayBuffer must be defined.
+ *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -43,12 +48,16 @@ export default function Implicit3DTileContent(
   tileset,
   tile,
   resource,
+  json,
   arrayBuffer,
   byteOffset
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("tile.implicitTileset", tile.implicitTileset);
   Check.defined("tile.implicitCoordinates", tile.implicitCoordinates);
+  if (defined(json) === defined(arrayBuffer)) {
+    throw new DeveloperError("One of json and arrayBuffer must be defined.");
+  }
   //>>includeEnd('debug');
 
   const implicitTileset = tile.implicitTileset;
@@ -73,7 +82,7 @@ export default function Implicit3DTileContent(
   );
   this._url = subtreeResource.getUrlComponent(true);
 
-  initialize(this, arrayBuffer, byteOffset);
+  initialize(this, json, arrayBuffer, byteOffset);
 }
 
 Object.defineProperties(Implicit3DTileContent.prototype, {
@@ -164,22 +173,27 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
  * up a promise chain to expand the immediate subtree.
  *
  * @param {Implicit3DTileContent} content The implicit content
- * @param {ArrayBuffer} arrayBuffer The ArrayBuffer containing a subtree binary
+ * @param {Object} [json] The JSON containing the subtree. Mutually exclusive with arrayBuffer.
+ * @param {ArrayBuffer} [arrayBuffer] The ArrayBuffer containing a subtree binary. Mutually exclusive with json.
  * @param {Number} [byteOffset=0] The byte offset into the arrayBuffer
  * @private
  */
-function initialize(content, arrayBuffer, byteOffset) {
-  // Parse the subtree file
+function initialize(content, json, arrayBuffer, byteOffset) {
   byteOffset = defaultValue(byteOffset, 0);
-  const uint8Array = new Uint8Array(arrayBuffer, byteOffset);
+  let uint8Array;
+  if (defined(arrayBuffer)) {
+    uint8Array = new Uint8Array(arrayBuffer, byteOffset);
+  }
+
   const subtree = new ImplicitSubtree(
     content._resource,
+    json,
     uint8Array,
     content._implicitTileset,
     content._implicitCoordinates
   );
-  content._implicitSubtree = subtree;
 
+  content._implicitSubtree = subtree;
   subtree.readyPromise
     .then(function () {
       expandSubtree(content, subtree);

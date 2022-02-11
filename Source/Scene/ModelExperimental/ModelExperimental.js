@@ -1,3 +1,4 @@
+import BoundingSphere from "../../Core/BoundingSphere.js";
 import Check from "../../Core/Check.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import defined from "../../Core/defined.js";
@@ -135,8 +136,7 @@ export default function ModelExperimental(options) {
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._resources = [];
-
-  this._boundingSphere = undefined;
+  this._boundingSphere = new BoundingSphere();
 
   const pointCloudShading = new PointCloudShading(options.pointCloudShading);
   this._attenuation = pointCloudShading.attenuation;
@@ -539,7 +539,7 @@ Object.defineProperties(ModelExperimental.prototype, {
       }
       //>>includeEnd('debug');
 
-      return this._sceneGraph.boundingSphere;
+      return this._boundingSphere;
     },
   },
 
@@ -766,8 +766,16 @@ ModelExperimental.prototype.update = function (frameState) {
     this._debugShowBoundingVolumeDirty = false;
   }
 
+  // This is done without a dirty flag so that the model matrix can be update in-place
+  // without needing to use a setter.
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
     this._sceneGraph.updateModelMatrix(this);
+    this._modelMatrix = Matrix4.clone(this.modelMatrix);
+    BoundingSphere.transform(
+      this._sceneGraph.boundingSphere,
+      this.modelMatrix,
+      this._boundingSphere
+    );
   }
 
   if (this._backFaceCullingDirty) {
