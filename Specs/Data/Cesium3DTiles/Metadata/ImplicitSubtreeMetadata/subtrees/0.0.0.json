@@ -13,7 +13,8 @@
     "properties": {
       "author": "Cesium",
       "date": "2022-02-10",
-      "credits": ["Data Company 1", "Data Company 2", "Data Company 3"]
+      "credits": ["Data Company 1", "Data Company 2", "Data Company 3"],
+      "Height": 1000
     }
   }
 }

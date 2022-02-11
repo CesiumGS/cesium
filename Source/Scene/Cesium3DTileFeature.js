@@ -241,6 +241,8 @@ Cesium3DTileFeature.prototype.getProperty = function (name) {
  *   <li>Batch table (feature metadata) property by property ID</li>
  *   <li>Tile metadata property by semantic</li>
  *   <li>Tile metadata property by property ID</li>
+ *   <li>Subtree metadata property by semantic</li>
+ *   <li>Subtree metadata property by property ID</li>
  *   <li>Group metadata property by semantic</li>
  *   <li>Group metadata property by property ID</li>
  *   <li>Tileset metadata property by semantic</li>
@@ -275,7 +277,8 @@ Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
     }
   }
 
-  const tileMetadata = content.tile.metadata;
+  const tile = content.tile;
+  const tileMetadata = tile.metadata;
   if (defined(tileMetadata)) {
     value = tileMetadata.getPropertyBySemantic(name);
     if (defined(value)) {
@@ -285,6 +288,21 @@ Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
     value = tileMetadata.getProperty(name);
     if (defined(value)) {
       return value;
+    }
+  }
+
+  if (defined(tile.implicitSubtree)) {
+    const subtreeMetadata = tile.implicitSubtree.metadata;
+    if (defined(subtreeMetadata)) {
+      value = subtreeMetadata.getPropertyBySemantic(name);
+      if (defined(value)) {
+        return value;
+      }
+
+      value = subtreeMetadata.getProperty(name);
+      if (defined(value)) {
+        return value;
+      }
     }
   }
 

@@ -9,6 +9,38 @@
   "extensionsRequired": [
     "3DTILES_implicit_tiling"
   ],
+  "extensions": {
+    "3DTILES_metadata": {
+      "schema": {
+        "classes": {
+          "subtree": {
+            "properties": {
+              "author": {
+                "description": "The person or entity that made the subtree",
+                "componentType": "STRING",
+                "semantic": "AUTHOR"
+              },
+              "date": {
+                "description": "Date of subtree generation in YYYY-MM-DD format",
+                "componentType": "STRING",
+                "semantic": "DATE_ISO_8601"
+              },
+              "credits": {
+                "description": "A list of copyright strings relevant to this subtree",
+                "type": "ARRAY",
+                "componentType": "STRING"
+              },
+              "Height": {
+                "description": "The height of the subtree. Intentionally capitalized so it conflicts with the property in the b3dm file.",
+                "componentType": "FLOAT32",
+                "semantic": "HEIGHT"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
   "extras": {
     "name": "Sample Implicit Tileset"
   },
@@ -34,31 +66,6 @@
         "maximumLevel": 1,
         "subtrees": {
           "uri": "subtrees/{level}.{x}.{y}.json"
-        }
-      },
-      "3DTILES_metadata": {
-        "schema": {
-          "classes": {
-            "subtree": {
-              "properties": {
-                "author": {
-                  "description": "The person or entity that made the subtree",
-                  "componentType": "STRING",
-                  "semantic": "AUTHOR"
-                },
-                "date": {
-                  "description": "Date of subtree generation in YYYY-MM-DD format",
-                  "componentType": "STRING",
-                  "semantic": "DATE_ISO_8601"
-                },
-                "credits": {
-                  "description": "A list of copyright strings relevant to this subtree",
-                  "type": "ARRAY",
-                  "componentType": "STRING"
-                }
-              }
-            }
-          }
         }
       }
     },

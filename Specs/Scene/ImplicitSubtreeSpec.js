@@ -1331,6 +1331,10 @@ describe("Scene/ImplicitSubtree", function () {
       },
     };
 
+    const subtreeJsonResource = new Resource({
+      url: "https://example.com/0.0.0.json",
+    });
+
     const subtreeSchema = {
       classes: {
         subtree: {
@@ -1405,7 +1409,7 @@ describe("Scene/ImplicitSubtree", function () {
 
     it("creates metadata from JSON", function () {
       const subtree = new ImplicitSubtree(
-        subtreeResource,
+        subtreeJsonResource,
         metadataSubtreeJson,
         undefined,
         subtreeMetadataQuadtree,
