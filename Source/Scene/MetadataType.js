@@ -16,7 +16,7 @@ const MetadataType = {
    * @constant
    * @private
    */
-  SINGLE: "SINGLE",
+  SCALAR: "SCALAR",
   /**
    * A vector with two components
    *
@@ -66,14 +66,31 @@ const MetadataType = {
    */
   MAT4: "MAT4",
   /**
-   * An array of values. A <code>componentType</code> property is needed to
-   * define what type of values are stored in the array.
+   * A boolean (true/false) value
    *
    * @type {String}
    * @constant
    * @private
    */
-  ARRAY: "ARRAY",
+  BOOLEAN: "BOOLEAN",
+  /**
+   * A UTF-8 encoded string value
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
+  STRING: "STRING",
+  /**
+   * An enumerated value. This type is used in conjunction with a {@link MetadataEnum} to describe the valid values.
+   *
+   * @see MetadataEnum
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
+  ENUM: "ENUM",
 };
 
 /**
@@ -133,7 +150,7 @@ MetadataType.getComponentCount = function (type) {
   //>>includeEnd('debug');
 
   switch (type) {
-    case MetadataType.SINGLE:
+    case MetadataType.SCALAR:
       return 1;
     case MetadataType.VEC2:
       return 2;
