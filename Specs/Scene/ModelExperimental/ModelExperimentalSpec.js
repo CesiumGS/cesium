@@ -270,7 +270,12 @@ describe(
       const loadPromise = resource.fetchArrayBuffer();
       return loadPromise.then(function (buffer) {
         return loadAndZoomToModelExperimental(
-          { gltf: new Uint8Array(buffer), debugShowBoundingVolume: true, scale: 10, maximumScale: 20 },
+          {
+            gltf: new Uint8Array(buffer),
+            debugShowBoundingVolume: true,
+            scale: 10,
+            maximumScale: 20,
+          },
           scene
         ).then(function (model) {
           scene.renderForSpecs();
@@ -291,7 +296,12 @@ describe(
       const loadPromise = resource.fetchArrayBuffer();
       return loadPromise.then(function (buffer) {
         return loadAndZoomToModelExperimental(
-          { gltf: new Uint8Array(buffer), debugShowBoundingVolume: true, scale: 20, maximumScale: 10 },
+          {
+            gltf: new Uint8Array(buffer),
+            debugShowBoundingVolume: true,
+            scale: 20,
+            maximumScale: 10,
+          },
           scene
         ).then(function (model) {
           scene.renderForSpecs();

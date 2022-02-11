@@ -353,10 +353,10 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     this._boundingSpheres
   );
   scaledBoundingSphere.center = Cartesian3.multiplyByScalar(
-      scaledBoundingSphere.center,
-      this._model.scale,
-      scaledBoundingSphere.center
-    );
+    scaledBoundingSphere.center,
+    this._model.scale,
+    scaledBoundingSphere.center
+  );
   scaledBoundingSphere.radius = this._model.scale * scaledBoundingSphere.radius;
 
   this._boundingSphere = scaledBoundingSphere;

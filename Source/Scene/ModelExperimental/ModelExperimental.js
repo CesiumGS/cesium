@@ -674,14 +674,13 @@ Object.defineProperties(ModelExperimental.prototype, {
   scale: {
     get: function () {
       return defined(this._maximumScale)
-          ? Math.min(this._maximumScale, this._scale)
-          : this._scale;
+        ? Math.min(this._maximumScale, this._scale)
+        : this._scale;
     },
     set: function (value) {
       this._scale = value;
     },
   },
-
 
   /**
    * The approximate minimum pixelsize of the model regardless of zoom.
@@ -700,7 +699,6 @@ Object.defineProperties(ModelExperimental.prototype, {
       this._minimumPixelSize = value;
     },
   },
-
 
   /**
    * The maximum scale size of a model. An upper limit for minimumPixelSize.
