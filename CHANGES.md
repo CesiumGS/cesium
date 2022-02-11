@@ -9,7 +9,7 @@
 - Added `depthPlaneEllipsoidOffset` to Viewer and Scene constructors to address rendering artefacts below ellipsoid zero elevation. [#9200](https://github.com/CesiumGS/cesium/pull/9200)
 - Added support for `debugColorTiles` in `ModelExperimental`. [#10071](https://github.com/CesiumGS/cesium/pull/10071)
 - Added support for shadows in `ModelExperimental`. [#10077](https://github.com/CesiumGS/cesium/pull/10077)
-- Added the ability to load implicit tiling subtrees using JSON files. [#10086](https://github.com/CesiumGS/cesium/pull/10086)
+- Added the ability to load implicit tiling subtree files from JSON. [#10086](https://github.com/CesiumGS/cesium/pull/10086)
 - Added support for subtree metadata in tilesets with implicit tiling. [#10093](https://github.com/CesiumGS/cesium/pull/10093)
 
 ##### Fixes :wrench:
