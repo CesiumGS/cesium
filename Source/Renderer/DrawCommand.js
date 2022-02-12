@@ -1,6 +1,7 @@
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
+import DrawCommandFlags from "./DrawCommandFlags.js";
 
 /**
  * Represents a command to the renderer for drawing.
@@ -47,6 +48,14 @@ function DrawCommand(options) {
     options.depthForTranslucentClassification,
     false
   );
+
+  this._flags = 0;
+
+  if (options.splitDirection === -1.0) {
+    this._flags |= DrawCommandFlags.LEFT_SIDE_ONLY;
+  } else if (options.splitDirection === 1.0) {
+    this._flags |= DrawCommandFlags.RIGHT_SIDE_ONLY;
+  }
 
   this.dirty = true;
   this.lastDirtyTime = 0;
@@ -536,6 +545,35 @@ Object.defineProperties(DrawCommand.prototype, {
       }
     },
   },
+
+  /**
+   * Indicates whether this draw command should be executed for only the left
+   * side of the screen (-1.0), for only the right side (1.0), or for both sides
+   * (0.0).
+   * 
+   * @memberof DrawCommand.prototype
+   * @type {Number}
+   * @default 0.0
+   */
+  splitDirection: {
+    get: function () {
+      if ((this._flags & DrawCommandFlags.LEFT_SIDE_ONLY) === DrawCommandFlags.LEFT_SIDE_ONLY) {
+        return -1.0;
+      } else if ((this._flags & DrawCommandFlags.RIGHT_SIDE_ONLY) === DrawCommandFlags.RIGHT_SIDE_ONLY) {
+        return 1.0;
+      } else {
+        return 0.0;
+      }
+    },
+    set: function (value) {
+      this._flags &= ~(DrawCommandFlags.LEFT_SIDE_ONLY | DrawCommandFlags.RIGHT_SIDE_ONLY);
+      if (value === -1.0) {
+        this._flags |= DrawCommandFlags.LEFT_SIDE_ONLY;
+      } else if (value === 1.0) {
+        this._flags |= DrawCommandFlags.RIGHT_SIDE_ONLY;
+      }
+    }
+  },
 });
 
 /**
@@ -574,6 +612,7 @@ DrawCommand.shallowClone = function (command, result) {
   result._pickOnly = command._pickOnly;
   result._depthForTranslucentClassification =
     command._depthForTranslucentClassification;
+  result._flags = command._flags;
 
   result.dirty = true;
   result.lastDirtyTime = 0;

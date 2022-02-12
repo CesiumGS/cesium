@@ -433,6 +433,7 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
   model.specularEnvironmentMaps = tileset.specularEnvironmentMaps;
   model.backFaceCulling = tileset.backFaceCulling;
   model.debugWireframe = tileset.debugWireframe;
+  model.splitDirection = tileset.splitDirection;
 
   // Update clipping planes
   const tilesetClippingPlanes = tileset.clippingPlanes;

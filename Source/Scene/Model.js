@@ -5704,6 +5704,7 @@ Model.prototype.update = function (frameState) {
           } else if (!backFaceCulling) {
             command = nc.disableCullingCommand;
           }
+          command.splitDirection = this.splitDirection;
           commandList.push(command);
           boundingVolume = nc.command.boundingVolume;
           if (
@@ -5719,6 +5720,7 @@ Model.prototype.update = function (frameState) {
             } else if (!backFaceCulling) {
               command2D = nc.disableCullingCommand2D;
             }
+            command2D.splitDirection = this.splitDirection;
             commandList.push(command2D);
           }
         }
@@ -5729,6 +5731,7 @@ Model.prototype.update = function (frameState) {
         for (i = 0; i < length; ++i) {
           nc = nodeCommands[i];
           if (nc.show) {
+            nc.silhouetteColorCommand.splitDirection = this.splitDirection;
             commandList.push(nc.silhouetteColorCommand);
             boundingVolume = nc.command.boundingVolume;
             if (
@@ -5736,6 +5739,7 @@ Model.prototype.update = function (frameState) {
               (boundingVolume.center.y + boundingVolume.radius > idl2D ||
                 boundingVolume.center.y - boundingVolume.radius < idl2D)
             ) {
+              nc.silhouetteColorCommand2D.splitDirection = this.splitDirection;
               commandList.push(nc.silhouetteColorCommand2D);
             }
           }

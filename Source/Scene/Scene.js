@@ -1748,10 +1748,8 @@ Scene.prototype.updateDerivedCommands = function (command) {
   let derivedCommands = command.derivedCommands;
 
   const useSplitting =
-    defined(command.owner) &&
-    defined(command.owner.primitive) &&
-    defined(command.owner.primitive.splitDirection) &&
-    command.owner.primitive.splitDirection !== SplitDirection.NONE;
+    defined(command.splitDirection) &&
+    command.splitDirection !== SplitDirection.NONE;
 
   if (
     (useSplitting && !defined(derivedCommands.splitting)) ||
@@ -1774,7 +1772,8 @@ Scene.prototype.updateDerivedCommands = function (command) {
   const hasLogDepthDerivedCommands = defined(derivedCommands.logDepth);
   const hasHdrCommands = defined(derivedCommands.hdr);
   const hasDerivedCommands = defined(derivedCommands.originalCommand);
-  const needsLogDepthDerivedCommands = useLogDepth && !hasLogDepthDerivedCommands;
+  const needsLogDepthDerivedCommands =
+    useLogDepth && !hasLogDepthDerivedCommands;
   const needsHdrCommands = useHdr && !hasHdrCommands;
   const needsDerivedCommands = (!useLogDepth || !useHdr) && !hasDerivedCommands;
   command.dirty =
@@ -2113,15 +2112,7 @@ function executeCommand(command, scene, context, passState, debugFramebuffer) {
 
   if (defined(command.derivedCommands.splitting)) {
     command = command.derivedCommands.splitting.command;
-
-    var splitDirection =
-      defined(command.owner) &&
-      defined(command.owner.primitive) &&
-      defined(command.owner.primitive.splitDirection)
-        ? command.owner.primitive.splitDirection
-        : SplitDirection.NONE;
-
-    context._us._primitiveSplitDirection = splitDirection;
+    context._us._primitiveSplitDirection = command.splitDirection;
   }
 
   if (frameState.useLogDepth && defined(command.derivedCommands.logDepth)) {
