@@ -71,7 +71,7 @@ function DrawCommand(options) {
 }
 
 function hasFlag(command, flag) {
-  return (command._flags & flag) == flag;
+  return (command._flags & flag) === flag;
 }
 
 function setFlag(command, flag, value) {
