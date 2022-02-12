@@ -13,6 +13,7 @@
 ##### Fixes :wrench:
 
 - Fixed a bug where updating `ModelExperimental`'s model matrix would not update its bounding sphere. [#10078](https://github.com/CesiumGS/cesium/pull/10078)
+- Fixed a bug where `GregorianDate` constructor would not validate the input parameters for valid date. Also default date is set as 0001-01-01 00:00:00:0000. [#10075](https://github.com/CesiumGS/cesium/pull/10075)
 
 ### 1.90 - 2022-02-01
 
