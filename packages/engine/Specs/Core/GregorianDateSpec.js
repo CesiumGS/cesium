@@ -1,7 +1,7 @@
 import { GregorianDate } from "../../Source/Cesium.js";
 
 describe("Core/GregorianDate", function () {
-  describe("Positive scenarios", function () {
+  describe("With valid parameters", function () {
     it("Constructs any valid date", function () {
       const validDate = new GregorianDate(2022, 2, 4, 23, 54, 0, 999.9, false);
       expect(validDate.year).toEqual(2022);
@@ -11,7 +11,7 @@ describe("Core/GregorianDate", function () {
       expect(validDate.minute).toEqual(54);
       expect(validDate.second).toEqual(0);
       expect(validDate.millisecond).toEqual(999.9);
-      expect(validDate.isLeapSecond).toBeFalsy();
+      expect(validDate.isLeapSecond).toBe(false);
     });
 
     it("Constructs valid leap year date", function () {
@@ -23,7 +23,7 @@ describe("Core/GregorianDate", function () {
       expect(validDate.minute).toEqual(54);
       expect(validDate.second).toEqual(0);
       expect(validDate.millisecond).toEqual(999.9);
-      expect(validDate.isLeapSecond).toBeFalsy();
+      expect(validDate.isLeapSecond).toBe(false);
     });
 
     it("Constructs the minimum date when no parameters are passed", function () {
@@ -35,12 +35,18 @@ describe("Core/GregorianDate", function () {
       expect(minimumDate.minute).toEqual(0);
       expect(minimumDate.second).toEqual(0);
       expect(minimumDate.millisecond).toEqual(0);
-      expect(minimumDate.isLeapSecond).toBeFalsy();
+      expect(minimumDate.isLeapSecond).toBe(false);
     });
 
     it("Constructs valid dates for edge cases of days", function () {
       expect(function () {
         return new GregorianDate(2022, 1, 31);
+      }).not.toThrowDeveloperError();
+      expect(function () {
+        return new GregorianDate(2000, 2, 28);
+      }).not.toThrowDeveloperError();
+      expect(function () {
+        return new GregorianDate(2020, 2, 29);
       }).not.toThrowDeveloperError();
       expect(function () {
         return new GregorianDate(2022, 3, 31);
@@ -83,7 +89,7 @@ describe("Core/GregorianDate", function () {
       expect(minimumDate.minute).toEqual(0);
       expect(minimumDate.second).toEqual(0);
       expect(minimumDate.millisecond).toEqual(0);
-      expect(minimumDate.isLeapSecond).toBeFalsy();
+      expect(minimumDate.isLeapSecond).toBe(false);
     });
 
     it("Constructs the minimum possible day of the month when only year and month parameters are passed", function () {
@@ -95,7 +101,7 @@ describe("Core/GregorianDate", function () {
       expect(minimumDate.minute).toEqual(0);
       expect(minimumDate.second).toEqual(0);
       expect(minimumDate.millisecond).toEqual(0);
-      expect(minimumDate.isLeapSecond).toBeFalsy();
+      expect(minimumDate.isLeapSecond).toBe(false);
     });
 
     it("Constructs the minimum possible time of the day when only year, month and day parameters are passed", function () {
@@ -107,7 +113,7 @@ describe("Core/GregorianDate", function () {
       expect(minimumDate.minute).toEqual(0);
       expect(minimumDate.second).toEqual(0);
       expect(minimumDate.millisecond).toEqual(0);
-      expect(minimumDate.isLeapSecond).toBeFalsy();
+      expect(minimumDate.isLeapSecond).toBe(false);
     });
 
     it("Constructs the minimum possible time of the day when only year, month, day and hour parameters are passed", function () {
@@ -119,7 +125,7 @@ describe("Core/GregorianDate", function () {
       expect(minimumDate.minute).toEqual(0);
       expect(minimumDate.second).toEqual(0);
       expect(minimumDate.millisecond).toEqual(0);
-      expect(minimumDate.isLeapSecond).toBeFalsy();
+      expect(minimumDate.isLeapSecond).toBe(false);
     });
 
     it("Constructs the minimum possible time of the day when only year, month, day, hour and minutes parameters are passed", function () {
@@ -131,7 +137,7 @@ describe("Core/GregorianDate", function () {
       expect(minimumDate.minute).toEqual(59);
       expect(minimumDate.second).toEqual(0);
       expect(minimumDate.millisecond).toEqual(0);
-      expect(minimumDate.isLeapSecond).toBeFalsy();
+      expect(minimumDate.isLeapSecond).toBe(false);
     });
 
     it("Constructs the minimum possible time of the day when only year, month, day, hour, minutes and seconds parameters are passed", function () {
@@ -143,7 +149,7 @@ describe("Core/GregorianDate", function () {
       expect(minimumDate.minute).toEqual(59);
       expect(minimumDate.second).toEqual(59);
       expect(minimumDate.millisecond).toEqual(0);
-      expect(minimumDate.isLeapSecond).toBeFalsy();
+      expect(minimumDate.isLeapSecond).toBe(false);
     });
 
     it("Constructs the date with leap second", function () {
@@ -155,10 +161,10 @@ describe("Core/GregorianDate", function () {
       expect(minimumDate.minute).toEqual(59);
       expect(minimumDate.second).toEqual(60);
       expect(minimumDate.millisecond).toEqual(100);
-      expect(minimumDate.isLeapSecond).toBeTruthy();
+      expect(minimumDate.isLeapSecond).toBe(true);
     });
   });
-  describe("Negative scenarios", function () {
+  describe("With invalid parameters", function () {
     it("Should throw error if invalid year is passed", function () {
       expect(function () {
         return new GregorianDate(-1, 2, 4, 23, 54, 0, 999.9, false);
@@ -193,11 +199,11 @@ describe("Core/GregorianDate", function () {
       expect(function () {
         return new GregorianDate(2022, 12, 32, 23, 54, 0, 999.9, false);
       }).toThrowDeveloperError();
+    });
+
+    it("Should throw error if day is out of range for month", function () {
       expect(function () {
         return new GregorianDate(2020, 2, 30, 23, 54, 0, 999.9, false);
-      }).toThrowDeveloperError();
-      expect(function () {
-        return new GregorianDate(2022, 2, 29, 23, 54, 0, 999.9, false);
       }).toThrowDeveloperError();
       expect(function () {
         return new GregorianDate(2022, 11, 31, 23, 54, 0, 999.9, false);
@@ -210,6 +216,12 @@ describe("Core/GregorianDate", function () {
       }).toThrowDeveloperError();
       expect(function () {
         return new GregorianDate(2022, 9, 31, 23, 54, 0, 999.9, false);
+      }).toThrowDeveloperError();
+    });
+
+    it("Should throw error if leap day is given for non-leap year", function () {
+      expect(function () {
+        return new GregorianDate(2022, 2, 29, 23, 54, 0, 999.9, false);
       }).toThrowDeveloperError();
     });
 
