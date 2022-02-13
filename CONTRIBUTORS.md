@@ -150,6 +150,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Eli Bogomolny](https://github.com/ebogo1)
   - [Erixen Cruz](https://github.com/ErixenCruz)
   - [Dzung Nguyen](https://github.com/dzungpng)
+  - [Jordi Torres](https://github.com/jtorresfabra)
   - [Nithin Pranesh](https://github.com/nithinp7)
   - [Alexander Gallegos](https://github.com/argallegos)
   - [Janine Liu](https://github.com/j9liu)
