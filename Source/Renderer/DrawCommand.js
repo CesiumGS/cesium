@@ -1,7 +1,6 @@
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
-import DrawCommandFlags from "./DrawCommandFlags.js";
 
 const Flags = {
   CULL: 1,
@@ -12,6 +11,8 @@ const Flags = {
   RECEIVE_SHADOWS: 32,
   PICK_ONLY: 64,
   DEPTH_FOR_TRANSLUCENT_CLASSIFICATION: 128,
+  LEFT_SIDE_ONLY: 256,
+  RIGHT_SIDE_ONLY: 512,
 };
 
 /**
@@ -61,14 +62,7 @@ function DrawCommand(options) {
     options.depthForTranslucentClassification,
     false
   );
-
-  this._flags = 0;
-
-  if (options.splitDirection === -1.0) {
-    this._flags |= DrawCommandFlags.LEFT_SIDE_ONLY;
-  } else if (options.splitDirection === 1.0) {
-    this._flags |= DrawCommandFlags.RIGHT_SIDE_ONLY;
-  }
+  this.splitDirection = defaultValue(options.splitDirection, 0.0);
 
   this.dirty = true;
   this.lastDirtyTime = 0;
@@ -580,25 +574,31 @@ Object.defineProperties(DrawCommand.prototype, {
    * @type {Number}
    * @default 0.0
    */
-  splitDirection: {
+   splitDirection: {
     get: function () {
-      if ((this._flags & DrawCommandFlags.LEFT_SIDE_ONLY) === DrawCommandFlags.LEFT_SIDE_ONLY) {
+      if (hasFlag(this, Flags.LEFT_SIDE_ONLY)) {
         return -1.0;
-      } else if ((this._flags & DrawCommandFlags.RIGHT_SIDE_ONLY) === DrawCommandFlags.RIGHT_SIDE_ONLY) {
+      } else if (hasFlag(this, Flags.RIGHT_SIDE_ONLY)) {
         return 1.0;
       } else {
         return 0.0;
       }
     },
     set: function (value) {
-      this._flags &= ~(DrawCommandFlags.LEFT_SIDE_ONLY | DrawCommandFlags.RIGHT_SIDE_ONLY);
-      if (value === -1.0) {
-        this._flags |= DrawCommandFlags.LEFT_SIDE_ONLY;
-      } else if (value === 1.0) {
-        this._flags |= DrawCommandFlags.RIGHT_SIDE_ONLY;
+      if (this.splitDirection !== value) {
+        if (value === -1.0) {
+          setFlag(this, Flags.LEFT_SIDE_ONLY, true);
+          setFlag(this, Flags.RIGHT_SIDE_ONLY, false);
+        } else if (value === 1.0) {
+          setFlag(this, Flags.LEFT_SIDE_ONLY, false);
+          setFlag(this, Flags.RIGHT_SIDE_ONLY, true);
+        } else {
+          setFlag(this, Flags.LEFT_SIDE_ONLY | Flags.RIGHT_SIDE_ONLY, false);
+        }
+        this.dirty = true;
       }
-    }
-  },
+    },
+  }
 });
 
 /**
