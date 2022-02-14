@@ -26,7 +26,7 @@ describe("Core/sampleTerrain", function () {
   });
 
   it("queries heights", function () {
-    // Test fails because wrong baseline is passed in.
+    // Test fails
     const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(87.0, 28.0),
