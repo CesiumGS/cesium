@@ -4,6 +4,7 @@ import TerrainTileProcessor from "../TerrainTileProcessor.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartesian4 } from "../../Source/Cesium.js";
 import { createWorldTerrain } from "../../Source/Cesium.js";
+import { CesiumTerrainProvider } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { EllipsoidTerrainProvider } from "../../Source/Cesium.js";
 import { GeographicTilingScheme } from "../../Source/Cesium.js";
@@ -333,20 +334,11 @@ describe("Scene/GlobeSurfaceTile", function () {
         scene.destroyForSpecs();
       });
 
-      it("gets correct results even when the mesh includes normals", function () {
+      xit("gets correct results even when the mesh includes normals", function () {
         const terrainProvider = createWorldTerrain({
           requestVertexNormals: true,
           requestWaterMask: false,
         });
-
-        // const terrainProvider = new CesiumTerrainProvider({
-        //   url: "/Specs/Mocks/CesiumTerrainProvider", // Mock payload from Ion
-        //   requestVertexNormals: true,
-        //   requestWaterMask: true,
-        //   ready: true,
-        // });
-
-        // const terrainProvider = mockTerrain.createMeshWillSucceed(rootTile);
 
         const tile = new QuadtreeTile({
           tilingScheme: new GeographicTilingScheme(),
@@ -357,21 +349,21 @@ describe("Scene/GlobeSurfaceTile", function () {
 
         processor.frameState = scene.frameState;
         processor.terrainProvider = terrainProvider;
+        //TODO: Workhere
 
         return processor.process([tile]).then(function () {
-          const origin = new Cartesian3(
-            -5052039.459789615,
-            2561172.040315167,
-            -2936276.999965875
+          const ray = new Ray(
+            new Cartesian3(
+              -5052039.459789615,
+              2561172.040315167,
+              -2936276.999965875
+            ),
+            new Cartesian3(
+              0.5036332963145244,
+              0.6648033332898124,
+              0.5517155343926082
+            )
           );
-          const direction = new new Cartesian3(
-            0.5036332963145244,
-            0.6648033332898124,
-            0.5517155343926082
-          )();
-
-          const ray = new Ray(origin, direction);
-
           const pickResult = tile.data.pick(ray, undefined, undefined, true);
           const cartographic = Ellipsoid.WGS84.cartesianToCartographic(
             pickResult

@@ -5,21 +5,20 @@ import { sampleTerrainMostDetailed } from "../../Source/Cesium.js";
 
 describe("Core/sampleTerrainMostDetailed", function () {
   let worldTerrain;
-  beforeAll(function () {
-    worldTerrain = createWorldTerrain();
-    return worldTerrain.readyPromise;
-  });
-
   // beforeAll(function () {
-
-  //   worldTerrain = new CesiumTerrainProvider({
-  //     url: "/Specs/Mocks/CesiumTerrainProvider", // Mock payload from Ion
-  //     requestVertexNormals: false,
-  //     requestWaterMask: false,
-  //     ready: true,
-  //   });
-  //   return worldTerrain._readyPromise;
+  //   worldTerrain = createWorldTerrain();
+  //   return worldTerrain.readyPromise;
   // });
+
+  beforeAll(function () {
+    worldTerrain = new CesiumTerrainProvider({
+      url: "/Specs/Mocks/CesiumTerrainProvider", // Mock payload from Ion
+      requestVertexNormals: false,
+      requestWaterMask: false,
+      ready: true,
+    });
+    return worldTerrain._readyPromise;
+  });
 
   it("queries heights", function () {
     // Fails
