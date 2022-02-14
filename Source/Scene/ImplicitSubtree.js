@@ -493,9 +493,9 @@ function preprocessBufferViews(bufferViewHeaders, bufferHeaders) {
  * Determine which buffer views need to be loaded into memory. This includes:
  *
  * <ul>
- * <li>The tile availability bitstream (if a bufferView is defined)</li>
- * <li>The content availability bitstream(s) (if a bufferView is defined)</li>
- * <li>The child subtree availability bitstream (if a bufferView is defined)</li>
+ * <li>The tile availability bitstream (if a bitstream is defined)</li>
+ * <li>The content availability bitstream(s) (if a bitstream is defined)</li>
+ * <li>The child subtree availability bitstream (if a bitstream is defined)</li>
  * </ul>
  *
  * <p>
@@ -509,24 +509,24 @@ function preprocessBufferViews(bufferViewHeaders, bufferHeaders) {
 function markActiveBufferViews(subtreeJson, bufferViewHeaders) {
   let header;
   const tileAvailabilityHeader = subtreeJson.tileAvailability;
-  if (defined(tileAvailabilityHeader.bufferView)) {
-    header = bufferViewHeaders[tileAvailabilityHeader.bufferView];
+  if (defined(tileAvailabilityHeader.bitstream)) {
+    header = bufferViewHeaders[tileAvailabilityHeader.bitstream];
     header.isActive = true;
     header.bufferHeader.isActive = true;
   }
 
   const contentAvailabilityHeaders = subtreeJson.contentAvailabilityHeaders;
   for (let i = 0; i < contentAvailabilityHeaders.length; i++) {
-    if (defined(contentAvailabilityHeaders[i].bufferView)) {
-      header = bufferViewHeaders[contentAvailabilityHeaders[i].bufferView];
+    if (defined(contentAvailabilityHeaders[i].bitstream)) {
+      header = bufferViewHeaders[contentAvailabilityHeaders[i].bitstream];
       header.isActive = true;
       header.bufferHeader.isActive = true;
     }
   }
 
   const childSubtreeAvailabilityHeader = subtreeJson.childSubtreeAvailability;
-  if (defined(childSubtreeAvailabilityHeader.bufferView)) {
-    header = bufferViewHeaders[childSubtreeAvailabilityHeader.bufferView];
+  if (defined(childSubtreeAvailabilityHeader.bitstream)) {
+    header = bufferViewHeaders[childSubtreeAvailabilityHeader.bitstream];
     header.isActive = true;
     header.bufferHeader.isActive = true;
   }
@@ -731,7 +731,7 @@ function parseAvailabilityBitstream(
     });
   }
 
-  const bufferView = bufferViewsU8[availabilityJson.bufferView];
+  const bufferView = bufferViewsU8[availabilityJson.bitstream];
 
   return new ImplicitAvailabilityBitstream({
     bitstream: bufferView,

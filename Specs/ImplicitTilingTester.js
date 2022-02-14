@@ -219,7 +219,7 @@ function gatherBufferViews(
     // 1. shareBuffer is only used for content availability
     // 2. tileAvailability is stored in the first bufferView so it has index 0
     parsedBitstream.availabilityJson = {
-      bufferView: 0,
+      bitstream: 0,
       availableCount: parsedBitstream.availableCount,
     };
   } else {
@@ -234,7 +234,7 @@ function gatherBufferViews(
     bufferViewJsonArray.push(bufferViewJson);
 
     parsedBitstream.availabilityJson = {
-      bufferView: bufferViewId,
+      bitstream: bufferViewId,
       availableCount: parsedBitstream.availableCount,
     };
 
