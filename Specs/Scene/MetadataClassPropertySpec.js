@@ -17,6 +17,7 @@ describe("Scene/MetadataClassProperty", function () {
     const property = new MetadataClassProperty({
       id: "height",
       property: {
+        type: "SCALAR",
         componentType: "FLOAT32",
       },
     });
@@ -24,7 +25,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.id).toBe("height");
     expect(property.name).toBeUndefined();
     expect(property.description).toBeUndefined();
-    expect(property.type).toBe(MetadataType.SINGLE);
+    expect(property.type).toBe(MetadataType.SCALAR);
     expect(property.enumType).toBeUndefined();
     expect(property.componentType).toBe(MetadataComponentType.FLOAT32);
     expect(property.valueType).toBe(MetadataComponentType.FLOAT32);
@@ -55,14 +56,15 @@ describe("Scene/MetadataClassProperty", function () {
       property: {
         name: "Position",
         description: "Position (X, Y, Z)",
-        type: "ARRAY",
+        hasFixedCount: true,
+        count: 3,
+        type: "SCALAR",
         componentType: "INT16",
-        componentCount: 3,
         normalized: true,
         max: max,
         min: min,
         default: propertyDefault,
-        optional: false,
+        required: true,
         semantic: "_POSITION",
         extras: extras,
         extensions: extensions,
@@ -72,11 +74,11 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.id).toBe("position");
     expect(property.name).toBe("Position");
     expect(property.description).toBe("Position (X, Y, Z)");
-    expect(property.type).toBe(MetadataType.ARRAY);
+    expect(property.type).toBe(MetadataType.SCALAR);
     expect(property.enumType).toBeUndefined();
     expect(property.componentType).toBe(MetadataComponentType.INT16);
     expect(property.valueType).toBe(MetadataComponentType.INT16);
-    expect(property.componentCount).toBe(3);
+    expect(property.count).toBe(3);
     expect(property.normalized).toBe(true);
     expect(property.max).toBe(max);
     expect(property.min).toBe(min);
@@ -85,6 +87,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.semantic).toBe("_POSITION");
     expect(property.extras).toBe(extras);
     expect(property.extensions).toBe(extensions);
+    expect(property.isLegacyExtension).toBe(false);
   });
 
   it("transcodes single properties from EXT_feature_metadata", function () {
@@ -118,7 +121,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.id).toBe("population");
     expect(property.name).toBe("Population");
     expect(property.description).toBe("Population (thousands)");
-    expect(property.type).toBe(MetadataType.SINGLE);
+    expect(property.type).toBe(MetadataType.SCALAR);
     expect(property.enumType).toBeUndefined();
     expect(property.componentType).toBe(MetadataComponentType.INT32);
     expect(property.valueType).toBe(MetadataComponentType.INT32);
@@ -131,6 +134,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.semantic).toBe("_POSITION");
     expect(property.extras).toBe(extras);
     expect(property.extensions).toBe(extensions);
+    expect(property.isLegacyExtension).toBe(true);
   });
 
   it("creates enum property", function () {
@@ -153,14 +157,14 @@ describe("Scene/MetadataClassProperty", function () {
     const property = new MetadataClassProperty({
       id: "color",
       property: {
-        componentType: "ENUM",
+        type: "ENUM",
         enumType: "color",
       },
       enums: enums,
     });
 
-    expect(property.type).toBe(MetadataType.SINGLE);
-    expect(property.componentType).toBe(MetadataComponentType.ENUM);
+    expect(property.type).toBe(MetadataType.ENUM);
+    expect(property.componentType).not.toBeDefined();
     expect(property.enumType).toBe(colorEnum);
     expect(property.valueType).toBe(MetadataComponentType.UINT16); // default enum valueType
   });
@@ -198,7 +202,9 @@ describe("Scene/MetadataClassProperty", function () {
   it("constructor throws without id", function () {
     expect(function () {
       return new MetadataClassProperty({
+        id: undefined,
         property: {
+          type: "VEC2",
           componentType: "FLOAT32",
         },
       });
@@ -209,6 +215,19 @@ describe("Scene/MetadataClassProperty", function () {
     expect(function () {
       return new MetadataClassProperty({
         id: "propertyId",
+        property: undefined,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("constructor throws without property.type", function () {
+    expect(function () {
+      return new MetadataClassProperty({
+        id: "propertyId",
+        property: {
+          type: undefined,
+          componentType: "FLOAT32",
+        },
       });
     }).toThrowDeveloperError();
   });
@@ -220,36 +239,42 @@ describe("Scene/MetadataClassProperty", function () {
 
     const properties = {
       propertyInt8: {
-        type: "SINGLE",
+        type: "SCALAR",
         componentType: "INT8",
         normalized: true,
       },
       propertyUint8: {
-        // SINGLE is the default type
+        type: "SCALAR",
         componentType: "UINT8",
         normalized: true,
       },
       propertyInt16: {
+        type: "SCALAR",
         componentType: "INT16",
         normalized: true,
       },
       propertyUint16: {
+        type: "SCALAR",
         componentType: "UINT16",
         normalized: true,
       },
       propertyInt32: {
+        type: "SCALAR",
         componentType: "INT32",
         normalized: true,
       },
       propertyUint32: {
+        type: "SCALAR",
         componentType: "UINT32",
         normalized: true,
       },
       propertyInt64: {
+        type: "SCALAR",
         componentType: "INT64",
         normalized: true,
       },
       propertyUint64: {
+        type: "SCALAR",
         componentType: "UINT64",
         normalized: true,
       },
@@ -304,14 +329,16 @@ describe("Scene/MetadataClassProperty", function () {
   it("normalize array values", function () {
     const properties = {
       propertyInt8: {
-        type: "ARRAY",
+        hasFixedCount: false,
+        type: "SCALAR",
         componentType: "INT8",
         normalized: true,
       },
       propertyUint8: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT8",
-        componentCount: 2,
+        hasFixedCount: true,
+        count: 2,
         normalized: true,
       },
     };
@@ -429,22 +456,22 @@ describe("Scene/MetadataClassProperty", function () {
 
     const properties = {
       propertyEnum: {
-        componentType: "ENUM",
+        type: "ENUM",
         enumType: "myEnum",
         normalized: true,
       },
       propertyEnumArray: {
-        type: "ARRAY",
-        componentType: "ENUM",
+        type: "ENUM",
+        hasFixedCount: false,
         enumType: "myEnum",
         normalized: true,
       },
       propertyString: {
-        componentType: "STRING",
+        type: "STRING",
         normalized: true,
       },
       propertyBoolean: {
-        componentType: "BOOLEAN",
+        type: "BOOLEAN",
         normalized: true,
       },
     };
@@ -594,20 +621,22 @@ describe("Scene/MetadataClassProperty", function () {
 
     const properties = {
       propertyString: {
-        componentType: "STRING",
+        type: "STRING",
       },
       propertyBoolean: {
-        componentType: "BOOLEAN",
+        type: "BOOLEAN",
       },
       propertyArray: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT8",
-        componentCount: 5,
+        hasFixedCount: true,
+        count: 5,
       },
       propertyBigIntArray: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT64",
-        componentCount: 2,
+        hasFixedCount: true,
+        count: 2,
       },
     };
 
@@ -761,20 +790,22 @@ describe("Scene/MetadataClassProperty", function () {
 
     const properties = {
       propertyString: {
-        componentType: "STRING",
+        type: "STRING",
       },
       propertyBoolean: {
-        componentType: "BOOLEAN",
+        type: "BOOLEAN",
       },
       propertyArray: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT8",
-        componentCount: 5,
+        hasFixedCount: true,
+        count: 5,
       },
       propertyBigIntArray: {
         type: "ARRAY",
         componentType: "UINT64",
-        componentCount: 2,
+        hasFixedCount: true,
+        count: 2,
       },
     };
 
@@ -825,9 +856,10 @@ describe("Scene/MetadataClassProperty", function () {
     const property = new MetadataClassProperty({
       id: "position",
       property: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "FLOAT32",
-        componentCount: 8,
+        hasFixedCount: true,
+        count: 8,
       },
     });
 
@@ -930,7 +962,8 @@ describe("Scene/MetadataClassProperty", function () {
       property: {
         type: "ARRAY",
         componentType: "FLOAT32",
-        componentCount: 6,
+        hasFixedCount: true,
+        count: 6,
       },
     });
 
@@ -963,7 +996,7 @@ describe("Scene/MetadataClassProperty", function () {
     const property = new MetadataClassProperty({
       id: "myEnum",
       property: {
-        componentType: "ENUM",
+        type: "ENUM",
         enumType: "myEnum",
       },
       enums: {
@@ -999,6 +1032,7 @@ describe("Scene/MetadataClassProperty", function () {
       const property = new MetadataClassProperty({
         id: "property",
         property: {
+          type: "SCALAR",
           componentType: types[i],
         },
       });
@@ -1078,7 +1112,8 @@ describe("Scene/MetadataClassProperty", function () {
         const property = new MetadataClassProperty({
           id: "property",
           property: {
-            type: "ARRAY",
+            hasFixedCount: false,
+            type: "SCALAR",
             componentType: componentType,
           },
         });
@@ -1095,6 +1130,7 @@ describe("Scene/MetadataClassProperty", function () {
     const propertyInt8 = new MetadataClassProperty({
       id: "property",
       property: {
+        type: "SCALAR",
         componentType: "INT8",
         normalized: true,
       },
@@ -1103,6 +1139,7 @@ describe("Scene/MetadataClassProperty", function () {
     const propertyUint8 = new MetadataClassProperty({
       id: "property",
       property: {
+        type: "SCALAR",
         componentType: "UINT8",
         normalized: true,
       },

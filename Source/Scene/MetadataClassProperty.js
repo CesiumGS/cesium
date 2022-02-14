@@ -32,6 +32,7 @@ function MetadataClassProperty(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("options.id", id);
   Check.typeOf.object("options.property", property);
+  Check.typeOf.string("options.property.type", property.type);
   //>>includeEnd('debug');
 
   // Try to determine if this is the legacy extension. This is not
@@ -490,7 +491,10 @@ function parseType(property, enums) {
 
   // Both EXT_feature_metadata and EXT_mesh_features allow numeric types like
   // INT32 or FLOAT64 as a componentType.
-  if (MetadataComponentType.isNumericType(componentType)) {
+  if (
+    defined(componentType) &&
+    MetadataComponentType.isNumericType(componentType)
+  ) {
     return {
       type: MetadataType.SCALAR,
       componentType: componentType,
