@@ -61,7 +61,7 @@ describe("Scene/MetadataEntity", function () {
     }).toThrowDeveloperError();
   });
 
-  it("hasProperty returns false when there's no properties", function () {
+  it("hasProperty returns false when there are no properties", function () {
     expect(
       MetadataEntity.hasProperty("name", {}, classWithNoPropertiesDefinition)
     ).toBe(false);

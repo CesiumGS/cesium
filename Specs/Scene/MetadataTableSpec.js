@@ -64,9 +64,11 @@ describe("Scene/MetadataTable", function () {
     );
   });
 
-  it("constructor throws without parameters", function () {
+  it("constructor throws without count", function () {
     expect(function () {
-      return new MetadataTable({});
+      return new MetadataTable({
+        class: {},
+      });
     }).toThrowDeveloperError();
   });
 

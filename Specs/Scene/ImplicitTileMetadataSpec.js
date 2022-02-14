@@ -185,6 +185,16 @@ describe("Scene/ImplicitTileMetadata", function () {
     }).toThrowDeveloperError();
   });
 
+  it("throws without class", function () {
+    expect(function () {
+      tileMetadata = new ImplicitTileMetadata({
+        implicitSubtree: subtree,
+        implicitCoordinates: implicitCoordinates,
+        class: undefined,
+      });
+    }).toThrowDeveloperError();
+  });
+
   it("creates tile metadata", function () {
     tileMetadata = new ImplicitTileMetadata({
       implicitSubtree: subtree,

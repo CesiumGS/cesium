@@ -15,6 +15,9 @@ import MetadataEntity from "./MetadataEntity.js";
  * @constructor
  * @private
  */
+
+const emptyClass = {};
+
 export default function JsonMetadataTable(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThan("options.count", options.count, 0);
@@ -33,7 +36,7 @@ export default function JsonMetadataTable(options) {
  * @private
  */
 JsonMetadataTable.prototype.hasProperty = function (propertyId) {
-  return MetadataEntity.hasProperty(propertyId, this._properties, {});
+  return MetadataEntity.hasProperty(propertyId, this._properties, emptyClass);
 };
 
 /**
@@ -44,7 +47,7 @@ JsonMetadataTable.prototype.hasProperty = function (propertyId) {
  * @private
  */
 JsonMetadataTable.prototype.getPropertyIds = function (results) {
-  return MetadataEntity.getPropertyIds(this._properties, {}, results);
+  return MetadataEntity.getPropertyIds(this._properties, emptyClass, results);
 };
 
 /**
