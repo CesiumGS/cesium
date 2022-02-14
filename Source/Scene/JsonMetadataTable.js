@@ -33,7 +33,7 @@ export default function JsonMetadataTable(options) {
  * @private
  */
 JsonMetadataTable.prototype.hasProperty = function (propertyId) {
-  return MetadataEntity.hasProperty(propertyId, this._properties);
+  return MetadataEntity.hasProperty(propertyId, this._properties, {});
 };
 
 /**
@@ -44,7 +44,7 @@ JsonMetadataTable.prototype.hasProperty = function (propertyId) {
  * @private
  */
 JsonMetadataTable.prototype.getPropertyIds = function (results) {
-  return MetadataEntity.getPropertyIds(this._properties, undefined, results);
+  return MetadataEntity.getPropertyIds(this._properties, {}, results);
 };
 
 /**

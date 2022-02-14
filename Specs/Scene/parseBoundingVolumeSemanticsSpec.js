@@ -25,6 +25,9 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
       tile: {
         properties: {},
       },
+      class: {
+        properties: {},
+      },
     });
     expect(parseBoundingVolumeSemantics(emptyMetadata)).toEqual({
       tile: {

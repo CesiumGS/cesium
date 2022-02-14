@@ -1,6 +1,11 @@
 import { MetadataClass, MetadataEntity } from "../../Source/Cesium.js";
 
 describe("Scene/MetadataEntity", function () {
+  const classWithNoPropertiesDefinition = new MetadataClass({
+    id: "building",
+    class: {},
+  });
+
   const classDefinition = new MetadataClass({
     id: "building",
     class: {
@@ -57,7 +62,9 @@ describe("Scene/MetadataEntity", function () {
   });
 
   it("hasProperty returns false when there's no properties", function () {
-    expect(MetadataEntity.hasProperty("name", {})).toBe(false);
+    expect(
+      MetadataEntity.hasProperty("name", {}, classWithNoPropertiesDefinition)
+    ).toBe(false);
   });
 
   it("hasProperty returns false when there's no property with the given property ID", function () {
@@ -90,13 +97,20 @@ describe("Scene/MetadataEntity", function () {
     }).toThrowDeveloperError();
   });
 
-  it("hasProperty works without classDefinition", function () {
-    expect(MetadataEntity.hasProperty("name", properties)).toBe(true);
-    expect(MetadataEntity.hasProperty("volume", properties)).toBe(false);
+  it("hasProperty throws without classDefinition", function () {
+    expect(function () {
+      MetadataEntity.hasProperty("name", properties, undefined);
+    }).toThrowDeveloperError();
   });
 
   it("hasPropertyBySemantic returns false when there's no properties", function () {
-    expect(MetadataEntity.hasPropertyBySemantic("NAME", {})).toBe(false);
+    expect(
+      MetadataEntity.hasPropertyBySemantic(
+        "NAME",
+        {},
+        classWithNoPropertiesDefinition
+      )
+    ).toBe(false);
   });
 
   it("hasPropertyBySemantic returns false when there's no property with the given property ID", function () {
@@ -107,15 +121,6 @@ describe("Scene/MetadataEntity", function () {
         classDefinition
       )
     ).toBe(false);
-  });
-
-  it("hasPropertyBySemantic returns false when there's no class definition", function () {
-    expect(MetadataEntity.hasPropertyBySemantic("NAME", properties)).toBe(
-      false
-    );
-    expect(MetadataEntity.hasPropertyBySemantic("VOLUME", properties)).toBe(
-      false
-    );
   });
 
   it("hasPropertyBySemantic returns true when there's a property with the given property ID", function () {
@@ -146,8 +151,16 @@ describe("Scene/MetadataEntity", function () {
     }).toThrowDeveloperError();
   });
 
+  it("hasPropertyBySemantic throws without class definition", function () {
+    expect(function () {
+      MetadataEntity.hasPropertyBySemantic("NAME", properties, undefined);
+    }).toThrowDeveloperError();
+  });
+
   it("getPropertyIds returns empty array when there are no properties", function () {
-    expect(MetadataEntity.getPropertyIds({}).length).toBe(0);
+    expect(
+      MetadataEntity.getPropertyIds({}, classWithNoPropertiesDefinition).length
+    ).toBe(0);
   });
 
   it("getPropertyIds returns array of property IDs", function () {
@@ -175,19 +188,17 @@ describe("Scene/MetadataEntity", function () {
     }).toThrowDeveloperError();
   });
 
-  it("getPropertyIds works without classDefinition", function () {
-    const results = [];
-    const returnedResults = MetadataEntity.getPropertyIds(
-      properties,
-      undefined,
-      results
-    );
-    expect(results).toBe(returnedResults);
-    expect(results.sort()).toEqual(["name", "position"]);
+  it("getPropertyIds throws without classDefinition", function () {
+    expect(function () {
+      const results = [];
+      MetadataEntity.getPropertyIds(properties, undefined, results);
+    }).toThrowDeveloperError();
   });
 
   it("getProperty returns undefined when there's no properties", function () {
-    expect(MetadataEntity.getProperty("name", {})).toBeUndefined();
+    expect(
+      MetadataEntity.getProperty("name", {}, classWithNoPropertiesDefinition)
+    ).toBeUndefined();
   });
 
   it("getProperty returns undefined when there's no property with the given property ID", function () {
@@ -223,16 +234,16 @@ describe("Scene/MetadataEntity", function () {
     }).toThrowDeveloperError();
   });
 
-  it("getProperty works without classDefinition", function () {
-    const value = MetadataEntity.getProperty("position", properties, undefined);
-    expect(value).toEqual(properties.position);
-    expect(value).not.toBe(properties.position); // The value is cloned
+  it("getProperty throws without classDefinition", function () {
+    expect(function () {
+      MetadataEntity.getProperty("name", properties, undefined);
+    }).toThrowDeveloperError();
   });
 
   it("setProperty returns false if property doesn't exist", function () {
-    expect(MetadataEntity.setProperty("volume", 100.0, classDefinition)).toBe(
-      false
-    );
+    expect(
+      MetadataEntity.setProperty("volume", 100.0, properties, classDefinition)
+    ).toBe(false);
   });
 
   it("setProperty sets property value", function () {
@@ -287,21 +298,10 @@ describe("Scene/MetadataEntity", function () {
     }).toThrowDeveloperError();
   });
 
-  it("setProperty works without classDefinition", function () {
-    const position = [1.0, 1.0, 1.0];
-    MetadataEntity.setProperty("position", position, properties);
-    const retrievedPosition = MetadataEntity.getProperty(
-      "position",
-      properties
-    );
-    expect(retrievedPosition).toEqual(position);
-    expect(retrievedPosition).not.toBe(position); // The value is cloned
-  });
-
-  it("getPropertyBySemantic returns undefined when there's no class", function () {
-    expect(
-      MetadataEntity.getPropertyBySemantic("NAME", properties)
-    ).toBeUndefined();
+  it("setProperty throws without classDefinition", function () {
+    expect(function () {
+      MetadataEntity.setProperty("name", "Building B", properties, undefined);
+    }).toThrowDeveloperError();
   });
 
   it("getPropertyBySemantic returns undefined when there's no property with the given semantic", function () {
@@ -336,10 +336,10 @@ describe("Scene/MetadataEntity", function () {
     }).toThrowDeveloperError();
   });
 
-  it("getPropertyBySemantic returns undefined without classDefinition", function () {
-    expect(
-      MetadataEntity.getPropertyBySemantic("NAME", properties, undefined)
-    ).toBeUndefined();
+  it("getPropertyBySemantic throws without classDefinition", function () {
+    expect(function () {
+      MetadataEntity.getPropertyBySemantic("NAME", properties, undefined);
+    }).toThrowDeveloperError();
   });
 
   it("setPropertyBySemantic sets property value", function () {

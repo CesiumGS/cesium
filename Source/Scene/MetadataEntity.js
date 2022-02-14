@@ -126,7 +126,7 @@ MetadataEntity.prototype.setPropertyBySemantic = function (semantic, value) {
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {Object} properties The dictionary containing properties.
- * @param {MetadataClass} [classDefinition] The class.
+ * @param {MetadataClass} classDefinition The class.
  * @returns {Boolean} Whether the entity has this property.
  *
  * @private
@@ -139,17 +139,21 @@ MetadataEntity.hasProperty = function (
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("propertyId", propertyId);
   Check.typeOf.object("properties", properties);
+  Check.typeOf.object("classDefinition", classDefinition);
   //>>includeEnd('debug');
 
   if (defined(properties[propertyId])) {
     return true;
   }
 
-  if (defined(classDefinition)) {
-    const classProperty = classDefinition.properties[propertyId];
-    if (defined(classProperty) && defined(classProperty.default)) {
-      return true;
-    }
+  const classProperties = classDefinition.properties;
+  if (!defined(classProperties)) {
+    return false;
+  }
+
+  const classProperty = classProperties[propertyId];
+  if (defined(classProperty) && defined(classProperty.default)) {
+    return true;
   }
 
   return false;
@@ -160,7 +164,7 @@ MetadataEntity.hasProperty = function (
  *
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {Object} properties The dictionary containing properties.
- * @param {MetadataClass} [classDefinition] The class.
+ * @param {MetadataClass} classDefinition The class.
  * @returns {Boolean} Whether the entity has a property with the given semantic.
  *
  * @private
@@ -173,13 +177,15 @@ MetadataEntity.hasPropertyBySemantic = function (
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("semantic", semantic);
   Check.typeOf.object("properties", properties);
+  Check.typeOf.object("classDefinition", classDefinition);
   //>>includeEnd('debug');
 
-  if (!defined(classDefinition)) {
+  const propertiesBySemantic = classDefinition.propertiesBySemantic;
+  if (!defined(propertiesBySemantic)) {
     return false;
   }
 
-  const property = classDefinition.propertiesBySemantic[semantic];
+  const property = propertiesBySemantic[semantic];
   return defined(property);
 };
 
@@ -187,7 +193,7 @@ MetadataEntity.hasPropertyBySemantic = function (
  * Returns an array of property IDs.
  *
  * @param {Object} properties The dictionary containing properties.
- * @param {MetadataClass} [classDefinition] The class.
+ * @param {MetadataClass} classDefinition The class.
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
  *
@@ -200,6 +206,7 @@ MetadataEntity.getPropertyIds = function (
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("properties", properties);
+  Check.typeOf.object("classDefinition", classDefinition);
   //>>includeEnd('debug');
 
   results = defined(results) ? results : [];
@@ -216,8 +223,8 @@ MetadataEntity.getPropertyIds = function (
   }
 
   // Add default properties
-  if (defined(classDefinition)) {
-    const classProperties = classDefinition.properties;
+  const classProperties = classDefinition.properties;
+  if (defined(classProperties)) {
     for (const classPropertyId in classProperties) {
       if (
         classProperties.hasOwnProperty(classPropertyId) &&
@@ -240,7 +247,7 @@ MetadataEntity.getPropertyIds = function (
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {Object} properties The dictionary containing properties.
- * @param {MetadataClass} [classDefinition] The class.
+ * @param {MetadataClass} classDefinition The class.
  * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
  *
  * @private
@@ -253,13 +260,15 @@ MetadataEntity.getProperty = function (
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("propertyId", propertyId);
   Check.typeOf.object("properties", properties);
+  Check.typeOf.object("classDefinition", classDefinition);
   //>>includeEnd('debug');
 
   let value = properties[propertyId];
 
   let classProperty;
-  if (defined(classDefinition)) {
-    classProperty = classDefinition.properties[propertyId];
+  const classProperties = classDefinition.properties;
+  if (defined(classProperties)) {
+    classProperty = classProperties[propertyId];
   }
 
   if (!defined(value) && defined(classProperty)) {
@@ -291,7 +300,7 @@ MetadataEntity.getProperty = function (
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
  * @param {Object} properties The dictionary containing properties.
- * @param {MetadataClass} [classDefinition] The class.
+ * @param {MetadataClass} classDefinition The class.
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  *
  * @private
@@ -306,6 +315,7 @@ MetadataEntity.setProperty = function (
   Check.typeOf.string("propertyId", propertyId);
   Check.defined("value", value);
   Check.typeOf.object("properties", properties);
+  Check.typeOf.object("classDefinition", classDefinition);
   //>>includeEnd('debug');
 
   if (!defined(properties[propertyId])) {
@@ -316,12 +326,15 @@ MetadataEntity.setProperty = function (
     value = value.slice(); // clone
   }
 
-  if (defined(classDefinition)) {
-    const classProperty = classDefinition.properties[propertyId];
-    if (defined(classProperty)) {
-      value = classProperty.packVectorAndMatrixTypes(value);
-      value = classProperty.unnormalize(value);
-    }
+  let classProperty;
+  const classProperties = classDefinition.properties;
+  if (defined(classProperties)) {
+    classProperty = classProperties[propertyId];
+  }
+
+  if (defined(classProperty)) {
+    value = classProperty.packVectorAndMatrixTypes(value);
+    value = classProperty.unnormalize(value);
   }
 
   properties[propertyId] = value;
@@ -346,12 +359,15 @@ MetadataEntity.getPropertyBySemantic = function (
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("semantic", semantic);
   Check.typeOf.object("properties", properties);
+  Check.typeOf.object("classDefinition", classDefinition);
   //>>includeEnd('debug');
-  if (!defined(classDefinition)) {
+
+  const propertiesBySemantic = classDefinition.propertiesBySemantic;
+  if (!defined(propertiesBySemantic)) {
     return undefined;
   }
 
-  const property = classDefinition.propertiesBySemantic[semantic];
+  const property = propertiesBySemantic[semantic];
   if (defined(property)) {
     return MetadataEntity.getProperty(property.id, properties, classDefinition);
   }
@@ -380,6 +396,11 @@ MetadataEntity.setPropertyBySemantic = function (
   Check.typeOf.object("properties", properties);
   Check.typeOf.object("classDefinition", classDefinition);
   //>>includeEnd('debug');
+
+  const propertiesBySemantic = classDefinition.propertiesBySemantic;
+  if (!defined(propertiesBySemantic)) {
+    return false;
+  }
 
   const property = classDefinition.propertiesBySemantic[semantic];
   if (defined(property)) {
