@@ -5,23 +5,24 @@ import { sampleTerrainMostDetailed } from "../../Source/Cesium.js";
 
 describe("Core/sampleTerrainMostDetailed", function () {
   let worldTerrain;
-  // beforeAll(function () {
-  //   worldTerrain = createWorldTerrain();
-  //   return worldTerrain.readyPromise;
-  // });
-
   beforeAll(function () {
-    //Repplicates the same as function createWorldTerrain()
-    worldTerrain = new CesiumTerrainProvider({
-      url: "/Specs/Mocks/CesiumTerrainProvider", // Mock payload from Ion
-      requestVertexNormals: false,
-      requestWaterMask: false,
-      ready: true,
-    });
-    return worldTerrain._readyPromise;
+    worldTerrain = createWorldTerrain();
+    return worldTerrain.readyPromise;
   });
 
+  // beforeAll(function () {
+
+  //   worldTerrain = new CesiumTerrainProvider({
+  //     url: "/Specs/Mocks/CesiumTerrainProvider", // Mock payload from Ion
+  //     requestVertexNormals: false,
+  //     requestWaterMask: false,
+  //     ready: true,
+  //   });
+  //   return worldTerrain._readyPromise;
+  // });
+
   it("queries heights", function () {
+    // Fails
     const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(87.0, 28.0),
@@ -39,6 +40,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
   });
 
   it("should throw querying heights from Small Terrain", function () {
+    // PASSES
     const terrainProvider = new CesiumTerrainProvider({
       // url: "https://s3.amazonaws.com/cesiumjs/smallTerrain",
       url: "/Specs/Mocks/sampleTerrainMostDetailed", // Mock payload from AWS
@@ -57,6 +59,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
   });
 
   it("uses a suitable common tile height for a range of locations", function () {
+    // FAILS
     const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(87.0, 28.0),
@@ -71,6 +74,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
   });
 
   it("requires terrainProvider and positions", function () {
+    // PASSES
     const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(87.0, 28.0),
@@ -86,6 +90,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
   });
 
   it("works for a dodgy point right near the edge of a tile", function () {
+    // fails
     const positions = [
       new Cartographic(0.33179290856829535, 0.7363107781851078),
     ];

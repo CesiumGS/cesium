@@ -333,14 +333,20 @@ describe("Scene/GlobeSurfaceTile", function () {
         scene.destroyForSpecs();
       });
 
-      // Mock here
-
       it("gets correct results even when the mesh includes normals", function () {
         const terrainProvider = createWorldTerrain({
-          url: "/Specs/Mocks/GlobeSurfaceTile", // Mock payload from Ion
           requestVertexNormals: true,
           requestWaterMask: false,
         });
+
+        // const terrainProvider = new CesiumTerrainProvider({
+        //   url: "/Specs/Mocks/CesiumTerrainProvider", // Mock payload from Ion
+        //   requestVertexNormals: true,
+        //   requestWaterMask: true,
+        //   ready: true,
+        // });
+
+        // const terrainProvider = mockTerrain.createMeshWillSucceed(rootTile);
 
         const tile = new QuadtreeTile({
           tilingScheme: new GeographicTilingScheme(),
@@ -352,21 +358,20 @@ describe("Scene/GlobeSurfaceTile", function () {
         processor.frameState = scene.frameState;
         processor.terrainProvider = terrainProvider;
 
-        //TODO: make spy
-        spyOn();
         return processor.process([tile]).then(function () {
-          const ray = new Ray(
-            new Cartesian3(
-              -5052039.459789615,
-              2561172.040315167,
-              -2936276.999965875
-            ),
-            new Cartesian3(
-              0.5036332963145244,
-              0.6648033332898124,
-              0.5517155343926082
-            )
+          const origin = new Cartesian3(
+            -5052039.459789615,
+            2561172.040315167,
+            -2936276.999965875
           );
+          const direction = new new Cartesian3(
+            0.5036332963145244,
+            0.6648033332898124,
+            0.5517155343926082
+          )();
+
+          const ray = new Ray(origin, direction);
+
           const pickResult = tile.data.pick(ray, undefined, undefined, true);
           const cartographic = Ellipsoid.WGS84.cartesianToCartographic(
             pickResult

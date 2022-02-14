@@ -24,8 +24,9 @@ describe("Core/sampleTerrain", function () {
     });
     return worldTerrain._readyPromise;
   });
-  // Test fails because wrong baseline is passed in.
+
   it("queries heights", function () {
+    // Test fails because wrong baseline is passed in.
     const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(87.0, 28.0),
@@ -43,6 +44,7 @@ describe("Core/sampleTerrain", function () {
   });
 
   it("queries heights from Small Terrain", function () {
+    // TEST FAILS
     const terrainProvider = new CesiumTerrainProvider({
       // url: "https://s3.amazonaws.com/cesiumjs/smallTerrain",
       url: "/Specs/Mocks/sampleTerrainMostDetailed", // Mock payload from AWS
@@ -65,6 +67,7 @@ describe("Core/sampleTerrain", function () {
   });
 
   it("sets height to undefined if terrain data is not available at the position and specified level", function () {
+    // PASSES
     const positions = [Cartographic.fromDegrees(0.0, 0.0, 0.0)];
 
     return sampleTerrain(worldTerrain, 18, positions).then(function () {
@@ -73,6 +76,7 @@ describe("Core/sampleTerrain", function () {
   });
 
   it("fills in what it can when given a mix of positions with and without valid tiles", function () {
+    // FAILS
     const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(0.0, 89.0, 0.0),
@@ -89,6 +93,7 @@ describe("Core/sampleTerrain", function () {
   });
 
   it("requires terrainProvider, level, and positions", function () {
+    // PASSES
     const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(0.0, 0.0, 0.0),
@@ -109,6 +114,7 @@ describe("Core/sampleTerrain", function () {
   });
 
   it("works for a dodgy point right near the edge of a tile", function () {
+    // FAIL
     const positions = [
       new Cartographic(0.33179290856829535, 0.7363107781851078),
     ];
