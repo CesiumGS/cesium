@@ -16,6 +16,8 @@ import MetadataEntity from "./MetadataEntity.js";
  * @private
  */
 
+// An empty class is used because JsonMetadataTable is an older type of metadata table
+// that does not have a class definition.
 const emptyClass = {};
 
 export default function JsonMetadataTable(options) {
