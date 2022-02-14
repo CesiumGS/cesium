@@ -1,6 +1,11 @@
 import { MetadataClass, TileMetadata } from "../../Source/Cesium.js";
 
 describe("Scene/TileMetadata", function () {
+  const tileClassWithNoProperties = new MetadataClass({
+    id: "tile",
+    class: {},
+  });
+
   const tileClass = new MetadataClass({
     id: "tile",
     class: {
@@ -45,12 +50,21 @@ describe("Scene/TileMetadata", function () {
     }).toThrowDeveloperError();
   });
 
+  it("throws without class", function () {
+    expect(function () {
+      tileMetadata = new TileMetadata({
+        tile: {},
+        class: undefined,
+      });
+    }).toThrowDeveloperError();
+  });
+
   it("creates tile metadata with default values", function () {
     const metadata = new TileMetadata({
       tile: {},
+      class: tileClassWithNoProperties,
     });
 
-    expect(metadata.class).toBeUndefined();
     expect(metadata.extras).toBeUndefined();
     expect(metadata.extensions).toBeUndefined();
   });

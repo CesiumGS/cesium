@@ -11,7 +11,7 @@ import MetadataEntity from "./MetadataEntity.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.tile The extension JSON attached to the tile.
- * @param {MetadataClass} [options.class] The class that the tile metadata conforms to.
+ * @param {MetadataClass} options.class The class that the tile metadata conforms to.
  *
  * @alias TileMetadata
  * @constructor
@@ -20,17 +20,18 @@ import MetadataEntity from "./MetadataEntity.js";
  */
 export default function TileMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const tile = options.tile;
+  const metadataClass = options.class;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.tile", options.tile);
+  Check.typeOf.object("options.tile", tile);
+  Check.typeOf.object("options.class", metadataClass);
   //>>includeEnd('debug');
 
-  this._class = options.class;
-
-  const tileMetadata = options.tile;
-  this._properties = tileMetadata.properties;
-  this._extensions = tileMetadata.extensions;
-  this._extras = tileMetadata.extras;
+  this._class = metadataClass;
+  this._properties = tile.properties;
+  this._extensions = tile.extensions;
+  this._extras = tile.extras;
 }
 
 Object.defineProperties(TileMetadata.prototype, {
