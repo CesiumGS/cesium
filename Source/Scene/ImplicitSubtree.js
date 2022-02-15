@@ -325,10 +325,9 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
   };
 
   // In the current schema, content availability is provided in an array in the subtree JSON
-  // regardless of whether or not it contains multiple contents. This differsn from previous
-  // schema drafts, where content availability had to use the multiple contents extension
-  // in order to be properly interpreted. Otherwise, content availability was provided as a
-  // single object in the subtree JSON or the multiple contents extension.
+  // regardless of whether or not it contains multiple contents. This differs from previous
+  // schema drafts, where content availability is either a single object in the subtree 
+  // JSON or as an array in the 3DTILES_multiple_contents extension. 
   //
   // After identifying how availability is stored, put the results in this new array for consistent processing later
   subtreeJson.contentAvailabilityHeaders = [];
