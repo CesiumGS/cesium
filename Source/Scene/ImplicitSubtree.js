@@ -324,9 +324,13 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
     constant: 0,
   };
 
-  // content availability is either in the subtree JSON or the multiple
-  // contents extension. Either way, put the results in this new array
-  // for consistent processing later
+  // In the current schema, content availability is provided in an array in the subtree JSON
+  // regardless of whether or not it contains multiple contents. This differsn from previous
+  // schema drafts, where content availability had to use the multiple contents extension
+  // in order to be properly interpreted. Otherwise, content availability was provided as a
+  // single object in the subtree JSON or the multiple contents extension.
+  //
+  // After identifying how availability is stored, put the results in this new array for consistent processing later
   subtreeJson.contentAvailabilityHeaders = [];
   if (hasExtension(subtreeJson, "3DTILES_multiple_contents")) {
     subtreeJson.contentAvailabilityHeaders =
@@ -511,6 +515,9 @@ function preprocessBufferViews(bufferViewHeaders, bufferHeaders) {
 function markActiveBufferViews(subtreeJson, bufferViewHeaders) {
   let header;
   const tileAvailabilityHeader = subtreeJson.tileAvailability;
+
+  // Check for bitstream first, which is part of the current schema.
+  // bufferView is the name of the bitstream from an older schema draft.
   if (defined(tileAvailabilityHeader.bitstream)) {
     header = bufferViewHeaders[tileAvailabilityHeader.bitstream];
   } else if (defined(tileAvailabilityHeader.bufferView)) {
@@ -751,6 +758,9 @@ function parseAvailabilityBitstream(
   }
 
   let bufferView;
+
+  // Check for bitstream first, which is part of the current schema.
+  // bufferView is the name of the bitstream from an older schema draft.
   if (defined(availabilityJson.bitstream)) {
     bufferView = bufferViewsU8[availabilityJson.bitstream];
   } else if (defined(availabilityJson.bufferView)) {

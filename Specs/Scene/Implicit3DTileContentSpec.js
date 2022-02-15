@@ -965,7 +965,7 @@ describe(
         });
       });
 
-      it("multiple contents are transcoded to a tile without extension in subtree", function () {
+      it("multiple contents are transcoded from a subtree without multiple contents extension", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitMultipleContentsWithoutExtensionUrl

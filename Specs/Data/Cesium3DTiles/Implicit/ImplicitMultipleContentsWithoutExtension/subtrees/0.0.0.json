@@ -2,7 +2,7 @@
   "buffers": [
     {
       "byteLength": 8,
-      "uri": "0.bin"
+      "uri": "availability.bin"
     }
   ],
   "bufferViews": [
