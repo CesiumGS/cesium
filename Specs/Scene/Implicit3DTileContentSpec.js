@@ -927,6 +927,9 @@ describe(
       const implicitMultipleContentsUrl =
         "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset.json";
 
+      const implicitMultipleContentsWithoutExtensionUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContentsWithoutExtension/tileset.json";
+
       it("a single content is transcoded as a regular tile", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
@@ -949,6 +952,23 @@ describe(
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitMultipleContentsUrl
+        ).then(function (tileset) {
+          const childTiles = tileset.root.children[0].children;
+          for (let i = 0; i < childTiles.length; i++) {
+            const childTile = childTiles[i];
+            const content = childTile.content;
+            expect(content).toBeInstanceOf(Multiple3DTileContent);
+
+            const childTileHeader = childTile._header;
+            expect(childTileHeader.content).not.toBeDefined();
+          }
+        });
+      });
+
+      it("multiple contents are transcoded to a tile without extension in subtree", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitMultipleContentsWithoutExtensionUrl
         ).then(function (tileset) {
           const childTiles = tileset.root.children[0].children;
           for (let i = 0; i < childTiles.length; i++) {
