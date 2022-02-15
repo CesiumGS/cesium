@@ -511,22 +511,39 @@ function markActiveBufferViews(subtreeJson, bufferViewHeaders) {
   const tileAvailabilityHeader = subtreeJson.tileAvailability;
   if (defined(tileAvailabilityHeader.bitstream)) {
     header = bufferViewHeaders[tileAvailabilityHeader.bitstream];
+  } else if (defined(tileAvailabilityHeader.bufferView)) {
+    header = bufferViewHeaders[tileAvailabilityHeader.bufferView];
+  }
+
+  if (defined(header)) {
     header.isActive = true;
     header.bufferHeader.isActive = true;
   }
 
   const contentAvailabilityHeaders = subtreeJson.contentAvailabilityHeaders;
   for (let i = 0; i < contentAvailabilityHeaders.length; i++) {
+    header = undefined;
     if (defined(contentAvailabilityHeaders[i].bitstream)) {
       header = bufferViewHeaders[contentAvailabilityHeaders[i].bitstream];
+    } else if (defined(contentAvailabilityHeaders[i].bufferView)) {
+      header = bufferViewHeaders[contentAvailabilityHeaders[i].bufferView];
+    }
+
+    if (defined(header)) {
       header.isActive = true;
       header.bufferHeader.isActive = true;
     }
   }
 
+  header = undefined;
   const childSubtreeAvailabilityHeader = subtreeJson.childSubtreeAvailability;
   if (defined(childSubtreeAvailabilityHeader.bitstream)) {
     header = bufferViewHeaders[childSubtreeAvailabilityHeader.bitstream];
+  } else if (defined(childSubtreeAvailabilityHeader.bufferView)) {
+    header = bufferViewHeaders[childSubtreeAvailabilityHeader.bufferView];
+  }
+
+  if (defined(header)) {
     header.isActive = true;
     header.bufferHeader.isActive = true;
   }
@@ -731,7 +748,12 @@ function parseAvailabilityBitstream(
     });
   }
 
-  const bufferView = bufferViewsU8[availabilityJson.bitstream];
+  let bufferView;
+  if (defined(availabilityJson.bitstream)) {
+    bufferView = bufferViewsU8[availabilityJson.bitstream];
+  } else if (defined(availabilityJson.bufferView)) {
+    bufferView = bufferViewsU8[availabilityJson.bufferView];
+  }
 
   return new ImplicitAvailabilityBitstream({
     bitstream: bufferView,
