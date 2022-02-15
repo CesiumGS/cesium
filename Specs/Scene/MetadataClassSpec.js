@@ -40,16 +40,18 @@ describe("Scene/MetadataClass", function () {
         extensions: extensions,
         properties: {
           height: {
+            type: "SCALAR",
             componentType: "FLOAT32",
           },
           position: {
-            type: "ARRAY",
+            type: "SCALAR",
             componentType: "FLOAT32",
-            componentCount: 3,
+            hasFixedCount: true,
+            count: 3,
             semantic: "_POSITION",
           },
           color: {
-            componentType: "STRING",
+            type: "STRING",
             semantic: "_COLOR",
           },
         },
@@ -110,7 +112,7 @@ describe("Scene/MetadataClass", function () {
       class: {
         properties: {
           color: {
-            componentType: "ENUM",
+            type: "ENUM",
             enumType: "color",
           },
         },

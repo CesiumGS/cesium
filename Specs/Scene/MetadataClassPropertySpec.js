@@ -335,11 +335,23 @@ describe("Scene/MetadataClassProperty", function () {
         normalized: true,
       },
       propertyUint8: {
-        type: "SCALAR",
-        componentType: "UINT8",
         hasFixedCount: true,
         count: 2,
+        type: "SCALAR",
+        componentType: "UINT8",
         normalized: true,
+      },
+      propertyVector: {
+        type: "VEC3",
+        componentType: "UINT8",
+        hasFixedCount: true,
+        count: 3,
+      },
+      propertyMatrix: {
+        type: "MAT2",
+        componentType: "UINT8",
+        normalized: true,
+        hasFixedCount: false,
       },
     };
 
@@ -350,6 +362,15 @@ describe("Scene/MetadataClassProperty", function () {
         [0, 51],
         [255, 255],
       ],
+      propertyVector: [
+        [255, 0, 0],
+        [0, 255, 0],
+        [0, 0, 255],
+      ],
+      propertyMatrix: [
+        [255, 255, 255, 255],
+        [51, 0, 0, 51],
+      ],
     };
 
     const normalizedValues = {
@@ -358,6 +379,15 @@ describe("Scene/MetadataClassProperty", function () {
         [0.0, 1.0],
         [0.0, 0.2],
         [1.0, 1.0],
+      ],
+      propertyVector: [
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 0.0, 1.0],
+      ],
+      propertyMatrix: [
+        [1.0, 1.0, 1.0, 1.0],
+        [0.2, 0.0, 0.0, 0.2],
       ],
     };
 
@@ -1071,6 +1101,7 @@ describe("Scene/MetadataClassProperty", function () {
         const property = new MetadataClassProperty({
           id: "property",
           property: {
+            type: "SCALAR",
             componentType: type,
           },
         });

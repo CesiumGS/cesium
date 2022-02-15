@@ -49,18 +49,22 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
       class: {
         properties: {
           tileMinimumHeight: {
+            type: "SCALAR",
             componentType: "FLOAT32",
             semantic: "TILE_MINIMUM_HEIGHT",
           },
           tileMaximumHeight: {
+            type: "SCALAR",
             componentType: "FLOAT32",
             semantic: "TILE_MAXIMUM_HEIGHT",
           },
           contentMinimumHeight: {
+            type: "SCALAR",
             componentType: "FLOAT32",
             semantic: "CONTENT_MINIMUM_HEIGHT",
           },
           contentMaximumHeight: {
+            type: "SCALAR",
             componentType: "FLOAT32",
             semantic: "CONTENT_MAXIMUM_HEIGHT",
           },
@@ -100,15 +104,17 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
       class: {
         properties: {
           tileBoundingBox: {
-            type: "ARRAY",
+            type: "SCALAR",
             componentType: "FLOAT64",
-            componentCount: 12,
+            hasFixedCount: true,
+            count: 12,
             semantic: "TILE_BOUNDING_BOX",
           },
           contentBoundingSphere: {
-            type: "ARRAY",
+            type: "SCALAR",
             componentType: "FLOAT64",
-            componentCount: 4,
+            hasFixedCount: true,
+            count: 4,
             semantic: "CONTENT_BOUNDING_SPHERE",
           },
         },
@@ -149,27 +155,31 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
       class: {
         properties: {
           tileBoundingBox: {
-            type: "ARRAY",
+            type: "SCALAR",
             componentType: "FLOAT64",
-            componentCount: 12,
+            hasFixedCount: false,
+            count: 12,
             semantic: "TILE_BOUNDING_BOX",
           },
           tileBoundingRegion: {
-            type: "ARRAY",
+            type: "SCALAR",
             componentType: "FLOAT64",
-            componentCount: 6,
+            hasFixedCount: false,
+            count: 6,
             semantic: "TILE_BOUNDING_REGION",
           },
           contentBoundingRegion: {
-            type: "ARRAY",
+            type: "SCALAR",
             componentType: "FLOAT64",
-            componentCount: 6,
+            hasFixedCount: false,
+            count: 6,
             semantic: "CONTENT_BOUNDING_REGION",
           },
           contentBoundingSphere: {
-            type: "ARRAY",
+            type: "SCALAR",
             componentType: "FLOAT64",
-            componentCount: 4,
+            hasFixedCount: false,
+            count: 4,
             semantic: "CONTENT_BOUNDING_SPHERE",
           },
         },

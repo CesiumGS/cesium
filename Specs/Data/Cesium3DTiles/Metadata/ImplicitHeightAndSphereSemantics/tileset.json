@@ -16,17 +16,20 @@
           "tile": {
             "properties": {
               "minimumHeight": {
+                "type": "SCALAR",
                 "componentType": "FLOAT64",
                 "semantic": "TILE_MINIMUM_HEIGHT"
               },
               "maximumHeight": {
+                "type": "SCALAR",
                 "componentType": "FLOAT64",
                 "semantic": "TILE_MAXIMUM_HEIGHT"
               },
               "boundingSphere": {
-                "type": "ARRAY",
+                "type": "SCALAR",
                 "componentType": "FLOAT64",
-                "componentCount": 4,
+                "hasFixedCount": true,
+                "count": 4,
                 "semantic": "TILE_BOUNDING_SPHERE"
               }
             }

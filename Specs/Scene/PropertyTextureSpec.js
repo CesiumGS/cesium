@@ -22,14 +22,17 @@ describe("Scene/PropertyTexture", function () {
       class: {
         properties: {
           color: {
-            type: "ARRAY",
+            type: "SCALAR",
             componentType: "UINT8",
-            componentCount: 3,
+            hasFixedCount: true,
+            count: 3,
           },
           intensity: {
+            type: "SCALAR",
             componentType: "UINT8",
           },
           ortho: {
+            type: "SCALAR",
             componentType: "UINT8",
             normalized: true,
           },

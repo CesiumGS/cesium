@@ -38,6 +38,7 @@ describe("Scene/ImplicitTileMetadata", function () {
             semantic: "_HIGHLIGHT_COLOR",
           },
           buildingCount: {
+            type: "SCALAR",
             componentType: "UINT16",
           },
         },

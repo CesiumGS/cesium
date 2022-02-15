@@ -16,9 +16,10 @@
           "tile": {
             "properties": {
               "contentBounds": {
-                "type": "ARRAY",
+                "type": "SCALAR",
                 "componentType": "FLOAT64",
-                "componentCount": 4,
+                "hasFixedCount": true,
+                "count": 4,
                 "semantic": "CONTENT_BOUNDING_SPHERE"
               }
             }

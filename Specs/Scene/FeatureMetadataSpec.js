@@ -6,9 +6,10 @@ describe("Scene/FeatureMetadata", function () {
       building: {
         properties: {
           name: {
-            componentType: "STRING",
+            type: "STRING",
           },
           height: {
+            type: "SCALAR",
             componentType: "FLOAT64",
           },
         },
@@ -16,7 +17,7 @@ describe("Scene/FeatureMetadata", function () {
       tree: {
         properties: {
           species: {
-            componentType: "STRING",
+            type: "STRING",
           },
         },
       },
@@ -28,11 +29,13 @@ describe("Scene/FeatureMetadata", function () {
       map: {
         properties: {
           color: {
-            type: "ARRAY",
+            type: "SCALAR",
             componentType: "UINT8",
-            componentCount: 3,
+            hasFixedCount: true,
+            count: 3,
           },
           intensity: {
+            type: "SCALAR",
             componentType: "UINT8",
           },
         },
@@ -40,6 +43,7 @@ describe("Scene/FeatureMetadata", function () {
       ortho: {
         properties: {
           vegetation: {
+            type: "SCALAR",
             componentType: "UINT8",
             normalized: true,
           },

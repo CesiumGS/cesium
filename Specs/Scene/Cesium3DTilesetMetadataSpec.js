@@ -9,21 +9,21 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
       city: {
         properties: {
           name: {
-            componentType: "STRING",
+            type: "STRING",
           },
         },
       },
       neighborhood: {
         properties: {
           color: {
-            componentType: "STRING",
+            type: "STRING",
           },
         },
       },
       tree: {
         properties: {
           species: {
-            componentType: "STRING",
+            type: "STRING",
           },
         },
       },

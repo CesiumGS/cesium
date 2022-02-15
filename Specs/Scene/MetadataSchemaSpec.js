@@ -60,31 +60,33 @@ describe("Scene/MetadataSchema", function () {
         city: {
           properties: {
             name: {
-              componentType: "STRING",
+              type: "STRING",
             },
           },
         },
         neighborhood: {
           properties: {
             color: {
-              componentType: "ENUM",
+              type: "ENUM",
               enumType: "color",
             },
             coordinates: {
-              type: "ARRAY",
+              type: "SCALAR",
               componentType: "FLOAT64",
-              componentCount: 2,
+              hasFixedCount: true,
+              count: 2,
             },
           },
         },
         tree: {
           properties: {
             species: {
-              type: "ARRAY",
-              componentType: "ENUM",
+              type: "ENUM",
+              hasFixedCount: false,
               enumType: "species",
             },
             height: {
+              type: "SCALAR",
               componentType: "FLOAT32",
             },
           },

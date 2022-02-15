@@ -1324,6 +1324,7 @@ describe("Scene/ImplicitSubtree", function () {
               componentType: "UINT8",
             },
             buildingCount: {
+              type: "SCALAR",
               componentType: "UINT16",
             },
           },
@@ -1340,11 +1341,11 @@ describe("Scene/ImplicitSubtree", function () {
         subtree: {
           properties: {
             author: {
-              componentType: "STRING",
+              type: "STRING",
             },
             credits: {
-              type: "ARRAY",
-              componentType: "STRING",
+              type: "STRING",
+              hasFixedCount: false,
             },
           },
         },
@@ -1871,15 +1872,16 @@ describe("Scene/ImplicitSubtree", function () {
           tile: {
             properties: {
               stringProperty: {
-                componentType: "STRING",
+                type: "STRING",
               },
               arrayProperty: {
-                type: "ARRAY",
+                type: "SCALAR",
                 componentType: "INT16",
+                hasFixedCount: false,
               },
               arrayOfStringProperty: {
-                type: "ARRAY",
-                componentType: "STRING",
+                type: "STRING",
+                hasFixedCount: false,
               },
             },
           },

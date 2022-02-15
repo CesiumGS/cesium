@@ -284,6 +284,7 @@ describe("Scene/ImplicitTileset", function () {
           tile: {
             properties: {
               buildingCount: {
+                type: "SCALAR",
                 componentType: "UINT16",
               },
             },
