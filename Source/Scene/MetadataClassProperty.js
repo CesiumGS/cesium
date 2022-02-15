@@ -43,6 +43,7 @@ function MetadataClassProperty(options) {
   const componentType = parsedType.componentType;
 
   const normalized =
+    defined(componentType) &&
     MetadataComponentType.isIntegerType(componentType) &&
     defaultValue(property.normalized, false);
 
@@ -50,6 +51,7 @@ function MetadataClassProperty(options) {
   this._id = id;
   this._name = property.name;
   this._description = property.description;
+  this._semantic = property.semantic;
   this._isLegacyExtension = isLegacyExtension;
 
   // Details about basic types
@@ -204,16 +206,17 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * The number of components per element. Only defined when type is a fixed size ARRAY.
+   * The number of components per element. Only defined for fixed-size
+   * arrays
    *
    * @memberof MetadataClassProperty.prototype
    * @type {Number}
    * @readonly
    * @private
    */
-  componentCount: {
+  count: {
     get: function () {
-      return this._componentCount;
+      return this._count;
     },
   },
 
@@ -274,16 +277,16 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * Whether the property is optional.
+   * Whether the property is required.
    *
    * @memberof MetadataClassProperty.prototype
    * @type {Boolean}
    * @readonly
    * @private
    */
-  optional: {
+  required: {
     get: function () {
-      return this._optional;
+      return this._required;
     },
   },
 

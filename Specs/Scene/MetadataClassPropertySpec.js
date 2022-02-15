@@ -29,12 +29,12 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.enumType).toBeUndefined();
     expect(property.componentType).toBe(MetadataComponentType.FLOAT32);
     expect(property.valueType).toBe(MetadataComponentType.FLOAT32);
-    expect(property.componentCount).toBe(1);
+    expect(property.count).toBe(1);
     expect(property.normalized).toBe(false);
     expect(property.max).toBeUndefined();
     expect(property.min).toBeUndefined();
     expect(property.default).toBeUndefined();
-    expect(property.optional).toBe(false);
+    expect(property.required).toBe(false);
     expect(property.semantic).toBeUndefined();
     expect(property.extras).toBeUndefined();
     expect(property.extensions).toBeUndefined();
@@ -83,11 +83,11 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.max).toBe(max);
     expect(property.min).toBe(min);
     expect(property.default).toBe(propertyDefault);
-    expect(property.optional).toBe(false);
+    expect(property.required).toBe(true);
     expect(property.semantic).toBe("_POSITION");
     expect(property.extras).toBe(extras);
     expect(property.extensions).toBe(extensions);
-    expect(property.isLegacyExtension).toBe(false);
+    expect(property._isLegacyExtension).toBe(false);
   });
 
   it("transcodes single properties from EXT_feature_metadata", function () {
@@ -125,16 +125,16 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.enumType).toBeUndefined();
     expect(property.componentType).toBe(MetadataComponentType.INT32);
     expect(property.valueType).toBe(MetadataComponentType.INT32);
-    expect(property.componentCount).toBe(1);
+    expect(property.count).toBe(1);
     expect(property.normalized).toBe(true);
     expect(property.max).toBe(max);
     expect(property.min).toBe(min);
     expect(property.default).toBe(propertyDefault);
-    expect(property.optional).toBe(false);
+    expect(property.required).toBe(true);
     expect(property.semantic).toBe("_POSITION");
     expect(property.extras).toBe(extras);
     expect(property.extensions).toBe(extensions);
-    expect(property.isLegacyExtension).toBe(true);
+    expect(property._isLegacyExtension).toBe(true);
   });
 
   it("creates enum property", function () {
@@ -180,7 +180,7 @@ describe("Scene/MetadataClassProperty", function () {
 
     expect(property.id).toBe("speed");
     expect(property.type).toBe(MetadataType.VEC2);
-    expect(property.componentCount).toBe(2);
+    expect(property.count).toBe(1);
     expect(property.componentType).toBe(MetadataComponentType.FLOAT32);
     expect(property.valueType).toBe(MetadataComponentType.FLOAT32);
 
@@ -194,7 +194,7 @@ describe("Scene/MetadataClassProperty", function () {
 
     expect(property.id).toBe("scale");
     expect(property.type).toBe(MetadataType.MAT3);
-    expect(property.componentCount).toBe(9);
+    expect(property.count).toBe(1);
     expect(property.componentType).toBe(MetadataComponentType.FLOAT64);
     expect(property.valueType).toBe(MetadataComponentType.FLOAT64);
   });
@@ -956,7 +956,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.validate(8.0)).toBe("matrix value 8 must be a Matrix4");
   });
 
-  it("validate returns error message if type is ARRAY and the array length does not match componentCount", function () {
+  it("validate returns error message for an array that doesn't match the count", function () {
     const property = new MetadataClassProperty({
       id: "position",
       property: {
@@ -968,7 +968,7 @@ describe("Scene/MetadataClassProperty", function () {
     });
 
     expect(property.validate([1.0, 2.0])).toBe(
-      "Array length does not match componentCount"
+      "Array length does not match count"
     );
   });
 
