@@ -208,8 +208,8 @@ ImplicitSubtree.prototype.contentIsAvailableAtCoordinates = function (
   implicitCoordinates,
   contentIndex
 ) {
-  const index = this.getTileIndex(implicitCoordinates, contentIndex);
-  return this.contentIsAvailableAtIndex(index);
+  const index = this.getTileIndex(implicitCoordinates);
+  return this.contentIsAvailableAtIndex(index, contentIndex);
 };
 
 /**
@@ -331,6 +331,8 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
   if (hasExtension(subtreeJson, "3DTILES_multiple_contents")) {
     subtreeJson.contentAvailabilityHeaders =
       subtreeJson.extensions["3DTILES_multiple_contents"].contentAvailability;
+  } else if (Array.isArray(subtreeJson.contentAvailability)) {
+    subtreeJson.contentAvailabilityHeaders = subtreeJson.contentAvailability;
   } else {
     subtreeJson.contentAvailabilityHeaders.push(
       defaultValue(subtreeJson.contentAvailability, defaultContentAvailability)

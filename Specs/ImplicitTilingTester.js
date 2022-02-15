@@ -210,7 +210,11 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
         },
       };
     } else if (contentAvailabilityArray.length > 1) {
-      subtreeJson.contentAvailability = contentAvailabilityArray;
+      subtreeJson.contentAvailability = contentAvailabilityArray.map(function (
+        x
+      ) {
+        return x.availabilityJson;
+      });
     } else {
       subtreeJson.contentAvailability =
         contentAvailabilityArray[0].availabilityJson;

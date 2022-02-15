@@ -1230,6 +1230,57 @@ describe("Scene/ImplicitSubtree", function () {
       });
   });
 
+  it("contentIsAvailableAtIndex works for multiple contents without extension", function () {
+    const subtreeDescription = {
+      tileAvailability: {
+        descriptor: 1,
+        lengthBits: 5,
+        isInternal: true,
+      },
+      contentAvailability: [
+        {
+          descriptor: 1,
+          lengthBits: 5,
+          isInternal: false,
+        },
+        {
+          descriptor: "10011",
+          lengthBits: 5,
+          isInternal: false,
+        },
+      ],
+      childSubtreeAvailability: {
+        descriptor: 0,
+        lengthBits: 16,
+        isInternal: true,
+      },
+    };
+
+    const results = ImplicitTilingTester.generateSubtreeBuffers(
+      subtreeDescription
+    );
+    const fetchExternal = spyOn(ResourceCache, "load").and.callFake(
+      fakeLoad(results.externalBuffer)
+    );
+
+    const subtree = new ImplicitSubtree(
+      subtreeResource,
+      undefined,
+      results.subtreeBuffer,
+      implicitQuadtree,
+      quadtreeCoordinates
+    );
+
+    return subtree.readyPromise.then(function () {
+      expect(fetchExternal).toHaveBeenCalled();
+      expectTileAvailability(subtree, subtreeDescription.tileAvailability);
+      expectContentAvailability(
+        subtree,
+        subtreeDescription.contentAvailability
+      );
+    });
+  });
+
   it("destroys", function () {
     const subtreeDescription = {
       tileAvailability: {
@@ -1308,6 +1359,14 @@ describe("Scene/ImplicitSubtree", function () {
       metadataSchema
     );
 
+    const multipleContentsCoordinates = new ImplicitTileCoordinates({
+      subdivisionScheme: multipleContentsQuadtree.subdivisionScheme,
+      subtreeLevels: multipleContentsQuadtree.subtreeLevels,
+      level: 0,
+      x: 0,
+      y: 0,
+    });
+
     it("contentIsAvailableAtIndex throws for out-of-bounds contentIndex", function () {
       const subtreeDescription = {
         tileAvailability: {
@@ -1342,7 +1401,7 @@ describe("Scene/ImplicitSubtree", function () {
         undefined,
         results.subtreeBuffer,
         multipleContentsQuadtree,
-        quadtreeCoordinates
+        multipleContentsCoordinates
       );
 
       const outOfBounds = 100;
@@ -1379,22 +1438,29 @@ describe("Scene/ImplicitSubtree", function () {
         },
         useMultipleContentsExtension: true,
       };
+
       const results = ImplicitTilingTester.generateSubtreeBuffers(
         subtreeDescription
       );
       const fetchExternal = spyOn(ResourceCache, "load").and.callFake(
         fakeLoad(results.externalBuffer)
       );
+
       const subtree = new ImplicitSubtree(
         subtreeResource,
         undefined,
         results.subtreeBuffer,
         multipleContentsQuadtree,
-        quadtreeCoordinates
+        multipleContentsCoordinates
       );
+
       return subtree.readyPromise.then(function () {
         expect(fetchExternal).toHaveBeenCalled();
         expectTileAvailability(subtree, subtreeDescription.tileAvailability);
+        expectContentAvailability(
+          subtree,
+          subtreeDescription.contentAvailability
+        );
       });
     });
   });
