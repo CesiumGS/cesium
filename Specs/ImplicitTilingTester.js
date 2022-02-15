@@ -29,19 +29,24 @@ export default function ImplicitTilingTester() {}
 /**
  * A JSON description of a subtree file for easier generation
  * @typedef {Object} SubtreeDescription
+ * @property {Boolean} [useBufferViews] If true, the resulting JSON chunk will use bufferView instead of bitstream. Used to test backwards compatibility.
  * @property {AvailabilityDescription} tileAvailability A description of the tile availability bitstream to generate
  * @property {AvailabilityDescription} contentAvailability A description of the content availability bitstream to generate
+ * @property {Boolean} [useMultipleContentsExtension] If true, use the multiple contents extension. Used to test backwards compatibility.
  * @property {AvailabilityDescription} childSubtreeAvailability A description of the child subtree availability bitstream to generate
  * @property {AvailabilityDescription} other A description of another bitstream. This is not used for availability, but rather to simulate extra buffer views.
  * @property {MetadataDescription} [metadata] For testing 3DTILES_metadata, additional options can be passed in here.
+ * @property {Boolean} [json] If true, return the result as a JSON with external buffers. Should not be true if any of the availability buffers are internal.
  * @private
  */
 
 /**
  * Results of procedurally generating a subtree.
  * @typedef {Object} GeneratedSubtree
- * @property {Uint8Array} subtreeBuffer A typed array storing the contents of the subtree file (including the internal buffer)
+ * @property {Uint8Array} [subtreeJson] The JSON portion of the subtree file. Mutually exclusive with subtreeBuffer.
+ * @property {Uint8Array} [subtreeBuffer] A typed array storing the contents of the subtree file (including the internal buffer). Mutually exclusive with subtreeJson.
  * @property {Uint8Array} externalBuffer A typed array representing an external .bin file. This is always returned, but it may be an empty typed array.
+
  */
 
 /**
@@ -96,6 +101,14 @@ ImplicitTilingTester.generateSubtreeBuffers = function (
 
   const bufferViewsU8 = makeBufferViews(subtreeDescription, subtreeJson);
   const buffersU8 = makeBuffers(bufferViewsU8, subtreeJson);
+
+  if (subtreeDescription.json) {
+    return {
+      subtreeJson: subtreeJson,
+      externalBuffer: buffersU8.external,
+    };
+  }
+
   const jsonChunk = makeJsonChunk(subtreeJson);
   const binaryChunk = buffersU8.internal;
   const header = makeSubtreeHeader(jsonChunk.length, binaryChunk.length);
@@ -137,11 +150,13 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
     count: 0,
   };
 
+  const useBufferViews = subtreeDescription.useBufferViews;
   const bufferViewJsonArray = [];
   gatherBufferViews(
     bufferViewsU8,
     bufferViewJsonArray,
-    parsedAvailability.tileAvailability
+    parsedAvailability.tileAvailability,
+    useBufferViews
   );
   if (hasContent) {
     parsedAvailability.contentAvailability.forEach(function (
@@ -150,14 +165,16 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
       gatherBufferViews(
         bufferViewsU8,
         bufferViewJsonArray,
-        contentAvailability
+        contentAvailability,
+        useBufferViews
       );
     });
   }
   gatherBufferViews(
     bufferViewsU8,
     bufferViewJsonArray,
-    parsedAvailability.childSubtreeAvailability
+    parsedAvailability.childSubtreeAvailability,
+    useBufferViews
   );
 
   // to simulate additional buffer views for metadata or other purposes.
@@ -165,7 +182,8 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
     gatherBufferViews(
       bufferViewsU8,
       bufferViewJsonArray,
-      parsedAvailability.other
+      parsedAvailability.other,
+      useBufferViews
     );
   }
   if (bufferViewJsonArray.length > 0) {
@@ -178,9 +196,12 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
   subtreeJson.childSubtreeAvailability =
     parsedAvailability.childSubtreeAvailability.availabilityJson;
 
+  const useMultipleContentsExtension =
+    subtreeDescription.useMultipleContentsExtension;
+
   if (hasContent) {
     const contentAvailabilityArray = parsedAvailability.contentAvailability;
-    if (contentAvailabilityArray.length > 1) {
+    if (useMultipleContentsExtension) {
       subtreeJson.extensions = {
         "3DTILES_multiple_contents": {
           contentAvailability: contentAvailabilityArray.map(function (x) {
@@ -188,6 +209,12 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
           }),
         },
       };
+    } else if (contentAvailabilityArray.length > 1) {
+      subtreeJson.contentAvailability = contentAvailabilityArray.map(function (
+        x
+      ) {
+        return x.availabilityJson;
+      });
     } else {
       subtreeJson.contentAvailability =
         contentAvailabilityArray[0].availabilityJson;
@@ -207,7 +234,8 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
 function gatherBufferViews(
   bufferViewsU8,
   bufferViewJsonArray,
-  parsedBitstream
+  parsedBitstream,
+  useBufferViews
 ) {
   if (defined(parsedBitstream.constant)) {
     parsedBitstream.availabilityJson = {
@@ -218,10 +246,17 @@ function gatherBufferViews(
     // simplifying assumptions:
     // 1. shareBuffer is only used for content availability
     // 2. tileAvailability is stored in the first bufferView so it has index 0
-    parsedBitstream.availabilityJson = {
-      bufferView: 0,
-      availableCount: parsedBitstream.availableCount,
-    };
+    if (useBufferViews) {
+      parsedBitstream.availabilityJson = {
+        bufferView: 0,
+        availableCount: parsedBitstream.availableCount,
+      };
+    } else {
+      parsedBitstream.availabilityJson = {
+        bitstream: 0,
+        availableCount: parsedBitstream.availableCount,
+      };
+    }
   } else {
     const bufferViewId = bufferViewsU8.count;
     bufferViewsU8.count++;
@@ -233,10 +268,17 @@ function gatherBufferViews(
     };
     bufferViewJsonArray.push(bufferViewJson);
 
-    parsedBitstream.availabilityJson = {
-      bufferView: bufferViewId,
-      availableCount: parsedBitstream.availableCount,
-    };
+    if (useBufferViews) {
+      parsedBitstream.availabilityJson = {
+        bufferView: bufferViewId,
+        availableCount: parsedBitstream.availableCount,
+      };
+    } else {
+      parsedBitstream.availabilityJson = {
+        bitstream: bufferViewId,
+        availableCount: parsedBitstream.availableCount,
+      };
+    }
 
     const bufferView = {
       bufferView: parsedBitstream.bitstream,
