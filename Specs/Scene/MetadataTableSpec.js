@@ -28,10 +28,10 @@ describe("Scene/MetadataTable", function () {
   it("creates metadata table with default values", function () {
     const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
 
     expect(metadataTable.count).toBe(10);
-    expect(metadataTable.class).toBeUndefined();
   });
 
   it("creates metadata table", function () {
@@ -66,7 +66,9 @@ describe("Scene/MetadataTable", function () {
 
   it("constructor throws without count", function () {
     expect(function () {
-      return new MetadataTable({});
+      return new MetadataTable({
+        class: {},
+      });
     }).toThrowDeveloperError();
   });
 
@@ -74,6 +76,16 @@ describe("Scene/MetadataTable", function () {
     expect(function () {
       return new MetadataTable({
         count: 0,
+        class: {},
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("constructor throws if class is undefined", function () {
+    expect(function () {
+      return new MetadataTable({
+        count: 1,
+        class: undefined,
       });
     }).toThrowDeveloperError();
   });
@@ -81,6 +93,7 @@ describe("Scene/MetadataTable", function () {
   it("hasProperty returns false when there's no properties", function () {
     const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
     expect(metadataTable.hasProperty("height")).toBe(false);
   });
@@ -145,6 +158,7 @@ describe("Scene/MetadataTable", function () {
   it("hasProperty throws without propertyId", function () {
     const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
     expect(function () {
       metadataTable.hasProperty();
@@ -154,6 +168,7 @@ describe("Scene/MetadataTable", function () {
   it("hasPropertyBySemantic returns false when there's no properties", function () {
     const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
     expect(metadataTable.hasPropertyBySemantic("HEIGHT")).toBe(false);
   });
@@ -220,6 +235,7 @@ describe("Scene/MetadataTable", function () {
   it("hasPropertyBySemantic throws without semantic", function () {
     const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
     expect(function () {
       metadataTable.hasPropertyBySemantic(undefined);
@@ -229,6 +245,7 @@ describe("Scene/MetadataTable", function () {
   it("getPropertyIds returns empty array when there are no properties", function () {
     const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
     expect(metadataTable.getPropertyIds().length).toBe(0);
   });
@@ -330,6 +347,7 @@ describe("Scene/MetadataTable", function () {
   it("getProperty returns undefined when there's no properties", function () {
     const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
     expect(metadataTable.getProperty(0, "height")).toBeUndefined();
   });
@@ -586,6 +604,7 @@ describe("Scene/MetadataTable", function () {
   it("getPropertyBySemantic returns undefined when there's no class", function () {
     const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
     expect(metadataTable.getPropertyBySemantic(0, "_HEIGHT")).toBeUndefined();
   });
@@ -695,6 +714,7 @@ describe("Scene/MetadataTable", function () {
   it("setPropertyBySemantic doesn't set property value when there's no class", function () {
     const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
 
     metadataTable.setPropertyBySemantic(0, "_HEIGHT", 20.0);
@@ -867,6 +887,7 @@ describe("Scene/MetadataTable", function () {
   it("getPropertyTypedArray throws if propertyId is undefined", function () {
     const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
 
     expect(function () {
@@ -920,6 +941,7 @@ describe("Scene/MetadataTable", function () {
   it("getPropertyTypedArrayBySemantic throws if semantic is undefined", function () {
     const metadataTable = new MetadataTable({
       count: 10,
+      class: {},
     });
 
     expect(function () {

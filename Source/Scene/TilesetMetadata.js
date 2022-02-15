@@ -11,7 +11,7 @@ import MetadataEntity from "./MetadataEntity.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.tileset The tileset metadata JSON object.
- * @param {MetadataClass} [options.class] The class that tileset metadata conforms to.
+ * @param {MetadataClass} options.class The class that tileset metadata conforms to.
  *
  * @alias TilesetMetadata
  * @constructor
@@ -21,14 +21,16 @@ import MetadataEntity from "./MetadataEntity.js";
 function TilesetMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const tileset = options.tileset;
+  const metadataClass = options.class;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.tileset", tileset);
+  Check.typeOf.object("options.class", metadataClass);
   //>>includeEnd('debug');
 
   const properties = defined(tileset.properties) ? tileset.properties : {};
 
-  this._class = options.class;
+  this._class = metadataClass;
   this._properties = properties;
   this._extras = tileset.extras;
   this._extensions = tileset.extensions;

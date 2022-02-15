@@ -8,9 +8,9 @@ describe("Scene/TilesetMetadata", function () {
   it("creates tileset metadata with default values", function () {
     const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
 
-    expect(tilesetMetadata.class).toBeUndefined();
     expect(tilesetMetadata.extras).toBeUndefined();
   });
 
@@ -58,13 +58,24 @@ describe("Scene/TilesetMetadata", function () {
 
   it("constructor throws without tileset", function () {
     expect(function () {
-      return new TilesetMetadata();
+      return new TilesetMetadata({
+        class: {},
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("constructor throws without class", function () {
+    expect(function () {
+      return new TilesetMetadata({
+        tileset: {},
+      });
     }).toThrowDeveloperError();
   });
 
   it("hasProperty returns false when there's no properties", function () {
     const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
     expect(tilesetMetadata.hasProperty("height")).toBe(false);
   });
@@ -139,6 +150,7 @@ describe("Scene/TilesetMetadata", function () {
   it("hasProperty throws without propertyId", function () {
     const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
 
     expect(function () {
@@ -149,6 +161,7 @@ describe("Scene/TilesetMetadata", function () {
   it("hasPropertyBySemantic returns false when there's no properties", function () {
     const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
     expect(tilesetMetadata.hasPropertyBySemantic("HEIGHT")).toBe(false);
   });
@@ -225,6 +238,7 @@ describe("Scene/TilesetMetadata", function () {
   it("hasPropertyBySemantic throws without semantic", function () {
     const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
 
     expect(function () {
@@ -235,6 +249,7 @@ describe("Scene/TilesetMetadata", function () {
   it("getPropertyIds returns empty array when there are no properties", function () {
     const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
 
     expect(tilesetMetadata.getPropertyIds().length).toBe(0);
@@ -337,6 +352,7 @@ describe("Scene/TilesetMetadata", function () {
   it("getProperty returns undefined when there's no properties", function () {
     const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
     expect(tilesetMetadata.getProperty("height")).toBeUndefined();
   });
@@ -420,6 +436,7 @@ describe("Scene/TilesetMetadata", function () {
   it("getProperty throws without propertyId", function () {
     const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
 
     expect(function () {
@@ -430,6 +447,7 @@ describe("Scene/TilesetMetadata", function () {
   it("setProperty returns false if property doesn't exist", function () {
     const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
 
     const position = [0.0, 0.0, 0.0];
@@ -467,6 +485,7 @@ describe("Scene/TilesetMetadata", function () {
   it("setProperty throws without propertyId", function () {
     const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
 
     expect(function () {
@@ -477,6 +496,7 @@ describe("Scene/TilesetMetadata", function () {
   it("setProperty throws without value", function () {
     const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
 
     expect(function () {
@@ -487,6 +507,7 @@ describe("Scene/TilesetMetadata", function () {
   it("getPropertyBySemantic returns undefined when there's no class", function () {
     const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
     expect(tilesetMetadata.getPropertyBySemantic("_HEIGHT")).toBeUndefined();
   });
@@ -543,6 +564,7 @@ describe("Scene/TilesetMetadata", function () {
   it("getPropertyBySemantic throws without semantic", function () {
     const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
 
     expect(function () {
@@ -603,6 +625,7 @@ describe("Scene/TilesetMetadata", function () {
   it("setPropertyBySemantic throws without semantic", function () {
     const tilesetMetadata = new TilesetMetadata({
       tileset: {},
+      class: {},
     });
 
     expect(function () {

@@ -14,7 +14,7 @@ import defaultValue from "../Core/defaultValue.js";
  *
  * @param {ImplicitSubtree} options.implicitSubtree The implicit subtree the tile belongs to. It is assumed that the subtree's readyPromise has already resolved.
  * @param {ImplicitTileCoordinates} options.implicitCoordinates Implicit tiling coordinates for the tile.
- * @param {MetadataClass} [options.class] The class that the tile metadata conforms to.
+ * @param {MetadataClass} options.class The class that the tile metadata conforms to.
  *
  * @alias ImplicitTileMetadata
  * @constructor
@@ -31,6 +31,7 @@ export default function ImplicitTileMetadata(options) {
     "options.implicitCoordinates",
     options.implicitCoordinates
   );
+  Check.typeOf.object("options.class", options.class);
   //>>includeEnd('debug');
 
   this._class = options.class;
