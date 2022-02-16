@@ -44,20 +44,22 @@ function MetadataTableProperty(options) {
   //>>includeEnd('debug');
 
   const type = classProperty.type;
-  const isArray = type === MetadataType.ARRAY;
-  const isVariableSizeArray = isArray && !defined(classProperty.componentCount);
+  const isArray = classProperty.isArray;
+  const hasFixedCount = classProperty.hasFixedCount;
+  const isVariableSizeArray = isArray && !hasFixedCount;
   const isVectorOrMatrix =
     MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
 
   let valueType = classProperty.valueType;
   const enumType = classProperty.enumType;
 
-  const hasStrings = valueType === MetadataComponentType.STRING;
-  const hasBooleans = valueType === MetadataComponentType.BOOLEAN;
+  const hasStrings = type === MetadataType.STRING;
+  const hasBooleans = type === MetadataType.BOOLEAN;
 
   let arrayOffsets;
   if (isVariableSizeArray) {
-    // EXT_mesh_features uses arrayOffsetType, EXT_feature_metadata uses offsetType for both arrays and strings
+    // EXT_structural_metadata uses arrayOffsetType.
+    // EXT_feature_metadata uses offsetType for both arrays and strings
     let arrayOffsetType = defaultValue(
       property.arrayOffsetType,
       property.offsetType
@@ -66,25 +68,41 @@ function MetadataTableProperty(options) {
       MetadataComponentType[arrayOffsetType],
       MetadataComponentType.UINT32
     );
+
+    // EXT_structural_metadata uses arrayOffsets.
+    // EXT_feature_metadata uses arrayOffsetBufferView
+    const arrayOffsetBufferView = defaultValue(
+      property.arrayOffsets,
+      property.arrayOffsetBufferView
+    );
     arrayOffsets = new BufferView(
-      bufferViews[property.arrayOffsetBufferView],
+      bufferViews[arrayOffsetBufferView],
       arrayOffsetType,
       count + 1
     );
   }
 
-  let componentCount;
-  if (isVariableSizeArray) {
-    componentCount = arrayOffsets.get(count) - arrayOffsets.get(0);
-  } else if (isArray || isVectorOrMatrix) {
-    componentCount = count * classProperty.componentCount;
+  let vectorComponentCount;
+  if (isVectorOrMatrix) {
+    vectorComponentCount = MetadataType.getComponentCount(type);
   } else {
-    componentCount = count;
+    vectorComponentCount = 1;
   }
+
+  let arrayComponentCount;
+  if (isVariableSizeArray) {
+    arrayComponentCount = arrayOffsets.get(count) - arrayOffsets.get(0);
+  } else if (isArray) {
+    arrayComponentCount = count;
+  } else {
+    arrayComponentCount = 1;
+  }
+
+  const componentCount = vectorComponentCount * arrayComponentCount;
 
   let stringOffsets;
   if (hasStrings) {
-    // EXT_mesh_features uses stringOffsetType, EXT_feature_metadata uses offsetType for both arrays and strings
+    // EXT_structural_metadata uses stringOffsetType, EXT_feature_metadata uses offsetType for both arrays and strings
     let stringOffsetType = defaultValue(
       property.stringOffsetType,
       property.offsetType
@@ -93,8 +111,15 @@ function MetadataTableProperty(options) {
       MetadataComponentType[stringOffsetType],
       MetadataComponentType.UINT32
     );
+
+    // EXT_structural_metadata uses stringOffsets.
+    // EXT_feature_metadata uses stringOffsetBufferView
+    const stringOffsetBufferView = defaultValue(
+      property.stringOffsets,
+      property.stringOffsetBufferView
+    );
     stringOffsets = new BufferView(
-      bufferViews[property.stringOffsetBufferView],
+      bufferViews[stringOffsetBufferView],
       stringOffsetType,
       componentCount + 1
     );
@@ -120,11 +145,12 @@ function MetadataTableProperty(options) {
     valueCount
   );
 
-  const that = this;
+  const offset = property.offset;
+  const scale = property.scale;
 
   let getValueFunction;
   let setValueFunction;
-
+  const that = this;
   if (hasStrings) {
     getValueFunction = function (index) {
       return getString(index, that._values, that._stringOffsets);
@@ -159,6 +185,11 @@ function MetadataTableProperty(options) {
   this._values = values;
   this._classProperty = classProperty;
   this._count = count;
+  this._min = property.min;
+  this._max = property.max;
+  this._offset = offset;
+  this._scale = scale;
+  this._hasRescaling = defined(offset) || defined(scale);
   this._getValue = getValueFunction;
   this._setValue = setValueFunction;
   this._unpackedValues = undefined;
@@ -211,6 +242,7 @@ MetadataTableProperty.prototype.get = function (index) {
 
   let value = get(this, index);
   value = this._classProperty.normalize(value);
+  value = scaleRange(this, value);
   return this._classProperty.unpackVectorAndMatrixTypes(value);
 };
 
@@ -234,6 +266,7 @@ MetadataTableProperty.prototype.set = function (index, value) {
   //>>includeEnd('debug');
 
   value = classProperty.packVectorAndMatrixTypes(value);
+  value = unscaleRange(this, value);
   value = classProperty.unnormalize(value);
 
   set(this, index, value);
@@ -460,6 +493,16 @@ function getUint64BigIntFallback(index, values) {
   // Combine the two 32-bit values
   var value = left + BigInt(4294967296) * right; // eslint-disable-line
 
+  return value;
+}
+
+function scaleRange(property, value) {
+  // TODO: apply scaling
+  return value;
+}
+
+function unscaleRange(property, value) {
+  // TODO: apply unscaling
   return value;
 }
 

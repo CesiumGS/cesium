@@ -71,7 +71,7 @@ describe("Scene/MetadataClass", function () {
 
     expect(heightProperty.type).toBe(MetadataType.SINGLE);
     expect(heightProperty.componentType).toBe(MetadataComponentType.FLOAT32);
-    expect(positionProperty.type).toBe(MetadataType.ARRAY);
+    expect(positionProperty.type).toBe(MetadataType.SCALAR);
     expect(positionProperty.componentType).toBe(MetadataComponentType.FLOAT32);
     expect(colorProperty.type).toBe(MetadataType.SINGLE);
     expect(colorProperty.componentType).toBe(MetadataComponentType.STRING);

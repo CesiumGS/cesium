@@ -71,8 +71,12 @@ function MetadataClassProperty(options) {
 
   // properties that adjust the range of metadata values
   this._normalized = normalized;
-  this._offset = property.offset;
-  this._scale = property.scale;
+
+  const offset = property.offset;
+  const scale = property.scale;
+  this._offset = offset;
+  this._scale = scale;
+  this._hasRescaling = defined(offset) || defined(scale);
 
   // sentinel value for missing data, and a default value to use
   // in its place if needed.
@@ -144,8 +148,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * The type of the property. Each type holds one (SINGLE) or more components
-   * (ARRAY, VECN, MATN).
+   * The type of the property such as SCALAR, VEC2, VEC3
    *
    *
    * @memberof MetadataClassProperty.prototype
@@ -160,7 +163,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * The enum type of the property. Only defined when componentType is ENUM.
+   * The enum type of the property. Only defined when type is ENUM.
    *
    * @memberof MetadataClassProperty.prototype
    * @type {MetadataEnum}
@@ -175,8 +178,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
 
   /**
    * The component type of the property. This includes integer
-   * (e.g. INT8 or UINT16), floating point (FLOAT32 and FLOAT64), STRING,
-   * BOOLEAN, and ENUM component types.
+   * (e.g. INT8 or UINT16), and floating point (FLOAT32 and FLOAT64) values
    *
    * @memberof MetadataClassProperty.prototype
    * @type {MetadataComponentType}
@@ -202,6 +204,34 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   valueType: {
     get: function () {
       return this._valueType;
+    },
+  },
+
+  /**
+   * True if a property is an array, false otherwise.
+   *
+   * @memberof MetadataClassProperty.prototype
+   * @type {Boolean}
+   * @readonly
+   * @private
+   */
+  isArray: {
+    get: function () {
+      return this._isArray;
+    },
+  },
+
+  /**
+   * True if a property is an array with a fixed count
+   *
+   * @memberof MetadataClassProperty.prototype
+   * @type {Boolean}
+   * @readonly
+   * @private
+   */
+  hasFixedCount: {
+    get: function () {
+      return this._hasFixedCount;
     },
   },
 
@@ -556,6 +586,16 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
   return normalize(this, value, MetadataComponentType.unnormalize);
 };
 
+MetadataClassProperty.prototype.scaleRange = function (value) {
+  // TODO
+  return value;
+};
+
+MetadataClassProperty.prototype.unscaleRange = function (value) {
+  // TODO
+  return value;
+};
+
 /**
  * Unpack VECN values into {@link Cartesian2}, {@link Cartesian3}, or
  * {@link Cartesian4} and MATN values into {@link Matrix2}, {@link Matrix3}, or
@@ -783,27 +823,21 @@ function checkValue(classProperty, value) {
 }
 
 function normalize(classProperty, value, normalizeFunction) {
-  const normalized = classProperty._normalized;
-  if (!normalized) {
+  if (!classProperty._normalized) {
     return value;
   }
 
   const type = classProperty._type;
   const valueType = classProperty._valueType;
+  const isArray = classProperty._isArray;
 
-  let i;
-  let length;
-  if (type === MetadataType.ARRAY) {
-    length = value.length;
-    for (i = 0; i < length; ++i) {
-      value[i] = normalizeFunction(value[i], valueType);
-    }
-  } else if (
+  if (
+    isArray ||
     MetadataType.isVectorType(type) ||
     MetadataType.isMatrixType(type)
   ) {
-    length = MetadataType.getComponentCount(type);
-    for (i = 0; i < length; ++i) {
+    const length = value.length;
+    for (let i = 0; i < length; ++i) {
       value[i] = normalizeFunction(value[i], valueType);
     }
   } else {

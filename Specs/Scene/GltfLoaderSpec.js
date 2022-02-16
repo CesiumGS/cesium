@@ -952,7 +952,7 @@ describe(
         expect(properties.name.componentType).toBe(
           MetadataComponentType.STRING
         );
-        expect(properties.color.type).toBe(MetadataType.ARRAY);
+        expect(properties.color.type).toBe(MetadataType.SCALAR);
         expect(properties.color.componentType).toBe(
           MetadataComponentType.UINT8
         );
@@ -1338,7 +1338,7 @@ describe(
         expect(weatherProperties.airPressure.componentType).toBe(
           MetadataComponentType.FLOAT32
         );
-        expect(weatherProperties.windVelocity.type).toBe(MetadataType.ARRAY);
+        expect(weatherProperties.windVelocity.type).toBe(MetadataType.SCALAR);
         expect(weatherProperties.windVelocity.componentType).toBe(
           MetadataComponentType.FLOAT32
         );

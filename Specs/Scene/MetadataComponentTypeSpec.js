@@ -1,7 +1,6 @@
 import {
   FeatureDetection,
   MetadataComponentType,
-  MetadataType,
 } from "../../Source/Cesium.js";
 
 describe("Scene/MetadataComponentType", function () {
@@ -168,16 +167,6 @@ describe("Scene/MetadataComponentType", function () {
     expect(
       MetadataComponentType.isNumericType(MetadataComponentType.FLOAT64)
     ).toBe(true);
-    expect(
-      MetadataComponentType.isNumericType(MetadataComponentType.BOOLEAN)
-    ).toBe(false);
-    expect(
-      MetadataComponentType.isNumericType(MetadataComponentType.STRING)
-    ).toBe(false);
-    expect(
-      MetadataComponentType.isNumericType(MetadataComponentType.ENUM)
-    ).toBe(false);
-    expect(MetadataComponentType.isNumericType(MetadataType.ARRAY)).toBe(false);
   });
 
   it("isNumericType throws without type", function () {
@@ -217,16 +206,6 @@ describe("Scene/MetadataComponentType", function () {
     expect(
       MetadataComponentType.isIntegerType(MetadataComponentType.FLOAT64)
     ).toBe(false);
-    expect(
-      MetadataComponentType.isIntegerType(MetadataComponentType.BOOLEAN)
-    ).toBe(false);
-    expect(
-      MetadataComponentType.isIntegerType(MetadataComponentType.STRING)
-    ).toBe(false);
-    expect(
-      MetadataComponentType.isIntegerType(MetadataComponentType.ENUM)
-    ).toBe(false);
-    expect(MetadataComponentType.isIntegerType(MetadataType.ARRAY)).toBe(false);
   });
 
   it("isIntegerType throws without type", function () {
@@ -265,18 +244,6 @@ describe("Scene/MetadataComponentType", function () {
     ).toBe(false);
     expect(
       MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.FLOAT64)
-    ).toBe(false);
-    expect(
-      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.BOOLEAN)
-    ).toBe(false);
-    expect(
-      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.STRING)
-    ).toBe(false);
-    expect(
-      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.ENUM)
-    ).toBe(false);
-    expect(
-      MetadataComponentType.isUnsignedIntegerType(MetadataType.ARRAY)
     ).toBe(false);
   });
 
@@ -484,7 +451,7 @@ describe("Scene/MetadataComponentType", function () {
 
   it("unnormalize throws if type is not an integer type", function () {
     expect(function () {
-      MetadataComponentType.unnormalize(10.0, MetadataComponentType.STRING);
+      MetadataComponentType.unnormalize(10.0, MetadataComponentType.FLOAT32);
     }).toThrowDeveloperError();
   });
 

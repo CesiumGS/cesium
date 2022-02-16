@@ -344,6 +344,7 @@ describe("Scene/MetadataClassProperty", function () {
       propertyVector: {
         type: "VEC3",
         componentType: "UINT8",
+        normalized: true,
         hasFixedCount: true,
         count: 3,
       },
