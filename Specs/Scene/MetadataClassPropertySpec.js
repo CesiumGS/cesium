@@ -883,6 +883,46 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.validate(new Cartesian3(1.0, 2.0, 3.0))).toBeUndefined();
   });
 
+  it("validate returns undefined for valid arrays of vectors", function () {
+    const property = new MetadataClassProperty({
+      id: "position",
+      property: {
+        type: "VEC3",
+        componentType: "FLOAT32",
+        hasFixedCount: true,
+        count: 3,
+      },
+    });
+
+    expect(
+      property.validate([
+        new Cartesian3(1.0, 2.0, 3.0),
+        new Cartesian3(4.0, 5.0, 6.0),
+        new Cartesian3(7.0, 8.0, 9.0),
+      ])
+    ).toBeUndefined();
+  });
+
+  it("validate returns undefined for valid arrays of matrices", function () {
+    const property = new MetadataClassProperty({
+      id: "position",
+      property: {
+        type: "MAT3",
+        componentType: "FLOAT32",
+        hasFixedCount: true,
+        count: 3,
+      },
+    });
+
+    expect(
+      property.validate([
+        new Matrix3(1, 0, 0, 0, 1, 0, 0, 0, 1),
+        new Matrix3(2, 0, 0, 0, 2, 0, 0, 0, 2),
+        new Matrix3(3, 0, 0, 0, 3, 0, 0, 0, 3),
+      ])
+    ).toBeUndefined();
+  });
+
   it("validate returns error message if type is ARRAY and value is not an array", function () {
     const property = new MetadataClassProperty({
       id: "position",
@@ -894,11 +934,11 @@ describe("Scene/MetadataClassProperty", function () {
       },
     });
 
-    expect(property.validate(8.0)).toBe("value 8 does not match type ARRAY");
+    expect(property.validate(8.0)).toBe("value 8 must be an array");
   });
 
-  it("validate returns error message if type is a vector or matrix and the component type is not vector-compatibile", function () {
-    let property = new MetadataClassProperty({
+  it("validate returns error message if type is a vector and the component type is not vector-compatibile", function () {
+    const property = new MetadataClassProperty({
       id: "position",
       property: {
         type: "VEC2",
@@ -909,8 +949,10 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.validate(8.0)).toBe(
       "componentType STRING is incompatible with vector type VEC2"
     );
+  });
 
-    property = new MetadataClassProperty({
+  it("validate returns error message if type is a matrix and the component type is not vector-compatibile", function () {
+    const property = new MetadataClassProperty({
       id: "position",
       property: {
         type: "MAT3",
@@ -991,7 +1033,7 @@ describe("Scene/MetadataClassProperty", function () {
     const property = new MetadataClassProperty({
       id: "position",
       property: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "FLOAT32",
         hasFixedCount: true,
         count: 6,
@@ -1043,7 +1085,7 @@ describe("Scene/MetadataClassProperty", function () {
     );
   });
 
-  it("validate returns error message if value does not match the type", function () {
+  it("validate returns error message if value does not match the type (SCALAR)", function () {
     const types = [
       "INT8",
       "UINT8",
@@ -1055,8 +1097,6 @@ describe("Scene/MetadataClassProperty", function () {
       "UINT64",
       "FLOAT32",
       "FLOAT64",
-      "BOOLEAN",
-      "STRING",
     ];
 
     for (let i = 0; i < types.length; ++i) {
@@ -1071,6 +1111,30 @@ describe("Scene/MetadataClassProperty", function () {
         `value [object Object] does not match type ${types[i]}`
       );
     }
+  });
+
+  it("validate returns error message if value does not match the type (BOOLEAN)", function () {
+    const property = new MetadataClassProperty({
+      id: "property",
+      property: {
+        type: "BOOLEAN",
+      },
+    });
+    expect(property.validate({})).toBe(
+      `value [object Object] does not match type BOOLEAN`
+    );
+  });
+
+  it("validate returns error message if value does not match the type (STRING)", function () {
+    const property = new MetadataClassProperty({
+      id: "property",
+      property: {
+        type: "STRING",
+      },
+    });
+    expect(property.validate({})).toBe(
+      `value [object Object] does not match type STRING`
+    );
   });
 
   it("validate returns error message if value is out of range", function () {

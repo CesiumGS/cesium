@@ -663,42 +663,55 @@ MetadataClassProperty.prototype.packVectorAndMatrixTypes = function (value) {
  * @private
  */
 MetadataClassProperty.prototype.validate = function (value) {
-  const type = this._type;
-  const componentType = this._componentType;
-
-  if (MetadataType.isVectorType(type) || MetadataType.isMatrixType(type)) {
-    return validateVectorOrMatrix(value, type, componentType);
-  } else if (type === MetadataType.ARRAY) {
-    return validateArray(this, value, this._componentCount);
+  if (this._isArray) {
+    return validateArray(this, value);
   }
 
-  return checkValue(this, value);
+  return validateSingleValue(this, value);
 };
 
-function validateArray(classProperty, value, componentCount) {
+function validateArray(classProperty, value) {
   if (!Array.isArray(value)) {
-    return getTypeErrorMessage(value, MetadataType.ARRAY);
+    return `value ${value} must be an array`;
   }
+
   const length = value.length;
-  if (defined(componentCount) && componentCount !== length) {
-    return "Array length does not match componentCount";
+  if (classProperty._hasFixedCount && length !== classProperty._count) {
+    return "Array length does not match count";
   }
-  for (let i = 0; i < length; ++i) {
-    const message = checkValue(classProperty, value[i]);
+
+  for (let i = 0; i < length; i++) {
+    const message = validateSingleValue(classProperty, value[i]);
     if (defined(message)) {
       return message;
     }
   }
 }
 
-function validateVectorOrMatrix(value, type, componentType) {
-  if (!MetadataComponentType.isVectorCompatible(componentType)) {
-    const message = `componentType ${componentType} is incompatible with `;
-    if (MetadataType.isVectorType(type)) {
-      return `${message}vector type ${type}`;
-    }
+function validateSingleValue(classProperty, value) {
+  const type = classProperty._type;
+  const valueType = classProperty._valueType;
+  const enumType = classProperty._enumType;
+  const normalized = classProperty._normalized;
 
-    return `${message}matrix type ${type}`;
+  if (MetadataType.isVectorType(type)) {
+    return validateVector(value, type, valueType);
+  } else if (MetadataType.isMatrixType(type)) {
+    return validateMatrix(value, type, valueType);
+  } else if (type === MetadataType.STRING) {
+    return validateString(value);
+  } else if (type === MetadataType.BOOLEAN) {
+    return validateBoolean(value);
+  } else if (type === MetadataType.ENUM) {
+    return validateEnum(value, enumType);
+  }
+
+  return validateScalar(value, valueType, normalized);
+}
+
+function validateVector(value, type, componentType) {
+  if (!MetadataComponentType.isVectorCompatible(componentType)) {
+    return `componentType ${componentType} is incompatible with vector type ${type}`;
   }
 
   if (type === MetadataType.VEC2 && !(value instanceof Cartesian2)) {
@@ -712,6 +725,12 @@ function validateVectorOrMatrix(value, type, componentType) {
   if (type === MetadataType.VEC4 && !(value instanceof Cartesian4)) {
     return `vector value ${value} must be a Cartesian4`;
   }
+}
+
+function validateMatrix(value, type, componentType) {
+  if (!MetadataComponentType.isVectorCompatible(componentType)) {
+    return `componentType ${componentType} is incompatible with matrix type ${type}`;
+  }
 
   if (type === MetadataType.MAT2 && !(value instanceof Matrix2)) {
     return `matrix value ${value} must be a Matrix2`;
@@ -723,6 +742,67 @@ function validateVectorOrMatrix(value, type, componentType) {
 
   if (type === MetadataType.MAT4 && !(value instanceof Matrix4)) {
     return `matrix value ${value} must be a Matrix4`;
+  }
+}
+
+function validateString(value) {
+  if (typeof value !== "string") {
+    return getTypeErrorMessage(value, MetadataType.STRING);
+  }
+}
+
+function validateBoolean(value) {
+  if (typeof value !== "boolean") {
+    return getTypeErrorMessage(value, MetadataType.BOOLEAN);
+  }
+}
+
+function validateEnum(value, enumType) {
+  const javascriptType = typeof value;
+  if (defined(enumType)) {
+    if (javascriptType !== "string" || !defined(enumType.valuesByName[value])) {
+      return `value ${value} is not a valid enum name for ${enumType.id}`;
+    }
+    return;
+  }
+}
+
+function validateScalar(value, valueType, normalized) {
+  const javascriptType = typeof value;
+
+  switch (valueType) {
+    case MetadataComponentType.INT8:
+    case MetadataComponentType.UINT8:
+    case MetadataComponentType.INT16:
+    case MetadataComponentType.UINT16:
+    case MetadataComponentType.INT32:
+    case MetadataComponentType.UINT32:
+      if (javascriptType !== "number") {
+        return getTypeErrorMessage(value, valueType);
+      }
+      return checkInRange(value, valueType, normalized);
+    case MetadataComponentType.INT64:
+    case MetadataComponentType.UINT64:
+      if (javascriptType !== "number" && javascriptType !== "bigint") {
+        return getTypeErrorMessage(value, valueType);
+      }
+      return checkInRange(value, valueType, normalized);
+    case MetadataComponentType.FLOAT32:
+      if (javascriptType !== "number") {
+        return getTypeErrorMessage(value, valueType);
+      }
+      if (isFinite(value)) {
+        return checkInRange(value, valueType, normalized);
+      }
+      return getNonFiniteErrorMessage(value, valueType);
+    case MetadataComponentType.FLOAT64:
+      if (javascriptType !== "number") {
+        return getTypeErrorMessage(value, valueType);
+      }
+      if (isFinite(value)) {
+        return checkInRange(value, valueType, normalized);
+      }
+      return getNonFiniteErrorMessage(value, valueType);
   }
 }
 
@@ -760,66 +840,6 @@ function checkInRange(value, componentType, normalized) {
 
 function getNonFiniteErrorMessage(value, type) {
   return `value ${value} of type ${type} must be finite`;
-}
-
-function checkValue(classProperty, value) {
-  const javascriptType = typeof value;
-
-  const enumType = classProperty._enumType;
-  if (defined(enumType)) {
-    if (javascriptType !== "string" || !defined(enumType.valuesByName[value])) {
-      return `value ${value} is not a valid enum name for ${enumType.id}`;
-    }
-    return;
-  }
-
-  const valueType = classProperty._valueType;
-  const normalized = classProperty._normalized;
-
-  switch (valueType) {
-    case MetadataComponentType.INT8:
-    case MetadataComponentType.UINT8:
-    case MetadataComponentType.INT16:
-    case MetadataComponentType.UINT16:
-    case MetadataComponentType.INT32:
-    case MetadataComponentType.UINT32:
-      if (javascriptType !== "number") {
-        return getTypeErrorMessage(value, valueType);
-      }
-      return checkInRange(value, valueType, normalized);
-    case MetadataComponentType.INT64:
-    case MetadataComponentType.UINT64:
-      if (javascriptType !== "number" && javascriptType !== "bigint") {
-        return getTypeErrorMessage(value, valueType);
-      }
-      return checkInRange(value, valueType, normalized);
-    case MetadataComponentType.FLOAT32:
-      if (javascriptType !== "number") {
-        return getTypeErrorMessage(value, valueType);
-      }
-      if (isFinite(value)) {
-        return checkInRange(value, valueType, normalized);
-      }
-      return getNonFiniteErrorMessage(value, valueType);
-    case MetadataComponentType.FLOAT64:
-      if (javascriptType !== "number") {
-        return getTypeErrorMessage(value, valueType);
-      }
-      if (isFinite(value)) {
-        return checkInRange(value, valueType, normalized);
-      }
-      return getNonFiniteErrorMessage(value, valueType);
-    case MetadataComponentType.BOOLEAN:
-      if (javascriptType !== "boolean") {
-        return getTypeErrorMessage(value, valueType);
-      }
-      break;
-    case MetadataComponentType.STRING:
-      if (javascriptType !== "string") {
-        return getTypeErrorMessage(value, valueType);
-      }
-      break;
-  }
 }
 
 function normalize(classProperty, value, normalizeFunction) {
