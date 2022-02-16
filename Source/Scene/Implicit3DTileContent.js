@@ -13,7 +13,6 @@ import Rectangle from "../Core/Rectangle.js";
 import S2Cell from "../Core/S2Cell.js";
 import when from "../ThirdParty/when.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
-import ImplicitTileMetadata from "./ImplicitTileMetadata.js";
 import hasExtension from "./hasExtension.js";
 import MetadataSemantic from "./MetadataSemantic.js";
 import parseBoundingVolumeSemantics from "./parseBoundingVolumeSemantics.js";
@@ -418,12 +417,7 @@ function deriveChildTile(
   let tileBounds;
   let contentBounds;
   if (defined(subtree.tilePropertyTableJson)) {
-    const metadataTable = subtree.tileMetadataTable;
-    tileMetadata = new ImplicitTileMetadata({
-      class: metadataTable.class,
-      implicitCoordinates: implicitCoordinates,
-      implicitSubtree: subtree,
-    });
+    tileMetadata = subtree.getTileMetadataView(implicitCoordinates);
 
     const boundingVolumeSemantics = parseBoundingVolumeSemantics(tileMetadata);
     tileBounds = boundingVolumeSemantics.tile;

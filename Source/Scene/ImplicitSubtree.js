@@ -12,6 +12,7 @@ import ImplicitSubtreeMetadata from "./ImplicitSubtreeMetadata.js";
 import MetadataTable from "./MetadataTable.js";
 import ResourceCache from "./ResourceCache.js";
 import when from "../ThirdParty/when.js";
+import ImplicitMetadataTableView from "./ImplicitMetadataTableView.js";
 
 /**
  * An object representing a single subtree in an implicit tileset
@@ -1057,6 +1058,28 @@ ImplicitSubtree.prototype.getContentEntityId = function (
   }
 
   return undefined;
+};
+
+/**
+ * Create and return a metadata table view for a tile within this subtree.
+ * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a tile
+ * @return {ImplicitMetadataTableView} The metadata table view for this tile, or <code>undefined</code> if not applicable.
+ *
+ * @private
+ */
+ImplicitSubtree.prototype.getTileMetadataView = function (implicitCoordinates) {
+  const entityId = this.getTileEntityId(implicitCoordinates);
+  if (!defined(entityId)) {
+    return undefined;
+  }
+
+  const metadataTable = this._tileMetadataTable;
+  return new ImplicitMetadataTableView({
+    class: metadataTable.class,
+    metadataTable: metadataTable,
+    entityId: entityId,
+    propertyTableJson: this._tilePropertyTableJson,
+  });
 };
 
 /**
