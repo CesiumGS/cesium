@@ -5525,7 +5525,7 @@ describe(
           let i;
           for (i = 0; i < tileCount; i++) {
             const tile = tiles[i];
-            const entityId = subtree.getEntityId(tile.implicitCoordinates);
+            const entityId = subtree.getTileEntityId(tile.implicitCoordinates);
             const metadata = tile.metadata;
             expect(metadata.getProperty("quadrant")).toBe(
               expectedQuadrants[entityId]

@@ -417,7 +417,7 @@ function deriveChildTile(
   let tileMetadata;
   let tileBounds;
   let contentBounds;
-  if (defined(subtree.tileMetadataExtension)) {
+  if (defined(subtree.tilePropertyTableJson)) {
     const metadataTable = subtree.tileMetadataTable;
     tileMetadata = new ImplicitTileMetadata({
       class: metadataTable.class,

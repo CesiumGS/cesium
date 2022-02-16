@@ -1753,7 +1753,7 @@ describe("Scene/ImplicitSubtree", function () {
       });
     });
 
-    it("getEntityId returns undefined for subtree without metadata", function () {
+    it("getTileEntityId returns undefined for subtree without metadata", function () {
       const subtreeDescription = {
         tileAvailability: {
           descriptor: 1,
@@ -1791,10 +1791,10 @@ describe("Scene/ImplicitSubtree", function () {
         x: 1,
         y: 1,
       });
-      expect(subtree.getEntityId(coordinates)).not.toBeDefined();
+      expect(subtree.getTileEntityId(coordinates)).not.toBeDefined();
     });
 
-    it("getEntityId throws for out-of-bounds coordinates", function () {
+    it("getTileEntityId throws for out-of-bounds coordinates", function () {
       const subtreeDescription = {
         tileAvailability: {
           descriptor: "11001",
@@ -1839,11 +1839,11 @@ describe("Scene/ImplicitSubtree", function () {
           x: 1,
           y: 1,
         });
-        return subtree.getEntityId(coordinates);
+        return subtree.getTileEntityId(coordinates);
       }).toThrowRuntimeError();
     });
 
-    it("getEntityId computes the entity id", function () {
+    it("getTileEntityId computes the entity id", function () {
       const subtreeDescription = {
         tileAvailability: {
           descriptor: "11001",
@@ -1887,10 +1887,10 @@ describe("Scene/ImplicitSubtree", function () {
         x: 1,
         y: 1,
       });
-      expect(subtree.getEntityId(coordinates)).toBe(2);
+      expect(subtree.getTileEntityId(coordinates)).toBe(2);
     });
 
-    it("getEntityId returns undefined for unavailable tile", function () {
+    it("getTileEntityId returns undefined for unavailable tile", function () {
       const subtreeDescription = {
         tileAvailability: {
           descriptor: "11001",
@@ -1934,7 +1934,7 @@ describe("Scene/ImplicitSubtree", function () {
         x: 1,
         y: 0,
       });
-      expect(subtree.getEntityId(coordinates)).not.toBeDefined();
+      expect(subtree.getTileEntityId(coordinates)).not.toBeDefined();
     });
 
     it("handles unavailable tiles correctly", function () {
@@ -1995,7 +1995,9 @@ describe("Scene/ImplicitSubtree", function () {
         quadtreeCoordinates
       );
       return subtree.readyPromise.then(function () {
-        expect(subtree._jumpBuffer).toEqual(new Uint8Array([0, 0, 0, 1, 2]));
+        expect(subtree._tileJumpBuffer).toEqual(
+          new Uint8Array([0, 0, 0, 1, 2])
+        );
 
         const metadataTable = subtree.tileMetadataTable;
         expect(metadataTable).toBeDefined();
