@@ -67,6 +67,7 @@ describe("Scene/ModelExperimental/CPUStylingPipelineStage", function () {
     ]);
 
     expect(uniformMap.model_colorBlend()).toEqual(colorBlend);
+    expect(uniformMap.model_commandTranslucent()).toBe(false);
   });
 
   it("doesn't add color blend uniform if model color is present", function () {
@@ -85,6 +86,7 @@ describe("Scene/ModelExperimental/CPUStylingPipelineStage", function () {
     ]);
 
     expect(uniformMap.model_colorBlend).toBeUndefined();
+    expect(uniformMap.model_commandTranslucent()).toBe(false);
   });
 
   it("adds command translucent uniform", function () {
@@ -102,6 +104,24 @@ describe("Scene/ModelExperimental/CPUStylingPipelineStage", function () {
     ]);
 
     expect(uniformMap.model_commandTranslucent()).toEqual(true);
+  });
+
+  it("model_commandTranslucent accounts for changes from later pipeline stages", function () {
+    const renderResources = clone(defaultRenderResources, true);
+    renderResources.model.color = Color.RED;
+    renderResources.model.colorBlendAmount = 0.75;
+    renderResources.model.colorBlendMode = ColorBlendMode.MIX;
+
+    CPUStylingPipelineStage.process(renderResources);
+
+    const uniformMap = renderResources.uniformMap;
+
+    expect(uniformMap.model_commandTranslucent()).toBe(false);
+
+    // Simulate applying a custom shader with isTranslucent = true;
+    renderResources.alphaOptions.pass = Pass.TRANSLUCENT;
+
+    expect(uniformMap.model_commandTranslucent()).toBe(true);
   });
 
   it("sets the style commands needed when only opaque commands are needed", function () {
