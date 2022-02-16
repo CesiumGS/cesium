@@ -43,6 +43,7 @@ function createGeometryFromPolygon(
   vertexFormat,
   boundingRectangle,
   stRotation,
+  inputTextureCoordinates,
   projectPointTo2D,
   normal,
   tangent,
@@ -127,7 +128,10 @@ function createGeometryFromPolygon(
     flatPositions[positionIndex++] = position.y;
     flatPositions[positionIndex++] = position.z;
 
-    if (vertexFormat.st) {
+    if (inputTextureCoordinates) {
+      textureCoordinates[i * 2] = inputTextureCoordinates[i][0];
+      textureCoordinates[i * 2 + 1] = inputTextureCoordinates[i][1];
+    } else if (vertexFormat.st) {
       const p = Matrix3.multiplyByVector(
         textureMatrix,
         position,
@@ -249,6 +253,7 @@ function CoplanarPolygonGeometry(options) {
     defaultValue(options.ellipsoid, Ellipsoid.WGS84)
   );
   this._workerName = "createCoplanarPolygonGeometry";
+  this._textureCoordinates = options.textureCoordinates;
 
   /**
    * The number of elements used to pack the object into an array.
@@ -258,6 +263,7 @@ function CoplanarPolygonGeometry(options) {
     PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) +
     VertexFormat.packedLength +
     Ellipsoid.packedLength +
+    (this._textureCoordinates ? this._textureCoordinates.length * 2 : 0) +
     2;
 }
 
@@ -300,6 +306,7 @@ CoplanarPolygonGeometry.fromPositions = function (options) {
     vertexFormat: options.vertexFormat,
     stRotation: options.stRotation,
     ellipsoid: options.ellipsoid,
+    textureCoordinates: options.textureCoordinates,
   };
   return new CoplanarPolygonGeometry(newOptions);
 };
@@ -334,7 +341,15 @@ CoplanarPolygonGeometry.pack = function (value, array, startingIndex) {
   startingIndex += VertexFormat.packedLength;
 
   array[startingIndex++] = value._stRotation;
-  array[startingIndex] = value.packedLength;
+  array[startingIndex++] = value.packedLength;
+
+  if (value._textureCoordinates) {
+    array[startingIndex++] = 1.0;
+    for (let i = 0; i < value._polygonHierarchy.positions.length; i++) {
+      array[startingIndex++] = value._textureCoordinates[i][0];
+      array[startingIndex++] = value._textureCoordinates[i][1];
+    }
+  }
 
   return array;
 };
@@ -377,7 +392,7 @@ CoplanarPolygonGeometry.unpack = function (array, startingIndex, result) {
   startingIndex += VertexFormat.packedLength;
 
   const stRotation = array[startingIndex++];
-  const packedLength = array[startingIndex];
+  const packedLength = array[startingIndex++];
 
   if (!defined(result)) {
     result = new CoplanarPolygonGeometry(scratchOptions);
@@ -388,6 +403,23 @@ CoplanarPolygonGeometry.unpack = function (array, startingIndex, result) {
   result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
   result._stRotation = stRotation;
   result.packedLength = packedLength;
+
+  if (array[startingIndex++] == 1.0) {
+    result._textureCoordinates = Array(
+      result._polygonHierarchy.positions.length
+    );
+    for (
+      let i = 0;
+      i < result._textureCoordinates.length;
+      ++i, startingIndex += 2
+    ) {
+      result._textureCoordinates[i] = [
+        array[startingIndex],
+        array[startingIndex + 1],
+      ];
+    }
+  }
+
   return result;
 };
 
@@ -496,6 +528,7 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
         vertexFormat,
         boundingRectangle,
         stRotation,
+        polygonGeometry._textureCoordinates,
         projectPoint,
         normal,
         tangent,

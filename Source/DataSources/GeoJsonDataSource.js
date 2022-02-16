@@ -508,6 +508,7 @@ function createPolygon(dataSource, geoJson, crsFunction, coordinates, options) {
   } else if (!options.clampToGround) {
     polygon.height = 0;
   }
+  polygon.textureCoordinates = geoJson.textureCoordinates;
 
   const entity = createObject(
     geoJson,

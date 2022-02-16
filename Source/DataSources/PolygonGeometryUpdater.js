@@ -418,6 +418,7 @@ PolygonGeometryUpdater.prototype._setStaticOptions = function (
   }
 
   options.extrudedHeight = extrudedHeightValue;
+  options.textureCoordinates = polygon.textureCoordinates;
 };
 
 PolygonGeometryUpdater.prototype._getIsClosed = function (options) {

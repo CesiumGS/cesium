@@ -159,7 +159,12 @@ function computeAttributes(options) {
         appendTextureCoordinatesCartesian3
       );
 
-      if (vertexFormat.st) {
+      if (options.textureCoordinates) {
+        textureCoordinates[(i * 2) / 3 + 0] =
+          options.textureCoordinates[i / 3][0];
+        textureCoordinates[(i * 2) / 3 + 1] =
+          options.textureCoordinates[i / 3][1];
+      } else if (vertexFormat.st) {
         let p = Matrix3.multiplyByVector(
           textureMatrix,
           position,
@@ -831,6 +836,7 @@ function PolygonGeometry(options) {
 
   this._rectangle = undefined;
   this._textureCoordinateRotationPoints = undefined;
+  this._textureCoordinates = options.textureCoordinates;
 
   /**
    * The number of elements used to pack the object into an array.
@@ -840,6 +846,7 @@ function PolygonGeometry(options) {
     PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) +
     Ellipsoid.packedLength +
     VertexFormat.packedLength +
+    (this._textureCoordinates ? this._textureCoordinates.length * 2 : 0) +
     12;
 }
 
@@ -891,6 +898,7 @@ PolygonGeometry.fromPositions = function (options) {
     extrudedHeight: options.extrudedHeight,
     vertexFormat: options.vertexFormat,
     stRotation: options.stRotation,
+    textureCoordinates: options.textureCoordinates,
     ellipsoid: options.ellipsoid,
     granularity: options.granularity,
     perPositionHeight: options.perPositionHeight,
@@ -942,7 +950,15 @@ PolygonGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
   array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
   array[startingIndex++] = value._arcType;
-  array[startingIndex] = value.packedLength;
+  array[startingIndex++] = value.packedLength;
+
+  if (value._textureCoordinates) {
+    array[startingIndex++] = 1.0;
+    for (let i = 0; i < value._polygonHierarchy.positions.length; i++) {
+      array[startingIndex++] = value._textureCoordinates[i][0];
+      array[startingIndex++] = value._textureCoordinates[i][1];
+    }
+  }
 
   return array;
 };
@@ -997,7 +1013,7 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
   const shadowVolume = array[startingIndex++] === 1.0;
   const offsetAttribute = array[startingIndex++];
   const arcType = array[startingIndex++];
-  const packedLength = array[startingIndex];
+  const packedLength = array[startingIndex++];
 
   if (!defined(result)) {
     result = new PolygonGeometry(dummyOptions);
@@ -1019,6 +1035,23 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
     offsetAttribute === -1 ? undefined : offsetAttribute;
   result._arcType = arcType;
   result.packedLength = packedLength;
+
+  if (array[startingIndex++] == 1.0) {
+    result._textureCoordinates = Array(
+      result._polygonHierarchy.positions.length
+    );
+    for (
+      let i = 0;
+      i < result._textureCoordinates.length;
+      ++i, startingIndex += 2
+    ) {
+      result._textureCoordinates[i] = [
+        array[startingIndex],
+        array[startingIndex + 1],
+      ];
+    }
+  }
+
   return result;
 };
 
@@ -1131,6 +1164,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
     boundingRectangle: boundingRectangle,
     ellipsoid: ellipsoid,
     stRotation: stRotation,
+    textureCoordinates: polygonGeometry._textureCoordinates,
     bottom: false,
     top: true,
     wall: false,
