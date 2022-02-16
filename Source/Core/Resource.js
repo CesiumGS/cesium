@@ -349,6 +349,21 @@ Resource.createIfNeeded = function (resource) {
   });
 };
 
+function getColorAtFirstPixel(imageBitmap) {
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  canvas.width = 1;
+  canvas.height = 1;
+  context.drawImage(imageBitmap, 0, 0, 1, 1);
+  const imageData = context.getImageData(0, 0, 1, 1);
+  return [
+    imageData.data[0],
+    imageData.data[1],
+    imageData.data[2],
+    imageData.data[3],
+  ];
+}
+
 let supportsImageBitmapOptionsPromise;
 /**
  * A helper function to check whether createImageBitmap supports passing ImageBitmapOptions.
@@ -361,6 +376,12 @@ Resource.supportsImageBitmapOptions = function () {
   // Until the HTML folks figure out what to do about this, we need to actually try loading an image to
   // know if this browser supports passing options to the createImageBitmap function.
   // https://github.com/whatwg/html/pull/4248
+  //
+  // We also need to check whether colorSpaceConversion is supported. We do this by
+  // loading a PNG with an embedded color profile, first with colorSpaceConversion: "none"
+  // and again with colorSpaceConversion: "default". If the values are
+  // different then we know the option is working. As of Webkit 17612.3.6.1.6
+  // the createImageBitmap promise resolves but the option is not actually supported.
   if (defined(supportsImageBitmapOptionsPromise)) {
     return supportsImageBitmapOptionsPromise;
   }
@@ -371,20 +392,27 @@ Resource.supportsImageBitmapOptions = function () {
   }
 
   const imageDataUri =
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWP4////fwAJ+wP9CNHoHgAAAABJRU5ErkJggg==";
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAABGdBTUEAAE4g3rEiDgAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAADElEQVQI12Ng6GAAAAEUAIngE3ZiAAAAAElFTkSuQmCC";
 
   supportsImageBitmapOptionsPromise = Resource.fetchBlob({
     url: imageDataUri,
   })
     .then(function (blob) {
-      return createImageBitmap(blob, {
-        imageOrientation: "flipY",
-        premultiplyAlpha: "none",
-        colorSpaceConversion: "none",
-      });
+      const imageBitmapOptions = {
+        imageOrientation: "flipY", // default is "none"
+        premultiplyAlpha: "none", // default is "default"
+        colorSpaceConversion: "none", // default is "default"
+      };
+      return when.all([
+        createImageBitmap(blob, imageBitmapOptions),
+        createImageBitmap(blob),
+      ]);
     })
-    .then(function (imageBitmap) {
-      return true;
+    .then(function (imageBitmaps) {
+      // Check whether the colorSpaceConversion option had any effect
+      const colorWithOptions = getColorAtFirstPixel(imageBitmaps[0]);
+      const colorWithDefaults = getColorAtFirstPixel(imageBitmaps[1]);
+      return colorWithOptions[1] !== colorWithDefaults[1];
     })
     .otherwise(function () {
       return false;
