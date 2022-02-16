@@ -22,6 +22,7 @@ function createPolygonHierarchyProperty(value) {
  *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the polygon.
  * @property {Property | PolygonHierarchy} [hierarchy] A Property specifying the {@link PolygonHierarchy}.
+ * @property {Property | Number[][]} [textureCoordinates] A Property specifying the texture coordinates.
  * @property {Property | number} [height=0] A numeric Property specifying the altitude of the polygon relative to the ellipsoid surface.
  * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
  * @property {Property | number} [extrudedHeight] A numeric Property specifying the altitude of the polygon's extruded face relative to the ellipsoid surface.

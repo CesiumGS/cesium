@@ -65,6 +65,7 @@ function computeAttributes(options) {
   const geometry = options.geometry;
   const shadowVolume = options.shadowVolume;
   const flatPositions = geometry.attributes.position.values;
+  const hardcodedTextureCoordinates = options.textureCoordinates;
   let length = flatPositions.length;
   const wall = options.wall;
   const top = options.top || wall;
@@ -87,6 +88,10 @@ function computeAttributes(options) {
     const origin = appendTextureCoordinatesOrigin;
     origin.x = boundingRectangle.x;
     origin.y = boundingRectangle.y;
+
+    if (hardcodedTextureCoordinates) {
+      console.log(options);
+    }
 
     const textureCoordinates = vertexFormat.st
       ? new Float32Array(2 * (length / 3))
@@ -159,36 +164,38 @@ function computeAttributes(options) {
         appendTextureCoordinatesCartesian3
       );
 
-      if (options.textureCoordinates) {
-        textureCoordinates[(i * 2) / 3 + 0] =
-          options.textureCoordinates[i / 3][0];
-        textureCoordinates[(i * 2) / 3 + 1] =
-          options.textureCoordinates[i / 3][1];
-      } else if (vertexFormat.st) {
-        let p = Matrix3.multiplyByVector(
-          textureMatrix,
-          position,
-          scratchPosition
-        );
-        p = ellipsoid.scaleToGeodeticSurface(p, p);
-        const st = tangentPlane.projectPointOntoPlane(
-          p,
-          appendTextureCoordinatesCartesian2
-        );
-        Cartesian2.subtract(st, origin, st);
+      if (vertexFormat.st) {
+        if (hardcodedTextureCoordinates) {
+          textureCoordinates[(i * 2) / 3 + 0] =
+            hardcodedTextureCoordinates[i / 3][0];
+          textureCoordinates[(i * 2) / 3 + 1] =
+            hardcodedTextureCoordinates[i / 3][1];
+        } else {
+          let p = Matrix3.multiplyByVector(
+            textureMatrix,
+            position,
+            scratchPosition
+          );
+          p = ellipsoid.scaleToGeodeticSurface(p, p);
+          const st = tangentPlane.projectPointOntoPlane(
+            p,
+            appendTextureCoordinatesCartesian2
+          );
+          Cartesian2.subtract(st, origin, st);
 
-        const stx = CesiumMath.clamp(st.x / boundingRectangle.width, 0, 1);
-        const sty = CesiumMath.clamp(st.y / boundingRectangle.height, 0, 1);
-        if (bottom) {
-          textureCoordinates[textureCoordIndex + bottomOffset2] = stx;
-          textureCoordinates[textureCoordIndex + 1 + bottomOffset2] = sty;
-        }
-        if (top) {
-          textureCoordinates[textureCoordIndex] = stx;
-          textureCoordinates[textureCoordIndex + 1] = sty;
-        }
+          const stx = CesiumMath.clamp(st.x / boundingRectangle.width, 0, 1);
+          const sty = CesiumMath.clamp(st.y / boundingRectangle.height, 0, 1);
+          if (bottom) {
+            textureCoordinates[textureCoordIndex + bottomOffset2] = stx;
+            textureCoordinates[textureCoordIndex + 1 + bottomOffset2] = sty;
+          }
+          if (top) {
+            textureCoordinates[textureCoordIndex] = stx;
+            textureCoordinates[textureCoordIndex + 1] = sty;
+          }
 
-        textureCoordIndex += 2;
+          textureCoordIndex += 2;
+        }
       }
 
       if (
@@ -847,7 +854,7 @@ function PolygonGeometry(options) {
     Ellipsoid.packedLength +
     VertexFormat.packedLength +
     (this._textureCoordinates ? this._textureCoordinates.length * 2 : 0) +
-    12;
+    13;
 }
 
 /**
@@ -953,11 +960,13 @@ PolygonGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value.packedLength;
 
   if (value._textureCoordinates) {
-    array[startingIndex++] = 1.0;
-    for (let i = 0; i < value._polygonHierarchy.positions.length; i++) {
+    array[startingIndex++] = value._textureCoordinates.length;
+    for (let i = 0; i < value._textureCoordinates.length; i++) {
       array[startingIndex++] = value._textureCoordinates[i][0];
       array[startingIndex++] = value._textureCoordinates[i][1];
     }
+  } else {
+    array[startingIndex++] = 0.0;
   }
 
   return array;
@@ -1036,10 +1045,8 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
   result._arcType = arcType;
   result.packedLength = packedLength;
 
-  if (array[startingIndex++] == 1.0) {
-    result._textureCoordinates = Array(
-      result._polygonHierarchy.positions.length
-    );
+  if (array[startingIndex] != 0.0) {
+    result._textureCoordinates = Array(array[startingIndex++]);
     for (
       let i = 0;
       i < result._textureCoordinates.length;

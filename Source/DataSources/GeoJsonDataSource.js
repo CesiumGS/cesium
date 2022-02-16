@@ -19,6 +19,7 @@ import when from "../ThirdParty/when.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CallbackProperty from "./CallbackProperty.js";
 import ColorMaterialProperty from "./ColorMaterialProperty.js";
+import ImageMaterialProperty from "./ImageMaterialProperty.js";
 import ConstantPositionProperty from "./ConstantPositionProperty.js";
 import ConstantProperty from "./ConstantProperty.js";
 import DataSource from "./DataSource.js";
@@ -436,6 +437,7 @@ function createPolygon(dataSource, geoJson, crsFunction, coordinates, options) {
   let outlineColorProperty = options.strokeMaterialProperty.color;
   let material = options.fillMaterialProperty;
   let widthProperty = options.strokeWidthProperty;
+  let textureCoordinatesProperty;
 
   const properties = geoJson.properties;
   if (defined(properties)) {
@@ -478,6 +480,16 @@ function createPolygon(dataSource, geoJson, crsFunction, coordinates, options) {
     if (defined(fillColor)) {
       material = new ColorMaterialProperty(fillColor);
     }
+
+    const imageUrl = properties.image;
+    if (defined(imageUrl)) {
+      material = new ImageMaterialProperty({ image: properties.image });
+    }
+
+    const textureCoordinates = properties["texture-coordinates"];
+    if (defined(textureCoordinates)) {
+      textureCoordinatesProperty = new ConstantProperty(textureCoordinates);
+    }
   }
 
   const polygon = new PolygonGraphics();
@@ -486,6 +498,7 @@ function createPolygon(dataSource, geoJson, crsFunction, coordinates, options) {
   polygon.outlineWidth = widthProperty;
   polygon.material = material;
   polygon.arcType = ArcType.RHUMB;
+  polygon.textureCoordinates = textureCoordinatesProperty;
 
   const holes = [];
   for (let i = 1, len = coordinates.length; i < len; i++) {
@@ -508,7 +521,6 @@ function createPolygon(dataSource, geoJson, crsFunction, coordinates, options) {
   } else if (!options.clampToGround) {
     polygon.height = 0;
   }
-  polygon.textureCoordinates = geoJson.textureCoordinates;
 
   const entity = createObject(
     geoJson,

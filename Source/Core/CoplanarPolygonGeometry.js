@@ -43,7 +43,7 @@ function createGeometryFromPolygon(
   vertexFormat,
   boundingRectangle,
   stRotation,
-  inputTextureCoordinates,
+  hardcodedTextureCoordinates,
   projectPointTo2D,
   normal,
   tangent,
@@ -128,9 +128,9 @@ function createGeometryFromPolygon(
     flatPositions[positionIndex++] = position.y;
     flatPositions[positionIndex++] = position.z;
 
-    if (inputTextureCoordinates) {
-      textureCoordinates[i * 2] = inputTextureCoordinates[i][0];
-      textureCoordinates[i * 2 + 1] = inputTextureCoordinates[i][1];
+    if (hardcodedTextureCoordinates) {
+      textureCoordinates[i * 2] = hardcodedTextureCoordinates[i][0];
+      textureCoordinates[i * 2 + 1] = hardcodedTextureCoordinates[i][1];
     } else if (vertexFormat.st) {
       const p = Matrix3.multiplyByVector(
         textureMatrix,
@@ -264,7 +264,7 @@ function CoplanarPolygonGeometry(options) {
     VertexFormat.packedLength +
     Ellipsoid.packedLength +
     (this._textureCoordinates ? this._textureCoordinates.length * 2 : 0) +
-    2;
+    3;
 }
 
 /**
@@ -344,11 +344,13 @@ CoplanarPolygonGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value.packedLength;
 
   if (value._textureCoordinates) {
-    array[startingIndex++] = 1.0;
-    for (let i = 0; i < value._polygonHierarchy.positions.length; i++) {
+    array[startingIndex++] = value._textureCoordinates.length;
+    for (let i = 0; i < value._textureCoordinates.length; i++) {
       array[startingIndex++] = value._textureCoordinates[i][0];
       array[startingIndex++] = value._textureCoordinates[i][1];
     }
+  } else {
+    array[startingIndex++] = 0.0;
   }
 
   return array;
@@ -404,10 +406,8 @@ CoplanarPolygonGeometry.unpack = function (array, startingIndex, result) {
   result._stRotation = stRotation;
   result.packedLength = packedLength;
 
-  if (array[startingIndex++] == 1.0) {
-    result._textureCoordinates = Array(
-      result._polygonHierarchy.positions.length
-    );
+  if (array[startingIndex] != 0.0) {
+    result._textureCoordinates = Array(array[startingIndex++]);
     for (
       let i = 0;
       i < result._textureCoordinates.length;

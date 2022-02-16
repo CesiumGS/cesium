@@ -406,6 +406,10 @@ PolygonGeometryUpdater.prototype._setStaticOptions = function (
     Iso8601.MINIMUM_VALUE,
     ArcType.GEODESIC
   );
+  options.textureCoordinates = Property.getValueOrUndefined(
+    polygon.textureCoordinates,
+    Iso8601.MINIMUM_VALUE
+  );
 
   extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(
     extrudedHeightValue,
@@ -418,7 +422,6 @@ PolygonGeometryUpdater.prototype._setStaticOptions = function (
   }
 
   options.extrudedHeight = extrudedHeightValue;
-  options.textureCoordinates = polygon.textureCoordinates;
 };
 
 PolygonGeometryUpdater.prototype._getIsClosed = function (options) {
