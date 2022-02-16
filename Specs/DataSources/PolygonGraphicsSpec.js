@@ -33,6 +33,7 @@ describe("DataSources/PolygonGraphics", function () {
       classificationType: ClassificationType.TERRAIN,
       arcType: ArcType.GEODESIC,
       zIndex: 22,
+      textureCoordinates: [],
     };
 
     const polygon = new PolygonGraphics(options);
@@ -55,6 +56,7 @@ describe("DataSources/PolygonGraphics", function () {
     expect(polygon.classificationType).toBeInstanceOf(ConstantProperty);
     expect(polygon.arcType).toBeInstanceOf(ConstantProperty);
     expect(polygon.zIndex).toBeInstanceOf(ConstantProperty);
+    expect(polygon.textureCoordinates).toBeInstanceOf(ConstantProperty);
 
     expect(polygon.material.color.getValue()).toEqual(options.material);
     expect(polygon.show.getValue()).toEqual(options.show);
@@ -81,6 +83,9 @@ describe("DataSources/PolygonGraphics", function () {
     );
     expect(polygon.arcType.getValue()).toEqual(options.arcType);
     expect(polygon.zIndex.getValue()).toEqual(22);
+    expect(polygon.textureCoordinates.getValue()).toEqual(
+      options.textureCoordinates
+    );
   });
 
   it("merge assigns unassigned properties", function () {
@@ -108,6 +113,7 @@ describe("DataSources/PolygonGraphics", function () {
     );
     source.arcType = new ConstantProperty(ArcType.RHUMB);
     source.zIndex = new ConstantProperty(30);
+    source.textureCoordinates = new ConstantProperty();
 
     const target = new PolygonGraphics();
     target.merge(source);
@@ -133,6 +139,7 @@ describe("DataSources/PolygonGraphics", function () {
     expect(target.classificationType).toBe(source.classificationType);
     expect(target.arcType).toBe(source.arcType);
     expect(target.zIndex).toBe(source.zIndex);
+    expect(target.textureCoordinates).toBe(source.textureCoordinates);
   });
 
   it("merge does not assign assigned properties", function () {
@@ -157,6 +164,7 @@ describe("DataSources/PolygonGraphics", function () {
     const classificationType = new ConstantProperty();
     const arcType = new ConstantProperty();
     const zIndex = new ConstantProperty();
+    const textureCoordinates = new ConstantProperty();
 
     const target = new PolygonGraphics();
     target.material = material;
@@ -178,6 +186,7 @@ describe("DataSources/PolygonGraphics", function () {
     target.classificationType = classificationType;
     target.arcType = arcType;
     target.zIndex = zIndex;
+    target.textureCoordinates = textureCoordinates;
 
     target.merge(source);
 
@@ -200,6 +209,7 @@ describe("DataSources/PolygonGraphics", function () {
     expect(target.classificationType).toBe(classificationType);
     expect(target.arcType).toBe(arcType);
     expect(target.zIndex).toBe(zIndex);
+    expect(target.textureCoordinates).toBe(textureCoordinates);
   });
 
   it("clone works", function () {
@@ -223,6 +233,7 @@ describe("DataSources/PolygonGraphics", function () {
     source.classificationType = new ConstantProperty();
     source.arcType = new ConstantProperty();
     source.zIndex = new ConstantProperty();
+    source.textureCoordinates = new ConstantProperty();
 
     const result = source.clone();
     expect(result.material).toBe(source.material);
@@ -246,6 +257,7 @@ describe("DataSources/PolygonGraphics", function () {
     expect(result.classificationType).toBe(source.classificationType);
     expect(result.arcType).toBe(source.arcType);
     expect(result.zIndex).toBe(source.zIndex);
+    expect(result.textureCoordinates).toBe(source.textureCoordinates);
   });
 
   it("merge throws if source undefined", function () {
@@ -291,6 +303,7 @@ describe("DataSources/PolygonGraphics", function () {
     );
     testDefinitionChanged(property, "arcType", ArcType.GEODESIC, ArcType.RHUMB);
     testDefinitionChanged(property, "zIndex", 54, 3);
+    testDefinitionChanged(property, "textureCoordinates", [], []);
   });
 
   it("converts an array of positions to a PolygonHierarchy", function () {

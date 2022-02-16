@@ -1286,6 +1286,41 @@ describe("Core/PolygonGeometry", function () {
     }
   });
 
+  it("uses explicit texture coordinates if defined in options", function () {
+    const textureCoordinates = [
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 1],
+    ];
+    const p = PolygonGeometry.createGeometry(
+      new PolygonGeometry({
+        vertexFormat: VertexFormat.POSITION_AND_ST,
+        polygonHierarchy: {
+          positions: Cartesian3.fromDegreesArray([
+            -100.5,
+            30.0,
+            -100.0,
+            30.0,
+            -100.0,
+            30.5,
+            -100.5,
+            30.5,
+          ]),
+        },
+        textureCoordinates: textureCoordinates,
+        height: 150000,
+        granularity: CesiumMath.PI,
+      })
+    );
+
+    const st = p.attributes.st.values;
+    for (let i = 0; i < textureCoordinates.length; i++) {
+      expect(st[i * 2 + 0]).toEqual(textureCoordinates[i][0]);
+      expect(st[i * 2 + 1]).toEqual(textureCoordinates[i][1]);
+    }
+  });
+
   it("creates a polygon from hierarchy extruded", function () {
     const hierarchy = {
       positions: Cartesian3.fromDegreesArray([
@@ -1833,6 +1868,8 @@ describe("Core/PolygonGeometry", function () {
     );
   });
 
+  // pack without explicit texture coordinates
+
   const positions = Cartesian3.fromDegreesArray([
     -12.4,
     3.5,
@@ -1911,7 +1948,79 @@ describe("Core/PolygonGeometry", function () {
     0,
     -1,
     ArcType.GEODESIC,
-    54
+    0,
+    55
   );
   createPackableSpecs(PolygonGeometry, polygon, packedInstance);
+
+  // pack with explicit texture coordinates
+
+  const textureCoordinates = [
+    [0, 0],
+    [1, 0],
+    [0, 1],
+    [0.1, 0.1],
+    [0.5, 0.1],
+    [0.1, 0.5],
+    [0.2, 0.2],
+    [0.3, 0.2],
+    [0.2, 0.3],
+  ];
+
+  const polygonTextured = new PolygonGeometry({
+    vertexFormat: VertexFormat.POSITION_ONLY,
+    polygonHierarchy: hierarchy,
+    textureCoordinates: textureCoordinates,
+    granularity: CesiumMath.PI_OVER_THREE,
+    perPositionHeight: true,
+    closeTop: false,
+    closeBottom: true,
+  });
+
+  const packedInstanceTextured = [3.0, 1.0];
+  addPositions(packedInstanceTextured, positions);
+  packedInstanceTextured.push(3.0, 1.0);
+  addPositions(packedInstanceTextured, holePositions0);
+  packedInstanceTextured.push(3.0, 0.0);
+  addPositions(packedInstanceTextured, holePositions1);
+  packedInstanceTextured.push(
+    Ellipsoid.WGS84.radii.x,
+    Ellipsoid.WGS84.radii.y,
+    Ellipsoid.WGS84.radii.z
+  );
+  packedInstanceTextured.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  packedInstanceTextured.push(
+    0.0,
+    0.0,
+    CesiumMath.PI_OVER_THREE,
+    0.0,
+    0.0,
+    1.0,
+    0,
+    1,
+    0,
+    -1,
+    ArcType.GEODESIC,
+    9,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0.1,
+    0.1,
+    0.5,
+    0.1,
+    0.1,
+    0.5,
+    0.2,
+    0.2,
+    0.3,
+    0.2,
+    0.2,
+    0.3,
+    73
+  );
+  createPackableSpecs(PolygonGeometry, polygonTextured, packedInstanceTextured);
 });

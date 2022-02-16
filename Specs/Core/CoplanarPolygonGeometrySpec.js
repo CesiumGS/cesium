@@ -167,6 +167,8 @@ describe("Core/CoplanarPolygonGeometry", function () {
     expect(expectedNormal).toEqualEpsilon(actual, CesiumMath.EPSILON6);
   });
 
+  // pack without explicit texture coordinates
+
   const positions = Cartesian3.fromDegreesArray([
     -12.4,
     3.5,
@@ -228,6 +230,72 @@ describe("Core/CoplanarPolygonGeometry", function () {
     Ellipsoid.WGS84.radii.y,
     Ellipsoid.WGS84.radii.z
   );
-  packedInstance.push(1, 0, 0, 0, 0, 0, 0, 44);
+  packedInstance.push(1, 0, 0, 0, 0, 0, 0, 0, 45);
   createPackableSpecs(CoplanarPolygonGeometry, polygon, packedInstance);
+
+  // pack with explicit texture coordinates
+
+  const textureCoordinates = [
+    [0, 0],
+    [1, 0],
+    [0, 1],
+    [0.1, 0.1],
+    [0.5, 0.1],
+    [0.1, 0.5],
+    [0.2, 0.2],
+    [0.3, 0.2],
+    [0.2, 0.3],
+  ];
+
+  const polygonTextured = new CoplanarPolygonGeometry({
+    vertexFormat: VertexFormat.POSITION_ONLY,
+    polygonHierarchy: hierarchy,
+    textureCoordinates: textureCoordinates,
+  });
+
+  const packedInstanceTextured = [3.0, 1.0];
+  addPositions(packedInstanceTextured, positions);
+  packedInstanceTextured.push(3.0, 1.0);
+  addPositions(packedInstanceTextured, holePositions0);
+  packedInstanceTextured.push(3.0, 0.0);
+  addPositions(packedInstanceTextured, holePositions1);
+  packedInstanceTextured.push(
+    Ellipsoid.WGS84.radii.x,
+    Ellipsoid.WGS84.radii.y,
+    Ellipsoid.WGS84.radii.z
+  );
+  packedInstanceTextured.push(
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    9,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0.1,
+    0.1,
+    0.5,
+    0.1,
+    0.1,
+    0.5,
+    0.2,
+    0.2,
+    0.3,
+    0.2,
+    0.2,
+    0.3,
+    63
+  );
+  createPackableSpecs(
+    CoplanarPolygonGeometry,
+    polygonTextured,
+    packedInstanceTextured
+  );
 });

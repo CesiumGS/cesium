@@ -89,10 +89,6 @@ function computeAttributes(options) {
     origin.x = boundingRectangle.x;
     origin.y = boundingRectangle.y;
 
-    if (hardcodedTextureCoordinates) {
-      console.log(options);
-    }
-
     const textureCoordinates = vertexFormat.st
       ? new Float32Array(2 * (length / 3))
       : undefined;
@@ -708,6 +704,7 @@ function createGeometryFromPositionsExtruded(
  * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
  * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
+ * @param {Number[][]} [options.textureCoordinates] The texture coordinates of the polygon.
  *
  * @see PolygonGeometry#createGeometry
  * @see PolygonGeometry#fromPositions
@@ -872,6 +869,7 @@ function PolygonGeometry(options) {
  * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
  * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
+ * @param {Number[][]} [options.textureCoordinates] The texture coordinates of the polygon.
  * @returns {PolygonGeometry}
  *
  *
@@ -905,7 +903,6 @@ PolygonGeometry.fromPositions = function (options) {
     extrudedHeight: options.extrudedHeight,
     vertexFormat: options.vertexFormat,
     stRotation: options.stRotation,
-    textureCoordinates: options.textureCoordinates,
     ellipsoid: options.ellipsoid,
     granularity: options.granularity,
     perPositionHeight: options.perPositionHeight,
@@ -913,6 +910,7 @@ PolygonGeometry.fromPositions = function (options) {
     closeBottom: options.closeBottom,
     offsetAttribute: options.offsetAttribute,
     arcType: options.arcType,
+    textureCoordinates: options.textureCoordinates,
   };
   return new PolygonGeometry(newOptions);
 };
@@ -957,18 +955,15 @@ PolygonGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
   array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
   array[startingIndex++] = value._arcType;
-  array[startingIndex++] = value.packedLength;
-
-  if (value._textureCoordinates) {
-    array[startingIndex++] = value._textureCoordinates.length;
-    for (let i = 0; i < value._textureCoordinates.length; i++) {
-      array[startingIndex++] = value._textureCoordinates[i][0];
-      array[startingIndex++] = value._textureCoordinates[i][1];
-    }
-  } else {
-    array[startingIndex++] = 0.0;
+  const textureCoordinatesCount = value._textureCoordinates
+    ? value._textureCoordinates.length
+    : 0.0;
+  array[startingIndex++] = textureCoordinatesCount;
+  for (let i = 0; i < textureCoordinatesCount; i++) {
+    array[startingIndex++] = value._textureCoordinates[i][0];
+    array[startingIndex++] = value._textureCoordinates[i][1];
   }
-
+  array[startingIndex++] = value.packedLength;
   return array;
 };
 
@@ -1022,6 +1017,10 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
   const shadowVolume = array[startingIndex++] === 1.0;
   const offsetAttribute = array[startingIndex++];
   const arcType = array[startingIndex++];
+  const textureCoordinates = Array(array[startingIndex++]);
+  for (let i = 0; i < textureCoordinates.length; ++i, startingIndex += 2) {
+    textureCoordinates[i] = [array[startingIndex], array[startingIndex + 1]];
+  }
   const packedLength = array[startingIndex++];
 
   if (!defined(result)) {
@@ -1043,21 +1042,9 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
   result._offsetAttribute =
     offsetAttribute === -1 ? undefined : offsetAttribute;
   result._arcType = arcType;
+  result._textureCoordinates =
+    textureCoordinates.length === 0 ? undefined : textureCoordinates;
   result.packedLength = packedLength;
-
-  if (array[startingIndex] != 0.0) {
-    result._textureCoordinates = Array(array[startingIndex++]);
-    for (
-      let i = 0;
-      i < result._textureCoordinates.length;
-      ++i, startingIndex += 2
-    ) {
-      result._textureCoordinates[i] = [
-        array[startingIndex],
-        array[startingIndex + 1],
-      ];
-    }
-  }
 
   return result;
 };

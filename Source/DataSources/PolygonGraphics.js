@@ -22,12 +22,11 @@ function createPolygonHierarchyProperty(value) {
  *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the polygon.
  * @property {Property | PolygonHierarchy} [hierarchy] A Property specifying the {@link PolygonHierarchy}.
- * @property {Property | Number[][]} [textureCoordinates] A Property specifying the texture coordinates.
  * @property {Property | number} [height=0] A numeric Property specifying the altitude of the polygon relative to the ellipsoid surface.
  * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
  * @property {Property | number} [extrudedHeight] A numeric Property specifying the altitude of the polygon's extruded face relative to the ellipsoid surface.
  * @property {Property | HeightReference} [extrudedHeightReference=HeightReference.NONE] A Property specifying what the extrudedHeight is relative to.
- * @property {Property | number} [stRotation=0.0] A numeric property specifying the rotation of the polygon texture counter-clockwise from north.
+ * @property {Property | number} [stRotation=0.0] A numeric property specifying the rotation of the polygon texture counter-clockwise from north. Only has an effect if textureCoordinates is not defined.
  * @property {Property | number} [granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
  * @property {Property | boolean} [fill=true] A boolean Property specifying whether the polygon is filled with the provided material.
  * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to fill the polygon.
@@ -42,6 +41,7 @@ function createPolygonHierarchyProperty(value) {
  * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this polygon will be displayed.
  * @property {Property | ClassificationType} [classificationType=ClassificationType.BOTH] An enum Property specifying whether this polygon will classify terrain, 3D Tiles, or both when on the ground.
  * @property {ConstantProperty | number} [zIndex=0] A property specifying the zIndex used for ordering ground geometry.  Only has an effect if the polygon is constant and neither height or extrudedHeight are specified.
+ * @property {Property | Number[][]} [textureCoordinates] A Property specifying texture coordinates to use. Coordinates should be [0..1, 0..1], ordered as in hierarchy, but flattened and omitting the closing points, i.e. a triangle should have 3 texture coordinates, not 4.
  */
 
 /**
@@ -101,6 +101,7 @@ function PolygonGraphics(options) {
   this._classificationTypeSubscription = undefined;
   this._zIndex = undefined;
   this._zIndexSubscription = undefined;
+  this._textureCoordinates = undefined;
 
   this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
 }
@@ -172,7 +173,7 @@ Object.defineProperties(PolygonGraphics.prototype, {
   extrudedHeightReference: createPropertyDescriptor("extrudedHeightReference"),
 
   /**
-   * Gets or sets the numeric property specifying the rotation of the polygon texture counter-clockwise from north.
+   * Gets or sets the numeric property specifying the rotation of the polygon texture counter-clockwise from north. Only has an effect if textureCoordinates is not defined.
    * @memberof PolygonGraphics.prototype
    * @type {Property|undefined}
    * @default 0
@@ -294,6 +295,13 @@ Object.defineProperties(PolygonGraphics.prototype, {
    * @default 0
    */
   zIndex: createPropertyDescriptor("zIndex"),
+
+  /**
+   * Gets or sets the Property specifying the texture coordinates.  A Property specifying texture coordinates to use. Coordinates should be [0..1, 0..1], ordered as in hierarchy, but flattened and omitting the closing points, i.e. a triangle should have 3 texture coordinates, not 4.
+   * @memberof PolygonGraphics.prototype
+   * @type {Property|undefined}
+   */
+  textureCoordinates: createPropertyDescriptor("textureCoordinates"),
 });
 
 /**
@@ -327,6 +335,7 @@ PolygonGraphics.prototype.clone = function (result) {
   result.distanceDisplayCondition = this.distanceDisplayCondition;
   result.classificationType = this.classificationType;
   result.zIndex = this.zIndex;
+  result.textureCoordinates = this.textureCoordinates;
   return result;
 };
 
@@ -382,5 +391,9 @@ PolygonGraphics.prototype.merge = function (source) {
     source.classificationType
   );
   this.zIndex = defaultValue(this.zIndex, source.zIndex);
+  this.textureCoordinates = defaultValue(
+    this.textureCoordinates,
+    source.textureCoordinates
+  );
 };
 export default PolygonGraphics;

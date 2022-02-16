@@ -341,17 +341,15 @@ CoplanarPolygonGeometry.pack = function (value, array, startingIndex) {
   startingIndex += VertexFormat.packedLength;
 
   array[startingIndex++] = value._stRotation;
-  array[startingIndex++] = value.packedLength;
-
-  if (value._textureCoordinates) {
-    array[startingIndex++] = value._textureCoordinates.length;
-    for (let i = 0; i < value._textureCoordinates.length; i++) {
-      array[startingIndex++] = value._textureCoordinates[i][0];
-      array[startingIndex++] = value._textureCoordinates[i][1];
-    }
-  } else {
-    array[startingIndex++] = 0.0;
+  const textureCoordinatesCount = value._textureCoordinates
+    ? value._textureCoordinates.length
+    : 0.0;
+  array[startingIndex++] = textureCoordinatesCount;
+  for (let i = 0; i < textureCoordinatesCount; i++) {
+    array[startingIndex++] = value._textureCoordinates[i][0];
+    array[startingIndex++] = value._textureCoordinates[i][1];
   }
+  array[startingIndex++] = value.packedLength;
 
   return array;
 };
@@ -394,6 +392,10 @@ CoplanarPolygonGeometry.unpack = function (array, startingIndex, result) {
   startingIndex += VertexFormat.packedLength;
 
   const stRotation = array[startingIndex++];
+  const textureCoordinates = Array(array[startingIndex++]);
+  for (let i = 0; i < textureCoordinates.length; ++i, startingIndex += 2) {
+    textureCoordinates[i] = [array[startingIndex], array[startingIndex + 1]];
+  }
   const packedLength = array[startingIndex++];
 
   if (!defined(result)) {
@@ -404,21 +406,9 @@ CoplanarPolygonGeometry.unpack = function (array, startingIndex, result) {
   result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
   result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
   result._stRotation = stRotation;
+  result._textureCoordinates =
+    textureCoordinates.length === 0 ? undefined : textureCoordinates;
   result.packedLength = packedLength;
-
-  if (array[startingIndex] != 0.0) {
-    result._textureCoordinates = Array(array[startingIndex++]);
-    for (
-      let i = 0;
-      i < result._textureCoordinates.length;
-      ++i, startingIndex += 2
-    ) {
-      result._textureCoordinates[i] = [
-        array[startingIndex],
-        array[startingIndex + 1],
-      ];
-    }
-  }
 
   return result;
 };
