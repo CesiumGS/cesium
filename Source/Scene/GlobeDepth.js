@@ -272,9 +272,9 @@ GlobeDepth.prototype.update = function (
   this._clearGlobeDepth = clearGlobeDepth;
 };
 
-GlobeDepth.prototype.prepareColorTextures = function (context) {
+GlobeDepth.prototype.prepareColorTextures = function (context, blitStencil) {
   if (!this.picking && this._numSamples > 1) {
-    this._outputFramebuffer.prepareTextures(context);
+    this._outputFramebuffer.prepareTextures(context, blitStencil);
   }
 };
 

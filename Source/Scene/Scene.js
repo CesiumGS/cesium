@@ -2484,7 +2484,9 @@ function executeCommands(scene, passState) {
 
       if (length > 0) {
         if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-          globeDepth.prepareColorTextures(context);
+          // When clearGlobeDepth is true, executeUpdateDepth needs
+          // a globe depth texture with resolved stencil bits.
+          globeDepth.prepareColorTextures(context, clearGlobeDepth);
           globeDepth.executeUpdateDepth(
             context,
             passState,

@@ -315,9 +315,12 @@ InvertClassification.prototype.update = function (
   }
 };
 
-InvertClassification.prototype.prepareTextures = function (context) {
+InvertClassification.prototype.prepareTextures = function (
+  context,
+  blitStencil
+) {
   if (this._fbo._numSamples > 1) {
-    this._fbo._multisampleFramebuffer.blitFramebuffers(context);
+    this._fbo.prepareTextures(context, blitStencil);
   }
 };
 
@@ -337,7 +340,7 @@ InvertClassification.prototype.executeClassified = function (
   if (!defined(this._previousFramebuffer)) {
     const framebuffer = passState.framebuffer;
 
-    this.prepareTextures(context);
+    this.prepareTextures(context, true);
     passState.framebuffer = this._fboClassified.framebuffer;
     this._translucentCommand.execute(context, passState);
 

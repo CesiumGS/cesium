@@ -402,9 +402,9 @@ FramebufferManager.prototype.setDepthStencilTexture = function (texture) {
   this._depthStencilTexture = texture;
 };
 
-FramebufferManager.prototype.prepareTextures = function (context) {
+FramebufferManager.prototype.prepareTextures = function (context, blitStencil) {
   if (this._numSamples > 1) {
-    this._multisampleFramebuffer.blitFramebuffers(context);
+    this._multisampleFramebuffer.blitFramebuffers(context, blitStencil);
   }
 };
 

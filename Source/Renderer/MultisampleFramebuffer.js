@@ -72,7 +72,10 @@ MultisampleFramebuffer.prototype.getColorFramebuffer = function () {
   return this._colorFramebuffer;
 };
 
-MultisampleFramebuffer.prototype.blitFramebuffers = function (context) {
+MultisampleFramebuffer.prototype.blitFramebuffers = function (
+  context,
+  blitStencil
+) {
   this._renderFramebuffer.bindRead();
   this._colorFramebuffer.bindDraw();
   const gl = context._gl;
@@ -81,7 +84,7 @@ MultisampleFramebuffer.prototype.blitFramebuffers = function (context) {
     mask |= gl.COLOR_BUFFER_BIT;
   }
   if (defined(this._colorFramebuffer.depthStencilTexture)) {
-    mask |= gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT;
+    mask |= gl.DEPTH_BUFFER_BIT | (blitStencil ? gl.STENCIL_BUFFER_BIT : 0);
   }
   gl.blitFramebuffer(
     0,
