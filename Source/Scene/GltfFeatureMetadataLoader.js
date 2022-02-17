@@ -179,6 +179,28 @@ function gatherBufferViewIdsFromProperties(properties, bufferViewIdSet) {
   for (const propertyId in properties) {
     if (properties.hasOwnProperty(propertyId)) {
       const property = properties[propertyId];
+      const bufferView = property.values;
+      const arrayOffsetBufferView = property.arrayOffsets;
+      const stringOffsetBufferView = property.stringOffsets;
+
+      // Using an object like a mathematical set
+      if (defined(bufferView)) {
+        bufferViewIdSet[bufferView] = true;
+      }
+      if (defined(arrayOffsetBufferView)) {
+        bufferViewIdSet[arrayOffsetBufferView] = true;
+      }
+      if (defined(stringOffsetBufferView)) {
+        bufferViewIdSet[stringOffsetBufferView] = true;
+      }
+    }
+  }
+}
+
+function gatherBufferViewIdsFromPropertiesLegacy(properties, bufferViewIdSet) {
+  for (const propertyId in properties) {
+    if (properties.hasOwnProperty(propertyId)) {
+      const property = properties[propertyId];
       const bufferView = property.bufferView;
       const arrayOffsetBufferView = property.arrayOffsetBufferView;
       const stringOffsetBufferView = property.stringOffsetBufferView;
@@ -222,7 +244,7 @@ function gatherUsedBufferViewIdsLegacy(extensionLegacy) {
         const featureTable = featureTables[featureTableId];
         const properties = featureTable.properties;
         if (defined(properties)) {
-          gatherBufferViewIdsFromProperties(properties, bufferViewIdSet);
+          gatherBufferViewIdsFromPropertiesLegacy(properties, bufferViewIdSet);
         }
       }
     }

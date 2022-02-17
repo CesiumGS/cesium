@@ -306,7 +306,7 @@ describe(
       featureMetadataLoader.load();
 
       return featureMetadataLoader.promise
-        .then(function (featureMetadataLoader) {
+        .then(function () {
           fail();
         })
         .otherwise(function (runtimeError) {
