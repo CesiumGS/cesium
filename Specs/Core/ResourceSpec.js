@@ -1,6 +1,5 @@
 import { DefaultProxy } from "../../Source/Cesium.js";
 import { defaultValue } from "../../Source/Cesium.js";
-import { FeatureDetection } from "../../Source/Cesium.js";
 import { queryToObject } from "../../Source/Cesium.js";
 import { Request } from "../../Source/Cesium.js";
 import { RequestErrorEvent } from "../../Source/Cesium.js";
