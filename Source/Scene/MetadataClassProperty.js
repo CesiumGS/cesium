@@ -633,22 +633,18 @@ MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (value) {
  * @private
  */
 MetadataClassProperty.prototype.packVectorAndMatrixTypes = function (value) {
-  switch (this._type) {
-    case MetadataType.VEC2:
-      return Cartesian2.pack(value, []);
-    case MetadataType.VEC3:
-      return Cartesian3.pack(value, []);
-    case MetadataType.VEC4:
-      return Cartesian4.pack(value, []);
-    case MetadataType.MAT2:
-      return Matrix2.pack(value, []);
-    case MetadataType.MAT3:
-      return Matrix3.pack(value, []);
-    case MetadataType.MAT4:
-      return Matrix4.pack(value, []);
-    default:
-      return value;
+  const MathType = MetadataType.getMathType(this._type);
+  const isArray = this._isArray;
+
+  if (!defined(MathType)) {
+    return value;
   }
+
+  if (isArray) {
+    return MathType.packArray(value, []);
+  }
+
+  return MathType.pack(value, []);
 };
 
 /**

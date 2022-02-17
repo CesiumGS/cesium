@@ -1587,6 +1587,7 @@ describe("Scene/MetadataTableProperty", function () {
     const propertyInt32 = {
       type: "SCALAR",
       componentType: "INT32",
+      hasFixedCount: false,
     };
 
     const propertyValues = [

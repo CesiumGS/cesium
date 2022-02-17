@@ -330,21 +330,23 @@ function get(property, index) {
     return property._getValue(index);
   }
 
+  return getArrayValues(property, classProperty, index);
+}
+
+function getArrayValues(property, classProperty, index) {
   let offset;
   let length;
-
-  if (isArray && !classProperty.hasFixedCount) {
+  if (classProperty.isArray && !classProperty.hasFixedCount) {
     offset = property._arrayOffsets.get(index);
     length = property._arrayOffsets.get(index + 1) - offset;
   } else {
-    const componentCount =
-      property._arrayComponentCount * property._vectorComponentCount;
+    const componentCount = classProperty.count * property._vectorComponentCount;
     offset = index * componentCount;
     length = componentCount;
   }
 
   const values = new Array(length);
-  for (let i = 0; i < length; ++i) {
+  for (let i = 0; i < length; i++) {
     values[i] = property._getValue(offset + i);
   }
 
@@ -381,13 +383,11 @@ function set(property, index, value) {
 
   let offset;
   let length;
-
   if (isArray && !classProperty.hasFixedCount) {
     offset = property._arrayOffsets.get(index);
     length = property._arrayOffsets.get(index + 1) - offset;
   } else {
-    const componentCount =
-      property._arrayComponentCount * property._vectorComponentCount;
+    const componentCount = classProperty.count * property._vectorComponentCount;
     offset = index * componentCount;
     length = componentCount;
   }
@@ -599,45 +599,25 @@ function unpackProperty(property) {
 }
 
 function unpackValues(property) {
-  let i;
   const count = property._count;
   const unpackedValues = new Array(count);
 
   const classProperty = property._classProperty;
-  if (!classProperty.isArray) {
-    for (i = 0; i < count; ++i) {
+  const isArray = classProperty.isArray;
+  const type = classProperty.type;
+  const isVectorOrMatrix =
+    MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
+
+  if (!isArray && !isVectorOrMatrix) {
+    for (let i = 0; i < count; ++i) {
       unpackedValues[i] = property._getValue(i);
     }
     return unpackedValues;
   }
 
-  let j;
-  let offset;
-  let arrayValues;
-
-  const componentCount = classProperty.componentCount;
-  if (defined(componentCount)) {
-    for (i = 0; i < count; ++i) {
-      arrayValues = new Array(componentCount);
-      unpackedValues[i] = arrayValues;
-      offset = i * componentCount;
-      for (j = 0; j < componentCount; ++j) {
-        arrayValues[j] = property._getValue(offset + j);
-      }
-    }
-    return unpackedValues;
+  for (let i = 0; i < count; i++) {
+    unpackedValues[i] = getArrayValues(property, classProperty, i);
   }
-
-  for (i = 0; i < count; ++i) {
-    offset = property._arrayOffsets.get(i);
-    const length = property._arrayOffsets.get(i + 1) - offset;
-    arrayValues = new Array(length);
-    unpackedValues[i] = arrayValues;
-    for (j = 0; j < length; ++j) {
-      arrayValues[j] = property._getValue(offset + j);
-    }
-  }
-
   return unpackedValues;
 }
 

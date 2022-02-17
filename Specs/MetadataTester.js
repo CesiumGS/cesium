@@ -451,11 +451,11 @@ function createValuesBuffer(values, classProperty) {
   const flattenedValues = flatten(values);
 
   if (type === MetadataType.STRING) {
-    return createStringBuffer(values);
+    return createStringBuffer(flattenedValues);
   }
 
   if (type === MetadataType.BOOLEAN) {
-    return createBooleanBuffer(values);
+    return createBooleanBuffer(flattenedValues);
   }
 
   if (defined(enumType)) {
