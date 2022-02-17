@@ -179,9 +179,9 @@ function gatherBufferViewIdsFromProperties(properties, bufferViewIdSet) {
   for (const propertyId in properties) {
     if (properties.hasOwnProperty(propertyId)) {
       const property = properties[propertyId];
-      const bufferView = property.values;
-      const arrayOffsetBufferView = property.arrayOffsets;
-      const stringOffsetBufferView = property.stringOffsets;
+      const bufferView = property.bufferView;
+      const arrayOffsetBufferView = property.arrayOffsetBufferView;
+      const stringOffsetBufferView = property.stringOffsetBufferView;
 
       // Using an object like a mathematical set
       if (defined(bufferView)) {
