@@ -230,7 +230,7 @@ describe(
         executeCommand,
         passState,
         translucentPrimitive.commands,
-        globeDepthFramebuffer.depthStencilTexture
+        undefined
       );
 
       expectResources(translucentTileClassification, false);
