@@ -188,6 +188,8 @@ function MetadataTableProperty(options) {
   this._values = values;
   this._classProperty = classProperty;
   this._count = count;
+  this._vectorComponentCount = vectorComponentCount;
+  this._arrayComponentCount = arrayComponentCount;
   this._min = property.min;
   this._max = property.max;
   this._offset = offset;
@@ -309,20 +311,21 @@ function get(property, index) {
   }
 
   const classProperty = property._classProperty;
+  const isArray = classProperty.isArray;
+  const type = classProperty.type;
+  const isVectorOrMatrix =
+    MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
 
   if (defined(property._unpackedValues)) {
     const value = property._unpackedValues[index];
-    if (classProperty.isArray) {
+    if (isArray) {
       // TODO: if this is an array of vectors, maybe we need to deep clone?
       return value.slice(); // clone
     }
     return value;
   }
 
-  const type = classProperty.type;
-  const isArray = classProperty.isArray;
-  const isVectorOrMatrix =
-    MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
+  // handle single values
   if (!isArray && !isVectorOrMatrix) {
     return property._getValue(index);
   }
@@ -330,13 +333,14 @@ function get(property, index) {
   let offset;
   let length;
 
-  const componentCount = classProperty.componentCount;
-  if (defined(componentCount)) {
-    offset = index * componentCount;
-    length = componentCount;
-  } else {
+  if (isArray && !classProperty.hasFixedCount) {
     offset = property._arrayOffsets.get(index);
     length = property._arrayOffsets.get(index + 1) - offset;
+  } else {
+    const componentCount =
+      property._arrayComponentCount * property._vectorComponentCount;
+    offset = index * componentCount;
+    length = componentCount;
   }
 
   const values = new Array(length);
@@ -353,6 +357,10 @@ function set(property, index, value) {
   }
 
   const classProperty = property._classProperty;
+  const isArray = classProperty.isArray;
+  const type = classProperty.type;
+  const isVectorOrMatrix =
+    MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
 
   if (defined(property._unpackedValues)) {
     if (classProperty.isArray) {
@@ -365,10 +373,7 @@ function set(property, index, value) {
   // Values are unpacked if the length of a variable-size array changes or the
   // property has strings. No need to handle these cases below.
 
-  const type = classProperty.type;
-  const isArray = classProperty.isArray;
-  const isVectorOrMatrix =
-    MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
+  // Handle single values
   if (!isArray && !isVectorOrMatrix) {
     property._setValue(index, value);
     return;
@@ -377,13 +382,14 @@ function set(property, index, value) {
   let offset;
   let length;
 
-  const componentCount = classProperty.componentCount;
-  if (defined(componentCount)) {
-    offset = index * componentCount;
-    length = componentCount;
-  } else {
+  if (isArray && !classProperty.hasFixedCount) {
     offset = property._arrayOffsets.get(index);
     length = property._arrayOffsets.get(index + 1) - offset;
+  } else {
+    const componentCount =
+      property._arrayComponentCount * property._vectorComponentCount;
+    offset = index * componentCount;
+    length = componentCount;
   }
 
   for (let i = 0; i < length; ++i) {
@@ -536,8 +542,9 @@ function requiresUnpackForGet(property) {
     return false;
   }
 
-  const type = property._type;
-  const valueType = property._classProperty.valueType;
+  const classProperty = property._classProperty;
+  const type = classProperty.type;
+  const valueType = classProperty.valueType;
 
   if (type === MetadataType.STRING) {
     // Unpack since UTF-8 decoding is expensive

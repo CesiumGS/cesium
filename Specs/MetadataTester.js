@@ -1,6 +1,7 @@
 import {
   defined,
   defaultValue,
+  DeveloperError,
   FeatureDetection,
   PropertyTable,
   MetadataClass,
@@ -379,8 +380,6 @@ MetadataTester.createGltf = function (options) {
 
 function createBuffer(values, componentType) {
   let typedArray;
-  let encoder;
-  let length;
   switch (componentType) {
     case MetadataComponentType.INT8:
       typedArray = new Int8Array(values);
@@ -412,24 +411,33 @@ function createBuffer(values, componentType) {
     case MetadataComponentType.FLOAT64:
       typedArray = new Float64Array(values);
       break;
-    case MetadataComponentType.STRING:
-      encoder = new TextEncoder();
-      typedArray = encoder.encode(values.join(""));
-      break;
-    case MetadataComponentType.BOOLEAN:
-      length = Math.ceil(values.length / 8);
-      typedArray = new Uint8Array(length); // Initialized as 0's
-      for (let i = 0; i < values.length; ++i) {
-        const byteIndex = i >> 3;
-        const bitIndex = i % 8;
-        if (values[i]) {
-          typedArray[byteIndex] |= 1 << bitIndex;
-        }
-      }
-      break;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError(
+        `${componentType} is not a valid component type`
+      );
+    //>>includeEnd('debug');
   }
 
   return new Uint8Array(typedArray.buffer);
+}
+
+function createStringBuffer(values) {
+  const encoder = new TextEncoder();
+  return encoder.encode(values.join(""));
+}
+
+function createBooleanBuffer(values) {
+  const length = Math.ceil(values.length / 8);
+  const typedArray = new Uint8Array(length); // Initialized as 0's
+  for (let i = 0; i < values.length; ++i) {
+    const byteIndex = i >> 3;
+    const bitIndex = i % 8;
+    if (values[i]) {
+      typedArray[byteIndex] |= 1 << bitIndex;
+    }
+  }
+  return typedArray;
 }
 
 function flatten(values) {
@@ -437,9 +445,18 @@ function flatten(values) {
 }
 
 function createValuesBuffer(values, classProperty) {
+  const type = classProperty.type;
   const valueType = classProperty.valueType;
   const enumType = classProperty.enumType;
   const flattenedValues = flatten(values);
+
+  if (type === MetadataType.STRING) {
+    return createStringBuffer(values);
+  }
+
+  if (type === MetadataType.BOOLEAN) {
+    return createBooleanBuffer(values);
+  }
 
   if (defined(enumType)) {
     const length = flattenedValues.length;
