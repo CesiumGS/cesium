@@ -1598,7 +1598,7 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
-   * Whether or not the camera is underneath the globe.
+   * The sample rate of multisample antialiasing (values greater than 1 enable MSAA).
    * @memberof Scene.prototype
    * @type {Boolean}
    * @readonly

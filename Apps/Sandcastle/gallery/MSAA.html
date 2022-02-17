@@ -8,7 +8,7 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <meta name="description" content="Add MSAA to the scene." />
-    <meta name="cesium-sandcastle-labels" content="Post Processing" />
+    <meta name="cesium-sandcastle-labels" content="Showcases" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -69,7 +69,13 @@
               maximumScale: 20000,
             },
           });
-          viewer.trackedEntity = entity;
+          const target = Cesium.Cartesian3.fromDegrees(
+            -123.0744619,
+            44.0503706,
+            height + 7.5
+          );
+          const offset = new Cesium.Cartesian3(50.0, -15.0, 0.0);
+          viewer.scene.camera.lookAt(target, offset);
         }
 
         const options = [
