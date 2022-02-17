@@ -5010,6 +5010,8 @@ describe(
         "Data/Cesium3DTiles/MultipleContents/MultipleContents/tileset.json";
       const implicitMultipleContentsUrl =
         "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset.json";
+      const implicitMultipleContentsWithoutExtensionUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContentsWithoutExtension/tileset.json";
 
       it("request statistics are updated correctly on success", function () {
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
@@ -5288,6 +5290,19 @@ describe(
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitMultipleContentsUrl
+        ).then(function (tileset) {
+          const statistics = tileset._statistics;
+          // implicit placeholder + transcoded root + 4 child tiles
+          expect(statistics.visited).toEqual(6);
+          // root content + 2 contents per child tile
+          expect(statistics.numberOfCommands).toEqual(9);
+        });
+      });
+
+      it("renders implicit tileset with multiple contents and without subtree extension", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitMultipleContentsWithoutExtensionUrl
         ).then(function (tileset) {
           const statistics = tileset._statistics;
           // implicit placeholder + transcoded root + 4 child tiles

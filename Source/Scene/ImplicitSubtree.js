@@ -208,8 +208,8 @@ ImplicitSubtree.prototype.contentIsAvailableAtCoordinates = function (
   implicitCoordinates,
   contentIndex
 ) {
-  const index = this.getTileIndex(implicitCoordinates, contentIndex);
-  return this.contentIsAvailableAtIndex(index);
+  const index = this.getTileIndex(implicitCoordinates);
+  return this.contentIsAvailableAtIndex(index, contentIndex);
 };
 
 /**
@@ -324,13 +324,18 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
     constant: 0,
   };
 
-  // content availability is either in the subtree JSON or the multiple
-  // contents extension. Either way, put the results in this new array
-  // for consistent processing later
+  // In the current schema, content availability is provided in an array in the subtree JSON
+  // regardless of whether or not it contains multiple contents. This differs from previous
+  // schema drafts, where content availability is either a single object in the subtree 
+  // JSON or as an array in the 3DTILES_multiple_contents extension. 
+  //
+  // After identifying how availability is stored, put the results in this new array for consistent processing later
   subtreeJson.contentAvailabilityHeaders = [];
   if (hasExtension(subtreeJson, "3DTILES_multiple_contents")) {
     subtreeJson.contentAvailabilityHeaders =
       subtreeJson.extensions["3DTILES_multiple_contents"].contentAvailability;
+  } else if (Array.isArray(subtreeJson.contentAvailability)) {
+    subtreeJson.contentAvailabilityHeaders = subtreeJson.contentAvailability;
   } else {
     subtreeJson.contentAvailabilityHeaders.push(
       defaultValue(subtreeJson.contentAvailability, defaultContentAvailability)
@@ -493,9 +498,9 @@ function preprocessBufferViews(bufferViewHeaders, bufferHeaders) {
  * Determine which buffer views need to be loaded into memory. This includes:
  *
  * <ul>
- * <li>The tile availability bitstream (if a bufferView is defined)</li>
- * <li>The content availability bitstream(s) (if a bufferView is defined)</li>
- * <li>The child subtree availability bitstream (if a bufferView is defined)</li>
+ * <li>The tile availability bitstream (if a bitstream is defined)</li>
+ * <li>The content availability bitstream(s) (if a bitstream is defined)</li>
+ * <li>The child subtree availability bitstream (if a bitstream is defined)</li>
  * </ul>
  *
  * <p>
@@ -509,24 +514,44 @@ function preprocessBufferViews(bufferViewHeaders, bufferHeaders) {
 function markActiveBufferViews(subtreeJson, bufferViewHeaders) {
   let header;
   const tileAvailabilityHeader = subtreeJson.tileAvailability;
-  if (defined(tileAvailabilityHeader.bufferView)) {
+
+  // Check for bitstream first, which is part of the current schema.
+  // bufferView is the name of the bitstream from an older schema draft.
+  if (defined(tileAvailabilityHeader.bitstream)) {
+    header = bufferViewHeaders[tileAvailabilityHeader.bitstream];
+  } else if (defined(tileAvailabilityHeader.bufferView)) {
     header = bufferViewHeaders[tileAvailabilityHeader.bufferView];
+  }
+
+  if (defined(header)) {
     header.isActive = true;
     header.bufferHeader.isActive = true;
   }
 
   const contentAvailabilityHeaders = subtreeJson.contentAvailabilityHeaders;
   for (let i = 0; i < contentAvailabilityHeaders.length; i++) {
-    if (defined(contentAvailabilityHeaders[i].bufferView)) {
+    header = undefined;
+    if (defined(contentAvailabilityHeaders[i].bitstream)) {
+      header = bufferViewHeaders[contentAvailabilityHeaders[i].bitstream];
+    } else if (defined(contentAvailabilityHeaders[i].bufferView)) {
       header = bufferViewHeaders[contentAvailabilityHeaders[i].bufferView];
+    }
+
+    if (defined(header)) {
       header.isActive = true;
       header.bufferHeader.isActive = true;
     }
   }
 
+  header = undefined;
   const childSubtreeAvailabilityHeader = subtreeJson.childSubtreeAvailability;
-  if (defined(childSubtreeAvailabilityHeader.bufferView)) {
+  if (defined(childSubtreeAvailabilityHeader.bitstream)) {
+    header = bufferViewHeaders[childSubtreeAvailabilityHeader.bitstream];
+  } else if (defined(childSubtreeAvailabilityHeader.bufferView)) {
     header = bufferViewHeaders[childSubtreeAvailabilityHeader.bufferView];
+  }
+
+  if (defined(header)) {
     header.isActive = true;
     header.bufferHeader.isActive = true;
   }
@@ -731,7 +756,15 @@ function parseAvailabilityBitstream(
     });
   }
 
-  const bufferView = bufferViewsU8[availabilityJson.bufferView];
+  let bufferView;
+
+  // Check for bitstream first, which is part of the current schema.
+  // bufferView is the name of the bitstream from an older schema draft.
+  if (defined(availabilityJson.bitstream)) {
+    bufferView = bufferViewsU8[availabilityJson.bitstream];
+  } else if (defined(availabilityJson.bufferView)) {
+    bufferView = bufferViewsU8[availabilityJson.bufferView];
+  }
 
   return new ImplicitAvailabilityBitstream({
     bitstream: bufferView,
