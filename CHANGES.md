@@ -13,6 +13,7 @@
 ##### Fixes :wrench:
 
 - Fixed a bug where updating `ModelExperimental`'s model matrix would not update its bounding sphere. [#10078](https://github.com/CesiumGS/cesium/pull/10078)
+- Fixed feature ID texture artifacts on Safari. [#10111](https://github.com/CesiumGS/cesium/pull/10111)
 
 ### 1.90 - 2022-02-01
 
