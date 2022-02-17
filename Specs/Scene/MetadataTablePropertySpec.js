@@ -81,7 +81,7 @@ describe("Scene/MetadataTableProperty", function () {
     const property = new MetadataTableProperty({
       count: 2,
       property: {
-        bufferView: 0,
+        values: 0,
         extras: extras,
         extensions: extensions,
         stringOffsetType: "UINT16",

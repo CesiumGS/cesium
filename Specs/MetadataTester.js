@@ -89,7 +89,7 @@ function createProperties(options) {
       bufferViews[valuesBufferView] = valuesBuffer;
 
       const property = {
-        bufferView: valuesBufferView,
+        values: valuesBufferView,
       };
 
       properties[propertyId] = property;
@@ -107,20 +107,17 @@ function createProperties(options) {
         property.arrayOffsetType = arrayOffsetType;
       }
 
-      if (
-        classProperty.type === MetadataType.ARRAY &&
-        !defined(classProperty.componentCount)
-      ) {
+      if (classProperty.isArray && !classProperty.hasFixedCount) {
         const arrayOffsetBufferType = defaultValue(arrayOffsetType, offsetType);
         const arrayOffsetBuffer = addPadding(
           createArrayOffsetBuffer(values, arrayOffsetBufferType)
         );
         const arrayOffsetBufferView = bufferViewIndex++;
         bufferViews[arrayOffsetBufferView] = arrayOffsetBuffer;
-        property.arrayOffsetBufferView = arrayOffsetBufferView;
+        property.arrayOffsets = arrayOffsetBufferView;
       }
 
-      if (classProperty.componentType === MetadataComponentType.STRING) {
+      if (classProperty.type === MetadataType.STRING) {
         const stringOffsetBufferType = defaultValue(
           stringOffsetType,
           offsetType
@@ -130,7 +127,7 @@ function createProperties(options) {
         );
         const stringOffsetBufferView = bufferViewIndex++;
         bufferViews[stringOffsetBufferView] = stringOffsetBuffer;
-        property.stringOffsetBufferView = stringOffsetBufferView;
+        property.stringOffsets = stringOffsetBufferView;
       }
     }
   }

@@ -93,9 +93,9 @@ function MetadataTableProperty(options) {
   if (isVariableSizeArray) {
     arrayComponentCount = arrayOffsets.get(count) - arrayOffsets.get(0);
   } else if (isArray) {
-    arrayComponentCount = count;
+    arrayComponentCount = count * classProperty.count;
   } else {
-    arrayComponentCount = 1;
+    arrayComponentCount = count;
   }
 
   const componentCount = vectorComponentCount * arrayComponentCount;
@@ -139,8 +139,11 @@ function MetadataTableProperty(options) {
     valueCount = componentCount;
   }
 
+  // EXT_structural_metadata uses values
+  // EXT_feature_metadata uses bufferView
+  const valuesBufferView = defaultValue(property.values, property.bufferView);
   const values = new BufferView(
-    bufferViews[property.bufferView],
+    bufferViews[valuesBufferView],
     valueType,
     valueCount
   );
@@ -309,14 +312,15 @@ function get(property, index) {
 
   if (defined(property._unpackedValues)) {
     const value = property._unpackedValues[index];
-    if (classProperty.type === MetadataType.ARRAY) {
+    if (classProperty.isArray) {
+      // TODO: if this is an array of vectors, maybe we need to deep clone?
       return value.slice(); // clone
     }
     return value;
   }
 
   const type = classProperty.type;
-  const isArray = classProperty.type === MetadataType.ARRAY;
+  const isArray = classProperty.isArray;
   const isVectorOrMatrix =
     MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
   if (!isArray && !isVectorOrMatrix) {
@@ -351,7 +355,7 @@ function set(property, index, value) {
   const classProperty = property._classProperty;
 
   if (defined(property._unpackedValues)) {
-    if (classProperty.type === MetadataType.ARRAY) {
+    if (classProperty.isArray) {
       value = value.slice(); // clone
     }
     property._unpackedValues[index] = value;
@@ -362,7 +366,7 @@ function set(property, index, value) {
   // property has strings. No need to handle these cases below.
 
   const type = classProperty.type;
-  const isArray = classProperty.type === MetadataType.ARRAY;
+  const isArray = classProperty.isArray;
   const isVectorOrMatrix =
     MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
   if (!isArray && !isVectorOrMatrix) {
@@ -532,9 +536,10 @@ function requiresUnpackForGet(property) {
     return false;
   }
 
+  const type = property._type;
   const valueType = property._classProperty.valueType;
 
-  if (valueType === MetadataComponentType.STRING) {
+  if (type === MetadataType.STRING) {
     // Unpack since UTF-8 decoding is expensive
     return true;
   }
@@ -592,7 +597,7 @@ function unpackValues(property) {
   const unpackedValues = new Array(count);
 
   const classProperty = property._classProperty;
-  if (classProperty.type !== MetadataType.ARRAY) {
+  if (!classProperty.isArray) {
     for (i = 0; i < count; ++i) {
       unpackedValues[i] = property._getValue(i);
     }

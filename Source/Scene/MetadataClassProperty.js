@@ -603,26 +603,22 @@ MetadataClassProperty.prototype.unscaleRange = function (value) {
  * other sizes) are passed through unaltered.
  *
  * @param {*} value the original, normalized values.
- * @returns {*} The appropriate vector or matrix type if the value is a vector or matrix type, respectively. Otherwise, the value is returned unaltered.
+ * @returns {*} The appropriate vector or matrix type if the value is a vector or matrix type, respectively. If the property is an array of vectors or matrices, an array of the appropriate vector or matrix type is returned. Otherwise, the value is returned unaltered.
  * @private
  */
 MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (value) {
-  switch (this._type) {
-    case MetadataType.VEC2:
-      return Cartesian2.unpack(value);
-    case MetadataType.VEC3:
-      return Cartesian3.unpack(value);
-    case MetadataType.VEC4:
-      return Cartesian4.unpack(value);
-    case MetadataType.MAT2:
-      return Matrix2.unpack(value);
-    case MetadataType.MAT3:
-      return Matrix3.unpack(value);
-    case MetadataType.MAT4:
-      return Matrix4.unpack(value);
-    default:
-      return value;
+  const MathType = MetadataType.getMathType(this._type);
+  const isArray = this._isArray;
+
+  if (!defined(MathType)) {
+    return value;
   }
+
+  if (isArray) {
+    return MathType.unpackArray(value);
+  }
+
+  return MathType.unpack(value);
 };
 
 /**

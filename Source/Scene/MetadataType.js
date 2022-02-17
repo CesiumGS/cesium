@@ -1,4 +1,10 @@
 import Check from "../Core/Check.js";
+import Cartesian2 from "../Core/Cartesian2.js";
+import Cartesian3 from "../Core/Cartesian3.js";
+import Cartesian4 from "../Core/Cartesian4.js";
+import Matrix2 from "../Core/Matrix2.js";
+import Matrix3 from "../Core/Matrix3.js";
+import Matrix4 from "../Core/Matrix4.js";
 
 /**
  * An enum of metadata types. These metadata types are containers containing
@@ -164,6 +170,25 @@ MetadataType.getComponentCount = function (type) {
       return 9;
     case MetadataType.MAT4:
       return 16;
+    default:
+      return undefined;
+  }
+};
+
+MetadataType.getMathType = function (type) {
+  switch (type) {
+    case MetadataType.VEC2:
+      return Cartesian2;
+    case MetadataType.VEC3:
+      return Cartesian3;
+    case MetadataType.VEC4:
+      return Cartesian4;
+    case MetadataType.MAT2:
+      return Matrix2;
+    case MetadataType.MAT3:
+      return Matrix3;
+    case MetadataType.MAT4:
+      return Matrix4;
     default:
       return undefined;
   }
