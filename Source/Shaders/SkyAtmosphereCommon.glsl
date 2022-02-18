@@ -1,68 +1,9 @@
-/**
- * @license
- * Copyright (c) 2000-2005, Sean O'Neil (s_p_oneil@hotmail.com)
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * * Redistributions of source code must retain the above copyright notice,
- *   this list of conditions and the following disclaimer.
- * * Redistributions in binary form must reproduce the above copyright notice,
- *   this list of conditions and the following disclaimer in the documentation
- *   and/or other materials provided with the distribution.
- * * Neither the name of the project nor the names of its contributors may be
- *   used to endorse or promote products derived from this software without
- *   specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * Modifications made by Cesium GS, Inc.
- */
-
- // Code:  http://sponeil.net/
- // GPU Gems 2 Article:  https://developer.nvidia.com/gpugems/GPUGems2/gpugems2_chapter16.html
-
-const float Kr = 0.0025;
-const float Kr4PI = Kr * 4.0 * czm_pi;
-const float Km = 0.0015;
-const float Km4PI = Km * 4.0 * czm_pi;
-const float ESun = 15.0;
-const float KmESun = Km * ESun;
-const float KrESun = Kr * ESun;
-const vec3 InvWavelength = vec3(
-    5.60204474633241,  // Red = 1.0 / Math.pow(0.650, 4.0)
-    9.473284437923038, // Green = 1.0 / Math.pow(0.570, 4.0)
-    19.643802610477206); // Blue = 1.0 / Math.pow(0.475, 4.0)
-const float rayleighScaleDepth = 0.25;
-
-const int nSamples = 2;
-const float fSamples = 2.0;
-
-const float g = -0.95;
-const float g2 = g * g;
 
 #ifdef COLOR_CORRECT
 uniform vec3 u_hsbShift; // Hue, saturation, brightness
 #endif
 
 uniform vec3 u_radiiAndDynamicAtmosphereColor; // outer radius, inner radius, dynamic atmosphere color flag
-
-float scale(float cosAngle)
-{
-    float x = 1.0 - cosAngle;
-    return rayleighScaleDepth  * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));
-}
 
 vec3 getLightDirection(vec3 positionWC)
 {
@@ -72,34 +13,6 @@ vec3 getLightDirection(vec3 positionWC)
         czm_lightDirectionWC * float(lightEnum == 1.0) +
         czm_sunDirectionWC * float(lightEnum == 2.0);
     return normalize(lightDirection);
-}
-
-void calculateRayScatteringFromSpace(in vec3 positionWC, in vec3 ray, in float innerRadius, in float outerRadius, inout float far, out vec3 start, out float startOffset)
-{
-    // Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)
-    float cameraHeight = length(positionWC);
-    float B = 2.0 * dot(positionWC, ray);
-    float C = cameraHeight * cameraHeight - outerRadius * outerRadius;
-    float det = max(0.0, B * B - 4.0 * C);
-    float near = 0.5 * (-B - sqrt(det));
-
-    // Calculate the ray's starting position, then calculate its scattering offset
-    start = positionWC + ray * near;
-    far -= near;
-    float startAngle = dot(ray, start) / outerRadius;
-    float startDepth = exp(-1.0 / rayleighScaleDepth);
-    startOffset = startDepth * scale(startAngle);
-}
-
-void calculateRayScatteringFromGround(in vec3 positionWC, in vec3 ray, in float atmosphereScale, in float innerRadius, out vec3 start, out float startOffset)
-{
-    // Calculate the ray's starting position, then calculate its scattering offset
-    float cameraHeight = length(positionWC);
-    start = positionWC;
-    float height = length(start);
-    float depth = exp((atmosphereScale / rayleighScaleDepth ) * (innerRadius - cameraHeight));
-    float startAngle = dot(ray, start) / height;
-    startOffset = depth*scale(startAngle);
 }
 
 czm_raySegment rayEllipsoidIntersection(czm_ray ray, vec3 inverseRadii)
@@ -132,156 +45,167 @@ czm_raySegment rayEllipsoidIntersection(czm_ray ray, vec3 inverseRadii)
     return czm_raySegment(t1, t2);
 }
 
-vec3 getAdjustedPosition(vec3 positionWC, float innerRadius)
+float maxDistance = 10000000.0;
+
+czm_raySegment raySphereIntersection(czm_ray ray, float radius)
 {
-  // Adjust the camera position so that atmosphere color looks the same wherever the eye height is the same
-  float cameraHeight = czm_eyeHeight + innerRadius;
-  return normalize(positionWC) * cameraHeight;
+    vec3 o = ray.origin;
+    vec3 d = ray.direction;
+
+    float a = dot(d, d);
+    float b = 2.0 * dot(o, d);
+    float c = dot(o, o) - (radius * radius);
+
+    float det = (b * b) - (4.0 * a * c);
+
+    if (det < 0.0) {
+        return czm_emptyRaySegment;
+    }
+
+    float sqrtDet = sqrt(det);
+
+
+    float t0 = (-b - sqrtDet) / (2.0 * a);
+    float t1 = (-b + sqrtDet) / (2.0 * a);
+
+    return czm_raySegment(t0, t1);
 }
 
-vec3 getTranslucentPosition(vec3 positionWC, vec3 outerPositionWC, float innerRadius, out bool intersectsEllipsoid)
-{
-    vec3 directionWC = normalize(outerPositionWC - positionWC);
-    vec3 directionEC = czm_viewRotation * directionWC;
-    czm_ray viewRay = czm_ray(vec3(0.0), directionEC);
-    czm_raySegment raySegment = rayEllipsoidIntersection(viewRay, czm_ellipsoidInverseRadii);
-    intersectsEllipsoid = raySegment.start >= 0.0;
+float planetRadius = 6356752.3142;
+float ATMOSPHERE_THICKNESS = 111e3;
 
-    if (intersectsEllipsoid)
-    {
-        return positionWC + raySegment.stop * directionWC;
+float G = 0.9;
+
+float RAYLEIGH_HEIGHT_LIMIT = 10e3;
+float MIE_HEIGHT_LIMIT = 3.2e3;
+
+vec3 BETA_RAYLEIGH = vec3(5.5e-6, 13.0e-6, 22.4e-6);
+vec3 BETA_MIE = vec3(21e-6);
+vec3 BETA_AMBIENT = vec3(0.0);
+
+vec3 LIGHT_INTENSITY = vec3(100.0);
+
+
+void computeScattering(
+    vec3 start,
+    vec3 direction,
+    float maxDistance,
+    vec3 lightDirection,
+    out vec3 rayleighColor,
+    out vec3 mieColor,
+    out float opacity
+) {
+
+    const int PRIMARY_STEPS = 16;
+    const int LIGHT_STEPS = 4;
+
+    vec2 HEIGHT_SCALE = vec2(RAYLEIGH_HEIGHT_LIMIT, MIE_HEIGHT_LIMIT);
+
+    float AtmosphereRadius = u_radiiAndDynamicAtmosphereColor.x + ATMOSPHERE_THICKNESS;
+
+    // Initialize the default scattering amounts to 0.
+    rayleighColor = vec3(0.0);
+    mieColor = vec3(0.0);
+    opacity = 0.0;
+
+    // Find the intersection from the ray to the outer ring of the atmosphere.
+    czm_ray viewpointRay = czm_ray(start, direction);
+    czm_raySegment viewpointAtmosphereIntersect = raySphereIntersection(viewpointRay, AtmosphereRadius);
+
+    if (viewpointAtmosphereIntersect == czm_emptyRaySegment) {
+        return;
     }
 
-    return getAdjustedPosition(positionWC, innerRadius);
+    viewpointAtmosphereIntersect.start = max(viewpointAtmosphereIntersect.start, 0.0);
+    viewpointAtmosphereIntersect.stop = min(viewpointAtmosphereIntersect.stop, maxDistance);
+
+    if (viewpointAtmosphereIntersect.start > viewpointAtmosphereIntersect.stop) {
+        return;
+    }
+
+    // Prevent Mie glow on objects right in front of the camera.
+    bool allowMie = maxDistance > viewpointAtmosphereIntersect.stop;
+
+    // Set up for sampling positions along the ray - starting from the intersection with the outer ring of the atmosphere.
+    float rayStepLength = (viewpointAtmosphereIntersect.stop - viewpointAtmosphereIntersect.start) / float(PRIMARY_STEPS);
+    float rayPositionLength = viewpointAtmosphereIntersect.start;
+
+    vec3 rayleighAccumulation = vec3(0.0);
+    vec3 mieAccumulation = vec3(0.0);
+    vec2 opticalDepth = vec2(0.0);
+
+    // Sample positions along the primary ray.
+    for (int i = 0; i < PRIMARY_STEPS; ++i) {
+
+        // Calculate sample position along viewpoint ray.
+        vec3 samplePosition = start + direction * (rayPositionLength + rayStepLength);
+
+        // Calculate height of sample position above ellipsoid.
+        float sampleHeight = length(samplePosition) - planetRadius;
+
+        // Calculate density of particles at the sample position.
+        vec2 density = exp(-sampleHeight / HEIGHT_SCALE) * rayStepLength;
+
+        // Add these densities to the optical depth, so that we know how many particles are on this ray.
+        opticalDepth += density;
+
+        // Generate ray from the sample position segment to the light source, up to the outer ring of the atmosphere.
+        czm_ray lightRay = czm_ray(samplePosition, lightDirection);
+        czm_raySegment lightAtmosphereIntersect = raySphereIntersection(lightRay, AtmosphereRadius);
+        
+        float lightStepLength = lightAtmosphereIntersect.stop / float(LIGHT_STEPS);
+        float lightPositionLength = 0.0;
+
+        vec2 lightOpticalDepth = vec2(0.0);
+
+
+        // Sample positions along the light ray, to accumulate incidence of light on the latest sample segment.
+        for (int j = 0; j < LIGHT_STEPS; ++j) {
+
+            // Calculate sample position along light ray.
+            vec3 lightPosition = samplePosition + lightDirection * (lightPositionLength + lightStepLength * 0.5);
+
+            // Calculate height of the light sample position above ellipsoid.
+            float lightHeight = length(lightPosition) - planetRadius;
+
+            // Calculate density of photons at the light sample position.
+            lightOpticalDepth += exp(-lightHeight / HEIGHT_SCALE) * lightStepLength;
+
+            // Increment distance on light ray.
+            lightPositionLength += lightStepLength;
+        }
+
+        // Compute attenuation via the primary ray and the light ray.
+        vec3 attenuation = exp(-((BETA_MIE * (opticalDepth.y + lightOpticalDepth.y)) + (BETA_RAYLEIGH * (opticalDepth.x + lightOpticalDepth.x))));
+
+        // Accumulate the scattering.
+        rayleighAccumulation += density.x * attenuation;
+        mieAccumulation += density.y * attenuation;
+
+        // Increment distance on primary ray.
+        rayPositionLength += rayStepLength;
+    }
+
+    // Compute final color and opacity.
+    rayleighColor = BETA_RAYLEIGH * rayleighAccumulation;
+    mieColor = allowMie ? BETA_MIE * mieAccumulation : vec3(0.0);
+    opacity = length(exp(-((BETA_MIE * opticalDepth.y) + (BETA_RAYLEIGH * opticalDepth.x))));
 }
 
-void calculateMieColorAndRayleighColor(vec3 outerPositionWC, out vec3 mieColor, out vec3 rayleighColor)
+vec4 computeFinalColor(vec3 positionWC, vec3 direction, vec3 lightDirection, vec3 rayleighColor, vec3 mieColor, float opacity)
 {
-    // Unpack attributes
-    float outerRadius = u_radiiAndDynamicAtmosphereColor.x;
-    float innerRadius = u_radiiAndDynamicAtmosphereColor.y;
+    float cosAngle = dot(direction, lightDirection);
+    float cosAngle2 = cosAngle * cosAngle;
+    float G2 = G * G;
 
-#ifdef GLOBE_TRANSLUCENT
-    bool intersectsEllipsoid = false;
-    vec3 startPositionWC = getTranslucentPosition(czm_viewerPositionWC, outerPositionWC, innerRadius, intersectsEllipsoid);
-#else
-    vec3 startPositionWC = getAdjustedPosition(czm_viewerPositionWC, innerRadius);
-#endif
+    // The Rayleigh phase function.
+    float rayleighPhase = 3.0 / (50.2654824574) * (1.0 + cosAngle2);
+    // The Mie phase function.
+    float miePhase = 3.0 / (25.1327412287) * ((1.0 - G2) * (cosAngle2 + 1.0)) / (pow(1.0 + G2 - 2.0 * cosAngle * G, 1.5) * (2.0 + G2));
 
-    vec3 lightDirection = getLightDirection(startPositionWC);
+    // The final color is generated by combining the effects of the Rayleigh and Mie scattering.
+    vec3 rayleigh = rayleighPhase * rayleighColor;
+    vec3 mie = miePhase * mieColor;
 
-    // Get the ray from the start position to the outer position and its length (which is the far point of the ray passing through the atmosphere)
-    vec3 ray = outerPositionWC - startPositionWC;
-    float far = length(ray);
-    ray /= far;
-
-    float atmosphereScale = 1.0 / (outerRadius - innerRadius);
-
-    vec3 start;
-    float startOffset;
-
-#ifdef SKY_FROM_SPACE
-#ifdef GLOBE_TRANSLUCENT
-    if (intersectsEllipsoid)
-    {
-        calculateRayScatteringFromGround(startPositionWC, ray, atmosphereScale, innerRadius, start, startOffset);
-    }
-    else
-    {
-        calculateRayScatteringFromSpace(startPositionWC, ray, innerRadius, outerRadius, far, start, startOffset);
-    }
-#else
-    calculateRayScatteringFromSpace(startPositionWC, ray, innerRadius, outerRadius, far, start, startOffset);
-#endif
-#else
-    calculateRayScatteringFromGround(startPositionWC, ray, atmosphereScale, innerRadius, start, startOffset);
-#endif
-
-    // Initialize the scattering loop variables
-    float sampleLength = far / fSamples;
-    float scaledLength = sampleLength * atmosphereScale;
-    vec3 sampleRay = ray * sampleLength;
-    vec3 samplePoint = start + sampleRay * 0.5;
-
-    // Now loop through the sample rays
-    vec3 frontColor = vec3(0.0, 0.0, 0.0);
-
-    for (int i = 0; i<nSamples; i++)
-    {
-        float height = length(samplePoint);
-        float depth = exp((atmosphereScale / rayleighScaleDepth ) * (innerRadius - height));
-        float fLightAngle = dot(lightDirection, samplePoint) / height;
-        float fCameraAngle = dot(ray, samplePoint) / height;
-        float fScatter = (startOffset + depth*(scale(fLightAngle) - scale(fCameraAngle)));
-        vec3 attenuate = exp(-fScatter * (InvWavelength * Kr4PI + Km4PI));
-        frontColor += attenuate * (depth * scaledLength);
-        samplePoint += sampleRay;
-    }
-
-    // Finally, scale the Mie and Rayleigh colors and set up the varying variables for the pixel shader
-    mieColor = frontColor * KmESun;
-    rayleighColor = frontColor * (InvWavelength * KrESun);
-
-    // Cap mie and rayleigh colors to prevent NaNs when vertex interpolation happens
-    mieColor = min(mieColor, vec3(10000000.0));
-    rayleighColor = min(rayleighColor, vec3(10000000.0));
-}
-
-vec4 calculateFinalColor(vec3 positionWC, vec3 toCamera, vec3 lightDirection, vec3 mieColor, vec3 rayleighColor)
-{
-    // Extra normalize added for Android
-    float cosAngle = dot(lightDirection, normalize(toCamera)) / length(toCamera);
-    float rayleighPhase = 0.75 * (1.0 + cosAngle * cosAngle);
-    float miePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + cosAngle * cosAngle) / pow(1.0 + g2 - 2.0 * g * cosAngle, 1.5);
-
-    vec3 rgb = rayleighPhase * rayleighColor + miePhase * mieColor;
-
-    const float exposure = 2.0;
-    vec3 rgbExposure = vec3(1.0) - exp(-exposure * rgb);
-
-#ifndef HDR
-    rgb = rgbExposure;
-#endif
-
-#ifdef COLOR_CORRECT
-    // Convert rgb color to hsb
-    vec3 hsb = czm_RGBToHSB(rgb);
-    // Perform hsb shift
-    hsb.x += u_hsbShift.x; // hue
-    hsb.y = clamp(hsb.y + u_hsbShift.y, 0.0, 1.0); // saturation
-    hsb.z = hsb.z > czm_epsilon7 ? hsb.z + u_hsbShift.z : 0.0; // brightness
-    // Convert shifted hsb back to rgb
-    rgb = czm_HSBToRGB(hsb);
-#endif
-
-    float outerRadius = u_radiiAndDynamicAtmosphereColor.x;
-    float innerRadius = u_radiiAndDynamicAtmosphereColor.y;
-    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
-
-    float cameraHeight = czm_eyeHeight + innerRadius;
-
-    // Alter alpha based on how close the viewer is to the ground (1.0 = on ground, 0.0 = at edge of atmosphere)
-    float atmosphereAlpha = clamp((outerRadius - cameraHeight) / (outerRadius - innerRadius), 0.0, 1.0);
-
-    // Alter alpha based on time of day (0.0 = night , 1.0 = day)
-    float nightAlpha = (lightEnum != 0.0) ? clamp(dot(normalize(positionWC), lightDirection), 0.0, 1.0) : 1.0;
-    atmosphereAlpha *= pow(nightAlpha, 0.5);
-
-    vec4 finalColor = vec4(rgb, mix(clamp(rgbExposure.b, 0.0, 1.0), 1.0, atmosphereAlpha) * smoothstep(0.0, 1.0, czm_morphTime));
-
-    if (mieColor.b > 1.0)
-    {
-        // Fade atmosphere below the ellipsoid. As the camera zooms further away from the ellipsoid draw
-        // a larger atmosphere ring to cover empty space of lower LOD globe tiles.
-        float strength = mieColor.b;
-        float minDistance = outerRadius;
-        float maxDistance = outerRadius * 3.0;
-        float maxStrengthLerp = 1.0 - clamp((maxDistance - cameraHeight) / (maxDistance - minDistance), 0.0, 1.0);
-        float maxStrength = mix(100.0, 10000.0, maxStrengthLerp);
-        strength = min(strength, maxStrength);
-        float alpha = 1.0 - (strength / maxStrength);
-        finalColor.a = alpha;
-    }
-
-    return finalColor;
+    return vec4((rayleigh + mie) * LIGHT_INTENSITY, 1.0 - opacity);
 }

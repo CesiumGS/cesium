@@ -687,7 +687,7 @@ PostProcessStageLibrary.createAtmosphereScatteringStage = function (
     name: "czm_atmosphere_scattering_generate",
     fragmentShader: fs,
     uniforms: {
-      planetRadius: Cesium.Ellipsoid.WGS84.minimumRadius,
+      planetRadius: Ellipsoid.WGS84.minimumRadius,
     },
   });
 };
