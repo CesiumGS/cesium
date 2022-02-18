@@ -1,4 +1,12 @@
-import { MetadataType } from "../../Source/Cesium.js";
+import {
+  MetadataType,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Matrix2,
+  Matrix3,
+  Matrix4,
+} from "../../Source/Cesium.js";
 
 describe("Scene/MetadataType", function () {
   it("isVectorType works", function () {
@@ -42,5 +50,18 @@ describe("Scene/MetadataType", function () {
     expect(
       MetadataType.getComponentCount(MetadataType.STRING)
     ).not.toBeDefined();
+  });
+
+  it("getMathType works", function () {
+    expect(MetadataType.getMathType(MetadataType.VEC2)).toBe(Cartesian2);
+    expect(MetadataType.getMathType(MetadataType.VEC3)).toBe(Cartesian3);
+    expect(MetadataType.getMathType(MetadataType.VEC4)).toBe(Cartesian4);
+    expect(MetadataType.getMathType(MetadataType.MAT2)).toBe(Matrix2);
+    expect(MetadataType.getMathType(MetadataType.MAT3)).toBe(Matrix3);
+    expect(MetadataType.getMathType(MetadataType.MAT4)).toBe(Matrix4);
+    expect(MetadataType.getMathType(MetadataType.SCALAR)).not.toBeDefined();
+    expect(MetadataType.getMathType(MetadataType.ENUM)).not.toBeDefined();
+    expect(MetadataType.getMathType(MetadataType.BOOLEAN)).not.toBeDefined();
+    expect(MetadataType.getMathType(MetadataType.STRING)).not.toBeDefined();
   });
 });
