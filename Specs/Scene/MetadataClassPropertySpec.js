@@ -29,7 +29,9 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.enumType).toBeUndefined();
     expect(property.componentType).toBe(MetadataComponentType.FLOAT32);
     expect(property.valueType).toBe(MetadataComponentType.FLOAT32);
-    expect(property.count).toBe(1);
+    expect(property.isArray).toBe(false);
+    expect(property.isVariableLengthArray).toBe(false);
+    expect(property.arrayLength).not.toBeDefined();
     expect(property.normalized).toBe(false);
     expect(property.max).toBeUndefined();
     expect(property.min).toBeUndefined();
@@ -78,7 +80,9 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.enumType).toBeUndefined();
     expect(property.componentType).toBe(MetadataComponentType.INT16);
     expect(property.valueType).toBe(MetadataComponentType.INT16);
-    expect(property.count).toBe(3);
+    expect(property.isArray).toBe(true);
+    expect(property.isVariableLengthArray).toBe(false);
+    expect(property.arrayLength).toBe(3);
     expect(property.normalized).toBe(true);
     expect(property.max).toBe(max);
     expect(property.min).toBe(min);
@@ -125,7 +129,9 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.enumType).toBeUndefined();
     expect(property.componentType).toBe(MetadataComponentType.INT32);
     expect(property.valueType).toBe(MetadataComponentType.INT32);
-    expect(property.count).toBe(1);
+    expect(property.isArray).toBe(false);
+    expect(property.isVariableLengthArray).toBe(false);
+    expect(property.arrayLength).not.toBeDefined();
     expect(property.normalized).toBe(true);
     expect(property.max).toBe(max);
     expect(property.min).toBe(min);
@@ -163,6 +169,9 @@ describe("Scene/MetadataClassProperty", function () {
       enums: enums,
     });
 
+    expect(property.isArray).toBe(false);
+    expect(property.isVariableLengthArray).toBe(false);
+    expect(property.arrayLength).not.toBeDefined();
     expect(property.type).toBe(MetadataType.ENUM);
     expect(property.componentType).not.toBeDefined();
     expect(property.enumType).toBe(colorEnum);
@@ -180,7 +189,9 @@ describe("Scene/MetadataClassProperty", function () {
 
     expect(property.id).toBe("speed");
     expect(property.type).toBe(MetadataType.VEC2);
-    expect(property.count).toBe(1);
+    expect(property.isArray).toBe(false);
+    expect(property.isVariableLengthArray).toBe(false);
+    expect(property.arrayLength).not.toBeDefined();
     expect(property.componentType).toBe(MetadataComponentType.FLOAT32);
     expect(property.valueType).toBe(MetadataComponentType.FLOAT32);
 
@@ -194,7 +205,9 @@ describe("Scene/MetadataClassProperty", function () {
 
     expect(property.id).toBe("scale");
     expect(property.type).toBe(MetadataType.MAT3);
-    expect(property.count).toBe(1);
+    expect(property.isArray).toBe(false);
+    expect(property.isVariableLengthArray).toBe(false);
+    expect(property.arrayLength).not.toBeDefined();
     expect(property.componentType).toBe(MetadataComponentType.FLOAT64);
     expect(property.valueType).toBe(MetadataComponentType.FLOAT64);
   });
@@ -1041,7 +1054,7 @@ describe("Scene/MetadataClassProperty", function () {
     });
 
     expect(property.validate([1.0, 2.0])).toBe(
-      "Array length does not match count"
+      "Array length does not match property.arrayLength"
     );
   });
 

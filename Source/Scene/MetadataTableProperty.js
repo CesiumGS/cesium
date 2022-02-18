@@ -46,8 +46,7 @@ function MetadataTableProperty(options) {
 
   const type = classProperty.type;
   const isArray = classProperty.isArray;
-  const hasFixedCount = classProperty.hasFixedCount;
-  const isVariableSizeArray = isArray && !hasFixedCount;
+  const isVariableLengthArray = classProperty.isVariableLengthArray;
   const isVectorOrMatrix =
     MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
 
@@ -58,7 +57,7 @@ function MetadataTableProperty(options) {
   const hasBooleans = type === MetadataType.BOOLEAN;
 
   let arrayOffsets;
-  if (isVariableSizeArray) {
+  if (isVariableLengthArray) {
     // EXT_structural_metadata uses arrayOffsetType.
     // EXT_feature_metadata uses offsetType for both arrays and strings
     let arrayOffsetType = defaultValue(
@@ -85,10 +84,10 @@ function MetadataTableProperty(options) {
   }
 
   let arrayComponentCount;
-  if (isVariableSizeArray) {
+  if (isVariableLengthArray) {
     arrayComponentCount = arrayOffsets.get(count) - arrayOffsets.get(0);
   } else if (isArray) {
-    arrayComponentCount = count * classProperty.count;
+    arrayComponentCount = count * classProperty.arrayLength;
   } else {
     arrayComponentCount = count;
   }
@@ -175,7 +174,6 @@ function MetadataTableProperty(options) {
   this._classProperty = classProperty;
   this._count = count;
   this._vectorComponentCount = vectorComponentCount;
-  this._arrayComponentCount = arrayComponentCount;
   this._min = property.min;
   this._max = property.max;
   this._offset = offset;
@@ -319,11 +317,12 @@ function get(property, index) {
 function getArrayValues(property, classProperty, index) {
   let offset;
   let length;
-  if (classProperty.isArray && !classProperty.hasFixedCount) {
+  if (classProperty.isVariableLengthArray) {
     offset = property._arrayOffsets.get(index);
     length = property._arrayOffsets.get(index + 1) - offset;
   } else {
-    const componentCount = classProperty.count * property._vectorComponentCount;
+    const arrayLength = defaultValue(classProperty.arrayLength, 1);
+    const componentCount = arrayLength * property._vectorComponentCount;
     offset = index * componentCount;
     length = componentCount;
   }
@@ -366,11 +365,12 @@ function set(property, index, value) {
 
   let offset;
   let length;
-  if (isArray && !classProperty.hasFixedCount) {
+  if (classProperty.isVariableLengthArray) {
     offset = property._arrayOffsets.get(index);
     length = property._arrayOffsets.get(index + 1) - offset;
   } else {
-    const componentCount = classProperty.count * property._vectorComponentCount;
+    const arrayLength = defaultValue(classProperty.arrayLength, 1);
+    const componentCount = arrayLength * property._vectorComponentCount;
     offset = index * componentCount;
     length = componentCount;
   }

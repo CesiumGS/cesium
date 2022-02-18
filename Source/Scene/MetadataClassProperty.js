@@ -62,8 +62,8 @@ function MetadataClassProperty(options) {
 
   // Details about arrays
   this._isArray = parsedType.isArray;
-  this._count = parsedType.count;
-  this._hasFixedCount = parsedType.hasFixedCount;
+  this._isVariableLengthArray = parsedType.isVariableLengthArray;
+  this._arrayLength = parsedType.arrayLength;
 
   // min and max allowed values
   this._min = property.min;
@@ -208,7 +208,8 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * True if a property is an array, false otherwise.
+   * True if a property is an array (either fixed length or variable length),
+   * false otherwise.
    *
    * @memberof MetadataClassProperty.prototype
    * @type {Boolean}
@@ -222,31 +223,31 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * True if a property is an array with a fixed count
+   * True if a property is a variable length array, false otherwise.
    *
    * @memberof MetadataClassProperty.prototype
    * @type {Boolean}
    * @readonly
    * @private
    */
-  hasFixedCount: {
+  isVariableLengthArray: {
     get: function () {
-      return this._hasFixedCount;
+      return this._isVariableLengthArray;
     },
   },
 
   /**
    * The number of components per element. Only defined for fixed-size
-   * arrays
+   * arrays.
    *
    * @memberof MetadataClassProperty.prototype
    * @type {Number}
    * @readonly
    * @private
    */
-  count: {
+  arrayLength: {
     get: function () {
-      return this._count;
+      return this._arrayLength;
     },
   },
 
@@ -413,32 +414,32 @@ function parseType(property, enums) {
   // with count + hasFixedCount, so some details need to be transcoded
   const isLegacyArray = type === "ARRAY";
   let isArray;
-  let count;
-  let hasFixedCount;
+  let arrayLength;
+  let isVariableLengthArray;
   if (isLegacyArray) {
     // definitely EXT_feature_metadata
     isArray = true;
-    count = property.componentCount;
-    hasFixedCount = defined(count);
+    arrayLength = property.componentCount;
+    isVariableLengthArray = !defined(arrayLength);
   } else if (defined(property.count) || defined(property.hasFixedCount)) {
     // definitely EXT_structural metadata
     if (property.hasFixedCount) {
       // fixed-sized array
-      count = defaultValue(property.count, 1);
-      isArray = count > 1;
-      hasFixedCount = true;
+      isArray = property.count > 1;
+      arrayLength = isArray ? property.count : undefined;
+      isVariableLengthArray = false;
     } else {
       // variable sized array
       isArray = true;
-      count = undefined;
-      hasFixedCount = false;
+      arrayLength = undefined;
+      isVariableLengthArray = true;
     }
   } else {
     // Could be either extension. Some cases are impossible to distinguished
     // Default to a single value
     isArray = false;
-    count = 1;
-    hasFixedCount = true;
+    arrayLength = undefined;
+    isVariableLengthArray = false;
   }
 
   let enumType;
@@ -455,8 +456,8 @@ function parseType(property, enums) {
       enumType: enumType,
       valueType: enumType.valueType,
       isArray: isArray,
-      hasFixedCount: hasFixedCount,
-      count: count,
+      isVariableLengthArray: isVariableLengthArray,
+      arrayLength: arrayLength,
     };
   }
 
@@ -468,8 +469,8 @@ function parseType(property, enums) {
       enumType: enumType,
       valueType: enumType.valueType,
       isArray: isArray,
-      hasFixedCount: hasFixedCount,
-      count: count,
+      isVariableLengthArray: isVariableLengthArray,
+      arrayLength: arrayLength,
     };
   }
 
@@ -485,8 +486,8 @@ function parseType(property, enums) {
       enumType: undefined,
       valueType: componentType,
       isArray: isArray,
-      hasFixedCount: hasFixedCount,
-      count: count,
+      isVariableLengthArray: isVariableLengthArray,
+      arrayLength: arrayLength,
     };
   }
 
@@ -499,8 +500,8 @@ function parseType(property, enums) {
       enumType: undefined,
       valueType: undefined,
       isArray: isArray,
-      hasFixedCount: hasFixedCount,
-      count: count,
+      isVariableLengthArray: isVariableLengthArray,
+      arrayLength: arrayLength,
     };
   }
 
@@ -517,8 +518,8 @@ function parseType(property, enums) {
       enumType: undefined,
       valueType: undefined,
       isArray: isArray,
-      hasFixedCount: hasFixedCount,
-      count: count,
+      isVariableLengthArray: isVariableLengthArray,
+      arrayLength: arrayLength,
     };
   }
 
@@ -534,8 +535,8 @@ function parseType(property, enums) {
       enumType: undefined,
       valueType: componentType,
       isArray: isArray,
-      hasFixedCount: hasFixedCount,
-      count: count,
+      isVariableLengthArray: isVariableLengthArray,
+      arrayLength: arrayLength,
     };
   }
 
@@ -548,8 +549,8 @@ function parseType(property, enums) {
       enumType: undefined,
       valueType: type,
       isArray: isArray,
-      hasFixedCount: hasFixedCount,
-      count: count,
+      isVariableLengthArray: isVariableLengthArray,
+      arrayLength: arrayLength,
     };
   }
 
@@ -658,8 +659,11 @@ function validateArray(classProperty, value) {
   }
 
   const length = value.length;
-  if (classProperty._hasFixedCount && length !== classProperty._count) {
-    return "Array length does not match count";
+  if (
+    !classProperty._isVariableLengthArray &&
+    length !== classProperty._arrayLength
+  ) {
+    return "Array length does not match property.arrayLength";
   }
 
   for (let i = 0; i < length; i++) {

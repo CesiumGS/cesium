@@ -108,7 +108,7 @@ function createProperties(options) {
         property.arrayOffsetType = arrayOffsetType;
       }
 
-      if (classProperty.isArray && !classProperty.hasFixedCount) {
+      if (classProperty.isVariableLengthArray) {
         const arrayOffsetBufferType = defaultValue(arrayOffsetType, offsetType);
         const arrayOffsetBuffer = addPadding(
           createArrayOffsetBuffer(values, arrayOffsetBufferType)

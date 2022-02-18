@@ -889,7 +889,6 @@ describe(
         expect(properties.color.componentType).toBe(
           MetadataComponentType.UINT8
         );
-        expect(properties.color.count).toBe(1);
 
         const propertyTable = featureMetadata.getPropertyTable(0);
         expect(propertyTable.id).toEqual(0);
@@ -954,7 +953,7 @@ describe(
         expect(properties.color.componentType).toBe(
           MetadataComponentType.UINT8
         );
-        expect(properties.color.count).toBe(3);
+        expect(properties.color.arrayLength).toBe(3);
 
         const propertyTable = featureMetadata.getPropertyTable(0);
         expect(propertyTable.id).toEqual("landCoverTable");
@@ -1340,7 +1339,7 @@ describe(
         expect(weatherProperties.windVelocity.componentType).toBe(
           MetadataComponentType.FLOAT32
         );
-        expect(weatherProperties.windVelocity.count).toBe(3);
+        expect(weatherProperties.windVelocity.arrayLength).toBe(3);
 
         const townClass = featureMetadata.schema.classes.town;
         const townProperties = townClass.properties;
