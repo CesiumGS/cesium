@@ -463,15 +463,13 @@ describe(
     it("initializes with model matrix", function () {
       const translation = new Cartesian3(10, 0, 0);
       const transform = Matrix4.fromTranslation(translation);
-      const modelMatrix = new Matrix4();
-      Matrix4.multiplyTransformation(Matrix4.IDENTITY, transform, modelMatrix);
 
       return loadAndZoomToModelExperimental(
         {
           gltf: boxTexturedGlbUrl,
           upAxis: Axis.Z,
           forwardAxis: Axis.X,
-          modelMatrix: modelMatrix,
+          modelMatrix: transform,
         },
         scene
       ).then(function (model) {
@@ -482,6 +480,7 @@ describe(
         );
         verifyRender(model, false);
         expect(model.boundingSphere.center).toEqual(translation);
+        expect(model.modelMatrix).not.toBe(transform);
       });
     });
 
