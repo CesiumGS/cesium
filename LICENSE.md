@@ -1203,6 +1203,14 @@ https://sketchfab.com/3d-models/parc-lead-mine-4759a23abbff454c8c682ff9b02ba111
 
 https://github.com/logos
 
+### GPX files
+
+Public domain
+https://www.gpsvisualizer.com/examples/google_gpx.html
+
+Creative Commons Attribution-ShareAlike 2.0
+https://wiki.openstreetmap.org/wiki/GPX
+
 ### Font Awesome Icon
 
 Font Awesome by Dave Gandy - http://fontawesome.io

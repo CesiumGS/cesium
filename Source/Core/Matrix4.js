@@ -3,6 +3,7 @@ import Cartesian4 from "./Cartesian4.js";
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
+import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 import Matrix3 from "./Matrix3.js";
 import RuntimeError from "./RuntimeError.js";
@@ -164,6 +165,69 @@ Matrix4.unpack = function (array, startingIndex, result) {
   result[13] = array[startingIndex++];
   result[14] = array[startingIndex++];
   result[15] = array[startingIndex];
+  return result;
+};
+
+/**
+ * Flattens an array of Matrix4s into an array of components. The components
+ * are stored in column-major order.
+ *
+ * @param {Matrix4[]} array The array of matrices to pack.
+ * @param {Number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 16 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 16) elements.
+ * @returns {Number[]} The packed array.
+ */
+Matrix4.packArray = function (array, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
+
+  const length = array.length;
+  const resultLength = length * 16;
+  if (!defined(result)) {
+    result = new Array(resultLength);
+  } else if (!Array.isArray(result) && result.length !== resultLength) {
+    //>>includeStart('debug', pragmas.debug);
+    throw new DeveloperError(
+      "If result is a typed array, it must have exactly array.length * 16 elements"
+    );
+    //>>includeEnd('debug');
+  } else if (result.length !== resultLength) {
+    result.length = resultLength;
+  }
+
+  for (let i = 0; i < length; ++i) {
+    Matrix4.pack(array[i], result, i * 16);
+  }
+  return result;
+};
+
+/**
+ * Unpacks an array of column-major matrix components into an array of Matrix4s.
+ *
+ * @param {Number[]} array The array of components to unpack.
+ * @param {Matrix4[]} [result] The array onto which to store the result.
+ * @returns {Matrix4[]} The unpacked array.
+ */
+Matrix4.unpackArray = function (array, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  Check.typeOf.number.greaterThanOrEquals("array.length", array.length, 16);
+  if (array.length % 16 !== 0) {
+    throw new DeveloperError("array length must be a multiple of 16.");
+  }
+  //>>includeEnd('debug');
+
+  const length = array.length;
+  if (!defined(result)) {
+    result = new Array(length / 16);
+  } else {
+    result.length = length / 16;
+  }
+
+  for (let i = 0; i < length; i += 16) {
+    const index = i / 16;
+    result[index] = Matrix4.unpack(array, i, result[index]);
+  }
   return result;
 };
 

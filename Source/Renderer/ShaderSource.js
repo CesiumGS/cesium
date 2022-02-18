@@ -443,33 +443,46 @@ ShaderSource.createPickFragmentShaderSource = function (
   return `${renamedFS}\n${pickMain}`;
 };
 
-ShaderSource.findVarying = function (shaderSource, names) {
+function containsString(shaderSource, string) {
   const sources = shaderSource.sources;
-
-  const namesLength = names.length;
-  for (let i = 0; i < namesLength; ++i) {
-    const name = names[i];
-
-    const sourcesLength = sources.length;
-    for (let j = 0; j < sourcesLength; ++j) {
-      if (sources[j].indexOf(name) !== -1) {
-        return name;
-      }
+  const sourcesLength = sources.length;
+  for (let i = 0; i < sourcesLength; ++i) {
+    if (sources[i].indexOf(string) !== -1) {
+      return true;
     }
   }
+  return false;
+}
 
+function findFirstString(shaderSource, strings) {
+  const stringsLength = strings.length;
+  for (let i = 0; i < stringsLength; ++i) {
+    const string = strings[i];
+    if (containsString(shaderSource, string)) {
+      return string;
+    }
+  }
   return undefined;
-};
+}
 
 const normalVaryingNames = ["v_normalEC", "v_normal"];
 
 ShaderSource.findNormalVarying = function (shaderSource) {
-  return ShaderSource.findVarying(shaderSource, normalVaryingNames);
+  // Fix for ModelExperimental: the shader text always has the word v_normalEC
+  // wrapped in an #ifdef so instead of looking for v_normalEC look for the define
+  if (containsString(shaderSource, "#ifdef HAS_NORMALS")) {
+    if (containsString(shaderSource, "#define HAS_NORMALS")) {
+      return "v_normalEC";
+    }
+    return undefined;
+  }
+
+  return findFirstString(shaderSource, normalVaryingNames);
 };
 
 const positionVaryingNames = ["v_positionEC"];
 
 ShaderSource.findPositionVarying = function (shaderSource) {
-  return ShaderSource.findVarying(shaderSource, positionVaryingNames);
+  return findFirstString(shaderSource, positionVaryingNames);
 };
 export default ShaderSource;
