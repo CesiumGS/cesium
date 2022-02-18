@@ -232,7 +232,6 @@ MetadataTableProperty.prototype.get = function (index) {
 
   let value = get(this, index);
   value = this._classProperty.normalize(value);
-  value = scaleRange(this, value);
   return this._classProperty.unpackVectorAndMatrixTypes(value);
 };
 
@@ -256,7 +255,6 @@ MetadataTableProperty.prototype.set = function (index, value) {
   //>>includeEnd('debug');
 
   value = classProperty.packVectorAndMatrixTypes(value);
-  value = unscaleRange(this, value);
   value = classProperty.unnormalize(value);
 
   set(this, index, value);
@@ -488,16 +486,6 @@ function getUint64BigIntFallback(index, values) {
   // Combine the two 32-bit values
   var value = left + BigInt(4294967296) * right; // eslint-disable-line
 
-  return value;
-}
-
-function scaleRange(property, value) {
-  // TODO: apply scaling
-  return value;
-}
-
-function unscaleRange(property, value) {
-  // TODO: apply unscaling
   return value;
 }
 
