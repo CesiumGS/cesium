@@ -1466,52 +1466,41 @@ describe("Core/Matrix3", function () {
     }
   });
 
-  createPackableSpecs(Matrix3, new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9), [
-    1,
-    4,
-    7,
-    2,
-    5,
-    8,
-    3,
-    6,
-    9,
-  ]);
+  // prettier-ignore
+  createPackableSpecs(
+    Matrix3,
+    new Matrix3(
+      1, 2, 3,
+      4, 5, 6,
+      7, 8, 9
+    ), 
+    [1, 4, 7, 2, 5, 8, 3, 6, 9,]
+  );
+
+  // prettier-ignore
   createPackableArraySpecs(
     Matrix3,
     [
-      new Matrix3(1, 0, 0, 0, 1, 0, 0, 0, 1),
-      new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9),
-      new Matrix3(1, 2, 3, 1, 2, 3, 1, 2, 3),
+      new Matrix3(
+        1, 0, 0,
+        0, 1, 0,
+        0, 0, 1
+      ),
+      new Matrix3(
+        1, 2, 3,
+        4, 5, 6,
+        7, 8, 9
+      ),
+      new Matrix3(
+        1, 2, 3,
+        1, 2, 3,
+        1, 2, 3
+      ),
     ],
     [
-      1,
-      0,
-      0,
-      0,
-      1,
-      0,
-      0,
-      0,
-      1,
-      1,
-      4,
-      7,
-      2,
-      5,
-      8,
-      3,
-      6,
-      9,
-      1,
-      1,
-      1,
-      2,
-      2,
-      2,
-      3,
-      3,
-      3,
+      1, 0, 0, 0, 1, 0, 0, 0, 1,
+      1, 4, 7, 2, 5, 8, 3, 6, 9,
+      1, 1, 1, 2, 2, 2, 3, 3, 3,
     ],
     9
   );
