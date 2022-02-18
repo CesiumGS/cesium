@@ -161,9 +161,11 @@ Cartesian2.packArray = function (array, result) {
   if (!defined(result)) {
     result = new Array(resultLength);
   } else if (!Array.isArray(result) && result.length !== resultLength) {
+    //>>includeStart('debug', pragmas.debug);
     throw new DeveloperError(
       "If result is a typed array, it must have exactly array.length * 2 elements"
     );
+    //>>includeEnd('debug');
   } else if (result.length !== resultLength) {
     result.length = resultLength;
   }
