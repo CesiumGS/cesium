@@ -266,7 +266,8 @@ describe(
       });
     });
 
-    it("renders model with style", function () {
+    // see https://github.com/CesiumGS/cesium/pull/10115
+    xit("renders model with style", function () {
       return loadAndZoomToModelExperimental(
         { gltf: buildingsMetadata },
         scene

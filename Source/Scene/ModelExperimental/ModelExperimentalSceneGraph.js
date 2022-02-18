@@ -330,7 +330,6 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
         primitiveRenderResources.boundingSphere
       );
 
-      //boundingSpheres.push(runtimePrimitive.boundingSphere);
       boundingSpheres.push(runtimePrimitive.boundingSphere);
 
       const drawCommands = buildDrawCommands(
