@@ -120,6 +120,67 @@ Matrix3.unpack = function (array, startingIndex, result) {
 };
 
 /**
+ * Flattens an array of Matrix3s into an array of components. The components
+ * are stored in column-major order.
+ *
+ * @param {Matrix3[]} array The array of matrices to pack.
+ * @param {Number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 9 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 9) elements.
+ * @returns {Number[]} The packed array.
+ */
+Matrix3.packArray = function (array, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
+
+  const length = array.length;
+  const resultLength = length * 9;
+  if (!defined(result)) {
+    result = new Array(resultLength);
+  } else if (!Array.isArray(result) && result.length !== resultLength) {
+    throw new DeveloperError(
+      "If result is a typed array, it must have exactly array.length * 9 elements"
+    );
+  } else if (result.length !== resultLength) {
+    result.length = resultLength;
+  }
+
+  for (let i = 0; i < length; ++i) {
+    Matrix3.pack(array[i], result, i * 9);
+  }
+  return result;
+};
+
+/**
+ * Unpacks an array of column-major matrix components into an array of Matrix3s.
+ *
+ * @param {Number[]} array The array of components to unpack.
+ * @param {Matrix3[]} [result] The array onto which to store the result.
+ * @returns {Matrix3[]} The unpacked array.
+ */
+Matrix3.unpackArray = function (array, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  Check.typeOf.number.greaterThanOrEquals("array.length", array.length, 9);
+  if (array.length % 9 !== 0) {
+    throw new DeveloperError("array length must be a multiple of 9.");
+  }
+  //>>includeEnd('debug');
+
+  const length = array.length;
+  if (!defined(result)) {
+    result = new Array(length / 9);
+  } else {
+    result.length = length / 9;
+  }
+
+  for (let i = 0; i < length; i += 9) {
+    const index = i / 9;
+    result[index] = Matrix3.unpack(array, i, result[index]);
+  }
+  return result;
+};
+
+/**
  * Duplicates a Matrix3 instance.
  *
  * @param {Matrix3} matrix The matrix to duplicate.
