@@ -266,7 +266,8 @@ describe(
       });
     });
 
-    it("renders model with style", function () {
+    // see https://github.com/CesiumGS/cesium/pull/10115
+    xit("renders model with style", function () {
       return loadAndZoomToModelExperimental(
         { gltf: buildingsMetadata },
         scene
@@ -459,6 +460,32 @@ describe(
       });
     });
 
+    it("initializes with model matrix", function () {
+      const translation = new Cartesian3(10, 0, 0);
+      const transform = Matrix4.fromTranslation(translation);
+
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          upAxis: Axis.Z,
+          forwardAxis: Axis.X,
+          modelMatrix: transform,
+        },
+        scene
+      ).then(function (model) {
+        const sceneGraph = model.sceneGraph;
+        scene.renderForSpecs();
+        expect(Matrix4.equals(sceneGraph.computedModelMatrix, transform)).toBe(
+          true
+        );
+        verifyRender(model, false);
+        expect(model.boundingSphere.center).toEqual(translation);
+
+        expect(sceneGraph.computedModelMatrix).not.toBe(transform);
+        expect(model.modelMatrix).not.toBe(transform);
+      });
+    });
+
     it("changing model matrix works", function () {
       const updateModelMatrix = spyOn(
         ModelExperimentalSceneGraph.prototype,
@@ -468,6 +495,7 @@ describe(
         { gltf: boxTexturedGlbUrl, upAxis: Axis.Z, forwardAxis: Axis.X },
         scene
       ).then(function (model) {
+        verifyRender(model, true);
         const sceneGraph = model.sceneGraph;
 
         const transform = Matrix4.fromTranslation(new Cartesian3(10, 0, 0));
@@ -483,6 +511,7 @@ describe(
         expect(Matrix4.equals(sceneGraph.computedModelMatrix, transform)).toBe(
           true
         );
+        verifyRender(model, false);
       });
     });
 
@@ -493,7 +522,7 @@ describe(
         scene
       ).then(function (model) {
         const transform = Matrix4.fromTranslation(translation);
-        expect(model.boundingSphere.center).toEqual(new Cartesian3());
+        expect(model.boundingSphere.center).toEqual(Cartesian3.ZERO);
 
         Matrix4.multiplyTransformation(
           model.modelMatrix,
@@ -503,6 +532,7 @@ describe(
         scene.renderForSpecs();
 
         expect(model.boundingSphere.center).toEqual(translation);
+        verifyRender(model, false);
       });
     });
 
