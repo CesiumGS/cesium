@@ -2,6 +2,7 @@ import Cartesian2 from "./Cartesian2.js";
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
+import DeveloperError from "./DeveloperError.js";
 
 /**
  * A 2x2 matrix, indexable as a column-major order array.
@@ -83,6 +84,69 @@ Matrix2.unpack = function (array, startingIndex, result) {
   result[1] = array[startingIndex++];
   result[2] = array[startingIndex++];
   result[3] = array[startingIndex++];
+  return result;
+};
+
+/**
+ * Flattens an array of Matrix2s into an array of components. The components
+ * are stored in column-major order.
+ *
+ * @param {Matrix2[]} array The array of matrices to pack.
+ * @param {Number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 4 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 4) elements.
+ * @returns {Number[]} The packed array.
+ */
+Matrix2.packArray = function (array, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  //>>includeEnd('debug');
+
+  const length = array.length;
+  const resultLength = length * 4;
+  if (!defined(result)) {
+    result = new Array(resultLength);
+  } else if (!Array.isArray(result) && result.length !== resultLength) {
+    //>>includeStart('debug', pragmas.debug);
+    throw new DeveloperError(
+      "If result is a typed array, it must have exactly array.length * 4 elements"
+    );
+    //>>includeEnd('debug');
+  } else if (result.length !== resultLength) {
+    result.length = resultLength;
+  }
+
+  for (let i = 0; i < length; ++i) {
+    Matrix2.pack(array[i], result, i * 4);
+  }
+  return result;
+};
+
+/**
+ * Unpacks an array of column-major matrix components into an array of Matrix2s.
+ *
+ * @param {Number[]} array The array of components to unpack.
+ * @param {Matrix2[]} [result] The array onto which to store the result.
+ * @returns {Matrix2[]} The unpacked array.
+ */
+Matrix2.unpackArray = function (array, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("array", array);
+  Check.typeOf.number.greaterThanOrEquals("array.length", array.length, 4);
+  if (array.length % 4 !== 0) {
+    throw new DeveloperError("array length must be a multiple of 4.");
+  }
+  //>>includeEnd('debug');
+
+  const length = array.length;
+  if (!defined(result)) {
+    result = new Array(length / 4);
+  } else {
+    result.length = length / 4;
+  }
+
+  for (let i = 0; i < length; i += 4) {
+    const index = i / 4;
+    result[index] = Matrix2.unpack(array, i, result[index]);
+  }
   return result;
 };
 
