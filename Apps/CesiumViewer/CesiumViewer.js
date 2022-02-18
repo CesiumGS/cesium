@@ -11,6 +11,7 @@ import {
   CzmlDataSource,
   GeoJsonDataSource,
   KmlDataSource,
+  GpxDataSource,
   TileMapServiceImageryProvider,
   Viewer,
   viewerCesiumInspectorMixin,
@@ -118,6 +119,8 @@ function main() {
         sourceType = "geojson";
       } else if (/\.kml$/i.test(source) || /\.kmz$/i.test(source)) {
         sourceType = "kml";
+      } else if (/\.gpx$/i.test(source) || /\.gpx$/i.test(source)) {
+        sourceType = "gpx";
       }
     }
 
@@ -132,6 +135,8 @@ function main() {
         canvas: scene.canvas,
         screenOverlayContainer: viewer.container,
       });
+    } else if (sourceType === "gpx") {
+      loadPromise = GpxDataSource.load(source);
     } else {
       showLoadError(source, "Unknown format.");
     }

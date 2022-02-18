@@ -5,6 +5,8 @@ import { Matrix3 } from "../../Source/Cesium.js";
 import { Matrix4 } from "../../Source/Cesium.js";
 import { Quaternion } from "../../Source/Cesium.js";
 import { TranslationRotationScale } from "../../Source/Cesium.js";
+import createPackableSpecs from "../createPackableSpecs.js";
+import createPackableArraySpecs from "../createPackableArraySpecs.js";
 
 describe("Core/Matrix4", function () {
   it("default constructor creates values array with all zeros.", function () {
@@ -62,82 +64,6 @@ describe("Core/Matrix4", function () {
     expect(matrix[Matrix4.COLUMN1ROW3]).toEqual(14.0);
     expect(matrix[Matrix4.COLUMN2ROW3]).toEqual(15.0);
     expect(matrix[Matrix4.COLUMN3ROW3]).toEqual(16.0);
-  });
-
-  it("can pack and unpack", function () {
-    const array = [];
-    const matrix4 = new Matrix4(
-      1.0,
-      2.0,
-      3.0,
-      4.0,
-      5.0,
-      6.0,
-      7.0,
-      8.0,
-      9.0,
-      10.0,
-      11.0,
-      12.0,
-      13.0,
-      14.0,
-      15.0,
-      16.0
-    );
-    Matrix4.pack(matrix4, array);
-    expect(array.length).toEqual(Matrix4.packedLength);
-    expect(Matrix4.unpack(array)).toEqual(matrix4);
-  });
-
-  it("can pack and unpack with offset", function () {
-    const packed = new Array(3);
-    const offset = 3;
-    const matrix4 = new Matrix4(
-      1.0,
-      2.0,
-      3.0,
-      4.0,
-      5.0,
-      6.0,
-      7.0,
-      8.0,
-      9.0,
-      10.0,
-      11.0,
-      12.0,
-      13.0,
-      14.0,
-      15.0,
-      16.0
-    );
-
-    Matrix4.pack(matrix4, packed, offset);
-    expect(packed.length).toEqual(offset + Matrix4.packedLength);
-
-    const result = new Matrix4();
-    const returnedResult = Matrix4.unpack(packed, offset, result);
-    expect(returnedResult).toBe(result);
-    expect(result).toEqual(matrix4);
-  });
-
-  it("pack throws with undefined matrix4", function () {
-    const array = [];
-    expect(function () {
-      Matrix4.pack(undefined, array);
-    }).toThrowDeveloperError();
-  });
-
-  it("pack throws with undefined array", function () {
-    const matrix4 = new Matrix4();
-    expect(function () {
-      Matrix4.pack(matrix4, undefined);
-    }).toThrowDeveloperError();
-  });
-
-  it("unpack throws with undefined array", function () {
-    expect(function () {
-      Matrix4.unpack(undefined);
-    }).toThrowDeveloperError();
   });
 
   it("fromArray works without a result parameter", function () {
@@ -4643,4 +4569,47 @@ describe("Core/Matrix4", function () {
       expect(intArray[index]).toEqual(index + 1);
     }
   });
+
+  // prettier-ignore
+  createPackableSpecs(
+    Matrix4,
+    new Matrix4(
+      1, 2, 3, 4,
+      5, 6, 7, 8,
+      9, 10, 11, 12,
+      13, 14, 15, 16
+    ),
+    [1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16]
+  );
+
+  // prettier-ignore
+  createPackableArraySpecs(
+    Matrix4,
+    [
+      new Matrix4(
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+      ),
+      new Matrix4(
+        1, 2, 3, 4,
+        5, 6, 7, 8,
+        9, 10, 11, 12,
+        13, 14, 15, 16
+      ),
+      new Matrix4(
+        1, 2, 3, 4, 
+        1, 2, 3, 4,
+        1, 2, 3, 4,
+        1, 2, 3, 4
+      ),
+    ],
+    [
+      1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+      1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16,
+      1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ],
+    16
+  );
 });
