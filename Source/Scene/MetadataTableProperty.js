@@ -1,4 +1,5 @@
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
@@ -302,8 +303,7 @@ function get(property, index) {
   if (defined(property._unpackedValues)) {
     const value = property._unpackedValues[index];
     if (isArray) {
-      // TODO: if this is an array of vectors, maybe we need to deep clone?
-      return value.slice(); // clone
+      return clone(value, true);
     }
     return value;
   }
@@ -349,7 +349,7 @@ function set(property, index, value) {
 
   if (defined(property._unpackedValues)) {
     if (classProperty.isArray) {
-      value = value.slice(); // clone
+      value = clone(value, true);
     }
     property._unpackedValues[index] = value;
     return;

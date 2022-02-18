@@ -1,4 +1,5 @@
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import MetadataEntity from "./MetadataEntity.js";
@@ -328,7 +329,7 @@ function getDefault(classDefinition, propertyId) {
   if (defined(classProperty) && defined(classProperty.default)) {
     let value = classProperty.default;
     if (classProperty.isArray) {
-      value = value.slice(); // clone
+      value = clone(value, true); // clone
     }
     value = classProperty.normalize(value);
     return classProperty.unpackVectorAndMatrixTypes(value);
