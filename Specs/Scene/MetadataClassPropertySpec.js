@@ -178,6 +178,44 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.valueType).toBe(MetadataComponentType.UINT16); // default enum valueType
   });
 
+  it("creates array of enums with EXT_feature_metadata", function () {
+    const colorEnum = new MetadataEnum({
+      id: "color",
+      enum: {
+        valueType: "UINT32",
+        values: [
+          {
+            name: "RED",
+            value: 0,
+          },
+        ],
+      },
+    });
+
+    const enums = {
+      color: colorEnum,
+    };
+
+    const property = new MetadataClassProperty({
+      id: "color",
+      property: {
+        type: "ARRAY",
+        componentType: "ENUM",
+        componentCount: 4,
+        enumType: "color",
+      },
+      enums: enums,
+    });
+
+    expect(property.isArray).toBe(true);
+    expect(property.isVariableLengthArray).toBe(false);
+    expect(property.arrayLength).toBe(4);
+    expect(property.type).toBe(MetadataType.ENUM);
+    expect(property.componentType).not.toBeDefined();
+    expect(property.enumType).toBe(colorEnum);
+    expect(property.valueType).toBe(MetadataComponentType.UINT32);
+  });
+
   it("creates vector and matrix types", function () {
     let property = new MetadataClassProperty({
       id: "speed",
@@ -210,6 +248,89 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.arrayLength).not.toBeDefined();
     expect(property.componentType).toBe(MetadataComponentType.FLOAT64);
     expect(property.valueType).toBe(MetadataComponentType.FLOAT64);
+  });
+
+  it("creates arrays of BOOLEAN and STRING with EXT_feature_metadata", function () {
+    let property = new MetadataClassProperty({
+      id: "booleanArray",
+      property: {
+        type: "ARRAY",
+        componentType: "BOOLEAN",
+      },
+    });
+
+    expect(property.id).toBe("booleanArray");
+    expect(property.type).toBe(MetadataType.BOOLEAN);
+    expect(property.isArray).toBe(true);
+    expect(property.isVariableLengthArray).toBe(true);
+    expect(property.arrayLength).not.toBeDefined();
+    expect(property.componentType).not.toBeDefined();
+    expect(property.valueType).not.toBeDefined();
+
+    property = new MetadataClassProperty({
+      id: "stringArray",
+      property: {
+        type: "ARRAY",
+        componentType: "STRING",
+        componentCount: 2,
+      },
+    });
+
+    expect(property.id).toBe("stringArray");
+    expect(property.type).toBe(MetadataType.STRING);
+    expect(property.isArray).toBe(true);
+    expect(property.isVariableLengthArray).toBe(false);
+    expect(property.arrayLength).toBe(2);
+    expect(property.componentType).not.toBeDefined();
+    expect(property.valueType).not.toBeDefined();
+  });
+
+  it("creates arrays of vector and matrix types", function () {
+    let property = new MetadataClassProperty({
+      id: "speeds",
+      property: {
+        type: "VEC2",
+        componentType: "FLOAT32",
+        array: true,
+      },
+    });
+
+    expect(property.id).toBe("speeds");
+    expect(property.type).toBe(MetadataType.VEC2);
+    expect(property.isArray).toBe(true);
+    expect(property.isVariableLengthArray).toBe(true);
+    expect(property.arrayLength).not.toBeDefined();
+    expect(property.componentType).toBe(MetadataComponentType.FLOAT32);
+    expect(property.valueType).toBe(MetadataComponentType.FLOAT32);
+
+    property = new MetadataClassProperty({
+      id: "scaleFactors",
+      property: {
+        type: "MAT3",
+        componentType: "FLOAT64",
+        array: true,
+        count: 2,
+      },
+    });
+
+    expect(property.id).toBe("scaleFactors");
+    expect(property.type).toBe(MetadataType.MAT3);
+    expect(property.isArray).toBe(true);
+    expect(property.isVariableLengthArray).toBe(false);
+    expect(property.arrayLength).toBe(2);
+    expect(property.componentType).toBe(MetadataComponentType.FLOAT64);
+    expect(property.valueType).toBe(MetadataComponentType.FLOAT64);
+  });
+
+  it("constructor throws with invalid type definition", function () {
+    expect(function () {
+      return new MetadataClassProperty({
+        id: "propertyId",
+        property: {
+          type: "NOT_A_TYPE",
+        },
+      });
+    }).toThrowDeveloperError();
   });
 
   it("constructor throws without id", function () {
