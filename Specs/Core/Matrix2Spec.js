@@ -1,6 +1,8 @@
 import { Cartesian2 } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { Matrix2 } from "../../Source/Cesium.js";
+import createPackableSpecs from "../createPackableSpecs.js";
+import createPackableArraySpecs from "../createPackableArraySpecs.js";
 
 describe("Core/Matrix2", function () {
   it("default constructor creates values array with all zeros.", function () {
@@ -17,48 +19,6 @@ describe("Core/Matrix2", function () {
     expect(matrix[Matrix2.COLUMN1ROW0]).toEqual(2.0);
     expect(matrix[Matrix2.COLUMN0ROW1]).toEqual(3.0);
     expect(matrix[Matrix2.COLUMN1ROW1]).toEqual(4.0);
-  });
-
-  it("can pack and unpack", function () {
-    const array = [];
-    const matrix = new Matrix2(1.0, 2.0, 3.0, 4.0);
-    Matrix2.pack(matrix, array);
-    expect(array.length).toEqual(Matrix2.packedLength);
-    expect(Matrix2.unpack(array)).toEqual(matrix);
-  });
-
-  it("can pack and unpack with offset", function () {
-    const packed = new Array(3);
-    const offset = 3;
-    const matrix = new Matrix2(1.0, 2.0, 3.0, 4.0);
-
-    Matrix2.pack(matrix, packed, offset);
-    expect(packed.length).toEqual(offset + Matrix2.packedLength);
-
-    const result = new Matrix2();
-    const returnedResult = Matrix2.unpack(packed, offset, result);
-    expect(returnedResult).toBe(result);
-    expect(result).toEqual(matrix);
-  });
-
-  it("pack throws with undefined matrix", function () {
-    const array = [];
-    expect(function () {
-      Matrix2.pack(undefined, array);
-    }).toThrowDeveloperError();
-  });
-
-  it("pack throws with undefined array", function () {
-    const matrix = new Matrix2();
-    expect(function () {
-      Matrix2.pack(matrix, undefined);
-    }).toThrowDeveloperError();
-  });
-
-  it("unpack throws with undefined array", function () {
-    expect(function () {
-      Matrix2.unpack(undefined);
-    }).toThrowDeveloperError();
   });
 
   it("fromArray works without a result parameter", function () {
@@ -829,4 +789,16 @@ describe("Core/Matrix2", function () {
       expect(intArray[index]).toEqual(index + 1);
     }
   });
+
+  createPackableSpecs(Matrix2, new Matrix2(0, -1, 1, 0), [0, 1, -1, 0]);
+  createPackableArraySpecs(
+    Matrix2,
+    [
+      new Matrix2(1, 0, 0, 1),
+      new Matrix2(1, 2, 3, 4),
+      new Matrix2(0, 1, -1, 0),
+    ],
+    [1, 0, 0, 1, 1, 3, 2, 4, 0, -1, 1, 0],
+    4
+  );
 });
