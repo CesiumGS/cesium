@@ -480,6 +480,8 @@ describe(
         );
         verifyRender(model, false);
         expect(model.boundingSphere.center).toEqual(translation);
+
+        expect(sceneGraph.computedModelMatrix).not.toBe(transform);
         expect(model.modelMatrix).not.toBe(transform);
       });
     });
