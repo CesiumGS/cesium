@@ -13,7 +13,7 @@ describe("Scene/TileMetadata", function () {
         color: {
           type: "SCALAR",
           componentType: "FLOAT32",
-          hasFixedCount: true,
+          array: true,
           count: 8,
           semantic: "COLOR",
         },

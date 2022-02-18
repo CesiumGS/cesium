@@ -73,7 +73,7 @@ describe("Scene/MetadataSchema", function () {
             coordinates: {
               type: "SCALAR",
               componentType: "FLOAT64",
-              hasFixedCount: true,
+              array: true,
               count: 2,
             },
           },
@@ -82,7 +82,7 @@ describe("Scene/MetadataSchema", function () {
           properties: {
             species: {
               type: "ENUM",
-              hasFixedCount: false,
+              array: true,
               enumType: "species",
             },
             height: {

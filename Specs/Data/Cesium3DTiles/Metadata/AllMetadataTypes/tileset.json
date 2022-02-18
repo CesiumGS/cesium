@@ -47,7 +47,7 @@
               },
               "neighborhoods": {
                 "type": "STRING",
-                "hasFixedCount": false
+                "array": true
               },
               "name": {
                 "type": "STRING",
@@ -67,7 +67,7 @@
               },
               "majorIndustries": {
                 "type": "STRING",
-                "hasFixedCount": false
+                "array": true
               },
               "name": {
                 "type": "STRING",

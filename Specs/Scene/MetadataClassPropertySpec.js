@@ -58,7 +58,7 @@ describe("Scene/MetadataClassProperty", function () {
       property: {
         name: "Position",
         description: "Position (X, Y, Z)",
-        hasFixedCount: true,
+        array: true,
         count: 3,
         type: "SCALAR",
         componentType: "INT16",
@@ -342,13 +342,13 @@ describe("Scene/MetadataClassProperty", function () {
   it("normalize array values", function () {
     const properties = {
       propertyInt8: {
-        hasFixedCount: false,
+        array: true,
         type: "SCALAR",
         componentType: "INT8",
         normalized: true,
       },
       propertyUint8: {
-        hasFixedCount: true,
+        array: true,
         count: 2,
         type: "SCALAR",
         componentType: "UINT8",
@@ -358,14 +358,14 @@ describe("Scene/MetadataClassProperty", function () {
         type: "VEC3",
         componentType: "UINT8",
         normalized: true,
-        hasFixedCount: true,
+        array: true,
         count: 3,
       },
       propertyMatrix: {
         type: "MAT2",
         componentType: "UINT8",
         normalized: true,
-        hasFixedCount: false,
+        array: true,
       },
     };
 
@@ -506,7 +506,7 @@ describe("Scene/MetadataClassProperty", function () {
       },
       propertyEnumArray: {
         type: "ENUM",
-        hasFixedCount: false,
+        array: true,
         enumType: "myEnum",
         normalized: true,
       },
@@ -673,13 +673,13 @@ describe("Scene/MetadataClassProperty", function () {
       propertyArray: {
         type: "SCALAR",
         componentType: "UINT8",
-        hasFixedCount: true,
+        array: true,
         count: 5,
       },
       propertyBigIntArray: {
         type: "SCALAR",
         componentType: "UINT64",
-        hasFixedCount: true,
+        array: true,
         count: 2,
       },
     };
@@ -842,13 +842,13 @@ describe("Scene/MetadataClassProperty", function () {
       propertyArray: {
         type: "SCALAR",
         componentType: "UINT8",
-        hasFixedCount: true,
+        array: true,
         count: 5,
       },
       propertyBigIntArray: {
         type: "ARRAY",
         componentType: "UINT64",
-        hasFixedCount: true,
+        array: true,
         count: 2,
       },
     };
@@ -902,7 +902,7 @@ describe("Scene/MetadataClassProperty", function () {
       property: {
         type: "VEC3",
         componentType: "FLOAT32",
-        hasFixedCount: true,
+        array: true,
         count: 3,
       },
     });
@@ -922,7 +922,7 @@ describe("Scene/MetadataClassProperty", function () {
       property: {
         type: "MAT3",
         componentType: "FLOAT32",
-        hasFixedCount: true,
+        array: true,
         count: 3,
       },
     });
@@ -942,7 +942,7 @@ describe("Scene/MetadataClassProperty", function () {
       property: {
         type: "SCALAR",
         componentType: "FLOAT32",
-        hasFixedCount: true,
+        array: true,
         count: 8,
       },
     });
@@ -1048,7 +1048,7 @@ describe("Scene/MetadataClassProperty", function () {
       property: {
         type: "SCALAR",
         componentType: "FLOAT32",
-        hasFixedCount: true,
+        array: true,
         count: 6,
       },
     });
@@ -1221,7 +1221,7 @@ describe("Scene/MetadataClassProperty", function () {
         const property = new MetadataClassProperty({
           id: "property",
           property: {
-            hasFixedCount: false,
+            array: true,
             type: "SCALAR",
             componentType: componentType,
           },

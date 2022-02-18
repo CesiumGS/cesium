@@ -18,7 +18,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
         properties: {
           credits: {
             type: "STRING",
-            hasFixedCount: false,
+            array: true,
           },
         },
       },
@@ -83,7 +83,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
         properties: {
           credits: {
             type: "STRING",
-            hasFixedCount: false,
+            array: true,
           },
         },
       },
@@ -107,7 +107,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
         properties: {
           credits: {
             type: "STRING",
-            hasFixedCount: false,
+            array: true,
           },
         },
       },
@@ -131,7 +131,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
         properties: {
           credits: {
             type: "STRING",
-            hasFixedCount: false,
+            array: true,
             required: false,
             default: [],
           },
@@ -166,7 +166,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
         properties: {
           credits: {
             type: "STRING",
-            hasFixedCount: false,
+            array: true,
             semantic: "CREDITS",
           },
         },
@@ -191,7 +191,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
         properties: {
           credits: {
             type: "STRING",
-            hasFixedCount: false,
+            array: true,
             semantic: "CREDITS",
           },
         },
@@ -216,7 +216,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
         properties: {
           credits: {
             type: "STRING",
-            hasFixedCount: false,
+            array: true,
             semantic: "CREDITS",
             default: [],
           },
@@ -269,7 +269,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
           },
           credits: {
             type: "STRING",
-            hasFixedCount: false,
+            array: true,
           },
         },
       },
@@ -306,7 +306,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
           },
           credits: {
             type: "STRING",
-            hasFixedCount: false,
+            array: true,
             required: false,
             default: [],
           },
@@ -343,7 +343,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
           },
           credits: {
             type: "STRING",
-            hasFixedCount: false,
+            array: true,
           },
         },
       },

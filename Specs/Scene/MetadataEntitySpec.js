@@ -23,7 +23,7 @@ describe("Scene/MetadataEntity", function () {
         position: {
           type: "SCALAR",
           componentType: "FLOAT32",
-          hasFixedCount: true,
+          array: true,
           count: 3,
         },
       },

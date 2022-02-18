@@ -18,7 +18,7 @@
               "tileBounds": {
                 "type": "SCALAR",
                 "componentType": "FLOAT64",
-                "hasFixedCount": true,
+                "array": true,
                 "count": 12,
                 "semantic": "TILE_BOUNDING_BOX"
               }

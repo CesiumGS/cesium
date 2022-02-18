@@ -1496,7 +1496,7 @@ describe("Scene/ImplicitSubtree", function () {
             },
             credits: {
               type: "STRING",
-              hasFixedCount: false,
+              array: true,
             },
           },
         },
@@ -2028,11 +2028,11 @@ describe("Scene/ImplicitSubtree", function () {
               arrayProperty: {
                 type: "SCALAR",
                 componentType: "INT16",
-                hasFixedCount: false,
+                array: true,
               },
               arrayOfStringProperty: {
                 type: "STRING",
-                hasFixedCount: false,
+                array: true,
               },
             },
           },

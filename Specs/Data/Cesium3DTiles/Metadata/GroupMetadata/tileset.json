@@ -18,7 +18,7 @@
               },
               "neighborhoods": {
                 "type": "STRING",
-                "hasFixedCount": false
+                "array": true
               }
             }
           },
@@ -30,7 +30,7 @@
               },
               "majorIndustries": {
                 "type": "STRING",
-                "hasFixedCount": false
+                "array": true
               }
             }
           }

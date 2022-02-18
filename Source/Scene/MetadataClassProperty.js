@@ -392,12 +392,12 @@ function isLegacy(property) {
     defined(property.offset) ||
     defined(property.required) ||
     defined(property.count) ||
-    defined(property.hasFixedCount)
+    defined(property.array)
   ) {
     return false;
   }
 
-  // Properties that only exist in EXT_structural_metadata
+  // Properties that only exist in EXT_feature_metadata
   if (defined(property.optional)) {
     return false;
   }
@@ -411,7 +411,7 @@ function parseType(property, enums) {
   const componentType = property.componentType;
 
   // EXT_feature_metadata had an ARRAY type. This is now handled
-  // with count + hasFixedCount, so some details need to be transcoded
+  // with array + count, so some details need to be transcoded
   const isLegacyArray = type === "ARRAY";
   let isArray;
   let arrayLength;
@@ -421,19 +421,10 @@ function parseType(property, enums) {
     isArray = true;
     arrayLength = property.componentCount;
     isVariableLengthArray = !defined(arrayLength);
-  } else if (defined(property.count) || defined(property.hasFixedCount)) {
-    // definitely EXT_structural metadata
-    if (property.hasFixedCount) {
-      // fixed-sized array
-      isArray = property.count > 1;
-      arrayLength = isArray ? property.count : undefined;
-      isVariableLengthArray = false;
-    } else {
-      // variable sized array
-      isArray = true;
-      arrayLength = undefined;
-      isVariableLengthArray = true;
-    }
+  } else if (property.array) {
+    isArray = true;
+    arrayLength = property.count;
+    isVariableLengthArray = !defined(property.count);
   } else {
     // Could be either extension. Some cases are impossible to distinguished
     // Default to a single value

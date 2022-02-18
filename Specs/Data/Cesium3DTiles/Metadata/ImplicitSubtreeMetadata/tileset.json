@@ -28,7 +28,7 @@
               "credits": {
                 "description": "A list of copyright strings relevant to this subtree",
                 "type": "STRING",
-                "hasFixedCount": false
+                "array": true
               },
               "Height": {
                 "description": "The height of the subtree. Intentionally capitalized so it conflicts with the Height property in the b3dm files.",

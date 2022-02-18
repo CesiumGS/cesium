@@ -28,7 +28,7 @@
               "boundingRegion": {
                 "type": "SCALAR",
                 "componentType": "FLOAT64",
-                "hasFixedCount": true,
+                "array": true,
                 "count": 6,
                 "semantic": "CONTENT_BOUNDING_REGION"
               }

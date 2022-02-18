@@ -21,7 +21,7 @@ describe("Scene/TilesetMetadata", function () {
         properties: {
           neighborhoods: {
             type: "STRING",
-            hasFixedCount: false,
+            array: true,
           },
         },
       },

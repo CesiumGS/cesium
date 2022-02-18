@@ -93,7 +93,7 @@ describe("Scene/MetadataTableProperty", function () {
         id: "property",
         property: {
           type: "STRING",
-          hasFixedCount: false,
+          array: true,
         },
       }),
       bufferViews: {
@@ -144,7 +144,7 @@ describe("Scene/MetadataTableProperty", function () {
         id: "property",
         property: {
           type: "STRING",
-          hasFixedCount: false,
+          array: true,
         },
       }),
       bufferViews: {
@@ -497,29 +497,29 @@ describe("Scene/MetadataTableProperty", function () {
       propertyInt64: {
         type: "SCALAR",
         componentType: "INT64",
-        hasFixedCount: true,
+        array: true,
         count: 3,
       },
       propertyUint64: {
         type: "SCALAR",
         componentType: "UINT64",
-        hasFixedCount: true,
+        array: true,
         count: 3,
       },
       propertyBoolean: {
         type: "BOOLEAN",
-        hasFixedCount: true,
+        array: true,
         count: 3,
       },
       propertyString: {
         type: "STRING",
-        hasFixedCount: true,
+        array: true,
         count: 3,
       },
       propertyEnum: {
         type: "ENUM",
         enumType: "myEnum",
-        hasFixedCount: true,
+        array: true,
         count: 3,
       },
       // Once we created EXT_mesh_features, arrays no longer automatically
@@ -527,13 +527,13 @@ describe("Scene/MetadataTableProperty", function () {
       propertyUint32: {
         type: "SCALAR",
         componentType: "UINT32",
-        hasFixedCount: true,
+        array: true,
         count: 3,
       },
       propertyFloat32: {
         type: "SCALAR",
         componentType: "FLOAT32",
-        hasFixedCount: true,
+        array: true,
         count: 3,
       },
     };
@@ -592,65 +592,65 @@ describe("Scene/MetadataTableProperty", function () {
       propertyInt8: {
         type: "SCALAR",
         componentType: "INT8",
-        hasFixedCount: false,
+        array: true,
       },
       propertyUint8: {
         type: "SCALAR",
         componentType: "UINT8",
-        hasFixedCount: false,
+        array: true,
       },
       propertyInt16: {
         type: "SCALAR",
         componentType: "INT16",
-        hasFixedCount: false,
+        array: true,
       },
       propertyUint16: {
         type: "SCALAR",
         componentType: "UINT16",
-        hasFixedCount: false,
+        array: true,
       },
       propertyInt32: {
         type: "SCALAR",
         componentType: "INT32",
-        hasFixedCount: false,
+        array: true,
       },
       propertyUint32: {
         type: "SCALAR",
         componentType: "UINT32",
-        hasFixedCount: false,
+        array: true,
       },
       propertyInt64: {
         type: "SCALAR",
         componentType: "INT64",
-        hasFixedCount: false,
+        array: true,
       },
       propertyUint64: {
         type: "SCALAR",
         componentType: "UINT64",
-        hasFixedCount: false,
+        array: true,
       },
       propertyFloat32: {
         type: "SCALAR",
         componentType: "FLOAT32",
-        hasFixedCount: false,
+        array: true,
       },
       propertyFloat64: {
         type: "SCALAR",
         componentType: "FLOAT64",
-        hasFixedCount: false,
+        array: true,
       },
       propertyBoolean: {
         type: "BOOLEAN",
-        hasFixedCount: false,
+        array: true,
       },
       propertyString: {
         type: "STRING",
-        hasFixedCount: false,
+        array: true,
       },
       propertyEnum: {
         type: "ENUM",
         enumType: "myEnum",
-        hasFixedCount: false,
+        array: true,
       },
     };
 
@@ -994,41 +994,41 @@ describe("Scene/MetadataTableProperty", function () {
       propertyInt64: {
         type: "SCALAR",
         componentType: "INT64",
-        hasFixedCount: true,
+        array: true,
         count: 3,
       },
       propertyUint64: {
         type: "SCALAR",
         componentType: "UINT64",
-        hasFixedCount: true,
+        array: true,
         count: 3,
       },
       propertyBoolean: {
         type: "BOOLEAN",
-        hasFixedCount: true,
+        array: true,
         count: 3,
       },
       propertyString: {
         type: "STRING",
-        hasFixedCount: true,
+        array: true,
         count: 3,
       },
       propertyEnum: {
         type: "ENUM",
         enumType: "myEnum",
-        hasFixedCount: true,
+        array: true,
         count: 3,
       },
       propertyUint32: {
         type: "SCALAR",
         componentType: "UINT32",
-        hasFixedCount: true,
+        array: true,
         count: 3,
       },
       propertyFloat32: {
         type: "SCALAR",
         componentType: "FLOAT32",
-        hasFixedCount: true,
+        array: true,
         count: 2,
       },
     };
@@ -1122,65 +1122,65 @@ describe("Scene/MetadataTableProperty", function () {
       propertyInt8: {
         type: "SCALAR",
         componentType: "INT8",
-        hasFixedCount: false,
+        array: true,
       },
       propertyUint8: {
         type: "SCALAR",
         componentType: "UINT8",
-        hasFixedCount: false,
+        array: true,
       },
       propertyInt16: {
         type: "SCALAR",
         componentType: "INT16",
-        hasFixedCount: false,
+        array: true,
       },
       propertyUint16: {
         type: "SCALAR",
         componentType: "UINT16",
-        hasFixedCount: false,
+        array: true,
       },
       propertyInt32: {
         type: "SCALAR",
         componentType: "INT32",
-        hasFixedCount: false,
+        array: true,
       },
       propertyUint32: {
         type: "SCALAR",
         componentType: "UINT32",
-        hasFixedCount: false,
+        array: true,
       },
       propertyInt64: {
         type: "SCALAR",
         componentType: "INT64",
-        hasFixedCount: false,
+        array: true,
       },
       propertyUint64: {
         type: "SCALAR",
         componentType: "UINT64",
-        hasFixedCount: false,
+        array: true,
       },
       propertyFloat32: {
         type: "SCALAR",
         componentType: "FLOAT32",
-        hasFixedCount: false,
+        array: true,
       },
       propertyFloat64: {
         type: "SCALAR",
         componentType: "FLOAT64",
-        hasFixedCount: false,
+        array: true,
       },
       propertyBoolean: {
         type: "BOOLEAN",
-        hasFixedCount: false,
+        array: true,
       },
       propertyString: {
         type: "STRING",
-        hasFixedCount: false,
+        array: true,
       },
       propertyEnum: {
         type: "ENUM",
         enumType: "myEnum",
-        hasFixedCount: false,
+        array: true,
       },
     };
 
@@ -1273,65 +1273,65 @@ describe("Scene/MetadataTableProperty", function () {
       propertyInt8: {
         type: "SCALAR",
         componentType: "INT8",
-        hasFixedCount: false,
+        array: true,
       },
       propertyUint8: {
         type: "SCALAR",
         componentType: "UINT8",
-        hasFixedCount: false,
+        array: true,
       },
       propertyInt16: {
         type: "SCALAR",
         componentType: "INT16",
-        hasFixedCount: false,
+        array: true,
       },
       propertyUint16: {
         type: "SCALAR",
         componentType: "UINT16",
-        hasFixedCount: false,
+        array: true,
       },
       propertyInt32: {
         type: "SCALAR",
         componentType: "INT32",
-        hasFixedCount: false,
+        array: true,
       },
       propertyUint32: {
         type: "SCALAR",
         componentType: "UINT32",
-        hasFixedCount: false,
+        array: true,
       },
       propertyInt64: {
         type: "SCALAR",
         componentType: "INT64",
-        hasFixedCount: false,
+        array: true,
       },
       propertyUint64: {
         type: "SCALAR",
         componentType: "UINT64",
-        hasFixedCount: false,
+        array: true,
       },
       propertyFloat32: {
         type: "SCALAR",
         componentType: "FLOAT32",
-        hasFixedCount: false,
+        array: true,
       },
       propertyFloat64: {
         type: "SCALAR",
         componentType: "FLOAT64",
-        hasFixedCount: false,
+        array: true,
       },
       propertyBoolean: {
         type: "BOOLEAN",
-        hasFixedCount: false,
+        array: true,
       },
       propertyString: {
         type: "STRING",
-        hasFixedCount: false,
+        array: true,
       },
       propertyEnum: {
         type: "ENUM",
         enumType: "myEnum",
-        hasFixedCount: false,
+        array: true,
       },
     };
 
@@ -1549,7 +1549,7 @@ describe("Scene/MetadataTableProperty", function () {
       property: {
         type: "SCALAR",
         componentType: "FLOAT32",
-        hasFixedCount: true,
+        array: true,
         count: 3,
       },
       values: [[1.0, 2.0, 3.0]],
@@ -1564,7 +1564,7 @@ describe("Scene/MetadataTableProperty", function () {
     const propertyInt32 = {
       type: "SCALAR",
       componentType: "INT32",
-      hasFixedCount: true,
+      array: true,
       count: 3,
     };
 
@@ -1587,7 +1587,7 @@ describe("Scene/MetadataTableProperty", function () {
     const propertyInt32 = {
       type: "SCALAR",
       componentType: "INT32",
-      hasFixedCount: false,
+      array: true,
     };
 
     const propertyValues = [

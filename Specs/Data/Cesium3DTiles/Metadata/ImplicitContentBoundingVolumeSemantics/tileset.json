@@ -18,7 +18,7 @@
               "contentBounds": {
                 "type": "SCALAR",
                 "componentType": "FLOAT64",
-                "hasFixedCount": true,
+                "array": true,
                 "count": 4,
                 "semantic": "CONTENT_BOUNDING_SPHERE"
               }

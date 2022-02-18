@@ -47,7 +47,7 @@ describe(
           properties: {
             species: {
               type: "STRING",
-              hasFixedCount: false,
+              array: true,
             },
           },
         },
@@ -56,7 +56,7 @@ describe(
             color: {
               type: "SCALAR",
               componentType: "UINT8",
-              hasFixedCount: true,
+              array: true,
               count: 3,
             },
             intensity: {

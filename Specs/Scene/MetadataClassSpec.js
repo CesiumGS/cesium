@@ -46,7 +46,7 @@ describe("Scene/MetadataClass", function () {
           position: {
             type: "SCALAR",
             componentType: "FLOAT32",
-            hasFixedCount: true,
+            array: true,
             count: 3,
             semantic: "_POSITION",
           },
