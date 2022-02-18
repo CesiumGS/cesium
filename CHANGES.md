@@ -14,6 +14,7 @@
 ##### Fixes :wrench:
 
 - Fixed a bug where updating `ModelExperimental`'s model matrix would not update its bounding sphere. [#10078](https://github.com/CesiumGS/cesium/pull/10078)
+- Fixed a bug where a translucent shader applied to a `ModeleExperimental` with opaque features was not being rendered. [#10110](https://github.com/CesiumGS/cesium/pull/10110)
 
 ### 1.90 - 2022-02-01
 
