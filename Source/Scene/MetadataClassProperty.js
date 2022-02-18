@@ -586,16 +586,6 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
   return normalize(this, value, MetadataComponentType.unnormalize);
 };
 
-MetadataClassProperty.prototype.scaleRange = function (value) {
-  // TODO
-  return value;
-};
-
-MetadataClassProperty.prototype.unscaleRange = function (value) {
-  // TODO
-  return value;
-};
-
 /**
  * Unpack VECN values into {@link Cartesian2}, {@link Cartesian3}, or
  * {@link Cartesian4} and MATN values into {@link Matrix2}, {@link Matrix3}, or
