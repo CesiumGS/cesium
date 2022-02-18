@@ -40,6 +40,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.semantic).toBeUndefined();
     expect(property.extras).toBeUndefined();
     expect(property.extensions).toBeUndefined();
+    expect(property._isLegacyExtension).toBe(false);
   });
 
   it("creates property", function () {
@@ -165,10 +166,12 @@ describe("Scene/MetadataClassProperty", function () {
       property: {
         type: "ENUM",
         enumType: "color",
+        required: true,
       },
       enums: enums,
     });
 
+    expect(property.required).toBe(true);
     expect(property.isArray).toBe(false);
     expect(property.isVariableLengthArray).toBe(false);
     expect(property.arrayLength).not.toBeDefined();
@@ -176,6 +179,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.componentType).not.toBeDefined();
     expect(property.enumType).toBe(colorEnum);
     expect(property.valueType).toBe(MetadataComponentType.UINT16); // default enum valueType
+    expect(property._isLegacyExtension).toBe(false);
   });
 
   it("creates array of enums with EXT_feature_metadata", function () {
@@ -214,6 +218,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.componentType).not.toBeDefined();
     expect(property.enumType).toBe(colorEnum);
     expect(property.valueType).toBe(MetadataComponentType.UINT32);
+    expect(property._isLegacyExtension).toBe(true);
   });
 
   it("creates vector and matrix types", function () {
@@ -232,6 +237,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.arrayLength).not.toBeDefined();
     expect(property.componentType).toBe(MetadataComponentType.FLOAT32);
     expect(property.valueType).toBe(MetadataComponentType.FLOAT32);
+    expect(property._isLegacyExtension).toBe(false);
 
     property = new MetadataClassProperty({
       id: "scale",
@@ -248,6 +254,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.arrayLength).not.toBeDefined();
     expect(property.componentType).toBe(MetadataComponentType.FLOAT64);
     expect(property.valueType).toBe(MetadataComponentType.FLOAT64);
+    expect(property._isLegacyExtension).toBe(false);
   });
 
   it("creates arrays of BOOLEAN and STRING with EXT_feature_metadata", function () {
@@ -266,6 +273,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.arrayLength).not.toBeDefined();
     expect(property.componentType).not.toBeDefined();
     expect(property.valueType).not.toBeDefined();
+    expect(property._isLegacyExtension).toBe(true);
 
     property = new MetadataClassProperty({
       id: "stringArray",
@@ -283,6 +291,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.arrayLength).toBe(2);
     expect(property.componentType).not.toBeDefined();
     expect(property.valueType).not.toBeDefined();
+    expect(property._isLegacyExtension).toBe(true);
   });
 
   it("creates arrays of vector and matrix types", function () {
@@ -302,6 +311,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.arrayLength).not.toBeDefined();
     expect(property.componentType).toBe(MetadataComponentType.FLOAT32);
     expect(property.valueType).toBe(MetadataComponentType.FLOAT32);
+    expect(property._isLegacyExtension).toBe(false);
 
     property = new MetadataClassProperty({
       id: "scaleFactors",
@@ -320,6 +330,27 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.arrayLength).toBe(2);
     expect(property.componentType).toBe(MetadataComponentType.FLOAT64);
     expect(property.valueType).toBe(MetadataComponentType.FLOAT64);
+    expect(property._isLegacyExtension).toBe(false);
+  });
+
+  it("handles ambiguous extension gracefully", function () {
+    const property = new MetadataClassProperty({
+      id: "name",
+      property: {
+        // this is valid in both EXT_structural_metadata and EXT_feature_metadata
+        type: "STRING",
+      },
+    });
+
+    expect(property.id).toBe("name");
+    expect(property.required).toBe(false);
+    expect(property.type).toBe(MetadataType.STRING);
+    expect(property.isArray).toBe(false);
+    expect(property.isVariableLengthArray).toBe(false);
+    expect(property.arrayLength).not.toBeDefined();
+    expect(property.componentType).not.toBeDefined();
+    expect(property.valueType).not.toBeDefined();
+    expect(property._isLegacyExtension).not.toBeDefined();
   });
 
   it("constructor throws with invalid type definition", function () {
