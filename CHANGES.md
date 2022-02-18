@@ -4,6 +4,7 @@
 
 ##### Additions :tada:
 
+- Added MSAA support for WebGL2. Enabled on viewer creation with the multisampling rate as the `msaaSamples` option and can be controlled through `Scene.msaaSamples`.
 - glTF contents now use `ModelExperimental` by default. [#10055](https://github.com/CesiumGS/cesium/pull/10055)
 - Added the ability to toggle back-face culling in `ModelExperimental`. [#10070](https://github.com/CesiumGS/cesium/pull/10070)
 - Added `depthPlaneEllipsoidOffset` to Viewer and Scene constructors to address rendering artefacts below ellipsoid zero elevation. [#9200](https://github.com/CesiumGS/cesium/pull/9200)
