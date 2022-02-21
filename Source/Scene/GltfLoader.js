@@ -1002,18 +1002,19 @@ function loadPrimitive(
   const structuralMetadata = extensions.EXT_structural_metadata;
   const meshFeatures = extensions.EXT_mesh_features;
   const featureMetadataLegacy = extensions.EXT_feature_metadata;
+  const hasFeatureMetadataLegacy = defined(featureMetadataLegacy);
 
-  if (defined(structuralMetadata) || defined(meshFeatures)) {
-    loadPrimitiveMetadata(
+  // Load feature Ids
+  if (defined(meshFeatures)) {
+    loadPrimitiveFeatures(
       loader,
       gltf,
       primitive,
       meshFeatures,
-      structuralMetadata,
       supportedImageFormats
     );
-  } else if (defined(featureMetadataLegacy)) {
-    loadPrimitiveMetadataLegacy(
+  } else if (hasFeatureMetadataLegacy) {
+    loadPrimitiveFeaturesLegacy(
       loader,
       gltf,
       primitive,
@@ -1022,17 +1023,24 @@ function loadPrimitive(
     );
   }
 
+  // Load structural metadata
+  if (defined(structuralMetadata)) {
+    loadPrimitiveMetadata(primitive, structuralMetadata);
+  } else if (hasFeatureMetadataLegacy) {
+    loadPrimitiveMetadataLegacy(loader, primitive, featureMetadataLegacy);
+  }
+
   primitive.primitiveType = gltfPrimitive.mode;
 
   return primitive;
 }
 
-function loadPrimitiveMetadata(
+// For EXT_mesh_features
+function loadPrimitiveFeatures(
   loader,
   gltf,
   primitive,
   meshFeaturesExtension,
-  structuralMetadataExtension,
   supportedImageFormats
 ) {
   let featureIdsArray;
@@ -1064,17 +1072,10 @@ function loadPrimitiveMetadata(
 
     primitive.featureIds.push(featureIdComponent);
   }
-
-  // Property Textures
-  if (
-    defined(structuralMetadataExtension) &&
-    defined(structuralMetadataExtension.propertyTextures)
-  ) {
-    primitive.propertyTextureIds = structuralMetadataExtension.propertyTextures;
-  }
 }
 
-function loadPrimitiveMetadataLegacy(
+// For EXT_feature_metadata
+function loadPrimitiveFeaturesLegacy(
   loader,
   gltf,
   primitive,
@@ -1137,7 +1138,21 @@ function loadPrimitiveMetadataLegacy(
       primitive.featureIds.push(featureIdComponent);
     }
   }
+}
 
+// For primitive-level EXT_structural_metadata
+function loadPrimitiveMetadata(primitive, structuralMetadataExtension) {
+  // Property Textures
+  if (
+    defined(structuralMetadataExtension) &&
+    defined(structuralMetadataExtension.propertyTextures)
+  ) {
+    primitive.propertyTextureIds = structuralMetadataExtension.propertyTextures;
+  }
+}
+
+// For EXT_feature_metadata
+function loadPrimitiveMetadataLegacy(loader, primitive, metadataExtension) {
   // Feature Textures
   if (defined(metadataExtension.featureTextures)) {
     // feature textures are now identified by an integer index. To convert the
