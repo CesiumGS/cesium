@@ -1,6 +1,10 @@
 import {
   defaultValue,
+  Cartesian2,
   Cartesian3,
+  Cartesian4,
+  Matrix2,
+  Matrix3,
   MetadataClassProperty,
   MetadataComponentType,
   MetadataTableProperty,
@@ -403,7 +407,7 @@ describe("Scene/MetadataTableProperty", function () {
     }
   });
 
-  it("get returns vectors", function () {
+  it("get returns vector values", function () {
     const properties = {
       propertyInt8: {
         type: "VEC3",
@@ -522,8 +526,6 @@ describe("Scene/MetadataTableProperty", function () {
         array: true,
         count: 3,
       },
-      // Once we created EXT_mesh_features, arrays no longer automatically
-      // convert to vectors, since we now have dedicated VECN types
       propertyUint32: {
         type: "SCALAR",
         componentType: "UINT32",
@@ -699,6 +701,101 @@ describe("Scene/MetadataTableProperty", function () {
         for (let i = 0; i < length; ++i) {
           const value = property.get(i);
           expect(value).toEqual(expectedValues[i]);
+        }
+      }
+    }
+  });
+
+  it("get returns arrays of vectors and matrices", function () {
+    const properties = {
+      propertyVec4: {
+        type: "VEC4",
+        componentType: "FLOAT32",
+        array: true,
+        count: 2,
+      },
+      propertyDVec2: {
+        type: "VEC2",
+        componentType: "FLOAT64",
+        array: true,
+      },
+      propertyU8Mat3: {
+        type: "MAT3",
+        componentType: "UINT8",
+        array: true,
+        count: 2,
+      },
+      propertyDMat2: {
+        type: "MAT2",
+        componentType: "FLOAT64",
+        array: true,
+      },
+    };
+
+    // for unpacking results in expect()
+    const mathTypes = {
+      propertyVec4: Cartesian4,
+      propertyDVec2: Cartesian2,
+      propertyU8Mat3: Matrix3,
+      propertyDMat2: Matrix2,
+    };
+
+    // prettier-ignore
+    const propertyValues = {
+      propertyVec4: [
+        [
+          1, 1, 0, 1,
+          1, 1, 0, 1
+        ],
+        [
+          1, 2, 3, 4,
+          1, 2, 3, 4
+        ]
+      ],
+      propertyDVec2: [
+        [
+          1, 2,
+          3, 4,
+          5, 6
+        ],
+        [1, 2]
+      ],
+      propertyU8Mat3: [
+        [
+          2, 0, 0, 0, 2, 0, 0, 0, 2, 
+          1, 2, 3, 1, 2, 3, 1, 2, 3
+        ],
+        [
+          255, 128, 0, 0, 255, 0, 0, 255, 255,
+          1, 2, 3, 4, 5, 6, 7, 8, 9 
+        ]
+      ],
+      propertyDMat2: [
+        [
+          1, 2, 3, 4,
+          1, 0, 0, 1,
+          0, 0, 0, 1,
+        ],
+        [
+          1, 2, 1, 2,
+          1, 0, 0, 2
+        ]
+      ]
+    };
+
+    for (const propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        const property = MetadataTester.createProperty({
+          property: properties[propertyId],
+          values: propertyValues[propertyId],
+        });
+
+        const expectedValues = propertyValues[propertyId];
+        const length = expectedValues.length;
+        const MathType = mathTypes[propertyId];
+        for (let i = 0; i < length; ++i) {
+          const value = property.get(i);
+          expect(value).toEqual(MathType.unpackArray(expectedValues[i]));
         }
       }
     }
@@ -1101,6 +1198,134 @@ describe("Scene/MetadataTableProperty", function () {
           property: properties[propertyId],
           values: propertyValues[propertyId],
           enums: enums,
+        });
+        const expectedValues = valuesToSet[propertyId];
+        const length = expectedValues.length;
+        for (let i = 0; i < length; ++i) {
+          property.set(i, expectedValues[i]);
+          let value = property.get(i);
+          expect(value).toEqual(expectedValues[i]);
+          // Test setting / getting again
+          property.set(i, expectedValues[i]);
+          value = property.get(i);
+          expect(value).toEqual(expectedValues[i]);
+        }
+      }
+    }
+  });
+
+  it("set sets arrays of vectors and matrices", function () {
+    const properties = {
+      propertyVec4: {
+        type: "VEC4",
+        componentType: "FLOAT32",
+        array: true,
+        count: 2,
+      },
+      propertyDVec2: {
+        type: "VEC2",
+        componentType: "FLOAT64",
+        array: true,
+      },
+      propertyU8Mat3: {
+        type: "MAT3",
+        componentType: "UINT8",
+        array: true,
+        count: 2,
+      },
+      propertyDMat2: {
+        type: "MAT2",
+        componentType: "FLOAT64",
+        array: true,
+      },
+    };
+
+    // for unpacking results in expect()
+    /*
+    const mathTypes = {
+      propertyVec4: Cartesian4,
+      propertyDVec2: Cartesian2,
+      propertyU8Mat3: Matrix3,
+      propertyDMat2: Matrix2
+    };*/
+
+    // prettier-ignore
+    const propertyValues = {
+      propertyVec4: [
+        [
+          1, 1, 0, 1,
+          1, 1, 0, 1
+        ],
+        [
+          1, 2, 3, 4,
+          1, 2, 3, 4
+        ]
+      ],
+      propertyDVec2: [
+        [
+          1, 2,
+          3, 4,
+          5, 6
+        ],
+        [1, 2]
+      ],
+      propertyU8Mat3: [
+        [
+          2, 0, 0, 0, 2, 0, 0, 0, 2, 
+          1, 2, 3, 1, 2, 3, 1, 2, 3
+        ],
+        [
+          255, 128, 0, 0, 255, 0, 0, 255, 255,
+          1, 2, 3, 4, 5, 6, 7, 8, 9 
+        ]
+      ],
+      propertyDMat2: [
+        [
+          1, 2, 3, 4,
+          1, 0, 0, 1,
+          0, 0, 0, 1,
+        ],
+        [
+          1, 2, 1, 2,
+          1, 0, 0, 2
+        ]
+      ]
+    };
+
+    const valuesToSet = {
+      propertyVec4: [
+        [new Cartesian4(1, 1, 0, 1), new Cartesian4(1, 1, 0, 1)],
+        [new Cartesian4(1, 2, 3, 4), new Cartesian4(1, 2, 3, 4)],
+      ],
+      propertyDVec2: [
+        [new Cartesian2(1, 2), new Cartesian2(3, 4), new Cartesian2(5, 6)],
+        [new Cartesian2(1, 2)],
+      ],
+      propertyU8Mat3: [
+        [
+          new Matrix3(2, 0, 0, 0, 2, 0, 0, 0, 2),
+          new Matrix3(1, 2, 3, 1, 2, 3, 1, 2, 3),
+        ],
+        [
+          new Matrix3(255, 128, 0, 0, 255, 0, 0, 255, 255),
+          new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9),
+        ],
+      ],
+      propertyDMat2: [
+        [
+          new Matrix2(1, 2, 3, 4),
+          new Matrix2(1, 0, 0, 1),
+          new Matrix2(0, 0, 0, 1),
+        ],
+        [new Matrix2(1, 2, 1, 2), new Matrix2(1, 0, 0, 2)],
+      ],
+    };
+
+    for (const propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        const property = MetadataTester.createProperty({
+          property: properties[propertyId],
+          values: propertyValues[propertyId],
         });
         const expectedValues = valuesToSet[propertyId];
         const length = expectedValues.length;

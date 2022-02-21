@@ -83,16 +83,14 @@ function MetadataTableProperty(options) {
     vectorComponentCount = 1;
   }
 
-  let arrayComponentCount;
+  let componentCount;
   if (isVariableLengthArray) {
-    arrayComponentCount = arrayOffsets.get(count) - arrayOffsets.get(0);
+    componentCount = arrayOffsets.get(count) - arrayOffsets.get(0);
   } else if (isArray) {
-    arrayComponentCount = count * classProperty.arrayLength;
+    componentCount = count * classProperty.arrayLength * vectorComponentCount;
   } else {
-    arrayComponentCount = count;
+    componentCount = count * vectorComponentCount;
   }
-
-  const componentCount = vectorComponentCount * arrayComponentCount;
 
   let stringOffsets;
   if (hasStrings) {

@@ -329,7 +329,7 @@ function getDefault(classDefinition, propertyId) {
   if (defined(classProperty) && defined(classProperty.default)) {
     let value = classProperty.default;
     if (classProperty.isArray) {
-      value = clone(value, true); // clone
+      value = clone(value, true);
     }
     value = classProperty.normalize(value);
     return classProperty.unpackVectorAndMatrixTypes(value);

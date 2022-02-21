@@ -382,7 +382,8 @@ describe("Scene/MetadataTable", function () {
   });
 
   it("getProperty returns the default value when the property is missing", function () {
-    const position = [0.0, 0.0, 0.0];
+    const position = [0, 0, 0];
+    const defaultBoundingSphere = [0, 0, 0, 1];
 
     const properties = {
       position: {
@@ -400,6 +401,13 @@ describe("Scene/MetadataTable", function () {
         required: false,
         default: "Other",
       },
+      boundingSphere: {
+        type: "SCALAR",
+        componentType: "FLOAT64",
+        array: true,
+        count: 4,
+        default: defaultBoundingSphere,
+      },
     };
     const propertyValues = {
       name: ["A", "B"],
@@ -415,6 +423,10 @@ describe("Scene/MetadataTable", function () {
     expect(value).toEqual(Cartesian3.unpack(position));
 
     expect(metadataTable.getProperty(0, "type")).toBe("Other");
+
+    const sphere = metadataTable.getProperty(0, "boundingSphere");
+    expect(sphere).toEqual(defaultBoundingSphere);
+    expect(sphere).not.toBe(defaultBoundingSphere); // it should clone the value
   });
 
   it("getProperty throws without index", function () {
