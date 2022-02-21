@@ -1,4 +1,5 @@
 import Check from "../Core/Check.js";
+import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import PropertyTable from "./PropertyTable.js";
@@ -76,7 +77,7 @@ export default function parseFeatureMetadataLegacy(options) {
       propertyTextures.push(
         new PropertyTexture({
           id: featureTextureId,
-          featureTexture: featureTexture,
+          propertyTexture: transcodeToPropertyTexture(featureTexture),
           class: schema.classes[featureTexture.class],
           textures: options.textures,
         })
@@ -92,4 +93,45 @@ export default function parseFeatureMetadataLegacy(options) {
     extras: extension.extras,
     extensions: extension.extensions,
   });
+}
+
+function transcodeToPropertyTexture(featureTexture) {
+  const propertyTexture = {
+    class: featureTexture.class,
+    properties: {},
+  };
+
+  const properties = featureTexture.properties;
+  for (const propertyId in properties) {
+    if (properties.hasOwnProperty(propertyId)) {
+      const oldProperty = properties[propertyId];
+      const property = {
+        // EXT_structural_metadata uses numeric channel indices instead of
+        // a string of channel letters like "rgba".
+        channels: reformatChannels(oldProperty.channels),
+        extras: oldProperty.extras,
+        extensions: oldProperty.extensions,
+      };
+
+      // EXT_feature_metadata puts the textureInfo in property.texture.
+      // EXT_structural_metadata flattens this structure; essentially a
+      // textureInfo + channels
+      propertyTexture.properties[propertyId] = combine(
+        oldProperty.texture,
+        property,
+        true
+      );
+    }
+  }
+
+  return propertyTexture;
+}
+
+function reformatChannels(channelsString) {
+  const length = channelsString.length;
+  const result = new Array(length);
+  for (let i = 0; i < length; i++) {
+    result[i] = "rgba".indexOf(channelsString[i]);
+  }
+  return result;
 }

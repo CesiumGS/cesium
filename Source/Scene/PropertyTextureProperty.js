@@ -33,12 +33,18 @@ function PropertyTextureProperty(options) {
   Check.typeOf.object("options.textures", textures);
   //>>includeEnd('debug');
 
-  const textureInfo = property.texture;
+  // in EXT_structural_metadata, the property is a valid glTF textureInfo
+  const textureInfo = property;
   const textureReader = GltfLoaderUtil.createModelTextureReader({
     textureInfo: textureInfo,
-    channels: property.channels,
+    channels: reformatChannels(property.channels),
     texture: textures[textureInfo.index],
   });
+
+  this._offset = property.offset;
+  this._scale = property.scale;
+  this._min = property.min;
+  this._max = property.max;
 
   this._textureReader = textureReader;
   this._classProperty = classProperty;
@@ -89,5 +95,21 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
     },
   },
 });
+
+/**
+ * Reformat from an array of channel indices like <code>[0, 1]</code> to a
+ * string of channels as would be used in GLSL swizzling (e.g. "rg")
+ *
+ * @param {Number[]} channels the channel indices
+ * @return {String} The channels as a string of "r", "g", "b" or "a" characters.
+ * @private
+ */
+function reformatChannels(channels) {
+  return channels
+    .map(function (channelIndex) {
+      return "rgba".charAt(channelIndex);
+    })
+    .join("");
+}
 
 export default PropertyTextureProperty;

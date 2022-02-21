@@ -794,6 +794,16 @@ function TextureReader() {
   this.texture = undefined;
 
   /**
+   * The index of the texture in the glTF. This is useful for determining
+   * when textures are shared to avoid attaching a texture in multiple uniform
+   * slots in the shader.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.index = undefined;
+
+  /**
    * The texture coordinate set.
    *
    * @type {Number}
