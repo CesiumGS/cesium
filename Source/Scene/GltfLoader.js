@@ -113,7 +113,7 @@ export default function GltfLoader(options) {
   this._renameBatchIdSemantic = renameBatchIdSemantic;
 
   // When loading EXT_feature_metadata, the feature tables and textures
-  // are now stored as arrays like the newer EXT_mesh_features extension.
+  // are now stored as arrays like the newer EXT_structural_metadata extension.
   // This requires sorting the dictionary keys for a consistent ordering.
   this._sortedPropertyTableIds = undefined;
   this._sortedFeatureTextureIds = undefined;
@@ -995,15 +995,21 @@ function loadPrimitive(
     primitive.indices = loadIndices(loader, gltf, indices, draco);
   }
 
-  const featureMetadata = extensions.EXT_mesh_features;
+  // With the latest revision, feature IDs are defined in EXT_mesh_features
+  // while EXT_structural_metadata is for defining property textures and
+  // property mappings. In the legacy EXT_feature_metadata, these concepts
+  // were all in one extension.
+  const structuralMetadata = extensions.EXT_structural_metadata;
+  const meshFeatures = extensions.EXT_mesh_features;
   const featureMetadataLegacy = extensions.EXT_feature_metadata;
 
-  if (defined(featureMetadata)) {
+  if (defined(structuralMetadata) || defined(meshFeatures)) {
     loadPrimitiveMetadata(
       loader,
       gltf,
       primitive,
-      featureMetadata,
+      meshFeatures,
+      structuralMetadata,
       supportedImageFormats
     );
   } else if (defined(featureMetadataLegacy)) {
@@ -1025,12 +1031,19 @@ function loadPrimitiveMetadata(
   loader,
   gltf,
   primitive,
-  metadataExtension,
+  meshFeaturesExtension,
+  structuralMetadataExtension,
   supportedImageFormats
 ) {
-  const featureIdsArray = defined(metadataExtension.featureIds)
-    ? metadataExtension.featureIds
-    : [];
+  let featureIdsArray;
+  if (
+    defined(meshFeaturesExtension) &&
+    defined(meshFeaturesExtension.featureIds)
+  ) {
+    featureIdsArray = meshFeaturesExtension.featureIds;
+  } else {
+    featureIdsArray = [];
+  }
 
   for (let i = 0; i < featureIdsArray.length; i++) {
     const featureIds = featureIdsArray[i];
@@ -1053,8 +1066,11 @@ function loadPrimitiveMetadata(
   }
 
   // Property Textures
-  if (defined(metadataExtension.propertyTextures)) {
-    primitive.propertyTextureIds = metadataExtension.propertyTextures;
+  if (
+    defined(structuralMetadataExtension) &&
+    defined(structuralMetadataExtension.propertyTextures)
+  ) {
+    primitive.propertyTextureIds = structuralMetadataExtension.propertyTextures;
   }
 }
 
@@ -1183,11 +1199,11 @@ function loadInstances(loader, gltf, nodeExtensions, frameState) {
     instancingExtension.extensions,
     defaultValue.EMPTY_OBJECT
   );
-  const featureMetadata = nodeExtensions.EXT_mesh_features;
+  const instanceFeatures = nodeExtensions.EXT_instance_features;
   const featureMetadataLegacy = instancingExtExtensions.EXT_feature_metadata;
 
-  if (defined(featureMetadata)) {
-    loadInstanceMetadata(instances, featureMetadata);
+  if (defined(instanceFeatures)) {
+    loadInstanceMetadata(instances, instanceFeatures);
   } else if (defined(featureMetadataLegacy)) {
     loadInstanceMetadataLegacy(
       gltf,
@@ -1201,9 +1217,9 @@ function loadInstances(loader, gltf, nodeExtensions, frameState) {
 }
 
 // For EXT_mesh_features
-function loadInstanceMetadata(instances, metadataExtension) {
-  // feature IDs are required in EXT_mesh_features
-  const featureIdsArray = metadataExtension.featureIds;
+function loadInstanceMetadata(instances, instanceFeaturesExtension) {
+  // feature IDs are required in EXT_instance_features
+  const featureIdsArray = instanceFeaturesExtension.featureIds;
 
   for (let i = 0; i < featureIdsArray.length; i++) {
     const featureIds = featureIdsArray[i];
@@ -1420,10 +1436,10 @@ function loadScene(gltf, nodes) {
 
 function parse(loader, gltf, supportedImageFormats, frameState) {
   const extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);
-  const featureMetadataExtension = extensions.EXT_mesh_features;
+  const structuralMetadataExtension = extensions.EXT_structural_metadata;
   const featureMetadataExtensionLegacy = extensions.EXT_feature_metadata;
 
-  if (featureMetadataExtensionLegacy) {
+  if (defined(featureMetadataExtensionLegacy)) {
     // If the old EXT_feature_metadata extension is present, sort the IDs of the
     // feature tables and feature textures so we don't have to do this once
     // per primitive.
@@ -1453,13 +1469,13 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
 
   // Load feature metadata (feature tables and feature textures)
   if (
-    defined(featureMetadataExtension) ||
+    defined(structuralMetadataExtension) ||
     defined(featureMetadataExtensionLegacy)
   ) {
     const featureMetadataLoader = loadFeatureMetadata(
       loader,
       gltf,
-      featureMetadataExtension,
+      structuralMetadataExtension,
       featureMetadataExtensionLegacy,
       supportedImageFormats
     );

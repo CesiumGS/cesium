@@ -3,14 +3,15 @@
     "version": "2.0"
   },
   "extensionsUsed": [
-    "EXT_mesh_features",
+    "EXT_instance_features",
+    "EXT_structural_metadata",
     "EXT_mesh_gpu_instancing"
   ],
   "extensionsRequired": [
     "EXT_mesh_gpu_instancing"
   ],
   "extensions": {
-    "EXT_mesh_features": {
+    "EXT_structural_metadata": {
       "schema": {
         "classes": {
           "box": {
@@ -91,7 +92,7 @@
             "_FEATURE_ID_0": 6
           }
         },
-        "EXT_mesh_features": {
+        "EXT_instance_features": {
           "featureIds": [
             {
               "propertyTable": 0,

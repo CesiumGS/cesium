@@ -231,7 +231,7 @@ Cesium3DTileFeature.prototype.getProperty = function (name) {
 
 /**
  * Returns a copy of the feature's property with the given name, examining all
- * the metadata from 3D Tiles 1.0 formats, the EXT_mesh_features and legacy
+ * the metadata from 3D Tiles 1.0 formats, the EXT_structural_metadata and legacy
  * EXT_feature_metadata glTF extensions, and the 3DTILES_metadata 3D Tiles
  * extension. Metadata is checked against name from most specific to most
  * general and the first match is returned. Metadata is checked in this order:

@@ -136,11 +136,11 @@ describe(
     });
 
     const gltf = results.gltf;
-    const extension = gltf.extensions.EXT_mesh_features;
+    const extension = gltf.extensions.EXT_structural_metadata;
     const buffer = results.buffer.buffer;
 
     const gltfSchemaUri = clone(gltf, true);
-    const extensionSchemaUri = gltfSchemaUri.extensions.EXT_mesh_features;
+    const extensionSchemaUri = gltfSchemaUri.extensions.EXT_structural_metadata;
     extensionSchemaUri.schemaUri = "schema.json";
     delete extensionSchemaUri.schema;
 

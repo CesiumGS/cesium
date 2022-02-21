@@ -281,17 +281,17 @@ to a single feature ID, always with index 0:
 - `vsInput.featureIds.featureId_0` (Vertex shader)
 - `fsInput.featureIds.featureId_0` (Fragment shader)
 
-### `EXT_mesh_features` Feature IDs
+### `EXT_mesh_features`/`EXT_instance_features` Feature IDs
 
-When the glTF extension `EXT_mesh_features` is used, feature IDs appear in
-two places:
+When the glTF extensions `EXT_mesh_features` or `EXT_instance_features` are used,
+feature IDs appear in two places:
 
 1. Any glTF primitive can have a `featureIds` array. The `featureIds` array may
    contain feature ID attributes, implicit feature ID attributes, and/or feature
    ID textures. Regardless of the type of feature IDs, they all appear in the
    custom shader as `(vsInput|fsInput).featureIds.featureId_N` where `N` is the
    index of the feature IDs in the `featureIds` array.
-2. Any glTF node with the `EXT_mesh_gpu_instancing` and `EXT_mesh_features` may
+2. Any glTF node with the `EXT_mesh_gpu_instancing` and `EXT_instance_features` may
    define feature IDs. These may be feature ID attributes or implicit feature ID
    attributes, but not feature ID textures. These will appear in the custom
    shader as `(vsInput|fsInput).featureIds.instanceFeatureId_N` where `N` is the
@@ -313,7 +313,7 @@ For example, suppose we had a glTF primitive with the following feature IDs:
           "_FEATURE_ID_0": 4
         }
       },
-      "EXT_mesh_features": {
+      "EXT_instance_features": {
         "featureIds": [
           {
             // Feature ID attribute from implicit range

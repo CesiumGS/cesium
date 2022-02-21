@@ -19,10 +19,11 @@
       }
     ],
     "extensionsUsed": [
-      "EXT_mesh_features"
+      "EXT_mesh_features",
+      "EXT_structural_metadata"
     ],
     "extensions": {
-      "EXT_mesh_features": {
+      "EXT_structural_metadata": {
         "schema": {
           "classes": {
             "perTriangle": {
