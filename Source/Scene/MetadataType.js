@@ -2,6 +2,7 @@ import Check from "../Core/Check.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import Matrix2 from "../Core/Matrix2.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -142,13 +143,11 @@ MetadataType.isMatrixType = function (type) {
 };
 
 /**
- * Get the number of components for a type. e.g. a VECN returns N.
- * The only exception is the ARRAY type, whose number of components is
- * determined separately by the componentCount property in the metadata
- * extension.
+ * Get the number of components for a vector or matrix type. e.g.
+ * a VECN returns N, and a MATN returns N*N. All other types return 1.
  *
  * @param {MetadataType} type The type to get the component count for
- * @return {Number} The number of components, or <code>undefined</code> for ARRAY
+ * @return {Number} The number of components
  */
 MetadataType.getComponentCount = function (type) {
   //>>includeStart('debug', pragmas.debug);
@@ -157,6 +156,9 @@ MetadataType.getComponentCount = function (type) {
 
   switch (type) {
     case MetadataType.SCALAR:
+    case MetadataType.STRING:
+    case MetadataType.ENUM:
+    case MetadataType.BOOLEAN:
       return 1;
     case MetadataType.VEC2:
       return 2;
@@ -170,8 +172,10 @@ MetadataType.getComponentCount = function (type) {
       return 9;
     case MetadataType.MAT4:
       return 16;
+    //>>includeStart('debug', pragmas.debug);
     default:
-      return undefined;
+      throw new DeveloperError(`Invalid metadata type ${type}`);
+    //>>includeEnd('debug');
   }
 };
 

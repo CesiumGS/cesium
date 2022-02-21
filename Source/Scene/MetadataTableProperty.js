@@ -83,14 +83,16 @@ function MetadataTableProperty(options) {
     vectorComponentCount = 1;
   }
 
-  let componentCount;
+  let arrayComponentCount;
   if (isVariableLengthArray) {
-    componentCount = arrayOffsets.get(count) - arrayOffsets.get(0);
+    arrayComponentCount = arrayOffsets.get(count) - arrayOffsets.get(0);
   } else if (isArray) {
-    componentCount = count * classProperty.arrayLength * vectorComponentCount;
+    arrayComponentCount = count * classProperty.arrayLength;
   } else {
-    componentCount = count * vectorComponentCount;
+    arrayComponentCount = count;
   }
+
+  const componentCount = vectorComponentCount * arrayComponentCount;
 
   let stringOffsets;
   if (hasStrings) {
@@ -318,6 +320,12 @@ function getArrayValues(property, classProperty, index) {
   if (classProperty.isVariableLengthArray) {
     offset = property._arrayOffsets.get(index);
     length = property._arrayOffsets.get(index + 1) - offset;
+
+    // for vectors and matrices, the offset and length need to be multiplied
+    // by the component count
+    const componentCount = MetadataType.getComponentCount(classProperty.type);
+    offset *= componentCount;
+    length *= componentCount;
   } else {
     const arrayLength = defaultValue(classProperty.arrayLength, 1);
     const componentCount = arrayLength * property._vectorComponentCount;

@@ -43,13 +43,15 @@ describe("Scene/MetadataType", function () {
     expect(MetadataType.getComponentCount(MetadataType.MAT3)).toBe(9);
     expect(MetadataType.getComponentCount(MetadataType.MAT4)).toBe(16);
     expect(MetadataType.getComponentCount(MetadataType.SCALAR)).toBe(1);
-    expect(MetadataType.getComponentCount(MetadataType.ENUM)).not.toBeDefined();
-    expect(
-      MetadataType.getComponentCount(MetadataType.BOOLEAN)
-    ).not.toBeDefined();
-    expect(
-      MetadataType.getComponentCount(MetadataType.STRING)
-    ).not.toBeDefined();
+    expect(MetadataType.getComponentCount(MetadataType.ENUM)).toBe(1);
+    expect(MetadataType.getComponentCount(MetadataType.BOOLEAN)).toBe(1);
+    expect(MetadataType.getComponentCount(MetadataType.STRING)).toBe(1);
+  });
+
+  it("getComponentCount throws for invalid type", function () {
+    expect(function () {
+      return MetadataType.getComponentCount("NOT_A_TYPE");
+    }).toThrowDeveloperError();
   });
 
   it("getMathType works", function () {

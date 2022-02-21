@@ -111,7 +111,11 @@ function createProperties(options) {
       if (classProperty.isVariableLengthArray) {
         const arrayOffsetBufferType = defaultValue(arrayOffsetType, offsetType);
         const arrayOffsetBuffer = addPadding(
-          createArrayOffsetBuffer(values, arrayOffsetBufferType)
+          createArrayOffsetBuffer(
+            values,
+            classProperty.type,
+            arrayOffsetBufferType
+          )
         );
         const arrayOffsetBufferView = bufferViewIndex++;
         bufferViews[arrayOffsetBufferView] = arrayOffsetBuffer;
@@ -483,13 +487,14 @@ function createStringOffsetBuffer(values, offsetType) {
   return createBuffer(offsets, offsetType);
 }
 
-function createArrayOffsetBuffer(values, offsetType) {
+function createArrayOffsetBuffer(values, type, offsetType) {
+  const componentCount = MetadataType.getComponentCount(type);
   const length = values.length;
   const offsets = new Array(length + 1);
   let offset = 0;
   for (let i = 0; i < length; ++i) {
     offsets[i] = offset;
-    offset += values[i].length;
+    offset += values[i].length / componentCount;
   }
   offsets[length] = offset;
   offsetType = defaultValue(offsetType, MetadataComponentType.UINT32);
