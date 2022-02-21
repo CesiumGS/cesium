@@ -340,16 +340,9 @@ MetadataComponentType.normalize = function (value, type) {
   }
   //>>includeEnd('debug');
 
-  if (value >= 0) {
-    return Math.min(
-      Number(value) / Number(MetadataComponentType.getMaximum(type)),
-      1.0
-    );
-  }
-
-  return -Math.min(
-    Number(value) / Number(MetadataComponentType.getMinimum(type)),
-    1.0
+  return Math.max(
+    Number(value) / Number(MetadataComponentType.getMaximum(type)),
+    -1.0
   );
 };
 
@@ -377,8 +370,8 @@ MetadataComponentType.unnormalize = function (value, type) {
   }
   //>>includeEnd('debug');
 
-  const min = MetadataComponentType.getMinimum(type);
   const max = MetadataComponentType.getMaximum(type);
+  const min = MetadataComponentType.isUnsignedIntegerType(type) ? 0 : -max;
 
   if (value >= 0.0) {
     value = value * Number(max);
