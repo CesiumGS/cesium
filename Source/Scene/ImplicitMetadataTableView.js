@@ -172,6 +172,8 @@ ImplicitMetadataTableView.prototype.getPropertyBySemantic = function (
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  * @private
  */
+
+// TODO: account for multiple contents?
 ImplicitMetadataTableView.prototype.setPropertyBySemantic = function (
   semantic,
   value

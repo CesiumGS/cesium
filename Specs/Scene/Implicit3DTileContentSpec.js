@@ -1154,25 +1154,27 @@ describe(
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitHeightSemanticsUrl
-        ).then(function (tileset) {
-          const placeholderTile = tileset.root;
-          const subtreeRootTile = placeholderTile.children[0];
+        )
+          .then(function (tileset) {
+            const placeholderTile = tileset.root;
+            const subtreeRootTile = placeholderTile.children[0];
 
-          const implicitRegion =
-            placeholderTile.implicitTileset.boundingVolume.region;
-          const minimumHeight = implicitRegion[4];
-          const maximumHeight = implicitRegion[5];
+            const implicitRegion =
+              placeholderTile.implicitTileset.boundingVolume.region;
+            const minimumHeight = implicitRegion[4];
+            const maximumHeight = implicitRegion[5];
 
-          // This tileset uses TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT
-          // to set tighter bounding volumes
-          const tiles = [];
-          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
-          for (let i = 0; i < tiles.length; i++) {
-            const tileRegion = tiles[i].boundingVolume;
-            expect(tileRegion.minimumHeight).toBeGreaterThan(minimumHeight);
-            expect(tileRegion.maximumHeight).toBeLessThan(maximumHeight);
-          }
-        });
+            // This tileset uses TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT
+            // to set tighter bounding volumes
+            const tiles = [];
+            gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+            for (let i = 0; i < tiles.length; i++) {
+              const tileRegion = tiles[i].boundingVolume;
+              expect(tileRegion.minimumHeight).toBeGreaterThan(minimumHeight);
+              expect(tileRegion.maximumHeight).toBeLessThan(maximumHeight);
+            }
+          })
+          .otherwise(console.error);
       });
 
       it("uses height semantics to adjust S2 bounding volumes", function () {

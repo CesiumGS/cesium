@@ -1,0 +1,68 @@
+{
+  "buffers": [
+    {
+      "byteLength": 32,
+      "uri": "0.bin"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 1
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 8,
+      "byteLength": 5
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 16,
+      "byteLength": 12
+    }
+  ],
+  "tileAvailability": {
+    "bitstream": 0,
+    "availableCount": 4
+  },
+  "contentAvailability": {
+    "constant": 1
+  },
+  "childSubtreeAvailability": {
+    "constant": 0
+  },
+  "contentMetadata": [
+    {
+      "class": "content",
+      "properties": {
+        "author": "Cesium",
+        "credits": [
+          "Data Company 1", "Data Company 2"
+        ]
+      }
+    },
+    {
+      "class": "content",
+      "properties": {
+        "author": "Data Company 1",
+        "credits": [
+          "Data Company 3"
+        ]
+      }
+    }
+  ],
+  "extensions": {
+    "3DTILES_metadata": {
+      "class": "tile",
+      "properties": {
+        "quadrant": {
+          "bufferView": 1
+        },
+        "color": {
+          "bufferView": 2
+        }
+      }
+    }
+  }
+}
