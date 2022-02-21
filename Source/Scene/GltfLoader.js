@@ -15,7 +15,7 @@ import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.
 import when from "../ThirdParty/when.js";
 import AttributeType from "./AttributeType.js";
 import Axis from "./Axis.js";
-import GltfFeatureMetadataLoader from "./GltfFeatureMetadataLoader.js";
+import GltfStructuralMetadataLoader from "./GltfStructuralMetadataLoader.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
 import ModelComponents from "./ModelComponents.js";
@@ -128,7 +128,7 @@ export default function GltfLoader(options) {
   this._textureLoaders = [];
   this._bufferViewLoaders = [];
   this._geometryLoaders = [];
-  this._featureMetadataLoader = undefined;
+  this._structuralMetadataLoader = undefined;
 
   // Loaded results
   this._components = undefined;
@@ -264,8 +264,8 @@ function process(loader, frameState) {
     geometryLoaders[i].process(frameState);
   }
 
-  if (defined(loader._featureMetadataLoader)) {
-    loader._featureMetadataLoader.process(frameState);
+  if (defined(loader._structuralMetadataLoader)) {
+    loader._structuralMetadataLoader.process(frameState);
   }
 }
 
@@ -1203,9 +1203,9 @@ function loadInstances(loader, gltf, nodeExtensions, frameState) {
   const featureMetadataLegacy = instancingExtExtensions.EXT_feature_metadata;
 
   if (defined(instanceFeatures)) {
-    loadInstanceMetadata(instances, instanceFeatures);
+    loadInstanceFeatures(instances, instanceFeatures);
   } else if (defined(featureMetadataLegacy)) {
-    loadInstanceMetadataLegacy(
+    loadInstanceFeaturesLegacy(
       gltf,
       instances,
       featureMetadataLegacy,
@@ -1217,7 +1217,7 @@ function loadInstances(loader, gltf, nodeExtensions, frameState) {
 }
 
 // For EXT_mesh_features
-function loadInstanceMetadata(instances, instanceFeaturesExtension) {
+function loadInstanceFeatures(instances, instanceFeaturesExtension) {
   // feature IDs are required in EXT_instance_features
   const featureIdsArray = instanceFeaturesExtension.featureIds;
 
@@ -1235,7 +1235,7 @@ function loadInstanceMetadata(instances, instanceFeaturesExtension) {
 }
 
 // For backwards-compatibility with EXT_feature_metadata
-function loadInstanceMetadataLegacy(
+function loadInstanceFeaturesLegacy(
   gltf,
   instances,
   metadataExtension,
@@ -1392,14 +1392,14 @@ function loadNodes(loader, gltf, supportedImageFormats, frameState) {
   return nodes;
 }
 
-function loadFeatureMetadata(
+function loadStructuralMetadata(
   loader,
   gltf,
   extension,
   extensionLegacy,
   supportedImageFormats
 ) {
-  const featureMetadataLoader = new GltfFeatureMetadataLoader({
+  const structuralMetadataLoader = new GltfStructuralMetadataLoader({
     gltf: gltf,
     extension: extension,
     extensionLegacy: extensionLegacy,
@@ -1408,11 +1408,11 @@ function loadFeatureMetadata(
     supportedImageFormats: supportedImageFormats,
     asynchronous: loader._asynchronous,
   });
-  featureMetadataLoader.load();
+  structuralMetadataLoader.load();
 
-  loader._featureMetadataLoader = featureMetadataLoader;
+  loader._structuralMetadataLoader = structuralMetadataLoader;
 
-  return featureMetadataLoader;
+  return structuralMetadataLoader;
 }
 
 function getSceneNodeIds(gltf) {
@@ -1472,18 +1472,19 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
     defined(structuralMetadataExtension) ||
     defined(featureMetadataExtensionLegacy)
   ) {
-    const featureMetadataLoader = loadFeatureMetadata(
+    const structuralMetadataLoader = loadStructuralMetadata(
       loader,
       gltf,
       structuralMetadataExtension,
       featureMetadataExtensionLegacy,
       supportedImageFormats
     );
-    featureMetadataLoader.promise.then(function (featureMetadataLoader) {
+    structuralMetadataLoader.promise.then(function (structuralMetadataLoader) {
       if (loader.isDestroyed()) {
         return;
       }
-      components.featureMetadata = featureMetadataLoader.featureMetadata;
+      components.structuralMetadata =
+        structuralMetadataLoader.structuralMetadata;
     });
   }
 
@@ -1492,8 +1493,8 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
   loaders.push.apply(loaders, loader._bufferViewLoaders);
   loaders.push.apply(loaders, loader._geometryLoaders);
 
-  if (defined(loader._featureMetadataLoader)) {
-    loaders.push(loader._featureMetadataLoader);
+  if (defined(loader._structuralMetadataLoader)) {
+    loaders.push(loader._structuralMetadataLoader);
   }
 
   if (!loader._incrementallyLoadTextures) {
@@ -1559,10 +1560,10 @@ function unloadGeometry(loader) {
   loader._geometryLoaders.length = 0;
 }
 
-function unloadFeatureMetadata(loader) {
-  if (defined(loader._featureMetadataLoader)) {
-    loader._featureMetadataLoader.destroy();
-    loader._featureMetadataLoader = undefined;
+function unloadStructuralMetadata(loader) {
+  if (defined(loader._structuralMetadataLoader)) {
+    loader._structuralMetadataLoader.destroy();
+    loader._structuralMetadataLoader = undefined;
   }
 }
 
@@ -1579,7 +1580,7 @@ GltfLoader.prototype.unload = function () {
   unloadTextures(this);
   unloadBufferViews(this);
   unloadGeometry(this);
-  unloadFeatureMetadata(this);
+  unloadStructuralMetadata(this);
 
   this._components = undefined;
 };

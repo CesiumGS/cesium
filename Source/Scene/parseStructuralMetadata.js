@@ -4,11 +4,11 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import PropertyTable from "./PropertyTable.js";
 import PropertyTexture from "./PropertyTexture.js";
-import FeatureMetadata from "./FeatureMetadata.js";
+import StructuralMetadata from "./StructuralMetadata.js";
 import MetadataTable from "./MetadataTable.js";
 
 /**
- * Parse the <code>EXT_mesh_features</code> glTF extension to create a
+ * Parse the <code>EXT_structural_metadata</code> glTF extension to create a
  * feature metadata object.
  *
  * @param {Object} options Object with the following properties:
@@ -16,11 +16,11 @@ import MetadataTable from "./MetadataTable.js";
  * @param {MetadataSchema} options.schema The parsed schema.
  * @param {Object.<String, Uint8Array>} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
  * @param {Object.<String, Texture>} [options.textures] An object mapping texture IDs to {@link Texture} objects.
- * @return {FeatureMetadata} A feature metadata object
+ * @return {StructuralMetadata} A feature metadata object
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function parseFeatureMetadata(options) {
+export default function parseStructuralMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const extension = options.extension;
 
@@ -74,7 +74,7 @@ export default function parseFeatureMetadata(options) {
     }
   }
 
-  return new FeatureMetadata({
+  return new StructuralMetadata({
     schema: schema,
     propertyTables: propertyTables,
     propertyTextures: propertyTextures,
@@ -88,14 +88,14 @@ export default function parseFeatureMetadata(options) {
  * The legacy EXT_feature_metadata schema was a bit broad in what it could do.
  * The properties in a feature texture could potentially belong to different
  * textures. For full backwards compatibility, here we transcode <i>backwards</i>
- * from EXT_mesh_features to EXT_feature_metadata.
+ * from EXT_structural_metadata to EXT_feature_metadata.
  *
- * @param {Object} propertyTexture The property texture JSON from EXT_mesh_features
+ * @param {Object} propertyTexture The property texture JSON from EXT_structural_metadata
  * @return {Object} The corresponding feature texture JSON for the legacy EXT_feature_metadata
  * @private
  */
 function reformatPropertyTexture(propertyTexture) {
-  // in EXT_mesh_features propertyTexture is a valid glTF textureInfo
+  // in EXT_structural_metadata propertyTexture is a valid glTF textureInfo
   // since it has an index and a texCoord.
   const textureInfo = clone(propertyTexture);
 

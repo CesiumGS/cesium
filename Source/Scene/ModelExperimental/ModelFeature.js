@@ -167,7 +167,7 @@ ModelFeature.prototype.getProperty = function (name) {
 
 /**
  * Returns a copy of the feature's property with the given name, examining all
- * the metadata from the EXT_mesh_features and legacy EXT_feature_metadata glTF
+ * the metadata from the EXT_structural_metadata and legacy EXT_feature_metadata glTF
  * extensions. Metadata is checked against name from most specific to most
  * general and the first match is returned. Metadata is checked in this order:
  * <ol>
@@ -175,7 +175,7 @@ ModelFeature.prototype.getProperty = function (name) {
  *   <li>Feature metadata property by property ID</li>
  * </ol>
  * <p>
- * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features Extension} as well as the
+ * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension} as well as the
  * previous {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
  * </p>
  *

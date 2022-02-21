@@ -3,7 +3,7 @@ import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import BatchTableHierarchy from "./BatchTableHierarchy.js";
-import FeatureMetadata from "./FeatureMetadata.js";
+import StructuralMetadata from "./StructuralMetadata.js";
 import PropertyTable from "./PropertyTable.js";
 import getBinaryAccessor from "./getBinaryAccessor.js";
 import JsonMetadataTable from "./JsonMetadataTable.js";
@@ -13,16 +13,16 @@ import MetadataTable from "./MetadataTable.js";
 
 /**
  * An object that parses the the 3D Tiles 1.0 batch table and transcodes it to
- * be compatible with feature metadata from the <code>EXT_mesh_features</code> glTF extension
+ * be compatible with structural metadata from the <code>EXT_structural_metadata</code> glTF extension
  * <p>
- * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features Extension} for glTF.
+ * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension} for glTF.
  * </p>
  *
  * @param {Object} options Object with the following properties:
  * @param {Number} options.count The number of features in the batch table.
  * @param {Object} options.batchTable The batch table JSON
  * @param {Uint8Array} [options.binaryBody] The batch table binary body
- * @return {FeatureMetadata} A transcoded feature metadata object
+ * @return {StructuralMetadata} A transcoded feature metadata object
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -74,7 +74,7 @@ export default function parseBatchTable(options) {
     batchTableHierarchy: hierarchy,
   });
 
-  return new FeatureMetadata({
+  return new StructuralMetadata({
     schema: binaryResults.transcodedSchema,
     propertyTables: [propertyTable],
     extensions: partitionResults.extensions,
@@ -139,13 +139,13 @@ function partitionProperties(batchTable) {
 
 /**
  * Transcode the binary properties of the batch table to be compatible with
- * <code>EXT_mesh_features</code>
+ * <code>EXT_structural_metadata</code>
  *
  * @param {Number} featureCount The number of features in the batch table
  * @param {String} className The name of the metadata class to be created.
  * @param {Object.<String, Object>} binaryProperties A dictionary of property ID to property definition
  * @param {Uint8Array} [binaryBody] The binary body of the batch table
- * @return {Object} Transcoded data needed for constructing a {@link FeatureMetadata} object.
+ * @return {Object} Transcoded data needed for constructing a {@link StructuralMetadata} object.
  *
  * @private
  */
@@ -213,7 +213,7 @@ function transcodeBinaryProperties(
 
 /**
  * Given a property definition from the batch table, compute the equivalent
- * <code>EXT_mesh_features</code> type definition
+ * <code>EXT_structural_metadata</code> type definition
  *
  * @param {Object} property The batch table property definition
  * @return {Object} The corresponding feature metadata property definition

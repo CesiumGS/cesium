@@ -157,10 +157,10 @@ export default function ModelExperimental(options) {
   initialize(this);
 }
 
-function createModelFeatureTables(model, featureMetadata) {
+function createModelFeatureTables(model, structuralMetadata) {
   const featureTables = model._featureTables;
 
-  const propertyTables = featureMetadata.propertyTables;
+  const propertyTables = structuralMetadata.propertyTables;
   for (let i = 0; i < propertyTables.length; i++) {
     const propertyTable = propertyTables[i];
     const modelFeatureTable = new ModelFeatureTable({
@@ -221,10 +221,13 @@ function initialize(model) {
   loader.promise
     .then(function (loader) {
       const components = loader.components;
-      const featureMetadata = components.featureMetadata;
+      const structuralMetadata = components.structuralMetadata;
 
-      if (defined(featureMetadata) && featureMetadata.propertyTableCount > 0) {
-        createModelFeatureTables(model, featureMetadata);
+      if (
+        defined(structuralMetadata) &&
+        structuralMetadata.propertyTableCount > 0
+      ) {
+        createModelFeatureTables(model, structuralMetadata);
       }
 
       model._sceneGraph = new ModelExperimentalSceneGraph({
@@ -800,9 +803,12 @@ ModelExperimental.prototype.update = function (frameState) {
 
 function updateFeatureTableId(model) {
   const components = model._sceneGraph.components;
-  const featureMetadata = components.featureMetadata;
+  const structuralMetadata = components.structuralMetadata;
 
-  if (defined(featureMetadata) && featureMetadata.propertyTableCount > 0) {
+  if (
+    defined(structuralMetadata) &&
+    structuralMetadata.propertyTableCount > 0
+  ) {
     model.featureTableId = selectFeatureTableId(components, model);
     // Re-apply the style to reflect the new feature ID table.
     // This in turn triggers a rebuild of the draw commands.

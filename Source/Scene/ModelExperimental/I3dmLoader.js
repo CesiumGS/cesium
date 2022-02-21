@@ -7,7 +7,7 @@ import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
-import FeatureMetadata from "../FeatureMetadata.js";
+import StructuralMetadata from "../StructuralMetadata.js";
 import getStringFromTypedArray from "../../Core/getStringFromTypedArray.js";
 import GltfLoader from "../GltfLoader.js";
 import I3dmParser from "../I3dmParser.js";
@@ -217,7 +217,7 @@ I3dmLoader.prototype.load = function () {
     this._transform = Matrix4.fromTranslation(Cartesian3.fromArray(rtcCenter));
   }
 
-  // Save the batch table section to use for FeatureMetadata generation.
+  // Save the batch table section to use for StructuralMetadata generation.
   this._batchTable = {
     json: batchTableJson,
     binary: batchTableBinary,
@@ -264,7 +264,7 @@ I3dmLoader.prototype.load = function () {
       const components = gltfLoader.components;
       components.transform = that._transform;
       createInstances(that, components);
-      createFeatureMetadata(that, components);
+      createStructuralMetadata(that, components);
       that._components = components;
 
       that._state = I3dmLoaderState.READY;
@@ -300,7 +300,7 @@ I3dmLoader.prototype.process = function (frameState) {
   }
 };
 
-function createFeatureMetadata(loader, components) {
+function createStructuralMetadata(loader, components) {
   const batchTable = loader._batchTable;
   const instancesLength = loader._instancesLength;
 
@@ -308,10 +308,10 @@ function createFeatureMetadata(loader, components) {
     return;
   }
 
-  let featureMetadata;
+  let structuralMetadata;
   if (defined(batchTable.json)) {
     // Add the feature metadata from the batch table to the model components.
-    featureMetadata = parseBatchTable({
+    structuralMetadata = parseBatchTable({
       count: instancesLength,
       batchTable: batchTable.json,
       binaryBody: batchTable.binary,
@@ -322,13 +322,13 @@ function createFeatureMetadata(loader, components) {
       name: MetadataClass.BATCH_TABLE_CLASS_NAME,
       count: instancesLength,
     });
-    featureMetadata = new FeatureMetadata({
+    structuralMetadata = new StructuralMetadata({
       schema: {},
       propertyTables: [emptyPropertyTable],
     });
   }
 
-  components.featureMetadata = featureMetadata;
+  components.structuralMetadata = structuralMetadata;
 }
 
 const positionScratch = new Cartesian3();

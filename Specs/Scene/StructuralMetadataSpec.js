@@ -1,6 +1,6 @@
-import { FeatureMetadata, MetadataSchema } from "../../Source/Cesium.js";
+import { StructuralMetadata, MetadataSchema } from "../../Source/Cesium.js";
 
-describe("Scene/FeatureMetadata", function () {
+describe("Scene/StructuralMetadata", function () {
   const propertyTablesSchema = {
     classes: {
       building: {
@@ -53,7 +53,7 @@ describe("Scene/FeatureMetadata", function () {
   };
 
   it("creates feature metadata with default values", function () {
-    const metadata = new FeatureMetadata({
+    const metadata = new StructuralMetadata({
       schema: new MetadataSchema(propertyTablesSchema),
     });
 
@@ -68,7 +68,7 @@ describe("Scene/FeatureMetadata", function () {
       { id: 0, name: "Buildings" },
       { id: 1, name: "Trees" },
     ];
-    const metadata = new FeatureMetadata({
+    const metadata = new StructuralMetadata({
       schema: new MetadataSchema(propertyTablesSchema),
       propertyTables: mockPropertyTables,
     });
@@ -106,7 +106,7 @@ describe("Scene/FeatureMetadata", function () {
       },
     ];
 
-    const metadata = new FeatureMetadata({
+    const metadata = new StructuralMetadata({
       schema: schema,
       propertyTextures: mockTextures,
     });
@@ -130,7 +130,7 @@ describe("Scene/FeatureMetadata", function () {
       date: "2021-04-14",
     };
 
-    const metadata = new FeatureMetadata({
+    const metadata = new StructuralMetadata({
       extras: extras,
       schema: new MetadataSchema(propertyTablesSchema),
     });
@@ -143,7 +143,7 @@ describe("Scene/FeatureMetadata", function () {
       "3DTILES_extension": {},
     };
 
-    const metadata = new FeatureMetadata({
+    const metadata = new StructuralMetadata({
       extensions: extensions,
       schema: new MetadataSchema(propertyTablesSchema),
     });
@@ -166,7 +166,7 @@ describe("Scene/FeatureMetadata", function () {
       },
     };
 
-    const metadata = new FeatureMetadata({
+    const metadata = new StructuralMetadata({
       statistics: statistics,
       schema: new MetadataSchema(propertyTablesSchema),
     });
@@ -175,7 +175,7 @@ describe("Scene/FeatureMetadata", function () {
   });
 
   it("getPropertyTable throws without propertyTableId", function () {
-    const metadata = new FeatureMetadata({
+    const metadata = new StructuralMetadata({
       extension: {},
       schema: new MetadataSchema(propertyTablesSchema),
     });
@@ -186,7 +186,7 @@ describe("Scene/FeatureMetadata", function () {
   });
 
   it("getPropertyTexture throws without featureTextureId", function () {
-    const metadata = new FeatureMetadata({
+    const metadata = new StructuralMetadata({
       extension: {},
       schema: new MetadataSchema(propertyTexturesSchema),
     });

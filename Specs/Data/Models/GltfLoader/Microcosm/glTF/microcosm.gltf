@@ -113,7 +113,9 @@
                     "channels": [0] 
                   }
                 }
-              ],
+              ]
+            },
+            "EXT_structural_metadata": {
               "propertyTextures": [
                 0
               ]
