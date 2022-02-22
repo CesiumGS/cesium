@@ -47,8 +47,6 @@ function MetadataTableProperty(options) {
   const type = classProperty.type;
   const isArray = classProperty.isArray;
   const isVariableLengthArray = classProperty.isVariableLengthArray;
-  const isVectorOrMatrix =
-    MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
 
   let valueType = classProperty.valueType;
   const enumType = classProperty.enumType;
@@ -76,12 +74,7 @@ function MetadataTableProperty(options) {
     );
   }
 
-  let vectorComponentCount;
-  if (isVectorOrMatrix) {
-    vectorComponentCount = MetadataType.getComponentCount(type);
-  } else {
-    vectorComponentCount = 1;
-  }
+  const vectorComponentCount = MetadataType.getComponentCount(type);
 
   let arrayComponentCount;
   if (isVariableLengthArray) {
@@ -295,8 +288,7 @@ function get(property, index) {
   const classProperty = property._classProperty;
   const isArray = classProperty.isArray;
   const type = classProperty.type;
-  const isVectorOrMatrix =
-    MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
+  const componentCount = MetadataType.getComponentCount(type);
 
   if (defined(property._unpackedValues)) {
     const value = property._unpackedValues[index];
@@ -307,7 +299,7 @@ function get(property, index) {
   }
 
   // handle single values
-  if (!isArray && !isVectorOrMatrix) {
+  if (!isArray && componentCount === 1) {
     return property._getValue(index);
   }
 
@@ -349,8 +341,7 @@ function set(property, index, value) {
   const classProperty = property._classProperty;
   const isArray = classProperty.isArray;
   const type = classProperty.type;
-  const isVectorOrMatrix =
-    MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
+  const componentCount = MetadataType.getComponentCount(type);
 
   if (defined(property._unpackedValues)) {
     if (classProperty.isArray) {
@@ -364,7 +355,7 @@ function set(property, index, value) {
   // property has strings. No need to handle these cases below.
 
   // Handle single values
-  if (!isArray && !isVectorOrMatrix) {
+  if (!isArray && componentCount === 1) {
     property._setValue(index, value);
     return;
   }
@@ -584,10 +575,10 @@ function unpackValues(property) {
   const classProperty = property._classProperty;
   const isArray = classProperty.isArray;
   const type = classProperty.type;
-  const isVectorOrMatrix =
-    MetadataType.isVectorType(type) || MetadataType.isMatrixType(type);
+  const componentCount = MetadataType.getComponentCount(type);
 
-  if (!isArray && !isVectorOrMatrix) {
+  // Handle single values
+  if (!isArray && componentCount === 1) {
     for (let i = 0; i < count; ++i) {
       unpackedValues[i] = property._getValue(i);
     }

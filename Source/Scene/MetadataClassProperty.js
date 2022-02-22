@@ -827,12 +827,9 @@ function normalize(classProperty, value, normalizeFunction) {
   const type = classProperty._type;
   const valueType = classProperty._valueType;
   const isArray = classProperty._isArray;
+  const componentCount = MetadataType.getComponentCount(type);
 
-  if (
-    isArray ||
-    MetadataType.isVectorType(type) ||
-    MetadataType.isMatrixType(type)
-  ) {
+  if (isArray || componentCount > 1) {
     const length = value.length;
     for (let i = 0; i < length; ++i) {
       value[i] = normalizeFunction(value[i], valueType);
