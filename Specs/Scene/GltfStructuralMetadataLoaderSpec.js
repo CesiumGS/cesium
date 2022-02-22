@@ -116,20 +116,28 @@ describe(
         {
           name: "Map",
           class: "map",
-          index: 0,
-          texCoord: 0,
           properties: {
-            color: [0, 1, 2],
-            intensity: [3],
+            color: {
+              channels: [0, 1, 2],
+              index: 0,
+              texCoord: 0,
+            },
+            intensity: {
+              channels: [3],
+              index: 0,
+              texCoord: 0,
+            },
           },
         },
         {
           name: "Ortho",
           class: "ortho",
-          index: 1,
-          texCoord: 1,
           properties: {
-            vegetation: [0],
+            vegetation: {
+              channels: [0],
+              index: 1,
+              texCoord: 1,
+            },
           },
         },
       ],
