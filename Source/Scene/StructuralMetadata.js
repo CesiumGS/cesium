@@ -12,7 +12,8 @@ import defined from "../Core/defined.js";
  * @param {Object} options Object with the following properties:
  * @param {MetadataSchema} options.schema The parsed schema.
  * @param {PropertyTable[]} [options.propertyTables] An array of property table objects. For the legacy <code>EXT_feature_metadata</code> extension, this is sorted by the key in the propertyTables dictionary
- * @param {PropertyTexture[]} [options.propertyTextures] An array of feature texture objects. For the legacy <code>EXT_feature_metadata</code> extension, this is sorted by the key in the propertyTextures dictionary
+ * @param {PropertyTexture[]} [options.propertyTextures] An array of property texture objects. For the legacy <code>EXT_feature_metadata</code> extension, this is sorted by the key in the propertyTextures dictionary
+ * @param {PropertyAttribute[]} [options.propertyAttributes] An array of property attribute objects. This is new in <code>EXT_structural_metadata</code>
  * @param {Object} [options.statistics] Statistics about metadata
  * @param {Object} [options.extras] Extra user-defined properties
  * @param {Object} [options.extensions] An object containing extensions
@@ -36,6 +37,7 @@ function StructuralMetadata(options) {
     : 0;
   this._propertyTables = propertyTables;
   this._propertyTextures = options.propertyTextures;
+  this._propertyAttributes = options.propertyAttributes;
   this._statistics = options.statistics;
   this._extras = options.extras;
   this._extensions = options.extensions;

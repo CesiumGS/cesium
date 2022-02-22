@@ -92,6 +92,7 @@ export default function parseStructuralMetadata(options) {
     schema: schema,
     propertyTables: propertyTables,
     propertyTextures: propertyTextures,
+    propertyAttributes: propertyAttributes,
     statistics: extension.statistics,
     extras: extension.extras,
     extensions: extension.extensions,
