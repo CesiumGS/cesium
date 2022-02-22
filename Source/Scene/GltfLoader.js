@@ -1482,7 +1482,7 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
 
   loader._components = components;
 
-  // Load feature metadata (feature tables and feature textures)
+  // Load structural metadata (property tables and property textures)
   if (
     defined(structuralMetadataExtension) ||
     defined(featureMetadataExtensionLegacy)

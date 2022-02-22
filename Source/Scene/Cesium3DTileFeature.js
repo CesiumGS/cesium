@@ -237,8 +237,8 @@ Cesium3DTileFeature.prototype.getProperty = function (name) {
  * general and the first match is returned. Metadata is checked in this order:
  *
  * <ol>
- *   <li>Batch table (feature metadata) property by semantic</li>
- *   <li>Batch table (feature metadata) property by property ID</li>
+ *   <li>Batch table (structural metadata) property by semantic</li>
+ *   <li>Batch table (structural metadata) property by property ID</li>
  *   <li>Tile metadata property by semantic</li>
  *   <li>Tile metadata property by property ID</li>
  *   <li>Subtree metadata property by semantic</li>

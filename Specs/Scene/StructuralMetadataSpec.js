@@ -52,7 +52,7 @@ describe("Scene/StructuralMetadata", function () {
     },
   };
 
-  it("creates feature metadata with default values", function () {
+  it("creates structural metadata with default values", function () {
     const metadata = new StructuralMetadata({
       schema: new MetadataSchema(propertyTablesSchema),
     });
@@ -63,7 +63,7 @@ describe("Scene/StructuralMetadata", function () {
     expect(metadata.extensions).toBeUndefined();
   });
 
-  it("creates feature metadata", function () {
+  it("creates structural metadata", function () {
     const mockPropertyTables = [
       { id: 0, name: "Buildings" },
       { id: 1, name: "Trees" },
@@ -88,7 +88,7 @@ describe("Scene/StructuralMetadata", function () {
     expect(treesTable).toBe(mockPropertyTables[1]);
   });
 
-  it("creates feature metadata with feature textures", function () {
+  it("creates structural metadata with feature textures", function () {
     const schema = new MetadataSchema(propertyTexturesSchema);
     const mapClass = schema.classes.map;
     const orthoClass = schema.classes.ortho;
@@ -125,7 +125,7 @@ describe("Scene/StructuralMetadata", function () {
     expect(orthoTexture.class).toBe(orthoClass);
   });
 
-  it("creates feature metadata with extras", function () {
+  it("creates structural metadata with extras", function () {
     const extras = {
       date: "2021-04-14",
     };
@@ -138,7 +138,7 @@ describe("Scene/StructuralMetadata", function () {
     expect(metadata.extras).toBe(extras);
   });
 
-  it("creates feature metadata with extensions", function () {
+  it("creates structural metadata with extensions", function () {
     const extensions = {
       "3DTILES_extension": {},
     };
@@ -151,7 +151,7 @@ describe("Scene/StructuralMetadata", function () {
     expect(metadata.extensions).toBe(extensions);
   });
 
-  it("creates feature metadata with statistics", function () {
+  it("creates structural metadata with statistics", function () {
     const statistics = {
       classes: {
         tree: {

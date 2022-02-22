@@ -8,14 +8,14 @@ import MetadataTable from "./MetadataTable.js";
 
 /**
  * Parse the <code>EXT_feature_metadata</code> glTF extension to create a
- * feature metadata object.
+ * structural metadata object.
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.extension The extension JSON object.
  * @param {MetadataSchema} options.schema The parsed schema.
  * @param {Object.<String, Uint8Array>} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
  * @param {Object.<String, Texture>} [options.textures] An object mapping texture IDs to {@link Texture} objects.
- * @return {StructuralMetadata} A feature metadata object
+ * @return {StructuralMetadata} A structural metadata object
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */

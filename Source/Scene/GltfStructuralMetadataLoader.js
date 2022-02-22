@@ -109,7 +109,7 @@ Object.defineProperties(GltfStructuralMetadataLoader.prototype, {
     },
   },
   /**
-   * Feature metadata.
+   * The parsed structural metadata
    *
    * @memberof GltfStructuralMetadataLoader.prototype
    *
@@ -172,7 +172,7 @@ GltfStructuralMetadataLoader.prototype.load = function () {
       }
       that.unload();
       that._state = ResourceLoaderState.FAILED;
-      const errorMessage = "Failed to load feature metadata";
+      const errorMessage = "Failed to load structural metadata";
       that._promise.reject(that.getError(errorMessage, error));
     });
 };

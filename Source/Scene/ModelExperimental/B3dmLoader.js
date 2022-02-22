@@ -276,7 +276,7 @@ function createStructuralMetadata(loader, components) {
 
   let structuralMetadata;
   if (defined(batchTable.json)) {
-    // Add the feature metadata from the batch table to the model components.
+    // Add the structural metadata from the batch table to the model components.
     structuralMetadata = parseBatchTable({
       count: batchLength,
       batchTable: batchTable.json,

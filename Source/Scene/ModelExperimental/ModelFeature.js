@@ -171,8 +171,8 @@ ModelFeature.prototype.getProperty = function (name) {
  * extensions. Metadata is checked against name from most specific to most
  * general and the first match is returned. Metadata is checked in this order:
  * <ol>
- *   <li>Feature metadata property by semantic</li>
- *   <li>Feature metadata property by property ID</li>
+ *   <li>structural metadata property by semantic</li>
+ *   <li>structural metadata property by property ID</li>
  * </ol>
  * <p>
  * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension} as well as the

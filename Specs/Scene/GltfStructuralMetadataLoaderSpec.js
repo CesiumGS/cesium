@@ -245,7 +245,7 @@ describe(
         })
         .otherwise(function (runtimeError) {
           expect(runtimeError.message).toBe(
-            "Failed to load feature metadata\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
+            "Failed to load structural metadata\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
           );
         });
     });
@@ -276,7 +276,7 @@ describe(
         })
         .otherwise(function (runtimeError) {
           expect(runtimeError.message).toBe(
-            "Failed to load feature metadata\nFailed to load texture\nFailed to load image: map.png\n404 Not Found"
+            "Failed to load structural metadata\nFailed to load texture\nFailed to load image: map.png\n404 Not Found"
           );
         });
     });
@@ -311,12 +311,12 @@ describe(
         })
         .otherwise(function (runtimeError) {
           expect(runtimeError.message).toBe(
-            "Failed to load feature metadata\nFailed to load schema: https://example.com/schema.json\n404 Not Found"
+            "Failed to load structural metadata\nFailed to load schema: https://example.com/schema.json\n404 Not Found"
           );
         });
     });
 
-    it("loads feature metadata", function () {
+    it("loads structural metadata", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         when.resolve(buffer)
       );
@@ -380,7 +380,7 @@ describe(
       );
     });
 
-    it("loads feature metadata with external schema", function () {
+    it("loads structural metadata with external schema", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         when.resolve(buffer)
       );
@@ -414,7 +414,7 @@ describe(
       );
     });
 
-    it("destroys feature metadata", function () {
+    it("destroys structural metadata", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         when.resolve(buffer)
       );
@@ -494,8 +494,8 @@ describe(
         "destroy"
       ).and.callThrough();
 
-      // Load a copy of feature metadata into the cache so that the resource
-      // promises resolve even if the feature metadata loader is destroyed
+      // Load a copy of structural metadata into the cache so that the resource
+      // promises resolve even if the structural metadata loader is destroyed
       const structuralMetadataLoaderCopy = new GltfStructuralMetadataLoader({
         gltf: gltf,
         extension: extension,

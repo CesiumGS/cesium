@@ -22,7 +22,7 @@ import MetadataTable from "./MetadataTable.js";
  * @param {Number} options.count The number of features in the batch table.
  * @param {Object} options.batchTable The batch table JSON
  * @param {Uint8Array} [options.binaryBody] The batch table binary body
- * @return {StructuralMetadata} A transcoded feature metadata object
+ * @return {StructuralMetadata} A transcoded structural metadata object
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -216,7 +216,7 @@ function transcodeBinaryProperties(
  * <code>EXT_structural_metadata</code> type definition
  *
  * @param {Object} property The batch table property definition
- * @return {Object} The corresponding feature metadata property definition
+ * @return {Object} The corresponding structural metadata property definition
  * @private
  */
 function transcodePropertyType(property) {
@@ -230,10 +230,10 @@ function transcodePropertyType(property) {
 
 /**
  * Convert the component type of a batch table property to the corresponding
- * type used with feature metadata
+ * type used with structural metadata
  *
  * @property {String} componentType the batch table's component type
- * @return {String} The corresponding feature metadata data type
+ * @return {String} The corresponding structural metadata data type
  *
  * @private
  */
