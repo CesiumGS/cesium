@@ -28,6 +28,7 @@
             "perTriangle": {
               "properties": {
                 "value": {
+                  "type": "SCALAR",
                   "componentType": "UINT8"
                 }
               }
@@ -35,6 +36,7 @@
             "perFace": {
               "properties": {
                 "value": {
+                  "type": "SCALAR",
                   "componentType": "INT8"
                 }
               }

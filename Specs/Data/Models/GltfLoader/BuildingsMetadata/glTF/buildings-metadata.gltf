@@ -236,9 +236,11 @@
           "building": {
             "properties": {
               "height": {
+                "type": "SCALAR",
                 "componentType": "FLOAT32"
               },
               "id": {
+                "type": "SCALAR",
                 "componentType": "INT32"
               }
             }

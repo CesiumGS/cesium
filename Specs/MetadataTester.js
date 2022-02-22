@@ -1,6 +1,7 @@
 import {
   defined,
   defaultValue,
+  DeveloperError,
   FeatureDetection,
   PropertyTable,
   MetadataClass,
@@ -107,20 +108,21 @@ function createProperties(options) {
         property.arrayOffsetType = arrayOffsetType;
       }
 
-      if (
-        classProperty.type === MetadataType.ARRAY &&
-        !defined(classProperty.componentCount)
-      ) {
+      if (classProperty.isVariableLengthArray) {
         const arrayOffsetBufferType = defaultValue(arrayOffsetType, offsetType);
         const arrayOffsetBuffer = addPadding(
-          createArrayOffsetBuffer(values, arrayOffsetBufferType)
+          createArrayOffsetBuffer(
+            values,
+            classProperty.type,
+            arrayOffsetBufferType
+          )
         );
         const arrayOffsetBufferView = bufferViewIndex++;
         bufferViews[arrayOffsetBufferView] = arrayOffsetBuffer;
         property.arrayOffsetBufferView = arrayOffsetBufferView;
       }
 
-      if (classProperty.componentType === MetadataComponentType.STRING) {
+      if (classProperty.type === MetadataType.STRING) {
         const stringOffsetBufferType = defaultValue(
           stringOffsetType,
           offsetType
@@ -382,8 +384,6 @@ MetadataTester.createGltf = function (options) {
 
 function createBuffer(values, componentType) {
   let typedArray;
-  let encoder;
-  let length;
   switch (componentType) {
     case MetadataComponentType.INT8:
       typedArray = new Int8Array(values);
@@ -415,24 +415,33 @@ function createBuffer(values, componentType) {
     case MetadataComponentType.FLOAT64:
       typedArray = new Float64Array(values);
       break;
-    case MetadataComponentType.STRING:
-      encoder = new TextEncoder();
-      typedArray = encoder.encode(values.join(""));
-      break;
-    case MetadataComponentType.BOOLEAN:
-      length = Math.ceil(values.length / 8);
-      typedArray = new Uint8Array(length); // Initialized as 0's
-      for (let i = 0; i < values.length; ++i) {
-        const byteIndex = i >> 3;
-        const bitIndex = i % 8;
-        if (values[i]) {
-          typedArray[byteIndex] |= 1 << bitIndex;
-        }
-      }
-      break;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError(
+        `${componentType} is not a valid component type`
+      );
+    //>>includeEnd('debug');
   }
 
   return new Uint8Array(typedArray.buffer);
+}
+
+function createStringBuffer(values) {
+  const encoder = new TextEncoder();
+  return encoder.encode(values.join(""));
+}
+
+function createBooleanBuffer(values) {
+  const length = Math.ceil(values.length / 8);
+  const typedArray = new Uint8Array(length); // Initialized as 0's
+  for (let i = 0; i < values.length; ++i) {
+    const byteIndex = i >> 3;
+    const bitIndex = i % 8;
+    if (values[i]) {
+      typedArray[byteIndex] |= 1 << bitIndex;
+    }
+  }
+  return typedArray;
 }
 
 function flatten(values) {
@@ -440,9 +449,18 @@ function flatten(values) {
 }
 
 function createValuesBuffer(values, classProperty) {
+  const type = classProperty.type;
   const valueType = classProperty.valueType;
   const enumType = classProperty.enumType;
   const flattenedValues = flatten(values);
+
+  if (type === MetadataType.STRING) {
+    return createStringBuffer(flattenedValues);
+  }
+
+  if (type === MetadataType.BOOLEAN) {
+    return createBooleanBuffer(flattenedValues);
+  }
 
   if (defined(enumType)) {
     const length = flattenedValues.length;
@@ -469,13 +487,14 @@ function createStringOffsetBuffer(values, offsetType) {
   return createBuffer(offsets, offsetType);
 }
 
-function createArrayOffsetBuffer(values, offsetType) {
+function createArrayOffsetBuffer(values, type, offsetType) {
+  const componentCount = MetadataType.getComponentCount(type);
   const length = values.length;
   const offsets = new Array(length + 1);
   let offset = 0;
   for (let i = 0; i < length; ++i) {
     offsets[i] = offset;
-    offset += values[i].length;
+    offset += values[i].length / componentCount;
   }
   offsets[length] = offset;
   offsetType = defaultValue(offsetType, MetadataComponentType.UINT32);

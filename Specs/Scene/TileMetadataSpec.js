@@ -11,15 +11,16 @@ describe("Scene/TileMetadata", function () {
     class: {
       properties: {
         color: {
-          type: "ARRAY",
+          type: "SCALAR",
           componentType: "FLOAT32",
-          componentCount: 8,
+          array: true,
+          count: 8,
           semantic: "COLOR",
         },
         isSquare: {
           description:
             "Is a square tile, rather than a rectangular partial tile",
-          componentType: "BOOLEAN",
+          type: "BOOLEAN",
         },
       },
     },

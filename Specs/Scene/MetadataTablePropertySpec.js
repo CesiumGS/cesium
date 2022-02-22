@@ -1,6 +1,10 @@
 import {
   defaultValue,
+  Cartesian2,
   Cartesian3,
+  Cartesian4,
+  Matrix2,
+  Matrix3,
   MetadataClassProperty,
   MetadataComponentType,
   MetadataTableProperty,
@@ -50,6 +54,7 @@ describe("Scene/MetadataTableProperty", function () {
       classProperty: new MetadataClassProperty({
         id: "property",
         property: {
+          type: "SCALAR",
           componentType: "FLOAT32",
         },
       }),
@@ -91,8 +96,8 @@ describe("Scene/MetadataTableProperty", function () {
       classProperty: new MetadataClassProperty({
         id: "property",
         property: {
-          type: "ARRAY",
-          componentType: "STRING",
+          type: "STRING",
+          array: true,
         },
       }),
       bufferViews: {
@@ -142,8 +147,8 @@ describe("Scene/MetadataTableProperty", function () {
       classProperty: new MetadataClassProperty({
         id: "property",
         property: {
-          type: "ARRAY",
-          componentType: "STRING",
+          type: "STRING",
+          array: true,
         },
       }),
       bufferViews: {
@@ -226,6 +231,7 @@ describe("Scene/MetadataTableProperty", function () {
     }
 
     const classProperty = {
+      type: "SCALAR",
       componentType: "UINT64",
     };
 
@@ -274,6 +280,7 @@ describe("Scene/MetadataTableProperty", function () {
     }
 
     const classProperty = {
+      type: "SCALAR",
       componentType: "INT64",
     };
 
@@ -325,37 +332,45 @@ describe("Scene/MetadataTableProperty", function () {
     // INT64 and UINT64 are tested above
     const properties = {
       propertyInt8: {
+        type: "SCALAR",
         componentType: "INT8",
       },
       propertyUint8: {
+        type: "SCALAR",
         componentType: "UINT8",
       },
       propertyInt16: {
+        type: "SCALAR",
         componentType: "INT16",
       },
       propertyUint16: {
+        type: "SCALAR",
         componentType: "UINT16",
       },
       propertyInt32: {
+        type: "SCALAR",
         componentType: "INT32",
       },
       propertyUint32: {
+        type: "SCALAR",
         componentType: "UINT32",
       },
       propertyFloat32: {
+        type: "SCALAR",
         componentType: "FLOAT32",
       },
       propertyFloat64: {
+        type: "SCALAR",
         componentType: "FLOAT64",
       },
       propertyBoolean: {
-        componentType: "BOOLEAN",
+        type: "BOOLEAN",
       },
       propertyString: {
-        componentType: "STRING",
+        type: "STRING",
       },
       propertyEnum: {
-        componentType: "ENUM",
+        type: "ENUM",
         enumType: "myEnum",
       },
     };
@@ -392,7 +407,7 @@ describe("Scene/MetadataTableProperty", function () {
     }
   });
 
-  it("get returns vectors", function () {
+  it("get returns vector values", function () {
     const properties = {
       propertyInt8: {
         type: "VEC3",
@@ -484,42 +499,44 @@ describe("Scene/MetadataTableProperty", function () {
   it("get returns fixed size arrays", function () {
     const properties = {
       propertyInt64: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "INT64",
-        componentCount: 3,
+        array: true,
+        count: 3,
       },
       propertyUint64: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT64",
-        componentCount: 3,
+        array: true,
+        count: 3,
       },
       propertyBoolean: {
-        type: "ARRAY",
-        componentType: "BOOLEAN",
-        componentCount: 3,
+        type: "BOOLEAN",
+        array: true,
+        count: 3,
       },
       propertyString: {
-        type: "ARRAY",
-        componentType: "STRING",
-        componentCount: 3,
+        type: "STRING",
+        array: true,
+        count: 3,
       },
       propertyEnum: {
-        type: "ARRAY",
-        componentType: "ENUM",
+        type: "ENUM",
         enumType: "myEnum",
-        componentCount: 3,
+        array: true,
+        count: 3,
       },
-      // Once we created EXT_mesh_features, arrays no longer automatically
-      // convert to vectors, since we now have dedicated VECN types
       propertyUint32: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT32",
-        componentCount: 3,
+        array: true,
+        count: 3,
       },
       propertyFloat32: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "FLOAT32",
-        componentCount: 3,
+        array: true,
+        count: 3,
       },
     };
 
@@ -575,57 +592,67 @@ describe("Scene/MetadataTableProperty", function () {
   it("get returns variable size arrays", function () {
     const properties = {
       propertyInt8: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "INT8",
+        array: true,
       },
       propertyUint8: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT8",
+        array: true,
       },
       propertyInt16: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "INT16",
+        array: true,
       },
       propertyUint16: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT16",
+        array: true,
       },
       propertyInt32: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "INT32",
+        array: true,
       },
       propertyUint32: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT32",
+        array: true,
       },
       propertyInt64: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "INT64",
+        array: true,
       },
       propertyUint64: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT64",
+        array: true,
       },
       propertyFloat32: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "FLOAT32",
+        array: true,
       },
       propertyFloat64: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "FLOAT64",
+        array: true,
       },
       propertyBoolean: {
-        type: "ARRAY",
-        componentType: "BOOLEAN",
+        type: "BOOLEAN",
+        array: true,
       },
       propertyString: {
-        type: "ARRAY",
-        componentType: "STRING",
+        type: "STRING",
+        array: true,
       },
       propertyEnum: {
-        type: "ARRAY",
-        componentType: "ENUM",
+        type: "ENUM",
         enumType: "myEnum",
+        array: true,
       },
     };
 
@@ -679,9 +706,105 @@ describe("Scene/MetadataTableProperty", function () {
     }
   });
 
+  it("get returns arrays of vectors and matrices", function () {
+    const properties = {
+      propertyVec4: {
+        type: "VEC4",
+        componentType: "FLOAT32",
+        array: true,
+        count: 2,
+      },
+      propertyDVec2: {
+        type: "VEC2",
+        componentType: "FLOAT64",
+        array: true,
+      },
+      propertyU8Mat3: {
+        type: "MAT3",
+        componentType: "UINT8",
+        array: true,
+        count: 2,
+      },
+      propertyDMat2: {
+        type: "MAT2",
+        componentType: "FLOAT64",
+        array: true,
+      },
+    };
+
+    // for unpacking results in expect()
+    const mathTypes = {
+      propertyVec4: Cartesian4,
+      propertyDVec2: Cartesian2,
+      propertyU8Mat3: Matrix3,
+      propertyDMat2: Matrix2,
+    };
+
+    // prettier-ignore
+    const propertyValues = {
+      propertyVec4: [
+        [
+          1, 1, 0, 1,
+          1, 1, 0, 1
+        ],
+        [
+          1, 2, 3, 4,
+          1, 2, 3, 4
+        ]
+      ],
+      propertyDVec2: [
+        [
+          1, 2,
+          3, 4,
+          5, 6
+        ],
+        [1, 2]
+      ],
+      propertyU8Mat3: [
+        [
+          2, 0, 0, 0, 2, 0, 0, 0, 2, 
+          1, 2, 3, 1, 2, 3, 1, 2, 3
+        ],
+        [
+          255, 128, 0, 0, 255, 0, 0, 255, 255,
+          1, 2, 3, 4, 5, 6, 7, 8, 9 
+        ]
+      ],
+      propertyDMat2: [
+        [
+          1, 2, 3, 4,
+          1, 0, 0, 1,
+          0, 0, 0, 1,
+        ],
+        [
+          1, 2, 1, 2,
+          1, 0, 0, 2
+        ]
+      ]
+    };
+
+    for (const propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        const property = MetadataTester.createProperty({
+          property: properties[propertyId],
+          values: propertyValues[propertyId],
+        });
+
+        const expectedValues = propertyValues[propertyId];
+        const length = expectedValues.length;
+        const MathType = mathTypes[propertyId];
+        for (let i = 0; i < length; ++i) {
+          const value = property.get(i);
+          expect(value).toEqual(MathType.unpackArray(expectedValues[i]));
+        }
+      }
+    }
+  });
+
   it("get returns normalized value", function () {
     const propertyInt8 = MetadataTester.createProperty({
       property: {
+        type: "SCALAR",
         componentType: "INT8",
         normalized: true,
       },
@@ -690,6 +813,7 @@ describe("Scene/MetadataTableProperty", function () {
 
     const propertyUint8 = MetadataTester.createProperty({
       property: {
+        type: "SCALAR",
         componentType: "UINT8",
         normalized: true,
       },
@@ -703,6 +827,7 @@ describe("Scene/MetadataTableProperty", function () {
   it("get throws without index", function () {
     const property = MetadataTester.createProperty({
       property: {
+        type: "SCALAR",
         componentType: "FLOAT32",
       },
       values: [1.0, 2.0],
@@ -716,6 +841,7 @@ describe("Scene/MetadataTableProperty", function () {
   it("get throws if index is out of bounds", function () {
     const property = MetadataTester.createProperty({
       property: {
+        type: "SCALAR",
         componentType: "FLOAT32",
       },
       values: [1.0, 2.0],
@@ -729,48 +855,56 @@ describe("Scene/MetadataTableProperty", function () {
     }).toThrowDeveloperError();
   });
 
-  it("set sets single values", function () {
+  it("set sets scalar values", function () {
     const properties = {
       propertyInt8: {
-        type: "SINGLE",
+        type: "SCALAR",
         componentType: "INT8",
       },
       propertyUint8: {
-        // SINGLE is the default
+        type: "SCALAR",
         componentType: "UINT8",
       },
       propertyInt16: {
+        type: "SCALAR",
         componentType: "INT16",
       },
       propertyUint16: {
+        type: "SCALAR",
         componentType: "UINT16",
       },
       propertyInt32: {
+        type: "SCALAR",
         componentType: "INT32",
       },
       propertyUint32: {
+        type: "SCALAR",
         componentType: "UINT32",
       },
       propertyInt64: {
+        type: "SCALAR",
         componentType: "INT64",
       },
       propertyUint64: {
+        type: "SCALAR",
         componentType: "UINT64",
       },
       propertyFloat32: {
+        type: "SCALAR",
         componentType: "FLOAT32",
       },
       propertyFloat64: {
+        type: "SCALAR",
         componentType: "FLOAT64",
       },
       propertyBoolean: {
-        componentType: "BOOLEAN",
+        type: "BOOLEAN",
       },
       propertyString: {
-        componentType: "STRING",
+        type: "STRING",
       },
       propertyEnum: {
-        componentType: "ENUM",
+        type: "ENUM",
         enumType: "myEnum",
       },
     };
@@ -955,40 +1089,44 @@ describe("Scene/MetadataTableProperty", function () {
   it("set sets fixed size arrays", function () {
     const properties = {
       propertyInt64: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "INT64",
-        componentCount: 3,
+        array: true,
+        count: 3,
       },
       propertyUint64: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT64",
-        componentCount: 3,
+        array: true,
+        count: 3,
       },
       propertyBoolean: {
-        type: "ARRAY",
-        componentType: "BOOLEAN",
-        componentCount: 3,
+        type: "BOOLEAN",
+        array: true,
+        count: 3,
       },
       propertyString: {
-        type: "ARRAY",
-        componentType: "STRING",
-        componentCount: 3,
+        type: "STRING",
+        array: true,
+        count: 3,
       },
       propertyEnum: {
-        type: "ARRAY",
-        componentType: "ENUM",
+        type: "ENUM",
         enumType: "myEnum",
-        componentCount: 3,
+        array: true,
+        count: 3,
       },
       propertyUint32: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT32",
-        componentCount: 3,
+        array: true,
+        count: 3,
       },
       propertyFloat32: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "FLOAT32",
-        componentCount: 2,
+        array: true,
+        count: 2,
       },
     };
 
@@ -1076,60 +1214,198 @@ describe("Scene/MetadataTableProperty", function () {
     }
   });
 
+  it("set sets arrays of vectors and matrices", function () {
+    const properties = {
+      propertyVec4: {
+        type: "VEC4",
+        componentType: "FLOAT32",
+        array: true,
+        count: 2,
+      },
+      propertyDVec2: {
+        type: "VEC2",
+        componentType: "FLOAT64",
+        array: true,
+      },
+      propertyU8Mat3: {
+        type: "MAT3",
+        componentType: "UINT8",
+        array: true,
+        count: 2,
+      },
+      propertyDMat2: {
+        type: "MAT2",
+        componentType: "FLOAT64",
+        array: true,
+      },
+    };
+
+    // for unpacking results in expect()
+    /*
+    const mathTypes = {
+      propertyVec4: Cartesian4,
+      propertyDVec2: Cartesian2,
+      propertyU8Mat3: Matrix3,
+      propertyDMat2: Matrix2
+    };*/
+
+    // prettier-ignore
+    const propertyValues = {
+      propertyVec4: [
+        [
+          1, 1, 0, 1,
+          1, 1, 0, 1
+        ],
+        [
+          1, 2, 3, 4,
+          1, 2, 3, 4
+        ]
+      ],
+      propertyDVec2: [
+        [
+          1, 2,
+          3, 4,
+          5, 6
+        ],
+        [1, 2]
+      ],
+      propertyU8Mat3: [
+        [
+          2, 0, 0, 0, 2, 0, 0, 0, 2, 
+          1, 2, 3, 1, 2, 3, 1, 2, 3
+        ],
+        [
+          255, 128, 0, 0, 255, 0, 0, 255, 255,
+          1, 2, 3, 4, 5, 6, 7, 8, 9 
+        ]
+      ],
+      propertyDMat2: [
+        [
+          1, 2, 3, 4,
+          1, 0, 0, 1,
+          0, 0, 0, 1,
+        ],
+        [
+          1, 2, 1, 2,
+          1, 0, 0, 2
+        ]
+      ]
+    };
+
+    const valuesToSet = {
+      propertyVec4: [
+        [new Cartesian4(1, 1, 0, 1), new Cartesian4(1, 1, 0, 1)],
+        [new Cartesian4(1, 2, 3, 4), new Cartesian4(1, 2, 3, 4)],
+      ],
+      propertyDVec2: [
+        [new Cartesian2(1, 2), new Cartesian2(3, 4), new Cartesian2(5, 6)],
+        [new Cartesian2(1, 2)],
+      ],
+      propertyU8Mat3: [
+        [
+          new Matrix3(2, 0, 0, 0, 2, 0, 0, 0, 2),
+          new Matrix3(1, 2, 3, 1, 2, 3, 1, 2, 3),
+        ],
+        [
+          new Matrix3(255, 128, 0, 0, 255, 0, 0, 255, 255),
+          new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9),
+        ],
+      ],
+      propertyDMat2: [
+        [
+          new Matrix2(1, 2, 3, 4),
+          new Matrix2(1, 0, 0, 1),
+          new Matrix2(0, 0, 0, 1),
+        ],
+        [new Matrix2(1, 2, 1, 2), new Matrix2(1, 0, 0, 2)],
+      ],
+    };
+
+    for (const propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        const property = MetadataTester.createProperty({
+          property: properties[propertyId],
+          values: propertyValues[propertyId],
+        });
+        const expectedValues = valuesToSet[propertyId];
+        const length = expectedValues.length;
+        for (let i = 0; i < length; ++i) {
+          property.set(i, expectedValues[i]);
+          let value = property.get(i);
+          expect(value).toEqual(expectedValues[i]);
+          // Test setting / getting again
+          property.set(i, expectedValues[i]);
+          value = property.get(i);
+          expect(value).toEqual(expectedValues[i]);
+        }
+      }
+    }
+  });
+
   it("set sets variable size arrays with arrays of the same length", function () {
     const properties = {
       propertyInt8: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "INT8",
+        array: true,
       },
       propertyUint8: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT8",
+        array: true,
       },
       propertyInt16: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "INT16",
+        array: true,
       },
       propertyUint16: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT16",
+        array: true,
       },
       propertyInt32: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "INT32",
+        array: true,
       },
       propertyUint32: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT32",
+        array: true,
       },
       propertyInt64: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "INT64",
+        array: true,
       },
       propertyUint64: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT64",
+        array: true,
       },
       propertyFloat32: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "FLOAT32",
+        array: true,
       },
       propertyFloat64: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "FLOAT64",
+        array: true,
       },
       propertyBoolean: {
-        type: "ARRAY",
-        componentType: "BOOLEAN",
+        type: "BOOLEAN",
+        array: true,
       },
       propertyString: {
-        type: "ARRAY",
-        componentType: "STRING",
+        type: "STRING",
+        array: true,
       },
       propertyEnum: {
-        type: "ARRAY",
-        componentType: "ENUM",
+        type: "ENUM",
         enumType: "myEnum",
+        array: true,
       },
     };
 
@@ -1220,57 +1496,67 @@ describe("Scene/MetadataTableProperty", function () {
   it("set sets variable size arrays with arrays of different lengths", function () {
     const properties = {
       propertyInt8: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "INT8",
+        array: true,
       },
       propertyUint8: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT8",
+        array: true,
       },
       propertyInt16: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "INT16",
+        array: true,
       },
       propertyUint16: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT16",
+        array: true,
       },
       propertyInt32: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "INT32",
+        array: true,
       },
       propertyUint32: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT32",
+        array: true,
       },
       propertyInt64: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "INT64",
+        array: true,
       },
       propertyUint64: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT64",
+        array: true,
       },
       propertyFloat32: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "FLOAT32",
+        array: true,
       },
       propertyFloat64: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "FLOAT64",
+        array: true,
       },
       propertyBoolean: {
-        type: "ARRAY",
-        componentType: "BOOLEAN",
+        type: "BOOLEAN",
+        array: true,
       },
       propertyString: {
-        type: "ARRAY",
-        componentType: "STRING",
+        type: "STRING",
+        array: true,
       },
       propertyEnum: {
-        type: "ARRAY",
-        componentType: "ENUM",
+        type: "ENUM",
         enumType: "myEnum",
+        array: true,
       },
     };
 
@@ -1361,6 +1647,7 @@ describe("Scene/MetadataTableProperty", function () {
   it("set throws if Infinity is given for FLOAT32 and FLOAT64", function () {
     const propertyFloat32 = MetadataTester.createProperty({
       property: {
+        type: "SCALAR",
         componentType: "FLOAT32",
       },
       values: [0.0, 0.0],
@@ -1368,6 +1655,7 @@ describe("Scene/MetadataTableProperty", function () {
 
     const propertyFloat64 = MetadataTester.createProperty({
       property: {
+        type: "SCALAR",
         componentType: "FLOAT64",
       },
       values: [0.0, 0.0],
@@ -1395,6 +1683,7 @@ describe("Scene/MetadataTableProperty", function () {
   it("set throws if a NaN is given for FLOAT32 and FLOAT64", function () {
     const propertyFloat32 = MetadataTester.createProperty({
       property: {
+        type: "SCALAR",
         componentType: "FLOAT32",
       },
       values: [0.0],
@@ -1402,6 +1691,7 @@ describe("Scene/MetadataTableProperty", function () {
 
     const propertyFloat64 = MetadataTester.createProperty({
       property: {
+        type: "SCALAR",
         componentType: "FLOAT64",
       },
       values: [0.0],
@@ -1421,6 +1711,7 @@ describe("Scene/MetadataTableProperty", function () {
   it("set sets value for normalized property", function () {
     const propertyInt8 = MetadataTester.createProperty({
       property: {
+        type: "SCALAR",
         componentType: "INT8",
         normalized: true,
       },
@@ -1429,6 +1720,7 @@ describe("Scene/MetadataTableProperty", function () {
 
     const propertyUint8 = MetadataTester.createProperty({
       property: {
+        type: "SCALAR",
         componentType: "UINT8",
         normalized: true,
       },
@@ -1445,6 +1737,7 @@ describe("Scene/MetadataTableProperty", function () {
   it("set throws without index", function () {
     const property = MetadataTester.createProperty({
       property: {
+        type: "SCALAR",
         componentType: "FLOAT32",
       },
       values: [1.0, 2.0],
@@ -1458,6 +1751,7 @@ describe("Scene/MetadataTableProperty", function () {
   it("set throws if index is out of bounds", function () {
     const property = MetadataTester.createProperty({
       property: {
+        type: "SCALAR",
         componentType: "FLOAT32",
       },
       values: [1.0, 2.0],
@@ -1478,9 +1772,10 @@ describe("Scene/MetadataTableProperty", function () {
   it("set throws if value doesn't conform to the class property", function () {
     const property = MetadataTester.createProperty({
       property: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "FLOAT32",
-        componentCount: 3,
+        array: true,
+        count: 3,
       },
       values: [[1.0, 2.0, 3.0]],
     });
@@ -1492,9 +1787,10 @@ describe("Scene/MetadataTableProperty", function () {
 
   it("getTypedArray returns typed array", function () {
     const propertyInt32 = {
-      type: "ARRAY",
+      type: "SCALAR",
       componentType: "INT32",
-      componentCount: 3,
+      array: true,
+      count: 3,
     };
 
     const propertyValues = [
@@ -1514,8 +1810,9 @@ describe("Scene/MetadataTableProperty", function () {
 
   it("getTypedArray returns undefined if values are unpacked", function () {
     const propertyInt32 = {
-      type: "ARRAY",
+      type: "SCALAR",
       componentType: "INT32",
+      array: true,
     };
 
     const propertyValues = [

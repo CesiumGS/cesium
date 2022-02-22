@@ -23,6 +23,7 @@
                 "componentType": "UINT8"
               },
               "priority": {
+                "type": "SCALAR",
                 "componentType": "UINT32"
               }
             }

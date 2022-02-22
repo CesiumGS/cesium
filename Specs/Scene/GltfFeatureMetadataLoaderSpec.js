@@ -35,9 +35,10 @@ describe(
         building: {
           properties: {
             name: {
-              componentType: "STRING",
+              type: "STRING",
             },
             height: {
+              type: "SCALAR",
               componentType: "FLOAT64",
             },
           },
@@ -45,19 +46,21 @@ describe(
         tree: {
           properties: {
             species: {
-              type: "ARRAY",
-              componentType: "STRING",
+              type: "STRING",
+              array: true,
             },
           },
         },
         map: {
           properties: {
             color: {
-              type: "ARRAY",
+              type: "SCALAR",
               componentType: "UINT8",
-              componentCount: 3,
+              array: true,
+              count: 3,
             },
             intensity: {
+              type: "SCALAR",
               componentType: "UINT8",
             },
           },
@@ -65,6 +68,7 @@ describe(
         ortho: {
           properties: {
             vegetation: {
+              type: "SCALAR",
               componentType: "UINT8",
               normalized: true,
             },
@@ -302,7 +306,7 @@ describe(
       featureMetadataLoader.load();
 
       return featureMetadataLoader.promise
-        .then(function (featureMetadataLoader) {
+        .then(function () {
           fail();
         })
         .otherwise(function (runtimeError) {

@@ -33,10 +33,11 @@
                 "componentType": "UINT8"
               },
               "priority": {
+                "type": "SCALAR",
                 "componentType": "UINT8"
               },
               "isInstanced": {
-                "componentType": "BOOLEAN"
+                "type": "BOOLEAN"
               }
             }
           }

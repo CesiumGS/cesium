@@ -246,9 +246,10 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
       class: {
         properties: {
           name: {
-            componentType: "STRING",
+            type: "STRING",
           },
           height: {
+            type: "SCALAR",
             componentType: "FLOAT32",
           },
         },

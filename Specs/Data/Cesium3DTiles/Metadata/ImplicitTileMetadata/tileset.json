@@ -15,7 +15,7 @@
           "tile": {
             "properties": {
               "quadrant": {
-                "componentType": "ENUM",
+                "type": "ENUM",
                 "enumType": "quadrantType"
               },
               "color": {

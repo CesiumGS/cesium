@@ -428,11 +428,11 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
           componentType: MetadataComponentType.FLOAT32,
         },
         name: {
-          type: MetadataType.SINGLE,
+          type: MetadataType.SCALAR,
           isJson: true,
         },
         id: {
-          type: MetadataType.SINGLE,
+          type: MetadataType.SCALAR,
           componentType: MetadataComponentType.UINT32,
         },
       });
@@ -475,11 +475,11 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
           componentType: MetadataComponentType.FLOAT32,
         },
         name: {
-          type: MetadataType.SINGLE,
+          type: MetadataType.SCALAR,
           isJson: true,
         },
         id: {
-          type: MetadataType.SINGLE,
+          type: MetadataType.SCALAR,
           componentType: MetadataComponentType.UINT32,
         },
       });
@@ -502,7 +502,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
       expect(components).toBeDefined();
       expectMetadata(components.featureMetadata, {
         temperature: {
-          type: MetadataType.SINGLE,
+          type: MetadataType.SCALAR,
           componentType: MetadataComponentType.FLOAT32,
         },
         secondaryColor: {
@@ -510,7 +510,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
           componentType: MetadataComponentType.FLOAT32,
         },
         id: {
-          type: MetadataType.SINGLE,
+          type: MetadataType.SCALAR,
           componentType: MetadataComponentType.UINT16,
         },
       });
@@ -531,7 +531,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
       expect(components).toBeDefined();
       expectMetadata(components.featureMetadata, {
         "temperature ℃": {
-          type: MetadataType.SINGLE,
+          type: MetadataType.SCALAR,
           componentType: MetadataComponentType.FLOAT32,
         },
         secondaryColor: {
@@ -539,7 +539,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
           componentType: MetadataComponentType.FLOAT32,
         },
         id: {
-          type: MetadataType.SINGLE,
+          type: MetadataType.SCALAR,
           componentType: MetadataComponentType.UINT16,
         },
       });

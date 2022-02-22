@@ -14,10 +14,11 @@ describe("Scene/PropertyTable", function () {
 
   const properties = {
     name: {
-      componentType: "STRING",
+      type: "STRING",
       semantic: "NAME",
     },
     height: {
+      type: "SCALAR",
       componentType: "FLOAT32",
       semantic: "HEIGHT",
     },
@@ -280,9 +281,11 @@ describe("Scene/PropertyTable", function () {
         box: {
           properties: {
             itemId: {
+              type: "SCALAR",
               componentType: "UINT8",
             },
             itemCount: {
+              type: "SCALAR",
               componentType: "UINT16",
             },
           },

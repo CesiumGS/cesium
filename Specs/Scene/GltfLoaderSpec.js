@@ -883,14 +883,12 @@ describe(
 
         const classDefinition = featureMetadata.schema.classes.landCover;
         const properties = classDefinition.properties;
-        expect(properties.name.componentType).toBe(
-          MetadataComponentType.STRING
-        );
+        expect(properties.name.type).toBe(MetadataType.STRING);
+        expect(properties.name.componentType).not.toBeDefined();
         expect(properties.color.type).toBe(MetadataType.VEC3);
         expect(properties.color.componentType).toBe(
           MetadataComponentType.UINT8
         );
-        expect(properties.color.componentCount).toBe(3);
 
         const propertyTable = featureMetadata.getPropertyTable(0);
         expect(propertyTable.id).toEqual(0);
@@ -949,14 +947,13 @@ describe(
 
         const classDefinition = featureMetadata.schema.classes.landCover;
         const properties = classDefinition.properties;
-        expect(properties.name.componentType).toBe(
-          MetadataComponentType.STRING
-        );
-        expect(properties.color.type).toBe(MetadataType.ARRAY);
+        expect(properties.name.type).toBe(MetadataType.STRING);
+        expect(properties.name.componentType).not.toBeDefined();
+        expect(properties.color.type).toBe(MetadataType.SCALAR);
         expect(properties.color.componentType).toBe(
           MetadataComponentType.UINT8
         );
-        expect(properties.color.componentCount).toBe(3);
+        expect(properties.color.arrayLength).toBe(3);
 
         const propertyTable = featureMetadata.getPropertyTable(0);
         expect(propertyTable.id).toEqual("landCoverTable");
@@ -1240,9 +1237,9 @@ describe(
 
         const townClass = featureMetadata.schema.classes.town;
         const townProperties = townClass.properties;
-        expect(townProperties.name.componentType).toBe(
-          MetadataComponentType.STRING
-        );
+        expect(townProperties.name.type).toBe(MetadataType.STRING);
+        expect(townProperties.name.componentCount).not.toBeDefined();
+        expect(townProperties.population.type).toBe(MetadataType.SCALAR);
         expect(townProperties.population.componentType).toBe(
           MetadataComponentType.UINT16
         );
@@ -1338,17 +1335,17 @@ describe(
         expect(weatherProperties.airPressure.componentType).toBe(
           MetadataComponentType.FLOAT32
         );
-        expect(weatherProperties.windVelocity.type).toBe(MetadataType.ARRAY);
+        expect(weatherProperties.windVelocity.type).toBe(MetadataType.SCALAR);
         expect(weatherProperties.windVelocity.componentType).toBe(
           MetadataComponentType.FLOAT32
         );
-        expect(weatherProperties.windVelocity.componentCount).toBe(3);
+        expect(weatherProperties.windVelocity.arrayLength).toBe(3);
 
         const townClass = featureMetadata.schema.classes.town;
         const townProperties = townClass.properties;
-        expect(townProperties.name.componentType).toBe(
-          MetadataComponentType.STRING
-        );
+        expect(townProperties.name.type).toBe(MetadataType.STRING);
+        expect(townProperties.name.componentType).not.toBeDefined();
+        expect(townProperties.population.type).toBe(MetadataType.SCALAR);
         expect(townProperties.population.componentType).toBe(
           MetadataComponentType.UINT16
         );
@@ -1543,18 +1540,17 @@ describe(
 
         const boxClass = featureMetadata.schema.classes.box;
         const boxProperties = boxClass.properties;
-        expect(boxProperties.name.componentType).toBe(
-          MetadataComponentType.STRING
-        );
+        expect(boxProperties.name.type).toBe(MetadataType.STRING);
+        expect(boxProperties.name.componentType).not.toBeDefined();
         expect(boxProperties.volume.componentType).toBe(
           MetadataComponentType.FLOAT32
         );
 
         const sectionClass = featureMetadata.schema.classes.section;
         const sectionProperties = sectionClass.properties;
-        expect(sectionProperties.name.componentType).toBe(
-          MetadataComponentType.STRING
-        );
+        expect(sectionProperties.name.type).toBe(MetadataType.STRING);
+        expect(sectionProperties.name.componentType).not.toBeDefined();
+        expect(sectionProperties.id.type).toBe(MetadataType.SCALAR);
         expect(sectionProperties.id.componentType).toBe(
           MetadataComponentType.UINT16
         );
@@ -1735,18 +1731,17 @@ describe(
 
         const boxClass = featureMetadata.schema.classes.box;
         const boxProperties = boxClass.properties;
-        expect(boxProperties.name.componentType).toBe(
-          MetadataComponentType.STRING
-        );
+        expect(boxProperties.name.type).toBe(MetadataType.STRING);
+        expect(boxProperties.name.componentType).not.toBeDefined();
         expect(boxProperties.volume.componentType).toBe(
           MetadataComponentType.FLOAT32
         );
 
         const sectionClass = featureMetadata.schema.classes.section;
         const sectionProperties = sectionClass.properties;
-        expect(sectionProperties.name.componentType).toBe(
-          MetadataComponentType.STRING
-        );
+        expect(sectionProperties.name.type).toBe(MetadataType.STRING);
+        expect(sectionProperties.name.componentType).not.toBeDefined();
+        expect(sectionProperties.id.type).toBe(MetadataType.SCALAR);
         expect(sectionProperties.id.componentType).toBe(
           MetadataComponentType.UINT16
         );

@@ -94,32 +94,6 @@ const MetadataComponentType = {
    * @private
    */
   FLOAT64: "FLOAT64",
-  /**
-   * A boolean (true/false) value
-   *
-   * @type {String}
-   * @constant
-   * @private
-   */
-  BOOLEAN: "BOOLEAN",
-  /**
-   * A UTF-8 encoded string value
-   *
-   * @type {String}
-   * @constant
-   * @private
-   */
-  STRING: "STRING",
-  /**
-   * An enumerated value. This type is used in conjunction with a {@link MetadataEnum} to describe the valid values.
-   *
-   * @see MetadataEnum
-   *
-   * @type {String}
-   * @constant
-   * @private
-   */
-  ENUM: "ENUM",
 };
 
 /**

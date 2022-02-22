@@ -16,9 +16,10 @@
           "box": {
             "properties": {
               "name": {
-                "componentType": "STRING"
+                "type": "STRING"
               },
               "volume": {
+                "type": "SCALAR",
                 "componentType": "FLOAT32"
               }
             }
@@ -26,9 +27,10 @@
           "section": {
             "properties": {
               "name": {
-                "componentType": "STRING"
+                "type": "STRING"
               },
               "id": {
+                "type": "SCALAR",
                 "componentType": "UINT16"
               }
             }

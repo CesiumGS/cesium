@@ -1,4 +1,11 @@
 import Check from "../Core/Check.js";
+import Cartesian2 from "../Core/Cartesian2.js";
+import Cartesian3 from "../Core/Cartesian3.js";
+import Cartesian4 from "../Core/Cartesian4.js";
+import DeveloperError from "../Core/DeveloperError.js";
+import Matrix2 from "../Core/Matrix2.js";
+import Matrix3 from "../Core/Matrix3.js";
+import Matrix4 from "../Core/Matrix4.js";
 
 /**
  * An enum of metadata types. These metadata types are containers containing
@@ -16,7 +23,7 @@ const MetadataType = {
    * @constant
    * @private
    */
-  SINGLE: "SINGLE",
+  SCALAR: "SCALAR",
   /**
    * A vector with two components
    *
@@ -66,14 +73,31 @@ const MetadataType = {
    */
   MAT4: "MAT4",
   /**
-   * An array of values. A <code>componentType</code> property is needed to
-   * define what type of values are stored in the array.
+   * A boolean (true/false) value
    *
    * @type {String}
    * @constant
    * @private
    */
-  ARRAY: "ARRAY",
+  BOOLEAN: "BOOLEAN",
+  /**
+   * A UTF-8 encoded string value
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
+  STRING: "STRING",
+  /**
+   * An enumerated value. This type is used in conjunction with a {@link MetadataEnum} to describe the valid values.
+   *
+   * @see MetadataEnum
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
+  ENUM: "ENUM",
 };
 
 /**
@@ -119,13 +143,11 @@ MetadataType.isMatrixType = function (type) {
 };
 
 /**
- * Get the number of components for a type. e.g. a VECN returns N.
- * The only exception is the ARRAY type, whose number of components is
- * determined separately by the componentCount property in the metadata
- * extension.
+ * Get the number of components for a vector or matrix type. e.g.
+ * a VECN returns N, and a MATN returns N*N. All other types return 1.
  *
  * @param {MetadataType} type The type to get the component count for
- * @return {Number} The number of components, or <code>undefined</code> for ARRAY
+ * @return {Number} The number of components
  */
 MetadataType.getComponentCount = function (type) {
   //>>includeStart('debug', pragmas.debug);
@@ -133,7 +155,10 @@ MetadataType.getComponentCount = function (type) {
   //>>includeEnd('debug');
 
   switch (type) {
-    case MetadataType.SINGLE:
+    case MetadataType.SCALAR:
+    case MetadataType.STRING:
+    case MetadataType.ENUM:
+    case MetadataType.BOOLEAN:
       return 1;
     case MetadataType.VEC2:
       return 2;
@@ -147,6 +172,34 @@ MetadataType.getComponentCount = function (type) {
       return 9;
     case MetadataType.MAT4:
       return 16;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError(`Invalid metadata type ${type}`);
+    //>>includeEnd('debug');
+  }
+};
+
+/**
+ * Get the corresponding vector or matrix class. This is used to simplify
+ * packing and unpacking code.
+ * @param {MetadataType} type The metadata type
+ * @return {Object} The appropriate CartesianN class for vector types, MatrixN class for matrix types, or undefined otherwise.
+ * @private
+ */
+MetadataType.getMathType = function (type) {
+  switch (type) {
+    case MetadataType.VEC2:
+      return Cartesian2;
+    case MetadataType.VEC3:
+      return Cartesian3;
+    case MetadataType.VEC4:
+      return Cartesian4;
+    case MetadataType.MAT2:
+      return Matrix2;
+    case MetadataType.MAT3:
+      return Matrix3;
+    case MetadataType.MAT4:
+      return Matrix4;
     default:
       return undefined;
   }
