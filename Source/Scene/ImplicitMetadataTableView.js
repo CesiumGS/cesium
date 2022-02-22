@@ -173,7 +173,6 @@ ImplicitMetadataTableView.prototype.getPropertyBySemantic = function (
  * @private
  */
 
-// TODO: account for multiple contents?
 ImplicitMetadataTableView.prototype.setPropertyBySemantic = function (
   semantic,
   value

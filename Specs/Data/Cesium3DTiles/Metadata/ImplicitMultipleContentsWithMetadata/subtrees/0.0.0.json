@@ -1,0 +1,73 @@
+{
+  "buffers": [
+    {
+      "byteLength": 8,
+      "uri": "availability.bin"
+    },
+    {
+      "byteLength": 32,
+      "uri": "buildingMetadata.bin"
+    },
+    {
+      "byteLength": 8,
+      "uri": "treeMetadata.bin"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 1
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 0,
+      "byteLength": 10
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 16,
+      "byteLength": 15
+    },
+    {
+      "buffer": 2,
+      "byteOffset": 0,
+      "byteLength": 8
+    }
+  ],
+  "tileAvailability": {
+    "constant": 1
+  },
+  "contentAvailability": [
+    {
+      "constant": 1
+    },
+    {
+      "bitstream": 0
+    }
+  ],
+  "childSubtreeAvailability": {
+    "constant": 0
+  },
+  "contentMetadata": [
+    {
+      "class": "building",
+      "properties": {
+        "height": {
+          "bufferView": 1
+        },
+        "color": {
+          "bufferView": 2
+        }
+      }
+    },
+    {
+      "class": "tree",
+      "properties": {
+        "age": {
+          "bufferView": 3
+        }
+      }
+    }
+  ]
+}

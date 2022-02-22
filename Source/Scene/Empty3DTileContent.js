@@ -88,6 +88,17 @@ Object.defineProperties(Empty3DTileContent.prototype, {
     },
   },
 
+  metadata: {
+    get: function () {
+      return undefined;
+    },
+    set: function (value) {
+      throw new DeveloperError(
+        "Empty3DTileContent cannot have content metadata"
+      );
+    },
+  },
+
   batchTable: {
     get: function () {
       return undefined;

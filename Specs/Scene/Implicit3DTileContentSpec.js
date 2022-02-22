@@ -1053,6 +1053,10 @@ describe(
         "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset.json";
       const implicitGroupMetadataUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitGroupMetadata/tileset.json";
+      const implicitContentMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitContentMetadata/tileset.json";
+      const implicitMultipleContentsMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset.json";
       const implicitHeightSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitHeightSemantics/tileset.json";
       const implicitS2HeightSemanticsUrl =
@@ -1071,8 +1075,6 @@ describe(
         "Data/Cesium3DTiles/Metadata/ImplicitContentHeightAndRegionSemantics/tileset.json";
       const implicitGeometricErrorSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitGeometricErrorSemantics/tileset.json";
-      const implicitContentMetadataUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitContentMetadata/tileset.json";
 
       const groupMetadataClass = new MetadataClass({
         id: "test",
@@ -1222,6 +1224,62 @@ describe(
                 expectedColors[index]
               );
             }
+          }
+        });
+      });
+
+      it("multiple content metadatas get transcoded correctly", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitMultipleContentsMetadataUrl
+        ).then(function (tileset) {
+          const expectedHeights = [10, 20, 30, 40, 50];
+          const expectedColors = [
+            new Cartesian3(255, 255, 255),
+            new Cartesian3(255, 0, 0),
+            new Cartesian3(255, 255, 0),
+            new Cartesian3(0, 255, 0),
+            new Cartesian3(0, 0, 255),
+          ];
+
+          // All tiles except the subtree root tile have tree content
+          const expectedAges = [21, 7, 11, 16];
+
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
+          const tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
+          for (let i = 0; i < tiles.length; i++) {
+            const tile = tiles[i];
+            const coordinates = tile.implicitCoordinates;
+            const index = coordinates.tileIndex;
+
+            let buildingMetadata;
+            if (i > 0) {
+              expect(tile.hasMultipleContents).toBe(true);
+              const buildingContent = tile.content.innerContents[0];
+              buildingMetadata = buildingContent.metadata;
+            } else {
+              expect(tile.hasMultipleContents).toBe(false);
+              buildingMetadata = tile.content.metadata;
+            }
+
+            expect(buildingMetadata.getProperty("height")).toBe(
+              expectedHeights[index]
+            );
+            expect(buildingMetadata.getProperty("color")).toEqual(
+              expectedColors[index]
+            );
+
+            if (i === 0) {
+              continue;
+            }
+
+            const treeContent = tile.content.innerContents[1];
+            const treeMetadata = treeContent.metadata;
+            expect(treeMetadata.getProperty("age")).toEqual(
+              expectedAges[index - 1]
+            );
           }
         });
       });

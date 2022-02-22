@@ -380,13 +380,11 @@ describe(
           function (tileset) {
             expect(function () {
               const content = tileset.root.content;
-              content.groupMetadata = groupMetadata;
+              content.metadata = {};
             }).toThrowDeveloperError();
           }
         );
       });
-
-      // TODO: test retrieving multiple content metadata
     });
   },
   "WebGL"

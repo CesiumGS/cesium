@@ -27,6 +27,13 @@ describe("Scene/Empty3DTileContent", function () {
   });
 
   describe("3DTILES_metadata", function () {
+    it("contentMetadata returns undefined", function () {
+      const mockTileset = {};
+      const mockTile = {};
+      const content = new Empty3DTileContent(mockTileset, mockTile);
+      expect(content.metadata).not.toBeDefined();
+    });
+
     it("groupMetadata returns undefined", function () {
       const mockTileset = {};
       const mockTile = {};
