@@ -156,12 +156,24 @@ Object.defineProperties(Composite3DTileContent.prototype, {
     },
   },
 
+  /**
+   * Part of the {@link Cesium3DTileContent} interface. <code>Composite3DTileContent</code>
+   * both stores the content metadata and propagates the content metadata to all of its children.
+   * @memberof Composite3DTileContent.prototype
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
   metadata: {
     get: function () {
       return this._metadata;
     },
     set: function (value) {
       this._metadata = value;
+      const contents = this._contents;
+      const length = contents.length;
+      for (let i = 0; i < length; ++i) {
+        contents[i].metadata = value;
+      }
     },
   },
 
