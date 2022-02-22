@@ -93,7 +93,7 @@ function MetadataClassProperty(options) {
     // the property
     required = false;
   } else if (isLegacyExtension) {
-    required = defaultValue(!property.optional, true);
+    required = defined(property.optional) ? !property.optional : true;
   } else {
     required = defaultValue(property.required, false);
   }
@@ -237,7 +237,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * The number of components per element. Only defined for fixed-size
+   * The number of array elements. Only defined for fixed-size
    * arrays.
    *
    * @memberof MetadataClassProperty.prototype
@@ -667,14 +667,14 @@ function validateArray(classProperty, value) {
 
 function validateSingleValue(classProperty, value) {
   const type = classProperty._type;
-  const valueType = classProperty._valueType;
+  const componentType = classProperty._componentType;
   const enumType = classProperty._enumType;
   const normalized = classProperty._normalized;
 
   if (MetadataType.isVectorType(type)) {
-    return validateVector(value, type, valueType);
+    return validateVector(value, type, componentType);
   } else if (MetadataType.isMatrixType(type)) {
-    return validateMatrix(value, type, valueType);
+    return validateMatrix(value, type, componentType);
   } else if (type === MetadataType.STRING) {
     return validateString(value);
   } else if (type === MetadataType.BOOLEAN) {
@@ -683,7 +683,7 @@ function validateSingleValue(classProperty, value) {
     return validateEnum(value, enumType);
   }
 
-  return validateScalar(value, valueType, normalized);
+  return validateScalar(value, componentType, normalized);
 }
 
 function validateVector(value, type, componentType) {
@@ -744,10 +744,10 @@ function validateEnum(value, enumType) {
   }
 }
 
-function validateScalar(value, valueType, normalized) {
+function validateScalar(value, componentType, normalized) {
   const javascriptType = typeof value;
 
-  switch (valueType) {
+  switch (componentType) {
     case MetadataComponentType.INT8:
     case MetadataComponentType.UINT8:
     case MetadataComponentType.INT16:
@@ -755,31 +755,31 @@ function validateScalar(value, valueType, normalized) {
     case MetadataComponentType.INT32:
     case MetadataComponentType.UINT32:
       if (javascriptType !== "number") {
-        return getTypeErrorMessage(value, valueType);
+        return getTypeErrorMessage(value, componentType);
       }
-      return checkInRange(value, valueType, normalized);
+      return checkInRange(value, componentType, normalized);
     case MetadataComponentType.INT64:
     case MetadataComponentType.UINT64:
       if (javascriptType !== "number" && javascriptType !== "bigint") {
-        return getTypeErrorMessage(value, valueType);
+        return getTypeErrorMessage(value, componentType);
       }
-      return checkInRange(value, valueType, normalized);
+      return checkInRange(value, componentType, normalized);
     case MetadataComponentType.FLOAT32:
       if (javascriptType !== "number") {
-        return getTypeErrorMessage(value, valueType);
+        return getTypeErrorMessage(value, componentType);
       }
       if (isFinite(value)) {
-        return checkInRange(value, valueType, normalized);
+        return checkInRange(value, componentType, normalized);
       }
-      return getNonFiniteErrorMessage(value, valueType);
+      return getNonFiniteErrorMessage(value, componentType);
     case MetadataComponentType.FLOAT64:
       if (javascriptType !== "number") {
-        return getTypeErrorMessage(value, valueType);
+        return getTypeErrorMessage(value, componentType);
       }
       if (isFinite(value)) {
-        return checkInRange(value, valueType, normalized);
+        return checkInRange(value, componentType, normalized);
       }
-      return getNonFiniteErrorMessage(value, valueType);
+      return getNonFiniteErrorMessage(value, componentType);
   }
 }
 

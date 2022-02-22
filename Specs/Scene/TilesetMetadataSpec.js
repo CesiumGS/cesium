@@ -136,7 +136,7 @@ describe("Scene/TilesetMetadata", function () {
           height: {
             type: "SCALAR",
             componentType: "FLOAT32",
-            optional: true,
+            required: false,
             default: 10.0,
           },
         },
@@ -227,7 +227,7 @@ describe("Scene/TilesetMetadata", function () {
             type: "SCALAR",
             componentType: "FLOAT32",
             semantic: "HEIGHT",
-            optional: true,
+            required: false,
             default: 10.0,
           },
         },

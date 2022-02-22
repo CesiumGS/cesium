@@ -141,7 +141,7 @@ describe("Scene/MetadataTable", function () {
         type: "SCALAR",
         componentType: "FLOAT32",
         default: 10.0,
-        optional: true,
+        required: false,
       },
       name: {
         type: "STRING",
@@ -221,7 +221,7 @@ describe("Scene/MetadataTable", function () {
         componentType: "FLOAT32",
         semantic: "HEIGHT",
         default: 10.0,
-        optional: true,
+        required: false,
       },
       name: {
         type: "STRING",
@@ -286,7 +286,7 @@ describe("Scene/MetadataTable", function () {
         type: "SCALAR",
         componentType: "FLOAT32",
         default: 10.0,
-        optional: true,
+        required: false,
       },
       name: {
         type: "STRING",
