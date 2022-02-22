@@ -1123,7 +1123,7 @@ describe(
         expect(featureIdAttribute.byteOffset).toBe(0);
         expect(featureIdAttribute.byteStride).toBe(4);
 
-        expect(primitive.featureIds.length).toBe(3);
+        expect(primitive.featureIds.length).toBe(2);
         expect(primitive.propertyTextureIds.length).toBe(0);
 
         // feature ID via accessor
@@ -1136,28 +1136,17 @@ describe(
         expect(featureIdAccessor.propertyTableId).toBe(0);
         expect(featureIdAccessor.setIndex).toBe(0);
 
-        // feature ID via offset + repeat
-        const featureIdImplicit = primitive.featureIds[1];
-        expect(featureIdImplicit).toBeInstanceOf(
+        // Default feature ID
+        const featureIdDefault = primitive.featureIds[1];
+        expect(featureIdDefault).toBeInstanceOf(
           ModelComponents.FeatureIdImplicitRange
         );
-        expect(featureIdImplicit.featureCount).toEqual(5);
-        expect(featureIdImplicit.nullFeatureId).not.toBeDefined();
-        expect(featureIdImplicit.propertyTableId).toBe(0);
-        expect(featureIdImplicit.setIndex).not.toBeDefined();
-        expect(featureIdImplicit.offset).toBe(0);
-        expect(featureIdImplicit.repeat).toBe(2);
-
-        // Feature ID via offset only. This one has no corresponding table
-        const featureIdConstant = primitive.featureIds[2];
-        expect(featureIdConstant).toBeInstanceOf(
-          ModelComponents.FeatureIdImplicitRange
-        );
-        expect(featureIdConstant.featureCount).toEqual(1);
-        expect(featureIdConstant.nullFeatureId).not.toBeDefined();
-        expect(featureIdConstant.propertyTableId).not.toBeDefined();
-        expect(featureIdConstant.offset).toBe(3);
-        expect(featureIdConstant.repeat).not.toBeDefined();
+        expect(featureIdDefault.featureCount).toEqual(5);
+        expect(featureIdDefault.nullFeatureId).not.toBeDefined();
+        expect(featureIdDefault.propertyTableId).toBe(0);
+        expect(featureIdDefault.setIndex).not.toBeDefined();
+        expect(featureIdDefault.offset).toBe(0);
+        expect(featureIdDefault.repeat).toBe(1);
 
         const classDefinition = structuralMetadata.schema.classes.building;
         const properties = classDefinition.properties;

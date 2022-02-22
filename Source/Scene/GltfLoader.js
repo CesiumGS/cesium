@@ -834,15 +834,17 @@ function loadFeatureIdAttributeLegacy(
   return featureIdAttribute;
 }
 
-// for EXT_mesh_features
-function loadFeatureIdImplicitRange(featureIds) {
-  const featureIdAttribute = new FeatureIdImplicitRange();
-  featureIdAttribute.propertyTableId = featureIds.propertyTable;
-  featureIdAttribute.featureCount = featureIds.featureCount;
-  featureIdAttribute.nullFeatureId = featureIds.nullFeatureId;
-  featureIdAttribute.offset = defaultValue(featureIds.offset, 0);
-  featureIdAttribute.repeat = featureIds.repeat;
-  return featureIdAttribute;
+// implicit ranges do not exist in EXT_mesh_features and EXT_instance_features,
+// but both default to the vertex/instance ID which is like
+// an implicit range of {offset: 0, repeat: 1}
+function loadDefaultFeatureIds(featureIds) {
+  const featureIdRange = new FeatureIdImplicitRange();
+  featureIdRange.propertyTableId = featureIds.propertyTable;
+  featureIdRange.featureCount = featureIds.featureCount;
+  featureIdRange.nullFeatureId = featureIds.nullFeatureId;
+  featureIdRange.offset = 0;
+  featureIdRange.repeat = 1;
+  return featureIdRange;
 }
 
 // for backwards compatibility with EXT_feature_metadata
@@ -851,17 +853,17 @@ function loadFeatureIdImplicitRangeLegacy(
   featureTableId,
   featureCount
 ) {
-  const featureIdAttribute = new FeatureIdImplicitRange();
+  const featureIdRange = new FeatureIdImplicitRange();
   const featureIds = gltfFeatureIdAttribute.featureIds;
-  featureIdAttribute.propertyTableId = featureTableId;
-  featureIdAttribute.featureCount = featureCount;
+  featureIdRange.propertyTableId = featureTableId;
+  featureIdRange.featureCount = featureCount;
 
   // constant/divisor was renamed to offset/repeat
-  featureIdAttribute.offset = defaultValue(featureIds.constant, 0);
+  featureIdRange.offset = defaultValue(featureIds.constant, 0);
   // The default is now undefined
   const divisor = defaultValue(featureIds.divisor, 0);
-  featureIdAttribute.repeat = divisor === 0 ? undefined : divisor;
-  return featureIdAttribute;
+  featureIdRange.repeat = divisor === 0 ? undefined : divisor;
+  return featureIdRange;
 }
 
 // for EXT_mesh_features
@@ -1067,7 +1069,9 @@ function loadPrimitiveFeatures(
     } else if (defined(featureIds.attribute)) {
       featureIdComponent = loadFeatureIdAttribute(featureIds);
     } else {
-      featureIdComponent = loadFeatureIdImplicitRange(featureIds);
+      // default to vertex ID, in other words an implicit range with
+      // offset: 0, repeat: 1
+      featureIdComponent = loadDefaultFeatureIds(featureIds);
     }
 
     primitive.featureIds.push(featureIdComponent);
@@ -1142,12 +1146,19 @@ function loadPrimitiveFeaturesLegacy(
 
 // For primitive-level EXT_structural_metadata
 function loadPrimitiveMetadata(primitive, structuralMetadataExtension) {
+  if (!defined(structuralMetadataExtension)) {
+    return;
+  }
+
   // Property Textures
-  if (
-    defined(structuralMetadataExtension) &&
-    defined(structuralMetadataExtension.propertyTextures)
-  ) {
+  if (defined(structuralMetadataExtension.propertyTextures)) {
     primitive.propertyTextureIds = structuralMetadataExtension.propertyTextures;
+  }
+
+  // Property Attributes
+  if (defined(structuralMetadataExtension.propertyAttributes)) {
+    primitive.propertyAttributeIds =
+      structuralMetadataExtension.propertyAttributes;
   }
 }
 
@@ -1243,8 +1254,11 @@ function loadInstanceFeatures(instances, instanceFeaturesExtension) {
     if (defined(featureIds.attribute)) {
       featureIdComponent = loadFeatureIdAttribute(featureIds);
     } else {
-      featureIdComponent = loadFeatureIdImplicitRange(featureIds);
+      // in EXT_instance_features, the default is to assign IDs by instance
+      // ID. This can be expressed with offset: 0, repeat: 1
+      featureIdComponent = loadDefaultFeatureIds(featureIds);
     }
+
     instances.featureIds.push(featureIdComponent);
   }
 }
