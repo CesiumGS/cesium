@@ -70,6 +70,8 @@ export default function Implicit3DTileContent(
   this._resource = resource;
   this._readyPromise = when.defer();
 
+  this._metadata = undefined;
+
   this.featurePropertiesDirty = false;
   this._groupMetadata = undefined;
 
@@ -148,6 +150,15 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
   url: {
     get: function () {
       return this._url;
+    },
+  },
+
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
     },
   },
 
@@ -424,6 +435,12 @@ function deriveChildTile(
     contentBounds = boundingVolumeSemantics.content;
   }
 
+  // Content is not loaded at this point, so this flag is set for future reference.
+  const contentPropertyTableJsons = subtree._contentPropertyTableJsons;
+  const hasImplicitContentMetadata =
+    subtree.contentIsAvailableAtCoordinates(implicitCoordinates, 0) &&
+    contentPropertyTableJsons.length > 0;
+
   const boundingVolume = getTileBoundingVolume(
     implicitTileset,
     implicitCoordinates,
@@ -496,9 +513,11 @@ function deriveChildTile(
     combinedTileJson,
     parentTile
   );
+
   childTile.implicitCoordinates = implicitCoordinates;
   childTile.implicitSubtree = subtree;
   childTile.metadata = tileMetadata;
+  childTile.hasImplicitContentMetadata = hasImplicitContentMetadata;
 
   return childTile;
 }

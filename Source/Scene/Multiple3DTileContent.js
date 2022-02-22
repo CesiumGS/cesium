@@ -219,6 +219,21 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
 
   /**
    * Part of the {@link Cesium3DTileContent} interface. <code>Multiple3DTileContent</code>
+   * always returns <code>undefined</code>.  Instead call <code>metadata</code> for a specific inner content.
+   * @memberof Multiple3DTileContent.prototype
+   * @private
+   */
+  metadata: {
+    get: function () {
+      return undefined;
+    },
+    set: function () {
+      throw new DeveloperError("Multiple3DTileContent cannot have metadata");
+    },
+  },
+
+  /**
+   * Part of the {@link Cesium3DTileContent} interface. <code>Multiple3DTileContent</code>
    * always returns <code>undefined</code>.  Instead call <code>batchTable</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
    * @private
@@ -500,28 +515,31 @@ function createInnerContent(multipleContents, arrayBuffer, index) {
 
   const tileset = multipleContents._tileset;
   const resource = multipleContents._innerContentResources[index];
+  const tile = multipleContents._tile;
 
   let content;
   const contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
   if (defined(preprocessed.binaryPayload)) {
     content = contentFactory(
       tileset,
-      multipleContents._tile,
+      tile,
       resource,
       preprocessed.binaryPayload.buffer,
       0
     );
   } else {
     // JSON formats
-    content = contentFactory(
-      tileset,
-      multipleContents._tile,
-      resource,
-      preprocessed.jsonPayload
-    );
+    content = contentFactory(tileset, tile, resource, preprocessed.jsonPayload);
   }
 
   const contentHeader = multipleContents._innerContentHeaders[index];
+
+  if (tile.hasImplicitContentMetadata) {
+    const subtree = tile.implicitSubtree;
+    const coordinates = tile.implicitCoordinates;
+    content.metadata = subtree.getContentMetadataView(coordinates, index);
+  }
+
   content.groupMetadata = findGroupMetadata(tileset, contentHeader);
   return content;
 }

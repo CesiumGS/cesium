@@ -31,6 +31,8 @@ function Composite3DTileContent(
   this._resource = resource;
   this._contents = [];
   this._readyPromise = when.defer();
+
+  this._metadata = undefined;
   this._groupMetadata = undefined;
 
   initialize(this, arrayBuffer, byteOffset, factory);
@@ -151,6 +153,15 @@ Object.defineProperties(Composite3DTileContent.prototype, {
   url: {
     get: function () {
       return this._resource.getUrlComponent(true);
+    },
+  },
+
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
     },
   },
 

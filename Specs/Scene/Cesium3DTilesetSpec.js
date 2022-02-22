@@ -5522,8 +5522,7 @@ describe(
           const tiles = [transcodedRoot].concat(transcodedRoot.children);
           expect(tiles.length).toBe(tileCount);
 
-          // TODO
-          /*
+          /* TODO: rewrite test to not use getTileEntityId
           let i;
           for (i = 0; i < tileCount; i++) {
             const tile = tiles[i];

@@ -25,14 +25,15 @@
               }
             }
           },
-          "content": {
+          "building": {
             "properties": {
-              "author": {
-                "componentType": "STRING"
+              "height": {
+                "componentType": "UINT16",
+                "semantic": "_BUILDING_HEIGHT"
               },
-              "credits" : {
-                "type": "ARRAY",
-                "componentType": "STRING"
+              "color" : {
+                "type": "VEC3",
+                "componentType": "UINT8"
               }
             }
           }

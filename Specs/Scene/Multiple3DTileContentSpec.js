@@ -365,6 +365,28 @@ describe(
           expect(groupMetadata.getProperty("isInstanced")).toBe(true);
         });
       });
+
+      it("content metadata returns undefined", function () {
+        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
+          function (tileset) {
+            const content = tileset.root.content;
+            expect(content.metadata).not.toBeDefined();
+          }
+        );
+      });
+
+      it("assigning content metadata throws", function () {
+        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
+          function (tileset) {
+            expect(function () {
+              const content = tileset.root.content;
+              content.groupMetadata = groupMetadata;
+            }).toThrowDeveloperError();
+          }
+        );
+      });
+
+      // TODO: test retrieving multiple content metadata
     });
   },
   "WebGL"

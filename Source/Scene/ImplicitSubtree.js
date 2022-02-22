@@ -71,7 +71,7 @@ export default function ImplicitSubtree(
   this._tilePropertyTableJson = undefined;
 
   this._contentMetadataTables = undefined;
-  this._contentPropertyTableJsons = undefined;
+  this._contentPropertyTableJsons = [];
 
   // Jump buffers are maps of availability bit index to entity ID
   this._tileJumpBuffer = undefined;
@@ -340,7 +340,10 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
     tilePropertyTableJson = subtreeJson.tileMetadata;
   }
 
-  const contentPropertyTableJsons = subtreeJson.contentMetadata;
+  const contentPropertyTableJsons = defaultValue(
+    subtreeJson.contentMetadata,
+    []
+  );
 
   let metadata;
   const schema = implicitTileset.metadataSchema;
@@ -395,14 +398,9 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
     markActiveMetadataBufferViews(tilePropertyTableJson, bufferViewHeaders);
   }
 
-  if (defined(contentPropertyTableJsons)) {
-    for (let i = 0; i < contentPropertyTableJsons.length; i++) {
-      const contentPropertyTableJson = contentPropertyTableJsons[i];
-      markActiveMetadataBufferViews(
-        contentPropertyTableJson,
-        bufferViewHeaders
-      );
-    }
+  for (let i = 0; i < contentPropertyTableJsons.length; i++) {
+    const contentPropertyTableJson = contentPropertyTableJsons[i];
+    markActiveMetadataBufferViews(contentPropertyTableJson, bufferViewHeaders);
   }
 
   requestActiveBuffers(subtree, bufferHeaders, chunks.binary)
@@ -418,10 +416,8 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
         makeTileJumpBuffer(subtree);
       }
 
-      if (defined(contentPropertyTableJsons)) {
-        parseContentMetadataTables(subtree, implicitTileset, bufferViewsU8);
-        makeContentJumpBuffers(subtree);
-      }
+      parseContentMetadataTables(subtree, implicitTileset, bufferViewsU8);
+      makeContentJumpBuffers(subtree);
 
       subtree._readyPromise.resolve(subtree);
     })
@@ -1106,6 +1102,7 @@ ImplicitSubtree.prototype.getContentMetadataView = function (
     class: metadataTable.class,
     metadataTable: metadataTable,
     entityId: entityId,
+    contentIndex: contentIndex,
     propertyTableJson: propertyTableJson,
   });
 };
