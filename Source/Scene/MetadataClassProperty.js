@@ -426,7 +426,7 @@ function parseType(property, enums) {
     arrayLength = property.count;
     isVariableLengthArray = !defined(property.count);
   } else {
-    // Could be either extension. Some cases are impossible to distinguished
+    // Could be either extension. Some cases are impossible to distinguish
     // Default to a single value
     isArray = false;
     arrayLength = undefined;
