@@ -1586,6 +1586,46 @@ describe("Scene/MetadataClassProperty", function () {
     }
   });
 
+  it("validate returns error message for non-finite values", function () {
+    if (!FeatureDetection.supportsBigInt()) {
+      return;
+    }
+
+    const nonFiniteValues = [
+      NaN,
+      Number.POSITIVE_INFINITY,
+      Number.NEGATIVE_INFINITY,
+    ];
+    const types = [
+      "INT8",
+      "UINT8",
+      "INT16",
+      "UINT16",
+      "INT32",
+      "UINT32",
+      "INT64",
+      "UINT64",
+      "FLOAT32",
+      "FLOAT64",
+    ];
+
+    for (let i = 0; i < types.length; i++) {
+      const type = types[i];
+      const property = new MetadataClassProperty({
+        id: "property",
+        property: {
+          type: "SCALAR",
+          componentType: type,
+        },
+      });
+      for (let i = 0; i < nonFiniteValues.length; ++i) {
+        expect(property.validate(nonFiniteValues[i])).toBe(
+          `value ${nonFiniteValues[i]} of type ${type} must be finite`
+        );
+      }
+    }
+  });
+
   it("validate returns error message if component value is out of range", function () {
     if (!FeatureDetection.supportsBigInt()) {
       return;

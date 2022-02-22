@@ -754,8 +754,13 @@ function validateScalar(value, componentType, normalized) {
     case MetadataComponentType.UINT16:
     case MetadataComponentType.INT32:
     case MetadataComponentType.UINT32:
+    case MetadataComponentType.FLOAT32:
+    case MetadataComponentType.FLOAT64:
       if (javascriptType !== "number") {
         return getTypeErrorMessage(value, componentType);
+      }
+      if (!isFinite(value)) {
+        return getNonFiniteErrorMessage(value, componentType);
       }
       return checkInRange(value, componentType, normalized);
     case MetadataComponentType.INT64:
@@ -763,23 +768,10 @@ function validateScalar(value, componentType, normalized) {
       if (javascriptType !== "number" && javascriptType !== "bigint") {
         return getTypeErrorMessage(value, componentType);
       }
+      if (javascriptType === "number" && !isFinite(value)) {
+        return getNonFiniteErrorMessage(value, componentType);
+      }
       return checkInRange(value, componentType, normalized);
-    case MetadataComponentType.FLOAT32:
-      if (javascriptType !== "number") {
-        return getTypeErrorMessage(value, componentType);
-      }
-      if (isFinite(value)) {
-        return checkInRange(value, componentType, normalized);
-      }
-      return getNonFiniteErrorMessage(value, componentType);
-    case MetadataComponentType.FLOAT64:
-      if (javascriptType !== "number") {
-        return getTypeErrorMessage(value, componentType);
-      }
-      if (isFinite(value)) {
-        return checkInRange(value, componentType, normalized);
-      }
-      return getNonFiniteErrorMessage(value, componentType);
   }
 }
 
