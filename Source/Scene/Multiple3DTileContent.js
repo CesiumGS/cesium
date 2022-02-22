@@ -228,7 +228,9 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
       return undefined;
     },
     set: function () {
+      //>>includeStart('debug', pragmas.debug);
       throw new DeveloperError("Multiple3DTileContent cannot have metadata");
+      //>>includeEnd('debug');
     },
   },
 
@@ -255,9 +257,11 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
       return undefined;
     },
     set: function () {
+      //>>includeStart('debug', pragmas.debug);
       throw new DeveloperError(
         "Multiple3DTileContent cannot have group metadata"
       );
+      //>>includeEnd('debug');
     },
   },
 

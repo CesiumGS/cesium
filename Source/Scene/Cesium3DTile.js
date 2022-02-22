@@ -278,9 +278,10 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.hasImplicitContent = false;
 
   /**
-   * When <code>true</code>, the tile's content is an implicit tileset with metadata.
+   * When <code>true</code>, the tile contains content metadata from implicit tiling. This flag is set
+   * for tiles transcoded by <code>Implicit3DTileContent</code>.
    * <p>
-   * This is <code>false</code> until the tile's implicit content is loaded.
+   * This is <code>false</code> until the tile's content is loaded.
    * </p>
    *
    * @type {Boolean}

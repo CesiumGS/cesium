@@ -230,7 +230,7 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
    * not part of the public Cesium API.
    * </p>
    *
-   * @type {ImplicitMetadataTableView|undefined}
+   * @type {ImplicitMetadataView|undefined}
    *
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.

@@ -4,7 +4,7 @@ import {
   HeadingPitchRange,
   MetadataClass,
   GroupMetadata,
-  ImplicitMetadataTableView,
+  ImplicitMetadataView,
 } from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
@@ -185,7 +185,7 @@ describe(
         );
       });
 
-      const metadata = new ImplicitMetadataTableView({
+      const metadata = new ImplicitMetadataView({
         metadataTable: {},
         class: {},
         entityId: 0,

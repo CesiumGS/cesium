@@ -153,12 +153,20 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
     },
   },
 
+  /**
+   * Part of the {@link Cesium3DTileContent} interface. <code>Implicit3DTileContent</code>
+   * always returns <code>undefined</code>. Only transcoded tiles have content metadata.
+   * @memberof Implicit3DTileContent.prototype
+   * @private
+   */
   metadata: {
     get: function () {
-      return this._metadata;
+      return undefined;
     },
-    set: function (value) {
-      this._metadata = value;
+    set: function () {
+      //>>includeStart('debug', pragmas.debug);
+      throw new DeveloperError("Implicit3DTileContent cannot have metadata");
+      //>>includeEnd('debug');
     },
   },
 
@@ -436,10 +444,15 @@ function deriveChildTile(
   }
 
   // Content is not loaded at this point, so this flag is set for future reference.
-  const contentPropertyTableJsons = subtree._contentPropertyTableJsons;
-  const hasImplicitContentMetadata =
-    subtree.contentIsAvailableAtCoordinates(implicitCoordinates, 0) &&
-    contentPropertyTableJsons.length > 0;
+  const contentPropertyTableJsons = subtree.contentPropertyTableJsons;
+  const length = contentPropertyTableJsons.length;
+  let hasImplicitContentMetadata = false;
+  for (let i = 0; i < length; i++) {
+    if (subtree.contentIsAvailableAtCoordinates(implicitCoordinates, i)) {
+      hasImplicitContentMetadata = true;
+      break;
+    }
+  }
 
   const boundingVolume = getTileBoundingVolume(
     implicitTileset,

@@ -18,7 +18,6 @@ import {
   Resource,
   TileBoundingSphere,
   TileBoundingS2Cell,
-  ImplicitMetadataTableView,
 } from "../../Source/Cesium.js";
 import CesiumMath from "../../Source/Core/Math.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
@@ -1148,42 +1147,16 @@ describe(
         });
       });
 
-      const contentMetadataClass = new MetadataClass({
-        id: "building",
-        class: {
-          properties: {
-            height: {
-              componentType: "UINT16",
-            },
-            color: {
-              type: "VEC3",
-              componentType: "UINT8",
-            },
-          },
-        },
-      });
-
-      it("assigns content metadata", function () {
+      it("assigning content metadata throws", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitContentMetadataUrl
         ).then(function (tileset) {
-          const placeholderTile = tileset.root;
-          const tile = placeholderTile.children[0];
-          const content = tile.content;
-
-          const subtree = tile.implicitSubtree;
-
-          const metadataView = new ImplicitMetadataTableView({
-            metadataTable: subtree.contentMetadataTables[0],
-            class: contentMetadataClass,
-            entityId: 1,
-            contentIndex: 0,
-            propertyTableJson: subtree.contentPropertyTableJsons[0],
-          });
-
-          content.metadata = metadataView;
-          expect(content.metadata).toBe(metadataView);
+          expect(function () {
+            const placeholderTile = tileset.root;
+            const content = placeholderTile.content;
+            content.metadata = {};
+          }).toThrowDeveloperError();
         });
       });
 

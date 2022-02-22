@@ -19,7 +19,7 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
   });
 
   it("works if no semantics are present", function () {
-    // Note: TileMetadata is used in unit tests instead of ImplicitMetadataTableView
+    // Note: TileMetadata is used in unit tests instead of ImplicitMetadataView
     // as the former is more straightforward to construct
     const emptyMetadata = new TileMetadata({
       tile: {

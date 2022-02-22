@@ -3,14 +3,14 @@ import {
   ImplicitSubtree,
   ImplicitTileCoordinates,
   ImplicitTileset,
-  ImplicitMetadataTableView,
+  ImplicitMetadataView,
   MetadataClass,
   MetadataSchema,
   Resource,
 } from "../../Source/Cesium.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
 
-describe("Scene/ImplicitMetadataTableView", function () {
+describe("Scene/ImplicitMetadataView", function () {
   const highlightColors = [
     [255, 0, 0],
     [255, 255, 0],
@@ -230,21 +230,21 @@ describe("Scene/ImplicitMetadataTableView", function () {
   let secondTreeView;
 
   beforeEach(function () {
-    tileView = new ImplicitMetadataTableView({
+    tileView = new ImplicitMetadataView({
       metadataTable: subtree.tileMetadataTable,
       class: tileClass,
       entityId: 0,
       propertyTableJson: emptyJson,
     });
 
-    secondTileView = new ImplicitMetadataTableView({
+    secondTileView = new ImplicitMetadataView({
       metadataTable: subtree.tileMetadataTable,
       class: tileClass,
       entityId: 1,
       propertyTableJson: emptyJson,
     });
 
-    buildingView = new ImplicitMetadataTableView({
+    buildingView = new ImplicitMetadataView({
       metadataTable: subtree.contentMetadataTables[0],
       class: buildingClass,
       entityId: 0,
@@ -252,7 +252,7 @@ describe("Scene/ImplicitMetadataTableView", function () {
       propertyTableJson: emptyJson,
     });
 
-    secondBuildingView = new ImplicitMetadataTableView({
+    secondBuildingView = new ImplicitMetadataView({
       metadataTable: subtree.contentMetadataTables[0],
       class: buildingClass,
       entityId: 1,
@@ -260,7 +260,7 @@ describe("Scene/ImplicitMetadataTableView", function () {
       propertyTableJson: emptyJson,
     });
 
-    treeView = new ImplicitMetadataTableView({
+    treeView = new ImplicitMetadataView({
       metadataTable: subtree.contentMetadataTables[1],
       class: treeClass,
       entityId: 0,
@@ -268,7 +268,7 @@ describe("Scene/ImplicitMetadataTableView", function () {
       propertyTableJson: emptyJson,
     });
 
-    secondTreeView = new ImplicitMetadataTableView({
+    secondTreeView = new ImplicitMetadataView({
       metadataTable: subtree.contentMetadataTables[1],
       class: treeClass,
       entityId: 1,
@@ -279,7 +279,7 @@ describe("Scene/ImplicitMetadataTableView", function () {
 
   it("throws without metadataTable", function () {
     expect(function () {
-      tileView = new ImplicitMetadataTableView({
+      tileView = new ImplicitMetadataView({
         metadataTable: undefined,
         class: tileClass,
         entityId: 0,
@@ -290,7 +290,7 @@ describe("Scene/ImplicitMetadataTableView", function () {
 
   it("throws without class", function () {
     expect(function () {
-      tileView = new ImplicitMetadataTableView({
+      tileView = new ImplicitMetadataView({
         metadataTable: subtree.tileMetadataTable,
         class: undefined,
         entityId: 0,
@@ -301,7 +301,7 @@ describe("Scene/ImplicitMetadataTableView", function () {
 
   it("throws without entityId", function () {
     expect(function () {
-      tileView = new ImplicitMetadataTableView({
+      tileView = new ImplicitMetadataView({
         metadataTable: subtree.tileMetadataTable,
         class: tileClass,
         entityId: undefined,
@@ -312,7 +312,7 @@ describe("Scene/ImplicitMetadataTableView", function () {
 
   it("throws without propertyTableJson", function () {
     expect(function () {
-      tileView = new ImplicitMetadataTableView({
+      tileView = new ImplicitMetadataView({
         metadataTable: subtree.tileMetadataTable,
         class: tileClass,
         entityId: 0,
@@ -321,20 +321,8 @@ describe("Scene/ImplicitMetadataTableView", function () {
     }).toThrowDeveloperError();
   });
 
-  it("throws with invalid contentIndex", function () {
-    expect(function () {
-      buildingView = new ImplicitMetadataTableView({
-        metadataTable: subtree.tileMetadataTable,
-        class: buildingClass,
-        entityId: 0,
-        contentIndex: "invalid",
-        propertyTableJson: emptyJson,
-      });
-    }).toThrowDeveloperError();
-  });
-
   it("creates tile metadata table view", function () {
-    tileView = new ImplicitMetadataTableView({
+    tileView = new ImplicitMetadataView({
       metadataTable: subtree.tileMetadataTable,
       class: tileClass,
       entityId: 0,
@@ -344,35 +332,30 @@ describe("Scene/ImplicitMetadataTableView", function () {
     expect(tileView.class).toBe(tileClass);
     expect(tileView.extras).toBe(undefined);
     expect(tileView.extensions).toBe(undefined);
-    expect(tileView._contentIndex).toEqual(0);
   });
 
   it("creates content metadata table views", function () {
-    buildingView = new ImplicitMetadataTableView({
+    buildingView = new ImplicitMetadataView({
       metadataTable: subtree.contentMetadataTables[0],
       class: buildingClass,
       entityId: 0,
-      contentIndex: 1,
       propertyTableJson: emptyJson,
     });
 
     expect(buildingView.class).toBe(buildingClass);
     expect(buildingView.extras).toBe(undefined);
     expect(buildingView.extensions).toBe(undefined);
-    expect(buildingView._contentIndex).toEqual(1);
 
-    treeView = new ImplicitMetadataTableView({
+    treeView = new ImplicitMetadataView({
       metadataTable: subtree.contentMetadataTables[1],
       class: treeClass,
       entityId: 0,
-      contentIndex: 1,
       propertyTableJson: emptyJson,
     });
 
     expect(treeView.class).toBe(treeClass);
     expect(treeView.extras).toBe(undefined);
     expect(treeView.extensions).toBe(undefined);
-    expect(treeView._contentIndex).toEqual(1);
   });
 
   it("hasProperty returns true if the metadata table has this property", function () {

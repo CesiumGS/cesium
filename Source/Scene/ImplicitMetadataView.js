@@ -2,8 +2,8 @@ import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 
 /**
- * Metadata about a tile or content in an implicit subtree from the
- * <code>3DTILES_implicit_tiling</code> extension.
+ * This class represents a single entity in the <code>MetadataTable</code> owned by an implicit subtree from the
+ * <code>3DTILES_implicit_tiling</code> extension. The entity is specified by the entityId.
  * <p>
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
@@ -11,28 +11,25 @@ import defaultValue from "../Core/defaultValue.js";
  * @param {MetadataTable} options.metadataTable The metadata table.
  * @param {MetadataClass} options.class The class that the metadata conforms to.
  * @param {Number} options.entityId The ID of the entity the metadata belongs to.
- * @param {Number} [options.contentIndex = 0] The index of the content metadata, in the case of multiple contents.
  * @param {Object} options.propertyTableJson The JSON that contains the property table of the entity.
  *
- * @alias ImplicitMetadataTableView
+ * @alias ImplicitMetadataView
  * @constructor
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function ImplicitMetadataTableView(options) {
+export default function ImplicitMetadataView(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const metadataTable = options.metadataTable;
   const metadataClass = options.class;
   const entityId = options.entityId;
-  const contentIndex = defaultValue(options.contentIndex, 0);
   const propertyTableJson = options.propertyTableJson;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.metadataTable", metadataTable);
   Check.typeOf.object("options.class", metadataClass);
   Check.typeOf.number("options.entityId", entityId);
-  Check.typeOf.number("options.contentIndex", contentIndex);
   Check.typeOf.object("options.propertyTableJson", propertyTableJson);
 
   //>>includeEnd('debug');
@@ -40,17 +37,16 @@ export default function ImplicitMetadataTableView(options) {
   this._class = metadataClass;
   this._metadataTable = metadataTable;
   this._entityId = entityId;
-  this._contentIndex = contentIndex;
 
   this._extensions = propertyTableJson.extensions;
   this._extras = propertyTableJson.extras;
 }
 
-Object.defineProperties(ImplicitMetadataTableView.prototype, {
+Object.defineProperties(ImplicitMetadataView.prototype, {
   /**
    * The class that properties conform to.
    *
-   * @memberof ImplicitMetadataTableView.prototype
+   * @memberof ImplicitMetadataView.prototype
    * @type {MetadataClass}
    * @readonly
    */
@@ -63,7 +59,7 @@ Object.defineProperties(ImplicitMetadataTableView.prototype, {
   /**
    * Extras in the JSON object.
    *
-   * @memberof ImplicitMetadataTableView.prototype
+   * @memberof ImplicitMetadataView.prototype
    * @type {Object}
    * @readonly
    */
@@ -76,7 +72,7 @@ Object.defineProperties(ImplicitMetadataTableView.prototype, {
   /**
    * Extensions in the JSON object.
    *
-   * @memberof ImplicitMetadataTableView.prototype
+   * @memberof ImplicitMetadataView.prototype
    * @type {Object}
    * @readonly
    */
@@ -94,7 +90,7 @@ Object.defineProperties(ImplicitMetadataTableView.prototype, {
  * @returns {Boolean} Whether the tile has this property.
  * @private
  */
-ImplicitMetadataTableView.prototype.hasProperty = function (propertyId) {
+ImplicitMetadataView.prototype.hasProperty = function (propertyId) {
   return this._metadataTable.hasProperty(propertyId);
 };
 
@@ -105,20 +101,18 @@ ImplicitMetadataTableView.prototype.hasProperty = function (propertyId) {
  * @returns {Boolean} Whether the tile has a property with the given semantic.
  * @private
  */
-ImplicitMetadataTableView.prototype.hasPropertyBySemantic = function (
-  semantic
-) {
+ImplicitMetadataView.prototype.hasPropertyBySemantic = function (semantic) {
   return this._metadataTable.hasPropertyBySemantic(semantic);
 };
 
 /**
- * Returns an array of property IDs in the metadata able.
+ * Returns an array of property IDs in the metadata table.
  *
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
  * @private
  */
-ImplicitMetadataTableView.prototype.getPropertyIds = function (results) {
+ImplicitMetadataView.prototype.getPropertyIds = function (results) {
   return this._metadataTable.getPropertyIds(results);
 };
 
@@ -132,7 +126,7 @@ ImplicitMetadataTableView.prototype.getPropertyIds = function (results) {
  * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this property.
  * @private
  */
-ImplicitMetadataTableView.prototype.getProperty = function (propertyId) {
+ImplicitMetadataView.prototype.getProperty = function (propertyId) {
   return this._metadataTable.getProperty(this._entityId, propertyId);
 };
 
@@ -147,7 +141,7 @@ ImplicitMetadataTableView.prototype.getProperty = function (propertyId) {
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  * @private
  */
-ImplicitMetadataTableView.prototype.setProperty = function (propertyId, value) {
+ImplicitMetadataView.prototype.setProperty = function (propertyId, value) {
   return this._metadataTable.setProperty(this._entityId, propertyId, value);
 };
 
@@ -158,9 +152,7 @@ ImplicitMetadataTableView.prototype.setProperty = function (propertyId, value) {
  * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this semantic.
  * @private
  */
-ImplicitMetadataTableView.prototype.getPropertyBySemantic = function (
-  semantic
-) {
+ImplicitMetadataView.prototype.getPropertyBySemantic = function (semantic) {
   return this._metadataTable.getPropertyBySemantic(this._entityId, semantic);
 };
 
@@ -173,7 +165,7 @@ ImplicitMetadataTableView.prototype.getPropertyBySemantic = function (
  * @private
  */
 
-ImplicitMetadataTableView.prototype.setPropertyBySemantic = function (
+ImplicitMetadataView.prototype.setPropertyBySemantic = function (
   semantic,
   value
 ) {
