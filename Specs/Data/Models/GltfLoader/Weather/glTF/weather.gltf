@@ -3,10 +3,11 @@
     "version": "2.0"
   },
   "extensionsUsed": [
-    "EXT_mesh_features"
+    "EXT_mesh_features",
+    "EXT_structural_metadata"
   ],
   "extensions": {
-    "EXT_mesh_features": {
+    "EXT_structural_metadata": {
       "schema": {
         "classes": {
           "weather": {
@@ -14,10 +15,12 @@
             "properties": {
               "airTemperature": {
                 "name": "Air Temperature",
+                "type": "SCALAR",
                 "componentType": "FLOAT32"
               },
               "airPressure": {
                 "name": "Air Pressure",
+                "type": "SCALAR",
                 "componentType": "FLOAT32"
               },
               "windVelocity": {
@@ -32,10 +35,11 @@
             "properties": {
               "name": {
                 "name": "Name",
-                "componentType": "STRING"
+                "type": "STRING"
               },
               "population": {
                 "name": "Population",
+                "type": "SCALAR",
                 "componentType": "UINT16"
               }
             }

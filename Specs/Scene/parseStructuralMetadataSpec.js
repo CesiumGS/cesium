@@ -1,6 +1,6 @@
 import {
   MetadataSchema,
-  parseFeatureMetadata,
+  parseStructuralMetadata,
   PixelDatatype,
   PixelFormat,
   Texture,
@@ -9,16 +9,17 @@ import createContext from "../createContext.js";
 import MetadataTester from "../MetadataTester.js";
 
 describe(
-  "Scene/parseFeatureMetadata",
+  "Scene/parseStructuralMetadata",
   function () {
     const propertyTablesSchema = {
       classes: {
         building: {
           properties: {
             name: {
-              componentType: "STRING",
+              type: "STRING",
             },
             height: {
+              type: "SCALAR",
               componentType: "FLOAT64",
             },
           },
@@ -26,7 +27,7 @@ describe(
         tree: {
           properties: {
             species: {
-              componentType: "STRING",
+              type: "STRING",
             },
           },
         },
@@ -38,11 +39,13 @@ describe(
         map: {
           properties: {
             color: {
-              type: "ARRAY",
+              type: "SCALAR",
               componentType: "UINT8",
-              componentCount: 3,
+              array: true,
+              count: 3,
             },
             intensity: {
+              type: "SCALAR",
               componentType: "UINT8",
             },
           },
@@ -50,6 +53,7 @@ describe(
         ortho: {
           properties: {
             vegetation: {
+              type: "SCALAR",
               componentType: "UINT8",
               normalized: true,
             },
@@ -60,7 +64,7 @@ describe(
 
     it("throws without extension", function () {
       expect(function () {
-        return parseFeatureMetadata({
+        return parseStructuralMetadata({
           extension: undefined,
           schema: new MetadataSchema(propertyTablesSchema),
         });
@@ -69,7 +73,7 @@ describe(
 
     it("throws without schema", function () {
       expect(function () {
-        return parseFeatureMetadata({
+        return parseStructuralMetadata({
           extension: {},
           schema: undefined,
         });
@@ -77,7 +81,7 @@ describe(
     });
 
     it("parses extension with default values", function () {
-      const metadata = parseFeatureMetadata({
+      const metadata = parseStructuralMetadata({
         extension: {},
         schema: new MetadataSchema(propertyTablesSchema),
       });
@@ -119,7 +123,7 @@ describe(
         propertyTables: propertyTableResults.propertyTables,
       };
 
-      const metadata = parseFeatureMetadata({
+      const metadata = parseStructuralMetadata({
         extension: extension,
         schema: new MetadataSchema(propertyTablesSchema),
         bufferViews: propertyTableResults.bufferViews,
@@ -189,26 +193,34 @@ describe(
           {
             name: "Map",
             class: "map",
-            index: 0,
-            texCoord: 0,
             properties: {
-              color: [0, 1, 2],
-              intensity: [3],
+              color: {
+                index: 0,
+                texCoord: 0,
+                channels: [0, 1, 2],
+              },
+              intensity: {
+                index: 0,
+                texCoord: 0,
+                channels: [3],
+              },
             },
           },
           {
             name: "Ortho",
             class: "ortho",
-            index: 1,
-            texCoord: 1,
             properties: {
-              vegetation: [0],
+              vegetation: {
+                index: 1,
+                texCoord: 1,
+                channels: [0],
+              },
             },
           },
         ],
       };
 
-      const metadata = parseFeatureMetadata({
+      const metadata = parseStructuralMetadata({
         extension: extension,
         schema: new MetadataSchema(featureTexturesSchema),
         textures: textures,
@@ -252,7 +264,7 @@ describe(
       const extension = {
         statistics: statistics,
       };
-      const metadata = parseFeatureMetadata({
+      const metadata = parseStructuralMetadata({
         extension: extension,
         schema: new MetadataSchema(featureTexturesSchema),
       });
@@ -266,7 +278,7 @@ describe(
       const extension = {
         extras: extras,
       };
-      const metadata = parseFeatureMetadata({
+      const metadata = parseStructuralMetadata({
         extension: extension,
         schema: new MetadataSchema(featureTexturesSchema),
       });
@@ -280,7 +292,7 @@ describe(
       const extension = {
         extensions: extensions,
       };
-      const metadata = parseFeatureMetadata({
+      const metadata = parseStructuralMetadata({
         extension: extension,
         schema: new MetadataSchema(featureTexturesSchema),
       });

@@ -37,7 +37,7 @@ describe("Scene/ImplicitMetadataView", function () {
     class: "building",
     properties: {
       height: buildingHeights,
-      type: buildingTypes,
+      buildingType: buildingTypes,
     },
   };
 
@@ -63,6 +63,7 @@ describe("Scene/ImplicitMetadataView", function () {
             semantic: "_HIGHLIGHT_COLOR",
           },
           buildingCount: {
+            type: "SCALAR",
             componentType: "UINT16",
           },
         },
@@ -70,11 +71,12 @@ describe("Scene/ImplicitMetadataView", function () {
       building: {
         properties: {
           height: {
+            type: "SCALAR",
             componentType: "UINT16",
             semantic: "_HEIGHT",
           },
-          type: {
-            componentType: "STRING",
+          buildingType: {
+            type: "STRING",
             semantic: "_BUILDING_TYPE",
           },
         },
@@ -82,11 +84,12 @@ describe("Scene/ImplicitMetadataView", function () {
       tree: {
         properties: {
           height: {
+            type: "SCALAR",
             componentType: "UINT16",
             semantic: "_HEIGHT",
           },
           species: {
-            componentType: "STRING",
+            type: "STRING",
             semantic: "_TREE_SPECIES",
           },
         },
@@ -367,7 +370,7 @@ describe("Scene/ImplicitMetadataView", function () {
   it("hasProperty returns false if the metadata table does not have this property", function () {
     expect(tileView.hasProperty("height")).toBe(false);
     expect(buildingView.hasProperty("buildingCount")).toBe(false);
-    expect(treeView.hasProperty("type")).toBe(false);
+    expect(treeView.hasProperty("buildingType")).toBe(false);
   });
 
   it("hasPropertyBySemantic returns true if the metadata table has a property with the given semantic", function () {
@@ -391,7 +394,7 @@ describe("Scene/ImplicitMetadataView", function () {
   it("getPropertyIds returns different property IDs for different content metadata tables", function () {
     const buildingPropertyIds = buildingView.getPropertyIds([]);
     buildingPropertyIds.sort();
-    expect(buildingPropertyIds).toEqual(["height", "type"]);
+    expect(buildingPropertyIds).toEqual(["buildingType", "height"]);
 
     const treePropertyIds = treeView.getPropertyIds([]);
     treePropertyIds.sort();
@@ -401,7 +404,7 @@ describe("Scene/ImplicitMetadataView", function () {
   it("getProperty returns undefined if a property does not exist for the metadata table", function () {
     expect(tileView.getProperty("height")).not.toBeDefined();
     expect(buildingView.getProperty("species")).not.toBeDefined();
-    expect(treeView.getProperty("type")).not.toBeDefined();
+    expect(treeView.getProperty("buildingType")).not.toBeDefined();
   });
 
   it("getProperty returns the property value for the metadata table", function () {
@@ -411,7 +414,7 @@ describe("Scene/ImplicitMetadataView", function () {
     expect(tileView.getProperty("buildingCount")).toBe(100);
 
     expect(buildingView.getProperty("height")).toEqual(20);
-    expect(buildingView.getProperty("type")).toBe("Residential");
+    expect(buildingView.getProperty("buildingType")).toBe("Residential");
 
     expect(treeView.getProperty("height")).toEqual(3);
     expect(treeView.getProperty("species")).toBe("Oak");
@@ -425,8 +428,8 @@ describe("Scene/ImplicitMetadataView", function () {
       new Cartesian3(255, 255, 0)
     );
 
-    expect(buildingView.getProperty("type")).toEqual("Residential");
-    expect(secondBuildingView.getProperty("type")).toBe("Commercial");
+    expect(buildingView.getProperty("buildingType")).toEqual("Residential");
+    expect(secondBuildingView.getProperty("buildingType")).toBe("Commercial");
 
     expect(treeView.getProperty("species")).toEqual("Oak");
     expect(secondTreeView.getProperty("species")).toBe("Pine");
@@ -440,7 +443,7 @@ describe("Scene/ImplicitMetadataView", function () {
   it("setProperty does not create property if it doesn't exist", function () {
     expect(tileView.setProperty("height", 10)).toBe(false);
     expect(buildingView.setProperty("buildingCount", 10)).toBe(false);
-    expect(treeView.setProperty("type", "Other")).toBe(false);
+    expect(treeView.setProperty("buildingType", "Other")).toBe(false);
   });
 
   it("setProperty sets property value", function () {
@@ -448,9 +451,9 @@ describe("Scene/ImplicitMetadataView", function () {
     expect(tileView.setProperty("buildingCount", 400)).toBe(true);
     expect(tileView.getProperty("buildingCount")).toBe(400);
 
-    expect(buildingView.getProperty("type")).toBe("Residential");
-    expect(buildingView.setProperty("type", "Commercial")).toBe(true);
-    expect(buildingView.getProperty("type")).toBe("Commercial");
+    expect(buildingView.getProperty("buildingType")).toBe("Residential");
+    expect(buildingView.setProperty("buildingType", "Commercial")).toBe(true);
+    expect(buildingView.getProperty("buildingType")).toBe("Commercial");
 
     expect(treeView.getProperty("species")).toBe("Oak");
     expect(treeView.setProperty("species", "Chestnut")).toBe(true);
@@ -460,8 +463,8 @@ describe("Scene/ImplicitMetadataView", function () {
     expect(tileView.setProperty("buildingCount", 100)).toBe(true);
     expect(tileView.getProperty("buildingCount")).toBe(100);
 
-    expect(buildingView.setProperty("type", "Residential")).toBe(true);
-    expect(buildingView.getProperty("type")).toBe("Residential");
+    expect(buildingView.setProperty("buildingType", "Residential")).toBe(true);
+    expect(buildingView.getProperty("buildingType")).toBe("Residential");
 
     expect(treeView.setProperty("species", "Oak")).toBe(true);
     expect(treeView.getProperty("species")).toBe("Oak");
@@ -490,10 +493,10 @@ describe("Scene/ImplicitMetadataView", function () {
     expect(tileView.getProperty("buildingCount")).toBe(400);
     expect(secondTileView.getProperty("buildingCount")).toBe(350);
 
-    expect(buildingView.getProperty("type")).toBe("Residential");
-    expect(buildingView.setProperty("type", "Other")).toBe(true);
-    expect(buildingView.getProperty("type")).toBe("Other");
-    expect(secondBuildingView.getProperty("type")).toBe("Commercial");
+    expect(buildingView.getProperty("buildingType")).toBe("Residential");
+    expect(buildingView.setProperty("buildingType", "Other")).toBe(true);
+    expect(buildingView.getProperty("buildingType")).toBe("Other");
+    expect(secondBuildingView.getProperty("buildingType")).toBe("Commercial");
 
     expect(treeView.getProperty("species")).toBe("Oak");
     expect(treeView.setProperty("species", "Chestnut")).toBe(true);
@@ -504,8 +507,8 @@ describe("Scene/ImplicitMetadataView", function () {
     expect(tileView.setProperty("buildingCount", 100)).toBe(true);
     expect(tileView.getProperty("buildingCount")).toBe(100);
 
-    expect(buildingView.setProperty("type", "Residential")).toBe(true);
-    expect(buildingView.getProperty("type")).toBe("Residential");
+    expect(buildingView.setProperty("buildingType", "Residential")).toBe(true);
+    expect(buildingView.getProperty("buildingType")).toBe("Residential");
 
     expect(treeView.setProperty("species", "Oak")).toBe(true);
     expect(treeView.getProperty("species")).toBe("Oak");

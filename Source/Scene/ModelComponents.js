@@ -743,12 +743,13 @@ function Components() {
   this.nodes = undefined;
 
   /**
-   * Feature metadata containing the schema, feature tables, and feature textures.
+   * Structural metadata containing the schema, property tables, property
+   * textures and property mappings
    *
-   * @type {FeatureMetadata}
+   * @type {StructuralMetadata}
    * @private
    */
-  this.featureMetadata = undefined;
+  this.structuralMetadata = undefined;
 
   /**
    * The model's up axis.
@@ -791,6 +792,16 @@ function TextureReader() {
    * @private
    */
   this.texture = undefined;
+
+  /**
+   * The index of the texture in the glTF. This is useful for determining
+   * when textures are shared to avoid attaching a texture in multiple uniform
+   * slots in the shader.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.index = undefined;
 
   /**
    * The texture coordinate set.

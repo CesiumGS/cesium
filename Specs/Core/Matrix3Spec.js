@@ -3,6 +3,8 @@ import { HeadingPitchRoll } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { Matrix3 } from "../../Source/Cesium.js";
 import { Quaternion } from "../../Source/Cesium.js";
+import createPackableSpecs from "../createPackableSpecs.js";
+import createPackableArraySpecs from "../createPackableArraySpecs.js";
 
 describe("Core/Matrix3", function () {
   it("default constructor creates values array with all zeros.", function () {
@@ -29,48 +31,6 @@ describe("Core/Matrix3", function () {
     expect(matrix[Matrix3.COLUMN0ROW2]).toEqual(7.0);
     expect(matrix[Matrix3.COLUMN1ROW2]).toEqual(8.0);
     expect(matrix[Matrix3.COLUMN2ROW2]).toEqual(9.0);
-  });
-
-  it("can pack and unpack", function () {
-    const array = [];
-    const matrix = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-    Matrix3.pack(matrix, array);
-    expect(array.length).toEqual(Matrix3.packedLength);
-    expect(Matrix3.unpack(array)).toEqual(matrix);
-  });
-
-  it("can pack and unpack with offset", function () {
-    const packed = new Array(3);
-    const offset = 3;
-    const matrix = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-
-    Matrix3.pack(matrix, packed, offset);
-    expect(packed.length).toEqual(offset + Matrix3.packedLength);
-
-    const result = new Matrix3();
-    const returnedResult = Matrix3.unpack(packed, offset, result);
-    expect(returnedResult).toBe(result);
-    expect(result).toEqual(matrix);
-  });
-
-  it("pack throws with undefined matrix", function () {
-    const array = [];
-    expect(function () {
-      Matrix3.pack(undefined, array);
-    }).toThrowDeveloperError();
-  });
-
-  it("pack throws with undefined array", function () {
-    const matrix = new Matrix3();
-    expect(function () {
-      Matrix3.pack(matrix, undefined);
-    }).toThrowDeveloperError();
-  });
-
-  it("unpack throws with undefined array", function () {
-    expect(function () {
-      Matrix3.unpack(undefined);
-    }).toThrowDeveloperError();
   });
 
   it("fromQuaternion works without a result parameter", function () {
@@ -1505,4 +1465,43 @@ describe("Core/Matrix3", function () {
       expect(intArray[index]).toEqual(index + 1);
     }
   });
+
+  // prettier-ignore
+  createPackableSpecs(
+    Matrix3,
+    new Matrix3(
+      1, 2, 3,
+      4, 5, 6,
+      7, 8, 9
+    ), 
+    [1, 4, 7, 2, 5, 8, 3, 6, 9,]
+  );
+
+  // prettier-ignore
+  createPackableArraySpecs(
+    Matrix3,
+    [
+      new Matrix3(
+        1, 0, 0,
+        0, 1, 0,
+        0, 0, 1
+      ),
+      new Matrix3(
+        1, 2, 3,
+        4, 5, 6,
+        7, 8, 9
+      ),
+      new Matrix3(
+        1, 2, 3,
+        1, 2, 3,
+        1, 2, 3
+      ),
+    ],
+    [
+      1, 0, 0, 0, 1, 0, 0, 0, 1,
+      1, 4, 7, 2, 5, 8, 3, 6, 9,
+      1, 1, 1, 2, 2, 2, 3, 3, 3,
+    ],
+    9
+  );
 });

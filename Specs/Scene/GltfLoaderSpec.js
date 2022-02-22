@@ -6,7 +6,7 @@ import {
   Cartesian4,
   combine,
   ComponentDatatype,
-  GltfFeatureMetadataLoader,
+  GltfStructuralMetadataLoader,
   GltfIndexBufferLoader,
   GltfJsonLoader,
   GltfLoader,
@@ -860,7 +860,7 @@ describe(
         const primitive = rootNode.primitives[0];
         const material = primitive.material;
         const baseColorTexture = material.metallicRoughness.baseColorTexture;
-        const featureMetadata = components.featureMetadata;
+        const structuralMetadata = components.structuralMetadata;
 
         expect(baseColorTexture.texCoord).toBe(1);
         expect(primitive.featureIds.length).toBe(1);
@@ -881,18 +881,16 @@ describe(
           Sampler.NEAREST
         );
 
-        const classDefinition = featureMetadata.schema.classes.landCover;
+        const classDefinition = structuralMetadata.schema.classes.landCover;
         const properties = classDefinition.properties;
-        expect(properties.name.componentType).toBe(
-          MetadataComponentType.STRING
-        );
+        expect(properties.name.type).toBe(MetadataType.STRING);
+        expect(properties.name.componentType).not.toBeDefined();
         expect(properties.color.type).toBe(MetadataType.VEC3);
         expect(properties.color.componentType).toBe(
           MetadataComponentType.UINT8
         );
-        expect(properties.color.componentCount).toBe(3);
 
-        const propertyTable = featureMetadata.getPropertyTable(0);
+        const propertyTable = structuralMetadata.getPropertyTable(0);
         expect(propertyTable.id).toEqual(0);
         expect(propertyTable.name).toEqual("Land Cover");
         expect(propertyTable.count).toBe(256);
@@ -906,7 +904,7 @@ describe(
           new Cartesian3(194, 194, 194)
         );
 
-        const featureTexture = featureMetadata.getPropertyTexture(0);
+        const featureTexture = structuralMetadata.getPropertyTexture(0);
         expect(featureTexture.id).toEqual(0);
         expect(featureTexture.name).toEqual("Vegetation");
         const vegetationProperty = featureTexture.getProperty(
@@ -926,7 +924,7 @@ describe(
         const primitive = rootNode.primitives[0];
         const material = primitive.material;
         const baseColorTexture = material.metallicRoughness.baseColorTexture;
-        const featureMetadata = components.featureMetadata;
+        const structuralMetadata = components.structuralMetadata;
 
         expect(baseColorTexture.texCoord).toBe(1);
         expect(primitive.featureIds.length).toBe(1);
@@ -947,18 +945,17 @@ describe(
           Sampler.NEAREST
         );
 
-        const classDefinition = featureMetadata.schema.classes.landCover;
+        const classDefinition = structuralMetadata.schema.classes.landCover;
         const properties = classDefinition.properties;
-        expect(properties.name.componentType).toBe(
-          MetadataComponentType.STRING
-        );
-        expect(properties.color.type).toBe(MetadataType.ARRAY);
+        expect(properties.name.type).toBe(MetadataType.STRING);
+        expect(properties.name.componentType).not.toBeDefined();
+        expect(properties.color.type).toBe(MetadataType.SCALAR);
         expect(properties.color.componentType).toBe(
           MetadataComponentType.UINT8
         );
-        expect(properties.color.componentCount).toBe(3);
+        expect(properties.color.arrayLength).toBe(3);
 
-        const propertyTable = featureMetadata.getPropertyTable(0);
+        const propertyTable = structuralMetadata.getPropertyTable(0);
         expect(propertyTable.id).toEqual("landCoverTable");
         expect(propertyTable.count).toBe(256);
         expect(propertyTable.class).toBe(classDefinition);
@@ -971,7 +968,7 @@ describe(
           194,
         ]);
 
-        const featureTexture = featureMetadata.getPropertyTexture(0);
+        const featureTexture = structuralMetadata.getPropertyTexture(0);
         expect(featureTexture.id).toEqual("vegetationTexture");
         const vegetationProperty = featureTexture.getProperty(
           "vegetationDensity"
@@ -990,8 +987,8 @@ describe(
         const primitive = rootNode.primitives[0];
         const material = primitive.material;
         const baseColorTexture = material.metallicRoughness.baseColorTexture;
-        const featureMetadata = components.featureMetadata;
-        expect(featureMetadata).not.toBeDefined();
+        const structuralMetadata = components.structuralMetadata;
+        expect(structuralMetadata).not.toBeDefined();
 
         expect(baseColorTexture.texCoord).toBe(0);
         expect(primitive.featureIds.length).toBe(7);
@@ -1101,7 +1098,7 @@ describe(
           VertexAttributeSemantic.FEATURE_ID,
           0
         );
-        const featureMetadata = components.featureMetadata;
+        const structuralMetadata = components.structuralMetadata;
 
         expect(positionAttribute).toBeDefined();
         expect(normalAttribute).toBeDefined();
@@ -1162,14 +1159,14 @@ describe(
         expect(featureIdConstant.offset).toBe(3);
         expect(featureIdConstant.repeat).not.toBeDefined();
 
-        const classDefinition = featureMetadata.schema.classes.building;
+        const classDefinition = structuralMetadata.schema.classes.building;
         const properties = classDefinition.properties;
         expect(properties.height.componentType).toBe(
           MetadataComponentType.FLOAT32
         );
         expect(properties.id.componentType).toBe(MetadataComponentType.INT32);
 
-        const propertyTable = featureMetadata.getPropertyTable(0);
+        const propertyTable = structuralMetadata.getPropertyTable(0);
         expect(propertyTable.id).toBe(0);
         expect(propertyTable.count).toBe(10);
         expect(propertyTable.class).toBe(classDefinition);
@@ -1196,7 +1193,7 @@ describe(
           VertexAttributeSemantic.FEATURE_ID,
           0
         );
-        const featureMetadata = components.featureMetadata;
+        const structuralMetadata = components.structuralMetadata;
 
         expect(primitive.primitiveType).toBe(PrimitiveType.POINTS);
 
@@ -1225,7 +1222,7 @@ describe(
         expect(featureIdAttributeMapping1.propertyTableId).toBe(0);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
 
-        const weatherClass = featureMetadata.schema.classes.weather;
+        const weatherClass = structuralMetadata.schema.classes.weather;
         const weatherProperties = weatherClass.properties;
         expect(weatherProperties.airTemperature.componentType).toBe(
           MetadataComponentType.FLOAT32
@@ -1238,16 +1235,16 @@ describe(
           MetadataComponentType.FLOAT32
         );
 
-        const townClass = featureMetadata.schema.classes.town;
+        const townClass = structuralMetadata.schema.classes.town;
         const townProperties = townClass.properties;
-        expect(townProperties.name.componentType).toBe(
-          MetadataComponentType.STRING
-        );
+        expect(townProperties.name.type).toBe(MetadataType.STRING);
+        expect(townProperties.name.componentCount).not.toBeDefined();
+        expect(townProperties.population.type).toBe(MetadataType.SCALAR);
         expect(townProperties.population.componentType).toBe(
           MetadataComponentType.UINT16
         );
 
-        const weatherTable = featureMetadata.getPropertyTable(1);
+        const weatherTable = structuralMetadata.getPropertyTable(1);
         expect(weatherTable.id).toBe(1);
         expect(weatherTable.name).toBe("Weather");
         expect(weatherTable.count).toBe(1000);
@@ -1271,7 +1268,7 @@ describe(
           new Cartesian3(1, 0.07490774989128113, 0.0022833053953945637)
         );
 
-        const townTable = featureMetadata.getPropertyTable(0);
+        const townTable = structuralMetadata.getPropertyTable(0);
         expect(townTable.id).toBe(0);
         expect(townTable.name).toBe("Town");
         expect(townTable.count).toBe(3);
@@ -1301,7 +1298,7 @@ describe(
           VertexAttributeSemantic.FEATURE_ID,
           0
         );
-        const featureMetadata = components.featureMetadata;
+        const structuralMetadata = components.structuralMetadata;
 
         expect(primitive.primitiveType).toBe(PrimitiveType.POINTS);
 
@@ -1330,7 +1327,7 @@ describe(
         expect(featureIdAttributeMapping1.propertyTableId).toBe(0);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
 
-        const weatherClass = featureMetadata.schema.classes.weather;
+        const weatherClass = structuralMetadata.schema.classes.weather;
         const weatherProperties = weatherClass.properties;
         expect(weatherProperties.airTemperature.componentType).toBe(
           MetadataComponentType.FLOAT32
@@ -1338,22 +1335,22 @@ describe(
         expect(weatherProperties.airPressure.componentType).toBe(
           MetadataComponentType.FLOAT32
         );
-        expect(weatherProperties.windVelocity.type).toBe(MetadataType.ARRAY);
+        expect(weatherProperties.windVelocity.type).toBe(MetadataType.SCALAR);
         expect(weatherProperties.windVelocity.componentType).toBe(
           MetadataComponentType.FLOAT32
         );
-        expect(weatherProperties.windVelocity.componentCount).toBe(3);
+        expect(weatherProperties.windVelocity.arrayLength).toBe(3);
 
-        const townClass = featureMetadata.schema.classes.town;
+        const townClass = structuralMetadata.schema.classes.town;
         const townProperties = townClass.properties;
-        expect(townProperties.name.componentType).toBe(
-          MetadataComponentType.STRING
-        );
+        expect(townProperties.name.type).toBe(MetadataType.STRING);
+        expect(townProperties.name.componentType).not.toBeDefined();
+        expect(townProperties.population.type).toBe(MetadataType.SCALAR);
         expect(townProperties.population.componentType).toBe(
           MetadataComponentType.UINT16
         );
 
-        const weatherTable = featureMetadata.getPropertyTable(1);
+        const weatherTable = structuralMetadata.getPropertyTable(1);
         expect(weatherTable.id).toBe("weatherTable");
         expect(weatherTable.count).toBe(1000);
         expect(weatherTable.class).toBe(weatherClass);
@@ -1380,7 +1377,7 @@ describe(
           0.0022833053953945637,
         ]);
 
-        const townTable = featureMetadata.getPropertyTable(0);
+        const townTable = structuralMetadata.getPropertyTable(0);
         expect(townTable.id).toBe("townTable");
         expect(townTable.count).toBe(3);
         expect(townTable.class).toBe(townClass);
@@ -1412,7 +1409,7 @@ describe(
           attributes,
           VertexAttributeSemantic.NORMAL
         );
-        const featureMetadata = components.featureMetadata;
+        const structuralMetadata = components.structuralMetadata;
         const instances = rootNode.instances;
         const instancedAttributes = instances.attributes;
         const translationAttribute = getAttribute(
@@ -1541,25 +1538,24 @@ describe(
         expect(featureIdAttributeMapping1.propertyTableId).toBe(1);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
 
-        const boxClass = featureMetadata.schema.classes.box;
+        const boxClass = structuralMetadata.schema.classes.box;
         const boxProperties = boxClass.properties;
-        expect(boxProperties.name.componentType).toBe(
-          MetadataComponentType.STRING
-        );
+        expect(boxProperties.name.type).toBe(MetadataType.STRING);
+        expect(boxProperties.name.componentType).not.toBeDefined();
         expect(boxProperties.volume.componentType).toBe(
           MetadataComponentType.FLOAT32
         );
 
-        const sectionClass = featureMetadata.schema.classes.section;
+        const sectionClass = structuralMetadata.schema.classes.section;
         const sectionProperties = sectionClass.properties;
-        expect(sectionProperties.name.componentType).toBe(
-          MetadataComponentType.STRING
-        );
+        expect(sectionProperties.name.type).toBe(MetadataType.STRING);
+        expect(sectionProperties.name.componentType).not.toBeDefined();
+        expect(sectionProperties.id.type).toBe(MetadataType.SCALAR);
         expect(sectionProperties.id.componentType).toBe(
           MetadataComponentType.UINT16
         );
 
-        const boxTable = featureMetadata.getPropertyTable(0);
+        const boxTable = structuralMetadata.getPropertyTable(0);
         expect(boxTable.id).toBe(0);
         expect(boxTable.name).toBe("Box");
         expect(boxTable.count).toBe(4);
@@ -1573,7 +1569,7 @@ describe(
         expect(boxTable.getProperty(3, "name")).toBe("top right");
         expect(boxTable.getProperty(3, "volume")).toBe(0.4320000112056732);
 
-        const sectionTable = featureMetadata.getPropertyTable(1);
+        const sectionTable = structuralMetadata.getPropertyTable(1);
         expect(sectionTable.id).toBe(1);
         expect(sectionTable.name).toBe("Section");
         expect(sectionTable.count).toBe(2);
@@ -1604,7 +1600,7 @@ describe(
           attributes,
           VertexAttributeSemantic.NORMAL
         );
-        const featureMetadata = components.featureMetadata;
+        const structuralMetadata = components.structuralMetadata;
         const instances = rootNode.instances;
         const instancedAttributes = instances.attributes;
         const translationAttribute = getAttribute(
@@ -1733,25 +1729,24 @@ describe(
         expect(featureIdAttributeMapping1.propertyTableId).toBe(1);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
 
-        const boxClass = featureMetadata.schema.classes.box;
+        const boxClass = structuralMetadata.schema.classes.box;
         const boxProperties = boxClass.properties;
-        expect(boxProperties.name.componentType).toBe(
-          MetadataComponentType.STRING
-        );
+        expect(boxProperties.name.type).toBe(MetadataType.STRING);
+        expect(boxProperties.name.componentType).not.toBeDefined();
         expect(boxProperties.volume.componentType).toBe(
           MetadataComponentType.FLOAT32
         );
 
-        const sectionClass = featureMetadata.schema.classes.section;
+        const sectionClass = structuralMetadata.schema.classes.section;
         const sectionProperties = sectionClass.properties;
-        expect(sectionProperties.name.componentType).toBe(
-          MetadataComponentType.STRING
-        );
+        expect(sectionProperties.name.type).toBe(MetadataType.STRING);
+        expect(sectionProperties.name.componentType).not.toBeDefined();
+        expect(sectionProperties.id.type).toBe(MetadataType.SCALAR);
         expect(sectionProperties.id.componentType).toBe(
           MetadataComponentType.UINT16
         );
 
-        const boxTable = featureMetadata.getPropertyTable(0);
+        const boxTable = structuralMetadata.getPropertyTable(0);
         expect(boxTable.id).toBe("boxTable");
         expect(boxTable.count).toBe(4);
         expect(boxTable.class).toBe(boxClass);
@@ -1764,7 +1759,7 @@ describe(
         expect(boxTable.getProperty(3, "name")).toBe("top right");
         expect(boxTable.getProperty(3, "volume")).toBe(0.4320000112056732);
 
-        const sectionTable = featureMetadata.getPropertyTable(1);
+        const sectionTable = structuralMetadata.getPropertyTable(1);
         expect(sectionTable.id).toBe("sectionTable");
         expect(sectionTable.count).toBe(2);
         expect(sectionTable.class).toBe(sectionClass);
@@ -2476,8 +2471,8 @@ describe(
     });
 
     it("destroys glTF loader", function () {
-      const destroyFeatureMetadataLoader = spyOn(
-        GltfFeatureMetadataLoader.prototype,
+      const destroyStructuralMetadataLoader = spyOn(
+        GltfStructuralMetadataLoader.prototype,
         "destroy"
       ).and.callThrough();
 
@@ -2504,7 +2499,7 @@ describe(
 
         expect(gltfLoader.components).not.toBeDefined();
 
-        expect(destroyFeatureMetadataLoader.calls.count()).toBe(1);
+        expect(destroyStructuralMetadataLoader.calls.count()).toBe(1);
         expect(destroyVertexBufferLoader.calls.count()).toBe(3);
         expect(destroyIndexBufferLoader.calls.count()).toBe(1);
         expect(destroyTextureLoader.calls.count()).toBe(3);

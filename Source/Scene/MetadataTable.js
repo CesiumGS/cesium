@@ -1,9 +1,9 @@
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import MetadataEntity from "./MetadataEntity.js";
 import MetadataTableProperty from "./MetadataTableProperty.js";
-import MetadataType from "./MetadataType.js";
 
 /**
  * A table containing binary metadata for a collection of entities. This is
@@ -328,8 +328,8 @@ function getDefault(classDefinition, propertyId) {
   const classProperty = classProperties[propertyId];
   if (defined(classProperty) && defined(classProperty.default)) {
     let value = classProperty.default;
-    if (classProperty.type === MetadataType.ARRAY) {
-      value = value.slice(); // clone
+    if (classProperty.isArray) {
+      value = clone(value, true);
     }
     value = classProperty.normalize(value);
     return classProperty.unpackVectorAndMatrixTypes(value);

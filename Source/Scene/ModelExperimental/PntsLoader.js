@@ -16,7 +16,7 @@ import AttributeType from "../AttributeType.js";
 import Axis from "../Axis.js";
 import parseBatchTable from "../parseBatchTable.js";
 import DracoLoader from "../DracoLoader.js";
-import FeatureMetadata from "../FeatureMetadata.js";
+import StructuralMetadata from "../StructuralMetadata.js";
 import ResourceLoader from "../ResourceLoader.js";
 import MetadataClass from "../MetadataClass.js";
 import ModelComponents from "../ModelComponents.js";
@@ -467,7 +467,7 @@ function makeAttributes(loader, parsedContent, context) {
   return attributes;
 }
 
-function makeFeatureMetadata(parsedContent) {
+function makeStructuralMetadata(parsedContent) {
   const batchLength = parsedContent.batchLength;
   const pointsLength = parsedContent.pointsLength;
   const batchTableBinary = parsedContent.batchTableBinary;
@@ -486,7 +486,7 @@ function makeFeatureMetadata(parsedContent) {
     name: MetadataClass.BATCH_TABLE_CLASS_NAME,
     count: pointsLength,
   });
-  return new FeatureMetadata({
+  return new StructuralMetadata({
     schema: {},
     propertyTables: [emptyPropertyTable],
   });
@@ -535,7 +535,7 @@ function makeComponents(loader, context) {
   const components = new Components();
   components.scene = scene;
   components.nodes = [node];
-  components.featureMetadata = makeFeatureMetadata(parsedContent);
+  components.structuralMetadata = makeStructuralMetadata(parsedContent);
 
   if (defined(parsedContent.rtcCenter)) {
     components.transform = Matrix4.multiplyByTranslation(

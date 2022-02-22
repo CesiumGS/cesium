@@ -17,8 +17,8 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
       class: {
         properties: {
           credits: {
-            type: "ARRAY",
-            componentType: "STRING",
+            type: "STRING",
+            array: true,
           },
         },
       },
@@ -82,8 +82,8 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
       class: {
         properties: {
           credits: {
-            type: "ARRAY",
-            componentType: "STRING",
+            type: "STRING",
+            array: true,
           },
         },
       },
@@ -106,8 +106,8 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
       class: {
         properties: {
           credits: {
-            type: "ARRAY",
-            componentType: "STRING",
+            type: "STRING",
+            array: true,
           },
         },
       },
@@ -130,9 +130,9 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
       class: {
         properties: {
           credits: {
-            type: "ARRAY",
-            componentType: "STRING",
-            optional: true,
+            type: "STRING",
+            array: true,
+            required: false,
             default: [],
           },
         },
@@ -165,8 +165,8 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
       class: {
         properties: {
           credits: {
-            type: "ARRAY",
-            componentType: "STRING",
+            type: "STRING",
+            array: true,
             semantic: "CREDITS",
           },
         },
@@ -190,8 +190,8 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
       class: {
         properties: {
           credits: {
-            type: "ARRAY",
-            componentType: "STRING",
+            type: "STRING",
+            array: true,
             semantic: "CREDITS",
           },
         },
@@ -215,8 +215,8 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
       class: {
         properties: {
           credits: {
-            type: "ARRAY",
-            componentType: "STRING",
+            type: "STRING",
+            array: true,
             semantic: "CREDITS",
             default: [],
           },
@@ -262,14 +262,14 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
       class: {
         properties: {
           author: {
-            componentType: "STRING",
+            type: "STRING",
           },
           date: {
-            componentType: "STRING",
+            type: "STRING",
           },
           credits: {
-            type: "ARRAY",
-            componentType: "STRING",
+            type: "STRING",
+            array: true,
           },
         },
       },
@@ -299,15 +299,15 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
       class: {
         properties: {
           author: {
-            componentType: "STRING",
+            type: "STRING",
           },
           date: {
-            componentType: "STRING",
+            type: "STRING",
           },
           credits: {
-            type: "ARRAY",
-            componentType: "STRING",
-            optional: true,
+            type: "STRING",
+            array: true,
+            required: false,
             default: [],
           },
         },
@@ -336,14 +336,14 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
       class: {
         properties: {
           author: {
-            componentType: "STRING",
+            type: "STRING",
           },
           date: {
-            componentType: "STRING",
+            type: "STRING",
           },
           credits: {
-            type: "ARRAY",
-            componentType: "STRING",
+            type: "STRING",
+            array: true,
           },
         },
       },
@@ -383,7 +383,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
       class: {
         properties: {
           author: {
-            componentType: "STRING",
+            type: "STRING",
           },
         },
       },
@@ -406,7 +406,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
       class: {
         properties: {
           author: {
-            componentType: "STRING",
+            type: "STRING",
           },
         },
       },
@@ -433,8 +433,8 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
       class: {
         properties: {
           author: {
-            componentType: "STRING",
-            optional: true,
+            type: "STRING",
+            required: false,
             default: defaultAuthor,
           },
         },
@@ -481,7 +481,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
       class: {
         properties: {
           author: {
-            componentType: "STRING",
+            type: "STRING",
           },
         },
       },
@@ -533,7 +533,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
       class: {
         properties: {
           author: {
-            componentType: "STRING",
+            type: "STRING",
             semantic: "AUTHOR",
           },
         },
@@ -558,7 +558,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
       class: {
         properties: {
           author: {
-            componentType: "STRING",
+            type: "STRING",
             semantic: "AUTHOR",
           },
         },
@@ -596,7 +596,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
       class: {
         properties: {
           author: {
-            componentType: "STRING",
+            type: "STRING",
             semantic: "AUTHOR",
           },
         },
@@ -623,7 +623,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
       class: {
         properties: {
           author: {
-            componentType: "STRING",
+            type: "STRING",
             semantic: "AUTHOR",
           },
         },
@@ -661,7 +661,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
       class: {
         properties: {
           author: {
-            componentType: "STRING",
+            type: "STRING",
             semantic: "AUTHOR",
           },
         },

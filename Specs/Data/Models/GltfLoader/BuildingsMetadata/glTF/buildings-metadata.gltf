@@ -224,21 +224,21 @@
     }
   ],
   "extensionsUsed": [
-    "EXT_mesh_features"
-  ],
-  "extensionsRequired": [
-    "EXT_mesh_features"
+    "EXT_mesh_features",
+    "EXT_structural_metadata"
   ],
   "extensions": {
-    "EXT_mesh_features": {
+    "EXT_structural_metadata": {
       "schema": {
         "classes": {
           "building": {
             "properties": {
               "height": {
+                "type": "SCALAR",
                 "componentType": "FLOAT32"
               },
               "id": {
+                "type": "SCALAR",
                 "componentType": "INT32"
               }
             }

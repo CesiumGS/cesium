@@ -17,21 +17,22 @@
             "properties": {
               "author": {
                 "description": "The person or entity that made the subtree",
-                "componentType": "STRING",
+                "type": "STRING",
                 "semantic": "AUTHOR"
               },
               "date": {
                 "description": "Date of subtree generation in YYYY-MM-DD format",
-                "componentType": "STRING",
+                "type": "STRING",
                 "semantic": "DATE_ISO_8601"
               },
               "credits": {
                 "description": "A list of copyright strings relevant to this subtree",
-                "type": "ARRAY",
-                "componentType": "STRING"
+                "type": "STRING",
+                "array": true
               },
               "Height": {
                 "description": "The height of the subtree. Intentionally capitalized so it conflicts with the Height property in the b3dm files.",
+                "type": "SCALAR",
                 "componentType": "FLOAT32",
                 "semantic": "HEIGHT"
               }

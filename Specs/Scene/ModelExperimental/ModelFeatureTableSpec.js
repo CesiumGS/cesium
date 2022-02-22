@@ -10,12 +10,14 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
   const properties = {
     height: {
       semantic: "HEIGHT_SEMANTIC",
+      type: "SCALAR",
       componentType: "FLOAT32",
     },
     name: {
-      componentType: "STRING",
+      type: "STRING",
     },
     HEIGHT_SEMANTIC: {
+      type: "SCALAR",
       componentType: "FLOAT32",
     },
   };

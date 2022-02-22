@@ -256,6 +256,8 @@ function Context(canvas, options) {
     gl.MAX_VERTEX_UNIFORM_VECTORS
   ); // min: 128
 
+  ContextLimits._maximumSamples = gl.getParameter(gl.MAX_SAMPLES);
+
   const aliasedLineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE); // must include 1
   ContextLimits._minimumAliasedLineWidth = aliasedLineWidthRange[0];
   ContextLimits._maximumAliasedLineWidth = aliasedLineWidthRange[1];
@@ -595,6 +597,18 @@ Object.defineProperties(Context.prototype, {
   antialias: {
     get: function () {
       return this._antialias;
+    },
+  },
+
+  /**
+   * <code>true</code> if the WebGL context supports multisample antialiasing. Requires
+   * WebGL2.
+   * @memberof Context.prototype
+   * @type {Boolean}
+   */
+  msaa: {
+    get: function () {
+      return this._webgl2;
     },
   },
 

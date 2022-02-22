@@ -1473,6 +1473,7 @@ describe("Scene/ImplicitSubtree", function () {
           componentType: "UINT8",
         },
         buildingCount: {
+          type: "SCALAR",
           componentType: "UINT16",
         },
       },
@@ -1493,11 +1494,11 @@ describe("Scene/ImplicitSubtree", function () {
         subtree: {
           properties: {
             author: {
-              componentType: "STRING",
+              type: "STRING",
             },
             credits: {
-              type: "ARRAY",
-              componentType: "STRING",
+              type: "STRING",
+              array: true,
             },
           },
         },
@@ -1507,11 +1508,12 @@ describe("Scene/ImplicitSubtree", function () {
     const buildingProperties = {
       properties: {
         height: {
+          type: "SCALAR",
           componentType: "UINT16",
           semantic: "_HEIGHT",
         },
-        type: {
-          componentType: "STRING",
+        buildingType: {
+          type: "STRING",
           semantic: "_BUILDING_TYPE",
         },
       },
@@ -1520,11 +1522,12 @@ describe("Scene/ImplicitSubtree", function () {
     const treeProperties = {
       properties: {
         height: {
+          type: "SCALAR",
           componentType: "UINT16",
           semantic: "_HEIGHT",
         },
         species: {
-          componentType: "STRING",
+          type: "STRING",
           semantic: "_TREE_SPECIES",
         },
       },
@@ -1568,7 +1571,7 @@ describe("Scene/ImplicitSubtree", function () {
       class: "building",
       properties: {
         height: buildingHeights,
-        type: buildingTypes,
+        buildingType: buildingTypes,
       },
     };
 
@@ -1842,7 +1845,9 @@ describe("Scene/ImplicitSubtree", function () {
           expect(metadataTable.getProperty(i, "height")).toEqual(
             buildingHeights[i]
           );
-          expect(metadataTable.getProperty(i, "type")).toBe(buildingTypes[i]);
+          expect(metadataTable.getProperty(i, "buildingType")).toBe(
+            buildingTypes[i]
+          );
         }
       });
     });
@@ -1901,7 +1906,9 @@ describe("Scene/ImplicitSubtree", function () {
           expect(metadataTable.getProperty(i, "height")).toEqual(
             buildingHeights[i]
           );
-          expect(metadataTable.getProperty(i, "type")).toBe(buildingTypes[i]);
+          expect(metadataTable.getProperty(i, "buildingType")).toBe(
+            buildingTypes[i]
+          );
         }
       });
     });
@@ -1965,7 +1972,7 @@ describe("Scene/ImplicitSubtree", function () {
           expect(buildingMetadataTable.getProperty(i, "height")).toEqual(
             buildingHeights[i]
           );
-          expect(buildingMetadataTable.getProperty(i, "type")).toBe(
+          expect(buildingMetadataTable.getProperty(i, "buildingType")).toBe(
             buildingTypes[i]
           );
         }
@@ -2044,7 +2051,7 @@ describe("Scene/ImplicitSubtree", function () {
           expect(buildingMetadataTable.getProperty(i, "height")).toEqual(
             buildingHeights[i]
           );
-          expect(buildingMetadataTable.getProperty(i, "type")).toBe(
+          expect(buildingMetadataTable.getProperty(i, "buildingType")).toBe(
             buildingTypes[i]
           );
         }
@@ -2120,7 +2127,9 @@ describe("Scene/ImplicitSubtree", function () {
           expect(metadataTable.getProperty(i, "height")).toEqual(
             buildingHeights[i]
           );
-          expect(metadataTable.getProperty(i, "type")).toBe(buildingTypes[i]);
+          expect(metadataTable.getProperty(i, "buildingType")).toBe(
+            buildingTypes[i]
+          );
         }
       });
     });
@@ -2318,7 +2327,7 @@ describe("Scene/ImplicitSubtree", function () {
           expect(metadataTable.getProperty(i, "height")).toEqual(
             buildingHeightsTruncated[i]
           );
-          expect(metadataTable.getProperty(i, "type")).toBe(
+          expect(metadataTable.getProperty(i, "buildingType")).toBe(
             buildingTypesTruncated[i]
           );
         }
@@ -2393,7 +2402,7 @@ describe("Scene/ImplicitSubtree", function () {
           expect(buildingMetadataTable.getProperty(i, "height")).toEqual(
             buildingHeightsTruncated[i]
           );
-          expect(buildingMetadataTable.getProperty(i, "type")).toBe(
+          expect(buildingMetadataTable.getProperty(i, "buildingType")).toBe(
             buildingTypesTruncated[i]
           );
         }
@@ -2423,15 +2432,16 @@ describe("Scene/ImplicitSubtree", function () {
           tile: {
             properties: {
               stringProperty: {
-                componentType: "STRING",
+                type: "STRING",
               },
               arrayProperty: {
-                type: "ARRAY",
+                type: "SCALAR",
                 componentType: "INT16",
+                array: true,
               },
               arrayOfStringProperty: {
-                type: "ARRAY",
-                componentType: "STRING",
+                type: "STRING",
+                array: true,
               },
             },
           },

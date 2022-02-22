@@ -20,6 +20,7 @@
           "building": {
             "properties": {
               "height": {
+                "type": "SCALAR",
                 "componentType": "UINT16",
                 "semantic": "_BUILDING_HEIGHT"
               },
@@ -32,6 +33,7 @@
           "tree": {
             "properties": {
               "age": {
+                "type": "SCALAR",
                 "componentType": "UINT16"
               }
             }

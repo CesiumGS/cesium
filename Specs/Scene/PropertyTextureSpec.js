@@ -14,7 +14,7 @@ describe("Scene/PropertyTexture", function () {
   let texture1;
   let extras;
   let extensions;
-  let featureTexture;
+  let propertyTexture;
 
   beforeAll(function () {
     classDefinition = new MetadataClass({
@@ -22,14 +22,17 @@ describe("Scene/PropertyTexture", function () {
       class: {
         properties: {
           color: {
-            type: "ARRAY",
+            type: "SCALAR",
             componentType: "UINT8",
-            componentCount: 3,
+            array: true,
+            count: 3,
           },
           intensity: {
+            type: "SCALAR",
             componentType: "UINT8",
           },
           ortho: {
+            type: "SCALAR",
             componentType: "UINT8",
             normalized: true,
           },
@@ -69,37 +72,31 @@ describe("Scene/PropertyTexture", function () {
       EXT_other_extension: {},
     };
 
-    const featureTextureJson = {
+    const propertyTextureJson = {
       class: "map",
       extras: extras,
       extensions: extensions,
       properties: {
         color: {
-          channels: "rgb",
-          texture: {
-            index: 0,
-            texCoord: 0,
-          },
+          channels: [0, 1, 2],
+          index: 0,
+          texCoord: 0,
         },
         intensity: {
-          channels: "a",
-          texture: {
-            index: 0,
-            texCoord: 0,
-          },
+          channels: [3],
+          index: 0,
+          texCoord: 0,
         },
         ortho: {
-          channels: "r",
-          texture: {
-            index: 1,
-            texCoord: 0,
-          },
+          channels: [0],
+          index: 1,
+          texCoord: 0,
         },
       },
     };
 
-    featureTexture = new PropertyTexture({
-      featureTexture: featureTextureJson,
+    propertyTexture = new PropertyTexture({
+      propertyTexture: propertyTextureJson,
       class: classDefinition,
       textures: {
         0: texture0,
@@ -114,10 +111,10 @@ describe("Scene/PropertyTexture", function () {
     context.destroyForSpecs();
   });
 
-  it("creates feature texture", function () {
-    expect(featureTexture.class).toBe(classDefinition);
-    expect(featureTexture.extras).toBe(extras);
-    expect(featureTexture.extensions).toBe(extensions);
+  it("creates property texture", function () {
+    expect(propertyTexture.class).toBe(classDefinition);
+    expect(propertyTexture.extras).toBe(extras);
+    expect(propertyTexture.extensions).toBe(extensions);
   });
 
   it("constructor throws without featureTexture", function () {
@@ -148,18 +145,18 @@ describe("Scene/PropertyTexture", function () {
   });
 
   it("getProperty returns feature texture property", function () {
-    expect(featureTexture.getProperty("color")).toBeDefined();
-    expect(featureTexture.getProperty("intensity")).toBeDefined();
-    expect(featureTexture.getProperty("ortho")).toBeDefined();
+    expect(propertyTexture.getProperty("color")).toBeDefined();
+    expect(propertyTexture.getProperty("intensity")).toBeDefined();
+    expect(propertyTexture.getProperty("ortho")).toBeDefined();
   });
 
   it("getProperty returns undefined if the property doesn't exist", function () {
-    expect(featureTexture.getProperty("other")).toBeUndefined();
+    expect(propertyTexture.getProperty("other")).toBeUndefined();
   });
 
   it("getProperty throws if propertyId is undefined", function () {
     expect(function () {
-      featureTexture.getProperty(undefined);
+      propertyTexture.getProperty(undefined);
     }).toThrowDeveloperError();
   });
 });

@@ -17,12 +17,12 @@
             "properties": {
               "author": {
                 "description": "The person or entity that made the tileset",
-                "componentType": "STRING",
+                "type": "STRING",
                 "semantic": "AUTHOR"
               },
               "date": {
                 "description": "Date of tileset creation in YYYY-MM-DD format",
-                "componentType": "STRING",
+                "type": "STRING",
                 "semantic": "DATE_ISO_8601"
               },
               "centerCartographic": {
@@ -32,6 +32,7 @@
               },
               "tileCount": {
                 "description": "Total number of tiles in the tileset",
+                "type": "SCALAR",
                 "componentType": "UINT8"
               }
             }

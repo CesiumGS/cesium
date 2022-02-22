@@ -1,7 +1,7 @@
 import {
   clone,
   GltfBufferViewLoader,
-  GltfFeatureMetadataLoader,
+  GltfStructuralMetadataLoader,
   GltfTextureLoader,
   MetadataSchemaLoader,
   Resource,
@@ -15,7 +15,7 @@ import MetadataTester from "../MetadataTester.js";
 import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
 describe(
-  "Scene/GltfFeatureMetadataLoader",
+  "Scene/GltfStructuralMetadataLoader",
   function () {
     if (!MetadataTester.isSupported()) {
       return;
@@ -35,9 +35,10 @@ describe(
         building: {
           properties: {
             name: {
-              componentType: "STRING",
+              type: "STRING",
             },
             height: {
+              type: "SCALAR",
               componentType: "FLOAT64",
             },
           },
@@ -45,19 +46,21 @@ describe(
         tree: {
           properties: {
             species: {
-              type: "ARRAY",
-              componentType: "STRING",
+              type: "STRING",
+              array: true,
             },
           },
         },
         map: {
           properties: {
             color: {
-              type: "ARRAY",
+              type: "SCALAR",
               componentType: "UINT8",
-              componentCount: 3,
+              array: true,
+              count: 3,
             },
             intensity: {
+              type: "SCALAR",
               componentType: "UINT8",
             },
           },
@@ -65,6 +68,7 @@ describe(
         ortho: {
           properties: {
             vegetation: {
+              type: "SCALAR",
               componentType: "UINT8",
               normalized: true,
             },
@@ -112,31 +116,39 @@ describe(
         {
           name: "Map",
           class: "map",
-          index: 0,
-          texCoord: 0,
           properties: {
-            color: [0, 1, 2],
-            intensity: [3],
+            color: {
+              channels: [0, 1, 2],
+              index: 0,
+              texCoord: 0,
+            },
+            intensity: {
+              channels: [3],
+              index: 0,
+              texCoord: 0,
+            },
           },
         },
         {
           name: "Ortho",
           class: "ortho",
-          index: 1,
-          texCoord: 1,
           properties: {
-            vegetation: [0],
+            vegetation: {
+              channels: [0],
+              index: 1,
+              texCoord: 1,
+            },
           },
         },
       ],
     });
 
     const gltf = results.gltf;
-    const extension = gltf.extensions.EXT_mesh_features;
+    const extension = gltf.extensions.EXT_structural_metadata;
     const buffer = results.buffer.buffer;
 
     const gltfSchemaUri = clone(gltf, true);
-    const extensionSchemaUri = gltfSchemaUri.extensions.EXT_mesh_features;
+    const extensionSchemaUri = gltfSchemaUri.extensions.EXT_structural_metadata;
     extensionSchemaUri.schemaUri = "schema.json";
     delete extensionSchemaUri.schema;
 
@@ -156,7 +168,7 @@ describe(
 
     it("throws if gltf is undefined", function () {
       expect(function () {
-        return new GltfFeatureMetadataLoader({
+        return new GltfStructuralMetadataLoader({
           gltf: undefined,
           extension: extension,
           gltfResource: gltfResource,
@@ -168,7 +180,7 @@ describe(
 
     it("throws if neither extension nor extensionLegacy is defined", function () {
       expect(function () {
-        return new GltfFeatureMetadataLoader({
+        return new GltfStructuralMetadataLoader({
           gltf: gltf,
           extension: undefined,
           extensionLegacy: undefined,
@@ -181,7 +193,7 @@ describe(
 
     it("throws if gltfResource is undefined", function () {
       expect(function () {
-        return new GltfFeatureMetadataLoader({
+        return new GltfStructuralMetadataLoader({
           gltf: gltf,
           extension: extension,
           gltfResource: undefined,
@@ -193,7 +205,7 @@ describe(
 
     it("throws if baseResource is undefined", function () {
       expect(function () {
-        return new GltfFeatureMetadataLoader({
+        return new GltfStructuralMetadataLoader({
           gltf: gltf,
           extension: extension,
           gltfResource: gltfResource,
@@ -205,7 +217,7 @@ describe(
 
     it("throws if gltf is undefined", function () {
       expect(function () {
-        return new GltfFeatureMetadataLoader({
+        return new GltfStructuralMetadataLoader({
           gltf: gltf,
           extension: extension,
           gltfResource: gltfResource,
@@ -225,7 +237,7 @@ describe(
         when.resolve(image)
       );
 
-      const featureMetadataLoader = new GltfFeatureMetadataLoader({
+      const structuralMetadataLoader = new GltfStructuralMetadataLoader({
         gltf: gltf,
         extension: extension,
         gltfResource: gltfResource,
@@ -233,15 +245,15 @@ describe(
         supportedImageFormats: new SupportedImageFormats(),
       });
 
-      featureMetadataLoader.load();
+      structuralMetadataLoader.load();
 
-      return featureMetadataLoader.promise
-        .then(function (featureMetadataLoader) {
+      return structuralMetadataLoader.promise
+        .then(function (structuralMetadataLoader) {
           fail();
         })
         .otherwise(function (runtimeError) {
           expect(runtimeError.message).toBe(
-            "Failed to load feature metadata\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
+            "Failed to load structural metadata\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
           );
         });
     });
@@ -256,7 +268,7 @@ describe(
         when.reject(error)
       );
 
-      const featureMetadataLoader = new GltfFeatureMetadataLoader({
+      const structuralMetadataLoader = new GltfStructuralMetadataLoader({
         gltf: gltf,
         extension: extension,
         gltfResource: gltfResource,
@@ -264,15 +276,15 @@ describe(
         supportedImageFormats: new SupportedImageFormats(),
       });
 
-      featureMetadataLoader.load();
+      structuralMetadataLoader.load();
 
-      return featureMetadataLoader.promise
-        .then(function (featureMetadataLoader) {
+      return structuralMetadataLoader.promise
+        .then(function (structuralMetadataLoader) {
           fail();
         })
         .otherwise(function (runtimeError) {
           expect(runtimeError.message).toBe(
-            "Failed to load feature metadata\nFailed to load texture\nFailed to load image: map.png\n404 Not Found"
+            "Failed to load structural metadata\nFailed to load texture\nFailed to load image: map.png\n404 Not Found"
           );
         });
     });
@@ -291,7 +303,7 @@ describe(
         when.reject(error)
       );
 
-      const featureMetadataLoader = new GltfFeatureMetadataLoader({
+      const structuralMetadataLoader = new GltfStructuralMetadataLoader({
         gltf: gltfSchemaUri,
         extension: extensionSchemaUri,
         gltfResource: gltfResource,
@@ -299,20 +311,20 @@ describe(
         supportedImageFormats: new SupportedImageFormats(),
       });
 
-      featureMetadataLoader.load();
+      structuralMetadataLoader.load();
 
-      return featureMetadataLoader.promise
-        .then(function (featureMetadataLoader) {
+      return structuralMetadataLoader.promise
+        .then(function () {
           fail();
         })
         .otherwise(function (runtimeError) {
           expect(runtimeError.message).toBe(
-            "Failed to load feature metadata\nFailed to load schema: https://example.com/schema.json\n404 Not Found"
+            "Failed to load structural metadata\nFailed to load schema: https://example.com/schema.json\n404 Not Found"
           );
         });
     });
 
-    it("loads feature metadata", function () {
+    it("loads structural metadata", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         when.resolve(buffer)
       );
@@ -321,7 +333,7 @@ describe(
         when.resolve(image)
       );
 
-      const featureMetadataLoader = new GltfFeatureMetadataLoader({
+      const structuralMetadataLoader = new GltfStructuralMetadataLoader({
         gltf: gltf,
         extension: extension,
         gltfResource: gltfResource,
@@ -329,56 +341,54 @@ describe(
         supportedImageFormats: new SupportedImageFormats(),
       });
 
-      featureMetadataLoader.load();
+      structuralMetadataLoader.load();
 
-      return waitForLoaderProcess(featureMetadataLoader, scene).then(function (
-        featureMetadataLoader
-      ) {
-        loaderProcess(featureMetadataLoader, scene); // Check that calling process after load doesn't break anything
-        const featureMetadata = featureMetadataLoader.featureMetadata;
-        const buildingsTable = featureMetadata.getPropertyTable(0);
-        expect(buildingsTable.id).toBe(0);
-        const treesTable = featureMetadata.getPropertyTable(1);
-        expect(treesTable.id).toBe(1);
-        const mapTexture = featureMetadata.getPropertyTexture(0);
-        expect(mapTexture.id).toBe(0);
-        const orthoTexture = featureMetadata.getPropertyTexture(1);
-        expect(orthoTexture.id).toBe(1);
+      return waitForLoaderProcess(structuralMetadataLoader, scene).then(
+        function (structuralMetadataLoader) {
+          loaderProcess(structuralMetadataLoader, scene); // Check that calling process after load doesn't break anything
+          const structuralMetadata =
+            structuralMetadataLoader.structuralMetadata;
+          const buildingsTable = structuralMetadata.getPropertyTable(0);
+          expect(buildingsTable.id).toBe(0);
+          const treesTable = structuralMetadata.getPropertyTable(1);
+          expect(treesTable.id).toBe(1);
+          const mapTexture = structuralMetadata.getPropertyTexture(0);
+          expect(mapTexture.id).toBe(0);
+          const orthoTexture = structuralMetadata.getPropertyTexture(1);
+          expect(orthoTexture.id).toBe(1);
 
-        expect(buildingsTable.getProperty(0, "name")).toBe("House");
-        expect(buildingsTable.getProperty(1, "name")).toBe("Hospital");
-        expect(treesTable.getProperty(0, "species")).toEqual([
-          "Sparrow",
-          "Squirrel",
-        ]);
-        expect(treesTable.getProperty(1, "species")).toEqual(["Crow"]);
+          expect(buildingsTable.getProperty(0, "name")).toBe("House");
+          expect(buildingsTable.getProperty(1, "name")).toBe("Hospital");
+          expect(treesTable.getProperty(0, "species")).toEqual([
+            "Sparrow",
+            "Squirrel",
+          ]);
+          expect(treesTable.getProperty(1, "species")).toEqual(["Crow"]);
 
-        const colorProperty = mapTexture.getProperty("color");
-        const intensityProperty = mapTexture.getProperty("intensity");
-        const vegetationProperty = orthoTexture.getProperty("vegetation");
+          const colorProperty = mapTexture.getProperty("color");
+          const intensityProperty = mapTexture.getProperty("intensity");
+          const vegetationProperty = orthoTexture.getProperty("vegetation");
 
-        expect(colorProperty.textureReader.texture.width).toBe(1);
-        expect(colorProperty.textureReader.texture.height).toBe(1);
-        expect(colorProperty.textureReader.texture).toBe(
-          intensityProperty.textureReader.texture
-        );
+          expect(colorProperty.textureReader.texture.width).toBe(1);
+          expect(colorProperty.textureReader.texture.height).toBe(1);
+          expect(colorProperty.textureReader.texture).toBe(
+            intensityProperty.textureReader.texture
+          );
 
-        expect(vegetationProperty.textureReader.texture.width).toBe(1);
-        expect(vegetationProperty.textureReader.texture.height).toBe(1);
-        expect(vegetationProperty.textureReader.texture).not.toBe(
-          colorProperty.textureReader.texture
-        );
+          expect(vegetationProperty.textureReader.texture.width).toBe(1);
+          expect(vegetationProperty.textureReader.texture.height).toBe(1);
+          expect(vegetationProperty.textureReader.texture).not.toBe(
+            colorProperty.textureReader.texture
+          );
 
-        expect(Object.keys(featureMetadata.schema.classes).sort()).toEqual([
-          "building",
-          "map",
-          "ortho",
-          "tree",
-        ]);
-      });
+          expect(
+            Object.keys(structuralMetadata.schema.classes).sort()
+          ).toEqual(["building", "map", "ortho", "tree"]);
+        }
+      );
     });
 
-    it("loads feature metadata with external schema", function () {
+    it("loads structural metadata with external schema", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         when.resolve(buffer)
       );
@@ -391,7 +401,7 @@ describe(
         when.resolve(schemaJson)
       );
 
-      const featureMetadataLoader = new GltfFeatureMetadataLoader({
+      const structuralMetadataLoader = new GltfStructuralMetadataLoader({
         gltf: gltfSchemaUri,
         extension: extensionSchemaUri,
         gltfResource: gltfResource,
@@ -399,22 +409,20 @@ describe(
         supportedImageFormats: new SupportedImageFormats(),
       });
 
-      featureMetadataLoader.load();
+      structuralMetadataLoader.load();
 
-      return waitForLoaderProcess(featureMetadataLoader, scene).then(function (
-        featureMetadataLoader
-      ) {
-        const featureMetadata = featureMetadataLoader.featureMetadata;
-        expect(Object.keys(featureMetadata.schema.classes).sort()).toEqual([
-          "building",
-          "map",
-          "ortho",
-          "tree",
-        ]);
-      });
+      return waitForLoaderProcess(structuralMetadataLoader, scene).then(
+        function (structuralMetadataLoader) {
+          const structuralMetadata =
+            structuralMetadataLoader.structuralMetadata;
+          expect(
+            Object.keys(structuralMetadata.schema.classes).sort()
+          ).toEqual(["building", "map", "ortho", "tree"]);
+        }
+      );
     });
 
-    it("destroys feature metadata", function () {
+    it("destroys structural metadata", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         when.resolve(buffer)
       );
@@ -442,7 +450,7 @@ describe(
         "destroy"
       ).and.callThrough();
 
-      const featureMetadataLoader = new GltfFeatureMetadataLoader({
+      const structuralMetadataLoader = new GltfStructuralMetadataLoader({
         gltf: gltf,
         extension: extension,
         gltfResource: gltfResource,
@@ -450,23 +458,23 @@ describe(
         supportedImageFormats: new SupportedImageFormats(),
       });
 
-      featureMetadataLoader.load();
+      structuralMetadataLoader.load();
 
-      return waitForLoaderProcess(featureMetadataLoader, scene).then(function (
-        featureMetadataLoader
-      ) {
-        expect(featureMetadataLoader.featureMetadata).toBeDefined();
-        expect(featureMetadataLoader.isDestroyed()).toBe(false);
+      return waitForLoaderProcess(structuralMetadataLoader, scene).then(
+        function (structuralMetadataLoader) {
+          expect(structuralMetadataLoader.structuralMetadata).toBeDefined();
+          expect(structuralMetadataLoader.isDestroyed()).toBe(false);
 
-        featureMetadataLoader.destroy();
+          structuralMetadataLoader.destroy();
 
-        expect(featureMetadataLoader.featureMetadata).not.toBeDefined();
-        expect(featureMetadataLoader.isDestroyed()).toBe(true);
+          expect(structuralMetadataLoader.structuralMetadata).not.toBeDefined();
+          expect(structuralMetadataLoader.isDestroyed()).toBe(true);
 
-        expect(destroyBufferView.calls.count()).toBe(6);
-        expect(destroyTexture.calls.count()).toBe(2);
-        expect(destroySchema.calls.count()).toBe(1);
-      });
+          expect(destroyBufferView.calls.count()).toBe(6);
+          expect(destroyTexture.calls.count()).toBe(2);
+          expect(destroySchema.calls.count()).toBe(1);
+        }
+      );
     });
 
     function resolveAfterDestroy(reject) {
@@ -494,9 +502,9 @@ describe(
         "destroy"
       ).and.callThrough();
 
-      // Load a copy of feature metadata into the cache so that the resource
-      // promises resolve even if the feature metadata loader is destroyed
-      const featureMetadataLoaderCopy = new GltfFeatureMetadataLoader({
+      // Load a copy of structural metadata into the cache so that the resource
+      // promises resolve even if the structural metadata loader is destroyed
+      const structuralMetadataLoaderCopy = new GltfStructuralMetadataLoader({
         gltf: gltf,
         extension: extension,
         gltfResource: gltfResource,
@@ -511,23 +519,23 @@ describe(
         resource: schemaResource,
       });
 
-      featureMetadataLoaderCopy.load();
+      structuralMetadataLoaderCopy.load();
 
-      return waitForLoaderProcess(featureMetadataLoaderCopy, scene).then(
-        function (featureMetadataLoaderCopy) {
-          // Ignore featureMetadataLoaderCopy destroying its buffer views
+      return waitForLoaderProcess(structuralMetadataLoaderCopy, scene).then(
+        function (structuralMetadataLoaderCopy) {
+          // Ignore structuralMetadataLoaderCopy destroying its buffer views
           destroyBufferView.calls.reset();
 
-          const featureMetadataLoader = new GltfFeatureMetadataLoader({
+          const structuralMetadataLoader = new GltfStructuralMetadataLoader({
             gltf: gltfSchemaUri,
             extension: extensionSchemaUri,
             gltfResource: gltfResource,
             baseResource: gltfResource,
             supportedImageFormats: new SupportedImageFormats(),
           });
-          expect(featureMetadataLoader.featureMetadata).not.toBeDefined();
-          featureMetadataLoader.load();
-          featureMetadataLoader.destroy();
+          expect(structuralMetadataLoader.structuralMetadata).not.toBeDefined();
+          structuralMetadataLoader.load();
+          structuralMetadataLoader.destroy();
 
           if (reject) {
             deferredPromise.reject(new Error());
@@ -535,10 +543,10 @@ describe(
             deferredPromise.resolve(schemaJson);
           }
 
-          expect(featureMetadataLoader.featureMetadata).not.toBeDefined();
-          expect(featureMetadataLoader.isDestroyed()).toBe(true);
+          expect(structuralMetadataLoader.structuralMetadata).not.toBeDefined();
+          expect(structuralMetadataLoader.isDestroyed()).toBe(true);
 
-          featureMetadataLoaderCopy.destroy();
+          structuralMetadataLoaderCopy.destroy();
 
           expect(destroyBufferView.calls.count()).toBe(6);
           expect(destroyTexture.calls.count()).toBe(2);

@@ -3,15 +3,17 @@
     "version": "2.0"
   },
   "extensionsUsed": [
-    "EXT_mesh_features"
+    "EXT_mesh_features",
+    "EXT_structural_metadata"
   ],
   "extensions": {
-    "EXT_mesh_features": {
+    "EXT_structural_metadata": {
       "schema": {
         "classes": {
           "vegetation": {
             "properties": {
               "vegetationDensity": {
+                "type": "SCALAR",
                 "componentType": "UINT8",
                 "normalized": true
               }
@@ -20,7 +22,7 @@
           "landCover": {
             "properties": {
               "name": {
-                "componentType": "STRING"
+                "type": "STRING"
               },
               "color": {
                 "type": "VEC3",
@@ -50,12 +52,12 @@
         {
           "name": "Vegetation",
           "class": "vegetation",
-          "index": 1,
-          "texCoord": 0,
           "properties": {
-            "vegetationDensity": [
-              0
-            ]
+            "vegetationDensity": {
+              "index": 1,
+              "texCoord": 0,
+              "channels": [0]
+            }
           }
         }
       ]
@@ -111,7 +113,9 @@
                     "channels": [0] 
                   }
                 }
-              ],
+              ]
+            },
+            "EXT_structural_metadata": {
               "propertyTextures": [
                 0
               ]
