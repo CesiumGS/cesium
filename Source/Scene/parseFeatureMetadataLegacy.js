@@ -3,19 +3,19 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import PropertyTable from "./PropertyTable.js";
 import PropertyTexture from "./PropertyTexture.js";
-import FeatureMetadata from "./FeatureMetadata.js";
+import StructuralMetadata from "./StructuralMetadata.js";
 import MetadataTable from "./MetadataTable.js";
 
 /**
  * Parse the <code>EXT_feature_metadata</code> glTF extension to create a
- * feature metadata object.
+ * structural metadata object.
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.extension The extension JSON object.
  * @param {MetadataSchema} options.schema The parsed schema.
  * @param {Object.<String, Uint8Array>} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
  * @param {Object.<String, Texture>} [options.textures] An object mapping texture IDs to {@link Texture} objects.
- * @return {FeatureMetadata} A feature metadata object
+ * @return {StructuralMetadata} A structural metadata object
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -37,7 +37,7 @@ export default function parseFeatureMetadataLegacy(options) {
   let sortedIds;
   if (defined(extension.featureTables)) {
     // Store textures in an array sorted by the dictionary keys. This
-    // allows compatibility with the newer EXT_mesh_features extension
+    // allows compatibility with the newer EXT_structural_metadata extension
     // which is array-based.
     sortedIds = Object.keys(extension.featureTables).sort();
     for (i = 0; i < sortedIds.length; i++) {
@@ -67,7 +67,7 @@ export default function parseFeatureMetadataLegacy(options) {
   const propertyTextures = [];
   if (defined(extension.featureTextures)) {
     // Store textures in an array sorted by the dictionary keys. This
-    // allows compatibility with the newer EXT_mesh_features extension
+    // allows compatibility with the newer EXT_structural_metadata extension
     // which is array-based.
     sortedIds = Object.keys(extension.featureTextures).sort();
     for (i = 0; i < sortedIds.length; i++) {
@@ -84,7 +84,7 @@ export default function parseFeatureMetadataLegacy(options) {
     }
   }
 
-  return new FeatureMetadata({
+  return new StructuralMetadata({
     schema: schema,
     propertyTables: propertyTables,
     propertyTextures: propertyTextures,

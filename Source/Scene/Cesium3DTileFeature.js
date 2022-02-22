@@ -231,14 +231,14 @@ Cesium3DTileFeature.prototype.getProperty = function (name) {
 
 /**
  * Returns a copy of the feature's property with the given name, examining all
- * the metadata from 3D Tiles 1.0 formats, the EXT_mesh_features and legacy
+ * the metadata from 3D Tiles 1.0 formats, the EXT_structural_metadata and legacy
  * EXT_feature_metadata glTF extensions, and the 3DTILES_metadata 3D Tiles
  * extension. Metadata is checked against name from most specific to most
  * general and the first match is returned. Metadata is checked in this order:
  *
  * <ol>
- *   <li>Batch table (feature metadata) property by semantic</li>
- *   <li>Batch table (feature metadata) property by property ID</li>
+ *   <li>Batch table (structural metadata) property by semantic</li>
+ *   <li>Batch table (structural metadata) property by property ID</li>
  *   <li>Tile metadata property by semantic</li>
  *   <li>Tile metadata property by property ID</li>
  *   <li>Subtree metadata property by semantic</li>
@@ -251,7 +251,7 @@ Cesium3DTileFeature.prototype.getProperty = function (name) {
  * </ol>
  * <p>
  * For 3D Tiles Next details, see the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension}
- * for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features Extension}
+ * for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension}
  * for glTF. For the legacy glTF extension, see {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension}
  * </p>
  *

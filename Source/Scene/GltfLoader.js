@@ -15,7 +15,7 @@ import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.
 import when from "../ThirdParty/when.js";
 import AttributeType from "./AttributeType.js";
 import Axis from "./Axis.js";
-import GltfFeatureMetadataLoader from "./GltfFeatureMetadataLoader.js";
+import GltfStructuralMetadataLoader from "./GltfStructuralMetadataLoader.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js";
 import ModelComponents from "./ModelComponents.js";
@@ -113,7 +113,7 @@ export default function GltfLoader(options) {
   this._renameBatchIdSemantic = renameBatchIdSemantic;
 
   // When loading EXT_feature_metadata, the feature tables and textures
-  // are now stored as arrays like the newer EXT_mesh_features extension.
+  // are now stored as arrays like the newer EXT_structural_metadata extension.
   // This requires sorting the dictionary keys for a consistent ordering.
   this._sortedPropertyTableIds = undefined;
   this._sortedFeatureTextureIds = undefined;
@@ -128,7 +128,7 @@ export default function GltfLoader(options) {
   this._textureLoaders = [];
   this._bufferViewLoaders = [];
   this._geometryLoaders = [];
-  this._featureMetadataLoader = undefined;
+  this._structuralMetadataLoader = undefined;
 
   // Loaded results
   this._components = undefined;
@@ -264,8 +264,8 @@ function process(loader, frameState) {
     geometryLoaders[i].process(frameState);
   }
 
-  if (defined(loader._featureMetadataLoader)) {
-    loader._featureMetadataLoader.process(frameState);
+  if (defined(loader._structuralMetadataLoader)) {
+    loader._structuralMetadataLoader.process(frameState);
   }
 }
 
@@ -995,19 +995,26 @@ function loadPrimitive(
     primitive.indices = loadIndices(loader, gltf, indices, draco);
   }
 
-  const featureMetadata = extensions.EXT_mesh_features;
+  // With the latest revision, feature IDs are defined in EXT_mesh_features
+  // while EXT_structural_metadata is for defining property textures and
+  // property mappings. In the legacy EXT_feature_metadata, these concepts
+  // were all in one extension.
+  const structuralMetadata = extensions.EXT_structural_metadata;
+  const meshFeatures = extensions.EXT_mesh_features;
   const featureMetadataLegacy = extensions.EXT_feature_metadata;
+  const hasFeatureMetadataLegacy = defined(featureMetadataLegacy);
 
-  if (defined(featureMetadata)) {
-    loadPrimitiveMetadata(
+  // Load feature Ids
+  if (defined(meshFeatures)) {
+    loadPrimitiveFeatures(
       loader,
       gltf,
       primitive,
-      featureMetadata,
+      meshFeatures,
       supportedImageFormats
     );
-  } else if (defined(featureMetadataLegacy)) {
-    loadPrimitiveMetadataLegacy(
+  } else if (hasFeatureMetadataLegacy) {
+    loadPrimitiveFeaturesLegacy(
       loader,
       gltf,
       primitive,
@@ -1016,21 +1023,35 @@ function loadPrimitive(
     );
   }
 
+  // Load structural metadata
+  if (defined(structuralMetadata)) {
+    loadPrimitiveMetadata(primitive, structuralMetadata);
+  } else if (hasFeatureMetadataLegacy) {
+    loadPrimitiveMetadataLegacy(loader, primitive, featureMetadataLegacy);
+  }
+
   primitive.primitiveType = gltfPrimitive.mode;
 
   return primitive;
 }
 
-function loadPrimitiveMetadata(
+// For EXT_mesh_features
+function loadPrimitiveFeatures(
   loader,
   gltf,
   primitive,
-  metadataExtension,
+  meshFeaturesExtension,
   supportedImageFormats
 ) {
-  const featureIdsArray = defined(metadataExtension.featureIds)
-    ? metadataExtension.featureIds
-    : [];
+  let featureIdsArray;
+  if (
+    defined(meshFeaturesExtension) &&
+    defined(meshFeaturesExtension.featureIds)
+  ) {
+    featureIdsArray = meshFeaturesExtension.featureIds;
+  } else {
+    featureIdsArray = [];
+  }
 
   for (let i = 0; i < featureIdsArray.length; i++) {
     const featureIds = featureIdsArray[i];
@@ -1051,14 +1072,10 @@ function loadPrimitiveMetadata(
 
     primitive.featureIds.push(featureIdComponent);
   }
-
-  // Property Textures
-  if (defined(metadataExtension.propertyTextures)) {
-    primitive.propertyTextureIds = metadataExtension.propertyTextures;
-  }
 }
 
-function loadPrimitiveMetadataLegacy(
+// For EXT_feature_metadata
+function loadPrimitiveFeaturesLegacy(
   loader,
   gltf,
   primitive,
@@ -1121,7 +1138,21 @@ function loadPrimitiveMetadataLegacy(
       primitive.featureIds.push(featureIdComponent);
     }
   }
+}
 
+// For primitive-level EXT_structural_metadata
+function loadPrimitiveMetadata(primitive, structuralMetadataExtension) {
+  // Property Textures
+  if (
+    defined(structuralMetadataExtension) &&
+    defined(structuralMetadataExtension.propertyTextures)
+  ) {
+    primitive.propertyTextureIds = structuralMetadataExtension.propertyTextures;
+  }
+}
+
+// For EXT_feature_metadata
+function loadPrimitiveMetadataLegacy(loader, primitive, metadataExtension) {
   // Feature Textures
   if (defined(metadataExtension.featureTextures)) {
     // feature textures are now identified by an integer index. To convert the
@@ -1183,13 +1214,13 @@ function loadInstances(loader, gltf, nodeExtensions, frameState) {
     instancingExtension.extensions,
     defaultValue.EMPTY_OBJECT
   );
-  const featureMetadata = nodeExtensions.EXT_mesh_features;
+  const instanceFeatures = nodeExtensions.EXT_instance_features;
   const featureMetadataLegacy = instancingExtExtensions.EXT_feature_metadata;
 
-  if (defined(featureMetadata)) {
-    loadInstanceMetadata(instances, featureMetadata);
+  if (defined(instanceFeatures)) {
+    loadInstanceFeatures(instances, instanceFeatures);
   } else if (defined(featureMetadataLegacy)) {
-    loadInstanceMetadataLegacy(
+    loadInstanceFeaturesLegacy(
       gltf,
       instances,
       featureMetadataLegacy,
@@ -1201,9 +1232,9 @@ function loadInstances(loader, gltf, nodeExtensions, frameState) {
 }
 
 // For EXT_mesh_features
-function loadInstanceMetadata(instances, metadataExtension) {
-  // feature IDs are required in EXT_mesh_features
-  const featureIdsArray = metadataExtension.featureIds;
+function loadInstanceFeatures(instances, instanceFeaturesExtension) {
+  // feature IDs are required in EXT_instance_features
+  const featureIdsArray = instanceFeaturesExtension.featureIds;
 
   for (let i = 0; i < featureIdsArray.length; i++) {
     const featureIds = featureIdsArray[i];
@@ -1219,7 +1250,7 @@ function loadInstanceMetadata(instances, metadataExtension) {
 }
 
 // For backwards-compatibility with EXT_feature_metadata
-function loadInstanceMetadataLegacy(
+function loadInstanceFeaturesLegacy(
   gltf,
   instances,
   metadataExtension,
@@ -1376,14 +1407,14 @@ function loadNodes(loader, gltf, supportedImageFormats, frameState) {
   return nodes;
 }
 
-function loadFeatureMetadata(
+function loadStructuralMetadata(
   loader,
   gltf,
   extension,
   extensionLegacy,
   supportedImageFormats
 ) {
-  const featureMetadataLoader = new GltfFeatureMetadataLoader({
+  const structuralMetadataLoader = new GltfStructuralMetadataLoader({
     gltf: gltf,
     extension: extension,
     extensionLegacy: extensionLegacy,
@@ -1392,11 +1423,11 @@ function loadFeatureMetadata(
     supportedImageFormats: supportedImageFormats,
     asynchronous: loader._asynchronous,
   });
-  featureMetadataLoader.load();
+  structuralMetadataLoader.load();
 
-  loader._featureMetadataLoader = featureMetadataLoader;
+  loader._structuralMetadataLoader = structuralMetadataLoader;
 
-  return featureMetadataLoader;
+  return structuralMetadataLoader;
 }
 
 function getSceneNodeIds(gltf) {
@@ -1420,10 +1451,10 @@ function loadScene(gltf, nodes) {
 
 function parse(loader, gltf, supportedImageFormats, frameState) {
   const extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);
-  const featureMetadataExtension = extensions.EXT_mesh_features;
+  const structuralMetadataExtension = extensions.EXT_structural_metadata;
   const featureMetadataExtensionLegacy = extensions.EXT_feature_metadata;
 
-  if (featureMetadataExtensionLegacy) {
+  if (defined(featureMetadataExtensionLegacy)) {
     // If the old EXT_feature_metadata extension is present, sort the IDs of the
     // feature tables and feature textures so we don't have to do this once
     // per primitive.
@@ -1451,23 +1482,24 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
 
   loader._components = components;
 
-  // Load feature metadata (feature tables and feature textures)
+  // Load structural metadata (property tables and property textures)
   if (
-    defined(featureMetadataExtension) ||
+    defined(structuralMetadataExtension) ||
     defined(featureMetadataExtensionLegacy)
   ) {
-    const featureMetadataLoader = loadFeatureMetadata(
+    const structuralMetadataLoader = loadStructuralMetadata(
       loader,
       gltf,
-      featureMetadataExtension,
+      structuralMetadataExtension,
       featureMetadataExtensionLegacy,
       supportedImageFormats
     );
-    featureMetadataLoader.promise.then(function (featureMetadataLoader) {
+    structuralMetadataLoader.promise.then(function (structuralMetadataLoader) {
       if (loader.isDestroyed()) {
         return;
       }
-      components.featureMetadata = featureMetadataLoader.featureMetadata;
+      components.structuralMetadata =
+        structuralMetadataLoader.structuralMetadata;
     });
   }
 
@@ -1476,8 +1508,8 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
   loaders.push.apply(loaders, loader._bufferViewLoaders);
   loaders.push.apply(loaders, loader._geometryLoaders);
 
-  if (defined(loader._featureMetadataLoader)) {
-    loaders.push(loader._featureMetadataLoader);
+  if (defined(loader._structuralMetadataLoader)) {
+    loaders.push(loader._structuralMetadataLoader);
   }
 
   if (!loader._incrementallyLoadTextures) {
@@ -1543,10 +1575,10 @@ function unloadGeometry(loader) {
   loader._geometryLoaders.length = 0;
 }
 
-function unloadFeatureMetadata(loader) {
-  if (defined(loader._featureMetadataLoader)) {
-    loader._featureMetadataLoader.destroy();
-    loader._featureMetadataLoader = undefined;
+function unloadStructuralMetadata(loader) {
+  if (defined(loader._structuralMetadataLoader)) {
+    loader._structuralMetadataLoader.destroy();
+    loader._structuralMetadataLoader = undefined;
   }
 }
 
@@ -1563,7 +1595,7 @@ GltfLoader.prototype.unload = function () {
   unloadTextures(this);
   unloadBufferViews(this);
   unloadGeometry(this);
-  unloadFeatureMetadata(this);
+  unloadStructuralMetadata(this);
 
   this._components = undefined;
 };

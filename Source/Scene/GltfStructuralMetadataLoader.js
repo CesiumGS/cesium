@@ -3,25 +3,25 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import when from "../ThirdParty/when.js";
-import parseFeatureMetadata from "./parseFeatureMetadata.js";
+import parseStructuralMetadata from "./parseStructuralMetadata.js";
 import parseFeatureMetadataLegacy from "./parseFeatureMetadataLegacy.js";
 import ResourceCache from "./ResourceCache.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 
 /**
- * Loads glTF feature metadata
+ * Loads glTF structural metadata
  * <p>
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GltfFeatureMetadataLoader
+ * @alias GltfStructuralMetadataLoader
  * @constructor
  * @augments ResourceLoader
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
- * @param {String} [options.extension] The <code>EXT_mesh_features</code> extension object. If this is undefined, then extensionLegacy must be defined.
+ * @param {String} [options.extension] The <code>EXT_structural_metadata</code> extension object. If this is undefined, then extensionLegacy must be defined.
  * @param {String} [options.extensionLegacy] The legacy <code>EXT_feature_metadata</code> extension for backwards compatibility.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
@@ -32,7 +32,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function GltfFeatureMetadataLoader(options) {
+export default function GltfStructuralMetadataLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const gltf = options.gltf;
   const extension = options.extension;
@@ -67,23 +67,25 @@ export default function GltfFeatureMetadataLoader(options) {
   this._bufferViewLoaders = [];
   this._textureLoaders = [];
   this._schemaLoader = undefined;
-  this._featureMetadata = undefined;
+  this._structuralMetadata = undefined;
   this._state = ResourceLoaderState.UNLOADED;
   this._promise = when.defer();
 }
 
 if (defined(Object.create)) {
-  GltfFeatureMetadataLoader.prototype = Object.create(ResourceLoader.prototype);
-  GltfFeatureMetadataLoader.prototype.constructor = GltfFeatureMetadataLoader;
+  GltfStructuralMetadataLoader.prototype = Object.create(
+    ResourceLoader.prototype
+  );
+  GltfStructuralMetadataLoader.prototype.constructor = GltfStructuralMetadataLoader;
 }
 
-Object.defineProperties(GltfFeatureMetadataLoader.prototype, {
+Object.defineProperties(GltfStructuralMetadataLoader.prototype, {
   /**
    * A promise that resolves to the resource when the resource is ready.
    *
-   * @memberof GltfFeatureMetadataLoader.prototype
+   * @memberof GltfStructuralMetadataLoader.prototype
    *
-   * @type {Promise.<GltfFeatureMetadataLoader>}
+   * @type {Promise.<GltfStructuralMetadataLoader>}
    * @readonly
    * @private
    */
@@ -95,7 +97,7 @@ Object.defineProperties(GltfFeatureMetadataLoader.prototype, {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfFeatureMetadataLoader.prototype
+   * @memberof GltfStructuralMetadataLoader.prototype
    *
    * @type {String}
    * @readonly
@@ -107,17 +109,17 @@ Object.defineProperties(GltfFeatureMetadataLoader.prototype, {
     },
   },
   /**
-   * Feature metadata.
+   * The parsed structural metadata
    *
-   * @memberof GltfFeatureMetadataLoader.prototype
+   * @memberof GltfStructuralMetadataLoader.prototype
    *
-   * @type {FeatureMetadata}
+   * @type {StructuralMetadata}
    * @readonly
    * @private
    */
-  featureMetadata: {
+  structuralMetadata: {
     get: function () {
-      return this._featureMetadata;
+      return this._structuralMetadata;
     },
   },
 });
@@ -126,7 +128,7 @@ Object.defineProperties(GltfFeatureMetadataLoader.prototype, {
  * Loads the resource.
  * @private
  */
-GltfFeatureMetadataLoader.prototype.load = function () {
+GltfStructuralMetadataLoader.prototype.load = function () {
   const bufferViewsPromise = loadBufferViews(this);
   const texturesPromise = loadTextures(this);
   const schemaPromise = loadSchema(this);
@@ -147,14 +149,14 @@ GltfFeatureMetadataLoader.prototype.load = function () {
       const schema = results[2];
 
       if (defined(that._extension)) {
-        that._featureMetadata = parseFeatureMetadata({
+        that._structuralMetadata = parseStructuralMetadata({
           extension: that._extension,
           schema: schema,
           bufferViews: bufferViews,
           textures: textures,
         });
       } else {
-        that._featureMetadata = parseFeatureMetadataLegacy({
+        that._structuralMetadata = parseFeatureMetadataLegacy({
           extension: that._extensionLegacy,
           schema: schema,
           bufferViews: bufferViews,
@@ -170,7 +172,7 @@ GltfFeatureMetadataLoader.prototype.load = function () {
       }
       that.unload();
       that._state = ResourceLoaderState.FAILED;
-      const errorMessage = "Failed to load feature metadata";
+      const errorMessage = "Failed to load structural metadata";
       that._promise.reject(that.getError(errorMessage, error));
     });
 };
@@ -252,13 +254,15 @@ function gatherUsedBufferViewIdsLegacy(extensionLegacy) {
   return bufferViewIdSet;
 }
 
-function loadBufferViews(featureMetadataLoader) {
+function loadBufferViews(structuralMetadataLoader) {
   let bufferViewIds;
-  if (defined(featureMetadataLoader._extension)) {
-    bufferViewIds = gatherUsedBufferViewIds(featureMetadataLoader._extension);
+  if (defined(structuralMetadataLoader._extension)) {
+    bufferViewIds = gatherUsedBufferViewIds(
+      structuralMetadataLoader._extension
+    );
   } else {
     bufferViewIds = gatherUsedBufferViewIdsLegacy(
-      featureMetadataLoader._extensionLegacy
+      structuralMetadataLoader._extensionLegacy
     );
   }
 
@@ -268,13 +272,13 @@ function loadBufferViews(featureMetadataLoader) {
   for (const bufferViewId in bufferViewIds) {
     if (bufferViewIds.hasOwnProperty(bufferViewId)) {
       const bufferViewLoader = ResourceCache.loadBufferView({
-        gltf: featureMetadataLoader._gltf,
+        gltf: structuralMetadataLoader._gltf,
         bufferViewId: parseInt(bufferViewId),
-        gltfResource: featureMetadataLoader._gltfResource,
-        baseResource: featureMetadataLoader._baseResource,
+        gltfResource: structuralMetadataLoader._gltfResource,
+        baseResource: structuralMetadataLoader._baseResource,
       });
       bufferViewPromises.push(bufferViewLoader.promise);
-      featureMetadataLoader._bufferViewLoaders.push(bufferViewLoader);
+      structuralMetadataLoader._bufferViewLoaders.push(bufferViewLoader);
       bufferViewLoaders[bufferViewId] = bufferViewLoader;
     }
   }
@@ -294,7 +298,7 @@ function loadBufferViews(featureMetadataLoader) {
     }
 
     // Buffer views can be unloaded after the data has been copied
-    unloadBufferViews(featureMetadataLoader);
+    unloadBufferViews(structuralMetadataLoader);
 
     return bufferViews;
   });
@@ -345,21 +349,21 @@ function gatherUsedTextureIdsLegacy(extensionLegacy) {
   return textureIds;
 }
 
-function loadTextures(featureMetadataLoader) {
+function loadTextures(structuralMetadataLoader) {
   let textureIds;
-  if (defined(featureMetadataLoader._extension)) {
-    textureIds = gatherUsedTextureIds(featureMetadataLoader._extension);
+  if (defined(structuralMetadataLoader._extension)) {
+    textureIds = gatherUsedTextureIds(structuralMetadataLoader._extension);
   } else {
     textureIds = gatherUsedTextureIdsLegacy(
-      featureMetadataLoader._extensionLegacy
+      structuralMetadataLoader._extensionLegacy
     );
   }
 
-  const gltf = featureMetadataLoader._gltf;
-  const gltfResource = featureMetadataLoader._gltfResource;
-  const baseResource = featureMetadataLoader._baseResource;
-  const supportedImageFormats = featureMetadataLoader._supportedImageFormats;
-  const asynchronous = featureMetadataLoader._asynchronous;
+  const gltf = structuralMetadataLoader._gltf;
+  const gltfResource = structuralMetadataLoader._gltfResource;
+  const baseResource = structuralMetadataLoader._baseResource;
+  const supportedImageFormats = structuralMetadataLoader._supportedImageFormats;
+  const asynchronous = structuralMetadataLoader._asynchronous;
 
   // Load the textures
   const texturePromises = [];
@@ -375,7 +379,7 @@ function loadTextures(featureMetadataLoader) {
         asynchronous: asynchronous,
       });
       texturePromises.push(textureLoader.promise);
-      featureMetadataLoader._textureLoaders.push(textureLoader);
+      structuralMetadataLoader._textureLoaders.push(textureLoader);
       textureLoaders[textureId] = textureLoader;
     }
   }
@@ -393,15 +397,15 @@ function loadTextures(featureMetadataLoader) {
   });
 }
 
-function loadSchema(featureMetadataLoader) {
+function loadSchema(structuralMetadataLoader) {
   const extension = defaultValue(
-    featureMetadataLoader._extension,
-    featureMetadataLoader._extensionLegacy
+    structuralMetadataLoader._extension,
+    structuralMetadataLoader._extensionLegacy
   );
 
   let schemaLoader;
   if (defined(extension.schemaUri)) {
-    const resource = featureMetadataLoader._baseResource.getDerivedResource({
+    const resource = structuralMetadataLoader._baseResource.getDerivedResource({
       url: extension.schemaUri,
     });
     schemaLoader = ResourceCache.loadSchema({
@@ -413,7 +417,7 @@ function loadSchema(featureMetadataLoader) {
     });
   }
 
-  featureMetadataLoader._schemaLoader = schemaLoader;
+  structuralMetadataLoader._schemaLoader = schemaLoader;
 
   return schemaLoader.promise.then(function (schemaLoader) {
     return schemaLoader.schema;
@@ -426,7 +430,7 @@ function loadSchema(featureMetadataLoader) {
  * @param {FrameState} frameState The frame state.
  * @private
  */
-GltfFeatureMetadataLoader.prototype.process = function (frameState) {
+GltfStructuralMetadataLoader.prototype.process = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
@@ -444,29 +448,29 @@ GltfFeatureMetadataLoader.prototype.process = function (frameState) {
   }
 };
 
-function unloadBufferViews(featureMetadataLoader) {
-  const bufferViewLoaders = featureMetadataLoader._bufferViewLoaders;
+function unloadBufferViews(structuralMetadataLoader) {
+  const bufferViewLoaders = structuralMetadataLoader._bufferViewLoaders;
   const bufferViewLoadersLength = bufferViewLoaders.length;
   for (let i = 0; i < bufferViewLoadersLength; ++i) {
     ResourceCache.unload(bufferViewLoaders[i]);
   }
-  featureMetadataLoader._bufferViewLoaders.length = 0;
+  structuralMetadataLoader._bufferViewLoaders.length = 0;
 }
 
-function unloadTextures(featureMetadataLoader) {
-  const textureLoaders = featureMetadataLoader._textureLoaders;
+function unloadTextures(structuralMetadataLoader) {
+  const textureLoaders = structuralMetadataLoader._textureLoaders;
   const textureLoadersLength = textureLoaders.length;
   for (let i = 0; i < textureLoadersLength; ++i) {
     ResourceCache.unload(textureLoaders[i]);
   }
-  featureMetadataLoader._textureLoaders.length = 0;
+  structuralMetadataLoader._textureLoaders.length = 0;
 }
 
 /**
  * Unloads the resource.
  * @private
  */
-GltfFeatureMetadataLoader.prototype.unload = function () {
+GltfStructuralMetadataLoader.prototype.unload = function () {
   unloadBufferViews(this);
   unloadTextures(this);
 
@@ -475,5 +479,5 @@ GltfFeatureMetadataLoader.prototype.unload = function () {
   }
   this._schemaLoader = undefined;
 
-  this._featureMetadata = undefined;
+  this._structuralMetadata = undefined;
 };

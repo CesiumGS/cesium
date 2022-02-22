@@ -34,7 +34,7 @@ MetadataTester.createProperty = function (options) {
     properties: properties,
     propertyValues: propertyValues,
     // offsetType is for legacy EXT_feature_metadata, arrayOffsetType and
-    // stringOffsetType are for EXT_mesh_features
+    // stringOffsetType are for EXT_structural_metadata
     offsetType: options.offsetType,
     arrayOffsetType: options.arrayOffsetType,
     stringOffsetType: options.stringOffsetType,
@@ -246,7 +246,7 @@ MetadataTester.createPropertyTable = function (options) {
   });
 };
 
-// for EXT_mesh_features
+// for EXT_structural_metadata
 MetadataTester.createPropertyTables = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -366,9 +366,9 @@ MetadataTester.createGltf = function (options) {
     images: options.images,
     textures: options.textures,
     bufferViews: bufferViews,
-    extensionsUsed: ["EXT_mesh_features"],
+    extensionsUsed: ["EXT_structural_metadata"],
     extensions: {
-      EXT_mesh_features: {
+      EXT_structural_metadata: {
         schema: options.schema,
         propertyTables: propertyTableResults.propertyTables,
         propertyTextures: options.propertyTextures,

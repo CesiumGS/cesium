@@ -743,12 +743,13 @@ function Components() {
   this.nodes = undefined;
 
   /**
-   * Feature metadata containing the schema, feature tables, and feature textures.
+   * Structural metadata containing the schema, property tables, property
+   * textures and property mappings
    *
-   * @type {FeatureMetadata}
+   * @type {StructuralMetadata}
    * @private
    */
-  this.featureMetadata = undefined;
+  this.structuralMetadata = undefined;
 
   /**
    * The model's up axis.

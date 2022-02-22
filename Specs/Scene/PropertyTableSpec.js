@@ -390,7 +390,7 @@ describe("Scene/PropertyTable", function () {
       ]);
     });
 
-    it("hasProperty uses feature metadata", function () {
+    it("hasProperty uses structural metadata", function () {
       expect(batchTable.hasProperty(0, "itemId")).toBe(true);
       expect(batchTable.hasProperty(0, "itemCount")).toBe(true);
     });
@@ -425,7 +425,7 @@ describe("Scene/PropertyTable", function () {
       expect(batchTableJsonOnly.hasPropertyBySemantic(0, "NAME")).toBe(false);
     });
 
-    it("propertyExists uses feature metadata", function () {
+    it("propertyExists uses structural metadata", function () {
       expect(batchTable.propertyExists("itemId")).toBe(true);
       expect(batchTable.propertyExists("itemCount")).toBe(true);
     });
@@ -450,7 +450,7 @@ describe("Scene/PropertyTable", function () {
       expect(batchTableJsonOnly.propertyExistsBySemantic("NAME")).toBe(false);
     });
 
-    it("getProperty uses feature metadata", function () {
+    it("getProperty uses structural metadata", function () {
       expect(batchTable.getProperty(0, "itemId")).toBe(25);
       expect(batchTable.getProperty(0, "itemCount")).toBe(25);
 
@@ -492,7 +492,7 @@ describe("Scene/PropertyTable", function () {
       expect(batchTable.getProperty(0, "widgets")).not.toBeDefined();
     });
 
-    it("setProperty uses feature metadata", function () {
+    it("setProperty uses structural metadata", function () {
       expect(batchTable.getProperty(0, "itemCount")).toBe(25);
       expect(batchTable.setProperty(0, "itemCount", 24)).toBe(true);
       expect(batchTable.getProperty(0, "itemCount")).toBe(24);

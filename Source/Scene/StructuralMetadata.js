@@ -3,27 +3,27 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 
 /**
- * An object containing feature metadata.
+ * An object containing structural metadata.
  * <p>
- * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features Extension} as well as the
+ * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadatas|EXT_structural_metadata Extension} as well as the
  * previous {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
  * </p>
  *
  * @param {Object} options Object with the following properties:
  * @param {MetadataSchema} options.schema The parsed schema.
- * @param {PropertyTable[]} [options.propertyTables] An array of feature table objects. For the legacy <code>EXT_feature_metadata</code> extension, this is sorted by the key in the propertyTables dictionary
+ * @param {PropertyTable[]} [options.propertyTables] An array of property table objects. For the legacy <code>EXT_feature_metadata</code> extension, this is sorted by the key in the propertyTables dictionary
  * @param {PropertyTexture[]} [options.propertyTextures] An array of feature texture objects. For the legacy <code>EXT_feature_metadata</code> extension, this is sorted by the key in the propertyTextures dictionary
  * @param {Object} [options.statistics] Statistics about metadata
  * @param {Object} [options.extras] Extra user-defined properties
  * @param {Object} [options.extensions] An object containing extensions
  *
- * @alias FeatureMetadata
+ * @alias StructuralMetadata
  * @constructor
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function FeatureMetadata(options) {
+function StructuralMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.schema", options.schema);
@@ -41,11 +41,11 @@ function FeatureMetadata(options) {
   this._extensions = options.extensions;
 }
 
-Object.defineProperties(FeatureMetadata.prototype, {
+Object.defineProperties(StructuralMetadata.prototype, {
   /**
    * Schema containing classes and enums.
    *
-   * @memberof FeatureMetadata.prototype
+   * @memberof StructuralMetadata.prototype
    * @type {MetadataSchema}
    * @readonly
    * @private
@@ -62,7 +62,7 @@ Object.defineProperties(FeatureMetadata.prototype, {
    * See the {@link https://github.com/CesiumGS/glTF/blob/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata/schema/statistics.schema.json|statistics schema reference} for the full set of properties.
    * </p>
    *
-   * @memberof FeatureMetadata.prototype
+   * @memberof StructuralMetadata.prototype
    * @type {Object}
    * @readonly
    * @private
@@ -76,7 +76,7 @@ Object.defineProperties(FeatureMetadata.prototype, {
   /**
    * Extras in the JSON object.
    *
-   * @memberof FeatureMetadata.prototype
+   * @memberof StructuralMetadata.prototype
    * @type {*}
    * @readonly
    * @private
@@ -90,7 +90,7 @@ Object.defineProperties(FeatureMetadata.prototype, {
   /**
    * Extensions in the JSON object.
    *
-   * @memberof FeatureMetadata.prototype
+   * @memberof StructuralMetadata.prototype
    * @type {Object}
    * @readonly
    * @private
@@ -104,7 +104,7 @@ Object.defineProperties(FeatureMetadata.prototype, {
   /**
    * Number of feature tables in the metadata.
    *
-   * @memberof FeatureMetadata.prototype
+   * @memberof StructuralMetadata.prototype
    * @type {Number}
    * @readonly
    * @private
@@ -118,7 +118,7 @@ Object.defineProperties(FeatureMetadata.prototype, {
   /**
    * The feature tables in the metadata.
    *
-   * @memberof FeatureMetadata.prototype
+   * @memberof StructuralMetadata.prototype
    * @type {PropertyTable[]}
    * @readonly
    * @private
@@ -141,7 +141,7 @@ Object.defineProperties(FeatureMetadata.prototype, {
  * @returns {PropertyTable} The feature table.
  * @private
  */
-FeatureMetadata.prototype.getPropertyTable = function (propertyTableId) {
+StructuralMetadata.prototype.getPropertyTable = function (propertyTableId) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("propertyTableId", propertyTableId);
   //>>includeEnd('debug');
@@ -160,7 +160,7 @@ FeatureMetadata.prototype.getPropertyTable = function (propertyTableId) {
  * @returns {PropertyTexture} The feature texture.
  * @private
  */
-FeatureMetadata.prototype.getPropertyTexture = function (propertyTextureId) {
+StructuralMetadata.prototype.getPropertyTexture = function (propertyTextureId) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("propertyTextureId", propertyTextureId);
   //>>includeEnd('debug');
@@ -168,4 +168,4 @@ FeatureMetadata.prototype.getPropertyTexture = function (propertyTextureId) {
   return this._propertyTextures[propertyTextureId];
 };
 
-export default FeatureMetadata;
+export default StructuralMetadata;

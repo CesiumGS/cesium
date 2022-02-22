@@ -363,7 +363,7 @@ describe("Scene/parseBatchTable", function () {
     expect(propertyTable.getProperty(9, "year")).toBe("2018");
   });
 
-  it("stores extras and extensions in the transcoded FeatureMetadata", function () {
+  it("stores extras and extensions in the transcoded StructuralMetadata", function () {
     const batchTable = {
       extras: {
         author: "Cesium",

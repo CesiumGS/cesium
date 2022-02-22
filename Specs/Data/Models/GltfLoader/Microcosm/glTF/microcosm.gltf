@@ -3,10 +3,11 @@
     "version": "2.0"
   },
   "extensionsUsed": [
-    "EXT_mesh_features"
+    "EXT_mesh_features",
+    "EXT_structural_metadata"
   ],
   "extensions": {
-    "EXT_mesh_features": {
+    "EXT_structural_metadata": {
       "schema": {
         "classes": {
           "vegetation": {
@@ -112,7 +113,9 @@
                     "channels": [0] 
                   }
                 }
-              ],
+              ]
+            },
+            "EXT_structural_metadata": {
               "propertyTextures": [
                 0
               ]

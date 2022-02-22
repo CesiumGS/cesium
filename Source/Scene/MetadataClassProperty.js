@@ -514,7 +514,7 @@ function parseType(property, enums) {
     };
   }
 
-  // Both EXT_feature_metadata and EXT_mesh_features allow numeric types like
+  // Both EXT_feature_metadata and EXT_structural_metadata allow numeric types like
   // INT32 or FLOAT64 as a componentType.
   if (
     defined(componentType) &&

@@ -1,6 +1,6 @@
 import {
   MetadataSchema,
-  parseFeatureMetadata,
+  parseStructuralMetadata,
   PixelDatatype,
   PixelFormat,
   Texture,
@@ -9,7 +9,7 @@ import createContext from "../createContext.js";
 import MetadataTester from "../MetadataTester.js";
 
 describe(
-  "Scene/parseFeatureMetadata",
+  "Scene/parseStructuralMetadata",
   function () {
     const propertyTablesSchema = {
       classes: {
@@ -64,7 +64,7 @@ describe(
 
     it("throws without extension", function () {
       expect(function () {
-        return parseFeatureMetadata({
+        return parseStructuralMetadata({
           extension: undefined,
           schema: new MetadataSchema(propertyTablesSchema),
         });
@@ -73,7 +73,7 @@ describe(
 
     it("throws without schema", function () {
       expect(function () {
-        return parseFeatureMetadata({
+        return parseStructuralMetadata({
           extension: {},
           schema: undefined,
         });
@@ -81,7 +81,7 @@ describe(
     });
 
     it("parses extension with default values", function () {
-      const metadata = parseFeatureMetadata({
+      const metadata = parseStructuralMetadata({
         extension: {},
         schema: new MetadataSchema(propertyTablesSchema),
       });
@@ -123,7 +123,7 @@ describe(
         propertyTables: propertyTableResults.propertyTables,
       };
 
-      const metadata = parseFeatureMetadata({
+      const metadata = parseStructuralMetadata({
         extension: extension,
         schema: new MetadataSchema(propertyTablesSchema),
         bufferViews: propertyTableResults.bufferViews,
@@ -212,7 +212,7 @@ describe(
         ],
       };
 
-      const metadata = parseFeatureMetadata({
+      const metadata = parseStructuralMetadata({
         extension: extension,
         schema: new MetadataSchema(featureTexturesSchema),
         textures: textures,
@@ -256,7 +256,7 @@ describe(
       const extension = {
         statistics: statistics,
       };
-      const metadata = parseFeatureMetadata({
+      const metadata = parseStructuralMetadata({
         extension: extension,
         schema: new MetadataSchema(featureTexturesSchema),
       });
@@ -270,7 +270,7 @@ describe(
       const extension = {
         extras: extras,
       };
-      const metadata = parseFeatureMetadata({
+      const metadata = parseStructuralMetadata({
         extension: extension,
         schema: new MetadataSchema(featureTexturesSchema),
       });
@@ -284,7 +284,7 @@ describe(
       const extension = {
         extensions: extensions,
       };
-      const metadata = parseFeatureMetadata({
+      const metadata = parseStructuralMetadata({
         extension: extension,
         schema: new MetadataSchema(featureTexturesSchema),
       });
