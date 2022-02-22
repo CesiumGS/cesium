@@ -559,6 +559,15 @@ function Primitive() {
    * @private
    */
   this.propertyTextureIds = [];
+
+  /**
+   * The property attribute IDs. These indices correspond to the array of
+   * property attributes in the EXT_structural_metadata extension.
+   *
+   * @type {Number[]}
+   * @private
+   */
+  this.propertyAttributeIds = [];
 }
 
 /**
