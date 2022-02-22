@@ -52,12 +52,12 @@
         {
           "name": "Vegetation",
           "class": "vegetation",
-          "index": 1,
-          "texCoord": 0,
           "properties": {
-            "vegetationDensity": [
-              0
-            ]
+            "vegetationDensity": {
+              "index": 1,
+              "texCoord": 0,
+              "channels": [0]
+            }
           }
         }
       ]

@@ -50,24 +50,19 @@ describe("Scene/PropertyTextureProperty", function () {
     };
 
     extensions = {
-      EXT_other_extension: {},
+      KHR_texture_transform: {
+        offset: [0.5, 0.5],
+        scale: [0.1, 0.2],
+        texCoord: 1,
+      },
     };
 
     const property = {
-      channels: "rgb",
-      texture: {
-        index: 0,
-        texCoord: 0,
-        extensions: {
-          KHR_texture_transform: {
-            offset: [0.5, 0.5],
-            scale: [0.1, 0.2],
-            texCoord: 1,
-          },
-        },
-      },
-      extras: extras,
+      channels: [0, 1, 2],
+      index: 0,
+      texCoord: 0,
       extensions: extensions,
+      extras: extras,
     };
 
     propertyTextureProperty = new PropertyTextureProperty({

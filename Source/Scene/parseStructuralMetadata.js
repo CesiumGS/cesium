@@ -1,5 +1,4 @@
 import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import PropertyTable from "./PropertyTable.js";
@@ -66,7 +65,7 @@ export default function parseStructuralMetadata(options) {
         new PropertyTexture({
           id: i,
           name: propertyTexture.name,
-          featureTexture: reformatPropertyTexture(propertyTexture),
+          propertyTexture: propertyTexture,
           class: schema.classes[propertyTexture.class],
           textures: options.textures,
         })
@@ -82,52 +81,4 @@ export default function parseStructuralMetadata(options) {
     extras: extension.extras,
     extensions: extension.extensions,
   });
-}
-
-/**
- * The legacy EXT_feature_metadata schema was a bit broad in what it could do.
- * The properties in a feature texture could potentially belong to different
- * textures. For full backwards compatibility, here we transcode <i>backwards</i>
- * from EXT_structural_metadata to EXT_feature_metadata.
- *
- * @param {Object} propertyTexture The property texture JSON from EXT_structural_metadata
- * @return {Object} The corresponding feature texture JSON for the legacy EXT_feature_metadata
- * @private
- */
-function reformatPropertyTexture(propertyTexture) {
-  // in EXT_structural_metadata propertyTexture is a valid glTF textureInfo
-  // since it has an index and a texCoord.
-  const textureInfo = clone(propertyTexture);
-
-  const featureTexture = clone(propertyTexture);
-  featureTexture.properties = {};
-
-  const originalProperties = propertyTexture.properties;
-  for (const propertyId in originalProperties) {
-    if (originalProperties.hasOwnProperty(propertyId)) {
-      const channels = originalProperties[propertyId];
-      featureTexture.properties[propertyId] = {
-        texture: textureInfo,
-        channels: reformatChannels(channels),
-      };
-    }
-  }
-
-  return featureTexture;
-}
-
-/**
- * Reformat from an array of channel indices like <code>[0, 1]</code> to a
- * string of channels as would be used in GLSL swizzling (e.g. "rg")
- *
- * @param {Number[]} channels the channel indices
- * @return {String} The channels as a string of "r", "g", "b" or "a" characters.
- * @private
- */
-function reformatChannels(channels) {
-  return channels
-    .map(function (channelIndex) {
-      return "rgba".charAt(channelIndex);
-    })
-    .join("");
 }

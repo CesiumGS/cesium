@@ -13,7 +13,7 @@ import PropertyTextureProperty from "./PropertyTextureProperty.js";
  * @param {Object} options Object with the following properties:
  * @param {String} [options.name] Optional human-readable name to describe the table
  * @param {String|Number} [options.id] A unique id to identify the feature table, useful for debugging. For <code>EXT_structural_metadata</code>, this is the array index in the feature tables array, for <code>EXT_feature_metadata</code> this is the dictionary key in the feature tables dictionary.
- * @param {Object} options.featureTexture The feature texture JSON. Note that this follows the legacy EXT_feature_metadata schema to allow full backwards compatibility.
+ * @param {Object} options.propertyTexture The property texture JSON, following the EXT_structural_metadata schema.
  * @param {MetadataClass} options.class The class that properties conform to.
  * @param {Object.<String, Texture>} options.textures An object mapping texture IDs to {@link Texture} objects.
  *
@@ -25,25 +25,25 @@ import PropertyTextureProperty from "./PropertyTextureProperty.js";
  */
 function PropertyTexture(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const featureTexture = options.featureTexture;
+  const propertyTexture = options.propertyTexture;
   const classDefinition = options.class;
   const textures = options.textures;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.featureTexture", featureTexture);
+  Check.typeOf.object("options.propertyTexture", propertyTexture);
   Check.typeOf.object("options.class", classDefinition);
   Check.typeOf.object("options.textures", textures);
   //>>includeEnd('debug');
 
-  const extensions = featureTexture.extensions;
-  const extras = featureTexture.extras;
+  const extensions = propertyTexture.extensions;
+  const extras = propertyTexture.extras;
 
   const properties = {};
-  if (defined(featureTexture.properties)) {
-    for (const propertyId in featureTexture.properties) {
-      if (featureTexture.properties.hasOwnProperty(propertyId)) {
+  if (defined(propertyTexture.properties)) {
+    for (const propertyId in propertyTexture.properties) {
+      if (propertyTexture.properties.hasOwnProperty(propertyId)) {
         properties[propertyId] = new PropertyTextureProperty({
-          property: featureTexture.properties[propertyId],
+          property: propertyTexture.properties[propertyId],
           classProperty: classDefinition.properties[propertyId],
           textures: textures,
         });
