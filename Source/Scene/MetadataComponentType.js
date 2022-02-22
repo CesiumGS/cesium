@@ -1,3 +1,4 @@
+import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
@@ -373,11 +374,7 @@ MetadataComponentType.unnormalize = function (value, type) {
   const max = MetadataComponentType.getMaximum(type);
   const min = MetadataComponentType.isUnsignedIntegerType(type) ? 0 : -max;
 
-  if (value >= 0.0) {
-    value = value * Number(max);
-  } else {
-    value = -value * Number(min);
-  }
+  value = CesiumMath.sign(value) * Math.round(Math.abs(value) * Number(max));
 
   if (
     (type === MetadataComponentType.INT64 ||

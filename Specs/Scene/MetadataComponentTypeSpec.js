@@ -364,8 +364,16 @@ describe("Scene/MetadataComponentType", function () {
       const type = signedTypes[i];
       const min = MetadataComponentType.getMinimum(MetadataComponentType[type]);
       const max = MetadataComponentType.getMaximum(MetadataComponentType[type]);
-      const values = [-1.0, -middle[i], 0.0, middle[i], 1.0];
-      const expectedResults = [min + 1, min / 2, 0, (max + 1) / 2, max];
+      const values = [-1.0, -middle[i], -0.5, 0.0, middle[i], 0.5, 1.0];
+      const expectedResults = [
+        min + 1,
+        min / 2,
+        min / 2,
+        0,
+        (max + 1) / 2,
+        (max + 1) / 2,
+        max,
+      ];
       for (let j = 0; j < values.length; ++j) {
         const result = MetadataComponentType.unnormalize(values[j], type);
         expect(result).toBe(expectedResults[j]);
@@ -378,8 +386,8 @@ describe("Scene/MetadataComponentType", function () {
     for (let i = 0; i < unsignedTypes.length; ++i) {
       const type = unsignedTypes[i];
       const max = MetadataComponentType.getMaximum(MetadataComponentType[type]);
-      const values = [0.0, 0.2, 1.0];
-      const expectedResults = [0, max / 5, max];
+      const values = [0.0, 0.2, 0.5, 1.0];
+      const expectedResults = [0, max / 5, (max + 1) / 2, max];
       for (let j = 0; j < values.length; ++j) {
         const result = MetadataComponentType.unnormalize(values[j], type);
         expect(result).toBe(expectedResults[j]);
@@ -419,12 +427,14 @@ describe("Scene/MetadataComponentType", function () {
     }
 
     const max = MetadataComponentType.getMaximum(MetadataComponentType.UINT64);
-    const values = [0.0, 0.2, 1.0];
+    const values = [0.0, 0.2, 0.5, 1.0];
 
     // Second result is max / 5
+    // Third result is (max + 1) / 2
     const expectedResults = [
       BigInt(0), // eslint-disable-line
       BigInt(3689348814741910323), // eslint-disable-line
+      BigInt(9223372036854775808), // eslint-disable-line
       max,
     ];
     for (let i = 0; i < values.length; ++i) {
