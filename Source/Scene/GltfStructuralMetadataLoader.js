@@ -304,16 +304,16 @@ function loadBufferViews(structuralMetadataLoader) {
   });
 }
 
-function gatherUsedTextureIds(extension) {
+function gatherUsedTextureIds(structuralMetadataExtension) {
   // Gather the used textures
   const textureIds = {};
-  const propertyTextures = extension.propertyTextures;
+  const propertyTextures = structuralMetadataExtension.propertyTextures;
   if (defined(propertyTextures)) {
     for (let i = 0; i < propertyTextures.length; i++) {
       const propertyTexture = propertyTextures[i];
-      if (defined(propertyTexture.properties)) {
-        // The property texture JSON is also a glTF textureInfo
-        textureIds[propertyTexture.index] = propertyTexture;
+      const properties = propertyTexture.properties;
+      if (defined(properties)) {
+        gatherTextureIdsFromProperties(properties, textureIds);
       }
     }
   }
@@ -323,8 +323,8 @@ function gatherUsedTextureIds(extension) {
 function gatherTextureIdsFromProperties(properties, textureIds) {
   for (const propertyId in properties) {
     if (properties.hasOwnProperty(propertyId)) {
-      const property = properties[propertyId];
-      const textureInfo = property.texture;
+      // in EXT_structural_metadata the property is a valid textureInfo.
+      const textureInfo = properties[propertyId];
       textureIds[textureInfo.index] = textureInfo;
     }
   }
@@ -340,13 +340,23 @@ function gatherUsedTextureIdsLegacy(extensionLegacy) {
         const featureTexture = featureTextures[featureTextureId];
         const properties = featureTexture.properties;
         if (defined(properties)) {
-          gatherTextureIdsFromProperties(properties, textureIds);
+          gatherTextureIdsFromPropertiesLegacy(properties, textureIds);
         }
       }
     }
   }
 
   return textureIds;
+}
+
+function gatherTextureIdsFromPropertiesLegacy(properties, textureIds) {
+  for (const propertyId in properties) {
+    if (properties.hasOwnProperty(propertyId)) {
+      const property = properties[propertyId];
+      const textureInfo = property.texture;
+      textureIds[textureInfo.index] = textureInfo;
+    }
+  }
 }
 
 function loadTextures(structuralMetadataLoader) {
