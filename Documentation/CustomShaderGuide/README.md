@@ -316,13 +316,11 @@ For example, suppose we had a glTF primitive with the following feature IDs:
       "EXT_instance_features": {
         "featureIds": [
           {
-            // Feature ID attribute from implicit range
+            // Default feature IDs (instance ID)
             //
             // Vertex Shader: vsInput.featureIds.instanceFeatureId_0
             // Fragment Shader: fsInput.featureIds.instanceFeatureId_0
-            "propertyTable": 0,
-            "offset": 0,
-            "repeat": 1
+            "propertyTable": 0
           },
           {
             // Feature ID attribute. This corresponds to _FEATURE_ID_0 from the
@@ -363,13 +361,11 @@ For example, suppose we had a glTF primitive with the following feature IDs:
                 "channel": 0
               },
               {
-                // Implicit Feature ID attribute
+                // Default Feature IDs (vertex ID)
                 //
                 // Vertex Shader: vsInput.featureIds.featureId_1
                 // Fragment Shader: fsInput.featureIds.featureId_1
                 "propertyTable": 3,
-                "offset": 0,
-                "repeat": 3
               },
               {
                 // Feature ID Attribute (_FEATURE_ID_0). Note that this
