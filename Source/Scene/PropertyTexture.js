@@ -4,15 +4,15 @@ import defined from "../Core/defined.js";
 import PropertyTextureProperty from "./PropertyTextureProperty.js";
 
 /**
- * A feature texture.
+ * A property texture.
  * <p>
  * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension} as well as the
  * previous {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {String} [options.name] Optional human-readable name to describe the table
- * @param {String|Number} [options.id] A unique id to identify the feature table, useful for debugging. For <code>EXT_structural_metadata</code>, this is the array index in the feature tables array, for <code>EXT_feature_metadata</code> this is the dictionary key in the feature tables dictionary.
+ * @param {String} [options.name] Optional human-readable name to describe the texture
+ * @param {String|Number} [options.id] A unique id to identify the property texture, useful for debugging. For <code>EXT_structural_metadata</code>, this is the array index in the property textures array, for <code>EXT_feature_metadata</code> this is the dictionary key in the property textures dictionary.
  * @param {Object} options.propertyTexture The property texture JSON, following the EXT_structural_metadata schema.
  * @param {MetadataClass} options.class The class that properties conform to.
  * @param {Object.<String, Texture>} options.textures An object mapping texture IDs to {@link Texture} objects.

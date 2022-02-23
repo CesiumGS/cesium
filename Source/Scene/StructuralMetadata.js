@@ -118,7 +118,7 @@ Object.defineProperties(StructuralMetadata.prototype, {
   },
 
   /**
-   * The feature tables in the metadata.
+   * The property textures in the metadata.
    *
    * @memberof StructuralMetadata.prototype
    * @type {PropertyTable[]}
@@ -128,6 +128,34 @@ Object.defineProperties(StructuralMetadata.prototype, {
   propertyTables: {
     get: function () {
       return this._propertyTables;
+    },
+  },
+
+  /**
+   * The property textures in the metadata.
+   *
+   * @memberof StructuralMetadata.prototype
+   * @type {PropertyTexture[]}
+   * @readonly
+   * @private
+   */
+  propertyTextures: {
+    get: function () {
+      return this._propertyTextures;
+    },
+  },
+
+  /**
+   * The property attributes from the structural metadata extension
+   *
+   * @memberof StructuralMetadata.prototype
+   * @type {PropertyAttribute[]}
+   * @readonly
+   * @private
+   */
+  propertyAttributes: {
+    get: function () {
+      return this._propertyAttributes;
     },
   },
 });
@@ -158,8 +186,8 @@ StructuralMetadata.prototype.getPropertyTable = function (propertyTableId) {
  * by the key in the propertyTextures dictionary.
  * </p>
  *
- * @param {Number} propertyTextureId The index into the feature textures array.
- * @returns {PropertyTexture} The feature texture.
+ * @param {Number} propertyTextureId The index into the property textures array.
+ * @returns {PropertyTexture} The property texture
  * @private
  */
 StructuralMetadata.prototype.getPropertyTexture = function (propertyTextureId) {
@@ -168,6 +196,24 @@ StructuralMetadata.prototype.getPropertyTexture = function (propertyTextureId) {
   //>>includeEnd('debug');
 
   return this._propertyTextures[propertyTextureId];
+};
+
+/**
+ * Gets the property attribute with the given ID. This concept is new in
+ * EXT_structural_metadata
+ *
+ * @param {Number} propertyAttributeId The index into the property attributes array.
+ * @returns {PropertyAttribute} The property attribute
+ * @private
+ */
+StructuralMetadata.prototype.getPropertyAttribute = function (
+  propertyAttributeId
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("propertyAttributeId", propertyAttributeId);
+  //>>includeEnd('debug');
+
+  return this._propertyAttributes[propertyAttributeId];
 };
 
 export default StructuralMetadata;

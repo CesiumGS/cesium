@@ -3,6 +3,25 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import PropertyAttributeProperty from "./PropertyAttributeProperty.js";
 
+/**
+ * A property attribute; a collection of per-point properties stored as custom
+ * vertex attributes.
+ * <p>
+ * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension}
+ * </p>
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {String} [options.name] Optional human-readable name to describe the attribute
+ * @param {Number} [options.id] A unique id to identify the property attribute, useful for debugging. This is the array index in the property attributes array
+ * @param {Object} options.propertyAttribute The property attribute JSON, following the EXT_structural_metadata schema.
+ * @param {MetadataClass} options.class The class that properties conform to.
+ *
+ * @alias PropertyTexture
+ * @constructor
+ *
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+ */
 export default function PropertyAttribute(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const propertyAttribute = options.propertyAttribute;
