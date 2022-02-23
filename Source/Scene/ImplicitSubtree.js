@@ -753,7 +753,7 @@ function parseAvailability(
   const childSubtreeBits = Math.pow(branchingFactor, subtreeLevels);
 
   // availableCount is only needed for the metadata jump buffer, which
-  // corresponds to the tile andavailability bitstream.
+  // corresponds to the tile availability bitstream.
   const hasMetadataExtension = hasExtension(subtreeJson, "3DTILES_metadata");
   const hasTileMetadata = defined(subtree._tilePropertyTableJson);
   let computeAvailableCountEnabled = hasMetadataExtension || hasTileMetadata;

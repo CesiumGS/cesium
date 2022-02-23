@@ -1202,7 +1202,7 @@ describe(
         });
       });
 
-      it("multiple content metadatas get transcoded correctly", function () {
+      it("multiple content metadata views get transcoded correctly", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitMultipleContentsMetadataUrl

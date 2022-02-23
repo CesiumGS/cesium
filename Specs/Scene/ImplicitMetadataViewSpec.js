@@ -97,20 +97,9 @@ describe("Scene/ImplicitMetadataView", function () {
     },
   };
 
-  const tileClass = new MetadataClass({
-    id: "tile",
-    class: schema.classes.tile,
-  });
-
-  const buildingClass = new MetadataClass({
-    id: "building",
-    class: schema.classes.building,
-  });
-
-  const treeClass = new MetadataClass({
-    id: "tree",
-    class: schema.classes.tree,
-  });
+  let tileClass;
+  let buildingClass;
+  let treeClass;
 
   const propertyTablesDescription = {
     schema: schema,
@@ -153,25 +142,11 @@ describe("Scene/ImplicitMetadataView", function () {
     },
   };
 
-  const results = ImplicitTilingTester.generateSubtreeBuffers(
-    subtreeDescription
-  );
+  let tilesetResource;
+  let subtreeResource;
 
-  const tilesetResource = new Resource({
-    url: "https://example.com/tileset.json",
-  });
-
-  const subtreeResource = new Resource({
-    url: "https://example.com/test.subtree",
-  });
-
-  const mockTilesetWithMetadata = {
-    metadata: {
-      schema: new MetadataSchema(schema),
-    },
-  };
-
-  const metadataSchema = mockTilesetWithMetadata.metadata.schema;
+  let mockTilesetWithMetadata;
+  let metadataSchema;
 
   const implicitQuadtreeJson = {
     geometricError: 500,
@@ -194,34 +169,59 @@ describe("Scene/ImplicitMetadataView", function () {
     },
   };
 
-  const metadataQuadtree = new ImplicitTileset(
-    tilesetResource,
-    implicitQuadtreeJson,
-    metadataSchema
-  );
+  let metadataQuadtree;
+  let rootCoordinates;
 
-  const rootCoordinates = new ImplicitTileCoordinates({
-    subdivisionScheme: metadataQuadtree.subdivisionScheme,
-    subtreeLevels: metadataQuadtree.subtreeLevels,
-    x: 0,
-    y: 0,
-    level: 0,
-  });
-
-  let subtree;
   beforeAll(function () {
-    subtree = new ImplicitSubtree(
-      subtreeResource,
-      undefined,
-      results.subtreeBuffer,
-      metadataQuadtree,
-      rootCoordinates
+    tilesetResource = new Resource({
+      url: "https://example.com/tileset.json",
+    });
+
+    subtreeResource = new Resource({
+      url: "https://example.com/test.subtree",
+    });
+
+    tileClass = new MetadataClass({
+      id: "tile",
+      class: schema.classes.tile,
+    });
+
+    buildingClass = new MetadataClass({
+      id: "building",
+      class: schema.classes.building,
+    });
+
+    treeClass = new MetadataClass({
+      id: "tree",
+      class: schema.classes.tree,
+    });
+
+    mockTilesetWithMetadata = {
+      metadata: {
+        schema: new MetadataSchema(schema),
+      },
+    };
+
+    metadataSchema = mockTilesetWithMetadata.metadata.schema;
+
+    metadataQuadtree = new ImplicitTileset(
+      tilesetResource,
+      implicitQuadtreeJson,
+      metadataSchema
     );
 
-    return subtree.readyPromise.otherwise(console.error);
+    rootCoordinates = new ImplicitTileCoordinates({
+      subdivisionScheme: metadataQuadtree.subdivisionScheme,
+      subtreeLevels: metadataQuadtree.subtreeLevels,
+      x: 0,
+      y: 0,
+      level: 0,
+    });
   });
 
   const emptyJson = {};
+
+  let subtree;
 
   let tileView;
   let secondTileView;
@@ -233,50 +233,64 @@ describe("Scene/ImplicitMetadataView", function () {
   let secondTreeView;
 
   beforeEach(function () {
-    tileView = new ImplicitMetadataView({
-      metadataTable: subtree.tileMetadataTable,
-      class: tileClass,
-      entityId: 0,
-      propertyTableJson: emptyJson,
-    });
+    const results = ImplicitTilingTester.generateSubtreeBuffers(
+      subtreeDescription
+    );
 
-    secondTileView = new ImplicitMetadataView({
-      metadataTable: subtree.tileMetadataTable,
-      class: tileClass,
-      entityId: 1,
-      propertyTableJson: emptyJson,
-    });
+    subtree = new ImplicitSubtree(
+      subtreeResource,
+      undefined,
+      results.subtreeBuffer,
+      metadataQuadtree,
+      rootCoordinates
+    );
 
-    buildingView = new ImplicitMetadataView({
-      metadataTable: subtree.contentMetadataTables[0],
-      class: buildingClass,
-      entityId: 0,
-      contentIndex: 0,
-      propertyTableJson: emptyJson,
-    });
+    return subtree.readyPromise.then(function () {
+      tileView = new ImplicitMetadataView({
+        metadataTable: subtree.tileMetadataTable,
+        class: tileClass,
+        entityId: 0,
+        propertyTableJson: emptyJson,
+      });
 
-    secondBuildingView = new ImplicitMetadataView({
-      metadataTable: subtree.contentMetadataTables[0],
-      class: buildingClass,
-      entityId: 1,
-      contentIndex: 0,
-      propertyTableJson: emptyJson,
-    });
+      secondTileView = new ImplicitMetadataView({
+        metadataTable: subtree.tileMetadataTable,
+        class: tileClass,
+        entityId: 1,
+        propertyTableJson: emptyJson,
+      });
 
-    treeView = new ImplicitMetadataView({
-      metadataTable: subtree.contentMetadataTables[1],
-      class: treeClass,
-      entityId: 0,
-      contentIndex: 1,
-      propertyTableJson: emptyJson,
-    });
+      buildingView = new ImplicitMetadataView({
+        metadataTable: subtree.contentMetadataTables[0],
+        class: buildingClass,
+        entityId: 0,
+        contentIndex: 0,
+        propertyTableJson: emptyJson,
+      });
 
-    secondTreeView = new ImplicitMetadataView({
-      metadataTable: subtree.contentMetadataTables[1],
-      class: treeClass,
-      entityId: 1,
-      contentIndex: 1,
-      propertyTableJson: emptyJson,
+      secondBuildingView = new ImplicitMetadataView({
+        metadataTable: subtree.contentMetadataTables[0],
+        class: buildingClass,
+        entityId: 1,
+        contentIndex: 0,
+        propertyTableJson: emptyJson,
+      });
+
+      treeView = new ImplicitMetadataView({
+        metadataTable: subtree.contentMetadataTables[1],
+        class: treeClass,
+        entityId: 0,
+        contentIndex: 1,
+        propertyTableJson: emptyJson,
+      });
+
+      secondTreeView = new ImplicitMetadataView({
+        metadataTable: subtree.contentMetadataTables[1],
+        class: treeClass,
+        entityId: 1,
+        contentIndex: 1,
+        propertyTableJson: emptyJson,
+      });
     });
   });
 
@@ -458,16 +472,6 @@ describe("Scene/ImplicitMetadataView", function () {
     expect(treeView.getProperty("species")).toBe("Oak");
     expect(treeView.setProperty("species", "Chestnut")).toBe(true);
     expect(treeView.getProperty("species")).toBe("Chestnut");
-
-    // reset the value so it won't affect other tests
-    expect(tileView.setProperty("buildingCount", 100)).toBe(true);
-    expect(tileView.getProperty("buildingCount")).toBe(100);
-
-    expect(buildingView.setProperty("buildingType", "Residential")).toBe(true);
-    expect(buildingView.getProperty("buildingType")).toBe("Residential");
-
-    expect(treeView.setProperty("species", "Oak")).toBe(true);
-    expect(treeView.getProperty("species")).toBe("Oak");
   });
 
   it("setProperty sets property value for different metadata table views with same property", function () {
@@ -478,13 +482,6 @@ describe("Scene/ImplicitMetadataView", function () {
     expect(treeView.setProperty("height", 25)).toBe(true);
     expect(treeView.getProperty("height")).toBe(25);
     expect(buildingView.getProperty("height")).toBe(100);
-
-    // reset the value so it won't affect other tests
-    expect(buildingView.setProperty("height", 20)).toBe(true);
-    expect(buildingView.getProperty("height")).toBe(20);
-
-    expect(treeView.setProperty("height", 3)).toBe(true);
-    expect(treeView.getProperty("height")).toBe(3);
   });
 
   it("setProperty sets the correct values for metadata table views that point to the same table", function () {
@@ -502,16 +499,6 @@ describe("Scene/ImplicitMetadataView", function () {
     expect(treeView.setProperty("species", "Chestnut")).toBe(true);
     expect(treeView.getProperty("species")).toBe("Chestnut");
     expect(secondTreeView.getProperty("species")).toBe("Pine");
-
-    // reset the value so it won't affect other tests
-    expect(tileView.setProperty("buildingCount", 100)).toBe(true);
-    expect(tileView.getProperty("buildingCount")).toBe(100);
-
-    expect(buildingView.setProperty("buildingType", "Residential")).toBe(true);
-    expect(buildingView.getProperty("buildingType")).toBe("Residential");
-
-    expect(treeView.setProperty("species", "Oak")).toBe(true);
-    expect(treeView.getProperty("species")).toBe("Oak");
   });
 
   it("getPropertyBySemantic returns undefined when there's no property with the given semantic", function () {
@@ -587,27 +574,6 @@ describe("Scene/ImplicitMetadataView", function () {
       true
     );
     expect(treeView.getPropertyBySemantic("_TREE_SPECIES")).toEqual("Chestnut");
-
-    // reset the value so it won't affect other tests
-    expect(
-      tileView.setPropertyBySemantic(
-        "_HIGHLIGHT_COLOR",
-        new Cartesian3(255, 0, 0)
-      )
-    ).toBe(true);
-    expect(tileView.getPropertyBySemantic("_HIGHLIGHT_COLOR")).toEqual(
-      new Cartesian3(255, 0, 0)
-    );
-
-    expect(
-      buildingView.setPropertyBySemantic("_BUILDING_TYPE", "Residential")
-    ).toBe(true);
-    expect(buildingView.getPropertyBySemantic("_BUILDING_TYPE")).toEqual(
-      "Residential"
-    );
-
-    expect(treeView.setPropertyBySemantic("_TREE_SPECIES", "Oak")).toBe(true);
-    expect(treeView.getPropertyBySemantic("_TREE_SPECIES")).toEqual("Oak");
   });
 
   it("setPropertyBySemantic sets the correct value for different metadata table views with the same semantic", function () {
@@ -618,13 +584,6 @@ describe("Scene/ImplicitMetadataView", function () {
     expect(treeView.setPropertyBySemantic("_HEIGHT", 55)).toBe(true);
     expect(treeView.getPropertyBySemantic("_HEIGHT")).toEqual(55);
     expect(buildingView.getPropertyBySemantic("_HEIGHT")).toEqual(100);
-
-    // reset the value so it won't affect other tests
-    expect(buildingView.setPropertyBySemantic("_HEIGHT", 20)).toBe(true);
-    expect(buildingView.getPropertyBySemantic("_HEIGHT")).toEqual(20);
-
-    expect(treeView.setPropertyBySemantic("_HEIGHT", 3)).toBe(true);
-    expect(treeView.getPropertyBySemantic("_HEIGHT")).toEqual(3);
   });
 
   it("setPropertyBySemantic sets the correct value for metadata table views that point to the same table", function () {
@@ -665,27 +624,6 @@ describe("Scene/ImplicitMetadataView", function () {
     expect(secondTreeView.getPropertyBySemantic("_TREE_SPECIES")).toEqual(
       "Pine"
     );
-
-    // reset the value so it won't affect other tests
-    expect(
-      tileView.setPropertyBySemantic(
-        "_HIGHLIGHT_COLOR",
-        new Cartesian3(255, 0, 0)
-      )
-    ).toBe(true);
-    expect(tileView.getPropertyBySemantic("_HIGHLIGHT_COLOR")).toEqual(
-      new Cartesian3(255, 0, 0)
-    );
-
-    expect(
-      buildingView.setPropertyBySemantic("_BUILDING_TYPE", "Residential")
-    ).toBe(true);
-    expect(buildingView.getPropertyBySemantic("_BUILDING_TYPE")).toEqual(
-      "Residential"
-    );
-
-    expect(treeView.setPropertyBySemantic("_TREE_SPECIES", "Oak")).toBe(true);
-    expect(treeView.getPropertyBySemantic("_TREE_SPECIES")).toEqual("Oak");
   });
 
   it("setPropertyBySemantic returns false if the semantic does not exist", function () {
