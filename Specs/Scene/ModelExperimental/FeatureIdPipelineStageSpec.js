@@ -247,7 +247,7 @@ describe(
       });
     });
 
-    it("processes implicit feature ID attribute with constant feature IDs", function () {
+    it("processes implicit feature ID attribute with default feature IDs", function () {
       return loadGltf(buildingsMetadata).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const node = components.nodes[1];
@@ -262,21 +262,13 @@ describe(
           shaderBuilder,
           FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
           FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
-          [
-            "    int featureId_0;",
-            "    int featureId_1;",
-            "    int featureId_2;",
-          ]
+          ["    int featureId_0;", "    int featureId_1;"]
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
           FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
           FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
-          [
-            "    int featureId_0;",
-            "    int featureId_1;",
-            "    int featureId_2;",
-          ]
+          ["    int featureId_0;", "    int featureId_1;"]
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
@@ -285,7 +277,6 @@ describe(
           [
             "    featureIds.featureId_0 = int(czm_round(attributes.featureId_0));",
             "    featureIds.featureId_1 = int(czm_round(a_implicit_featureId_1));",
-            "    featureIds.featureId_2 = int(czm_round(a_implicit_featureId_2));",
           ]
         );
         ShaderBuilderTester.expectHasFragmentFunction(
@@ -295,29 +286,23 @@ describe(
           [
             "    featureIds.featureId_0 = int(czm_round(attributes.featureId_0));",
             "    featureIds.featureId_1 = int(czm_round(v_implicit_featureId_1));",
-            "    featureIds.featureId_2 = int(czm_round(v_implicit_featureId_2));",
           ]
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
           FeatureIdPipelineStage.FUNCTION_ID_SET_FEATURE_ID_VARYINGS,
           FeatureIdPipelineStage.FUNCTION_SIGNATURE_SET_FEATURE_ID_VARYINGS,
-          [
-            "    v_implicit_featureId_1 = a_implicit_featureId_1;",
-            "    v_implicit_featureId_2 = a_implicit_featureId_2;",
-          ]
+          ["    v_implicit_featureId_1 = a_implicit_featureId_1;"]
         );
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
           "attribute float a_implicit_featureId_1;",
-          "attribute float a_implicit_featureId_2;",
         ]);
         ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
         ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
         ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
           "varying float v_implicit_featureId_1;",
-          "varying float v_implicit_featureId_2;",
         ]);
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
           _shadersFeatureIdStageVS,
@@ -331,7 +316,7 @@ describe(
         expect(vertexBuffer).toBeDefined();
         expect(vertexBuffer.vertexArrayDestroyable).toBe(false);
 
-        expect(renderResources.attributes.length).toBe(3);
+        expect(renderResources.attributes.length).toBe(2);
         const implicitAttribute = renderResources.attributes[1];
         expect(implicitAttribute.index).toBe(1);
         expect(implicitAttribute.instanceDivisor).toBeUndefined();
@@ -344,19 +329,6 @@ describe(
         );
         expect(implicitAttribute.strideInBytes).toBe(4);
         expect(implicitAttribute.offsetInBytes).toBe(0);
-
-        const constantAttribute = renderResources.attributes[2];
-        expect(constantAttribute.index).toBe(2);
-        expect(constantAttribute.instanceDivisor).toBeUndefined();
-        expect(constantAttribute.value).toEqual([3]);
-        expect(constantAttribute.vertexBuffer).toBeUndefined();
-        expect(constantAttribute.normalize).toBe(false);
-        expect(constantAttribute.componentsPerAttribute).toBe(1);
-        expect(constantAttribute.componentDatatype).toBe(
-          ComponentDatatype.FLOAT
-        );
-        expect(constantAttribute.strideInBytes).toBe(4);
-        expect(constantAttribute.offsetInBytes).toBe(0);
 
         const uniformMap = renderResources.uniformMap;
         expect(uniformMap).toEqual({});

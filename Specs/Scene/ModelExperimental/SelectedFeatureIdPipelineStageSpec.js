@@ -113,7 +113,7 @@ describe(
         const primitive = node.primitives[0];
         const frameState = scene.frameState;
         const renderResources = mockRenderResources(node);
-        renderResources.model.featureIdIndex = 2;
+        renderResources.model.featureIdIndex = 1;
 
         SelectedFeatureIdPipelineStage.process(
           renderResources,
@@ -128,12 +128,12 @@ describe(
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_SELECTED_FEATURE_ID",
           "HAS_SELECTED_FEATURE_ID_ATTRIBUTE",
-          "SELECTED_FEATURE_ID featureId_2",
+          "SELECTED_FEATURE_ID featureId_1",
         ]);
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
           "HAS_SELECTED_FEATURE_ID",
           "HAS_SELECTED_FEATURE_ID_ATTRIBUTE",
-          "SELECTED_FEATURE_ID featureId_2",
+          "SELECTED_FEATURE_ID featureId_1",
         ]);
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
           _shadersSelectedFeatureIdStageCommon,
