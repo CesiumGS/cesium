@@ -679,6 +679,14 @@ function Scene() {
  */
 function Components() {
   /**
+   * The asset object provided by the glTF's JSON.
+   *
+   * @type {Object}
+   * @private
+   */
+  this.asset = undefined;
+
+  /**
    * The default scene.
    *
    * @type {ModelComponents.Scene}

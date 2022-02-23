@@ -6,6 +6,7 @@ import {
   Cartesian4,
   combine,
   ComponentDatatype,
+  Credit,
   GltfFeatureMetadataLoader,
   GltfIndexBufferLoader,
   GltfJsonLoader,
@@ -44,6 +45,8 @@ describe(
       "./Data/Models/GltfLoader/BoxInterleaved/glTF/BoxInterleaved.gltf";
     const boxTextured =
       "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
+    const boxTexturedWithCredits =
+      "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured-WithCredits.gltf";
     const boxTexturedBinary =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
     const boxTexturedEmbedded =
@@ -2589,6 +2592,23 @@ describe(
         expect(translationAttribute.buffer).toBeUndefined();
         expect(translationAttribute.byteOffset).toBe(0);
         expect(translationAttribute.byteStride).toBeUndefined();
+      });
+    });
+
+    it("stores asset in components", function () {
+      return loadGltf(boxTexturedWithCredits).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const asset = components.asset;
+        expect(asset).toBeDefined();
+
+        const credits = asset.copyright;
+        expect(credits.length).toBe(3);
+        credits.forEach(function (credit) {
+          expect(credit).toBeInstanceOf(Credit);
+        });
+
+        expect(asset.generator).toEqual("COLLADA2GLTF");
+        expect(asset.version).toEqual("2.0");
       });
     });
   },

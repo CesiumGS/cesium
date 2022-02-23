@@ -2,7 +2,9 @@ import arrayFill from "../Core/arrayFill.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
+import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
@@ -1429,6 +1431,22 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
   const scene = loadScene(gltf, nodes);
 
   const components = new Components();
+  const asset = clone(gltf.asset);
+  const copyright = gltf.asset.copyright;
+  if (defined(copyright)) {
+    const credits = [];
+    const creditStrings = copyright.split(",").map(function (string) {
+      return string.trim();
+    });
+
+    creditStrings.forEach(function (string) {
+      credits.push(new Credit(string));
+    });
+
+    asset.copyright = credits;
+  }
+
+  components.asset = asset;
   components.scene = scene;
   components.nodes = nodes;
   components.upAxis = loader._upAxis;

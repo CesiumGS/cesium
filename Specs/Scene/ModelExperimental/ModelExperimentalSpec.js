@@ -1,5 +1,6 @@
 import {
   Cesium3DTileStyle,
+  Credit,
   FeatureDetection,
   JulianDate,
   defaultValue,
@@ -33,6 +34,8 @@ describe(
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
     const boxTexturedGltfUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
+    const boxTexturedGltfWithCreditsUrl =
+      "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured-WithCredits.gltf";
     const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
     const boxInstanced =
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
@@ -202,6 +205,26 @@ describe(
           .otherwise(function (error) {
             expect(error).toBeDefined();
           });
+      });
+    });
+
+    it("gets credits from gltf", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGltfWithCreditsUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxTexturedGltfWithCreditsUrl,
+          },
+          scene
+        ).then(function (model) {
+          const asset = model._sceneGraph.components.asset;
+          const credits = asset.copyright;
+          expect(credits.length).toBe(3);
+          credits.forEach(function (credit) {
+            expect(credit).toBeInstanceOf(Credit);
+          });
+        });
       });
     });
 

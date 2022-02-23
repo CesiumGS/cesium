@@ -297,7 +297,7 @@ function Model(options) {
   // List of credits to be added from the Resource if it is an IonResource
   this._resourceCredits = [];
 
-  // List of credits to be added from the glTFs
+  // List of credits to be added from the glTF
   this._gltfCredits = [];
 
   /**
@@ -5758,18 +5758,15 @@ Model.prototype.update = function (frameState) {
     frameState.creditDisplay.addCredit(credit);
   }
 
-  let c;
   const resourceCredits = this._resourceCredits;
-  const resourceCreditCount = resourceCredits.length;
-  for (c = 0; c < resourceCreditCount; c++) {
-    frameState.creditDisplay.addCredit(resourceCredits[c]);
-  }
+  resourceCredits.forEach(function (credit) {
+    frameState.creditDisplay.addCredit(credit);
+  });
 
   const gltfCredits = this._gltfCredits;
-  const gltfCreditCount = gltfCredits.length;
-  for (c = 0; c < gltfCreditCount; c++) {
-    frameState.creditDisplay.addCredit(gltfCredits[c]);
-  }
+  gltfCredits.forEach(function (credit) {
+    frameState.creditDisplay.addCredit(credit);
+  });
 };
 
 function destroyIfNotCached(rendererResources, cachedRendererResources) {

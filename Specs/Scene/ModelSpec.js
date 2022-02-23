@@ -400,7 +400,7 @@ describe(
       expect(model.credit).toBeInstanceOf(Credit);
     });
 
-    it("gets multiple credits from gltf", function () {
+    it("gets credits from gltf", function () {
       return loadModel(boxWithCreditsUrl).then(function (model) {
         const credits = model._gltfCredits;
         expect(credits.length).toBe(3);

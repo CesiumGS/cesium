@@ -154,8 +154,6 @@ export default function ModelExperimental(options) {
     false
   );
 
-  this._credits = [];
-
   initialize(this);
 }
 
@@ -745,7 +743,14 @@ ModelExperimental.prototype.update = function (frameState) {
   }
 
   if (!this._drawCommandsBuilt) {
-    // Handle credits in the glTF
+    const components = this._sceneGraph.components;
+    const copyright = components.asset.copyright;
+
+    if (defined(copyright)) {
+      copyright.forEach(function (credit) {
+        frameState.creditDisplay.addCredit(credit);
+      });
+    }
 
     this._sceneGraph.buildDrawCommands(frameState);
     this._drawCommandsBuilt = true;
@@ -801,8 +806,6 @@ ModelExperimental.prototype.update = function (frameState) {
     frameState.commandList.push.apply(frameState.commandList, drawCommands);
   }
 };
-
-function updateCredits(model) {}
 
 function updateFeatureTableId(model) {
   const components = model._sceneGraph.components;
