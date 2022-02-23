@@ -15,6 +15,10 @@
   - Added `setScale`, `setUniformScale`, `setRotation`, `getRotation`, and `multiplyByUniformScale` to `Matrix2`.
   - Added `setScale`, `setUniformScale`, `setRotation`, and `multiplyByUniformScale` to `Matrix3`.
   - Added `setUniformScale`, `setRotation`, `getRotation`, and `fromRotation` to `Matrix4`.
+- Added `AxisAlignedBoundingBox.fromCorners`. [#10130](https://github.com/CesiumGS/cesium/pull/10130)
+- Added `BoundingSphere.fromTransformation`. [#10130](https://github.com/CesiumGS/cesium/pull/10130)
+- Added `OrientedBoundingBox.fromTransformation`, `OrientedBoundingBox.computeCorners`, and `OrientedBoundingBox.computeTransformation`. [#10130](https://github.com/CesiumGS/cesium/pull/10130)
+- Added `Rectangle.subsection`. [#10130](https://github.com/CesiumGS/cesium/pull/10130)
 
 ##### Fixes :wrench:
 
