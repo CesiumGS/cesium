@@ -27,6 +27,7 @@ export default function PropertyAttribute(options) {
 
   this._name = options.name;
   this._id = options.id;
+  this._class = classDefinition;
   this._properties = properties;
   this._extras = propertyAttribute.extras;
   this._extensions = propertyAttribute.extensions;
