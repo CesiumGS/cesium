@@ -16,7 +16,7 @@ import PropertyAttributeProperty from "./PropertyAttributeProperty.js";
  * @param {Object} options.propertyAttribute The property attribute JSON, following the EXT_structural_metadata schema.
  * @param {MetadataClass} options.class The class that properties conform to.
  *
- * @alias PropertyTexture
+ * @alias PropertyAttribute
  * @constructor
  *
  * @private
@@ -54,7 +54,7 @@ export default function PropertyAttribute(options) {
 
 Object.defineProperties(PropertyAttribute.prototype, {
   /**
-   * A human-readable name for this texture
+   * A human-readable name for this attribute
    *
    * @memberof PropertyAttribute.prototype
    * @type {String}
@@ -67,7 +67,7 @@ Object.defineProperties(PropertyAttribute.prototype, {
     },
   },
   /**
-   * An identifier for this texture. Useful for debugging.
+   * An identifier for this attribute. Useful for debugging.
    *
    * @memberof PropertyAttribute.prototype
    * @type {String|Number}

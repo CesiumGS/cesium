@@ -1,6 +1,23 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 
+/**
+ * A property in a property attribute from EXT_structural_metadata.
+ *
+ * <p>
+ * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension}
+ * </p>
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {Object} options.property The property JSON object.
+ * @param {MetadataClassProperty} options.classProperty The class property.
+ *
+ * @alias PropertyAttributeProperty
+ * @constructor
+ *
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+ */
 export default function PropertyAttributeProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const property = options.property;

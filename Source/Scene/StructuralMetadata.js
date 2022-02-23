@@ -104,7 +104,7 @@ Object.defineProperties(StructuralMetadata.prototype, {
   },
 
   /**
-   * Number of feature tables in the metadata.
+   * Number of property tables in the metadata.
    *
    * @memberof StructuralMetadata.prototype
    * @type {Number}
