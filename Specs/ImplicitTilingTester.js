@@ -22,7 +22,7 @@ export default function ImplicitTilingTester() {}
  * A description of 3DTILES_metadata properties stored in the subtree.
  * @typedef {Object} MetadataDescription
  * @property {Boolean} isInternal True if the metadata should be stored in the subtree file, false if the metadata should be stored in an external buffer.
- * @property {Object} propertyTables Options to pass into {@link MetadataTester.createPropertyTables} to create the feature table buffer views.
+ * @property {Object} propertyTables Options to pass into {@link MetadataTester.createPropertyTables} to create the property table buffer views.
  * @private
  */
 

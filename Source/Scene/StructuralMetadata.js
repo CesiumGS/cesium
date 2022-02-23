@@ -161,14 +161,14 @@ Object.defineProperties(StructuralMetadata.prototype, {
 });
 
 /**
- * Gets the feature table with the given ID.
+ * Gets the property table with the given ID.
  * <p>
  * For the legacy <code>EXT_feature_metadata</code>, textures are stored in an array sorted
  * by the key in the propertyTables dictionary.
  * </p>
  *
- * @param {Number} propertyTableId The feature table ID.
- * @returns {PropertyTable} The feature table.
+ * @param {Number} propertyTableId The property table ID.
+ * @returns {PropertyTable} The property table.
  * @private
  */
 StructuralMetadata.prototype.getPropertyTable = function (propertyTableId) {
@@ -180,7 +180,7 @@ StructuralMetadata.prototype.getPropertyTable = function (propertyTableId) {
 };
 
 /**
- * Gets the feature texture with the given ID.
+ * Gets the property texture with the given ID.
  * <p>
  * For the legacy <code>EXT_feature_metadata</code>, textures are stored in an array sorted
  * by the key in the propertyTextures dictionary.

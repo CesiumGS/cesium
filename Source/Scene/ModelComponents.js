@@ -326,7 +326,7 @@ function Indices() {
 }
 
 /**
- * Maps per-vertex or per-instance feature IDs to a feature table. Feature
+ * Maps per-vertex or per-instance feature IDs to a property table. Feature
  * IDs are stored in an accessor.
  *
  * @alias ModelComponents.FeatureIdAttribute
@@ -352,7 +352,7 @@ function FeatureIdAttribute() {
   this.nullFeatureId = undefined;
 
   /**
-   * The ID of the feature table that feature IDs index into. If undefined,
+   * The ID of the property table that feature IDs index into. If undefined,
    * feature IDs are used for classification, but no metadata is associated.
    *
    *
@@ -398,7 +398,7 @@ function FeatureIdImplicitRange() {
   this.nullFeatureId = undefined;
 
   /**
-   * The ID of the feature table that feature IDs index into. If undefined,
+   * The ID of the property table that feature IDs index into. If undefined,
    * feature IDs are used for classification, but no metadata is associated.
    *
    * @type {Number}
@@ -425,7 +425,7 @@ function FeatureIdImplicitRange() {
 }
 
 /**
- * A texture that contains per-texel feature IDs that index into a feature table.
+ * A texture that contains per-texel feature IDs that index into a property table.
  *
  * @alias ModelComponents.FeatureIdTexture
  * @constructor
@@ -450,7 +450,7 @@ function FeatureIdTexture() {
   this.nullFeatureId = undefined;
 
   /**
-   * The ID of the feature table that feature IDs index into. If undefined,
+   * The ID of the property table that feature IDs index into. If undefined,
    * feature IDs are used for classification, but no metadata is associated.
    *
    * @type {String}

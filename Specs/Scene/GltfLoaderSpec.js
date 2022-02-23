@@ -917,10 +917,10 @@ describe(
           new Cartesian3(194, 194, 194)
         );
 
-        const featureTexture = structuralMetadata.getPropertyTexture(0);
-        expect(featureTexture.id).toEqual(0);
-        expect(featureTexture.name).toEqual("Vegetation");
-        const vegetationProperty = featureTexture.getProperty(
+        const propertyTexture = structuralMetadata.getPropertyTexture(0);
+        expect(propertyTexture.id).toEqual(0);
+        expect(propertyTexture.name).toEqual("Vegetation");
+        const vegetationProperty = propertyTexture.getProperty(
           "vegetationDensity"
         );
 
@@ -981,9 +981,9 @@ describe(
           194,
         ]);
 
-        const featureTexture = structuralMetadata.getPropertyTexture(0);
-        expect(featureTexture.id).toEqual("vegetationTexture");
-        const vegetationProperty = featureTexture.getProperty(
+        const propertyTexture = structuralMetadata.getPropertyTexture(0);
+        expect(propertyTexture.id).toEqual("vegetationTexture");
+        const vegetationProperty = propertyTexture.getProperty(
           "vegetationDensity"
         );
 

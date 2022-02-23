@@ -44,7 +44,7 @@ describe("Scene/PropertyAttributeProperty", function () {
     });
   });
 
-  it("creates feature attribute property", function () {
+  it("creates property attribute property", function () {
     expect(propertyAttributeProperty.attribute).toBe("_INTENSITY");
     expect(propertyAttributeProperty.extras).toBe(extras);
     expect(propertyAttributeProperty.extensions).toBe(extensions);

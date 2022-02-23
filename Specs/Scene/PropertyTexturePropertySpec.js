@@ -82,7 +82,7 @@ describe(
       context.destroyForSpecs();
     });
 
-    it("creates feature texture property", function () {
+    it("creates property texture property", function () {
       expect(propertyTextureProperty.extras).toBe(extras);
       expect(propertyTextureProperty.extensions).toBe(extensions);
 

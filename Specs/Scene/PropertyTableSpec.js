@@ -45,7 +45,7 @@ describe("Scene/PropertyTable", function () {
     });
   }
 
-  it("creates feature table with default values", function () {
+  it("creates property table with default values", function () {
     const propertyTable = new PropertyTable({
       count: 3,
     });
@@ -55,7 +55,7 @@ describe("Scene/PropertyTable", function () {
     expect(propertyTable.extensions).toBeUndefined();
   });
 
-  it("creates feature table", function () {
+  it("creates property table", function () {
     const propertyTable = createPropertyTable();
     expect(propertyTable.count).toBe(3);
     expect(propertyTable.class).toBeDefined();

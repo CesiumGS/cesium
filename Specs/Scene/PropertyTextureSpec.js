@@ -117,7 +117,7 @@ describe(
       expect(propertyTexture.extensions).toBe(extensions);
     });
 
-    it("constructor throws without featureTexture", function () {
+    it("constructor throws without propertyTexture", function () {
       expect(function () {
         return new PropertyTexture({
           class: classDefinition,
@@ -129,7 +129,7 @@ describe(
     it("constructor throws without class", function () {
       expect(function () {
         return new PropertyTexture({
-          featureTexture: {},
+          propertyTexture: {},
           textures: {},
         });
       }).toThrowDeveloperError();
@@ -138,13 +138,13 @@ describe(
     it("constructor throws without textures", function () {
       expect(function () {
         return new PropertyTexture({
-          featureTexture: {},
+          propertyTexture: {},
           class: classDefinition,
         });
       }).toThrowDeveloperError();
     });
 
-    it("getProperty returns feature texture property", function () {
+    it("getProperty returns property texture property", function () {
       expect(propertyTexture.getProperty("color")).toBeDefined();
       expect(propertyTexture.getProperty("intensity")).toBeDefined();
       expect(propertyTexture.getProperty("ortho")).toBeDefined();
