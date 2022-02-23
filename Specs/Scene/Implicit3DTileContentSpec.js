@@ -1052,6 +1052,10 @@ describe(
         "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset.json";
       const implicitGroupMetadataUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitGroupMetadata/tileset.json";
+      const implicitContentMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitContentMetadata/tileset.json";
+      const implicitMultipleContentsMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset.json";
       const implicitHeightSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitHeightSemantics/tileset.json";
       const implicitS2HeightSemanticsUrl =
@@ -1071,7 +1075,7 @@ describe(
       const implicitGeometricErrorSemanticsUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitGeometricErrorSemantics/tileset.json";
 
-      const metadataClass = new MetadataClass({
+      const groupMetadataClass = new MetadataClass({
         id: "test",
         class: {
           properties: {
@@ -1085,6 +1089,7 @@ describe(
           },
         },
       });
+
       const groupMetadata = new GroupMetadata({
         id: "testGroup",
         group: {
@@ -1093,7 +1098,7 @@ describe(
             height: 35.6,
           },
         },
-        class: metadataClass,
+        class: groupMetadataClass,
       });
 
       it("assigns groupMetadata", function () {
@@ -1143,6 +1148,116 @@ describe(
         });
       });
 
+      it("assigning content metadata throws", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitContentMetadataUrl
+        ).then(function (tileset) {
+          expect(function () {
+            const placeholderTile = tileset.root;
+            const content = placeholderTile.content;
+            content.metadata = {};
+          }).toThrowDeveloperError();
+        });
+      });
+
+      it("content metadata gets transcoded correctly", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitContentMetadataUrl
+        ).then(function (tileset) {
+          const expectedHeights = [10, 20, 0, 30, 40];
+          const expectedColors = [
+            new Cartesian3(255, 255, 255),
+            new Cartesian3(255, 0, 0),
+            Cartesian3.ZERO,
+            new Cartesian3(0, 255, 0),
+            new Cartesian3(0, 0, 255),
+          ];
+
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
+          const tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
+
+          for (let i = 0; i < tiles.length; i++) {
+            const tile = tiles[i];
+            const subtree = tile.implicitSubtree;
+            const coordinates = tile.implicitCoordinates;
+            const index = coordinates.tileIndex;
+            const metadata = tile.content.metadata;
+
+            if (!subtree.contentIsAvailableAtIndex(index, 0)) {
+              expect(metadata.getProperty("height")).not.toBeDefined();
+              expect(metadata.getProperty("color")).not.toBeDefined();
+            } else {
+              expect(metadata.getProperty("height")).toBe(
+                expectedHeights[index]
+              );
+              expect(metadata.getProperty("color")).toEqual(
+                expectedColors[index]
+              );
+            }
+          }
+        });
+      });
+
+      it("multiple content metadata views get transcoded correctly", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitMultipleContentsMetadataUrl
+        ).then(function (tileset) {
+          const expectedHeights = [10, 20, 30, 40, 50];
+          const expectedColors = [
+            new Cartesian3(255, 255, 255),
+            new Cartesian3(255, 0, 0),
+            new Cartesian3(255, 255, 0),
+            new Cartesian3(0, 255, 0),
+            new Cartesian3(0, 0, 255),
+          ];
+
+          // All tiles except the subtree root tile have tree content
+          const expectedAges = [21, 7, 11, 16];
+
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
+          const tiles = [];
+          gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
+          for (let i = 0; i < tiles.length; i++) {
+            const tile = tiles[i];
+            const coordinates = tile.implicitCoordinates;
+            const index = coordinates.tileIndex;
+
+            let buildingMetadata;
+            if (i > 0) {
+              expect(tile.hasMultipleContents).toBe(true);
+              const buildingContent = tile.content.innerContents[0];
+              buildingMetadata = buildingContent.metadata;
+            } else {
+              expect(tile.hasMultipleContents).toBe(false);
+              buildingMetadata = tile.content.metadata;
+            }
+
+            expect(buildingMetadata.getProperty("height")).toBe(
+              expectedHeights[index]
+            );
+            expect(buildingMetadata.getProperty("color")).toEqual(
+              expectedColors[index]
+            );
+
+            if (i === 0) {
+              continue;
+            }
+
+            const treeContent = tile.content.innerContents[1];
+            const treeMetadata = treeContent.metadata;
+            expect(treeMetadata.getProperty("age")).toEqual(
+              expectedAges[index - 1]
+            );
+          }
+        });
+      });
+
       // view (lon, lat, height) = (0, 0, 0) from height meters above
       function viewCartographicOrigin(height) {
         const center = Cartesian3.fromDegrees(0.0, 0.0);
@@ -1155,25 +1270,27 @@ describe(
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitHeightSemanticsUrl
-        ).then(function (tileset) {
-          const placeholderTile = tileset.root;
-          const subtreeRootTile = placeholderTile.children[0];
+        )
+          .then(function (tileset) {
+            const placeholderTile = tileset.root;
+            const subtreeRootTile = placeholderTile.children[0];
 
-          const implicitRegion =
-            placeholderTile.implicitTileset.boundingVolume.region;
-          const minimumHeight = implicitRegion[4];
-          const maximumHeight = implicitRegion[5];
+            const implicitRegion =
+              placeholderTile.implicitTileset.boundingVolume.region;
+            const minimumHeight = implicitRegion[4];
+            const maximumHeight = implicitRegion[5];
 
-          // This tileset uses TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT
-          // to set tighter bounding volumes
-          const tiles = [];
-          gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
-          for (let i = 0; i < tiles.length; i++) {
-            const tileRegion = tiles[i].boundingVolume;
-            expect(tileRegion.minimumHeight).toBeGreaterThan(minimumHeight);
-            expect(tileRegion.maximumHeight).toBeLessThan(maximumHeight);
-          }
-        });
+            // This tileset uses TILE_MINIMUM_HEIGHT and TILE_MAXIMUM_HEIGHT
+            // to set tighter bounding volumes
+            const tiles = [];
+            gatherTilesPreorder(subtreeRootTile, 0, 3, tiles);
+            for (let i = 0; i < tiles.length; i++) {
+              const tileRegion = tiles[i].boundingVolume;
+              expect(tileRegion.minimumHeight).toBeGreaterThan(minimumHeight);
+              expect(tileRegion.maximumHeight).toBeLessThan(maximumHeight);
+            }
+          })
+          .otherwise(console.error);
       });
 
       it("uses height semantics to adjust S2 bounding volumes", function () {

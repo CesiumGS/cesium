@@ -239,6 +239,8 @@ Cesium3DTileFeature.prototype.getProperty = function (name) {
  * <ol>
  *   <li>Batch table (structural metadata) property by semantic</li>
  *   <li>Batch table (structural metadata) property by property ID</li>
+ *   <li>Content metadata property by semantic</li>
+ *   <li>Content metadata property by property</li>
  *   <li>Tile metadata property by semantic</li>
  *   <li>Tile metadata property by property ID</li>
  *   <li>Subtree metadata property by semantic</li>
@@ -272,6 +274,19 @@ Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
     }
 
     value = batchTable.getProperty(batchId, name);
+    if (defined(value)) {
+      return value;
+    }
+  }
+
+  const contentMetadata = content.metadata;
+  if (defined(contentMetadata)) {
+    value = contentMetadata.getPropertyBySemantic(name);
+    if (defined(value)) {
+      return value;
+    }
+
+    value = contentMetadata.getProperty(name);
     if (defined(value)) {
       return value;
     }

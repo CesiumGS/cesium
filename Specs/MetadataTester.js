@@ -101,7 +101,7 @@ function createProperties(options) {
       }
 
       if (defined(stringOffsetType)) {
-        property.stringOffsetType = offsetType;
+        property.stringOffsetType = stringOffsetType;
       }
 
       if (defined(arrayOffsetType)) {

@@ -2,54 +2,51 @@ import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 
 /**
- * Metadata about a 3D tile, from a <code>3DTILES_metadata</code> extension
- * within a subtree from the <code>3DTILES_implicit_tiling</code> extension
- * <p>
- * This class is used in place of a {@link TileMetadata} object, as implicit
- * tile metadata is stored in a {@link MetadataTable} rather than a JSON object.
- * </p>
+ * This class represents a single entity in the <code>MetadataTable</code> owned by an implicit subtree from the
+ * <code>3DTILES_implicit_tiling</code> extension. The entity is specified by the entityId.
  * <p>
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
  *
- * @param {ImplicitSubtree} options.implicitSubtree The implicit subtree the tile belongs to. It is assumed that the subtree's readyPromise has already resolved.
- * @param {ImplicitTileCoordinates} options.implicitCoordinates Implicit tiling coordinates for the tile.
- * @param {MetadataClass} options.class The class that the tile metadata conforms to.
+ * @param {MetadataTable} options.metadataTable The metadata table.
+ * @param {MetadataClass} options.class The class that the metadata conforms to.
+ * @param {Number} options.entityId The ID of the entity the metadata belongs to.
+ * @param {Object} options.propertyTableJson The JSON that contains the property table of the entity.
  *
- * @alias ImplicitTileMetadata
+ * @alias ImplicitMetadataView
  * @constructor
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function ImplicitTileMetadata(options) {
+export default function ImplicitMetadataView(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const metadataTable = options.metadataTable;
+  const metadataClass = options.class;
+  const entityId = options.entityId;
+  const propertyTableJson = options.propertyTableJson;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.implicitSubtree", options.implicitSubtree);
-  Check.typeOf.object(
-    "options.implicitCoordinates",
-    options.implicitCoordinates
-  );
-  Check.typeOf.object("options.class", options.class);
+  Check.typeOf.object("options.metadataTable", metadataTable);
+  Check.typeOf.object("options.class", metadataClass);
+  Check.typeOf.number("options.entityId", entityId);
+  Check.typeOf.object("options.propertyTableJson", propertyTableJson);
+
   //>>includeEnd('debug');
 
-  this._class = options.class;
+  this._class = metadataClass;
+  this._metadataTable = metadataTable;
+  this._entityId = entityId;
 
-  const subtree = options.implicitSubtree;
-  this._metadataTable = subtree.tileMetadataTable;
-  this._entityId = subtree.getEntityId(options.implicitCoordinates);
-
-  const subtreeExtension = subtree.tileMetadataExtension;
-  this._extensions = subtreeExtension.extensions;
-  this._extras = subtreeExtension.extras;
+  this._extensions = propertyTableJson.extensions;
+  this._extras = propertyTableJson.extras;
 }
 
-Object.defineProperties(ImplicitTileMetadata.prototype, {
+Object.defineProperties(ImplicitMetadataView.prototype, {
   /**
    * The class that properties conform to.
    *
-   * @memberof ImplicitTileMetadata.prototype
+   * @memberof ImplicitMetadataView.prototype
    * @type {MetadataClass}
    * @readonly
    */
@@ -62,8 +59,8 @@ Object.defineProperties(ImplicitTileMetadata.prototype, {
   /**
    * Extras in the JSON object.
    *
-   * @memberof ImplicitTileMetadata.prototype
-   * @type {*}
+   * @memberof ImplicitMetadataView.prototype
+   * @type {Object}
    * @readonly
    */
   extras: {
@@ -75,7 +72,7 @@ Object.defineProperties(ImplicitTileMetadata.prototype, {
   /**
    * Extensions in the JSON object.
    *
-   * @memberof ImplicitTileMetadata.prototype
+   * @memberof ImplicitMetadataView.prototype
    * @type {Object}
    * @readonly
    */
@@ -87,35 +84,35 @@ Object.defineProperties(ImplicitTileMetadata.prototype, {
 });
 
 /**
- * Returns whether the tile has this property.
+ * Returns whether the metadata contains this property.
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {Boolean} Whether the tile has this property.
  * @private
  */
-ImplicitTileMetadata.prototype.hasProperty = function (propertyId) {
+ImplicitMetadataView.prototype.hasProperty = function (propertyId) {
   return this._metadataTable.hasProperty(propertyId);
 };
 
 /**
- * Returns whether the tile has a property with the given semantic.
+ * Returns whether the metadata contains a property with the given semantic.
  *
  * @param {String} semantic The case-sensitive semantic of the property.
  * @returns {Boolean} Whether the tile has a property with the given semantic.
  * @private
  */
-ImplicitTileMetadata.prototype.hasPropertyBySemantic = function (semantic) {
+ImplicitMetadataView.prototype.hasPropertyBySemantic = function (semantic) {
   return this._metadataTable.hasPropertyBySemantic(semantic);
 };
 
 /**
- * Returns an array of property IDs.
+ * Returns an array of property IDs in the metadata table.
  *
  * @param {String[]} [results] An array into which to store the results.
  * @returns {String[]} The property IDs.
  * @private
  */
-ImplicitTileMetadata.prototype.getPropertyIds = function (results) {
+ImplicitMetadataView.prototype.getPropertyIds = function (results) {
   return this._metadataTable.getPropertyIds(results);
 };
 
@@ -129,12 +126,12 @@ ImplicitTileMetadata.prototype.getPropertyIds = function (results) {
  * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this property.
  * @private
  */
-ImplicitTileMetadata.prototype.getProperty = function (propertyId) {
+ImplicitMetadataView.prototype.getProperty = function (propertyId) {
   return this._metadataTable.getProperty(this._entityId, propertyId);
 };
 
 /**
- * Sets the value of the property with the given ID.
+ * Sets the value of the property with the given ID in the metadata table.
  * <p>
  * If the property is normalized a normalized value must be provided to this function.
  * </p>
@@ -144,30 +141,31 @@ ImplicitTileMetadata.prototype.getProperty = function (propertyId) {
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  * @private
  */
-ImplicitTileMetadata.prototype.setProperty = function (propertyId, value) {
+ImplicitMetadataView.prototype.setProperty = function (propertyId, value) {
   return this._metadataTable.setProperty(this._entityId, propertyId, value);
 };
 
 /**
- * Returns a copy of the value of the property with the given semantic.
+ * Returns a copy of the value of the property with the given semantic in the metadata table.
  *
  * @param {String} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this semantic.
  * @private
  */
-ImplicitTileMetadata.prototype.getPropertyBySemantic = function (semantic) {
+ImplicitMetadataView.prototype.getPropertyBySemantic = function (semantic) {
   return this._metadataTable.getPropertyBySemantic(this._entityId, semantic);
 };
 
 /**
- * Sets the value of the property with the given semantic.
+ * Sets the value of the property with the given semantic in the metadata table.
  *
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  * @private
  */
-ImplicitTileMetadata.prototype.setPropertyBySemantic = function (
+
+ImplicitMetadataView.prototype.setPropertyBySemantic = function (
   semantic,
   value
 ) {

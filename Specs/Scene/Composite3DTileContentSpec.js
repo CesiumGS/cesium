@@ -4,6 +4,7 @@ import {
   HeadingPitchRange,
   MetadataClass,
   GroupMetadata,
+  ImplicitMetadataView,
 } from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
@@ -180,6 +181,28 @@ describe(
             const innerContents = content.innerContents;
             for (let i = 0; i < innerContents.length; i++) {
               expect(innerContents[i].groupMetadata).toBe(groupMetadata);
+            }
+          }
+        );
+      });
+
+      const metadata = new ImplicitMetadataView({
+        metadataTable: {},
+        class: {},
+        entityId: 0,
+        propertyTableJson: {},
+      });
+
+      it("assigning content metadata propagates to inner contents", function () {
+        return Cesium3DTilesTester.loadTileset(scene, compositeUrl).then(
+          function (tileset) {
+            const content = tileset.root.content;
+            content.metadata = metadata;
+            expect(content.metadata).toBe(metadata);
+
+            const innerContents = content.innerContents;
+            for (let i = 0; i < innerContents.length; i++) {
+              expect(innerContents[i].metadata).toBe(metadata);
             }
           }
         );

@@ -26,6 +26,7 @@ export default function ModelExperimental3DTileContent(
   this._resource = resource;
 
   this._model = undefined;
+  this._metadata = undefined;
   this._groupMetadata = undefined;
 }
 
@@ -115,6 +116,15 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
       }
 
       return undefined;
+    },
+  },
+
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
     },
   },
 

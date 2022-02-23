@@ -13,7 +13,6 @@ import Rectangle from "../Core/Rectangle.js";
 import S2Cell from "../Core/S2Cell.js";
 import when from "../ThirdParty/when.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
-import ImplicitTileMetadata from "./ImplicitTileMetadata.js";
 import hasExtension from "./hasExtension.js";
 import MetadataSemantic from "./MetadataSemantic.js";
 import parseBoundingVolumeSemantics from "./parseBoundingVolumeSemantics.js";
@@ -70,6 +69,8 @@ export default function Implicit3DTileContent(
   this._tile = tile;
   this._resource = resource;
   this._readyPromise = when.defer();
+
+  this._metadata = undefined;
 
   this.featurePropertiesDirty = false;
   this._groupMetadata = undefined;
@@ -149,6 +150,23 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
   url: {
     get: function () {
       return this._url;
+    },
+  },
+
+  /**
+   * Part of the {@link Cesium3DTileContent} interface. <code>Implicit3DTileContent</code>
+   * always returns <code>undefined</code>. Only transcoded tiles have content metadata.
+   * @memberof Implicit3DTileContent.prototype
+   * @private
+   */
+  metadata: {
+    get: function () {
+      return undefined;
+    },
+    set: function () {
+      //>>includeStart('debug', pragmas.debug);
+      throw new DeveloperError("Implicit3DTileContent cannot have metadata");
+      //>>includeEnd('debug');
     },
   },
 
@@ -417,17 +435,23 @@ function deriveChildTile(
   let tileMetadata;
   let tileBounds;
   let contentBounds;
-  if (defined(subtree.tileMetadataExtension)) {
-    const metadataTable = subtree.tileMetadataTable;
-    tileMetadata = new ImplicitTileMetadata({
-      class: metadataTable.class,
-      implicitCoordinates: implicitCoordinates,
-      implicitSubtree: subtree,
-    });
+  if (defined(subtree.tilePropertyTableJson)) {
+    tileMetadata = subtree.getTileMetadataView(implicitCoordinates);
 
     const boundingVolumeSemantics = parseBoundingVolumeSemantics(tileMetadata);
     tileBounds = boundingVolumeSemantics.tile;
     contentBounds = boundingVolumeSemantics.content;
+  }
+
+  // Content is not loaded at this point, so this flag is set for future reference.
+  const contentPropertyTableJsons = subtree.contentPropertyTableJsons;
+  const length = contentPropertyTableJsons.length;
+  let hasImplicitContentMetadata = false;
+  for (let i = 0; i < length; i++) {
+    if (subtree.contentIsAvailableAtCoordinates(implicitCoordinates, i)) {
+      hasImplicitContentMetadata = true;
+      break;
+    }
   }
 
   const boundingVolume = getTileBoundingVolume(
@@ -502,9 +526,11 @@ function deriveChildTile(
     combinedTileJson,
     parentTile
   );
+
   childTile.implicitCoordinates = implicitCoordinates;
   childTile.implicitSubtree = subtree;
   childTile.metadata = tileMetadata;
+  childTile.hasImplicitContentMetadata = hasImplicitContentMetadata;
 
   return childTile;
 }
