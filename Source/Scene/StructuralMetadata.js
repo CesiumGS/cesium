@@ -118,7 +118,7 @@ Object.defineProperties(StructuralMetadata.prototype, {
   },
 
   /**
-   * The property textures in the metadata.
+   * The property tables in the metadata.
    *
    * @memberof StructuralMetadata.prototype
    * @type {PropertyTable[]}

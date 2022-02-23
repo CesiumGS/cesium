@@ -40,7 +40,7 @@ Object.defineProperties(PropertyAttributeProperty.prototype, {
   /**
    * The attribute semantic
    *
-   * @memberof PropertyTexture.prototype
+   * @memberof PropertyAttributeProperty.prototype
    * @type {String}
    * @readonly
    * @private
