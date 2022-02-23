@@ -743,15 +743,6 @@ ModelExperimental.prototype.update = function (frameState) {
   }
 
   if (!this._drawCommandsBuilt) {
-    const components = this._sceneGraph.components;
-    const copyright = components.asset.copyright;
-
-    if (defined(copyright)) {
-      copyright.forEach(function (credit) {
-        frameState.creditDisplay.addCredit(credit);
-      });
-    }
-
     this._sceneGraph.buildDrawCommands(frameState);
     this._drawCommandsBuilt = true;
 
@@ -802,6 +793,15 @@ ModelExperimental.prototype.update = function (frameState) {
   // Check for show here because we still want the draw commands to be built so user can instantly see the model
   // when show is set to true.
   if (this._show) {
+    const components = this._sceneGraph.components;
+    const copyright = components.asset.copyright;
+
+    if (defined(copyright)) {
+      copyright.forEach(function (credit) {
+        frameState.creditDisplay.addCredit(credit);
+      });
+    }
+
     const drawCommands = this._sceneGraph.getDrawCommands();
     frameState.commandList.push.apply(frameState.commandList, drawCommands);
   }
