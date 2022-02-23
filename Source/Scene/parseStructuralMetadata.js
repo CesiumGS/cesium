@@ -76,13 +76,13 @@ export default function parseStructuralMetadata(options) {
   const propertyAttributes = [];
   if (defined(extension.propertyAttributes)) {
     for (let i = 0; i < extension.propertyAttributes.length; i++) {
-      const propertyAttribute = propertyAttributes[i];
+      const propertyAttribute = extension.propertyAttributes[i];
       propertyAttributes.push(
         new PropertyAttribute({
           id: i,
           name: propertyAttribute.name,
           class: schema.classes[propertyAttribute.class],
-          propertyAttributes: propertyAttribute,
+          propertyAttribute: propertyAttribute,
         })
       );
     }

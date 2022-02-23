@@ -72,6 +72,8 @@ describe(
     const weather = "./Data/Models/GltfLoader/Weather/glTF/weather.gltf";
     const weatherLegacy =
       "./Data/Models/GltfLoader/Weather/glTF/weather_EXT_feature_metadata.gltf";
+    const pointCloudWithPropertyAttributes =
+      "./Data/Models/GltfLoader/PointCloudWithPropertyAttributes/glTF/PointCloudWithPropertyAttributes.gltf";
     const boxInstanced =
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
     const boxInstancedLegacy =
@@ -183,6 +185,17 @@ describe(
           attribute.semantic === semantic &&
           attribute.setIndex === setIndex
         ) {
+          return attribute;
+        }
+      }
+      return undefined;
+    }
+
+    function getAttributeByName(attributes, name) {
+      const attributesLength = attributes.length;
+      for (let i = 0; i < attributesLength; ++i) {
+        const attribute = attributes[i];
+        if (attribute.name === name) {
           return attribute;
         }
       }
@@ -1376,6 +1389,98 @@ describe(
         expect(townTable.getProperty(1, "population")).toBe(5234);
         expect(townTable.getProperty(2, "name")).toBe("Newer Town");
         expect(townTable.getProperty(2, "population")).toBe(34245);
+      });
+    });
+
+    it("loads PointCloudWithPropertyAttributes", function () {
+      return loadGltf(pointCloudWithPropertyAttributes).then(function (
+        gltfLoader
+      ) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const color0Attribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.COLOR,
+          0
+        );
+        // custom attributes don't have a VertexAttributeSemantic
+        const circleTAttribute = getAttributeByName(attributes, "_CIRCLE_T");
+        const featureId0Attribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.FEATURE_ID,
+          0
+        );
+        const featureId1Attribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.FEATURE_ID,
+          1
+        );
+        const structuralMetadata = components.structuralMetadata;
+
+        expect(primitive.primitiveType).toBe(PrimitiveType.POINTS);
+
+        expect(positionAttribute).toBeDefined();
+        expect(color0Attribute).toBeDefined();
+        expect(circleTAttribute).toBeDefined();
+        expect(featureId0Attribute).toBeDefined();
+        expect(featureId1Attribute).toBeDefined();
+
+        expect(primitive.featureIds.length).toBe(2);
+        expect(primitive.propertyTextureIds.length).toBe(0);
+        expect(primitive.propertyAttributeIds).toEqual([0]);
+
+        const featureIdAttribute0 = primitive.featureIds[0];
+        expect(featureIdAttribute0).toBeInstanceOf(
+          ModelComponents.FeatureIdAttribute
+        );
+        expect(featureIdAttribute0.featureCount).toEqual(30);
+        expect(featureIdAttribute0.nullFeatureId).not.toBeDefined();
+        expect(featureIdAttribute0.propertyTableId).not.toBeDefined();
+        expect(featureIdAttribute0.setIndex).toBe(0);
+
+        const featureIdAttribute1 = primitive.featureIds[1];
+        expect(featureIdAttribute1).toBeInstanceOf(
+          ModelComponents.FeatureIdAttribute
+        );
+        expect(featureIdAttribute1.featureCount).toEqual(20);
+        expect(featureIdAttribute1.nullFeatureId).not.toBeDefined();
+        expect(featureIdAttribute1.propertyTableId).not.toBeDefined();
+        expect(featureIdAttribute1.setIndex).toBe(1);
+
+        const torusClass = structuralMetadata.schema.classes.torus;
+        const torusProperties = torusClass.properties;
+        const circleT = torusProperties.circleT;
+        expect(circleT.type).toBe(MetadataType.SCALAR);
+        expect(circleT.componentType).toBe(MetadataComponentType.FLOAT32);
+
+        const iteration = torusProperties.iteration;
+        expect(iteration.type).toBe(MetadataType.SCALAR);
+        expect(iteration.componentType).toBe(MetadataComponentType.FLOAT32);
+
+        const pointId = torusProperties.pointId;
+        expect(pointId.type).toBe(MetadataType.SCALAR);
+        expect(pointId.componentType).toBe(MetadataComponentType.FLOAT32);
+
+        const propertyAttribute = structuralMetadata.getPropertyAttribute(0);
+        expect(propertyAttribute.id).toBe(0);
+        expect(propertyAttribute.name).not.toBeDefined();
+        expect(propertyAttribute.class).toBe(torusClass);
+        expect(propertyAttribute.getProperty("circleT").attribute).toBe(
+          "_CIRCLE_T"
+        );
+        expect(propertyAttribute.getProperty("iteration").attribute).toBe(
+          "_FEATURE_ID_0"
+        );
+        expect(propertyAttribute.getProperty("pointId").attribute).toBe(
+          "_FEATURE_ID_1"
+        );
       });
     });
 
