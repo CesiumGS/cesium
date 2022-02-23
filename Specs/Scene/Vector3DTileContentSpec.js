@@ -22,7 +22,6 @@ import {
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 
-// See https://github.com/CesiumGS/cesium/issues/7249#issuecomment-546347729
 describe(
   "Scene/Vector3DTileContent",
   function () {
