@@ -3,7 +3,7 @@ import DeveloperError from "./DeveloperError.js";
 import getAbsoluteUri from "./getAbsoluteUri.js";
 import Resource from "./Resource.js";
 
-/*global CESIUM_BASE_URL*/
+/*global CESIUM_BASE_URL,define,require*/
 
 const cesiumScriptRegex = /((?:.*\/)|^)Cesium\.js(?:\?|\#|$)/;
 function getBaseUrlFromCesiumScript() {
@@ -77,7 +77,7 @@ function getCesiumBaseUrl() {
 
 function buildModuleUrlFromRequireToUrl(moduleID) {
   //moduleID will be non-relative, so require it relative to this module, in Core.
-  return tryMakeAbsolute(require.toUrl("../" + moduleID));
+  return tryMakeAbsolute(require.toUrl(`../${moduleID}`));
 }
 
 function buildModuleUrlFromBaseUrl(moduleID) {
