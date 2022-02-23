@@ -11,6 +11,7 @@
 - Added support for `debugColorTiles` in `ModelExperimental`. [#10071](https://github.com/CesiumGS/cesium/pull/10071)
 - Added support for shadows in `ModelExperimental`. [#10077](https://github.com/CesiumGS/cesium/pull/10077)
 - Added `packArray` and `unpackArray` for matrix types. [#10118](https://github.com/CesiumGS/cesium/pull/10118)
+- glTF copyrights now appear under the credits display. [#10138](https://github.com/CesiumGS/cesium/pull/10138)
 
 ##### Fixes :wrench:
 
