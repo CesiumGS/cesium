@@ -10,6 +10,7 @@ import DeveloperError from "./DeveloperError.js";
 import getAbsoluteUri from "./getAbsoluteUri.js";
 import getBaseUri from "./getBaseUri.js";
 import getExtensionFromUri from "./getExtensionFromUri.js";
+import getImagePixels from "./getImagePixels.js";
 import isBlobUri from "./isBlobUri.js";
 import isCrossOriginUrl from "./isCrossOriginUrl.js";
 import isDataUri from "./isDataUri.js";
@@ -349,21 +350,6 @@ Resource.createIfNeeded = function (resource) {
   });
 };
 
-function getColorOfFirstPixel(imageBitmap) {
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d");
-  canvas.width = 1;
-  canvas.height = 1;
-  context.drawImage(imageBitmap, 0, 0, 1, 1);
-  const imageData = context.getImageData(0, 0, 1, 1);
-  return [
-    imageData.data[0],
-    imageData.data[1],
-    imageData.data[2],
-    imageData.data[3],
-  ];
-}
-
 let supportsImageBitmapOptionsPromise;
 /**
  * A helper function to check whether createImageBitmap supports passing ImageBitmapOptions.
@@ -411,8 +397,8 @@ Resource.supportsImageBitmapOptions = function () {
     })
     .then(function (imageBitmaps) {
       // Check whether the colorSpaceConversion option had any effect on the green channel
-      const colorWithOptions = getColorOfFirstPixel(imageBitmaps[0]);
-      const colorWithDefaults = getColorOfFirstPixel(imageBitmaps[1]);
+      const colorWithOptions = getImagePixels(imageBitmaps[0]);
+      const colorWithDefaults = getImagePixels(imageBitmaps[1]);
       return colorWithOptions[1] !== colorWithDefaults[1];
     })
     .otherwise(function () {
