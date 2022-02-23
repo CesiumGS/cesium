@@ -196,11 +196,6 @@ PointCloudEyeDomeLighting.prototype.update = function (
       continue;
     }
 
-    // These variables need to get reset for each iteration. It has to be
-    // done manually since var is function scope not block scope.
-    derivedCommand = undefined;
-    originalShaderProgram = undefined;
-
     let derivedCommandObject = command.derivedCommands.pointCloudProcessor;
     if (defined(derivedCommandObject)) {
       derivedCommand = derivedCommandObject.command;

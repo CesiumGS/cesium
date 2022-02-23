@@ -251,7 +251,7 @@ describe("Core/JulianDate", function () {
   it("Construct from ISO8601 UTC calendar date and time fractional seconds, basic format", function () {
     //Date is only accurate to milliseconds, while JulianDate, much more so.  The below date gets
     //rounded to 513, so we need to construct a JulianDate directly.
-    //var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 25, 5125423)));
+    //const expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 25, 5125423)));
     const expectedDate = new JulianDate(
       2455045,
       1825.5125423,
@@ -276,7 +276,7 @@ describe("Core/JulianDate", function () {
   it('Construct from ISO8601 UTC calendar date and time fractional seconds, basic format, "," instead of "."', function () {
     //Date is only accurate to milliseconds, while JulianDate, much more so.  The below date gets
     //rounded to 513, so we need to construct a JulianDate directly.
-    //var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 25, 5125423)));
+    //const expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 25, 5125423)));
     const expectedDate = new JulianDate(
       2455045,
       1825.5125423,

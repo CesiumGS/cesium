@@ -2614,7 +2614,7 @@ describe("Core/Resource", function () {
 
     describe("retries when Resource has the callback set", function () {
       it("rejects after too many retries", function () {
-        //var cb = jasmine.createSpy('retry').and.returnValue(true);
+        //const cb = jasmine.createSpy('retry').and.returnValue(true);
         const cb = jasmine
           .createSpy("retry")
           .and.callFake(function (resource, error) {
