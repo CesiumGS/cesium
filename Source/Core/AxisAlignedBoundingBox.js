@@ -55,7 +55,7 @@ function AxisAlignedBoundingBox(minimum, maximum, center) {
  *
  * @example
  * // Compute an axis aligned bounding box from the two corners.
- * var box = Cesium.AxisAlignedBoundingBox.fromCorners(new Cesium.Cartesian3(-1, -1, -1), new Cesium.Cartesian3(1, 1, 1));
+ * const box = Cesium.AxisAlignedBoundingBox.fromCorners(new Cesium.Cartesian3(-1, -1, -1), new Cesium.Cartesian3(1, 1, 1));
  */
 AxisAlignedBoundingBox.fromCorners = function (minimum, maximum, result) {
   //>>includeStart('debug', pragmas.debug);
