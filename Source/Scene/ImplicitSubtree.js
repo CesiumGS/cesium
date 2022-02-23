@@ -12,6 +12,7 @@ import ImplicitSubtreeMetadata from "./ImplicitSubtreeMetadata.js";
 import MetadataTable from "./MetadataTable.js";
 import ResourceCache from "./ResourceCache.js";
 import when from "../ThirdParty/when.js";
+import ImplicitMetadataView from "./ImplicitMetadataView.js";
 
 /**
  * An object representing a single subtree in an implicit tileset
@@ -56,9 +57,9 @@ export default function ImplicitSubtree(
   this._subtreeJson = undefined;
   this._bufferLoader = undefined;
   this._tileAvailability = undefined;
-  this._implicitCoordinates = implicitCoordinates;
   this._contentAvailabilityBitstreams = [];
   this._childSubtreeAvailability = undefined;
+  this._implicitCoordinates = implicitCoordinates;
   this._subtreeLevels = implicitTileset.subtreeLevels;
   this._subdivisionScheme = implicitTileset.subdivisionScheme;
   this._branchingFactor = implicitTileset.branchingFactor;
@@ -67,9 +68,14 @@ export default function ImplicitSubtree(
   // properties for 3DTILES_metadata
   this._metadata = undefined;
   this._tileMetadataTable = undefined;
-  this._tileMetadataExtension = undefined;
-  // Map of availability bit index to entity ID
-  this._jumpBuffer = undefined;
+  this._tilePropertyTableJson = undefined;
+
+  this._contentMetadataTables = [];
+  this._contentPropertyTableJsons = [];
+
+  // Jump buffers are maps of availability bit index to entity ID
+  this._tileJumpBuffer = undefined;
+  this._contentJumpBuffers = [];
 
   initialize(this, json, subtreeView, implicitTileset);
 }
@@ -126,9 +132,38 @@ Object.defineProperties(ImplicitSubtree.prototype, {
    * @readonly
    * @private
    */
-  tileMetadataExtension: {
+  tilePropertyTableJson: {
     get: function () {
-      return this._tileMetadataExtension;
+      return this._tilePropertyTableJson;
+    },
+  },
+
+  /**
+   * When the <code>3DTILES_metadata</code> extension is used, this property stores
+   * an array of {@link MetadataTable} instances for the contents in the subtree.
+   *
+   * @type {Array}
+   * @readonly
+   * @private
+   */
+  contentMetadataTables: {
+    get: function () {
+      return this._contentMetadataTables;
+    },
+  },
+
+  /**
+   * When the <code>3DTILES_metadata</code> extension is used, this property
+   * an array of the JSONs from the extension. This is used to get the extras
+   * and extensions for the contents in the subtree.
+   *
+   * @type {Array}
+   * @readonly
+   * @private
+   */
+  contentPropertyTableJsons: {
+    get: function () {
+      return this._contentPropertyTableJsons;
     },
   },
 
@@ -298,10 +333,17 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
   const subtreeJson = chunks.json;
   subtree._subtreeJson = subtreeJson;
 
-  let tileMetadataExtension;
+  let tilePropertyTableJson;
   if (hasExtension(subtreeJson, "3DTILES_metadata")) {
-    tileMetadataExtension = subtreeJson.extensions["3DTILES_metadata"];
+    tilePropertyTableJson = subtreeJson.extensions["3DTILES_metadata"];
+  } else {
+    tilePropertyTableJson = subtreeJson.tileMetadata;
   }
+
+  const contentPropertyTableJsons = defaultValue(
+    subtreeJson.contentMetadata,
+    []
+  );
 
   let metadata;
   const schema = implicitTileset.metadataSchema;
@@ -316,7 +358,8 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
   }
 
   subtree._metadata = metadata;
-  subtree._tileMetadataExtension = tileMetadataExtension;
+  subtree._tilePropertyTableJson = tilePropertyTableJson;
+  subtree._contentPropertyTableJsons = contentPropertyTableJsons;
 
   // if no contentAvailability is specified, no tile in the subtree has
   // content
@@ -351,8 +394,13 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
   // Buffers and buffer views are inactive until explicitly marked active.
   // This way we can avoid fetching buffers that will not be used.
   markActiveBufferViews(subtreeJson, bufferViewHeaders);
-  if (defined(tileMetadataExtension)) {
-    markActiveMetadataBufferViews(tileMetadataExtension, bufferViewHeaders);
+  if (defined(tilePropertyTableJson)) {
+    markActiveMetadataBufferViews(tilePropertyTableJson, bufferViewHeaders);
+  }
+
+  for (let i = 0; i < contentPropertyTableJsons.length; i++) {
+    const contentPropertyTableJson = contentPropertyTableJsons[i];
+    markActiveMetadataBufferViews(contentPropertyTableJson, bufferViewHeaders);
   }
 
   requestActiveBuffers(subtree, bufferHeaders, chunks.binary)
@@ -363,10 +411,13 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
       );
       parseAvailability(subtree, subtreeJson, implicitTileset, bufferViewsU8);
 
-      if (defined(tileMetadataExtension)) {
-        parseMetadataTable(subtree, implicitTileset, bufferViewsU8);
-        makeJumpBuffer(subtree);
+      if (defined(tilePropertyTableJson)) {
+        parseTileMetadataTable(subtree, implicitTileset, bufferViewsU8);
+        makeTileJumpBuffer(subtree);
       }
+
+      parseContentMetadataTables(subtree, implicitTileset, bufferViewsU8);
+      makeContentJumpBuffers(subtree);
 
       subtree._readyPromise.resolve(subtree);
     })
@@ -558,17 +609,18 @@ function markActiveBufferViews(subtreeJson, bufferViewHeaders) {
 }
 
 /**
- * For <code>3DTILES_metadata</code>, look over the tile metadata buffers
+ * For <code>3DTILES_metadata</code>, look over the tile and content metadata buffers
  * <p>
  * This always loads all of the metadata immediately. Future iterations may
  * allow filtering this to avoid downloading unneeded buffers.
  * </p>
- * @param {Object} metadataExtension The 3DTILES_metadata extension
+ *
+ * @param {Object} propertyTableJson The property table JSON for either a tile or some content
  * @param {BufferViewHeader[]} bufferViewHeaders The preprocessed buffer view headers
  * @private
  */
-function markActiveMetadataBufferViews(metadataExtension, bufferViewHeaders) {
-  const properties = metadataExtension.properties;
+function markActiveMetadataBufferViews(propertyTableJson, bufferViewHeaders) {
+  const properties = propertyTableJson.properties;
   let header;
   for (const key in properties) {
     if (properties.hasOwnProperty(key)) {
@@ -702,10 +754,10 @@ function parseAvailability(
 
   // availableCount is only needed for the metadata jump buffer, which
   // corresponds to the tile availability bitstream.
-  const computeAvailableCountEnabled = hasExtension(
-    subtreeJson,
-    "3DTILES_metadata"
-  );
+  const hasMetadataExtension = hasExtension(subtreeJson, "3DTILES_metadata");
+  const hasTileMetadata = defined(subtree._tilePropertyTableJson);
+  let computeAvailableCountEnabled = hasMetadataExtension || hasTileMetadata;
+
   subtree._tileAvailability = parseAvailabilityBitstream(
     subtreeJson.tileAvailability,
     bufferViewsU8,
@@ -713,12 +765,17 @@ function parseAvailability(
     computeAvailableCountEnabled
   );
 
+  const hasContentMetadata = subtree._contentPropertyTableJsons.length > 0;
+  computeAvailableCountEnabled =
+    computeAvailableCountEnabled || hasContentMetadata;
+
   for (let i = 0; i < subtreeJson.contentAvailabilityHeaders.length; i++) {
     const bitstream = parseAvailabilityBitstream(
       subtreeJson.contentAvailabilityHeaders[i],
       bufferViewsU8,
       // content availability has the same length as tile availability.
-      tileAvailabilityBits
+      tileAvailabilityBits,
+      computeAvailableCountEnabled
     );
     subtree._contentAvailabilityBitstreams.push(bitstream);
   }
@@ -775,45 +832,80 @@ function parseAvailabilityBitstream(
 }
 
 /**
- * Parse the 3DTILES_metadata table, storing a {@link MetadataTable} in the
- * subtree.
+ * Parse the 3DTILES_metadata table for the tile metadata, storing a {@link MetadataTable}
+ * in the subtree.
  *
  * @param {ImplicitSubtree} subtree The subtree
  * @param {ImplicitTileset} implicitTileset The implicit tileset this subtree belongs to.
  * @param {Object} bufferViewsU8 A dictionary of bufferView index to its Uint8Array contents.
  * @private
  */
-function parseMetadataTable(subtree, implicitTileset, bufferViewsU8) {
-  const metadataExtension = subtree._tileMetadataExtension;
+function parseTileMetadataTable(subtree, implicitTileset, bufferViewsU8) {
+  const tilePropertyTableJson = subtree._tilePropertyTableJson;
   const tileCount = subtree._tileAvailability.availableCount;
-  const metadataClassName = metadataExtension.class;
   const metadataSchema = implicitTileset.metadataSchema;
-  const metadataClass = metadataSchema.classes[metadataClassName];
+
+  const tileMetadataClassName = tilePropertyTableJson.class;
+  const tileMetadataClass = metadataSchema.classes[tileMetadataClassName];
 
   subtree._tileMetadataTable = new MetadataTable({
-    class: metadataClass,
+    class: tileMetadataClass,
     count: tileCount,
-    properties: metadataExtension.properties,
+    properties: tilePropertyTableJson.properties,
     bufferViews: bufferViewsU8,
   });
 }
 
 /**
- * Make a jump buffer, i.e. a map of tile bit index to the metadata entity ID.
- * This is stored in the subtree.
- * <p>
- * For unavailable tiles, the jump buffer entry will be uninitialized. Use
- * the tile availability to determine whether a jump buffer value is valid.
- * </p>
+ * Parse the 3DTILES_metadata tables for the content metadata, storing an array of
+ * {@link MetadataTable}s in the subtree.
  *
  * @param {ImplicitSubtree} subtree The subtree
+ * @param {ImplicitTileset} implicitTileset The implicit tileset this subtree belongs to.
+ * @param {Object} bufferViewsU8 A dictionary of bufferView index to its Uint8Array contents.
  * @private
  */
-function makeJumpBuffer(subtree) {
-  const tileAvailability = subtree._tileAvailability;
+function parseContentMetadataTables(subtree, implicitTileset, bufferViewsU8) {
+  const contentPropertyTableJsons = subtree._contentPropertyTableJsons;
+  const contentAvailabilityBitstreams = subtree._contentAvailabilityBitstreams;
+  const metadataSchema = implicitTileset.metadataSchema;
+
+  const contentMetadataTables = subtree._contentMetadataTables;
+  for (let i = 0; i < contentPropertyTableJsons.length; i++) {
+    const contentPropertyTableJson = contentPropertyTableJsons[i];
+    const contentAvailabilityBitsteam = contentAvailabilityBitstreams[i];
+
+    const contentCount = contentAvailabilityBitsteam.availableCount;
+    const contentMetadataClassName = contentPropertyTableJson.class;
+    const contentMetadataClass =
+      metadataSchema.classes[contentMetadataClassName];
+
+    const metadataTable = new MetadataTable({
+      class: contentMetadataClass,
+      count: contentCount,
+      properties: contentPropertyTableJson.properties,
+      bufferViews: bufferViewsU8,
+    });
+
+    contentMetadataTables.push(metadataTable);
+  }
+}
+
+/**
+ * Make a jump buffer, i.e. a map of a bit index to the metadata entity ID.
+ * <p>
+ * For unavailable tiles and content, the jump buffer entries will be uninitialized.
+ * Use the tile and content availability to determine whether a jump buffer value is valid.
+ * </p>
+ *
+ * @param {ImplicitAvailabilityBitstream} availability The availability bitstream to create the jump buffer from.
+ * @returns {Array} The resulting jump buffer.
+ * @private
+ */
+function makeJumpBuffer(availability) {
   let entityId = 0;
-  const bufferLength = tileAvailability.lengthBits;
-  const availableCount = tileAvailability.availableCount;
+  const bufferLength = availability.lengthBits;
+  const availableCount = availability.availableCount;
 
   let jumpBuffer;
   if (availableCount < 256) {
@@ -824,19 +916,49 @@ function makeJumpBuffer(subtree) {
     jumpBuffer = new Uint32Array(bufferLength);
   }
 
-  for (let i = 0; i < tileAvailability.lengthBits; i++) {
-    if (tileAvailability.getBit(i)) {
+  for (let i = 0; i < availability.lengthBits; i++) {
+    if (availability.getBit(i)) {
       jumpBuffer[i] = entityId;
       entityId++;
     }
   }
-  subtree._jumpBuffer = jumpBuffer;
+
+  return jumpBuffer;
+}
+
+/**
+ * Make the jump buffer, i.e. a map of a bit index to the metadata entity ID,
+ * for the content metadata. This is stored in the subtree.
+ *
+ * @param {ImplicitSubtree} subtree The subtree
+ * @private
+ */
+function makeTileJumpBuffer(subtree) {
+  const tileJumpBuffer = makeJumpBuffer(subtree._tileAvailability);
+  subtree._tileJumpBuffer = tileJumpBuffer;
+}
+
+/**
+ * Make the jump buffers, i.e. maps of bit indices to the metadata entity IDs,
+ * for the content metadata. This is stored in the subtree.
+ *
+ * @param {ImplicitSubtree} subtree The subtree
+ * @private
+ */
+function makeContentJumpBuffers(subtree) {
+  const contentJumpBuffers = subtree._contentJumpBuffers;
+  const contentAvailabilityBitstreams = subtree._contentAvailabilityBitstreams;
+  for (let i = 0; i < contentAvailabilityBitstreams.length; i++) {
+    const contentAvailability = contentAvailabilityBitstreams[i];
+    const contentJumpBuffer = makeJumpBuffer(contentAvailability);
+    contentJumpBuffers.push(contentJumpBuffer);
+  }
 }
 
 /**
  * Given the implicit tiling coordinates for a tile, get the index within the
  * subtree's tile availability bitstream.
- * @property {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a tile
+ * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a tile
  * @return {Number} The tile's index within the subtree.
  * @private
  */
@@ -858,7 +980,7 @@ ImplicitSubtree.prototype.getTileIndex = function (implicitCoordinates) {
 /**
  * Given the implicit tiling coordinates for a child subtree, get the index within the
  * subtree's child subtree availability bitstream.
- * @property {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a child subtree
+ * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a child subtree
  * @return {Number} The child subtree's index within the subtree's child subtree availability bitstream.
  * @private
  */
@@ -884,22 +1006,103 @@ ImplicitSubtree.prototype.getChildSubtreeIndex = function (
 
 /**
  * Get the entity ID for a tile within this subtree.
- * @property {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a tile
+ * @param {ImplicitSubtree} subtree The subtree
+ * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a tile
  * @return {Number} The entity ID for this tile for accessing tile metadata, or <code>undefined</code> if not applicable.
  *
  * @private
  */
-ImplicitSubtree.prototype.getEntityId = function (implicitCoordinates) {
-  if (!defined(this._tileMetadataTable)) {
+function getTileEntityId(subtree, implicitCoordinates) {
+  if (!defined(subtree._tileMetadataTable)) {
     return undefined;
   }
 
-  const tileIndex = this.getTileIndex(implicitCoordinates);
-  if (this._tileAvailability.getBit(tileIndex)) {
-    return this._jumpBuffer[tileIndex];
+  const tileIndex = subtree.getTileIndex(implicitCoordinates);
+  if (subtree._tileAvailability.getBit(tileIndex)) {
+    return subtree._tileJumpBuffer[tileIndex];
   }
 
   return undefined;
+}
+
+/**
+ * Get the entity ID for a content within this subtree.
+ * @param {ImplicitSubtree} subtree The subtree
+ * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a content
+ * @param {Number} contentIndex The content index, for distinguishing between multiple contents.
+ * @return {Number} The entity ID for this content for accessing content metadata, or <code>undefined</code> if not applicable.
+ *
+ * @private
+ */
+function getContentEntityId(subtree, implicitCoordinates, contentIndex) {
+  const metadataTables = subtree._contentMetadataTables;
+  if (!defined(metadataTables)) {
+    return undefined;
+  }
+
+  const metadataTable = metadataTables[contentIndex];
+  if (!defined(metadataTable)) {
+    return undefined;
+  }
+
+  const availability = subtree._contentAvailabilityBitstreams[contentIndex];
+  const tileIndex = subtree.getTileIndex(implicitCoordinates);
+  if (availability.getBit(tileIndex)) {
+    const contentJumpBuffer = subtree._contentJumpBuffers[contentIndex];
+    return contentJumpBuffer[tileIndex];
+  }
+
+  return undefined;
+}
+
+/**
+ * Create and return a metadata table view for a tile within this subtree.
+ * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a tile
+ * @return {ImplicitMetadataView} The metadata view for this tile, or <code>undefined</code> if not applicable.
+ *
+ * @private
+ */
+ImplicitSubtree.prototype.getTileMetadataView = function (implicitCoordinates) {
+  const entityId = getTileEntityId(this, implicitCoordinates);
+  if (!defined(entityId)) {
+    return undefined;
+  }
+
+  const metadataTable = this._tileMetadataTable;
+  return new ImplicitMetadataView({
+    class: metadataTable.class,
+    metadataTable: metadataTable,
+    entityId: entityId,
+    propertyTableJson: this._tilePropertyTableJson,
+  });
+};
+
+/**
+ * Create and return a metadata table view for a content within this subtree.
+ * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a content
+ * @param {Number} contentIndex The index of the content used to distinguish between multiple contents
+ * @return {ImplicitMetadataView} The metadata view for this content, or <code>undefined</code> if not applicable.
+ *
+ * @private
+ */
+ImplicitSubtree.prototype.getContentMetadataView = function (
+  implicitCoordinates,
+  contentIndex
+) {
+  const entityId = getContentEntityId(this, implicitCoordinates, contentIndex);
+  if (!defined(entityId)) {
+    return undefined;
+  }
+
+  const metadataTable = this._contentMetadataTables[contentIndex];
+  const propertyTableJson = this._contentPropertyTableJsons[contentIndex];
+  return new ImplicitMetadataView({
+    class: metadataTable.class,
+    metadataTable: metadataTable,
+    entityId: entityId,
+    contentIndex: contentIndex,
+    propertyTableJson: propertyTableJson,
+  });
 };
 
 /**

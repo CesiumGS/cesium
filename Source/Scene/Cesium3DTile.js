@@ -278,6 +278,21 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.hasImplicitContent = false;
 
   /**
+   * When <code>true</code>, the tile contains content metadata from implicit tiling. This flag is set
+   * for tiles transcoded by <code>Implicit3DTileContent</code>.
+   * <p>
+   * This is <code>false</code> until the tile's content is loaded.
+   * </p>
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  this.hasImplicitContentMetadata = false;
+
+  /**
    * When <code>true</code>, the tile has multiple contents via the
    * <code>3DTILES_multiple_contents</code> extension.
    *
@@ -1289,6 +1304,13 @@ function makeContent(tile, arrayBuffer) {
   }
 
   const contentHeader = tile._header.content;
+
+  if (tile.hasImplicitContentMetadata) {
+    const subtree = tile.implicitSubtree;
+    const coordinates = tile.implicitCoordinates;
+    content.metadata = subtree.getContentMetadataView(coordinates, 0);
+  }
+
   content.groupMetadata = findGroupMetadata(tileset, contentHeader);
   return content;
 }

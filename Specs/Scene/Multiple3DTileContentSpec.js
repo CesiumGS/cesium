@@ -294,6 +294,9 @@ describe(
       const withGroupMetadataUrl =
         "./Data/Cesium3DTiles/MultipleContents/GroupMetadata/tileset.json";
 
+      const withImplicitContentMetadataUrl =
+        "./Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset.json";
+
       const metadataClass = new MetadataClass({
         id: "test",
         class: {
@@ -364,6 +367,55 @@ describe(
           );
           expect(groupMetadata.getProperty("priority")).toBe(5);
           expect(groupMetadata.getProperty("isInstanced")).toBe(true);
+        });
+      });
+
+      it("content metadata returns undefined", function () {
+        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
+          function (tileset) {
+            const content = tileset.root.content;
+            expect(content.metadata).not.toBeDefined();
+          }
+        );
+      });
+
+      it("assigning content metadata throws", function () {
+        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
+          function (tileset) {
+            expect(function () {
+              const content = tileset.root.content;
+              content.metadata = {};
+            }).toThrowDeveloperError();
+          }
+        );
+      });
+
+      it("initializes content metadata for inner contents", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          withImplicitContentMetadataUrl
+        ).then(function (tileset) {
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
+
+          // This retrieves the tile at (1, 1, 1)
+          const subtreeChildTile = subtreeRootTile.children[0];
+
+          const multipleContents = subtreeChildTile.content;
+          const innerContents = multipleContents.innerContents;
+
+          const buildingContent = innerContents[0];
+          const buildingMetadata = buildingContent.metadata;
+          expect(buildingMetadata).toBeDefined();
+          expect(buildingMetadata.getProperty("height")).toEqual(50);
+          expect(buildingMetadata.getProperty("color")).toEqual(
+            new Cartesian3(0, 0, 255)
+          );
+
+          const treeContent = innerContents[1];
+          const treeMetadata = treeContent.metadata;
+          expect(treeMetadata).toBeDefined();
+          expect(treeMetadata.getProperty("age")).toEqual(16);
         });
       });
     });
