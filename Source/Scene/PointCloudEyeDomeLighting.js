@@ -184,9 +184,6 @@ PointCloudEyeDomeLighting.prototype.update = function (
   const commandList = frameState.commandList;
   const commandEnd = commandList.length;
 
-  let derivedCommand;
-  let originalShaderProgram;
-
   for (i = commandStart; i < commandEnd; ++i) {
     const command = commandList[i];
     if (
@@ -195,6 +192,9 @@ PointCloudEyeDomeLighting.prototype.update = function (
     ) {
       continue;
     }
+
+    let derivedCommand;
+    let originalShaderProgram;
 
     let derivedCommandObject = command.derivedCommands.pointCloudProcessor;
     if (defined(derivedCommandObject)) {
