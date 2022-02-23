@@ -3,6 +3,7 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import PropertyTable from "./PropertyTable.js";
 import PropertyTexture from "./PropertyTexture.js";
+import PropertyAttribute from "./PropertyAttribute.js";
 import StructuralMetadata from "./StructuralMetadata.js";
 import MetadataTable from "./MetadataTable.js";
 
@@ -32,10 +33,9 @@ export default function parseStructuralMetadata(options) {
   Check.typeOf.object("options.schema", schema);
   //>>includeEnd('debug');
 
-  let i;
   const propertyTables = [];
   if (defined(extension.propertyTables)) {
-    for (i = 0; i < extension.propertyTables.length; i++) {
+    for (let i = 0; i < extension.propertyTables.length; i++) {
       const propertyTable = extension.propertyTables[i];
       const classDefinition = schema.classes[propertyTable.class];
       const metadataTable = new MetadataTable({
@@ -59,7 +59,7 @@ export default function parseStructuralMetadata(options) {
 
   const propertyTextures = [];
   if (defined(extension.propertyTextures)) {
-    for (i = 0; i < extension.propertyTextures.length; i++) {
+    for (let i = 0; i < extension.propertyTextures.length; i++) {
       const propertyTexture = extension.propertyTextures[i];
       propertyTextures.push(
         new PropertyTexture({
@@ -73,10 +73,26 @@ export default function parseStructuralMetadata(options) {
     }
   }
 
+  const propertyAttributes = [];
+  if (defined(extension.propertyAttributes)) {
+    for (let i = 0; i < extension.propertyAttributes.length; i++) {
+      const propertyAttribute = extension.propertyAttributes[i];
+      propertyAttributes.push(
+        new PropertyAttribute({
+          id: i,
+          name: propertyAttribute.name,
+          class: schema.classes[propertyAttribute.class],
+          propertyAttribute: propertyAttribute,
+        })
+      );
+    }
+  }
+
   return new StructuralMetadata({
     schema: schema,
     propertyTables: propertyTables,
     propertyTextures: propertyTextures,
+    propertyAttributes: propertyAttributes,
     statistics: extension.statistics,
     extras: extension.extras,
     extensions: extension.extensions,

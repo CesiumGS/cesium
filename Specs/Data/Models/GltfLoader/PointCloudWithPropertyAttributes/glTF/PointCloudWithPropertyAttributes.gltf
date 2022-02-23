@@ -1,0 +1,236 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "Chaos Game 3D fractal generator from https://github.com/ptrgags/chaos-game-3d + many hand-edits"
+  },
+  "extensionsUsed": [
+    "EXT_mesh_features",
+    "EXT_structural_metadata"
+  ],
+  "extensions": {
+    "EXT_structural_metadata": {
+      "schema": {
+        "classes": {
+          "torus": {
+            "name": "Torus",
+            "description": "Properties of the torus point cloud",
+            "properties": {
+              "circleT": {
+                "description": "t value in [0, 1) used to place points around one of the circular rings (in the poloidal direction). Can be computed from pointId, but this property was included to demonstrate a property mapping that is not also a feature ID",
+                "type": "SCALAR",
+                "componentType": "FLOAT32"
+              },
+              "iteration": {
+                "description": "Integer iteration number in [0, 30), stored as a float for easier use in shaders. Each iteration rotates the ring of points around the torus' central axis (the toriodal direction)",
+                "type": "SCALAR",
+                "componentType": "FLOAT32"
+              },
+              "pointId": {
+                "description": "Integer point ID from [0, 20), stored as a float for easier use in shaders. The value increases around one of the circular rings (in the poloidal direction).",
+                "type": "SCALAR",
+                "componentType": "FLOAT32"
+              }
+            }
+          }
+        }
+      },
+      "propertyAttributes": [
+        {
+          "class": "torus",
+          "properties": {
+            "circleT": {
+              "attribute": "_CIRCLE_T"
+            },
+            "iteration": {
+              "attribute": "_FEATURE_ID_0"
+            },
+            "pointId": {
+              "attribute": "_FEATURE_ID_1"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "COLOR_0": 1,
+            "_CIRCLE_T": 2,
+            "_FEATURE_ID_0": 3,
+            "_FEATURE_ID_1": 4
+          },
+          "mode": 0,
+          "extensions": {
+            "EXT_mesh_features": {
+              "featureIds": [
+                {
+                  "featureCount": 30,
+                  "attribute": 0
+                },
+                {
+                  "featureCount": 20,
+                  "attribute": 1
+                }
+              ]
+            },
+            "EXT_structural_metadata": {
+              "propertyAttributes": [
+                0
+              ]
+            }
+          },
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "accessors": [
+    {
+      "name": "Positions",
+      "bufferView": 0,
+      "count": 620,
+      "min": [
+        -1.5,
+        -1.491782784461975,
+        -0.5
+      ],
+      "max": [
+        1.5,
+        1.491782784461975,
+        0.5
+      ],
+      "type": "VEC3",
+      "componentType": 5126,
+      "byteOffset": 0
+    },
+    {
+      "name": "Colors",
+      "bufferView": 1,
+      "count": 620,
+      "type": "VEC3",
+      "componentType": 5121,
+      "normalized": true,
+      "byteOffset": 0
+    },
+    {
+      "name": "Cluster Coordinates",
+      "bufferView": 2,
+      "count": 620,
+      "type": "SCALAR",
+      "componentType": 5126,
+      "byteOffset": 0
+    },
+    {
+      "name": "Feature ID 0 (iterations)",
+      "bufferView": 3,
+      "count": 620,
+      "type": "SCALAR",
+      "componentType": 5126,
+      "byteOffset": 0
+    },
+    {
+      "name": "Feature ID 1 (point id)",
+      "bufferView": 4,
+      "count": 620,
+      "type": "SCALAR",
+      "componentType": 5126,
+      "byteOffset": 0
+    }
+  ],
+  "bufferViews": [
+    {
+      "name": "Positions",
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 7440,
+      "byteStride": 12,
+      "target": 34962
+    },
+    {
+      "name": "Colors",
+      "buffer": 0,
+      "byteOffset": 7440,
+      "byteLength": 2480,
+      "byteStride": 4,
+      "target": 34962
+    },
+    {
+      "name": "Circle t value",
+      "buffer": 0,
+      "byteOffset": 9920,
+      "byteLength": 2480,
+      "byteStride": 4,
+      "target": 34962
+    },
+    {
+      "name": "Feature ID 0 (iterations)",
+      "buffer": 0,
+      "byteOffset": 12400,
+      "byteLength": 2480,
+      "byteStride": 4,
+      "target": 34962
+    },
+    {
+      "name": "Feature ID 1 (point id)",
+      "buffer": 0,
+      "byteOffset": 14880,
+      "byteLength": 2480,
+      "byteStride": 4,
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "name": "PointCloudWithPropertyAttributes",
+      "byteLength": 17360,
+      "uri": "PointCloudWithPropertyAttributes.bin"
+    }
+  ],
+  "materials": [
+    {
+      "name": "default",
+      "emissiveFactor": [
+        0,
+        0,
+        0
+      ],
+      "alphaMode": "OPAQUE",
+      "doubleSided": false
+    }
+  ]
+}

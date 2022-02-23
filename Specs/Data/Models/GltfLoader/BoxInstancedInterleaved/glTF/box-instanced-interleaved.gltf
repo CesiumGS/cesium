@@ -94,8 +94,7 @@
               "featureIds": [
                 {
                   "propertyTable": 0,
-                  "offset": 0,
-                  "repeat": 1
+                  "featureCount": 4
                 },
                 {
                   "propertyTable": 1,

@@ -1,4 +1,8 @@
-import { StructuralMetadata, MetadataSchema } from "../../Source/Cesium.js";
+import {
+  StructuralMetadata,
+  MetadataSchema,
+  PropertyAttribute,
+} from "../../Source/Cesium.js";
 
 describe("Scene/StructuralMetadata", function () {
   const propertyTablesSchema = {
@@ -52,6 +56,29 @@ describe("Scene/StructuralMetadata", function () {
     },
   };
 
+  const propertyAttributesSchema = {
+    classes: {
+      points: {
+        properties: {
+          color: {
+            type: "VEC3",
+            componentType: "UINT8",
+            array: true,
+            count: 3,
+          },
+          intensity: {
+            type: "SCALAR",
+            componentType: "UINT8",
+          },
+          pointSize: {
+            type: "SCALAR",
+            componentTYpe: "FLOAT32",
+          },
+        },
+      },
+    },
+  };
+
   it("creates structural metadata with default values", function () {
     const metadata = new StructuralMetadata({
       schema: new MetadataSchema(propertyTablesSchema),
@@ -88,7 +115,7 @@ describe("Scene/StructuralMetadata", function () {
     expect(treesTable).toBe(mockPropertyTables[1]);
   });
 
-  it("creates structural metadata with feature textures", function () {
+  it("creates structural metadata with property textures", function () {
     const schema = new MetadataSchema(propertyTexturesSchema);
     const mapClass = schema.classes.map;
     const orthoClass = schema.classes.ortho;
@@ -123,6 +150,52 @@ describe("Scene/StructuralMetadata", function () {
     expect(orthoTexture.id).toBe(1);
     expect(orthoTexture.name).toBe("Ortho Texture");
     expect(orthoTexture.class).toBe(orthoClass);
+  });
+
+  it("creates structural metadata with property attributes", function () {
+    const schema = new MetadataSchema(propertyAttributesSchema);
+    const pointsClass = schema.classes.points;
+
+    const propertyAttributes = [
+      new PropertyAttribute({
+        class: pointsClass,
+        name: "Points",
+        id: 0,
+        propertyAttribute: {
+          properties: {
+            color: {
+              attribute: "_COLOR",
+            },
+            intensity: {
+              attribute: "_INTENSITY",
+            },
+            pointSize: {
+              attribute: "_POINT_SIZE",
+            },
+          },
+        },
+      }),
+    ];
+
+    const metadata = new StructuralMetadata({
+      schema: schema,
+      propertyAttributes: propertyAttributes,
+    });
+
+    expect(pointsClass.id).toBe("points");
+
+    const propertyAttribute = metadata.getPropertyAttribute(0);
+    expect(propertyAttribute).toBe(propertyAttributes[0]);
+    expect(propertyAttribute.id).toBe(0);
+    expect(propertyAttribute.name).toBe("Points");
+    expect(propertyAttribute.class).toBe(pointsClass);
+    expect(propertyAttribute.getProperty("color").attribute).toBe("_COLOR");
+    expect(propertyAttribute.getProperty("intensity").attribute).toBe(
+      "_INTENSITY"
+    );
+    expect(propertyAttribute.getProperty("pointSize").attribute).toBe(
+      "_POINT_SIZE"
+    );
   });
 
   it("creates structural metadata with extras", function () {
@@ -185,7 +258,7 @@ describe("Scene/StructuralMetadata", function () {
     }).toThrowDeveloperError();
   });
 
-  it("getPropertyTexture throws without featureTextureId", function () {
+  it("getPropertyTexture throws without propertyTextureId", function () {
     const metadata = new StructuralMetadata({
       extension: {},
       schema: new MetadataSchema(propertyTexturesSchema),
@@ -193,6 +266,17 @@ describe("Scene/StructuralMetadata", function () {
 
     expect(function () {
       metadata.getPropertyTexture();
+    }).toThrowDeveloperError();
+  });
+
+  it("getPropertyAttribute throws without propertyAttributeId", function () {
+    const metadata = new StructuralMetadata({
+      extension: {},
+      schema: new MetadataSchema(propertyAttributesSchema),
+    });
+
+    expect(function () {
+      metadata.getPropertyAttribute();
     }).toThrowDeveloperError();
   });
 });

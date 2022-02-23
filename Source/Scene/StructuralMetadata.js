@@ -12,7 +12,8 @@ import defined from "../Core/defined.js";
  * @param {Object} options Object with the following properties:
  * @param {MetadataSchema} options.schema The parsed schema.
  * @param {PropertyTable[]} [options.propertyTables] An array of property table objects. For the legacy <code>EXT_feature_metadata</code> extension, this is sorted by the key in the propertyTables dictionary
- * @param {PropertyTexture[]} [options.propertyTextures] An array of feature texture objects. For the legacy <code>EXT_feature_metadata</code> extension, this is sorted by the key in the propertyTextures dictionary
+ * @param {PropertyTexture[]} [options.propertyTextures] An array of property texture objects. For the legacy <code>EXT_feature_metadata</code> extension, this is sorted by the key in the propertyTextures dictionary
+ * @param {PropertyAttribute[]} [options.propertyAttributes] An array of property attribute objects. This is new in <code>EXT_structural_metadata</code>
  * @param {Object} [options.statistics] Statistics about metadata
  * @param {Object} [options.extras] Extra user-defined properties
  * @param {Object} [options.extensions] An object containing extensions
@@ -36,6 +37,7 @@ function StructuralMetadata(options) {
     : 0;
   this._propertyTables = propertyTables;
   this._propertyTextures = options.propertyTextures;
+  this._propertyAttributes = options.propertyAttributes;
   this._statistics = options.statistics;
   this._extras = options.extras;
   this._extensions = options.extensions;
@@ -102,7 +104,7 @@ Object.defineProperties(StructuralMetadata.prototype, {
   },
 
   /**
-   * Number of feature tables in the metadata.
+   * Number of property tables in the metadata.
    *
    * @memberof StructuralMetadata.prototype
    * @type {Number}
@@ -116,7 +118,7 @@ Object.defineProperties(StructuralMetadata.prototype, {
   },
 
   /**
-   * The feature tables in the metadata.
+   * The property tables in the metadata.
    *
    * @memberof StructuralMetadata.prototype
    * @type {PropertyTable[]}
@@ -128,17 +130,45 @@ Object.defineProperties(StructuralMetadata.prototype, {
       return this._propertyTables;
     },
   },
+
+  /**
+   * The property textures in the metadata.
+   *
+   * @memberof StructuralMetadata.prototype
+   * @type {PropertyTexture[]}
+   * @readonly
+   * @private
+   */
+  propertyTextures: {
+    get: function () {
+      return this._propertyTextures;
+    },
+  },
+
+  /**
+   * The property attributes from the structural metadata extension
+   *
+   * @memberof StructuralMetadata.prototype
+   * @type {PropertyAttribute[]}
+   * @readonly
+   * @private
+   */
+  propertyAttributes: {
+    get: function () {
+      return this._propertyAttributes;
+    },
+  },
 });
 
 /**
- * Gets the feature table with the given ID.
+ * Gets the property table with the given ID.
  * <p>
  * For the legacy <code>EXT_feature_metadata</code>, textures are stored in an array sorted
  * by the key in the propertyTables dictionary.
  * </p>
  *
- * @param {Number} propertyTableId The feature table ID.
- * @returns {PropertyTable} The feature table.
+ * @param {Number} propertyTableId The property table ID.
+ * @returns {PropertyTable} The property table.
  * @private
  */
 StructuralMetadata.prototype.getPropertyTable = function (propertyTableId) {
@@ -150,14 +180,14 @@ StructuralMetadata.prototype.getPropertyTable = function (propertyTableId) {
 };
 
 /**
- * Gets the feature texture with the given ID.
+ * Gets the property texture with the given ID.
  * <p>
  * For the legacy <code>EXT_feature_metadata</code>, textures are stored in an array sorted
  * by the key in the propertyTextures dictionary.
  * </p>
  *
- * @param {Number} propertyTextureId The index into the feature textures array.
- * @returns {PropertyTexture} The feature texture.
+ * @param {Number} propertyTextureId The index into the property textures array.
+ * @returns {PropertyTexture} The property texture
  * @private
  */
 StructuralMetadata.prototype.getPropertyTexture = function (propertyTextureId) {
@@ -166,6 +196,24 @@ StructuralMetadata.prototype.getPropertyTexture = function (propertyTextureId) {
   //>>includeEnd('debug');
 
   return this._propertyTextures[propertyTextureId];
+};
+
+/**
+ * Gets the property attribute with the given ID. This concept is new in
+ * EXT_structural_metadata
+ *
+ * @param {Number} propertyAttributeId The index into the property attributes array.
+ * @returns {PropertyAttribute} The property attribute
+ * @private
+ */
+StructuralMetadata.prototype.getPropertyAttribute = function (
+  propertyAttributeId
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("propertyAttributeId", propertyAttributeId);
+  //>>includeEnd('debug');
+
+  return this._propertyAttributes[propertyAttributeId];
 };
 
 export default StructuralMetadata;

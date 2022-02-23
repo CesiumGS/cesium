@@ -95,9 +95,7 @@
         "EXT_instance_features": {
           "featureIds": [
             {
-              "propertyTable": 0,
-              "offset": 0,
-              "repeat": 1
+              "propertyTable": 0
             },
             {
               "propertyTable": 1,

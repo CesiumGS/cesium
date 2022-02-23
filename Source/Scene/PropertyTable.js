@@ -3,7 +3,7 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 
 /**
- * A feature table for use with the <code>EXT_structural_metadata</code> extension or
+ * A property table for use with the <code>EXT_structural_metadata</code> extension or
  * legacy <code>EXT_feature_metadata</code> glTF extension. It also includes some
  * options to be compatible with the 3D Tiles 1.0 batch table.
  * <p>
@@ -21,7 +21,7 @@ import defined from "../Core/defined.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {String} [options.name] Human-readable name to describe the table
- * @param {String|Number} [options.id] A unique id to identify the feature table, useful for debugging. For <code>EXT_structural_metadata</code>, this is the array index in the feature tables array, for <code>EXT_feature_metadata</code> this is the dictionary key in the feature tables dictionary.
+ * @param {String|Number} [options.id] A unique id to identify the property table, useful for debugging. For <code>EXT_structural_metadata</code>, this is the array index in the property tables array, for <code>EXT_feature_metadata</code> this is the dictionary key in the property tables dictionary.
  * @param {Number} options.count The number of features in the table.
  * @param {MetadataTable} [options.metadataTable] A table of binary properties.
  * @param {JsonMetadataTable} [options.jsonMetadataTable] For compatibility with the old batch table, free-form JSON properties can be passed in.

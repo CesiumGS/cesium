@@ -34,7 +34,7 @@ describe(
       },
     };
 
-    const featureTexturesSchema = {
+    const propertyTexturesSchema = {
       classes: {
         map: {
           properties: {
@@ -56,6 +56,29 @@ describe(
               type: "SCALAR",
               componentType: "UINT8",
               normalized: true,
+            },
+          },
+        },
+      },
+    };
+
+    const propertyAttributesSchema = {
+      classes: {
+        points: {
+          properties: {
+            color: {
+              type: "VEC3",
+              componentType: "UINT8",
+              array: true,
+              count: 3,
+            },
+            intensity: {
+              type: "SCALAR",
+              componentType: "UINT8",
+            },
+            pointSize: {
+              type: "SCALAR",
+              componentTYpe: "FLOAT32",
             },
           },
         },
@@ -188,7 +211,7 @@ describe(
       };
 
       const extension = {
-        schema: featureTexturesSchema,
+        schema: propertyTexturesSchema,
         propertyTextures: [
           {
             name: "Map",
@@ -222,7 +245,7 @@ describe(
 
       const metadata = parseStructuralMetadata({
         extension: extension,
-        schema: new MetadataSchema(featureTexturesSchema),
+        schema: new MetadataSchema(propertyTexturesSchema),
         textures: textures,
       });
 
@@ -247,6 +270,49 @@ describe(
       context.destroyForSpecs();
     });
 
+    it("parses extension with property attributes", function () {
+      const extension = {
+        schema: propertyAttributesSchema,
+        propertyAttributes: [
+          {
+            class: "points",
+            name: "Points",
+            properties: {
+              color: {
+                attribute: "_COLOR",
+              },
+              intensity: {
+                attribute: "_INTENSITY",
+              },
+              pointSize: {
+                attribute: "_POINT_SIZE",
+              },
+            },
+          },
+        ],
+      };
+
+      const metadata = parseStructuralMetadata({
+        extension: extension,
+        schema: new MetadataSchema(propertyAttributesSchema),
+      });
+
+      const pointsClass = metadata.schema.classes.points;
+      expect(pointsClass.id).toBe("points");
+
+      const propertyAttribute = metadata.getPropertyAttribute(0);
+      expect(propertyAttribute.id).toBe(0);
+      expect(propertyAttribute.name).toBe("Points");
+      expect(propertyAttribute.class).toBe(pointsClass);
+      expect(propertyAttribute.getProperty("color").attribute).toBe("_COLOR");
+      expect(propertyAttribute.getProperty("intensity").attribute).toBe(
+        "_INTENSITY"
+      );
+      expect(propertyAttribute.getProperty("pointSize").attribute).toBe(
+        "_POINT_SIZE"
+      );
+    });
+
     it("parses extension with statistics", function () {
       const statistics = {
         classes: {
@@ -266,7 +332,7 @@ describe(
       };
       const metadata = parseStructuralMetadata({
         extension: extension,
-        schema: new MetadataSchema(featureTexturesSchema),
+        schema: new MetadataSchema(propertyTexturesSchema),
       });
       expect(metadata.statistics).toBe(statistics);
     });
@@ -280,7 +346,7 @@ describe(
       };
       const metadata = parseStructuralMetadata({
         extension: extension,
-        schema: new MetadataSchema(featureTexturesSchema),
+        schema: new MetadataSchema(propertyTexturesSchema),
       });
       expect(metadata.extras).toBe(extras);
     });
@@ -294,7 +360,7 @@ describe(
       };
       const metadata = parseStructuralMetadata({
         extension: extension,
-        schema: new MetadataSchema(featureTexturesSchema),
+        schema: new MetadataSchema(propertyTexturesSchema),
       });
 
       expect(metadata.extensions).toBe(extensions);

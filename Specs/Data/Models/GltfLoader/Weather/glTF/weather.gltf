@@ -110,8 +110,6 @@
               "featureIds": [
                 {
                   "propertyTable": 1,
-                  "offset": 0,
-                  "repeat": 1,
                   "featureCount": 1000
                 },
                 {

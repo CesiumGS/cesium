@@ -3,7 +3,7 @@ import defaultValue from "../Core/defaultValue.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 
 /**
- * A property in a feature texture.
+ * A property in a property texture.
  *
  * <p>
  * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension} as well as the
