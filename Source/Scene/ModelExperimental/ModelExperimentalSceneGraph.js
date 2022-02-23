@@ -330,7 +330,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
         primitiveRenderResources.boundingSphere
       );
 
-      boundingSpheres.push(primitiveRenderResources.boundingSphere);
+      boundingSpheres.push(runtimePrimitive.boundingSphere);
 
       const drawCommands = buildDrawCommands(
         primitiveRenderResources,
@@ -344,8 +344,8 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   this._boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
   BoundingSphere.transform(
     this._boundingSphere,
-    this._model.modelMatrix,
-    this._model._boundingSphere
+    model.modelMatrix,
+    model._boundingSphere
   );
 };
 
