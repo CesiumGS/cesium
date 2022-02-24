@@ -1,6 +1,5 @@
 import {
   Cesium3DTileStyle,
-  Credit,
   FeatureDetection,
   JulianDate,
   defaultValue,
