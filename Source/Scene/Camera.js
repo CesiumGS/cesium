@@ -2985,9 +2985,9 @@ Camera.prototype.getPickRay = function (windowPosition, result) {
     result = new Ray();
   }
 
-  const scene = this._scene;
+  const canvas = this._scene.canvas;
   const frustum = this.frustum;
-  if (defined(scene.canvas.style) && scene.canvas.style["display"] === "none") {
+  if (canvas.clientWidth <= 0 || canvas.clientHeight <= 0) {
     return undefined;
   } else if (
     defined(frustum.aspectRatio) &&
@@ -2995,9 +2995,9 @@ Camera.prototype.getPickRay = function (windowPosition, result) {
     defined(frustum.near)
   ) {
     return getPickRayPerspective(this, windowPosition, result);
+  } else {
+    return getPickRayOrthographic(this, windowPosition, result);
   }
-
-  return getPickRayOrthographic(this, windowPosition, result);
 };
 
 const scratchToCenter = new Cartesian3();
