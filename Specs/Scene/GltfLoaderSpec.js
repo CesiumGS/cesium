@@ -6,7 +6,6 @@ import {
   Cartesian4,
   combine,
   ComponentDatatype,
-  Credit,
   GltfFeatureMetadataLoader,
   GltfIndexBufferLoader,
   GltfJsonLoader,
@@ -41,12 +40,12 @@ import waitForLoaderProcess from "../waitForLoaderProcess.js";
 describe(
   "Scene/GltfLoader",
   function () {
+    const boxWithCredits =
+      "./Data/Models/GltfLoader/BoxWithCopyright/glTF/Box.gltf";
     const boxInterleaved =
       "./Data/Models/GltfLoader/BoxInterleaved/glTF/BoxInterleaved.gltf";
     const boxTextured =
       "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
-    const boxTexturedWithCredits =
-      "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured-WithCredits.gltf";
     const boxTexturedBinary =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
     const boxTexturedEmbedded =
@@ -2595,20 +2594,23 @@ describe(
       });
     });
 
-    it("stores asset in components", function () {
-      return loadGltf(boxTexturedWithCredits).then(function (gltfLoader) {
+    it("parses copyright field", function () {
+      return loadGltf(boxWithCredits).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const asset = components.asset;
         expect(asset).toBeDefined();
 
-        const credits = asset.copyright;
-        expect(credits.length).toBe(3);
-        credits.forEach(function (credit) {
-          expect(credit).toBeInstanceOf(Credit);
-        });
-
-        expect(asset.generator).toEqual("COLLADA2GLTF");
-        expect(asset.version).toEqual("2.0");
+        const expectedCredits = [
+          "First Source",
+          "Second Source",
+          "Third Source",
+        ];
+        const credits = asset.credits;
+        const length = credits.length;
+        expect(length).toBe(expectedCredits.length);
+        for (let i = 0; i < length; i++) {
+          expect(credits[i].html).toEqual(expectedCredits[i]);
+        }
       });
     });
   },

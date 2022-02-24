@@ -670,6 +670,24 @@ function Scene() {
 }
 
 /**
+ * The asset of the model.
+ *
+ * @alias {ModelComponents.Asset}
+ * @constructor
+ *
+ * @private
+ */
+function Asset() {
+  /**
+   * The copyrights of the model.
+   *
+   * @type {Credit[]}
+   * @private
+   */
+  this.credits = [];
+}
+
+/**
  * The components that make up a model.
  *
  * @alias ModelComponents.Components
@@ -679,9 +697,9 @@ function Scene() {
  */
 function Components() {
   /**
-   * The asset object provided by the glTF's JSON.
+   * The asset of the model.
    *
-   * @type {Object}
+   * @type {ModelComponents.Asset}
    * @private
    */
   this.asset = undefined;
@@ -1030,6 +1048,7 @@ ModelComponents.Instances = Instances;
 ModelComponents.Skin = Skin;
 ModelComponents.Node = Node;
 ModelComponents.Scene = Scene;
+ModelComponents.Asset = Asset;
 ModelComponents.Components = Components;
 ModelComponents.TextureReader = TextureReader;
 ModelComponents.MetallicRoughness = MetallicRoughness;

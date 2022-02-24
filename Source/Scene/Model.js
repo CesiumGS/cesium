@@ -2221,14 +2221,11 @@ function parseCredits(model) {
     return;
   }
 
-  const credits = model._gltfCredits;
-  const creditStrings = copyright.split(",").map(function (string) {
-    return string.trim();
+  const credits = copyright.split(",").map(function (string) {
+    return new Credit(string.trim());
   });
 
-  creditStrings.forEach(function (string) {
-    credits.push(new Credit(string));
-  });
+  model._gltfCredits = credits;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -5759,14 +5756,16 @@ Model.prototype.update = function (frameState) {
   }
 
   const resourceCredits = this._resourceCredits;
-  resourceCredits.forEach(function (credit) {
-    frameState.creditDisplay.addCredit(credit);
-  });
+  const resourceCreditsLength = resourceCredits.length;
+  for (let c = 0; c < resourceCreditsLength; c++) {
+    frameState.creditDisplay.addCredit(resourceCredits[c]);
+  }
 
   const gltfCredits = this._gltfCredits;
-  gltfCredits.forEach(function (credit) {
-    frameState.creditDisplay.addCredit(credit);
-  });
+  const gltfCreditsLength = gltfCredits.length;
+  for (let c = 0; c < gltfCreditsLength; c++) {
+    frameState.creditDisplay.addCredit(gltfCredits[c]);
+  }
 };
 
 function destroyIfNotCached(rendererResources, cachedRendererResources) {

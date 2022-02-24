@@ -1,8 +1,8 @@
 {
     "asset": {
-        "copyright": "First Source, Second Source, Third Source",
         "generator": "COLLADA2GLTF",
-        "version": "2.0"
+        "version": "2.0",
+        "copyright": "First Source, Second Source, Third Source"
     },
     "scene": 0,
     "scenes": [
@@ -46,8 +46,7 @@
                 {
                     "attributes": {
                         "NORMAL": 1,
-                        "POSITION": 2,
-                        "TEXCOORD_0": 3
+                        "POSITION": 2
                     },
                     "indices": 0,
                     "mode": 4,
@@ -104,57 +103,26 @@
                 -0.5
             ],
             "type": "VEC3"
-        },
-        {
-            "bufferView": 2,
-            "byteOffset": 0,
-            "componentType": 5126,
-            "count": 24,
-            "max": [
-                6.0,
-                1.0
-            ],
-            "min": [
-                0.0,
-                0.0
-            ],
-            "type": "VEC2"
         }
     ],
     "materials": [
         {
             "pbrMetallicRoughness": {
-                "baseColorTexture": {
-                    "index": 0
-                },
+                "baseColorFactor": [
+                    0.800000011920929,
+                    0.0,
+                    0.0,
+                    1.0
+                ],
                 "metallicFactor": 0.0
             },
-            "name": "Texture"
-        }
-    ],
-    "textures": [
-        {
-            "sampler": 0,
-            "source": 0
-        }
-    ],
-    "images": [
-        {
-            "uri": "CesiumLogoFlat.png"
-        }
-    ],
-    "samplers": [
-        {
-            "magFilter": 9729,
-            "minFilter": 9986,
-            "wrapS": 10497,
-            "wrapT": 10497
+            "name": "Red"
         }
     ],
     "bufferViews": [
         {
             "buffer": 0,
-            "byteOffset": 768,
+            "byteOffset": 576,
             "byteLength": 72,
             "target": 34963
         },
@@ -164,19 +132,12 @@
             "byteLength": 576,
             "byteStride": 12,
             "target": 34962
-        },
-        {
-            "buffer": 0,
-            "byteOffset": 576,
-            "byteLength": 192,
-            "byteStride": 8,
-            "target": 34962
         }
     ],
     "buffers": [
         {
-            "byteLength": 840,
-            "uri": "BoxTextured0.bin"
+            "byteLength": 648,
+            "uri": "Box0.bin"
         }
     ]
 }

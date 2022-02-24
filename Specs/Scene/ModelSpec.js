@@ -400,13 +400,14 @@ describe(
       expect(model.credit).toBeInstanceOf(Credit);
     });
 
-    it("gets credits from gltf", function () {
+    it("gets copyrights from gltf", function () {
       return loadModel(boxWithCreditsUrl).then(function (model) {
         const credits = model._gltfCredits;
-        expect(credits.length).toBe(3);
-        credits.forEach(function (credit) {
-          expect(credit).toBeInstanceOf(Credit);
-        });
+        const length = credits.length;
+        expect(length).toBe(3);
+        for (let i = 0; i < length; i++) {
+          expect(credits[i]).toBeInstanceOf(Credit);
+        }
       });
     });
 
