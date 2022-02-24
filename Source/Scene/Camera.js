@@ -2974,7 +2974,6 @@ function getPickRayOrthographic(camera, windowPosition, result) {
  * @returns {Ray} Returns the {@link Cartesian3} position and direction of the ray.
  */
 Camera.prototype.getPickRay = function (windowPosition, result) {
-  //TODO: remove this
   //>>includeStart('debug', pragmas.debug);
   if (!defined(windowPosition)) {
     throw new DeveloperError("windowPosition is required.");
@@ -2984,7 +2983,7 @@ Camera.prototype.getPickRay = function (windowPosition, result) {
   if (!defined(result)) {
     result = new Ray();
   }
-  //TODO: check if the display is 'none'
+
   const scene = this._scene;
   const frustum = this.frustum;
   if (scene.canvas.style["display"] === "none") {
