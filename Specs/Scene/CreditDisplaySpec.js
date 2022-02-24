@@ -255,6 +255,85 @@ describe("Scene/CreditDisplay", function () {
     expect(creditContainer.childNodes[0].innerHTML).toEqual("credit1");
   });
 
+  it("credit display keeps count of repeated credits", function () {
+    const repeatedCreditCount = 4;
+    creditDisplay = new CreditDisplay(container);
+    beginFrame(creditDisplay);
+
+    for (let i = 0; i < repeatedCreditCount; i++) {
+      creditDisplay.addCredit(new Credit("credit1", true));
+    }
+    creditDisplay.addCredit(new Credit("credit2", true));
+
+    const credits = creditDisplay._currentFrameCredits.screenCredits.values;
+    expect(credits.length).toEqual(2);
+
+    const firstCredit = credits[0];
+    expect(firstCredit[0].html).toEqual("credit1");
+    expect(firstCredit[1]).toEqual(repeatedCreditCount);
+
+    const secondCredit = credits[1];
+    expect(secondCredit[0].html).toEqual("credit2");
+    expect(secondCredit[1]).toEqual(1);
+  });
+
+  it("credit display sorts credits by frequency", function () {
+    const creditCounts = [2, 10, 6, 1];
+    const credit1 = new Credit("credit1", true);
+    const credit2 = new Credit("credit2", true);
+    const credit3 = new Credit("credit3", true);
+    const credit4 = new Credit("credit4", true);
+
+    creditDisplay = new CreditDisplay(container);
+    beginFrame(creditDisplay);
+
+    for (let i = 0; i < creditCounts.length; i++) {
+      const creditString = "credit".concat((i + 1).toString());
+      const count = creditCounts[i];
+      for (let j = 0; j < count; j++) {
+        creditDisplay.addCredit(new Credit(creditString, true));
+      }
+    }
+    creditDisplay.endFrame();
+
+    const creditContainer = container.childNodes[1];
+    expect(creditContainer.childNodes.length).toEqual(7);
+    expect(creditContainer.childNodes[0]).toEqual(credit2.element);
+    expect(creditContainer.childNodes[2]).toEqual(credit3.element);
+    expect(creditContainer.childNodes[4]).toEqual(credit1.element);
+    expect(creditContainer.childNodes[6]).toEqual(credit4.element);
+  });
+
+  it("credit display sorts credits by frequency with default credit", function () {
+    const defaultCredit = new Credit("default credit", true);
+    const creditCounts = [2, 10, 6, 1];
+    const credit1 = new Credit("credit1", true);
+    const credit2 = new Credit("credit2", true);
+    const credit3 = new Credit("credit3", true);
+    const credit4 = new Credit("credit4", true);
+
+    creditDisplay = new CreditDisplay(container);
+    creditDisplay.addDefaultCredit(defaultCredit);
+    beginFrame(creditDisplay);
+
+    for (let i = 0; i < creditCounts.length; i++) {
+      const creditString = "credit".concat((i + 1).toString());
+      const count = creditCounts[i];
+      for (let j = 0; j < count; j++) {
+        creditDisplay.addCredit(new Credit(creditString, true));
+      }
+    }
+    creditDisplay.endFrame();
+
+    const creditContainer = container.childNodes[1];
+    expect(creditContainer.childNodes.length).toEqual(9);
+    expect(creditContainer.childNodes[0]).toEqual(defaultCredit.element);
+    expect(creditContainer.childNodes[2]).toEqual(credit2.element);
+    expect(creditContainer.childNodes[4]).toEqual(credit3.element);
+    expect(creditContainer.childNodes[6]).toEqual(credit1.element);
+    expect(creditContainer.childNodes[8]).toEqual(credit4.element);
+  });
+
   it("displays credits in a lightbox", function () {
     const credit1 = new Credit("credit1");
     const credit2 = new Credit(`<img src="${imageUrl}"/>`);

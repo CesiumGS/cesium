@@ -229,7 +229,7 @@ describe(
           const length = credits.length;
           expect(credits.length).toEqual(expectedCredits.length);
           for (let i = 0; i < length; i++) {
-            expect(credits[i].html).toEqual(expectedCredits[i]);
+            expect(credits[i][0].html).toEqual(expectedCredits[i]);
           }
         });
       });

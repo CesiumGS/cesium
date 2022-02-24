@@ -66,8 +66,16 @@ function createCreditElement(element, elementWrapperTagName) {
 function displayCredits(container, credits, delimiter, elementWrapperTagName) {
   const childNodes = container.childNodes;
   let domIndex = -1;
+
+  // Sort the credits such that more frequent credits appear first
+  const creditsSorted = credits.slice();
+  creditsSorted.sort(function (credit1, credit2) {
+    return credit2[1] - credit1[1];
+  });
+
   for (let creditIndex = 0; creditIndex < credits.length; ++creditIndex) {
-    const credit = credits[creditIndex];
+    const creditInfo = creditsSorted[creditIndex];
+    const credit = creditInfo[0];
     if (defined(credit)) {
       domIndex = creditIndex;
       if (defined(delimiter)) {
@@ -341,10 +349,15 @@ function CreditDisplay(container, delimiter, viewport) {
   this._cesiumCredit = cesiumCredit;
   this._previousCesiumCredit = undefined;
   this._currentCesiumCredit = cesiumCredit;
+
+  // Each AssociativeArray contains both the credit and the number of times
+  // it has been added to the display. This is used to sort the credits by
+  // frequency of appearance when they are later displayed.
   this._currentFrameCredits = {
     screenCredits: new AssociativeArray(),
     lightboxCredits: new AssociativeArray(),
   };
+
   this._defaultCredit = undefined;
 
   this.viewport = viewport;
@@ -376,10 +389,19 @@ CreditDisplay.prototype.addCredit = function (credit) {
     return;
   }
 
+  let credits;
   if (!credit.showOnScreen) {
-    this._currentFrameCredits.lightboxCredits.set(credit.id, credit);
+    credits = this._currentFrameCredits.lightboxCredits;
   } else {
-    this._currentFrameCredits.screenCredits.set(credit.id, credit);
+    credits = this._currentFrameCredits.screenCredits;
+  }
+
+  if (credits.contains(credit.id)) {
+    const creditInfo = credits.get(credit.id);
+    const creditCount = creditInfo[1];
+    credits.set(credit.id, [credit, creditCount + 1]);
+  } else {
+    credits.set(credit.id, [credit, 1]);
   }
 };
 
@@ -446,7 +468,7 @@ CreditDisplay.prototype.beginFrame = function () {
   const defaultCredits = this._defaultCredits;
   for (let i = 0; i < defaultCredits.length; ++i) {
     const defaultCredit = defaultCredits[i];
-    screenCredits.set(defaultCredit.id, defaultCredit);
+    screenCredits.set(defaultCredit.id, [defaultCredit, Number.MAX_VALUE]);
   }
 
   currentFrameCredits.lightboxCredits.removeAll();

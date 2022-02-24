@@ -872,10 +872,10 @@ describe(
         creditDisplay.showLightbox();
         expect(
           creditDisplay._currentFrameCredits.lightboxCredits.values
-        ).toContain(imageryCredit);
+        ).toContain([imageryCredit, 1]);
         expect(
           creditDisplay._currentFrameCredits.lightboxCredits.values
-        ).toContain(terrainCredit);
+        ).toContain([terrainCredit, 1]);
         creditDisplay.hideLightbox();
       });
     });
