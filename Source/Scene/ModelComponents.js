@@ -679,7 +679,7 @@ function Scene() {
  */
 function Asset() {
   /**
-   * The copyrights of the model.
+   * The credits of the model.
    *
    * @type {Credit[]}
    * @private
