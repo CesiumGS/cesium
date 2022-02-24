@@ -2975,7 +2975,6 @@ function getPickRayOrthographic(camera, windowPosition, result) {
  */
 Camera.prototype.getPickRay = function (windowPosition, result) {
   //TODO: remove this
-  console.log("At the top of getPickRay");
   //>>includeStart('debug', pragmas.debug);
   if (!defined(windowPosition)) {
     throw new DeveloperError("windowPosition is required.");
@@ -2988,8 +2987,6 @@ Camera.prototype.getPickRay = function (windowPosition, result) {
   //TODO: check if the display is 'none'
   const scene = this._scene;
   const frustum = this.frustum;
-  console.log("this._scene.canvas.style['display']");
-  console.log(scene.canvas.style["display"]);
   if (scene.canvas.style["display"] === "none") {
     return undefined;
   } else if (
