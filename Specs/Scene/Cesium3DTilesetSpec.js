@@ -4955,7 +4955,7 @@ describe(
         expect(length).toEqual(expectedCredits.length);
         for (let i = 0; i < length; i++) {
           const creditInfo = credits[i];
-          const creditString = creditInfo[0].html;
+          const creditString = creditInfo.credit.html;
           expect(expectedCredits.includes(creditString)).toBe(true);
         }
       });
@@ -4974,29 +4974,33 @@ describe(
         scene.camera.moveDown(150);
         scene.renderForSpecs();
         expect(credits.values.length).toEqual(1);
-        expect(credits.values[0][0].html).toEqual("Lower Left Copyright");
+        expect(credits.values[0].credit.html).toEqual("Lower Left Copyright");
 
         setZoom(10.0);
         scene.camera.moveRight(150);
         scene.camera.moveDown(150);
         scene.renderForSpecs();
         expect(credits.values.length).toEqual(2);
-        expect(credits.values[0][0].html).toEqual("Lower Right Copyright 1");
-        expect(credits.values[1][0].html).toEqual("Lower Right Copyright 2");
+        expect(credits.values[0].credit.html).toEqual(
+          "Lower Right Copyright 1"
+        );
+        expect(credits.values[1].credit.html).toEqual(
+          "Lower Right Copyright 2"
+        );
 
         setZoom(10.0);
         scene.camera.moveRight(150);
         scene.camera.moveUp(150);
         scene.renderForSpecs();
         expect(credits.values.length).toEqual(1);
-        expect(credits.values[0][0].html).toEqual("Upper Right Copyright");
+        expect(credits.values[0].credit.html).toEqual("Upper Right Copyright");
 
         setZoom(10.0);
         scene.camera.moveLeft(150);
         scene.camera.moveUp(150);
         scene.renderForSpecs();
         expect(credits.values.length).toEqual(1);
-        expect(credits.values[0][0].html).toEqual("Upper Left Copyright");
+        expect(credits.values[0].credit.html).toEqual("Upper Left Copyright");
       });
     });
 

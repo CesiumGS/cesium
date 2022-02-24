@@ -12,6 +12,20 @@ const lightboxHeight = 100;
 const textColor = "#ffffff";
 const highlightColor = "#48b";
 
+/**
+ * Used to sort the credits by frequency of appearance
+ * when they are later displayed.
+ *
+ * @alias CreditDisplay.CreditDisplayElement
+ * @constructor
+ *
+ * @private
+ */
+function CreditDisplayElement(credit, count) {
+  this.credit = credit;
+  this.count = defaultValue(count, 1);
+}
+
 function contains(credits, credit) {
   const len = credits.length;
   for (let i = 0; i < len; i++) {
@@ -70,12 +84,11 @@ function displayCredits(container, credits, delimiter, elementWrapperTagName) {
   // Sort the credits such that more frequent credits appear first
   const creditsSorted = credits.slice();
   creditsSorted.sort(function (credit1, credit2) {
-    return credit2[1] - credit1[1];
+    return credit2.count - credit1.count;
   });
 
   for (let creditIndex = 0; creditIndex < credits.length; ++creditIndex) {
-    const creditInfo = creditsSorted[creditIndex];
-    const credit = creditInfo[0];
+    const credit = creditsSorted[creditIndex].credit;
     if (defined(credit)) {
       domIndex = creditIndex;
       if (defined(delimiter)) {
@@ -350,9 +363,6 @@ function CreditDisplay(container, delimiter, viewport) {
   this._previousCesiumCredit = undefined;
   this._currentCesiumCredit = cesiumCredit;
 
-  // Each AssociativeArray contains both the credit and the number of times
-  // it has been added to the display. This is used to sort the credits by
-  // frequency of appearance when they are later displayed.
   this._currentFrameCredits = {
     screenCredits: new AssociativeArray(),
     lightboxCredits: new AssociativeArray(),
@@ -397,11 +407,10 @@ CreditDisplay.prototype.addCredit = function (credit) {
   }
 
   if (credits.contains(credit.id)) {
-    const creditInfo = credits.get(credit.id);
-    const creditCount = creditInfo[1];
-    credits.set(credit.id, [credit, creditCount + 1]);
+    const creditCount = credits.get(credit.id).count;
+    credits.set(credit.id, new CreditDisplayElement(credit, creditCount + 1));
   } else {
-    credits.set(credit.id, [credit, 1]);
+    credits.set(credit.id, new CreditDisplayElement(credit));
   }
 };
 
@@ -468,7 +477,10 @@ CreditDisplay.prototype.beginFrame = function () {
   const defaultCredits = this._defaultCredits;
   for (let i = 0; i < defaultCredits.length; ++i) {
     const defaultCredit = defaultCredits[i];
-    screenCredits.set(defaultCredit.id, [defaultCredit, Number.MAX_VALUE]);
+    screenCredits.set(
+      defaultCredit.id,
+      new CreditDisplayElement(defaultCredit, Number.MAX_VALUE)
+    );
   }
 
   currentFrameCredits.lightboxCredits.removeAll();
@@ -579,4 +591,6 @@ Object.defineProperties(CreditDisplay, {
     },
   },
 });
+
+CreditDisplay.CreditDisplayElement = CreditDisplayElement;
 export default CreditDisplay;

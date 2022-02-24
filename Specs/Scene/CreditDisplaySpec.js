@@ -269,12 +269,12 @@ describe("Scene/CreditDisplay", function () {
     expect(credits.length).toEqual(2);
 
     const firstCredit = credits[0];
-    expect(firstCredit[0].html).toEqual("credit1");
-    expect(firstCredit[1]).toEqual(repeatedCreditCount);
+    expect(firstCredit.credit.html).toEqual("credit1");
+    expect(firstCredit.count).toEqual(repeatedCreditCount);
 
     const secondCredit = credits[1];
-    expect(secondCredit[0].html).toEqual("credit2");
-    expect(secondCredit[1]).toEqual(1);
+    expect(secondCredit.credit.html).toEqual("credit2");
+    expect(secondCredit.count).toEqual(1);
   });
 
   it("credit display sorts credits by frequency", function () {
