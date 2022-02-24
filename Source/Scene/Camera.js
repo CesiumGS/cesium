@@ -2986,7 +2986,7 @@ Camera.prototype.getPickRay = function (windowPosition, result) {
 
   const scene = this._scene;
   const frustum = this.frustum;
-  if (scene.canvas.style["display"] === "none") {
+  if (defined(scene.canvas.style) && scene.canvas.style["display"] === "none") {
     return undefined;
   } else if (
     defined(frustum.aspectRatio) &&
