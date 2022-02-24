@@ -45,6 +45,44 @@ describe("Core/AxisAlignedBoundingBox", function () {
     expect(box.center).toEqual(expectedCenter);
   });
 
+  it("fromCorners works with a result parameter", function () {
+    const minimum = new Cartesian3(0, 0, 0);
+    const maximum = new Cartesian3(1, 1, 1);
+    const expectedCenter = new Cartesian3(0.5, 0.5, 0.5);
+
+    const box = new AxisAlignedBoundingBox();
+    const result = AxisAlignedBoundingBox.fromCorners(minimum, maximum, box);
+
+    expect(result.minimum).toEqual(minimum);
+    expect(result.maximum).toEqual(maximum);
+    expect(result.center).toEqual(expectedCenter);
+    expect(result).toBe(box);
+  });
+
+  it("fromCorners works without a result parameter", function () {
+    const minimum = new Cartesian3(0, 0, 0);
+    const maximum = new Cartesian3(1, 1, 1);
+    const expectedCenter = new Cartesian3(0.5, 0.5, 0.5);
+
+    const box = AxisAlignedBoundingBox.fromCorners(minimum, maximum);
+
+    expect(box.minimum).toEqual(minimum);
+    expect(box.maximum).toEqual(maximum);
+    expect(box.center).toEqual(expectedCenter);
+  });
+
+  it("fromCorners throws without a minimum", function () {
+    expect(function () {
+      AxisAlignedBoundingBox.fromCorners(undefined, Cartesian3.ZERO);
+    }).toThrowDeveloperError();
+  });
+
+  it("fromCorners throws without a maximum", function () {
+    expect(function () {
+      AxisAlignedBoundingBox.fromCorners(Cartesian3.ZERO, undefined);
+    }).toThrowDeveloperError();
+  });
+
   it("fromPoints constructs empty box with undefined positions", function () {
     const box = AxisAlignedBoundingBox.fromPoints(undefined);
     expect(box.minimum).toEqual(Cartesian3.ZERO);

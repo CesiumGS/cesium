@@ -5002,7 +5002,7 @@ describe("Core/Matrix4", function () {
     }).toThrowDeveloperError();
   });
 
-  it("computeView throws without a result paramter", function () {
+  it("computeView throws without a result parameter", function () {
     expect(function () {
       const position = Cartesian3.ONE;
       const direction = Cartesian3.UNIT_Z;
