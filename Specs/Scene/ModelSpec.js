@@ -45,7 +45,7 @@ describe(
     const boxNoTechniqueUrl =
       "./Data/Models/Box/CesiumBoxTest-NoTechnique.gltf";
     const boxWithCreditsUrl =
-      "./Data/Models/Box/CesiumBoxTest-WithCredits.gltf";
+      "./Data/Models/Box/CesiumBoxTest-WithCopyright.gltf";
     const boxNoIndicesUrl = "./Data/Models/Box-NoIndices/box-noindices.gltf";
     const texturedBoxUrl =
       "./Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf";
