@@ -2985,10 +2985,12 @@ Camera.prototype.getPickRay = function (windowPosition, result) {
   }
 
   const canvas = this._scene.canvas;
-  const frustum = this.frustum;
   if (canvas.clientWidth <= 0 || canvas.clientHeight <= 0) {
     return undefined;
-  } else if (
+  }
+
+  const frustum = this.frustum;
+  if (
     defined(frustum.aspectRatio) &&
     defined(frustum.fov) &&
     defined(frustum.near)
