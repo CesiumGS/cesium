@@ -82,13 +82,12 @@ function displayCredits(container, credits, delimiter, elementWrapperTagName) {
   let domIndex = -1;
 
   // Sort the credits such that more frequent credits appear first
-  const creditsSorted = credits.slice();
-  creditsSorted.sort(function (credit1, credit2) {
+  credits.sort(function (credit1, credit2) {
     return credit2.count - credit1.count;
   });
 
   for (let creditIndex = 0; creditIndex < credits.length; ++creditIndex) {
-    const credit = creditsSorted[creditIndex].credit;
+    const credit = credits[creditIndex].credit;
     if (defined(credit)) {
       domIndex = creditIndex;
       if (defined(delimiter)) {
@@ -362,6 +361,8 @@ function CreditDisplay(container, delimiter, viewport) {
   this._cesiumCredit = cesiumCredit;
   this._previousCesiumCredit = undefined;
   this._currentCesiumCredit = cesiumCredit;
+  this._creditDisplayElementPool = [];
+  this._creditDisplayElementIndex = 0;
 
   this._currentFrameCredits = {
     screenCredits: new AssociativeArray(),
@@ -379,6 +380,26 @@ function CreditDisplay(container, delimiter, viewport) {
   this.container = container;
 }
 
+function setCredit(creditDisplay, credits, credit, count) {
+  count = defaultValue(count, 1);
+  let creditDisplayElement = credits.get(credit.id);
+  if (!defined(creditDisplayElement)) {
+    const pool = creditDisplay._creditDisplayElementPool;
+    const poolIndex = creditDisplay._creditDisplayElementPoolIndex;
+    if (poolIndex < pool.length) {
+      creditDisplayElement = pool[poolIndex];
+      creditDisplayElement.credit = credit;
+      creditDisplayElement.count = count;
+    } else {
+      creditDisplayElement = new CreditDisplayElement(credit, count);
+      pool.push(creditDisplayElement);
+    }
+    ++creditDisplay._creditDisplayElementPoolIndex;
+    credits.set(credit.id, creditDisplayElement);
+  } else if (creditDisplayElement.count < Number.MAX_VALUE) {
+    creditDisplayElement.count += count;
+  }
+}
 /**
  * Adds a credit to the list of current credits to be displayed in the credit container
  *
@@ -406,12 +427,7 @@ CreditDisplay.prototype.addCredit = function (credit) {
     credits = this._currentFrameCredits.screenCredits;
   }
 
-  if (credits.contains(credit.id)) {
-    const creditCount = credits.get(credit.id).count;
-    credits.set(credit.id, new CreditDisplayElement(credit, creditCount + 1));
-  } else {
-    credits.set(credit.id, new CreditDisplayElement(credit));
-  }
+  setCredit(this, credits, credit);
 };
 
 /**
@@ -471,16 +487,14 @@ CreditDisplay.prototype.update = function () {
  */
 CreditDisplay.prototype.beginFrame = function () {
   const currentFrameCredits = this._currentFrameCredits;
+  this._creditDisplayElementPoolIndex = 0;
 
   const screenCredits = currentFrameCredits.screenCredits;
   screenCredits.removeAll();
   const defaultCredits = this._defaultCredits;
   for (let i = 0; i < defaultCredits.length; ++i) {
     const defaultCredit = defaultCredits[i];
-    screenCredits.set(
-      defaultCredit.id,
-      new CreditDisplayElement(defaultCredit, Number.MAX_VALUE)
-    );
+    setCredit(this, screenCredits, defaultCredit, Number.MAX_VALUE);
   }
 
   currentFrameCredits.lightboxCredits.removeAll();
