@@ -2971,8 +2971,7 @@ function getPickRayOrthographic(camera, windowPosition, result) {
  *
  * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
  * @param {Ray} [result] The object onto which to store the result.
- * @returns {Ray} Returns the {@link Cartesian3} position and direction of the ray.
- * If the Scene is not rendered or the pickRay cannot be determined, returns undefined.
+ * @returns {Ray|undefined} Returns the {@link Cartesian3} position and direction of the ray, or undefined if the pick ray cannot be determined.
  */
 Camera.prototype.getPickRay = function (windowPosition, result) {
   //>>includeStart('debug', pragmas.debug);
