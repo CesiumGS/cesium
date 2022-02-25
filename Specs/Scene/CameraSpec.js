@@ -3156,7 +3156,7 @@ describe("Scene/Camera", function () {
 
     scene.canvas.clientWidth = 0;
     const ray = camera.getPickRay(windowCoord);
-    expect(ray).toEqual(undefined);
+    expect(ray).toBeUndefined();
   });
 
   it("get pick ray perspective", function () {
