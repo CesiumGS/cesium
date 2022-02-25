@@ -217,20 +217,103 @@ describe(
           },
           scene
         ).then(function (model) {
-          scene.renderForSpecs();
           const expectedCredits = [
             "First Source",
             "Second Source",
             "Third Source",
           ];
+
+          scene.renderForSpecs();
           const creditDisplay = scene.frameState.creditDisplay;
           const credits =
             creditDisplay._currentFrameCredits.lightboxCredits.values;
           const length = credits.length;
-          expect(credits.length).toEqual(expectedCredits.length);
+          expect(length).toEqual(expectedCredits.length);
           for (let i = 0; i < length; i++) {
             expect(credits[i].credit.html).toEqual(expectedCredits[i]);
           }
+        });
+      });
+    });
+
+    it("shows credits on screen", function () {
+      const resource = Resource.createIfNeeded(boxWithCreditsUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxWithCreditsUrl,
+            showCreditsOnScreen: true,
+          },
+          scene
+        ).then(function (model) {
+          const expectedCredits = [
+            "First Source",
+            "Second Source",
+            "Third Source",
+          ];
+
+          scene.renderForSpecs();
+          const creditDisplay = scene.frameState.creditDisplay;
+          const credits =
+            creditDisplay._currentFrameCredits.screenCredits.values;
+          const length = credits.length;
+          expect(length).toEqual(expectedCredits.length);
+          for (let i = 0; i < length; i++) {
+            expect(credits[i].credit.html).toEqual(expectedCredits[i]);
+          }
+        });
+      });
+    });
+
+    it("toggles showing credits on screen", function () {
+      const resource = Resource.createIfNeeded(boxWithCreditsUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxWithCreditsUrl,
+            showCreditsOnScreen: false,
+          },
+          scene
+        ).then(function (model) {
+          const expectedCredits = [
+            "First Source",
+            "Second Source",
+            "Third Source",
+          ];
+
+          scene.renderForSpecs();
+          const creditDisplay = scene.frameState.creditDisplay;
+          const lightboxCredits =
+            creditDisplay._currentFrameCredits.lightboxCredits.values;
+          const screenCredits =
+            creditDisplay._currentFrameCredits.screenCredits.values;
+
+          let length = lightboxCredits.length;
+          expect(length).toEqual(expectedCredits.length);
+          for (let i = 0; i < length; i++) {
+            expect(lightboxCredits[i].credit.html).toEqual(expectedCredits[i]);
+          }
+          expect(screenCredits.length).toEqual(0);
+
+          model.showCreditsOnScreen = true;
+          scene.renderForSpecs();
+          length = screenCredits.length;
+          expect(length).toEqual(expectedCredits.length);
+          for (let i = 0; i < length; i++) {
+            expect(screenCredits[i].credit.html).toEqual(expectedCredits[i]);
+          }
+          expect(lightboxCredits.length).toEqual(0);
+
+          model.showCreditsOnScreen = false;
+          scene.renderForSpecs();
+          length = lightboxCredits.length;
+          expect(length).toEqual(expectedCredits.length);
+          for (let i = 0; i < length; i++) {
+            expect(lightboxCredits[i].credit.html).toEqual(expectedCredits[i]);
+          }
+          expect(screenCredits.length).toEqual(0);
         });
       });
     });
