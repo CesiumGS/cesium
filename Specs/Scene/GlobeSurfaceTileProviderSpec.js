@@ -1,8 +1,9 @@
-import { Cartesian3, CreditDisplay } from "../../Source/Cesium.js";
+import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartesian4 } from "../../Source/Cesium.js";
 import { CesiumTerrainProvider } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { Credit } from "../../Source/Cesium.js";
+import { CreditDisplay } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { EllipsoidTerrainProvider } from "../../Source/Cesium.js";
