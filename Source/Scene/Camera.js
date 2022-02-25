@@ -2994,9 +2994,9 @@ Camera.prototype.getPickRay = function (windowPosition, result) {
     defined(frustum.near)
   ) {
     return getPickRayPerspective(this, windowPosition, result);
-  } else {
-    return getPickRayOrthographic(this, windowPosition, result);
   }
+
+  return getPickRayOrthographic(this, windowPosition, result);
 };
 
 const scratchToCenter = new Cartesian3();
