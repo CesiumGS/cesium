@@ -234,7 +234,7 @@ ShaderBuilder.prototype.addFunction = function (
 /**
  * Add lines to a dynamically-generated function
  * @param {String} functionName The name of the function. This must be created beforehand using {@link ShaderBuilder#addFunction}
- * @param {String} lines An array of lines of GLSL code to add to the function body. Do not include any whitespace at the ends of each line, but do include the semicolon.
+ * @param {String[]} lines An array of lines of GLSL code to add to the function body. Do not include any preceding or ending whitespace, but do include the semicolon for each line.
  *
  * @example
  * // generates the following function in the vertex shader
