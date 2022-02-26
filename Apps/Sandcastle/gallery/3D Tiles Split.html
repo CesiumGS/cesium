@@ -199,7 +199,9 @@
               })
             );
 
-            tileset.splitDirection = viewModel.splitDirection;
+            if (Cesium.defined(viewModel.selectedSplitDirection)) {
+              tileset.splitDirection = viewModel.selectedSplitDirection.value;
+            }
 
             tileset.readyPromise
               .then(function () {
