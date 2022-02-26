@@ -11,8 +11,6 @@ const Flags = {
   RECEIVE_SHADOWS: 32,
   PICK_ONLY: 64,
   DEPTH_FOR_TRANSLUCENT_CLASSIFICATION: 128,
-  LEFT_SIDE_ONLY: 256,
-  RIGHT_SIDE_ONLY: 512,
 };
 
 /**
@@ -62,7 +60,6 @@ function DrawCommand(options) {
     options.depthForTranslucentClassification,
     false
   );
-  this.splitDirection = defaultValue(options.splitDirection, 0.0);
 
   this.dirty = true;
   this.lastDirtyTime = 0;
@@ -560,41 +557,6 @@ Object.defineProperties(DrawCommand.prototype, {
     set: function (value) {
       if (hasFlag(this, Flags.DEPTH_FOR_TRANSLUCENT_CLASSIFICATION) !== value) {
         setFlag(this, Flags.DEPTH_FOR_TRANSLUCENT_CLASSIFICATION, value);
-        this.dirty = true;
-      }
-    },
-  },
-
-  /**
-   * Indicates whether this draw command should be executed for only the left
-   * side of the screen (-1.0), for only the right side (1.0), or for both sides
-   * (0.0).
-   *
-   * @memberof DrawCommand.prototype
-   * @type {Number}
-   * @default 0.0
-   */
-  splitDirection: {
-    get: function () {
-      if (hasFlag(this, Flags.LEFT_SIDE_ONLY)) {
-        return -1.0;
-      } else if (hasFlag(this, Flags.RIGHT_SIDE_ONLY)) {
-        return 1.0;
-      } else {
-        return 0.0;
-      }
-    },
-    set: function (value) {
-      if (this.splitDirection !== value) {
-        if (value === -1.0) {
-          setFlag(this, Flags.LEFT_SIDE_ONLY, true);
-          setFlag(this, Flags.RIGHT_SIDE_ONLY, false);
-        } else if (value === 1.0) {
-          setFlag(this, Flags.LEFT_SIDE_ONLY, false);
-          setFlag(this, Flags.RIGHT_SIDE_ONLY, true);
-        } else {
-          setFlag(this, Flags.LEFT_SIDE_ONLY | Flags.RIGHT_SIDE_ONLY, false);
-        }
         this.dirty = true;
       }
     },

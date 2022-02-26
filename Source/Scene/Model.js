@@ -3832,12 +3832,6 @@ function createSpecularEnvironmentMapLOD(model) {
   };
 }
 
-function createSplitDirectionFunction(model) {
-  return function () {
-    return model.splitDirection;
-  };
-}
-
 function triangleCountFromPrimitiveIndices(primitive, indicesCount) {
   switch (primitive.mode) {
     case PrimitiveType.TRIANGLES:

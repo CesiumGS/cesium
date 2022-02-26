@@ -43,11 +43,6 @@ function PointCloud3DTileContent(
   this.featurePropertiesDirty = false;
   this._groupMetadata = undefined;
 
-  var pickObject = {
-    content: this,
-    primitive: tileset,
-  };
-
   this._pointCloud = new PointCloud({
     arrayBuffer: arrayBuffer,
     byteOffset: byteOffset,
@@ -58,7 +53,6 @@ function PointCloud3DTileContent(
     uniformMapLoaded: getUniformMapLoaded(this),
     batchTableLoaded: getBatchTableLoaded(this),
     pickIdLoaded: getPickIdLoaded(this),
-    pickObject: pickObject,
   });
 }
 

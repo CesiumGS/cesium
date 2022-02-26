@@ -74,13 +74,6 @@ export default function buildDrawCommands(
     primitiveRenderResources.boundingSphere
   );
 
-  var owner = model._pickObject;
-  if (!defined(owner)) {
-    owner = {
-      primitive: model,
-    };
-  }
-
   const command = new DrawCommand({
     boundingVolume: primitiveRenderResources.boundingSphere,
     modelMatrix: modelMatrix,
@@ -97,7 +90,6 @@ export default function buildDrawCommands(
     debugShowBoundingVolume: model.debugShowBoundingVolume,
     castShadows: ShadowMode.castShadows(model.shadows),
     receiveShadows: ShadowMode.receiveShadows(model.shadows),
-    owner: owner,
   });
 
   const styleCommandsNeeded = primitiveRenderResources.styleCommandsNeeded;
