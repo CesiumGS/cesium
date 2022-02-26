@@ -569,12 +569,12 @@ Object.defineProperties(DrawCommand.prototype, {
    * Indicates whether this draw command should be executed for only the left
    * side of the screen (-1.0), for only the right side (1.0), or for both sides
    * (0.0).
-   * 
+   *
    * @memberof DrawCommand.prototype
    * @type {Number}
    * @default 0.0
    */
-   splitDirection: {
+  splitDirection: {
     get: function () {
       if (hasFlag(this, Flags.LEFT_SIDE_ONLY)) {
         return -1.0;
@@ -598,7 +598,7 @@ Object.defineProperties(DrawCommand.prototype, {
         this.dirty = true;
       }
     },
-  }
+  },
 });
 
 /**

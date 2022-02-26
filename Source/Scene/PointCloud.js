@@ -160,7 +160,7 @@ function PointCloud(options) {
    * @type {SplitDirection}
    * @default {@link SplitDirection.NONE}
    */
-   this.splitDirection = defaultValue(
+  this.splitDirection = defaultValue(
     options.splitDirection,
     SplitDirection.NONE
   );
