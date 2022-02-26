@@ -5,6 +5,8 @@ import { Matrix3 } from "../../Source/Cesium.js";
 import { Matrix4 } from "../../Source/Cesium.js";
 import { Quaternion } from "../../Source/Cesium.js";
 import { TranslationRotationScale } from "../../Source/Cesium.js";
+import createPackableSpecs from "../createPackableSpecs.js";
+import createPackableArraySpecs from "../createPackableArraySpecs.js";
 
 describe("Core/Matrix4", function () {
   it("default constructor creates values array with all zeros.", function () {
@@ -62,82 +64,6 @@ describe("Core/Matrix4", function () {
     expect(matrix[Matrix4.COLUMN1ROW3]).toEqual(14.0);
     expect(matrix[Matrix4.COLUMN2ROW3]).toEqual(15.0);
     expect(matrix[Matrix4.COLUMN3ROW3]).toEqual(16.0);
-  });
-
-  it("can pack and unpack", function () {
-    const array = [];
-    const matrix4 = new Matrix4(
-      1.0,
-      2.0,
-      3.0,
-      4.0,
-      5.0,
-      6.0,
-      7.0,
-      8.0,
-      9.0,
-      10.0,
-      11.0,
-      12.0,
-      13.0,
-      14.0,
-      15.0,
-      16.0
-    );
-    Matrix4.pack(matrix4, array);
-    expect(array.length).toEqual(Matrix4.packedLength);
-    expect(Matrix4.unpack(array)).toEqual(matrix4);
-  });
-
-  it("can pack and unpack with offset", function () {
-    const packed = new Array(3);
-    const offset = 3;
-    const matrix4 = new Matrix4(
-      1.0,
-      2.0,
-      3.0,
-      4.0,
-      5.0,
-      6.0,
-      7.0,
-      8.0,
-      9.0,
-      10.0,
-      11.0,
-      12.0,
-      13.0,
-      14.0,
-      15.0,
-      16.0
-    );
-
-    Matrix4.pack(matrix4, packed, offset);
-    expect(packed.length).toEqual(offset + Matrix4.packedLength);
-
-    const result = new Matrix4();
-    const returnedResult = Matrix4.unpack(packed, offset, result);
-    expect(returnedResult).toBe(result);
-    expect(result).toEqual(matrix4);
-  });
-
-  it("pack throws with undefined matrix4", function () {
-    const array = [];
-    expect(function () {
-      Matrix4.pack(undefined, array);
-    }).toThrowDeveloperError();
-  });
-
-  it("pack throws with undefined array", function () {
-    const matrix4 = new Matrix4();
-    expect(function () {
-      Matrix4.pack(matrix4, undefined);
-    }).toThrowDeveloperError();
-  });
-
-  it("unpack throws with undefined array", function () {
-    expect(function () {
-      Matrix4.unpack(undefined);
-    }).toThrowDeveloperError();
   });
 
   it("fromArray works without a result parameter", function () {
@@ -831,6 +757,80 @@ describe("Core/Matrix4", function () {
     expect(returnedResult).toEqual(expected);
   });
 
+  it("fromRotation works without a result parameter", function () {
+    const expected = Matrix4.fromColumnMajorArray([
+      1.0,
+      2.0,
+      3.0,
+      0.0,
+      4.0,
+      5.0,
+      6.0,
+      0.0,
+      7.0,
+      8.0,
+      9.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+    ]);
+    const returnedResult = Matrix4.fromRotation(
+      Matrix3.fromColumnMajorArray([
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        5.0,
+        6.0,
+        7.0,
+        8.0,
+        9.0,
+      ])
+    );
+    expect(returnedResult).toEqual(expected);
+  });
+
+  it("fromRotation works with a result parameter", function () {
+    const expected = Matrix4.fromColumnMajorArray([
+      1.0,
+      2.0,
+      3.0,
+      0.0,
+      4.0,
+      5.0,
+      6.0,
+      0.0,
+      7.0,
+      8.0,
+      9.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+    ]);
+
+    const result = new Matrix4();
+    const returnedResult = Matrix4.fromRotation(
+      Matrix3.fromColumnMajorArray([
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        5.0,
+        6.0,
+        7.0,
+        8.0,
+        9.0,
+      ]),
+      result
+    );
+    expect(returnedResult).toBe(result);
+    expect(returnedResult).toEqual(expected);
+  });
+
   it("computePerspectiveFieldOfView works", function () {
     const expected = new Matrix4(
       1,
@@ -919,7 +919,39 @@ describe("Core/Matrix4", function () {
     expect(returnedResult).toEqual(expected);
   });
 
-  it("computeViewportTransformation  works", function () {
+  it("computeViewportTransformation works without a result parameter", function () {
+    const expected = new Matrix4(
+      2.0,
+      0.0,
+      0.0,
+      2.0,
+      0.0,
+      3.0,
+      0.0,
+      3.0,
+      0.0,
+      0.0,
+      1.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    );
+    const returnedResult = Matrix4.computeViewportTransformation(
+      {
+        x: 0,
+        y: 0,
+        width: 4.0,
+        height: 6.0,
+      },
+      0.0,
+      2.0
+    );
+    expect(returnedResult).toEqual(expected);
+  });
+
+  it("computeViewportTransformation works with a result parameter", function () {
     const expected = new Matrix4(
       2.0,
       0.0,
@@ -987,7 +1019,7 @@ describe("Core/Matrix4", function () {
     expect(returnedResult).toBe(result);
   });
 
-  it("computeInfinitePerspectiveOffCenter  works", function () {
+  it("computeInfinitePerspectiveOffCenter works", function () {
     const expected = new Matrix4(
       2,
       0,
@@ -1303,23 +1335,6 @@ describe("Core/Matrix4", function () {
     expect(result).toEqual(expected);
   });
 
-  it("setScale works", function () {
-    const matrix = Matrix4.clone(Matrix4.IDENTITY);
-    const result = new Matrix4();
-    const newScale = new Cartesian3(1.0, 2.0, 3.0);
-
-    expect(Matrix4.getScale(matrix, new Cartesian3())).toEqual(
-      new Cartesian3(1.0, 1.0, 1.0)
-    );
-
-    const returnedResult = Matrix4.setScale(matrix, newScale, result);
-
-    expect(Matrix4.getScale(returnedResult, new Cartesian3())).toEqual(
-      newScale
-    );
-    expect(result).toBe(returnedResult);
-  });
-
   it("getRow works for each row", function () {
     const matrix = new Matrix4(
       1.0,
@@ -1493,8 +1508,40 @@ describe("Core/Matrix4", function () {
     expect(result).toEqual(expected);
   });
 
+  it("setScale works", function () {
+    const matrix = Matrix4.clone(Matrix4.IDENTITY);
+    const result = new Matrix4();
+    const newScale = new Cartesian3(2.0, 3.0, 4.0);
+
+    expect(Matrix4.getScale(matrix, new Cartesian3())).toEqual(Cartesian3.ONE);
+
+    const returnedResult = Matrix4.setScale(matrix, newScale, result);
+
+    expect(Matrix4.getScale(returnedResult, new Cartesian3())).toEqual(
+      newScale
+    );
+    expect(result).toBe(returnedResult);
+  });
+
+  it("setUniformScale works", function () {
+    const oldScale = new Cartesian3(2.0, 3.0, 4.0);
+    const newScale = 5.0;
+
+    const matrix = Matrix4.fromScale(oldScale, new Matrix4());
+    const result = new Matrix4();
+
+    expect(Matrix4.getScale(matrix, new Cartesian3())).toEqual(oldScale);
+
+    const returnedResult = Matrix4.setUniformScale(matrix, newScale, result);
+
+    expect(Matrix4.getScale(returnedResult, new Cartesian3())).toEqual(
+      new Cartesian3(newScale, newScale, newScale)
+    );
+    expect(result).toBe(returnedResult);
+  });
+
   it("getScale works", function () {
-    const scale = new Cartesian3(1.0, 2.0, 3.0);
+    const scale = new Cartesian3(2.0, 3.0, 4.0);
     const result = new Cartesian3();
     const computedScale = Matrix4.getScale(Matrix4.fromScale(scale), result);
 
@@ -1502,24 +1549,86 @@ describe("Core/Matrix4", function () {
     expect(computedScale).toEqualEpsilon(scale, CesiumMath.EPSILON14);
   });
 
-  it("getScale throws without a matrix", function () {
-    expect(function () {
-      Matrix4.getScale();
-    }).toThrowDeveloperError();
-  });
-
   it("getMaximumScale works", function () {
-    const m = Matrix4.fromScale(new Cartesian3(1.0, 2.0, 3.0));
+    const m = Matrix4.fromScale(new Cartesian3(2.0, 3.0, 4.0));
     expect(Matrix4.getMaximumScale(m)).toEqualEpsilon(
-      3.0,
+      4.0,
       CesiumMath.EPSILON14
     );
   });
 
-  it("getMaximumScale throws without a matrix", function () {
-    expect(function () {
-      Matrix4.getMaximumScale();
-    }).toThrowDeveloperError();
+  it("setRotation works", function () {
+    const scaleVec = new Cartesian3(2.0, 3.0, 4.0);
+    const scale = Matrix4.fromScale(scaleVec, new Matrix3());
+    const rotation = Matrix3.fromRotationX(0.5, new Matrix3());
+    const scaleRotation = Matrix4.setRotation(scale, rotation, new Matrix4());
+
+    const extractedScale = Matrix4.getScale(scaleRotation, new Cartesian3());
+    const extractedRotation = Matrix4.getRotation(scaleRotation, new Matrix3());
+
+    expect(extractedScale).toEqualEpsilon(scaleVec, CesiumMath.EPSILON14);
+    expect(extractedRotation).toEqualEpsilon(rotation, CesiumMath.EPSILON14);
+  });
+
+  it("getRotation returns matrix without scale", function () {
+    const matrix = Matrix4.fromRotation(
+      Matrix3.fromColumnMajorArray([
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        5.0,
+        6.0,
+        7.0,
+        8.0,
+        9.0,
+      ])
+    );
+    const expectedRotation = Matrix3.fromColumnMajorArray([
+      1.0 / Math.sqrt(1.0 * 1.0 + 2.0 * 2.0 + 3.0 * 3.0),
+      2.0 / Math.sqrt(1.0 * 1.0 + 2.0 * 2.0 + 3.0 * 3.0),
+      3.0 / Math.sqrt(1.0 * 1.0 + 2.0 * 2.0 + 3.0 * 3.0),
+      4.0 / Math.sqrt(4.0 * 4.0 + 5.0 * 5.0 + 6.0 * 6.0),
+      5.0 / Math.sqrt(4.0 * 4.0 + 5.0 * 5.0 + 6.0 * 6.0),
+      6.0 / Math.sqrt(4.0 * 4.0 + 5.0 * 5.0 + 6.0 * 6.0),
+      7.0 / Math.sqrt(7.0 * 7.0 + 8.0 * 8.0 + 9.0 * 9.0),
+      8.0 / Math.sqrt(7.0 * 7.0 + 8.0 * 8.0 + 9.0 * 9.0),
+      9.0 / Math.sqrt(7.0 * 7.0 + 8.0 * 8.0 + 9.0 * 9.0),
+    ]);
+    const rotation = Matrix4.getRotation(matrix, new Matrix3());
+    expect(rotation).toEqualEpsilon(expectedRotation, CesiumMath.EPSILON14);
+  });
+
+  it("getRotation does not modify rotation matrix", function () {
+    const matrix = Matrix4.fromRotation(
+      Matrix3.fromColumnMajorArray([
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        5.0,
+        6.0,
+        7.0,
+        8.0,
+        9.0,
+      ])
+    );
+    const duplicateMatrix = Matrix4.clone(matrix, new Matrix4());
+    const expectedRotation = Matrix3.fromColumnMajorArray([
+      1.0 / Math.sqrt(1.0 * 1.0 + 2.0 * 2.0 + 3.0 * 3.0),
+      2.0 / Math.sqrt(1.0 * 1.0 + 2.0 * 2.0 + 3.0 * 3.0),
+      3.0 / Math.sqrt(1.0 * 1.0 + 2.0 * 2.0 + 3.0 * 3.0),
+      4.0 / Math.sqrt(4.0 * 4.0 + 5.0 * 5.0 + 6.0 * 6.0),
+      5.0 / Math.sqrt(4.0 * 4.0 + 5.0 * 5.0 + 6.0 * 6.0),
+      6.0 / Math.sqrt(4.0 * 4.0 + 5.0 * 5.0 + 6.0 * 6.0),
+      7.0 / Math.sqrt(7.0 * 7.0 + 8.0 * 8.0 + 9.0 * 9.0),
+      8.0 / Math.sqrt(7.0 * 7.0 + 8.0 * 8.0 + 9.0 * 9.0),
+      9.0 / Math.sqrt(7.0 * 7.0 + 8.0 * 8.0 + 9.0 * 9.0),
+    ]);
+    const result = Matrix4.getRotation(matrix, new Matrix3());
+    expect(result).toEqualEpsilon(expectedRotation, CesiumMath.EPSILON14);
+    expect(matrix).toEqual(duplicateMatrix);
+    expect(matrix).not.toBe(result);
   });
 
   it("multiply works", function () {
@@ -2043,13 +2152,43 @@ describe("Core/Matrix4", function () {
   });
 
   it("multiplyByUniformScale works", function () {
-    const m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
-    const scale = 1.0;
-    const expected = Matrix4.multiply(
-      m,
-      Matrix4.fromUniformScale(scale),
-      new Matrix4()
-    );
+    const m = Matrix4.fromColumnMajorArray([
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+    ]);
+    const scale = 2.0;
+    const expected = Matrix4.fromColumnMajorArray([
+      2 * scale,
+      3 * scale,
+      4 * scale,
+      5,
+      6 * scale,
+      7 * scale,
+      8 * scale,
+      9,
+      10 * scale,
+      11 * scale,
+      12 * scale,
+      13,
+      14,
+      15,
+      16,
+      17,
+    ]);
     const result = new Matrix4();
     const returnedResult = Matrix4.multiplyByUniformScale(m, scale, result);
     expect(returnedResult).toBe(result);
@@ -2057,13 +2196,43 @@ describe("Core/Matrix4", function () {
   });
 
   it("multiplyByUniformScale works with a result parameter that is an input result parameter", function () {
-    const m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+    const m = Matrix4.fromColumnMajorArray([
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+    ]);
     const scale = 2.0;
-    const expected = Matrix4.multiply(
-      m,
-      Matrix4.fromUniformScale(scale),
-      new Matrix4()
-    );
+    const expected = Matrix4.fromColumnMajorArray([
+      2 * scale,
+      3 * scale,
+      4 * scale,
+      5,
+      6 * scale,
+      7 * scale,
+      8 * scale,
+      9,
+      10 * scale,
+      11 * scale,
+      12 * scale,
+      13,
+      14,
+      15,
+      16,
+      17,
+    ]);
     const returnedResult = Matrix4.multiplyByUniformScale(m, scale, m);
     expect(returnedResult).toBe(m);
     expect(m).toEqual(expected);
@@ -2096,6 +2265,95 @@ describe("Core/Matrix4", function () {
       new Matrix4()
     );
     const returnedResult = Matrix4.multiplyByScale(m, scale, m);
+    expect(returnedResult).toBe(m);
+    expect(m).toEqual(expected);
+  });
+
+  it("multiplyByUniformScale works", function () {
+    const m = Matrix4.fromColumnMajorArray([
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+    ]);
+    const scale = 2.0;
+    const expected = Matrix4.fromColumnMajorArray([
+      2 * scale,
+      3 * scale,
+      4 * scale,
+      5,
+      6 * scale,
+      7 * scale,
+      8 * scale,
+      9,
+      10 * scale,
+      11 * scale,
+      12 * scale,
+      13,
+      14,
+      15,
+      16,
+      17,
+    ]);
+
+    const result = new Matrix4();
+    const returnedResult = Matrix4.multiplyByUniformScale(m, scale, result);
+    expect(returnedResult).toBe(result);
+    expect(result).toEqual(expected);
+  });
+
+  it('multiplyByUniformScale works with "this" result parameter', function () {
+    const m = Matrix4.fromColumnMajorArray([
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+    ]);
+    const scale = 2.0;
+    const expected = Matrix4.fromColumnMajorArray([
+      2 * scale,
+      3 * scale,
+      4 * scale,
+      5,
+      6 * scale,
+      7 * scale,
+      8 * scale,
+      9,
+      10 * scale,
+      11 * scale,
+      12 * scale,
+      13,
+      14,
+      15,
+      16,
+      17,
+    ]);
+
+    const returnedResult = Matrix4.multiplyByUniformScale(m, scale, m);
     expect(returnedResult).toBe(m);
     expect(m).toEqual(expected);
   });
@@ -3778,6 +4036,12 @@ describe("Core/Matrix4", function () {
     }).toThrowDeveloperError();
   });
 
+  it("fromRotation throws without rotation parameter", function () {
+    expect(function () {
+      Matrix4.fromRotation(undefined);
+    }).toThrowDeveloperError();
+  });
+
   it("fromCamera throws without camera", function () {
     expect(function () {
       Matrix4.fromCamera(undefined);
@@ -3808,6 +4072,30 @@ describe("Core/Matrix4", function () {
         position: Cartesian3.ZERO,
         direction: Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
       });
+    }).toThrowDeveloperError();
+  });
+
+  it("computePerspectiveFieldOfView throws with out of range y field of view", function () {
+    expect(function () {
+      Matrix4.computePerspectiveFieldOfView(0, 1, 2, 3);
+    }).toThrowDeveloperError();
+  });
+
+  it("computePerspectiveFieldOfView throws with out of range aspect", function () {
+    expect(function () {
+      Matrix4.computePerspectiveFieldOfView(1, 0, 2, 3);
+    }).toThrowDeveloperError();
+  });
+
+  it("computePerspectiveFieldOfView throws with out of range near", function () {
+    expect(function () {
+      Matrix4.computePerspectiveFieldOfView(1, 1, 0, 3);
+    }).toThrowDeveloperError();
+  });
+
+  it("computePerspectiveFieldOfView throws with out of range far", function () {
+    expect(function () {
+      Matrix4.computePerspectiveFieldOfView(1, 1, 2, 0);
     }).toThrowDeveloperError();
   });
 
@@ -4027,7 +4315,7 @@ describe("Core/Matrix4", function () {
     }).toThrowDeveloperError();
   });
 
-  it("computeInfinitePerspectiveOffCenter  throws without left", function () {
+  it("computeInfinitePerspectiveOffCenter throws without left", function () {
     expect(function () {
       const right = 0,
         bottom = 0,
@@ -4045,7 +4333,7 @@ describe("Core/Matrix4", function () {
     }).toThrowDeveloperError();
   });
 
-  it("computeInfinitePerspectiveOffCenter  throws without right", function () {
+  it("computeInfinitePerspectiveOffCenter throws without right", function () {
     expect(function () {
       const left = 0,
         bottom = 0,
@@ -4063,7 +4351,7 @@ describe("Core/Matrix4", function () {
     }).toThrowDeveloperError();
   });
 
-  it("computeInfinitePerspectiveOffCenter  throws without bottom", function () {
+  it("computeInfinitePerspectiveOffCenter throws without bottom", function () {
     expect(function () {
       const left = 0,
         right = 0,
@@ -4081,7 +4369,7 @@ describe("Core/Matrix4", function () {
     }).toThrowDeveloperError();
   });
 
-  it("computeInfinitePerspectiveOffCenter  throws without top", function () {
+  it("computeInfinitePerspectiveOffCenter throws without top", function () {
     expect(function () {
       const left = 0,
         right = 0,
@@ -4099,7 +4387,7 @@ describe("Core/Matrix4", function () {
     }).toThrowDeveloperError();
   });
 
-  it("computeInfinitePerspectiveOffCenter  throws without near", function () {
+  it("computeInfinitePerspectiveOffCenter throws without near", function () {
     expect(function () {
       const left = 0,
         right = 0,
@@ -4117,27 +4405,39 @@ describe("Core/Matrix4", function () {
     }).toThrowDeveloperError();
   });
 
-  it("computePerspectiveFieldOfView throws with out of range y field of view", function () {
+  it("computeView throws without position", function () {
     expect(function () {
-      Matrix4.computePerspectiveFieldOfView(0, 1, 2, 3);
+      const direction = Cartesian3.UNIT_Z;
+      const up = Cartesian3.UNIT_Y;
+      const right = Cartesian3.UNIT_X;
+      Matrix4.computeView(undefined, direction, up, right, new Matrix4());
     }).toThrowDeveloperError();
   });
 
-  it("computePerspectiveFieldOfView throws with out of range aspect", function () {
+  it("computeView throws without direction", function () {
     expect(function () {
-      Matrix4.computePerspectiveFieldOfView(1, 0, 2, 3);
+      const position = Cartesian3.ZERO;
+      const up = Cartesian3.UNIT_Y;
+      const right = Cartesian3.UNIT_X;
+      Matrix4.computeView(position, undefined, up, right, new Matrix4());
     }).toThrowDeveloperError();
   });
 
-  it("computePerspectiveFieldOfView throws with out of range near", function () {
+  it("computeView throws without up", function () {
     expect(function () {
-      Matrix4.computePerspectiveFieldOfView(1, 1, 0, 3);
+      const position = Cartesian3.ZERO;
+      const direction = Cartesian3.UNIT_Z;
+      const right = Cartesian3.UNIT_X;
+      Matrix4.computeView(position, direction, undefined, right, new Matrix4());
     }).toThrowDeveloperError();
   });
 
-  it("computePerspectiveFieldOfView throws with out of range far", function () {
+  it("computeView throws without right", function () {
     expect(function () {
-      Matrix4.computePerspectiveFieldOfView(1, 1, 2, 0);
+      const position = Cartesian3.ZERO;
+      const direction = Cartesian3.UNIT_Z;
+      const up = Cartesian3.UNIT_Y;
+      Matrix4.computeView(position, direction, up, undefined, new Matrix4());
     }).toThrowDeveloperError();
   });
 
@@ -4173,7 +4473,7 @@ describe("Core/Matrix4", function () {
     }).toThrowDeveloperError();
   });
 
-  it("getColumn throws without of range index parameter", function () {
+  it("getColumn throws with out of range index parameter", function () {
     const matrix = new Matrix4();
     expect(function () {
       Matrix4.getColumn(matrix, 4);
@@ -4194,7 +4494,7 @@ describe("Core/Matrix4", function () {
     }).toThrowDeveloperError();
   });
 
-  it("setColumn throws without of range index parameter", function () {
+  it("setColumn throws with out of range index parameter", function () {
     const matrix = new Matrix4();
     const cartesian = new Cartesian4();
     expect(function () {
@@ -4221,13 +4521,13 @@ describe("Core/Matrix4", function () {
     }).toThrowDeveloperError();
   });
 
-  it("setTranslation throws without result parameter", function () {
+  it("setTranslation throws without a result parameter", function () {
     expect(function () {
       Matrix4.setTranslation(new Matrix4(), new Cartesian3(), undefined);
     }).toThrowDeveloperError();
   });
 
-  it("getRow throws without of range index parameter", function () {
+  it("getRow throws with out of range index parameter", function () {
     const matrix = new Matrix4();
     expect(function () {
       Matrix4.getRow(matrix, 4);
@@ -4248,11 +4548,65 @@ describe("Core/Matrix4", function () {
     }).toThrowDeveloperError();
   });
 
-  it("setRow throws without of range index parameter", function () {
+  it("setRow throws with out of range index parameter", function () {
     const matrix = new Matrix4();
     const cartesian = new Cartesian4();
     expect(function () {
       Matrix4.setRow(matrix, 4, cartesian);
+    }).toThrowDeveloperError();
+  });
+
+  it("setScale throws without a matrix", function () {
+    expect(function () {
+      Matrix4.setScale();
+    }).toThrowDeveloperError();
+  });
+
+  it("setScale throws without a scale", function () {
+    expect(function () {
+      Matrix4.setScale(new Matrix4());
+    }).toThrowDeveloperError();
+  });
+
+  it("setUniformScale throws without a matrix", function () {
+    expect(function () {
+      Matrix4.setUniformScale();
+    }).toThrowDeveloperError();
+  });
+
+  it("setUniformScale throws without a scale", function () {
+    expect(function () {
+      Matrix4.setUniformScale(new Matrix4());
+    }).toThrowDeveloperError();
+  });
+
+  it("getScale throws without a matrix", function () {
+    expect(function () {
+      Matrix4.getScale();
+    }).toThrowDeveloperError();
+  });
+
+  it("getMaximumScale throws without a matrix", function () {
+    expect(function () {
+      Matrix4.getMaximumScale();
+    }).toThrowDeveloperError();
+  });
+
+  it("setRotation throws without a matrix", function () {
+    expect(function () {
+      return Matrix4.setRotation();
+    }).toThrowDeveloperError();
+  });
+
+  it("setRotation throws without a rotation", function () {
+    expect(function () {
+      return Matrix4.setRotation(new Matrix4());
+    }).toThrowDeveloperError();
+  });
+
+  it("getRotation throws without a matrix", function () {
+    expect(function () {
+      return Matrix4.getRotation();
     }).toThrowDeveloperError();
   });
 
@@ -4284,29 +4638,27 @@ describe("Core/Matrix4", function () {
     }).toThrowDeveloperError();
   });
 
-  it("multiplyByUniformScale throws with no matrix parameter", function () {
-    expect(function () {
-      Matrix4.multiplyByUniformScale(undefined, 2.0);
-    }).toThrowDeveloperError();
-  });
-
-  it("multiplyByUniformScale throws with no scale parameter", function () {
-    const m = new Matrix4();
-    expect(function () {
-      Matrix4.multiplyByUniformScale(m, undefined);
-    }).toThrowDeveloperError();
-  });
-
   it("multiplyByScale throws with no matrix parameter", function () {
     expect(function () {
-      Matrix4.multiplyByScale(undefined, new Cartesian3());
+      Matrix4.multiplyByScale();
     }).toThrowDeveloperError();
   });
 
   it("multiplyByScale throws with no scale parameter", function () {
-    const m = new Matrix4();
     expect(function () {
-      Matrix4.multiplyByScale(m, undefined);
+      Matrix4.multiplyByScale(new Matrix4());
+    }).toThrowDeveloperError();
+  });
+
+  it("multiplyByUniformScale throws with no matrix parameter", function () {
+    expect(function () {
+      Matrix4.multiplyByUniformScale();
+    }).toThrowDeveloperError();
+  });
+
+  it("multiplyByUniformScale throws with no scale parameter", function () {
+    expect(function () {
+      Matrix4.multiplyByUniformScale(new Matrix4());
     }).toThrowDeveloperError();
   });
 
@@ -4411,73 +4763,97 @@ describe("Core/Matrix4", function () {
     }).toThrowDeveloperError();
   });
 
-  it("getColumn throws without result parameter", function () {
+  it("getColumn throws without a result parameter", function () {
     expect(function () {
       Matrix4.getColumn(new Matrix4(), 2);
     }).toThrowDeveloperError();
   });
 
-  it("setColumn throws without result parameter", function () {
+  it("setColumn throws without a result parameter", function () {
     expect(function () {
       Matrix4.setColumn(new Matrix4(), 2, new Cartesian4());
     }).toThrowDeveloperError();
   });
 
-  it("getRow throws without result parameter", function () {
+  it("getRow throws without a result parameter", function () {
     expect(function () {
       Matrix4.getRow(new Matrix4(), 2);
     }).toThrowDeveloperError();
   });
 
-  it("setRow throws without result parameter", function () {
+  it("setRow throws without a result parameter", function () {
     expect(function () {
       Matrix4.setRow(new Matrix4(), 2, new Cartesian4());
     }).toThrowDeveloperError();
   });
 
-  it("getScale throws without result parameter", function () {
+  it("setScale throws without a result parameter", function () {
+    expect(function () {
+      Matrix4.setScale(new Matrix4(), new Cartesian3());
+    }).toThrowDeveloperError();
+  });
+
+  it("setUniformScale throws without a result parameter", function () {
+    expect(function () {
+      Matrix4.setUniformScale(new Matrix4(), 1.0);
+    }).toThrowDeveloperError();
+  });
+
+  it("getScale throws without a result parameter", function () {
     expect(function () {
       Matrix4.getScale(new Matrix4());
     }).toThrowDeveloperError();
   });
 
-  it("multiply throws without result parameter", function () {
+  it("setRotation throws without a result parameter", function () {
+    expect(function () {
+      return Matrix4.setRotation(new Matrix4(), new Matrix3());
+    }).toThrowDeveloperError();
+  });
+
+  it("getRotation throws without a result parameter", function () {
+    expect(function () {
+      return Matrix4.getRotation(new Matrix4());
+    }).toThrowDeveloperError();
+  });
+
+  it("multiply throws without a result parameter", function () {
     expect(function () {
       Matrix4.multiply(new Matrix4(), new Matrix3());
     }).toThrowDeveloperError();
   });
 
-  it("multiplyByVector throws without result parameter", function () {
+  it("multiplyByVector throws without a result parameter", function () {
     expect(function () {
       Matrix4.multiplyByVector(new Matrix4(), new Cartesian4());
     }).toThrowDeveloperError();
   });
 
-  it("multiplyByScalar throws without result parameter", function () {
+  it("multiplyByScalar throws without a result parameter", function () {
     expect(function () {
       Matrix4.multiplyByScalar(new Matrix4(), 2);
     }).toThrowDeveloperError();
   });
 
-  it("negate throws without result parameter", function () {
+  it("negate throws without a result parameter", function () {
     expect(function () {
       Matrix4.negate(new Matrix4());
     }).toThrowDeveloperError();
   });
 
-  it("transpose throws without result parameter", function () {
+  it("transpose throws without a result parameter", function () {
     expect(function () {
       Matrix4.transpose(new Matrix4());
     }).toThrowDeveloperError();
   });
 
-  it("abs throws without result parameter", function () {
+  it("abs throws without a result parameter", function () {
     expect(function () {
       Matrix4.abs(new Matrix4());
     }).toThrowDeveloperError();
   });
 
-  it("inverse throws without result parameter", function () {
+  it("inverse throws without a result parameter", function () {
     expect(function () {
       Matrix4.inverse(new Matrix4());
     }).toThrowDeveloperError();
@@ -4495,7 +4871,7 @@ describe("Core/Matrix4", function () {
     }).toThrowDeveloperError();
   });
 
-  it("multiplyTransformation throws without result parameter", function () {
+  it("multiplyTransformation throws without a result parameter", function () {
     expect(function () {
       Matrix4.multiplyTransformation(new Matrix4(), new Matrix4());
     }).toThrowDeveloperError();
@@ -4519,15 +4895,15 @@ describe("Core/Matrix4", function () {
     }).toThrowDeveloperError();
   });
 
-  it("multiplyByUniformScale throws without result parameter", function () {
+  it("multiplyByScale throws without a result parameter", function () {
     expect(function () {
-      Matrix4.multiplyByUniformScale(new Matrix4(), 2);
+      Matrix4.multiplyByScale(new Matrix4(), new Cartesian3());
     }).toThrowDeveloperError();
   });
 
-  it("multiplyByScale throws without result parameter", function () {
+  it("multiplyByUniformScale throws without a result parameter", function () {
     expect(function () {
-      Matrix4.multiplyByScale(new Matrix4(), new Cartesian3());
+      Matrix4.multiplyByUniformScale(new Matrix4(), 2);
     }).toThrowDeveloperError();
   });
 
@@ -4543,7 +4919,7 @@ describe("Core/Matrix4", function () {
     }).toThrowDeveloperError();
   });
 
-  it("multiplyByPointAsVector throws without result parameter", function () {
+  it("multiplyByPointAsVector throws without a result parameter", function () {
     expect(function () {
       Matrix4.multiplyByPointAsVector(new Matrix4(), new Cartesian3());
     }).toThrowDeveloperError();
@@ -4555,65 +4931,84 @@ describe("Core/Matrix4", function () {
     }).toThrowDeveloperError();
   });
 
-  it("getTranslation throws without result parameter", function () {
+  it("getTranslation throws without a result parameter", function () {
     expect(function () {
       Matrix4.getTranslation(new Matrix4());
     }).toThrowDeveloperError();
   });
 
-  it("getMatrix3 throws without result parameter", function () {
+  it("getMatrix3 throws without a result parameter", function () {
     expect(function () {
       Matrix4.getMatrix3(new Matrix4());
     }).toThrowDeveloperError();
   });
 
-  it("inverseTransformtation throws without result parameter", function () {
+  it("inverseTransformtation throws without a result parameter", function () {
     expect(function () {
       Matrix4.inverseTransformation(new Matrix4());
     }).toThrowDeveloperError();
   });
 
-  it("multiplyByTranslation throws without result parameter", function () {
+  it("multiplyByTranslation throws without a result parameter", function () {
     expect(function () {
       Matrix4.multiplyByTranslation(new Matrix4(), new Cartesian3());
     }).toThrowDeveloperError();
   });
 
-  it("computePerspectiveFieldOfView throws without result parameter", function () {
+  it("computePerspectiveFieldOfView throws without a result parameter", function () {
     expect(function () {
       Matrix4.computePerspectiveFieldOfView(CesiumMath.PI_OVER_TWO, 1, 1, 10);
     }).toThrowDeveloperError();
   });
 
-  it("computeOrthographicOffCenter throws without result parameter", function () {
+  it("computeOrthographicOffCenter throws without a result parameter", function () {
+    expect(function () {
+      const left = 0,
+        right = 0,
+        bottom = 0,
+        top = 0,
+        near = 0,
+        far = 0;
+      Matrix4.computeOrthographicOffCenter(left, right, bottom, top, near, far);
+    }).toThrowDeveloperError();
+  });
+
+  it("computePerspectiveOffCenter throws without a result parameter", function () {
+    expect(function () {
+      const left = 0,
+        right = 0,
+        bottom = 0,
+        top = 0,
+        near = 0,
+        far = 0;
+      Matrix4.computePerspectiveOffCenter(left, right, bottom, top, near, far);
+    }).toThrowDeveloperError();
+  });
+
+  it("computeInfinitePerspectiveOffCenter throws without a result parameter", function () {
     expect(function () {
       const left = 0,
         right = 0,
         bottom = 0,
         top = 0,
         near = 0;
-      Matrix4.computeOrthographicOffCenter(left, right, bottom, top, near, 0);
+      Matrix4.computeInfinitePerspectiveOffCenter(
+        left,
+        right,
+        bottom,
+        top,
+        near
+      );
     }).toThrowDeveloperError();
   });
 
-  it("computePerspectiveOffCenter throws without result parameter", function () {
+  it("computeView throws without a result parameter", function () {
     expect(function () {
-      const left = 0,
-        right = 0,
-        bottom = 0,
-        top = 0,
-        near = 0;
-      Matrix4.computePerspectiveOffCenter(left, right, bottom, top, near, 0);
-    }).toThrowDeveloperError();
-  });
-
-  it("computeInfinitePerspectiveOffCenter throws without near", function () {
-    expect(function () {
-      const left = 0,
-        right = 0,
-        bottom = 0,
-        top = 0;
-      Matrix4.computeInfinitePerspectiveOffCenter(left, right, bottom, top, 0);
+      const position = Cartesian3.ONE;
+      const direction = Cartesian3.UNIT_Z;
+      const up = Cartesian3.UNIT_Y;
+      const right = Cartesian3.UNIT_X;
+      Matrix4.computeView(position, direction, up, right);
     }).toThrowDeveloperError();
   });
 
@@ -4643,4 +5038,47 @@ describe("Core/Matrix4", function () {
       expect(intArray[index]).toEqual(index + 1);
     }
   });
+
+  // prettier-ignore
+  createPackableSpecs(
+    Matrix4,
+    new Matrix4(
+      1, 2, 3, 4,
+      5, 6, 7, 8,
+      9, 10, 11, 12,
+      13, 14, 15, 16
+    ),
+    [1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16]
+  );
+
+  // prettier-ignore
+  createPackableArraySpecs(
+    Matrix4,
+    [
+      new Matrix4(
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+      ),
+      new Matrix4(
+        1, 2, 3, 4,
+        5, 6, 7, 8,
+        9, 10, 11, 12,
+        13, 14, 15, 16
+      ),
+      new Matrix4(
+        1, 2, 3, 4, 
+        1, 2, 3, 4,
+        1, 2, 3, 4,
+        1, 2, 3, 4
+      ),
+    ],
+    [
+      1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+      1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16,
+      1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+    ],
+    16
+  );
 });

@@ -313,3 +313,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Jon Beniston](https://github.com/srcejon)
 - [Ugnius Malukas](https://github.com/ugnelis)
 - [Justin Peter](https://github.com/themagicnacho)
+- [Gu Miao](https://github.com/Gu-Miao)

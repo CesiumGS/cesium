@@ -8,7 +8,7 @@ const context2DsByWidthAndHeight = {};
  *
  * @function getImagePixels
  *
- * @param {HTMLImageElement} image The image to extract pixels from.
+ * @param {HTMLImageElement|ImageBitmap} image The image to extract pixels from.
  * @param {Number} width The width of the image. If not defined, then image.width is assigned.
  * @param {Number} height The height of the image. If not defined, then image.height is assigned.
  * @returns {ImageData} The pixels of the image.

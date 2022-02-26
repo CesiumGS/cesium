@@ -33,6 +33,8 @@ describe(
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
     const boxTexturedGltfUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
+    const boxWithCreditsUrl =
+      "./Data/Models/GltfLoader/BoxWithCopyright/glTF/Box.gltf";
     const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
     const boxInstanced =
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
@@ -205,6 +207,34 @@ describe(
       });
     });
 
+    it("gets copyrights from gltf", function () {
+      const resource = Resource.createIfNeeded(boxWithCreditsUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxWithCreditsUrl,
+          },
+          scene
+        ).then(function (model) {
+          scene.renderForSpecs();
+          const expectedCredits = [
+            "First Source",
+            "Second Source",
+            "Third Source",
+          ];
+          const creditDisplay = scene.frameState.creditDisplay;
+          const credits =
+            creditDisplay._currentFrameCredits.lightboxCredits.values;
+          const length = credits.length;
+          expect(credits.length).toEqual(expectedCredits.length);
+          for (let i = 0; i < length; i++) {
+            expect(credits[i].credit.html).toEqual(expectedCredits[i]);
+          }
+        });
+      });
+    });
+
     it("show works", function () {
       const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
       const loadPromise = resource.fetchArrayBuffer();
@@ -266,7 +296,8 @@ describe(
       });
     });
 
-    it("renders model with style", function () {
+    // see https://github.com/CesiumGS/cesium/pull/10115
+    xit("renders model with style", function () {
       return loadAndZoomToModelExperimental(
         { gltf: buildingsMetadata },
         scene
@@ -459,6 +490,32 @@ describe(
       });
     });
 
+    it("initializes with model matrix", function () {
+      const translation = new Cartesian3(10, 0, 0);
+      const transform = Matrix4.fromTranslation(translation);
+
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          upAxis: Axis.Z,
+          forwardAxis: Axis.X,
+          modelMatrix: transform,
+        },
+        scene
+      ).then(function (model) {
+        const sceneGraph = model.sceneGraph;
+        scene.renderForSpecs();
+        expect(Matrix4.equals(sceneGraph.computedModelMatrix, transform)).toBe(
+          true
+        );
+        verifyRender(model, false);
+        expect(model.boundingSphere.center).toEqual(translation);
+
+        expect(sceneGraph.computedModelMatrix).not.toBe(transform);
+        expect(model.modelMatrix).not.toBe(transform);
+      });
+    });
+
     it("changing model matrix works", function () {
       const updateModelMatrix = spyOn(
         ModelExperimentalSceneGraph.prototype,
@@ -468,6 +525,7 @@ describe(
         { gltf: boxTexturedGlbUrl, upAxis: Axis.Z, forwardAxis: Axis.X },
         scene
       ).then(function (model) {
+        verifyRender(model, true);
         const sceneGraph = model.sceneGraph;
 
         const transform = Matrix4.fromTranslation(new Cartesian3(10, 0, 0));
@@ -483,6 +541,7 @@ describe(
         expect(Matrix4.equals(sceneGraph.computedModelMatrix, transform)).toBe(
           true
         );
+        verifyRender(model, false);
       });
     });
 
@@ -493,7 +552,7 @@ describe(
         scene
       ).then(function (model) {
         const transform = Matrix4.fromTranslation(translation);
-        expect(model.boundingSphere.center).toEqual(new Cartesian3());
+        expect(model.boundingSphere.center).toEqual(Cartesian3.ZERO);
 
         Matrix4.multiplyTransformation(
           model.modelMatrix,
@@ -503,6 +562,7 @@ describe(
         scene.renderForSpecs();
 
         expect(model.boundingSphere.center).toEqual(translation);
+        verifyRender(model, false);
       });
     });
 

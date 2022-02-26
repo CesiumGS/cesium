@@ -48,6 +48,7 @@ describe(
 
     const boxUrl = "./Data/Models/Shadows/Box.gltf";
     const boxTranslucentUrl = "./Data/Models/Shadows/BoxTranslucent.gltf";
+    const boxNoNormalsUrl = "./Data/Models/Shadows/BoxNoNormals.gltf";
     const boxCutoutUrl = "./Data/Models/Shadows/BoxCutout.gltf";
     const boxInvertedUrl = "./Data/Models/Shadows/BoxInverted.gltf";
 
@@ -57,6 +58,7 @@ describe(
 
     let boxExperimental;
     let boxTranslucentExperimental;
+    let boxNoNormalsExperimental;
 
     let room;
     let floor;
@@ -162,6 +164,15 @@ describe(
           show: false,
         }).then(function (model) {
           boxTranslucentExperimental = model;
+        })
+      );
+      modelPromises.push(
+        loadModelExperimental({
+          gltf: boxNoNormalsUrl,
+          modelMatrix: boxTransformExperimental,
+          show: false,
+        }).then(function (model) {
+          boxNoNormalsExperimental = model;
         })
       );
       modelPromises.push(
@@ -573,6 +584,13 @@ describe(
       floor.show = true;
       createCascadedShadowMap();
       verifyShadows(boxTranslucentExperimental, floor);
+    });
+
+    it("model without normals casts shadows onto another model", function () {
+      boxNoNormalsExperimental.show = true;
+      floor.show = true;
+      createCascadedShadowMap();
+      verifyShadows(boxNoNormalsExperimental, floor);
     });
 
     it("model with cutout texture casts shadows onto another model", function () {

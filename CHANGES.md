@@ -4,15 +4,29 @@
 
 ##### Additions :tada:
 
+- Added MSAA support for WebGL2. Enabled on viewer creation with the multisampling rate as the `msaaSamples` option and can be controlled through `Scene.msaaSamples`.
 - glTF contents now use `ModelExperimental` by default. [#10055](https://github.com/CesiumGS/cesium/pull/10055)
 - Added the ability to toggle back-face culling in `ModelExperimental`. [#10070](https://github.com/CesiumGS/cesium/pull/10070)
 - Added `depthPlaneEllipsoidOffset` to Viewer and Scene constructors to address rendering artefacts below ellipsoid zero elevation. [#9200](https://github.com/CesiumGS/cesium/pull/9200)
 - Added support for `debugColorTiles` in `ModelExperimental`. [#10071](https://github.com/CesiumGS/cesium/pull/10071)
 - Added support for shadows in `ModelExperimental`. [#10077](https://github.com/CesiumGS/cesium/pull/10077)
+- Added `packArray` and `unpackArray` for matrix types. [#10118](https://github.com/CesiumGS/cesium/pull/10118)
+- glTF copyrights now appear under the credits display. [#10138](https://github.com/CesiumGS/cesium/pull/10138)
+- Credits are now sorted based on their number of occurrences. [#10141](https://github.com/CesiumGS/cesium/pull/10141)
+- Added more affine transformation helper functions to `Matrix2`, `Matrix3`, and `Matrix4`. [#10124](https://github.com/CesiumGS/cesium/pull/10124)
+  - Added `setScale`, `setUniformScale`, `setRotation`, `getRotation`, and `multiplyByUniformScale` to `Matrix2`.
+  - Added `setScale`, `setUniformScale`, `setRotation`, and `multiplyByUniformScale` to `Matrix3`.
+  - Added `setUniformScale`, `setRotation`, `getRotation`, and `fromRotation` to `Matrix4`.
+- Added `AxisAlignedBoundingBox.fromCorners`. [#10130](https://github.com/CesiumGS/cesium/pull/10130)
+- Added `BoundingSphere.fromTransformation`. [#10130](https://github.com/CesiumGS/cesium/pull/10130)
+- Added `OrientedBoundingBox.fromTransformation`, `OrientedBoundingBox.computeCorners`, and `OrientedBoundingBox.computeTransformation`. [#10130](https://github.com/CesiumGS/cesium/pull/10130)
+- Added `Rectangle.subsection`. [#10130](https://github.com/CesiumGS/cesium/pull/10130)
 
 ##### Fixes :wrench:
 
 - Fixed a bug where updating `ModelExperimental`'s model matrix would not update its bounding sphere. [#10078](https://github.com/CesiumGS/cesium/pull/10078)
+- Fixed feature ID texture artifacts on Safari. [#10111](https://github.com/CesiumGS/cesium/pull/10111)
+- Fixed a bug where a translucent shader applied to a `ModelExperimental` with opaque features was not being rendered. [#10110](https://github.com/CesiumGS/cesium/pull/10110)
 
 ### 1.90 - 2022-02-01
 

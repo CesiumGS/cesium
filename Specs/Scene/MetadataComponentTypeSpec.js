@@ -322,7 +322,8 @@ describe("Scene/MetadataComponentType", function () {
 
     const min = MetadataComponentType.getMinimum(MetadataComponentType.INT64);
     const max = MetadataComponentType.getMaximum(MetadataComponentType.INT64);
-    var values = [min, min / BigInt(2), 0, max / BigInt(2), max]; // eslint-disable-line
+    // eslint-disable-next-line no-undef
+    const values = [min, min / BigInt(2), 0, max / BigInt(2), max];
     const expectedResults = [-1.0, -0.5, 0.0, 0.5, 1.0];
     for (let j = 0; j < values.length; ++j) {
       const result = MetadataComponentType.normalize(
@@ -339,7 +340,8 @@ describe("Scene/MetadataComponentType", function () {
     }
 
     const max = MetadataComponentType.getMaximum(MetadataComponentType.UINT64);
-    var values = [BigInt(0), max / BigInt(4), max / BigInt(2), max]; // eslint-disable-line
+    // eslint-disable-next-line no-undef
+    const values = [BigInt(0), max / BigInt(4), max / BigInt(2), max];
     const expectedResults = [0.0, 0.25, 0.5, 1.0];
     for (let j = 0; j < values.length; ++j) {
       const result = MetadataComponentType.normalize(

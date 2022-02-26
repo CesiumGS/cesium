@@ -895,6 +895,77 @@ Rectangle.subsample = function (rectangle, ellipsoid, surfaceHeight, result) {
 };
 
 /**
+ * Computes a subsection of a rectangle from normalized coordinates in the range [0.0, 1.0].
+ *
+ * @param {Rectangle} rectangle The rectangle to subsection.
+ * @param {Number} westLerp The west interpolation factor in the range [0.0, 1.0]. Must be less than or equal to eastLerp.
+ * @param {Number} southLerp The south interpolation factor in the range [0.0, 1.0]. Must be less than or equal to northLerp.
+ * @param {Number} eastLerp The east interpolation factor in the range [0.0, 1.0]. Must be greater than or equal to westLerp.
+ * @param {Number} northLerp The north interpolation factor in the range [0.0, 1.0]. Must be greater than or equal to southLerp.
+ * @param {Rectangle} [result] The object onto which to store the result.
+ * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
+ */
+Rectangle.subsection = function (
+  rectangle,
+  westLerp,
+  southLerp,
+  eastLerp,
+  northLerp,
+  result
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  Check.typeOf.number.greaterThanOrEquals("westLerp", westLerp, 0.0);
+  Check.typeOf.number.lessThanOrEquals("westLerp", westLerp, 1.0);
+  Check.typeOf.number.greaterThanOrEquals("southLerp", southLerp, 0.0);
+  Check.typeOf.number.lessThanOrEquals("southLerp", southLerp, 1.0);
+  Check.typeOf.number.greaterThanOrEquals("eastLerp", eastLerp, 0.0);
+  Check.typeOf.number.lessThanOrEquals("eastLerp", eastLerp, 1.0);
+  Check.typeOf.number.greaterThanOrEquals("northLerp", northLerp, 0.0);
+  Check.typeOf.number.lessThanOrEquals("northLerp", northLerp, 1.0);
+
+  Check.typeOf.number.lessThanOrEquals("westLerp", westLerp, eastLerp);
+  Check.typeOf.number.lessThanOrEquals("southLerp", southLerp, northLerp);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new Rectangle();
+  }
+
+  // This function doesn't use CesiumMath.lerp because it has floating point precision problems
+  // when the start and end values are the same but the t changes.
+
+  if (rectangle.west <= rectangle.east) {
+    const width = rectangle.east - rectangle.west;
+    result.west = rectangle.west + westLerp * width;
+    result.east = rectangle.west + eastLerp * width;
+  } else {
+    const width = CesiumMath.TWO_PI + rectangle.east - rectangle.west;
+    result.west = CesiumMath.negativePiToPi(rectangle.west + westLerp * width);
+    result.east = CesiumMath.negativePiToPi(rectangle.west + eastLerp * width);
+  }
+  const height = rectangle.north - rectangle.south;
+  result.south = rectangle.south + southLerp * height;
+  result.north = rectangle.south + northLerp * height;
+
+  // Fix floating point precision problems when t = 1
+  if (westLerp === 1.0) {
+    result.west = rectangle.east;
+  }
+  if (eastLerp === 1.0) {
+    result.east = rectangle.east;
+  }
+  if (southLerp === 1.0) {
+    result.south = rectangle.north;
+  }
+  if (northLerp === 1.0) {
+    result.north = rectangle.north;
+  }
+
+  return result;
+};
+
+/**
  * The largest possible rectangle.
  *
  * @type {Rectangle}
