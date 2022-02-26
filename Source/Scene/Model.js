@@ -76,6 +76,7 @@ import processPbrMaterials from "./processPbrMaterials.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
 import SplitDirection from "./SplitDirection.js";
+import Splitter from "./Splitter.js";
 import StencilConstants from "./StencilConstants.js";
 
 const boundingSphereCartesian3Scratch = new Cartesian3();
@@ -545,6 +546,7 @@ function Model(options) {
     options.splitDirection,
     SplitDirection.NONE
   );
+  this._splittingEnabled = false;
 
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
@@ -2616,6 +2618,10 @@ function recreateProgram(programToCreate, model, context) {
     );
   }
 
+  if (model.splitDirection !== SplitDirection.NONE) {
+    finalFS = Splitter.modifyFragmentShader(finalFS);
+  }
+
   const drawVS = modifyShader(vs, programId, model._vertexShaderLoaded);
   let drawFS = modifyShader(finalFS, programId, model._fragmentShaderLoaded);
 
@@ -3826,6 +3832,12 @@ function createSpecularEnvironmentMapLOD(model) {
   };
 }
 
+function createSplitDirectionFunction(model) {
+  return function() {
+    return model.splitDirection;
+  }
+}
+
 function triangleCountFromPrimitiveIndices(primitive, indicesCount) {
   switch (primitive.mode) {
     case PrimitiveType.TRIANGLES:
@@ -3948,6 +3960,8 @@ function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
       gltf_maxSpecularLOD: createSpecularEnvironmentMapLOD(model),
       gltf_luminanceAtZenith: createLuminanceAtZenithFunction(model),
     });
+
+    Splitter.addUniforms(model, uniformMap);
 
     // Allow callback to modify the uniformMap
     if (defined(model._uniformMapLoaded)) {
@@ -4554,11 +4568,23 @@ function updateShowBoundingVolume(model) {
 }
 
 function updateShadows(model) {
-  if (model.shadows !== model._shadows) {
-    model._shadows = model.shadows;
+  let shadows = model.shadows;
 
-    const castShadows = ShadowMode.castShadows(model.shadows);
-    const receiveShadows = ShadowMode.receiveShadows(model.shadows);
+  // Disable shadow casting when the splitter is active.
+  // Showing shadows on just one side of the splitter would require major changes.
+  if (model.splitDirection !== SplitDirection.NONE) {
+    if (shadows === ShadowMode.CAST_ONLY) {
+      shadows = ShadowMode.DISABLED;
+    } else if (shadows === ShadowMode.ENABLED) {
+      shadows = ShadowMode.RECEIVE_ONLY;
+    }
+  }
+
+  if (shadows !== model._shadows) {
+    model._shadows = shadows;
+
+    const castShadows = ShadowMode.castShadows(shadows);
+    const receiveShadows = ShadowMode.receiveShadows(shadows);
     const nodeCommands = model._nodeCommands;
     const length = nodeCommands.length;
 
@@ -5676,6 +5702,13 @@ Model.prototype.update = function (frameState) {
       shouldRegenerateShaders = true;
     }
 
+    // Regenerate shaders if splitting was enabled/disable from last update
+    const splittingEnabled = this.splitDirection !== SplitDirection.NONE;
+    if (this._splittingEnabled !== splittingEnabled) {
+      this._splittingEnabled = splittingEnabled;
+      shouldRegenerateShaders = true;
+    }
+
     if (shouldRegenerateShaders) {
       regenerateShaders(this, frameState);
     } else {
@@ -5803,12 +5836,12 @@ function destroyIfNotCached(rendererResources, cachedRendererResources) {
 // Run this from destructor after removing color state and clipping plane state
 function regenerateShaders(model, frameState) {
   // In regards to _cachedRendererResources:
-  // Fair to assume that this is data that should just never get modified due to clipping planes or model color.
-  // So if clipping planes or model color active:
+  // Fair to assume that this is data that should just never get modified due to clipping planes, model color, or splitting.
+  // So if clipping planes, model color, or splitting are active:
   // - delink _rendererResources.*programs and create new dictionaries.
   // - do NOT destroy any programs - might be used by copies of the model or by might be needed in the future if clipping planes/model color is deactivated
 
-  // If clipping planes and model color inactive:
+  // If clipping planes, model color, and splitting inactive:
   // - destroy _rendererResources.*programs
   // - relink _rendererResources.*programs to _cachedRendererResources
 
@@ -5822,6 +5855,7 @@ function regenerateShaders(model, frameState) {
   if (
     isClippingEnabled(model) ||
     isColorShadingEnabled(model) ||
+    model.splitDirection !== SplitDirection.NONE ||
     model._shouldRegenerateShaders
   ) {
     model._shouldRegenerateShaders = false;

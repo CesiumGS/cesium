@@ -6,7 +6,7 @@
  * @see ImageryLayer#splitDirection
  * @see Cesium3DTileset#splitDirection
  */
-var SplitDirection = {
+const SplitDirection = {
   /**
    * Display the primitive or ImageryLayer to the left of the {@link Scene#splitPosition}.
    *

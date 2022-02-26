@@ -63,7 +63,6 @@ import SceneTransforms from "./SceneTransforms.js";
 import SceneTransitioner from "./SceneTransitioner.js";
 import ScreenSpaceCameraController from "./ScreenSpaceCameraController.js";
 import ShadowMap from "./ShadowMap.js";
-import SplitDirection from "./SplitDirection.js";
 import StencilConstants from "./StencilConstants.js";
 import SunLight from "./SunLight.js";
 import SunPostProcess from "./SunPostProcess.js";
@@ -1777,30 +1776,9 @@ Scene.prototype.updateDerivedCommands = function (command) {
     shadowsDirty = true;
   }
 
-  let derivedCommands = command.derivedCommands;
-
-  const useSplitting =
-    defined(command.splitDirection) &&
-    command.splitDirection !== SplitDirection.NONE;
-
-  if (
-    (useSplitting && !defined(derivedCommands.splitting)) ||
-    (command.dirty && defined(derivedCommands.splitting))
-  ) {
-    derivedCommands.splitting = DerivedCommand.createSplittingCommand(
-      command,
-      context,
-      derivedCommands.splitting
-    );
-  }
-
-  if (defined(derivedCommands.splitting)) {
-    command = derivedCommands.splitting.command;
-    derivedCommands = command.derivedCommands;
-  }
-
   const useLogDepth = frameState.useLogDepth;
   const useHdr = this._hdr;
+  const derivedCommands = command.derivedCommands;
   const hasLogDepthDerivedCommands = defined(derivedCommands.logDepth);
   const hasHdrCommands = defined(derivedCommands.hdr);
   const hasDerivedCommands = defined(derivedCommands.originalCommand);
@@ -2140,11 +2118,6 @@ function executeCommand(command, scene, context, passState, debugFramebuffer) {
 
   if (command.debugShowBoundingVolume && defined(command.boundingVolume)) {
     debugShowBoundingVolume(command, scene, passState, debugFramebuffer);
-  }
-
-  if (defined(command.derivedCommands.splitting)) {
-    command = command.derivedCommands.splitting.command;
-    context._us._primitiveSplitDirection = command.splitDirection;
   }
 
   if (frameState.useLogDepth && defined(command.derivedCommands.logDepth)) {
