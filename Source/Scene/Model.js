@@ -4568,23 +4568,11 @@ function updateShowBoundingVolume(model) {
 }
 
 function updateShadows(model) {
-  let shadows = model.shadows;
+  if (model.shadows !== model._shadows) {
+    model._shadows = model.shadows;
 
-  // Disable shadow casting when the splitter is active.
-  // Showing shadows on just one side of the splitter would require major changes.
-  if (model.splitDirection !== SplitDirection.NONE) {
-    if (shadows === ShadowMode.CAST_ONLY) {
-      shadows = ShadowMode.DISABLED;
-    } else if (shadows === ShadowMode.ENABLED) {
-      shadows = ShadowMode.RECEIVE_ONLY;
-    }
-  }
-
-  if (shadows !== model._shadows) {
-    model._shadows = shadows;
-
-    const castShadows = ShadowMode.castShadows(shadows);
-    const receiveShadows = ShadowMode.receiveShadows(shadows);
+    const castShadows = ShadowMode.castShadows(model.shadows);
+    const receiveShadows = ShadowMode.receiveShadows(model.shadows);
     const nodeCommands = model._nodeCommands;
     const length = nodeCommands.length;
 

@@ -535,6 +535,7 @@ Instanced3DModel3DTileContent.prototype.update = function (
   this._modelInstanceCollection.specularEnvironmentMaps = this._tileset.specularEnvironmentMaps;
   this._modelInstanceCollection.backFaceCulling = this._tileset.backFaceCulling;
   this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
+  this._modelInstanceCollection.splitDirection = this._tileset.splitDirection;
 
   const model = this._modelInstanceCollection._model;
 
