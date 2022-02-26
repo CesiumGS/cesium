@@ -33,6 +33,8 @@ import getClippingFunction from "./getClippingFunction.js";
 import PntsParser from "./PntsParser.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
+import SplitDirection from "./SplitDirection.js";
+import Splitter from "./Splitter.js";
 import StencilConstants from "./StencilConstants.js";
 
 const DecodingState = {
@@ -151,6 +153,18 @@ function PointCloud(options) {
    * @private
    */
   this._pickObject = defaultValue(options.pickObject, this);
+
+  /**
+   * The {@link SplitDirection} to apply to this point cloud.
+   *
+   * @type {SplitDirection}
+   * @default {@link SplitDirection.NONE}
+   */
+   this.splitDirection = defaultValue(
+    options.splitDirection,
+    SplitDirection.NONE
+  );
+  this._splittingEnabled = false;
 
   initialize(this, options);
 }
@@ -697,6 +711,8 @@ function createUniformMap(pointCloud, frameState) {
     },
   };
 
+  Splitter.addUniforms(pointCloud, uniformMap);
+
   if (isQuantized || isQuantizedDraco || isOctEncodedDraco) {
     uniformMap = combine(uniformMap, {
       u_quantizedVolumeScaleAndOctEncodedRange: function () {
@@ -1126,6 +1142,10 @@ function createShaders(pointCloud, frameState, style) {
 
   fs += "} \n";
 
+  if (pointCloud.splitDirection !== SplitDirection.NONE) {
+    fs = Splitter.modifyFragmentShader(fs);
+  }
+
   if (defined(pointCloud._vertexShaderLoaded)) {
     vs = pointCloud._vertexShaderLoaded(vs);
   }
@@ -1350,6 +1370,12 @@ PointCloud.prototype.update = function (frameState) {
   if (this._style !== this.style || this.styleDirty) {
     this._style = this.style;
     this.styleDirty = false;
+    shadersDirty = true;
+  }
+
+  const splittingEnabled = this.splitDirection !== SplitDirection.NONE;
+  if (this._splittingEnabled !== splittingEnabled) {
+    this._splittingEnabled = splittingEnabled;
     shadersDirty = true;
   }
 
