@@ -472,7 +472,7 @@ describe("Scene/ImplicitSubtree", function () {
   // Test for backwards compatibility
   it("gets availability with bufferViews", function () {
     const description = clone(internalQuadtreeDescription);
-    description.useBufferViews = true;
+    description.useLegacySchema = true;
 
     const results = ImplicitTilingTester.generateSubtreeBuffers(description);
 
@@ -2471,7 +2471,7 @@ describe("Scene/ImplicitSubtree", function () {
       });
     });
 
-    it("handles 3DTiles_metadata extension for backwards compatibility", function () {
+    it("handles 3DTILES_metadata extension for backwards compatibility", function () {
       const subtreeDescription = {
         tileAvailability: {
           descriptor: 1,
@@ -2864,6 +2864,119 @@ describe("Scene/ImplicitSubtree", function () {
           arrayProperty: arrayValues,
           arrayOfStringProperty: stringArrayValues,
         },
+      };
+
+      const propertyTablesWithOffsets = {
+        schema: arraySchema,
+        propertyTables: [tileTableDescription],
+      };
+
+      const subtreeDescription = {
+        tileAvailability: {
+          descriptor: 1,
+          lengthBits: 5,
+          isInternal: true,
+          includeAvailableCount: true,
+        },
+        contentAvailability: [
+          {
+            descriptor: 1,
+            lengthBits: 5,
+            isInternal: true,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: 0,
+          lengthBits: 16,
+          isInternal: true,
+        },
+        metadata: {
+          isInternal: true,
+          propertyTables: propertyTablesWithOffsets,
+        },
+      };
+
+      const metadataSchema = new MetadataSchema(arraySchema);
+
+      const arrayQuadtree = new ImplicitTileset(
+        tilesetResource,
+        implicitQuadtreeJson,
+        metadataSchema
+      );
+
+      const results = ImplicitTilingTester.generateSubtreeBuffers(
+        subtreeDescription
+      );
+      const subtree = new ImplicitSubtree(
+        subtreeResource,
+        undefined,
+        results.subtreeBuffer,
+        arrayQuadtree,
+        quadtreeCoordinates
+      );
+      return subtree.readyPromise.then(function () {
+        const metadataTable = subtree.tileMetadataTable;
+        expect(metadataTable).toBeDefined();
+        expect(metadataTable.count).toBe(5);
+
+        for (let i = 0; i < buildingCounts.length; i++) {
+          expect(metadataTable.getProperty(i, "stringProperty")).toBe(
+            stringValues[i]
+          );
+          expect(metadataTable.getProperty(i, "arrayProperty")).toEqual(
+            arrayValues[i]
+          );
+          expect(metadataTable.getProperty(i, "arrayOfStringProperty")).toEqual(
+            stringArrayValues[i]
+          );
+        }
+      });
+    });
+
+    it("handles legacy 3DTILES_metadata schema correctly for arrays and strings", function () {
+      if (!MetadataTester.isSupported()) {
+        return;
+      }
+
+      const arraySchema = {
+        classes: {
+          tile: {
+            properties: {
+              stringProperty: {
+                type: "STRING",
+              },
+              arrayProperty: {
+                type: "SCALAR",
+                componentType: "INT16",
+                array: true,
+              },
+              arrayOfStringProperty: {
+                type: "STRING",
+                array: true,
+              },
+            },
+          },
+        },
+      };
+
+      const stringValues = ["foo", "bar", "baz", "qux", "quux"];
+      const arrayValues = [[1, 2], [3], [4, 5, 6], [7], []];
+      const stringArrayValues = [
+        ["foo"],
+        ["bar", "bar"],
+        ["qux"],
+        ["quux"],
+        [],
+      ];
+
+      const tileTableDescription = {
+        class: "tile",
+        properties: {
+          stringProperty: stringValues,
+          arrayProperty: arrayValues,
+          arrayOfStringProperty: stringArrayValues,
+        },
+        useLegacySchema: true,
       };
 
       const propertyTablesWithOffsets = {

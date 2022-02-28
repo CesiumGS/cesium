@@ -119,7 +119,7 @@ describe("Scene/MetadataTableProperty", function () {
     expect(property.get(1)).toEqual(["dddd", "eeeee"]);
   });
 
-  it("constructs property with EXT_feature_metadata offsetType", function () {
+  it("constructs property with EXT_feature_metadata schema", function () {
     const extras = {
       other: 0,
     };
