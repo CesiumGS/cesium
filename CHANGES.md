@@ -2,6 +2,8 @@
 
 ### 1.91 - 2022-03-01
 
+##### Breaking Changes :mega:
+
 ##### Additions :tada:
 
 - Added MSAA support for WebGL2. Enabled on viewer creation with the multisampling rate as the `msaaSamples` option and can be controlled through `Scene.msaaSamples`.
