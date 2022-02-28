@@ -27,7 +27,6 @@
 - Fixed a bug where updating `ModelExperimental`'s model matrix would not update its bounding sphere. [#10078](https://github.com/CesiumGS/cesium/pull/10078)
 - Fixed feature ID texture artifacts on Safari. [#10111](https://github.com/CesiumGS/cesium/pull/10111)
 - Fixed a bug where a translucent shader applied to a `ModelExperimental` with opaque features was not being rendered. [#10110](https://github.com/CesiumGS/cesium/pull/10110)
-- Fixed an inconsistently handled exception in `camera.getPickRay` that arises when the scene is not rendered. [#10139](https://github.com/CesiumGS/cesium/pull/10139)
 
 ### 1.90 - 2022-02-01
 
