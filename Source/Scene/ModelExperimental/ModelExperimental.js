@@ -49,6 +49,7 @@ import ShadowMode from "../ShadowMode.js";
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
+ * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
@@ -153,6 +154,8 @@ export default function ModelExperimental(options) {
     options.debugShowBoundingVolume,
     false
   );
+
+  this._showCreditsOnScreen = defaultValue(options.showCreditsOnScreen, false);
 
   initialize(this);
 }
@@ -677,6 +680,22 @@ Object.defineProperties(ModelExperimental.prototype, {
       this._shadows = value;
     },
   },
+
+  /**
+   * Gets or sets whether the credits of the model will be displayed on the screen
+   * @memberof ModelExperimental.prototype
+   * @type {Boolean}
+   *
+   * @default false
+   */
+  showCreditsOnScreen: {
+    get: function () {
+      return this._showCreditsOnScreen;
+    },
+    set: function (value) {
+      this._showCreditsOnScreen = value;
+    },
+  },
 });
 
 /**
@@ -798,7 +817,9 @@ ModelExperimental.prototype.update = function (frameState) {
 
     const length = credits.length;
     for (let i = 0; i < length; i++) {
-      frameState.creditDisplay.addCredit(credits[i]);
+      const credit = credits[i];
+      credit.showOnScreen = this._showCreditsOnScreen;
+      frameState.creditDisplay.addCredit(credit);
     }
 
     const drawCommands = this._sceneGraph.getDrawCommands();
@@ -909,6 +930,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
+ * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @returns {ModelExperimental} The newly created model.
  */
 ModelExperimental.fromGltf = function (options) {
@@ -968,6 +990,7 @@ ModelExperimental.fromGltf = function (options) {
     pointCloudShading: options.pointCloudShading,
     backFaceCulling: options.backFaceCulling,
     shadows: options.shadows,
+    showCreditsOnScreen: options.showCreditsOnScreen,
   };
   const model = new ModelExperimental(modelOptions);
 

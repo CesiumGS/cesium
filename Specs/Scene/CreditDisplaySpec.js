@@ -382,6 +382,56 @@ describe("Scene/CreditDisplay", function () {
     creditDisplay.hideLightbox();
   });
 
+  it("handles showOnScreen toggles at runtime", function () {
+    // Credits are constructed to show on screen
+    const credit1 = new Credit("credit1", true);
+    const credit2 = new Credit("credit2", true);
+
+    creditDisplay = new CreditDisplay(container);
+    beginFrame(creditDisplay);
+    creditDisplay.addCredit(credit1);
+    creditDisplay.addCredit(credit2);
+    creditDisplay.endFrame();
+
+    const screenCreditContainer = container.childNodes[1];
+    expect(screenCreditContainer.childNodes.length).toEqual(3);
+    expect(screenCreditContainer.childNodes[0]).toEqual(credit1.element);
+    expect(screenCreditContainer.childNodes[2]).toEqual(credit2.element);
+
+    // Show credits in lightbox instead
+    credit1.showOnScreen = false;
+    credit2.showOnScreen = false;
+
+    creditDisplay.showLightbox();
+    beginFrame(creditDisplay);
+    creditDisplay.addCredit(credit1);
+    creditDisplay.addCredit(credit2);
+    creditDisplay.endFrame();
+
+    const lightboxCreditList = creditDisplay._creditList;
+    expect(lightboxCreditList.childNodes.length).toEqual(2);
+    expect(lightboxCreditList.childNodes[0].childNodes[0]).toEqual(
+      credit1.element
+    );
+    expect(lightboxCreditList.childNodes[1].childNodes[0]).toEqual(
+      credit2.element
+    );
+
+    // Show credits on screen again
+    credit1.showOnScreen = true;
+    credit2.showOnScreen = true;
+
+    creditDisplay.hideLightbox();
+    beginFrame(creditDisplay);
+    creditDisplay.addCredit(credit1);
+    creditDisplay.addCredit(credit2);
+    creditDisplay.endFrame();
+
+    expect(screenCreditContainer.childNodes.length).toEqual(3);
+    expect(screenCreditContainer.childNodes[0]).toEqual(credit1.element);
+    expect(screenCreditContainer.childNodes[2]).toEqual(credit2.element);
+  });
+
   it("renders lightbox credits", function () {
     const credit1 = new Credit("credit1");
     const credit2 = new Credit(`<img src="${imageUrl}"/>`);

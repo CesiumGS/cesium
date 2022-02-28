@@ -102,6 +102,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Boolean} [options.vectorKeepDecodedPositions=false] Whether vector tiles should keep decoded positions in memory. This is used with {@link Cesium3DTileFeature.getPolylinePositions}.
  * @param {Number} [options.featureIdIndex=0] The index into the list of primitive feature IDs used for picking and styling. For EXT_feature_metadata, feature ID attributes are listed before feature ID textures. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Number} [options.instanceFeatureIdIndex=0] The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
@@ -177,6 +178,8 @@ function Cesium3DTileset(options) {
   this._previousModelMatrix = undefined;
   this._extras = undefined;
   this._credits = undefined;
+
+  this._showCreditsOnScreen = defaultValue(options.showCreditsOnScreen, false);
 
   this._cullWithChildrenBounds = defaultValue(
     options.cullWithChildrenBounds,
@@ -1043,7 +1046,7 @@ function Cesium3DTileset(options) {
         }
         for (let i = 0; i < extraCredits.length; ++i) {
           const credit = extraCredits[i];
-          credits.push(new Credit(credit.html, credit.showOnScreen));
+          credits.push(new Credit(credit.html, that._showCreditsOnScreen));
         }
       }
 
@@ -1832,6 +1835,23 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   vectorKeepDecodedPositions: {
     get: function () {
       return this._vectorKeepDecodedPositions;
+    },
+  },
+
+  /**
+   * Determines whether the credits of the tileset will be displayed on the screen
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {Boolean}
+   * @default false
+   */
+  showCreditsOnScreen: {
+    get: function () {
+      return this._showCreditsOnScreen;
+    },
+    set: function (value) {
+      this._showCreditsOnScreen = value;
     },
   },
 });
@@ -2777,7 +2797,9 @@ function update(tileset, frameState, passStatistics, passOptions) {
     if (defined(credits) && statistics.selected !== 0) {
       const length = credits.length;
       for (let i = 0; i < length; ++i) {
-        frameState.creditDisplay.addCredit(credits[i]);
+        const credit = credits[i];
+        credit.showOnScreen = tileset._showCreditsOnScreen;
+        frameState.creditDisplay.addCredit(credit);
       }
     }
   }

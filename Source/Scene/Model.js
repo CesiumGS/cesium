@@ -225,8 +225,10 @@ const uriToGuid = {};
  * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
  * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if {@link Model#color} is translucent or {@link Model#silhouetteSize} is greater than 0.0.
  * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
+ *
  *
  * @see Model.fromGltf
  *
@@ -299,6 +301,8 @@ function Model(options) {
 
   // List of credits to be added from the glTF
   this._gltfCredits = [];
+
+  this._showCreditsOnScreen = defaultValue(options.showCreditsOnScreen, false);
 
   /**
    * Determines if the model primitive will be shown.
@@ -1310,6 +1314,7 @@ Object.defineProperties(Model.prototype, {
       this._specularEnvironmentMaps = value;
     },
   },
+
   /**
    * Gets the credit that will be displayed for the model
    * @memberof Model.prototype
@@ -1318,6 +1323,36 @@ Object.defineProperties(Model.prototype, {
   credit: {
     get: function () {
       return this._credit;
+    },
+  },
+
+  /**
+   * Gets or sets whether the credits of the model will be displayed on the screen
+   * @memberof Model.prototype
+   * @type {Boolean}
+   */
+  showCreditsOnScreen: {
+    get: function () {
+      return this._showCreditsOnScreen;
+    },
+    set: function (value) {
+      if (this._showCreditsOnScreen !== value) {
+        if (defined(this._credit)) {
+          this._credit.showOnScreen = value;
+        }
+
+        const resourceCreditsLength = this._resourceCredits.length;
+        for (let i = 0; i < resourceCreditsLength; i++) {
+          this._resourceCredits[i].showOnScreen = value;
+        }
+
+        const gltfCreditsLength = this._gltfCredits.length;
+        for (let i = 0; i < gltfCreditsLength; i++) {
+          this._gltfCredits[i].showOnScreen = value;
+        }
+      }
+
+      this._showCreditsOnScreen = value;
     },
   },
 });
@@ -1426,6 +1461,7 @@ function containsGltfMagic(uint8Array) {
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
  * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
  * @param {Credit|String} [options.credit] A credit for the model, which is displayed on the canvas.
+ * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if {@link Model#color} is translucent or {@link Model#silhouetteSize} is greater than 0.0.
  * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
  * @returns {Model} The newly created model.
@@ -2221,8 +2257,9 @@ function parseCredits(model) {
     return;
   }
 
+  const showOnScreen = model._showCreditsOnScreen;
   const credits = copyright.split(";").map(function (string) {
-    return new Credit(string.trim());
+    return new Credit(string.trim(), showOnScreen);
   });
 
   model._gltfCredits = credits;
