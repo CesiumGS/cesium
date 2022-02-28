@@ -9,7 +9,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  *
  * @private
  */
-var VertexAttributeSemantic = {
+const VertexAttributeSemantic = {
   /**
    * Per-vertex position.
    *
@@ -78,11 +78,11 @@ var VertexAttributeSemantic = {
 function semanticToVariableName(semantic) {
   switch (semantic) {
     case VertexAttributeSemantic.POSITION:
-      return "position";
+      return "positionMC";
     case VertexAttributeSemantic.NORMAL:
-      return "normal";
+      return "normalMC";
     case VertexAttributeSemantic.TANGENT:
-      return "tangent";
+      return "tangentMC";
     case VertexAttributeSemantic.TEXCOORD:
       return "texCoord";
     case VertexAttributeSemantic.COLOR:
@@ -146,11 +146,11 @@ VertexAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
   Check.typeOf.string("gltfSemantic", gltfSemantic);
   //>>includeEnd('debug');
 
-  var semantic = gltfSemantic;
+  let semantic = gltfSemantic;
 
   // Strip the set index from the semantic
-  var setIndexRegex = /^(\w+)_\d+$/;
-  var setIndexMatch = setIndexRegex.exec(gltfSemantic);
+  const setIndexRegex = /^(\w+)_\d+$/;
+  const setIndexMatch = setIndexRegex.exec(gltfSemantic);
   if (setIndexMatch !== null) {
     semantic = setIndexMatch[1];
   }
@@ -170,9 +170,8 @@ VertexAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
       return VertexAttributeSemantic.JOINTS;
     case "WEIGHTS":
       return VertexAttributeSemantic.WEIGHTS;
-    case "_FEATURE_ID":
-    case "_BATCHID": // for b3dm compatibility
-    case "BATCHID": // for legacy b3dm compatibility
+    case "_FEATURE_ID": // for EXT_feature_metadata
+    case "FEATURE_ID": // for EXT_mesh_features
       return VertexAttributeSemantic.FEATURE_ID;
   }
 
@@ -265,9 +264,9 @@ VertexAttributeSemantic.getVariableName = function (semantic, setIndex) {
   Check.typeOf.string("semantic", semantic);
   //>>includeEnd('debug');
 
-  var variableName = semanticToVariableName(semantic);
+  let variableName = semanticToVariableName(semantic);
   if (defined(setIndex)) {
-    variableName += setIndex;
+    variableName += `_${setIndex}`;
   }
   return variableName;
 };

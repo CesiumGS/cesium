@@ -9,7 +9,7 @@ import WebGLConstants from "./WebGLConstants.js";
  *
  * @enum {Number}
  */
-var IndexDatatype = {
+const IndexDatatype = {
   /**
    * 8-bit unsigned byte corresponding to <code>UNSIGNED_BYTE</code> and the type
    * of an element in <code>Uint8Array</code>.
@@ -46,7 +46,7 @@ var IndexDatatype = {
  *
  * @example
  * // Returns 2
- * var size = Cesium.IndexDatatype.getSizeInBytes(Cesium.IndexDatatype.UNSIGNED_SHORT);
+ * const size = Cesium.IndexDatatype.getSizeInBytes(Cesium.IndexDatatype.UNSIGNED_SHORT);
  */
 IndexDatatype.getSizeInBytes = function (indexDatatype) {
   switch (indexDatatype) {

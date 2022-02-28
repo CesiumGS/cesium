@@ -13,7 +13,6 @@
     "3DTILES_metadata": {
       "schemaUri": "schema.json",
       "tileset": {
-        "name": "Sample Tileset",
         "class": "tileset",
         "properties": {
           "author": "Cesium",

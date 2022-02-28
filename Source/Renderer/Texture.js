@@ -24,10 +24,10 @@ function Texture(options) {
   Check.defined("options.context", options.context);
   //>>includeEnd('debug');
 
-  var context = options.context;
-  var width = options.width;
-  var height = options.height;
-  var source = options.source;
+  const context = options.context;
+  let width = options.width;
+  let height = options.height;
+  const source = options.source;
 
   if (defined(source)) {
     if (!defined(width)) {
@@ -38,18 +38,18 @@ function Texture(options) {
     }
   }
 
-  var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
-  var pixelDatatype = defaultValue(
+  const pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
+  const pixelDatatype = defaultValue(
     options.pixelDatatype,
     PixelDatatype.UNSIGNED_BYTE
   );
-  var internalFormat = PixelFormat.toInternalFormat(
+  const internalFormat = PixelFormat.toInternalFormat(
     pixelFormat,
     pixelDatatype,
     context
   );
 
-  var isCompressed = PixelFormat.isCompressedFormat(internalFormat);
+  const isCompressed = PixelFormat.isCompressedFormat(internalFormat);
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(width) || !defined(height)) {
@@ -62,9 +62,7 @@ function Texture(options) {
 
   if (width > ContextLimits.maximumTextureSize) {
     throw new DeveloperError(
-      "Width must be less than or equal to the maximum texture size (" +
-        ContextLimits.maximumTextureSize +
-        ").  Check maximumTextureSize."
+      `Width must be less than or equal to the maximum texture size (${ContextLimits.maximumTextureSize}).  Check maximumTextureSize.`
     );
   }
 
@@ -72,9 +70,7 @@ function Texture(options) {
 
   if (height > ContextLimits.maximumTextureSize) {
     throw new DeveloperError(
-      "Height must be less than or equal to the maximum texture size (" +
-        ContextLimits.maximumTextureSize +
-        ").  Check maximumTextureSize."
+      `Height must be less than or equal to the maximum texture size (${ContextLimits.maximumTextureSize}).  Check maximumTextureSize.`
     );
   }
 
@@ -183,26 +179,26 @@ function Texture(options) {
 
   // Use premultiplied alpha for opaque textures should perform better on Chrome:
   // http://media.tojicode.com/webglCamp4/#20
-  var preMultiplyAlpha =
+  const preMultiplyAlpha =
     options.preMultiplyAlpha ||
     pixelFormat === PixelFormat.RGB ||
     pixelFormat === PixelFormat.LUMINANCE;
-  var flipY = defaultValue(options.flipY, true);
-  var skipColorSpaceConversion = defaultValue(
+  const flipY = defaultValue(options.flipY, true);
+  const skipColorSpaceConversion = defaultValue(
     options.skipColorSpaceConversion,
     false
   );
 
-  var initialized = true;
+  let initialized = true;
 
-  var gl = context._gl;
-  var textureTarget = gl.TEXTURE_2D;
-  var texture = gl.createTexture();
+  const gl = context._gl;
+  const textureTarget = gl.TEXTURE_2D;
+  const texture = gl.createTexture();
 
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(textureTarget, texture);
 
-  var unpackAlignment = 4;
+  let unpackAlignment = 4;
   if (defined(source) && defined(source.arrayBufferView) && !isCompressed) {
     unpackAlignment = PixelFormat.alignmentInBytes(
       pixelFormat,
@@ -228,8 +224,8 @@ function Texture(options) {
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
       // Source: typed array
-      var arrayBufferView = source.arrayBufferView;
-      var i, mipWidth, mipHeight;
+      let arrayBufferView = source.arrayBufferView;
+      let i, mipWidth, mipHeight;
       if (isCompressed) {
         gl.compressedTexImage2D(
           textureTarget,
@@ -365,7 +361,7 @@ function Texture(options) {
   }
   gl.bindTexture(textureTarget, null);
 
-  var sizeInBytes;
+  let sizeInBytes;
   if (isCompressed) {
     sizeInBytes = PixelFormat.compressedTextureSizeInBytes(
       pixelFormat,
@@ -436,7 +432,7 @@ Texture.create = function (options) {
  *
  * @example
  * // Create a texture with the contents of the framebuffer.
- * var t = Texture.fromFramebuffer({
+ * const t = Texture.fromFramebuffer({
  *     context : context
  * });
  *
@@ -451,15 +447,15 @@ Texture.fromFramebuffer = function (options) {
   Check.defined("options.context", options.context);
   //>>includeEnd('debug');
 
-  var context = options.context;
-  var gl = context._gl;
+  const context = options.context;
+  const gl = context._gl;
 
-  var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGB);
-  var framebufferXOffset = defaultValue(options.framebufferXOffset, 0);
-  var framebufferYOffset = defaultValue(options.framebufferYOffset, 0);
-  var width = defaultValue(options.width, gl.drawingBufferWidth);
-  var height = defaultValue(options.height, gl.drawingBufferHeight);
-  var framebuffer = options.framebuffer;
+  const pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGB);
+  const framebufferXOffset = defaultValue(options.framebufferXOffset, 0);
+  const framebufferYOffset = defaultValue(options.framebufferYOffset, 0);
+  const width = defaultValue(options.width, gl.drawingBufferWidth);
+  const height = defaultValue(options.height, gl.drawingBufferHeight);
+  const framebuffer = options.framebuffer;
 
   //>>includeStart('debug', pragmas.debug);
   if (!PixelFormat.validate(pixelFormat)) {
@@ -496,7 +492,7 @@ Texture.fromFramebuffer = function (options) {
   }
   //>>includeEnd('debug');
 
-  var texture = new Texture({
+  const texture = new Texture({
     context: context,
     width: width,
     height: height,
@@ -542,13 +538,13 @@ Object.defineProperties(Texture.prototype, {
       return this._sampler;
     },
     set: function (sampler) {
-      var minificationFilter = sampler.minificationFilter;
-      var magnificationFilter = sampler.magnificationFilter;
-      var context = this._context;
-      var pixelFormat = this._pixelFormat;
-      var pixelDatatype = this._pixelDatatype;
+      let minificationFilter = sampler.minificationFilter;
+      let magnificationFilter = sampler.magnificationFilter;
+      const context = this._context;
+      const pixelFormat = this._pixelFormat;
+      const pixelDatatype = this._pixelDatatype;
 
-      var mipmap =
+      const mipmap =
         minificationFilter ===
           TextureMinificationFilter.NEAREST_MIPMAP_NEAREST ||
         minificationFilter ===
@@ -578,8 +574,8 @@ Object.defineProperties(Texture.prototype, {
         }
       }
 
-      var gl = context._gl;
-      var target = this._textureTarget;
+      const gl = context._gl;
+      const target = this._textureTarget;
 
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(target, this._texture);
@@ -681,8 +677,8 @@ Texture.prototype.copyFrom = function (options) {
   Check.defined("options", options);
   //>>includeEnd('debug');
 
-  var xOffset = defaultValue(options.xOffset, 0);
-  var yOffset = defaultValue(options.yOffset, 0);
+  const xOffset = defaultValue(options.xOffset, 0);
+  const yOffset = defaultValue(options.yOffset, 0);
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.source", options.source);
@@ -710,33 +706,33 @@ Texture.prototype.copyFrom = function (options) {
   );
   //>>includeEnd('debug');
 
-  var source = options.source;
+  const source = options.source;
 
-  var context = this._context;
-  var gl = context._gl;
-  var target = this._textureTarget;
+  const context = this._context;
+  const gl = context._gl;
+  const target = this._textureTarget;
 
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(target, this._texture);
 
-  var width = source.width;
-  var height = source.height;
-  var arrayBufferView = source.arrayBufferView;
+  const width = source.width;
+  const height = source.height;
+  let arrayBufferView = source.arrayBufferView;
 
-  var textureWidth = this._width;
-  var textureHeight = this._height;
-  var internalFormat = this._internalFormat;
-  var pixelFormat = this._pixelFormat;
-  var pixelDatatype = this._pixelDatatype;
+  const textureWidth = this._width;
+  const textureHeight = this._height;
+  const internalFormat = this._internalFormat;
+  const pixelFormat = this._pixelFormat;
+  const pixelDatatype = this._pixelDatatype;
 
-  var preMultiplyAlpha = this._preMultiplyAlpha;
-  var flipY = this._flipY;
-  var skipColorSpaceConversion = defaultValue(
+  const preMultiplyAlpha = this._preMultiplyAlpha;
+  const flipY = this._flipY;
+  const skipColorSpaceConversion = defaultValue(
     options.skipColorSpaceConversion,
     false
   );
 
-  var unpackAlignment = 4;
+  let unpackAlignment = 4;
   if (defined(arrayBufferView)) {
     unpackAlignment = PixelFormat.alignmentInBytes(
       pixelFormat,
@@ -756,7 +752,7 @@ Texture.prototype.copyFrom = function (options) {
     );
   }
 
-  var uploaded = false;
+  let uploaded = false;
   if (!this._initialized) {
     if (
       xOffset === 0 &&
@@ -809,7 +805,7 @@ Texture.prototype.copyFrom = function (options) {
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
       // initialize the entire texture to zero
-      var bufferView = PixelFormat.createTypedArray(
+      const bufferView = PixelFormat.createTypedArray(
         pixelFormat,
         pixelDatatype,
         textureWidth,
@@ -956,8 +952,8 @@ Texture.prototype.copyFromFramebuffer = function (
   );
   //>>includeEnd('debug');
 
-  var gl = this._context._gl;
-  var target = this._textureTarget;
+  const gl = this._context._gl;
+  const target = this._textureTarget;
 
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(target, this._texture);
@@ -1016,8 +1012,8 @@ Texture.prototype.generateMipmap = function (hint) {
 
   this._hasMipmap = true;
 
-  var gl = this._context._gl;
-  var target = this._textureTarget;
+  const gl = this._context._gl;
+  const target = this._textureTarget;
 
   gl.hint(gl.GENERATE_MIPMAP_HINT, hint);
   gl.activeTexture(gl.TEXTURE0);

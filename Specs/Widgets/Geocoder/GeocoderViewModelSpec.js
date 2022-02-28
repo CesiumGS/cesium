@@ -8,10 +8,10 @@ import { GeocoderViewModel } from "../../../Source/Cesium.js";
 describe(
   "Widgets/Geocoder/GeocoderViewModel",
   function () {
-    var scene;
-    var mockDestination = new Cartesian3(1.0, 2.0, 3.0);
+    let scene;
+    const mockDestination = new Cartesian3(1.0, 2.0, 3.0);
 
-    var geocoderResults1 = [
+    const geocoderResults1 = [
       {
         displayName: "a",
         destination: mockDestination,
@@ -25,14 +25,14 @@ describe(
         destination: mockDestination,
       },
     ];
-    var customGeocoderOptions = {
+    const customGeocoderOptions = {
       autoComplete: true,
       geocode: function (input) {
         return when.resolve(geocoderResults1);
       },
     };
 
-    var geocoderResults2 = [
+    const geocoderResults2 = [
       {
         displayName: "1",
         destination: mockDestination,
@@ -42,14 +42,14 @@ describe(
         destination: mockDestination,
       },
     ];
-    var customGeocoderOptions2 = {
+    const customGeocoderOptions2 = {
       autoComplete: true,
       geocode: function (input) {
         return when.resolve(geocoderResults2);
       },
     };
 
-    var noResultsGeocoder = {
+    const noResultsGeocoder = {
       autoComplete: true,
       geocode: function (input) {
         return when.resolve([]);
@@ -65,9 +65,9 @@ describe(
     });
 
     it("constructor sets expected properties", function () {
-      var flightDuration = 1234;
+      const flightDuration = 1234;
 
-      var viewModel = new GeocoderViewModel({
+      const viewModel = new GeocoderViewModel({
         scene: scene,
         flightDuration: flightDuration,
       });
@@ -78,7 +78,7 @@ describe(
     });
 
     it("can get and set flight duration", function () {
-      var viewModel = new GeocoderViewModel({
+      const viewModel = new GeocoderViewModel({
         scene: scene,
       });
       viewModel.flightDuration = 324;
@@ -90,7 +90,7 @@ describe(
     });
 
     it("throws is searchText is not a string", function () {
-      var viewModel = new GeocoderViewModel({
+      const viewModel = new GeocoderViewModel({
         scene: scene,
         geocoderServices: [customGeocoderOptions],
       });
@@ -100,12 +100,12 @@ describe(
     });
 
     it("moves camera when search command invoked", function () {
-      var viewModel = new GeocoderViewModel({
+      const viewModel = new GeocoderViewModel({
         scene: scene,
         geocoderServices: [customGeocoderOptions],
       });
 
-      var cameraPosition = Cartesian3.clone(scene.camera.position);
+      const cameraPosition = Cartesian3.clone(scene.camera.position);
 
       viewModel.searchText = "220 Valley Creek Blvd, Exton, PA";
       viewModel.search();
@@ -123,13 +123,13 @@ describe(
     });
 
     it("raises the complete event camera finished", function () {
-      var viewModel = new GeocoderViewModel({
+      const viewModel = new GeocoderViewModel({
         scene: scene,
         flightDuration: 0,
         geocoderServices: [customGeocoderOptions],
       });
 
-      var spyListener = jasmine.createSpy("listener");
+      const spyListener = jasmine.createSpy("listener");
       viewModel.complete.addEventListener(spyListener);
 
       viewModel.searchText = "-1.0, -2.0";
@@ -157,7 +157,7 @@ describe(
     });
 
     it("automatic suggestions can be retrieved", function () {
-      var geocoder = new GeocoderViewModel({
+      const geocoder = new GeocoderViewModel({
         scene: scene,
         geocoderServices: [customGeocoderOptions],
       });
@@ -167,7 +167,7 @@ describe(
     });
 
     it("update search suggestions results in empty list if the query is empty", function () {
-      var geocoder = new GeocoderViewModel({
+      const geocoder = new GeocoderViewModel({
         scene: scene,
         geocoderServices: [customGeocoderOptions],
       });
@@ -179,13 +179,13 @@ describe(
 
     it("can activate selected search suggestion", function () {
       spyOn(GeocoderViewModel, "flyToDestination");
-      var destination = new Rectangle(0.0, -0.1, 0.1, 0.1);
-      var geocoder = new GeocoderViewModel({
+      const destination = new Rectangle(0.0, -0.1, 0.1, 0.1);
+      const geocoder = new GeocoderViewModel({
         scene: scene,
         geocoderServices: [customGeocoderOptions],
       });
 
-      var suggestion = { displayName: "a", destination: destination };
+      const suggestion = { displayName: "a", destination: destination };
       geocoder._selectedSuggestion = suggestion;
       geocoder.activateSuggestion(suggestion);
       expect(geocoder._searchText).toEqual("a");
@@ -198,7 +198,7 @@ describe(
     it("if more than one geocoder service is provided, use first result from first geocode in array order", function () {
       spyOn(GeocoderViewModel, "flyToDestination");
 
-      var geocoder = new GeocoderViewModel({
+      const geocoder = new GeocoderViewModel({
         scene: scene,
         geocoderServices: [noResultsGeocoder, customGeocoderOptions2],
       });
@@ -213,7 +213,7 @@ describe(
     });
 
     it("can update autoComplete suggestions list using multiple geocoders", function () {
-      var geocoder = new GeocoderViewModel({
+      const geocoder = new GeocoderViewModel({
         scene: scene,
         geocoderServices: [customGeocoderOptions, customGeocoderOptions2],
       });
@@ -227,8 +227,8 @@ describe(
     it("uses custom destination found callback", function () {
       spyOn(GeocoderViewModel, "flyToDestination");
 
-      var destinationFound = jasmine.createSpy();
-      var geocoder = new GeocoderViewModel({
+      const destinationFound = jasmine.createSpy();
+      const geocoder = new GeocoderViewModel({
         scene: scene,
         geocoderServices: [noResultsGeocoder, customGeocoderOptions2],
         destinationFound: destinationFound,
@@ -243,7 +243,7 @@ describe(
 
     it("automatic suggestions can be navigated by arrow up/down keys", function () {
       spyOn(GeocoderViewModel, "_adjustSuggestionsScroll");
-      var viewModel = new GeocoderViewModel({
+      const viewModel = new GeocoderViewModel({
         scene: scene,
         geocoderServices: [customGeocoderOptions],
       });

@@ -7,7 +7,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
  *
  * @see TextureMagnificationFilter
  */
-var TextureMinificationFilter = {
+const TextureMinificationFilter = {
   /**
    * Samples the texture by returning the closest pixel.
    *

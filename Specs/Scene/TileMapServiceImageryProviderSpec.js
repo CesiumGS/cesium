@@ -19,7 +19,7 @@ import pollToPromise from "../pollToPromise.js";
 import { when } from "../../Source/Cesium.js";
 
 describe("Scene/TileMapServiceImageryProvider", function () {
-  var validSampleXmlString =
+  const validSampleXmlString =
     '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
     "    <Title>NE2_HR_LC_SR_W_DR_recolored.tif</Title>" +
     "   <Abstract></Abstract>" +
@@ -48,8 +48,8 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       // We can't resolve the promise immediately, because then the error would be raised
       // before we could subscribe to it.  This a problem particular to tests.
       setTimeout(function () {
-        var parser = new DOMParser();
-        var xml = parser.parseFromString(xmlResponseString, "text/xml");
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(xmlResponseString, "text/xml");
         deferred.resolve(xml);
       }, 1);
     };
@@ -85,7 +85,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   });
 
   it("return a UrlTemplateImageryProvider", function () {
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server/",
     });
     expect(provider).toBeInstanceOf(UrlTemplateImageryProvider);
@@ -93,7 +93,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
 
   it("resolves readyPromise", function () {
     patchRequestScheduler(validSampleXmlString);
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server/",
     });
 
@@ -105,7 +105,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
 
   it("resolves readyPromise when promise url is used", function () {
     patchRequestScheduler(validSampleXmlString);
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: when.resolve("made/up/tms/server/"),
     });
 
@@ -117,11 +117,11 @@ describe("Scene/TileMapServiceImageryProvider", function () {
 
   it("resolves readyPromise with Resource", function () {
     patchRequestScheduler(validSampleXmlString);
-    var resource = new Resource({
+    const resource = new Resource({
       url: "made/up/tms/server/",
     });
 
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: resource,
     });
 
@@ -132,8 +132,8 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   });
 
   it("rejects readyPromise if options.url rejects", function () {
-    var error = new Error();
-    var provider = new TileMapServiceImageryProvider({
+    const error = new Error();
+    const provider = new TileMapServiceImageryProvider({
       url: when.reject(error),
     });
     return provider.readyPromise
@@ -147,7 +147,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   });
 
   it("rejects readyPromise on error", function () {
-    var xmlString =
+    const xmlString =
       '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
       "   <Title/>" +
       "   <Abstract/>" +
@@ -161,7 +161,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "   </TileSets>" +
       "</TileMap>";
     patchRequestScheduler(xmlString);
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server",
     });
 
@@ -176,7 +176,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   });
 
   it("rejects readyPromise on invalid xml", function () {
-    var xmlString =
+    const xmlString =
       '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
       "   <Title/>" +
       "   <Abstract/>" +
@@ -189,7 +189,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "   </TileSets>" +
       "</TileMap>";
     patchRequestScheduler(xmlString);
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server",
     });
 
@@ -213,7 +213,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
 
   it("returns valid value for hasAlphaChannel", function () {
     patchRequestScheduler(validSampleXmlString);
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server/",
     });
 
@@ -226,8 +226,8 @@ describe("Scene/TileMapServiceImageryProvider", function () {
 
   it("supports a slash at the end of the URL", function () {
     patchRequestScheduler(validSampleXmlString);
-    var baseUrl = "made/up/tms/server/";
-    var provider = new TileMapServiceImageryProvider({
+    const baseUrl = "made/up/tms/server/";
+    const provider = new TileMapServiceImageryProvider({
       url: baseUrl,
     });
 
@@ -258,7 +258,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
 
   it("supports no slash at the endof the URL", function () {
     patchRequestScheduler(validSampleXmlString);
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "http://made/up/tms/server",
     });
 
@@ -289,9 +289,9 @@ describe("Scene/TileMapServiceImageryProvider", function () {
 
   it("supports a query string at the end of the URL", function () {
     patchRequestScheduler(validSampleXmlString);
-    var baseUrl = "made/up/tms/server/";
-    var provider = new TileMapServiceImageryProvider({
-      url: baseUrl + "?a=some&b=query",
+    const baseUrl = "made/up/tms/server/";
+    const provider = new TileMapServiceImageryProvider({
+      url: `${baseUrl}?a=some&b=query`,
     });
 
     return pollToPromise(function () {
@@ -321,7 +321,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
 
   it("requestImage returns a promise for an image and loads it for cross-origin use", function () {
     patchRequestScheduler(validSampleXmlString);
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server/",
     });
 
@@ -329,9 +329,10 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       return provider.ready;
     }).then(function () {
       // check some details about the tilemapresourcel.xml so we know we got parsed/configured properly
-      expect(provider.url).toEqual(
-        getAbsoluteUri("made/up/tms/server/{z}/{x}/{reverseY}.jpg")
-      );
+      let url = getAbsoluteUri("made/up/tms/server/{z}/{x}/{reverseY}.jpg");
+      // Uri.absoluteTo() escapes the placeholders. Undo that.
+      url = url.replace(/%7B/g, "{").replace(/%7D/g, "}");
+      expect(provider.url).toEqual(url);
       expect(provider.tileWidth).toEqual(256);
       expect(provider.tileHeight).toEqual(256);
 
@@ -357,7 +358,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
 
   it("when no credit is supplied, the provider has no logo", function () {
     patchRequestScheduler(validSampleXmlString);
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server",
     });
     return pollToPromise(function () {
@@ -369,7 +370,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
 
   it("turns the supplied credit into a logo", function () {
     patchRequestScheduler(validSampleXmlString);
-    var providerWithCredit = new TileMapServiceImageryProvider({
+    const providerWithCredit = new TileMapServiceImageryProvider({
       url: "made/up/gms/server",
       credit: "Thanks to our awesome made up source of this imagery!",
     });
@@ -382,7 +383,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
 
   it("resource request takes a query string", function () {
     /*eslint-disable no-unused-vars*/
-    var requestMetadata = when.defer();
+    const requestMetadata = when.defer();
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
       responseType,
@@ -396,7 +397,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       deferred.reject(); //since the TMS server doesn't exist (and doesn't need too) we can just reject here.
     });
 
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "http://server.invalid?query=1",
     });
 
@@ -409,8 +410,8 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   it("rectangle passed to constructor does not affect tile numbering", function () {
     patchRequestScheduler(validSampleXmlString);
 
-    var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
-    var provider = new TileMapServiceImageryProvider({
+    const rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server",
       rectangle: rectangle,
     });
@@ -466,7 +467,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
 
   it("uses maximumLevel passed to constructor", function () {
     patchRequestScheduler(validSampleXmlString);
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server",
       maximumLevel: 5,
     });
@@ -480,13 +481,13 @@ describe("Scene/TileMapServiceImageryProvider", function () {
 
   it("raises error event when image cannot be loaded", function () {
     patchRequestScheduler(validSampleXmlString);
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server",
     });
 
-    var layer = new ImageryLayer(provider);
+    const layer = new ImageryLayer(provider);
 
-    var tries = 0;
+    let tries = 0;
     provider.errorEvent.addEventListener(function (error) {
       expect(error.timesRetried).toEqual(tries);
       ++tries;
@@ -521,7 +522,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     return pollToPromise(function () {
       return provider.ready;
     }).then(function () {
-      var imagery = new Imagery(layer, 0, 0, 0);
+      const imagery = new Imagery(layer, 0, 0, 0);
       imagery.addReference();
       layer._requestImagery(imagery);
       RequestScheduler.update();
@@ -537,7 +538,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   });
 
   it("keeps the rectangle within the bounds allowed by the tiling scheme no matter what the tilemapresource.xml says.", function () {
-    var xmlString =
+    const xmlString =
       "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
       "  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>" +
       "  <Abstract/>" +
@@ -550,7 +551,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "  </TileSets>" +
       "</TileMap>";
     patchRequestScheduler(xmlString);
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server",
     });
 
@@ -589,7 +590,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   });
 
   it("uses a minimum level if the tilemapresource.xml specifies one and it is reasonable", function () {
-    var xmlString =
+    const xmlString =
       "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
       "  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>" +
       "  <Abstract/>" +
@@ -604,7 +605,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "</TileMap>";
     patchRequestScheduler(xmlString);
 
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server",
     });
 
@@ -617,7 +618,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   });
 
   it("ignores the minimum level in the tilemapresource.xml if it is unreasonable", function () {
-    var xmlString =
+    const xmlString =
       "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
       "  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>" +
       "  <Abstract/>" +
@@ -632,7 +633,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "</TileMap>";
     patchRequestScheduler(xmlString);
 
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server",
     });
 
@@ -645,7 +646,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   });
 
   it("handles XML with casing differences", function () {
-    var xmlString =
+    const xmlString =
       "<Tilemap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
       "  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>" +
       "  <Abstract/>" +
@@ -660,7 +661,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "</Tilemap>";
     patchRequestScheduler(xmlString);
 
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server",
     });
 
@@ -673,7 +674,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   });
 
   it("supports the global-mercator profile with a non-flipped, mercator bounding box", function () {
-    var xmlString =
+    const xmlString =
       '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
       "   <Title/>" +
       "   <Abstract/>" +
@@ -688,7 +689,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "</TileMap>";
     patchRequestScheduler(xmlString);
 
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server",
     });
 
@@ -700,11 +701,11 @@ describe("Scene/TileMapServiceImageryProvider", function () {
         WebMercatorProjection
       );
 
-      var projection = provider.tilingScheme.projection;
-      var expectedSW = projection.unproject(
+      const projection = provider.tilingScheme.projection;
+      const expectedSW = projection.unproject(
         new Cartesian2(-11877789.667642293, 1707163.7595205167)
       );
-      var expectedNE = projection.unproject(
+      const expectedNE = projection.unproject(
         new Cartesian2(-4696205.4540757351, 7952627.0736533012)
       );
 
@@ -719,7 +720,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   });
 
   it("supports the global-geodetic profile with a non-flipped, geographic bounding box", function () {
-    var xmlString =
+    const xmlString =
       '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
       "   <Title/>" +
       "   <Abstract/>" +
@@ -734,7 +735,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "</TileMap>";
     patchRequestScheduler(xmlString);
 
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server",
     });
 
@@ -746,8 +747,8 @@ describe("Scene/TileMapServiceImageryProvider", function () {
         GeographicProjection
       );
 
-      var expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
-      var expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
+      const expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
+      const expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
 
       expect(provider.rectangle.west).toBeCloseTo(
         expectedSW.longitude,
@@ -763,7 +764,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   });
 
   it("supports the old mercator profile with a flipped, geographic bounding box", function () {
-    var xmlString =
+    const xmlString =
       '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
       "   <Title/>" +
       "   <Abstract/>" +
@@ -778,7 +779,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "</TileMap>";
     patchRequestScheduler(xmlString);
 
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server",
       flipXY: true,
     });
@@ -791,8 +792,8 @@ describe("Scene/TileMapServiceImageryProvider", function () {
         WebMercatorProjection
       );
 
-      var expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
-      var expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
+      const expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
+      const expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
 
       expect(provider.rectangle.west).toBeCloseTo(
         expectedSW.longitude,
@@ -808,7 +809,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   });
 
   it("supports the old geodetic profile with a flipped, geographic bounding box", function () {
-    var xmlString =
+    const xmlString =
       '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
       "   <Title/>" +
       "   <Abstract/>" +
@@ -823,7 +824,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "</TileMap>";
     patchRequestScheduler(xmlString);
 
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server",
       flipXY: true,
     });
@@ -836,8 +837,8 @@ describe("Scene/TileMapServiceImageryProvider", function () {
         GeographicProjection
       );
 
-      var expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
-      var expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
+      const expectedSW = Cartographic.fromDegrees(-123.0, -10.0);
+      const expectedNE = Cartographic.fromDegrees(-110.0, 11.0);
 
       expect(provider.rectangle.west).toBeCloseTo(
         expectedSW.longitude,
@@ -853,7 +854,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   });
 
   it("raises an error if tilemapresource.xml specifies an unsupported profile", function () {
-    var xmlString =
+    const xmlString =
       '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
       "   <Title/>" +
       "   <Abstract/>" +
@@ -868,11 +869,11 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "</TileMap>";
     patchRequestScheduler(xmlString);
 
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server",
     });
 
-    var errorRaised = false;
+    let errorRaised = false;
     provider.errorEvent.addEventListener(function (e) {
       expect(e.message).toContain("unsupported profile");
       errorRaised = true;
@@ -887,7 +888,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
 
   it("forces minimum detail level to zero if the tilemapresource.xml request fails and the constructor minimum level is too high", function () {
     patchRequestSchedulerToRejectRequest();
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server/",
       maximumLevel: 10,
     });
@@ -903,7 +904,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
 
   it("allows the constructor minimum detail level if the tilemapresource.xml request fails but the constructor rectangle is small enough", function () {
     patchRequestSchedulerToRejectRequest();
-    var provider = new TileMapServiceImageryProvider({
+    const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server/",
       // a high minimum detail level
       maximumLevel: 12,

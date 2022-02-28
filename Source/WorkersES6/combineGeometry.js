@@ -2,10 +2,10 @@ import PrimitivePipeline from "../Scene/PrimitivePipeline.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
 function combineGeometry(packedParameters, transferableObjects) {
-  var parameters = PrimitivePipeline.unpackCombineGeometryParameters(
+  const parameters = PrimitivePipeline.unpackCombineGeometryParameters(
     packedParameters
   );
-  var results = PrimitivePipeline.combineGeometry(parameters);
+  const results = PrimitivePipeline.combineGeometry(parameters);
   return PrimitivePipeline.packCombineGeometryResults(
     results,
     transferableObjects

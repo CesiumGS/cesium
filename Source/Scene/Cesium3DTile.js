@@ -55,7 +55,7 @@ import Pass from "../Renderer/Pass.js";
 function Cesium3DTile(tileset, baseResource, header, parent) {
   this._tileset = tileset;
   this._header = header;
-  var contentHeader = header.content;
+  const contentHeader = header.content;
 
   /**
    * The local transform of this tile.
@@ -65,16 +65,16 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
     ? Matrix4.unpack(header.transform)
     : Matrix4.clone(Matrix4.IDENTITY);
 
-  var parentTransform = defined(parent)
+  const parentTransform = defined(parent)
     ? parent.computedTransform
     : tileset.modelMatrix;
-  var computedTransform = Matrix4.multiply(
+  const computedTransform = Matrix4.multiply(
     parentTransform,
     this.transform,
     new Matrix4()
   );
 
-  var parentInitialTransform = defined(parent)
+  const parentInitialTransform = defined(parent)
     ? parent._initialTransform
     : Matrix4.IDENTITY;
   this._initialTransform = Matrix4.multiply(
@@ -96,7 +96,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   );
   this._boundingVolume2D = undefined;
 
-  var contentBoundingVolume;
+  let contentBoundingVolume;
 
   if (defined(contentHeader) && defined(contentHeader.boundingVolume)) {
     // Non-leaf tiles may have a content bounding-volume, which is a tight-fit bounding volume
@@ -112,7 +112,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this._contentBoundingVolume = contentBoundingVolume;
   this._contentBoundingVolume2D = undefined;
 
-  var viewerRequestVolume;
+  let viewerRequestVolume;
   if (defined(header.viewerRequestVolume)) {
     viewerRequestVolume = this.createBoundingVolume(
       header.viewerRequestVolume,
@@ -143,16 +143,14 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   this.updateGeometricErrorScale();
 
-  var refine;
+  let refine;
   if (defined(header.refine)) {
     if (header.refine === "replace" || header.refine === "add") {
       Cesium3DTile._deprecationWarning(
         "lowercase-refine",
-        'This tile uses a lowercase refine "' +
-          header.refine +
-          '". Instead use "' +
-          header.refine.toUpperCase() +
-          '".'
+        `This tile uses a lowercase refine "${
+          header.refine
+        }". Instead use "${header.refine.toUpperCase()}".`
       );
     }
     refine =
@@ -196,12 +194,12 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    */
   this.parent = parent;
 
-  var content;
-  var hasEmptyContent = false;
-  var hasMultipleContents = false;
-  var contentState;
-  var contentResource;
-  var serverKey;
+  let content;
+  let hasEmptyContent = false;
+  let hasMultipleContents = false;
+  let contentState;
+  let contentResource;
+  let serverKey;
 
   baseResource = Resource.createIfNeeded(baseResource);
 
@@ -212,7 +210,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
     // relative to the tileset, so the base resource is used.
     contentResource = baseResource.clone();
   } else if (defined(contentHeader)) {
-    var contentHeaderUri = contentHeader.uri;
+    let contentHeaderUri = contentHeader.uri;
     if (defined(contentHeader.url)) {
       Cesium3DTile._deprecationWarning(
         "contentUrl",
@@ -283,7 +281,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * When <code>true</code>, the tile has multiple contents via the
    * <code>3DTILES_multiple_contents</code> extension.
    *
-   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_multiple_contents/0.0.0|3DTILES_multiple_contents extension}
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_multiple_contents|3DTILES_multiple_contents extension}
    *
    * @type {Boolean}
    * @readonly
@@ -292,13 +290,13 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    */
   this.hasMultipleContents = hasMultipleContents;
 
-  var metadata;
+  let metadata;
   if (hasExtension(header, "3DTILES_metadata")) {
     // This assumes that tileset.metadata has been created before any
     // tiles are constructed.
-    var extension = header.extensions["3DTILES_metadata"];
-    var classes = tileset.metadata.schema.classes;
-    var tileClass = classes[extension.class];
+    const extension = header.extensions["3DTILES_metadata"];
+    const classes = tileset.metadata.schema.classes;
+    const tileClass = classes[extension.class];
     metadata = new TileMetadata({
       tile: extension,
       class: tileClass,
@@ -328,9 +326,9 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    */
   this.cacheNode = undefined;
 
-  var expire = header.expire;
-  var expireDuration;
-  var expireDate;
+  const expire = header.expire;
+  let expireDuration;
+  let expireDate;
   if (defined(expire)) {
     expireDuration = expire.duration;
     if (defined(expire.date)) {
@@ -740,55 +738,55 @@ Object.defineProperties(Cesium3DTile.prototype, {
   },
 });
 
-var scratchCartesian = new Cartesian3();
+const scratchCartesian = new Cartesian3();
 function isPriorityDeferred(tile, frameState) {
-  var tileset = tile._tileset;
+  const tileset = tile._tileset;
 
   // If closest point on line is inside the sphere then set foveatedFactor to 0. Otherwise, the dot product is with the line from camera to the point on the sphere that is closest to the line.
-  var camera = frameState.camera;
-  var boundingSphere = tile.boundingSphere;
-  var radius = boundingSphere.radius;
-  var scaledCameraDirection = Cartesian3.multiplyByScalar(
+  const camera = frameState.camera;
+  const boundingSphere = tile.boundingSphere;
+  const radius = boundingSphere.radius;
+  const scaledCameraDirection = Cartesian3.multiplyByScalar(
     camera.directionWC,
     tile._centerZDepth,
     scratchCartesian
   );
-  var closestPointOnLine = Cartesian3.add(
+  const closestPointOnLine = Cartesian3.add(
     camera.positionWC,
     scaledCameraDirection,
     scratchCartesian
   );
   // The distance from the camera's view direction to the tile.
-  var toLine = Cartesian3.subtract(
+  const toLine = Cartesian3.subtract(
     closestPointOnLine,
     boundingSphere.center,
     scratchCartesian
   );
-  var distanceToCenterLine = Cartesian3.magnitude(toLine);
-  var notTouchingSphere = distanceToCenterLine > radius;
+  const distanceToCenterLine = Cartesian3.magnitude(toLine);
+  const notTouchingSphere = distanceToCenterLine > radius;
 
   // If camera's direction vector is inside the bounding sphere then consider
   // this tile right along the line of sight and set _foveatedFactor to 0.
   // Otherwise,_foveatedFactor is one minus the dot product of the camera's direction
   // and the vector between the camera and the point on the bounding sphere closest to the view line.
   if (notTouchingSphere) {
-    var toLineNormalized = Cartesian3.normalize(toLine, scratchCartesian);
-    var scaledToLine = Cartesian3.multiplyByScalar(
+    const toLineNormalized = Cartesian3.normalize(toLine, scratchCartesian);
+    const scaledToLine = Cartesian3.multiplyByScalar(
       toLineNormalized,
       radius,
       scratchCartesian
     );
-    var closestOnSphere = Cartesian3.add(
+    const closestOnSphere = Cartesian3.add(
       boundingSphere.center,
       scaledToLine,
       scratchCartesian
     );
-    var toClosestOnSphere = Cartesian3.subtract(
+    const toClosestOnSphere = Cartesian3.subtract(
       closestOnSphere,
       camera.positionWC,
       scratchCartesian
     );
-    var toClosestOnSphereNormalize = Cartesian3.normalize(
+    const toClosestOnSphereNormalize = Cartesian3.normalize(
       toClosestOnSphere,
       scratchCartesian
     );
@@ -801,8 +799,8 @@ function isPriorityDeferred(tile, frameState) {
 
   // Skip this feature if: non-skipLevelOfDetail and replace refine, if the foveated settings are turned off, if tile is progressive resolution and replace refine and skipLevelOfDetail (will help get rid of ancestor artifacts faster)
   // Or if the tile is a preload of any kind
-  var replace = tile.refine === Cesium3DTileRefine.REPLACE;
-  var skipLevelOfDetail = tileset._skipLevelOfDetail;
+  const replace = tile.refine === Cesium3DTileRefine.REPLACE;
+  const skipLevelOfDetail = tileset._skipLevelOfDetail;
   if (
     (replace && !skipLevelOfDetail) ||
     !tileset.foveatedScreenSpaceError ||
@@ -814,8 +812,8 @@ function isPriorityDeferred(tile, frameState) {
     return false;
   }
 
-  var maximumFovatedFactor = 1.0 - Math.cos(camera.frustum.fov * 0.5); // 0.14 for fov = 60. NOTE very hard to defer vertically foveated tiles since max is based on fovy (which is fov). Lowering the 0.5 to a smaller fraction of the screen height will start to defer vertically foveated tiles.
-  var foveatedConeFactor = tileset.foveatedConeSize * maximumFovatedFactor;
+  const maximumFovatedFactor = 1.0 - Math.cos(camera.frustum.fov * 0.5); // 0.14 for fov = 60. NOTE very hard to defer vertically foveated tiles since max is based on fovy (which is fov). Lowering the 0.5 to a smaller fraction of the screen height will start to defer vertically foveated tiles.
+  const foveatedConeFactor = tileset.foveatedConeSize * maximumFovatedFactor;
 
   // If it's inside the user-defined view cone, then it should not be deferred.
   if (tile._foveatedFactor <= foveatedConeFactor) {
@@ -823,18 +821,18 @@ function isPriorityDeferred(tile, frameState) {
   }
 
   // Relax SSE based on how big the angle is between the tile and the edge of the foveated cone.
-  var range = maximumFovatedFactor - foveatedConeFactor;
-  var normalizedFoveatedFactor = CesiumMath.clamp(
+  const range = maximumFovatedFactor - foveatedConeFactor;
+  const normalizedFoveatedFactor = CesiumMath.clamp(
     (tile._foveatedFactor - foveatedConeFactor) / range,
     0.0,
     1.0
   );
-  var sseRelaxation = tileset.foveatedInterpolationCallback(
+  const sseRelaxation = tileset.foveatedInterpolationCallback(
     tileset.foveatedMinimumScreenSpaceErrorRelaxation,
     tileset.maximumScreenSpaceError,
     normalizedFoveatedFactor
   );
-  var sse =
+  const sse =
     tile._screenSpaceError === 0.0 && defined(tile.parent)
       ? tile.parent._screenSpaceError * 0.5
       : tile._screenSpaceError;
@@ -842,7 +840,7 @@ function isPriorityDeferred(tile, frameState) {
   return tileset.maximumScreenSpaceError - sseRelaxation <= sse;
 }
 
-var scratchJulianDate = new JulianDate();
+const scratchJulianDate = new JulianDate();
 
 /**
  * Get the tile's screen space error.
@@ -854,24 +852,24 @@ Cesium3DTile.prototype.getScreenSpaceError = function (
   useParentGeometricError,
   progressiveResolutionHeightFraction
 ) {
-  var tileset = this._tileset;
-  var heightFraction = defaultValue(progressiveResolutionHeightFraction, 1.0);
-  var parentGeometricError = defined(this.parent)
+  const tileset = this._tileset;
+  const heightFraction = defaultValue(progressiveResolutionHeightFraction, 1.0);
+  const parentGeometricError = defined(this.parent)
     ? this.parent.geometricError
     : tileset._geometricError;
-  var geometricError = useParentGeometricError
+  const geometricError = useParentGeometricError
     ? parentGeometricError
     : this.geometricError;
   if (geometricError === 0.0) {
     // Leaf tiles do not have any error so save the computation
     return 0.0;
   }
-  var camera = frameState.camera;
-  var frustum = camera.frustum;
-  var context = frameState.context;
-  var width = context.drawingBufferWidth;
-  var height = context.drawingBufferHeight * heightFraction;
-  var error;
+  const camera = frameState.camera;
+  let frustum = camera.frustum;
+  const context = frameState.context;
+  const width = context.drawingBufferWidth;
+  const height = context.drawingBufferHeight * heightFraction;
+  let error;
   if (
     frameState.mode === SceneMode.SCENE2D ||
     frustum instanceof OrthographicFrustum
@@ -879,19 +877,19 @@ Cesium3DTile.prototype.getScreenSpaceError = function (
     if (defined(frustum._offCenterFrustum)) {
       frustum = frustum._offCenterFrustum;
     }
-    var pixelSize =
+    const pixelSize =
       Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) /
       Math.max(width, height);
     error = geometricError / pixelSize;
   } else {
     // Avoid divide by zero when viewer is inside the tile
-    var distance = Math.max(this._distanceToCamera, CesiumMath.EPSILON7);
-    var sseDenominator = camera.frustum.sseDenominator;
+    const distance = Math.max(this._distanceToCamera, CesiumMath.EPSILON7);
+    const sseDenominator = camera.frustum.sseDenominator;
     error = (geometricError * height) / (distance * sseDenominator);
     if (tileset.dynamicScreenSpaceError) {
-      var density = tileset._dynamicScreenSpaceErrorComputedDensity;
-      var factor = tileset.dynamicScreenSpaceErrorFactor;
-      var dynamicError = CesiumMath.fog(distance, density) * factor;
+      const density = tileset._dynamicScreenSpaceErrorComputedDensity;
+      const factor = tileset.dynamicScreenSpaceErrorFactor;
+      const dynamicError = CesiumMath.fog(distance, density) * factor;
       error -= dynamicError;
     }
   }
@@ -909,15 +907,15 @@ function isPriorityProgressiveResolution(tileset, tile) {
     return false;
   }
 
-  var isProgressiveResolutionTile =
+  let isProgressiveResolutionTile =
     tile._screenSpaceErrorProgressiveResolution >
     tileset._maximumScreenSpaceError; // Mark non-SSE leaves
   tile._priorityProgressiveResolutionScreenSpaceErrorLeaf = false; // Needed for skipLOD
-  var parent = tile.parent;
-  var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
-  var tilePasses =
+  const parent = tile.parent;
+  const maximumScreenSpaceError = tileset._maximumScreenSpaceError;
+  const tilePasses =
     tile._screenSpaceErrorProgressiveResolution <= maximumScreenSpaceError;
-  var parentFails =
+  const parentFails =
     defined(parent) &&
     parent._screenSpaceErrorProgressiveResolution > maximumScreenSpaceError;
   if (tilePasses && parentFails) {
@@ -929,14 +927,14 @@ function isPriorityProgressiveResolution(tileset, tile) {
 }
 
 function getPriorityReverseScreenSpaceError(tileset, tile) {
-  var parent = tile.parent;
-  var useParentScreenSpaceError =
+  const parent = tile.parent;
+  const useParentScreenSpaceError =
     defined(parent) &&
     (!tileset._skipLevelOfDetail ||
       tile._screenSpaceError === 0.0 ||
       parent.hasTilesetContent ||
       parent.hasImplicitContent);
-  var screenSpaceError = useParentScreenSpaceError
+  const screenSpaceError = useParentScreenSpaceError
     ? parent._screenSpaceError
     : tile._screenSpaceError;
   return tileset.root._screenSpaceError - screenSpaceError;
@@ -948,12 +946,12 @@ function getPriorityReverseScreenSpaceError(tileset, tile) {
  * @private
  */
 Cesium3DTile.prototype.updateVisibility = function (frameState) {
-  var parent = this.parent;
-  var tileset = this._tileset;
-  var parentTransform = defined(parent)
+  const parent = this.parent;
+  const tileset = this._tileset;
+  const parentTransform = defined(parent)
     ? parent.computedTransform
     : tileset.modelMatrix;
-  var parentVisibilityPlaneMask = defined(parent)
+  const parentVisibilityPlaneMask = defined(parent)
     ? parent._visibilityPlaneMask
     : CullingVolume.MASK_INDETERMINATE;
   this.updateTransform(parentTransform);
@@ -994,7 +992,7 @@ Cesium3DTile.prototype.updateExpiration = function () {
     !this.hasEmptyContent &&
     !this.hasMultipleContents
   ) {
-    var now = JulianDate.now(scratchJulianDate);
+    const now = JulianDate.now(scratchJulianDate);
     if (JulianDate.lessThan(this.expireDate, now)) {
       this._contentState = Cesium3DTileContentState.EXPIRED;
       this._expiredContent = this._content;
@@ -1004,7 +1002,7 @@ Cesium3DTile.prototype.updateExpiration = function () {
 
 function updateExpireDate(tile) {
   if (defined(tile.expireDuration)) {
-    var expireDurationDate = JulianDate.now(scratchJulianDate);
+    const expireDurationDate = JulianDate.now(scratchJulianDate);
     JulianDate.addSeconds(
       expireDurationDate,
       tile.expireDuration,
@@ -1062,13 +1060,14 @@ Cesium3DTile.prototype.requestContent = function () {
  * @private
  */
 function requestMultipleContents(tile) {
-  var multipleContents = tile._content;
-  var tileset = tile._tileset;
+  let multipleContents = tile._content;
+  const tileset = tile._tileset;
 
   if (!defined(multipleContents)) {
     // Create the content object immediately, it will handle scheduling
     // requests for inner contents.
-    var extensionHeader = tile._header.extensions["3DTILES_multiple_contents"];
+    const extensionHeader =
+      tile._header.extensions["3DTILES_multiple_contents"];
     multipleContents = new Multiple3DTileContent(
       tileset,
       tile,
@@ -1078,7 +1077,7 @@ function requestMultipleContents(tile) {
     tile._content = multipleContents;
   }
 
-  var backloggedRequestCount = multipleContents.requestInnerContents();
+  const backloggedRequestCount = multipleContents.requestInnerContents();
   if (backloggedRequestCount > 0) {
     return backloggedRequestCount;
   }
@@ -1147,8 +1146,8 @@ function multipleContentFailed(tile, tileset, error) {
 function requestSingleContent(tile) {
   // it is important to clone here. The fetchArrayBuffer() below uses
   // throttling, but other uses of the resources do not.
-  var resource = tile._contentResource.clone();
-  var expired = tile.contentExpired;
+  const resource = tile._contentResource.clone();
+  const expired = tile.contentExpired;
   if (expired) {
     // Append a query parameter of the tile expiration date to prevent caching
     resource.setQueryParameters({
@@ -1156,7 +1155,7 @@ function requestSingleContent(tile) {
     });
   }
 
-  var request = new Request({
+  const request = new Request({
     throttle: true,
     throttleByServer: true,
     type: RequestType.TILES3D,
@@ -1167,13 +1166,13 @@ function requestSingleContent(tile) {
   tile._request = request;
   resource.request = request;
 
-  var promise = resource.fetchArrayBuffer();
+  const promise = resource.fetchArrayBuffer();
   if (!defined(promise)) {
     return 1;
   }
 
-  var previousState = tile._contentState;
-  var tileset = tile._tileset;
+  const previousState = tile._contentState;
+  const tileset = tile._tileset;
   tile._contentState = Cesium3DTileContentState.LOADING;
   tile._contentReadyToProcessPromise = when.defer();
   tile._contentReadyPromise = when.defer();
@@ -1187,7 +1186,7 @@ function requestSingleContent(tile) {
         return;
       }
 
-      var content = makeContent(tile, arrayBuffer);
+      const content = makeContent(tile, arrayBuffer);
 
       if (expired) {
         tile.expireDate = undefined;
@@ -1252,10 +1251,10 @@ function singleContentFailed(tile, tileset, error) {
  * @private
  */
 function makeContent(tile, arrayBuffer) {
-  var preprocessed = preprocess3DTileContent(arrayBuffer);
+  const preprocessed = preprocess3DTileContent(arrayBuffer);
 
   // Vector and Geometry tile rendering do not support the skip LOD optimization.
-  var tileset = tile._tileset;
+  const tileset = tile._tileset;
   tileset._disableSkipLevelOfDetail =
     tileset._disableSkipLevelOfDetail ||
     preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
@@ -1269,8 +1268,8 @@ function makeContent(tile, arrayBuffer) {
     tile.hasTilesetContent = true;
   }
 
-  var content;
-  var contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
+  let content;
+  const contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
   if (defined(preprocessed.binaryPayload)) {
     content = contentFactory(
       tileset,
@@ -1289,7 +1288,7 @@ function makeContent(tile, arrayBuffer) {
     );
   }
 
-  var contentHeader = tile._header.content;
+  const contentHeader = tile._header.content;
   content.groupMetadata = findGroupMetadata(tileset, contentHeader);
   return content;
 }
@@ -1342,15 +1341,15 @@ Cesium3DTile.prototype.unloadContent = function () {
     this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
 };
 
-var scratchProjectedBoundingSphere = new BoundingSphere();
+const scratchProjectedBoundingSphere = new BoundingSphere();
 
 function getBoundingVolume(tile, frameState) {
   if (
     frameState.mode !== SceneMode.SCENE3D &&
     !defined(tile._boundingVolume2D)
   ) {
-    var boundingSphere = tile._boundingVolume.boundingSphere;
-    var sphere = BoundingSphere.projectTo2D(
+    const boundingSphere = tile._boundingVolume.boundingSphere;
+    const sphere = BoundingSphere.projectTo2D(
       boundingSphere,
       frameState.mapProjection,
       scratchProjectedBoundingSphere
@@ -1371,8 +1370,8 @@ function getContentBoundingVolume(tile, frameState) {
     frameState.mode !== SceneMode.SCENE3D &&
     !defined(tile._contentBoundingVolume2D)
   ) {
-    var boundingSphere = tile._contentBoundingVolume.boundingSphere;
-    var sphere = BoundingSphere.projectTo2D(
+    const boundingSphere = tile._contentBoundingVolume.boundingSphere;
+    const sphere = BoundingSphere.projectTo2D(
       boundingSphere,
       frameState.mapProjection,
       scratchProjectedBoundingSphere
@@ -1400,13 +1399,13 @@ Cesium3DTile.prototype.visibility = function (
   frameState,
   parentVisibilityPlaneMask
 ) {
-  var cullingVolume = frameState.cullingVolume;
-  var boundingVolume = getBoundingVolume(this, frameState);
+  const cullingVolume = frameState.cullingVolume;
+  const boundingVolume = getBoundingVolume(this, frameState);
 
-  var tileset = this._tileset;
-  var clippingPlanes = tileset.clippingPlanes;
+  const tileset = this._tileset;
+  const clippingPlanes = tileset.clippingPlanes;
   if (defined(clippingPlanes) && clippingPlanes.enabled) {
-    var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(
+    const intersection = clippingPlanes.computeIntersectionWithBoundingVolume(
       boundingVolume,
       tileset.clippingPlanesOriginMatrix
     );
@@ -1446,13 +1445,13 @@ Cesium3DTile.prototype.contentVisibility = function (frameState) {
 
   // PERFORMANCE_IDEA: is it possible to burn less CPU on this test since we know the
   // tile's (not the content's) bounding volume intersects the culling volume?
-  var cullingVolume = frameState.cullingVolume;
-  var boundingVolume = getContentBoundingVolume(this, frameState);
+  const cullingVolume = frameState.cullingVolume;
+  const boundingVolume = getContentBoundingVolume(this, frameState);
 
-  var tileset = this._tileset;
-  var clippingPlanes = tileset.clippingPlanes;
+  const tileset = this._tileset;
+  const clippingPlanes = tileset.clippingPlanes;
   if (defined(clippingPlanes) && clippingPlanes.enabled) {
-    var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(
+    const intersection = clippingPlanes.computeIntersectionWithBoundingVolume(
       boundingVolume,
       tileset.clippingPlanesOriginMatrix
     );
@@ -1474,11 +1473,11 @@ Cesium3DTile.prototype.contentVisibility = function (frameState) {
  * @private
  */
 Cesium3DTile.prototype.distanceToTile = function (frameState) {
-  var boundingVolume = getBoundingVolume(this, frameState);
+  const boundingVolume = getBoundingVolume(this, frameState);
   return boundingVolume.distanceToCamera(frameState);
 };
 
-var scratchToTileCenter = new Cartesian3();
+const scratchToTileCenter = new Cartesian3();
 
 /**
  * Computes the distance from the center of the tile's bounding volume to the camera's plane defined by its position and view direction.
@@ -1489,9 +1488,9 @@ var scratchToTileCenter = new Cartesian3();
  * @private
  */
 Cesium3DTile.prototype.distanceToTileCenter = function (frameState) {
-  var tileBoundingVolume = getBoundingVolume(this, frameState);
-  var boundingVolume = tileBoundingVolume.boundingVolume; // Gets the underlying OrientedBoundingBox or BoundingSphere
-  var toCenter = Cartesian3.subtract(
+  const tileBoundingVolume = getBoundingVolume(this, frameState);
+  const boundingVolume = tileBoundingVolume.boundingVolume; // Gets the underlying OrientedBoundingBox or BoundingSphere
+  const toCenter = Cartesian3.subtract(
     boundingVolume.center,
     frameState.camera.positionWC,
     scratchToTileCenter
@@ -1508,28 +1507,28 @@ Cesium3DTile.prototype.distanceToTileCenter = function (frameState) {
  * @private
  */
 Cesium3DTile.prototype.insideViewerRequestVolume = function (frameState) {
-  var viewerRequestVolume = this._viewerRequestVolume;
+  const viewerRequestVolume = this._viewerRequestVolume;
   return (
     !defined(viewerRequestVolume) ||
     viewerRequestVolume.distanceToCamera(frameState) === 0.0
   );
 };
 
-var scratchMatrix = new Matrix3();
-var scratchScale = new Cartesian3();
-var scratchHalfAxes = new Matrix3();
-var scratchCenter = new Cartesian3();
-var scratchRectangle = new Rectangle();
-var scratchOrientedBoundingBox = new OrientedBoundingBox();
-var scratchTransform = new Matrix4();
+const scratchMatrix = new Matrix3();
+const scratchScale = new Cartesian3();
+const scratchHalfAxes = new Matrix3();
+const scratchCenter = new Cartesian3();
+const scratchRectangle = new Rectangle();
+const scratchOrientedBoundingBox = new OrientedBoundingBox();
+const scratchTransform = new Matrix4();
 
 function createBox(box, transform, result) {
-  var center = Cartesian3.fromElements(box[0], box[1], box[2], scratchCenter);
-  var halfAxes = Matrix3.fromArray(box, 3, scratchHalfAxes);
+  let center = Cartesian3.fromElements(box[0], box[1], box[2], scratchCenter);
+  let halfAxes = Matrix3.fromArray(box, 3, scratchHalfAxes);
 
   // Find the transformed center and halfAxes
   center = Matrix4.multiplyByPoint(transform, center, center);
-  var rotationScale = Matrix4.getMatrix3(transform, scratchMatrix);
+  const rotationScale = Matrix4.getMatrix3(transform, scratchMatrix);
   halfAxes = Matrix3.multiply(rotationScale, halfAxes, halfAxes);
 
   if (defined(result)) {
@@ -1545,19 +1544,19 @@ function createBoxFromTransformedRegion(
   initialTransform,
   result
 ) {
-  var rectangle = Rectangle.unpack(region, 0, scratchRectangle);
-  var minimumHeight = region[4];
-  var maximumHeight = region[5];
+  const rectangle = Rectangle.unpack(region, 0, scratchRectangle);
+  const minimumHeight = region[4];
+  const maximumHeight = region[5];
 
-  var orientedBoundingBox = OrientedBoundingBox.fromRectangle(
+  const orientedBoundingBox = OrientedBoundingBox.fromRectangle(
     rectangle,
     minimumHeight,
     maximumHeight,
     Ellipsoid.WGS84,
     scratchOrientedBoundingBox
   );
-  var center = orientedBoundingBox.center;
-  var halfAxes = orientedBoundingBox.halfAxes;
+  let center = orientedBoundingBox.center;
+  let halfAxes = orientedBoundingBox.halfAxes;
 
   // A region bounding volume is not transformed by the transform in the tileset JSON,
   // but may be transformed by additional transforms applied in Cesium.
@@ -1568,7 +1567,7 @@ function createBoxFromTransformedRegion(
     scratchTransform
   );
   center = Matrix4.multiplyByPoint(transform, center, center);
-  var rotationScale = Matrix4.getMatrix3(transform, scratchMatrix);
+  const rotationScale = Matrix4.getMatrix3(transform, scratchMatrix);
   halfAxes = Matrix3.multiply(rotationScale, halfAxes, halfAxes);
 
   if (defined(result) && result instanceof TileOrientedBoundingBox) {
@@ -1595,7 +1594,7 @@ function createRegion(region, transform, initialTransform, result) {
     return result;
   }
 
-  var rectangleRegion = Rectangle.unpack(region, 0, scratchRectangle);
+  const rectangleRegion = Rectangle.unpack(region, 0, scratchRectangle);
 
   return new TileBoundingRegion({
     rectangle: rectangleRegion,
@@ -1605,18 +1604,18 @@ function createRegion(region, transform, initialTransform, result) {
 }
 
 function createSphere(sphere, transform, result) {
-  var center = Cartesian3.fromElements(
+  let center = Cartesian3.fromElements(
     sphere[0],
     sphere[1],
     sphere[2],
     scratchCenter
   );
-  var radius = sphere[3];
+  let radius = sphere[3];
 
   // Find the transformed center and radius
   center = Matrix4.multiplyByPoint(transform, center, center);
-  var scale = Matrix4.getScale(transform, scratchScale);
-  var uniformScale = Cartesian3.maximumComponent(scale);
+  const scale = Matrix4.getScale(transform, scratchScale);
+  const uniformScale = Cartesian3.maximumComponent(scale);
   radius *= uniformScale;
 
   if (defined(result)) {
@@ -1677,12 +1676,12 @@ Cesium3DTile.prototype.createBoundingVolume = function (
  */
 Cesium3DTile.prototype.updateTransform = function (parentTransform) {
   parentTransform = defaultValue(parentTransform, Matrix4.IDENTITY);
-  var computedTransform = Matrix4.multiply(
+  const computedTransform = Matrix4.multiply(
     parentTransform,
     this.transform,
     scratchTransform
   );
-  var transformChanged = !Matrix4.equals(
+  const transformChanged = !Matrix4.equals(
     computedTransform,
     this.computedTransform
   );
@@ -1694,8 +1693,8 @@ Cesium3DTile.prototype.updateTransform = function (parentTransform) {
   Matrix4.clone(computedTransform, this.computedTransform);
 
   // Update the bounding volumes
-  var header = this._header;
-  var content = this._header.content;
+  const header = this._header;
+  const content = this._header.content;
   this._boundingVolume = this.createBoundingVolume(
     header.boundingVolume,
     this.computedTransform,
@@ -1729,8 +1728,8 @@ Cesium3DTile.prototype.updateTransform = function (parentTransform) {
 };
 
 Cesium3DTile.prototype.updateGeometricErrorScale = function () {
-  var scale = Matrix4.getScale(this.computedTransform, scratchScale);
-  var uniformScale = Cartesian3.maximumComponent(scale);
+  const scale = Matrix4.getScale(this.computedTransform, scratchScale);
+  const uniformScale = Cartesian3.maximumComponent(scale);
   this.geometricError = this._geometricError * uniformScale;
 };
 
@@ -1739,17 +1738,17 @@ function applyDebugSettings(tile, tileset, frameState, passOptions) {
     return;
   }
 
-  var hasContentBoundingVolume =
+  const hasContentBoundingVolume =
     defined(tile._header.content) &&
     defined(tile._header.content.boundingVolume);
-  var empty =
+  const empty =
     tile.hasEmptyContent || tile.hasTilesetContent || tile.hasImplicitContent;
 
-  var showVolume =
+  const showVolume =
     tileset.debugShowBoundingVolume ||
     (tileset.debugShowContentBoundingVolume && !hasContentBoundingVolume);
   if (showVolume) {
-    var color;
+    let color;
     if (!tile._finalResolution) {
       color = Color.YELLOW;
     } else if (empty) {
@@ -1761,7 +1760,7 @@ function applyDebugSettings(tile, tileset, frameState, passOptions) {
       tile._debugBoundingVolume = tile._boundingVolume.createDebugVolume(color);
     }
     tile._debugBoundingVolume.update(frameState);
-    var attributes = tile._debugBoundingVolume.getGeometryInstanceAttributes(
+    const attributes = tile._debugBoundingVolume.getGeometryInstanceAttributes(
       "outline"
     );
     attributes.color = ColorGeometryInstanceAttribute.toValue(
@@ -1803,10 +1802,10 @@ function applyDebugSettings(tile, tileset, frameState, passOptions) {
     tile._debugViewerRequestVolume = tile._debugViewerRequestVolume.destroy();
   }
 
-  var debugColorizeTilesOn =
+  const debugColorizeTilesOn =
     (tileset.debugColorizeTiles && !tile._debugColorizeTiles) ||
     defined(tileset._heatmap.tilePropertyName);
-  var debugColorizeTilesOff =
+  const debugColorizeTilesOff =
     !tileset.debugColorizeTiles && tile._debugColorizeTiles;
 
   if (debugColorizeTilesOn) {
@@ -1829,8 +1828,8 @@ function applyDebugSettings(tile, tileset, frameState, passOptions) {
 }
 
 function updateContent(tile, tileset, frameState) {
-  var content = tile._content;
-  var expiredContent = tile._expiredContent;
+  const content = tile._content;
+  const expiredContent = tile._expiredContent;
 
   // expired content is not supported for 3DTILES_multiple_contents
   if (!tile.hasMultipleContents && defined(expiredContent)) {
@@ -1853,8 +1852,8 @@ function updateClippingPlanes(tile, tileset) {
   // - enabled-ness - are clipping planes enabled? is this tile clipped?
   // - clipping plane count
   // - clipping function (union v. intersection)
-  var clippingPlanes = tileset.clippingPlanes;
-  var currentClippingPlanesState = 0;
+  const clippingPlanes = tileset.clippingPlanes;
+  let currentClippingPlanesState = 0;
   if (defined(clippingPlanes) && tile._isClipped && clippingPlanes.enabled) {
     currentClippingPlanesState = clippingPlanes.clippingPlanesState;
   }
@@ -1871,26 +1870,26 @@ function updateClippingPlanes(tile, tileset) {
  * @private
  */
 Cesium3DTile.prototype.update = function (tileset, frameState, passOptions) {
-  var commandStart = frameState.commandList.length;
+  const commandStart = frameState.commandList.length;
 
   updateClippingPlanes(this, tileset);
   applyDebugSettings(this, tileset, frameState, passOptions);
   updateContent(this, tileset, frameState);
 
-  var commandEnd = frameState.commandList.length;
-  var commandsLength = commandEnd - commandStart;
+  const commandEnd = frameState.commandList.length;
+  const commandsLength = commandEnd - commandStart;
   this._commandsLength = commandsLength;
 
-  for (var i = 0; i < commandsLength; ++i) {
-    var command = frameState.commandList[commandStart + i];
-    var translucent = command.pass === Pass.TRANSLUCENT;
+  for (let i = 0; i < commandsLength; ++i) {
+    const command = frameState.commandList[commandStart + i];
+    const translucent = command.pass === Pass.TRANSLUCENT;
     command.depthForTranslucentClassification = translucent;
   }
 
   this.clippingPlanesDirty = false; // reset after content update
 };
 
-var scratchCommandList = [];
+const scratchCommandList = [];
 
 /**
  * Processes the tile's content, e.g., create WebGL resources, to move from the PROCESSING to READY state.
@@ -1901,7 +1900,7 @@ var scratchCommandList = [];
  * @private
  */
 Cesium3DTile.prototype.process = function (tileset, frameState) {
-  var savedCommandList = frameState.commandList;
+  const savedCommandList = frameState.commandList;
   frameState.commandList = scratchCommandList;
 
   this._content.update(tileset, frameState);
@@ -1911,8 +1910,8 @@ Cesium3DTile.prototype.process = function (tileset, frameState) {
 };
 
 function isolateDigits(normalizedValue, numberOfDigits, leftShift) {
-  var scaled = normalizedValue * Math.pow(10, numberOfDigits);
-  var integer = parseInt(scaled);
+  const scaled = normalizedValue * Math.pow(10, numberOfDigits);
+  const integer = parseInt(scaled);
   return integer * Math.pow(10, leftShift);
 }
 
@@ -1928,10 +1927,10 @@ function priorityNormalizeAndClamp(value, minimum, maximum) {
  * @private
  */
 Cesium3DTile.prototype.updatePriority = function () {
-  var tileset = this.tileset;
-  var preferLeaves = tileset.preferLeaves;
-  var minimumPriority = tileset._minimumPriority;
-  var maximumPriority = tileset._maximumPriority;
+  const tileset = this.tileset;
+  const preferLeaves = tileset.preferLeaves;
+  const minimumPriority = tileset._minimumPriority;
+  const maximumPriority = tileset._maximumPriority;
 
   // Combine priority systems together by mapping them into a base 10 number where each priority controls a specific set of digits in the number.
   // For number priorities, map them to a 0.xxxxx number then left shift it up into a set number of digits before the decimal point. Chop of the fractional part then left shift again into the position it needs to go.
@@ -1942,36 +1941,36 @@ Cesium3DTile.prototype.updatePriority = function () {
   // Certain flags like preferLeaves will flip / turn off certain digits to get desired load order.
 
   // Setup leftShifts, digit counts, and scales (for booleans)
-  var digitsForANumber = 4;
-  var digitsForABoolean = 1;
+  const digitsForANumber = 4;
+  const digitsForABoolean = 1;
 
-  var preferredSortingLeftShift = 0;
-  var preferredSortingDigitsCount = digitsForANumber;
+  const preferredSortingLeftShift = 0;
+  const preferredSortingDigitsCount = digitsForANumber;
 
-  var foveatedLeftShift =
+  const foveatedLeftShift =
     preferredSortingLeftShift + preferredSortingDigitsCount;
-  var foveatedDigitsCount = digitsForANumber;
+  const foveatedDigitsCount = digitsForANumber;
 
-  var preloadProgressiveResolutionLeftShift =
+  const preloadProgressiveResolutionLeftShift =
     foveatedLeftShift + foveatedDigitsCount;
-  var preloadProgressiveResolutionDigitsCount = digitsForABoolean;
-  var preloadProgressiveResolutionScale = Math.pow(
+  const preloadProgressiveResolutionDigitsCount = digitsForABoolean;
+  const preloadProgressiveResolutionScale = Math.pow(
     10,
     preloadProgressiveResolutionLeftShift
   );
 
-  var foveatedDeferLeftShift =
+  const foveatedDeferLeftShift =
     preloadProgressiveResolutionLeftShift +
     preloadProgressiveResolutionDigitsCount;
-  var foveatedDeferDigitsCount = digitsForABoolean;
-  var foveatedDeferScale = Math.pow(10, foveatedDeferLeftShift);
+  const foveatedDeferDigitsCount = digitsForABoolean;
+  const foveatedDeferScale = Math.pow(10, foveatedDeferLeftShift);
 
-  var preloadFlightLeftShift =
+  const preloadFlightLeftShift =
     foveatedDeferLeftShift + foveatedDeferDigitsCount;
-  var preloadFlightScale = Math.pow(10, preloadFlightLeftShift);
+  const preloadFlightScale = Math.pow(10, preloadFlightLeftShift);
 
   // Compute the digits for each priority
-  var depthDigits = priorityNormalizeAndClamp(
+  let depthDigits = priorityNormalizeAndClamp(
     this._depth,
     minimumPriority.depth,
     maximumPriority.depth
@@ -1979,9 +1978,9 @@ Cesium3DTile.prototype.updatePriority = function () {
   depthDigits = preferLeaves ? 1.0 - depthDigits : depthDigits;
 
   // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
-  var useDistance =
+  const useDistance =
     !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
-  var normalizedPreferredSorting = useDistance
+  const normalizedPreferredSorting = useDistance
     ? priorityNormalizeAndClamp(
         this._priorityHolder._distanceToCamera,
         minimumPriority.distance,
@@ -1992,30 +1991,30 @@ Cesium3DTile.prototype.updatePriority = function () {
         minimumPriority.reverseScreenSpaceError,
         maximumPriority.reverseScreenSpaceError
       );
-  var preferredSortingDigits = isolateDigits(
+  const preferredSortingDigits = isolateDigits(
     normalizedPreferredSorting,
     preferredSortingDigitsCount,
     preferredSortingLeftShift
   );
 
-  var preloadProgressiveResolutionDigits = this._priorityProgressiveResolution
+  const preloadProgressiveResolutionDigits = this._priorityProgressiveResolution
     ? 0
     : preloadProgressiveResolutionScale;
 
-  var normalizedFoveatedFactor = priorityNormalizeAndClamp(
+  const normalizedFoveatedFactor = priorityNormalizeAndClamp(
     this._priorityHolder._foveatedFactor,
     minimumPriority.foveatedFactor,
     maximumPriority.foveatedFactor
   );
-  var foveatedDigits = isolateDigits(
+  const foveatedDigits = isolateDigits(
     normalizedFoveatedFactor,
     foveatedDigitsCount,
     foveatedLeftShift
   );
 
-  var foveatedDeferDigits = this.priorityDeferred ? foveatedDeferScale : 0;
+  const foveatedDeferDigits = this.priorityDeferred ? foveatedDeferScale : 0;
 
-  var preloadFlightDigits =
+  const preloadFlightDigits =
     tileset._pass === Cesium3DTilePass.PRELOAD_FLIGHT ? 0 : preloadFlightScale;
 
   // Get the final base 10 number

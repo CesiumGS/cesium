@@ -48,7 +48,7 @@ function Quaternion(x, y, z, w) {
   this.w = defaultValue(w, 0.0);
 }
 
-var fromAxisAngleScratch = new Cartesian3();
+let fromAxisAngleScratch = new Cartesian3();
 
 /**
  * Computes a quaternion representing a rotation around an axis.
@@ -64,14 +64,14 @@ Quaternion.fromAxisAngle = function (axis, angle, result) {
   Check.typeOf.number("angle", angle);
   //>>includeEnd('debug');
 
-  var halfAngle = angle / 2.0;
-  var s = Math.sin(halfAngle);
+  const halfAngle = angle / 2.0;
+  const s = Math.sin(halfAngle);
   fromAxisAngleScratch = Cartesian3.normalize(axis, fromAxisAngleScratch);
 
-  var x = fromAxisAngleScratch.x * s;
-  var y = fromAxisAngleScratch.y * s;
-  var z = fromAxisAngleScratch.z * s;
-  var w = Math.cos(halfAngle);
+  const x = fromAxisAngleScratch.x * s;
+  const y = fromAxisAngleScratch.y * s;
+  const z = fromAxisAngleScratch.z * s;
+  const w = Math.cos(halfAngle);
   if (!defined(result)) {
     return new Quaternion(x, y, z, w);
   }
@@ -82,8 +82,8 @@ Quaternion.fromAxisAngle = function (axis, angle, result) {
   return result;
 };
 
-var fromRotationMatrixNext = [1, 2, 0];
-var fromRotationMatrixQuat = new Array(3);
+const fromRotationMatrixNext = [1, 2, 0];
+const fromRotationMatrixQuat = new Array(3);
 /**
  * Computes a Quaternion from the provided Matrix3 instance.
  *
@@ -98,16 +98,16 @@ Quaternion.fromRotationMatrix = function (matrix, result) {
   Check.typeOf.object("matrix", matrix);
   //>>includeEnd('debug');
 
-  var root;
-  var x;
-  var y;
-  var z;
-  var w;
+  let root;
+  let x;
+  let y;
+  let z;
+  let w;
 
-  var m00 = matrix[Matrix3.COLUMN0ROW0];
-  var m11 = matrix[Matrix3.COLUMN1ROW1];
-  var m22 = matrix[Matrix3.COLUMN2ROW2];
-  var trace = m00 + m11 + m22;
+  const m00 = matrix[Matrix3.COLUMN0ROW0];
+  const m11 = matrix[Matrix3.COLUMN1ROW1];
+  const m22 = matrix[Matrix3.COLUMN2ROW2];
+  const trace = m00 + m11 + m22;
 
   if (trace > 0.0) {
     // |w| > 1/2, may as well choose w > 1/2
@@ -120,17 +120,17 @@ Quaternion.fromRotationMatrix = function (matrix, result) {
     z = (matrix[Matrix3.COLUMN0ROW1] - matrix[Matrix3.COLUMN1ROW0]) * root;
   } else {
     // |w| <= 1/2
-    var next = fromRotationMatrixNext;
+    const next = fromRotationMatrixNext;
 
-    var i = 0;
+    let i = 0;
     if (m11 > m00) {
       i = 1;
     }
     if (m22 > m00 && m22 > m11) {
       i = 2;
     }
-    var j = next[i];
-    var k = next[j];
+    const j = next[i];
+    const k = next[j];
 
     root = Math.sqrt(
       matrix[Matrix3.getElementIndex(i, i)] -
@@ -139,7 +139,7 @@ Quaternion.fromRotationMatrix = function (matrix, result) {
         1.0
     );
 
-    var quat = fromRotationMatrixQuat;
+    const quat = fromRotationMatrixQuat;
     quat[i] = 0.5 * root;
     root = 0.5 / root;
     w =
@@ -170,10 +170,10 @@ Quaternion.fromRotationMatrix = function (matrix, result) {
   return result;
 };
 
-var scratchHPRQuaternion = new Quaternion();
-var scratchHeadingQuaternion = new Quaternion();
-var scratchPitchQuaternion = new Quaternion();
-var scratchRollQuaternion = new Quaternion();
+const scratchHPRQuaternion = new Quaternion();
+let scratchHeadingQuaternion = new Quaternion();
+let scratchPitchQuaternion = new Quaternion();
+let scratchRollQuaternion = new Quaternion();
 
 /**
  * Computes a rotation from the given heading, pitch and roll angles. Heading is the rotation about the
@@ -212,11 +212,11 @@ Quaternion.fromHeadingPitchRoll = function (headingPitchRoll, result) {
   return Quaternion.multiply(scratchHeadingQuaternion, result, result);
 };
 
-var sampledQuaternionAxis = new Cartesian3();
-var sampledQuaternionRotation = new Cartesian3();
-var sampledQuaternionTempQuaternion = new Quaternion();
-var sampledQuaternionQuaternion0 = new Quaternion();
-var sampledQuaternionQuaternion0Conjugate = new Quaternion();
+const sampledQuaternionAxis = new Cartesian3();
+const sampledQuaternionRotation = new Cartesian3();
+const sampledQuaternionTempQuaternion = new Quaternion();
+const sampledQuaternionQuaternion0 = new Quaternion();
+const sampledQuaternionQuaternion0Conjugate = new Quaternion();
 
 /**
  * The number of elements used to pack the object into an array.
@@ -304,8 +304,8 @@ Quaternion.convertPackedArrayForInterpolation = function (
     sampledQuaternionQuaternion0Conjugate
   );
 
-  for (var i = 0, len = lastIndex - startingIndex + 1; i < len; i++) {
-    var offset = i * 3;
+  for (let i = 0, len = lastIndex - startingIndex + 1; i < len; i++) {
+    const offset = i * 3;
     Quaternion.unpack(
       packedArray,
       (startingIndex + i) * 4,
@@ -329,7 +329,7 @@ Quaternion.convertPackedArrayForInterpolation = function (
       sampledQuaternionTempQuaternion,
       sampledQuaternionAxis
     );
-    var angle = Quaternion.computeAngle(sampledQuaternionTempQuaternion);
+    const angle = Quaternion.computeAngle(sampledQuaternionTempQuaternion);
     if (!defined(result)) {
       result = [];
     }
@@ -360,7 +360,7 @@ Quaternion.unpackInterpolationResult = function (
     result = new Quaternion();
   }
   Cartesian3.fromArray(array, 0, sampledQuaternionRotation);
-  var magnitude = Cartesian3.magnitude(sampledQuaternionRotation);
+  const magnitude = Cartesian3.magnitude(sampledQuaternionRotation);
 
   Quaternion.unpack(sourceArray, lastIndex * 4, sampledQuaternionQuaternion0);
 
@@ -470,11 +470,11 @@ Quaternion.normalize = function (quaternion, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var inverseMagnitude = 1.0 / Quaternion.magnitude(quaternion);
-  var x = quaternion.x * inverseMagnitude;
-  var y = quaternion.y * inverseMagnitude;
-  var z = quaternion.z * inverseMagnitude;
-  var w = quaternion.w * inverseMagnitude;
+  const inverseMagnitude = 1.0 / Quaternion.magnitude(quaternion);
+  const x = quaternion.x * inverseMagnitude;
+  const y = quaternion.y * inverseMagnitude;
+  const z = quaternion.z * inverseMagnitude;
+  const w = quaternion.w * inverseMagnitude;
 
   result.x = x;
   result.y = y;
@@ -495,7 +495,7 @@ Quaternion.inverse = function (quaternion, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var magnitudeSquared = Quaternion.magnitudeSquared(quaternion);
+  const magnitudeSquared = Quaternion.magnitudeSquared(quaternion);
   result = Quaternion.conjugate(quaternion, result);
   return Quaternion.multiplyByScalar(result, 1.0 / magnitudeSquared, result);
 };
@@ -597,20 +597,20 @@ Quaternion.multiply = function (left, right, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var leftX = left.x;
-  var leftY = left.y;
-  var leftZ = left.z;
-  var leftW = left.w;
+  const leftX = left.x;
+  const leftY = left.y;
+  const leftZ = left.z;
+  const leftW = left.w;
 
-  var rightX = right.x;
-  var rightY = right.y;
-  var rightZ = right.z;
-  var rightW = right.w;
+  const rightX = right.x;
+  const rightY = right.y;
+  const rightZ = right.z;
+  const rightW = right.w;
 
-  var x = leftW * rightX + leftX * rightW + leftY * rightZ - leftZ * rightY;
-  var y = leftW * rightY - leftX * rightZ + leftY * rightW + leftZ * rightX;
-  var z = leftW * rightZ + leftX * rightY - leftY * rightX + leftZ * rightW;
-  var w = leftW * rightW - leftX * rightX - leftY * rightY - leftZ * rightZ;
+  const x = leftW * rightX + leftX * rightW + leftY * rightZ - leftZ * rightY;
+  const y = leftW * rightY - leftX * rightZ + leftY * rightW + leftZ * rightX;
+  const z = leftW * rightZ + leftX * rightY - leftY * rightX + leftZ * rightW;
+  const w = leftW * rightW - leftX * rightX - leftY * rightY - leftZ * rightZ;
 
   result.x = x;
   result.y = y;
@@ -676,13 +676,13 @@ Quaternion.computeAxis = function (quaternion, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var w = quaternion.w;
+  const w = quaternion.w;
   if (Math.abs(w - 1.0) < CesiumMath.EPSILON6) {
     result.x = result.y = result.z = 0;
     return result;
   }
 
-  var scalar = 1.0 / Math.sqrt(1.0 - w * w);
+  const scalar = 1.0 / Math.sqrt(1.0 - w * w);
 
   result.x = quaternion.x * scalar;
   result.y = quaternion.y * scalar;
@@ -707,7 +707,7 @@ Quaternion.computeAngle = function (quaternion) {
   return 2.0 * Math.acos(quaternion.w);
 };
 
-var lerpScratch = new Quaternion();
+let lerpScratch = new Quaternion();
 /**
  * Computes the linear interpolation or extrapolation at t using the provided quaternions.
  *
@@ -730,9 +730,9 @@ Quaternion.lerp = function (start, end, t, result) {
   return Quaternion.add(lerpScratch, result, result);
 };
 
-var slerpEndNegated = new Quaternion();
-var slerpScaledP = new Quaternion();
-var slerpScaledR = new Quaternion();
+let slerpEndNegated = new Quaternion();
+let slerpScaledP = new Quaternion();
+let slerpScaledR = new Quaternion();
 /**
  * Computes the spherical linear interpolation or extrapolation at t using the provided quaternions.
  *
@@ -752,11 +752,11 @@ Quaternion.slerp = function (start, end, t, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var dot = Quaternion.dot(start, end);
+  let dot = Quaternion.dot(start, end);
 
   // The angle between start must be acute. Since q and -q represent
   // the same rotation, negate q to get the acute angle.
-  var r = end;
+  let r = end;
   if (dot < 0.0) {
     dot = -dot;
     r = slerpEndNegated = Quaternion.negate(end, slerpEndNegated);
@@ -768,7 +768,7 @@ Quaternion.slerp = function (start, end, t, result) {
     return Quaternion.lerp(start, r, t, result);
   }
 
-  var theta = Math.acos(dot);
+  const theta = Math.acos(dot);
   slerpScaledP = Quaternion.multiplyByScalar(
     start,
     Math.sin((1 - t) * theta),
@@ -796,8 +796,8 @@ Quaternion.log = function (quaternion, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var theta = CesiumMath.acosClamped(quaternion.w);
-  var thetaOverSinTheta = 0.0;
+  const theta = CesiumMath.acosClamped(quaternion.w);
+  let thetaOverSinTheta = 0.0;
 
   if (theta !== 0.0) {
     thetaOverSinTheta = theta / Math.sin(theta);
@@ -819,8 +819,8 @@ Quaternion.exp = function (cartesian, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var theta = Cartesian3.magnitude(cartesian);
-  var sinThetaOverTheta = 0.0;
+  const theta = Cartesian3.magnitude(cartesian);
+  let sinThetaOverTheta = 0.0;
 
   if (theta !== 0.0) {
     sinThetaOverTheta = Math.sin(theta) / theta;
@@ -834,10 +834,10 @@ Quaternion.exp = function (cartesian, result) {
   return result;
 };
 
-var squadScratchCartesian0 = new Cartesian3();
-var squadScratchCartesian1 = new Cartesian3();
-var squadScratchQuaternion0 = new Quaternion();
-var squadScratchQuaternion1 = new Quaternion();
+const squadScratchCartesian0 = new Cartesian3();
+const squadScratchCartesian1 = new Cartesian3();
+const squadScratchQuaternion0 = new Quaternion();
+const squadScratchQuaternion1 = new Quaternion();
 
 /**
  * Computes an inner quadrangle point.
@@ -859,12 +859,12 @@ Quaternion.computeInnerQuadrangle = function (q0, q1, q2, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var qInv = Quaternion.conjugate(q1, squadScratchQuaternion0);
+  const qInv = Quaternion.conjugate(q1, squadScratchQuaternion0);
   Quaternion.multiply(qInv, q2, squadScratchQuaternion1);
-  var cart0 = Quaternion.log(squadScratchQuaternion1, squadScratchCartesian0);
+  const cart0 = Quaternion.log(squadScratchQuaternion1, squadScratchCartesian0);
 
   Quaternion.multiply(qInv, q0, squadScratchQuaternion1);
-  var cart1 = Quaternion.log(squadScratchQuaternion1, squadScratchCartesian1);
+  const cart1 = Quaternion.log(squadScratchQuaternion1, squadScratchCartesian1);
 
   Cartesian3.add(cart0, cart1, cart0);
   Cartesian3.multiplyByScalar(cart0, 0.25, cart0);
@@ -888,13 +888,13 @@ Quaternion.computeInnerQuadrangle = function (q0, q1, q2, result) {
  *
  * @example
  * // 1. compute the squad interpolation between two quaternions on a curve
- * var s0 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[i - 1], quaternions[i], quaternions[i + 1], new Cesium.Quaternion());
- * var s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[i], quaternions[i + 1], quaternions[i + 2], new Cesium.Quaternion());
- * var q = Cesium.Quaternion.squad(quaternions[i], quaternions[i + 1], s0, s1, t, new Cesium.Quaternion());
+ * const s0 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[i - 1], quaternions[i], quaternions[i + 1], new Cesium.Quaternion());
+ * const s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[i], quaternions[i + 1], quaternions[i + 2], new Cesium.Quaternion());
+ * const q = Cesium.Quaternion.squad(quaternions[i], quaternions[i + 1], s0, s1, t, new Cesium.Quaternion());
  *
  * // 2. compute the squad interpolation as above but where the first quaternion is a end point.
- * var s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[0], quaternions[1], quaternions[2], new Cesium.Quaternion());
- * var q = Cesium.Quaternion.squad(quaternions[0], quaternions[1], quaternions[0], s1, t, new Cesium.Quaternion());
+ * const s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[0], quaternions[1], quaternions[2], new Cesium.Quaternion());
+ * const q = Cesium.Quaternion.squad(quaternions[0], quaternions[1], quaternions[0], s1, t, new Cesium.Quaternion());
  *
  * @see Quaternion#computeInnerQuadrangle
  */
@@ -908,21 +908,21 @@ Quaternion.squad = function (q0, q1, s0, s1, t, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var slerp0 = Quaternion.slerp(q0, q1, t, squadScratchQuaternion0);
-  var slerp1 = Quaternion.slerp(s0, s1, t, squadScratchQuaternion1);
+  const slerp0 = Quaternion.slerp(q0, q1, t, squadScratchQuaternion0);
+  const slerp1 = Quaternion.slerp(s0, s1, t, squadScratchQuaternion1);
   return Quaternion.slerp(slerp0, slerp1, 2.0 * t * (1.0 - t), result);
 };
 
-var fastSlerpScratchQuaternion = new Quaternion();
-var opmu = 1.90110745351730037;
-var u = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
-var v = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
-var bT = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
-var bD = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
+const fastSlerpScratchQuaternion = new Quaternion();
+const opmu = 1.90110745351730037;
+const u = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
+const v = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
+const bT = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
+const bD = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
 
-for (var i = 0; i < 7; ++i) {
-  var s = i + 1.0;
-  var t = 2.0 * s + 1.0;
+for (let i = 0; i < 7; ++i) {
+  const s = i + 1.0;
+  const t = 2.0 * s + 1.0;
   u[i] = 1.0 / (s * t);
   v[i] = s / t;
 }
@@ -950,9 +950,9 @@ Quaternion.fastSlerp = function (start, end, t, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var x = Quaternion.dot(start, end);
+  let x = Quaternion.dot(start, end);
 
-  var sign;
+  let sign;
   if (x >= 0) {
     sign = 1.0;
   } else {
@@ -960,17 +960,17 @@ Quaternion.fastSlerp = function (start, end, t, result) {
     x = -x;
   }
 
-  var xm1 = x - 1.0;
-  var d = 1.0 - t;
-  var sqrT = t * t;
-  var sqrD = d * d;
+  const xm1 = x - 1.0;
+  const d = 1.0 - t;
+  const sqrT = t * t;
+  const sqrD = d * d;
 
-  for (var i = 7; i >= 0; --i) {
+  for (let i = 7; i >= 0; --i) {
     bT[i] = (u[i] * sqrT - v[i]) * xm1;
     bD[i] = (u[i] * sqrD - v[i]) * xm1;
   }
 
-  var cT =
+  const cT =
     sign *
     t *
     (1.0 +
@@ -984,7 +984,7 @@ Quaternion.fastSlerp = function (start, end, t, result) {
                     (1.0 +
                       bT[4] *
                         (1.0 + bT[5] * (1.0 + bT[6] * (1.0 + bT[7]))))))));
-  var cD =
+  const cD =
     d *
     (1.0 +
       bD[0] *
@@ -998,7 +998,11 @@ Quaternion.fastSlerp = function (start, end, t, result) {
                       bD[4] *
                         (1.0 + bD[5] * (1.0 + bD[6] * (1.0 + bD[7]))))))));
 
-  var temp = Quaternion.multiplyByScalar(start, cD, fastSlerpScratchQuaternion);
+  const temp = Quaternion.multiplyByScalar(
+    start,
+    cD,
+    fastSlerpScratchQuaternion
+  );
   Quaternion.multiplyByScalar(end, cT, result);
   return Quaternion.add(temp, result, result);
 };
@@ -1027,8 +1031,8 @@ Quaternion.fastSquad = function (q0, q1, s0, s1, t, result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  var slerp0 = Quaternion.fastSlerp(q0, q1, t, squadScratchQuaternion0);
-  var slerp1 = Quaternion.fastSlerp(s0, s1, t, squadScratchQuaternion1);
+  const slerp0 = Quaternion.fastSlerp(q0, q1, t, squadScratchQuaternion0);
+  const slerp1 = Quaternion.fastSlerp(s0, s1, t, squadScratchQuaternion1);
   return Quaternion.fastSlerp(slerp0, slerp1, 2.0 * t * (1.0 - t), result);
 };
 
@@ -1132,6 +1136,6 @@ Quaternion.prototype.equalsEpsilon = function (right, epsilon) {
  * @returns {String} A string representing this Quaternion.
  */
 Quaternion.prototype.toString = function () {
-  return "(" + this.x + ", " + this.y + ", " + this.z + ", " + this.w + ")";
+  return `(${this.x}, ${this.y}, ${this.z}, ${this.w})`;
 };
 export default Quaternion;

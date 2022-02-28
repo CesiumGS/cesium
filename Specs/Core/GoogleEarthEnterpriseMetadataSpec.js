@@ -46,16 +46,16 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
 
   it("decode", function () {
     CesiumMath.setRandomNumberSeed(123123);
-    var key = new Uint8Array(1025);
-    var data = new Uint8Array(1025);
-    for (var i = 0; i < 1025; ++i) {
+    const key = new Uint8Array(1025);
+    const data = new Uint8Array(1025);
+    for (let i = 0; i < 1025; ++i) {
       key[i] = Math.floor(CesiumMath.nextRandomNumber() * 256);
       data[i] = Math.floor(CesiumMath.nextRandomNumber() * 256);
     }
 
-    var keyBuffer = key.buffer.slice(0, 1024); // Key length should be divisible by 4
-    var dataBuffer = data.buffer.slice();
-    var a = new Uint8Array(dataBuffer);
+    const keyBuffer = key.buffer.slice(0, 1024); // Key length should be divisible by 4
+    const dataBuffer = data.buffer.slice();
+    const a = new Uint8Array(dataBuffer);
     decodeGoogleEarthEnterpriseData(keyBuffer, dataBuffer);
     expect(a).not.toEqual(data);
 
@@ -66,7 +66,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
   });
 
   it("decode requires key", function () {
-    var data = new Uint8Array(3);
+    const data = new Uint8Array(3);
 
     expect(function () {
       decodeGoogleEarthEnterpriseData(undefined, data.buffer);
@@ -74,7 +74,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
   });
 
   it("decode requires data", function () {
-    var key = new Uint8Array(4);
+    const key = new Uint8Array(4);
 
     expect(function () {
       decodeGoogleEarthEnterpriseData(key.buffer);
@@ -82,8 +82,8 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
   });
 
   it("decode throws if key length isn't greater than 0 and a multiple 4", function () {
-    var key;
-    var data = new Uint8Array(3);
+    let key;
+    const data = new Uint8Array(3);
 
     key = new Uint8Array(0);
     expect(function () {
@@ -107,8 +107,8 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
   });
 
   it("populateSubtree", function () {
-    var quad = "0123";
-    var index = 0;
+    const quad = "0123";
+    let index = 0;
     spyOn(
       GoogleEarthEnterpriseMetadata.prototype,
       "getQuadTreePacket"
@@ -125,15 +125,15 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
       return when();
     });
 
-    var metadata = new GoogleEarthEnterpriseMetadata({
+    const metadata = new GoogleEarthEnterpriseMetadata({
       url: "http://test.server",
     });
-    var request = new Request({
+    const request = new Request({
       throttle: true,
     });
     return metadata.readyPromise
       .then(function () {
-        var tileXY = GoogleEarthEnterpriseMetadata.quadKeyToTileXY(quad);
+        const tileXY = GoogleEarthEnterpriseMetadata.quadKeyToTileXY(quad);
         return metadata.populateSubtree(
           tileXY.x,
           tileXY.y,
@@ -158,7 +158,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
           GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
         ).toHaveBeenCalledWith("012", 1, request);
 
-        var tileInfo = metadata._tileInfo;
+        const tileInfo = metadata._tileInfo;
         expect(tileInfo["0"]).toBeDefined();
         expect(tileInfo["01"]).toBeDefined();
         expect(tileInfo["012"]).toBeDefined();
@@ -167,9 +167,9 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
   });
 
   it("resolves readyPromise", function () {
-    var baseurl = "http://fake.fake.invalid/";
+    const baseurl = "http://fake.fake.invalid/";
 
-    var req = 0;
+    let req = 0;
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
       responseType,
@@ -181,10 +181,10 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
     ) {
       expect(responseType).toEqual("arraybuffer");
       if (req === 0) {
-        expect(url).toEqual(baseurl + "dbRoot.v5?output=proto");
+        expect(url).toEqual(`${baseurl}dbRoot.v5?output=proto`);
         deferred.reject(); // Reject dbRoot request and use defaults
       } else {
-        expect(url).toEqual(baseurl + "flatfile?q2-0-q.1");
+        expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
         Resource._DefaultImplementations.loadWithXhr(
           "Data/GoogleEarthEnterprise/gee.metadata",
           responseType,
@@ -197,7 +197,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
       ++req;
     });
 
-    var provider = new GoogleEarthEnterpriseMetadata({
+    const provider = new GoogleEarthEnterpriseMetadata({
       url: baseurl,
     });
 
@@ -211,7 +211,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
       expect(provider.negativeAltitudeExponentBias).toBe(32);
       expect(provider.providers).toEqual({});
 
-      var tileInfo = provider._tileInfo["0"];
+      const tileInfo = provider._tileInfo["0"];
       expect(tileInfo).toBeDefined();
       expect(tileInfo._bits).toEqual(0x40);
       expect(tileInfo.cnodeVersion).toEqual(2);
@@ -223,12 +223,12 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
   });
 
   it("resolves readyPromise with Resource", function () {
-    var baseurl = "http://fake.fake.invalid/";
-    var resource = new Resource({
+    const baseurl = "http://fake.fake.invalid/";
+    const resource = new Resource({
       url: baseurl,
     });
 
-    var req = 0;
+    let req = 0;
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
       responseType,
@@ -240,10 +240,10 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
     ) {
       expect(responseType).toEqual("arraybuffer");
       if (req === 0) {
-        expect(url).toEqual(baseurl + "dbRoot.v5?output=proto");
+        expect(url).toEqual(`${baseurl}dbRoot.v5?output=proto`);
         deferred.reject(); // Reject dbRoot request and use defaults
       } else {
-        expect(url).toEqual(baseurl + "flatfile?q2-0-q.1");
+        expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
         Resource._DefaultImplementations.loadWithXhr(
           "Data/GoogleEarthEnterprise/gee.metadata",
           responseType,
@@ -256,7 +256,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
       ++req;
     });
 
-    var provider = new GoogleEarthEnterpriseMetadata(resource);
+    const provider = new GoogleEarthEnterpriseMetadata(resource);
 
     return provider.readyPromise.then(function (result) {
       expect(result).toBe(true);
@@ -268,7 +268,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
       expect(provider.negativeAltitudeExponentBias).toBe(32);
       expect(provider.providers).toEqual({});
 
-      var tileInfo = provider._tileInfo["0"];
+      const tileInfo = provider._tileInfo["0"];
       expect(tileInfo).toBeDefined();
       expect(tileInfo._bits).toEqual(0x40);
       expect(tileInfo.cnodeVersion).toEqual(2);
@@ -280,8 +280,8 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
   });
 
   it("rejects readyPromise on error", function () {
-    var url = "host.invalid/";
-    var provider = new GoogleEarthEnterpriseMetadata({
+    const url = "host.invalid/";
+    const provider = new GoogleEarthEnterpriseMetadata({
       url: url,
     });
 

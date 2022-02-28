@@ -9,26 +9,26 @@ import testDefinitionChanged from "../testDefinitionChanged.js";
 
 describe("DataSources/NodeTransformationProperty", function () {
   it("default constructor sets expected values", function () {
-    var property = new NodeTransformationProperty();
+    const property = new NodeTransformationProperty();
     expect(property.isConstant).toBe(true);
     expect(property.translation).toBeUndefined();
     expect(property.rotation).toBeUndefined();
     expect(property.scale).toBeUndefined();
 
-    var result = property.getValue();
+    const result = property.getValue();
     expect(result.translation).toEqual(Cartesian3.ZERO);
     expect(result.rotation).toEqual(Quaternion.IDENTITY);
     expect(result.scale).toEqual(new Cartesian3(1.0, 1.0, 1.0));
   });
 
   it("constructor sets options and allows raw assignment", function () {
-    var options = {
+    const options = {
       translation: Cartesian3.UNIT_Y,
       rotation: new Quaternion(0.5, 0.5, 0.5, 0.5),
       scale: Cartesian3.UNIT_X,
     };
 
-    var property = new NodeTransformationProperty(options);
+    const property = new NodeTransformationProperty(options);
     expect(property.translation).toBeInstanceOf(ConstantProperty);
     expect(property.rotation).toBeInstanceOf(ConstantProperty);
     expect(property.scale).toBeInstanceOf(ConstantProperty);
@@ -39,27 +39,27 @@ describe("DataSources/NodeTransformationProperty", function () {
   });
 
   it("works with constant values", function () {
-    var property = new NodeTransformationProperty();
+    const property = new NodeTransformationProperty();
     property.translation = new ConstantProperty(Cartesian3.UNIT_Y);
     property.rotation = new ConstantProperty(
       new Quaternion(0.5, 0.5, 0.5, 0.5)
     );
     property.scale = new ConstantProperty(Cartesian3.UNIT_X);
 
-    var result = property.getValue(JulianDate.now());
+    const result = property.getValue(JulianDate.now());
     expect(result.translation).toEqual(Cartesian3.UNIT_Y);
     expect(result.rotation).toEqual(new Quaternion(0.5, 0.5, 0.5, 0.5));
     expect(result.scale).toEqual(Cartesian3.UNIT_X);
   });
 
   it("works with dynamic values", function () {
-    var property = new NodeTransformationProperty();
+    const property = new NodeTransformationProperty();
     property.translation = new TimeIntervalCollectionProperty();
     property.rotation = new TimeIntervalCollectionProperty();
     property.scale = new TimeIntervalCollectionProperty();
 
-    var start = new JulianDate(1, 0);
-    var stop = new JulianDate(2, 0);
+    const start = new JulianDate(1, 0);
+    const stop = new JulianDate(2, 0);
     property.translation.intervals.addInterval(
       new TimeInterval({
         start: start,
@@ -84,30 +84,30 @@ describe("DataSources/NodeTransformationProperty", function () {
 
     expect(property.isConstant).toBe(false);
 
-    var result = property.getValue(start);
+    const result = property.getValue(start);
     expect(result.translation).toEqual(Cartesian3.UNIT_Y);
     expect(result.rotation).toEqual(new Quaternion(0.5, 0.5, 0.5, 0.5));
     expect(result.scale).toEqual(Cartesian3.UNIT_X);
   });
 
   it("works with a result parameter", function () {
-    var property = new NodeTransformationProperty();
+    const property = new NodeTransformationProperty();
     property.translation = new ConstantProperty(Cartesian3.UNIT_Y);
     property.rotation = new ConstantProperty(
       new Quaternion(0.5, 0.5, 0.5, 0.5)
     );
     property.scale = new ConstantProperty(Cartesian3.UNIT_X);
 
-    var translation = new Cartesian3();
-    var rotation = new Quaternion();
-    var scale = new Cartesian3();
-    var result = {
+    const translation = new Cartesian3();
+    const rotation = new Quaternion();
+    const scale = new Cartesian3();
+    const result = {
       translation: translation,
       rotation: rotation,
       scale: scale,
     };
 
-    var returnedResult = property.getValue(JulianDate.now(), result);
+    const returnedResult = property.getValue(JulianDate.now(), result);
     expect(returnedResult).toBe(result);
     expect(returnedResult.translation).toBe(translation);
     expect(returnedResult.translation).toEqual(Cartesian3.UNIT_Y);
@@ -118,12 +118,12 @@ describe("DataSources/NodeTransformationProperty", function () {
   });
 
   it("equals works", function () {
-    var left = new NodeTransformationProperty();
+    const left = new NodeTransformationProperty();
     left.translation = new ConstantProperty(Cartesian3.UNIT_Y);
     left.rotation = new ConstantProperty(new Quaternion(0.5, 0.5, 0.5, 0.5));
     left.scale = new ConstantProperty(Cartesian3.UNIT_X);
 
-    var right = new NodeTransformationProperty();
+    const right = new NodeTransformationProperty();
     right.translation = new ConstantProperty(Cartesian3.UNIT_Y);
     right.rotation = new ConstantProperty(new Quaternion(0.5, 0.5, 0.5, 0.5));
     right.scale = new ConstantProperty(Cartesian3.UNIT_X);
@@ -142,7 +142,7 @@ describe("DataSources/NodeTransformationProperty", function () {
   });
 
   it("raises definitionChanged when a property is assigned or modified", function () {
-    var property = new NodeTransformationProperty();
+    const property = new NodeTransformationProperty();
     testDefinitionChanged(
       property,
       "rotation",

@@ -8,7 +8,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  * This type describes an interface and is not intended to be instantiated directly.
  * </p>
  * <p>
- * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
  *
  * @alias MetadataEntity
@@ -146,7 +146,7 @@ MetadataEntity.hasProperty = function (
   }
 
   if (defined(classDefinition)) {
-    var classProperty = classDefinition.properties[propertyId];
+    const classProperty = classDefinition.properties[propertyId];
     if (defined(classProperty) && defined(classProperty.default)) {
       return true;
     }
@@ -179,7 +179,7 @@ MetadataEntity.hasPropertyBySemantic = function (
     return false;
   }
 
-  var property = classDefinition.propertiesBySemantic[semantic];
+  const property = classDefinition.propertiesBySemantic[semantic];
   return defined(property);
 };
 
@@ -206,7 +206,7 @@ MetadataEntity.getPropertyIds = function (
   results.length = 0;
 
   // Add entity properties
-  for (var propertyId in properties) {
+  for (const propertyId in properties) {
     if (
       properties.hasOwnProperty(propertyId) &&
       defined(properties[propertyId])
@@ -217,8 +217,8 @@ MetadataEntity.getPropertyIds = function (
 
   // Add default properties
   if (defined(classDefinition)) {
-    var classProperties = classDefinition.properties;
-    for (var classPropertyId in classProperties) {
+    const classProperties = classDefinition.properties;
+    for (const classPropertyId in classProperties) {
       if (
         classProperties.hasOwnProperty(classPropertyId) &&
         !defined(properties[classPropertyId]) &&
@@ -255,9 +255,9 @@ MetadataEntity.getProperty = function (
   Check.typeOf.object("properties", properties);
   //>>includeEnd('debug');
 
-  var value = properties[propertyId];
+  let value = properties[propertyId];
 
-  var classProperty;
+  let classProperty;
   if (defined(classDefinition)) {
     classProperty = classDefinition.properties[propertyId];
   }
@@ -276,7 +276,7 @@ MetadataEntity.getProperty = function (
 
   if (defined(classProperty)) {
     value = classProperty.normalize(value);
-    value = classProperty.unpackVectorTypes(value);
+    value = classProperty.unpackVectorAndMatrixTypes(value);
   }
 
   return value;
@@ -317,9 +317,9 @@ MetadataEntity.setProperty = function (
   }
 
   if (defined(classDefinition)) {
-    var classProperty = classDefinition.properties[propertyId];
+    const classProperty = classDefinition.properties[propertyId];
     if (defined(classProperty)) {
-      value = classProperty.packVectorTypes(value);
+      value = classProperty.packVectorAndMatrixTypes(value);
       value = classProperty.unnormalize(value);
     }
   }
@@ -351,7 +351,7 @@ MetadataEntity.getPropertyBySemantic = function (
     return undefined;
   }
 
-  var property = classDefinition.propertiesBySemantic[semantic];
+  const property = classDefinition.propertiesBySemantic[semantic];
   if (defined(property)) {
     return MetadataEntity.getProperty(property.id, properties, classDefinition);
   }
@@ -381,7 +381,7 @@ MetadataEntity.setPropertyBySemantic = function (
   Check.typeOf.object("classDefinition", classDefinition);
   //>>includeEnd('debug');
 
-  var property = classDefinition.propertiesBySemantic[semantic];
+  const property = classDefinition.propertiesBySemantic[semantic];
   if (defined(property)) {
     return MetadataEntity.setProperty(
       property.id,

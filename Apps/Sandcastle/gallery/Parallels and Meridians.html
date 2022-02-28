@@ -35,11 +35,11 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var toDegrees = Cesium.Math.toDegrees;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const toDegrees = Cesium.Math.toDegrees;
 
         function parallel(latitude, color, granularity) {
-          var name = "Parallel " + latitude;
+          const name = `Parallel ${latitude}`;
           return viewer.entities.add({
             name: name,
             polyline: {
@@ -64,7 +64,7 @@
         }
 
         function meridian(longitude, color, granularity) {
-          var name = "Meridian " + longitude;
+          const name = `Meridian ${longitude}`;
           return viewer.entities.add({
             name: name,
             polyline: {
@@ -85,10 +85,10 @@
         }
 
         function labelCoordinates(cartographic) {
-          var position = Cesium.Cartographic.toCartesian(cartographic);
-          var latitude = toDegrees(cartographic.latitude).toFixed(4);
-          var longitude = toDegrees(cartographic.longitude).toFixed(4);
-          var label = "lat: " + latitude + "°\nlon: " + longitude + "°";
+          const position = Cesium.Cartographic.toCartesian(cartographic);
+          const latitude = toDegrees(cartographic.latitude).toFixed(4);
+          const longitude = toDegrees(cartographic.longitude).toFixed(4);
+          const label = `lat: ${latitude}°\nlon: ${longitude}°`;
 
           return viewer.entities.add({
             position: position,
@@ -101,13 +101,13 @@
         }
 
         function makeGrid(numberOfDivisions, color, show) {
-          var parallels = makeParallelsRecursive(
+          const parallels = makeParallelsRecursive(
             -90,
             90,
             numberOfDivisions,
             color
           );
-          var meridians = makeMeridiansRecursive(
+          const meridians = makeMeridiansRecursive(
             -180,
             180,
             numberOfDivisions,
@@ -115,7 +115,7 @@
           );
           meridians.push(meridian(180, color));
 
-          var allLines = parallels.concat(meridians);
+          const allLines = parallels.concat(meridians);
           allLines.forEach(function (line) {
             line.show = show;
           });
@@ -129,18 +129,18 @@
           depth,
           color
         ) {
-          var result = [];
-          var midpoint = (minLatitude + maxLatitude) / 2;
+          let result = [];
+          const midpoint = (minLatitude + maxLatitude) / 2;
           result.push(parallel(midpoint, color));
 
           if (depth > 0) {
-            var southernLines = makeParallelsRecursive(
+            const southernLines = makeParallelsRecursive(
               minLatitude,
               midpoint,
               depth - 1,
               color
             );
-            var northernLines = makeParallelsRecursive(
+            const northernLines = makeParallelsRecursive(
               midpoint,
               maxLatitude,
               depth - 1,
@@ -158,18 +158,18 @@
           depth,
           color
         ) {
-          var result = [];
-          var midpoint = (minLongitude + maxLongitude) / 2;
+          let result = [];
+          const midpoint = (minLongitude + maxLongitude) / 2;
           result.push(meridian(midpoint, color));
 
           if (depth > 0) {
-            var westernLines = makeMeridiansRecursive(
+            const westernLines = makeMeridiansRecursive(
               minLongitude,
               midpoint,
               depth - 1,
               color
             );
-            var easternLines = makeMeridiansRecursive(
+            const easternLines = makeMeridiansRecursive(
               midpoint,
               maxLongitude,
               depth - 1,
@@ -181,8 +181,8 @@
           return result;
         }
 
-        var showAntipodalPoint = false;
-        var primitives = {
+        let showAntipodalPoint = false;
+        const primitives = {
           equator: parallel(0, Cesium.Color.BLUE),
           primeMeridian: meridian(0, Cesium.Color.BLUE),
           selectedPoint: {
@@ -200,8 +200,8 @@
         };
 
         function updateCrosshairs(cartographic) {
-          var selectedPoint = primitives.selectedPoint;
-          var antipodalPoint = primitives.antipodalPoint;
+          const selectedPoint = primitives.selectedPoint;
+          const antipodalPoint = primitives.antipodalPoint;
           if (Cesium.defined(selectedPoint.parallel)) {
             viewer.entities.remove(selectedPoint.parallel);
             viewer.entities.remove(selectedPoint.meridian);
@@ -211,15 +211,15 @@
             viewer.entities.remove(antipodalPoint.label);
           }
 
-          var pointLatitude = toDegrees(cartographic.latitude);
-          var antipodeLatitude = -pointLatitude;
+          const pointLatitude = toDegrees(cartographic.latitude);
+          const antipodeLatitude = -pointLatitude;
 
-          var pointLongitude = toDegrees(cartographic.longitude);
-          var antipodeLongitude = (pointLongitude + 180) % 360;
+          const pointLongitude = toDegrees(cartographic.longitude);
+          const antipodeLongitude = (pointLongitude + 180) % 360;
 
           // Increase the granularity to improve accuracy when zoomed in
-          var finerGranularity = 0.001;
-          var red = Cesium.Color.RED;
+          const finerGranularity = 0.001;
+          const red = Cesium.Color.RED;
           selectedPoint.parallel = parallel(
             toDegrees(cartographic.latitude),
             red,
@@ -232,8 +232,8 @@
           );
           selectedPoint.label = labelCoordinates(cartographic);
 
-          var cyan = Cesium.Color.CYAN;
-          var antipode = new Cesium.Cartographic.fromDegrees(
+          const cyan = Cesium.Color.CYAN;
+          const antipode = new Cesium.Cartographic.fromDegrees(
             antipodeLongitude,
             antipodeLatitude,
             0
@@ -258,15 +258,15 @@
         // Click to shift the cross-hairs
         viewer.screenSpaceEventHandler.setInputAction(function (mouse) {
           viewer.scene.pick(mouse.position);
-          var ray = viewer.camera.getPickRay(mouse.position);
-          var globe = viewer.scene.globe;
-          var cartesian = globe.pick(ray, viewer.scene);
+          const ray = viewer.camera.getPickRay(mouse.position);
+          const globe = viewer.scene.globe;
+          const cartesian = globe.pick(ray, viewer.scene);
 
           if (!Cesium.defined(cartesian)) {
             return;
           }
 
-          var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+          const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
           updateCrosshairs(cartographic);
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
@@ -302,7 +302,7 @@
           checked
         ) {
           showAntipodalPoint = checked;
-          var antipodalPoint = primitives.antipodalPoint;
+          const antipodalPoint = primitives.antipodalPoint;
 
           if (Cesium.defined(antipodalPoint.parallel)) {
             antipodalPoint.parallel.show = showAntipodalPoint;

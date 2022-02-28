@@ -4,11 +4,11 @@ import { NavigationHelpButton } from "../../../Source/Cesium.js";
 
 describe("Widgets/NavigationHelpButton/NavigationHelpButton", function () {
   it("can create and destroy", function () {
-    var container = document.createElement("span");
+    const container = document.createElement("span");
     container.id = "testContainer";
     document.body.appendChild(container);
 
-    var widget = new NavigationHelpButton({
+    const widget = new NavigationHelpButton({
       container: "testContainer",
     });
     expect(widget.container.id).toBe(container.id);
@@ -21,7 +21,7 @@ describe("Widgets/NavigationHelpButton/NavigationHelpButton", function () {
   });
 
   it("does not show instructions by default", function () {
-    var widget = new NavigationHelpButton({
+    const widget = new NavigationHelpButton({
       container: document.body,
     });
     expect(widget.viewModel.showInstructions).toBe(false);
@@ -29,7 +29,7 @@ describe("Widgets/NavigationHelpButton/NavigationHelpButton", function () {
   });
 
   it("shows instructions by default if told to do so in the constructor", function () {
-    var widget = new NavigationHelpButton({
+    const widget = new NavigationHelpButton({
       container: document.body,
       instructionsInitiallyVisible: true,
     });
@@ -38,29 +38,26 @@ describe("Widgets/NavigationHelpButton/NavigationHelpButton", function () {
   });
 
   function addCloseOnInputSpec(name, func) {
-    it(
-      name + " event closes dropdown if target is not inside container",
-      function () {
-        var container = document.createElement("span");
-        container.id = "testContainer";
-        document.body.appendChild(container);
+    it(`${name} event closes dropdown if target is not inside container`, function () {
+      const container = document.createElement("span");
+      container.id = "testContainer";
+      document.body.appendChild(container);
 
-        var widget = new NavigationHelpButton({
-          container: "testContainer",
-        });
+      const widget = new NavigationHelpButton({
+        container: "testContainer",
+      });
 
-        widget.viewModel.showInstructions = true;
-        func(document.body);
-        expect(widget.viewModel.showInstructions).toEqual(false);
+      widget.viewModel.showInstructions = true;
+      func(document.body);
+      expect(widget.viewModel.showInstructions).toEqual(false);
 
-        widget.viewModel.showInstructions = true;
-        func(container.firstChild);
-        expect(widget.viewModel.showInstructions).toEqual(true);
+      widget.viewModel.showInstructions = true;
+      func(container.firstChild);
+      expect(widget.viewModel.showInstructions).toEqual(true);
 
-        widget.destroy();
-        document.body.removeChild(container);
-      }
-    );
+      widget.destroy();
+      document.body.removeChild(container);
+    });
   }
 
   if (FeatureDetection.supportsPointerEvents()) {

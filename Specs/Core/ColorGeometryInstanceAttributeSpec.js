@@ -4,27 +4,27 @@ import { ComponentDatatype } from "../../Source/Cesium.js";
 
 describe("Core/ColorGeometryInstanceAttribute", function () {
   it("constructor", function () {
-    var attribute = new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 0.5);
+    const attribute = new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 0.5);
     expect(attribute.componentDatatype).toEqual(
       ComponentDatatype.UNSIGNED_BYTE
     );
     expect(attribute.componentsPerAttribute).toEqual(4);
     expect(attribute.normalize).toEqual(true);
 
-    var value = new Uint8Array(new Color(1.0, 1.0, 0.0, 0.5).toBytes());
+    const value = new Uint8Array(new Color(1.0, 1.0, 0.0, 0.5).toBytes());
     expect(attribute.value).toEqual(value);
   });
 
   it("fromColor", function () {
-    var color = Color.AQUA;
-    var attribute = ColorGeometryInstanceAttribute.fromColor(color);
+    const color = Color.AQUA;
+    const attribute = ColorGeometryInstanceAttribute.fromColor(color);
     expect(attribute.componentDatatype).toEqual(
       ComponentDatatype.UNSIGNED_BYTE
     );
     expect(attribute.componentsPerAttribute).toEqual(4);
     expect(attribute.normalize).toEqual(true);
 
-    var value = new Uint8Array(color.toBytes());
+    const value = new Uint8Array(color.toBytes());
     expect(attribute.value).toEqual(value);
   });
 
@@ -35,18 +35,21 @@ describe("Core/ColorGeometryInstanceAttribute", function () {
   });
 
   it("toValue", function () {
-    var color = Color.AQUA;
-    var expectedResult = new Uint8Array(color.toBytes());
+    const color = Color.AQUA;
+    const expectedResult = new Uint8Array(color.toBytes());
     expect(ColorGeometryInstanceAttribute.toValue(color)).toEqual(
       expectedResult
     );
   });
 
   it("toValue works with result parameter", function () {
-    var color = Color.AQUA;
-    var expectedResult = new Uint8Array(color.toBytes());
-    var result = new Uint8Array(4);
-    var returnedResult = ColorGeometryInstanceAttribute.toValue(color, result);
+    const color = Color.AQUA;
+    const expectedResult = new Uint8Array(color.toBytes());
+    const result = new Uint8Array(4);
+    const returnedResult = ColorGeometryInstanceAttribute.toValue(
+      color,
+      result
+    );
     expect(returnedResult).toBe(result);
     expect(returnedResult).toEqual(expectedResult);
   });
@@ -58,7 +61,7 @@ describe("Core/ColorGeometryInstanceAttribute", function () {
   });
 
   it("equals", function () {
-    var color = new ColorGeometryInstanceAttribute(0.1, 0.2, 0.3, 0.4);
+    const color = new ColorGeometryInstanceAttribute(0.1, 0.2, 0.3, 0.4);
     expect(ColorGeometryInstanceAttribute.equals(color, color)).toEqual(true);
     expect(
       ColorGeometryInstanceAttribute.equals(

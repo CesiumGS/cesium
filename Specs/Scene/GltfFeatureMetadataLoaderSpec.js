@@ -10,6 +10,7 @@ import {
   when,
 } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
+import loaderProcess from "../loaderProcess.js";
 import MetadataTester from "../MetadataTester.js";
 import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
@@ -20,24 +21,24 @@ describe(
       return;
     }
 
-    var image = new Image();
+    const image = new Image();
     image.src =
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
 
-    var gltfUri = "https://example.com/model.glb";
-    var gltfResource = new Resource({
+    const gltfUri = "https://example.com/model.glb";
+    const gltfResource = new Resource({
       url: gltfUri,
     });
 
-    var schemaJson = {
+    const schemaJson = {
       classes: {
         building: {
           properties: {
             name: {
-              type: "STRING",
+              componentType: "STRING",
             },
             height: {
-              type: "FLOAT64",
+              componentType: "FLOAT64",
             },
           },
         },
@@ -57,14 +58,14 @@ describe(
               componentCount: 3,
             },
             intensity: {
-              type: "UINT8",
+              componentType: "UINT8",
             },
           },
         },
         ortho: {
           properties: {
             vegetation: {
-              type: "UINT8",
+              componentType: "UINT8",
               normalized: true,
             },
           },
@@ -72,23 +73,25 @@ describe(
       },
     };
 
-    var results = MetadataTester.createGltf({
+    const results = MetadataTester.createGltf({
       schema: schemaJson,
-      featureTables: {
-        buildings: {
+      propertyTables: [
+        {
+          name: "Buildings",
           class: "building",
           properties: {
             name: ["House", "Hospital"],
             height: [10.0, 20.0],
           },
         },
-        trees: {
+        {
+          name: "Trees",
           class: "tree",
           properties: {
             species: [["Sparrow", "Squirrel"], ["Crow"]],
           },
         },
-      },
+      ],
       images: [
         {
           uri: "map.png",
@@ -105,51 +108,39 @@ describe(
           source: 1,
         },
       ],
-      featureTextures: {
-        mapTexture: {
+      propertyTextures: [
+        {
+          name: "Map",
           class: "map",
+          index: 0,
+          texCoord: 0,
           properties: {
-            color: {
-              channels: "rgb",
-              texture: {
-                index: 0,
-                texCoord: 0,
-              },
-            },
-            intensity: {
-              channels: "a",
-              texture: {
-                index: 0,
-                texCoord: 0,
-              },
-            },
+            color: [0, 1, 2],
+            intensity: [3],
           },
         },
-        orthoTexture: {
+        {
+          name: "Ortho",
           class: "ortho",
+          index: 1,
+          texCoord: 1,
           properties: {
-            vegetation: {
-              channels: "r",
-              texture: {
-                index: 1,
-                texCoord: 1,
-              },
-            },
+            vegetation: [0],
           },
         },
-      },
+      ],
     });
 
-    var gltf = results.gltf;
-    var extension = gltf.extensions.EXT_feature_metadata;
-    var buffer = results.buffer.buffer;
+    const gltf = results.gltf;
+    const extension = gltf.extensions.EXT_mesh_features;
+    const buffer = results.buffer.buffer;
 
-    var gltfSchemaUri = clone(gltf, true);
-    var extensionSchemaUri = gltfSchemaUri.extensions.EXT_feature_metadata;
+    const gltfSchemaUri = clone(gltf, true);
+    const extensionSchemaUri = gltfSchemaUri.extensions.EXT_mesh_features;
     extensionSchemaUri.schemaUri = "schema.json";
     delete extensionSchemaUri.schema;
 
-    var scene;
+    let scene;
 
     beforeAll(function () {
       scene = createScene();
@@ -175,11 +166,12 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("throws if extension is undefined", function () {
+    it("throws if neither extension nor extensionLegacy is defined", function () {
       expect(function () {
         return new GltfFeatureMetadataLoader({
           gltf: gltf,
           extension: undefined,
+          extensionLegacy: undefined,
           gltfResource: gltfResource,
           baseResource: gltfResource,
           supportedImageFormats: new SupportedImageFormats(),
@@ -224,7 +216,7 @@ describe(
     });
 
     it("rejects promise if buffer view fails to load", function () {
-      var error = new Error("404 Not Found");
+      const error = new Error("404 Not Found");
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         when.reject(error)
       );
@@ -233,7 +225,7 @@ describe(
         when.resolve(image)
       );
 
-      var featureMetadataLoader = new GltfFeatureMetadataLoader({
+      const featureMetadataLoader = new GltfFeatureMetadataLoader({
         gltf: gltf,
         extension: extension,
         gltfResource: gltfResource,
@@ -259,12 +251,12 @@ describe(
         when.resolve(buffer)
       );
 
-      var error = new Error("404 Not Found");
+      const error = new Error("404 Not Found");
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
         when.reject(error)
       );
 
-      var featureMetadataLoader = new GltfFeatureMetadataLoader({
+      const featureMetadataLoader = new GltfFeatureMetadataLoader({
         gltf: gltf,
         extension: extension,
         gltfResource: gltfResource,
@@ -294,12 +286,12 @@ describe(
         when.resolve(image)
       );
 
-      var error = new Error("404 Not Found");
+      const error = new Error("404 Not Found");
       spyOn(Resource.prototype, "fetchJson").and.returnValue(
         when.reject(error)
       );
 
-      var featureMetadataLoader = new GltfFeatureMetadataLoader({
+      const featureMetadataLoader = new GltfFeatureMetadataLoader({
         gltf: gltfSchemaUri,
         extension: extensionSchemaUri,
         gltfResource: gltfResource,
@@ -329,7 +321,7 @@ describe(
         when.resolve(image)
       );
 
-      var featureMetadataLoader = new GltfFeatureMetadataLoader({
+      const featureMetadataLoader = new GltfFeatureMetadataLoader({
         gltf: gltf,
         extension: extension,
         gltfResource: gltfResource,
@@ -342,12 +334,16 @@ describe(
       return waitForLoaderProcess(featureMetadataLoader, scene).then(function (
         featureMetadataLoader
       ) {
-        featureMetadataLoader.process(scene.frameState); // Check that calling process after load doesn't break anything
-        var featureMetadata = featureMetadataLoader.featureMetadata;
-        var buildingsTable = featureMetadata.getFeatureTable("buildings");
-        var treesTable = featureMetadata.getFeatureTable("trees");
-        var mapTexture = featureMetadata.getFeatureTexture("mapTexture");
-        var orthoTexture = featureMetadata.getFeatureTexture("orthoTexture");
+        loaderProcess(featureMetadataLoader, scene); // Check that calling process after load doesn't break anything
+        const featureMetadata = featureMetadataLoader.featureMetadata;
+        const buildingsTable = featureMetadata.getPropertyTable(0);
+        expect(buildingsTable.id).toBe(0);
+        const treesTable = featureMetadata.getPropertyTable(1);
+        expect(treesTable.id).toBe(1);
+        const mapTexture = featureMetadata.getPropertyTexture(0);
+        expect(mapTexture.id).toBe(0);
+        const orthoTexture = featureMetadata.getPropertyTexture(1);
+        expect(orthoTexture.id).toBe(1);
 
         expect(buildingsTable.getProperty(0, "name")).toBe("House");
         expect(buildingsTable.getProperty(1, "name")).toBe("Hospital");
@@ -357,9 +353,9 @@ describe(
         ]);
         expect(treesTable.getProperty(1, "species")).toEqual(["Crow"]);
 
-        var colorProperty = mapTexture.getProperty("color");
-        var intensityProperty = mapTexture.getProperty("intensity");
-        var vegetationProperty = orthoTexture.getProperty("vegetation");
+        const colorProperty = mapTexture.getProperty("color");
+        const intensityProperty = mapTexture.getProperty("intensity");
+        const vegetationProperty = orthoTexture.getProperty("vegetation");
 
         expect(colorProperty.textureReader.texture.width).toBe(1);
         expect(colorProperty.textureReader.texture.height).toBe(1);
@@ -395,7 +391,7 @@ describe(
         when.resolve(schemaJson)
       );
 
-      var featureMetadataLoader = new GltfFeatureMetadataLoader({
+      const featureMetadataLoader = new GltfFeatureMetadataLoader({
         gltf: gltfSchemaUri,
         extension: extensionSchemaUri,
         gltfResource: gltfResource,
@@ -408,7 +404,7 @@ describe(
       return waitForLoaderProcess(featureMetadataLoader, scene).then(function (
         featureMetadataLoader
       ) {
-        var featureMetadata = featureMetadataLoader.featureMetadata;
+        const featureMetadata = featureMetadataLoader.featureMetadata;
         expect(Object.keys(featureMetadata.schema.classes).sort()).toEqual([
           "building",
           "map",
@@ -431,22 +427,22 @@ describe(
         when.resolve(schemaJson)
       );
 
-      var destroyBufferView = spyOn(
+      const destroyBufferView = spyOn(
         GltfBufferViewLoader.prototype,
         "destroy"
       ).and.callThrough();
 
-      var destroyTexture = spyOn(
+      const destroyTexture = spyOn(
         GltfTextureLoader.prototype,
         "destroy"
       ).and.callThrough();
 
-      var destroySchema = spyOn(
+      const destroySchema = spyOn(
         MetadataSchemaLoader.prototype,
         "destroy"
       ).and.callThrough();
 
-      var featureMetadataLoader = new GltfFeatureMetadataLoader({
+      const featureMetadataLoader = new GltfFeatureMetadataLoader({
         gltf: gltf,
         extension: extension,
         gltfResource: gltfResource,
@@ -480,27 +476,27 @@ describe(
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
         when.resolve(image)
       );
-      var deferredPromise = when.defer();
+      const deferredPromise = when.defer();
       spyOn(Resource.prototype, "fetchJson").and.returnValue(
         deferredPromise.promise
       );
 
-      var destroyBufferView = spyOn(
+      const destroyBufferView = spyOn(
         GltfBufferViewLoader.prototype,
         "destroy"
       ).and.callThrough();
-      var destroyTexture = spyOn(
+      const destroyTexture = spyOn(
         GltfTextureLoader.prototype,
         "destroy"
       ).and.callThrough();
-      var destroySchema = spyOn(
+      const destroySchema = spyOn(
         MetadataSchemaLoader.prototype,
         "destroy"
       ).and.callThrough();
 
       // Load a copy of feature metadata into the cache so that the resource
       // promises resolve even if the feature metadata loader is destroyed
-      var featureMetadataLoaderCopy = new GltfFeatureMetadataLoader({
+      const featureMetadataLoaderCopy = new GltfFeatureMetadataLoader({
         gltf: gltf,
         extension: extension,
         gltfResource: gltfResource,
@@ -508,10 +504,10 @@ describe(
         supportedImageFormats: new SupportedImageFormats(),
       });
       // Also load a copy of the schema into the cache
-      var schemaResource = gltfResource.getDerivedResource({
+      const schemaResource = gltfResource.getDerivedResource({
         url: "schema.json",
       });
-      var schemaCopy = ResourceCache.loadSchema({
+      const schemaCopy = ResourceCache.loadSchema({
         resource: schemaResource,
       });
 
@@ -522,7 +518,7 @@ describe(
           // Ignore featureMetadataLoaderCopy destroying its buffer views
           destroyBufferView.calls.reset();
 
-          var featureMetadataLoader = new GltfFeatureMetadataLoader({
+          const featureMetadataLoader = new GltfFeatureMetadataLoader({
             gltf: gltfSchemaUri,
             extension: extensionSchemaUri,
             gltfResource: gltfResource,

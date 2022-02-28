@@ -12,17 +12,17 @@ import TextureWrap from "./TextureWrap.js";
 function Sampler(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var wrapS = defaultValue(options.wrapS, TextureWrap.CLAMP_TO_EDGE);
-  var wrapT = defaultValue(options.wrapT, TextureWrap.CLAMP_TO_EDGE);
-  var minificationFilter = defaultValue(
+  const wrapS = defaultValue(options.wrapS, TextureWrap.CLAMP_TO_EDGE);
+  const wrapT = defaultValue(options.wrapT, TextureWrap.CLAMP_TO_EDGE);
+  const minificationFilter = defaultValue(
     options.minificationFilter,
     TextureMinificationFilter.LINEAR
   );
-  var magnificationFilter = defaultValue(
+  const magnificationFilter = defaultValue(
     options.magnificationFilter,
     TextureMagnificationFilter.LINEAR
   );
-  var maximumAnisotropy = defined(options.maximumAnisotropy)
+  const maximumAnisotropy = defined(options.maximumAnisotropy)
     ? options.maximumAnisotropy
     : 1.0;
 

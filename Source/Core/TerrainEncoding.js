@@ -9,13 +9,13 @@ import Matrix4 from "./Matrix4.js";
 import TerrainExaggeration from "./TerrainExaggeration.js";
 import TerrainQuantization from "./TerrainQuantization.js";
 
-var cartesian3Scratch = new Cartesian3();
-var cartesian3DimScratch = new Cartesian3();
-var cartesian2Scratch = new Cartesian2();
-var matrix4Scratch = new Matrix4();
-var matrix4Scratch2 = new Matrix4();
+const cartesian3Scratch = new Cartesian3();
+const cartesian3DimScratch = new Cartesian3();
+const cartesian2Scratch = new Cartesian2();
+const matrix4Scratch = new Matrix4();
+const matrix4Scratch2 = new Matrix4();
 
-var SHIFT_LEFT_12 = Math.pow(2.0, 12.0);
+const SHIFT_LEFT_12 = Math.pow(2.0, 12.0);
 
 /**
  * Data used to quantize and pack the terrain mesh. The position can be unpacked for picking and all attributes
@@ -49,9 +49,9 @@ function TerrainEncoding(
   exaggeration,
   exaggerationRelativeHeight
 ) {
-  var quantization = TerrainQuantization.NONE;
-  var toENU;
-  var matrix;
+  let quantization = TerrainQuantization.NONE;
+  let toENU;
+  let matrix;
 
   if (
     defined(axisAlignedBoundingBox) &&
@@ -59,16 +59,16 @@ function TerrainEncoding(
     defined(maximumHeight) &&
     defined(fromENU)
   ) {
-    var minimum = axisAlignedBoundingBox.minimum;
-    var maximum = axisAlignedBoundingBox.maximum;
+    const minimum = axisAlignedBoundingBox.minimum;
+    const maximum = axisAlignedBoundingBox.maximum;
 
-    var dimensions = Cartesian3.subtract(
+    const dimensions = Cartesian3.subtract(
       maximum,
       minimum,
       cartesian3DimScratch
     );
-    var hDim = maximumHeight - minimumHeight;
-    var maxDim = Math.max(Cartesian3.maximumComponent(dimensions), hDim);
+    const hDim = maximumHeight - minimumHeight;
+    const maxDim = Math.max(Cartesian3.maximumComponent(dimensions), hDim);
 
     if (maxDim < SHIFT_LEFT_12 - 1.0) {
       quantization = TerrainQuantization.BITS12;
@@ -78,14 +78,14 @@ function TerrainEncoding(
 
     toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
 
-    var translation = Cartesian3.negate(minimum, cartesian3Scratch);
+    const translation = Cartesian3.negate(minimum, cartesian3Scratch);
     Matrix4.multiply(
       Matrix4.fromTranslation(translation, matrix4Scratch),
       toENU,
       toENU
     );
 
-    var scale = cartesian3Scratch;
+    const scale = cartesian3Scratch;
     scale.x = 1.0 / dimensions.x;
     scale.y = 1.0 / dimensions.y;
     scale.z = 1.0 / dimensions.z;
@@ -96,9 +96,9 @@ function TerrainEncoding(
 
     fromENU = Matrix4.clone(fromENU, new Matrix4());
 
-    var translationMatrix = Matrix4.fromTranslation(minimum, matrix4Scratch);
-    var scaleMatrix = Matrix4.fromScale(dimensions, matrix4Scratch2);
-    var st = Matrix4.multiply(translationMatrix, scaleMatrix, matrix4Scratch);
+    const translationMatrix = Matrix4.fromTranslation(minimum, matrix4Scratch);
+    const scaleMatrix = Matrix4.fromScale(dimensions, matrix4Scratch2);
+    const st = Matrix4.multiply(translationMatrix, scaleMatrix, matrix4Scratch);
 
     Matrix4.multiply(fromENU, st, fromENU);
     Matrix4.multiply(matrix, st, matrix);
@@ -205,8 +205,8 @@ TerrainEncoding.prototype.encode = function (
   webMercatorT,
   geodeticSurfaceNormal
 ) {
-  var u = uv.x;
-  var v = uv.y;
+  const u = uv.x;
+  const v = uv.y;
 
   if (this.quantization === TerrainQuantization.BITS12) {
     position = Matrix4.multiplyByPoint(
@@ -219,21 +219,21 @@ TerrainEncoding.prototype.encode = function (
     position.y = CesiumMath.clamp(position.y, 0.0, 1.0);
     position.z = CesiumMath.clamp(position.z, 0.0, 1.0);
 
-    var hDim = this.maximumHeight - this.minimumHeight;
-    var h = CesiumMath.clamp((height - this.minimumHeight) / hDim, 0.0, 1.0);
+    const hDim = this.maximumHeight - this.minimumHeight;
+    const h = CesiumMath.clamp((height - this.minimumHeight) / hDim, 0.0, 1.0);
 
     Cartesian2.fromElements(position.x, position.y, cartesian2Scratch);
-    var compressed0 = AttributeCompression.compressTextureCoordinates(
+    const compressed0 = AttributeCompression.compressTextureCoordinates(
       cartesian2Scratch
     );
 
     Cartesian2.fromElements(position.z, h, cartesian2Scratch);
-    var compressed1 = AttributeCompression.compressTextureCoordinates(
+    const compressed1 = AttributeCompression.compressTextureCoordinates(
       cartesian2Scratch
     );
 
     Cartesian2.fromElements(u, v, cartesian2Scratch);
-    var compressed2 = AttributeCompression.compressTextureCoordinates(
+    const compressed2 = AttributeCompression.compressTextureCoordinates(
       cartesian2Scratch
     );
 
@@ -243,7 +243,7 @@ TerrainEncoding.prototype.encode = function (
 
     if (this.hasWebMercatorT) {
       Cartesian2.fromElements(webMercatorT, 0.0, cartesian2Scratch);
-      var compressed3 = AttributeCompression.compressTextureCoordinates(
+      const compressed3 = AttributeCompression.compressTextureCoordinates(
         cartesian2Scratch
       );
       vertexBuffer[bufferIndex++] = compressed3;
@@ -278,8 +278,8 @@ TerrainEncoding.prototype.encode = function (
   return bufferIndex;
 };
 
-var scratchPosition = new Cartesian3();
-var scratchGeodeticSurfaceNormal = new Cartesian3();
+const scratchPosition = new Cartesian3();
+const scratchGeodeticSurfaceNormal = new Cartesian3();
 
 TerrainEncoding.prototype.addGeodeticSurfaceNormals = function (
   oldBuffer,
@@ -290,25 +290,25 @@ TerrainEncoding.prototype.addGeodeticSurfaceNormals = function (
     return;
   }
 
-  var oldStride = this.stride;
-  var vertexCount = oldBuffer.length / oldStride;
+  const oldStride = this.stride;
+  const vertexCount = oldBuffer.length / oldStride;
   this.hasGeodeticSurfaceNormals = true;
   this._calculateStrideAndOffsets();
-  var newStride = this.stride;
+  const newStride = this.stride;
 
-  for (var index = 0; index < vertexCount; index++) {
-    for (var offset = 0; offset < oldStride; offset++) {
-      var oldIndex = index * oldStride + offset;
-      var newIndex = index * newStride + offset;
+  for (let index = 0; index < vertexCount; index++) {
+    for (let offset = 0; offset < oldStride; offset++) {
+      const oldIndex = index * oldStride + offset;
+      const newIndex = index * newStride + offset;
       newBuffer[newIndex] = oldBuffer[oldIndex];
     }
-    var position = this.decodePosition(newBuffer, index, scratchPosition);
-    var geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormal(
+    const position = this.decodePosition(newBuffer, index, scratchPosition);
+    const geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormal(
       position,
       scratchGeodeticSurfaceNormal
     );
 
-    var bufferIndex = index * newStride + this._offsetGeodeticSurfaceNormal;
+    const bufferIndex = index * newStride + this._offsetGeodeticSurfaceNormal;
     newBuffer[bufferIndex] = geodeticSurfaceNormal.x;
     newBuffer[bufferIndex + 1] = geodeticSurfaceNormal.y;
     newBuffer[bufferIndex + 2] = geodeticSurfaceNormal.z;
@@ -323,16 +323,16 @@ TerrainEncoding.prototype.removeGeodeticSurfaceNormals = function (
     return;
   }
 
-  var oldStride = this.stride;
-  var vertexCount = oldBuffer.length / oldStride;
+  const oldStride = this.stride;
+  const vertexCount = oldBuffer.length / oldStride;
   this.hasGeodeticSurfaceNormals = false;
   this._calculateStrideAndOffsets();
-  var newStride = this.stride;
+  const newStride = this.stride;
 
-  for (var index = 0; index < vertexCount; index++) {
-    for (var offset = 0; offset < newStride; offset++) {
-      var oldIndex = index * oldStride + offset;
-      var newIndex = index * newStride + offset;
+  for (let index = 0; index < vertexCount; index++) {
+    for (let offset = 0; offset < newStride; offset++) {
+      const oldIndex = index * oldStride + offset;
+      const newIndex = index * newStride + offset;
       newBuffer[newIndex] = oldBuffer[oldIndex];
     }
   }
@@ -346,14 +346,14 @@ TerrainEncoding.prototype.decodePosition = function (buffer, index, result) {
   index *= this.stride;
 
   if (this.quantization === TerrainQuantization.BITS12) {
-    var xy = AttributeCompression.decompressTextureCoordinates(
+    const xy = AttributeCompression.decompressTextureCoordinates(
       buffer[index],
       cartesian2Scratch
     );
     result.x = xy.x;
     result.y = xy.y;
 
-    var zh = AttributeCompression.decompressTextureCoordinates(
+    const zh = AttributeCompression.decompressTextureCoordinates(
       buffer[index + 1],
       cartesian2Scratch
     );
@@ -375,17 +375,17 @@ TerrainEncoding.prototype.getExaggeratedPosition = function (
 ) {
   result = this.decodePosition(buffer, index, result);
 
-  var exaggeration = this.exaggeration;
-  var exaggerationRelativeHeight = this.exaggerationRelativeHeight;
-  var hasExaggeration = exaggeration !== 1.0;
+  const exaggeration = this.exaggeration;
+  const exaggerationRelativeHeight = this.exaggerationRelativeHeight;
+  const hasExaggeration = exaggeration !== 1.0;
   if (hasExaggeration && this.hasGeodeticSurfaceNormals) {
-    var geodeticSurfaceNormal = this.decodeGeodeticSurfaceNormal(
+    const geodeticSurfaceNormal = this.decodeGeodeticSurfaceNormal(
       buffer,
       index,
       scratchGeodeticSurfaceNormal
     );
-    var rawHeight = this.decodeHeight(buffer, index);
-    var heightDifference =
+    const rawHeight = this.decodeHeight(buffer, index);
+    const heightDifference =
       TerrainExaggeration.getHeight(
         rawHeight,
         exaggeration,
@@ -426,7 +426,7 @@ TerrainEncoding.prototype.decodeHeight = function (buffer, index) {
   index *= this.stride;
 
   if (this.quantization === TerrainQuantization.BITS12) {
-    var zh = AttributeCompression.decompressTextureCoordinates(
+    const zh = AttributeCompression.decompressTextureCoordinates(
       buffer[index + 1],
       cartesian2Scratch
     );
@@ -458,9 +458,9 @@ TerrainEncoding.prototype.getOctEncodedNormal = function (
 ) {
   index = index * this.stride + this._offsetVertexNormal;
 
-  var temp = buffer[index] / 256.0;
-  var x = Math.floor(temp);
-  var y = (temp - x) * 256.0;
+  const temp = buffer[index] / 256.0;
+  const x = Math.floor(temp);
+  const y = (temp - x) * 256.0;
 
   return Cartesian2.fromElements(x, y, result);
 };
@@ -479,7 +479,7 @@ TerrainEncoding.prototype.decodeGeodeticSurfaceNormal = function (
 };
 
 TerrainEncoding.prototype._calculateStrideAndOffsets = function () {
-  var vertexStride = 0;
+  let vertexStride = 0;
 
   switch (this.quantization) {
     case TerrainQuantization.BITS12:
@@ -503,24 +503,24 @@ TerrainEncoding.prototype._calculateStrideAndOffsets = function () {
   this.stride = vertexStride;
 };
 
-var attributesIndicesNone = {
+const attributesIndicesNone = {
   position3DAndHeight: 0,
   textureCoordAndEncodedNormals: 1,
   geodeticSurfaceNormal: 2,
 };
-var attributesIndicesBits12 = {
+const attributesIndicesBits12 = {
   compressed0: 0,
   compressed1: 1,
   geodeticSurfaceNormal: 2,
 };
 
 TerrainEncoding.prototype.getAttributes = function (buffer) {
-  var datatype = ComponentDatatype.FLOAT;
-  var sizeInBytes = ComponentDatatype.getSizeInBytes(datatype);
-  var strideInBytes = this.stride * sizeInBytes;
-  var offsetInBytes = 0;
+  const datatype = ComponentDatatype.FLOAT;
+  const sizeInBytes = ComponentDatatype.getSizeInBytes(datatype);
+  const strideInBytes = this.stride * sizeInBytes;
+  let offsetInBytes = 0;
 
-  var attributes = [];
+  const attributes = [];
   function addAttribute(index, componentsPerAttribute) {
     attributes.push({
       index: index,
@@ -536,7 +536,7 @@ TerrainEncoding.prototype.getAttributes = function (buffer) {
   if (this.quantization === TerrainQuantization.NONE) {
     addAttribute(attributesIndicesNone.position3DAndHeight, 4);
 
-    var componentsTexCoordAndNormals = 2;
+    let componentsTexCoordAndNormals = 2;
     componentsTexCoordAndNormals += this.hasWebMercatorT ? 1 : 0;
     componentsTexCoordAndNormals += this.hasVertexNormals ? 1 : 0;
     addAttribute(
@@ -551,9 +551,9 @@ TerrainEncoding.prototype.getAttributes = function (buffer) {
     // When there is no webMercatorT or vertex normals, the attribute only needs 3 components: x/y, z/h, u/v.
     // WebMercatorT and vertex normals each take up one component, so if only one of them is present the first
     // attribute gets a 4th component. If both are present, we need an additional attribute that has 1 component.
-    var usingAttribute0Component4 =
+    const usingAttribute0Component4 =
       this.hasWebMercatorT || this.hasVertexNormals;
-    var usingAttribute1Component1 =
+    const usingAttribute1Component1 =
       this.hasWebMercatorT && this.hasVertexNormals;
     addAttribute(
       attributesIndicesBits12.compressed0,

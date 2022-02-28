@@ -10,9 +10,9 @@ import createScene from "../createScene.js";
 describe(
   "Scene/PerInstanceColorAppearance",
   function () {
-    var scene;
-    var rectangle;
-    var primitive;
+    let scene;
+    let rectangle;
+    let primitive;
 
     beforeAll(function () {
       scene = createScene();
@@ -46,7 +46,7 @@ describe(
     });
 
     it("constructor", function () {
-      var a = new PerInstanceColorAppearance();
+      const a = new PerInstanceColorAppearance();
 
       expect(a.material).not.toBeDefined();
       expect(a.vertexShaderSource).toBeDefined();

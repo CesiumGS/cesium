@@ -52,12 +52,12 @@ function ImageryLayerFeatureInfo() {
 ImageryLayerFeatureInfo.prototype.configureNameFromProperties = function (
   properties
 ) {
-  var namePropertyPrecedence = 10;
-  var nameProperty;
+  let namePropertyPrecedence = 10;
+  let nameProperty;
 
-  for (var key in properties) {
+  for (const key in properties) {
     if (properties.hasOwnProperty(key) && properties[key]) {
-      var lowerKey = key.toLowerCase();
+      const lowerKey = key.toLowerCase();
 
       if (namePropertyPrecedence > 1 && lowerKey === "name") {
         namePropertyPrecedence = 1;
@@ -89,16 +89,15 @@ ImageryLayerFeatureInfo.prototype.configureDescriptionFromProperties = function 
   properties
 ) {
   function describe(properties) {
-    var html = '<table class="cesium-infoBox-defaultTable">';
-    for (var key in properties) {
+    let html = '<table class="cesium-infoBox-defaultTable">';
+    for (const key in properties) {
       if (properties.hasOwnProperty(key)) {
-        var value = properties[key];
+        const value = properties[key];
         if (defined(value)) {
           if (typeof value === "object") {
-            html +=
-              "<tr><td>" + key + "</td><td>" + describe(value) + "</td></tr>";
+            html += `<tr><td>${key}</td><td>${describe(value)}</td></tr>`;
           } else {
-            html += "<tr><td>" + key + "</td><td>" + value + "</td></tr>";
+            html += `<tr><td>${key}</td><td>${value}</td></tr>`;
           }
         }
       }

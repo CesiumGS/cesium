@@ -17,17 +17,17 @@ import generateJsonBuffer from "../generateJsonBuffer.js";
 describe(
   "Scene/Multiple3DTileContent",
   function () {
-    var scene;
+    let scene;
 
     // This scene is the same as Composite/Composite, just rephrased
     // using 3DTILES_multiple_contents
-    var centerLongitude = -1.31968;
-    var centerLatitude = 0.698874;
-    var multipleContentsUrl =
+    const centerLongitude = -1.31968;
+    const centerLatitude = 0.698874;
+    const multipleContentsUrl =
       "./Data/Cesium3DTiles/MultipleContents/MultipleContents/tileset.json";
 
-    var tilesetResource = new Resource({ url: "http://example.com" });
-    var extensionJson = {
+    const tilesetResource = new Resource({ url: "http://example.com" });
+    const extensionJson = {
       content: [
         {
           uri: "pointcloud.pnts",
@@ -42,7 +42,7 @@ describe(
     };
 
     function makeGltfBuffer() {
-      var gltf = {
+      const gltf = {
         asset: {
           version: "1.0",
         },
@@ -50,10 +50,10 @@ describe(
       return generateJsonBuffer(gltf).buffer;
     }
 
-    var originalRequestsPerServer;
+    let originalRequestsPerServer;
 
     function setZoom(distance) {
-      var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+      const center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
       scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, distance));
     }
 
@@ -87,7 +87,7 @@ describe(
     function expectRenderMultipleContents(tileset) {
       expect(scene).toPickAndCall(function (result) {
         // Pick a building
-        var pickedBuilding = result;
+        const pickedBuilding = result;
         expect(pickedBuilding).toBeDefined();
 
         // Change the color of the picked building to yellow
@@ -104,7 +104,7 @@ describe(
         // Both a building and instance are located at the center, hide the building and pick the instance
         pickedBuilding.show = false;
 
-        var pickedInstance;
+        let pickedInstance;
         expect(scene).toPickAndCall(function (result) {
           pickedInstance = result;
           expect(pickedInstance).toBeDefined();
@@ -129,9 +129,9 @@ describe(
     }
 
     it("innerContentUrls returns the urls from the extension", function () {
-      var tileset = {};
-      var tile = {};
-      var content = new Multiple3DTileContent(
+      const tileset = {};
+      const tile = {};
+      const content = new Multiple3DTileContent(
         tileset,
         tile,
         tilesetResource,
@@ -146,13 +146,13 @@ describe(
     });
 
     it("contentsFetchedPromise is undefined until requestInnerContents is successful", function () {
-      var mockTileset = {
+      const mockTileset = {
         statistics: {
           numberOfPendingRequests: 0,
         },
       };
-      var tile = {};
-      var content = new Multiple3DTileContent(
+      const tile = {};
+      const content = new Multiple3DTileContent(
         mockTileset,
         tile,
         tilesetResource,
@@ -169,13 +169,13 @@ describe(
     });
 
     it("contentsFetchedPromise is undefined if no requests are scheduled", function () {
-      var mockTileset = {
+      const mockTileset = {
         statistics: {
           numberOfPendingRequests: 0,
         },
       };
-      var tile = {};
-      var content = new Multiple3DTileContent(
+      const tile = {};
+      const content = new Multiple3DTileContent(
         mockTileset,
         tile,
         tilesetResource,
@@ -191,20 +191,20 @@ describe(
     });
 
     it("requestInnerContents returns 0 if successful", function () {
-      var mockTileset = {
+      const mockTileset = {
         statistics: {
           numberOfPendingRequests: 0,
         },
       };
-      var tile = {};
-      var content = new Multiple3DTileContent(
+      const tile = {};
+      const content = new Multiple3DTileContent(
         mockTileset,
         tile,
         tilesetResource,
         extensionJson
       );
 
-      var fetchArray = spyOn(
+      const fetchArray = spyOn(
         Resource.prototype,
         "fetchArrayBuffer"
       ).and.callFake(function () {
@@ -215,20 +215,20 @@ describe(
     });
 
     it("requestInnerContents schedules no requests if there are not enough open slots", function () {
-      var mockTileset = {
+      const mockTileset = {
         statistics: {
           numberOfPendingRequests: 0,
         },
       };
-      var tile = {};
-      var content = new Multiple3DTileContent(
+      const tile = {};
+      const content = new Multiple3DTileContent(
         mockTileset,
         tile,
         tilesetResource,
         extensionJson
       );
 
-      var fetchArray = spyOn(Resource.prototype, "fetchArrayBuffer");
+      const fetchArray = spyOn(Resource.prototype, "fetchArrayBuffer");
       RequestScheduler.maximumRequestsPerServer = 2;
       expect(content.requestInnerContents()).toBe(3);
       expect(fetchArray).not.toHaveBeenCalled();
@@ -248,12 +248,12 @@ describe(
     });
 
     it("renders valid tiles after tile failure", function () {
-      var originalLoadJson = Cesium3DTileset.loadJson;
+      const originalLoadJson = Cesium3DTileset.loadJson;
       spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
         return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
-          var content =
+          const content =
             tilesetJson.root.extensions["3DTILES_multiple_contents"].content;
-          var badTile = {
+          const badTile = {
             uri: "nonexistent.b3dm",
           };
           content.splice(1, 0, badTile);
@@ -273,7 +273,7 @@ describe(
           viewAllTiles();
           scene.renderForSpecs();
 
-          var multipleContents = tileset.root.content;
+          const multipleContents = tileset.root.content;
           multipleContents.cancelRequests();
 
           return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
@@ -291,23 +291,23 @@ describe(
     });
 
     describe("3DTILES_metadata", function () {
-      var withGroupMetadataUrl =
+      const withGroupMetadataUrl =
         "./Data/Cesium3DTiles/MultipleContents/GroupMetadata/tileset.json";
 
-      var metadataClass = new MetadataClass({
+      const metadataClass = new MetadataClass({
         id: "test",
         class: {
           properties: {
             name: {
-              type: "STRING",
+              componentType: "STRING",
             },
             height: {
-              type: "FLOAT32",
+              componentType: "FLOAT32",
             },
           },
         },
       });
-      var groupMetadata = new GroupMetadata({
+      const groupMetadata = new GroupMetadata({
         id: "testGroup",
         group: {
           properties: {
@@ -321,7 +321,7 @@ describe(
       it("groupMetadata returns undefined", function () {
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
           function (tileset) {
-            var content = tileset.root.content;
+            const content = tileset.root.content;
             expect(content.groupMetadata).not.toBeDefined();
           }
         );
@@ -331,7 +331,7 @@ describe(
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
           function (tileset) {
             expect(function () {
-              var content = tileset.root.content;
+              const content = tileset.root.content;
               content.groupMetadata = groupMetadata;
             }).toThrowDeveloperError();
           }
@@ -343,11 +343,11 @@ describe(
           scene,
           withGroupMetadataUrl
         ).then(function (tileset) {
-          var multipleContents = tileset.root.content;
-          var innerContents = multipleContents.innerContents;
+          const multipleContents = tileset.root.content;
+          const innerContents = multipleContents.innerContents;
 
-          var buildingsContent = innerContents[0];
-          var groupMetadata = buildingsContent.groupMetadata;
+          const buildingsContent = innerContents[0];
+          let groupMetadata = buildingsContent.groupMetadata;
           expect(groupMetadata).toBeDefined();
           expect(groupMetadata.getProperty("color")).toEqual(
             new Cartesian3(255, 127, 0)
@@ -355,7 +355,7 @@ describe(
           expect(groupMetadata.getProperty("priority")).toBe(10);
           expect(groupMetadata.getProperty("isInstanced")).toBe(false);
 
-          var cubesContent = innerContents[1];
+          const cubesContent = innerContents[1];
           groupMetadata = cubesContent.groupMetadata;
           expect(groupMetadata).toBeDefined();
           expect(groupMetadata.getProperty("color")).toEqual(

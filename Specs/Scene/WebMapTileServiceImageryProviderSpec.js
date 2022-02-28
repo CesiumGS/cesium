@@ -36,7 +36,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
   });
 
   it("generates expected tile urls", function () {
-    var options = {
+    const options = {
       url: "http://wmts.invalid",
       format: "image/png",
       layer: "someLayer",
@@ -45,16 +45,16 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       tileMatrixLabels: ["first", "second", "third"],
     };
 
-    var provider = new WebMapTileServiceImageryProvider(options);
+    const provider = new WebMapTileServiceImageryProvider(options);
 
     spyOn(ImageryProvider, "loadImage");
 
-    var tilecol = 12;
-    var tilerow = 5;
-    var level = 1;
+    let tilecol = 12;
+    let tilerow = 5;
+    let level = 1;
     provider.requestImage(tilecol, tilerow, level);
-    var uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
-    var queryObject = queryToObject(uri.query);
+    let uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
+    let queryObject = queryToObject(uri.query());
 
     expect(queryObject.request).toEqual("GetTile");
     expect(queryObject.service).toEqual("WMTS");
@@ -72,7 +72,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     level = 2;
     provider.requestImage(tilecol, tilerow, level);
     uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
-    queryObject = queryToObject(uri.query);
+    queryObject = queryToObject(uri.query());
 
     expect(queryObject.request).toEqual("GetTile");
     expect(queryObject.service).toEqual("WMTS");
@@ -87,7 +87,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
   });
 
   it("generates expected tile urls for subdomains", function () {
-    var options = {
+    const options = {
       url: "http://wmts{s}.invalid",
       format: "image/png",
       layer: "someLayer",
@@ -96,16 +96,16 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       tileMatrixLabels: ["first", "second", "third"],
     };
 
-    var provider = new WebMapTileServiceImageryProvider(options);
+    const provider = new WebMapTileServiceImageryProvider(options);
 
     spyOn(ImageryProvider, "loadImage");
 
-    var tilecol = 12;
-    var tilerow = 5;
-    var level = 1;
+    let tilecol = 12;
+    let tilerow = 5;
+    let level = 1;
     provider.requestImage(tilecol, tilerow, level);
-    var uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
-    var queryObject = queryToObject(uri.query);
+    let uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
+    let queryObject = queryToObject(uri.query());
 
     expect(queryObject.request).toEqual("GetTile");
     expect(queryObject.service).toEqual("WMTS");
@@ -117,14 +117,14 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     expect(queryObject.tilematrixset).toEqual(options.tileMatrixSetID);
     expect(queryObject.tilematrix).toEqual(options.tileMatrixLabels[level]);
     expect(parseInt(queryObject.tilerow, 10)).toEqual(tilerow);
-    expect(uri.authority).toEqual("wmtsa.invalid");
+    expect(uri.authority()).toEqual("wmtsa.invalid");
 
     tilecol = 2;
     tilerow = 3;
     level = 2;
     provider.requestImage(tilecol, tilerow, level);
     uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
-    queryObject = queryToObject(uri.query);
+    queryObject = queryToObject(uri.query());
 
     expect(queryObject.request).toEqual("GetTile");
     expect(queryObject.service).toEqual("WMTS");
@@ -136,11 +136,11 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     expect(queryObject.tilematrixset).toEqual(options.tileMatrixSetID);
     expect(queryObject.tilematrix).toEqual(options.tileMatrixLabels[level]);
     expect(parseInt(queryObject.tilerow, 10)).toEqual(tilerow);
-    expect(uri.authority).toEqual("wmtsb.invalid");
+    expect(uri.authority()).toEqual("wmtsb.invalid");
   });
 
   it("supports subdomains string urls", function () {
-    var options = {
+    const options = {
       url: "{s}",
       layer: "",
       style: "",
@@ -148,22 +148,22 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       tileMatrixSetID: "",
     };
 
-    var provider = new WebMapTileServiceImageryProvider(options);
+    const provider = new WebMapTileServiceImageryProvider(options);
 
     spyOn(ImageryProvider, "loadImage");
 
-    var tilecol = 1;
-    var tilerow = 1;
-    var level = 1;
+    const tilecol = 1;
+    const tilerow = 1;
+    const level = 1;
     provider.requestImage(tilecol, tilerow, level);
-    var url = ImageryProvider.loadImage.calls
+    const url = ImageryProvider.loadImage.calls
       .mostRecent()
       .args[1].getUrlComponent();
     expect("123".indexOf(url)).toBeGreaterThanOrEqualTo(0);
   });
 
   it("supports subdomains array urls", function () {
-    var options = {
+    const options = {
       url: "{s}",
       layer: "",
       style: "",
@@ -171,22 +171,22 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       tileMatrixSetID: "",
     };
 
-    var provider = new WebMapTileServiceImageryProvider(options);
+    const provider = new WebMapTileServiceImageryProvider(options);
 
     spyOn(ImageryProvider, "loadImage");
 
-    var tilecol = 1;
-    var tilerow = 1;
-    var level = 1;
+    const tilecol = 1;
+    const tilerow = 1;
+    const level = 1;
     provider.requestImage(tilecol, tilerow, level);
-    var url = ImageryProvider.loadImage.calls
+    const url = ImageryProvider.loadImage.calls
       .mostRecent()
       .args[1].getUrlComponent();
     expect(["foo", "bar"].indexOf(url)).toBeGreaterThanOrEqualTo(0);
   });
 
   it("generates expected tile urls from template", function () {
-    var options = {
+    const options = {
       url:
         "http://wmts.invalid/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png",
       format: "image/png",
@@ -196,15 +196,15 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       tileMatrixLabels: ["first", "second", "third"],
     };
 
-    var provider = new WebMapTileServiceImageryProvider(options);
+    const provider = new WebMapTileServiceImageryProvider(options);
 
     spyOn(ImageryProvider, "loadImage");
 
-    var tilecol = 12;
-    var tilerow = 5;
-    var level = 1;
+    const tilecol = 12;
+    const tilerow = 5;
+    const level = 1;
     provider.requestImage(tilecol, tilerow, level);
-    var uri = new Uri(
+    const uri = new Uri(
       ImageryProvider.loadImage.calls.mostRecent().args[1].getUrlComponent()
     );
     expect(uri.toString()).toEqual(
@@ -275,7 +275,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
   });
 
   it("resolves readyPromise", function () {
-    var provider = new WebMapTileServiceImageryProvider({
+    const provider = new WebMapTileServiceImageryProvider({
       layer: "someLayer",
       style: "someStyle",
       url: "http://wmts.invalid",
@@ -289,11 +289,11 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
   });
 
   it("resolves readyPromise with Resource", function () {
-    var resource = new Resource({
+    const resource = new Resource({
       url: "http://wmts.invalid",
     });
 
-    var provider = new WebMapTileServiceImageryProvider({
+    const provider = new WebMapTileServiceImageryProvider({
       layer: "someLayer",
       style: "someStyle",
       url: resource,
@@ -308,7 +308,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
 
   // default parameters values
   it("uses default values for undefined parameters", function () {
-    var provider = new WebMapTileServiceImageryProvider({
+    const provider = new WebMapTileServiceImageryProvider({
       layer: "someLayer",
       style: "someStyle",
       url: "http://wmts.invalid",
@@ -327,9 +327,9 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
 
   // non default parameters values
   it("uses parameters passed to constructor", function () {
-    var tilingScheme = new GeographicTilingScheme();
-    var rectangle = new WebMercatorTilingScheme().rectangle;
-    var provider = new WebMapTileServiceImageryProvider({
+    const tilingScheme = new GeographicTilingScheme();
+    const rectangle = new WebMercatorTilingScheme().rectangle;
+    const provider = new WebMapTileServiceImageryProvider({
       layer: "someLayer",
       style: "someStyle",
       url: "http://wmts.invalid",
@@ -355,13 +355,13 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
   });
 
   it("doesn't care about trailing question mark at the end of URL", function () {
-    var provider1 = new WebMapTileServiceImageryProvider({
+    const provider1 = new WebMapTileServiceImageryProvider({
       layer: "someLayer",
       style: "someStyle",
       url: "http://wmts.invalid",
       tileMatrixSetID: "someTMS",
     });
-    var provider2 = new WebMapTileServiceImageryProvider({
+    const provider2 = new WebMapTileServiceImageryProvider({
       layer: "someLayer",
       style: "someStyle",
       url: "http://wmts.invalid?",
@@ -390,7 +390,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
             2
           );
           //expect the two image URLs to be the same between the two providers
-          var allCalls = Resource._Implementations.createImage.calls.all();
+          const allCalls = Resource._Implementations.createImage.calls.all();
           expect(allCalls[1].args[0].url).toEqual(allCalls[0].args[0].url);
         });
       });
@@ -398,7 +398,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
   });
 
   it("requestImage returns a promise for an image and loads it for cross-origin use", function () {
-    var provider = new WebMapTileServiceImageryProvider({
+    const provider = new WebMapTileServiceImageryProvider({
       layer: "someLayer",
       style: "someStyle",
       url: "http://wmts.invalid",
@@ -429,16 +429,16 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
   });
 
   it("raises error event when image cannot be loaded", function () {
-    var provider = new WebMapTileServiceImageryProvider({
+    const provider = new WebMapTileServiceImageryProvider({
       layer: "someLayer",
       style: "someStyle",
       url: "http://wmts.invalid",
       tileMatrixSetID: "someTMS",
     });
 
-    var layer = new ImageryLayer(provider);
+    const layer = new ImageryLayer(provider);
 
-    var tries = 0;
+    let tries = 0;
     provider.errorEvent.addEventListener(function (error) {
       expect(error.timesRetried).toEqual(tries);
       ++tries;
@@ -473,7 +473,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     return pollToPromise(function () {
       return provider.ready;
     }).then(function () {
-      var imagery = new Imagery(layer, 0, 0, 0);
+      const imagery = new Imagery(layer, 0, 0, 0);
       imagery.addReference();
       layer._requestImagery(imagery);
       RequestScheduler.update();
@@ -489,7 +489,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
   });
 
   it("tiles preload on requestImage as we approach the next time interval", function () {
-    var times = TimeIntervalCollection.fromIso8601({
+    const times = TimeIntervalCollection.fromIso8601({
       iso8601: "2017-04-26/2017-04-30/P1D",
       dataCallback: function (interval, index) {
         return {
@@ -497,12 +497,12 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
         };
       },
     });
-    var clock = new Clock({
+    const clock = new Clock({
       currentTime: JulianDate.fromIso8601("2017-04-26"),
       shouldAnimate: true,
     });
 
-    var provider = new WebMapTileServiceImageryProvider({
+    const provider = new WebMapTileServiceImageryProvider({
       layer: "someLayer",
       style: "someStyle",
       url: "http://wmts.invalid/{Time}",
@@ -523,7 +523,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       );
     };
 
-    var entry;
+    let entry;
     return pollToPromise(function () {
       return provider.ready;
     })
@@ -535,7 +535,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
         RequestScheduler.update();
 
         // Test tile 0,0,0 was prefetched
-        var cache = provider._timeDynamicImagery._tileCache;
+        const cache = provider._timeDynamicImagery._tileCache;
         expect(cache["1"]).toBeDefined();
         entry = cache["1"]["0-0-0"];
         expect(entry).toBeDefined();
@@ -549,7 +549,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
   });
 
   it("tiles preload onTick event as we approach the next time interval", function () {
-    var times = TimeIntervalCollection.fromIso8601({
+    const times = TimeIntervalCollection.fromIso8601({
       iso8601: "2017-04-26/2017-04-30/P1D",
       dataCallback: function (interval, index) {
         return {
@@ -557,12 +557,12 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
         };
       },
     });
-    var clock = new Clock({
+    const clock = new Clock({
       currentTime: JulianDate.fromIso8601("2017-04-26"),
       shouldAnimate: true,
     });
 
-    var provider = new WebMapTileServiceImageryProvider({
+    const provider = new WebMapTileServiceImageryProvider({
       layer: "someLayer",
       style: "someStyle",
       url: "http://wmts.invalid/{Time}",
@@ -583,7 +583,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       );
     };
 
-    var entry;
+    let entry;
     return pollToPromise(function () {
       return provider.ready;
     })
@@ -592,7 +592,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       })
       .then(function () {
         // Test tile 0,0,0 wasn't prefetched
-        var cache = provider._timeDynamicImagery._tileCache;
+        const cache = provider._timeDynamicImagery._tileCache;
         expect(cache["1"]).toBeUndefined();
 
         // Update the clock and process any requests
@@ -614,7 +614,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
   });
 
   it("reload is called once we cross into next interval", function () {
-    var times = TimeIntervalCollection.fromIso8601({
+    const times = TimeIntervalCollection.fromIso8601({
       iso8601: "2017-04-26/2017-04-30/P1D",
       dataCallback: function (interval, index) {
         return {
@@ -622,7 +622,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
         };
       },
     });
-    var clock = new Clock({
+    const clock = new Clock({
       currentTime: JulianDate.fromIso8601("2017-04-26"),
       clockStep: ClockStep.TICK_DEPENDENT,
       shouldAnimate: true,
@@ -640,7 +640,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       );
     };
 
-    var provider = new WebMapTileServiceImageryProvider({
+    const provider = new WebMapTileServiceImageryProvider({
       layer: "someLayer",
       style: "someStyle",
       url: "http://wmts.invalid/{Time}",
@@ -668,7 +668,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       .then(function () {
         expect(provider._reload.calls.count()).toEqual(1);
 
-        var calls = provider._timeDynamicImagery.getFromCache.calls.all();
+        const calls = provider._timeDynamicImagery.getFromCache.calls.all();
         expect(calls.length).toBe(2);
         expect(calls[0].returnValue).toBeUndefined();
         expect(calls[1].returnValue).toBeDefined();
@@ -676,7 +676,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
   });
 
   it("dimensions work with RESTful requests", function () {
-    var lastUrl;
+    let lastUrl;
     Resource._Implementations.createImage = function (
       request,
       crossOrigin,
@@ -690,7 +690,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       );
     };
 
-    var provider = new WebMapTileServiceImageryProvider({
+    const provider = new WebMapTileServiceImageryProvider({
       layer: "someLayer",
       style: "someStyle",
       url: "http://wmts.invalid/{FOO}",
@@ -723,7 +723,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
   });
 
   it("dimensions work with KVP requests", function () {
-    var lastUrl;
+    let lastUrl;
     Resource._Implementations.createImage = function (
       request,
       crossOrigin,
@@ -737,8 +737,8 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       );
     };
 
-    var uri = new Uri("http://wmts.invalid/kvp");
-    var query = {
+    const uri = new Uri("http://wmts.invalid/kvp");
+    const query = {
       tilematrix: 0,
       layer: "someLayer",
       style: "someStyle",
@@ -752,7 +752,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       request: "GetTile",
     };
 
-    var provider = new WebMapTileServiceImageryProvider({
+    const provider = new WebMapTileServiceImageryProvider({
       layer: query.layer,
       style: query.style,
       url: uri.toString(),
@@ -772,7 +772,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       })
       .then(function () {
         // Verify request is correct
-        uri.query = objectToQuery(query);
+        uri.query(objectToQuery(query));
         expect(lastUrl).toEqual(uri.toString());
         expect(provider._reload.calls.count()).toEqual(0);
 
@@ -786,7 +786,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       })
       .then(function () {
         // Verify request changed
-        uri.query = objectToQuery(query);
+        uri.query(objectToQuery(query));
         expect(lastUrl).toEqual(uri.toString());
       });
   });

@@ -28,7 +28,7 @@ import JulianDate from "./JulianDate.js";
  *
  * @example
  * // Create a clock that loops on Christmas day 2013 and runs in real-time.
- * var clock = new Cesium.Clock({
+ * const clock = new Cesium.Clock({
  *    startTime : Cesium.JulianDate.fromIso8601("2013-12-25"),
  *    currentTime : Cesium.JulianDate.fromIso8601("2013-12-25"),
  *    stopTime : Cesium.JulianDate.fromIso8601("2013-12-26"),
@@ -43,9 +43,9 @@ import JulianDate from "./JulianDate.js";
 function Clock(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var currentTime = options.currentTime;
-  var startTime = options.startTime;
-  var stopTime = options.stopTime;
+  let currentTime = options.currentTime;
+  let startTime = options.startTime;
+  let stopTime = options.stopTime;
 
   if (!defined(currentTime)) {
     // if not specified, current time is the start time,
@@ -259,15 +259,15 @@ Object.defineProperties(Clock.prototype, {
  * @returns {JulianDate} The new value of the {@link Clock#currentTime} property.
  */
 Clock.prototype.tick = function () {
-  var currentSystemTime = getTimestamp();
-  var currentTime = JulianDate.clone(this._currentTime);
+  const currentSystemTime = getTimestamp();
+  let currentTime = JulianDate.clone(this._currentTime);
 
   if (this.canAnimate && this._shouldAnimate) {
-    var clockStep = this._clockStep;
+    const clockStep = this._clockStep;
     if (clockStep === ClockStep.SYSTEM_CLOCK) {
       currentTime = JulianDate.now(currentTime);
     } else {
-      var multiplier = this._multiplier;
+      const multiplier = this._multiplier;
 
       if (clockStep === ClockStep.TICK_DEPENDENT) {
         currentTime = JulianDate.addSeconds(
@@ -276,7 +276,7 @@ Clock.prototype.tick = function () {
           currentTime
         );
       } else {
-        var milliseconds = currentSystemTime - this._lastSystemTime;
+        const milliseconds = currentSystemTime - this._lastSystemTime;
         currentTime = JulianDate.addSeconds(
           currentTime,
           multiplier * (milliseconds / 1000.0),
@@ -284,9 +284,9 @@ Clock.prototype.tick = function () {
         );
       }
 
-      var clockRange = this.clockRange;
-      var startTime = this.startTime;
-      var stopTime = this.stopTime;
+      const clockRange = this.clockRange;
+      const startTime = this.startTime;
+      const stopTime = this.stopTime;
 
       if (clockRange === ClockRange.CLAMPED) {
         if (JulianDate.lessThan(currentTime, startTime)) {

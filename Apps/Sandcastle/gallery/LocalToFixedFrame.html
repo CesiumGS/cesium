@@ -65,25 +65,25 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer");
-        var canvas = viewer.canvas;
+        const viewer = new Cesium.Viewer("cesiumContainer");
+        const canvas = viewer.canvas;
         canvas.setAttribute("tabindex", "0"); // needed to put focus on the canvas
         canvas.addEventListener("click", function () {
           canvas.focus();
         });
         canvas.focus();
 
-        var scene = viewer.scene;
-        var camera = viewer.camera;
-        var controller = scene.screenSpaceCameraController;
-        var r = 0;
-        var center = new Cesium.Cartesian3();
+        const scene = viewer.scene;
+        const camera = viewer.camera;
+        const controller = scene.screenSpaceCameraController;
+        let r = 0;
+        const center = new Cesium.Cartesian3();
 
-        var hpRoll = new Cesium.HeadingPitchRoll();
-        var hpRange = new Cesium.HeadingPitchRange();
-        var deltaRadians = Cesium.Math.toRadians(1.0);
+        const hpRoll = new Cesium.HeadingPitchRoll();
+        const hpRange = new Cesium.HeadingPitchRange();
+        const deltaRadians = Cesium.Math.toRadians(1.0);
 
-        var localFrames = [
+        const localFrames = [
           {
             pos: Cesium.Cartesian3.fromDegrees(-123.075, 44.045, 5000.0),
             converter: Cesium.Transforms.eastNorthUpToFixedFrame,
@@ -123,14 +123,14 @@
           },
         ];
 
-        var primitives = [];
-        var hprRollZero = new Cesium.HeadingPitchRoll();
+        const primitives = [];
+        const hprRollZero = new Cesium.HeadingPitchRoll();
 
-        for (var i = 0; i < localFrames.length; i++) {
-          var position = localFrames[i].pos;
-          var converter = localFrames[i].converter;
-          var comments = localFrames[i].comments;
-          var planePrimitive = scene.primitives.add(
+        for (let i = 0; i < localFrames.length; i++) {
+          const position = localFrames[i].pos;
+          const converter = localFrames[i].converter;
+          const comments = localFrames[i].comments;
+          const planePrimitive = scene.primitives.add(
             Cesium.Model.fromGltf({
               url: "../../SampleData/models/CesiumAir/Cesium_Air.glb",
               modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
@@ -148,7 +148,7 @@
             converter: converter,
             position: position,
           });
-          var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+          const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
             position,
             hprRollZero,
             Cesium.Ellipsoid.WGS84,
@@ -162,7 +162,7 @@
             })
           );
 
-          var positionLabel = position.clone();
+          const positionLabel = position.clone();
           positionLabel.z = position.z + 300.0;
           viewer.entities.add({
             position: positionLabel,
@@ -194,8 +194,8 @@
             model.boundingSphere.center,
             center
           );
-          var heading = Cesium.Math.toRadians(90.0);
-          var pitch = Cesium.Math.toRadians(0.0);
+          const heading = Cesium.Math.toRadians(90.0);
+          const pitch = Cesium.Math.toRadians(0.0);
           hpRange.heading = heading;
           hpRange.pitch = pitch;
           hpRange.range = r * 100.0;
@@ -252,15 +252,15 @@
           }
         });
 
-        var headingSpan = document.getElementById("heading");
-        var pitchSpan = document.getElementById("pitch");
-        var rollSpan = document.getElementById("roll");
+        const headingSpan = document.getElementById("heading");
+        const pitchSpan = document.getElementById("pitch");
+        const rollSpan = document.getElementById("roll");
 
         viewer.scene.preUpdate.addEventListener(function (scene, time) {
-          for (var i = 0; i < primitives.length; i++) {
-            var primitive = primitives[i].primitive;
-            var converter = primitives[i].converter;
-            var position = primitives[i].position;
+          for (let i = 0; i < primitives.length; i++) {
+            const primitive = primitives[i].primitive;
+            const converter = primitives[i].converter;
+            const position = primitives[i].position;
             Cesium.Transforms.headingPitchRollToFixedFrame(
               position,
               hpRoll,

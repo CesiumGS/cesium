@@ -3,18 +3,15 @@ import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import Framebuffer from "../Renderer/Framebuffer.js";
+import FramebufferManager from "../Renderer/FramebufferManager.js";
 import PassState from "../Renderer/PassState.js";
-import Renderbuffer from "../Renderer/Renderbuffer.js";
-import RenderbufferFormat from "../Renderer/RenderbufferFormat.js";
-import Texture from "../Renderer/Texture.js";
 
 /**
  * @private
  */
 function PickFramebuffer(context) {
   // Override per-command states
-  var passState = new PassState(context);
+  const passState = new PassState(context);
   passState.blendingEnabled = false;
   passState.scissorTest = {
     enabled: true,
@@ -23,45 +20,28 @@ function PickFramebuffer(context) {
   passState.viewport = new BoundingRectangle();
 
   this._context = context;
-  this._fb = undefined;
+  this._fb = new FramebufferManager({
+    depthStencil: true,
+  });
   this._passState = passState;
   this._width = 0;
   this._height = 0;
 }
 PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
-  var context = this._context;
-  var width = viewport.width;
-  var height = viewport.height;
+  const context = this._context;
+  const width = viewport.width;
+  const height = viewport.height;
 
   BoundingRectangle.clone(
     screenSpaceRectangle,
     this._passState.scissorTest.rectangle
   );
 
-  // Initially create or recreate renderbuffers and framebuffer used for picking
-  if (!defined(this._fb) || this._width !== width || this._height !== height) {
-    this._width = width;
-    this._height = height;
-
-    this._fb = this._fb && this._fb.destroy();
-    this._fb = new Framebuffer({
-      context: context,
-      colorTextures: [
-        new Texture({
-          context: context,
-          width: width,
-          height: height,
-        }),
-      ],
-      depthStencilRenderbuffer: new Renderbuffer({
-        context: context,
-        width: width,
-        height: height,
-        format: RenderbufferFormat.DEPTH_STENCIL,
-      }),
-    });
-    this._passState.framebuffer = this._fb;
-  }
+  // Create or recreate renderbuffers and framebuffer used for picking
+  this._width = width;
+  this._height = height;
+  this._fb.update(context, width, height);
+  this._passState.framebuffer = this._fb.framebuffer;
 
   this._passState.viewport.width = width;
   this._passState.viewport.height = height;
@@ -69,51 +49,51 @@ PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
   return this._passState;
 };
 
-var colorScratch = new Color();
+const colorScratch = new Color();
 
 PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
-  var width = defaultValue(screenSpaceRectangle.width, 1.0);
-  var height = defaultValue(screenSpaceRectangle.height, 1.0);
+  const width = defaultValue(screenSpaceRectangle.width, 1.0);
+  const height = defaultValue(screenSpaceRectangle.height, 1.0);
 
-  var context = this._context;
-  var pixels = context.readPixels({
+  const context = this._context;
+  const pixels = context.readPixels({
     x: screenSpaceRectangle.x,
     y: screenSpaceRectangle.y,
     width: width,
     height: height,
-    framebuffer: this._fb,
+    framebuffer: this._fb.framebuffer,
   });
 
-  var max = Math.max(width, height);
-  var length = max * max;
-  var halfWidth = Math.floor(width * 0.5);
-  var halfHeight = Math.floor(height * 0.5);
+  const max = Math.max(width, height);
+  const length = max * max;
+  const halfWidth = Math.floor(width * 0.5);
+  const halfHeight = Math.floor(height * 0.5);
 
-  var x = 0;
-  var y = 0;
-  var dx = 0;
-  var dy = -1;
+  let x = 0;
+  let y = 0;
+  let dx = 0;
+  let dy = -1;
 
   // Spiral around the center pixel, this is a workaround until
   // we can access the depth buffer on all browsers.
 
   // The region does not have to square and the dimensions do not have to be odd, but
   // loop iterations would be wasted. Prefer square regions where the size is odd.
-  for (var i = 0; i < length; ++i) {
+  for (let i = 0; i < length; ++i) {
     if (
       -halfWidth <= x &&
       x <= halfWidth &&
       -halfHeight <= y &&
       y <= halfHeight
     ) {
-      var index = 4 * ((halfHeight - y) * width + x + halfWidth);
+      const index = 4 * ((halfHeight - y) * width + x + halfWidth);
 
       colorScratch.red = Color.byteToFloat(pixels[index]);
       colorScratch.green = Color.byteToFloat(pixels[index + 1]);
       colorScratch.blue = Color.byteToFloat(pixels[index + 2]);
       colorScratch.alpha = Color.byteToFloat(pixels[index + 3]);
 
-      var object = context.getObjectByPickColor(colorScratch);
+      const object = context.getObjectByPickColor(colorScratch);
       if (defined(object)) {
         return object;
       }
@@ -122,7 +102,7 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
     // if (top right || bottom left corners) || (top left corner) || (bottom right corner + (1, 0))
     // change spiral direction
     if (x === y || (x < 0 && -x === y) || (x > 0 && x === 1 - y)) {
-      var temp = dx;
+      const temp = dx;
       dx = -dy;
       dy = temp;
     }
@@ -139,7 +119,7 @@ PickFramebuffer.prototype.isDestroyed = function () {
 };
 
 PickFramebuffer.prototype.destroy = function () {
-  this._fb = this._fb && this._fb.destroy();
+  this._fb.destroy();
   return destroyObject(this);
 };
 export default PickFramebuffer;

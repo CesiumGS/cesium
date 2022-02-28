@@ -35,12 +35,15 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
         });
 
-        var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706);
-        var url = "../../SampleData/models/CesiumMan/Cesium_Man.glb";
+        const position = Cesium.Cartesian3.fromDegrees(
+          -123.0744619,
+          44.0503706
+        );
+        const url = "../../SampleData/models/CesiumMan/Cesium_Man.glb";
         viewer.trackedEntity = viewer.entities.add({
           name: url,
           position: position,
@@ -57,21 +60,21 @@
           );
         }
 
-        var stages = viewer.scene.postProcessStages;
-        var silhouette = stages.add(
+        const stages = viewer.scene.postProcessStages;
+        const silhouette = stages.add(
           Cesium.PostProcessStageLibrary.createSilhouetteStage()
         );
         silhouette.uniforms.color = Cesium.Color.LIME;
-        var blackAndWhite = stages.add(
+        const blackAndWhite = stages.add(
           Cesium.PostProcessStageLibrary.createBlackAndWhiteStage()
         );
         blackAndWhite.uniforms.gradations = 5.0;
 
-        var handler;
+        let handler;
         function addMouseOver(stage) {
           handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
           handler.setInputAction(function (movement) {
-            var pickedObject = viewer.scene.pick(movement.endPosition);
+            const pickedObject = viewer.scene.pick(movement.endPosition);
             if (Cesium.defined(pickedObject)) {
               stage.selected = [pickedObject.primitive];
             } else {

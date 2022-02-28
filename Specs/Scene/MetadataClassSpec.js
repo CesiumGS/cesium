@@ -1,12 +1,13 @@
 import {
   MetadataClass,
+  MetadataComponentType,
   MetadataEnum,
   MetadataType,
 } from "../../Source/Cesium.js";
 
 describe("Scene/MetadataClass", function () {
   it("creates class with default values", function () {
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {},
     });
@@ -21,16 +22,16 @@ describe("Scene/MetadataClass", function () {
   });
 
   it("creates class", function () {
-    var extras = {
+    const extras = {
       cityInfo: {
         name: "city",
       },
     };
-    var extensions = {
+    const extensions = {
       EXT_other_extension: {},
     };
 
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         name: "Building",
@@ -39,7 +40,7 @@ describe("Scene/MetadataClass", function () {
         extensions: extensions,
         properties: {
           height: {
-            type: "FLOAT32",
+            componentType: "FLOAT32",
           },
           position: {
             type: "ARRAY",
@@ -48,7 +49,7 @@ describe("Scene/MetadataClass", function () {
             semantic: "_POSITION",
           },
           color: {
-            type: "STRING",
+            componentType: "STRING",
             semantic: "_COLOR",
           },
         },
@@ -61,21 +62,24 @@ describe("Scene/MetadataClass", function () {
     expect(buildingClass.extras).toBe(extras);
     expect(buildingClass.extensions).toBe(extensions);
 
-    var properties = buildingClass.properties;
-    var heightProperty = properties.height;
-    var positionProperty = properties.position;
-    var colorProperty = properties.color;
+    const properties = buildingClass.properties;
+    const heightProperty = properties.height;
+    const positionProperty = properties.position;
+    const colorProperty = properties.color;
 
-    expect(heightProperty.type).toBe(MetadataType.FLOAT32);
+    expect(heightProperty.type).toBe(MetadataType.SINGLE);
+    expect(heightProperty.componentType).toBe(MetadataComponentType.FLOAT32);
     expect(positionProperty.type).toBe(MetadataType.ARRAY);
-    expect(colorProperty.type).toBe(MetadataType.STRING);
+    expect(positionProperty.componentType).toBe(MetadataComponentType.FLOAT32);
+    expect(colorProperty.type).toBe(MetadataType.SINGLE);
+    expect(colorProperty.componentType).toBe(MetadataComponentType.STRING);
     expect(Object.keys(properties).sort()).toEqual([
       "color",
       "height",
       "position",
     ]);
 
-    var propertiesBySemantic = buildingClass.propertiesBySemantic;
+    const propertiesBySemantic = buildingClass.propertiesBySemantic;
     expect(propertiesBySemantic._COLOR).toBe(colorProperty);
     expect(propertiesBySemantic._POSITION).toBe(positionProperty);
     expect(Object.keys(propertiesBySemantic).sort()).toEqual([
@@ -85,7 +89,7 @@ describe("Scene/MetadataClass", function () {
   });
 
   it("creates class with enum property", function () {
-    var colorEnum = new MetadataEnum({
+    const colorEnum = new MetadataEnum({
       id: "color",
       enum: {
         values: [
@@ -97,16 +101,16 @@ describe("Scene/MetadataClass", function () {
       },
     });
 
-    var enums = {
+    const enums = {
       color: colorEnum,
     };
 
-    var buildingClass = new MetadataClass({
+    const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
           color: {
-            type: "ENUM",
+            componentType: "ENUM",
             enumType: "color",
           },
         },
@@ -114,7 +118,10 @@ describe("Scene/MetadataClass", function () {
       enums: enums,
     });
 
-    expect(buildingClass.properties.color.type).toBe(MetadataType.ENUM);
+    expect(buildingClass.properties.color.type).toBe(MetadataType.SINGLE);
+    expect(buildingClass.properties.color.componentType).toBe(
+      MetadataComponentType.ENUM
+    );
     expect(buildingClass.properties.color.enumType).toBe(colorEnum);
   });
 

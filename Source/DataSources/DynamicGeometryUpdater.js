@@ -70,11 +70,11 @@ DynamicGeometryUpdater.prototype.update = function (time) {
   Check.defined("time", time);
   //>>includeEnd('debug');
 
-  var geometryUpdater = this._geometryUpdater;
-  var onTerrain = geometryUpdater._onTerrain;
+  const geometryUpdater = this._geometryUpdater;
+  const onTerrain = geometryUpdater._onTerrain;
 
-  var primitives = this._primitives;
-  var orderedGroundPrimitives = this._orderedGroundPrimitives;
+  const primitives = this._primitives;
+  const orderedGroundPrimitives = this._orderedGroundPrimitives;
   if (onTerrain) {
     orderedGroundPrimitives.remove(this._primitive);
   } else {
@@ -84,21 +84,21 @@ DynamicGeometryUpdater.prototype.update = function (time) {
   }
   this._primitive = undefined;
 
-  var entity = this._entity;
-  var geometry = entity[this._geometryUpdater._geometryPropertyName];
+  const entity = this._entity;
+  const geometry = entity[this._geometryUpdater._geometryPropertyName];
   this._setOptions(entity, geometry, time);
   if (this._isHidden(entity, geometry, time)) {
     return;
   }
 
-  var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
-  var options = this._options;
+  const shadows = this._geometryUpdater.shadowsProperty.getValue(time);
+  const options = this._options;
   if (!defined(geometry.fill) || geometry.fill.getValue(time)) {
-    var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
-    var isColorAppearance =
+    const fillMaterialProperty = geometryUpdater.fillMaterialProperty;
+    const isColorAppearance =
       fillMaterialProperty instanceof ColorMaterialProperty;
-    var appearance;
-    var closed = geometryUpdater._getIsClosed(options);
+    let appearance;
+    const closed = geometryUpdater._getIsClosed(options);
     if (isColorAppearance) {
       appearance = new PerInstanceColorAppearance({
         closed: closed,
@@ -106,7 +106,7 @@ DynamicGeometryUpdater.prototype.update = function (time) {
           onTerrain && !geometryUpdater._supportsMaterialsforEntitiesOnTerrain,
       });
     } else {
-      var material = MaterialProperty.getValue(
+      const material = MaterialProperty.getValue(
         time,
         fillMaterialProperty,
         this._material
@@ -138,7 +138,9 @@ DynamicGeometryUpdater.prototype.update = function (time) {
     } else {
       options.vertexFormat = appearance.vertexFormat;
 
-      var fillInstance = this._geometryUpdater.createFillGeometryInstance(time);
+      const fillInstance = this._geometryUpdater.createFillGeometryInstance(
+        time
+      );
 
       if (isColorAppearance) {
         appearance.translucent = fillInstance.attributes.color.value[3] !== 255;
@@ -160,10 +162,10 @@ DynamicGeometryUpdater.prototype.update = function (time) {
     defined(geometry.outline) &&
     geometry.outline.getValue(time)
   ) {
-    var outlineInstance = this._geometryUpdater.createOutlineGeometryInstance(
+    const outlineInstance = this._geometryUpdater.createOutlineGeometryInstance(
       time
     );
-    var outlineWidth = Property.getValueOrDefault(
+    const outlineWidth = Property.getValueOrDefault(
       geometry.outlineWidth,
       time,
       1.0
@@ -203,11 +205,11 @@ DynamicGeometryUpdater.prototype.getBoundingSphere = function (result) {
     throw new DeveloperError("result is required.");
   }
   //>>includeEnd('debug');
-  var entity = this._entity;
-  var primitive = this._primitive;
-  var outlinePrimitive = this._outlinePrimitive;
+  const entity = this._entity;
+  const primitive = this._primitive;
+  const outlinePrimitive = this._outlinePrimitive;
 
-  var attributes;
+  let attributes;
 
   //Outline and Fill geometries have the same bounding sphere, so just use whichever one is defined and ready
   if (defined(primitive) && primitive.show && primitive.ready) {
@@ -259,8 +261,8 @@ DynamicGeometryUpdater.prototype.isDestroyed = function () {
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  */
 DynamicGeometryUpdater.prototype.destroy = function () {
-  var primitives = this._primitives;
-  var orderedGroundPrimitives = this._orderedGroundPrimitives;
+  const primitives = this._primitives;
+  const orderedGroundPrimitives = this._orderedGroundPrimitives;
   if (this._geometryUpdater._onTerrain) {
     orderedGroundPrimitives.remove(this._primitive);
   } else {

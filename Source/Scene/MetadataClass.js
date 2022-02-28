@@ -7,7 +7,7 @@ import MetadataClassProperty from "./MetadataClassProperty.js";
  * A metadata class.
  *
  * <p>
- * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
  *
  * @param {Object} options Object with the following properties:
@@ -22,19 +22,19 @@ import MetadataClassProperty from "./MetadataClassProperty.js";
  */
 function MetadataClass(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var id = options.id;
-  var classDefinition = options.class;
+  const id = options.id;
+  const classDefinition = options.class;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("options.id", id);
   Check.typeOf.object("options.class", classDefinition);
   //>>includeEnd('debug');
 
-  var properties = {};
-  var propertiesBySemantic = {};
-  for (var propertyId in classDefinition.properties) {
+  const properties = {};
+  const propertiesBySemantic = {};
+  for (const propertyId in classDefinition.properties) {
     if (classDefinition.properties.hasOwnProperty(propertyId)) {
-      var property = new MetadataClassProperty({
+      const property = new MetadataClassProperty({
         id: propertyId,
         property: classDefinition.properties[propertyId],
         enums: options.enums,
@@ -155,5 +155,13 @@ Object.defineProperties(MetadataClass.prototype, {
     },
   },
 });
+
+/**
+ * The class name given to the metadata class when a batch
+ * table is loaded from 3D Tiles 1.0 formats.
+ *
+ * @private
+ */
+MetadataClass.BATCH_TABLE_CLASS_NAME = "_batchTable";
 
 export default MetadataClass;

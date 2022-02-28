@@ -6,10 +6,10 @@ import { Intersect } from "../../Source/Cesium.js";
 import { PerspectiveFrustum } from "../../Source/Cesium.js";
 
 describe("Core/CullingVolume", function () {
-  var cullingVolume;
+  let cullingVolume;
 
   beforeEach(function () {
-    var frustum = new PerspectiveFrustum();
+    const frustum = new PerspectiveFrustum();
     frustum.near = 1.0;
     frustum.far = 2.0;
     frustum.fov = Math.PI / 3;
@@ -48,7 +48,7 @@ describe("Core/CullingVolume", function () {
   function testWithAndWithoutPlaneMask(culling, bound, intersect) {
     expect(culling.computeVisibility(bound)).toEqual(intersect);
 
-    var mask = culling.computeVisibilityWithPlaneMask(
+    const mask = culling.computeVisibilityWithPlaneMask(
       bound,
       CullingVolume.MASK_INDETERMINATE
     );
@@ -65,7 +65,7 @@ describe("Core/CullingVolume", function () {
 
   describe("box intersections", function () {
     it("can contain an axis aligned bounding box", function () {
-      var box1 = AxisAlignedBoundingBox.fromPoints([
+      const box1 = AxisAlignedBoundingBox.fromPoints([
         new Cartesian3(-0.5, 0, -1.25),
         new Cartesian3(0.5, 0, -1.25),
         new Cartesian3(-0.5, 0, -1.75),
@@ -76,7 +76,7 @@ describe("Core/CullingVolume", function () {
 
     describe("can partially contain an axis aligned bounding box", function () {
       it("on the far plane", function () {
-        var box2 = AxisAlignedBoundingBox.fromPoints([
+        const box2 = AxisAlignedBoundingBox.fromPoints([
           new Cartesian3(-0.5, 0, -1.5),
           new Cartesian3(0.5, 0, -1.5),
           new Cartesian3(-0.5, 0, -2.5),
@@ -90,7 +90,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("on the near plane", function () {
-        var box3 = AxisAlignedBoundingBox.fromPoints([
+        const box3 = AxisAlignedBoundingBox.fromPoints([
           new Cartesian3(-0.5, 0, -0.5),
           new Cartesian3(0.5, 0, -0.5),
           new Cartesian3(-0.5, 0, -1.5),
@@ -104,7 +104,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("on the left plane", function () {
-        var box4 = AxisAlignedBoundingBox.fromPoints([
+        const box4 = AxisAlignedBoundingBox.fromPoints([
           new Cartesian3(-1.5, 0, -1.25),
           new Cartesian3(0, 0, -1.25),
           new Cartesian3(-1.5, 0, -1.5),
@@ -118,7 +118,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("on the right plane", function () {
-        var box5 = AxisAlignedBoundingBox.fromPoints([
+        const box5 = AxisAlignedBoundingBox.fromPoints([
           new Cartesian3(0, 0, -1.25),
           new Cartesian3(1.5, 0, -1.25),
           new Cartesian3(0, 0, -1.5),
@@ -132,7 +132,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("on the top plane", function () {
-        var box6 = AxisAlignedBoundingBox.fromPoints([
+        const box6 = AxisAlignedBoundingBox.fromPoints([
           new Cartesian3(-0.5, 0, -1.25),
           new Cartesian3(0.5, 0, -1.25),
           new Cartesian3(-0.5, 2.0, -1.75),
@@ -146,7 +146,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("on the bottom plane", function () {
-        var box7 = AxisAlignedBoundingBox.fromPoints([
+        const box7 = AxisAlignedBoundingBox.fromPoints([
           new Cartesian3(-0.5, -2.0, -1.25),
           new Cartesian3(0.5, 0, -1.25),
           new Cartesian3(-0.5, -2.0, -1.5),
@@ -162,7 +162,7 @@ describe("Core/CullingVolume", function () {
 
     describe("can not contain an axis aligned bounding box", function () {
       it("past the far plane", function () {
-        var box8 = AxisAlignedBoundingBox.fromPoints([
+        const box8 = AxisAlignedBoundingBox.fromPoints([
           new Cartesian3(-0.5, 0, -2.25),
           new Cartesian3(0.5, 0, -2.25),
           new Cartesian3(-0.5, 0, -2.75),
@@ -172,7 +172,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("before the near plane", function () {
-        var box9 = AxisAlignedBoundingBox.fromPoints([
+        const box9 = AxisAlignedBoundingBox.fromPoints([
           new Cartesian3(-0.5, 0, -0.25),
           new Cartesian3(0.5, 0, -0.25),
           new Cartesian3(-0.5, 0, -0.75),
@@ -182,7 +182,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("past the left plane", function () {
-        var box10 = AxisAlignedBoundingBox.fromPoints([
+        const box10 = AxisAlignedBoundingBox.fromPoints([
           new Cartesian3(-5, 0, -1.25),
           new Cartesian3(-3, 0, -1.25),
           new Cartesian3(-5, 0, -1.75),
@@ -192,7 +192,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("past the right plane", function () {
-        var box11 = AxisAlignedBoundingBox.fromPoints([
+        const box11 = AxisAlignedBoundingBox.fromPoints([
           new Cartesian3(3, 0, -1.25),
           new Cartesian3(5, 0, -1.25),
           new Cartesian3(3, 0, -1.75),
@@ -202,7 +202,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("past the top plane", function () {
-        var box12 = AxisAlignedBoundingBox.fromPoints([
+        const box12 = AxisAlignedBoundingBox.fromPoints([
           new Cartesian3(-0.5, 3, -1.25),
           new Cartesian3(0.5, 3, -1.25),
           new Cartesian3(-0.5, 5, -1.75),
@@ -212,7 +212,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("past the bottom plane", function () {
-        var box13 = AxisAlignedBoundingBox.fromPoints([
+        const box13 = AxisAlignedBoundingBox.fromPoints([
           new Cartesian3(-0.5, -3, -1.25),
           new Cartesian3(0.5, -3, -1.25),
           new Cartesian3(-0.5, -5, -1.75),
@@ -225,7 +225,7 @@ describe("Core/CullingVolume", function () {
 
   describe("sphere intersection", function () {
     it("can contain a sphere", function () {
-      var sphere1 = BoundingSphere.fromPoints([
+      const sphere1 = BoundingSphere.fromPoints([
         new Cartesian3(0, 0, -1.25),
         new Cartesian3(0, 0, -1.75),
       ]);
@@ -234,7 +234,7 @@ describe("Core/CullingVolume", function () {
 
     describe("can partially contain a sphere", function () {
       it("on the far plane", function () {
-        var sphere2 = BoundingSphere.fromPoints([
+        const sphere2 = BoundingSphere.fromPoints([
           new Cartesian3(0, 0, -1.5),
           new Cartesian3(0, 0, -2.5),
         ]);
@@ -246,7 +246,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("on the near plane", function () {
-        var sphere3 = BoundingSphere.fromPoints([
+        const sphere3 = BoundingSphere.fromPoints([
           new Cartesian3(0, 0, -0.5),
           new Cartesian3(0, 0, -1.5),
         ]);
@@ -258,7 +258,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("on the left plane", function () {
-        var sphere4 = BoundingSphere.fromPoints([
+        const sphere4 = BoundingSphere.fromPoints([
           new Cartesian3(-1.0, 0, -1.5),
           new Cartesian3(0, 0, -1.5),
         ]);
@@ -270,7 +270,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("on the right plane", function () {
-        var sphere5 = BoundingSphere.fromPoints([
+        const sphere5 = BoundingSphere.fromPoints([
           new Cartesian3(0, 0, -1.5),
           new Cartesian3(1.0, 0, -1.5),
         ]);
@@ -282,7 +282,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("on the top plane", function () {
-        var sphere6 = BoundingSphere.fromPoints([
+        const sphere6 = BoundingSphere.fromPoints([
           new Cartesian3(0, 0, -1.5),
           new Cartesian3(0, 2.0, -1.5),
         ]);
@@ -294,7 +294,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("on the bottom plane", function () {
-        var sphere7 = BoundingSphere.fromPoints([
+        const sphere7 = BoundingSphere.fromPoints([
           new Cartesian3(0, -2.0, -1.5),
           new Cartesian3(0, 0, -1.5),
         ]);
@@ -308,7 +308,7 @@ describe("Core/CullingVolume", function () {
 
     describe("can not contain a sphere", function () {
       it("past the far plane", function () {
-        var sphere8 = BoundingSphere.fromPoints([
+        const sphere8 = BoundingSphere.fromPoints([
           new Cartesian3(0, 0, -2.25),
           new Cartesian3(0, 0, -2.75),
         ]);
@@ -316,7 +316,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("before the near plane", function () {
-        var sphere9 = BoundingSphere.fromPoints([
+        const sphere9 = BoundingSphere.fromPoints([
           new Cartesian3(0, 0, -0.25),
           new Cartesian3(0, 0, -0.5),
         ]);
@@ -324,7 +324,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("past the left plane", function () {
-        var sphere10 = BoundingSphere.fromPoints([
+        const sphere10 = BoundingSphere.fromPoints([
           new Cartesian3(-5, 0, -1.25),
           new Cartesian3(-4.5, 0, -1.75),
         ]);
@@ -332,7 +332,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("past the right plane", function () {
-        var sphere11 = BoundingSphere.fromPoints([
+        const sphere11 = BoundingSphere.fromPoints([
           new Cartesian3(4.5, 0, -1.25),
           new Cartesian3(5, 0, -1.75),
         ]);
@@ -340,7 +340,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("past the top plane", function () {
-        var sphere12 = BoundingSphere.fromPoints([
+        const sphere12 = BoundingSphere.fromPoints([
           new Cartesian3(-0.5, 4.5, -1.25),
           new Cartesian3(-0.5, 5, -1.25),
         ]);
@@ -348,7 +348,7 @@ describe("Core/CullingVolume", function () {
       });
 
       it("past the bottom plane", function () {
-        var sphere13 = BoundingSphere.fromPoints([
+        const sphere13 = BoundingSphere.fromPoints([
           new Cartesian3(-0.5, -4.5, -1.25),
           new Cartesian3(-0.5, -5, -1.25),
         ]);
@@ -358,11 +358,11 @@ describe("Core/CullingVolume", function () {
   });
 
   describe("construct from bounding sphere", function () {
-    var boundingSphereCullingVolume = new BoundingSphere(
+    const boundingSphereCullingVolume = new BoundingSphere(
       new Cartesian3(1000.0, 2000.0, 3000.0),
       100.0
     );
-    var cullingVolume = CullingVolume.fromBoundingSphere(
+    const cullingVolume = CullingVolume.fromBoundingSphere(
       boundingSphereCullingVolume
     );
 
@@ -373,25 +373,25 @@ describe("Core/CullingVolume", function () {
     });
 
     it("can contain a volume", function () {
-      var sphere1 = BoundingSphere.clone(boundingSphereCullingVolume);
+      const sphere1 = BoundingSphere.clone(boundingSphereCullingVolume);
       sphere1.radius *= 0.5;
       testWithAndWithoutPlaneMask(cullingVolume, sphere1, Intersect.INSIDE);
     });
 
     describe("can partially contain a volume", function () {
       it("on the far plane", function () {
-        var offset = new Cartesian3(
+        const offset = new Cartesian3(
           0.0,
           0.0,
           boundingSphereCullingVolume.radius * 1.5
         );
-        var center = Cartesian3.add(
+        const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
           new Cartesian3()
         );
-        var radius = boundingSphereCullingVolume.radius * 0.5;
-        var sphere2 = new BoundingSphere(center, radius);
+        const radius = boundingSphereCullingVolume.radius * 0.5;
+        const sphere2 = new BoundingSphere(center, radius);
 
         testWithAndWithoutPlaneMask(
           cullingVolume,
@@ -401,18 +401,18 @@ describe("Core/CullingVolume", function () {
       });
 
       it("on the near plane", function () {
-        var offset = new Cartesian3(
+        const offset = new Cartesian3(
           0.0,
           0.0,
           -boundingSphereCullingVolume.radius * 1.5
         );
-        var center = Cartesian3.add(
+        const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
           new Cartesian3()
         );
-        var radius = boundingSphereCullingVolume.radius * 0.5;
-        var sphere3 = new BoundingSphere(center, radius);
+        const radius = boundingSphereCullingVolume.radius * 0.5;
+        const sphere3 = new BoundingSphere(center, radius);
 
         testWithAndWithoutPlaneMask(
           cullingVolume,
@@ -422,18 +422,18 @@ describe("Core/CullingVolume", function () {
       });
 
       it("on the left plane", function () {
-        var offset = new Cartesian3(
+        const offset = new Cartesian3(
           -boundingSphereCullingVolume.radius * 1.5,
           0.0,
           0.0
         );
-        var center = Cartesian3.add(
+        const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
           new Cartesian3()
         );
-        var radius = boundingSphereCullingVolume.radius * 0.5;
-        var sphere4 = new BoundingSphere(center, radius);
+        const radius = boundingSphereCullingVolume.radius * 0.5;
+        const sphere4 = new BoundingSphere(center, radius);
 
         testWithAndWithoutPlaneMask(
           cullingVolume,
@@ -443,18 +443,18 @@ describe("Core/CullingVolume", function () {
       });
 
       it("on the right plane", function () {
-        var offset = new Cartesian3(
+        const offset = new Cartesian3(
           boundingSphereCullingVolume.radius * 1.5,
           0.0,
           0.0
         );
-        var center = Cartesian3.add(
+        const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
           new Cartesian3()
         );
-        var radius = boundingSphereCullingVolume.radius * 0.5;
-        var sphere5 = new BoundingSphere(center, radius);
+        const radius = boundingSphereCullingVolume.radius * 0.5;
+        const sphere5 = new BoundingSphere(center, radius);
 
         testWithAndWithoutPlaneMask(
           cullingVolume,
@@ -464,18 +464,18 @@ describe("Core/CullingVolume", function () {
       });
 
       it("on the top plane", function () {
-        var offset = new Cartesian3(
+        const offset = new Cartesian3(
           0.0,
           boundingSphereCullingVolume.radius * 1.5,
           0.0
         );
-        var center = Cartesian3.add(
+        const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
           new Cartesian3()
         );
-        var radius = boundingSphereCullingVolume.radius * 0.5;
-        var sphere6 = new BoundingSphere(center, radius);
+        const radius = boundingSphereCullingVolume.radius * 0.5;
+        const sphere6 = new BoundingSphere(center, radius);
 
         testWithAndWithoutPlaneMask(
           cullingVolume,
@@ -485,18 +485,18 @@ describe("Core/CullingVolume", function () {
       });
 
       it("on the bottom plane", function () {
-        var offset = new Cartesian3(
+        const offset = new Cartesian3(
           0.0,
           -boundingSphereCullingVolume.radius * 1.5,
           0.0
         );
-        var center = Cartesian3.add(
+        const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
           new Cartesian3()
         );
-        var radius = boundingSphereCullingVolume.radius * 0.5;
-        var sphere7 = new BoundingSphere(center, radius);
+        const radius = boundingSphereCullingVolume.radius * 0.5;
+        const sphere7 = new BoundingSphere(center, radius);
 
         testWithAndWithoutPlaneMask(
           cullingVolume,
@@ -508,103 +508,103 @@ describe("Core/CullingVolume", function () {
 
     describe("can not contain a volume", function () {
       it("past the far plane", function () {
-        var offset = new Cartesian3(
+        const offset = new Cartesian3(
           0.0,
           0.0,
           boundingSphereCullingVolume.radius * 2.0
         );
-        var center = Cartesian3.add(
+        const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
           new Cartesian3()
         );
-        var radius = boundingSphereCullingVolume.radius * 0.5;
-        var sphere8 = new BoundingSphere(center, radius);
+        const radius = boundingSphereCullingVolume.radius * 0.5;
+        const sphere8 = new BoundingSphere(center, radius);
 
         testWithAndWithoutPlaneMask(cullingVolume, sphere8, Intersect.OUTSIDE);
       });
 
       it("before the near plane", function () {
-        var offset = new Cartesian3(
+        const offset = new Cartesian3(
           0.0,
           0.0,
           -boundingSphereCullingVolume.radius * 2.0
         );
-        var center = Cartesian3.add(
+        const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
           new Cartesian3()
         );
-        var radius = boundingSphereCullingVolume.radius * 0.5;
-        var sphere9 = new BoundingSphere(center, radius);
+        const radius = boundingSphereCullingVolume.radius * 0.5;
+        const sphere9 = new BoundingSphere(center, radius);
 
         testWithAndWithoutPlaneMask(cullingVolume, sphere9, Intersect.OUTSIDE);
       });
 
       it("past the left plane", function () {
-        var offset = new Cartesian3(
+        const offset = new Cartesian3(
           -boundingSphereCullingVolume.radius * 2.0,
           0.0,
           0.0
         );
-        var center = Cartesian3.add(
+        const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
           new Cartesian3()
         );
-        var radius = boundingSphereCullingVolume.radius * 0.5;
-        var sphere10 = new BoundingSphere(center, radius);
+        const radius = boundingSphereCullingVolume.radius * 0.5;
+        const sphere10 = new BoundingSphere(center, radius);
 
         testWithAndWithoutPlaneMask(cullingVolume, sphere10, Intersect.OUTSIDE);
       });
 
       it("past the right plane", function () {
-        var offset = new Cartesian3(
+        const offset = new Cartesian3(
           boundingSphereCullingVolume.radius * 2.0,
           0.0,
           0.0
         );
-        var center = Cartesian3.add(
+        const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
           new Cartesian3()
         );
-        var radius = boundingSphereCullingVolume.radius * 0.5;
-        var sphere11 = new BoundingSphere(center, radius);
+        const radius = boundingSphereCullingVolume.radius * 0.5;
+        const sphere11 = new BoundingSphere(center, radius);
 
         testWithAndWithoutPlaneMask(cullingVolume, sphere11, Intersect.OUTSIDE);
       });
 
       it("past the top plane", function () {
-        var offset = new Cartesian3(
+        const offset = new Cartesian3(
           0.0,
           boundingSphereCullingVolume.radius * 2.0,
           0.0
         );
-        var center = Cartesian3.add(
+        const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
           new Cartesian3()
         );
-        var radius = boundingSphereCullingVolume.radius * 0.5;
-        var sphere12 = new BoundingSphere(center, radius);
+        const radius = boundingSphereCullingVolume.radius * 0.5;
+        const sphere12 = new BoundingSphere(center, radius);
 
         testWithAndWithoutPlaneMask(cullingVolume, sphere12, Intersect.OUTSIDE);
       });
 
       it("past the bottom plane", function () {
-        var offset = new Cartesian3(
+        const offset = new Cartesian3(
           0.0,
           -boundingSphereCullingVolume.radius * 2.0,
           0.0
         );
-        var center = Cartesian3.add(
+        const center = Cartesian3.add(
           boundingSphereCullingVolume.center,
           offset,
           new Cartesian3()
         );
-        var radius = boundingSphereCullingVolume.radius * 0.5;
-        var sphere13 = new BoundingSphere(center, radius);
+        const radius = boundingSphereCullingVolume.radius * 0.5;
+        const sphere13 = new BoundingSphere(center, radius);
 
         testWithAndWithoutPlaneMask(cullingVolume, sphere13, Intersect.OUTSIDE);
       });

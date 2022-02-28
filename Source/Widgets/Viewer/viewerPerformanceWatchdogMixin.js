@@ -18,7 +18,7 @@ import PerformanceWatchdog from "../PerformanceWatchdog/PerformanceWatchdog.js";
  * @exception {DeveloperError} viewer is required.
  *
  * @example
- * var viewer = new Cesium.Viewer('cesiumContainer');
+ * const viewer = new Cesium.Viewer('cesiumContainer');
  * viewer.extend(Cesium.viewerPerformanceWatchdogMixin, {
  *     lowFrameRateMessage : 'Why is this going so <em>slowly</em>?'
  * });
@@ -32,7 +32,7 @@ function viewerPerformanceWatchdogMixin(viewer, options) {
 
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var performanceWatchdog = new PerformanceWatchdog({
+  const performanceWatchdog = new PerformanceWatchdog({
     scene: viewer.scene,
     container: viewer.bottomContainer,
     lowFrameRateMessage: options.lowFrameRateMessage,

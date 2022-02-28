@@ -32,7 +32,7 @@ import UniformState from "./UniformState.js";
 import VertexArray from "./VertexArray.js";
 
 function errorToString(gl, error) {
-  var message = "WebGL Error:  ";
+  let message = "WebGL Error:  ";
   switch (error) {
     case gl.INVALID_ENUM:
       message += "INVALID_ENUM";
@@ -50,16 +50,16 @@ function errorToString(gl, error) {
       message += "CONTEXT_LOST_WEBGL lost";
       break;
     default:
-      message += "Unknown (" + error + ")";
+      message += `Unknown (${error})`;
   }
 
   return message;
 }
 
 function createErrorMessage(gl, glFunc, glFuncArguments, error) {
-  var message = errorToString(gl, error) + ": " + glFunc.name + "(";
+  let message = `${errorToString(gl, error)}: ${glFunc.name}(`;
 
-  for (var i = 0; i < glFuncArguments.length; ++i) {
+  for (let i = 0; i < glFuncArguments.length; ++i) {
     if (i !== 0) {
       message += ", ";
     }
@@ -71,7 +71,7 @@ function createErrorMessage(gl, glFunc, glFuncArguments, error) {
 }
 
 function throwOnError(gl, glFunc, glFuncArguments) {
-  var error = gl.getError();
+  const error = gl.getError();
   if (error !== gl.NO_ERROR) {
     throw new RuntimeError(
       createErrorMessage(gl, glFunc, glFuncArguments, error)
@@ -82,13 +82,13 @@ function throwOnError(gl, glFunc, glFuncArguments) {
 function makeGetterSetter(gl, propertyName, logFunction) {
   return {
     get: function () {
-      var value = gl[propertyName];
-      logFunction(gl, "get: " + propertyName, value);
+      const value = gl[propertyName];
+      logFunction(gl, `get: ${propertyName}`, value);
       return gl[propertyName];
     },
     set: function (value) {
       gl[propertyName] = value;
-      logFunction(gl, "set: " + propertyName, value);
+      logFunction(gl, `set: ${propertyName}`, value);
     },
   };
 }
@@ -100,20 +100,20 @@ function wrapGL(gl, logFunction) {
 
   function wrapFunction(property) {
     return function () {
-      var result = property.apply(gl, arguments);
+      const result = property.apply(gl, arguments);
       logFunction(gl, property, arguments);
       return result;
     };
   }
 
-  var glWrapper = {};
+  const glWrapper = {};
 
   // JavaScript linters normally demand that a for..in loop must directly contain an if,
   // but in our loop below, we actually intend to iterate all properties, including
   // those in the prototype.
   /*eslint-disable guard-for-in*/
-  for (var propertyName in gl) {
-    var property = gl[propertyName];
+  for (const propertyName in gl) {
+    const property = gl[propertyName];
 
     // wrap any functions we encounter, otherwise just copy the property to the wrapper.
     if (property instanceof Function) {
@@ -132,9 +132,9 @@ function wrapGL(gl, logFunction) {
 }
 
 function getExtension(gl, names) {
-  var length = names.length;
-  for (var i = 0; i < length; ++i) {
-    var extension = gl.getExtension(names[i]);
+  const length = names.length;
+  for (let i = 0; i < length; ++i) {
+    const extension = gl.getExtension(names[i]);
     if (extension) {
       return extension;
     }
@@ -168,19 +168,19 @@ function Context(canvas, options) {
     options.allowTextureFilterAnisotropic,
     true
   );
-  var webglOptions = defaultValue(options.webgl, {});
+  const webglOptions = defaultValue(options.webgl, {});
 
   // Override select WebGL defaults
   webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
   webglOptions.stencil = defaultValue(webglOptions.stencil, true); // WebGL default is false
 
-  var requestWebgl2 =
+  const requestWebgl2 =
     defaultValue(options.requestWebgl2, false) &&
     typeof WebGL2RenderingContext !== "undefined";
-  var webgl2 = false;
+  let webgl2 = false;
 
-  var glContext;
-  var getWebGLStub = options.getWebGLStub;
+  let glContext;
+  const getWebGLStub = options.getWebGLStub;
 
   if (!defined(getWebGLStub)) {
     if (requestWebgl2) {
@@ -223,7 +223,7 @@ function Context(canvas, options) {
   this._shaderCache = new ShaderCache(this);
   this._textureCache = new TextureCache();
 
-  var gl = glContext;
+  const gl = glContext;
 
   this._stencilBits = gl.getParameter(gl.STENCIL_BITS);
 
@@ -256,24 +256,26 @@ function Context(canvas, options) {
     gl.MAX_VERTEX_UNIFORM_VECTORS
   ); // min: 128
 
-  var aliasedLineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE); // must include 1
+  ContextLimits._maximumSamples = gl.getParameter(gl.MAX_SAMPLES);
+
+  const aliasedLineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE); // must include 1
   ContextLimits._minimumAliasedLineWidth = aliasedLineWidthRange[0];
   ContextLimits._maximumAliasedLineWidth = aliasedLineWidthRange[1];
 
-  var aliasedPointSizeRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE); // must include 1
+  const aliasedPointSizeRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE); // must include 1
   ContextLimits._minimumAliasedPointSize = aliasedPointSizeRange[0];
   ContextLimits._maximumAliasedPointSize = aliasedPointSizeRange[1];
 
-  var maximumViewportDimensions = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
+  const maximumViewportDimensions = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
   ContextLimits._maximumViewportWidth = maximumViewportDimensions[0];
   ContextLimits._maximumViewportHeight = maximumViewportDimensions[1];
 
-  var highpFloat = gl.getShaderPrecisionFormat(
+  const highpFloat = gl.getShaderPrecisionFormat(
     gl.FRAGMENT_SHADER,
     gl.HIGH_FLOAT
   );
   ContextLimits._highpFloatSupported = highpFloat.precision !== 0;
-  var highpInt = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_INT);
+  const highpInt = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_INT);
   ContextLimits._highpIntSupported = highpInt.rangeMax !== 0;
 
   this._antialias = gl.getContextAttributes().antialias;
@@ -331,7 +333,7 @@ function Context(canvas, options) {
     this._bc7
   );
 
-  var textureFilterAnisotropic = options.allowTextureFilterAnisotropic
+  const textureFilterAnisotropic = options.allowTextureFilterAnisotropic
     ? getExtension(gl, [
         "EXT_texture_filter_anisotropic",
         "WEBKIT_EXT_texture_filter_anisotropic",
@@ -344,22 +346,22 @@ function Context(canvas, options) {
     ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT)
     : 1.0;
 
-  var glCreateVertexArray;
-  var glBindVertexArray;
-  var glDeleteVertexArray;
+  let glCreateVertexArray;
+  let glBindVertexArray;
+  let glDeleteVertexArray;
 
-  var glDrawElementsInstanced;
-  var glDrawArraysInstanced;
-  var glVertexAttribDivisor;
+  let glDrawElementsInstanced;
+  let glDrawArraysInstanced;
+  let glVertexAttribDivisor;
 
-  var glDrawBuffers;
+  let glDrawBuffers;
 
-  var vertexArrayObject;
-  var instancedArrays;
-  var drawBuffers;
+  let vertexArrayObject;
+  let instancedArrays;
+  let drawBuffers;
 
   if (webgl2) {
-    var that = this;
+    const that = this;
 
     glCreateVertexArray = function () {
       return that._gl.createVertexArray();
@@ -467,13 +469,18 @@ function Context(canvas, options) {
   this._clearDepth = 1.0;
   this._clearStencil = 0;
 
-  var us = new UniformState();
-  var ps = new PassState(this);
-  var rs = RenderState.fromCache();
+  const us = new UniformState();
+  const ps = new PassState(this);
+  const rs = RenderState.fromCache();
 
   this._defaultPassState = ps;
   this._defaultRenderState = rs;
+  // default texture has a value of (1, 1, 1)
+  // default emissive texture has a value of (0, 0, 0)
+  // default normal texture is +z which is encoded as (0.5, 0.5, 1)
   this._defaultTexture = undefined;
+  this._defaultEmissiveTexture = undefined;
+  this._defaultNormalTexture = undefined;
   this._defaultCubeMap = undefined;
 
   this._us = us;
@@ -485,7 +492,7 @@ function Context(canvas, options) {
   // Vertex attribute divisor state cache. Workaround for ANGLE (also look at VertexArray.setVertexAttribDivisor)
   this._vertexAttribDivisors = [];
   this._previousDrawInstanced = false;
-  for (var i = 0; i < ContextLimits._maximumVertexAttributes; i++) {
+  for (let i = 0; i < ContextLimits._maximumVertexAttributes; i++) {
     this._vertexAttribDivisors.push(0);
   }
 
@@ -523,7 +530,7 @@ function Context(canvas, options) {
   RenderState.apply(gl, rs, ps);
 }
 
-var defaultFramebufferMarker = {};
+const defaultFramebufferMarker = {};
 
 Object.defineProperties(Context.prototype, {
   id: {
@@ -590,6 +597,18 @@ Object.defineProperties(Context.prototype, {
   antialias: {
     get: function () {
       return this._antialias;
+    },
+  },
+
+  /**
+   * <code>true</code> if the WebGL context supports multisample antialiasing. Requires
+   * WebGL2.
+   * @memberof Context.prototype
+   * @type {Boolean}
+   */
+  msaa: {
+    get: function () {
+      return this._webgl2;
     },
   },
 
@@ -957,6 +976,57 @@ Object.defineProperties(Context.prototype, {
       return this._defaultTexture;
     },
   },
+  /**
+   * A 1x1 RGB texture initialized to [0, 0, 0] representing a material that is
+   * not emissive. This can be used as a placeholder texture for emissive
+   * textures while other textures are downloaded.
+   * @memberof Context.prototype
+   * @type {Texture}
+   */
+  defaultEmissiveTexture: {
+    get: function () {
+      if (this._defaultEmissiveTexture === undefined) {
+        this._defaultEmissiveTexture = new Texture({
+          context: this,
+          pixelFormat: PixelFormat.RGB,
+          source: {
+            width: 1,
+            height: 1,
+            arrayBufferView: new Uint8Array([0, 0, 0]),
+          },
+          flipY: false,
+        });
+      }
+
+      return this._defaultEmissiveTexture;
+    },
+  },
+  /**
+   * A 1x1 RGBA texture initialized to [128, 128, 255] to encode a tangent
+   * space normal pointing in the +z direction, i.e. (0, 0, 1). This can
+   * be used as a placeholder normal texture while other textures are
+   * downloaded.
+   * @memberof Context.prototype
+   * @type {Texture}
+   */
+  defaultNormalTexture: {
+    get: function () {
+      if (this._defaultNormalTexture === undefined) {
+        this._defaultNormalTexture = new Texture({
+          context: this,
+          pixelFormat: PixelFormat.RGB,
+          source: {
+            width: 1,
+            height: 1,
+            arrayBufferView: new Uint8Array([128, 128, 255]),
+          },
+          flipY: false,
+        });
+      }
+
+      return this._defaultNormalTexture;
+    },
+  },
 
   /**
    * A cube map, where each face is a 1x1 RGBA texture initialized to
@@ -968,7 +1038,7 @@ Object.defineProperties(Context.prototype, {
   defaultCubeMap: {
     get: function () {
       if (this._defaultCubeMap === undefined) {
-        var face = {
+        const face = {
           width: 1,
           height: 1,
           arrayBufferView: new Uint8Array([255, 255, 255, 255]),
@@ -1038,11 +1108,11 @@ Object.defineProperties(Context.prototype, {
 function validateFramebuffer(context) {
   //>>includeStart('debug', pragmas.debug);
   if (context.validateFramebuffer) {
-    var gl = context._gl;
-    var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    const gl = context._gl;
+    const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
 
     if (status !== gl.FRAMEBUFFER_COMPLETE) {
-      var message;
+      let message;
 
       switch (status) {
         case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
@@ -1070,8 +1140,8 @@ function validateFramebuffer(context) {
 }
 
 function applyRenderState(context, renderState, passState, clear) {
-  var previousRenderState = context._currentRenderState;
-  var previousPassState = context._currentPassState;
+  const previousRenderState = context._currentRenderState;
+  const previousPassState = context._currentPassState;
   context._currentRenderState = renderState;
   context._currentPassState = passState;
   RenderState.partialApply(
@@ -1084,7 +1154,7 @@ function applyRenderState(context, renderState, passState, clear) {
   );
 }
 
-var scratchBackBufferArray;
+let scratchBackBufferArray;
 // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
 if (typeof WebGLRenderingContext !== "undefined") {
   scratchBackBufferArray = [WebGLConstants.BACK];
@@ -1093,7 +1163,7 @@ if (typeof WebGLRenderingContext !== "undefined") {
 function bindFramebuffer(context, framebuffer) {
   if (framebuffer !== context._currentFramebuffer) {
     context._currentFramebuffer = framebuffer;
-    var buffers = scratchBackBufferArray;
+    let buffers = scratchBackBufferArray;
 
     if (defined(framebuffer)) {
       framebuffer._bind();
@@ -1102,7 +1172,7 @@ function bindFramebuffer(context, framebuffer) {
       // TODO: Need a way for a command to give what draw buffers are active.
       buffers = framebuffer._getActiveColorAttachments();
     } else {
-      var gl = context._gl;
+      const gl = context._gl;
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
 
@@ -1112,18 +1182,18 @@ function bindFramebuffer(context, framebuffer) {
   }
 }
 
-var defaultClearCommand = new ClearCommand();
+const defaultClearCommand = new ClearCommand();
 
 Context.prototype.clear = function (clearCommand, passState) {
   clearCommand = defaultValue(clearCommand, defaultClearCommand);
   passState = defaultValue(passState, this._defaultPassState);
 
-  var gl = this._gl;
-  var bitmask = 0;
+  const gl = this._gl;
+  let bitmask = 0;
 
-  var c = clearCommand.color;
-  var d = clearCommand.depth;
-  var s = clearCommand.stencil;
+  const c = clearCommand.color;
+  const d = clearCommand.depth;
+  const s = clearCommand.stencil;
 
   if (defined(c)) {
     if (!Color.equals(this._clearColor, c)) {
@@ -1149,11 +1219,11 @@ Context.prototype.clear = function (clearCommand, passState) {
     bitmask |= gl.STENCIL_BUFFER_BIT;
   }
 
-  var rs = defaultValue(clearCommand.renderState, this._defaultRenderState);
+  const rs = defaultValue(clearCommand.renderState, this._defaultRenderState);
   applyRenderState(this, rs, passState, true);
 
   // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
-  var framebuffer = defaultValue(
+  const framebuffer = defaultValue(
     clearCommand.framebuffer,
     passState.framebuffer
   );
@@ -1189,11 +1259,11 @@ function beginDraw(
 }
 
 function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
-  var primitiveType = drawCommand._primitiveType;
-  var va = drawCommand._vertexArray;
-  var offset = drawCommand._offset;
-  var count = drawCommand._count;
-  var instanceCount = drawCommand.instanceCount;
+  const primitiveType = drawCommand._primitiveType;
+  const va = drawCommand._vertexArray;
+  let offset = drawCommand._offset;
+  let count = drawCommand._count;
+  const instanceCount = drawCommand.instanceCount;
 
   //>>includeStart('debug', pragmas.debug);
   if (!PrimitiveType.validate(primitiveType)) {
@@ -1225,7 +1295,7 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
   );
 
   va._bind();
-  var indexBuffer = va.indexBuffer;
+  const indexBuffer = va.indexBuffer;
 
   if (defined(indexBuffer)) {
     offset = offset * indexBuffer.bytesPerIndex; // offset in vertices to offset in bytes
@@ -1276,11 +1346,11 @@ Context.prototype.draw = function (
 
   passState = defaultValue(passState, this._defaultPassState);
   // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
-  var framebuffer = defaultValue(
+  const framebuffer = defaultValue(
     drawCommand._framebuffer,
     passState.framebuffer
   );
-  var renderState = defaultValue(
+  const renderState = defaultValue(
     drawCommand._renderState,
     this._defaultRenderState
   );
@@ -1292,21 +1362,21 @@ Context.prototype.draw = function (
 };
 
 Context.prototype.endFrame = function () {
-  var gl = this._gl;
+  const gl = this._gl;
   gl.useProgram(null);
 
   this._currentFramebuffer = undefined;
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-  var buffers = scratchBackBufferArray;
+  const buffers = scratchBackBufferArray;
   if (this.drawBuffers) {
     this.glDrawBuffers(buffers);
   }
 
-  var length = this._maxFrameTextureUnitIndex;
+  const length = this._maxFrameTextureUnitIndex;
   this._maxFrameTextureUnitIndex = 0;
 
-  for (var i = 0; i < length; ++i) {
+  for (let i = 0; i < length; ++i) {
     gl.activeTexture(gl.TEXTURE0 + i);
     gl.bindTexture(gl.TEXTURE_2D, null);
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
@@ -1314,26 +1384,26 @@ Context.prototype.endFrame = function () {
 };
 
 Context.prototype.readPixels = function (readState) {
-  var gl = this._gl;
+  const gl = this._gl;
 
   readState = defaultValue(readState, defaultValue.EMPTY_OBJECT);
-  var x = Math.max(defaultValue(readState.x, 0), 0);
-  var y = Math.max(defaultValue(readState.y, 0), 0);
-  var width = defaultValue(readState.width, gl.drawingBufferWidth);
-  var height = defaultValue(readState.height, gl.drawingBufferHeight);
-  var framebuffer = readState.framebuffer;
+  const x = Math.max(defaultValue(readState.x, 0), 0);
+  const y = Math.max(defaultValue(readState.y, 0), 0);
+  const width = defaultValue(readState.width, gl.drawingBufferWidth);
+  const height = defaultValue(readState.height, gl.drawingBufferHeight);
+  const framebuffer = readState.framebuffer;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThan("readState.width", width, 0);
   Check.typeOf.number.greaterThan("readState.height", height, 0);
   //>>includeEnd('debug');
 
-  var pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
+  let pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
   if (defined(framebuffer) && framebuffer.numberOfColorAttachments > 0) {
     pixelDatatype = framebuffer.getColorTexture(0).pixelDatatype;
   }
 
-  var pixels = PixelFormat.createTypedArray(
+  const pixels = PixelFormat.createTypedArray(
     PixelFormat.RGBA,
     pixelDatatype,
     width,
@@ -1355,17 +1425,17 @@ Context.prototype.readPixels = function (readState) {
   return pixels;
 };
 
-var viewportQuadAttributeLocations = {
+const viewportQuadAttributeLocations = {
   position: 0,
   textureCoordinates: 1,
 };
 
 Context.prototype.getViewportQuadVertexArray = function () {
   // Per-context cache for viewport quads
-  var vertexArray = this.cache.viewportQuad_vertexArray;
+  let vertexArray = this.cache.viewportQuad_vertexArray;
 
   if (!defined(vertexArray)) {
-    var geometry = new Geometry({
+    const geometry = new Geometry({
       attributes: {
         position: new GeometryAttribute({
           componentDatatype: ComponentDatatype.FLOAT,
@@ -1428,7 +1498,7 @@ Context.prototype.createViewportQuadCommand = function (
  * @returns {Object} The object associated with the pick color, or undefined if no object is associated with that color.
  *
  * @example
- * var object = context.getObjectByPickColor(pickColor);
+ * const object = context.getObjectByPickColor(pickColor);
  *
  * @see Context#createPickId
  */
@@ -1489,7 +1559,7 @@ Context.prototype.createPickId = function (object) {
   // the increment and assignment have to be separate statements to
   // actually detect overflow in the Uint32 value
   ++this._nextPickColor[0];
-  var key = this._nextPickColor[0];
+  const key = this._nextPickColor[0];
   if (key === 0) {
     // In case of overflow
     throw new RuntimeError("Out of unique Pick IDs.");
@@ -1505,10 +1575,10 @@ Context.prototype.isDestroyed = function () {
 
 Context.prototype.destroy = function () {
   // Destroy all objects in the cache that have a destroy method.
-  var cache = this.cache;
-  for (var property in cache) {
+  const cache = this.cache;
+  for (const property in cache) {
     if (cache.hasOwnProperty(property)) {
-      var propertyValue = cache[property];
+      const propertyValue = cache[property];
       if (defined(propertyValue.destroy)) {
         propertyValue.destroy();
       }
@@ -1518,6 +1588,10 @@ Context.prototype.destroy = function () {
   this._shaderCache = this._shaderCache.destroy();
   this._textureCache = this._textureCache.destroy();
   this._defaultTexture = this._defaultTexture && this._defaultTexture.destroy();
+  this._defaultEmissiveTexture =
+    this._defaultEmissiveTexture && this._defaultEmissiveTexture.destroy();
+  this._defaultNormalTexture =
+    this._defaultNormalTexture && this._defaultNormalTexture.destroy();
   this._defaultCubeMap = this._defaultCubeMap && this._defaultCubeMap.destroy();
 
   return destroyObject(this);

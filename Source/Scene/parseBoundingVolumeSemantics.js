@@ -11,7 +11,7 @@ import defined from "../Core/defined.js";
  * the first valid bounding volume is returned.
  * </p>
  *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/specification/Metadata/Semantics|Semantics Specification} for the various bounding volumes and minimum/maximum heights.
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata/Semantics|3D Metadata Semantic Reference} for the various bounding volumes and minimum/maximum heights.
  *
  * @param {TileMetadata} tileMetadata The metadata object for looking up values by semantic. In practice, this will typically be a {@link ImplicitTileMetadata}
  * @return {Object} An object containing a <code>tile</code> property and a <code>content</code> property. These contain the bounding volume, and any minimum or maximum height.
@@ -53,8 +53,8 @@ export default function parseBoundingVolumeSemantics(tileMetadata) {
  * @private
  */
 function parseBoundingVolume(prefix, tileMetadata) {
-  var boundingBoxSemantic = prefix + "_BOUNDING_BOX";
-  var boundingBox = tileMetadata.getPropertyBySemantic(boundingBoxSemantic);
+  const boundingBoxSemantic = `${prefix}_BOUNDING_BOX`;
+  const boundingBox = tileMetadata.getPropertyBySemantic(boundingBoxSemantic);
 
   if (defined(boundingBox)) {
     return {
@@ -62,8 +62,8 @@ function parseBoundingVolume(prefix, tileMetadata) {
     };
   }
 
-  var boundingRegionSemantic = prefix + "_BOUNDING_REGION";
-  var boundingRegion = tileMetadata.getPropertyBySemantic(
+  const boundingRegionSemantic = `${prefix}_BOUNDING_REGION`;
+  const boundingRegion = tileMetadata.getPropertyBySemantic(
     boundingRegionSemantic
   );
 
@@ -73,20 +73,15 @@ function parseBoundingVolume(prefix, tileMetadata) {
     };
   }
 
-  var boundingSphereSemantic = prefix + "_BOUNDING_SPHERE";
-  var boundingSphere = tileMetadata.getPropertyBySemantic(
+  const boundingSphereSemantic = `${prefix}_BOUNDING_SPHERE`;
+  const boundingSphere = tileMetadata.getPropertyBySemantic(
     boundingSphereSemantic
   );
 
   if (defined(boundingSphere)) {
     // ARRAY with 4 elements is automatically converted to a Cartesian4
     return {
-      sphere: [
-        boundingSphere.x,
-        boundingSphere.y,
-        boundingSphere.z,
-        boundingSphere.w,
-      ],
+      sphere: boundingSphere,
     };
   }
 
@@ -104,7 +99,7 @@ function parseBoundingVolume(prefix, tileMetadata) {
  * @private
  */
 function parseMinimumHeight(prefix, tileMetadata) {
-  var minimumHeightSemantic = prefix + "_MINIMUM_HEIGHT";
+  const minimumHeightSemantic = `${prefix}_MINIMUM_HEIGHT`;
   return tileMetadata.getPropertyBySemantic(minimumHeightSemantic);
 }
 
@@ -119,6 +114,6 @@ function parseMinimumHeight(prefix, tileMetadata) {
  * @private
  */
 function parseMaximumHeight(prefix, tileMetadata) {
-  var maximumHeightSemantic = prefix + "_MAXIMUM_HEIGHT";
+  const maximumHeightSemantic = `${prefix}_MAXIMUM_HEIGHT`;
   return tileMetadata.getPropertyBySemantic(maximumHeightSemantic);
 }

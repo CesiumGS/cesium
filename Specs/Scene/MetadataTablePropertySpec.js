@@ -2,6 +2,7 @@ import {
   defaultValue,
   Cartesian3,
   MetadataClassProperty,
+  MetadataComponentType,
   MetadataTableProperty,
 } from "../../Source/Cesium.js";
 import MetadataTester from "../MetadataTester.js";
@@ -11,7 +12,7 @@ describe("Scene/MetadataTableProperty", function () {
     return;
   }
 
-  var enums = {
+  const enums = {
     myEnum: {
       values: [
         {
@@ -31,15 +32,15 @@ describe("Scene/MetadataTableProperty", function () {
   };
 
   it("creates metadata table property", function () {
-    var extras = {
+    const extras = {
       other: 0,
     };
 
-    var extensions = {
+    const extensions = {
       EXT_other_extension: {},
     };
 
-    var property = new MetadataTableProperty({
+    const property = new MetadataTableProperty({
       count: 2,
       property: {
         bufferView: 0,
@@ -49,7 +50,7 @@ describe("Scene/MetadataTableProperty", function () {
       classProperty: new MetadataClassProperty({
         id: "property",
         property: {
-          type: "FLOAT32",
+          componentType: "FLOAT32",
         },
       }),
       bufferViews: {
@@ -59,6 +60,109 @@ describe("Scene/MetadataTableProperty", function () {
 
     expect(property.extras).toBe(extras);
     expect(property.extensions).toBe(extensions);
+  });
+
+  it("constructs properties with stringOffset and arrayOffset", function () {
+    const extras = {
+      other: 0,
+    };
+
+    const extensions = {
+      EXT_other_extension: {},
+    };
+
+    const a = 97;
+    const b = 98;
+    const c = 99;
+    const d = 100;
+    const e = 101;
+
+    const property = new MetadataTableProperty({
+      count: 2,
+      property: {
+        bufferView: 0,
+        extras: extras,
+        extensions: extensions,
+        stringOffsetType: "UINT16",
+        stringOffsetBufferView: 1,
+        arrayOffsetType: "UINT8",
+        arrayOffsetBufferView: 2,
+      },
+      classProperty: new MetadataClassProperty({
+        id: "property",
+        property: {
+          type: "ARRAY",
+          componentType: "STRING",
+        },
+      }),
+      bufferViews: {
+        0: new Uint8Array([a, b, b, c, c, c, d, d, d, d, e, e, e, e, e]),
+        1: new Uint8Array([0, 0, 1, 0, 3, 0, 6, 0, 10, 0, 15, 0]),
+        2: new Uint8Array([0, 3, 5]),
+      },
+    });
+
+    expect(property.extras).toBe(extras);
+    expect(property.extensions).toBe(extensions);
+    expect(property._stringOffsets._componentType).toBe(
+      MetadataComponentType.UINT16
+    );
+    expect(property._arrayOffsets._componentType).toBe(
+      MetadataComponentType.UINT8
+    );
+    expect(property.get(0)).toEqual(["a", "bb", "ccc"]);
+    expect(property.get(1)).toEqual(["dddd", "eeeee"]);
+  });
+
+  it("constructs property with EXT_feature_metadata offsetType", function () {
+    const extras = {
+      other: 0,
+    };
+
+    const extensions = {
+      EXT_other_extension: {},
+    };
+
+    const a = 97;
+    const b = 98;
+    const c = 99;
+    const d = 100;
+    const e = 101;
+
+    const property = new MetadataTableProperty({
+      count: 2,
+      property: {
+        bufferView: 0,
+        extras: extras,
+        extensions: extensions,
+        offsetType: "UINT16",
+        stringOffsetBufferView: 1,
+        arrayOffsetBufferView: 2,
+      },
+      classProperty: new MetadataClassProperty({
+        id: "property",
+        property: {
+          type: "ARRAY",
+          componentType: "STRING",
+        },
+      }),
+      bufferViews: {
+        0: new Uint8Array([a, b, b, c, c, c, d, d, d, d, e, e, e, e, e]),
+        1: new Uint8Array([0, 0, 1, 0, 3, 0, 6, 0, 10, 0, 15, 0]),
+        2: new Uint8Array([0, 0, 3, 0, 5, 0]),
+      },
+    });
+
+    expect(property.extras).toBe(extras);
+    expect(property.extensions).toBe(extensions);
+    expect(property._stringOffsets._componentType).toBe(
+      MetadataComponentType.UINT16
+    );
+    expect(property._arrayOffsets._componentType).toBe(
+      MetadataComponentType.UINT16
+    );
+    expect(property.get(0)).toEqual(["a", "bb", "ccc"]);
+    expect(property.get(1)).toEqual(["dddd", "eeeee"]);
   });
 
   it("constructor throws without count", function () {
@@ -104,47 +208,47 @@ describe("Scene/MetadataTableProperty", function () {
 
   function testGetUint64(options) {
     options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-    var disableBigIntSupport = options.disableBigIntSupport;
-    var disableBigUint64ArraySupport = options.disableBigUint64ArraySupport;
+    const disableBigIntSupport = options.disableBigIntSupport;
+    const disableBigUint64ArraySupport = options.disableBigUint64ArraySupport;
 
-    var originalValues = [
+    const originalValues = [
       BigInt(0), // eslint-disable-line
       BigInt(10), // eslint-disable-line
       BigInt("4611686018427387833"), // eslint-disable-line
       BigInt("18446744073709551615"), // eslint-disable-line
     ];
 
-    var expectedValues = originalValues;
+    let expectedValues = originalValues;
 
     if (disableBigUint64ArraySupport && disableBigIntSupport) {
       // Precision loss is expected if UINT64 is converted to JS numbers
       expectedValues = [0, 10, 4611686018427388000, 18446744073709552000];
     }
 
-    var classProperty = {
-      type: "UINT64",
+    const classProperty = {
+      componentType: "UINT64",
     };
 
-    var property = MetadataTester.createProperty({
+    const property = MetadataTester.createProperty({
       property: classProperty,
       values: originalValues,
       disableBigUint64ArraySupport: disableBigUint64ArraySupport,
       disableBigIntSupport: disableBigIntSupport,
     });
 
-    var length = originalValues.length;
-    for (var i = 0; i < length; ++i) {
-      var value = property.get(i);
+    const length = originalValues.length;
+    for (let i = 0; i < length; ++i) {
+      const value = property.get(i);
       expect(value).toEqual(expectedValues[i]);
     }
   }
 
   function testGetInt64(options) {
     options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-    var disableBigIntSupport = options.disableBigIntSupport;
-    var disableBigInt64ArraySupport = options.disableBigInt64ArraySupport;
+    const disableBigIntSupport = options.disableBigIntSupport;
+    const disableBigInt64ArraySupport = options.disableBigInt64ArraySupport;
 
-    var originalValues = [
+    const originalValues = [
       BigInt("-9223372036854775808"), // eslint-disable-line
       BigInt("-4611686018427387833"), // eslint-disable-line
       BigInt(-10), // eslint-disable-line
@@ -154,7 +258,7 @@ describe("Scene/MetadataTableProperty", function () {
       BigInt("9223372036854775807"), // eslint-disable-line
     ];
 
-    var expectedValues = originalValues;
+    let expectedValues = originalValues;
 
     if (disableBigInt64ArraySupport && disableBigIntSupport) {
       // Precision loss is expected if INT64 is converted to JS numbers
@@ -169,20 +273,20 @@ describe("Scene/MetadataTableProperty", function () {
       ];
     }
 
-    var classProperty = {
-      type: "INT64",
+    const classProperty = {
+      componentType: "INT64",
     };
 
-    var property = MetadataTester.createProperty({
+    const property = MetadataTester.createProperty({
       property: classProperty,
       values: originalValues,
       disableBigInt64ArraySupport: disableBigInt64ArraySupport,
       disableBigIntSupport: disableBigIntSupport,
     });
 
-    var length = originalValues.length;
-    for (var i = 0; i < length; ++i) {
-      var value = property.get(i);
+    const length = originalValues.length;
+    for (let i = 0; i < length; ++i) {
+      const value = property.get(i);
       expect(value).toEqual(expectedValues[i]);
     }
   }
@@ -219,44 +323,44 @@ describe("Scene/MetadataTableProperty", function () {
 
   it("get returns single values", function () {
     // INT64 and UINT64 are tested above
-    var properties = {
+    const properties = {
       propertyInt8: {
-        type: "INT8",
+        componentType: "INT8",
       },
       propertyUint8: {
-        type: "UINT8",
+        componentType: "UINT8",
       },
       propertyInt16: {
-        type: "INT16",
+        componentType: "INT16",
       },
       propertyUint16: {
-        type: "UINT16",
+        componentType: "UINT16",
       },
       propertyInt32: {
-        type: "INT32",
+        componentType: "INT32",
       },
       propertyUint32: {
-        type: "UINT32",
+        componentType: "UINT32",
       },
       propertyFloat32: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
       propertyFloat64: {
-        type: "FLOAT64",
+        componentType: "FLOAT64",
       },
       propertyBoolean: {
-        type: "BOOLEAN",
+        componentType: "BOOLEAN",
       },
       propertyString: {
-        type: "STRING",
+        componentType: "STRING",
       },
       propertyEnum: {
-        type: "ENUM",
+        componentType: "ENUM",
         enumType: "myEnum",
       },
     };
 
-    var propertyValues = {
+    const propertyValues = {
       propertyInt8: [-128, -10, 0, 10, 127],
       propertyUint8: [0, 10, 20, 30, 255],
       propertyInt16: [-32768, -10, 0, 10, 32767],
@@ -270,18 +374,18 @@ describe("Scene/MetadataTableProperty", function () {
       propertyEnum: ["ValueA", "ValueB", "Other", "ValueA", "ValueA"],
     };
 
-    for (var propertyId in properties) {
+    for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        var property = MetadataTester.createProperty({
+        const property = MetadataTester.createProperty({
           property: properties[propertyId],
           values: propertyValues[propertyId],
           enums: enums,
         });
 
-        var expectedValues = propertyValues[propertyId];
-        var length = expectedValues.length;
-        for (var i = 0; i < length; ++i) {
-          var value = property.get(i);
+        const expectedValues = propertyValues[propertyId];
+        const length = expectedValues.length;
+        for (let i = 0; i < length; ++i) {
+          const value = property.get(i);
           expect(value).toEqual(expectedValues[i]);
         }
       }
@@ -289,50 +393,42 @@ describe("Scene/MetadataTableProperty", function () {
   });
 
   it("get returns vectors", function () {
-    var properties = {
+    const properties = {
       propertyInt8: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "INT8",
-        componentCount: 3,
       },
       propertyUint8: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "UINT8",
-        componentCount: 3,
       },
       propertyInt16: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "INT16",
-        componentCount: 3,
       },
       propertyUint16: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "UINT16",
-        componentCount: 3,
       },
       propertyInt32: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "INT32",
-        componentCount: 3,
       },
       propertyUint32: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "UINT32",
-        componentCount: 3,
       },
       propertyFloat32: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "FLOAT32",
-        componentCount: 3,
       },
       propertyFloat64: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "FLOAT64",
-        componentCount: 3,
       },
     };
 
-    var propertyValues = {
+    const propertyValues = {
       propertyInt8: [
         [-2, -1, 0],
         [1, 2, 3],
@@ -367,18 +463,18 @@ describe("Scene/MetadataTableProperty", function () {
       ],
     };
 
-    for (var propertyId in properties) {
+    for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        var property = MetadataTester.createProperty({
+        const property = MetadataTester.createProperty({
           property: properties[propertyId],
           values: propertyValues[propertyId],
           enums: enums,
         });
 
-        var expectedValues = propertyValues[propertyId];
-        var length = expectedValues.length;
-        for (var i = 0; i < length; ++i) {
-          var value = property.get(i);
+        const expectedValues = propertyValues[propertyId];
+        const length = expectedValues.length;
+        for (let i = 0; i < length; ++i) {
+          const value = property.get(i);
           expect(value).toEqual(Cartesian3.unpack(expectedValues[i]));
         }
       }
@@ -386,7 +482,7 @@ describe("Scene/MetadataTableProperty", function () {
   });
 
   it("get returns fixed size arrays", function () {
-    var properties = {
+    const properties = {
       propertyInt64: {
         type: "ARRAY",
         componentType: "INT64",
@@ -413,9 +509,21 @@ describe("Scene/MetadataTableProperty", function () {
         enumType: "myEnum",
         componentCount: 3,
       },
+      // Once we created EXT_mesh_features, arrays no longer automatically
+      // convert to vectors, since we now have dedicated VECN types
+      propertyUint32: {
+        type: "ARRAY",
+        componentType: "UINT32",
+        componentCount: 3,
+      },
+      propertyFloat32: {
+        type: "ARRAY",
+        componentType: "FLOAT32",
+        componentCount: 3,
+      },
     };
 
-    var propertyValues = {
+    const propertyValues = {
       propertyInt64: [
         [BigInt(-2), BigInt(-1), BigInt(0)], // eslint-disable-line
         [BigInt(1), BigInt(2), BigInt(3)], // eslint-disable-line
@@ -436,20 +544,28 @@ describe("Scene/MetadataTableProperty", function () {
         ["ValueA", "ValueB", "Other"],
         ["ValueA", "ValueA", "ValueA"],
       ],
+      propertyUint32: [
+        [0, 1, 2],
+        [3, 4, 5],
+      ],
+      propertyFloat32: [
+        [-2.0, -1.0, 0.0],
+        [1.0, 2.0, 3.0],
+      ],
     };
 
-    for (var propertyId in properties) {
+    for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        var property = MetadataTester.createProperty({
+        const property = MetadataTester.createProperty({
           property: properties[propertyId],
           values: propertyValues[propertyId],
           enums: enums,
         });
 
-        var expectedValues = propertyValues[propertyId];
-        var length = expectedValues.length;
-        for (var i = 0; i < length; ++i) {
-          var value = property.get(i);
+        const expectedValues = propertyValues[propertyId];
+        const length = expectedValues.length;
+        for (let i = 0; i < length; ++i) {
+          const value = property.get(i);
           expect(value).toEqual(expectedValues[i]);
         }
       }
@@ -457,7 +573,7 @@ describe("Scene/MetadataTableProperty", function () {
   });
 
   it("get returns variable size arrays", function () {
-    var properties = {
+    const properties = {
       propertyInt8: {
         type: "ARRAY",
         componentType: "INT8",
@@ -514,7 +630,7 @@ describe("Scene/MetadataTableProperty", function () {
     };
 
     // Tests empty arrays as well
-    var propertyValues = {
+    const propertyValues = {
       propertyInt8: [[-2], [-1, 0], [1, 2, 3], []],
       propertyUint8: [[0], [1, 2], [3, 4, 5], []],
       propertyInt16: [[-2], [-1, 0], [1, 2, 3], []],
@@ -545,18 +661,18 @@ describe("Scene/MetadataTableProperty", function () {
       ],
     };
 
-    for (var propertyId in properties) {
+    for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        var property = MetadataTester.createProperty({
+        const property = MetadataTester.createProperty({
           property: properties[propertyId],
           values: propertyValues[propertyId],
           enums: enums,
         });
 
-        var expectedValues = propertyValues[propertyId];
-        var length = expectedValues.length;
-        for (var i = 0; i < length; ++i) {
-          var value = property.get(i);
+        const expectedValues = propertyValues[propertyId];
+        const length = expectedValues.length;
+        for (let i = 0; i < length; ++i) {
+          const value = property.get(i);
           expect(value).toEqual(expectedValues[i]);
         }
       }
@@ -564,17 +680,17 @@ describe("Scene/MetadataTableProperty", function () {
   });
 
   it("get returns normalized value", function () {
-    var propertyInt8 = MetadataTester.createProperty({
+    const propertyInt8 = MetadataTester.createProperty({
       property: {
-        type: "INT8",
+        componentType: "INT8",
         normalized: true,
       },
       values: [-128],
     });
 
-    var propertyUint8 = MetadataTester.createProperty({
+    const propertyUint8 = MetadataTester.createProperty({
       property: {
-        type: "UINT8",
+        componentType: "UINT8",
         normalized: true,
       },
       values: [255],
@@ -585,9 +701,9 @@ describe("Scene/MetadataTableProperty", function () {
   });
 
   it("get throws without index", function () {
-    var property = MetadataTester.createProperty({
+    const property = MetadataTester.createProperty({
       property: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
       values: [1.0, 2.0],
     });
@@ -598,9 +714,9 @@ describe("Scene/MetadataTableProperty", function () {
   });
 
   it("get throws if index is out of bounds", function () {
-    var property = MetadataTester.createProperty({
+    const property = MetadataTester.createProperty({
       property: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
       values: [1.0, 2.0],
     });
@@ -614,50 +730,52 @@ describe("Scene/MetadataTableProperty", function () {
   });
 
   it("set sets single values", function () {
-    var properties = {
+    const properties = {
       propertyInt8: {
-        type: "INT8",
+        type: "SINGLE",
+        componentType: "INT8",
       },
       propertyUint8: {
-        type: "UINT8",
+        // SINGLE is the default
+        componentType: "UINT8",
       },
       propertyInt16: {
-        type: "INT16",
+        componentType: "INT16",
       },
       propertyUint16: {
-        type: "UINT16",
+        componentType: "UINT16",
       },
       propertyInt32: {
-        type: "INT32",
+        componentType: "INT32",
       },
       propertyUint32: {
-        type: "UINT32",
+        componentType: "UINT32",
       },
       propertyInt64: {
-        type: "INT64",
+        componentType: "INT64",
       },
       propertyUint64: {
-        type: "UINT64",
+        componentType: "UINT64",
       },
       propertyFloat32: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
       propertyFloat64: {
-        type: "FLOAT64",
+        componentType: "FLOAT64",
       },
       propertyBoolean: {
-        type: "BOOLEAN",
+        componentType: "BOOLEAN",
       },
       propertyString: {
-        type: "STRING",
+        componentType: "STRING",
       },
       propertyEnum: {
-        type: "ENUM",
+        componentType: "ENUM",
         enumType: "myEnum",
       },
     };
 
-    var propertyValues = {
+    const propertyValues = {
       propertyInt8: [0, 0, 0, 0, 0],
       propertyUint8: [0, 0, 0, 0, 0],
       propertyInt16: [0, 0, 0, 0, 0],
@@ -673,7 +791,7 @@ describe("Scene/MetadataTableProperty", function () {
       propertyEnum: ["Other", "Other", "Other", "Other", "Other"],
     };
 
-    var valuesToSet = {
+    const valuesToSet = {
       propertyInt8: [-128, -10, 0, 10, 127],
       propertyUint8: [0, 10, 20, 30, 255],
       propertyInt16: [-32768, -10, 0, 10, 32767],
@@ -694,26 +812,26 @@ describe("Scene/MetadataTableProperty", function () {
         BigInt("4611686018427387833"), // eslint-disable-line
         BigInt("18446744073709551615"), // eslint-disable-line
       ],
-      propertyFloat32: [-2.5, -1.0, 0.0, 700.0, Number.POSITIVE_INFINITY],
-      propertyFloat64: [-234934.12, -1.0, 0.0, 700.0, Number.POSITIVE_INFINITY],
+      propertyFloat32: [-2.5, -1.0, 0.0, 700.0, 38.0],
+      propertyFloat64: [-234934.12, -1.0, 0.0, 700.0, Math.PI],
       propertyBoolean: [true, true, false, false, true],
       propertyString: ["おはようございます。😃", "a", "", "def", "0001"],
       propertyEnum: ["ValueA", "ValueB", "Other", "ValueA", "ValueA"],
     };
 
-    for (var propertyId in properties) {
+    for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        var property = MetadataTester.createProperty({
+        const property = MetadataTester.createProperty({
           property: properties[propertyId],
           values: propertyValues[propertyId],
           enums: enums,
         });
 
-        var expectedValues = valuesToSet[propertyId];
-        var length = expectedValues.length;
-        for (var i = 0; i < length; ++i) {
+        const expectedValues = valuesToSet[propertyId];
+        const length = expectedValues.length;
+        for (let i = 0; i < length; ++i) {
           property.set(i, expectedValues[i]);
-          var value = property.get(i);
+          let value = property.get(i);
           expect(value).toEqual(expectedValues[i]);
           // Test setting / getting again
           property.set(i, expectedValues[i]);
@@ -725,50 +843,42 @@ describe("Scene/MetadataTableProperty", function () {
   });
 
   it("set sets vector values", function () {
-    var properties = {
+    const properties = {
       propertyInt8: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "INT8",
-        componentCount: 3,
       },
       propertyUint8: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "UINT8",
-        componentCount: 3,
       },
       propertyInt16: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "INT16",
-        componentCount: 3,
       },
       propertyUint16: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "UINT16",
-        componentCount: 3,
       },
       propertyInt32: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "INT32",
-        componentCount: 3,
       },
       propertyUint32: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "UINT32",
-        componentCount: 3,
       },
       propertyFloat32: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "FLOAT32",
-        componentCount: 3,
       },
       propertyFloat64: {
-        type: "ARRAY",
+        type: "VEC3",
         componentType: "FLOAT64",
-        componentCount: 3,
       },
     };
 
-    var propertyValues = {
+    const propertyValues = {
       propertyInt8: [
         [0, 0, 0],
         [0, 0, 0],
@@ -803,7 +913,7 @@ describe("Scene/MetadataTableProperty", function () {
       ],
     };
 
-    var valuesToSet = {
+    const valuesToSet = {
       propertyInt8: [new Cartesian3(-2, -1, 0), new Cartesian3(1, 2, 3)],
       propertyUint8: [new Cartesian3(0, 1, 2), new Cartesian3(3, 4, 5)],
       propertyInt16: [new Cartesian3(-2, -1, 0), new Cartesian3(1, 2, 3)],
@@ -820,18 +930,18 @@ describe("Scene/MetadataTableProperty", function () {
       ],
     };
 
-    for (var propertyId in properties) {
+    for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        var property = MetadataTester.createProperty({
+        const property = MetadataTester.createProperty({
           property: properties[propertyId],
           values: propertyValues[propertyId],
           enums: enums,
         });
-        var expectedValues = valuesToSet[propertyId];
-        var length = expectedValues.length;
-        for (var i = 0; i < length; ++i) {
+        const expectedValues = valuesToSet[propertyId];
+        const length = expectedValues.length;
+        for (let i = 0; i < length; ++i) {
           property.set(i, expectedValues[i]);
-          var value = property.get(i);
+          let value = property.get(i);
           expect(value).toEqual(expectedValues[i]);
           // Test setting / getting again
           property.set(i, expectedValues[i]);
@@ -843,7 +953,7 @@ describe("Scene/MetadataTableProperty", function () {
   });
 
   it("set sets fixed size arrays", function () {
-    var properties = {
+    const properties = {
       propertyInt64: {
         type: "ARRAY",
         componentType: "INT64",
@@ -870,9 +980,19 @@ describe("Scene/MetadataTableProperty", function () {
         enumType: "myEnum",
         componentCount: 3,
       },
+      propertyUint32: {
+        type: "ARRAY",
+        componentType: "UINT32",
+        componentCount: 3,
+      },
+      propertyFloat32: {
+        type: "ARRAY",
+        componentType: "FLOAT32",
+        componentCount: 2,
+      },
     };
 
-    var propertyValues = {
+    const propertyValues = {
       propertyInt64: [
         [BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
         [BigInt(0), BigInt(0), BigInt(0)], // eslint-disable-line
@@ -893,9 +1013,17 @@ describe("Scene/MetadataTableProperty", function () {
         ["Other", "Other", "Other"],
         ["Other", "Other", "Other"],
       ],
+      propertyUint32: [
+        [0, 0, 0],
+        [0, 0, 0],
+      ],
+      propertyFloat32: [
+        [0.0, 0.0],
+        [0.0, 0.0],
+      ],
     };
 
-    var valuesToSet = {
+    const valuesToSet = {
       propertyInt64: [
         [BigInt(-2), BigInt(-1), BigInt(0)], // eslint-disable-line
         [BigInt(1), BigInt(2), BigInt(3)], // eslint-disable-line
@@ -916,20 +1044,28 @@ describe("Scene/MetadataTableProperty", function () {
         ["ValueA", "ValueB", "Other"],
         ["ValueA", "ValueA", "ValueA"],
       ],
+      propertyUint32: [
+        [1, 0, 0],
+        [0, 2, 0],
+      ],
+      propertyFloat32: [
+        [0.0, 0.5],
+        [0.25, 0.25],
+      ],
     };
 
-    for (var propertyId in properties) {
+    for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        var property = MetadataTester.createProperty({
+        const property = MetadataTester.createProperty({
           property: properties[propertyId],
           values: propertyValues[propertyId],
           enums: enums,
         });
-        var expectedValues = valuesToSet[propertyId];
-        var length = expectedValues.length;
-        for (var i = 0; i < length; ++i) {
+        const expectedValues = valuesToSet[propertyId];
+        const length = expectedValues.length;
+        for (let i = 0; i < length; ++i) {
           property.set(i, expectedValues[i]);
-          var value = property.get(i);
+          let value = property.get(i);
           expect(value).toEqual(expectedValues[i]);
           // Test setting / getting again
           property.set(i, expectedValues[i]);
@@ -941,7 +1077,7 @@ describe("Scene/MetadataTableProperty", function () {
   });
 
   it("set sets variable size arrays with arrays of the same length", function () {
-    var properties = {
+    const properties = {
       propertyInt8: {
         type: "ARRAY",
         componentType: "INT8",
@@ -997,7 +1133,7 @@ describe("Scene/MetadataTableProperty", function () {
       },
     };
 
-    var propertyValues = {
+    const propertyValues = {
       propertyInt8: [[0], [0, 0], [0, 0, 0], []],
       propertyUint8: [[0], [0, 0], [0, 0, 0], []],
       propertyInt16: [[0], [0, 0], [0, 0, 0], []],
@@ -1028,7 +1164,7 @@ describe("Scene/MetadataTableProperty", function () {
       ],
     };
 
-    var valuesToSet = {
+    const valuesToSet = {
       propertyInt8: [[-2], [-1, 0], [1, 2, 3], []],
       propertyUint8: [[0], [1, 2], [3, 4, 5], []],
       propertyInt16: [[-2], [-1, 0], [1, 2, 3], []],
@@ -1059,18 +1195,18 @@ describe("Scene/MetadataTableProperty", function () {
       ],
     };
 
-    for (var propertyId in properties) {
+    for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        var property = MetadataTester.createProperty({
+        const property = MetadataTester.createProperty({
           property: properties[propertyId],
           values: propertyValues[propertyId],
           enums: enums,
         });
-        var expectedValues = valuesToSet[propertyId];
-        var length = expectedValues.length;
-        for (var i = 0; i < length; ++i) {
+        const expectedValues = valuesToSet[propertyId];
+        const length = expectedValues.length;
+        for (let i = 0; i < length; ++i) {
           property.set(i, expectedValues[i]);
-          var value = property.get(i);
+          let value = property.get(i);
           expect(value).toEqual(expectedValues[i]);
           // Test setting / getting again
           property.set(i, expectedValues[i]);
@@ -1082,7 +1218,7 @@ describe("Scene/MetadataTableProperty", function () {
   });
 
   it("set sets variable size arrays with arrays of different lengths", function () {
-    var properties = {
+    const properties = {
       propertyInt8: {
         type: "ARRAY",
         componentType: "INT8",
@@ -1138,7 +1274,7 @@ describe("Scene/MetadataTableProperty", function () {
       },
     };
 
-    var propertyValues = {
+    const propertyValues = {
       propertyInt8: [[0], [0, 0], [0, 0, 0], []],
       propertyUint8: [[0], [0, 0], [0, 0, 0], []],
       propertyInt16: [[0], [0, 0], [0, 0, 0], []],
@@ -1169,7 +1305,7 @@ describe("Scene/MetadataTableProperty", function () {
       ],
     };
 
-    var valuesToSet = {
+    const valuesToSet = {
       propertyInt8: [[1, 2, 3], [], [-2], [-1, 0]],
       propertyUint8: [[3, 4, 5], [0], [], [1, 2]],
       propertyInt16: [[], [1, 2, 3], [-2], [-1, 0]],
@@ -1200,18 +1336,18 @@ describe("Scene/MetadataTableProperty", function () {
       ],
     };
 
-    for (var propertyId in properties) {
+    for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        var property = MetadataTester.createProperty({
+        const property = MetadataTester.createProperty({
           property: properties[propertyId],
           values: propertyValues[propertyId],
           enums: enums,
         });
-        var expectedValues = valuesToSet[propertyId];
-        var length = expectedValues.length;
-        for (var i = 0; i < length; ++i) {
+        const expectedValues = valuesToSet[propertyId];
+        const length = expectedValues.length;
+        for (let i = 0; i < length; ++i) {
           property.set(i, expectedValues[i]);
-          var value = property.get(i);
+          let value = property.get(i);
           expect(value).toEqual(expectedValues[i]);
           // Test setting / getting again
           property.set(i, expectedValues[i]);
@@ -1222,66 +1358,78 @@ describe("Scene/MetadataTableProperty", function () {
     }
   });
 
-  it("set sets Infinity for FLOAT32 and FLOAT64", function () {
-    var propertyFloat32 = MetadataTester.createProperty({
+  it("set throws if Infinity is given for FLOAT32 and FLOAT64", function () {
+    const propertyFloat32 = MetadataTester.createProperty({
       property: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
       values: [0.0, 0.0],
     });
 
-    var propertyFloat64 = MetadataTester.createProperty({
+    const propertyFloat64 = MetadataTester.createProperty({
       property: {
-        type: "FLOAT64",
+        componentType: "FLOAT64",
       },
       values: [0.0, 0.0],
     });
 
-    propertyFloat32.set(0, Number.POSITIVE_INFINITY);
-    propertyFloat32.set(1, Number.NEGATIVE_INFINITY);
-    propertyFloat64.set(0, Number.POSITIVE_INFINITY);
-    propertyFloat64.set(1, Number.NEGATIVE_INFINITY);
+    expect(function () {
+      propertyFloat32.set(0, Number.POSITIVE_INFINITY);
+    }).toThrowDeveloperError();
+    expect(function () {
+      propertyFloat32.set(1, Number.NEGATIVE_INFINITY);
+    }).toThrowDeveloperError();
+    expect(function () {
+      propertyFloat64.set(0, Number.POSITIVE_INFINITY);
+    }).toThrowDeveloperError();
+    expect(function () {
+      propertyFloat32.set(1, Number.NEGATIVE_INFINITY);
+    }).toThrowDeveloperError();
 
-    expect(propertyFloat32.get(0)).toBe(Number.POSITIVE_INFINITY);
-    expect(propertyFloat32.get(1)).toBe(Number.NEGATIVE_INFINITY);
-    expect(propertyFloat64.get(0)).toBe(Number.POSITIVE_INFINITY);
-    expect(propertyFloat64.get(1)).toBe(Number.NEGATIVE_INFINITY);
+    expect(propertyFloat32.get(0)).toBe(0.0);
+    expect(propertyFloat32.get(1)).toBe(0.0);
+    expect(propertyFloat64.get(0)).toBe(0.0);
+    expect(propertyFloat64.get(1)).toBe(0.0);
   });
 
-  it("set sets NaN for FLOAT32 and FLOAT64", function () {
-    var propertyFloat32 = MetadataTester.createProperty({
+  it("set throws if a NaN is given for FLOAT32 and FLOAT64", function () {
+    const propertyFloat32 = MetadataTester.createProperty({
       property: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
       values: [0.0],
     });
 
-    var propertyFloat64 = MetadataTester.createProperty({
+    const propertyFloat64 = MetadataTester.createProperty({
       property: {
-        type: "FLOAT64",
+        componentType: "FLOAT64",
       },
       values: [0.0],
     });
 
-    propertyFloat32.set(0, NaN);
-    propertyFloat64.set(0, NaN);
+    expect(function () {
+      propertyFloat32.set(0, NaN);
+    }).toThrowDeveloperError();
+    expect(function () {
+      propertyFloat64.set(0, NaN);
+    }).toThrowDeveloperError();
 
-    expect(isNaN(propertyFloat32.get(0))).toBe(true);
-    expect(isNaN(propertyFloat64.get(0))).toBe(true);
+    expect(propertyFloat32.get(0)).toBe(0.0);
+    expect(propertyFloat64.get(0)).toBe(0.0);
   });
 
   it("set sets value for normalized property", function () {
-    var propertyInt8 = MetadataTester.createProperty({
+    const propertyInt8 = MetadataTester.createProperty({
       property: {
-        type: "INT8",
+        componentType: "INT8",
         normalized: true,
       },
       values: [0],
     });
 
-    var propertyUint8 = MetadataTester.createProperty({
+    const propertyUint8 = MetadataTester.createProperty({
       property: {
-        type: "UINT8",
+        componentType: "UINT8",
         normalized: true,
       },
       values: [255],
@@ -1295,9 +1443,9 @@ describe("Scene/MetadataTableProperty", function () {
   });
 
   it("set throws without index", function () {
-    var property = MetadataTester.createProperty({
+    const property = MetadataTester.createProperty({
       property: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
       values: [1.0, 2.0],
     });
@@ -1308,9 +1456,9 @@ describe("Scene/MetadataTableProperty", function () {
   });
 
   it("set throws if index is out of bounds", function () {
-    var property = MetadataTester.createProperty({
+    const property = MetadataTester.createProperty({
       property: {
-        type: "FLOAT32",
+        componentType: "FLOAT32",
       },
       values: [1.0, 2.0],
     });
@@ -1328,7 +1476,7 @@ describe("Scene/MetadataTableProperty", function () {
   });
 
   it("set throws if value doesn't conform to the class property", function () {
-    var property = MetadataTester.createProperty({
+    const property = MetadataTester.createProperty({
       property: {
         type: "ARRAY",
         componentType: "FLOAT32",
@@ -1343,20 +1491,20 @@ describe("Scene/MetadataTableProperty", function () {
   });
 
   it("getTypedArray returns typed array", function () {
-    var propertyInt32 = {
+    const propertyInt32 = {
       type: "ARRAY",
       componentType: "INT32",
       componentCount: 3,
     };
 
-    var propertyValues = [
+    const propertyValues = [
       [-2, -1, 0],
       [1, 2, 3],
     ];
 
-    var expectedTypedArray = new Int32Array([-2, -1, 0, 1, 2, 3]);
+    const expectedTypedArray = new Int32Array([-2, -1, 0, 1, 2, 3]);
 
-    var property = MetadataTester.createProperty({
+    const property = MetadataTester.createProperty({
       property: propertyInt32,
       values: propertyValues,
     });
@@ -1365,19 +1513,19 @@ describe("Scene/MetadataTableProperty", function () {
   });
 
   it("getTypedArray returns undefined if values are unpacked", function () {
-    var propertyInt32 = {
+    const propertyInt32 = {
       type: "ARRAY",
       componentType: "INT32",
     };
 
-    var propertyValues = [
+    const propertyValues = [
       [-2, -1, 0],
       [1, 2, 3],
     ];
 
-    var expectedTypedArray = new Int32Array([-2, -1, 0, 1, 2, 3]);
+    const expectedTypedArray = new Int32Array([-2, -1, 0, 1, 2, 3]);
 
-    var property = MetadataTester.createProperty({
+    const property = MetadataTester.createProperty({
       property: propertyInt32,
       values: propertyValues,
     });

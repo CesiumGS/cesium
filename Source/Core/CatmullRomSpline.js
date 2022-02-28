@@ -7,26 +7,26 @@ import HermiteSpline from "./HermiteSpline.js";
 import Matrix4 from "./Matrix4.js";
 import Spline from "./Spline.js";
 
-var scratchTimeVec = new Cartesian4();
-var scratchTemp0 = new Cartesian3();
-var scratchTemp1 = new Cartesian3();
+const scratchTimeVec = new Cartesian4();
+const scratchTemp0 = new Cartesian3();
+const scratchTemp1 = new Cartesian3();
 
 function createEvaluateFunction(spline) {
-  var points = spline.points;
-  var times = spline.times;
+  const points = spline.points;
+  const times = spline.times;
 
   if (points.length < 3) {
-    var t0 = times[0];
-    var invSpan = 1.0 / (times[1] - t0);
+    const t0 = times[0];
+    const invSpan = 1.0 / (times[1] - t0);
 
-    var p0 = points[0];
-    var p1 = points[1];
+    const p0 = points[0];
+    const p1 = points[1];
 
     return function (time, result) {
       if (!defined(result)) {
         result = new Cartesian3();
       }
-      var u = (time - t0) * invSpan;
+      const u = (time - t0) * invSpan;
       return Cartesian3.lerp(p0, p1, u, result);
     };
   }
@@ -35,23 +35,23 @@ function createEvaluateFunction(spline) {
     if (!defined(result)) {
       result = new Cartesian3();
     }
-    var i = (spline._lastTimeIndex = spline.findTimeInterval(
+    const i = (spline._lastTimeIndex = spline.findTimeInterval(
       time,
       spline._lastTimeIndex
     ));
-    var u = (time - times[i]) / (times[i + 1] - times[i]);
+    const u = (time - times[i]) / (times[i + 1] - times[i]);
 
-    var timeVec = scratchTimeVec;
+    const timeVec = scratchTimeVec;
     timeVec.z = u;
     timeVec.y = u * u;
     timeVec.x = timeVec.y * u;
     timeVec.w = 1.0;
 
-    var p0;
-    var p1;
-    var p2;
-    var p3;
-    var coefs;
+    let p0;
+    let p1;
+    let p2;
+    let p3;
+    let coefs;
 
     if (i === 0) {
       p0 = points[0];
@@ -100,8 +100,8 @@ function createEvaluateFunction(spline) {
   };
 }
 
-var firstTangentScratch = new Cartesian3();
-var lastTangentScratch = new Cartesian3();
+const firstTangentScratch = new Cartesian3();
+const lastTangentScratch = new Cartesian3();
 
 /**
  * A Catmull-Rom spline is a cubic spline where the tangent at control points,
@@ -126,7 +126,7 @@ var lastTangentScratch = new Cartesian3();
  *
  * @example
  * // spline above the earth from Philadelphia to Los Angeles
- * var spline = new Cesium.CatmullRomSpline({
+ * const spline = new Cesium.CatmullRomSpline({
  *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
  *     points : [
  *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
@@ -137,8 +137,8 @@ var lastTangentScratch = new Cartesian3();
  *     ]
  * });
  *
- * var p0 = spline.evaluate(times[i]);         // equal to positions[i]
- * var p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
+ * const p0 = spline.evaluate(times[i]);         // equal to positions[i]
+ * const p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
  *
  * @see HermiteSpline
  * @see LinearSpline
@@ -148,10 +148,10 @@ var lastTangentScratch = new Cartesian3();
 function CatmullRomSpline(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  var points = options.points;
-  var times = options.times;
-  var firstTangent = options.firstTangent;
-  var lastTangent = options.lastTangent;
+  const points = options.points;
+  const times = options.times;
+  let firstTangent = options.firstTangent;
+  let lastTangent = options.lastTangent;
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("points", points);
@@ -175,7 +175,7 @@ function CatmullRomSpline(options) {
     }
 
     if (!defined(lastTangent)) {
-      var n = points.length - 1;
+      const n = points.length - 1;
       lastTangent = lastTangentScratch;
       Cartesian3.multiplyByScalar(points[n - 1], 2.0, lastTangent);
       Cartesian3.subtract(points[n], lastTangent, lastTangent);

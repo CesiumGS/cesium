@@ -1,6 +1,7 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
+import Check from "../Core/Check.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Matrix2 from "../Core/Matrix2.js";
 import Matrix3 from "../Core/Matrix3.js";
@@ -13,7 +14,7 @@ import Matrix4 from "../Core/Matrix4.js";
  *
  * @private
  */
-var AttributeType = {
+const AttributeType = {
   /**
    * The attribute is a single component.
    *
@@ -95,6 +96,71 @@ AttributeType.getMathType = function (attributeType) {
       return Matrix3;
     case AttributeType.MAT4:
       return Matrix4;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("attributeType is not a valid value.");
+    //>>includeEnd('debug');
+  }
+};
+
+/**
+ * Gets the number of components per attribute.
+ *
+ * @param {AttributeType} attributeType The attribute type.
+ * @returns {Number} The number of components.
+ *
+ * @private
+ */
+AttributeType.getNumberOfComponents = function (attributeType) {
+  switch (attributeType) {
+    case AttributeType.SCALAR:
+      return 1;
+    case AttributeType.VEC2:
+      return 2;
+    case AttributeType.VEC3:
+      return 3;
+    case AttributeType.VEC4:
+    case AttributeType.MAT2:
+      return 4;
+    case AttributeType.MAT3:
+      return 9;
+    case AttributeType.MAT4:
+      return 16;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError("attributeType is not a valid value.");
+    //>>includeEnd('debug');
+  }
+};
+
+/**
+ * Gets the GLSL type for the attribute type.
+ *
+ * @param {AttributeType} attributeType The attribute type.
+ * @returns {String} The GLSL type for the attribute type.
+ *
+ * @private
+ */
+AttributeType.getGlslType = function (attributeType) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("attributeType", attributeType);
+  //>>includeEnd('debug');
+
+  switch (attributeType) {
+    case AttributeType.SCALAR:
+      return "float";
+    case AttributeType.VEC2:
+      return "vec2";
+    case AttributeType.VEC3:
+      return "vec3";
+    case AttributeType.VEC4:
+      return "vec4";
+    case AttributeType.MAT2:
+      return "mat2";
+    case AttributeType.MAT3:
+      return "mat3";
+    case AttributeType.MAT4:
+      return "mat4";
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError("attributeType is not a valid value.");

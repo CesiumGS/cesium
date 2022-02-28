@@ -16,9 +16,9 @@ function Imagery(imageryLayer, x, y, level, rectangle) {
   this.request = undefined;
 
   if (level !== 0) {
-    var parentX = (x / 2) | 0;
-    var parentY = (y / 2) | 0;
-    var parentLevel = level - 1;
+    const parentX = (x / 2) | 0;
+    const parentY = (y / 2) | 0;
+    const parentLevel = level - 1;
     this.parent = imageryLayer.getImageryFromCache(
       parentX,
       parentY,
@@ -35,14 +35,14 @@ function Imagery(imageryLayer, x, y, level, rectangle) {
   this.referenceCount = 0;
 
   if (!defined(rectangle) && imageryLayer.imageryProvider.ready) {
-    var tilingScheme = imageryLayer.imageryProvider.tilingScheme;
+    const tilingScheme = imageryLayer.imageryProvider.tilingScheme;
     rectangle = tilingScheme.tileXYToRectangle(x, y, level);
   }
 
   this.rectangle = rectangle;
 }
 Imagery.createPlaceholder = function (imageryLayer) {
-  var result = new Imagery(imageryLayer, 0, 0, 0);
+  const result = new Imagery(imageryLayer, 0, 0, 0);
   result.addReference();
   result.state = ImageryState.PLACEHOLDER;
   return result;
@@ -103,7 +103,7 @@ Imagery.prototype.processStateMachine = function (
   // If the imagery is already ready, but we need a geographic version and don't have it yet,
   // we still need to do the reprojection step. This can happen if the Web Mercator version
   // is fine initially, but the geographic one is needed later.
-  var needsReprojection =
+  const needsReprojection =
     this.state === ImageryState.READY &&
     needGeographicProjection &&
     !this.texture;

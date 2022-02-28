@@ -10,18 +10,18 @@ import createScene from "../createScene.js";
 describe(
   "Scene/Tileset3DTileContent",
   function () {
-    var scene;
-    var centerLongitude = -1.31968;
-    var centerLatitude = 0.698874;
+    let scene;
+    const centerLongitude = -1.31968;
+    const centerLatitude = 0.698874;
 
-    var tilesetOfTilesetsUrl =
+    const tilesetOfTilesetsUrl =
       "./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
 
     beforeAll(function () {
       scene = createScene();
 
       // Point the camera at the center and far enough way to only load the root tile
-      var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+      const center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
       scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 100.0));
     });
 
@@ -47,8 +47,8 @@ describe(
     it("gets properties", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(
         function (tileset) {
-          var tile = tileset.root;
-          var content = tile.content;
+          const tile = tileset.root;
+          const content = tile.content;
           expect(content.featuresLength).toBe(0);
           expect(content.pointsLength).toBe(0);
           expect(content.trianglesLength).toBe(0);
@@ -68,20 +68,20 @@ describe(
     });
 
     describe("3DTILES_metadata", function () {
-      var metadataClass = new MetadataClass({
+      const metadataClass = new MetadataClass({
         id: "test",
         class: {
           properties: {
             name: {
-              type: "STRING",
+              componentType: "STRING",
             },
             height: {
-              type: "FLOAT32",
+              componentType: "FLOAT32",
             },
           },
         },
       });
-      var groupMetadata = new GroupMetadata({
+      const groupMetadata = new GroupMetadata({
         id: "testGroup",
         group: {
           properties: {
@@ -97,7 +97,7 @@ describe(
           scene,
           tilesetOfTilesetsUrl
         ).then(function (tileset) {
-          var content = tileset.root.content;
+          const content = tileset.root.content;
           content.groupMetadata = groupMetadata;
           expect(content.groupMetadata).toBe(groupMetadata);
         });

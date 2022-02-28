@@ -44,7 +44,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
   }
 
   it("constructs quadtree", function () {
-    var coordinates = new ImplicitTileCoordinates({
+    const coordinates = new ImplicitTileCoordinates({
       subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
       subtreeLevels: 6,
       level: 4,
@@ -62,7 +62,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
   });
 
   it("constructs octree", function () {
-    var coordinates = new ImplicitTileCoordinates({
+    const coordinates = new ImplicitTileCoordinates({
       subdivisionScheme: ImplicitSubdivisionScheme.OCTREE,
       subtreeLevels: 6,
       level: 4,
@@ -134,8 +134,8 @@ describe("Scene/ImplicitTileCoordinates", function () {
 
     // mismatched subtreeLevels
     expect(function () {
-      var subtreeLevelsA = 2;
-      var subtreeLevelsB = 3;
+      const subtreeLevelsA = 2;
+      const subtreeLevelsB = 3;
       return quadtreeCoordinates(
         0,
         0,
@@ -295,8 +295,8 @@ describe("Scene/ImplicitTileCoordinates", function () {
 
     // mismatched subtreeLevels
     expect(function () {
-      var subtreeLevelsA = 2;
-      var subtreeLevelsB = 3;
+      const subtreeLevelsA = 2;
+      const subtreeLevelsB = 3;
       return quadtreeCoordinates(0, 0, 0, subtreeLevelsA).getOffsetCoordinates(
         quadtreeCoordinates(0, 0, 0, subtreeLevelsB)
       );
@@ -356,7 +356,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
   });
 
   it("getChildCoordinates throws for invalid inputs", function () {
-    var coordinates = quadtreeCoordinates(1, 0, 0);
+    const coordinates = quadtreeCoordinates(1, 0, 0);
     expect(function () {
       return coordinates.getChildCoordinates(undefined);
     }).toThrowDeveloperError();
@@ -369,7 +369,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
   });
 
   it("getChildCoordinates works as expected for quadree", function () {
-    var coordinates = quadtreeCoordinates(1, 0, 0);
+    const coordinates = quadtreeCoordinates(1, 0, 0);
 
     expect(
       coordinates.getChildCoordinates(0).isEqual(quadtreeCoordinates(2, 0, 0))
@@ -389,7 +389,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
   });
 
   it("getChildCoordinates works as expected for octree", function () {
-    var coordinates = octreeCoordinates(1, 0, 1, 1);
+    const coordinates = octreeCoordinates(1, 0, 1, 1);
 
     expect(
       coordinates.getChildCoordinates(0).isEqual(octreeCoordinates(2, 0, 2, 2))
@@ -567,8 +567,8 @@ describe("Scene/ImplicitTileCoordinates", function () {
 
     // mismatched subtreeLevels
     expect(function () {
-      var subtreeLevelsA = 2;
-      var subtreeLevelsB = 3;
+      const subtreeLevelsA = 2;
+      const subtreeLevelsB = 3;
       return quadtreeCoordinates(0, 0, 0, subtreeLevelsA).isAncestor(
         quadtreeCoordinates(0, 0, 0, subtreeLevelsB)
       );
@@ -668,8 +668,8 @@ describe("Scene/ImplicitTileCoordinates", function () {
     ).toEqual(false);
 
     // mismatched subtreeLevels
-    var subtreeLevelsA = 2;
-    var subtreeLevelsB = 3;
+    const subtreeLevelsA = 2;
+    const subtreeLevelsB = 3;
     expect(
       quadtreeCoordinates(0, 0, 0, subtreeLevelsA).isEqual(
         quadtreeCoordinates(0, 0, 0, subtreeLevelsB)
@@ -728,11 +728,11 @@ describe("Scene/ImplicitTileCoordinates", function () {
   });
 
   it("fromMortonIndex works as expected for quadtree", function () {
-    var subtreeLevels = 6;
+    const subtreeLevels = 6;
 
     // 42 = 0b101010
     // deinterleave2D(42) = [0b111, 0b000] = [7, 0] = [y, x]
-    var coordinates = ImplicitTileCoordinates.fromMortonIndex(
+    const coordinates = ImplicitTileCoordinates.fromMortonIndex(
       ImplicitSubdivisionScheme.QUADTREE,
       subtreeLevels,
       3,
@@ -745,11 +745,11 @@ describe("Scene/ImplicitTileCoordinates", function () {
   });
 
   it("fromMortonIndex works as expected for octree", function () {
-    var subtreeLevels = 6;
+    const subtreeLevels = 6;
 
     // 43 = 0b101011
     // deinterleave3D(43) = [0b10, 0b01, 0b11] = [2, 1, 3] = [z, y, x]
-    var coordinates = ImplicitTileCoordinates.fromMortonIndex(
+    const coordinates = ImplicitTileCoordinates.fromMortonIndex(
       ImplicitSubdivisionScheme.OCTREE,
       subtreeLevels,
       2,
@@ -783,14 +783,14 @@ describe("Scene/ImplicitTileCoordinates", function () {
   });
 
   it("fromTileIndex works as expected for quadtree", function () {
-    var subtreeLevels = 6;
+    const subtreeLevels = 6;
 
     // level = 3
     // morton = 0b101010 = 42
     // deinterleave2D(42) = [0b111, 0b000] = [7, 0] = [y, x]
     // levelOffset = (4^level-1)/(4-1) = 21
     // tileIndex = levelOffset + morton = 63
-    var coordinates = ImplicitTileCoordinates.fromTileIndex(
+    const coordinates = ImplicitTileCoordinates.fromTileIndex(
       ImplicitSubdivisionScheme.QUADTREE,
       subtreeLevels,
       63
@@ -802,14 +802,14 @@ describe("Scene/ImplicitTileCoordinates", function () {
   });
 
   it("fromTileIndex works as expected for octree", function () {
-    var subtreeLevels = 6;
+    const subtreeLevels = 6;
 
     // level = 2
     // morton = 0b101011 = 43
     // deinterleave3D(43) = [0b10, 0b01, 0b11] = [2, 1, 3] = [z, y, x]
     // levelOffset = (8^level-1)/(8-1) = 9
     // tileIndex = levelOffset + morton = 52
-    var coordinates = ImplicitTileCoordinates.fromTileIndex(
+    const coordinates = ImplicitTileCoordinates.fromTileIndex(
       ImplicitSubdivisionScheme.OCTREE,
       subtreeLevels,
       52
@@ -821,7 +821,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
   });
 
   it("getTemplateValues works as expected for quadtree", function () {
-    var subtreeLevels = 6;
+    const subtreeLevels = 6;
     expect(
       quadtreeCoordinates(4, 3, 2, subtreeLevels).getTemplateValues()
     ).toEqual({
@@ -832,7 +832,7 @@ describe("Scene/ImplicitTileCoordinates", function () {
   });
 
   it("getTemplateValues works as expected for octree", function () {
-    var subtreeLevels = 6;
+    const subtreeLevels = 6;
 
     expect(
       octreeCoordinates(4, 3, 2, 1, subtreeLevels).getTemplateValues()

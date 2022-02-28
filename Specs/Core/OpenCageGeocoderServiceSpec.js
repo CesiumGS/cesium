@@ -3,8 +3,8 @@ import { Resource } from "../../Source/Cesium.js";
 import { when } from "../../Source/Cesium.js";
 
 describe("Core/OpenCageGeocoderService", function () {
-  var endpoint = "https://api.opencagedata.com/geocode/v1/";
-  var apiKey = "c2a490d593b14612aefa6ec2e6b77c47";
+  const endpoint = "https://api.opencagedata.com/geocode/v1/";
+  const apiKey = "c2a490d593b14612aefa6ec2e6b77c47";
 
   it("constructor throws without url", function () {
     expect(function () {
@@ -19,10 +19,10 @@ describe("Core/OpenCageGeocoderService", function () {
   });
 
   it("returns geocoder results", function () {
-    var service = new OpenCageGeocoderService(endpoint, apiKey);
+    const service = new OpenCageGeocoderService(endpoint, apiKey);
 
-    var query = "-22.6792,+14.5272";
-    var data = {
+    const query = "-22.6792,+14.5272";
+    const data = {
       results: [
         {
           bounds: {
@@ -53,10 +53,10 @@ describe("Core/OpenCageGeocoderService", function () {
   });
 
   it("returns no geocoder results if OpenCage has no results", function () {
-    var service = new OpenCageGeocoderService(endpoint, apiKey);
+    const service = new OpenCageGeocoderService(endpoint, apiKey);
 
-    var query = "";
-    var data = { results: [] };
+    const query = "";
+    const data = { results: [] };
     spyOn(Resource.prototype, "fetchJson").and.returnValue(when.resolve(data));
 
     return service.geocode(query).then(function (results) {

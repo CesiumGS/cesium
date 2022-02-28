@@ -1,6 +1,6 @@
 import defined from "./defined.js";
 
-var implementation;
+let implementation;
 if (typeof cancelAnimationFrame !== "undefined") {
   implementation = cancelAnimationFrame;
 }
@@ -8,13 +8,13 @@ if (typeof cancelAnimationFrame !== "undefined") {
 (function () {
   // look for vendor prefixed function
   if (!defined(implementation) && typeof window !== "undefined") {
-    var vendors = ["webkit", "moz", "ms", "o"];
-    var i = 0;
-    var len = vendors.length;
+    const vendors = ["webkit", "moz", "ms", "o"];
+    let i = 0;
+    const len = vendors.length;
     while (i < len && !defined(implementation)) {
-      implementation = window[vendors[i] + "CancelAnimationFrame"];
+      implementation = window[`${vendors[i]}CancelAnimationFrame`];
       if (!defined(implementation)) {
-        implementation = window[vendors[i] + "CancelRequestAnimationFrame"];
+        implementation = window[`${vendors[i]}CancelRequestAnimationFrame`];
       }
       ++i;
     }

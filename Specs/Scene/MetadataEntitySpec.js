@@ -1,20 +1,16 @@
-import {
-  Cartesian3,
-  MetadataClass,
-  MetadataEntity,
-} from "../../Source/Cesium.js";
+import { MetadataClass, MetadataEntity } from "../../Source/Cesium.js";
 
 describe("Scene/MetadataEntity", function () {
-  var classDefinition = new MetadataClass({
+  const classDefinition = new MetadataClass({
     id: "building",
     class: {
       properties: {
         name: {
-          type: "STRING",
+          componentType: "STRING",
           semantic: "NAME",
         },
         height: {
-          type: "FLOAT32",
+          componentType: "FLOAT32",
           optional: true,
           default: 10.0,
         },
@@ -27,13 +23,13 @@ describe("Scene/MetadataEntity", function () {
     },
   });
 
-  var properties = {
+  const properties = {
     name: "Building A",
     position: [0.0, 0.0, 0.0],
   };
 
   it("throws when using MetadataEntity directly", function () {
-    var entity = new MetadataEntity();
+    const entity = new MetadataEntity();
     expect(function () {
       return entity.class;
     }).toThrowDeveloperError();
@@ -162,8 +158,8 @@ describe("Scene/MetadataEntity", function () {
   });
 
   it("getPropertyIds uses results argument", function () {
-    var results = [];
-    var returnedResults = MetadataEntity.getPropertyIds(
+    const results = [];
+    const returnedResults = MetadataEntity.getPropertyIds(
       properties,
       classDefinition,
       results
@@ -180,8 +176,8 @@ describe("Scene/MetadataEntity", function () {
   });
 
   it("getPropertyIds works without classDefinition", function () {
-    var results = [];
-    var returnedResults = MetadataEntity.getPropertyIds(
+    const results = [];
+    const returnedResults = MetadataEntity.getPropertyIds(
       properties,
       undefined,
       results
@@ -201,12 +197,12 @@ describe("Scene/MetadataEntity", function () {
   });
 
   it("getProperty returns the property value", function () {
-    var value = MetadataEntity.getProperty(
+    const value = MetadataEntity.getProperty(
       "position",
       properties,
       classDefinition
     );
-    expect(value).toEqual(Cartesian3.unpack(properties.position));
+    expect(value).toEqual(properties.position);
   });
 
   it("getProperty returns the default value when the property is missing", function () {
@@ -228,7 +224,7 @@ describe("Scene/MetadataEntity", function () {
   });
 
   it("getProperty works without classDefinition", function () {
-    var value = MetadataEntity.getProperty("position", properties, undefined);
+    const value = MetadataEntity.getProperty("position", properties, undefined);
     expect(value).toEqual(properties.position);
     expect(value).not.toBe(properties.position); // The value is cloned
   });
@@ -240,7 +236,7 @@ describe("Scene/MetadataEntity", function () {
   });
 
   it("setProperty sets property value", function () {
-    var position = [1.0, 1.0, 1.0];
+    const position = [1.0, 1.0, 1.0];
     expect(
       MetadataEntity.setProperty(
         "position",
@@ -249,7 +245,7 @@ describe("Scene/MetadataEntity", function () {
         classDefinition
       )
     ).toBe(true);
-    var retrievedPosition = MetadataEntity.getProperty(
+    const retrievedPosition = MetadataEntity.getProperty(
       "position",
       properties,
       classDefinition
@@ -292,9 +288,12 @@ describe("Scene/MetadataEntity", function () {
   });
 
   it("setProperty works without classDefinition", function () {
-    var position = [1.0, 1.0, 1.0];
+    const position = [1.0, 1.0, 1.0];
     MetadataEntity.setProperty("position", position, properties);
-    var retrievedPosition = MetadataEntity.getProperty("position", properties);
+    const retrievedPosition = MetadataEntity.getProperty(
+      "position",
+      properties
+    );
     expect(retrievedPosition).toEqual(position);
     expect(retrievedPosition).not.toBe(position); // The value is cloned
   });

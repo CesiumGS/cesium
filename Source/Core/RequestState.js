@@ -3,7 +3,7 @@
  *
  * @enum {Number}
  */
-var RequestState = {
+const RequestState = {
   /**
    * Initial unissued state.
    *

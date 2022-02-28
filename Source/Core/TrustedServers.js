@@ -10,8 +10,8 @@ import DeveloperError from "./DeveloperError.js";
  *
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
-var TrustedServers = {};
-var _servers = {};
+const TrustedServers = {};
+let _servers = {};
 
 /**
  * Adds a trusted server to the registry
@@ -33,7 +33,7 @@ TrustedServers.add = function (host, port) {
   }
   //>>includeEnd('debug');
 
-  var authority = host.toLowerCase() + ":" + port;
+  const authority = `${host.toLowerCase()}:${port}`;
   if (!defined(_servers[authority])) {
     _servers[authority] = true;
   }
@@ -59,31 +59,32 @@ TrustedServers.remove = function (host, port) {
   }
   //>>includeEnd('debug');
 
-  var authority = host.toLowerCase() + ":" + port;
+  const authority = `${host.toLowerCase()}:${port}`;
   if (defined(_servers[authority])) {
     delete _servers[authority];
   }
 };
 
 function getAuthority(url) {
-  var uri = new Uri(url);
+  const uri = new Uri(url);
   uri.normalize();
 
   // Removes username:password@ so we just have host[:port]
-  var authority = uri.getAuthority();
-  if (!defined(authority)) {
+  let authority = uri.authority();
+  if (authority.length === 0) {
     return undefined; // Relative URL
   }
+  uri.authority(authority);
 
   if (authority.indexOf("@") !== -1) {
-    var parts = authority.split("@");
+    const parts = authority.split("@");
     authority = parts[1];
   }
 
   // If the port is missing add one based on the scheme
   if (authority.indexOf(":") === -1) {
-    var scheme = uri.getScheme();
-    if (!defined(scheme)) {
+    let scheme = uri.scheme();
+    if (scheme.length === 0) {
       scheme = window.location.protocol;
       scheme = scheme.substring(0, scheme.length - 1);
     }
@@ -124,7 +125,7 @@ TrustedServers.contains = function (url) {
     throw new DeveloperError("url is required.");
   }
   //>>includeEnd('debug');
-  var authority = getAuthority(url);
+  const authority = getAuthority(url);
   if (defined(authority) && defined(_servers[authority])) {
     return true;
   }

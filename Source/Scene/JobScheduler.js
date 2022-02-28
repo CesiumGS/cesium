@@ -74,7 +74,7 @@ function JobScheduler(budgets) {
   //>>includeEnd('debug');
 
   // Total for defaults is half of of one frame at 10 fps
-  var jobBudgets = new Array(JobType.NUMBER_OF_JOB_TYPES);
+  const jobBudgets = new Array(JobType.NUMBER_OF_JOB_TYPES);
   jobBudgets[JobType.TEXTURE] = new JobTypeBudget(
     defined(budgets) ? budgets[JobType.TEXTURE] : 10.0
   );
@@ -86,15 +86,15 @@ function JobScheduler(budgets) {
     defined(budgets) ? budgets[JobType.BUFFER] : 30.0
   );
 
-  var length = jobBudgets.length;
-  var i;
+  const length = jobBudgets.length;
+  let i;
 
-  var totalBudget = 0.0;
+  let totalBudget = 0.0;
   for (i = 0; i < length; ++i) {
     totalBudget += jobBudgets[i].total;
   }
 
-  var executedThisFrame = new Array(length);
+  const executedThisFrame = new Array(length);
   for (i = 0; i < length; ++i) {
     executedThisFrame[i] = false;
   }
@@ -122,10 +122,10 @@ JobScheduler.prototype.disableThisFrame = function () {
 };
 
 JobScheduler.prototype.resetBudgets = function () {
-  var budgets = this._budgets;
-  var length = budgets.length;
-  for (var i = 0; i < length; ++i) {
-    var budget = budgets[i];
+  const budgets = this._budgets;
+  const length = budgets.length;
+  for (let i = 0; i < length; ++i) {
+    const budget = budgets[i];
     budget.starvedLastFrame = budget.starvedThisFrame;
     budget.starvedThisFrame = false;
     budget.usedThisFrame = 0.0;
@@ -135,11 +135,11 @@ JobScheduler.prototype.resetBudgets = function () {
 };
 
 JobScheduler.prototype.execute = function (job, jobType) {
-  var budgets = this._budgets;
-  var budget = budgets[jobType];
+  const budgets = this._budgets;
+  const budget = budgets[jobType];
 
   // This ensures each job type makes progress each frame by executing at least once
-  var progressThisFrame = this._executedThisFrame[jobType];
+  const progressThisFrame = this._executedThisFrame[jobType];
 
   if (this._totalUsedThisFrame >= this._totalBudget && progressThisFrame) {
     // No budget left this frame for jobs of any type
@@ -147,12 +147,12 @@ JobScheduler.prototype.execute = function (job, jobType) {
     return false;
   }
 
-  var stolenBudget;
+  let stolenBudget;
 
   if (budget.usedThisFrame + budget.stolenFromMeThisFrame >= budget.total) {
     // No budget remaining for jobs of this type. Try to steal from other job types.
-    var length = budgets.length;
-    var i;
+    const length = budgets.length;
+    let i;
     for (i = 0; i < length; ++i) {
       stolenBudget = budgets[i];
 
@@ -179,9 +179,9 @@ JobScheduler.prototype.execute = function (job, jobType) {
     }
   }
 
-  var startTime = JobScheduler.getTimestamp();
+  const startTime = JobScheduler.getTimestamp();
   job.execute();
-  var duration = JobScheduler.getTimestamp() - startTime;
+  const duration = JobScheduler.getTimestamp() - startTime;
 
   // Track both time remaining for this job type and all jobs
   // so budget stealing does send us way over the total budget.

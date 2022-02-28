@@ -20,9 +20,9 @@ import createScene from "../createScene.js";
 describe(
   "DataSources/WallGeometryUpdater",
   function () {
-    var time;
-    var time2;
-    var scene;
+    let time;
+    let time2;
+    let scene;
 
     beforeAll(function () {
       scene = createScene();
@@ -35,29 +35,29 @@ describe(
     });
 
     function createBasicWall() {
-      var wall = new WallGraphics();
+      const wall = new WallGraphics();
       wall.positions = new ConstantProperty(
         Cartesian3.fromRadiansArrayHeights([0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1])
       );
-      var entity = new Entity();
+      const entity = new Entity();
       entity.wall = wall;
       return entity;
     }
 
     function createDynamicWall() {
-      var entity = createBasicWall();
+      const entity = createBasicWall();
       entity.wall.granularity = createDynamicProperty(1);
       return entity;
     }
 
     it("A time-varying positions causes geometry to be dynamic", function () {
-      var entity = createBasicWall();
-      var updater = new WallGeometryUpdater(entity, scene);
-      var point1 = new SampledPositionProperty();
+      const entity = createBasicWall();
+      const updater = new WallGeometryUpdater(entity, scene);
+      const point1 = new SampledPositionProperty();
       point1.addSample(time, new Cartesian3());
-      var point2 = new SampledPositionProperty();
+      const point2 = new SampledPositionProperty();
       point2.addSample(time, new Cartesian3());
-      var point3 = new SampledPositionProperty();
+      const point3 = new SampledPositionProperty();
       point3.addSample(time, new Cartesian3());
 
       entity.wall.positions = new PropertyArray();
@@ -68,8 +68,8 @@ describe(
     });
 
     it("A time-varying minimumHeights causes geometry to be dynamic", function () {
-      var entity = createBasicWall();
-      var updater = new WallGeometryUpdater(entity, scene);
+      const entity = createBasicWall();
+      const updater = new WallGeometryUpdater(entity, scene);
       entity.wall.minimumHeights = new TimeIntervalCollectionProperty();
       entity.wall.minimumHeights.intervals.addInterval(
         new TimeInterval({
@@ -84,8 +84,8 @@ describe(
     });
 
     it("A time-varying maximumHeights causes geometry to be dynamic", function () {
-      var entity = createBasicWall();
-      var updater = new WallGeometryUpdater(entity, scene);
+      const entity = createBasicWall();
+      const updater = new WallGeometryUpdater(entity, scene);
       entity.wall.maximumHeights = new TimeIntervalCollectionProperty();
       entity.wall.maximumHeights.intervals.addInterval(
         new TimeInterval({
@@ -100,8 +100,8 @@ describe(
     });
 
     it("A time-varying granularity causes geometry to be dynamic", function () {
-      var entity = createBasicWall();
-      var updater = new WallGeometryUpdater(entity, scene);
+      const entity = createBasicWall();
+      const updater = new WallGeometryUpdater(entity, scene);
       entity.wall.granularity = new SampledProperty(Number);
       entity.wall.granularity.addSample(time, 1);
       updater._onEntityPropertyChanged(entity, "wall");
@@ -110,24 +110,24 @@ describe(
     });
 
     it("Creates geometry with expected properties", function () {
-      var options = {
+      const options = {
         minimumHeights: [0, 1, 2, 3],
         maximumHeights: [4, 5, 6, 7],
         granularity: 0.97,
       };
 
-      var entity = createBasicWall();
+      const entity = createBasicWall();
 
-      var wall = entity.wall;
+      const wall = entity.wall;
       wall.outline = true;
       wall.minimumHeights = new ConstantProperty(options.minimumHeights);
       wall.maximumHeights = new ConstantProperty(options.maximumHeights);
       wall.granularity = new ConstantProperty(options.granularity);
 
-      var updater = new WallGeometryUpdater(entity, scene);
+      const updater = new WallGeometryUpdater(entity, scene);
 
-      var instance;
-      var geometry;
+      let instance;
+      let geometry;
       instance = updater.createFillGeometryInstance(time);
       geometry = instance.geometry;
       expect(geometry._granularity).toEqual(options.granularity);
@@ -142,7 +142,7 @@ describe(
     });
 
     it("dynamic updater sets properties", function () {
-      var wall = new WallGraphics();
+      const wall = new WallGraphics();
       wall.positions = createDynamicProperty(
         Cartesian3.fromRadiansArray([0, 0, 1, 0, 1, 1, 0, 1])
       );
@@ -154,17 +154,17 @@ describe(
       wall.outline = createDynamicProperty(true);
       wall.outlineColor = createDynamicProperty(Color.RED);
 
-      var entity = new Entity();
+      const entity = new Entity();
       entity.wall = wall;
 
-      var updater = new WallGeometryUpdater(entity, scene);
-      var dynamicUpdater = updater.createDynamicUpdater(
+      const updater = new WallGeometryUpdater(entity, scene);
+      const dynamicUpdater = updater.createDynamicUpdater(
         new PrimitiveCollection(),
         new PrimitiveCollection()
       );
       dynamicUpdater.update(time);
 
-      var options = dynamicUpdater._options;
+      const options = dynamicUpdater._options;
       expect(options.id).toEqual(entity);
       expect(options.positions).toEqual(wall.positions.getValue());
       expect(options.minimumHeights).toEqual(wall.minimumHeights.getValue());
@@ -173,9 +173,9 @@ describe(
     });
 
     it("geometryChanged event is raised when expected", function () {
-      var entity = createBasicWall();
-      var updater = new WallGeometryUpdater(entity, scene);
-      var listener = jasmine.createSpy("listener");
+      const entity = createBasicWall();
+      const updater = new WallGeometryUpdater(entity, scene);
+      const listener = jasmine.createSpy("listener");
       updater.geometryChanged.addEventListener(listener);
 
       entity.wall.positions = new ConstantProperty([]);

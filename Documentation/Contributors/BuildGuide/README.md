@@ -1,9 +1,33 @@
 # Build Guide
 
+- [Quickstart](#quickstart)
 - [Get the Code](#get-the-code)
 - [Build the Code](#build-the-code)
 - [Build Scripts](#build-scripts)
 - [Travis and Continuous Integration](#travis-and-continuous-integration)
+
+## Quickstart
+
+1. [Clone the repository](#get-the-code)
+
+2. [Build](#build-the-code)
+
+   ```
+    npm install
+    npm run build
+   ```
+
+3. Start the server
+
+   ```
+   npm start
+   ```
+
+4. Navigate to : [` http://localhost:8080/`](http://localhost:8080)
+
+_NOTE: If you change branches, you might have to rebuild._
+
+---
 
 ## Get the Code
 
@@ -95,7 +119,7 @@ Here's the full set of scripts and what they do.
   - `build` - A fast, developer-oriented build that prepares the source tree for use as standard [Asynchronous Module Definition (AMD)](https://github.com/amdjs/amdjs-api/wiki/AMD) modules, suitable for running tests and most examples (some Sandcastle examples require running `combine`). Run this when a GLSL shader is changed since the .glsl file is converted to a .js file with a string for the GLSL source. This runs automatically when saving files in Eclipse.
   - `build-watch` - A never-ending task that watches your file system for changes to Cesium and runs `build` on the source code as needed.
   - `combine` - Runs `build`, plus the [the RequireJS optimizer](http://requirejs.org/docs/optimization.html) to combine Cesium and [the Almond AMD loader](http://requirejs.org/docs/faq-optimization.html#wrap) to produce all-in-one files in the `Build/Cesium` directory that exposes the entire Cesium API attached to a single global `Cesium` object. This version is useful if you don't want to use the modules directly with a standard AMD loader.
-  - `minify` - Runs `combine`, plus [minifies](<http://en.wikipedia.org/wiki/Minification_(programming)>) Cesium.js using [UglifyJS2](https://github.com/mishoo/UglifyJS2) for a smaller deployable file.
+  - `minify` - Runs `combine`, plus [minifies](<http://en.wikipedia.org/wiki/Minification_(programming)>) Cesium.js.
   - `combineRelease` - Runs `combine`, plus uses the optimizer to remove debugging code that validates function input and throws DeveloperErrors. The removed sections are marked with `//>>includeStart('debug', pragmas.debug);` blocks in the code.
   - `minifyRelease` - Runs `minify`, and removes debugging code.
   - `requirejs` - Used internally by the build system and can not be called directly.
@@ -150,7 +174,7 @@ It is possible to configure your `travis.yml` and `gulpfile.cjs` to deploy to a 
 - In `gulpfile.cjs`, edit the following line:
 
 ```
-var travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
+const travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
 ```
 
 - Edit the URL to match the URL of the S3 bucket specified in `travis.yml`

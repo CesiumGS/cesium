@@ -35,12 +35,12 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
         });
 
         function dataCallback(interval, index) {
-          var time;
+          let time;
           if (index === 0) {
             // leading
             time = Cesium.JulianDate.toIso8601(interval.stop);
@@ -53,7 +53,7 @@
           };
         }
 
-        var times = Cesium.TimeIntervalCollection.fromIso8601({
+        const times = Cesium.TimeIntervalCollection.fromIso8601({
           iso8601: "2015-07-30/2017-06-16/P1D",
           leadingInterval: true,
           trailingInterval: true,
@@ -64,7 +64,7 @@
         // Add a WMTS imagery layer.
         // This comes from NASA's GIBS API.
         // See https://wiki.earthdata.nasa.gov/display/GIBS/GIBS+API+for+Developers#GIBSAPIforDevelopers-OGCWebMapService(WMS)
-        var provider = new Cesium.WebMapTileServiceImageryProvider({
+        const provider = new Cesium.WebMapTileServiceImageryProvider({
           url:
             "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/{Time}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg",
           layer: "MODIS_Terra_CorrectedReflectance_TrueColor",
@@ -76,15 +76,15 @@
           times: times,
           credit: "NASA Global Imagery Browse Services for EOSDIS",
         });
-        var imageryLayers = viewer.imageryLayers;
-        var layer = imageryLayers.addImageryProvider(provider);
+        const imageryLayers = viewer.imageryLayers;
+        const layer = imageryLayers.addImageryProvider(provider);
         provider.readyPromise.then(function () {
-          var start = Cesium.JulianDate.fromIso8601("2015-07-30");
-          var stop = Cesium.JulianDate.fromIso8601("2017-06-17");
+          const start = Cesium.JulianDate.fromIso8601("2015-07-30");
+          const stop = Cesium.JulianDate.fromIso8601("2017-06-17");
 
           viewer.timeline.zoomTo(start, stop);
 
-          var clock = viewer.clock;
+          const clock = viewer.clock;
           clock.startTime = start;
           clock.stopTime = stop;
           clock.currentTime = start;

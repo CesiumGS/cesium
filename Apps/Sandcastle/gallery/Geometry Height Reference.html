@@ -35,10 +35,10 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var cesiumTerrainProvider = Cesium.createWorldTerrain();
-        var ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
+        const cesiumTerrainProvider = Cesium.createWorldTerrain();
+        const ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
 
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           baseLayerPicker: false,
           terrainProvider: cesiumTerrainProvider,
         });
@@ -79,15 +79,15 @@
           },
         ]);
 
-        var longitude = 6.950615989890521;
-        var latitude = 45.79546589994886;
-        var delta = 0.001;
+        const longitude = 6.950615989890521;
+        const latitude = 45.79546589994886;
+        const delta = 0.001;
 
         function addGeometry(i, j) {
-          var west = longitude + delta * i;
-          var north = latitude + delta * j + delta;
+          const west = longitude + delta * i;
+          const north = latitude + delta * j + delta;
 
-          var type = Math.floor(Math.random() * 3);
+          const type = Math.floor(Math.random() * 3);
           if (type === 0) {
             viewer.entities.add({
               position: Cesium.Cartesian3.fromDegrees(west, north, 0.0),
@@ -121,8 +121,8 @@
         }
 
         function addGeometries() {
-          for (var i = 0; i < 4; i++) {
-            for (var j = 0; j < 4; j++) {
+          for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++) {
               addGeometry(i, j);
             }
           }
@@ -130,17 +130,17 @@
         }
 
         function addPolygon(i, j) {
-          var west = longitude + delta * i;
-          var east = longitude + delta * i + delta;
+          const west = longitude + delta * i;
+          const east = longitude + delta * i + delta;
 
-          var south = latitude + delta * j;
-          var north = latitude + delta * j + delta;
-          var a = Cesium.Cartesian3.fromDegrees(west, south);
-          var b = Cesium.Cartesian3.fromDegrees(west, north);
-          var c = Cesium.Cartesian3.fromDegrees(east, north);
-          var d = Cesium.Cartesian3.fromDegrees(east, south);
+          const south = latitude + delta * j;
+          const north = latitude + delta * j + delta;
+          const a = Cesium.Cartesian3.fromDegrees(west, south);
+          const b = Cesium.Cartesian3.fromDegrees(west, north);
+          const c = Cesium.Cartesian3.fromDegrees(east, north);
+          const d = Cesium.Cartesian3.fromDegrees(east, south);
 
-          var positions = [a, b, c, d];
+          const positions = [a, b, c, d];
           viewer.entities.add({
             polygon: {
               hierarchy: positions,
@@ -155,8 +155,8 @@
 
         function addPolygons() {
           // create 16 polygons that are side-by-side
-          for (var i = 0; i < 4; i++) {
-            for (var j = 0; j < 4; j++) {
+          for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++) {
               addPolygon(i, j);
             }
           }

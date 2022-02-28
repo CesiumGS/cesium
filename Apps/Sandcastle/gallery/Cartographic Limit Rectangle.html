@@ -35,15 +35,15 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
-        var scene = viewer.scene;
-        var globe = scene.globe;
+        const scene = viewer.scene;
+        const globe = scene.globe;
 
         // Tropics of Cancer and Capricorn
-        var coffeeBeltRectangle = Cesium.Rectangle.fromDegrees(
+        const coffeeBeltRectangle = Cesium.Rectangle.fromDegrees(
           -180.0,
           -23.43687,
           180.0,
@@ -57,9 +57,9 @@
         scene.skyAtmosphere.show = false;
 
         // Add rectangles to show bounds
-        var rectangles = [];
+        const rectangles = [];
 
-        for (var i = 0; i < 10; i++) {
+        for (let i = 0; i < 10; i++) {
           rectangles.push(
             viewer.entities.add({
               rectangle: {
@@ -83,9 +83,9 @@
         });
 
         Sandcastle.addToggleButton("Show Bounds", true, function (checked) {
-          var rectanglesLength = rectangles.length;
-          for (var i = 0; i < rectanglesLength; i++) {
-            var rectangleEntity = rectangles[i];
+          const rectanglesLength = rectangles.length;
+          for (let i = 0; i < rectanglesLength; i++) {
+            const rectangleEntity = rectangles[i];
             rectangleEntity.show = checked;
           }
         });

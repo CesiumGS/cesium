@@ -5,21 +5,21 @@ import {
 } from "../../Source/Cesium.js";
 
 describe("Scene/findGroupMetadata", function () {
-  var layerClass = new MetadataClass({
+  const layerClass = new MetadataClass({
     id: "layer",
     class: {
       properties: {
         name: {
-          type: "STRING",
+          componentType: "STRING",
         },
         elevation: {
-          type: "FLOAT32",
+          componentType: "FLOAT32",
         },
       },
     },
   });
 
-  var mockTileset = {
+  const mockTileset = {
     metadata: {
       groups: {
         testGroup: new GroupMetadata({
@@ -37,20 +37,20 @@ describe("Scene/findGroupMetadata", function () {
   };
 
   it("returns undefined if the content header is undefined", function () {
-    var group = findGroupMetadata(mockTileset, undefined);
+    const group = findGroupMetadata(mockTileset, undefined);
     expect(group).not.toBeDefined();
   });
 
   it("returns undefined if there is no extension", function () {
-    var contentHeader = {
+    const contentHeader = {
       uri: "https://example.com/model.b3dm",
     };
-    var group = findGroupMetadata(mockTileset, contentHeader);
+    const group = findGroupMetadata(mockTileset, contentHeader);
     expect(group).not.toBeDefined();
   });
 
   it("returns the group metadata if there is an extension", function () {
-    var contentHeader = {
+    const contentHeader = {
       uri: "https://example.com/model.b3dm",
       extensions: {
         "3DTILES_metadata": {
@@ -58,7 +58,7 @@ describe("Scene/findGroupMetadata", function () {
         },
       },
     };
-    var group = findGroupMetadata(mockTileset, contentHeader);
+    const group = findGroupMetadata(mockTileset, contentHeader);
     expect(group).toBeDefined();
     expect(group.getProperty("name")).toBe("Test Layer testGroup");
     expect(group.getProperty("elevation")).toBe(150.0);

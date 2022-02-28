@@ -4,7 +4,9 @@
         "jasmine": true
     },
     "rules": {
-        "no-self-assign": "off"
+        "no-self-assign": "off",
+        "es/no-block-scoped-variables": "off",
+        "es/no-template-literals": "off"
     },
     "overrides": [
         {

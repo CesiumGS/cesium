@@ -1,6 +1,6 @@
 import Check from "./Check.js";
 
-var blobUriRegex = /^blob:/i;
+const blobUriRegex = /^blob:/i;
 
 /**
  * Determines if the specified uri is a blob uri.

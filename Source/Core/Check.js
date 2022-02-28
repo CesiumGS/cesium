@@ -6,7 +6,7 @@ import DeveloperError from "./DeveloperError.js";
  * or meet specified conditions
  * @private
  */
-var Check = {};
+const Check = {};
 
 /**
  * Contains type checking functions, all using the typeof operator
@@ -14,18 +14,11 @@ var Check = {};
 Check.typeOf = {};
 
 function getUndefinedErrorMessage(name) {
-  return name + " is required, actual value was undefined";
+  return `${name} is required, actual value was undefined`;
 }
 
 function getFailedTypeErrorMessage(actual, expected, name) {
-  return (
-    "Expected " +
-    name +
-    " to be typeof " +
-    expected +
-    ", actual typeof was " +
-    actual
-  );
+  return `Expected ${name} to be typeof ${expected}, actual typeof was ${actual}`;
 }
 
 /**
@@ -98,12 +91,7 @@ Check.typeOf.number.lessThan = function (name, test, limit) {
   Check.typeOf.number(name, test);
   if (test >= limit) {
     throw new DeveloperError(
-      "Expected " +
-        name +
-        " to be less than " +
-        limit +
-        ", actual value was " +
-        test
+      `Expected ${name} to be less than ${limit}, actual value was ${test}`
     );
   }
 };
@@ -120,12 +108,7 @@ Check.typeOf.number.lessThanOrEquals = function (name, test, limit) {
   Check.typeOf.number(name, test);
   if (test > limit) {
     throw new DeveloperError(
-      "Expected " +
-        name +
-        " to be less than or equal to " +
-        limit +
-        ", actual value was " +
-        test
+      `Expected ${name} to be less than or equal to ${limit}, actual value was ${test}`
     );
   }
 };
@@ -142,12 +125,7 @@ Check.typeOf.number.greaterThan = function (name, test, limit) {
   Check.typeOf.number(name, test);
   if (test <= limit) {
     throw new DeveloperError(
-      "Expected " +
-        name +
-        " to be greater than " +
-        limit +
-        ", actual value was " +
-        test
+      `Expected ${name} to be greater than ${limit}, actual value was ${test}`
     );
   }
 };
@@ -164,12 +142,7 @@ Check.typeOf.number.greaterThanOrEquals = function (name, test, limit) {
   Check.typeOf.number(name, test);
   if (test < limit) {
     throw new DeveloperError(
-      "Expected " +
-        name +
-        " to be greater than or equal to " +
-        limit +
-        ", actual value was " +
-        test
+      `Expected ${name} to be greater than or equal to ${limit}, actual value was ${test}`
     );
   }
 };
@@ -233,13 +206,7 @@ Check.typeOf.number.equals = function (name1, name2, test1, test2) {
   Check.typeOf.number(name2, test2);
   if (test1 !== test2) {
     throw new DeveloperError(
-      name1 +
-        " must be equal to " +
-        name2 +
-        ", the actual values are " +
-        test1 +
-        " and " +
-        test2
+      `${name1} must be equal to ${name2}, the actual values are ${test1} and ${test2}`
     );
   }
 };

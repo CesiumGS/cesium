@@ -9,7 +9,7 @@ import defaultValue from "../Core/defaultValue.js";
  * tile metadata is stored in a {@link MetadataTable} rather than a JSON object.
  * </p>
  * <p>
- * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
  *
  * @param {ImplicitSubtree} options.implicitSubtree The implicit subtree the tile belongs to. It is assumed that the subtree's readyPromise has already resolved.
@@ -35,11 +35,11 @@ export default function ImplicitTileMetadata(options) {
 
   this._class = options.class;
 
-  var subtree = options.implicitSubtree;
+  const subtree = options.implicitSubtree;
   this._metadataTable = subtree.metadataTable;
   this._entityId = subtree.getEntityId(options.implicitCoordinates);
 
-  var subtreeExtension = subtree.metadataExtension;
+  const subtreeExtension = subtree.metadataExtension;
   this._extensions = subtreeExtension.extensions;
   this._extras = subtreeExtension.extras;
 }

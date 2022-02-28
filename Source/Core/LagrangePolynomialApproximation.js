@@ -5,7 +5,7 @@ import defined from "./defined.js";
  *
  * @namespace LagrangePolynomialApproximation
  */
-var LagrangePolynomialApproximation = {
+const LagrangePolynomialApproximation = {
   type: "Lagrange",
 };
 
@@ -43,20 +43,20 @@ LagrangePolynomialApproximation.interpolateOrderZero = function (
     result = new Array(yStride);
   }
 
-  var i;
-  var j;
-  var length = xTable.length;
+  let i;
+  let j;
+  const length = xTable.length;
 
   for (i = 0; i < yStride; i++) {
     result[i] = 0;
   }
 
   for (i = 0; i < length; i++) {
-    var coefficient = 1;
+    let coefficient = 1;
 
     for (j = 0; j < length; j++) {
       if (j !== i) {
-        var diffX = xTable[i] - xTable[j];
+        const diffX = xTable[i] - xTable[j];
         coefficient *= (x - xTable[j]) / diffX;
       }
     }

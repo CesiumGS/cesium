@@ -4,7 +4,7 @@ import { when } from "../Source/Cesium.js";
 function runLater(functionToRunLater, milliseconds) {
   milliseconds = defaultValue(milliseconds, 0);
 
-  var deferred = when.defer();
+  const deferred = when.defer();
   setTimeout(function () {
     try {
       deferred.resolve(functionToRunLater());

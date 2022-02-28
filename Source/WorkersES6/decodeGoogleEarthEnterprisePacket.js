@@ -1,15 +1,15 @@
 import decodeGoogleEarthEnterpriseData from "../Core/decodeGoogleEarthEnterpriseData.js";
 import GoogleEarthEnterpriseTileInformation from "../Core/GoogleEarthEnterpriseTileInformation.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import pako from "../ThirdParty/pako_inflate.js";
+import pako from "../ThirdParty/pako.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
 // Datatype sizes
-var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
-var sizeOfInt32 = Int32Array.BYTES_PER_ELEMENT;
-var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+const sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
+const sizeOfInt32 = Int32Array.BYTES_PER_ELEMENT;
+const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
-var Types = {
+const Types = {
   METADATA: 0,
   TERRAIN: 1,
   DBROOT: 2,
@@ -26,13 +26,13 @@ Types.fromString = function (s) {
 };
 
 function decodeGoogleEarthEnterprisePacket(parameters, transferableObjects) {
-  var type = Types.fromString(parameters.type);
-  var buffer = parameters.buffer;
+  const type = Types.fromString(parameters.type);
+  let buffer = parameters.buffer;
   decodeGoogleEarthEnterpriseData(parameters.key, buffer);
 
-  var uncompressedTerrain = uncompressPacket(buffer);
+  const uncompressedTerrain = uncompressPacket(buffer);
   buffer = uncompressedTerrain.buffer;
-  var length = uncompressedTerrain.length;
+  const length = uncompressedTerrain.length;
 
   switch (type) {
     case Types.METADATA:
@@ -47,25 +47,25 @@ function decodeGoogleEarthEnterprisePacket(parameters, transferableObjects) {
   }
 }
 
-var qtMagic = 32301;
+const qtMagic = 32301;
 
 function processMetadata(buffer, totalSize, quadKey) {
-  var dv = new DataView(buffer);
-  var offset = 0;
-  var magic = dv.getUint32(offset, true);
+  const dv = new DataView(buffer);
+  let offset = 0;
+  const magic = dv.getUint32(offset, true);
   offset += sizeOfUint32;
   if (magic !== qtMagic) {
     throw new RuntimeError("Invalid magic");
   }
 
-  var dataTypeId = dv.getUint32(offset, true);
+  const dataTypeId = dv.getUint32(offset, true);
   offset += sizeOfUint32;
   if (dataTypeId !== 1) {
     throw new RuntimeError("Invalid data type. Must be 1 for QuadTreePacket");
   }
 
   // Tile format version
-  var quadVersion = dv.getUint32(offset, true);
+  const quadVersion = dv.getUint32(offset, true);
   offset += sizeOfUint32;
   if (quadVersion !== 2) {
     throw new RuntimeError(
@@ -73,22 +73,22 @@ function processMetadata(buffer, totalSize, quadKey) {
     );
   }
 
-  var numInstances = dv.getInt32(offset, true);
+  const numInstances = dv.getInt32(offset, true);
   offset += sizeOfInt32;
 
-  var dataInstanceSize = dv.getInt32(offset, true);
+  const dataInstanceSize = dv.getInt32(offset, true);
   offset += sizeOfInt32;
   if (dataInstanceSize !== 32) {
     throw new RuntimeError("Invalid instance size.");
   }
 
-  var dataBufferOffset = dv.getInt32(offset, true);
+  const dataBufferOffset = dv.getInt32(offset, true);
   offset += sizeOfInt32;
 
-  var dataBufferSize = dv.getInt32(offset, true);
+  const dataBufferSize = dv.getInt32(offset, true);
   offset += sizeOfInt32;
 
-  var metaBufferSize = dv.getInt32(offset, true);
+  const metaBufferSize = dv.getInt32(offset, true);
   offset += sizeOfInt32;
 
   // Offset from beginning of packet (instances + current offset)
@@ -102,20 +102,20 @@ function processMetadata(buffer, totalSize, quadKey) {
   }
 
   // Read all the instances
-  var instances = [];
-  for (var i = 0; i < numInstances; ++i) {
-    var bitfield = dv.getUint8(offset);
+  const instances = [];
+  for (let i = 0; i < numInstances; ++i) {
+    const bitfield = dv.getUint8(offset);
     ++offset;
 
     ++offset; // 2 byte align
 
-    var cnodeVersion = dv.getUint16(offset, true);
+    const cnodeVersion = dv.getUint16(offset, true);
     offset += sizeOfUint16;
 
-    var imageVersion = dv.getUint16(offset, true);
+    const imageVersion = dv.getUint16(offset, true);
     offset += sizeOfUint16;
 
-    var terrainVersion = dv.getUint16(offset, true);
+    const terrainVersion = dv.getUint16(offset, true);
     offset += sizeOfUint16;
 
     // Number of channels stored in the dataBuffer
@@ -132,8 +132,8 @@ function processMetadata(buffer, totalSize, quadKey) {
     offset += 8; // Ignore image neighbors for now
 
     // Data providers
-    var imageProvider = dv.getUint8(offset++);
-    var terrainProvider = dv.getUint8(offset++);
+    const imageProvider = dv.getUint8(offset++);
+    const terrainProvider = dv.getUint8(offset++);
     offset += sizeOfUint16; // 4 byte align
 
     instances.push(
@@ -148,11 +148,11 @@ function processMetadata(buffer, totalSize, quadKey) {
     );
   }
 
-  var tileInfo = [];
-  var index = 0;
+  const tileInfo = [];
+  let index = 0;
 
   function populateTiles(parentKey, parent, level) {
-    var isLeaf = false;
+    let isLeaf = false;
     if (level === 4) {
       if (parent.hasSubtree()) {
         return; // We have a subtree, so just return
@@ -160,8 +160,8 @@ function processMetadata(buffer, totalSize, quadKey) {
 
       isLeaf = true; // No subtree, so set all children to null
     }
-    for (var i = 0; i < 4; ++i) {
-      var childKey = parentKey + i.toString();
+    for (let i = 0; i < 4; ++i) {
+      const childKey = parentKey + i.toString();
       if (isLeaf) {
         // No subtree so set all children to null
         tileInfo[childKey] = null;
@@ -176,7 +176,7 @@ function processMetadata(buffer, totalSize, quadKey) {
             return;
           }
 
-          var instance = instances[index++];
+          const instance = instances[index++];
           tileInfo[childKey] = instance;
           populateTiles(childKey, instance, level + 1);
         }
@@ -184,8 +184,8 @@ function processMetadata(buffer, totalSize, quadKey) {
     }
   }
 
-  var level = 0;
-  var root = instances[index++];
+  let level = 0;
+  const root = instances[index++];
   if (quadKey === "") {
     // Root tile has data at its root and one less level
     ++level;
@@ -198,20 +198,20 @@ function processMetadata(buffer, totalSize, quadKey) {
   return tileInfo;
 }
 
-var numMeshesPerPacket = 5;
-var numSubMeshesPerMesh = 4;
+const numMeshesPerPacket = 5;
+const numSubMeshesPerMesh = 4;
 
 // Each terrain packet will have 5 meshes - each containg 4 sub-meshes:
 //    1 even level mesh and its 4 odd level children.
 // Any remaining bytes after the 20 sub-meshes contains water surface meshes,
 // which are ignored.
 function processTerrain(buffer, totalSize, transferableObjects) {
-  var dv = new DataView(buffer);
+  const dv = new DataView(buffer);
 
   // Find the sub-meshes.
-  var advanceMesh = function (pos) {
-    for (var sub = 0; sub < numSubMeshesPerMesh; ++sub) {
-      var size = dv.getUint32(pos, true);
+  const advanceMesh = function (pos) {
+    for (let sub = 0; sub < numSubMeshesPerMesh; ++sub) {
+      const size = dv.getUint32(pos, true);
       pos += sizeOfUint32;
       pos += size;
       if (pos > totalSize) {
@@ -221,12 +221,12 @@ function processTerrain(buffer, totalSize, transferableObjects) {
     return pos;
   };
 
-  var offset = 0;
-  var terrainMeshes = [];
+  let offset = 0;
+  const terrainMeshes = [];
   while (terrainMeshes.length < numMeshesPerPacket) {
-    var start = offset;
+    const start = offset;
     offset = advanceMesh(offset);
-    var mesh = buffer.slice(start, offset);
+    const mesh = buffer.slice(start, offset);
     transferableObjects.push(mesh);
     terrainMeshes.push(mesh);
   }
@@ -234,8 +234,8 @@ function processTerrain(buffer, totalSize, transferableObjects) {
   return terrainMeshes;
 }
 
-var compressedMagic = 0x7468dead;
-var compressedMagicSwap = 0xadde6874;
+const compressedMagic = 0x7468dead;
+const compressedMagicSwap = 0xadde6874;
 
 function uncompressPacket(data) {
   // The layout of this decoded data is
@@ -244,20 +244,20 @@ function uncompressPacket(data) {
   // [GZipped chunk of Size bytes]
 
   // Pullout magic and verify we have the correct data
-  var dv = new DataView(data);
-  var offset = 0;
-  var magic = dv.getUint32(offset, true);
+  const dv = new DataView(data);
+  let offset = 0;
+  const magic = dv.getUint32(offset, true);
   offset += sizeOfUint32;
   if (magic !== compressedMagic && magic !== compressedMagicSwap) {
     throw new RuntimeError("Invalid magic");
   }
 
   // Get the size of the compressed buffer - the endianness depends on which magic was used
-  var size = dv.getUint32(offset, magic === compressedMagic);
+  const size = dv.getUint32(offset, magic === compressedMagic);
   offset += sizeOfUint32;
 
-  var compressedPacket = new Uint8Array(data, offset);
-  var uncompressedPacket = pako.inflate(compressedPacket);
+  const compressedPacket = new Uint8Array(data, offset);
+  const uncompressedPacket = pako.inflate(compressedPacket);
 
   if (uncompressedPacket.length !== size) {
     throw new RuntimeError("Size of packet doesn't match header");
