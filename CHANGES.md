@@ -8,6 +8,8 @@
 - Added support for subtree metadata in tilesets with implicit tiling. [#10093](https://github.com/CesiumGS/cesium/pull/10093)
 - Updated Feature ID parsing to match changes to the EXT_mesh_features specification. [#10087](https://github.com/CesiumGS/cesium/pull/10087)
 - Updated implicit tiling availability to match the latest specification changes. [#10107](https://github.com/CesiumGS/cesium/pull/10107)
+- Added support for content metadata in tilesets with implicit tiling. [#10123](https://github.com/CesiumGS/cesium/pull/10123)
+- Added support for explicit content metadata. [#10150](https://github.com/CesiumGS/cesium/pull/10150)
 
 ### 1.91 - 2022-03-01
 
