@@ -180,7 +180,6 @@ function Cesium3DTileset(options) {
   this._credits = undefined;
 
   this._showCreditsOnScreen = defaultValue(options.showCreditsOnScreen, false);
-  this._showCreditsOnScreenDirty = true;
 
   this._cullWithChildrenBounds = defaultValue(
     options.cullWithChildrenBounds,
@@ -1047,7 +1046,7 @@ function Cesium3DTileset(options) {
         }
         for (let i = 0; i < extraCredits.length; ++i) {
           const credit = extraCredits[i];
-          credits.push(new Credit(credit.html, this._showCreditsOnScreen));
+          credits.push(new Credit(credit.html, that._showCreditsOnScreen));
         }
       }
 
@@ -1852,10 +1851,6 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       return this._showCreditsOnScreen;
     },
     set: function (value) {
-      if (this._showCreditsOnScreen !== value) {
-        this._showCreditsOnScreenDirty = true;
-      }
-
       this._showCreditsOnScreen = value;
     },
   },
@@ -2803,12 +2798,9 @@ function update(tileset, frameState, passStatistics, passOptions) {
       const length = credits.length;
       for (let i = 0; i < length; ++i) {
         const credit = credits[i];
-        if (this._showCreditsOnScreenDirty) {
-          credit.showOnScreen = this._showCreditsOnScreen;
-        }
+        credit.showOnScreen = tileset._showCreditsOnScreen;
         frameState.creditDisplay.addCredit(credit);
       }
-      this._showCreditsOnScreenDirty = false;
     }
   }
 

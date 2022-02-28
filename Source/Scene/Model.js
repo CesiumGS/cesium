@@ -1343,7 +1343,7 @@ Object.defineProperties(Model.prototype, {
 
         const resourceCreditsLength = this._resourceCredits.length;
         for (let i = 0; i < resourceCreditsLength; i++) {
-          this._resourceCredits.showOnScreen = value;
+          this._resourceCredits[i].showOnScreen = value;
         }
 
         const gltfCreditsLength = this._gltfCredits.length;

@@ -36,7 +36,7 @@ function Credit(html, showOnScreen) {
 
   showOnScreen = defaultValue(showOnScreen, false);
 
-  // Credits are mostly immutable, so generate an id to use to optimize equal()
+  // Credits are immutable so generate an id to use to optimize equal()
   this._id = id;
   this._html = html;
   this._showOnScreen = showOnScreen;

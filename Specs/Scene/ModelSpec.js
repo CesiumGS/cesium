@@ -456,33 +456,6 @@ describe(
         });
       });
 
-      it("shows gltf copyrights in lightbox", function () {
-        return loadModel(boxWithCreditsUrl, {
-          showCreditsOnScreen: false,
-        }).then(function (model) {
-          copyrightModel = model;
-          const expectedCredits = [
-            "First Source",
-            "Second Source",
-            "Third Source",
-          ];
-
-          scene.renderForSpecs();
-          const creditDisplay = scene.frameState.creditDisplay;
-          const lightboxCredits =
-            creditDisplay._currentFrameCredits.lightboxCredits.values;
-          const screenCredits =
-            creditDisplay._currentFrameCredits.screenCredits.values;
-
-          const length = lightboxCredits.length;
-          expect(length).toEqual(expectedCredits.length);
-          for (let i = 0; i < length; i++) {
-            expect(lightboxCredits[i].credit.html).toEqual(expectedCredits[i]);
-          }
-          expect(screenCredits.length).toBe(0);
-        });
-      });
-
       it("shows gltf copyrights on screen", function () {
         return loadModel(boxWithCreditsUrl, {
           showCreditsOnScreen: true,

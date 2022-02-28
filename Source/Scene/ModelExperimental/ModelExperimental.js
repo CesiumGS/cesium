@@ -155,7 +155,6 @@ export default function ModelExperimental(options) {
     false
   );
 
-  this._showCreditsOnScreenDirty = true;
   this._showCreditsOnScreen = defaultValue(options.showCreditsOnScreen, false);
 
   initialize(this);
@@ -694,10 +693,6 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._showCreditsOnScreen;
     },
     set: function (value) {
-      if (this._showCreditsOnScreen !== value) {
-        this._showCreditsOnScreenDirty = true;
-      }
-
       this._showCreditsOnScreen = value;
     },
   },
@@ -823,14 +818,9 @@ ModelExperimental.prototype.update = function (frameState) {
     const length = credits.length;
     for (let i = 0; i < length; i++) {
       const credit = credits[i];
-      if (this._showCreditsOnScreenDirty) {
-        credit.showOnScreen = this._showCreditsOnScreen;
-      }
-
+      credit.showOnScreen = this._showCreditsOnScreen;
       frameState.creditDisplay.addCredit(credit);
     }
-
-    this._showCreditsOnScreenDirty = false;
 
     const drawCommands = this._sceneGraph.getDrawCommands();
     frameState.commandList.push.apply(frameState.commandList, drawCommands);
