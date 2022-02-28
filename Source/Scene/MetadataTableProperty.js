@@ -67,8 +67,14 @@ function MetadataTableProperty(options) {
       MetadataComponentType.UINT32
     );
 
+    // EXT_structural_metadata uses arrayOffsets.
+    // EXT_feature_metadata uses arrayOffsetBufferView
+    const arrayOffsetBufferView = defaultValue(
+      property.arrayOffsets,
+      property.arrayOffsetBufferView
+    );
     arrayOffsets = new BufferView(
-      bufferViews[property.arrayOffsetBufferView],
+      bufferViews[arrayOffsetBufferView],
       arrayOffsetType,
       count + 1
     );
@@ -99,8 +105,14 @@ function MetadataTableProperty(options) {
       MetadataComponentType.UINT32
     );
 
+    // EXT_structural_metadata uses stringOffsets.
+    // EXT_feature_metadata uses stringOffsetBufferView
+    const stringOffsetBufferView = defaultValue(
+      property.stringOffsets,
+      property.stringOffsetBufferView
+    );
     stringOffsets = new BufferView(
-      bufferViews[property.stringOffsetBufferView],
+      bufferViews[stringOffsetBufferView],
       stringOffsetType,
       componentCount + 1
     );
@@ -120,8 +132,11 @@ function MetadataTableProperty(options) {
     valueCount = componentCount;
   }
 
+  // EXT_structural_metadata uses values
+  // EXT_feature_metadata uses bufferView
+  const valuesBufferView = defaultValue(property.values, property.bufferView);
   const values = new BufferView(
-    bufferViews[property.bufferView],
+    bufferViews[valuesBufferView],
     valueType,
     valueCount
   );

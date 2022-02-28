@@ -90,7 +90,7 @@ function createProperties(options) {
       bufferViews[valuesBufferView] = valuesBuffer;
 
       const property = {
-        bufferView: valuesBufferView,
+        values: valuesBufferView,
       };
 
       properties[propertyId] = property;
@@ -119,7 +119,7 @@ function createProperties(options) {
         );
         const arrayOffsetBufferView = bufferViewIndex++;
         bufferViews[arrayOffsetBufferView] = arrayOffsetBuffer;
-        property.arrayOffsetBufferView = arrayOffsetBufferView;
+        property.arrayOffsets = arrayOffsetBufferView;
       }
 
       if (classProperty.type === MetadataType.STRING) {
@@ -132,7 +132,7 @@ function createProperties(options) {
         );
         const stringOffsetBufferView = bufferViewIndex++;
         bufferViews[stringOffsetBufferView] = stringOffsetBuffer;
-        property.stringOffsetBufferView = stringOffsetBufferView;
+        property.stringOffsets = stringOffsetBufferView;
       }
     }
   }

@@ -246,10 +246,10 @@
           "count": 10,
           "properties": {
             "height": {
-              "bufferView": 4
+              "values": 4
             },
             "id": {
-              "bufferView": 5
+              "values": 5
             }
           }
         }
