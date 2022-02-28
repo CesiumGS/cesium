@@ -3,42 +3,42 @@ import defaultValue from "../Core/defaultValue.js";
 import MetadataEntity from "./MetadataEntity.js";
 
 /**
- * Metadata about a 3D Tile. This represents the <code>3DTILES_metadata</code>
- * extension on a single {@link Cesium3DTile}
+ * Metadata about the content of a 3D Tile. This represents the <code>3DTILES_metadata</code>
+ * extension on a single {@link Cesium3DTileContent}
  * <p>
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.tile The extension JSON attached to the tile.
+ * @param {Object} options.content The extension JSON attached to the content.
  * @param {MetadataClass} options.class The class that the tile metadata conforms to.
  *
- * @alias TileMetadata
+ * @alias ContentMetadata
  * @constructor
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-export default function TileMetadata(options) {
+export default function ContentMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const tile = options.tile;
+  const content = options.content;
   const metadataClass = options.class;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.tile", tile);
+  Check.typeOf.object("options.content", content);
   Check.typeOf.object("options.class", metadataClass);
   //>>includeEnd('debug');
 
   this._class = metadataClass;
-  this._properties = tile.properties;
-  this._extensions = tile.extensions;
-  this._extras = tile.extras;
+  this._properties = content.properties;
+  this._extensions = content.extensions;
+  this._extras = content.extras;
 }
 
-Object.defineProperties(TileMetadata.prototype, {
+Object.defineProperties(ContentMetadata.prototype, {
   /**
    * The class that properties conform to.
    *
-   * @memberof TileMetadata.prototype
+   * @memberof ContentMetadata.prototype
    * @type {MetadataClass}
    * @readonly
    * @private
@@ -52,7 +52,7 @@ Object.defineProperties(TileMetadata.prototype, {
   /**
    * Extras in the JSON object.
    *
-   * @memberof TileMetadata.prototype
+   * @memberof ContentMetadata.prototype
    * @type {Object}
    * @readonly
    * @private
@@ -66,7 +66,7 @@ Object.defineProperties(TileMetadata.prototype, {
   /**
    * Extensions in the JSON object.
    *
-   * @memberof TileMetadata.prototype
+   * @memberof ContentMetadata.prototype
    * @type {Object}
    * @readonly
    * @private
@@ -79,24 +79,24 @@ Object.defineProperties(TileMetadata.prototype, {
 });
 
 /**
- * Returns whether the tile has this property.
+ * Returns whether the content has this property.
  *
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {Boolean} Whether the tile has this property.
+ * @returns {Boolean} Whether the content has this property.
  * @private
  */
-TileMetadata.prototype.hasProperty = function (propertyId) {
+ContentMetadata.prototype.hasProperty = function (propertyId) {
   return MetadataEntity.hasProperty(propertyId, this._properties, this._class);
 };
 
 /**
- * Returns whether the tile has a property with the given semantic.
+ * Returns whether the content has a property with the given semantic.
  *
  * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {Boolean} Whether the tile has a property with the given semantic.
+ * @returns {Boolean} Whether the content has a property with the given semantic.
  * @private
  */
-TileMetadata.prototype.hasPropertyBySemantic = function (semantic) {
+ContentMetadata.prototype.hasPropertyBySemantic = function (semantic) {
   return MetadataEntity.hasPropertyBySemantic(
     semantic,
     this._properties,
@@ -111,7 +111,7 @@ TileMetadata.prototype.hasPropertyBySemantic = function (semantic) {
  * @returns {String[]} The property IDs.
  * @private
  */
-TileMetadata.prototype.getPropertyIds = function (results) {
+ContentMetadata.prototype.getPropertyIds = function (results) {
   return MetadataEntity.getPropertyIds(this._properties, this._class, results);
 };
 
@@ -122,10 +122,10 @@ TileMetadata.prototype.getPropertyIds = function (results) {
  * </p>
  *
  * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this property.
+ * @returns {*} The value of the property or <code>undefined</code> if the content does not have this property.
  * @private
  */
-TileMetadata.prototype.getProperty = function (propertyId) {
+ContentMetadata.prototype.getProperty = function (propertyId) {
   return MetadataEntity.getProperty(propertyId, this._properties, this._class);
 };
 
@@ -140,7 +140,7 @@ TileMetadata.prototype.getProperty = function (propertyId) {
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  * @private
  */
-TileMetadata.prototype.setProperty = function (propertyId, value) {
+ContentMetadata.prototype.setProperty = function (propertyId, value) {
   return MetadataEntity.setProperty(
     propertyId,
     value,
@@ -153,10 +153,10 @@ TileMetadata.prototype.setProperty = function (propertyId, value) {
  * Returns a copy of the value of the property with the given semantic.
  *
  * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this semantic.
+ * @returns {*} The value of the property or <code>undefined</code> if the content does not have this semantic.
  * @private
  */
-TileMetadata.prototype.getPropertyBySemantic = function (semantic) {
+ContentMetadata.prototype.getPropertyBySemantic = function (semantic) {
   return MetadataEntity.getPropertyBySemantic(
     semantic,
     this._properties,
@@ -172,7 +172,7 @@ TileMetadata.prototype.getPropertyBySemantic = function (semantic) {
  * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  * @private
  */
-TileMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
+ContentMetadata.prototype.setPropertyBySemantic = function (semantic, value) {
   return MetadataEntity.setPropertyBySemantic(
     semantic,
     value,

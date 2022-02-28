@@ -41,6 +41,7 @@ import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileMetadata from "./TileMetadata.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 import Pass from "../Renderer/Pass.js";
+import ContentMetadata from "./ContentMetadata.js";
 
 /**
  * A tile in a {@link Cesium3DTileset}.  When a tile is first created, its content is not loaded;
@@ -1304,6 +1305,18 @@ function makeContent(tile, arrayBuffer) {
   }
 
   const contentHeader = tile._header.content;
+  // Should this be separated into its own file, like findGroupMetadata?
+  if (hasExtension(contentHeader, "3DTILES_metadata")) {
+    const contentExtension = contentHeader.extensions["3DTILES_metadata"];
+    const classes = tileset.metadata.schema.classes;
+    if (defined(contentExtension.class)) {
+      const contentClass = classes[contentExtension.class];
+      content.metadata = new ContentMetadata({
+        content: contentExtension,
+        class: contentClass,
+      });
+    }
+  }
 
   if (tile.hasImplicitContentMetadata) {
     const subtree = tile.implicitSubtree;

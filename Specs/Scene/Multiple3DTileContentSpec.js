@@ -294,6 +294,8 @@ describe(
       const withGroupMetadataUrl =
         "./Data/Cesium3DTiles/MultipleContents/GroupMetadata/tileset.json";
 
+      const withExplicitContentMetadataUrl =
+        "./Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset.json";
       const withImplicitContentMetadataUrl =
         "./Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset.json";
 
@@ -311,6 +313,7 @@ describe(
           },
         },
       });
+
       const groupMetadata = new GroupMetadata({
         id: "testGroup",
         group: {
@@ -390,7 +393,35 @@ describe(
         );
       });
 
-      it("initializes content metadata for inner contents", function () {
+      it("initializes explicit content metadata for inner contents", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          withExplicitContentMetadataUrl
+        ).then(function (tileset) {
+          const multipleContents = tileset.root.content;
+          const innerContents = multipleContents.innerContents;
+
+          const batchedContent = innerContents[0];
+          const batchedMetadata = batchedContent.metadata;
+          expect(batchedMetadata).toBeDefined();
+          expect(batchedMetadata.getProperty("highlightColor")).toEqual(
+            new Cartesian3(0, 0, 255)
+          );
+          expect(batchedMetadata.getProperty("author")).toEqual("Cesium");
+
+          const instancedContent = innerContents[1];
+          const instancedMetadata = instancedContent.metadata;
+          expect(instancedMetadata).toBeDefined();
+          expect(instancedMetadata.getProperty("numberOfInstances")).toEqual(
+            50
+          );
+          expect(instancedMetadata.getProperty("author")).toEqual(
+            "Sample Author"
+          );
+        });
+      });
+
+      it("initializes implicit content metadata for inner contents", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
           withImplicitContentMetadataUrl

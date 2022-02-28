@@ -1,6 +1,7 @@
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import hasExtension from "./hasExtension.js";
 import Request from "../Core/Request.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
 import RequestState from "../Core/RequestState.js";
@@ -9,6 +10,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import when from "../ThirdParty/when.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
+import ContentMetadata from "./ContentMetadata.js";
 import findGroupMetadata from "./findGroupMetadata.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 
@@ -537,6 +539,17 @@ function createInnerContent(multipleContents, arrayBuffer, index) {
   }
 
   const contentHeader = multipleContents._innerContentHeaders[index];
+  if (hasExtension(contentHeader, "3DTILES_metadata")) {
+    const contentExtension = contentHeader.extensions["3DTILES_metadata"];
+    const classes = tileset.metadata.schema.classes;
+    if (defined(contentExtension.class)) {
+      const contentClass = classes[contentExtension.class];
+      content.metadata = new ContentMetadata({
+        content: contentExtension,
+        class: contentClass,
+      });
+    }
+  }
 
   if (tile.hasImplicitContentMetadata) {
     const subtree = tile.implicitSubtree;

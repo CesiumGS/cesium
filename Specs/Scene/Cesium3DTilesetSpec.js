@@ -5437,8 +5437,12 @@ describe(
         "Data/Cesium3DTiles/Metadata/TileMetadata/tileset.json";
       const tilesetWithImplicitContentMetadataUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitContentMetadata/tileset.json";
+      const tilesetWithExplicitContentMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ContentMetadata/tileset.json";
       const tilesetWithImplicitMultipleContentsMetadataUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset.json";
+      const tilesetWithExplicitMultipleContentsMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset.json";
 
       const tilesetProperties = {
         author: "Cesium",
@@ -5659,6 +5663,51 @@ describe(
         });
       });
 
+      it("loads explicit tileset with content metadata", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithExplicitContentMetadataUrl
+        ).then(function (tileset) {
+          const expected = {
+            "parent.b3dm": {
+              highlightColor: new Cartesian3(255, 0, 0),
+              author: "Cesium",
+            },
+            "ll.b3dm": {
+              highlightColor: new Cartesian3(255, 255, 255),
+              author: "First Company",
+            },
+            "lr.b3dm": {
+              highlightColor: new Cartesian3(255, 0, 255),
+              author: "Second Company",
+            },
+            "ur.b3dm": {
+              highlightColor: new Cartesian3(0, 255, 0),
+              author: "Third Company",
+            },
+            "ul.b3dm": {
+              highlightColor: new Cartesian3(0, 0, 255),
+              author: "Fourth Company",
+            },
+          };
+
+          const parent = tileset.root;
+          const tiles = [parent].concat(parent.children);
+          tiles.forEach(function (tile) {
+            const uri = tile._header.content.uri;
+            const content = tile.content;
+            const expectedValues = expected[uri];
+            const metadata = content.metadata;
+            expect(metadata.getProperty("highlightColor")).toEqual(
+              expectedValues.highlightColor
+            );
+            expect(metadata.getProperty("author")).toEqual(
+              expectedValues.author
+            );
+          });
+        });
+      });
+
       it("loads implicit tileset with content metadata", function () {
         // this tileset is similar to other implicit tilesets, though
         // one tile is removed
@@ -5790,6 +5839,40 @@ describe(
               expectedAges[index - 1]
             );
           }
+        });
+      });
+
+      it("loads explicit tileset with multiple contents with metadata", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithExplicitMultipleContentsMetadataUrl
+        ).then(function (tileset) {
+          const content = tileset.root.content;
+          const batchedContent = content.innerContents[0];
+          const batchedContentMetadata = batchedContent.metadata;
+
+          expect(batchedContentMetadata.getProperty("highlightColor")).toEqual(
+            new Cartesian3(0, 0, 255)
+          );
+          expect(batchedContentMetadata.getProperty("author")).toEqual(
+            "Cesium"
+          );
+          expect(batchedContentMetadata.hasProperty("numberOfInstances")).toBe(
+            false
+          );
+
+          const instancedContent = content.innerContents[1];
+          const instancedContentMetadata = instancedContent.metadata;
+
+          expect(
+            instancedContentMetadata.getProperty("numberOfInstances")
+          ).toEqual(50);
+          expect(instancedContentMetadata.getProperty("author")).toEqual(
+            "Sample Author"
+          );
+          expect(instancedContentMetadata.hasProperty("highlightColor")).toBe(
+            false
+          );
         });
       });
     });
