@@ -4,7 +4,7 @@
 
 ##### Breaking Changes :mega:
 
-- Fixed an inconsistently handled exception in `camera.getPickRay` that arises when the scene is not rendered. [#10139](https://github.com/CesiumGS/cesium/pull/10139)
+- Fixed an inconsistently handled exception in `camera.getPickRay` that arises when the scene is not rendered. `camera.getPickRay` can now return undefined. [#10139](https://github.com/CesiumGS/cesium/pull/10139)
 
 ##### Additions :tada:
 
