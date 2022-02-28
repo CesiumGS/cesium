@@ -44,7 +44,7 @@ describe(
     const withRtcCenterUrl =
       "./Data/Cesium3DTiles/Batched/BatchedWithRtcCenter/tileset.json";
     const withCopyrightUrl =
-      "./Data/Cesium3dTiles/Batched/BatchedWithCopyright/tileset.json";
+      "./Data/Cesium3DTiles/Batched/BatchedWithCopyright/tileset.json";
 
     function setCamera(longitude, latitude) {
       // One feature is located at the center, point the camera there
