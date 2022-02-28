@@ -2,6 +2,10 @@
 
 ### 1.91 - 2022-03-01
 
+##### Breaking Changes :mega:
+
+- Fixed an inconsistently handled exception in `camera.getPickRay` that arises when the scene is not rendered. `camera.getPickRay` can now return undefined. [#10139](https://github.com/CesiumGS/cesium/pull/10139)
+
 ##### Additions :tada:
 
 - Added MSAA support for WebGL2. Enabled on viewer creation with the multisampling rate as the `msaaSamples` option and can be controlled through `Scene.msaaSamples`.
@@ -28,7 +32,6 @@
 - Fixed a bug where updating `ModelExperimental`'s model matrix would not update its bounding sphere. [#10078](https://github.com/CesiumGS/cesium/pull/10078)
 - Fixed feature ID texture artifacts on Safari. [#10111](https://github.com/CesiumGS/cesium/pull/10111)
 - Fixed a bug where a translucent shader applied to a `ModelExperimental` with opaque features was not being rendered. [#10110](https://github.com/CesiumGS/cesium/pull/10110)
-- Fixed an inconsistently handled exception in `camera.getPickRay` that arises when the scene is not rendered. [#10139](https://github.com/CesiumGS/cesium/pull/10139)
 
 ### 1.90 - 2022-02-01
 
@@ -165,9 +168,9 @@
 - Fixed an issue in `TileBoundingRegion.distanceToCamera` that caused incorrect results when the camera was on the opposite site of the globe. [#9678](https://github.com/CesiumGS/cesium/pull/9678)
 - Fixed an error with removing a CZML datasource when the clock interval has a duration of zero. [#9637](https://github.com/CesiumGS/cesium/pull/9637)
 - Fixed the ability to set a material's image to `undefined` and `Material.DefaultImageId`. [#9644](https://github.com/CesiumGS/cesium/pull/9644)
-- Fixed the calculation of `OrientedBoundingBox.distancedSquaredTo` such that they handle `halfAxes` with magnitudes near zero. [#9670](https://github.com/CesiumGS/cesium/pull/9670)
 - Fixed render crash when creating a `polylineVolume` with very close points. [#9669](https://github.com/CesiumGS/cesium/pull/9669)
 - Fixed a bug in `PolylineGeometry` that incorrectly shifted colors when duplicate positions were removed. [#9676](https://github.com/CesiumGS/cesium/pull/9676)
+- Fixed the calculation of `OrientedBoundingBox.distancedSquaredTo` such that they handle `halfAxes` with magnitudes near zero. [#9670](https://github.com/CesiumGS/cesium/pull/9670)
 - Fixed a crash that would hang the browser if a `Label` was created with a soft hyphen in its text. [#9682](https://github.com/CesiumGS/cesium/pull/9682)
 - Fixed the incorrect calculation of `distanceSquaredTo` in `BoundingSphere`. [#9686](https://github.com/CesiumGS/cesium/pull/9686)
 
