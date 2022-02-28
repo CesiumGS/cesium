@@ -63,7 +63,7 @@
     },
     "animations": {},
     "asset": {
-        "copyright": "First Source, Second Source, Third Source",
+        "copyright": "First Source; Second Source; Third Source",
         "generator": "collada2gltf@",
         "premultipliedAlpha": true,
         "profile": {

@@ -2,7 +2,7 @@
     "asset": {
         "generator": "COLLADA2GLTF",
         "version": "2.0",
-        "copyright": "First Source, Second Source, Third Source"
+        "copyright": "First Source; Second Source; Third Source"
     },
     "scene": 0,
     "scenes": [

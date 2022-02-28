@@ -2258,7 +2258,7 @@ function parseCredits(model) {
   }
 
   const showOnScreen = model._showCreditsOnScreen;
-  const credits = copyright.split(",").map(function (string) {
+  const credits = copyright.split(";").map(function (string) {
     return new Credit(string.trim(), showOnScreen);
   });
 
