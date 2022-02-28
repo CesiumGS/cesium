@@ -879,6 +879,40 @@ BoundingSphere.fromOrientedBoundingBox = function (
   return result;
 };
 
+const scratchFromTransformationCenter = new Cartesian3();
+const scratchFromTransformationScale = new Cartesian3();
+
+/**
+ * Computes a tight-fitting bounding sphere enclosing the provided affine transformation.
+ *
+ * @param {Matrix4} transformation The affine transformation.
+ * @param {BoundingSphere} [result] The object onto which to store the result.
+ * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+ */
+BoundingSphere.fromTransformation = function (transformation, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("transformation", transformation);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new BoundingSphere();
+  }
+
+  const center = Matrix4.getTranslation(
+    transformation,
+    scratchFromTransformationCenter
+  );
+  const scale = Matrix4.getScale(
+    transformation,
+    scratchFromTransformationScale
+  );
+  const radius = 0.5 * Cartesian3.magnitude(scale);
+  result.center = Cartesian3.clone(center, result.center);
+  result.radius = radius;
+
+  return result;
+};
+
 /**
  * Duplicates a BoundingSphere instance.
  *

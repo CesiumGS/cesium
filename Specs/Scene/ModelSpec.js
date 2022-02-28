@@ -44,6 +44,8 @@ describe(
     const boxUrl = "./Data/Models/Box/CesiumBoxTest.gltf";
     const boxNoTechniqueUrl =
       "./Data/Models/Box/CesiumBoxTest-NoTechnique.gltf";
+    const boxWithCreditsUrl =
+      "./Data/Models/Box/CesiumBoxTest-WithCopyright.gltf";
     const boxNoIndicesUrl = "./Data/Models/Box-NoIndices/box-noindices.gltf";
     const texturedBoxUrl =
       "./Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf";
@@ -396,6 +398,17 @@ describe(
         credit: "This is my model credit",
       });
       expect(model.credit).toBeInstanceOf(Credit);
+    });
+
+    it("gets copyrights from gltf", function () {
+      return loadModel(boxWithCreditsUrl).then(function (model) {
+        const credits = model._gltfCredits;
+        const length = credits.length;
+        expect(length).toBe(3);
+        for (let i = 0; i < length; i++) {
+          expect(credits[i]).toBeInstanceOf(Credit);
+        }
+      });
     });
 
     it("renders", function () {

@@ -796,6 +796,14 @@ ModelExperimental.prototype.update = function (frameState) {
   // Check for show here because we still want the draw commands to be built so user can instantly see the model
   // when show is set to true.
   if (this._show) {
+    const asset = this._sceneGraph.components.asset;
+    const credits = asset.credits;
+
+    const length = credits.length;
+    for (let i = 0; i < length; i++) {
+      frameState.creditDisplay.addCredit(credits[i]);
+    }
+
     const drawCommands = this._sceneGraph.getDrawCommands();
     frameState.commandList.push.apply(frameState.commandList, drawCommands);
   }

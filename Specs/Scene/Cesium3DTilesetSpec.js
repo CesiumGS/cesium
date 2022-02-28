@@ -2,6 +2,7 @@ import { Cartesian2 } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
+import { Credit } from "../../Source/Cesium.js";
 import { CullingVolume } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
 import { getAbsoluteUri } from "../../Source/Cesium.js";
@@ -108,6 +109,11 @@ describe(
 
     const gltfContentUrl = "Data/Cesium3DTiles/GltfContent/glTF/tileset.json";
     const glbContentUrl = "Data/Cesium3DTiles/GltfContent/glb/tileset.json";
+
+    const gltfContentWithCopyrightUrl =
+      "Data/Cesium3DTiles/GltfContentWithCopyright/glTF/tileset.json";
+    const gltfContentWithRepeatedCopyrightsUrl =
+      "Data/Cesium3DTiles/GltfContentWithRepeatedCopyrights/glTF/tileset.json";
 
     // 1 tile where each feature is a different source color
     const colorsUrl = "Data/Cesium3DTiles/Batched/BatchedColors/tileset.json";
@@ -4925,6 +4931,111 @@ describe(
           expect(tileset.statistics.numberOfPendingRequests).toBe(0);
         }
       );
+    });
+
+    it("displays copyrights for all glTF content", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        gltfContentWithCopyrightUrl
+      ).then(function (tileset) {
+        viewGltfContent();
+        const expectedCredits = [
+          "Parent Copyright",
+          "Lower Left Copyright",
+          "Lower Right Copyright 1",
+          "Lower Right Copyright 2",
+          "Upper Right Copyright",
+          "Upper Left Copyright",
+        ];
+
+        const creditDisplay = scene.frameState.creditDisplay;
+        const credits =
+          creditDisplay._currentFrameCredits.lightboxCredits.values;
+        const length = credits.length;
+        expect(length).toEqual(expectedCredits.length);
+        for (let i = 0; i < length; i++) {
+          const creditInfo = credits[i];
+          const creditString = creditInfo.credit.html;
+          expect(expectedCredits.includes(creditString)).toBe(true);
+        }
+      });
+    });
+
+    it("displays copyrights only for glTF content in view", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        gltfContentWithCopyrightUrl
+      ).then(function (tileset) {
+        const creditDisplay = scene.frameState.creditDisplay;
+        const credits = creditDisplay._currentFrameCredits.lightboxCredits;
+
+        setZoom(10.0);
+        scene.camera.moveLeft(150);
+        scene.camera.moveDown(150);
+        scene.renderForSpecs();
+        expect(credits.values.length).toEqual(1);
+        expect(credits.values[0].credit.html).toEqual("Lower Left Copyright");
+
+        setZoom(10.0);
+        scene.camera.moveRight(150);
+        scene.camera.moveDown(150);
+        scene.renderForSpecs();
+        expect(credits.values.length).toEqual(2);
+        expect(credits.values[0].credit.html).toEqual(
+          "Lower Right Copyright 1"
+        );
+        expect(credits.values[1].credit.html).toEqual(
+          "Lower Right Copyright 2"
+        );
+
+        setZoom(10.0);
+        scene.camera.moveRight(150);
+        scene.camera.moveUp(150);
+        scene.renderForSpecs();
+        expect(credits.values.length).toEqual(1);
+        expect(credits.values[0].credit.html).toEqual("Upper Right Copyright");
+
+        setZoom(10.0);
+        scene.camera.moveLeft(150);
+        scene.camera.moveUp(150);
+        scene.renderForSpecs();
+        expect(credits.values.length).toEqual(1);
+        expect(credits.values[0].credit.html).toEqual("Upper Left Copyright");
+      });
+    });
+
+    it("displays copyrights for glTF content in sorted order", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        gltfContentWithRepeatedCopyrightsUrl
+      ).then(function (tileset) {
+        setZoom(10.0);
+        scene.renderForSpecs();
+
+        const mostFrequentCopyright = new Credit("Most Frequent Copyright");
+        const secondRepeatedCopyright = new Credit("Second Repeated Copyright");
+        const lastRepeatedCopyright = new Credit("Last Repeated Copyright");
+        const uniqueCopyright = new Credit("Unique Copyright");
+
+        const expectedCredits = [
+          mostFrequentCopyright,
+          secondRepeatedCopyright,
+          lastRepeatedCopyright,
+          uniqueCopyright,
+        ];
+
+        const creditDisplay = scene.frameState.creditDisplay;
+        const creditContainer = creditDisplay._lightboxCredits.childNodes[2];
+        const creditList = creditContainer.childNodes;
+
+        const length = creditList.length;
+        expect(length).toEqual(4);
+
+        for (let i = 0; i < length; i++) {
+          const credit = creditList[i].childNodes[0];
+          expect(credit).toEqual(expectedCredits[i].element);
+        }
+      });
     });
 
     describe("3DTILES_implicit_tiling", function () {

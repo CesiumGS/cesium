@@ -231,6 +231,7 @@ ModelExperimental3DTileContent.fromGltf = function (
     colorBlendMode: tileset.colorBlendMode,
     colorBlendAmount: tileset.colorBlendAmount,
     backFaceCulling: tileset.backFaceCulling,
+    shadows: tileset.shadows,
   };
   content._model = ModelExperimental.fromGltf(modelOptions);
   return content;

@@ -33,6 +33,8 @@ describe(
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
     const boxTexturedGltfUrl =
       "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
+    const boxWithCreditsUrl =
+      "./Data/Models/GltfLoader/BoxWithCopyright/glTF/Box.gltf";
     const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
     const boxInstanced =
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
@@ -202,6 +204,34 @@ describe(
           .otherwise(function (error) {
             expect(error).toBeDefined();
           });
+      });
+    });
+
+    it("gets copyrights from gltf", function () {
+      const resource = Resource.createIfNeeded(boxWithCreditsUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: boxWithCreditsUrl,
+          },
+          scene
+        ).then(function (model) {
+          scene.renderForSpecs();
+          const expectedCredits = [
+            "First Source",
+            "Second Source",
+            "Third Source",
+          ];
+          const creditDisplay = scene.frameState.creditDisplay;
+          const credits =
+            creditDisplay._currentFrameCredits.lightboxCredits.values;
+          const length = credits.length;
+          expect(credits.length).toEqual(expectedCredits.length);
+          for (let i = 0; i < length; i++) {
+            expect(credits[i].credit.html).toEqual(expectedCredits[i]);
+          }
+        });
       });
     });
 
