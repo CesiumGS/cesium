@@ -4,12 +4,20 @@
 
 ##### Additions :tada:
 
-- Added the ability to load implicit tiling subtree files from JSON. [#10086](https://github.com/CesiumGS/cesium/pull/10086)
-- Added support for subtree metadata in tilesets with implicit tiling. [#10093](https://github.com/CesiumGS/cesium/pull/10093)
-- Updated Feature ID parsing to match changes to the EXT_mesh_features specification. [#10087](https://github.com/CesiumGS/cesium/pull/10087)
-- Updated implicit tiling availability to match the latest specification changes. [#10107](https://github.com/CesiumGS/cesium/pull/10107)
-- Added support for content metadata in tilesets with implicit tiling. [#10123](https://github.com/CesiumGS/cesium/pull/10123)
-- Added support for explicit content metadata. [#10150](https://github.com/CesiumGS/cesium/pull/10150)
+- Updated 3D Tiles Next extensions to match the latest specification. See the [latest specification PR](https://github.com/CesiumGS/3d-tiles/pull/630):
+  - `3DTILES_implicit_tiling`:
+    - Added support for JSON subtree files. [#10086](https://github.com/CesiumGS/cesium/pull/10086)
+    - Added support for subtree metadata. [#10093](https://github.com/CesiumGS/cesium/pull/10093)
+    - Updated implicit tiling availability to match the latest schema. [#10107](https://github.com/CesiumGS/cesium/pull/10107)
+    - Added support for content metadata in tilesets with implicit tiling. [#10123](https://github.com/CesiumGS/cesium/pull/10123)
+  - Split `EXT_mesh_features` into `EXT_mesh_features`, `EXT_instance_features`, `EXT_structural_metadata` [#10199](https://github.com/CesiumGS/cesium/pull/10119)
+  - `EXT_mesh_features`:
+    - Updated feature ID parsing to match the latest schema [#10087](https://github.com/CesiumGS/cesium/pull/10087)
+  - `EXT_structural_metadata`:
+    - Updated metadata type parsing to match the latest schema [#10116](https://github.com/CesiumGS/cesium/pull/10116)
+    - Updated property texture parsing to match the latest schema [#10122](https://github.com/CesiumGS/cesium/pull/10122)
+  - `3DTILES_metadata`:
+    - Added support for explicit content metadata. [#10150](https://github.com/CesiumGS/cesium/pull/10150)
 
 ### 1.91 - 2022-03-01
 
