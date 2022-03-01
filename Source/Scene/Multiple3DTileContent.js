@@ -9,6 +9,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import when from "../ThirdParty/when.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
+import findContentMetadata from "./findContentMetadata.js";
 import findGroupMetadata from "./findGroupMetadata.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 
@@ -542,6 +543,8 @@ function createInnerContent(multipleContents, arrayBuffer, index) {
     const subtree = tile.implicitSubtree;
     const coordinates = tile.implicitCoordinates;
     content.metadata = subtree.getContentMetadataView(coordinates, index);
+  } else if (!tile.hasImplicitContent) {
+    content.metadata = findContentMetadata(tileset, contentHeader);
   }
 
   content.groupMetadata = findGroupMetadata(tileset, contentHeader);

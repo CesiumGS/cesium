@@ -82,9 +82,33 @@
                 "componentType": "UINT8",
                 "semantic": "COLOR"
               },
+              "highlightColor": {
+                "type": "VEC4",
+                "componentType": "UINT8",
+                "semantic": "HIGHLIGHT_COLOR"
+              },
               "population": {
                 "type": "SCALAR",
                 "componentType": "UINT32"
+              }
+            }
+          },
+          "content": {
+            "properties": {
+              "triangleCount": {
+                "description": "The number of triangles in the glTF content",
+                "type": "SCALAR",
+                "componentType": "UINT32"
+              },
+              "highlightColor": {
+                "type": "VEC4",
+                "componentType": "UINT8",
+                "semantic": "HIGHLIGHT_COLOR"
+              },
+              "author": {
+                "description": "The person or entity that made the content",
+                "type": "STRING",
+                "semantic": "AUTHOR"
               }
             }
           }
@@ -153,10 +177,11 @@
       }
     },
     "extensions": {
-      "3DTILES_maetadata": {
+      "3DTILES_metadata": {
         "class": "tile",
         "properties": {
           "color": [127, 0, 255, 1.0],
+          "highlightColor": [255, 255, 255, 1.0],
           "population": 530
         }
       }
@@ -178,7 +203,13 @@
           "uri": "ll.b3dm",
           "extensions": {
             "3DTILES_metadata": {
-              "group": "residentialDistrict"
+              "group": "residentialDistrict",
+              "class": "content",
+              "properties": {
+                "triangleCount": 15000,
+                "highlightColor": [255, 0, 0, 1.0],
+                "author": "First Author"
+              }
             }
           }
         },
@@ -187,6 +218,7 @@
             "class": "tile",
             "properties": {
               "color": [255, 255, 0, 1.0],
+              "highlightColor": [255, 0, 255, 1.0],
               "population": 50
             }
           }
@@ -208,7 +240,13 @@
           "uri": "lr.b3dm",
           "extensions": {
             "3DTILES_metadata": {
-              "group": "commercialDistrict"
+              "group": "commercialDistrict",
+              "class": "content",
+              "properties": {
+                "triangleCount": 20000,
+                "highlightColor": [255, 255, 0, 1.0],
+                "author": "Second Author"
+              }
             }
           }
         },
@@ -217,6 +255,7 @@
             "class": "tile",
             "properties": {
               "color": [255, 0, 127, 1.0],
+              "highlightColor": [0, 255, 255, 1.0],
               "population": 230
             }
           }
@@ -238,7 +277,13 @@
           "uri": "ur.b3dm",
           "extensions": {
             "3DTILES_metadata": {
-              "group": "commercialDistrict"
+              "group": "commercialDistrict",
+              "class": "content",
+              "properties": {
+                "triangleCount": 32000,
+                "highlightColor": [0, 255, 0, 1.0],
+                "author": "Third Author"
+              }
             }
           }
         },
@@ -247,6 +292,7 @@
             "class": "tile",
             "properties": {
               "color": [255, 127, 0, 1.0],
+              "highlightColor": [0, 255, 0, 1.0],
               "population": 150
             }
           }
@@ -268,7 +314,13 @@
           "uri": "ul.b3dm",
           "extensions": {
             "3DTILES_metadata": {
-              "group": "residentialDistrict"
+              "group": "residentialDistrict",
+              "class": "content",
+              "properties": {
+                "triangleCount": 40000,
+                "highlightColor": [0, 0, 255, 1.0],
+                "author": "Fourth Author"
+              }
             }
           }
         },
@@ -277,6 +329,7 @@
             "class": "tile",
             "properties": {
               "color": [255, 0, 0, 1.0],
+              "highlightColor": [0, 255, 0, 1.0],
               "population": 100
             }
           }

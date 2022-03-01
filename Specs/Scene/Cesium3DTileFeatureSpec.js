@@ -130,6 +130,21 @@ describe(
         expect(feature.getPropertyInherited("unknown")).not.toBeDefined();
       });
 
+      it("getPropertyInherited returns content property by semantic", function () {
+        const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
+        expect(feature.getPropertyInherited("HIGHLIGHT_COLOR")).toEqual(
+          new Cartesian4(255, 0, 0, 1.0)
+        );
+      });
+
+      it("getPropertyInherited returns content property", function () {
+        const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
+        expect(feature.getPropertyInherited("HIGHLIGHT_COLOR")).toEqual(
+          new Cartesian4(255, 0, 0, 1.0)
+        );
+        expect(feature.getPropertyInherited("triangleCount")).toBe(15000);
+      });
+
       it("getPropertyInherited returns tile property by semantic", function () {
         const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
         expect(feature.getPropertyInherited("COLOR")).toEqual(
@@ -163,9 +178,6 @@ describe(
 
       it("getPropertyInherited returns tileset property by semantic", function () {
         const feature = new Cesium3DTileFeature(parentContent, 0);
-        expect(feature.getPropertyInherited("COLOR")).toEqual(
-          new Cartesian4(255, 0, 255, 1.0)
-        );
         expect(feature.getPropertyInherited("DATE_ISO_8601")).toBe(
           "2021-04-07"
         );
@@ -174,9 +186,6 @@ describe(
 
       it("getPropertyInherited returns tileset property", function () {
         const feature = new Cesium3DTileFeature(parentContent, 0);
-        expect(feature.getPropertyInherited("color")).toEqual(
-          new Cartesian4(255, 0, 255, 1.0)
-        );
         expect(feature.getPropertyInherited("centerCartographic")).toEqual(
           new Cartesian3(
             -1.3196816996258511,
@@ -190,9 +199,19 @@ describe(
       });
 
       it("resolves conflicting names from most specific to most general", function () {
+        const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
+        // content metadata is more specific than tile metadata so this returns
+        // red not cyan
+        expect(feature.getPropertyInherited("highlightColor")).toEqual(
+          new Cartesian4(255, 0, 0, 1.0)
+        );
+
+        // content metadata is more specific than tileset metadata so this returns
+        // "First Author" instead of "Cesium"
+        expect(feature.getPropertyInherited("author")).toEqual("First Author");
+
         // tile metadata is more specific than tileset metadata so this returns
         // yellow not magenta
-        const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
         expect(feature.getPropertyInherited("color")).toEqual(
           new Cartesian4(255, 255, 0, 1.0)
         );
