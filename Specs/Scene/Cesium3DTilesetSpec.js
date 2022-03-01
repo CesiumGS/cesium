@@ -2,6 +2,7 @@ import { Cartesian2 } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
+import { Credit } from "../../Source/Cesium.js";
 import { CullingVolume } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
 import { getAbsoluteUri } from "../../Source/Cesium.js";
@@ -108,6 +109,11 @@ describe(
 
     const gltfContentUrl = "Data/Cesium3DTiles/GltfContent/glTF/tileset.json";
     const glbContentUrl = "Data/Cesium3DTiles/GltfContent/glb/tileset.json";
+
+    const gltfContentWithCopyrightUrl =
+      "Data/Cesium3DTiles/GltfContentWithCopyright/glTF/tileset.json";
+    const gltfContentWithRepeatedCopyrightsUrl =
+      "Data/Cesium3DTiles/GltfContentWithRepeatedCopyrights/glTF/tileset.json";
 
     // 1 tile where each feature is a different source color
     const colorsUrl = "Data/Cesium3DTiles/Batched/BatchedColors/tileset.json";
@@ -1959,13 +1965,12 @@ describe(
       return checkDebugColorizeTiles(pointCloudUrl);
     });
 
-    // see https://github.com/CesiumGS/cesium/issues/10061
-    xit("debugColorizeTiles for glTF", function () {
+    it("debugColorizeTiles for glTF", function () {
       viewGltfContent();
       return checkDebugColorizeTiles(gltfContentUrl);
     });
 
-    xit("debugColorizeTiles for glb", function () {
+    it("debugColorizeTiles for glb", function () {
       viewGltfContent();
       return checkDebugColorizeTiles(glbContentUrl);
     });
@@ -2548,17 +2553,22 @@ describe(
         tileset
       ) {
         scene.camera.setView(setViewOptions);
+        // In the glTF and glb tests, the back-face of the model is black,
+        // so the background color is set to a different color to distinguish
+        // between the results.
+        scene.backgroundColor = new Color(0.0, 0.0, 1.0, 1.0);
         expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).toEqual([0, 0, 0, 255]);
+          expect(rgba).toEqual([0, 0, 255, 255]);
           tileset.backFaceCulling = false;
           expect(renderOptions).toRenderAndCall(function (rgba2) {
             expect(rgba2).not.toEqual(rgba);
           });
         });
+        scene.backgroundColor = new Color(0.0, 0.0, 0.0, 1.0);
       });
     }
 
-    it("renders b3dm tileset when back face culling is disabled", function () {
+    it("renders b3dm tileset when back-face culling is disabled", function () {
       const setViewOptions = {
         destination: new Cartesian3(
           1215012.6853779217,
@@ -2576,8 +2586,7 @@ describe(
       return testBackFaceCulling(withoutBatchTableUrl, setViewOptions);
     });
 
-    // see https://github.com/CesiumGS/cesium/issues/10056
-    xit("renders glTF tileset when back face culling is disabled", function () {
+    it("renders glTF tileset when back-face culling is disabled", function () {
       const setViewOptions = {
         destination: new Cartesian3(
           1215012.6853779217,
@@ -2595,7 +2604,7 @@ describe(
       return testBackFaceCulling(gltfContentUrl, setViewOptions);
     });
 
-    xit("renders glb tileset when back face culling is disabled", function () {
+    it("renders glb tileset when back-face culling is disabled", function () {
       const setViewOptions = {
         destination: new Cartesian3(
           1215012.6853779217,
@@ -2613,7 +2622,7 @@ describe(
       return testBackFaceCulling(glbContentUrl, setViewOptions);
     });
 
-    it("renders i3dm tileset when back face culling is disabled", function () {
+    it("renders i3dm tileset when back-face culling is disabled", function () {
       const setViewOptions = {
         destination: new Cartesian3(
           1215015.8599828142,
@@ -4922,6 +4931,206 @@ describe(
           expect(tileset.statistics.numberOfPendingRequests).toBe(0);
         }
       );
+    });
+
+    it("displays copyrights for all glTF content", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        gltfContentWithCopyrightUrl
+      ).then(function (tileset) {
+        setZoom(10.0);
+        scene.renderForSpecs();
+
+        const expectedCredits = [
+          "Parent Copyright",
+          "Lower Left Copyright",
+          "Lower Right Copyright 1",
+          "Lower Right Copyright 2",
+          "Upper Right Copyright",
+          "Upper Left Copyright",
+        ];
+
+        const creditDisplay = scene.frameState.creditDisplay;
+        const credits =
+          creditDisplay._currentFrameCredits.lightboxCredits.values;
+        const length = credits.length;
+        expect(length).toEqual(expectedCredits.length);
+        for (let i = 0; i < length; i++) {
+          const creditInfo = credits[i];
+          const creditString = creditInfo.credit.html;
+          expect(expectedCredits.includes(creditString)).toBe(true);
+        }
+      });
+    });
+
+    it("displays copyrights only for glTF content in view", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        gltfContentWithCopyrightUrl
+      ).then(function (tileset) {
+        const creditDisplay = scene.frameState.creditDisplay;
+        const credits = creditDisplay._currentFrameCredits.lightboxCredits;
+
+        setZoom(10.0);
+        scene.camera.moveLeft(150);
+        scene.camera.moveDown(150);
+        scene.renderForSpecs();
+        expect(credits.values.length).toEqual(1);
+        expect(credits.values[0].credit.html).toEqual("Lower Left Copyright");
+
+        setZoom(10.0);
+        scene.camera.moveRight(150);
+        scene.camera.moveDown(150);
+        scene.renderForSpecs();
+        expect(credits.values.length).toEqual(2);
+        expect(credits.values[0].credit.html).toEqual(
+          "Lower Right Copyright 1"
+        );
+        expect(credits.values[1].credit.html).toEqual(
+          "Lower Right Copyright 2"
+        );
+
+        setZoom(10.0);
+        scene.camera.moveRight(150);
+        scene.camera.moveUp(150);
+        scene.renderForSpecs();
+        expect(credits.values.length).toEqual(1);
+        expect(credits.values[0].credit.html).toEqual("Upper Right Copyright");
+
+        setZoom(10.0);
+        scene.camera.moveLeft(150);
+        scene.camera.moveUp(150);
+        scene.renderForSpecs();
+        expect(credits.values.length).toEqual(1);
+        expect(credits.values[0].credit.html).toEqual("Upper Left Copyright");
+      });
+    });
+
+    it("displays copyrights for glTF content in sorted order", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        gltfContentWithRepeatedCopyrightsUrl
+      ).then(function (tileset) {
+        setZoom(10.0);
+        scene.renderForSpecs();
+
+        const mostFrequentCopyright = new Credit("Most Frequent Copyright");
+        const secondRepeatedCopyright = new Credit("Second Repeated Copyright");
+        const lastRepeatedCopyright = new Credit("Last Repeated Copyright");
+        const uniqueCopyright = new Credit("Unique Copyright");
+
+        const expectedCredits = [
+          mostFrequentCopyright,
+          secondRepeatedCopyright,
+          lastRepeatedCopyright,
+          uniqueCopyright,
+        ];
+
+        const creditDisplay = scene.frameState.creditDisplay;
+        const creditContainer = creditDisplay._lightboxCredits.childNodes[2];
+        const creditList = creditContainer.childNodes;
+
+        const length = creditList.length;
+        expect(length).toEqual(4);
+
+        for (let i = 0; i < length; i++) {
+          const credit = creditList[i].childNodes[0];
+          expect(credit).toEqual(expectedCredits[i].element);
+        }
+      });
+    });
+
+    it("shows credits on screen", function () {
+      const options = {
+        showCreditsOnScreen: true,
+      };
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        gltfContentWithCopyrightUrl,
+        options
+      ).then(function (tileset) {
+        setZoom(10.0);
+        scene.renderForSpecs();
+
+        const expectedCredits = [
+          "Parent Copyright",
+          "Lower Left Copyright",
+          "Lower Right Copyright 1",
+          "Lower Right Copyright 2",
+          "Upper Right Copyright",
+          "Upper Left Copyright",
+        ];
+
+        const creditDisplay = scene.frameState.creditDisplay;
+        const credits = creditDisplay._currentFrameCredits.screenCredits.values;
+        const length = credits.length;
+        expect(length).toEqual(expectedCredits.length);
+        for (let i = 0; i < length; i++) {
+          const creditInfo = credits[i];
+          const creditString = creditInfo.credit.html;
+          expect(expectedCredits.includes(creditString)).toBe(true);
+        }
+      });
+    });
+
+    it("toggles showing credits on screen", function () {
+      const options = {
+        showCreditsOnScreen: false,
+      };
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        gltfContentWithCopyrightUrl,
+        options
+      ).then(function (tileset) {
+        setZoom(10.0);
+        scene.renderForSpecs();
+
+        const expectedCredits = [
+          "Parent Copyright",
+          "Lower Left Copyright",
+          "Lower Right Copyright 1",
+          "Lower Right Copyright 2",
+          "Upper Right Copyright",
+          "Upper Left Copyright",
+        ];
+
+        const creditDisplay = scene.frameState.creditDisplay;
+        const lightboxCredits =
+          creditDisplay._currentFrameCredits.lightboxCredits.values;
+        const screenCredits =
+          creditDisplay._currentFrameCredits.screenCredits.values;
+
+        let length = lightboxCredits.length;
+        expect(length).toEqual(expectedCredits.length);
+        for (let i = 0; i < length; i++) {
+          const creditInfo = lightboxCredits[i];
+          const creditString = creditInfo.credit.html;
+          expect(expectedCredits.includes(creditString)).toBe(true);
+        }
+        expect(screenCredits.length).toEqual(0);
+
+        tileset.showCreditsOnScreen = true;
+        scene.renderForSpecs();
+        length = screenCredits.length;
+        expect(length).toEqual(expectedCredits.length);
+        for (let i = 0; i < length; i++) {
+          const creditInfo = screenCredits[i];
+          const creditString = creditInfo.credit.html;
+          expect(expectedCredits.includes(creditString)).toBe(true);
+        }
+        expect(lightboxCredits.length).toEqual(0);
+
+        tileset.showCreditsOnScreen = false;
+        scene.renderForSpecs();
+        length = lightboxCredits.length;
+        expect(length).toEqual(expectedCredits.length);
+        for (let i = 0; i < length; i++) {
+          const creditInfo = lightboxCredits[i];
+          const creditString = creditInfo.credit.html;
+          expect(expectedCredits.includes(creditString)).toBe(true);
+        }
+        expect(screenCredits.length).toEqual(0);
+      });
     });
 
     describe("3DTILES_implicit_tiling", function () {

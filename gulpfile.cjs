@@ -1577,7 +1577,9 @@ function createTypeScriptDefinitions() {
       /= "WebGLConstants\.(.+)"/gm,
       // eslint-disable-next-line no-unused-vars
       (match, p1) => `= WebGLConstants.${p1}`
-    );
+    )
+    // Strip const enums which can cause errors - https://www.typescriptlang.org/docs/handbook/enums.html#const-enum-pitfalls
+    .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4");
 
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.

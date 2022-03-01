@@ -5,6 +5,8 @@ import PixelFormat from "../Core/PixelFormat.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
+import Renderbuffer from "../Renderer/Renderbuffer.js";
+import RenderbufferFormat from "../Renderer/RenderbufferFormat.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import Texture from "../Renderer/Texture.js";
@@ -18,14 +20,18 @@ import StencilOperation from "./StencilOperation.js";
  * @private
  */
 function InvertClassification() {
+  this._numSamples = 1;
   this.previousFramebuffer = undefined;
   this._previousFramebuffer = undefined;
 
   this._depthStencilTexture = undefined;
+  this._depthStencilRenderbuffer = undefined;
   this._fbo = new FramebufferManager({
+    depthStencil: true,
     createDepthAttachments: false,
   });
   this._fboClassified = new FramebufferManager({
+    depthStencil: true,
     createDepthAttachments: false,
   });
 
@@ -167,20 +173,29 @@ const opaqueFS =
   "#endif\n" +
   "}\n";
 
-InvertClassification.prototype.update = function (context) {
+InvertClassification.prototype.update = function (
+  context,
+  numSamples,
+  globeFramebuffer
+) {
   const texture = this._fbo.getColorTexture();
   const previousFramebufferChanged =
     this.previousFramebuffer !== this._previousFramebuffer;
   this._previousFramebuffer = this.previousFramebuffer;
+  const samplesChanged = this._numSamples !== numSamples;
 
   const width = context.drawingBufferWidth;
   const height = context.drawingBufferHeight;
   const textureChanged =
     !defined(texture) || texture.width !== width || texture.height !== height;
 
-  if (textureChanged || previousFramebufferChanged) {
+  if (textureChanged || previousFramebufferChanged || samplesChanged) {
+    this._numSamples = numSamples;
     this._depthStencilTexture =
       this._depthStencilTexture && this._depthStencilTexture.destroy();
+    this._depthStencilRenderbuffer =
+      this._depthStencilRenderbuffer &&
+      this._depthStencilRenderbuffer.destroy();
 
     if (!defined(this._previousFramebuffer)) {
       this._depthStencilTexture = new Texture({
@@ -190,13 +205,23 @@ InvertClassification.prototype.update = function (context) {
         pixelFormat: PixelFormat.DEPTH_STENCIL,
         pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
       });
+      if (numSamples > 1) {
+        this._depthStencilRenderbuffer = new Renderbuffer({
+          context: context,
+          width: width,
+          height: height,
+          format: RenderbufferFormat.DEPTH24_STENCIL8,
+          numSamples: numSamples,
+        });
+      }
     }
   }
 
   if (
     !defined(this._fbo.framebuffer) ||
     textureChanged ||
-    previousFramebufferChanged
+    previousFramebufferChanged ||
+    samplesChanged
   ) {
     this._fbo.destroy();
     this._fboClassified.destroy();
@@ -204,18 +229,18 @@ InvertClassification.prototype.update = function (context) {
     let depthStencilTexture;
     let depthStencilRenderbuffer;
     if (defined(this._previousFramebuffer)) {
-      depthStencilTexture = this._previousFramebuffer.depthStencilTexture;
-      depthStencilRenderbuffer = this._previousFramebuffer
-        .depthStencilRenderbuffer;
+      depthStencilTexture = globeFramebuffer.getDepthStencilTexture();
+      depthStencilRenderbuffer = globeFramebuffer.getDepthStencilRenderbuffer();
     } else {
       depthStencilTexture = this._depthStencilTexture;
+      depthStencilRenderbuffer = this._depthStencilRenderbuffer;
     }
 
     this._fbo.setDepthStencilTexture(depthStencilTexture);
     if (defined(depthStencilRenderbuffer)) {
       this._fbo.setDepthStencilRenderbuffer(depthStencilRenderbuffer);
     }
-    this._fbo.update(context, width, height);
+    this._fbo.update(context, width, height, numSamples);
 
     if (!defined(this._previousFramebuffer)) {
       this._fboClassified.setDepthStencilTexture(depthStencilTexture);
@@ -229,7 +254,11 @@ InvertClassification.prototype.update = function (context) {
     this._rsDefault = RenderState.fromCache(rsDefault);
   }
 
-  if (!defined(this._unclassifiedCommand) || previousFramebufferChanged) {
+  if (
+    !defined(this._unclassifiedCommand) ||
+    previousFramebufferChanged ||
+    samplesChanged
+  ) {
     if (defined(this._unclassifiedCommand)) {
       this._unclassifiedCommand.shaderProgram =
         this._unclassifiedCommand.shaderProgram &&
@@ -286,6 +315,15 @@ InvertClassification.prototype.update = function (context) {
   }
 };
 
+InvertClassification.prototype.prepareTextures = function (
+  context,
+  blitStencil
+) {
+  if (this._fbo._numSamples > 1) {
+    this._fbo.prepareTextures(context, blitStencil);
+  }
+};
+
 InvertClassification.prototype.clear = function (context, passState) {
   if (defined(this._previousFramebuffer)) {
     this._fbo.clear(context, this._clearColorCommand, passState);
@@ -302,6 +340,7 @@ InvertClassification.prototype.executeClassified = function (
   if (!defined(this._previousFramebuffer)) {
     const framebuffer = passState.framebuffer;
 
+    this.prepareTextures(context, true);
     passState.framebuffer = this._fboClassified.framebuffer;
     this._translucentCommand.execute(context, passState);
 
@@ -326,6 +365,8 @@ InvertClassification.prototype.destroy = function () {
   this._fboClassified.destroy();
   this._depthStencilTexture =
     this._depthStencilTexture && this._depthStencilTexture.destroy();
+  this._depthStencilRenderbuffer =
+    this._depthStencilRenderbuffer && this._depthStencilRenderbuffer.destroy();
 
   if (defined(this._unclassifiedCommand)) {
     this._unclassifiedCommand.shaderProgram =
