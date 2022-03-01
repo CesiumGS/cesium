@@ -1,6 +1,7 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import GroupMetadata from "./GroupMetadata.js";
 import TilesetMetadata from "./TilesetMetadata.js";
 
@@ -15,8 +16,11 @@ import TilesetMetadata from "./TilesetMetadata.js";
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {String} options.extension The extension JSON object.
+ * @param {Object} [options.tilesetJson] The tileset JSON object. If this is undefined, then options.extension must be defined.
+ * @param {Object} [options.extension] The JSON object, used for backwards compatibility with the 3DTILES_metadata extension.
  * @param {MetadataSchema} options.schema The parsed schema.
+ *
+ * @exception {DeveloperError} One of tilesetJson and extension must be defined.
  *
  * @alias Cesium3DTilesetMetadata
  * @constructor
@@ -25,6 +29,7 @@ import TilesetMetadata from "./TilesetMetadata.js";
  */
 function Cesium3DTilesetMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const tilesetJson = options.tilesetJson;
   const extension = options.extension;
 
   // The calling code is responsible for loading the schema.
@@ -32,38 +37,53 @@ function Cesium3DTilesetMetadata(options) {
   const schema = options.schema;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.extension", extension);
+  if (defined(tilesetJson) === defined(extension)) {
+    throw new DeveloperError(
+      "One of options.tilesetJson and extension must be defined."
+    );
+  }
   Check.typeOf.object("options.schema", schema);
   //>>includeEnd('debug');
 
+  let metadata;
+  if (defined(tilesetJson)) {
+    metadata = tilesetJson.metadata;
+  } else {
+    metadata = extension.tileset;
+  }
+
+  let tileset;
+  if (defined(metadata)) {
+    tileset = new TilesetMetadata({
+      tileset: metadata,
+      class: schema.classes[metadata.class],
+    });
+  }
+
+  const definedJson = defaultValue(tilesetJson, extension);
+  const groupsJson = definedJson.groups;
+
   const groups = {};
-  if (defined(extension.groups)) {
-    for (const groupId in extension.groups) {
-      if (extension.groups.hasOwnProperty(groupId)) {
-        const group = extension.groups[groupId];
+  if (defined(groupsJson)) {
+    for (const groupId in groupsJson) {
+      if (groupsJson.hasOwnProperty(groupId)) {
+        const group = groupsJson[groupId];
         groups[groupId] = new GroupMetadata({
           id: groupId,
-          group: extension.groups[groupId],
+          group: groupsJson[groupId],
           class: schema.classes[group.class],
         });
       }
     }
   }
 
-  let tileset;
-  if (defined(extension.tileset)) {
-    tileset = new TilesetMetadata({
-      tileset: extension.tileset,
-      class: schema.classes[extension.tileset.class],
-    });
-  }
-
   this._schema = schema;
   this._groups = groups;
   this._tileset = tileset;
-  this._statistics = extension.statistics;
-  this._extras = extension.extras;
-  this._extensions = extension.extensions;
+
+  this._statistics = definedJson.statistics;
+  this._extras = definedJson.extras;
+  this._extensions = definedJson.extensions;
 }
 
 Object.defineProperties(Cesium3DTilesetMetadata.prototype, {

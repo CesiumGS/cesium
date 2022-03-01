@@ -1013,6 +1013,10 @@ function Cesium3DTileset(options) {
     .then(function (tilesetJson) {
       // This needs to be called before loadTileset() so tile metadata
       // can be initialized synchronously in the Cesium3DTile constructor
+      const metadataJson = tilesetJson.metadata;
+      if (!defined(metadataJson)) {
+        return processMetadataExtensionLegacy(that, tilesetJson);
+      }
       return processMetadataExtension(that, tilesetJson);
     })
     .then(function (tilesetJson) {
@@ -1998,7 +2002,7 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
  * @return {Promise<Object>} A promise that resolves to tilesetJson for chaining.
  * @private
  */
-function processMetadataExtension(tileset, tilesetJson) {
+function processMetadataExtensionLegacy(tileset, tilesetJson) {
   if (!hasExtension(tilesetJson, "3DTILES_metadata")) {
     return when.resolve(tilesetJson);
   }
@@ -2024,6 +2028,42 @@ function processMetadataExtension(tileset, tilesetJson) {
     tileset.metadata = new Cesium3DTilesetMetadata({
       schema: schemaLoader.schema,
       extension: extension,
+    });
+
+    return tilesetJson;
+  });
+}
+
+/**
+ * If tileset metadata is present, initialize the {@link Cesium3DTilesetMetadata}
+ * instance. This is asynchronous since metadata schemas may be external.
+ *
+ * @param {Cesium3DTileset} tileset The tileset
+ * @param {Object} tilesetJson The tileset JSON
+ * @return {Promise<Object>} A promise that resolves to tilesetJson for chaining.
+ * @private
+ */
+function processMetadataExtension(tileset, tilesetJson) {
+  let schemaLoader;
+  if (defined(tilesetJson.schemaUri)) {
+    const resource = tileset._resource.getDerivedResource({
+      url: tilesetJson.schemaUri,
+    });
+    schemaLoader = ResourceCache.loadSchema({
+      resource: resource,
+    });
+  } else {
+    schemaLoader = ResourceCache.loadSchema({
+      schema: tilesetJson.schema,
+    });
+  }
+
+  tileset._schemaLoader = schemaLoader;
+
+  return schemaLoader.promise.then(function (schemaLoader) {
+    tileset.metadata = new Cesium3DTilesetMetadata({
+      schema: schemaLoader.schema,
+      tilesetJson: tilesetJson,
     });
 
     return tilesetJson;

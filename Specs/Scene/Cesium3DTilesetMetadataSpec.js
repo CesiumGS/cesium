@@ -34,7 +34,7 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
     const schema = new MetadataSchema(schemaJson);
 
     const metadata = new Cesium3DTilesetMetadata({
-      extension: {},
+      tilesetJson: {},
       schema: schema,
     });
 
@@ -47,6 +47,88 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
   });
 
   it("creates 3D Tiles metadata", function () {
+    const statistics = {
+      classes: {
+        tree: {
+          count: 100,
+          properties: {
+            height: {
+              min: 10.0,
+              max: 20.0,
+            },
+          },
+        },
+      },
+    };
+
+    const extras = {
+      description: "Extra",
+    };
+
+    const extensions = {
+      EXT_other_extension: {},
+    };
+
+    const tilesetJson = {
+      schema: schemaJson,
+      groups: {
+        neighborhoodA: {
+          class: "neighborhood",
+          properties: {
+            color: "RED",
+          },
+        },
+        neighborhoodB: {
+          class: "neighborhood",
+          properties: {
+            color: "GREEN",
+          },
+        },
+      },
+      metadata: {
+        class: "city",
+        properties: {
+          name: "City",
+        },
+      },
+      statistics: statistics,
+      extras: extras,
+      extensions: extensions,
+    };
+
+    const schema = new MetadataSchema(schemaJson);
+
+    const metadata = new Cesium3DTilesetMetadata({
+      tilesetJson: tilesetJson,
+      schema: schema,
+    });
+
+    const cityClass = metadata.schema.classes.city;
+    const neighborhoodClass = metadata.schema.classes.neighborhood;
+    const treeClass = metadata.schema.classes.tree;
+
+    expect(cityClass.id).toBe("city");
+    expect(neighborhoodClass.id).toBe("neighborhood");
+    expect(treeClass.id).toBe("tree");
+
+    const tilesetMetadata = metadata.tileset;
+    expect(tilesetMetadata.class).toBe(cityClass);
+    expect(tilesetMetadata.getProperty("name")).toBe("City");
+
+    const neighborhoodA = metadata.groups.neighborhoodA;
+    const neighborhoodB = metadata.groups.neighborhoodB;
+
+    expect(neighborhoodA.class).toBe(neighborhoodClass);
+    expect(neighborhoodA.getProperty("color")).toBe("RED");
+    expect(neighborhoodB.class).toBe(neighborhoodClass);
+    expect(neighborhoodB.getProperty("color")).toBe("GREEN");
+
+    expect(metadata.statistics).toBe(statistics);
+    expect(metadata.extras).toBe(extras);
+    expect(metadata.extensions).toBe(extensions);
+  });
+
+  it("creates 3D Tiles metadata with extension", function () {
     const statistics = {
       classes: {
         tree: {
@@ -128,7 +210,7 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
     expect(metadata.extensions).toBe(extensions);
   });
 
-  it("constructor throws without extension", function () {
+  it("constructor throws without metadatajson or extension", function () {
     const schema = new MetadataSchema(schemaJson);
 
     expect(function () {
@@ -141,7 +223,7 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
   it("constructor throws without schema", function () {
     expect(function () {
       return new Cesium3DTilesetMetadata({
-        extension: {},
+        metadataJson: {},
       });
     }).toThrowDeveloperError();
   });
