@@ -49,7 +49,7 @@
     }
   ],
   "asset": {
-    "copyright": "Lower Right Copyright 1, Lower Right Copyright 2",
+    "copyright": "Lower Right Copyright 1; Lower Right Copyright 2",
     "generator": "3d-tiles-samples-generator",
     "version": "2.0"
   },
