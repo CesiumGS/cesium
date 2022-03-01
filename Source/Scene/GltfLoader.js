@@ -1494,7 +1494,7 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
   const asset = new Asset();
   const copyright = gltf.asset.copyright;
   if (defined(copyright)) {
-    const credits = copyright.split(",").map(function (string) {
+    const credits = copyright.split(";").map(function (string) {
       return new Credit(string.trim());
     });
     asset.credits = credits;
