@@ -19,6 +19,9 @@
   - `3DTILES_metadata`:
     - Added support for explicit content metadata. [#10150](https://github.com/CesiumGS/cesium/pull/10150)
 
+- Updated extensions to match the latest 3D Tiles 1.1 schema. See the [latest schema PR](https://github.com/CesiumGS/3d-tiles/pull/634):
+  - Folded the tileset-level metadata extension into the tileset schema. [#10153](https://github.com/CesiumGS/cesium/pull/10153)
+
 ### 1.91 - 2022-03-01
 
 ##### Breaking Changes :mega:
