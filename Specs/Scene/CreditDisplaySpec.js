@@ -257,7 +257,7 @@ describe("Scene/CreditDisplay", function () {
 
   it("displays credits in a lightbox", function () {
     const credit1 = new Credit("credit1");
-    const credit2 = new Credit('<img src="' + imageUrl + '"/>');
+    const credit2 = new Credit(`<img src="${imageUrl}"/>`);
 
     creditDisplay = new CreditDisplay(container);
     const creditList = creditDisplay._creditList;
@@ -305,7 +305,7 @@ describe("Scene/CreditDisplay", function () {
 
   it("renders lightbox credits", function () {
     const credit1 = new Credit("credit1");
-    const credit2 = new Credit('<img src="' + imageUrl + '"/>');
+    const credit2 = new Credit(`<img src="${imageUrl}"/>`);
 
     creditDisplay = new CreditDisplay(container);
     const creditList = creditDisplay._creditList;
@@ -333,7 +333,7 @@ describe("Scene/CreditDisplay", function () {
 
   it("updates lightbox when a new frames are not rendered", function () {
     const credit1 = new Credit("credit1");
-    const credit2 = new Credit('<img src="' + imageUrl + '"/>');
+    const credit2 = new Credit(`<img src="${imageUrl}"/>`);
 
     creditDisplay = new CreditDisplay(container);
     const creditList = creditDisplay._creditList;

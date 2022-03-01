@@ -95,20 +95,9 @@ function addTextureCoordinates(
   if (defined(texInfo) && defined(texInfo.texCoord) && texInfo.texCoord === 1) {
     defaultTexCoord = defaultTexCoord.replace("0", "1");
   }
-  if (defined(generatedMaterialValues[textureName + "Offset"])) {
-    texCoord = textureName + "Coord";
-    result.fragmentShaderMain +=
-      "    vec2 " +
-      texCoord +
-      " = computeTexCoord(" +
-      defaultTexCoord +
-      ", " +
-      textureName +
-      "Offset, " +
-      textureName +
-      "Rotation, " +
-      textureName +
-      "Scale);\n";
+  if (defined(generatedMaterialValues[`${textureName}Offset`])) {
+    texCoord = `${textureName}Coord`;
+    result.fragmentShaderMain += `    vec2 ${texCoord} = computeTexCoord(${defaultTexCoord}, ${textureName}Offset, ${textureName}Rotation, ${textureName}Scale);\n`;
   } else {
     texCoord = defaultTexCoord;
   }
@@ -132,17 +121,17 @@ function handleKHRTextureTransform(
     return;
   }
 
-  const uniformName = "u_" + parameterName;
+  const uniformName = `u_${parameterName}`;
   const extension = value.extensions.KHR_texture_transform;
-  generatedMaterialValues[uniformName + "Offset"] = defaultValue(
+  generatedMaterialValues[`${uniformName}Offset`] = defaultValue(
     extension.offset,
     DEFAULT_TEXTURE_OFFSET
   );
-  generatedMaterialValues[uniformName + "Rotation"] = defaultValue(
+  generatedMaterialValues[`${uniformName}Rotation`] = defaultValue(
     extension.rotation,
     DEFAULT_TEXTURE_ROTATION
   );
-  generatedMaterialValues[uniformName + "Scale"] = defaultValue(
+  generatedMaterialValues[`${uniformName}Scale`] = defaultValue(
     extension.scale,
     DEFAULT_TEXTURE_SCALE
   );
@@ -180,7 +169,7 @@ function generateTechnique(
     for (parameterName in pbrMetallicRoughness) {
       if (pbrMetallicRoughness.hasOwnProperty(parameterName)) {
         value = pbrMetallicRoughness[parameterName];
-        uniformName = "u_" + parameterName;
+        uniformName = `u_${parameterName}`;
         generatedMaterialValues[uniformName] = value;
         handleKHRTextureTransform(
           parameterName,
@@ -197,7 +186,7 @@ function generateTechnique(
     for (parameterName in pbrSpecularGlossiness) {
       if (pbrSpecularGlossiness.hasOwnProperty(parameterName)) {
         value = pbrSpecularGlossiness[parameterName];
-        uniformName = "u_" + parameterName;
+        uniformName = `u_${parameterName}`;
         generatedMaterialValues[uniformName] = value;
         handleKHRTextureTransform(
           parameterName,
@@ -214,7 +203,7 @@ function generateTechnique(
       (additional.indexOf("Texture") >= 0 || additional.indexOf("Factor") >= 0)
     ) {
       value = material[additional];
-      uniformName = "u_" + additional;
+      uniformName = `u_${additional}`;
       generatedMaterialValues[uniformName] = value;
       handleKHRTextureTransform(additional, value, generatedMaterialValues);
     }
@@ -343,29 +332,21 @@ function generateTechnique(
   for (uniformName in techniqueUniforms) {
     if (techniqueUniforms.hasOwnProperty(uniformName)) {
       const uniform = techniqueUniforms[uniformName];
-      const arraySize = defined(uniform.count) ? "[" + uniform.count + "]" : "";
+      const arraySize = defined(uniform.count) ? `[${uniform.count}]` : "";
       if (
         (uniform.type !== WebGLConstants.FLOAT_MAT3 &&
           uniform.type !== WebGLConstants.FLOAT_MAT4 &&
           uniformName !== "u_morphWeights") ||
         uniform.useInFragment
       ) {
-        fragmentShader +=
-          "uniform " +
-          webGLConstantToGlslType(uniform.type) +
-          " " +
-          uniformName +
-          arraySize +
-          ";\n";
+        fragmentShader += `uniform ${webGLConstantToGlslType(
+          uniform.type
+        )} ${uniformName}${arraySize};\n`;
         delete uniform.useInFragment;
       } else {
-        vertexShader +=
-          "uniform " +
-          webGLConstantToGlslType(uniform.type) +
-          " " +
-          uniformName +
-          arraySize +
-          ";\n";
+        vertexShader += `uniform ${webGLConstantToGlslType(
+          uniform.type
+        )} ${uniformName}${arraySize};\n`;
       }
     }
   }
@@ -423,32 +404,17 @@ function generateTechnique(
           targetAttributes.hasOwnProperty(targetAttribute) &&
           targetAttribute !== "extras"
         ) {
-          const attributeName = "a_" + targetAttribute + "_" + k;
+          const attributeName = `a_${targetAttribute}_${k}`;
           techniqueAttributes[attributeName] = {
-            semantic: targetAttribute + "_" + k,
+            semantic: `${targetAttribute}_${k}`,
           };
-          vertexShader += "attribute vec3 " + attributeName + ";\n";
+          vertexShader += `attribute vec3 ${attributeName};\n`;
           if (targetAttribute === "POSITION") {
-            vertexShaderMain +=
-              "    weightedPosition += u_morphWeights[" +
-              k +
-              "] * " +
-              attributeName +
-              ";\n";
+            vertexShaderMain += `    weightedPosition += u_morphWeights[${k}] * ${attributeName};\n`;
           } else if (targetAttribute === "NORMAL") {
-            vertexShaderMain +=
-              "    weightedNormal += u_morphWeights[" +
-              k +
-              "] * " +
-              attributeName +
-              ";\n";
+            vertexShaderMain += `    weightedNormal += u_morphWeights[${k}] * ${attributeName};\n`;
           } else if (hasTangents && targetAttribute === "TANGENT") {
-            vertexShaderMain +=
-              "    weightedTangent.xyz += u_morphWeights[" +
-              k +
-              "] * " +
-              attributeName +
-              ";\n";
+            vertexShaderMain += `    weightedTangent.xyz += u_morphWeights[${k}] * ${attributeName};\n`;
           }
         }
       }
@@ -528,10 +494,10 @@ function generateTechnique(
 
     v_texCoord = "v_texcoord_0";
     vertexShader += "attribute vec2 a_texcoord_0;\n";
-    vertexShader += "varying vec2 " + v_texCoord + ";\n";
-    vertexShaderMain += "    " + v_texCoord + " = a_texcoord_0;\n";
+    vertexShader += `varying vec2 ${v_texCoord};\n`;
+    vertexShaderMain += `    ${v_texCoord} = a_texcoord_0;\n`;
 
-    fragmentShader += "varying vec2 " + v_texCoord + ";\n";
+    fragmentShader += `varying vec2 ${v_texCoord};\n`;
 
     if (hasTexCoord1) {
       techniqueAttributes.a_texcoord_1 = {
@@ -540,10 +506,10 @@ function generateTechnique(
 
       const v_texCoord1 = v_texCoord.replace("0", "1");
       vertexShader += "attribute vec2 a_texcoord_1;\n";
-      vertexShader += "varying vec2 " + v_texCoord1 + ";\n";
-      vertexShaderMain += "    " + v_texCoord1 + " = a_texcoord_1;\n";
+      vertexShader += `varying vec2 ${v_texCoord1};\n`;
+      vertexShaderMain += `    ${v_texCoord1} = a_texcoord_1;\n`;
 
-      fragmentShader += "varying vec2 " + v_texCoord1 + ";\n";
+      fragmentShader += `varying vec2 ${v_texCoord1};\n`;
     }
 
     const result = {
@@ -747,35 +713,27 @@ function generateTechnique(
         fragmentShader +=
           "    vec3 b = normalize(cross(ng, t) * v_tangent.w);\n";
         fragmentShader += "    mat3 tbn = mat3(t, b, ng);\n";
-        fragmentShader +=
-          "    vec3 n = texture2D(u_normalTexture, " +
-          normalTexCoord +
-          ").rgb;\n";
+        fragmentShader += `    vec3 n = texture2D(u_normalTexture, ${normalTexCoord}).rgb;\n`;
         fragmentShader += "    n = normalize(tbn * (2.0 * n - 1.0));\n";
       } else {
         // Add standard derivatives extension
-        fragmentShader =
+        fragmentShader = `${
           "#ifdef GL_OES_standard_derivatives\n" +
           "#extension GL_OES_standard_derivatives : enable\n" +
-          "#endif\n" +
-          fragmentShader;
+          "#endif\n"
+        }${fragmentShader}`;
         // Compute tangents
         fragmentShader += "#ifdef GL_OES_standard_derivatives\n";
         fragmentShader += "    vec3 pos_dx = dFdx(v_positionEC);\n";
         fragmentShader += "    vec3 pos_dy = dFdy(v_positionEC);\n";
-        fragmentShader +=
-          "    vec3 tex_dx = dFdx(vec3(" + normalTexCoord + ",0.0));\n";
-        fragmentShader +=
-          "    vec3 tex_dy = dFdy(vec3(" + normalTexCoord + ",0.0));\n";
+        fragmentShader += `    vec3 tex_dx = dFdx(vec3(${normalTexCoord},0.0));\n`;
+        fragmentShader += `    vec3 tex_dy = dFdy(vec3(${normalTexCoord},0.0));\n`;
         fragmentShader +=
           "    vec3 t = (tex_dy.t * pos_dx - tex_dx.t * pos_dy) / (tex_dx.s * tex_dy.t - tex_dy.s * tex_dx.t);\n";
         fragmentShader += "    t = normalize(t - ng * dot(ng, t));\n";
         fragmentShader += "    vec3 b = normalize(cross(ng, t));\n";
         fragmentShader += "    mat3 tbn = mat3(t, b, ng);\n";
-        fragmentShader +=
-          "    vec3 n = texture2D(u_normalTexture, " +
-          normalTexCoord +
-          ").rgb;\n";
+        fragmentShader += `    vec3 n = texture2D(u_normalTexture, ${normalTexCoord}).rgb;\n`;
         fragmentShader += "    n = normalize(tbn * (2.0 * n - 1.0));\n";
         fragmentShader += "#else\n";
         fragmentShader += "    vec3 n = ng;\n";
@@ -794,10 +752,7 @@ function generateTechnique(
 
   // Add base color to fragment shader
   if (defined(generatedMaterialValues.u_baseColorTexture)) {
-    fragmentShader +=
-      "    vec4 baseColorWithAlpha = SRGBtoLINEAR4(texture2D(u_baseColorTexture, " +
-      baseColorTexCoord +
-      "));\n";
+    fragmentShader += `    vec4 baseColorWithAlpha = SRGBtoLINEAR4(texture2D(u_baseColorTexture, ${baseColorTexCoord}));\n`;
     if (defined(generatedMaterialValues.u_baseColorFactor)) {
       fragmentShader += "    baseColorWithAlpha *= u_baseColorFactor;\n";
     }
@@ -816,10 +771,7 @@ function generateTechnique(
   if (hasNormals && !isUnlit) {
     if (useSpecGloss) {
       if (defined(generatedMaterialValues.u_specularGlossinessTexture)) {
-        fragmentShader +=
-          "    vec4 specularGlossiness = SRGBtoLINEAR4(texture2D(u_specularGlossinessTexture, " +
-          specularGlossinessTexCoord +
-          "));\n";
+        fragmentShader += `    vec4 specularGlossiness = SRGBtoLINEAR4(texture2D(u_specularGlossinessTexture, ${specularGlossinessTexCoord}));\n`;
         fragmentShader += "    vec3 specular = specularGlossiness.rgb;\n";
         fragmentShader += "    float glossiness = specularGlossiness.a;\n";
         if (defined(generatedMaterialValues.u_specularFactor)) {
@@ -843,10 +795,7 @@ function generateTechnique(
         }
       }
       if (defined(generatedMaterialValues.u_diffuseTexture)) {
-        fragmentShader +=
-          "    vec4 diffuse = SRGBtoLINEAR4(texture2D(u_diffuseTexture, " +
-          diffuseTexCoord +
-          "));\n";
+        fragmentShader += `    vec4 diffuse = SRGBtoLINEAR4(texture2D(u_diffuseTexture, ${diffuseTexCoord}));\n`;
         if (defined(generatedMaterialValues.u_diffuseFactor)) {
           fragmentShader += "    diffuse *= u_diffuseFactor;\n";
         }
@@ -861,10 +810,7 @@ function generateTechnique(
       // the base color alpha.
       fragmentShader += "    baseColorWithAlpha.a = diffuse.a;\n";
     } else if (defined(generatedMaterialValues.u_metallicRoughnessTexture)) {
-      fragmentShader +=
-        "    vec3 metallicRoughness = texture2D(u_metallicRoughnessTexture, " +
-        metallicRoughnessTexCoord +
-        ").rgb;\n";
+      fragmentShader += `    vec3 metallicRoughness = texture2D(u_metallicRoughnessTexture, ${metallicRoughnessTexCoord}).rgb;\n`;
       fragmentShader +=
         "    float metalness = clamp(metallicRoughness.b, 0.0, 1.0);\n";
       fragmentShader +=
@@ -1082,16 +1028,10 @@ function generateTechnique(
   // Ignore occlusion and emissive when unlit
   if (!isUnlit) {
     if (defined(generatedMaterialValues.u_occlusionTexture)) {
-      fragmentShader +=
-        "    color *= texture2D(u_occlusionTexture, " +
-        occlusionTexCoord +
-        ").r;\n";
+      fragmentShader += `    color *= texture2D(u_occlusionTexture, ${occlusionTexCoord}).r;\n`;
     }
     if (defined(generatedMaterialValues.u_emissiveTexture)) {
-      fragmentShader +=
-        "    vec3 emissive = SRGBtoLINEAR3(texture2D(u_emissiveTexture, " +
-        emissiveTexCoord +
-        ").rgb);\n";
+      fragmentShader += `    vec3 emissive = SRGBtoLINEAR3(texture2D(u_emissiveTexture, ${emissiveTexCoord}).rgb);\n`;
       if (defined(generatedMaterialValues.u_emissiveFactor)) {
         fragmentShader += "    emissive *= u_emissiveFactor;\n";
       }

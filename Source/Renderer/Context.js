@@ -50,14 +50,14 @@ function errorToString(gl, error) {
       message += "CONTEXT_LOST_WEBGL lost";
       break;
     default:
-      message += "Unknown (" + error + ")";
+      message += `Unknown (${error})`;
   }
 
   return message;
 }
 
 function createErrorMessage(gl, glFunc, glFuncArguments, error) {
-  let message = errorToString(gl, error) + ": " + glFunc.name + "(";
+  let message = `${errorToString(gl, error)}: ${glFunc.name}(`;
 
   for (let i = 0; i < glFuncArguments.length; ++i) {
     if (i !== 0) {
@@ -83,12 +83,12 @@ function makeGetterSetter(gl, propertyName, logFunction) {
   return {
     get: function () {
       const value = gl[propertyName];
-      logFunction(gl, "get: " + propertyName, value);
+      logFunction(gl, `get: ${propertyName}`, value);
       return gl[propertyName];
     },
     set: function (value) {
       gl[propertyName] = value;
-      logFunction(gl, "set: " + propertyName, value);
+      logFunction(gl, `set: ${propertyName}`, value);
     },
   };
 }

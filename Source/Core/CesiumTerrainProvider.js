@@ -201,8 +201,7 @@ function CesiumTerrainProvider(options) {
       hasWaterMask = true;
       that._requestWaterMask = true;
     } else if (data.format.indexOf("quantized-mesh-1.") !== 0) {
-      message =
-        'The tile format "' + data.format + '" is invalid or not supported.';
+      message = `The tile format "${data.format}" is invalid or not supported.`;
       metadataError = TileProviderError.handleError(
         metadataError,
         that,
@@ -235,8 +234,7 @@ function CesiumTerrainProvider(options) {
         ellipsoid: that._ellipsoid,
       });
     } else {
-      message =
-        'The projection "' + data.projection + '" is invalid or not supported.';
+      message = `The projection "${data.projection}" is invalid or not supported.`;
       metadataError = TileProviderError.handleError(
         metadataError,
         that,
@@ -258,7 +256,7 @@ function CesiumTerrainProvider(options) {
     if (!data.scheme || data.scheme === "tms" || data.scheme === "slippyMap") {
       that._scheme = data.scheme;
     } else {
-      message = 'The scheme "' + data.scheme + '" is invalid or not supported.';
+      message = `The scheme "${data.scheme}" is invalid or not supported.`;
       metadataError = TileProviderError.handleError(
         metadataError,
         that,
@@ -402,8 +400,7 @@ function CesiumTerrainProvider(options) {
   }
 
   function parseMetadataFailure(data) {
-    const message =
-      "An error occurred while accessing " + layerJsonResource.url + ".";
+    const message = `An error occurred while accessing ${layerJsonResource.url}.`;
     metadataError = TileProviderError.handleError(
       metadataError,
       that,
@@ -524,10 +521,7 @@ function getRequestHeader(extensionsList) {
   }
   const extensions = extensionsList.join("-");
   return {
-    Accept:
-      "application/vnd.quantized-mesh;extensions=" +
-      extensions +
-      ",application/octet-stream;q=0.9,*/*;q=0.01",
+    Accept: `application/vnd.quantized-mesh;extensions=${extensions},application/octet-stream;q=0.9,*/*;q=0.01`,
   };
 }
 
@@ -1281,7 +1275,7 @@ function checkLayer(provider, x, y, level, layer, topLayer) {
     ) {
       let requestPromise;
       if (!topLayer) {
-        cacheKey = tile.level + "-" + tile.x + "-" + tile.y;
+        cacheKey = `${tile.level}-${tile.x}-${tile.y}`;
         requestPromise = layer.availabilityPromiseCache[cacheKey];
         if (!defined(requestPromise)) {
           // For cutout terrain, if this isn't the top layer the availability tiles

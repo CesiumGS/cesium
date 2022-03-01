@@ -12,7 +12,7 @@ describe("Core/isDataUri", function () {
   });
 
   it("Determines that a uri is a data uri", function () {
-    const uri = "data:text/plain;base64," + btoa("a data uri");
+    const uri = `data:text/plain;base64,${btoa("a data uri")}`;
     expect(isDataUri(uri)).toEqual(true);
   });
 });

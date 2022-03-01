@@ -34,7 +34,7 @@ const CustomShaderMode = {
  * @private
  */
 CustomShaderMode.getDefineName = function (customShaderMode) {
-  return "CUSTOM_SHADER_" + customShaderMode;
+  return `CUSTOM_SHADER_${customShaderMode}`;
 };
 
 export default Object.freeze(CustomShaderMode);

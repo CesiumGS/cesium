@@ -28,7 +28,7 @@ describe("Core/DeveloperError", function () {
   it("has a working toString", function () {
     const str = new DeveloperError(testMessage).toString();
 
-    expect(str).toContain(name + ": " + testMessage);
+    expect(str).toContain(`${name}: ${testMessage}`);
 
     if (window.specsUsingRelease) {
       expect(str).toContain("Specs.js");

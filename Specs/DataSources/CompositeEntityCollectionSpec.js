@@ -831,7 +831,7 @@ describe("DataSources/CompositeEntityCollection", function () {
 
     // Add a new object
     const newObject = new Entity({
-      id: id + "billboard",
+      id: `${id}billboard`,
     });
     collection1.add(newObject);
 

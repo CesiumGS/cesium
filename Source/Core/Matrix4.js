@@ -2931,42 +2931,10 @@ Matrix4.prototype.equalsEpsilon = function (right, epsilon) {
  */
 Matrix4.prototype.toString = function () {
   return (
-    "(" +
-    this[0] +
-    ", " +
-    this[4] +
-    ", " +
-    this[8] +
-    ", " +
-    this[12] +
-    ")\n" +
-    "(" +
-    this[1] +
-    ", " +
-    this[5] +
-    ", " +
-    this[9] +
-    ", " +
-    this[13] +
-    ")\n" +
-    "(" +
-    this[2] +
-    ", " +
-    this[6] +
-    ", " +
-    this[10] +
-    ", " +
-    this[14] +
-    ")\n" +
-    "(" +
-    this[3] +
-    ", " +
-    this[7] +
-    ", " +
-    this[11] +
-    ", " +
-    this[15] +
-    ")"
+    `(${this[0]}, ${this[4]}, ${this[8]}, ${this[12]})\n` +
+    `(${this[1]}, ${this[5]}, ${this[9]}, ${this[13]})\n` +
+    `(${this[2]}, ${this[6]}, ${this[10]}, ${this[14]})\n` +
+    `(${this[3]}, ${this[7]}, ${this[11]}, ${this[15]})`
   );
 };
 export default Matrix4;

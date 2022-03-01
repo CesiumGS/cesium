@@ -154,7 +154,7 @@ VertexArrayFacade._verifyAttributes = function (attributes) {
     //>>includeStart('debug', pragmas.debug);
     if (uniqueIndices[index]) {
       throw new DeveloperError(
-        "Index " + index + " is used by more than one attribute."
+        `Index ${index} is used by more than one attribute.`
       );
     }
     //>>includeEnd('debug');

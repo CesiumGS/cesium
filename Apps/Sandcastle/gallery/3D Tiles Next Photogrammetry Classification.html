@@ -291,14 +291,13 @@
             const pickedObject = viewer.scene.pick(movement.endPosition);
             if (pickedObject instanceof Cesium.Cesium3DTileFeature) {
               nameOverlay.style.display = "block";
-              nameOverlay.style.bottom =
-                viewer.canvas.clientHeight - movement.endPosition.y + "px";
-              nameOverlay.style.left = movement.endPosition.x + "px";
-              const message =
-                "Component: " +
-                pickedObject.getProperty("component") +
-                "\nFeature ID: " +
-                pickedObject.featureId;
+              nameOverlay.style.bottom = `${
+                viewer.canvas.clientHeight - movement.endPosition.y
+              }px`;
+              nameOverlay.style.left = `${movement.endPosition.x}px`;
+              const message = `Component: ${pickedObject.getProperty(
+                "component"
+              )}\nFeature ID: ${pickedObject.featureId}`;
               nameOverlay.textContent = message;
             } else {
               nameOverlay.style.display = "none";

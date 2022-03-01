@@ -93,7 +93,7 @@
 
           if (Cesium.defined(height)) {
             cartographic.height = height;
-            point.label.text = Math.abs(height).toFixed(2).toString() + " m";
+            point.label.text = `${Math.abs(height).toFixed(2).toString()} m`;
             point.label.show = true;
           } else {
             cartographic.height = 0.0;

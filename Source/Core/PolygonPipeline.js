@@ -190,7 +190,7 @@ PolygonPipeline.computeSubdivision = function (
     // of the granularity, subdivide the triangle
     if (max > minDistanceSqrd) {
       if (g0 === max) {
-        edge = Math.min(i0, i1) + " " + Math.max(i0, i1);
+        edge = `${Math.min(i0, i1)} ${Math.max(i0, i1)}`;
 
         i = edges[edge];
         if (!defined(i)) {
@@ -204,7 +204,7 @@ PolygonPipeline.computeSubdivision = function (
         triangles.push(i0, i, i2);
         triangles.push(i, i1, i2);
       } else if (g1 === max) {
-        edge = Math.min(i1, i2) + " " + Math.max(i1, i2);
+        edge = `${Math.min(i1, i2)} ${Math.max(i1, i2)}`;
 
         i = edges[edge];
         if (!defined(i)) {
@@ -218,7 +218,7 @@ PolygonPipeline.computeSubdivision = function (
         triangles.push(i1, i, i0);
         triangles.push(i, i2, i0);
       } else if (g2 === max) {
-        edge = Math.min(i2, i0) + " " + Math.max(i2, i0);
+        edge = `${Math.min(i2, i0)} ${Math.max(i2, i0)}`;
 
         i = edges[edge];
         if (!defined(i)) {
@@ -354,7 +354,7 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
     // if the max length squared of a triangle edge is greater than granularity, subdivide the triangle
     if (max > minDistance) {
       if (g0 === max) {
-        edge = Math.min(i0, i1) + " " + Math.max(i0, i1);
+        edge = `${Math.min(i0, i1)} ${Math.max(i0, i1)}`;
 
         i = edges[edge];
         if (!defined(i)) {
@@ -382,7 +382,7 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
         triangles.push(i0, i, i2);
         triangles.push(i, i1, i2);
       } else if (g1 === max) {
-        edge = Math.min(i1, i2) + " " + Math.max(i1, i2);
+        edge = `${Math.min(i1, i2)} ${Math.max(i1, i2)}`;
 
         i = edges[edge];
         if (!defined(i)) {
@@ -410,7 +410,7 @@ PolygonPipeline.computeRhumbLineSubdivision = function (
         triangles.push(i1, i, i0);
         triangles.push(i, i2, i0);
       } else if (g2 === max) {
-        edge = Math.min(i2, i0) + " " + Math.max(i2, i0);
+        edge = `${Math.min(i2, i0)} ${Math.max(i2, i0)}`;
 
         i = edges[edge];
         if (!defined(i)) {

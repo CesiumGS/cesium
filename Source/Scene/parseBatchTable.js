@@ -166,7 +166,7 @@ function transcodeBinaryProperties(
 
     if (!defined(binaryBody)) {
       throw new RuntimeError(
-        "Property " + propertyId + " requires a batch table binary."
+        `Property ${propertyId} requires a batch table binary.`
       );
     }
 

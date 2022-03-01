@@ -304,7 +304,7 @@ describe(
         labelOutlineColor: "rgba(255, 255, 0, 0.5)",
         labelOutlineWidth: "1.0",
         font: '"30px sans-serif"',
-        labelStyle: "" + LabelStyle.FILL_AND_OUTLINE,
+        labelStyle: `${LabelStyle.FILL_AND_OUTLINE}`,
         labelText: '"test"',
         backgroundColor: "rgba(255, 255, 0, 0.2)",
         backgroundPadding: "vec2(10, 11)",
@@ -316,10 +316,10 @@ describe(
         anchorLineEnabled: "true",
         anchorLineColor: "rgba(255, 255, 0, 1.0)",
         disableDepthTestDistance: "1.0e6",
-        horizontalOrigin: "" + HorizontalOrigin.CENTER,
-        verticalOrigin: "" + VerticalOrigin.CENTER,
-        labelHorizontalOrigin: "" + HorizontalOrigin.RIGHT,
-        labelVerticalOrigin: "" + VerticalOrigin.BOTTOM,
+        horizontalOrigin: `${HorizontalOrigin.CENTER}`,
+        verticalOrigin: `${VerticalOrigin.CENTER}`,
+        labelHorizontalOrigin: `${HorizontalOrigin.RIGHT}`,
+        labelVerticalOrigin: `${VerticalOrigin.BOTTOM}`,
       });
 
       return loadPoints(points).then(function () {

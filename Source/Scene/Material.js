@@ -364,9 +364,7 @@ Material._uniformList = {};
 Material.fromType = function (type, uniforms) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(Material._materialCache.getMaterial(type))) {
-    throw new DeveloperError(
-      "material with type '" + type + "' does not exist."
-    );
+    throw new DeveloperError(`material with type '${type}' does not exist.`);
   }
   //>>includeEnd('debug');
 
@@ -481,7 +479,7 @@ Material.prototype.update = function (context) {
 
     this._textures[uniformId] = texture;
 
-    const uniformDimensionsName = uniformId + "Dimensions";
+    const uniformDimensionsName = `${uniformId}Dimensions`;
     if (this.uniforms.hasOwnProperty(uniformDimensionsName)) {
       const uniformDimensions = this.uniforms[uniformDimensionsName];
       uniformDimensions.x = texture._width;
@@ -665,14 +663,11 @@ function checkForValidProperties(object, properties, result, throwNotFound) {
 
 function invalidNameError(property, properties) {
   //>>includeStart('debug', pragmas.debug);
-  let errorString =
-    "fabric: property name '" + property + "' is not valid. It should be ";
+  let errorString = `fabric: property name '${property}' is not valid. It should be `;
   for (let i = 0; i < properties.length; i++) {
-    const propertyName = "'" + properties[i] + "'";
+    const propertyName = `'${properties[i]}'`;
     errorString +=
-      i === properties.length - 1
-        ? "or " + propertyName + "."
-        : propertyName + ", ";
+      i === properties.length - 1 ? `or ${propertyName}.` : `${propertyName}, `;
   }
   throw new DeveloperError(errorString);
   //>>includeEnd('debug');
@@ -680,10 +675,7 @@ function invalidNameError(property, properties) {
 
 function duplicateNameError(property, properties) {
   //>>includeStart('debug', pragmas.debug);
-  const errorString =
-    "fabric: uniforms and materials cannot share the same property '" +
-    property +
-    "'";
+  const errorString = `fabric: uniforms and materials cannot share the same property '${property}'`;
   throw new DeveloperError(errorString);
   //>>includeEnd('debug');
 }
@@ -756,7 +748,7 @@ function createMethodDefinition(material) {
   const components = material._template.components;
   const source = material._template.source;
   if (defined(source)) {
-    material.shaderSource += source + "\n";
+    material.shaderSource += `${source}\n`;
   } else {
     material.shaderSource +=
       "czm_material czm_getMaterial(czm_materialInput materialInput)\n{\n";
@@ -773,15 +765,12 @@ function createMethodDefinition(material) {
               isMaterialFused(components[component], material);
             const componentSource = isFusion
               ? components[component]
-              : "czm_gammaCorrect(" + components[component] + ")";
-            material.shaderSource +=
-              "material." + component + " = " + componentSource + "; \n";
+              : `czm_gammaCorrect(${components[component]})`;
+            material.shaderSource += `material.${component} = ${componentSource}; \n`;
           } else if (component === "alpha") {
-            material.shaderSource +=
-              "material.alpha = " + components.alpha + "; \n";
+            material.shaderSource += `material.alpha = ${components.alpha}; \n`;
           } else {
-            material.shaderSource +=
-              "material." + component + " = " + components[component] + ";\n";
+            material.shaderSource += `material.${component} = ${components[component]};\n`;
           }
         }
       }
@@ -854,7 +843,7 @@ function createTexture2DUpdateFunction(uniformId) {
       }
       material._textures[uniformId] = uniformValue;
 
-      uniformDimensionsName = uniformId + "Dimensions";
+      uniformDimensionsName = `${uniformId}Dimensions`;
       if (uniforms.hasOwnProperty(uniformDimensionsName)) {
         uniformDimensions = uniforms[uniformDimensionsName];
         uniformDimensions.x = uniformValue._width;
@@ -878,7 +867,7 @@ function createTexture2DUpdateFunction(uniformId) {
       material._texturePaths[uniformId] = undefined;
       texture = material._textures[uniformId] = material._defaultTexture;
 
-      uniformDimensionsName = uniformId + "Dimensions";
+      uniformDimensionsName = `${uniformId}Dimensions`;
       if (uniforms.hasOwnProperty(uniformDimensionsName)) {
         uniformDimensions = uniforms[uniformDimensionsName];
         uniformDimensions.x = texture._width;
@@ -1014,7 +1003,7 @@ function createUniform(material, uniformId) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(uniformType)) {
     throw new DeveloperError(
-      "fabric: uniform '" + uniformId + "' has invalid type."
+      `fabric: uniform '${uniformId}' has invalid type.`
     );
   }
   //>>includeEnd('debug');
@@ -1025,7 +1014,7 @@ function createUniform(material, uniformId) {
     //>>includeStart('debug', pragmas.debug);
     if (replacedTokenCount === 0 && strict) {
       throw new DeveloperError(
-        "strict: shader source does not use channels '" + uniformId + "'."
+        `strict: shader source does not use channels '${uniformId}'.`
       );
     }
     //>>includeEnd('debug');
@@ -1033,7 +1022,7 @@ function createUniform(material, uniformId) {
     // Since webgl doesn't allow texture dimension queries in glsl, create a uniform to do it.
     // Check if the shader source actually uses texture dimensions before creating the uniform.
     if (uniformType === "sampler2D") {
-      const imageDimensionsUniformName = uniformId + "Dimensions";
+      const imageDimensionsUniformName = `${uniformId}Dimensions`;
       if (getNumberOfTokens(material, imageDimensionsUniformName) > 0) {
         materialUniforms[imageDimensionsUniformName] = {
           type: "ivec3",
@@ -1046,20 +1035,19 @@ function createUniform(material, uniformId) {
 
     // Add uniform declaration to source code.
     const uniformDeclarationRegex = new RegExp(
-      "uniform\\s+" + uniformType + "\\s+" + uniformId + "\\s*;"
+      `uniform\\s+${uniformType}\\s+${uniformId}\\s*;`
     );
     if (!uniformDeclarationRegex.test(material.shaderSource)) {
-      const uniformDeclaration =
-        "uniform " + uniformType + " " + uniformId + ";";
+      const uniformDeclaration = `uniform ${uniformType} ${uniformId};`;
       material.shaderSource = uniformDeclaration + material.shaderSource;
     }
 
-    const newUniformId = uniformId + "_" + material._count++;
+    const newUniformId = `${uniformId}_${material._count++}`;
     replacedTokenCount = replaceToken(material, uniformId, newUniformId);
     //>>includeStart('debug', pragmas.debug);
     if (replacedTokenCount === 1 && strict) {
       throw new DeveloperError(
-        "strict: shader source does not use uniform '" + uniformId + "'."
+        `strict: shader source does not use uniform '${uniformId}'.`
       );
     }
     //>>includeEnd('debug');
@@ -1122,7 +1110,7 @@ function getUniformType(uniformValue) {
           uniformValue.length === 9 ||
           uniformValue.length === 16
         ) {
-          uniformType = "mat" + Math.sqrt(uniformValue.length);
+          uniformType = `mat${Math.sqrt(uniformValue.length)}`;
         }
       } else {
         let numAttributes = 0;
@@ -1132,7 +1120,7 @@ function getUniformType(uniformValue) {
           }
         }
         if (numAttributes >= 2 && numAttributes <= 4) {
-          uniformType = "vec" + numAttributes;
+          uniformType = `vec${numAttributes}`;
         } else if (numAttributes === 6) {
           uniformType = "samplerCube";
         }
@@ -1168,12 +1156,12 @@ function createSubMaterials(material) {
 
       // Make the material's czm_getMaterial unique by appending the sub-material type.
       const originalMethodName = "czm_getMaterial";
-      const newMethodName = originalMethodName + "_" + material._count++;
+      const newMethodName = `${originalMethodName}_${material._count++}`;
       replaceToken(subMaterial, originalMethodName, newMethodName);
       material.shaderSource = subMaterial.shaderSource + material.shaderSource;
 
       // Replace each material id with an czm_getMaterial method call.
-      const materialMethodCall = newMethodName + "(materialInput)";
+      const materialMethodCall = `${newMethodName}(materialInput)`;
       const tokensReplacedCount = replaceToken(
         material,
         subMaterialId,
@@ -1182,7 +1170,7 @@ function createSubMaterials(material) {
       //>>includeStart('debug', pragmas.debug);
       if (tokensReplacedCount === 0 && strict) {
         throw new DeveloperError(
-          "strict: shader source does not use material '" + subMaterialId + "'."
+          `strict: shader source does not use material '${subMaterialId}'.`
         );
       }
       //>>includeEnd('debug');
@@ -1197,7 +1185,7 @@ function replaceToken(material, token, newToken, excludePeriod) {
   excludePeriod = defaultValue(excludePeriod, true);
   let count = 0;
   const suffixChars = "([\\w])?";
-  const prefixChars = "([\\w" + (excludePeriod ? "." : "") + "])?";
+  const prefixChars = `([\\w${excludePeriod ? "." : ""}])?`;
   const regExp = new RegExp(prefixChars + token + suffixChars, "g");
   material.shaderSource = material.shaderSource.replace(regExp, function (
     $0,

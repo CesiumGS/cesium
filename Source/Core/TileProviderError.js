@@ -146,10 +146,9 @@ TileProviderError.handleError = function (
     event.raiseEvent(error);
   } else {
     console.log(
-      'An error occurred in "' +
-        provider.constructor.name +
-        '": ' +
-        formatError(message)
+      `An error occurred in "${provider.constructor.name}": ${formatError(
+        message
+      )}`
     );
   }
 

@@ -22,19 +22,19 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
       quadKey = defaultValue(quadKey, "");
       let t = new GoogleEarthEnterpriseTileInformation(0xff, 1, 1, 1);
       t.ancestorHasTerrain = true;
-      this._tileInfo[quadKey + "0"] = t;
+      this._tileInfo[`${quadKey}0`] = t;
 
       t = new GoogleEarthEnterpriseTileInformation(0xff, 1, 1, 1);
       t.ancestorHasTerrain = true;
-      this._tileInfo[quadKey + "1"] = t;
+      this._tileInfo[`${quadKey}1`] = t;
 
       t = new GoogleEarthEnterpriseTileInformation(0xff, 1, 1, 1);
       t.ancestorHasTerrain = true;
-      this._tileInfo[quadKey + "2"] = t;
+      this._tileInfo[`${quadKey}2`] = t;
 
       t = new GoogleEarthEnterpriseTileInformation(0xff, 1, 1, 1);
       t.ancestorHasTerrain = true;
-      this._tileInfo[quadKey + "3"] = t;
+      this._tileInfo[`${quadKey}3`] = t;
 
       return when();
     });

@@ -13,7 +13,7 @@ if (typeof requestAnimationFrame !== "undefined") {
     let i = 0;
     const len = vendors.length;
     while (i < len && !defined(implementation)) {
-      implementation = window[vendors[i] + "RequestAnimationFrame"];
+      implementation = window[`${vendors[i]}RequestAnimationFrame`];
       ++i;
     }
   }

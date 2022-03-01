@@ -174,7 +174,7 @@ function SingleTileImageryProvider(options) {
   }
 
   function failure(e) {
-    const message = "Failed to load image " + resource.url + ".";
+    const message = `Failed to load image ${resource.url}.`;
     error = TileProviderError.handleError(
       error,
       that,

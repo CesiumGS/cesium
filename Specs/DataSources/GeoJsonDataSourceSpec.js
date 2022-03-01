@@ -460,7 +460,7 @@ describe("DataSources/GeoJsonDataSource", function () {
       for (const key in properties) {
         if (properties.hasOwnProperty(key)) {
           const value = properties[key];
-          desc += key + " = " + value + ". ";
+          desc += `${key} = ${value}. `;
         }
       }
       return desc;
@@ -495,7 +495,7 @@ describe("DataSources/GeoJsonDataSource", function () {
       for (const key in properties) {
         if (properties.hasOwnProperty(key)) {
           const value = properties[key];
-          desc += key + " = " + value + "; ";
+          desc += `${key} = ${value}; `;
         }
       }
       return desc;
@@ -596,7 +596,7 @@ describe("DataSources/GeoJsonDataSource", function () {
       let entity = entityCollection.values[0];
       expect(entity.id).toEqual(featureWithId.id);
       entity = entityCollection.values[1];
-      expect(entity.id).toEqual(featureWithId.id + "_2");
+      expect(entity.id).toEqual(`${featureWithId.id}_2`);
     });
   });
 

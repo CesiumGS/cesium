@@ -207,10 +207,9 @@ describe(
       const bgColor = 51; // Choose a factor of 255 to make sure there aren't rounding issues
       s.postProcessStages.add(
         new PostProcessStage({
-          fragmentShader:
-            "void main() { gl_FragColor = vec4(vec3(" +
-            bgColor / 255 +
-            "), 1.0); }",
+          fragmentShader: `void main() { gl_FragColor = vec4(vec3(${
+            bgColor / 255
+          }), 1.0); }`,
         })
       );
 

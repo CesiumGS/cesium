@@ -957,39 +957,24 @@ describe("Core/TimeIntervalCollection", function () {
           // expect the interval at this time not to exist
           if (interval !== undefined) {
             throw new Error(
-              "expected undefined at " +
-                item.sec +
-                " seconds but it was " +
-                interval.data
+              `expected undefined at ${item.sec} seconds but it was ${interval.data}`
             );
           }
           expect(interval).toBeUndefined();
         } else if (interval === undefined) {
           throw new Error(
-            "expected " +
-              item.data +
-              " at " +
-              item.sec +
-              " seconds, but it was undefined"
+            `expected ${item.data} at ${item.sec} seconds, but it was undefined`
           );
         } else if (interval.data !== item.data) {
           throw new Error(
-            "expected " +
-              item.data +
-              " at " +
-              item.sec +
-              " seconds, but it was " +
-              interval.data
+            `expected ${item.data} at ${item.sec} seconds, but it was ${interval.data}`
           );
         }
       });
 
       if (collection.length !== count) {
         throw new Error(
-          "Expected interval to have " +
-            count +
-            " elements but it had " +
-            collection.length
+          `Expected interval to have ${count} elements but it had ${collection.length}`
         );
       }
     }
@@ -1592,7 +1577,7 @@ describe("Core/TimeIntervalCollection", function () {
     const julianDates = iso8601ToJulianDateArray([start, stop]);
 
     const intervals = TimeIntervalCollection.fromIso8601({
-      iso8601: start + "/" + stop,
+      iso8601: `${start}/${stop}`,
       isStartIncluded: false,
       isStopIncluded: false,
     });
@@ -1610,8 +1595,9 @@ describe("Core/TimeIntervalCollection", function () {
     const julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
     const intervals = TimeIntervalCollection.fromIso8601({
-      iso8601:
-        iso8601Dates[0] + "/" + iso8601Dates[iso8601Dates.length - 1] + "/P1Y",
+      iso8601: `${iso8601Dates[0]}/${
+        iso8601Dates[iso8601Dates.length - 1]
+      }/P1Y`,
     });
 
     checkIntervals(intervals, julianDates, true, true);
@@ -1628,8 +1614,9 @@ describe("Core/TimeIntervalCollection", function () {
     const julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
     const intervals = TimeIntervalCollection.fromIso8601({
-      iso8601:
-        iso8601Dates[0] + "/" + iso8601Dates[iso8601Dates.length - 1] + "/P1M",
+      iso8601: `${iso8601Dates[0]}/${
+        iso8601Dates[iso8601Dates.length - 1]
+      }/P1M`,
     });
 
     checkIntervals(intervals, julianDates, true, true);
@@ -1647,8 +1634,9 @@ describe("Core/TimeIntervalCollection", function () {
     const julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
     const intervals = TimeIntervalCollection.fromIso8601({
-      iso8601:
-        iso8601Dates[0] + "/" + iso8601Dates[iso8601Dates.length - 1] + "/P1D",
+      iso8601: `${iso8601Dates[0]}/${
+        iso8601Dates[iso8601Dates.length - 1]
+      }/P1D`,
       isStartIncluded: false,
     });
 
@@ -1665,11 +1653,9 @@ describe("Core/TimeIntervalCollection", function () {
     const julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
     const intervals = TimeIntervalCollection.fromIso8601({
-      iso8601:
-        iso8601Dates[0] +
-        "/" +
-        iso8601Dates[iso8601Dates.length - 1] +
-        "/P1Y2M3D",
+      iso8601: `${iso8601Dates[0]}/${
+        iso8601Dates[iso8601Dates.length - 1]
+      }/P1Y2M3D`,
       isStopIncluded: false,
     });
 
@@ -1686,8 +1672,9 @@ describe("Core/TimeIntervalCollection", function () {
     const julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
     const intervals = TimeIntervalCollection.fromIso8601({
-      iso8601:
-        iso8601Dates[0] + "/" + iso8601Dates[iso8601Dates.length - 1] + "/PT1H",
+      iso8601: `${iso8601Dates[0]}/${
+        iso8601Dates[iso8601Dates.length - 1]
+      }/PT1H`,
       isStartIncluded: false,
     });
 
@@ -1704,8 +1691,9 @@ describe("Core/TimeIntervalCollection", function () {
     const julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
     const intervals = TimeIntervalCollection.fromIso8601({
-      iso8601:
-        iso8601Dates[0] + "/" + iso8601Dates[iso8601Dates.length - 1] + "/PT1M",
+      iso8601: `${iso8601Dates[0]}/${
+        iso8601Dates[iso8601Dates.length - 1]
+      }/PT1M`,
       isStopIncluded: false,
     });
 
@@ -1722,8 +1710,9 @@ describe("Core/TimeIntervalCollection", function () {
     const julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
     const intervals = TimeIntervalCollection.fromIso8601({
-      iso8601:
-        iso8601Dates[0] + "/" + iso8601Dates[iso8601Dates.length - 1] + "/PT1S",
+      iso8601: `${iso8601Dates[0]}/${
+        iso8601Dates[iso8601Dates.length - 1]
+      }/PT1S`,
       isStartIncluded: false,
       isStopIncluded: false,
     });
@@ -1742,11 +1731,9 @@ describe("Core/TimeIntervalCollection", function () {
     const julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
     const intervals = TimeIntervalCollection.fromIso8601({
-      iso8601:
-        iso8601Dates[0] +
-        "/" +
-        iso8601Dates[iso8601Dates.length - 1] +
-        "/PT0.5S",
+      iso8601: `${iso8601Dates[0]}/${
+        iso8601Dates[iso8601Dates.length - 1]
+      }/PT0.5S`,
     });
 
     checkIntervals(intervals, julianDates, true, true);
@@ -1762,11 +1749,9 @@ describe("Core/TimeIntervalCollection", function () {
     const julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
     const intervals = TimeIntervalCollection.fromIso8601({
-      iso8601:
-        iso8601Dates[0] +
-        "/" +
-        iso8601Dates[iso8601Dates.length - 1] +
-        "/PT1H2M3.5S",
+      iso8601: `${iso8601Dates[0]}/${
+        iso8601Dates[iso8601Dates.length - 1]
+      }/PT1H2M3.5S`,
     });
 
     checkIntervals(intervals, julianDates, true, true);
@@ -1782,11 +1767,9 @@ describe("Core/TimeIntervalCollection", function () {
     const julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
     const intervals = TimeIntervalCollection.fromIso8601({
-      iso8601:
-        iso8601Dates[0] +
-        "/" +
-        iso8601Dates[iso8601Dates.length - 1] +
-        "/P1Y2M3DT1H2M3.5S",
+      iso8601: `${iso8601Dates[0]}/${
+        iso8601Dates[iso8601Dates.length - 1]
+      }/P1Y2M3DT1H2M3.5S`,
     });
 
     checkIntervals(intervals, julianDates, true, true);
@@ -1802,11 +1785,9 @@ describe("Core/TimeIntervalCollection", function () {
     const julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
     const intervals = TimeIntervalCollection.fromIso8601({
-      iso8601:
-        iso8601Dates[0] +
-        "/" +
-        iso8601Dates[iso8601Dates.length - 1] +
-        "/0001-02-03T01:02:03.5",
+      iso8601: `${iso8601Dates[0]}/${
+        iso8601Dates[iso8601Dates.length - 1]
+      }/0001-02-03T01:02:03.5`,
     });
 
     checkIntervals(intervals, julianDates, true, true);
@@ -1830,11 +1811,9 @@ describe("Core/TimeIntervalCollection", function () {
     const julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
     const intervals = TimeIntervalCollection.fromIso8601({
-      iso8601:
-        iso8601Dates[0] +
-        "/" +
-        iso8601Dates[iso8601Dates.length - 1] +
-        "/P1Y2M3DT1H2M3.5S",
+      iso8601: `${iso8601Dates[0]}/${
+        iso8601Dates[iso8601Dates.length - 1]
+      }/P1Y2M3DT1H2M3.5S`,
       dataCallback: dataSpy,
     });
 
@@ -1857,8 +1836,9 @@ describe("Core/TimeIntervalCollection", function () {
     const julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
     const intervals = TimeIntervalCollection.fromIso8601({
-      iso8601:
-        iso8601Dates[0] + "/" + iso8601Dates[iso8601Dates.length - 1] + "/PT1M",
+      iso8601: `${iso8601Dates[0]}/${
+        iso8601Dates[iso8601Dates.length - 1]
+      }/PT1M`,
       isStartIncluded: true,
       isStopIncluded: false,
       leadingInterval: true,
@@ -1892,8 +1872,9 @@ describe("Core/TimeIntervalCollection", function () {
     const julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
     const intervals = TimeIntervalCollection.fromIso8601({
-      iso8601:
-        iso8601Dates[0] + "/" + iso8601Dates[iso8601Dates.length - 1] + "/PT1M",
+      iso8601: `${iso8601Dates[0]}/${
+        iso8601Dates[iso8601Dates.length - 1]
+      }/PT1M`,
       isStartIncluded: false,
       isStopIncluded: true,
       trailingInterval: true,
@@ -1929,8 +1910,9 @@ describe("Core/TimeIntervalCollection", function () {
     const julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
     const intervals = TimeIntervalCollection.fromIso8601({
-      iso8601:
-        iso8601Dates[0] + "/" + iso8601Dates[iso8601Dates.length - 1] + "/PT1M",
+      iso8601: `${iso8601Dates[0]}/${
+        iso8601Dates[iso8601Dates.length - 1]
+      }/PT1M`,
       isStartIncluded: false,
       isStopIncluded: false,
       leadingInterval: true,

@@ -172,11 +172,11 @@ function AnimationViewModel(clockViewModel) {
 
     //If it's a whole number, just return it.
     if (multiplier % 1 === 0) {
-      return multiplier.toFixed(0) + "x";
+      return `${multiplier.toFixed(0)}x`;
     }
 
     //Convert to decimal string and remove any trailing zeroes
-    return multiplier.toFixed(3).replace(/0{0,3}$/, "") + "x";
+    return `${multiplier.toFixed(3).replace(/0{0,3}$/, "")}x`;
   });
 
   /**
@@ -383,13 +383,9 @@ function AnimationViewModel(clockViewModel) {
  */
 AnimationViewModel.defaultDateFormatter = function (date, viewModel) {
   const gregorianDate = JulianDate.toGregorianDate(date);
-  return (
-    monthNames[gregorianDate.month - 1] +
-    " " +
-    gregorianDate.day +
-    " " +
+  return `${monthNames[gregorianDate.month - 1]} ${gregorianDate.day} ${
     gregorianDate.year
-  );
+  }`;
 };
 
 /**
@@ -440,24 +436,19 @@ AnimationViewModel.defaultTimeFormatter = function (date, viewModel) {
   const gregorianDate = JulianDate.toGregorianDate(date);
   const millisecond = Math.round(gregorianDate.millisecond);
   if (Math.abs(viewModel._clockViewModel.multiplier) < 1) {
-    return (
-      gregorianDate.hour.toString().padStart(2, "0") +
-      ":" +
-      gregorianDate.minute.toString().padStart(2, "0") +
-      ":" +
-      gregorianDate.second.toString().padStart(2, "0") +
-      "." +
-      millisecond.toString().padStart(3, "0")
-    );
+    return `${gregorianDate.hour
+      .toString()
+      .padStart(2, "0")}:${gregorianDate.minute
+      .toString()
+      .padStart(2, "0")}:${gregorianDate.second
+      .toString()
+      .padStart(2, "0")}.${millisecond.toString().padStart(3, "0")}`;
   }
-  return (
-    gregorianDate.hour.toString().padStart(2, "0") +
-    ":" +
-    gregorianDate.minute.toString().padStart(2, "0") +
-    ":" +
-    gregorianDate.second.toString().padStart(2, "0") +
-    " UTC"
-  );
+  return `${gregorianDate.hour
+    .toString()
+    .padStart(2, "0")}:${gregorianDate.minute
+    .toString()
+    .padStart(2, "0")}:${gregorianDate.second.toString().padStart(2, "0")} UTC`;
 };
 
 /**
