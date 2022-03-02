@@ -5521,9 +5521,9 @@ describe(
 
     describe("3DTILES_metadata", function () {
       const tilesetMetadataUrl =
-        "Data/Cesium3DTiles/Metadata/TilesetMetadata/tileset.json";
+        "Data/Cesium3DTiles/Metadata/TilesetMetadata/1.1/tileset.json";
       const tilesetWithExternalSchemaUrl =
-        "Data/Cesium3DTiles/Metadata/ExternalSchema/tileset.json";
+        "Data/Cesium3DTiles/Metadata/ExternalSchema/1.1/tileset.json";
       const tilesetWithGroupMetadataUrl =
         "Data/Cesium3DTiles/Metadata/GroupMetadata/tileset.json";
       const tilesetWithImplicitTileMetadataUrl =
@@ -5538,6 +5538,11 @@ describe(
         "Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset.json";
       const tilesetWithExplicitMultipleContentsMetadataUrl =
         "Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset.json";
+
+      const tilesetMetadataLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/TilesetMetadata/1.0/tileset.json";
+      const tilesetWithExternalSchemaLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ExternalSchema/1.0/tileset.json";
 
       const tilesetProperties = {
         author: "Cesium",
@@ -5572,6 +5577,31 @@ describe(
             );
           }
         );
+      });
+
+      it("loads tileset metadata (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetMetadataLegacyUrl
+        ).then(function (tileset) {
+          const metadata = tileset.metadata;
+          expect(metadata).toBeDefined();
+
+          const tilesetMetadata = metadata.tileset;
+          expect(tilesetMetadata.getProperty("name")).not.toBeDefined();
+          expect(tilesetMetadata.getProperty("author")).toBe(
+            tilesetProperties.author
+          );
+          expect(tilesetMetadata.getPropertyBySemantic("DATE_ISO_8601")).toBe(
+            tilesetProperties.date
+          );
+          expect(tilesetMetadata.getProperty("centerCartographic")).toEqual(
+            Cartesian3.unpack(tilesetProperties.centerCartographic)
+          );
+          expect(tilesetMetadata.getProperty("tileCount")).toBe(
+            tilesetProperties.tileCount
+          );
+        });
       });
 
       it("loads group metadata", function () {
@@ -5645,10 +5675,36 @@ describe(
         );
       });
 
+      it("loads metadata with embedded schema (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetMetadataLegacyUrl
+        ).then(function (tileset) {
+          const schema = tileset.metadata.schema;
+          expect(schema).toBeDefined();
+
+          const classes = schema.classes;
+          expect(classes.tileset).toBeDefined();
+        });
+      });
+
       it("loads metadata with external schema", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
           tilesetWithExternalSchemaUrl
+        ).then(function (tileset) {
+          const schema = tileset.metadata.schema;
+          expect(schema).toBeDefined();
+
+          const classes = schema.classes;
+          expect(classes.tileset).toBeDefined();
+        });
+      });
+
+      it("loads metadata with external schema and extension (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithExternalSchemaLegacyUrl
         ).then(function (tileset) {
           const schema = tileset.metadata.schema;
           expect(schema).toBeDefined();
