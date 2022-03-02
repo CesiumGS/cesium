@@ -2,6 +2,7 @@ import { Cartesian2 } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
+import { Credit } from "../../Source/Cesium.js";
 import { CullingVolume } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
 import { getAbsoluteUri } from "../../Source/Cesium.js";
@@ -108,6 +109,11 @@ describe(
 
     const gltfContentUrl = "Data/Cesium3DTiles/GltfContent/glTF/tileset.json";
     const glbContentUrl = "Data/Cesium3DTiles/GltfContent/glb/tileset.json";
+
+    const gltfContentWithCopyrightUrl =
+      "Data/Cesium3DTiles/GltfContentWithCopyright/glTF/tileset.json";
+    const gltfContentWithRepeatedCopyrightsUrl =
+      "Data/Cesium3DTiles/GltfContentWithRepeatedCopyrights/glTF/tileset.json";
 
     // 1 tile where each feature is a different source color
     const colorsUrl = "Data/Cesium3DTiles/Batched/BatchedColors/tileset.json";
@@ -4927,6 +4933,206 @@ describe(
       );
     });
 
+    it("displays copyrights for all glTF content", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        gltfContentWithCopyrightUrl
+      ).then(function (tileset) {
+        setZoom(10.0);
+        scene.renderForSpecs();
+
+        const expectedCredits = [
+          "Parent Copyright",
+          "Lower Left Copyright",
+          "Lower Right Copyright 1",
+          "Lower Right Copyright 2",
+          "Upper Right Copyright",
+          "Upper Left Copyright",
+        ];
+
+        const creditDisplay = scene.frameState.creditDisplay;
+        const credits =
+          creditDisplay._currentFrameCredits.lightboxCredits.values;
+        const length = credits.length;
+        expect(length).toEqual(expectedCredits.length);
+        for (let i = 0; i < length; i++) {
+          const creditInfo = credits[i];
+          const creditString = creditInfo.credit.html;
+          expect(expectedCredits.includes(creditString)).toBe(true);
+        }
+      });
+    });
+
+    it("displays copyrights only for glTF content in view", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        gltfContentWithCopyrightUrl
+      ).then(function (tileset) {
+        const creditDisplay = scene.frameState.creditDisplay;
+        const credits = creditDisplay._currentFrameCredits.lightboxCredits;
+
+        setZoom(10.0);
+        scene.camera.moveLeft(150);
+        scene.camera.moveDown(150);
+        scene.renderForSpecs();
+        expect(credits.values.length).toEqual(1);
+        expect(credits.values[0].credit.html).toEqual("Lower Left Copyright");
+
+        setZoom(10.0);
+        scene.camera.moveRight(150);
+        scene.camera.moveDown(150);
+        scene.renderForSpecs();
+        expect(credits.values.length).toEqual(2);
+        expect(credits.values[0].credit.html).toEqual(
+          "Lower Right Copyright 1"
+        );
+        expect(credits.values[1].credit.html).toEqual(
+          "Lower Right Copyright 2"
+        );
+
+        setZoom(10.0);
+        scene.camera.moveRight(150);
+        scene.camera.moveUp(150);
+        scene.renderForSpecs();
+        expect(credits.values.length).toEqual(1);
+        expect(credits.values[0].credit.html).toEqual("Upper Right Copyright");
+
+        setZoom(10.0);
+        scene.camera.moveLeft(150);
+        scene.camera.moveUp(150);
+        scene.renderForSpecs();
+        expect(credits.values.length).toEqual(1);
+        expect(credits.values[0].credit.html).toEqual("Upper Left Copyright");
+      });
+    });
+
+    it("displays copyrights for glTF content in sorted order", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        gltfContentWithRepeatedCopyrightsUrl
+      ).then(function (tileset) {
+        setZoom(10.0);
+        scene.renderForSpecs();
+
+        const mostFrequentCopyright = new Credit("Most Frequent Copyright");
+        const secondRepeatedCopyright = new Credit("Second Repeated Copyright");
+        const lastRepeatedCopyright = new Credit("Last Repeated Copyright");
+        const uniqueCopyright = new Credit("Unique Copyright");
+
+        const expectedCredits = [
+          mostFrequentCopyright,
+          secondRepeatedCopyright,
+          lastRepeatedCopyright,
+          uniqueCopyright,
+        ];
+
+        const creditDisplay = scene.frameState.creditDisplay;
+        const creditContainer = creditDisplay._lightboxCredits.childNodes[2];
+        const creditList = creditContainer.childNodes;
+
+        const length = creditList.length;
+        expect(length).toEqual(4);
+
+        for (let i = 0; i < length; i++) {
+          const credit = creditList[i].childNodes[0];
+          expect(credit).toEqual(expectedCredits[i].element);
+        }
+      });
+    });
+
+    it("shows credits on screen", function () {
+      const options = {
+        showCreditsOnScreen: true,
+      };
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        gltfContentWithCopyrightUrl,
+        options
+      ).then(function (tileset) {
+        setZoom(10.0);
+        scene.renderForSpecs();
+
+        const expectedCredits = [
+          "Parent Copyright",
+          "Lower Left Copyright",
+          "Lower Right Copyright 1",
+          "Lower Right Copyright 2",
+          "Upper Right Copyright",
+          "Upper Left Copyright",
+        ];
+
+        const creditDisplay = scene.frameState.creditDisplay;
+        const credits = creditDisplay._currentFrameCredits.screenCredits.values;
+        const length = credits.length;
+        expect(length).toEqual(expectedCredits.length);
+        for (let i = 0; i < length; i++) {
+          const creditInfo = credits[i];
+          const creditString = creditInfo.credit.html;
+          expect(expectedCredits.includes(creditString)).toBe(true);
+        }
+      });
+    });
+
+    it("toggles showing credits on screen", function () {
+      const options = {
+        showCreditsOnScreen: false,
+      };
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        gltfContentWithCopyrightUrl,
+        options
+      ).then(function (tileset) {
+        setZoom(10.0);
+        scene.renderForSpecs();
+
+        const expectedCredits = [
+          "Parent Copyright",
+          "Lower Left Copyright",
+          "Lower Right Copyright 1",
+          "Lower Right Copyright 2",
+          "Upper Right Copyright",
+          "Upper Left Copyright",
+        ];
+
+        const creditDisplay = scene.frameState.creditDisplay;
+        const lightboxCredits =
+          creditDisplay._currentFrameCredits.lightboxCredits.values;
+        const screenCredits =
+          creditDisplay._currentFrameCredits.screenCredits.values;
+
+        let length = lightboxCredits.length;
+        expect(length).toEqual(expectedCredits.length);
+        for (let i = 0; i < length; i++) {
+          const creditInfo = lightboxCredits[i];
+          const creditString = creditInfo.credit.html;
+          expect(expectedCredits.includes(creditString)).toBe(true);
+        }
+        expect(screenCredits.length).toEqual(0);
+
+        tileset.showCreditsOnScreen = true;
+        scene.renderForSpecs();
+        length = screenCredits.length;
+        expect(length).toEqual(expectedCredits.length);
+        for (let i = 0; i < length; i++) {
+          const creditInfo = screenCredits[i];
+          const creditString = creditInfo.credit.html;
+          expect(expectedCredits.includes(creditString)).toBe(true);
+        }
+        expect(lightboxCredits.length).toEqual(0);
+
+        tileset.showCreditsOnScreen = false;
+        scene.renderForSpecs();
+        length = lightboxCredits.length;
+        expect(length).toEqual(expectedCredits.length);
+        for (let i = 0; i < length; i++) {
+          const creditInfo = lightboxCredits[i];
+          const creditString = creditInfo.credit.html;
+          expect(expectedCredits.includes(creditString)).toBe(true);
+        }
+        expect(screenCredits.length).toEqual(0);
+      });
+    });
+
     describe("3DTILES_implicit_tiling", function () {
       const implicitTilesetUrl =
         "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset.json";
@@ -5326,8 +5532,12 @@ describe(
         "Data/Cesium3DTiles/Metadata/TileMetadata/tileset.json";
       const tilesetWithImplicitContentMetadataUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitContentMetadata/tileset.json";
+      const tilesetWithExplicitContentMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ContentMetadata/tileset.json";
       const tilesetWithImplicitMultipleContentsMetadataUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset.json";
+      const tilesetWithExplicitMultipleContentsMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset.json";
 
       const tilesetProperties = {
         author: "Cesium",
@@ -5548,6 +5758,51 @@ describe(
         });
       });
 
+      it("loads explicit tileset with content metadata", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithExplicitContentMetadataUrl
+        ).then(function (tileset) {
+          const expected = {
+            "parent.b3dm": {
+              highlightColor: new Cartesian3(255, 0, 0),
+              author: "Cesium",
+            },
+            "ll.b3dm": {
+              highlightColor: new Cartesian3(255, 255, 255),
+              author: "First Company",
+            },
+            "lr.b3dm": {
+              highlightColor: new Cartesian3(255, 0, 255),
+              author: "Second Company",
+            },
+            "ur.b3dm": {
+              highlightColor: new Cartesian3(0, 255, 0),
+              author: "Third Company",
+            },
+            "ul.b3dm": {
+              highlightColor: new Cartesian3(0, 0, 255),
+              author: "Fourth Company",
+            },
+          };
+
+          const parent = tileset.root;
+          const tiles = [parent].concat(parent.children);
+          tiles.forEach(function (tile) {
+            const uri = tile._header.content.uri;
+            const content = tile.content;
+            const expectedValues = expected[uri];
+            const metadata = content.metadata;
+            expect(metadata.getProperty("highlightColor")).toEqual(
+              expectedValues.highlightColor
+            );
+            expect(metadata.getProperty("author")).toEqual(
+              expectedValues.author
+            );
+          });
+        });
+      });
+
       it("loads implicit tileset with content metadata", function () {
         // this tileset is similar to other implicit tilesets, though
         // one tile is removed
@@ -5679,6 +5934,40 @@ describe(
               expectedAges[index - 1]
             );
           }
+        });
+      });
+
+      it("loads explicit tileset with multiple contents with metadata", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithExplicitMultipleContentsMetadataUrl
+        ).then(function (tileset) {
+          const content = tileset.root.content;
+          const batchedContent = content.innerContents[0];
+          const batchedContentMetadata = batchedContent.metadata;
+
+          expect(batchedContentMetadata.getProperty("highlightColor")).toEqual(
+            new Cartesian3(0, 0, 255)
+          );
+          expect(batchedContentMetadata.getProperty("author")).toEqual(
+            "Cesium"
+          );
+          expect(batchedContentMetadata.hasProperty("numberOfInstances")).toBe(
+            false
+          );
+
+          const instancedContent = content.innerContents[1];
+          const instancedContentMetadata = instancedContent.metadata;
+
+          expect(
+            instancedContentMetadata.getProperty("numberOfInstances")
+          ).toEqual(50);
+          expect(instancedContentMetadata.getProperty("author")).toEqual(
+            "Sample Author"
+          );
+          expect(instancedContentMetadata.hasProperty("highlightColor")).toBe(
+            false
+          );
         });
       });
     });

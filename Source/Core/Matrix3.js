@@ -22,11 +22,17 @@ import CesiumMath from "./Math.js";
  * @param {Number} [column1Row2=0.0] The value for column 1, row 2.
  * @param {Number} [column2Row2=0.0] The value for column 2, row 2.
  *
+ * @see Matrix3.fromArray
  * @see Matrix3.fromColumnMajorArray
  * @see Matrix3.fromRowMajorArray
  * @see Matrix3.fromQuaternion
+ * @see Matrix3.fromHeadingPitchRoll
  * @see Matrix3.fromScale
  * @see Matrix3.fromUniformScale
+ * @see Matrix3.fromCrossProduct
+ * @see Matrix3.fromRotationX
+ * @see Matrix3.fromRotationY
+ * @see Matrix3.fromRotationZ
  * @see Matrix2
  * @see Matrix4
  */
@@ -239,28 +245,7 @@ Matrix3.clone = function (matrix, result) {
  * const v2 = [0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
  * const m2 = Cesium.Matrix3.fromArray(v2, 2);
  */
-Matrix3.fromArray = function (array, startingIndex, result) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("array", array);
-  //>>includeEnd('debug');
-
-  startingIndex = defaultValue(startingIndex, 0);
-
-  if (!defined(result)) {
-    result = new Matrix3();
-  }
-
-  result[0] = array[startingIndex];
-  result[1] = array[startingIndex + 1];
-  result[2] = array[startingIndex + 2];
-  result[3] = array[startingIndex + 3];
-  result[4] = array[startingIndex + 4];
-  result[5] = array[startingIndex + 5];
-  result[6] = array[startingIndex + 6];
-  result[7] = array[startingIndex + 7];
-  result[8] = array[startingIndex + 8];
-  return result;
-};
+Matrix3.fromArray = Matrix3.unpack;
 
 /**
  * Creates a Matrix3 instance from a column-major order array.
@@ -847,6 +832,92 @@ Matrix3.setRow = function (matrix, index, cartesian, result) {
   return result;
 };
 
+const scaleScratch1 = new Cartesian3();
+
+/**
+ * Computes a new matrix that replaces the scale with the provided scale.
+ * This assumes the matrix is an affine transformation.
+ *
+ * @param {Matrix3} matrix The matrix to use.
+ * @param {Cartesian3} scale The scale that replaces the scale of the provided matrix.
+ * @param {Matrix3} result The object onto which to store the result.
+ * @returns {Matrix3} The modified result parameter.
+ *
+ * @see Matrix3.setUniformScale
+ * @see Matrix3.fromScale
+ * @see Matrix3.fromUniformScale
+ * @see Matrix3.multiplyByScale
+ * @see Matrix3.multiplyByUniformScale
+ * @see Matrix3.getScale
+ */
+Matrix3.setScale = function (matrix, scale, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("matrix", matrix);
+  Check.typeOf.object("scale", scale);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  const existingScale = Matrix3.getScale(matrix, scaleScratch1);
+  const scaleRatioX = scale.x / existingScale.x;
+  const scaleRatioY = scale.y / existingScale.y;
+  const scaleRatioZ = scale.z / existingScale.z;
+
+  result[0] = matrix[0] * scaleRatioX;
+  result[1] = matrix[1] * scaleRatioX;
+  result[2] = matrix[2] * scaleRatioX;
+  result[3] = matrix[3] * scaleRatioY;
+  result[4] = matrix[4] * scaleRatioY;
+  result[5] = matrix[5] * scaleRatioY;
+  result[6] = matrix[6] * scaleRatioZ;
+  result[7] = matrix[7] * scaleRatioZ;
+  result[8] = matrix[8] * scaleRatioZ;
+
+  return result;
+};
+
+const scaleScratch2 = new Cartesian3();
+
+/**
+ * Computes a new matrix that replaces the scale with the provided uniform scale.
+ * This assumes the matrix is an affine transformation.
+ *
+ * @param {Matrix3} matrix The matrix to use.
+ * @param {Number} scale The uniform scale that replaces the scale of the provided matrix.
+ * @param {Matrix3} result The object onto which to store the result.
+ * @returns {Matrix3} The modified result parameter.
+ *
+ * @see Matrix3.setScale
+ * @see Matrix3.fromScale
+ * @see Matrix3.fromUniformScale
+ * @see Matrix3.multiplyByScale
+ * @see Matrix3.multiplyByUniformScale
+ * @see Matrix3.getScale
+ */
+Matrix3.setUniformScale = function (matrix, scale, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("matrix", matrix);
+  Check.typeOf.number("scale", scale);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  const existingScale = Matrix3.getScale(matrix, scaleScratch2);
+  const scaleRatioX = scale / existingScale.x;
+  const scaleRatioY = scale / existingScale.y;
+  const scaleRatioZ = scale / existingScale.z;
+
+  result[0] = matrix[0] * scaleRatioX;
+  result[1] = matrix[1] * scaleRatioX;
+  result[2] = matrix[2] * scaleRatioX;
+  result[3] = matrix[3] * scaleRatioY;
+  result[4] = matrix[4] * scaleRatioY;
+  result[5] = matrix[5] * scaleRatioY;
+  result[6] = matrix[6] * scaleRatioZ;
+  result[7] = matrix[7] * scaleRatioZ;
+  result[8] = matrix[8] * scaleRatioZ;
+
+  return result;
+};
+
 const scratchColumn = new Cartesian3();
 
 /**
@@ -855,6 +926,13 @@ const scratchColumn = new Cartesian3();
  * @param {Matrix3} matrix The matrix.
  * @param {Cartesian3} result The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter.
+ *
+ * @see Matrix3.multiplyByScale
+ * @see Matrix3.multiplyByUniformScale
+ * @see Matrix3.fromScale
+ * @see Matrix3.fromUniformScale
+ * @see Matrix3.setScale
+ * @see Matrix3.setUniformScale
  */
 Matrix3.getScale = function (matrix, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -874,7 +952,7 @@ Matrix3.getScale = function (matrix, result) {
   return result;
 };
 
-const scratchScale = new Cartesian3();
+const scaleScratch3 = new Cartesian3();
 
 /**
  * Computes the maximum scale assuming the matrix is an affine transformation.
@@ -884,8 +962,72 @@ const scratchScale = new Cartesian3();
  * @returns {Number} The maximum scale.
  */
 Matrix3.getMaximumScale = function (matrix) {
-  Matrix3.getScale(matrix, scratchScale);
-  return Cartesian3.maximumComponent(scratchScale);
+  Matrix3.getScale(matrix, scaleScratch3);
+  return Cartesian3.maximumComponent(scaleScratch3);
+};
+
+const scaleScratch4 = new Cartesian3();
+
+/**
+ * Sets the rotation assuming the matrix is an affine transformation.
+ *
+ * @param {Matrix3} matrix The matrix.
+ * @param {Matrix3} rotation The rotation matrix.
+ * @returns {Matrix3} The modified result parameter.
+ *
+ * @see Matrix3.getRotation
+ */
+Matrix3.setRotation = function (matrix, rotation, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("matrix", matrix);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  const scale = Matrix3.getScale(matrix, scaleScratch4);
+
+  result[0] = rotation[0] * scale.x;
+  result[1] = rotation[1] * scale.x;
+  result[2] = rotation[2] * scale.x;
+  result[3] = rotation[3] * scale.y;
+  result[4] = rotation[4] * scale.y;
+  result[5] = rotation[5] * scale.y;
+  result[6] = rotation[6] * scale.z;
+  result[7] = rotation[7] * scale.z;
+  result[8] = rotation[8] * scale.z;
+
+  return result;
+};
+
+const scaleScratch5 = new Cartesian3();
+
+/**
+ * Extracts the rotation matrix assuming the matrix is an affine transformation.
+ *
+ * @param {Matrix3} matrix The matrix.
+ * @param {Matrix3} result The object onto which to store the result.
+ * @returns {Matrix3} The modified result parameter.
+ *
+ * @see Matrix3.setRotation
+ */
+Matrix3.getRotation = function (matrix, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("matrix", matrix);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  const scale = Matrix3.getScale(matrix, scaleScratch5);
+
+  result[0] = matrix[0] / scale.x;
+  result[1] = matrix[1] / scale.x;
+  result[2] = matrix[2] / scale.x;
+  result[3] = matrix[3] / scale.y;
+  result[4] = matrix[4] / scale.y;
+  result[5] = matrix[5] / scale.y;
+  result[6] = matrix[6] / scale.z;
+  result[7] = matrix[7] / scale.z;
+  result[8] = matrix[8] / scale.z;
+
+  return result;
 };
 
 /**
@@ -1050,7 +1192,7 @@ Matrix3.multiplyByScalar = function (matrix, scalar, result) {
  * Computes the product of a matrix times a (non-uniform) scale, as if the scale were a scale matrix.
  *
  * @param {Matrix3} matrix The matrix on the left-hand side.
- * @param {Cartesian3} scale The non-uniform scale on the right-hand side.
+ * @param {Number} scale The non-uniform scale on the right-hand side.
  * @param {Matrix3} result The object onto which to store the result.
  * @returns {Matrix3} The modified result parameter.
  *
@@ -1059,8 +1201,12 @@ Matrix3.multiplyByScalar = function (matrix, scalar, result) {
  * // Instead of Cesium.Matrix3.multiply(m, Cesium.Matrix3.fromScale(scale), m);
  * Cesium.Matrix3.multiplyByScale(m, scale, m);
  *
- * @see Matrix3.fromScale
  * @see Matrix3.multiplyByUniformScale
+ * @see Matrix3.fromScale
+ * @see Matrix3.fromUniformScale
+ * @see Matrix3.setScale
+ * @see Matrix3.setUniformScale
+ * @see Matrix3.getScale
  */
 Matrix3.multiplyByScale = function (matrix, scale, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -1078,6 +1224,46 @@ Matrix3.multiplyByScale = function (matrix, scale, result) {
   result[6] = matrix[6] * scale.z;
   result[7] = matrix[7] * scale.z;
   result[8] = matrix[8] * scale.z;
+
+  return result;
+};
+
+/**
+ * Computes the product of a matrix times a uniform scale, as if the scale were a scale matrix.
+ *
+ * @param {Matrix3} matrix The matrix on the left-hand side.
+ * @param {Number} scale The uniform scale on the right-hand side.
+ * @param {Matrix3} result The object onto which to store the result.
+ * @returns {Matrix3} The modified result parameter.
+ *
+ * @example
+ * // Instead of Cesium.Matrix3.multiply(m, Cesium.Matrix3.fromUniformScale(scale), m);
+ * Cesium.Matrix3.multiplyByUniformScale(m, scale, m);
+ *
+ * @see Matrix3.multiplyByScale
+ * @see Matrix3.fromScale
+ * @see Matrix3.fromUniformScale
+ * @see Matrix3.setScale
+ * @see Matrix3.setUniformScale
+ * @see Matrix3.getScale
+ */
+Matrix3.multiplyByUniformScale = function (matrix, scale, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("matrix", matrix);
+  Check.typeOf.number("scale", scale);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  result[0] = matrix[0] * scale;
+  result[1] = matrix[1] * scale;
+  result[2] = matrix[2] * scale;
+  result[3] = matrix[3] * scale;
+  result[4] = matrix[4] * scale;
+  result[5] = matrix[5] * scale;
+  result[6] = matrix[6] * scale;
+  result[7] = matrix[7] * scale;
+  result[8] = matrix[8] * scale;
+
   return result;
 };
 
@@ -1138,31 +1324,6 @@ Matrix3.transpose = function (matrix, result) {
   result[6] = column2Row0;
   result[7] = column2Row1;
   result[8] = column2Row2;
-  return result;
-};
-
-const UNIT = new Cartesian3(1, 1, 1);
-
-/**
- * Extracts the rotation assuming the matrix is an affine transformation.
- *
- * @param {Matrix3} matrix The matrix.
- * @param {Matrix3} result The object onto which to store the result.
- * @returns {Matrix3} The modified result parameter
- */
-Matrix3.getRotation = function (matrix, result) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("matrix", matrix);
-  Check.typeOf.object("result", result);
-  //>>includeEnd('debug');
-
-  const inverseScale = Cartesian3.divideComponents(
-    UNIT,
-    Matrix3.getScale(matrix, scratchScale),
-    scratchScale
-  );
-  result = Matrix3.multiplyByScale(matrix, inverseScale, result);
-
   return result;
 };
 

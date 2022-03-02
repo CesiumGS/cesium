@@ -30,6 +30,7 @@ import Cesium3DTileOptimizationHint from "./Cesium3DTileOptimizationHint.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
+import findContentMetadata from "./findContentMetadata.js";
 import findGroupMetadata from "./findGroupMetadata.js";
 import hasExtension from "./hasExtension.js";
 import Multiple3DTileContent from "./Multiple3DTileContent.js";
@@ -1275,7 +1276,10 @@ function makeContent(tile, arrayBuffer) {
     preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
     preprocessed.contentType === Cesium3DTileContentType.VECTOR;
 
-  if (preprocessed.contentType === Cesium3DTileContentType.IMPLICIT_SUBTREE) {
+  if (
+    preprocessed.contentType === Cesium3DTileContentType.IMPLICIT_SUBTREE ||
+    preprocessed.contentType === Cesium3DTileContentType.IMPLICIT_SUBTREE_JSON
+  ) {
     tile.hasImplicitContent = true;
   }
 
@@ -1309,6 +1313,8 @@ function makeContent(tile, arrayBuffer) {
     const subtree = tile.implicitSubtree;
     const coordinates = tile.implicitCoordinates;
     content.metadata = subtree.getContentMetadataView(coordinates, 0);
+  } else if (!tile.hasImplicitContent) {
+    content.metadata = findContentMetadata(tileset, contentHeader);
   }
 
   content.groupMetadata = findGroupMetadata(tileset, contentHeader);

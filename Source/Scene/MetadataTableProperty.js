@@ -450,7 +450,8 @@ function getInt64NumberFallback(index, values) {
 function getInt64BigIntFallback(index, values) {
   const dataView = values.dataView;
   const byteOffset = index * 8;
-  var value = BigInt(0); // eslint-disable-line
+  // eslint-disable-next-line no-undef
+  let value = BigInt(0);
   const isNegative = (dataView.getUint8(byteOffset + 7) & 0x80) > 0;
   let carrying = true;
   for (let i = 0; i < 8; ++i) {
@@ -492,11 +493,15 @@ function getUint64BigIntFallback(index, values) {
   const byteOffset = index * 8;
 
   // Split 64-bit number into two 32-bit (4-byte) parts
-  var left = BigInt(dataView.getUint32(byteOffset, true)); // eslint-disable-line
-  var right = BigInt(dataView.getUint32(byteOffset + 4, true)); // eslint-disable-line
+  // eslint-disable-next-line no-undef
+  const left = BigInt(dataView.getUint32(byteOffset, true));
+
+  // eslint-disable-next-line no-undef
+  const right = BigInt(dataView.getUint32(byteOffset + 4, true));
 
   // Combine the two 32-bit values
-  var value = left + BigInt(4294967296) * right; // eslint-disable-line
+  // eslint-disable-next-line no-undef
+  const value = left + BigInt(4294967296) * right;
 
   return value;
 }

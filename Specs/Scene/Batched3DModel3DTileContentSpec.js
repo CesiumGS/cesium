@@ -43,6 +43,8 @@ describe(
       "./Data/Cesium3DTiles/Batched/BatchedTextured/tileset.json";
     const withRtcCenterUrl =
       "./Data/Cesium3DTiles/Batched/BatchedWithRtcCenter/tileset.json";
+    const withCopyrightUrl =
+      "./Data/Cesium3DTiles/Batched/BatchedWithCopyright/tileset.json";
 
     function setCamera(longitude, latitude) {
       // One feature is located at the center, point the camera there
@@ -402,6 +404,57 @@ describe(
           );
         }
       );
+    });
+
+    it("gets copyright from glTF", function () {
+      return Cesium3DTilesTester.loadTileset(scene, withCopyrightUrl).then(
+        function (tileset) {
+          const creditDisplay = scene.frameState.creditDisplay;
+          const credits =
+            creditDisplay._currentFrameCredits.lightboxCredits.values;
+          expect(credits.length).toEqual(1);
+          expect(credits[0].credit.html).toEqual("Sample Copyright");
+        }
+      );
+    });
+
+    it("shows copyright from glTF on screen", function () {
+      return Cesium3DTilesTester.loadTileset(scene, withCopyrightUrl, {
+        showCreditsOnScreen: true,
+      }).then(function (tileset) {
+        const creditDisplay = scene.frameState.creditDisplay;
+        const credits = creditDisplay._currentFrameCredits.screenCredits.values;
+        expect(credits.length).toEqual(1);
+        expect(credits[0].credit.html).toEqual("Sample Copyright");
+      });
+    });
+
+    it("toggles showing copyright from glTF on screen", function () {
+      return Cesium3DTilesTester.loadTileset(scene, withCopyrightUrl, {
+        showCreditsOnScreen: false,
+      }).then(function (tileset) {
+        const creditDisplay = scene.frameState.creditDisplay;
+        const lightboxCredits =
+          creditDisplay._currentFrameCredits.lightboxCredits.values;
+        const screenCredits =
+          creditDisplay._currentFrameCredits.screenCredits.values;
+
+        expect(lightboxCredits.length).toEqual(1);
+        expect(lightboxCredits[0].credit.html).toEqual("Sample Copyright");
+        expect(screenCredits.length).toEqual(0);
+
+        tileset.showCreditsOnScreen = true;
+        scene.renderForSpecs();
+        expect(screenCredits.length).toEqual(1);
+        expect(screenCredits[0].credit.html).toEqual("Sample Copyright");
+        expect(lightboxCredits.length).toEqual(0);
+
+        tileset.showCreditsOnScreen = false;
+        scene.renderForSpecs();
+        expect(lightboxCredits.length).toEqual(1);
+        expect(lightboxCredits[0].credit.html).toEqual("Sample Copyright");
+        expect(screenCredits.length).toEqual(0);
+      });
     });
 
     it("destroys", function () {

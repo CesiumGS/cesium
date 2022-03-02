@@ -3,6 +3,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
+import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
@@ -34,6 +35,7 @@ const Primitive = ModelComponents.Primitive;
 const Instances = ModelComponents.Instances;
 const Skin = ModelComponents.Skin;
 const Node = ModelComponents.Node;
+const Asset = ModelComponents.Asset;
 const Scene = ModelComponents.Scene;
 const Components = ModelComponents.Components;
 const MetallicRoughness = ModelComponents.MetallicRoughness;
@@ -1489,6 +1491,16 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
   const scene = loadScene(gltf, nodes);
 
   const components = new Components();
+  const asset = new Asset();
+  const copyright = gltf.asset.copyright;
+  if (defined(copyright)) {
+    const credits = copyright.split(";").map(function (string) {
+      return new Credit(string.trim());
+    });
+    asset.credits = credits;
+  }
+
+  components.asset = asset;
   components.scene = scene;
   components.nodes = nodes;
   components.upAxis = loader._upAxis;

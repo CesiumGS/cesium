@@ -53,7 +53,7 @@ Object.defineProperties(TileMetadata.prototype, {
    * Extras in the JSON object.
    *
    * @memberof TileMetadata.prototype
-   * @type {*}
+   * @type {Object}
    * @readonly
    * @private
    */

@@ -390,12 +390,6 @@ describe("Core/Matrix3", function () {
     expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON15);
   });
 
-  it("fromRotationX throws without angle", function () {
-    expect(function () {
-      Matrix3.fromRotationX();
-    }).toThrowDeveloperError();
-  });
-
   it("fromRotationY works without a result parameter", function () {
     const matrix = Matrix3.fromRotationY(0.0);
     expect(matrix).toEqual(Matrix3.IDENTITY);
@@ -409,12 +403,6 @@ describe("Core/Matrix3", function () {
     expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON15);
   });
 
-  it("fromRotationY throws without angle", function () {
-    expect(function () {
-      Matrix3.fromRotationY();
-    }).toThrowDeveloperError();
-  });
-
   it("fromRotationZ works without a result parameter", function () {
     const matrix = Matrix3.fromRotationZ(0.0);
     expect(matrix).toEqual(Matrix3.IDENTITY);
@@ -426,12 +414,6 @@ describe("Core/Matrix3", function () {
     const matrix = Matrix3.fromRotationZ(CesiumMath.toRadians(90.0), result);
     expect(matrix).toBe(result);
     expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON15);
-  });
-
-  it("fromRotationZ throws without angle", function () {
-    expect(function () {
-      Matrix3.fromRotationZ();
-    }).toThrowDeveloperError();
   });
 
   it("clone works without a result parameter", function () {
@@ -594,8 +576,40 @@ describe("Core/Matrix3", function () {
     expect(result).toEqual(expected);
   });
 
+  it("setScale works", function () {
+    const matrix = Matrix3.clone(Matrix3.IDENTITY);
+    const result = new Matrix3();
+    const newScale = new Cartesian3(2.0, 3.0, 4.0);
+
+    expect(Matrix3.getScale(matrix, new Cartesian3())).toEqual(Cartesian3.ONE);
+
+    const returnedResult = Matrix3.setScale(matrix, newScale, result);
+
+    expect(Matrix3.getScale(returnedResult, new Cartesian3())).toEqual(
+      newScale
+    );
+    expect(result).toBe(returnedResult);
+  });
+
+  it("setUniformScale works", function () {
+    const oldScale = new Cartesian3(2.0, 3.0, 4.0);
+    const newScale = 5.0;
+
+    const matrix = Matrix3.fromScale(oldScale, new Matrix3());
+    const result = new Matrix3();
+
+    expect(Matrix3.getScale(matrix, new Cartesian3())).toEqual(oldScale);
+
+    const returnedResult = Matrix3.setUniformScale(matrix, newScale, result);
+
+    expect(Matrix3.getScale(returnedResult, new Cartesian3())).toEqual(
+      new Cartesian3(newScale, newScale, newScale)
+    );
+    expect(result).toBe(returnedResult);
+  });
+
   it("getScale works", function () {
-    const scale = new Cartesian3(1.0, 2.0, 3.0);
+    const scale = new Cartesian3(2.0, 3.0, 4.0);
     const result = new Cartesian3();
     const computedScale = Matrix3.getScale(Matrix3.fromScale(scale), result);
 
@@ -603,24 +617,82 @@ describe("Core/Matrix3", function () {
     expect(computedScale).toEqualEpsilon(scale, CesiumMath.EPSILON14);
   });
 
-  it("getScale throws without a matrix", function () {
-    expect(function () {
-      Matrix3.getScale();
-    }).toThrowDeveloperError();
-  });
-
   it("getMaximumScale works", function () {
-    const m = Matrix3.fromScale(new Cartesian3(1.0, 2.0, 3.0));
+    const m = Matrix3.fromScale(new Cartesian3(2.0, 3.0, 4.0));
     expect(Matrix3.getMaximumScale(m)).toEqualEpsilon(
-      3.0,
+      4.0,
       CesiumMath.EPSILON14
     );
   });
 
-  it("getMaximumScale throws without a matrix", function () {
-    expect(function () {
-      Matrix3.getMaximumScale();
-    }).toThrowDeveloperError();
+  it("setRotation works", function () {
+    const scaleVec = new Cartesian3(2.0, 3.0, 4.0);
+    const scale = Matrix3.fromScale(scaleVec, new Matrix3());
+    const rotation = Matrix3.fromRotationX(0.5, new Matrix3());
+    const scaleRotation = Matrix3.setRotation(scale, rotation, new Matrix3());
+
+    const extractedScale = Matrix3.getScale(scaleRotation, new Cartesian3());
+    const extractedRotation = Matrix3.getRotation(scaleRotation, new Matrix3());
+
+    expect(extractedScale).toEqualEpsilon(scaleVec, CesiumMath.EPSILON14);
+    expect(extractedRotation).toEqualEpsilon(rotation, CesiumMath.EPSILON14);
+  });
+
+  it("getRotation returns matrix without scale", function () {
+    const matrix = Matrix3.fromColumnMajorArray([
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0,
+      7.0,
+      8.0,
+      9.0,
+    ]);
+    const expectedRotation = Matrix3.fromArray([
+      1.0 / Math.sqrt(1.0 * 1.0 + 2.0 * 2.0 + 3.0 * 3.0),
+      2.0 / Math.sqrt(1.0 * 1.0 + 2.0 * 2.0 + 3.0 * 3.0),
+      3.0 / Math.sqrt(1.0 * 1.0 + 2.0 * 2.0 + 3.0 * 3.0),
+      4.0 / Math.sqrt(4.0 * 4.0 + 5.0 * 5.0 + 6.0 * 6.0),
+      5.0 / Math.sqrt(4.0 * 4.0 + 5.0 * 5.0 + 6.0 * 6.0),
+      6.0 / Math.sqrt(4.0 * 4.0 + 5.0 * 5.0 + 6.0 * 6.0),
+      7.0 / Math.sqrt(7.0 * 7.0 + 8.0 * 8.0 + 9.0 * 9.0),
+      8.0 / Math.sqrt(7.0 * 7.0 + 8.0 * 8.0 + 9.0 * 9.0),
+      9.0 / Math.sqrt(7.0 * 7.0 + 8.0 * 8.0 + 9.0 * 9.0),
+    ]);
+    const rotation = Matrix3.getRotation(matrix, new Matrix3());
+    expect(rotation).toEqualEpsilon(expectedRotation, CesiumMath.EPSILON14);
+  });
+
+  it("getRotation does not modify rotation matrix", function () {
+    const matrix = Matrix3.fromColumnMajorArray([
+      1.0,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0,
+      7.0,
+      8.0,
+      9.0,
+    ]);
+    const duplicateMatrix = Matrix3.clone(matrix, new Matrix3());
+    const expectedRotation = Matrix3.fromArray([
+      1.0 / Math.sqrt(1.0 * 1.0 + 2.0 * 2.0 + 3.0 * 3.0),
+      2.0 / Math.sqrt(1.0 * 1.0 + 2.0 * 2.0 + 3.0 * 3.0),
+      3.0 / Math.sqrt(1.0 * 1.0 + 2.0 * 2.0 + 3.0 * 3.0),
+      4.0 / Math.sqrt(4.0 * 4.0 + 5.0 * 5.0 + 6.0 * 6.0),
+      5.0 / Math.sqrt(4.0 * 4.0 + 5.0 * 5.0 + 6.0 * 6.0),
+      6.0 / Math.sqrt(4.0 * 4.0 + 5.0 * 5.0 + 6.0 * 6.0),
+      7.0 / Math.sqrt(7.0 * 7.0 + 8.0 * 8.0 + 9.0 * 9.0),
+      8.0 / Math.sqrt(7.0 * 7.0 + 8.0 * 8.0 + 9.0 * 9.0),
+      9.0 / Math.sqrt(7.0 * 7.0 + 8.0 * 8.0 + 9.0 * 9.0),
+    ]);
+    const result = Matrix3.getRotation(matrix, new Matrix3());
+    expect(result).toEqualEpsilon(expectedRotation, CesiumMath.EPSILON14);
+    expect(matrix).toEqual(duplicateMatrix);
+    expect(matrix).not.toBe(result);
   });
 
   it("multiply works", function () {
@@ -707,6 +779,33 @@ describe("Core/Matrix3", function () {
     expect(m).toEqual(expected);
   });
 
+  it("multiplyByUniformScale works", function () {
+    const m = new Matrix3(2, 3, 4, 5, 6, 7, 8, 9, 10);
+    const scale = 2.0;
+    const expected = Matrix3.multiply(
+      m,
+      Matrix3.fromUniformScale(scale),
+      new Matrix3()
+    );
+    const result = new Matrix3();
+    const returnedResult = Matrix3.multiplyByUniformScale(m, scale, result);
+    expect(returnedResult).toBe(result);
+    expect(result).toEqual(expected);
+  });
+
+  it('multiplyByUniformScale works with "this" result parameter', function () {
+    const m = new Matrix3(2, 3, 4, 5, 6, 7, 8, 9, 10);
+    const scale = 2.0;
+    const expected = Matrix3.multiply(
+      m,
+      Matrix3.fromUniformScale(scale),
+      new Matrix3()
+    );
+    const returnedResult = Matrix3.multiplyByUniformScale(m, scale, m);
+    expect(returnedResult).toBe(m);
+    expect(m).toEqual(expected);
+  });
+
   it("multiplyByVector works", function () {
     const left = new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9);
     const right = new Cartesian3(10, 11, 12);
@@ -784,52 +883,6 @@ describe("Core/Matrix3", function () {
     expect(result).toEqual(expectedInverseTranspose);
   });
 
-  it("getRotation returns matrix without scale", function () {
-    const matrix = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-    let result = new Matrix3();
-    const expected = Matrix3.fromArray([
-      0.12309149097933272,
-      0.4923659639173309,
-      0.8616404368553291,
-      0.20739033894608505,
-      0.5184758473652127,
-      0.8295613557843402,
-      0.2672612419124244,
-      0.5345224838248488,
-      0.8017837257372732,
-    ]);
-    const scale = new Cartesian3();
-    const expectedScale = new Cartesian3(1.0, 1.0, 1.0);
-    result = Matrix3.getRotation(matrix, result);
-    const resultScale = Matrix3.getScale(result, scale);
-    expect(resultScale).toEqualEpsilon(expectedScale, CesiumMath.EPSILON14);
-    expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON14);
-  });
-
-  it("getRotation does not modify rotation matrix", function () {
-    const tmp = new Matrix3();
-    let result = new Matrix3();
-    const rotation = Matrix3.clone(Matrix3.IDENTITY, new Matrix3());
-    Matrix3.multiply(rotation, Matrix3.fromRotationX(1.0, tmp), rotation);
-    Matrix3.multiply(rotation, Matrix3.fromRotationY(2.0, tmp), rotation);
-    Matrix3.multiply(rotation, Matrix3.fromRotationZ(3.0, tmp), rotation);
-    result = Matrix3.getRotation(rotation, result);
-    expect(rotation).toEqualEpsilon(result, CesiumMath.EPSILON14);
-    expect(rotation).not.toBe(result);
-  });
-
-  it("getRotation throws without a matrix", function () {
-    expect(function () {
-      return Matrix3.getRotation();
-    }).toThrowDeveloperError();
-  });
-
-  it("getRotation throws without a result", function () {
-    expect(function () {
-      return Matrix3.getRotation(new Matrix3());
-    }).toThrowDeveloperError();
-  });
-
   it("transpose works with a result parameter that is an input result parameter", function () {
     const matrix = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
     const expected = new Matrix3(1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0);
@@ -880,12 +933,6 @@ describe("Core/Matrix3", function () {
     const returnedResult = Matrix3.inverse(matrix, matrix);
     expect(matrix).toBe(returnedResult);
     expect(matrix).toEqual(expected);
-  });
-
-  it("computeEigenDecomposition throws without a matrix", function () {
-    expect(function () {
-      return Matrix3.computeEigenDecomposition();
-    }).toThrowDeveloperError();
   });
 
   it("computes eigenvalues and eigenvectors", function () {
@@ -991,12 +1038,6 @@ describe("Core/Matrix3", function () {
       Matrix3.multiplyByVector(a, v, new Cartesian3()),
       CesiumMath.EPSILON14
     );
-  });
-
-  it("abs throws without a matrix", function () {
-    expect(function () {
-      return Matrix3.abs();
-    }).toThrowDeveloperError();
   });
 
   it("abs works", function () {
@@ -1171,6 +1212,24 @@ describe("Core/Matrix3", function () {
     }).toThrowDeveloperError();
   });
 
+  it("fromRotationX throws without angle", function () {
+    expect(function () {
+      Matrix3.fromRotationX();
+    }).toThrowDeveloperError();
+  });
+
+  it("fromRotationY throws without angle", function () {
+    expect(function () {
+      Matrix3.fromRotationY();
+    }).toThrowDeveloperError();
+  });
+
+  it("fromRotationZ throws without angle", function () {
+    expect(function () {
+      Matrix3.fromRotationZ();
+    }).toThrowDeveloperError();
+  });
+
   it("clone returns undefined without matrix parameter", function () {
     expect(Matrix3.clone(undefined)).toBeUndefined();
   });
@@ -1203,7 +1262,7 @@ describe("Core/Matrix3", function () {
     }).toThrowDeveloperError();
   });
 
-  it("getColumn throws without of range index parameter", function () {
+  it("getColumn throws with out of range index parameter", function () {
     const matrix = new Matrix3();
     expect(function () {
       Matrix3.getColumn(matrix, 3);
@@ -1224,7 +1283,7 @@ describe("Core/Matrix3", function () {
     }).toThrowDeveloperError();
   });
 
-  it("setColumn throws without of range index parameter", function () {
+  it("setColumn throws with out of range index parameter", function () {
     const matrix = new Matrix3();
     const cartesian = new Cartesian3();
     expect(function () {
@@ -1238,7 +1297,7 @@ describe("Core/Matrix3", function () {
     }).toThrowDeveloperError();
   });
 
-  it("getRow throws without of range index parameter", function () {
+  it("getRow throws with out of range index parameter", function () {
     const matrix = new Matrix3();
     expect(function () {
       Matrix3.getRow(matrix, 3);
@@ -1259,11 +1318,65 @@ describe("Core/Matrix3", function () {
     }).toThrowDeveloperError();
   });
 
-  it("setRow throws without of range index parameter", function () {
+  it("setRow throws with out of range index parameter", function () {
     const matrix = new Matrix3();
     const cartesian = new Cartesian3();
     expect(function () {
       Matrix3.setRow(matrix, 3, cartesian);
+    }).toThrowDeveloperError();
+  });
+
+  it("setScale throws without a matrix", function () {
+    expect(function () {
+      Matrix3.setScale();
+    }).toThrowDeveloperError();
+  });
+
+  it("setScale throws without a scale", function () {
+    expect(function () {
+      Matrix3.setScale(new Matrix3());
+    }).toThrowDeveloperError();
+  });
+
+  it("setUniformScale throws without a matrix", function () {
+    expect(function () {
+      Matrix3.setUniformScale();
+    }).toThrowDeveloperError();
+  });
+
+  it("setUniformScale throws without a scale", function () {
+    expect(function () {
+      Matrix3.setUniformScale(new Matrix3());
+    }).toThrowDeveloperError();
+  });
+
+  it("getScale throws without a matrix", function () {
+    expect(function () {
+      Matrix3.getScale();
+    }).toThrowDeveloperError();
+  });
+
+  it("getMaximumScale throws without a matrix", function () {
+    expect(function () {
+      Matrix3.getMaximumScale();
+    }).toThrowDeveloperError();
+  });
+
+  it("setRotation throws without a matrix", function () {
+    expect(function () {
+      return Matrix3.setRotation();
+    }).toThrowDeveloperError();
+  });
+
+  it("setRotation throws without a rotation", function () {
+    expect(function () {
+      return Matrix3.setRotation(new Matrix3());
+    }).toThrowDeveloperError();
+  });
+
+  it("getRotation throws without a matrix", function () {
+    expect(function () {
+      return Matrix3.getRotation();
     }).toThrowDeveloperError();
   });
 
@@ -1291,6 +1404,18 @@ describe("Core/Matrix3", function () {
     const m = new Matrix3();
     expect(function () {
       Matrix3.multiplyByScale(m, undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("multiplyByUniformScale throws with no matrix parameter", function () {
+    expect(function () {
+      Matrix3.multiplyByUniformScale(undefined, new Cartesian3());
+    }).toThrowDeveloperError();
+  });
+
+  it("multiplyByUniformScale throws with no scale parameter", function () {
+    expect(function () {
+      Matrix3.multiplyByUniformScale(new Matrix3(), undefined);
     }).toThrowDeveloperError();
   });
 
@@ -1333,6 +1458,12 @@ describe("Core/Matrix3", function () {
     }).toThrowDeveloperError();
   });
 
+  it("abs throws without a matrix", function () {
+    expect(function () {
+      return Matrix3.abs();
+    }).toThrowDeveloperError();
+  });
+
   it("determinant throws without matrix parameter", function () {
     expect(function () {
       Matrix3.determinant(undefined);
@@ -1351,6 +1482,12 @@ describe("Core/Matrix3", function () {
         new Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         new Matrix3()
       );
+    }).toThrowDeveloperError();
+  });
+
+  it("computeEigenDecomposition throws without a matrix", function () {
+    expect(function () {
+      return Matrix3.computeEigenDecomposition();
     }).toThrowDeveloperError();
   });
 
@@ -1378,79 +1515,109 @@ describe("Core/Matrix3", function () {
     }).toThrowDeveloperError();
   });
 
-  it("getColumn throws without result parameter", function () {
+  it("getColumn throws without a result parameter", function () {
     expect(function () {
       Matrix3.getColumn(new Matrix3(), 2);
     }).toThrowDeveloperError();
   });
 
-  it("setColumn throws without result parameter", function () {
+  it("setColumn throws without a result parameter", function () {
     expect(function () {
       Matrix3.setColumn(new Matrix3(), 2, new Cartesian3());
     }).toThrowDeveloperError();
   });
 
-  it("getRow throws without result parameter", function () {
+  it("getRow throws without a result parameter", function () {
     expect(function () {
       Matrix3.getRow(new Matrix3(), 2);
     }).toThrowDeveloperError();
   });
 
-  it("setRow throws without result parameter", function () {
+  it("setRow throws without a result parameter", function () {
     expect(function () {
       Matrix3.setRow(new Matrix3(), 2, new Cartesian3());
     }).toThrowDeveloperError();
   });
 
-  it("getScale throws without result parameter", function () {
+  it("setScale throws without a result parameter", function () {
+    expect(function () {
+      Matrix3.setScale(new Matrix3(), new Cartesian3());
+    }).toThrowDeveloperError();
+  });
+
+  it("setUniformScale throws without a result parameter", function () {
+    expect(function () {
+      Matrix3.setUniformScale(new Matrix3(), 1.0);
+    }).toThrowDeveloperError();
+  });
+
+  it("getScale throws without a result parameter", function () {
     expect(function () {
       Matrix3.getScale(new Matrix3());
     }).toThrowDeveloperError();
   });
 
-  it("multiply throws without result parameter", function () {
+  it("setRotation throws without a result parameter", function () {
+    expect(function () {
+      return Matrix3.setRotation(new Matrix3(), new Matrix3());
+    }).toThrowDeveloperError();
+  });
+
+  it("getRotation throws without a result parameter", function () {
+    expect(function () {
+      return Matrix3.getRotation(new Matrix3());
+    }).toThrowDeveloperError();
+  });
+
+  it("multiply throws without a result parameter", function () {
     expect(function () {
       Matrix3.multiply(new Matrix3(), new Matrix3());
     }).toThrowDeveloperError();
   });
 
-  it("multiplyByScale throws without result parameter", function () {
+  it("multiplyByScale throws without a result parameter", function () {
     expect(function () {
       Matrix3.multiplyByScale(new Matrix3(), new Cartesian3());
     }).toThrowDeveloperError();
   });
 
-  it("multiplyByVector throws without result parameter", function () {
+  it("multiplyByUniformScale throws without a result parameter", function () {
+    expect(function () {
+      Matrix3.multiplyByUniformScale(new Matrix3(), new Cartesian3());
+    }).toThrowDeveloperError();
+  });
+
+  it("multiplyByVector throws without a result parameter", function () {
     expect(function () {
       Matrix3.multiplyByVector(new Matrix3(), new Cartesian3());
     }).toThrowDeveloperError();
   });
 
-  it("multiplyByScalar throws without result parameter", function () {
+  it("multiplyByScalar throws without a result parameter", function () {
     expect(function () {
       Matrix3.multiplyByScalar(new Matrix3(), 2);
     }).toThrowDeveloperError();
   });
 
-  it("negate throws without result parameter", function () {
+  it("negate throws without a result parameter", function () {
     expect(function () {
       Matrix3.negate(new Matrix3());
     }).toThrowDeveloperError();
   });
 
-  it("transpose throws without result parameter", function () {
+  it("transpose throws without a result parameter", function () {
     expect(function () {
       Matrix3.transpose(new Matrix3());
     }).toThrowDeveloperError();
   });
 
-  it("abs throws without result parameter", function () {
+  it("abs throws without a result parameter", function () {
     expect(function () {
       Matrix3.abs(new Matrix3());
     }).toThrowDeveloperError();
   });
 
-  it("inverse throws without result parameter", function () {
+  it("inverse throws without a result parameter", function () {
     expect(function () {
       Matrix3.inverse(new Matrix3());
     }).toThrowDeveloperError();
