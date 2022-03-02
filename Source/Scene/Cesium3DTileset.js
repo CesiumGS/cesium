@@ -1016,9 +1016,6 @@ function Cesium3DTileset(options) {
     .then(function (tilesetJson) {
       // This needs to be called before loadTileset() so tile metadata
       // can be initialized synchronously in the Cesium3DTile constructor
-      if (hasExtension(tilesetJson, "3DTILES_metadata")) {
-        return processMetadataExtensionLegacy(that, tilesetJson);
-      }
       return processMetadataExtension(that, tilesetJson);
     })
     .then(function (tilesetJson) {
@@ -2042,7 +2039,7 @@ function processMetadataExtensionLegacy(tileset, tilesetJson) {
   return schemaLoader.promise.then(function (schemaLoader) {
     tileset.metadata = new Cesium3DTilesetMetadata({
       schema: schemaLoader.schema,
-      extension: extension,
+      tilestJson: extension,
     });
 
     return tilesetJson;
@@ -2059,17 +2056,21 @@ function processMetadataExtensionLegacy(tileset, tilesetJson) {
  * @private
  */
 function processMetadataExtension(tileset, tilesetJson) {
+  const metadataJson = hasExtension(tilesetJson, "3DTILES_metadata")
+    ? tilesetJson.extensions["3DTILES_metadata"]
+    : tilesetJson;
+
   let schemaLoader;
-  if (defined(tilesetJson.schemaUri)) {
+  if (defined(metadataJson.schemaUri)) {
     const resource = tileset._resource.getDerivedResource({
-      url: tilesetJson.schemaUri,
+      url: metadataJson.schemaUri,
     });
     schemaLoader = ResourceCache.loadSchema({
       resource: resource,
     });
-  } else if (defined(tilesetJson.schema)) {
+  } else if (defined(metadataJson.schema)) {
     schemaLoader = ResourceCache.loadSchema({
-      schema: tilesetJson.schema,
+      schema: metadataJson.schema,
     });
   } else {
     return when.resolve(tilesetJson);
@@ -2080,7 +2081,7 @@ function processMetadataExtension(tileset, tilesetJson) {
   return schemaLoader.promise.then(function (schemaLoader) {
     tileset.metadata = new Cesium3DTilesetMetadata({
       schema: schemaLoader.schema,
-      tilesetJson: tilesetJson,
+      tilesetJson: metadataJson,
     });
 
     return tilesetJson;

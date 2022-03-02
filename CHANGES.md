@@ -5,6 +5,7 @@
 ##### Additions :tada:
 
 - Updated 3D Tiles Next extensions to match the latest specification. See the [latest specification PR](https://github.com/CesiumGS/3d-tiles/pull/630):
+
   - `3DTILES_implicit_tiling`:
     - Added support for JSON subtree files. [#10086](https://github.com/CesiumGS/cesium/pull/10086)
     - Added support for subtree metadata. [#10093](https://github.com/CesiumGS/cesium/pull/10093)
@@ -20,7 +21,7 @@
     - Added support for explicit content metadata. [#10150](https://github.com/CesiumGS/cesium/pull/10150)
 
 - Updated extensions to match the latest 3D Tiles 1.1 schema. See the [latest schema PR](https://github.com/CesiumGS/3d-tiles/pull/634):
-  - Folded the tileset-level metadata extension into the tileset schema. [#10153](https://github.com/CesiumGS/cesium/pull/10153)
+  - Tileset metadata is now stored in `tilesetJson.metadata` rather than the `3DTILES_metadata` extension. [#10153](https://github.com/CesiumGS/cesium/pull/10153)
 
 ### 1.91 - 2022-03-01
 
