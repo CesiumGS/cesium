@@ -1,7 +1,6 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import GroupMetadata from "./GroupMetadata.js";
 import TilesetMetadata from "./TilesetMetadata.js";
 
@@ -16,11 +15,8 @@ import TilesetMetadata from "./TilesetMetadata.js";
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} [options.tilesetJson] The tileset JSON object. If this is undefined, then options.extension must be defined.
- * @param {Object} [options.extension] The JSON object, used for backwards compatibility with the 3DTILES_metadata extension.
+ * @param {Object} options.metadataJson Either the tileset JSON (3D Tiles 1.1) or the <code>3DTILES_metadata</code> extension object that contains the tileset metadata.
  * @param {MetadataSchema} options.schema The parsed schema.
- *
- * @exception {DeveloperError} One of tilesetJson and extension must be defined.
  *
  * @alias Cesium3DTilesetMetadata
  * @constructor
@@ -29,28 +25,19 @@ import TilesetMetadata from "./TilesetMetadata.js";
  */
 function Cesium3DTilesetMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const tilesetJson = options.tilesetJson;
-  const extension = options.extension;
+  const metadataJson = options.metadataJson;
 
   // The calling code is responsible for loading the schema.
   // This keeps metadata parsing synchronous.
   const schema = options.schema;
 
   //>>includeStart('debug', pragmas.debug);
-  if (defined(tilesetJson) === defined(extension)) {
-    throw new DeveloperError(
-      "One of options.tilesetJson and extension must be defined."
-    );
-  }
+  Check.typeOf.object("options.metadataJson", metadataJson);
   Check.typeOf.object("options.schema", schema);
   //>>includeEnd('debug');
 
-  let metadata;
-  if (defined(tilesetJson)) {
-    metadata = tilesetJson.metadata;
-  } else {
-    metadata = extension.tileset;
-  }
+  // An older schema stored the tileset metadata in the "tileset" property.
+  const metadata = defaultValue(metadataJson.metadata, metadataJson.tileset);
 
   let tileset;
   if (defined(metadata)) {
@@ -60,9 +47,7 @@ function Cesium3DTilesetMetadata(options) {
     });
   }
 
-  const definedJson = defaultValue(tilesetJson, extension);
-  const groupsJson = definedJson.groups;
-
+  const groupsJson = metadataJson.groups;
   const groups = {};
   if (defined(groupsJson)) {
     for (const groupId in groupsJson) {
@@ -81,9 +66,9 @@ function Cesium3DTilesetMetadata(options) {
   this._groups = groups;
   this._tileset = tileset;
 
-  this._statistics = definedJson.statistics;
-  this._extras = definedJson.extras;
-  this._extensions = definedJson.extensions;
+  this._statistics = metadataJson.statistics;
+  this._extras = metadataJson.extras;
+  this._extensions = metadataJson.extensions;
 }
 
 Object.defineProperties(Cesium3DTilesetMetadata.prototype, {

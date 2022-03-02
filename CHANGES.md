@@ -18,9 +18,9 @@
     - Updated property texture parsing to match the latest schema [#10122](https://github.com/CesiumGS/cesium/pull/10122)
   - `3DTILES_metadata`:
     - Added support for explicit content metadata. [#10150](https://github.com/CesiumGS/cesium/pull/10150)
-
 - Updated extensions to match the latest 3D Tiles 1.1 schema. See the [latest schema PR](https://github.com/CesiumGS/3d-tiles/pull/634):
-  - Folded the tileset-level metadata extension into the tileset schema. [#10153](https://github.com/CesiumGS/cesium/pull/10153)
+  - Version 1.1 tilesets are now supported. [#10155](https://github.com/CesiumGS/cesium/pull/10155)
+  - Tileset metadata is now stored in `tilesetJson.metadata` rather than the `3DTILES_metadata` extension. [#10153](https://github.com/CesiumGS/cesium/pull/10153)
 
 ### 1.91 - 2022-03-01
 

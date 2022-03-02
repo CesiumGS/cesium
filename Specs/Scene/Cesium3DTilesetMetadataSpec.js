@@ -34,7 +34,7 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
     const schema = new MetadataSchema(schemaJson);
 
     const metadata = new Cesium3DTilesetMetadata({
-      tilesetJson: {},
+      metadataJson: {},
       schema: schema,
     });
 
@@ -99,7 +99,7 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
     const schema = new MetadataSchema(schemaJson);
 
     const metadata = new Cesium3DTilesetMetadata({
-      tilesetJson: tilesetJson,
+      metadataJson: tilesetJson,
       schema: schema,
     });
 
@@ -128,7 +128,7 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
     expect(metadata.extensions).toBe(extensions);
   });
 
-  it("creates 3D Tiles metadata with extension", function () {
+  it("creates 3D Tiles metadata (legacy)", function () {
     const statistics = {
       classes: {
         tree: {
@@ -181,7 +181,7 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
     const schema = new MetadataSchema(schemaJson);
 
     const metadata = new Cesium3DTilesetMetadata({
-      extension: extension,
+      metadataJson: extension,
       schema: schema,
     });
 
@@ -210,7 +210,7 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
     expect(metadata.extensions).toBe(extensions);
   });
 
-  it("constructor throws without metadatajson or extension", function () {
+  it("constructor throws without metadataJson", function () {
     const schema = new MetadataSchema(schemaJson);
 
     expect(function () {

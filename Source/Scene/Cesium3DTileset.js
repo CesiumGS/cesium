@@ -1016,9 +1016,6 @@ function Cesium3DTileset(options) {
     .then(function (tilesetJson) {
       // This needs to be called before loadTileset() so tile metadata
       // can be initialized synchronously in the Cesium3DTile constructor
-      if (hasExtension(tilesetJson, "3DTILES_metadata")) {
-        return processMetadataExtensionLegacy(that, tilesetJson);
-      }
       return processMetadataExtension(that, tilesetJson);
     })
     .then(function (tilesetJson) {
@@ -1892,8 +1889,14 @@ Cesium3DTileset.prototype.loadTileset = function (
   if (!defined(asset)) {
     throw new RuntimeError("Tileset must have an asset property.");
   }
-  if (asset.version !== "0.0" && asset.version !== "1.0") {
-    throw new RuntimeError("The tileset must be 3D Tiles version 0.0 or 1.0.");
+  if (
+    asset.version !== "0.0" &&
+    asset.version !== "1.0" &&
+    asset.version !== "1.1"
+  ) {
+    throw new RuntimeError(
+      "The tileset must be 3D Tiles version 0.0, 1.0, or 1.1"
+    );
   }
 
   if (defined(tilesetJson.extensionsRequired)) {
@@ -2012,44 +2015,6 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
 }
 
 /**
- * Assuming the <code>3DTILES_metadata</code> extension is present, initialize the
- * {@link Cesium3DTilesetMetadata} instance. This is asynchronous since
- * metadata schemas may be external.
- *
- * @param {Cesium3DTileset} tileset The tileset
- * @param {Object} tilesetJson The tileset JSON
- * @return {Promise<Object>} A promise that resolves to tilesetJson for chaining.
- * @private
- */
-function processMetadataExtensionLegacy(tileset, tilesetJson) {
-  const extension = tilesetJson.extensions["3DTILES_metadata"];
-
-  let schemaLoader;
-  if (defined(extension.schemaUri)) {
-    const resource = tileset._resource.getDerivedResource({
-      url: extension.schemaUri,
-    });
-    schemaLoader = ResourceCache.loadSchema({
-      resource: resource,
-    });
-  } else {
-    schemaLoader = ResourceCache.loadSchema({
-      schema: extension.schema,
-    });
-  }
-  tileset._schemaLoader = schemaLoader;
-
-  return schemaLoader.promise.then(function (schemaLoader) {
-    tileset.metadata = new Cesium3DTilesetMetadata({
-      schema: schemaLoader.schema,
-      extension: extension,
-    });
-
-    return tilesetJson;
-  });
-}
-
-/**
  * If tileset metadata is present, initialize the {@link Cesium3DTilesetMetadata}
  * instance. This is asynchronous since metadata schemas may be external.
  *
@@ -2059,17 +2024,21 @@ function processMetadataExtensionLegacy(tileset, tilesetJson) {
  * @private
  */
 function processMetadataExtension(tileset, tilesetJson) {
+  const metadataJson = hasExtension(tilesetJson, "3DTILES_metadata")
+    ? tilesetJson.extensions["3DTILES_metadata"]
+    : tilesetJson;
+
   let schemaLoader;
-  if (defined(tilesetJson.schemaUri)) {
+  if (defined(metadataJson.schemaUri)) {
     const resource = tileset._resource.getDerivedResource({
-      url: tilesetJson.schemaUri,
+      url: metadataJson.schemaUri,
     });
     schemaLoader = ResourceCache.loadSchema({
       resource: resource,
     });
-  } else if (defined(tilesetJson.schema)) {
+  } else if (defined(metadataJson.schema)) {
     schemaLoader = ResourceCache.loadSchema({
-      schema: tilesetJson.schema,
+      schema: metadataJson.schema,
     });
   } else {
     return when.resolve(tilesetJson);
@@ -2080,7 +2049,7 @@ function processMetadataExtension(tileset, tilesetJson) {
   return schemaLoader.promise.then(function (schemaLoader) {
     tileset.metadata = new Cesium3DTilesetMetadata({
       schema: schemaLoader.schema,
-      tilesetJson: tilesetJson,
+      metadataJson: metadataJson,
     });
 
     return tilesetJson;
