@@ -1,7 +1,6 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import GroupMetadata from "./GroupMetadata.js";
 import TilesetMetadata from "./TilesetMetadata.js";
 
