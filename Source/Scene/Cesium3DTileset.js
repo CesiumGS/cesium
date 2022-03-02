@@ -2043,7 +2043,7 @@ function processMetadataExtension(tileset, tilesetJson) {
   return schemaLoader.promise.then(function (schemaLoader) {
     tileset.metadata = new Cesium3DTilesetMetadata({
       schema: schemaLoader.schema,
-      tilesetJson: metadataJson,
+      metadataJson: metadataJson,
     });
 
     return tilesetJson;

@@ -15,10 +15,8 @@ import TilesetMetadata from "./TilesetMetadata.js";
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.tilesetJson The tileset JSON object.
+ * @param {Object} options.metadataJson Either the tileset JSON or the 3DTILES_metadata extension object that contains the tileset metadata.
  * @param {MetadataSchema} options.schema The parsed schema.
- *
- * @exception {DeveloperError} One of tilesetJson and extension must be defined.
  *
  * @alias Cesium3DTilesetMetadata
  * @constructor
@@ -27,19 +25,19 @@ import TilesetMetadata from "./TilesetMetadata.js";
  */
 function Cesium3DTilesetMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const tilesetJson = options.tilesetJson;
+  const metadataJson = options.metadataJson;
 
   // The calling code is responsible for loading the schema.
   // This keeps metadata parsing synchronous.
   const schema = options.schema;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.tilesetJson", tilesetJson);
+  Check.typeOf.object("options.metadataJson", metadataJson);
   Check.typeOf.object("options.schema", schema);
   //>>includeEnd('debug');
 
   // An older schema stored the tileset metadata in the "tileset" property.
-  const metadata = defaultValue(tilesetJson.metadata, tilesetJson.tileset);
+  const metadata = defaultValue(metadataJson.metadata, metadataJson.tileset);
 
   let tileset;
   if (defined(metadata)) {
@@ -49,7 +47,7 @@ function Cesium3DTilesetMetadata(options) {
     });
   }
 
-  const groupsJson = tilesetJson.groups;
+  const groupsJson = metadataJson.groups;
   const groups = {};
   if (defined(groupsJson)) {
     for (const groupId in groupsJson) {
@@ -68,9 +66,9 @@ function Cesium3DTilesetMetadata(options) {
   this._groups = groups;
   this._tileset = tileset;
 
-  this._statistics = tilesetJson.statistics;
-  this._extras = tilesetJson.extras;
-  this._extensions = tilesetJson.extensions;
+  this._statistics = metadataJson.statistics;
+  this._extras = metadataJson.extras;
+  this._extensions = metadataJson.extensions;
 }
 
 Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
