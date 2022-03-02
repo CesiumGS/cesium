@@ -5522,11 +5522,7 @@ describe(
     describe("3DTILES_metadata", function () {
       const tilesetMetadataUrl =
         "Data/Cesium3DTiles/Metadata/TilesetMetadata/1.1/tileset.json";
-      const tilesetMetadataWithExtensionUrl =
-        "Data/Cesium3DTiles/Metadata/TilesetMetadata/1.0/tileset.json";
       const tilesetWithExternalSchemaUrl =
-        "Data/Cesium3DTiles/Metadata/ExternalSchema/1.1/tileset.json";
-      const tilesetWithExternalSchemaAndExtensionUrl =
         "Data/Cesium3DTiles/Metadata/ExternalSchema/1.1/tileset.json";
       const tilesetWithGroupMetadataUrl =
         "Data/Cesium3DTiles/Metadata/GroupMetadata/tileset.json";
@@ -5542,6 +5538,11 @@ describe(
         "Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset.json";
       const tilesetWithExplicitMultipleContentsMetadataUrl =
         "Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset.json";
+
+      const tilesetMetadataLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/TilesetMetadata/1.0/tileset.json";
+      const tilesetWithExternalSchemaLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ExternalSchema/1.0/tileset.json";
 
       const tilesetProperties = {
         author: "Cesium",
@@ -5578,10 +5579,10 @@ describe(
         );
       });
 
-      it("loads tileset metadata with extension for backwards compatibility", function () {
+      it("loads tileset metadata (legacy)", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          tilesetMetadataWithExtensionUrl
+          tilesetMetadataLegacyUrl
         ).then(function (tileset) {
           const metadata = tileset.metadata;
           expect(metadata).toBeDefined();
@@ -5674,10 +5675,10 @@ describe(
         );
       });
 
-      it("loads metadata with embedded schema and extension for backwards compatibility", function () {
+      it("loads metadata with embedded schema (legacy)", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          tilesetMetadataWithExtensionUrl
+          tilesetMetadataLegacyUrl
         ).then(function (tileset) {
           const schema = tileset.metadata.schema;
           expect(schema).toBeDefined();
@@ -5700,10 +5701,10 @@ describe(
         });
       });
 
-      it("loads metadata with external schema and extension for backwards compatibility", function () {
+      it("loads metadata with external schema and extension (legacy)", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          tilesetWithExternalSchemaAndExtensionUrl
+          tilesetWithExternalSchemaLegacyUrl
         ).then(function (tileset) {
           const schema = tileset.metadata.schema;
           expect(schema).toBeDefined();
