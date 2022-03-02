@@ -15,7 +15,7 @@ import TilesetMetadata from "./TilesetMetadata.js";
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.metadataJson Either the tileset JSON or the 3DTILES_metadata extension object that contains the tileset metadata.
+ * @param {Object} options.metadataJson Either the tileset JSON (3D Tiles 1.1) or the <code>3DTILES_metadata</code> extension object that contains the tileset metadata.
  * @param {MetadataSchema} options.schema The parsed schema.
  *
  * @alias Cesium3DTilesetMetadata
