@@ -5529,7 +5529,7 @@ describe(
       const tilesetWithImplicitTileMetadataUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitTileMetadata/tileset.json";
       const tilesetWithExplicitTileMetadataUrl =
-        "Data/Cesium3DTiles/Metadata/TileMetadata/tileset.json";
+        "Data/Cesium3DTiles/Metadata/TileMetadata/1.1/tileset.json";
       const tilesetWithImplicitContentMetadataUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitContentMetadata/tileset.json";
       const tilesetWithExplicitContentMetadataUrl =
@@ -5543,6 +5543,8 @@ describe(
         "Data/Cesium3DTiles/Metadata/TilesetMetadata/1.0/tileset.json";
       const tilesetWithExternalSchemaLegacyUrl =
         "Data/Cesium3DTiles/Metadata/ExternalSchema/1.0/tileset.json";
+      const tilesetWithExplicitTileMetadataLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/TileMetadata/1.0/tileset.json";
 
       const tilesetProperties = {
         author: "Cesium",
@@ -5718,6 +5720,48 @@ describe(
         return Cesium3DTilesTester.loadTileset(
           scene,
           tilesetWithExplicitTileMetadataUrl
+        ).then(function (tileset) {
+          const expected = {
+            "parent.b3dm": {
+              color: new Cartesian3(0.5, 0.0, 1.0),
+              population: 530,
+            },
+            "ll.b3dm": {
+              color: new Cartesian3(1.0, 1.0, 0.0),
+              population: 50,
+            },
+            "lr.b3dm": {
+              color: new Cartesian3(1.0, 0.0, 0.5),
+              population: 230,
+            },
+            "ur.b3dm": {
+              color: new Cartesian3(1.0, 0.5, 0.0),
+              population: 150,
+            },
+            "ul.b3dm": {
+              color: new Cartesian3(1.0, 0.0, 0.0),
+              population: 100,
+            },
+          };
+
+          const parent = tileset.root;
+          const tiles = [parent].concat(parent.children);
+          tiles.forEach(function (tile) {
+            const uri = tile._header.content.uri;
+            const expectedValues = expected[uri];
+            const metadata = tile.metadata;
+            expect(metadata.getProperty("color")).toEqual(expectedValues.color);
+            expect(metadata.getProperty("population")).toEqual(
+              expectedValues.population
+            );
+          });
+        });
+      });
+
+      it("loads explicit tileset with tile metadata (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithExplicitTileMetadataLegacyUrl
         ).then(function (tileset) {
           const expected = {
             "parent.b3dm": {

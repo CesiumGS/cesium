@@ -172,14 +172,12 @@
         ]
       }
     },
-    "extensions": {
-      "3DTILES_metadata": {
-        "class": "tile",
-        "properties": {
-          "color": [127, 0, 255, 1.0],
-          "highlightColor": [255, 255, 255, 1.0],
-          "population": 530
-        }
+    "metadata": {
+      "class": "tile",
+      "properties": {
+        "color": [127, 0, 255, 1.0],
+        "highlightColor": [255, 255, 255, 1.0],
+        "population": 530
       }
     },
     "children": [
@@ -209,14 +207,12 @@
             }
           }
         },
-        "extensions": {
-          "3DTILES_metadata": {
-            "class": "tile",
-            "properties": {
-              "color": [255, 255, 0, 1.0],
-              "highlightColor": [255, 0, 255, 1.0],
-              "population": 50
-            }
+        "metadata": {
+          "class": "tile",
+          "properties": {
+            "color": [255, 255, 0, 1.0],
+            "highlightColor": [255, 0, 255, 1.0],
+            "population": 50
           }
         }
       },
@@ -246,14 +242,12 @@
             }
           }
         },
-        "extensions": {
-          "3DTILES_metadata": {
-            "class": "tile",
-            "properties": {
-              "color": [255, 0, 127, 1.0],
-              "highlightColor": [0, 255, 255, 1.0],
-              "population": 230
-            }
+        "metadata": {
+          "class": "tile",
+          "properties": {
+            "color": [255, 0, 127, 1.0],
+            "highlightColor": [0, 255, 255, 1.0],
+            "population": 230
           }
         }
       },
@@ -283,14 +277,12 @@
             }
           }
         },
-        "extensions": {
-          "3DTILES_metadata": {
-            "class": "tile",
-            "properties": {
-              "color": [255, 127, 0, 1.0],
-              "highlightColor": [0, 255, 0, 1.0],
-              "population": 150
-            }
+        "metadata": {
+          "class": "tile",
+          "properties": {
+            "color": [255, 127, 0, 1.0],
+            "highlightColor": [0, 255, 0, 1.0],
+            "population": 150
           }
         }
       },
@@ -320,14 +312,12 @@
             }
           }
         },
-        "extensions": {
-          "3DTILES_metadata": {
-            "class": "tile",
-            "properties": {
-              "color": [255, 0, 0, 1.0],
-              "highlightColor": [0, 255, 0, 1.0],
-              "population": 100
-            }
+        "metadata": {
+          "class": "tile",
+          "properties": {
+            "color": [255, 0, 0, 1.0],
+            "highlightColor": [0, 255, 0, 1.0],
+            "population": 100
           }
         }
       }

@@ -32,6 +32,7 @@ import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
 import findContentMetadata from "./findContentMetadata.js";
 import findGroupMetadata from "./findGroupMetadata.js";
+import findTileMetadata from "./findTileMetadata.js";
 import hasExtension from "./hasExtension.js";
 import Multiple3DTileContent from "./Multiple3DTileContent.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
@@ -306,19 +307,6 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    */
   this.hasMultipleContents = hasMultipleContents;
 
-  let metadata;
-  if (hasExtension(header, "3DTILES_metadata")) {
-    // This assumes that tileset.metadata has been created before any
-    // tiles are constructed.
-    const extension = header.extensions["3DTILES_metadata"];
-    const classes = tileset.metadata.schema.classes;
-    const tileClass = classes[extension.class];
-    metadata = new TileMetadata({
-      tile: extension,
-      class: tileClass,
-    });
-  }
-
   /**
    * When the <code>3DTILES_metadata</code> extension is used, this
    * stores a {@link TileMetadata} object for accessing tile metadata.
@@ -328,7 +316,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
-  this.metadata = metadata;
+  this.metadata = findTileMetadata(tileset, header);
 
   /**
    * The node in the tileset's LRU cache, used to determine when to unload a tile's content.
