@@ -1647,6 +1647,21 @@ describe("Scene/MetadataClassProperty", function () {
     ).toBeUndefined();
   });
 
+  it("validate returns error message if property is required but value is undefined", function () {
+    const property = new MetadataClassProperty({
+      id: "position",
+      property: {
+        type: "SCALAR",
+        componentType: "FLOAT32",
+        required: true,
+      },
+    });
+
+    expect(property.validate(undefined)).toBe(
+      "required property must have a value"
+    );
+  });
+
   it("validate returns error message if type is ARRAY and value is not an array", function () {
     const property = new MetadataClassProperty({
       id: "position",

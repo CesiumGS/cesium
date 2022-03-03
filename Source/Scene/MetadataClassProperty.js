@@ -679,6 +679,10 @@ MetadataClassProperty.prototype.packVectorAndMatrixTypes = function (
  * @private
  */
 MetadataClassProperty.prototype.validate = function (value) {
+  if (this._required && !defined(value)) {
+    return `required property must have a value`;
+  }
+
   if (this._isArray) {
     return validateArray(this, value);
   }
