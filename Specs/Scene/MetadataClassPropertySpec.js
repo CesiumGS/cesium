@@ -1662,6 +1662,20 @@ describe("Scene/MetadataClassProperty", function () {
     );
   });
 
+  it("validate returns undefined if value is undefined but a default is available", function () {
+    const property = new MetadataClassProperty({
+      id: "position",
+      property: {
+        type: "SCALAR",
+        componentType: "FLOAT32",
+        required: true,
+        default: -1.0,
+      },
+    });
+
+    expect(property.validate(undefined)).not.toBeDefined();
+  });
+
   it("validate returns error message if type is ARRAY and value is not an array", function () {
     const property = new MetadataClassProperty({
       id: "position",
