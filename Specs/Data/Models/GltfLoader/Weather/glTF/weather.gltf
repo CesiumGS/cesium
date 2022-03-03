@@ -53,11 +53,11 @@
           "count": 3,
           "properties": {
             "name": {
-              "bufferView": 5,
-              "stringOffsetBufferView": 6
+              "values": 5,
+              "stringOffsets": 6
             },
             "population": {
-              "bufferView": 7
+              "values": 7
             }
           }
         },
@@ -67,13 +67,13 @@
           "count": 1000,
           "properties": {
             "airTemperature": {
-              "bufferView": 2
+              "values": 2
             },
             "airPressure": {
-              "bufferView": 3
+              "values": 3
             },
             "windVelocity": {
-              "bufferView": 4
+              "values": 4
             }
           }
         }

@@ -47,7 +47,7 @@ describe("Scene/MetadataTableProperty", function () {
     const property = new MetadataTableProperty({
       count: 2,
       property: {
-        bufferView: 0,
+        values: 0,
         extras: extras,
         extensions: extensions,
       },
@@ -67,7 +67,7 @@ describe("Scene/MetadataTableProperty", function () {
     expect(property.extensions).toBe(extensions);
   });
 
-  it("constructs properties with stringOffset and arrayOffset", function () {
+  it("constructs properties with stringOffsets and arrayOffsets", function () {
     const extras = {
       other: 0,
     };
@@ -85,13 +85,13 @@ describe("Scene/MetadataTableProperty", function () {
     const property = new MetadataTableProperty({
       count: 2,
       property: {
-        bufferView: 0,
+        values: 0,
         extras: extras,
         extensions: extensions,
         stringOffsetType: "UINT16",
-        stringOffsetBufferView: 1,
+        stringOffsets: 1,
         arrayOffsetType: "UINT8",
-        arrayOffsetBufferView: 2,
+        arrayOffsets: 2,
       },
       classProperty: new MetadataClassProperty({
         id: "property",
@@ -119,7 +119,7 @@ describe("Scene/MetadataTableProperty", function () {
     expect(property.get(1)).toEqual(["dddd", "eeeee"]);
   });
 
-  it("constructs property with EXT_feature_metadata offsetType", function () {
+  it("constructs property with EXT_feature_metadata schema", function () {
     const extras = {
       other: 0,
     };
@@ -1239,15 +1239,6 @@ describe("Scene/MetadataTableProperty", function () {
         array: true,
       },
     };
-
-    // for unpacking results in expect()
-    /*
-    const mathTypes = {
-      propertyVec4: Cartesian4,
-      propertyDVec2: Cartesian2,
-      propertyU8Mat3: Matrix3,
-      propertyDMat2: Matrix2
-    };*/
 
     // prettier-ignore
     const propertyValues = {

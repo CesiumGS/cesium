@@ -29,14 +29,13 @@ export default function ImplicitTilingTester() {}
 /**
  * A JSON description of a subtree file for easier generation
  * @typedef {Object} SubtreeDescription
- * @property {Boolean} [useBufferViews] If true, the resulting JSON chunk will use bufferView instead of bitstream. Used to test backwards compatibility.
+ * @property {Boolean} [useLegacySchema=false] If true, the resulting JSON chunk will use the legacy schema for subtrees and metadata (e.g. use bufferViews rather than bitstream, use 3DTILES_metadata extension rather than tileMetadata or contentMetadata). Used to test backwards compatibility.
  * @property {AvailabilityDescription} tileAvailability A description of the tile availability bitstream to generate
  * @property {AvailabilityDescription} contentAvailability A description of the content availability bitstream to generate
  * @property {Boolean} [useMultipleContentsExtension] If true, use the 3DTILES_multiple_contents extension. Used to test backwards compatibility.
  * @property {AvailabilityDescription} childSubtreeAvailability A description of the child subtree availability bitstream to generate
  * @property {AvailabilityDescription} other A description of another bitstream. This is not used for availability, but rather to simulate extra buffer views.
  * @property {MetadataDescription} [metadata] For testing 3DTILES_metadata, additional options can be passed in here.
- * @property {Boolean} [useMetadataExtension] If true, use the 3DTILES_metadata extension. Used to test backwards compatibility.
  * @property {Boolean} [json] If true, return the result as a JSON with external buffers. Should not be true if any of the availability buffers are internal.
  * @private
  */
@@ -151,13 +150,16 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
     count: 0,
   };
 
-  const useBufferViews = subtreeDescription.useBufferViews;
+  const useLegacySchema = defaultValue(
+    subtreeDescription.useLegacySchema,
+    false
+  );
   const bufferViewJsonArray = [];
   gatherBufferViews(
     bufferViewsU8,
     bufferViewJsonArray,
     parsedAvailability.tileAvailability,
-    useBufferViews
+    useLegacySchema
   );
 
   if (hasContent) {
@@ -168,7 +170,7 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
         bufferViewsU8,
         bufferViewJsonArray,
         contentAvailability,
-        useBufferViews
+        useLegacySchema
       );
     });
   }
@@ -176,7 +178,7 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
     bufferViewsU8,
     bufferViewJsonArray,
     parsedAvailability.childSubtreeAvailability,
-    useBufferViews
+    useLegacySchema
   );
 
   // to simulate additional buffer views for metadata or other purposes.
@@ -185,7 +187,7 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
       bufferViewsU8,
       bufferViewJsonArray,
       parsedAvailability.other,
-      useBufferViews
+      useLegacySchema
     );
   }
   if (bufferViewJsonArray.length > 0) {
@@ -226,12 +228,7 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
   // pass 4: add metadata buffer views --------------------------------------
   const metadata = subtreeDescription.metadata;
   if (defined(metadata)) {
-    addMetadata(
-      bufferViewsU8,
-      subtreeJson,
-      metadata,
-      subtreeDescription.useMetadataExtension
-    );
+    addMetadata(bufferViewsU8, subtreeJson, metadata, useLegacySchema);
   }
 
   // wrap up ----------------------------------------------------------------
@@ -243,7 +240,7 @@ function gatherBufferViews(
   bufferViewsU8,
   bufferViewJsonArray,
   parsedBitstream,
-  useBufferViews
+  useLegacySchema
 ) {
   if (defined(parsedBitstream.constant)) {
     parsedBitstream.availabilityJson = {
@@ -254,7 +251,7 @@ function gatherBufferViews(
     // simplifying assumptions:
     // 1. shareBuffer is only used for content availability
     // 2. tileAvailability is stored in the first bufferView so it has index 0
-    if (useBufferViews) {
+    if (useLegacySchema) {
       parsedBitstream.availabilityJson = {
         bufferView: 0,
         availableCount: parsedBitstream.availableCount,
@@ -276,7 +273,7 @@ function gatherBufferViews(
     };
     bufferViewJsonArray.push(bufferViewJson);
 
-    if (useBufferViews) {
+    if (useLegacySchema) {
       parsedBitstream.availabilityJson = {
         bufferView: bufferViewId,
         availableCount: parsedBitstream.availableCount,
@@ -406,7 +403,7 @@ function addMetadata(
   bufferViewsU8,
   subtreeJson,
   metadataOptions,
-  useMetadataExtension
+  useLegacySchema
 ) {
   const propertyTableResults = MetadataTester.createPropertyTables(
     metadataOptions.propertyTables
@@ -451,11 +448,12 @@ function addMetadata(
   const tileTable = propertyTableResults.propertyTables[0];
   const tileProperties = getPropertiesObjectFromPropertyTable(
     tileTable,
-    firstMetadataIndex
+    firstMetadataIndex,
+    useLegacySchema
   );
 
   // Store results in subtree JSON -----------------------------------------
-  if (useMetadataExtension) {
+  if (useLegacySchema) {
     if (!defined(subtreeJson.extensions)) {
       subtreeJson.extensions = {};
     }
@@ -480,7 +478,8 @@ function addMetadata(
       const contentTable = propertyTableResults.propertyTables[i];
       const contentProperties = getPropertiesObjectFromPropertyTable(
         contentTable,
-        firstMetadataIndex
+        firstMetadataIndex,
+        useLegacySchema
       );
       const contentMetadata = {
         class: contentTable.class,
@@ -497,27 +496,36 @@ function addMetadata(
 
 function getPropertiesObjectFromPropertyTable(
   propertyTable,
-  firstMetadataIndex
+  firstMetadataIndex,
+  useLegacySchema
 ) {
   const tableProperties = propertyTable.properties;
   const properties = {};
 
+  const valuesKey = useLegacySchema ? "bufferView" : "values";
+  const stringOffsetsKey = useLegacySchema
+    ? "stringOffsetBufferView"
+    : "stringOffsets";
+  const arrayOffsetsKey = useLegacySchema
+    ? "arrayOffsetBufferView"
+    : "arrayOffsets";
+
   for (const key in tableProperties) {
     if (tableProperties.hasOwnProperty(key)) {
       const property = tableProperties[key];
+      const values = property.values;
+      const stringOffsets = property.stringOffsets;
+      const arrayOffsets = property.arrayOffsets;
 
-      const propertyJson = {
-        bufferView: property.bufferView + firstMetadataIndex,
-      };
+      const propertyJson = {};
+      propertyJson[valuesKey] = firstMetadataIndex + values;
 
-      if (defined(property.stringOffsetBufferView)) {
-        propertyJson.stringOffsetBufferView =
-          property.stringOffsetBufferView + firstMetadataIndex;
+      if (defined(stringOffsets)) {
+        propertyJson[stringOffsetsKey] = firstMetadataIndex + stringOffsets;
       }
 
-      if (defined(property.arrayOffsetBufferView)) {
-        propertyJson.arrayOffsetBufferView =
-          property.arrayOffsetBufferView + firstMetadataIndex;
+      if (defined(arrayOffsets)) {
+        propertyJson[arrayOffsetsKey] = firstMetadataIndex + arrayOffsets;
       }
 
       properties[key] = propertyJson;

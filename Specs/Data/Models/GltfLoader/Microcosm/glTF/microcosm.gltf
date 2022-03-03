@@ -39,11 +39,11 @@
           "count": 256,
           "properties": {
             "name": {
-              "bufferView": 4,
-              "stringOffsetBufferView": 5
+              "values": 4,
+              "stringOffsets": 5
             },
             "color": {
-              "bufferView": 6
+              "values": 6
             }
           }
         }

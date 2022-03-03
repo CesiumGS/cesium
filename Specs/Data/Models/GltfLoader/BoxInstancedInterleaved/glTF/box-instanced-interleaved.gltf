@@ -45,11 +45,11 @@
           "properties": {
             "name": {
               "stringOffsetType": "UINT16",
-              "bufferView": 4,
-              "stringOffsetBufferView": 5
+              "values": 4,
+              "stringOffsets": 5
             },
             "volume": {
-              "bufferView": 6
+              "values": 6
             }
           }
         },
@@ -59,11 +59,11 @@
           "properties": {
             "name": {
               "stringOffsetType": "UINT16",
-              "bufferView": 7,
-              "stringOffsetBufferView": 8
+              "values": 7,
+              "stringOffsets": 8
             },
             "id": {
-              "bufferView": 9
+              "values": 9
             }
           }
         }

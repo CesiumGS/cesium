@@ -60,7 +60,7 @@
         "subtreeLevels": 3,
         "availableLevels": 3,
         "subtrees": {
-          "uri": "subtrees/{level}.{x}.{y}.subtree"
+          "uri": "subtrees/{level}.{x}.{y}.json"
         }
       }
     }

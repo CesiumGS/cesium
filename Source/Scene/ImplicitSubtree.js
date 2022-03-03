@@ -625,18 +625,34 @@ function markActiveMetadataBufferViews(propertyTableJson, bufferViewHeaders) {
   for (const key in properties) {
     if (properties.hasOwnProperty(key)) {
       const metadataHeader = properties[key];
-      header = bufferViewHeaders[metadataHeader.bufferView];
+
+      // An older spec used bufferView
+      const valuesBufferView = defaultValue(
+        metadataHeader.values,
+        metadataHeader.bufferView
+      );
+      header = bufferViewHeaders[valuesBufferView];
       header.isActive = true;
       header.bufferHeader.isActive = true;
 
-      if (defined(metadataHeader.stringOffsetBufferView)) {
-        header = bufferViewHeaders[metadataHeader.stringOffsetBufferView];
+      // An older spec revision used stringOffsetBufferView
+      const stringOffsetBufferView = defaultValue(
+        metadataHeader.stringOffsets,
+        metadataHeader.stringOffsetBufferView
+      );
+      if (defined(stringOffsetBufferView)) {
+        header = bufferViewHeaders[stringOffsetBufferView];
         header.isActive = true;
         header.bufferHeader.isActive = true;
       }
 
-      if (defined(metadataHeader.arrayOffsetBufferView)) {
-        header = bufferViewHeaders[metadataHeader.arrayOffsetBufferView];
+      // an older spec revision used arrayOffsetBufferView
+      const arrayOffsetBufferView = defaultValue(
+        metadataHeader.arrayOffsets,
+        metadataHeader.arrayOffsetBufferView
+      );
+      if (defined(arrayOffsetBufferView)) {
+        header = bufferViewHeaders[arrayOffsetBufferView];
         header.isActive = true;
         header.bufferHeader.isActive = true;
       }
