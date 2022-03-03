@@ -1,6 +1,7 @@
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import Texture from "../../Renderer/Texture.js";
+import TextureMinificationFilter from "../../Renderer/TextureMinificationFilter.js";
 
 /**
  * An object to manage loading textures
@@ -98,7 +99,21 @@ function createTexture(textureManager, loadedImage, context) {
       sampler: sampler,
     });
   }
-
+  //use mipmap
+  if (
+    sampler &&
+    sampler._minificationFilter &&
+    (sampler._minificationFilter ===
+      TextureMinificationFilter.NEAREST_MIPMAP_NEAREST ||
+      sampler._minificationFilter ===
+        TextureMinificationFilter.LINEAR_MIPMAP_NEAREST ||
+      sampler._minificationFilter ===
+        TextureMinificationFilter.NEAREST_MIPMAP_LINEAR ||
+      sampler._minificationFilter ===
+        TextureMinificationFilter.LINEAR_MIPMAP_LINEAR)
+  ) {
+    texture.generateMipmap();
+  }
   // Destroy the old texture once the new one is loaded for more seamless
   // transitions between values
   const oldTexture = textureManager._textures[id];
