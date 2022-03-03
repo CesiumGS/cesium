@@ -40,7 +40,6 @@ import SceneMode from "./SceneMode.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileBoundingS2Cell from "./TileBoundingS2Cell.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
-import TileMetadata from "./TileMetadata.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 import Pass from "../Renderer/Pass.js";
 
@@ -308,8 +307,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.hasMultipleContents = hasMultipleContents;
 
   /**
-   * When the <code>3DTILES_metadata</code> extension is used, this
-   * stores a {@link TileMetadata} object for accessing tile metadata.
+   * When tile metadata is present (3D Tiles 1.1) or the <code>3DTILES_metadata</code> extension is used,
+   * this stores a {@link TileMetadata} object for accessing tile metadata.
    *
    * @type {TileMetadata}
    * @readonly

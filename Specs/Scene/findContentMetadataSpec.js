@@ -30,17 +30,30 @@ describe("Scene/findContentMetadata", function () {
     },
   };
 
-  it("returns undefined if the content header is undefined", function () {
-    const metadata = findContentMetadata(mockTileset, undefined);
-    expect(metadata).not.toBeDefined();
-  });
-
-  it("returns undefined if there is no extension", function () {
+  it("returns undefined if there is no metadata or extension", function () {
     const contentHeader = {
       uri: "https://example.com/model.b3dm",
     };
     const metadata = findContentMetadata(mockTileset, contentHeader);
     expect(metadata).not.toBeDefined();
+  });
+
+  it("returns metadata if there is metadata", function () {
+    const contentHeader = {
+      uri: "https://example.com/model.b3dm",
+      metadata: {
+        class: "content",
+        properties: {
+          name: "Sample Content",
+          color: [255, 255, 0],
+        },
+      },
+    };
+
+    const metadata = findContentMetadata(mockTileset, contentHeader);
+    expect(metadata).toBeDefined();
+    expect(metadata.getProperty("name")).toEqual("Sample Content");
+    expect(metadata.getProperty("color")).toEqual(new Cartesian3(255, 255, 0));
   });
 
   it("returns metadata if there is an extension", function () {

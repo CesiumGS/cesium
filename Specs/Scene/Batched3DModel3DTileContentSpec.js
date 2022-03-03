@@ -1,6 +1,7 @@
 import {
   B3dmParser,
   Cartesian3,
+  ContentMetadata,
   Color,
   HeadingPitchRange,
   HeadingPitchRoll,
@@ -461,7 +462,7 @@ describe(
       return Cesium3DTilesTester.tileDestroys(scene, withoutBatchTableUrl);
     });
 
-    describe("3DTILES_metadata", function () {
+    describe("metadata", function () {
       const metadataClass = new MetadataClass({
         id: "test",
         class: {
@@ -487,6 +488,30 @@ describe(
         class: metadataClass,
       });
 
+      const contentMetadataClass = new MetadataClass({
+        id: "contentTest",
+        class: {
+          properties: {
+            author: {
+              type: "STRING",
+            },
+            color: {
+              type: "VEC3",
+              componentType: "UINT8",
+            },
+          },
+        },
+      });
+      const contentMetadata = new ContentMetadata({
+        content: {
+          properties: {
+            author: "Test Author",
+            color: [255, 0, 0],
+          },
+        },
+        class: contentMetadataClass,
+      });
+
       it("assigns groupMetadata", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
@@ -495,6 +520,17 @@ describe(
           const content = tileset.root.content;
           content.groupMetadata = groupMetadata;
           expect(content.groupMetadata).toBe(groupMetadata);
+        });
+      });
+
+      it("assigns metadata", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          withoutBatchTableUrl
+        ).then(function (tileset) {
+          const content = tileset.root.content;
+          content.metadata = contentMetadata;
+          expect(content.metadata).toBe(contentMetadata);
         });
       });
     });

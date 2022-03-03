@@ -3,26 +3,21 @@
     "version": "1.1",
     "tilesetVersion": "1.2.3"
   },
-  "extensionsUsed": [
-    "3DTILES_metadata"
-  ],
-  "extensionsRequired": [
-    "3DTILES_metadata"
-  ],
-  "schemaUri": "schema.json",
-  "metadata": {
-    "class": "tileset",
-    "properties": {
-      "author": "Cesium",
-      "date": "2021-03-23",
-      "centerCartographic": [
-        -1.3196816996258511,
-        0.6988767486400521,
-        45.78600543644279
-      ],
-      "tileCount": 5
+  "schema": {
+    "classes": {
+      "content": {
+        "properties": {
+          "highlightColor": {
+            "type": "VEC3",
+            "componentType": "UINT8"
+          },
+          "author": {
+            "type": "STRING"
+          }
+        }
+      }
     }
-  },  
+  },
   "geometricError": 240,
   "root": {
     "boundingVolume": {
@@ -48,6 +43,13 @@
           0,
           88
         ]
+      },
+      "metadata": {
+        "class": "content",
+        "properties": {
+          "highlightColor": [255, 0, 0],
+          "author": "Cesium"
+        }
       }
     },
     "children": [
@@ -64,7 +66,14 @@
         },
         "geometricError": 0,
         "content": {
-          "uri": "ll.b3dm"
+          "uri": "ll.b3dm",
+          "metadata": {
+            "class": "content",
+            "properties": {
+              "highlightColor": [255, 255, 255],
+              "author": "First Company"
+            }
+          }
         }
       },
       {
@@ -80,10 +89,14 @@
         },
         "geometricError": 0,
         "content": {
-          "uri": "lr.b3dm"
-        },
-        "extras": {
-          "id": "Special Tile"
+          "uri": "lr.b3dm",
+          "metadata": {
+            "class": "content",
+            "properties": {
+              "highlightColor": [255, 0, 255],
+              "author": "Second Company"
+            }
+          }
         }
       },
       {
@@ -99,7 +112,14 @@
         },
         "geometricError": 0,
         "content": {
-          "uri": "ur.b3dm"
+          "uri": "ur.b3dm",
+          "metadata": {
+            "class": "content",
+            "properties": {
+              "highlightColor": [0, 255, 0],
+              "author": "Third Company"
+            }
+          }
         }
       },
       {
@@ -115,7 +135,14 @@
         },
         "geometricError": 0,
         "content": {
-          "uri": "ul.b3dm"
+          "uri": "ul.b3dm",
+          "metadata": {
+            "class": "content",
+            "properties": {
+              "highlightColor": [0, 0, 255],
+              "author": "Fourth Company"
+            }
+          }
         }
       }
     ]

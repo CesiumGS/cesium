@@ -1,5 +1,6 @@
 import {
   Cartesian3,
+  ContentMetadata,
   defined,
   ExperimentalFeatures,
   GroupMetadata,
@@ -240,8 +241,8 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     return Cesium3DTilesTester.tileDestroys(scene, buildingsMetadataUrl);
   });
 
-  describe("3DTILES_metadata", function () {
-    const metadataClass = new MetadataClass({
+  describe("metadata", function () {
+    const groupMetadataClass = new MetadataClass({
       id: "test",
       class: {
         properties: {
@@ -263,7 +264,33 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
           height: 35.6,
         },
       },
-      class: metadataClass,
+      class: groupMetadataClass,
+    });
+
+    const contentMetadataClass = new MetadataClass({
+      id: "contentTest",
+      class: {
+        properties: {
+          author: {
+            type: "STRING",
+          },
+          color: {
+            type: "VEC3",
+            componentType: "UINT8",
+          },
+        },
+      },
+    });
+
+    const contentMetadata = new ContentMetadata({
+      content: {
+        class: "contentTest",
+        properties: {
+          author: "Test Author",
+          color: [255, 0, 255],
+        },
+      },
+      class: contentMetadataClass,
     });
 
     it("assigns groupMetadata", function () {
@@ -273,6 +300,17 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
           const content = tileset.root.content;
           content.groupMetadata = groupMetadata;
           expect(content.groupMetadata).toBe(groupMetadata);
+        }
+      );
+    });
+
+    it("assigns metadata", function () {
+      setCamera(centerLongitude, centerLatitude, 15.0);
+      return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
+        function (tileset) {
+          const content = tileset.root.content;
+          content.metadata = contentMetadata;
+          expect(content.metadata).toBe(contentMetadata);
         }
       );
     });

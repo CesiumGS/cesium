@@ -277,7 +277,7 @@ describe("Scene/ImplicitTileset", function () {
     });
   });
 
-  describe("3DTILES_metadata", function () {
+  describe("metadata", function () {
     it("stores metadataSchema", function () {
       const schema = {
         classes: {

@@ -3,8 +3,8 @@ import hasExtension from "./hasExtension.js";
 import TileMetadata from "./TileMetadata.js";
 
 /**
- * Check if a tile has metadata, either defined in its metadata field or in
- * the <code>3DTILES_metadata</code> extension. If defined, get the tile metadata
+ * Check if a tile has metadata, either defined in its metadata field (3D Tiles 1.1)
+ * or in the <code>3DTILES_metadata</code> extension. If defined, get the tile metadata
  * with the corresponding class.
  * <p>
  * This assumes that tileset.metadata has been created before any tiles are constructed.
@@ -18,12 +18,9 @@ import TileMetadata from "./TileMetadata.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function findTileMetadata(tileset, tileHeader) {
-  let metadataJson;
-  if (defined(tileHeader.metadata)) {
-    metadataJson = tileHeader.metadata;
-  } else if (hasExtension(tileHeader, "3DTILES_metadata")) {
-    metadataJson = tileHeader.extensions["3DTILES_metadata"];
-  }
+  const metadataJson = hasExtension(tileHeader, "3DTILES_metadata")
+    ? tileHeader.extensions["3DTILES_metadata"]
+    : tileHeader.metadata;
 
   if (!defined(metadataJson)) {
     return undefined;

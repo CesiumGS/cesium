@@ -943,8 +943,8 @@ function Cesium3DTileset(options) {
   this.examineVectorLinesFunction = undefined;
 
   /**
-   * If the 3DTILES_metadata extension is used, this stores
-   * a {@link Cesium3DTilesetMetadata} object to access metadata.
+   * If metadata is present (3D Tiles 1.1) or the 3DTILES_metadata extension is used,
+   * this stores a {@link Cesium3DTilesetMetadata} object to access metadata.
    *
    * @type {Cesium3DTilesetMetadata|undefined}
    * @private

@@ -246,8 +246,8 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
   },
 
   /**
-   * Gets the group metadata for this content if the content uses the
-   * <code>3DTILES_metadata</code> extension. If the extension is not used,
+   * Gets the group metadata for this content if the content has metadata (3D Tiles 1.1) or
+   * if it uses the <code>3DTILES_metadata</code> extension. If neither are present,
    * this property should be undefined.
    * <p>
    * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
