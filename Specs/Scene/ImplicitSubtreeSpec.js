@@ -2494,8 +2494,8 @@ describe("Scene/ImplicitSubtree", function () {
         metadata: {
           isInternal: true,
           propertyTables: buildingPropertyTablesDescription,
-          useMetadataExtension: true,
         },
+        useLegacySchema: true,
       };
 
       const results = ImplicitTilingTester.generateSubtreeBuffers(

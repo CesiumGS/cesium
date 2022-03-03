@@ -29,14 +29,13 @@ export default function ImplicitTilingTester() {}
 /**
  * A JSON description of a subtree file for easier generation
  * @typedef {Object} SubtreeDescription
- * @property {Boolean} [useLegacySchema] If true, the resulting JSON chunk will use the legacy schema for subtrees (i.e. use bitstream instead of bufferViews), as well as the legacy schema for 3DTILES_metadata. Used to test backwards compatibility.
+ * @property {Boolean} [useLegacySchema] If true, the resulting JSON chunk will use the legacy schema for subtrees and metadata (e.g. use bufferViews rather than bitstream, use 3DTILES_metadata extension rather than tileMetadata or contentMetadata). Used to test backwards compatibility.
  * @property {AvailabilityDescription} tileAvailability A description of the tile availability bitstream to generate
  * @property {AvailabilityDescription} contentAvailability A description of the content availability bitstream to generate
  * @property {Boolean} [useMultipleContentsExtension] If true, use the 3DTILES_multiple_contents extension. Used to test backwards compatibility.
  * @property {AvailabilityDescription} childSubtreeAvailability A description of the child subtree availability bitstream to generate
  * @property {AvailabilityDescription} other A description of another bitstream. This is not used for availability, but rather to simulate extra buffer views.
  * @property {MetadataDescription} [metadata] For testing 3DTILES_metadata, additional options can be passed in here.
- * @property {Boolean} [useMetadataExtension] If true, use the 3DTILES_metadata extension. Used to test backwards compatibility.
  * @property {Boolean} [json] If true, return the result as a JSON with external buffers. Should not be true if any of the availability buffers are internal.
  * @private
  */
@@ -226,13 +225,7 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
   // pass 4: add metadata buffer views --------------------------------------
   const metadata = subtreeDescription.metadata;
   if (defined(metadata)) {
-    addMetadata(
-      bufferViewsU8,
-      subtreeJson,
-      metadata,
-      subtreeDescription.useMetadataExtension,
-      useLegacySchema
-    );
+    addMetadata(bufferViewsU8, subtreeJson, metadata, useLegacySchema);
   }
 
   // wrap up ----------------------------------------------------------------
@@ -407,7 +400,6 @@ function addMetadata(
   bufferViewsU8,
   subtreeJson,
   metadataOptions,
-  useMetadataExtension,
   useLegacySchema
 ) {
   const propertyTableResults = MetadataTester.createPropertyTables(
@@ -458,7 +450,7 @@ function addMetadata(
   );
 
   // Store results in subtree JSON -----------------------------------------
-  if (useMetadataExtension) {
+  if (useLegacySchema) {
     if (!defined(subtreeJson.extensions)) {
       subtreeJson.extensions = {};
     }
