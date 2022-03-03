@@ -29,7 +29,7 @@ export default function ImplicitTilingTester() {}
 /**
  * A JSON description of a subtree file for easier generation
  * @typedef {Object} SubtreeDescription
- * @property {Boolean} [useLegacySchema] If true, the resulting JSON chunk will use the legacy schema for subtrees and metadata (e.g. use bufferViews rather than bitstream, use 3DTILES_metadata extension rather than tileMetadata or contentMetadata). Used to test backwards compatibility.
+ * @property {Boolean} [useLegacySchema=false] If true, the resulting JSON chunk will use the legacy schema for subtrees and metadata (e.g. use bufferViews rather than bitstream, use 3DTILES_metadata extension rather than tileMetadata or contentMetadata). Used to test backwards compatibility.
  * @property {AvailabilityDescription} tileAvailability A description of the tile availability bitstream to generate
  * @property {AvailabilityDescription} contentAvailability A description of the content availability bitstream to generate
  * @property {Boolean} [useMultipleContentsExtension] If true, use the 3DTILES_multiple_contents extension. Used to test backwards compatibility.
@@ -150,7 +150,10 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
     count: 0,
   };
 
-  const useLegacySchema = subtreeDescription.useLegacySchema;
+  const useLegacySchema = defaultValue(
+    subtreeDescription.useLegacySchema,
+    false
+  );
   const bufferViewJsonArray = [];
   gatherBufferViews(
     bufferViewsU8,
