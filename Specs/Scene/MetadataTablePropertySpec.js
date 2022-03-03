@@ -47,7 +47,7 @@ describe("Scene/MetadataTableProperty", function () {
     const property = new MetadataTableProperty({
       count: 2,
       property: {
-        bufferView: 0,
+        values: 0,
         extras: extras,
         extensions: extensions,
       },
@@ -67,7 +67,7 @@ describe("Scene/MetadataTableProperty", function () {
     expect(property.extensions).toBe(extensions);
   });
 
-  it("constructs properties with stringOffset and arrayOffset", function () {
+  it("constructs properties with stringOffsets and arrayOffsets", function () {
     const extras = {
       other: 0,
     };
