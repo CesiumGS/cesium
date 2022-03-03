@@ -81,6 +81,7 @@ function MetadataClassProperty(options) {
   // sentinel value for missing data, and a default value to use
   // in its place if needed.
   this._noData = property.noData;
+  // For vector and array types, this is stored as an array of values.
   this._default = property.default;
 
   // EXT_feature_metadata had an optional flag, while EXT_structural_metadata
@@ -290,6 +291,20 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   min: {
     get: function () {
       return this._min;
+    },
+  },
+
+  /**
+   * The no-data sentinel value that represents null values
+   *
+   * @memberof MetadataClassProperty.prototype
+   * @type {Boolean|Number|String|Array}
+   * @readonly
+   * @private
+   */
+  noData: {
+    get: function () {
+      return this._noData;
     },
   },
 
@@ -593,6 +608,43 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
   };
   return transformInPlace(value, unnormalizeFunction);
 };
+
+/**
+ * If the value is the noData sentinel, return undefined. Otherwise, return
+ * the value.
+ * @param {*} value The raw value
+ * @returns {*} Either the value or undefined if the value was a no data value.
+ */
+MetadataClassProperty.prototype.handleNoData = function (value) {
+  const sentinel = this._noData;
+  if (!defined(sentinel)) {
+    return value;
+  }
+
+  if (value === sentinel || arrayEquals(value, sentinel)) {
+    return undefined;
+  }
+
+  return value;
+};
+
+function arrayEquals(left, right) {
+  if (!Array.isArray(left) || !Array.isArray(right)) {
+    return false;
+  }
+
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  for (let i = 0; i < left.length; i++) {
+    if (left[i] !== right[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 /**
  * Unpack VECN values into {@link Cartesian2}, {@link Cartesian3}, or

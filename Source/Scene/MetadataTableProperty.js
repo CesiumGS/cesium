@@ -238,6 +238,14 @@ MetadataTableProperty.prototype.get = function (index) {
   //>>includeEnd('debug');
 
   let value = get(this, index);
+
+  // handle noData and default
+  value = this._classProperty.handleNoData(value);
+  if (!defined(value)) {
+    value = this._classProperty.default;
+    return this._classProperty.unpackVectorAndMatrixTypes(value);
+  }
+
   value = this._classProperty.normalize(value);
   return this._classProperty.unpackVectorAndMatrixTypes(value);
 };
@@ -254,6 +262,7 @@ MetadataTableProperty.prototype.set = function (index, value) {
   const classProperty = this._classProperty;
 
   //>>includeStart('debug', pragmas.debug);
+  Check.defined("value", value);
   checkIndex(this, index);
   const errorMessage = classProperty.validate(value);
   if (defined(errorMessage)) {
