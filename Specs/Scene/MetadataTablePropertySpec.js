@@ -1240,15 +1240,6 @@ describe("Scene/MetadataTableProperty", function () {
       },
     };
 
-    // for unpacking results in expect()
-    /*
-    const mathTypes = {
-      propertyVec4: Cartesian4,
-      propertyDVec2: Cartesian2,
-      propertyU8Mat3: Matrix3,
-      propertyDMat2: Matrix2
-    };*/
-
     // prettier-ignore
     const propertyValues = {
       propertyVec4: [
