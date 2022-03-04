@@ -1,20 +1,20 @@
 import {
   Cartesian3,
-  findContentMetadata,
+  findTileMetadata,
   MetadataClass,
 } from "../../Source/Cesium.js";
 
-describe("Scene/findContentMetadata", function () {
-  let contentClass;
+describe("Scene/findTileMetadata", function () {
+  let tileClass;
   let mockTileset;
-
   beforeAll(function () {
-    contentClass = new MetadataClass({
-      id: "content",
+    tileClass = new MetadataClass({
+      id: "tile",
       class: {
         properties: {
-          name: {
-            type: "STRING",
+          height: {
+            type: "SCALAR",
+            componentType: "FLOAT32",
           },
           color: {
             type: "VEC3",
@@ -23,60 +23,66 @@ describe("Scene/findContentMetadata", function () {
         },
       },
     });
+
     mockTileset = {
       metadata: {
         schema: {
           classes: {
-            content: contentClass,
+            tile: tileClass,
           },
         },
       },
     };
   });
 
+  const mockBoundingVolume = {};
+
   it("returns undefined if there is no metadata or extension", function () {
-    const contentHeader = {
-      uri: "https://example.com/model.b3dm",
+    const tileHeader = {
+      boundingVolume: mockBoundingVolume,
+      geometricError: 64,
     };
-    const metadata = findContentMetadata(mockTileset, contentHeader);
+    const metadata = findTileMetadata(mockTileset, tileHeader);
     expect(metadata).not.toBeDefined();
   });
 
   it("returns metadata if there is metadata", function () {
-    const contentHeader = {
-      uri: "https://example.com/model.b3dm",
+    const tileHeader = {
+      boundingVolume: mockBoundingVolume,
+      geometricError: 64,
       metadata: {
-        class: "content",
+        class: "tile",
         properties: {
-          name: "Sample Content",
+          height: 250.5,
           color: [255, 255, 0],
         },
       },
     };
 
-    const metadata = findContentMetadata(mockTileset, contentHeader);
+    const metadata = findTileMetadata(mockTileset, tileHeader);
     expect(metadata).toBeDefined();
-    expect(metadata.getProperty("name")).toEqual("Sample Content");
+    expect(metadata.getProperty("height")).toEqual(250.5);
     expect(metadata.getProperty("color")).toEqual(new Cartesian3(255, 255, 0));
   });
 
   it("returns metadata if there is an extension", function () {
-    const contentHeader = {
-      uri: "https://example.com/model.b3dm",
+    const tileHeader = {
+      boundingVolume: mockBoundingVolume,
+      geometricError: 64,
       extensions: {
         "3DTILES_metadata": {
-          class: "content",
+          class: "tile",
           properties: {
-            name: "Sample Content",
+            height: 250.5,
             color: [255, 255, 0],
           },
         },
       },
     };
 
-    const metadata = findContentMetadata(mockTileset, contentHeader);
+    const metadata = findTileMetadata(mockTileset, tileHeader);
     expect(metadata).toBeDefined();
-    expect(metadata.getProperty("name")).toEqual("Sample Content");
+    expect(metadata.getProperty("height")).toEqual(250.5);
     expect(metadata.getProperty("color")).toEqual(new Cartesian3(255, 255, 0));
   });
 });

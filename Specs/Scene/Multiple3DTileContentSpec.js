@@ -290,39 +290,47 @@ describe(
       return Cesium3DTilesTester.tileDestroys(scene, multipleContentsUrl);
     });
 
-    describe("3DTILES_metadata", function () {
+    describe("metadata", function () {
       const withGroupMetadataUrl =
-        "./Data/Cesium3DTiles/MultipleContents/GroupMetadata/tileset.json";
-
+        "./Data/Cesium3DTiles/MultipleContents/GroupMetadata/tileset_1.1.json";
+      const withGroupMetadataLegacyUrl =
+        "./Data/Cesium3DTiles/MultipleContents/GroupMetadata/tileset_1.0.json";
       const withExplicitContentMetadataUrl =
-        "./Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset.json";
+        "./Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset_1.1.json";
+      const withExplicitContentMetadataLegacyUrl =
+        "./Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset_1.0.json";
       const withImplicitContentMetadataUrl =
         "./Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset.json";
 
-      const metadataClass = new MetadataClass({
-        id: "test",
-        class: {
-          properties: {
-            name: {
-              type: "STRING",
-            },
-            height: {
-              type: "SCALAR",
-              componentType: "FLOAT32",
-            },
-          },
-        },
-      });
+      let metadataClass;
+      let groupMetadata;
 
-      const groupMetadata = new GroupMetadata({
-        id: "testGroup",
-        group: {
-          properties: {
-            name: "Test Group",
-            height: 35.6,
+      beforeAll(function () {
+        metadataClass = new MetadataClass({
+          id: "test",
+          class: {
+            properties: {
+              name: {
+                type: "STRING",
+              },
+              height: {
+                type: "SCALAR",
+                componentType: "FLOAT32",
+              },
+            },
           },
-        },
-        class: metadataClass,
+        });
+
+        groupMetadata = new GroupMetadata({
+          id: "testGroup",
+          group: {
+            properties: {
+              name: "Test Group",
+              height: 35.6,
+            },
+          },
+          class: metadataClass,
+        });
       });
 
       it("groupMetadata returns undefined", function () {
@@ -373,6 +381,34 @@ describe(
         });
       });
 
+      it("initializes groupMetadata for inner contents (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          withGroupMetadataLegacyUrl
+        ).then(function (tileset) {
+          const multipleContents = tileset.root.content;
+          const innerContents = multipleContents.innerContents;
+
+          const buildingsContent = innerContents[0];
+          let groupMetadata = buildingsContent.groupMetadata;
+          expect(groupMetadata).toBeDefined();
+          expect(groupMetadata.getProperty("color")).toEqual(
+            new Cartesian3(255, 127, 0)
+          );
+          expect(groupMetadata.getProperty("priority")).toBe(10);
+          expect(groupMetadata.getProperty("isInstanced")).toBe(false);
+
+          const cubesContent = innerContents[1];
+          groupMetadata = cubesContent.groupMetadata;
+          expect(groupMetadata).toBeDefined();
+          expect(groupMetadata.getProperty("color")).toEqual(
+            new Cartesian3(0, 255, 127)
+          );
+          expect(groupMetadata.getProperty("priority")).toBe(5);
+          expect(groupMetadata.getProperty("isInstanced")).toBe(true);
+        });
+      });
+
       it("content metadata returns undefined", function () {
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
           function (tileset) {
@@ -397,6 +433,34 @@ describe(
         return Cesium3DTilesTester.loadTileset(
           scene,
           withExplicitContentMetadataUrl
+        ).then(function (tileset) {
+          const multipleContents = tileset.root.content;
+          const innerContents = multipleContents.innerContents;
+
+          const batchedContent = innerContents[0];
+          const batchedMetadata = batchedContent.metadata;
+          expect(batchedMetadata).toBeDefined();
+          expect(batchedMetadata.getProperty("highlightColor")).toEqual(
+            new Cartesian3(0, 0, 255)
+          );
+          expect(batchedMetadata.getProperty("author")).toEqual("Cesium");
+
+          const instancedContent = innerContents[1];
+          const instancedMetadata = instancedContent.metadata;
+          expect(instancedMetadata).toBeDefined();
+          expect(instancedMetadata.getProperty("numberOfInstances")).toEqual(
+            50
+          );
+          expect(instancedMetadata.getProperty("author")).toEqual(
+            "Sample Author"
+          );
+        });
+      });
+
+      it("initializes explicit content metadata for inner contents (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          withExplicitContentMetadataLegacyUrl
         ).then(function (tileset) {
           const multipleContents = tileset.root.content;
           const innerContents = multipleContents.innerContents;

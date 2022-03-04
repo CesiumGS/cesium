@@ -10,8 +10,8 @@ import TilesetMetadata from "./TilesetMetadata.js";
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles.
  * </p>
  * <p>
- * This object represents the <code>3DTILES_metadata</code> object which
- * contains the schema ({@link MetadataSchema}), tileset metadata ({@link TilesetMetadata}), group metadata (dictionary of {@link GroupMetadata}), and metadata statistics (dictionary)
+ * This object represents the tileset JSON (3D Tiles 1.1) or the <code>3DTILES_metadata</code> object that contains
+ * the schema ({@link MetadataSchema}), tileset metadata ({@link TilesetMetadata}), group metadata (dictionary of {@link GroupMetadata}), and metadata statistics (dictionary)
  * </p>
  *
  * @param {Object} options Object with the following properties:

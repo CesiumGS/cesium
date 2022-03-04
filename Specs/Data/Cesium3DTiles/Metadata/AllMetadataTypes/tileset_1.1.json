@@ -3,9 +3,6 @@
     "version": "1.1",
     "tilesetVersion": "1.2.3"
   },
-  "extensionsUsed": [
-    "3DTILES_metadata"
-  ],
   "schema": {
     "classes": {
       "tileset": {
@@ -172,14 +169,12 @@
         ]
       }
     },
-    "extensions": {
-      "3DTILES_metadata": {
-        "class": "tile",
-        "properties": {
-          "color": [127, 0, 255, 1.0],
-          "highlightColor": [255, 255, 255, 1.0],
-          "population": 530
-        }
+    "metadata": {
+      "class": "tile",
+      "properties": {
+        "color": [127, 0, 255, 1.0],
+        "highlightColor": [255, 255, 255, 1.0],
+        "population": 530
       }
     },
     "children": [
@@ -197,26 +192,22 @@
         "geometricError": 0,
         "content": {
           "uri": "ll.b3dm",
-          "extensions": {
-            "3DTILES_metadata": {
-              "group": "residentialDistrict",
-              "class": "content",
-              "properties": {
-                "triangleCount": 15000,
-                "highlightColor": [255, 0, 0, 1.0],
-                "author": "First Author"
-              }
+          "group": "residentialDistrict",
+          "metadata": {
+            "class": "content",
+            "properties": {
+              "triangleCount": 15000,
+              "highlightColor": [255, 0, 0, 1.0],
+              "author": "First Author"
             }
           }
         },
-        "extensions": {
-          "3DTILES_metadata": {
-            "class": "tile",
-            "properties": {
-              "color": [255, 255, 0, 1.0],
-              "highlightColor": [255, 0, 255, 1.0],
-              "population": 50
-            }
+        "metadata": {
+          "class": "tile",
+          "properties": {
+            "color": [255, 255, 0, 1.0],
+            "highlightColor": [255, 0, 255, 1.0],
+            "population": 50
           }
         }
       },
@@ -234,26 +225,22 @@
         "geometricError": 0,
         "content": {
           "uri": "lr.b3dm",
-          "extensions": {
-            "3DTILES_metadata": {
-              "group": "commercialDistrict",
-              "class": "content",
-              "properties": {
-                "triangleCount": 20000,
-                "highlightColor": [255, 255, 0, 1.0],
-                "author": "Second Author"
-              }
+          "group": "commercialDistrict",
+          "metadata": {
+            "class": "content",
+            "properties": {
+              "triangleCount": 20000,
+              "highlightColor": [255, 255, 0, 1.0],
+              "author": "Second Author"
             }
           }
         },
-        "extensions": {
-          "3DTILES_metadata": {
-            "class": "tile",
-            "properties": {
-              "color": [255, 0, 127, 1.0],
-              "highlightColor": [0, 255, 255, 1.0],
-              "population": 230
-            }
+        "metadata": {
+          "class": "tile",
+          "properties": {
+            "color": [255, 0, 127, 1.0],
+            "highlightColor": [0, 255, 255, 1.0],
+            "population": 230
           }
         }
       },
@@ -271,26 +258,22 @@
         "geometricError": 0,
         "content": {
           "uri": "ur.b3dm",
-          "extensions": {
-            "3DTILES_metadata": {
-              "group": "commercialDistrict",
-              "class": "content",
-              "properties": {
-                "triangleCount": 32000,
-                "highlightColor": [0, 255, 0, 1.0],
-                "author": "Third Author"
-              }
+          "group": "commercialDistrict",
+          "metadata": {
+            "class": "content",
+            "properties": {
+              "triangleCount": 32000,
+              "highlightColor": [0, 255, 0, 1.0],
+              "author": "Third Author"
             }
           }
         },
-        "extensions": {
-          "3DTILES_metadata": {
-            "class": "tile",
-            "properties": {
-              "color": [255, 127, 0, 1.0],
-              "highlightColor": [0, 255, 0, 1.0],
-              "population": 150
-            }
+        "metadata": {
+          "class": "tile",
+          "properties": {
+            "color": [255, 127, 0, 1.0],
+            "highlightColor": [0, 255, 0, 1.0],
+            "population": 150
           }
         }
       },
@@ -308,26 +291,22 @@
         "geometricError": 0,
         "content": {
           "uri": "ul.b3dm",
-          "extensions": {
-            "3DTILES_metadata": {
-              "group": "residentialDistrict",
-              "class": "content",
-              "properties": {
-                "triangleCount": 40000,
-                "highlightColor": [0, 0, 255, 1.0],
-                "author": "Fourth Author"
-              }
+          "group": "residentialDistrict",
+          "metadata": {
+            "class": "content",
+            "properties": {
+              "triangleCount": 40000,
+              "highlightColor": [0, 0, 255, 1.0],
+              "author": "Fourth Author"
             }
           }
         },
-        "extensions": {
-          "3DTILES_metadata": {
-            "class": "tile",
-            "properties": {
-              "color": [255, 0, 0, 1.0],
-              "highlightColor": [0, 255, 0, 1.0],
-              "population": 100
-            }
+        "metadata": {
+          "class": "tile",
+          "properties": {
+            "color": [255, 0, 0, 1.0],
+            "highlightColor": [0, 255, 0, 1.0],
+            "population": 100
           }
         }
       }
