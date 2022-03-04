@@ -621,7 +621,7 @@ MetadataClassProperty.prototype.handleNoData = function (value) {
     return value;
   }
 
-  if (value === sentinel || arrayEquals(value, sentinel)) {
+  if (arrayEquals(value, sentinel)) {
     return undefined;
   }
 
@@ -629,7 +629,11 @@ MetadataClassProperty.prototype.handleNoData = function (value) {
 };
 
 function arrayEquals(left, right) {
-  if (!Array.isArray(left) || !Array.isArray(right)) {
+  if (!Array.isArray(left)) {
+    return left === right;
+  }
+
+  if (!Array.isArray(right)) {
     return false;
   }
 
@@ -638,7 +642,7 @@ function arrayEquals(left, right) {
   }
 
   for (let i = 0; i < left.length; i++) {
-    if (left[i] !== right[i]) {
+    if (!arrayEquals(left[i], right[i])) {
       return false;
     }
   }

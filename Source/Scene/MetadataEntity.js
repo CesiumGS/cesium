@@ -281,9 +281,13 @@ MetadataEntity.getProperty = function (
 
   // Handle noData and default
   value = classProperty.handleNoData(value);
-  if (!defined(value)) {
+  if (!defined(value) && defined(classProperty.default)) {
     value = clone(classProperty.default, true);
     return classProperty.unpackVectorAndMatrixTypes(value, enableNestedArrays);
+  }
+
+  if (!defined(value)) {
+    return undefined;
   }
 
   value = classProperty.normalize(value);

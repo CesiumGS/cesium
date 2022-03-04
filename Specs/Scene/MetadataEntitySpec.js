@@ -352,7 +352,13 @@ describe("Scene/MetadataEntity", function () {
         classWithNoDataValues
       )
     ).toBe(100);
-    //expect(MetadataEntity.getProperty("noDefaultVector", noDataProperties, classWithNoDataValues)).not.toBeDefined();
+    expect(
+      MetadataEntity.getProperty(
+        "noDefaultVector",
+        noDataProperties,
+        classWithNoDataValues
+      )
+    ).not.toBeDefined();
     expect(
       MetadataEntity.getProperty(
         "hasDefaultVector",
