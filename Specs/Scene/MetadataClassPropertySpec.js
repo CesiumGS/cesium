@@ -1557,7 +1557,7 @@ describe("Scene/MetadataClassProperty", function () {
         count: 5,
       },
       propertyBigIntArray: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT64",
         array: true,
         count: 2,
