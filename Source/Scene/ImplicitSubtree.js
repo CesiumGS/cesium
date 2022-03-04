@@ -18,7 +18,9 @@ import ImplicitMetadataView from "./ImplicitMetadataView.js";
  * An object representing a single subtree in an implicit tileset
  * including availability.
  * <p>
- * Subtrees handle tile metadata from the <code>3DTILES_metadata</code> extension
+ * Subtrees handle tile metadata, defined in the subtree JSON in either
+ * tileMetadata (3D Tiles 1.1) or the <code>3DTILES_metadata</code> extension.
+ * Subtrees also handle content metadata and metadata about the subtree itself.
  * </p>
  *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata#implicit-tile-properties|Implicit Tile Properties in the 3DTILES_metadata specification}
@@ -65,7 +67,7 @@ export default function ImplicitSubtree(
   this._branchingFactor = implicitTileset.branchingFactor;
   this._readyPromise = when.defer();
 
-  // properties for 3DTILES_metadata
+  // properties for metadata
   this._metadata = undefined;
   this._tileMetadataTable = undefined;
   this._tilePropertyTableJson = undefined;
@@ -96,8 +98,7 @@ Object.defineProperties(ImplicitSubtree.prototype, {
   },
 
   /**
-   * When the <code>3DTILES_metadata</code> extension is used, this property stores
-   * an {@link ImplicitSubtreeMetadata} instance
+   * When subtree metadata is present (3D Tiles Next), this property stores an {@link ImplicitSubtreeMetadata} instance
    *
    * @type {ImplicitSubtreeMetadata}
    * @readonly
@@ -110,8 +111,8 @@ Object.defineProperties(ImplicitSubtree.prototype, {
   },
 
   /**
-   * When the <code>3DTILES_metadata</code> extension is used, this property stores
-   * a {@link MetadataTable} instance for the tiles in the subtree.
+   * When tile metadata is present (3D Tiles Next) or the <code>3DTILES_metadata</code> extension is used,
+   * this property stores a {@link MetadataTable} instance for the tiles in the subtree.
    *
    * @type {MetadataTable}
    * @readonly
@@ -124,8 +125,8 @@ Object.defineProperties(ImplicitSubtree.prototype, {
   },
 
   /**
-   * When the <code>3DTILES_metadata</code> extension is used, this property
-   * stores the JSON from the extension. This is used by {@link TileMetadata}
+   * When tile metadata is present (3D Tiles Next) or the <code>3DTILES_metadata</code> extension is used,
+   * this property stores the JSON from the extension. This is used by {@link TileMetadata}
    * to get the extras and extensions for the tiles in the subtree.
    *
    * @type {Object}
@@ -139,7 +140,7 @@ Object.defineProperties(ImplicitSubtree.prototype, {
   },
 
   /**
-   * When the <code>3DTILES_metadata</code> extension is used, this property stores
+   * When content metadata is present (3D Tiles Next), this property stores
    * an array of {@link MetadataTable} instances for the contents in the subtree.
    *
    * @type {Array}
@@ -153,7 +154,7 @@ Object.defineProperties(ImplicitSubtree.prototype, {
   },
 
   /**
-   * When the <code>3DTILES_metadata</code> extension is used, this property
+   * When content metadata is present (3D Tiles Next), this property
    * an array of the JSONs from the extension. This is used to get the extras
    * and extensions for the contents in the subtree.
    *
@@ -609,7 +610,7 @@ function markActiveBufferViews(subtreeJson, bufferViewHeaders) {
 }
 
 /**
- * For <code>3DTILES_metadata</code>, look over the tile and content metadata buffers
+ * For handling metadata, look over the tile and content metadata buffers
  * <p>
  * This always loads all of the metadata immediately. Future iterations may
  * allow filtering this to avoid downloading unneeded buffers.
@@ -848,7 +849,7 @@ function parseAvailabilityBitstream(
 }
 
 /**
- * Parse the 3DTILES_metadata table for the tile metadata, storing a {@link MetadataTable}
+ * Parse the metadata table for the tile metadata, storing a {@link MetadataTable}
  * in the subtree.
  *
  * @param {ImplicitSubtree} subtree The subtree
@@ -873,7 +874,7 @@ function parseTileMetadataTable(subtree, implicitTileset, bufferViewsU8) {
 }
 
 /**
- * Parse the 3DTILES_metadata tables for the content metadata, storing an array of
+ * Parse the metadata tables for the content metadata, storing an array of
  * {@link MetadataTable}s in the subtree.
  *
  * @param {ImplicitSubtree} subtree The subtree
