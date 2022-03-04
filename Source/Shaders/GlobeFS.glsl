@@ -474,8 +474,14 @@ void main()
       finalColor.a *= interpolateByDistance(alphaByDistance, v_distance);
     }
 #endif
-
-    gl_FragColor = finalColor;
+    // Blend in atmosphere
+    vec3 emptyVec3 = vec3(0.0);
+    
+    vec4 blendColor = computeFinalColor(emptyVec3, atmosphereLightDirection, v_fogRayleighColor, v_fogMieColor, 0.5);
+    
+    
+    
+    gl_FragColor =  mix(finalColor, blendColor, 0.25);
 }
 
 #ifdef GROUND_ATMOSPHERE

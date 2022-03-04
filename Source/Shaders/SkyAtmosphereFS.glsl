@@ -8,27 +8,26 @@ varying float v_opacity;
 
 void main (void)
 {
-    
-    vec3 posToEye = v_outerPositionWC - czm_viewerPositionWC;
-    vec3 direction = normalize(posToEye);
     vec3 lightDirection = getLightDirection(czm_viewerPositionWC);
+   
     vec3 mieColor;
     vec3 rayleighColor;
     float opacity;
-    float distance = length(posToEye);
+
 
 #ifdef PER_FRAGMENT_ATMOSPHERE
-    computeScattering(
+    computeAtmosphericScattering(
         czm_viewerPositionWC,
-        direction,
-        distance,
         lightDirection,
-        rayleighColor, mieColor, opacity
+        rayleighColor,
+        mieColor,
+        opacity
     );
 #else
     mieColor = v_mieColor;
     rayleighColor = v_rayleighColor;
+    opacity = v_opacity;
 #endif
 
-    gl_FragColor = computeFinalColor(v_outerPositionWC,direction, lightDirection, rayleighColor, mieColor,  opacity);
+    gl_FragColor = computeAtmosphereColor(v_outerPositionWC, lightDirection, rayleighColor, mieColor, opacity);
 }

@@ -14,7 +14,7 @@ import RenderState from "../Renderer/RenderState.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import VertexArray from "../Renderer/VertexArray.js";
-import SkyAtmosphereCommon from "../Shaders/SkyAtmosphereCommon.js";
+import AtmosphereCommon from "../Shaders/AtmosphereCommon.js";
 import SkyAtmosphereFS from "../Shaders/SkyAtmosphereFS.js";
 import SkyAtmosphereVS from "../Shaders/SkyAtmosphereVS.js";
 import Axis from "./Axis.js";
@@ -256,12 +256,12 @@ SkyAtmosphere.prototype.update = function (frameState, globe) {
 
     let vs = new ShaderSource({
       defines: defines.concat("SKY_FROM_SPACE"),
-      sources: [SkyAtmosphereCommon, SkyAtmosphereVS],
+      sources: [AtmosphereCommon, SkyAtmosphereVS],
     });
 
     let fs = new ShaderSource({
       defines: defines.concat("SKY_FROM_SPACE"),
-      sources: [SkyAtmosphereCommon, SkyAtmosphereFS],
+      sources: [AtmosphereCommon, SkyAtmosphereFS],
     });
 
     this._spSkyFromSpace = ShaderProgram.fromCache({
@@ -272,12 +272,12 @@ SkyAtmosphere.prototype.update = function (frameState, globe) {
 
     vs = new ShaderSource({
       defines: defines.concat("SKY_FROM_ATMOSPHERE"),
-      sources: [SkyAtmosphereCommon, SkyAtmosphereVS],
+      sources: [AtmosphereCommon, SkyAtmosphereVS],
     });
 
     fs = new ShaderSource({
       defines: defines.concat("SKY_FROM_ATMOSPHERE"),
-      sources: [SkyAtmosphereCommon, SkyAtmosphereFS],
+      sources: [AtmosphereCommon, SkyAtmosphereFS],
     });
 
     this._spSkyFromAtmosphere = ShaderProgram.fromCache({

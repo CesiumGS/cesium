@@ -207,5 +207,8 @@ vec4 computeFinalColor(vec3 positionWC, vec3 direction, vec3 lightDirection, vec
     vec3 rayleigh = rayleighPhase * rayleighColor;
     vec3 mie = miePhase * mieColor;
 
-    return vec4((rayleigh + mie) * LIGHT_INTENSITY, 1.0 - opacity);
+    vec4 color = vec4((rayleigh + mie) * LIGHT_INTENSITY, 1.0 - opacity);
+
+
+    return color;
 }

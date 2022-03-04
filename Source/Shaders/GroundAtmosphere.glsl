@@ -77,6 +77,7 @@ struct AtmosphereColor
 {
     vec3 mie;
     vec3 rayleigh;
+    float opacity;
 };
 
 const int nSamples = 2;
@@ -118,7 +119,8 @@ void computeScattering(
 
     vec2 HEIGHT_SCALE = vec2(RAYLEIGH_HEIGHT_LIMIT, MIE_HEIGHT_LIMIT);
 
-    float AtmosphereRadius = u_radiiAndDynamicAtmosphereColor.x + ATMOSPHERE_THICKNESS;
+    float planetRadius = 6356752.3142;
+    float AtmosphereRadius = planetRadius + ATMOSPHERE_THICKNESS;
 
     // Initialize the default scattering amounts to 0.
     rayleighColor = vec3(0.0);
@@ -141,7 +143,7 @@ void computeScattering(
     }
 
     // Prevent Mie glow on objects right in front of the camera.
-    bool allowMie = maxDistance > viewpointAtmosphereIntersect.stop;
+    // bool allowMie = maxDistance > viewpointAtmosphereIntersect.stop;
 
     // Set up for sampling positions along the ray - starting from the intersection with the outer ring of the atmosphere.
     float rayStepLength = (viewpointAtmosphereIntersect.stop - viewpointAtmosphereIntersect.start) / float(PRIMARY_STEPS);
@@ -205,12 +207,15 @@ void computeScattering(
 
     // Compute final color and opacity.
     rayleighColor = BETA_RAYLEIGH * rayleighAccumulation;
-    mieColor = allowMie ? BETA_MIE * mieAccumulation : vec3(0.0);
+    mieColor = BETA_MIE * mieAccumulation;
     opacity = length(exp(-((BETA_MIE * opticalDepth.y) + (BETA_RAYLEIGH * opticalDepth.x))));
 }
 
-vec4 computeFinalColor(vec3 positionWC, vec3 direction, vec3 lightDirection, vec3 rayleighColor, vec3 mieColor, float opacity)
+vec4 computeFinalColor(vec3 positionWC, vec3 lightDirection, vec3 rayleighColor, vec3 mieColor, float opacity)
 {
+    vec3 cameraToPositionRay = positionWC - czm_viewerPositionWC;
+    vec3 direction = normalize(cameraToPositionRay);
+
     float cosAngle = dot(direction, lightDirection);
     float cosAngle2 = cosAngle * cosAngle;
     float G2 = G * G;
@@ -239,7 +244,7 @@ AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos, bool dynamicLightin
     vec3 rayleighColor;
     float opacity;
 
-    calculate_scattering2(
+    computeScattering(
         czm_viewerPositionWC,
         direction,
         dist,
