@@ -1,39 +1,62 @@
-import { MetadataClass, MetadataEntity } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  MetadataClass,
+  MetadataEntity,
+} from "../../Source/Cesium.js";
 
 describe("Scene/MetadataEntity", function () {
-  const classWithNoPropertiesDefinition = new MetadataClass({
-    id: "building",
-    class: {},
-  });
+  let classWithNoPropertiesDefinition;
+  let classDefinition;
+  let properties;
+  beforeAll(function () {
+    classWithNoPropertiesDefinition = new MetadataClass({
+      id: "building",
+      class: {},
+    });
 
-  const classDefinition = new MetadataClass({
-    id: "building",
-    class: {
-      properties: {
-        name: {
-          type: "STRING",
-          semantic: "NAME",
-        },
-        height: {
-          type: "SCALAR",
-          componentType: "FLOAT32",
-          required: false,
-          default: 10.0,
-        },
-        position: {
-          type: "SCALAR",
-          componentType: "FLOAT32",
-          array: true,
-          count: 3,
+    classDefinition = new MetadataClass({
+      id: "building",
+      class: {
+        properties: {
+          name: {
+            type: "STRING",
+            semantic: "NAME",
+          },
+          height: {
+            type: "SCALAR",
+            componentType: "FLOAT32",
+            required: false,
+            default: 10.0,
+          },
+          position: {
+            type: "SCALAR",
+            componentType: "FLOAT32",
+            array: true,
+            count: 3,
+          },
+          axisColors: {
+            array: true,
+            count: 3,
+            type: "VEC3",
+            componentType: "UINT8",
+            normalized: true,
+          },
         },
       },
-    },
+    });
   });
 
-  const properties = {
-    name: "Building A",
-    position: [0.0, 0.0, 0.0],
-  };
+  beforeEach(function () {
+    properties = {
+      name: "Building A",
+      position: [0.0, 0.0, 0.0],
+      axisColors: [
+        [255, 0, 0],
+        [0, 255, 0],
+        [0, 0, 255],
+      ],
+    };
+  });
 
   it("throws when using MetadataEntity directly", function () {
     const entity = new MetadataEntity();
@@ -169,7 +192,7 @@ describe("Scene/MetadataEntity", function () {
     // Includes height which has a default value
     expect(
       MetadataEntity.getPropertyIds(properties, classDefinition).sort()
-    ).toEqual(["height", "name", "position"]);
+    ).toEqual(["axisColors", "height", "name", "position"]);
   });
 
   it("getPropertyIds uses results argument", function () {
@@ -181,7 +204,12 @@ describe("Scene/MetadataEntity", function () {
     );
 
     expect(results).toBe(returnedResults);
-    expect(results.sort()).toEqual(["height", "name", "position"]);
+    expect(results.sort()).toEqual([
+      "axisColors",
+      "height",
+      "name",
+      "position",
+    ]);
   });
 
   it("getPropertyIds throws without properties", function () {
@@ -242,6 +270,16 @@ describe("Scene/MetadataEntity", function () {
     }).toThrowDeveloperError();
   });
 
+  it("getProperty handles arrays of vectors correctly", function () {
+    expect(
+      MetadataEntity.getProperty("axisColors", properties, classDefinition)
+    ).toEqual([
+      new Cartesian3(1, 0, 0),
+      new Cartesian3(0, 1, 0),
+      new Cartesian3(0, 0, 1),
+    ]);
+  });
+
   it("setProperty returns false if property doesn't exist", function () {
     expect(
       MetadataEntity.setProperty("volume", 100.0, properties, classDefinition)
@@ -265,6 +303,29 @@ describe("Scene/MetadataEntity", function () {
     );
     expect(retrievedPosition).toEqual(position);
     expect(retrievedPosition).not.toBe(position); // The value is cloned
+  });
+
+  it("setProperty handles arrays of vectors correctly", function () {
+    const axisColors = [
+      new Cartesian3(1, 0, 0),
+      new Cartesian3(0, 1, 0),
+      new Cartesian3(0, 0, 1),
+    ];
+    expect(
+      MetadataEntity.setProperty(
+        "axisColors",
+        axisColors,
+        properties,
+        classDefinition
+      )
+    ).toBe(true);
+    const retrievedPosition = MetadataEntity.getProperty(
+      "axisColors",
+      properties,
+      classDefinition
+    );
+    expect(retrievedPosition).toEqual(axisColors);
+    expect(retrievedPosition).not.toBe(axisColors); // The value is cloned
   });
 
   it("setProperty throws without propertyId", function () {

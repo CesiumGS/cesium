@@ -283,9 +283,11 @@ MetadataEntity.getProperty = function (
     value = value.slice(); // clone
   }
 
+  // Arrays of vectors are represented as nested arrays in JSON
+  const enableNestedArrays = true;
   if (defined(classProperty)) {
     value = classProperty.normalize(value);
-    value = classProperty.unpackVectorAndMatrixTypes(value);
+    value = classProperty.unpackVectorAndMatrixTypes(value, enableNestedArrays);
   }
 
   return value;
