@@ -1,0 +1,95 @@
+{
+  "asset": {
+    "version": "1.1"
+  },
+  "extensionsUsed": [
+    "3DTILES_implicit_tiling"
+  ],
+  "extensionsRequired": [
+    "3DTILES_implicit_tiling"
+  ],
+  "schema": {
+    "classes": {
+      "tile": {
+        "properties": {
+          "quadrant": {
+            "type": "ENUM",
+            "enumType": "quadrantType"
+          },
+          "color": {
+            "type": "VEC3",
+            "componentType": "UINT8"
+          }
+        }
+      },
+      "building": {
+        "properties": {
+          "height": {
+            "type": "SCALAR",
+            "componentType": "UINT16",
+            "semantic": "_BUILDING_HEIGHT"
+          },
+          "color" : {
+            "type": "VEC3",
+            "componentType": "UINT8"
+          }
+        }
+      }
+    },
+    "enums": {
+      "quadrantType": {
+        "valueType": "UINT8",
+        "values": [
+          {
+            "name": "Southwest",
+            "value": 0
+          },
+          {
+            "name": "Southeast",
+            "value": 1
+          },
+          {
+            "name": "Northwest",
+            "value": 2
+          },
+          {
+            "name": "Northeast",
+            "value": 3
+          },
+          {
+            "name": "None",
+            "value": 4
+          }
+        ]
+      }
+    }
+  },
+  "geometricError": 240,
+  "root": {
+    "boundingVolume": {
+      "region": [
+        -1.3197209591796106,
+        0.6988424218,
+        -1.3196390408203893,
+        0.6989055782,
+        0,
+        88
+      ]
+    },
+    "content": {
+      "uri": "content/{level}/{x}/{y}.b3dm"
+    },
+    "extensions": {
+      "3DTILES_implicit_tiling": {
+        "subdivisionScheme": "QUADTREE",
+        "subtreeLevels": 2,
+        "availableLevels": 2,
+        "subtrees": {
+          "uri": "subtrees/1.1/{level}.{x}.{y}.json"
+        }
+      }
+    },
+    "geometricError": 70,
+    "refine": "ADD"
+  }
+}

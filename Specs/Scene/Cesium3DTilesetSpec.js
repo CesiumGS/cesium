@@ -5539,10 +5539,16 @@ describe(
         "Data/Cesium3DTiles/Metadata/GroupMetadata/tileset_1.1.json";
       const tilesetWithExplicitTileMetadataUrl =
         "Data/Cesium3DTiles/Metadata/TileMetadata/tileset_1.1.json";
+      const tilesetWithImplicitTileMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitTileMetadata/tileset_1.1.json";
       const tilesetWithExplicitContentMetadataUrl =
         "Data/Cesium3DTiles/Metadata/ContentMetadata/tileset_1.1.json";
+      const tilesetWithImplicitContentMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitContentMetadata/tileset_1.1.json";
       const tilesetWithExplicitMultipleContentsMetadataUrl =
         "Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset_1.1.json";
+      const tilesetWithImplicitMultipleContentsMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset_1.1.json";
 
       it("loads tileset metadata", function () {
         return Cesium3DTilesTester.loadTileset(scene, tilesetMetadataUrl).then(
@@ -5694,6 +5700,64 @@ describe(
         });
       });
 
+      it("loads implicit tileset with tile metadata", function () {
+        // this tileset is similar to other implicit tilesets, though
+        // one tile is removed
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithImplicitTileMetadataUrl
+        ).then(function (tileset) {
+          const placeholderTile = tileset.root;
+
+          const transcodedRoot = placeholderTile.children[0];
+          const subtree = transcodedRoot.implicitSubtree;
+          expect(subtree).toBeDefined();
+
+          const metadataTable = subtree.tileMetadataTable;
+          expect(metadataTable).toBeDefined();
+          expect(metadataTable.count).toBe(4);
+          expect(metadataTable.hasProperty("color")).toBe(true);
+          expect(metadataTable.hasProperty("quadrant")).toBe(true);
+
+          const tileCount = 4;
+          const expectedQuadrants = [
+            "None",
+            "Southwest",
+            "",
+            "Northwest",
+            "Northeast",
+          ];
+          const expectedColors = [
+            new Cartesian3(255, 255, 255),
+            new Cartesian3(255, 0, 0),
+            Cartesian3.ZERO,
+            new Cartesian3(0, 255, 0),
+            new Cartesian3(0, 0, 255),
+          ];
+
+          const tiles = [transcodedRoot].concat(transcodedRoot.children);
+          expect(tiles.length).toBe(tileCount);
+
+          let i;
+          for (i = 0; i < tileCount; i++) {
+            const tile = tiles[i];
+            const index = tile.implicitCoordinates.tileIndex;
+            const metadata = tile.metadata;
+            if (!subtree.tileIsAvailableAtIndex(index)) {
+              expect(metadata.getProperty("quadrant")).not.toBeDefined();
+              expect(metadata.getProperty("color")).not.toBeDefined();
+            } else {
+              expect(metadata.getProperty("quadrant")).toBe(
+                expectedQuadrants[index]
+              );
+              expect(metadata.getProperty("color")).toEqual(
+                expectedColors[index]
+              );
+            }
+          }
+        });
+      });
+
       it("loads explicit tileset with content metadata", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
@@ -5739,6 +5803,63 @@ describe(
         });
       });
 
+      it("loads implicit tileset with content metadata", function () {
+        // this tileset is similar to other implicit tilesets, though
+        // one tile is removed
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithImplicitContentMetadataUrl
+        ).then(function (tileset) {
+          const placeholderTile = tileset.root;
+
+          const transcodedRoot = placeholderTile.children[0];
+          const subtree = transcodedRoot.implicitSubtree;
+          expect(subtree).toBeDefined();
+
+          const metadataTables = subtree.contentMetadataTables;
+          expect(metadataTables.length).toBe(1);
+
+          const metadataTable = metadataTables[0];
+
+          expect(metadataTable.count).toBe(4);
+          expect(metadataTable.hasProperty("height")).toBe(true);
+          expect(metadataTable.hasProperty("color")).toBe(true);
+
+          const tileCount = 4;
+
+          const expectedHeights = [10, 20, 0, 30, 40];
+          const expectedColors = [
+            new Cartesian3(255, 255, 255),
+            new Cartesian3(255, 0, 0),
+            Cartesian3.ZERO,
+            new Cartesian3(0, 255, 0),
+            new Cartesian3(0, 0, 255),
+          ];
+
+          const tiles = [transcodedRoot].concat(transcodedRoot.children);
+          expect(tiles.length).toBe(tileCount);
+
+          let i;
+          for (i = 0; i < tileCount; i++) {
+            const tile = tiles[i];
+            const content = tile.content;
+            const index = tile.implicitCoordinates.tileIndex;
+            const metadata = content.metadata;
+            if (!subtree.contentIsAvailableAtIndex(index, 0)) {
+              expect(metadata.getProperty("height")).not.toBeDefined();
+              expect(metadata.getProperty("color")).not.toBeDefined();
+            } else {
+              expect(metadata.getProperty("height")).toBe(
+                expectedHeights[index]
+              );
+              expect(metadata.getProperty("color")).toEqual(
+                expectedColors[index]
+              );
+            }
+          }
+        });
+      });
+
       it("loads explicit tileset with multiple contents with metadata", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
@@ -5772,16 +5893,86 @@ describe(
           );
         });
       });
+
+      it("loads implicit tileset with multiple contents with metadata", function () {
+        // this tileset is similar to other implicit tilesets, though
+        // one tile is removed
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithImplicitMultipleContentsMetadataUrl
+        ).then(function (tileset) {
+          const placeholderTile = tileset.root;
+
+          const transcodedRoot = placeholderTile.children[0];
+          const subtree = transcodedRoot.implicitSubtree;
+          expect(subtree).toBeDefined();
+
+          const metadataTables = subtree.contentMetadataTables;
+          expect(metadataTables.length).toBe(2);
+
+          const buildingMetadataTable = metadataTables[0];
+          const treeMetadataTable = metadataTables[1];
+
+          expect(buildingMetadataTable.count).toBe(5);
+          expect(buildingMetadataTable.hasProperty("height")).toBe(true);
+          expect(buildingMetadataTable.hasProperty("color")).toBe(true);
+
+          expect(treeMetadataTable.count).toBe(4);
+          expect(treeMetadataTable.hasProperty("age")).toBe(true);
+
+          const tileCount = 5;
+
+          const expectedHeights = [10, 20, 30, 40, 50];
+          const expectedColors = [
+            new Cartesian3(255, 255, 255),
+            new Cartesian3(255, 0, 0),
+            new Cartesian3(255, 255, 0),
+            new Cartesian3(0, 255, 0),
+            new Cartesian3(0, 0, 255),
+          ];
+
+          const expectedAges = [21, 7, 11, 16];
+
+          const tiles = [transcodedRoot].concat(transcodedRoot.children);
+          expect(tiles.length).toBe(tileCount);
+
+          let i;
+          for (i = 0; i < tileCount; i++) {
+            const tile = tiles[i];
+            const index = tile.implicitCoordinates.tileIndex;
+
+            let buildingMetadata;
+            if (i > 0) {
+              expect(tile.hasMultipleContents).toBe(true);
+              const buildingContent = tile.content.innerContents[0];
+              buildingMetadata = buildingContent.metadata;
+            } else {
+              expect(tile.hasMultipleContents).toBe(false);
+              buildingMetadata = tile.content.metadata;
+            }
+
+            expect(buildingMetadata.getProperty("height")).toBe(
+              expectedHeights[index]
+            );
+            expect(buildingMetadata.getProperty("color")).toEqual(
+              expectedColors[index]
+            );
+
+            if (i === 0) {
+              continue;
+            }
+
+            const treeContent = tile.content.innerContents[1];
+            const treeMetadata = treeContent.metadata;
+            expect(treeMetadata.getProperty("age")).toEqual(
+              expectedAges[index - 1]
+            );
+          }
+        });
+      });
     });
 
     describe("3DTILES_metadata", function () {
-      const tilesetWithImplicitTileMetadataUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitTileMetadata/tileset.json";
-      const tilesetWithImplicitContentMetadataUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitContentMetadata/tileset.json";
-      const tilesetWithImplicitMultipleContentsMetadataUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset.json";
-
       const tilesetMetadataLegacyUrl =
         "Data/Cesium3DTiles/Metadata/TilesetMetadata/tileset_1.0.json";
       const tilesetWithExternalSchemaLegacyUrl =
@@ -5790,10 +5981,16 @@ describe(
         "Data/Cesium3DTiles/Metadata/GroupMetadata/tileset_1.0.json";
       const tilesetWithExplicitTileMetadataLegacyUrl =
         "Data/Cesium3DTiles/Metadata/TileMetadata/tileset_1.0.json";
+      const tilesetWithImplicitTileMetadataLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitTileMetadata/tileset_1.0.json";
       const tilesetWithExplicitContentMetadataLegacyUrl =
         "Data/Cesium3DTiles/Metadata/ContentMetadata/tileset_1.0.json";
+      const tilesetWithImplicitContentMetadataLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitContentMetadata/tileset_1.0.json";
       const tilesetWithExplicitMultipleContentsMetadataLegacyUrl =
         "Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset_1.0.json";
+      const tilesetWithImplicitMultipleContentsMetadataLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset_1.0.json";
 
       it("loads tileset metadata (legacy)", function () {
         return Cesium3DTilesTester.loadTileset(
@@ -5947,12 +6144,12 @@ describe(
         });
       });
 
-      it("loads implicit tileset with tile metadata", function () {
+      it("loads implicit tileset with tile metadata (legacy)", function () {
         // this tileset is similar to other implicit tilesets, though
         // one tile is removed
         return Cesium3DTilesTester.loadTileset(
           scene,
-          tilesetWithImplicitTileMetadataUrl
+          tilesetWithImplicitTileMetadataLegacyUrl
         ).then(function (tileset) {
           const placeholderTile = tileset.root;
 
@@ -6050,12 +6247,12 @@ describe(
         });
       });
 
-      it("loads implicit tileset with content metadata", function () {
+      it("loads implicit tileset with content metadata (legacy)", function () {
         // this tileset is similar to other implicit tilesets, though
         // one tile is removed
         return Cesium3DTilesTester.loadTileset(
           scene,
-          tilesetWithImplicitContentMetadataUrl
+          tilesetWithImplicitContentMetadataLegacyUrl
         ).then(function (tileset) {
           const placeholderTile = tileset.root;
 
@@ -6107,12 +6304,46 @@ describe(
         });
       });
 
-      it("loads implicit tileset with multiple contents with metadata", function () {
+      it("loads explicit tileset with multiple contents with metadata (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithExplicitMultipleContentsMetadataLegacyUrl
+        ).then(function (tileset) {
+          const content = tileset.root.content;
+          const batchedContent = content.innerContents[0];
+          const batchedContentMetadata = batchedContent.metadata;
+
+          expect(batchedContentMetadata.getProperty("highlightColor")).toEqual(
+            new Cartesian3(0, 0, 255)
+          );
+          expect(batchedContentMetadata.getProperty("author")).toEqual(
+            "Cesium"
+          );
+          expect(batchedContentMetadata.hasProperty("numberOfInstances")).toBe(
+            false
+          );
+
+          const instancedContent = content.innerContents[1];
+          const instancedContentMetadata = instancedContent.metadata;
+
+          expect(
+            instancedContentMetadata.getProperty("numberOfInstances")
+          ).toEqual(50);
+          expect(instancedContentMetadata.getProperty("author")).toEqual(
+            "Sample Author"
+          );
+          expect(instancedContentMetadata.hasProperty("highlightColor")).toBe(
+            false
+          );
+        });
+      });
+
+      it("loads implicit tileset with multiple contents with metadata (legacy)", function () {
         // this tileset is similar to other implicit tilesets, though
         // one tile is removed
         return Cesium3DTilesTester.loadTileset(
           scene,
-          tilesetWithImplicitMultipleContentsMetadataUrl
+          tilesetWithImplicitMultipleContentsMetadataLegacyUrl
         ).then(function (tileset) {
           const placeholderTile = tileset.root;
 
@@ -6181,40 +6412,6 @@ describe(
               expectedAges[index - 1]
             );
           }
-        });
-      });
-
-      it("loads explicit tileset with multiple contents with metadata (legacy)", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          tilesetWithExplicitMultipleContentsMetadataLegacyUrl
-        ).then(function (tileset) {
-          const content = tileset.root.content;
-          const batchedContent = content.innerContents[0];
-          const batchedContentMetadata = batchedContent.metadata;
-
-          expect(batchedContentMetadata.getProperty("highlightColor")).toEqual(
-            new Cartesian3(0, 0, 255)
-          );
-          expect(batchedContentMetadata.getProperty("author")).toEqual(
-            "Cesium"
-          );
-          expect(batchedContentMetadata.hasProperty("numberOfInstances")).toBe(
-            false
-          );
-
-          const instancedContent = content.innerContents[1];
-          const instancedContentMetadata = instancedContent.metadata;
-
-          expect(
-            instancedContentMetadata.getProperty("numberOfInstances")
-          ).toEqual(50);
-          expect(instancedContentMetadata.getProperty("author")).toEqual(
-            "Sample Author"
-          );
-          expect(instancedContentMetadata.hasProperty("highlightColor")).toBe(
-            false
-          );
         });
       });
     });
