@@ -2,6 +2,8 @@ import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import Texture from "../../Renderer/Texture.js";
 import TextureMinificationFilter from "../../Renderer/TextureMinificationFilter.js";
+import CesiumMath from "../../Core/Math.js";
+import TextureWrap from "../../Renderer/TextureWrap.js";
 
 /**
  * An object to manage loading textures
@@ -70,16 +72,58 @@ TextureManager.prototype.loadTexture2D = function (textureId, textureUniform) {
     fetchTexture2D(this, textureId, textureUniform);
   }
 };
-
+function resizeImageToNextPowerOfTwo(image) {
+  const canvas = document.createElement("canvas");
+  canvas.width = CesiumMath.nextPowerOfTwo(image.width);
+  canvas.height = CesiumMath.nextPowerOfTwo(image.height);
+  const canvasContext = canvas.getContext("2d");
+  canvasContext.drawImage(
+    image,
+    0,
+    0,
+    image.width,
+    image.height,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+  return canvas;
+}
 function createTexture(textureManager, loadedImage, context) {
   const id = loadedImage.id;
   const textureUniform = loadedImage.textureUniform;
 
   const typedArray = textureUniform.typedArray;
   const sampler = textureUniform.sampler;
+  const minFilter = sampler.minificationFilter;
+  const wrapS = sampler.wrapS;
+  const wrapT = sampler.wrapT;
+
+  const samplerRequiresMipmap =
+    minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST ||
+    minFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR ||
+    minFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST ||
+    minFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
+  const generateMipmap = samplerRequiresMipmap;
+  const requiresPowerOfTwo =
+    generateMipmap ||
+    wrapS === TextureWrap.REPEAT ||
+    wrapS === TextureWrap.MIRRORED_REPEAT ||
+    wrapT === TextureWrap.REPEAT ||
+    wrapT === TextureWrap.MIRRORED_REPEAT;
 
   let texture;
   if (defined(typedArray)) {
+    const nonPowerOfTwo =
+      !CesiumMath.isPowerOfTwo(textureUniform.width) ||
+      !CesiumMath.isPowerOfTwo(textureUniform.height);
+    if (!context.webgl2 && nonPowerOfTwo && requiresPowerOfTwo) {
+      console.warn(
+        "Compressed texture uses REPEAT or MIRRORED_REPEAT texture wrap mode and dimensions are not powers of two. The texture may be rendered incorrectly."
+      );
+    }
+
     texture = new Texture({
       context: context,
       pixelFormat: textureUniform.pixelFormat,
@@ -93,25 +137,22 @@ function createTexture(textureManager, loadedImage, context) {
       flipY: false,
     });
   } else {
+    let image = loadedImage.image;
+    const nonPowerOfTwo =
+      !CesiumMath.isPowerOfTwo(image.width) ||
+      !CesiumMath.isPowerOfTwo(image.height);
+    if (!context.webgl2 && requiresPowerOfTwo && nonPowerOfTwo) {
+      image = resizeImageToNextPowerOfTwo(image);
+    }
+
     texture = new Texture({
       context: context,
-      source: loadedImage.image,
+      source: image,
       sampler: sampler,
     });
   }
   //use mipmap
-  if (
-    sampler &&
-    sampler._minificationFilter &&
-    (sampler._minificationFilter ===
-      TextureMinificationFilter.NEAREST_MIPMAP_NEAREST ||
-      sampler._minificationFilter ===
-        TextureMinificationFilter.LINEAR_MIPMAP_NEAREST ||
-      sampler._minificationFilter ===
-        TextureMinificationFilter.NEAREST_MIPMAP_LINEAR ||
-      sampler._minificationFilter ===
-        TextureMinificationFilter.LINEAR_MIPMAP_LINEAR)
-  ) {
+  if (generateMipmap) {
     texture.generateMipmap();
   }
   // Destroy the old texture once the new one is loaded for more seamless
