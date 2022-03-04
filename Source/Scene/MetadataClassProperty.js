@@ -567,16 +567,10 @@ MetadataClassProperty.prototype.normalize = function (value) {
   }
 
   const valueType = this._valueType;
-  const valueTransform = function (x) {
+  const normalizeFunction = function (x) {
     return MetadataComponentType.normalize(x, valueType);
   };
-
-  if (Array.isArray(value)) {
-    transformValuesInPlace(value, valueTransform);
-    return value;
-  }
-
-  return valueTransform(value);
+  return transformInPlace(value, normalizeFunction);
 };
 
 /**
@@ -594,16 +588,10 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
   }
 
   const valueType = this._valueType;
-  const valueTransform = function (x) {
+  const unnormalizeFunction = function (x) {
     return MetadataComponentType.unnormalize(x, valueType);
   };
-
-  if (Array.isArray(value)) {
-    transformValuesInPlace(value, valueTransform);
-    return value;
-  }
-
-  return valueTransform(value);
+  return transformInPlace(value, unnormalizeFunction);
 };
 
 /**
@@ -865,37 +853,16 @@ function getNonFiniteErrorMessage(value, type) {
   return `value ${value} of type ${type} must be finite`;
 }
 
-function normalize(classProperty, value, normalizeFunction) {
-  if (!classProperty._normalized) {
-    return value;
+function transformInPlace(value, transformationFunction) {
+  if (!Array.isArray(value)) {
+    return transformationFunction(value);
   }
 
-  const type = classProperty._type;
-  const valueType = classProperty._valueType;
-  const isArray = classProperty._isArray;
-  const componentCount = MetadataType.getComponentCount(type);
-
-  if (isArray || componentCount > 1) {
-    const length = value.length;
-    for (let i = 0; i < length; ++i) {
-      value[i] = normalizeFunction(value[i], valueType);
-    }
-  } else {
-    value = normalizeFunction(value, valueType);
+  for (let i = 0; i < value.length; i++) {
+    value[i] = transformInPlace(value[i], transformationFunction);
   }
 
   return value;
-}
-
-function transformValuesInPlace(valuesArray, valueTransformation) {
-  for (let i = 0; i < valuesArray.length; i++) {
-    const oldValue = valuesArray[i];
-    if (Array.isArray(oldValue)) {
-      transformValuesInPlace(oldValue, valueTransformation);
-    } else {
-      valuesArray[i] = valueTransformation(oldValue);
-    }
-  }
 }
 
 export default MetadataClassProperty;

@@ -629,6 +629,79 @@ describe("Scene/MetadataClassProperty", function () {
     }
   });
 
+  it("normalizes nested arrays of vectors", function () {
+    const properties = {
+      propertyVector: {
+        type: "VEC3",
+        componentType: "UINT8",
+        normalized: true,
+        array: true,
+        count: 2,
+      },
+      propertyMatrix: {
+        type: "MAT2",
+        componentType: "UINT8",
+        normalized: true,
+        array: true,
+      },
+    };
+
+    const propertyValues = {
+      propertyVector: [
+        [
+          [255, 0, 0],
+          [0, 255, 0],
+        ],
+        [
+          [0, 0, 255],
+          [255, 255, 0],
+        ],
+      ],
+      propertyMatrix: [
+        [
+          [255, 255, 255, 255],
+          [51, 0, 0, 51],
+        ],
+        [],
+      ],
+    };
+
+    const normalizedValues = {
+      propertyVector: [
+        [
+          [1.0, 0.0, 0.0],
+          [0.0, 1.0, 0.0],
+        ],
+        [
+          [0.0, 0.0, 1.0],
+          [1.0, 1.0, 0.0],
+        ],
+      ],
+      propertyMatrix: [
+        [
+          [1.0, 1.0, 1.0, 1.0],
+          [0.2, 0.0, 0.0, 0.2],
+        ],
+        [],
+      ],
+    };
+
+    for (const propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        const property = new MetadataClassProperty({
+          id: propertyId,
+          property: properties[propertyId],
+        });
+        const length = normalizedValues[propertyId].length;
+        for (let i = 0; i < length; ++i) {
+          const value = propertyValues[propertyId][i];
+          const normalizedValue = property.normalize(value);
+          expect(normalizedValue).toEqual(normalizedValues[propertyId][i]);
+        }
+      }
+    }
+  });
+
   it("does not normalize non integer types", function () {
     const myEnum = new MetadataEnum({
       id: "myEnum",
