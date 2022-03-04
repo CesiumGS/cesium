@@ -629,6 +629,79 @@ describe("Scene/MetadataClassProperty", function () {
     }
   });
 
+  it("normalizes nested arrays of vectors", function () {
+    const properties = {
+      propertyVector: {
+        type: "VEC3",
+        componentType: "UINT8",
+        normalized: true,
+        array: true,
+        count: 2,
+      },
+      propertyMatrix: {
+        type: "MAT2",
+        componentType: "UINT8",
+        normalized: true,
+        array: true,
+      },
+    };
+
+    const propertyValues = {
+      propertyVector: [
+        [
+          [255, 0, 0],
+          [0, 255, 0],
+        ],
+        [
+          [0, 0, 255],
+          [255, 255, 0],
+        ],
+      ],
+      propertyMatrix: [
+        [
+          [255, 255, 255, 255],
+          [51, 0, 0, 51],
+        ],
+        [],
+      ],
+    };
+
+    const normalizedValues = {
+      propertyVector: [
+        [
+          [1.0, 0.0, 0.0],
+          [0.0, 1.0, 0.0],
+        ],
+        [
+          [0.0, 0.0, 1.0],
+          [1.0, 1.0, 0.0],
+        ],
+      ],
+      propertyMatrix: [
+        [
+          [1.0, 1.0, 1.0, 1.0],
+          [0.2, 0.0, 0.0, 0.2],
+        ],
+        [],
+      ],
+    };
+
+    for (const propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        const property = new MetadataClassProperty({
+          id: propertyId,
+          property: properties[propertyId],
+        });
+        const length = normalizedValues[propertyId].length;
+        for (let i = 0; i < length; ++i) {
+          const value = propertyValues[propertyId][i];
+          const normalizedValue = property.normalize(value);
+          expect(normalizedValue).toEqual(normalizedValues[propertyId][i]);
+        }
+      }
+    }
+  });
+
   it("does not normalize non integer types", function () {
     const myEnum = new MetadataEnum({
       id: "myEnum",
@@ -931,6 +1004,128 @@ describe("Scene/MetadataClassProperty", function () {
     }
   });
 
+  it("packVectorAndMatrixTypes packs nested arrays of vectors", function () {
+    const properties = {
+      propertyVec2: {
+        type: "VEC2",
+        componentType: "FLOAT32",
+        array: true,
+      },
+      propertyIVec3: {
+        type: "VEC3",
+        componentType: "INT32",
+        array: true,
+        count: 3,
+      },
+      propertyDVec4: {
+        type: "VEC4",
+        componentType: "FLOAT64",
+        array: true,
+      },
+      propertyMat4: {
+        type: "MAT4",
+        componentType: "FLOAT32",
+        array: true,
+      },
+      propertyIMat3: {
+        type: "MAT3",
+        componentType: "FLOAT32",
+        array: true,
+        count: 3,
+      },
+      propertyDMat2: {
+        type: "MAT2",
+        componentType: "FLOAT32",
+        array: true,
+        count: 3,
+      },
+    };
+
+    const propertyValues = {
+      propertyVec2: [
+        new Cartesian2(0.1, 0.8),
+        new Cartesian2(0.3, 0.5),
+        new Cartesian2(0.7, 0.2),
+      ],
+      propertyIVec3: [
+        new Cartesian3(1, 2, 3),
+        new Cartesian3(4, 5, 6),
+        new Cartesian3(7, 8, 9),
+      ],
+      propertyDVec4: [
+        new Cartesian4(0.1, 0.2, 0.3, 0.4),
+        new Cartesian4(0.3, 0.2, 0.1, 0.0),
+        new Cartesian4(0.1, 0.2, 0.4, 0.5),
+      ],
+      propertyMat4: [
+        new Matrix4(1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1),
+        new Matrix4(0, 2.5, 0, 0, 0, 0.5, 0.25, 0, 0, 0, 3.5, 0, 0, 0, 0, 1),
+        new Matrix4(1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0),
+      ],
+      propertyIMat3: [
+        new Matrix3(2, 0, 0, 0, 2, 0, 0, 0, 2),
+        new Matrix3(1, 0, 0, 0, 1, 0, 0, 0, 1),
+        new Matrix3(1, 2, 3, 2, 3, 1, 3, 1, 2),
+      ],
+      propertyDMat2: [
+        new Matrix2(1.5, 0.0, 0.0, 2.5),
+        new Matrix2(1.0, 0.0, 0.0, 1.0),
+        new Matrix2(1.5, 2.5, 3.5, 4.5),
+      ],
+    };
+
+    // prettier-ignore
+    const packedValues = {
+      propertyVec2: [
+        [0.1, 0.8],
+        [0.3, 0.5],
+        [0.7, 0.2],
+      ],
+      propertyIVec3: [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9],
+      ],
+      propertyDVec4: [
+        [0.1, 0.2, 0.3, 0.4],
+        [0.3, 0.2, 0.1, 0.0],
+        [0.1, 0.2, 0.4, 0.5],
+      ],
+      propertyMat4: [
+        // the MatrixN constructor is row-major, but internally things are
+        // stored column-major. So these are the transpose of the above
+        [1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 2.5, 0.5, 0, 0, 0, 0.25, 3.5, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 0, 0, 0, 0],
+      ],
+      propertyIMat3: [
+        [2, 0, 0, 0, 2, 0, 0, 0, 2],
+        [1, 0, 0, 0, 1, 0, 0, 0, 1],
+        [1, 2, 3, 2, 3, 1, 3, 1, 2],
+      ],
+      propertyDMat2: [
+        [1.5, 0.0, 0.0, 2.5],
+        [1.0, 0.0, 0.0, 1.0],
+        [1.5, 3.5, 2.5, 4.5],
+      ],
+    };
+
+    for (const propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        const property = new MetadataClassProperty({
+          id: propertyId,
+          property: properties[propertyId],
+        });
+
+        const value = propertyValues[propertyId];
+        const nested = true;
+        const packed = property.packVectorAndMatrixTypes(value, nested);
+        const expected = packedValues[propertyId];
+        expect(packed).toEqual(expected);
+      }
+    }
+  });
+
   it("packVectorAndMatrixTypes does not affect other types", function () {
     if (!FeatureDetection.supportsBigInt()) {
       return;
@@ -1215,6 +1410,128 @@ describe("Scene/MetadataClassProperty", function () {
 
         const packed = packedValues[propertyId];
         const unpacked = property.unpackVectorAndMatrixTypes(packed);
+        const expected = propertyValues[propertyId];
+        expect(unpacked).toEqual(expected);
+      }
+    }
+  });
+
+  it("unpackVectorAndMatrixTypes unpacks nested arrays of vectors", function () {
+    const properties = {
+      propertyVec2: {
+        type: "VEC2",
+        componentType: "FLOAT32",
+        array: true,
+      },
+      propertyIVec3: {
+        type: "VEC3",
+        componentType: "INT32",
+        array: true,
+        count: 3,
+      },
+      propertyDVec4: {
+        type: "VEC4",
+        componentType: "FLOAT64",
+        array: true,
+      },
+      propertyMat4: {
+        type: "MAT4",
+        componentType: "FLOAT32",
+        array: true,
+      },
+      propertyIMat3: {
+        type: "MAT3",
+        componentType: "FLOAT32",
+        array: true,
+        count: 3,
+      },
+      propertyDMat2: {
+        type: "MAT2",
+        componentType: "FLOAT32",
+        array: true,
+        count: 3,
+      },
+    };
+
+    const propertyValues = {
+      propertyVec2: [
+        new Cartesian2(0.1, 0.8),
+        new Cartesian2(0.3, 0.5),
+        new Cartesian2(0.7, 0.2),
+      ],
+      propertyIVec3: [
+        new Cartesian3(1, 2, 3),
+        new Cartesian3(4, 5, 6),
+        new Cartesian3(7, 8, 9),
+      ],
+      propertyDVec4: [
+        new Cartesian4(0.1, 0.2, 0.3, 0.4),
+        new Cartesian4(0.3, 0.2, 0.1, 0.0),
+        new Cartesian4(0.1, 0.2, 0.4, 0.5),
+      ],
+      propertyMat4: [
+        new Matrix4(1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1),
+        new Matrix4(0, 2.5, 0, 0, 0, 0.5, 0.25, 0, 0, 0, 3.5, 0, 0, 0, 0, 1),
+        new Matrix4(1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0),
+      ],
+      propertyIMat3: [
+        new Matrix3(2, 0, 0, 0, 2, 0, 0, 0, 2),
+        new Matrix3(1, 0, 0, 0, 1, 0, 0, 0, 1),
+        new Matrix3(1, 2, 3, 2, 3, 1, 3, 1, 2),
+      ],
+      propertyDMat2: [
+        new Matrix2(1.5, 0.0, 0.0, 2.5),
+        new Matrix2(1.0, 0.0, 0.0, 1.0),
+        new Matrix2(1.5, 2.5, 3.5, 4.5),
+      ],
+    };
+
+    // prettier-ignore
+    const packedValues = {
+      propertyVec2: [
+        [0.1, 0.8],
+        [0.3, 0.5],
+        [0.7, 0.2],
+      ],
+      propertyIVec3: [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9],
+      ],
+      propertyDVec4: [
+        [0.1, 0.2, 0.3, 0.4],
+        [0.3, 0.2, 0.1, 0.0],
+        [0.1, 0.2, 0.4, 0.5],
+      ],
+      propertyMat4: [
+        // the MatrixN constructor is row-major, but internally things are
+        // stored column-major. So these are the transpose of the above
+        [1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 2.5, 0.5, 0, 0, 0, 0.25, 3.5, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 0, 0, 0, 0],
+      ],
+      propertyIMat3: [
+        [2, 0, 0, 0, 2, 0, 0, 0, 2],
+        [1, 0, 0, 0, 1, 0, 0, 0, 1],
+        [1, 2, 3, 2, 3, 1, 3, 1, 2],
+      ],
+      propertyDMat2: [
+        [1.5, 0.0, 0.0, 2.5],
+        [1.0, 0.0, 0.0, 1.0],
+        [1.5, 3.5, 2.5, 4.5],
+      ],
+    };
+
+    for (const propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        const property = new MetadataClassProperty({
+          id: propertyId,
+          property: properties[propertyId],
+        });
+
+        const packed = packedValues[propertyId];
+        const nested = true;
+        const unpacked = property.unpackVectorAndMatrixTypes(packed, nested);
         const expected = propertyValues[propertyId];
         expect(unpacked).toEqual(expected);
       }

@@ -562,7 +562,15 @@ function parseType(property, enums) {
  * @private
  */
 MetadataClassProperty.prototype.normalize = function (value) {
-  return normalize(this, value, MetadataComponentType.normalize);
+  if (!this._normalized) {
+    return value;
+  }
+
+  const valueType = this._valueType;
+  const normalizeFunction = function (x) {
+    return MetadataComponentType.normalize(x, valueType);
+  };
+  return transformInPlace(value, normalizeFunction);
 };
 
 /**
@@ -575,7 +583,15 @@ MetadataClassProperty.prototype.normalize = function (value) {
  * @private
  */
 MetadataClassProperty.prototype.unnormalize = function (value) {
-  return normalize(this, value, MetadataComponentType.unnormalize);
+  if (!this._normalized) {
+    return value;
+  }
+
+  const valueType = this._valueType;
+  const unnormalizeFunction = function (x) {
+    return MetadataComponentType.unnormalize(x, valueType);
+  };
+  return transformInPlace(value, unnormalizeFunction);
 };
 
 /**
@@ -585,15 +601,28 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
  * other sizes) are passed through unaltered.
  *
  * @param {*} value the original, normalized values.
+ * @param {Boolean} [enableNestedArrays=false] If true, arrays of vectors are represented as nested arrays. This is used for JSON encoding but not binary encoding
  * @returns {*} The appropriate vector or matrix type if the value is a vector or matrix type, respectively. If the property is an array of vectors or matrices, an array of the appropriate vector or matrix type is returned. Otherwise, the value is returned unaltered.
  * @private
  */
-MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (value) {
+MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (
+  value,
+  enableNestedArrays
+) {
+  enableNestedArrays = defaultValue(enableNestedArrays, false);
   const MathType = MetadataType.getMathType(this._type);
   const isArray = this._isArray;
+  const componentCount = MetadataType.getComponentCount(this._type);
+  const isNested = isArray && componentCount > 1;
 
   if (!defined(MathType)) {
     return value;
+  }
+
+  if (enableNestedArrays && isNested) {
+    return value.map(function (x) {
+      return MathType.unpack(x);
+    });
   }
 
   if (isArray) {
@@ -611,15 +640,28 @@ MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (value) {
  * All other values (including arrays of other sizes) are passed through unaltered.
  *
  * @param {*} value The value of this property
+ * @param {Boolean} [enableNestedArrays=false] If true, arrays of vectors are represented as nested arrays. This is used for JSON encoding but not binary encoding
  * @returns {*} An array of the appropriate length if the property is a vector or matrix type. Otherwise, the value is returned unaltered.
  * @private
  */
-MetadataClassProperty.prototype.packVectorAndMatrixTypes = function (value) {
+MetadataClassProperty.prototype.packVectorAndMatrixTypes = function (
+  value,
+  enableNestedArrays
+) {
+  enableNestedArrays = defaultValue(enableNestedArrays, false);
   const MathType = MetadataType.getMathType(this._type);
   const isArray = this._isArray;
+  const componentCount = MetadataType.getComponentCount(this._type);
+  const isNested = isArray && componentCount > 1;
 
   if (!defined(MathType)) {
     return value;
+  }
+
+  if (enableNestedArrays && isNested) {
+    return value.map(function (x) {
+      return MathType.pack(x, []);
+    });
   }
 
   if (isArray) {
@@ -811,23 +853,13 @@ function getNonFiniteErrorMessage(value, type) {
   return `value ${value} of type ${type} must be finite`;
 }
 
-function normalize(classProperty, value, normalizeFunction) {
-  if (!classProperty._normalized) {
-    return value;
+function transformInPlace(value, transformationFunction) {
+  if (!Array.isArray(value)) {
+    return transformationFunction(value);
   }
 
-  const type = classProperty._type;
-  const valueType = classProperty._valueType;
-  const isArray = classProperty._isArray;
-  const componentCount = MetadataType.getComponentCount(type);
-
-  if (isArray || componentCount > 1) {
-    const length = value.length;
-    for (let i = 0; i < length; ++i) {
-      value[i] = normalizeFunction(value[i], valueType);
-    }
-  } else {
-    value = normalizeFunction(value, valueType);
+  for (let i = 0; i < value.length; i++) {
+    value[i] = transformInPlace(value[i], transformationFunction);
   }
 
   return value;
