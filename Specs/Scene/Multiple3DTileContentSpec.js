@@ -302,30 +302,35 @@ describe(
       const withImplicitContentMetadataUrl =
         "./Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset.json";
 
-      const metadataClass = new MetadataClass({
-        id: "test",
-        class: {
-          properties: {
-            name: {
-              type: "STRING",
-            },
-            height: {
-              type: "SCALAR",
-              componentType: "FLOAT32",
-            },
-          },
-        },
-      });
+      let metadataClass;
+      let groupMetadata;
 
-      const groupMetadata = new GroupMetadata({
-        id: "testGroup",
-        group: {
-          properties: {
-            name: "Test Group",
-            height: 35.6,
+      beforeAll(function () {
+        metadataClass = new MetadataClass({
+          id: "test",
+          class: {
+            properties: {
+              name: {
+                type: "STRING",
+              },
+              height: {
+                type: "SCALAR",
+                componentType: "FLOAT32",
+              },
+            },
           },
-        },
-        class: metadataClass,
+        });
+
+        groupMetadata = new GroupMetadata({
+          id: "testGroup",
+          group: {
+            properties: {
+              name: "Test Group",
+              height: 35.6,
+            },
+          },
+          class: metadataClass,
+        });
       });
 
       it("groupMetadata returns undefined", function () {

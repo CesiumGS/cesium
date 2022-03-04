@@ -5,30 +5,34 @@ import {
 } from "../../Source/Cesium.js";
 
 describe("Scene/findContentMetadata", function () {
-  const contentClass = new MetadataClass({
-    id: "content",
-    class: {
-      properties: {
-        name: {
-          type: "STRING",
-        },
-        color: {
-          type: "VEC3",
-          componentType: "UINT8",
-        },
-      },
-    },
-  });
+  let contentClass;
+  let mockTileset;
 
-  const mockTileset = {
-    metadata: {
-      schema: {
-        classes: {
-          content: contentClass,
+  beforeAll(function () {
+    contentClass = new MetadataClass({
+      id: "content",
+      class: {
+        properties: {
+          name: {
+            type: "STRING",
+          },
+          color: {
+            type: "VEC3",
+            componentType: "UINT8",
+          },
         },
       },
-    },
-  };
+    });
+    mockTileset = {
+      metadata: {
+        schema: {
+          classes: {
+            content: contentClass,
+          },
+        },
+      },
+    };
+  });
 
   it("returns undefined if there is no metadata or extension", function () {
     const contentHeader = {

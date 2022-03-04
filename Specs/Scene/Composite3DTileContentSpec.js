@@ -147,29 +147,70 @@ describe(
     });
 
     describe("metadata", function () {
-      const groupMetadataClass = new MetadataClass({
-        id: "test",
-        class: {
-          properties: {
-            name: {
-              type: "STRING",
-            },
-            height: {
-              type: "SCALAR",
-              componentType: "FLOAT32",
+      let metadataClass;
+      let groupMetadata;
+      let contentMetadataClass;
+      let explicitMetadata;
+      let implicitMetadata;
+
+      beforeAll(function () {
+        metadataClass = new MetadataClass({
+          id: "test",
+          class: {
+            properties: {
+              name: {
+                type: "STRING",
+              },
+              height: {
+                type: "SCALAR",
+                componentType: "FLOAT32",
+              },
             },
           },
-        },
-      });
-      const groupMetadata = new GroupMetadata({
-        id: "testGroup",
-        group: {
-          properties: {
-            name: "Test Group",
-            height: 35.6,
+        });
+
+        groupMetadata = new GroupMetadata({
+          id: "testGroup",
+          group: {
+            properties: {
+              name: "Test Group",
+              height: 35.6,
+            },
           },
-        },
-        class: groupMetadataClass,
+          class: metadataClass,
+        });
+
+        contentMetadataClass = new MetadataClass({
+          id: "contentTest",
+          class: {
+            properties: {
+              author: {
+                type: "STRING",
+              },
+              color: {
+                type: "VEC3",
+                componentType: "UINT8",
+              },
+            },
+          },
+        });
+
+        explicitMetadata = new ContentMetadata({
+          content: {
+            properties: {
+              author: "Test Author",
+              color: [255, 0, 0],
+            },
+          },
+          class: contentMetadataClass,
+        });
+
+        implicitMetadata = new ImplicitMetadataView({
+          metadataTable: {},
+          class: {},
+          entityId: 0,
+          propertyTableJson: {},
+        });
       });
 
       it("assigning groupMetadata propagates to inner contents", function () {
@@ -187,30 +228,6 @@ describe(
         );
       });
 
-      const contentMetadataClass = new MetadataClass({
-        id: "contentTest",
-        class: {
-          properties: {
-            author: {
-              type: "STRING",
-            },
-            color: {
-              type: "VEC3",
-              componentType: "UINT8",
-            },
-          },
-        },
-      });
-      const explicitMetadata = new ContentMetadata({
-        content: {
-          properties: {
-            author: "Test Author",
-            color: [255, 0, 0],
-          },
-        },
-        class: contentMetadataClass,
-      });
-
       it("assigning implicit content metadata propagates to inner contents", function () {
         return Cesium3DTilesTester.loadTileset(scene, compositeUrl).then(
           function (tileset) {
@@ -224,13 +241,6 @@ describe(
             }
           }
         );
-      });
-
-      const implicitMetadata = new ImplicitMetadataView({
-        metadataTable: {},
-        class: {},
-        entityId: 0,
-        propertyTableJson: {},
       });
 
       it("assigning implicit content metadata propagates to inner contents", function () {

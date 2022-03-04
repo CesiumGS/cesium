@@ -5,31 +5,35 @@ import {
 } from "../../Source/Cesium.js";
 
 describe("Scene/findTileMetadata", function () {
-  const tileClass = new MetadataClass({
-    id: "tile",
-    class: {
-      properties: {
-        height: {
-          type: "SCALAR",
-          componentType: "FLOAT32",
-        },
-        color: {
-          type: "VEC3",
-          componentType: "UINT8",
+  let tileClass;
+  let mockTileset;
+  beforeAll(function () {
+    tileClass = new MetadataClass({
+      id: "tile",
+      class: {
+        properties: {
+          height: {
+            type: "SCALAR",
+            componentType: "FLOAT32",
+          },
+          color: {
+            type: "VEC3",
+            componentType: "UINT8",
+          },
         },
       },
-    },
-  });
+    });
 
-  const mockTileset = {
-    metadata: {
-      schema: {
-        classes: {
-          tile: tileClass,
+    mockTileset = {
+      metadata: {
+        schema: {
+          classes: {
+            tile: tileClass,
+          },
         },
       },
-    },
-  };
+    };
+  });
 
   const mockBoundingVolume = {};
 

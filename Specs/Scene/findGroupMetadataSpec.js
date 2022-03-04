@@ -5,37 +5,42 @@ import {
 } from "../../Source/Cesium.js";
 
 describe("Scene/findGroupMetadata", function () {
-  const layerClass = new MetadataClass({
-    id: "layer",
-    class: {
-      properties: {
-        name: {
-          type: "STRING",
-        },
-        elevation: {
-          type: "SCALAR",
-          componentType: "FLOAT32",
-        },
-      },
-    },
-  });
+  let layerClass;
+  let mockTileset;
 
-  const mockTileset = {
-    metadata: {
-      groups: {
-        testGroup: new GroupMetadata({
-          id: "testGroup",
-          class: layerClass,
-          group: {
-            properties: {
-              name: "Test Layer testGroup",
-              elevation: 150.0,
-            },
+  beforeAll(function () {
+    layerClass = new MetadataClass({
+      id: "layer",
+      class: {
+        properties: {
+          name: {
+            type: "STRING",
           },
-        }),
+          elevation: {
+            type: "SCALAR",
+            componentType: "FLOAT32",
+          },
+        },
       },
-    },
-  };
+    });
+
+    mockTileset = {
+      metadata: {
+        groups: {
+          testGroup: new GroupMetadata({
+            id: "testGroup",
+            class: layerClass,
+            group: {
+              properties: {
+                name: "Test Layer testGroup",
+                elevation: 150.0,
+              },
+            },
+          }),
+        },
+      },
+    };
+  });
 
   it("returns undefined if there is no group or extension", function () {
     const contentHeader = {

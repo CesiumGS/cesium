@@ -1075,53 +1075,62 @@ xdescribe(
     });
 
     describe("metadata", function () {
-      const metadataClass = new MetadataClass({
-        id: "test",
-        class: {
-          properties: {
-            name: {
-              type: "STRING",
-            },
-            height: {
-              type: "SCALAR",
-              componentType: "FLOAT32",
-            },
-          },
-        },
-      });
-      const groupMetadata = new GroupMetadata({
-        id: "testGroup",
-        group: {
-          properties: {
-            name: "Test Group",
-            height: 35.6,
-          },
-        },
-        class: metadataClass,
-      });
+      let metadataClass;
+      let groupMetadata;
+      let contentMetadataClass;
+      let contentMetadata;
 
-      const contentMetadataClass = new MetadataClass({
-        id: "contentTest",
-        class: {
-          properties: {
-            author: {
-              type: "STRING",
-            },
-            color: {
-              type: "VEC3",
-              componentType: "UINT8",
+      beforeAll(function () {
+        metadataClass = new MetadataClass({
+          id: "test",
+          class: {
+            properties: {
+              name: {
+                type: "STRING",
+              },
+              height: {
+                type: "SCALAR",
+                componentType: "FLOAT32",
+              },
             },
           },
-        },
-      });
-      const contentMetadata = new ContentMetadata({
-        content: {
-          properties: {
-            author: "Test Author",
-            color: [255, 0, 0],
+        });
+
+        groupMetadata = new GroupMetadata({
+          id: "testGroup",
+          group: {
+            properties: {
+              name: "Test Group",
+              height: 35.6,
+            },
           },
-        },
-        class: contentMetadataClass,
+          class: metadataClass,
+        });
+
+        contentMetadataClass = new MetadataClass({
+          id: "contentTest",
+          class: {
+            properties: {
+              author: {
+                type: "STRING",
+              },
+              color: {
+                type: "VEC3",
+                componentType: "UINT8",
+              },
+            },
+          },
+        });
+
+        contentMetadata = new ContentMetadata({
+          content: {
+            properties: {
+              author: "Test Author",
+              color: [255, 0, 0],
+            },
+          },
+          class: contentMetadataClass,
+        });
       });
 
       it("assigns groupMetadata", function () {
