@@ -562,7 +562,21 @@ function parseType(property, enums) {
  * @private
  */
 MetadataClassProperty.prototype.normalize = function (value) {
-  return normalize(this, value, MetadataComponentType.normalize);
+  if (!this._normalized) {
+    return value;
+  }
+
+  const valueType = this._valueType;
+  const valueTransform = function (x) {
+    return MetadataComponentType.normalize(x, valueType);
+  };
+
+  if (Array.isArray(value)) {
+    transformValuesInPlace(value, valueTransform);
+    return value;
+  }
+
+  return valueTransform(value);
 };
 
 /**
@@ -575,7 +589,21 @@ MetadataClassProperty.prototype.normalize = function (value) {
  * @private
  */
 MetadataClassProperty.prototype.unnormalize = function (value) {
-  return normalize(this, value, MetadataComponentType.unnormalize);
+  if (!this._normalized) {
+    return value;
+  }
+
+  const valueType = this._valueType;
+  const valueTransform = function (x) {
+    return MetadataComponentType.unnormalize(x, valueType);
+  };
+
+  if (Array.isArray(value)) {
+    transformValuesInPlace(value, valueTransform);
+    return value;
+  }
+
+  return valueTransform(value);
 };
 
 /**
@@ -857,6 +885,17 @@ function normalize(classProperty, value, normalizeFunction) {
   }
 
   return value;
+}
+
+function transformValuesInPlace(valuesArray, valueTransformation) {
+  for (let i = 0; i < valuesArray.length; i++) {
+    const oldValue = valuesArray[i];
+    if (Array.isArray(oldValue)) {
+      transformValuesInPlace(oldValue, valueTransformation);
+    } else {
+      valuesArray[i] = valueTransformation(oldValue);
+    }
+  }
 }
 
 export default MetadataClassProperty;
