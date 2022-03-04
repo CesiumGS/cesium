@@ -585,15 +585,28 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
  * other sizes) are passed through unaltered.
  *
  * @param {*} value the original, normalized values.
+ * @param {Boolean} [enableNestedArrays=false] If true, arrays of vectors are represented as nested arrays. This is used for JSON encoding but not binary encoding
  * @returns {*} The appropriate vector or matrix type if the value is a vector or matrix type, respectively. If the property is an array of vectors or matrices, an array of the appropriate vector or matrix type is returned. Otherwise, the value is returned unaltered.
  * @private
  */
-MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (value) {
+MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (
+  value,
+  enableNestedArrays
+) {
+  enableNestedArrays = defaultValue(enableNestedArrays, false);
   const MathType = MetadataType.getMathType(this._type);
   const isArray = this._isArray;
+  const componentCount = MetadataType.getComponentCount(this._type);
+  const isNested = isArray && componentCount > 1;
 
   if (!defined(MathType)) {
     return value;
+  }
+
+  if (enableNestedArrays && isNested) {
+    return value.map(function (x) {
+      return MathType.unpack(x);
+    });
   }
 
   if (isArray) {
@@ -611,15 +624,28 @@ MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (value) {
  * All other values (including arrays of other sizes) are passed through unaltered.
  *
  * @param {*} value The value of this property
+ * @param {Boolean} [enableNestedArrays=false] If true, arrays of vectors are represented as nested arrays. This is used for JSON encoding but not binary encoding
  * @returns {*} An array of the appropriate length if the property is a vector or matrix type. Otherwise, the value is returned unaltered.
  * @private
  */
-MetadataClassProperty.prototype.packVectorAndMatrixTypes = function (value) {
+MetadataClassProperty.prototype.packVectorAndMatrixTypes = function (
+  value,
+  enableNestedArrays
+) {
+  enableNestedArrays = defaultValue(enableNestedArrays, false);
   const MathType = MetadataType.getMathType(this._type);
   const isArray = this._isArray;
+  const componentCount = MetadataType.getComponentCount(this._type);
+  const isNested = isArray && componentCount > 1;
 
   if (!defined(MathType)) {
     return value;
+  }
+
+  if (enableNestedArrays && isNested) {
+    return value.map(function (x) {
+      return MathType.pack(x, []);
+    });
   }
 
   if (isArray) {
