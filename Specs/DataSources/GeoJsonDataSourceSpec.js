@@ -263,21 +263,6 @@ describe("DataSources/GeoJsonDataSource", function () {
     geometry: point,
   };
 
-  const featurePolygonWithTexture = {
-    type: "Feature",
-    properties: {
-      image:
-        "http://cdn.ecommercedns.uk/files/4/214034/1/2517411/sj4271-num-grid-chalkboard-med-80cm-01.jpg",
-      "texture-coordinates": [
-        [0, 0],
-        [0.4, 0],
-        [0.4, 0.3],
-        [0, 0.3],
-      ],
-    },
-    geometry: polygon,
-  };
-
   const featureWithNullName = {
     type: "Feature",
     geometry: point,
@@ -1066,34 +1051,6 @@ describe("DataSources/GeoJsonDataSource", function () {
         options.markerSize
       );
       expect(entity.billboard.image.getValue()).toEqual(expectedImage);
-    });
-  });
-
-  it("Can provide image", function () {
-    const dataSource = new GeoJsonDataSource();
-    return dataSource.load(featurePolygonWithTexture).then(function () {
-      const entityCollection = dataSource.entities;
-      const entities = entityCollection.values;
-
-      const entity = entities[0];
-      expect(entity.polygon.material.image.getValue()).toEqual(
-        featurePolygonWithTexture.properties.image
-      );
-      expect(entity.polygon.textureCoordinates.getValue().length).toEqual(
-        featurePolygonWithTexture.properties["texture-coordinates"].length
-      );
-      for (
-        let i = 0;
-        i < featurePolygonWithTexture.properties["texture-coordinates"].length;
-        i++
-      ) {
-        expect(entity.polygon.textureCoordinates.getValue()[i][0]).toEqual(
-          featurePolygonWithTexture.properties["texture-coordinates"][i][0]
-        );
-        expect(entity.polygon.textureCoordinates.getValue()[i][1]).toEqual(
-          featurePolygonWithTexture.properties["texture-coordinates"][i][1]
-        );
-      }
     });
   });
 

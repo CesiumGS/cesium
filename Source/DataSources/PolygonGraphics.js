@@ -297,7 +297,7 @@ Object.defineProperties(PolygonGraphics.prototype, {
   zIndex: createPropertyDescriptor("zIndex"),
 
   /**
-   *  A Property specifying texture coordinates to use. Should have the same structure as polygonHierarchy, but with Cartesian2 UVs instead of Cartesian3 positions. Has no effect for extrusions, ground primitives and large polygons without per-position heights.
+   *  A Property specifying texture coordinates to use. Should have the same structure as polygonHierarchy, but with Cartesian2 UVs instead of Cartesian3 positions. Has no effect for extrusions, ground primitives, and sufficiently large polygons without per-position heights.
    * @memberof PolygonGraphics.prototype
    * @type {Property|undefined}
    */

@@ -9,9 +9,7 @@
 - Added `depthPlaneEllipsoidOffset` to Viewer and Scene constructors to address rendering artefacts below ellipsoid zero elevation. [#9200](https://github.com/CesiumGS/cesium/pull/9200)
 - Added support for `debugColorTiles` in `ModelExperimental`. [#10071](https://github.com/CesiumGS/cesium/pull/10071)
 - Added support for shadows in `ModelExperimental`. [#10077](https://github.com/CesiumGS/cesium/pull/10077)
-- Added `PolygonGraphics.textureCoordinates`, `PolygonGeometry.textureCoordinates`, `CoplanarPolygonGeometry.textureCoordinates`, which override the default `stRotation`-based texture coordinate calculation behaviour with the provided points.
-- Added support for `image` property in `GeoJsonDataSource`, which sets `PolygonGraphics.material` to an `ImageMaterialProperty` to the URL provided.
-- Added support for `texture-coordinates` property in `GeoJsonDataSource`, which sets `PolygonGraphics.textureCoordinates`.
+- Added `PolygonGraphics.textureCoordinates`, `PolygonGeometry.textureCoordinates`, `CoplanarPolygonGeometry.textureCoordinates`, which override the default `stRotation`-based texture coordinate calculation behaviour with the provided texture coordinates, specified in the form of a PolygonHierarchy of Cartesian2 points.
 
 ##### Fixes :wrench:
 
