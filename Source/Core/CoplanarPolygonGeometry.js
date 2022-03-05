@@ -128,26 +128,28 @@ function createGeometryFromPolygon(
     flatPositions[positionIndex++] = position.y;
     flatPositions[positionIndex++] = position.z;
 
-    if (
-      hardcodedTextureCoordinates &&
-      hardcodedTextureCoordinates.positions.length === length / 3
-    ) {
-      textureCoordinates[i * 2] = hardcodedTextureCoordinates.positions[i].x;
-      textureCoordinates[i * 2 + 1] =
-        hardcodedTextureCoordinates.positions[i].y;
-    } else if (vertexFormat.st) {
-      const p = Matrix3.multiplyByVector(
-        textureMatrix,
-        position,
-        scratchPosition
-      );
-      const st = projectPointTo2D(p, stScratch);
-      Cartesian2.subtract(st, stOrigin, st);
+    if (vertexFormat.st) {
+      if (
+        hardcodedTextureCoordinates &&
+        hardcodedTextureCoordinates.positions.length === length
+      ) {
+        textureCoordinates[i * 2] = hardcodedTextureCoordinates.positions[i].x;
+        textureCoordinates[i * 2 + 1] =
+          hardcodedTextureCoordinates.positions[i].y;
+      } else {
+        const p = Matrix3.multiplyByVector(
+          textureMatrix,
+          position,
+          scratchPosition
+        );
+        const st = projectPointTo2D(p, stScratch);
+        Cartesian2.subtract(st, stOrigin, st);
 
-      const stx = CesiumMath.clamp(st.x / boundingRectangle.width, 0, 1);
-      const sty = CesiumMath.clamp(st.y / boundingRectangle.height, 0, 1);
-      textureCoordinates[stIndex++] = stx;
-      textureCoordinates[stIndex++] = sty;
+        const stx = CesiumMath.clamp(st.x / boundingRectangle.width, 0, 1);
+        const sty = CesiumMath.clamp(st.y / boundingRectangle.height, 0, 1);
+        textureCoordinates[stIndex++] = stx;
+        textureCoordinates[stIndex++] = sty;
+      }
     }
 
     if (vertexFormat.normal) {
@@ -519,6 +521,7 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
 
   const results = PolygonGeometryLibrary.polygonsFromHierarchy(
     polygonHierarchy,
+    defined(textureCoordinates),
     projectPoints,
     false
   );
@@ -528,6 +531,7 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
   const textureCoordinatePolygons = textureCoordinates
     ? PolygonGeometryLibrary.polygonsFromHierarchy(
         textureCoordinates,
+        true,
         function (identity) {
           return identity;
         },

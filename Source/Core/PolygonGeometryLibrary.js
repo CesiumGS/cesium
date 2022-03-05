@@ -358,6 +358,7 @@ PolygonGeometryLibrary.polygonOutlinesFromHierarchy = function (
 
 PolygonGeometryLibrary.polygonsFromHierarchy = function (
   polygonHierarchy,
+  keepDuplicates,
   projectPointsTo2D,
   scaleToEllipsoidSurface,
   ellipsoid
@@ -384,11 +385,13 @@ PolygonGeometryLibrary.polygonsFromHierarchy = function (
       }
     }
 
-    outerRing = arrayRemoveDuplicates(
-      outerRing,
-      Cartesian3.equalsEpsilon,
-      true
-    );
+    if (!keepDuplicates) {
+      outerRing = arrayRemoveDuplicates(
+        outerRing,
+        Cartesian3.equalsEpsilon,
+        true
+      );
+    }
     if (outerRing.length < 3) {
       continue;
     }
@@ -422,11 +425,13 @@ PolygonGeometryLibrary.polygonsFromHierarchy = function (
         }
       }
 
-      holePositions = arrayRemoveDuplicates(
-        holePositions,
-        Cartesian3.equalsEpsilon,
-        true
-      );
+      if (!keepDuplicates) {
+        holePositions = arrayRemoveDuplicates(
+          holePositions,
+          Cartesian3.equalsEpsilon,
+          true
+        );
+      }
       if (holePositions.length < 3) {
         continue;
       }

@@ -1146,6 +1146,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
 
   const results = PolygonGeometryLibrary.polygonsFromHierarchy(
     polygonHierarchy,
+    defined(textureCoordinates),
     tangentPlane.projectPointsOntoPlane.bind(tangentPlane),
     !perPositionHeight,
     ellipsoid
@@ -1157,6 +1158,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
   const textureCoordinatePolygons = textureCoordinates
     ? PolygonGeometryLibrary.polygonsFromHierarchy(
         textureCoordinates,
+        true,
         function (identity) {
           return identity;
         },
