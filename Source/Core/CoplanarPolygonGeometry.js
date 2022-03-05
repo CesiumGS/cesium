@@ -128,7 +128,10 @@ function createGeometryFromPolygon(
     flatPositions[positionIndex++] = position.y;
     flatPositions[positionIndex++] = position.z;
 
-    if (hardcodedTextureCoordinates) {
+    if (
+      hardcodedTextureCoordinates &&
+      hardcodedTextureCoordinates.positions.length == length / 3
+    ) {
       textureCoordinates[i * 2] = hardcodedTextureCoordinates.positions[i].x;
       textureCoordinates[i * 2 + 1] =
         hardcodedTextureCoordinates.positions[i].y;

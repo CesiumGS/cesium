@@ -160,7 +160,10 @@ function computeAttributes(options) {
       );
 
       if (vertexFormat.st) {
-        if (options.textureCoordinates) {
+        if (
+          options.textureCoordinates &&
+          options.textureCoordinates.positions.length == length / 3
+        ) {
           textureCoordinates[(i * 2) / 3 + 0] =
             options.textureCoordinates.positions[i / 3].x;
           textureCoordinates[(i * 2) / 3 + 1] =
