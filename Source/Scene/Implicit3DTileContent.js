@@ -821,16 +821,16 @@ function deriveBoundingVolumeS2(
   }
 
   // Extract the first 3 face bits from the 64-bit S2 cell ID.
-  // eslint-disable-next-line
-  var face = Number(parentTile._boundingVolume.s2Cell._cellId >> BigInt(61));
+  // eslint-disable-next-line no-undef
+  const face = Number(parentTile._boundingVolume.s2Cell._cellId >> BigInt(61));
   // The Hilbert curve is rotated for the "odd" faces on the S2 Earthcube.
   // See http://s2geometry.io/devguide/img/s2cell_global.jpg
   const position =
     face % 2 === 0
       ? HilbertOrder.encode2D(level, x, y)
       : HilbertOrder.encode2D(level, y, x);
-  // eslint-disable-next-line
-  var cell = S2Cell.fromFacePositionLevel(face, BigInt(position), level);
+  // eslint-disable-next-line no-undef
+  const cell = S2Cell.fromFacePositionLevel(face, BigInt(position), level);
 
   let minHeight, maxHeight;
   if (defined(z)) {

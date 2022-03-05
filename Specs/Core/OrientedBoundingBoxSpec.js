@@ -5,6 +5,7 @@ import { Ellipsoid } from "../../Source/Cesium.js";
 import { Intersect } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { Matrix3 } from "../../Source/Cesium.js";
+import { Matrix4 } from "../../Source/Cesium.js";
 import { Occluder } from "../../Source/Cesium.js";
 import { OrientedBoundingBox } from "../../Source/Cesium.js";
 import { Plane } from "../../Source/Cesium.js";
@@ -890,6 +891,68 @@ describe("Core/OrientedBoundingBox", function () {
       new Matrix3(0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0),
       CesiumMath.EPSILON15
     );
+  });
+
+  it("fromTransformation works with a result parameter", function () {
+    const translation = new Cartesian3(1.0, 2.0, 3.0);
+    const rotation = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, 0.4);
+    const scale = new Cartesian3(1.0, 2.0, 3.0);
+    const transformation = Matrix4.fromTranslationQuaternionRotationScale(
+      translation,
+      rotation,
+      scale
+    );
+
+    const box = new OrientedBoundingBox();
+    OrientedBoundingBox.fromTransformation(transformation, box);
+
+    expect(box.center).toEqual(translation);
+    expect(box.halfAxes).toEqualEpsilon(
+      Matrix3.multiplyByUniformScale(
+        Matrix4.getMatrix3(transformation, new Matrix3()),
+        0.5,
+        new Matrix3()
+      ),
+      CesiumMath.EPSILON14
+    );
+  });
+
+  it("fromTransformation works without a result parameter", function () {
+    const translation = new Cartesian3(1.0, 2.0, 3.0);
+    const rotation = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, 0.4);
+    const scale = new Cartesian3(1.0, 2.0, 3.0);
+    const transformation = Matrix4.fromTranslationQuaternionRotationScale(
+      translation,
+      rotation,
+      scale
+    );
+
+    const box = OrientedBoundingBox.fromTransformation(transformation);
+
+    expect(box.center).toEqual(translation);
+    expect(box.halfAxes).toEqualEpsilon(
+      Matrix3.multiplyByUniformScale(
+        Matrix4.getMatrix3(transformation, new Matrix3()),
+        0.5,
+        new Matrix3()
+      ),
+      CesiumMath.EPSILON14
+    );
+  });
+
+  it("fromTransformation works with a transformation that has zero scale", function () {
+    const transformation = Matrix4.fromScale(Cartesian3.ZERO);
+
+    const box = OrientedBoundingBox.fromTransformation(transformation);
+
+    expect(box.center).toEqual(Cartesian3.ZERO);
+    expect(box.halfAxes).toEqual(Matrix3.ZERO);
+  });
+
+  it("fromTransformation throws with no transformation parameter", function () {
+    expect(function () {
+      OrientedBoundingBox.fromTransformation(undefined);
+    }).toThrowDeveloperError();
   });
 
   const intersectPlaneTestCornersEdgesFaces = function (center, axes) {
@@ -2506,6 +2569,134 @@ describe("Core/OrientedBoundingBox", function () {
         new Cartesian3(),
         undefined
       );
+    }).toThrowDeveloperError();
+  });
+
+  it("computeCorners works with a result parameter", function () {
+    const center = new Cartesian3(1, 2, 3);
+    const halfScale = new Cartesian3(1, 2, 3);
+    const halfAxes = Matrix3.fromScale(halfScale);
+    const box = new OrientedBoundingBox(center, halfAxes);
+
+    const corners = new Array(
+      new Cartesian3(),
+      new Cartesian3(),
+      new Cartesian3(),
+      new Cartesian3(),
+      new Cartesian3(),
+      new Cartesian3(),
+      new Cartesian3(),
+      new Cartesian3()
+    );
+    const result = box.computeCorners(corners);
+
+    expect(result[0]).toEqual(new Cartesian3(0, 0, 0));
+    expect(result[1]).toEqual(new Cartesian3(0, 0, 6));
+    expect(result[2]).toEqual(new Cartesian3(0, 4, 0));
+    expect(result[3]).toEqual(new Cartesian3(0, 4, 6));
+    expect(result[4]).toEqual(new Cartesian3(2, 0, 0));
+    expect(result[5]).toEqual(new Cartesian3(2, 0, 6));
+    expect(result[6]).toEqual(new Cartesian3(2, 4, 0));
+    expect(result[7]).toEqual(new Cartesian3(2, 4, 6));
+    expect(result).toBe(corners);
+  });
+
+  it("computeCorners works without a result parameter", function () {
+    const center = new Cartesian3(1, 2, 3);
+    const halfScale = new Cartesian3(1, 2, 3);
+    const halfAxes = Matrix3.fromScale(halfScale);
+    const box = new OrientedBoundingBox(center, halfAxes);
+
+    const corners = box.computeCorners();
+
+    expect(corners[0]).toEqual(new Cartesian3(0, 0, 0));
+    expect(corners[1]).toEqual(new Cartesian3(0, 0, 6));
+    expect(corners[2]).toEqual(new Cartesian3(0, 4, 0));
+    expect(corners[3]).toEqual(new Cartesian3(0, 4, 6));
+    expect(corners[4]).toEqual(new Cartesian3(2, 0, 0));
+    expect(corners[5]).toEqual(new Cartesian3(2, 0, 6));
+    expect(corners[6]).toEqual(new Cartesian3(2, 4, 0));
+    expect(corners[7]).toEqual(new Cartesian3(2, 4, 6));
+  });
+
+  it("computeCorners works with a box that has zero scale", function () {
+    const center = new Cartesian3(0, 0, 0);
+    const halfScale = new Cartesian3(0, 0, 0);
+    const halfAxes = Matrix3.fromScale(halfScale);
+    const box = new OrientedBoundingBox(center, halfAxes);
+
+    const corners = box.computeCorners();
+
+    expect(corners[0]).toEqual(Cartesian3.ZERO);
+    expect(corners[1]).toEqual(Cartesian3.ZERO);
+    expect(corners[2]).toEqual(Cartesian3.ZERO);
+    expect(corners[3]).toEqual(Cartesian3.ZERO);
+    expect(corners[4]).toEqual(Cartesian3.ZERO);
+    expect(corners[5]).toEqual(Cartesian3.ZERO);
+    expect(corners[6]).toEqual(Cartesian3.ZERO);
+    expect(corners[7]).toEqual(Cartesian3.ZERO);
+  });
+
+  it("computeCorners throws with no box parameter", function () {
+    expect(function () {
+      OrientedBoundingBox.computeCorners();
+    }).toThrowDeveloperError();
+  });
+
+  it("computeTransformation works with a result parameter", function () {
+    const center = new Cartesian3(1, 2, 3);
+    const halfScale = new Cartesian3(1, 2, 3);
+    const expectedScale = new Cartesian3(2, 4, 6);
+    const halfAxes = Matrix3.fromScale(halfScale);
+    const box = new OrientedBoundingBox(center, halfAxes);
+
+    const transformation = new Matrix4();
+    const result = box.computeTransformation(transformation);
+
+    const extractedTranslation = Matrix4.getTranslation(
+      result,
+      new Cartesian3()
+    );
+    const extractedScale = Matrix4.getScale(result, new Cartesian3());
+
+    expect(extractedTranslation).toEqual(center);
+    expect(extractedScale).toEqual(expectedScale);
+    expect(result).toBe(transformation);
+  });
+
+  it("computeTransformation works without a result parameter", function () {
+    const center = new Cartesian3(1, 2, 3);
+    const halfScale = new Cartesian3(1, 2, 3);
+    const expectedScale = new Cartesian3(2, 4, 6);
+    const halfAxes = Matrix3.fromScale(halfScale);
+    const box = new OrientedBoundingBox(center, halfAxes);
+
+    const transformation = box.computeTransformation();
+
+    const extractedTranslation = Matrix4.getTranslation(
+      transformation,
+      new Cartesian3()
+    );
+    const extractedScale = Matrix4.getScale(transformation, new Cartesian3());
+
+    expect(extractedTranslation).toEqual(center);
+    expect(extractedScale).toEqual(expectedScale);
+  });
+
+  it("computeTransformation works with box that has zero scale", function () {
+    const center = new Cartesian3(0, 0, 0);
+    const halfScale = new Cartesian3(0, 0, 0);
+    const halfAxes = Matrix3.fromScale(halfScale);
+    const box = new OrientedBoundingBox(center, halfAxes);
+
+    const expectedTransformation = Matrix4.fromScale(Cartesian3.ZERO);
+    const transformation = box.computeTransformation();
+    expect(transformation).toEqual(expectedTransformation);
+  });
+
+  it("computeTransformation throws with no box parameter", function () {
+    expect(function () {
+      OrientedBoundingBox.computeTransformation();
     }).toThrowDeveloperError();
   });
 

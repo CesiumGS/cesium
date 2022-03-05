@@ -173,7 +173,7 @@ describe("Core/Plane", function () {
     expect(result.distance).toEqual(distance);
   });
 
-  it("clones a plane instance into a result paramter", function () {
+  it("clones a plane instance into a result parameter", function () {
     let normal = new Cartesian3(1.0, 2.0, 3.0);
     normal = Cartesian3.normalize(normal, normal);
     const distance = 4.0;
