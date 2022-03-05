@@ -148,13 +148,6 @@ function PointCloud(options) {
   this.maximumAttenuation = this._pointSize;
 
   /**
-   * Used for picking primitives that wrap a point cloud.
-   *
-   * @private
-   */
-  this._pickObject = defaultValue(options.pickObject, this);
-
-  /**
    * The {@link SplitDirection} to apply to this point cloud.
    *
    * @type {SplitDirection}
@@ -618,7 +611,6 @@ function createResources(pointCloud, frameState) {
       ? pointCloud._translucentRenderState
       : pointCloud._opaqueRenderState,
     pass: isTranslucent ? Pass.TRANSLUCENT : pointCloud._opaquePass,
-    owner: pointCloud._pickObject,
     castShadows: false,
     receiveShadows: false,
     pickId: pointCloud._pickIdLoaded(),

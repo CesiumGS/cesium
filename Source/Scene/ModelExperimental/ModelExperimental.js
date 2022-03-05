@@ -5,7 +5,6 @@ import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import GltfLoader from "../GltfLoader.js";
-import SplitDirection from "../SplitDirection.js";
 import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
 import ModelExperimentalType from "./ModelExperimentalType.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
@@ -51,7 +50,6 @@ import ShadowMode from "../ShadowMode.js";
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
- * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
@@ -150,24 +148,6 @@ export default function ModelExperimental(options) {
 
   this._shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
   this._shadowsDirty = false;
-
-  /**
-   * Used for picking primitives that wrap a model.
-   *
-   * @private
-   */
-  this._pickObject = options.pickObject;
-
-  /**
-   * The {@link SplitDirection} to apply to this model.
-   *
-   * @type {SplitDirection}
-   * @default {@link SplitDirection.NONE}
-   */
-  this.splitDirection = defaultValue(
-    options.splitDirection,
-    SplitDirection.NONE
-  );
 
   this._debugShowBoundingVolumeDirty = false;
   this._debugShowBoundingVolume = defaultValue(

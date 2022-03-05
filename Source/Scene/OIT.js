@@ -771,9 +771,6 @@ function executeTranslucentCommandsSortedMRT(
 
   for (let j = 0; j < length; ++j) {
     command = commands[j];
-    command = defined(command.derivedCommands.splitting)
-      ? command.derivedCommands.splitting.command
-      : command;
     command = useLogDepth ? command.derivedCommands.logDepth.command : command;
     command = useHdr ? command.derivedCommands.hdr.command : command;
     derivedCommand =

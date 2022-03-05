@@ -166,7 +166,6 @@ function UniformState() {
   this._geometricToleranceOverMeter = undefined;
 
   this._minimumDisableDepthTestDistance = undefined;
-  this._primitiveSplitDirection = 0.0;
 }
 
 Object.defineProperties(UniformState.prototype, {
@@ -1039,15 +1038,6 @@ Object.defineProperties(UniformState.prototype, {
   ellipsoid: {
     get: function () {
       return defaultValue(this._ellipsoid, Ellipsoid.WGS84);
-    },
-  },
-
-  /**
-   * The split direction (none=0.0, left=-1.0, right=1.0) of the current primitive.
-   */
-  primitiveSplitDirection: {
-    get: function () {
-      return this._primitiveSplitDirection;
     },
   },
 });
