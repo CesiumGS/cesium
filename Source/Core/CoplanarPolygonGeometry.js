@@ -130,7 +130,7 @@ function createGeometryFromPolygon(
 
     if (
       hardcodedTextureCoordinates &&
-      hardcodedTextureCoordinates.positions.length == length / 3
+      hardcodedTextureCoordinates.positions.length === length / 3
     ) {
       textureCoordinates[i * 2] = hardcodedTextureCoordinates.positions[i].x;
       textureCoordinates[i * 2 + 1] =
@@ -229,6 +229,7 @@ function createGeometryFromPolygon(
  * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {PolygonHierarchy} [options.textureCoordinates] Texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points.
  *
  * @example
  * const polygonGeometry = new Cesium.CoplanarPolygonGeometry({
@@ -288,6 +289,7 @@ function CoplanarPolygonGeometry(options) {
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {PolygonHierarchy} [options.textureCoordinates] Texture coordinates as a {@link PolygonHierarchy} of {@link Cartesian2} points.
  * @returns {CoplanarPolygonGeometry}
  *
  * @example
