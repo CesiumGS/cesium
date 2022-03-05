@@ -129,8 +129,9 @@ function createGeometryFromPolygon(
     flatPositions[positionIndex++] = position.z;
 
     if (hardcodedTextureCoordinates) {
-      textureCoordinates[i * 2] = hardcodedTextureCoordinates[i][0];
-      textureCoordinates[i * 2 + 1] = hardcodedTextureCoordinates[i][1];
+      textureCoordinates[i * 2] = hardcodedTextureCoordinates.positions[i].x;
+      textureCoordinates[i * 2 + 1] =
+        hardcodedTextureCoordinates.positions[i].y;
     } else if (vertexFormat.st) {
       const p = Matrix3.multiplyByVector(
         textureMatrix,
@@ -241,6 +242,7 @@ function createGeometryFromPolygon(
 function CoplanarPolygonGeometry(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const polygonHierarchy = options.polygonHierarchy;
+  const textureCoordinates = options.textureCoordinates;
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.polygonHierarchy", polygonHierarchy);
   //>>includeEnd('debug');
@@ -253,18 +255,26 @@ function CoplanarPolygonGeometry(options) {
     defaultValue(options.ellipsoid, Ellipsoid.WGS84)
   );
   this._workerName = "createCoplanarPolygonGeometry";
-  this._textureCoordinates = options.textureCoordinates;
+  this._textureCoordinates = textureCoordinates;
 
   /**
    * The number of elements used to pack the object into an array.
    * @type {Number}
    */
   this.packedLength =
-    PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) +
+    PolygonGeometryLibrary.computeHierarchyPackedLength(
+      polygonHierarchy,
+      Cartesian3
+    ) +
     VertexFormat.packedLength +
     Ellipsoid.packedLength +
-    (this._textureCoordinates ? this._textureCoordinates.length * 2 : 0) +
-    3;
+    (textureCoordinates
+      ? PolygonGeometryLibrary.computeHierarchyPackedLength(
+          textureCoordinates,
+          Cartesian2
+        )
+      : 1) +
+    2;
 }
 
 /**
@@ -331,7 +341,8 @@ CoplanarPolygonGeometry.pack = function (value, array, startingIndex) {
   startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(
     value._polygonHierarchy,
     array,
-    startingIndex
+    startingIndex,
+    Cartesian3
   );
 
   Ellipsoid.pack(value._ellipsoid, array, startingIndex);
@@ -341,13 +352,15 @@ CoplanarPolygonGeometry.pack = function (value, array, startingIndex) {
   startingIndex += VertexFormat.packedLength;
 
   array[startingIndex++] = value._stRotation;
-  const textureCoordinatesCount = value._textureCoordinates
-    ? value._textureCoordinates.length
-    : 0.0;
-  array[startingIndex++] = textureCoordinatesCount;
-  for (let i = 0; i < textureCoordinatesCount; i++) {
-    array[startingIndex++] = value._textureCoordinates[i][0];
-    array[startingIndex++] = value._textureCoordinates[i][1];
+  if (value._textureCoordinates) {
+    startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(
+      value._textureCoordinates,
+      array,
+      startingIndex,
+      Cartesian2
+    );
+  } else {
+    array[startingIndex++] = -1.0;
   }
   array[startingIndex++] = value.packedLength;
 
@@ -376,7 +389,8 @@ CoplanarPolygonGeometry.unpack = function (array, startingIndex, result) {
 
   const polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(
     array,
-    startingIndex
+    startingIndex,
+    Cartesian3
   );
   startingIndex = polygonHierarchy.startingIndex;
   delete polygonHierarchy.startingIndex;
@@ -392,9 +406,19 @@ CoplanarPolygonGeometry.unpack = function (array, startingIndex, result) {
   startingIndex += VertexFormat.packedLength;
 
   const stRotation = array[startingIndex++];
-  const textureCoordinates = Array(array[startingIndex++]);
-  for (let i = 0; i < textureCoordinates.length; ++i, startingIndex += 2) {
-    textureCoordinates[i] = [array[startingIndex], array[startingIndex + 1]];
+  const textureCoordinates =
+    array[startingIndex] === -1.0
+      ? undefined
+      : PolygonGeometryLibrary.unpackPolygonHierarchy(
+          array,
+          startingIndex,
+          Cartesian2
+        );
+  if (textureCoordinates) {
+    startingIndex = textureCoordinates.startingIndex;
+    delete textureCoordinates.startingIndex;
+  } else {
+    startingIndex++;
   }
   const packedLength = array[startingIndex++];
 
@@ -406,8 +430,7 @@ CoplanarPolygonGeometry.unpack = function (array, startingIndex, result) {
   result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
   result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
   result._stRotation = stRotation;
-  result._textureCoordinates =
-    textureCoordinates.length === 0 ? undefined : textureCoordinates;
+  result._textureCoordinates = textureCoordinates;
   result.packedLength = packedLength;
 
   return result;
@@ -423,6 +446,7 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
   const vertexFormat = polygonGeometry._vertexFormat;
   const polygonHierarchy = polygonGeometry._polygonHierarchy;
   const stRotation = polygonGeometry._stRotation;
+  const textureCoordinates = polygonGeometry._textureCoordinates;
 
   let outerPositions = polygonHierarchy.positions;
   outerPositions = arrayRemoveDuplicates(
@@ -496,6 +520,16 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
   const hierarchy = results.hierarchy;
   const polygons = results.polygons;
 
+  const textureCoordinatePolygons = textureCoordinates
+    ? PolygonGeometryLibrary.polygonsFromHierarchy(
+        textureCoordinates,
+        function (identity) {
+          return identity;
+        },
+        false
+      ).polygons
+    : undefined;
+
   if (hierarchy.length === 0) {
     return;
   }
@@ -518,7 +552,7 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
         vertexFormat,
         boundingRectangle,
         stRotation,
-        polygonGeometry._textureCoordinates,
+        textureCoordinates ? textureCoordinatePolygons[i] : undefined,
         projectPoint,
         normal,
         tangent,

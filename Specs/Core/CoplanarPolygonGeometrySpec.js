@@ -1,4 +1,5 @@
 import { Cartesian3 } from "../../Source/Cesium.js";
+import { Cartesian2 } from "../../Source/Cesium.js";
 import { CoplanarPolygonGeometry } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
@@ -219,6 +220,12 @@ describe("Core/CoplanarPolygonGeometry", function () {
     }
   }
 
+  function addPositions2D(array, positions) {
+    for (let i = 0; i < positions.length; ++i) {
+      array.push(positions[i].x, positions[i].y);
+    }
+  }
+
   const packedInstance = [3.0, 1.0];
   addPositions(packedInstance, positions);
   packedInstance.push(3.0, 1.0);
@@ -230,22 +237,25 @@ describe("Core/CoplanarPolygonGeometry", function () {
     Ellipsoid.WGS84.radii.y,
     Ellipsoid.WGS84.radii.z
   );
-  packedInstance.push(1, 0, 0, 0, 0, 0, 0, 0, 45);
+  packedInstance.push(1, 0, 0, 0, 0, 0, 0, -1, 45);
   createPackableSpecs(CoplanarPolygonGeometry, polygon, packedInstance);
 
   // pack with explicit texture coordinates
 
-  const textureCoordinates = [
-    [0, 0],
-    [1, 0],
-    [0, 1],
-    [0.1, 0.1],
-    [0.5, 0.1],
-    [0.1, 0.5],
-    [0.2, 0.2],
-    [0.3, 0.2],
-    [0.2, 0.3],
-  ];
+  const textureCoordinates = {
+    positions: [
+      new Cartesian2(0, 0),
+      new Cartesian2(1, 0),
+      new Cartesian2(0, 1),
+      new Cartesian2(0.1, 0.1),
+      new Cartesian2(0.5, 0.1),
+      new Cartesian2(0.1, 0.5),
+      new Cartesian2(0.2, 0.2),
+      new Cartesian2(0.3, 0.2),
+      new Cartesian2(0.2, 0.3),
+    ],
+    holes: undefined,
+  };
 
   const polygonTextured = new CoplanarPolygonGeometry({
     vertexFormat: VertexFormat.POSITION_ONLY,
@@ -264,35 +274,10 @@ describe("Core/CoplanarPolygonGeometry", function () {
     Ellipsoid.WGS84.radii.y,
     Ellipsoid.WGS84.radii.z
   );
-  packedInstanceTextured.push(
-    1,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    9,
-    0,
-    0,
-    1,
-    0,
-    0,
-    1,
-    0.1,
-    0.1,
-    0.5,
-    0.1,
-    0.1,
-    0.5,
-    0.2,
-    0.2,
-    0.3,
-    0.2,
-    0.2,
-    0.3,
-    63
-  );
+  packedInstanceTextured.push(1, 0, 0, 0, 0, 0, 0);
+  packedInstanceTextured.push(9.0, 0.0);
+  addPositions2D(packedInstanceTextured, textureCoordinates.positions);
+  packedInstanceTextured.push(64);
   createPackableSpecs(
     CoplanarPolygonGeometry,
     polygonTextured,

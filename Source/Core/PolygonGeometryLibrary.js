@@ -27,7 +27,8 @@ import WindingOrder from "./WindingOrder.js";
 const PolygonGeometryLibrary = {};
 
 PolygonGeometryLibrary.computeHierarchyPackedLength = function (
-  polygonHierarchy
+  polygonHierarchy,
+  CartesianX
 ) {
   let numComponents = 0;
   const stack = [polygonHierarchy];
@@ -42,8 +43,8 @@ PolygonGeometryLibrary.computeHierarchyPackedLength = function (
     const positions = hierarchy.positions;
     const holes = hierarchy.holes;
 
-    if (defined(positions)) {
-      numComponents += positions.length * Cartesian3.packedLength;
+    if (defined(positions) && positions.length > 0) {
+      numComponents += positions.length * CartesianX.packedLength;
     }
 
     if (defined(holes)) {
@@ -60,7 +61,8 @@ PolygonGeometryLibrary.computeHierarchyPackedLength = function (
 PolygonGeometryLibrary.packPolygonHierarchy = function (
   polygonHierarchy,
   array,
-  startingIndex
+  startingIndex,
+  CartesianX
 ) {
   const stack = [polygonHierarchy];
   while (stack.length > 0) {
@@ -77,8 +79,12 @@ PolygonGeometryLibrary.packPolygonHierarchy = function (
 
     if (defined(positions)) {
       const positionsLength = positions.length;
-      for (let i = 0; i < positionsLength; ++i, startingIndex += 3) {
-        Cartesian3.pack(positions[i], array, startingIndex);
+      for (
+        let i = 0;
+        i < positionsLength;
+        ++i, startingIndex += CartesianX.packedLength
+      ) {
+        CartesianX.pack(positions[i], array, startingIndex);
       }
     }
 
@@ -95,7 +101,8 @@ PolygonGeometryLibrary.packPolygonHierarchy = function (
 
 PolygonGeometryLibrary.unpackPolygonHierarchy = function (
   array,
-  startingIndex
+  startingIndex,
+  CartesianX
 ) {
   const positionsLength = array[startingIndex++];
   const holesLength = array[startingIndex++];
@@ -106,15 +113,16 @@ PolygonGeometryLibrary.unpackPolygonHierarchy = function (
   for (
     let i = 0;
     i < positionsLength;
-    ++i, startingIndex += Cartesian3.packedLength
+    ++i, startingIndex += CartesianX.packedLength
   ) {
-    positions[i] = Cartesian3.unpack(array, startingIndex);
+    positions[i] = CartesianX.unpack(array, startingIndex);
   }
 
   for (let j = 0; j < holesLength; ++j) {
     holes[j] = PolygonGeometryLibrary.unpackPolygonHierarchy(
       array,
-      startingIndex
+      startingIndex,
+      CartesianX
     );
     startingIndex = holes[j].startingIndex;
     delete holes[j].startingIndex;

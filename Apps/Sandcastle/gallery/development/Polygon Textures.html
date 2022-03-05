@@ -55,20 +55,22 @@
           -115.0,
           37.4,
         ]);
-        console.log(positions);
+        let textureCoordinates = {
+          positions: [
+            new Cesium.Cartesian2(0, 1),
+            new Cesium.Cartesian2(0, 0),
+            new Cesium.Cartesian2(0.5, 0),
+            new Cesium.Cartesian2(1, 0),
+            new Cesium.Cartesian2(1, 1),
+          ],
+        };
         // Create a geometry instance using the polygon geometry.
         const redPolygonInstance = new Cesium.GeometryInstance({
           geometry: Cesium.PolygonGeometry.fromPositions({
             positions: positions,
             vertexFormat:
               Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
-            textureCoordinates: [
-              [0, 1],
-              [0, 0],
-              [0.5, 0],
-              [1, 0],
-              [1, 1],
-            ],
+            textureCoordinates: textureCoordinates,
           }),
         });
 
@@ -140,26 +142,59 @@
             },
           ],
         };
+        textureCoordinates = {
+          positions: [
+            new Cesium.Cartesian2(0, 1),
+            new Cesium.Cartesian2(0, 0),
+            new Cesium.Cartesian2(0.5, 0),
+            new Cesium.Cartesian2(0.5, 1),
+          ],
+          holes: [
+            {
+              positions: [
+                new Cesium.Cartesian2(0.4, 0.4),
+                new Cesium.Cartesian2(0.4, 0.3),
+                new Cesium.Cartesian2(0.45, 0.3),
+                new Cesium.Cartesian2(0.45, 0.4),
+              ],
+            },
+            {
+              positions: [
+                new Cesium.Cartesian2(0.15, 0.7),
+                new Cesium.Cartesian2(0.15, 0.3),
+                new Cesium.Cartesian2(0.35, 0.3),
+                new Cesium.Cartesian2(0.35, 0.7),
+              ],
+              holes: [
+                {
+                  positions: [
+                    new Cesium.Cartesian2(0.2, 0.6),
+                    new Cesium.Cartesian2(0.2, 0.4),
+                    new Cesium.Cartesian2(0.3, 0.4),
+                    new Cesium.Cartesian2(0.3, 0.6),
+                  ],
+                  holes: [
+                    {
+                      positions: [
+                        new Cesium.Cartesian2(0.23, 0.54),
+                        new Cesium.Cartesian2(0.23, 0.46),
+                        new Cesium.Cartesian2(0.27, 0.46),
+                        new Cesium.Cartesian2(0.27, 0.54),
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
         // Create a geometry instance using the polygon geometry.
         const bluePolygonInstance = new Cesium.GeometryInstance({
           geometry: new Cesium.PolygonGeometry({
             polygonHierarchy: polygonHierarchy,
             vertexFormat:
               Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
-            textureCoordinates: [
-              [0, 1],
-              [0, 0],
-              [0.5, 0],
-              [0.5, 1],
-              [0.15, 0.7],
-              [0.15, 0.3],
-              [0.35, 0.3],
-              [0.35, 0.7],
-              [0.4, 0.4],
-              [0.4, 0.3],
-              [0.45, 0.3],
-              [0.45, 0.4],
-            ],
+            textureCoordinates: textureCoordinates,
           }),
         });
 
@@ -175,26 +210,20 @@
           -117.0,
           37.5,
         ]);
+        textureCoordinates = {
+          positions: [
+            new Cesium.Cartesian2(0, 1),
+            new Cesium.Cartesian2(0, 0),
+            new Cesium.Cartesian2(1, 0),
+          ],
+        };
         const greenPolygonInstance = new Cesium.GeometryInstance({
           geometry: Cesium.PolygonGeometry.fromPositions({
             positions: positions,
             extrudedHeight: 50000,
             vertexFormat:
               Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
-            textureCoordinates: [
-              [0, 1],
-              [0, 0],
-              [1, 0],
-              [0, 1],
-              [0, 0],
-              [1, 0],
-              [0, 1],
-              [0, 0],
-              [1, 0],
-              [0, 1],
-              [0, 0],
-              [1, 0],
-            ],
+            textureCoordinates: textureCoordinates,
           }),
         });
 
@@ -216,6 +245,14 @@
           37.5,
           50000,
         ]);
+        textureCoordinates = {
+          positions: [
+            new Cesium.Cartesian2(0.5, 1),
+            new Cesium.Cartesian2(0, 0.5),
+            new Cesium.Cartesian2(0.5, 0),
+            new Cesium.Cartesian2(1, 0.5),
+          ],
+        };
         // Set the perPositionHeight option to true for the polygon
         // to use the heights each position.  In this case, we are
         // also setting extrudedHeight to zero for the polygon
@@ -227,24 +264,7 @@
             vertexFormat:
               Cesium.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
             perPositionHeight: true,
-            textureCoordinates: [
-              [0.5, 1],
-              [0, 0.5],
-              [0.5, 0],
-              [1, 0.5],
-              [0.5, 1],
-              [0, 0.5],
-              [0.5, 0],
-              [1, 0.5],
-              [0.5, 1],
-              [0, 0.5],
-              [0.5, 0],
-              [1, 0.5],
-              [0.5, 1],
-              [0, 0.5],
-              [0.5, 0],
-              [1, 0.5],
-            ],
+            textureCoordinates: textureCoordinates,
           }),
         });
 
@@ -291,12 +311,7 @@
             geometryInstances: new Cesium.GeometryInstance({
               geometry: new Cesium.PolygonGeometry({
                 polygonHierarchy: { positions: positions },
-                textureCoordinates: [
-                  [0.5, 1],
-                  [0, 0.5],
-                  [0.5, 0],
-                  [1, 0.5],
-                ],
+                textureCoordinates: textureCoordinates,
               }),
             }),
             appearance: new Cesium.EllipsoidSurfaceAppearance({

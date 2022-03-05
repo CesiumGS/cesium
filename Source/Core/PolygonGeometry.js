@@ -65,7 +65,6 @@ function computeAttributes(options) {
   const geometry = options.geometry;
   const shadowVolume = options.shadowVolume;
   const flatPositions = geometry.attributes.position.values;
-  const hardcodedTextureCoordinates = options.textureCoordinates;
   let length = flatPositions.length;
   const wall = options.wall;
   const top = options.top || wall;
@@ -161,11 +160,11 @@ function computeAttributes(options) {
       );
 
       if (vertexFormat.st) {
-        if (hardcodedTextureCoordinates) {
+        if (options.textureCoordinates) {
           textureCoordinates[(i * 2) / 3 + 0] =
-            hardcodedTextureCoordinates[i / 3][0];
+            options.textureCoordinates.positions[i / 3].x;
           textureCoordinates[(i * 2) / 3 + 1] =
-            hardcodedTextureCoordinates[i / 3][1];
+            options.textureCoordinates.positions[i / 3].y;
         } else {
           let p = Matrix3.multiplyByVector(
             textureMatrix,
@@ -810,6 +809,7 @@ function PolygonGeometry(options) {
     CesiumMath.RADIANS_PER_DEGREE
   );
   const stRotation = defaultValue(options.stRotation, 0.0);
+  const textureCoordinates = options.textureCoordinates;
   const perPositionHeight = defaultValue(options.perPositionHeight, false);
   const perPositionHeightExtrude =
     perPositionHeight && defined(options.extrudedHeight);
@@ -840,18 +840,26 @@ function PolygonGeometry(options) {
 
   this._rectangle = undefined;
   this._textureCoordinateRotationPoints = undefined;
-  this._textureCoordinates = options.textureCoordinates;
+  this._textureCoordinates = textureCoordinates;
 
   /**
    * The number of elements used to pack the object into an array.
    * @type {Number}
    */
   this.packedLength =
-    PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) +
+    PolygonGeometryLibrary.computeHierarchyPackedLength(
+      polygonHierarchy,
+      Cartesian3
+    ) +
     Ellipsoid.packedLength +
     VertexFormat.packedLength +
-    (this._textureCoordinates ? this._textureCoordinates.length * 2 : 0) +
-    13;
+    (textureCoordinates
+      ? PolygonGeometryLibrary.computeHierarchyPackedLength(
+          textureCoordinates,
+          Cartesian2
+        )
+      : 1) +
+    12;
 }
 
 /**
@@ -935,7 +943,8 @@ PolygonGeometry.pack = function (value, array, startingIndex) {
   startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(
     value._polygonHierarchy,
     array,
-    startingIndex
+    startingIndex,
+    Cartesian3
   );
 
   Ellipsoid.pack(value._ellipsoid, array, startingIndex);
@@ -955,13 +964,15 @@ PolygonGeometry.pack = function (value, array, startingIndex) {
   array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
   array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
   array[startingIndex++] = value._arcType;
-  const textureCoordinatesCount = value._textureCoordinates
-    ? value._textureCoordinates.length
-    : 0.0;
-  array[startingIndex++] = textureCoordinatesCount;
-  for (let i = 0; i < textureCoordinatesCount; i++) {
-    array[startingIndex++] = value._textureCoordinates[i][0];
-    array[startingIndex++] = value._textureCoordinates[i][1];
+  if (value._textureCoordinates) {
+    startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(
+      value._textureCoordinates,
+      array,
+      startingIndex,
+      Cartesian2
+    );
+  } else {
+    array[startingIndex++] = -1.0;
   }
   array[startingIndex++] = value.packedLength;
   return array;
@@ -991,7 +1002,8 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
 
   const polygonHierarchy = PolygonGeometryLibrary.unpackPolygonHierarchy(
     array,
-    startingIndex
+    startingIndex,
+    Cartesian3
   );
   startingIndex = polygonHierarchy.startingIndex;
   delete polygonHierarchy.startingIndex;
@@ -1017,9 +1029,19 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
   const shadowVolume = array[startingIndex++] === 1.0;
   const offsetAttribute = array[startingIndex++];
   const arcType = array[startingIndex++];
-  const textureCoordinates = Array(array[startingIndex++]);
-  for (let i = 0; i < textureCoordinates.length; ++i, startingIndex += 2) {
-    textureCoordinates[i] = [array[startingIndex], array[startingIndex + 1]];
+  const textureCoordinates =
+    array[startingIndex] === -1.0
+      ? undefined
+      : PolygonGeometryLibrary.unpackPolygonHierarchy(
+          array,
+          startingIndex,
+          Cartesian2
+        );
+  if (textureCoordinates) {
+    startingIndex = textureCoordinates.startingIndex;
+    delete textureCoordinates.startingIndex;
+  } else {
+    startingIndex++;
   }
   const packedLength = array[startingIndex++];
 
@@ -1042,8 +1064,7 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
   result._offsetAttribute =
     offsetAttribute === -1 ? undefined : offsetAttribute;
   result._arcType = arcType;
-  result._textureCoordinates =
-    textureCoordinates.length === 0 ? undefined : textureCoordinates;
+  result._textureCoordinates = textureCoordinates;
   result.packedLength = packedLength;
 
   return result;
@@ -1108,6 +1129,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
   const closeTop = polygonGeometry._closeTop;
   const closeBottom = polygonGeometry._closeBottom;
   const arcType = polygonGeometry._arcType;
+  const textureCoordinates = polygonGeometry._textureCoordinates;
 
   let outerPositions = polygonHierarchy.positions;
   if (outerPositions.length < 3) {
@@ -1128,6 +1150,16 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
 
   const hierarchy = results.hierarchy;
   const polygons = results.polygons;
+
+  const textureCoordinatePolygons = textureCoordinates
+    ? PolygonGeometryLibrary.polygonsFromHierarchy(
+        textureCoordinates,
+        function (identity) {
+          return identity;
+        },
+        false
+      ).polygons
+    : undefined;
 
   if (hierarchy.length === 0) {
     return;
@@ -1158,7 +1190,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
     boundingRectangle: boundingRectangle,
     ellipsoid: ellipsoid,
     stRotation: stRotation,
-    textureCoordinates: polygonGeometry._textureCoordinates,
+    textureCoordinates: undefined,
     bottom: false,
     top: true,
     wall: false,
@@ -1256,6 +1288,9 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
         !perPositionHeight
       );
       options.geometry = geometryInstance.geometry;
+      options.textureCoordinates = textureCoordinates
+        ? textureCoordinatePolygons[i]
+        : undefined;
       geometryInstance.geometry = computeAttributes(options);
 
       if (defined(polygonGeometry._offsetAttribute)) {

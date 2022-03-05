@@ -1,6 +1,7 @@
 import { ArcType } from "../../Source/Cesium.js";
 import { arrayFill } from "../../Source/Cesium.js";
 import { BoundingSphere } from "../../Source/Cesium.js";
+import { Cartesian2 } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
@@ -1287,12 +1288,14 @@ describe("Core/PolygonGeometry", function () {
   });
 
   it("uses explicit texture coordinates if defined in options", function () {
-    const textureCoordinates = [
-      [0, 0],
-      [1, 0],
-      [1, 1],
-      [0, 1],
-    ];
+    const textureCoordinates = {
+      positions: [
+        new Cartesian2(0, 0),
+        new Cartesian2(1, 0),
+        new Cartesian2(1, 1),
+        new Cartesian2(0, 1),
+      ],
+    };
     const p = PolygonGeometry.createGeometry(
       new PolygonGeometry({
         vertexFormat: VertexFormat.POSITION_AND_ST,
@@ -1315,9 +1318,9 @@ describe("Core/PolygonGeometry", function () {
     );
 
     const st = p.attributes.st.values;
-    for (let i = 0; i < textureCoordinates.length; i++) {
-      expect(st[i * 2 + 0]).toEqual(textureCoordinates[i][0]);
-      expect(st[i * 2 + 1]).toEqual(textureCoordinates[i][1]);
+    for (let i = 0; i < textureCoordinates.positions.length; i++) {
+      expect(st[i * 2 + 0]).toEqual(textureCoordinates.positions[i].x);
+      expect(st[i * 2 + 1]).toEqual(textureCoordinates.positions[i].y);
     }
   });
 
@@ -1924,6 +1927,12 @@ describe("Core/PolygonGeometry", function () {
     }
   }
 
+  function addPositions2D(array, positions) {
+    for (let i = 0; i < positions.length; ++i) {
+      array.push(positions[i].x, positions[i].y);
+    }
+  }
+
   const packedInstance = [3.0, 1.0];
   addPositions(packedInstance, positions);
   packedInstance.push(3.0, 1.0);
@@ -1948,24 +1957,27 @@ describe("Core/PolygonGeometry", function () {
     0,
     -1,
     ArcType.GEODESIC,
-    0,
+    -1,
     55
   );
   createPackableSpecs(PolygonGeometry, polygon, packedInstance);
 
   // pack with explicit texture coordinates
 
-  const textureCoordinates = [
-    [0, 0],
-    [1, 0],
-    [0, 1],
-    [0.1, 0.1],
-    [0.5, 0.1],
-    [0.1, 0.5],
-    [0.2, 0.2],
-    [0.3, 0.2],
-    [0.2, 0.3],
-  ];
+  const textureCoordinates = {
+    positions: [
+      new Cartesian2(0, 0),
+      new Cartesian2(1, 0),
+      new Cartesian2(0, 1),
+      new Cartesian2(0.1, 0.1),
+      new Cartesian2(0.5, 0.1),
+      new Cartesian2(0.1, 0.5),
+      new Cartesian2(0.2, 0.2),
+      new Cartesian2(0.3, 0.2),
+      new Cartesian2(0.2, 0.3),
+    ],
+    holes: undefined,
+  };
 
   const polygonTextured = new PolygonGeometry({
     vertexFormat: VertexFormat.POSITION_ONLY,
@@ -2000,27 +2012,10 @@ describe("Core/PolygonGeometry", function () {
     1,
     0,
     -1,
-    ArcType.GEODESIC,
-    9,
-    0,
-    0,
-    1,
-    0,
-    0,
-    1,
-    0.1,
-    0.1,
-    0.5,
-    0.1,
-    0.1,
-    0.5,
-    0.2,
-    0.2,
-    0.3,
-    0.2,
-    0.2,
-    0.3,
-    73
+    ArcType.GEODESIC
   );
+  packedInstanceTextured.push(9.0, 0.0);
+  addPositions2D(packedInstanceTextured, textureCoordinates.positions);
+  packedInstanceTextured.push(74);
   createPackableSpecs(PolygonGeometry, polygonTextured, packedInstanceTextured);
 });
