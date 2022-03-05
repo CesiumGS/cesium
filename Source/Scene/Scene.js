@@ -1479,7 +1479,7 @@ Object.defineProperties(Scene.prototype, {
    *
    * @type {Number}
    */
-   splitPosition: {
+  splitPosition: {
     get: function () {
       return this._frameState.splitPosition;
     },
@@ -1497,11 +1497,17 @@ Object.defineProperties(Scene.prototype, {
    */
   imagerySplitPosition: {
     get: function () {
-      deprecationWarning("Scene.imagerySplitPosition", "Scene.imagerySplitPosition has been deprecated in Cesium 1.92. It will be removed in Cesium 1.94. Use splitPosition instead.")
+      deprecationWarning(
+        "Scene.imagerySplitPosition",
+        "Scene.imagerySplitPosition has been deprecated in Cesium 1.92. It will be removed in Cesium 1.94. Use splitPosition instead."
+      );
       return this._frameState.splitPosition;
     },
     set: function (value) {
-      deprecationWarning("Scene.imagerySplitPosition", "Scene.imagerySplitPosition has been deprecated in Cesium 1.92. It will be removed in Cesium 1.94. Use splitPosition instead.")
+      deprecationWarning(
+        "Scene.imagerySplitPosition",
+        "Scene.imagerySplitPosition has been deprecated in Cesium 1.92. It will be removed in Cesium 1.94. Use splitPosition instead."
+      );
       this._frameState.splitPosition = value;
     },
   },
