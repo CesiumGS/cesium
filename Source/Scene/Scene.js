@@ -10,6 +10,7 @@ import createGuid from "../Core/createGuid.js";
 import CullingVolume from "../Core/CullingVolume.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";
@@ -1473,17 +1474,35 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
-   * Gets or sets the position of the Imagery splitter within the viewport.  Valid values are between 0.0 and 1.0.
+   * Gets or sets the position of the splitter within the viewport.  Valid values are between 0.0 and 1.0.
    * @memberof Scene.prototype
    *
    * @type {Number}
    */
-  imagerySplitPosition: {
+   splitPosition: {
     get: function () {
-      return this._frameState.imagerySplitPosition;
+      return this._frameState.splitPosition;
     },
     set: function (value) {
-      this._frameState.imagerySplitPosition = value;
+      this._frameState.splitPosition = value;
+    },
+  },
+
+  /**
+   * Gets or sets the position of the Imagery splitter within the viewport.  Valid values are between 0.0 and 1.0.
+   * @memberof Scene.prototype
+   *
+   * @deprecated Use splitPosition instead.
+   * @type {Number}
+   */
+  imagerySplitPosition: {
+    get: function () {
+      deprecationWarning("Scene.imagerySplitPosition", "Scene.imagerySplitPosition has been deprecated in Cesium 1.92. It will be removed in Cesium 1.94. Use splitPosition instead.")
+      return this._frameState.splitPosition;
+    },
+    set: function (value) {
+      deprecationWarning("Scene.imagerySplitPosition", "Scene.imagerySplitPosition has been deprecated in Cesium 1.92. It will be removed in Cesium 1.94. Use splitPosition instead.")
+      this._frameState.splitPosition = value;
     },
   },
 

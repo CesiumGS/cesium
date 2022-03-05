@@ -245,7 +245,7 @@
 
         // Sync the position of the slider with the split position
         const slider = document.getElementById("slider");
-        viewer.scene.imagerySplitPosition =
+        viewer.scene.splitPosition =
           slider.offsetLeft / slider.parentElement.offsetWidth;
 
         const handler = new Cesium.ScreenSpaceEventHandler(slider);
@@ -262,7 +262,7 @@
             (slider.offsetLeft + relativeOffset) /
             slider.parentElement.offsetWidth;
           slider.style.left = `${100.0 * splitPosition}%`;
-          viewer.scene.imagerySplitPosition = splitPosition;
+          viewer.scene.splitPosition = splitPosition;
         }
 
         handler.setInputAction(function () {

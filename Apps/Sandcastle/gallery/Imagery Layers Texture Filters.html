@@ -87,7 +87,7 @@
         layerNearest.splitDirection = Cesium.SplitDirection.RIGHT;
 
         const slider = document.getElementById("slider");
-        viewer.scene.imagerySplitPosition =
+        viewer.scene.splitPosition =
           slider.offsetLeft / slider.parentElement.offsetWidth;
 
         let dragStartX = 0;
@@ -112,7 +112,7 @@
           const splitPosition =
             (e.clientX - dragStartX) / slider.parentElement.offsetWidth;
           slider.style.left = `${100.0 * splitPosition}%`;
-          viewer.scene.imagerySplitPosition = splitPosition;
+          viewer.scene.splitPosition = splitPosition;
         }
         //Sandcastle_End
 

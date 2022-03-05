@@ -12,21 +12,20 @@ const Splitter = {
    * other side are discarded. The screen side is given by a uniform called
    * `czm_splitDirection`, which can be added by calling
    * {@link Splitter#addUniforms}, and the split position is given by an
-   * automatic uniform called `czm_imagerySplitPosition`.
+   * automatic uniform called `czm_splitPosition`.
    */
   modifyFragmentShader: function modifyFragmentShader(shader) {
-    // TODO: rename czm_imagerySplitPosition to czm_splitPosition.
     shader = ShaderSource.replaceMain(shader, "czm_splitter_main");
     shader +=
-      //"uniform float czm_splitPosition; \n" +
+      // czm_splitPosition is not declared because it is an automatic uniform.
       "uniform float czm_splitDirection; \n" +
       "void main() \n" +
       "{ \n" +
       // Don't split when rendering the shadow map, because it is rendered from
       // the perpsective of a totally different camera.
       "#ifndef SHADOW_MAP\n" +
-      "    if (czm_splitDirection < 0.0 && gl_FragCoord.x > czm_imagerySplitPosition) discard; \n" +
-      "    if (czm_splitDirection > 0.0 && gl_FragCoord.x < czm_imagerySplitPosition) discard; \n" +
+      "    if (czm_splitDirection < 0.0 && gl_FragCoord.x > czm_splitPosition) discard; \n" +
+      "    if (czm_splitDirection > 0.0 && gl_FragCoord.x < czm_splitPosition) discard; \n" +
       "#endif\n" +
       "    czm_splitter_main(); \n" +
       "} \n";
