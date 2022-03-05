@@ -3148,6 +3148,17 @@ describe("Scene/Camera", function () {
     }).toThrowDeveloperError();
   });
 
+  it("get pick ray returns undefined if the Scene is not fully rendered", function () {
+    const windowCoord = new Cartesian2(
+      scene.canvas.clientWidth / 2,
+      scene.canvas.clientHeight
+    );
+
+    scene.canvas.clientWidth = 0;
+    const ray = camera.getPickRay(windowCoord);
+    expect(ray).toBeUndefined();
+  });
+
   it("get pick ray perspective", function () {
     const windowCoord = new Cartesian2(
       scene.canvas.clientWidth / 2,

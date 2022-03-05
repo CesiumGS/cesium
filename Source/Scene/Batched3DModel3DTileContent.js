@@ -320,6 +320,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       specularEnvironmentMaps: tileset.specularEnvironmentMaps,
       backFaceCulling: tileset.backFaceCulling,
       showOutline: tileset.showOutline,
+      showCreditsOnScreen: tileset.showCreditsOnScreen,
     });
     content._model.readyPromise.then(function (model) {
       model.activeAnimations.addAll({
@@ -433,6 +434,7 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
   model.specularEnvironmentMaps = tileset.specularEnvironmentMaps;
   model.backFaceCulling = tileset.backFaceCulling;
   model.debugWireframe = tileset.debugWireframe;
+  model.showCreditsOnScreen = tileset.showCreditsOnScreen;
   model.splitDirection = tileset.splitDirection;
 
   // Update clipping planes

@@ -49,7 +49,7 @@
     }
   ],
   "asset": {
-    "copyright": "Second Repeated Copyright, Most Frequent Copyright",
+    "copyright": "Second Repeated Copyright; Most Frequent Copyright",
     "generator": "3d-tiles-samples-generator",
     "version": "2.0"
   },

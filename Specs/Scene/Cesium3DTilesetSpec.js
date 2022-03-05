@@ -4938,7 +4938,9 @@ describe(
         scene,
         gltfContentWithCopyrightUrl
       ).then(function (tileset) {
-        viewGltfContent();
+        setZoom(10.0);
+        scene.renderForSpecs();
+
         const expectedCredits = [
           "Parent Copyright",
           "Lower Left Copyright",
@@ -5035,6 +5037,99 @@ describe(
           const credit = creditList[i].childNodes[0];
           expect(credit).toEqual(expectedCredits[i].element);
         }
+      });
+    });
+
+    it("shows credits on screen", function () {
+      const options = {
+        showCreditsOnScreen: true,
+      };
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        gltfContentWithCopyrightUrl,
+        options
+      ).then(function (tileset) {
+        setZoom(10.0);
+        scene.renderForSpecs();
+
+        const expectedCredits = [
+          "Parent Copyright",
+          "Lower Left Copyright",
+          "Lower Right Copyright 1",
+          "Lower Right Copyright 2",
+          "Upper Right Copyright",
+          "Upper Left Copyright",
+        ];
+
+        const creditDisplay = scene.frameState.creditDisplay;
+        const credits = creditDisplay._currentFrameCredits.screenCredits.values;
+        const length = credits.length;
+        expect(length).toEqual(expectedCredits.length);
+        for (let i = 0; i < length; i++) {
+          const creditInfo = credits[i];
+          const creditString = creditInfo.credit.html;
+          expect(expectedCredits.includes(creditString)).toBe(true);
+        }
+      });
+    });
+
+    it("toggles showing credits on screen", function () {
+      const options = {
+        showCreditsOnScreen: false,
+      };
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        gltfContentWithCopyrightUrl,
+        options
+      ).then(function (tileset) {
+        setZoom(10.0);
+        scene.renderForSpecs();
+
+        const expectedCredits = [
+          "Parent Copyright",
+          "Lower Left Copyright",
+          "Lower Right Copyright 1",
+          "Lower Right Copyright 2",
+          "Upper Right Copyright",
+          "Upper Left Copyright",
+        ];
+
+        const creditDisplay = scene.frameState.creditDisplay;
+        const lightboxCredits =
+          creditDisplay._currentFrameCredits.lightboxCredits.values;
+        const screenCredits =
+          creditDisplay._currentFrameCredits.screenCredits.values;
+
+        let length = lightboxCredits.length;
+        expect(length).toEqual(expectedCredits.length);
+        for (let i = 0; i < length; i++) {
+          const creditInfo = lightboxCredits[i];
+          const creditString = creditInfo.credit.html;
+          expect(expectedCredits.includes(creditString)).toBe(true);
+        }
+        expect(screenCredits.length).toEqual(0);
+
+        tileset.showCreditsOnScreen = true;
+        scene.renderForSpecs();
+        length = screenCredits.length;
+        expect(length).toEqual(expectedCredits.length);
+        for (let i = 0; i < length; i++) {
+          const creditInfo = screenCredits[i];
+          const creditString = creditInfo.credit.html;
+          expect(expectedCredits.includes(creditString)).toBe(true);
+        }
+        expect(lightboxCredits.length).toEqual(0);
+
+        tileset.showCreditsOnScreen = false;
+        scene.renderForSpecs();
+        length = lightboxCredits.length;
+        expect(length).toEqual(expectedCredits.length);
+        for (let i = 0; i < length; i++) {
+          const creditInfo = lightboxCredits[i];
+          const creditString = creditInfo.credit.html;
+          expect(expectedCredits.includes(creditString)).toBe(true);
+        }
+        expect(screenCredits.length).toEqual(0);
       });
     });
 

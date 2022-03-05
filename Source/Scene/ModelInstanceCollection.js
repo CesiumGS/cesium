@@ -65,10 +65,10 @@ const LoadState = {
  * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
  * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
+ * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this collection.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for the collection.
  * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the instances in wireframe.
- *
  * @exception {DeveloperError} Must specify either <options.gltf> or <options.url>, but not both.
  * @exception {DeveloperError} Shader program cannot be optimized for instancing. Parameters cannot have any of the following semantics: MODEL, MODELINVERSE, MODELVIEWINVERSE, MODELVIEWPROJECTIONINVERSE, MODELINVERSETRANSPOSE.
  *
@@ -177,7 +177,7 @@ function ModelInstanceCollection(options) {
   this.specularEnvironmentMaps = options.specularEnvironmentMaps;
   this.backFaceCulling = defaultValue(options.backFaceCulling, true);
   this._backFaceCulling = this.backFaceCulling;
-  this._pickObject = options.pickObject;
+  this.showCreditsOnScreen = defaultValue(options.showCreditsOnScreen, false);
 }
 
 Object.defineProperties(ModelInstanceCollection.prototype, {
@@ -694,7 +694,7 @@ function createModel(collection, context) {
     sphericalHarmonicCoefficients: collection.sphericalHarmonicCoefficients,
     specularEnvironmentMaps: collection.specularEnvironmentMaps,
     showOutline: collection.showOutline,
-    pickObject: collection._pickObject,
+    showCreditsOnScreen: collection.showCreditsOnScreen,
   };
 
   if (!usesBatchTable) {
@@ -1060,6 +1060,7 @@ ModelInstanceCollection.prototype.update = function (frameState) {
   model.luminanceAtZenith = this.luminanceAtZenith;
   model.sphericalHarmonicCoefficients = this.sphericalHarmonicCoefficients;
   model.specularEnvironmentMaps = this.specularEnvironmentMaps;
+  model.showCreditsOnScreen = this.showCreditsOnScreen;
   model.splitDirection = this.splitDirection;
 
   model.update(frameState);

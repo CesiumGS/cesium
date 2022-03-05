@@ -185,6 +185,8 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.featureIdIndex = tileset.featureIdIndex;
   model.instanceFeatureIdIndex = tileset.instanceFeatureIdIndex;
   model.backFaceCulling = tileset.backFaceCulling;
+  model.shadows = tileset.shadows;
+  model.showCreditsOnScreen = tileset.showCreditsOnScreen;
 
   model.update(frameState);
 };
