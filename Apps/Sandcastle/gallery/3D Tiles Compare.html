@@ -54,11 +54,16 @@
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
 
-        const left = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-          url: Cesium.IonResource.fromAssetId(69380)
-        }));
+        const left = viewer.scene.primitives.add(
+          new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(69380),
+          })
+        );
 
         left.splitDirection = Cesium.SplitDirection.LEFT;
+
+        const right = viewer.scene.primitives.add(Cesium.createOsmBuildings());
+        right.splitDirection = Cesium.SplitDirection.RIGHT;
 
         viewer.zoomTo(left);
 
