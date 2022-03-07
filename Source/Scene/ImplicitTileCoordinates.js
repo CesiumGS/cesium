@@ -10,7 +10,7 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * <p>
  * Level numbers are 0-indexed and typically start at the root of the implicit
  * tileset (the tile with either implicitTiling in its JSON (3D Tiles 1.1) or
- * the <code>3DTILES_implicit_tiling</code> extension.
+ * the <code>3DTILES_implicit_tiling</code> extension).
  * This object can also represent the relative offset from one set of coordinates
  * to another. See {@link ImplicitTileCoordinates#getOffsetCoordinates}. The term
  * local coordinates refers to coordinates that are relative to the root of a

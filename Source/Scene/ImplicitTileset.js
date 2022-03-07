@@ -17,7 +17,7 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * @constructor
  *
  * @param {Resource} baseResource The base resource for the tileset
- * @param {Object} tileJson The JSON header of the tile with either implicit tiling in the JSON (3D Tiles 1.1) or the 3DTILES_implicit_tiling extension.
+ * @param {Object} tileJson The JSON header of the tile with either implicit tiling (3D Tiles 1.1) or the 3DTILES_implicit_tiling extension.
  * @param {MetadataSchema} [metadataSchema] The metadata schema containing the implicit tile metadata class.
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -219,7 +219,7 @@ export default function ImplicitTileset(
  * This handles both regular tiles and tiles with the
  * `3DTILES_multiple_contents` extension
  *
- * @param {Object} tileJson The JSON header of the tile with either implicit tiling in its JSON (3D Tiles 1.1) or the 3DTILES_implicit_tiling extension.
+ * @param {Object} tileJson The JSON header of the tile with either implicit tiling (3D Tiles 1.1) or the 3DTILES_implicit_tiling extension.
  * @return {Object[]} An array of JSON headers for the contents of each tile
  * @private
  */

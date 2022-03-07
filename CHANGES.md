@@ -25,6 +25,7 @@
   - Tileset metadata is now stored in `tilesetJson.metadata` rather than the `3DTILES_metadata` extension. [#10153](https://github.com/CesiumGS/cesium/pull/10153)
   - Tile, content, and group metadata are now stored in `metadata` rather than the `3DTILES_metadata` extension.
     [#10159](https://github.com/CesiumGS/cesium/pull/10159)
+  - Implicit tiling is now specified in `tile.implicitTiling` rather than the `3DTILES_implicit_tiling` extension. [#10169](https://github.com/CesiumGS/cesium/pull/10169)
 
 ### 1.91 - 2022-03-01
 
