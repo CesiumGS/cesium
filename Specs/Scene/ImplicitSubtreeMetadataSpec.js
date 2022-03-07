@@ -66,17 +66,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
     }).toThrowDeveloperError();
   });
 
-  it("hasProperty returns false when there's no properties", function () {
-    const subtreeMetadata = new ImplicitSubtreeMetadata({
-      subtreeMetadata: {},
-      class: {
-        properties: {},
-      },
-    });
-    expect(subtreeMetadata.hasProperty("color")).toBe(false);
-  });
-
-  it("hasProperty returns false when there's no property with the given property ID", function () {
+  it("hasProperty throws when there's no property with the given property ID", function () {
     const subtreeClass = new MetadataClass({
       id: "subtree",
       class: {
@@ -97,7 +87,9 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
         },
       },
     });
-    expect(subtreeMetadata.hasProperty("color")).toBe(false);
+    expect(function () {
+      return subtreeMetadata.getProperty("color");
+    }).toThrowDeveloperError();
   });
 
   it("hasProperty returns true when there's a property with the given property ID", function () {
