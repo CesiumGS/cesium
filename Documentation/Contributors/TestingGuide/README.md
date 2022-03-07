@@ -15,7 +15,7 @@ All new code should have 100% code coverage and should pass all tests. Always ru
     - [Run Only WebGL Tests](#run-only-webgl-tests)
     - [Run Only Non-WebGL Tests](#run-only-non-webgl-tests)
     - [Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
-  - [Run Coverage](#run-coverage)
+    - [Run Coverage](#run-coverage)
     - [Running Tests on the Command Line with Karma](#running-tests-on-the-command-line-with-karma)
       - [Run Tests with a Specific Browser or Browsers](#run-tests-with-a-specific-browser-or-browsers)
       - [Run All Tests with WebGL Validation](#run-all-tests-with-webgl-validation)
@@ -117,7 +117,7 @@ The **Run All Tests against Combined File with Debug Code Removed** is the same 
 
 See the [Build Guide](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/BuildGuide/README.md#build-scripts) for all the CesiumJS build options.
 
-## Run Coverage
+### Run Coverage
 
 We use [istanbul](https://istanbul.js.org/) via [karma-coverage](https://github.com/karma-runner/karma-coverage) to generate code coverage reports. It is especially important to have outstanding code coverage since JavaScript doesn't have a compiler and linker to catch early errors.
 
