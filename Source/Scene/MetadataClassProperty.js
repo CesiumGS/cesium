@@ -614,6 +614,8 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
  * the value.
  * @param {*} value The raw value
  * @returns {*} Either the value or undefined if the value was a no data value.
+ *
+ * @private
  */
 MetadataClassProperty.prototype.handleNoData = function (value) {
   const sentinel = this._noData;
