@@ -958,7 +958,15 @@ gulp.task("coverage", function (done) {
       },
       client: {
         captureConsole: verbose,
-        args: [undefined, undefined, undefined, webglStub, undefined],
+        args: [
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          webglStub,
+          undefined,
+        ],
       },
     },
     function (e) {
