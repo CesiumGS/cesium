@@ -2,6 +2,7 @@ import {
   Cartesian2,
   Cartesian3,
   Cartesian4,
+  clone,
   Matrix2,
   Matrix3,
   Matrix4,
@@ -397,378 +398,500 @@ describe("Scene/MetadataClassProperty", function () {
     }).toThrowDeveloperError();
   });
 
-  it("normalize single values", function () {
-    if (!FeatureDetection.supportsBigInt()) {
-      return;
-    }
+  describe("normalize and unnormalize", function () {
+    let scalarProperties;
+    let scalarValues;
+    let normalizedScalarValues;
 
-    const properties = {
-      propertyInt8: {
-        type: "SCALAR",
-        componentType: "INT8",
-        normalized: true,
-      },
-      propertyUint8: {
-        type: "SCALAR",
-        componentType: "UINT8",
-        normalized: true,
-      },
-      propertyInt16: {
-        type: "SCALAR",
-        componentType: "INT16",
-        normalized: true,
-      },
-      propertyUint16: {
-        type: "SCALAR",
-        componentType: "UINT16",
-        normalized: true,
-      },
-      propertyInt32: {
-        type: "SCALAR",
-        componentType: "INT32",
-        normalized: true,
-      },
-      propertyUint32: {
-        type: "SCALAR",
-        componentType: "UINT32",
-        normalized: true,
-      },
-      propertyInt64: {
-        type: "SCALAR",
-        componentType: "INT64",
-        normalized: true,
-      },
-      propertyUint64: {
-        type: "SCALAR",
-        componentType: "UINT64",
-        normalized: true,
-      },
-    };
+    let arrayProperties;
+    let arrayValues;
+    let normalizedArrayValues;
 
-    const propertyValues = {
-      propertyInt8: [-128, 0, 127],
-      propertyUint8: [0, 51, 255],
-      propertyInt16: [-32768, 0, 32767],
-      propertyUint16: [0, 13107, 65535],
-      propertyInt32: [-2147483648, 0, 2147483647],
-      propertyUint32: [0, 858993459, 4294967295],
-      propertyInt64: [
-        BigInt("-9223372036854775808"), // eslint-disable-line
-        BigInt(0), // eslint-disable-line
-        BigInt("9223372036854775807"), // eslint-disable-line
-      ],
-      propertyUint64: [
-        BigInt(0), // eslint-disable-line
-        BigInt("3689348814741910323"), // eslint-disable-line
-        BigInt("18446744073709551615"), // eslint-disable-line
-      ],
-    };
+    let vectorProperties;
+    let vectorValues;
+    let normalizedVectorValues;
 
-    const normalizedValues = {
-      propertyInt8: [-1.0, 0, 1.0],
-      propertyUint8: [0.0, 0.2, 1.0],
-      propertyInt16: [-1.0, 0, 1.0],
-      propertyUint16: [0.0, 0.2, 1.0],
-      propertyInt32: [-1.0, 0, 1.0],
-      propertyUint32: [0.0, 0.2, 1.0],
-      propertyInt64: [-1.0, 0, 1.0],
-      propertyUint64: [0.0, 0.2, 1.0],
-    };
+    let arrayOfVectorProperties;
+    let arrayOfVectorValues;
+    let normalizedArrayOfVectorValues;
 
-    for (const propertyId in properties) {
-      if (properties.hasOwnProperty(propertyId)) {
-        const property = new MetadataClassProperty({
-          id: propertyId,
-          property: properties[propertyId],
-        });
-        const length = normalizedValues[propertyId].length;
-        for (let i = 0; i < length; ++i) {
-          const value = propertyValues[propertyId][i];
-          const normalizedValue = property.normalize(value);
-          expect(normalizedValue).toEqual(normalizedValues[propertyId][i]);
-        }
-      }
-    }
-  });
+    let myEnum;
+    let nonIntegerProperties;
+    let nonIntegerValues;
+    beforeAll(function () {
+      scalarProperties = {
+        propertyInt8: {
+          type: "SCALAR",
+          componentType: "INT8",
+          normalized: true,
+        },
+        propertyUint8: {
+          type: "SCALAR",
+          componentType: "UINT8",
+          normalized: true,
+        },
+        propertyInt16: {
+          type: "SCALAR",
+          componentType: "INT16",
+          normalized: true,
+        },
+        propertyUint16: {
+          type: "SCALAR",
+          componentType: "UINT16",
+          normalized: true,
+        },
+        propertyInt32: {
+          type: "SCALAR",
+          componentType: "INT32",
+          normalized: true,
+        },
+        propertyUint32: {
+          type: "SCALAR",
+          componentType: "UINT32",
+          normalized: true,
+        },
+        propertyInt64: {
+          type: "SCALAR",
+          componentType: "INT64",
+          normalized: true,
+        },
+        propertyUint64: {
+          type: "SCALAR",
+          componentType: "UINT64",
+          normalized: true,
+        },
+      };
 
-  it("normalize array values", function () {
-    const properties = {
-      propertyInt8: {
-        array: true,
-        type: "SCALAR",
-        componentType: "INT8",
-        normalized: true,
-      },
-      propertyUint8: {
-        array: true,
-        count: 2,
-        type: "SCALAR",
-        componentType: "UINT8",
-        normalized: true,
-      },
-      propertyVector: {
-        type: "VEC3",
-        componentType: "UINT8",
-        normalized: true,
-        array: true,
-        count: 3,
-      },
-      propertyMatrix: {
-        type: "MAT2",
-        componentType: "UINT8",
-        normalized: true,
-        array: true,
-      },
-    };
+      scalarValues = {
+        propertyInt8: [-128, 0, 127],
+        propertyUint8: [0, 51, 255],
+        propertyInt16: [-32768, 0, 32767],
+        propertyUint16: [0, 13107, 65535],
+        propertyInt32: [-2147483648, 0, 2147483647],
+        propertyUint32: [0, 858993459, 4294967295],
+        propertyInt64: [
+          BigInt("-9223372036854775808"), // eslint-disable-line
+          BigInt(0), // eslint-disable-line
+          BigInt("9223372036854775807"), // eslint-disable-line
+        ],
+        propertyUint64: [
+          BigInt(0), // eslint-disable-line
+          BigInt("3689348814741910323"), // eslint-disable-line
+          BigInt("18446744073709551615"), // eslint-disable-line
+        ],
+      };
 
-    const propertyValues = {
-      propertyInt8: [[-128, 0], [127], []],
-      propertyUint8: [
-        [0, 255],
-        [0, 51],
-        [255, 255],
-      ],
-      propertyVector: [
-        [255, 0, 0],
-        [0, 255, 0],
-        [0, 0, 255],
-      ],
-      propertyMatrix: [
-        [255, 255, 255, 255],
-        [51, 0, 0, 51],
-      ],
-    };
+      normalizedScalarValues = {
+        propertyInt8: [-1.0, 0, 1.0],
+        propertyUint8: [0.0, 0.2, 1.0],
+        propertyInt16: [-1.0, 0, 1.0],
+        propertyUint16: [0.0, 0.2, 1.0],
+        propertyInt32: [-1.0, 0, 1.0],
+        propertyUint32: [0.0, 0.2, 1.0],
+        propertyInt64: [-1.0, 0, 1.0],
+        propertyUint64: [0.0, 0.2, 1.0],
+      };
 
-    const normalizedValues = {
-      propertyInt8: [[-1.0, 0.0], [1.0], []],
-      propertyUint8: [
-        [0.0, 1.0],
-        [0.0, 0.2],
-        [1.0, 1.0],
-      ],
-      propertyVector: [
-        [1.0, 0.0, 0.0],
-        [0.0, 1.0, 0.0],
-        [0.0, 0.0, 1.0],
-      ],
-      propertyMatrix: [
-        [1.0, 1.0, 1.0, 1.0],
-        [0.2, 0.0, 0.0, 0.2],
-      ],
-    };
+      arrayProperties = {
+        propertyInt8: {
+          array: true,
+          type: "SCALAR",
+          componentType: "INT8",
+          normalized: true,
+        },
+        propertyUint8: {
+          array: true,
+          count: 2,
+          type: "SCALAR",
+          componentType: "UINT8",
+          normalized: true,
+        },
+        propertyVector: {
+          type: "VEC3",
+          componentType: "UINT8",
+          normalized: true,
+          array: true,
+          count: 3,
+        },
+        propertyMatrix: {
+          type: "MAT2",
+          componentType: "UINT8",
+          normalized: true,
+          array: true,
+        },
+      };
 
-    for (const propertyId in properties) {
-      if (properties.hasOwnProperty(propertyId)) {
-        const property = new MetadataClassProperty({
-          id: propertyId,
-          property: properties[propertyId],
-        });
-        const length = normalizedValues[propertyId].length;
-        for (let i = 0; i < length; ++i) {
-          const value = propertyValues[propertyId][i];
-          const normalizedValue = property.normalize(value);
-          expect(normalizedValue).toEqual(normalizedValues[propertyId][i]);
-        }
-      }
-    }
-  });
-
-  it("normalize vector and matrix values", function () {
-    const properties = {
-      vec4Int8: {
-        type: "VEC4",
-        componentType: "INT8",
-        normalized: true,
-      },
-      mat2Uint8: {
-        type: "MAT2",
-        componentType: "UINT8",
-        normalized: true,
-      },
-    };
-
-    const propertyValues = {
-      vec4Int8: [
-        [-128, 0, 127, 0],
-        [-128, -128, -128, 0],
-        [127, 127, 127, 127],
-      ],
-      mat2Uint8: [
-        [0, 255, 0, 0],
-        [0, 51, 51, 0],
-        [255, 0, 0, 255],
-      ],
-    };
-
-    const normalizedValues = {
-      vec4Int8: [
-        [-1.0, 0.0, 1.0, 0],
-        [-1.0, -1.0, -1.0, 0],
-        [1.0, 1.0, 1.0, 1.0],
-      ],
-      mat2Uint8: [
-        [0.0, 1.0, 0.0, 0.0],
-        [0.0, 0.2, 0.2, 0.0],
-        [1.0, 0.0, 0.0, 1.0],
-      ],
-    };
-
-    for (const propertyId in properties) {
-      if (properties.hasOwnProperty(propertyId)) {
-        const property = new MetadataClassProperty({
-          id: propertyId,
-          property: properties[propertyId],
-        });
-        const length = normalizedValues[propertyId].length;
-        for (let i = 0; i < length; ++i) {
-          const value = propertyValues[propertyId][i];
-          const normalizedValue = property.normalize(value);
-          expect(normalizedValue).toEqual(normalizedValues[propertyId][i]);
-        }
-      }
-    }
-  });
-
-  it("normalizes nested arrays of vectors", function () {
-    const properties = {
-      propertyVector: {
-        type: "VEC3",
-        componentType: "UINT8",
-        normalized: true,
-        array: true,
-        count: 2,
-      },
-      propertyMatrix: {
-        type: "MAT2",
-        componentType: "UINT8",
-        normalized: true,
-        array: true,
-      },
-    };
-
-    const propertyValues = {
-      propertyVector: [
-        [
+      arrayValues = {
+        propertyInt8: [[-128, 0], [127], []],
+        propertyUint8: [
+          [0, 255],
+          [0, 51],
+          [255, 255],
+        ],
+        propertyVector: [
           [255, 0, 0],
           [0, 255, 0],
-        ],
-        [
           [0, 0, 255],
-          [255, 255, 0],
         ],
-      ],
-      propertyMatrix: [
-        [
+        propertyMatrix: [
           [255, 255, 255, 255],
           [51, 0, 0, 51],
         ],
-        [],
-      ],
-    };
+      };
 
-    const normalizedValues = {
-      propertyVector: [
-        [
+      normalizedArrayValues = {
+        propertyInt8: [[-1.0, 0.0], [1.0], []],
+        propertyUint8: [
+          [0.0, 1.0],
+          [0.0, 0.2],
+          [1.0, 1.0],
+        ],
+        propertyVector: [
           [1.0, 0.0, 0.0],
           [0.0, 1.0, 0.0],
-        ],
-        [
           [0.0, 0.0, 1.0],
-          [1.0, 1.0, 0.0],
         ],
-      ],
-      propertyMatrix: [
-        [
+        propertyMatrix: [
           [1.0, 1.0, 1.0, 1.0],
           [0.2, 0.0, 0.0, 0.2],
         ],
-        [],
-      ],
-    };
+      };
 
-    for (const propertyId in properties) {
-      if (properties.hasOwnProperty(propertyId)) {
-        const property = new MetadataClassProperty({
-          id: propertyId,
-          property: properties[propertyId],
-        });
-        const length = normalizedValues[propertyId].length;
-        for (let i = 0; i < length; ++i) {
-          const value = propertyValues[propertyId][i];
-          const normalizedValue = property.normalize(value);
-          expect(normalizedValue).toEqual(normalizedValues[propertyId][i]);
-        }
-      }
-    }
-  });
+      vectorProperties = {
+        vec4Int8: {
+          type: "VEC4",
+          componentType: "INT8",
+          normalized: true,
+        },
+        mat2Uint8: {
+          type: "MAT2",
+          componentType: "UINT8",
+          normalized: true,
+        },
+      };
 
-  it("does not normalize non integer types", function () {
-    const myEnum = new MetadataEnum({
-      id: "myEnum",
-      enum: {
-        values: [
-          {
-            value: 0,
-            name: "ValueA",
-          },
-          {
-            value: 1,
-            name: "ValueB",
-          },
-          {
-            value: 999,
-            name: "Other",
-          },
+      vectorValues = {
+        vec4Int8: [
+          [-128, 0, 127, 0],
+          [-128, -128, -128, 0],
+          [127, 127, 127, 127],
         ],
-      },
+        mat2Uint8: [
+          [0, 255, 0, 0],
+          [0, 51, 51, 0],
+          [255, 0, 0, 255],
+        ],
+      };
+
+      normalizedVectorValues = {
+        vec4Int8: [
+          [-1.0, 0.0, 1.0, 0],
+          [-1.0, -1.0, -1.0, 0],
+          [1.0, 1.0, 1.0, 1.0],
+        ],
+        mat2Uint8: [
+          [0.0, 1.0, 0.0, 0.0],
+          [0.0, 0.2, 0.2, 0.0],
+          [1.0, 0.0, 0.0, 1.0],
+        ],
+      };
+
+      arrayOfVectorProperties = {
+        propertyVector: {
+          type: "VEC3",
+          componentType: "UINT8",
+          normalized: true,
+          array: true,
+          count: 2,
+        },
+        propertyMatrix: {
+          type: "MAT2",
+          componentType: "UINT8",
+          normalized: true,
+          array: true,
+        },
+      };
+
+      arrayOfVectorValues = {
+        propertyVector: [
+          [
+            [255, 0, 0],
+            [0, 255, 0],
+          ],
+          [
+            [0, 0, 255],
+            [255, 255, 0],
+          ],
+        ],
+        propertyMatrix: [
+          [
+            [255, 255, 255, 255],
+            [51, 0, 0, 51],
+          ],
+          [],
+        ],
+      };
+
+      normalizedArrayOfVectorValues = {
+        propertyVector: [
+          [
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+          ],
+          [
+            [0.0, 0.0, 1.0],
+            [1.0, 1.0, 0.0],
+          ],
+        ],
+        propertyMatrix: [
+          [
+            [1.0, 1.0, 1.0, 1.0],
+            [0.2, 0.0, 0.0, 0.2],
+          ],
+          [],
+        ],
+      };
+
+      myEnum = new MetadataEnum({
+        id: "myEnum",
+        enum: {
+          values: [
+            {
+              value: 0,
+              name: "ValueA",
+            },
+            {
+              value: 1,
+              name: "ValueB",
+            },
+            {
+              value: 999,
+              name: "Other",
+            },
+          ],
+        },
+      });
+
+      nonIntegerProperties = {
+        propertyEnum: {
+          type: "ENUM",
+          enumType: "myEnum",
+          normalized: true,
+        },
+        propertyEnumArray: {
+          type: "ENUM",
+          array: true,
+          enumType: "myEnum",
+          normalized: true,
+        },
+        propertyString: {
+          type: "STRING",
+          normalized: true,
+        },
+        propertyBoolean: {
+          type: "BOOLEAN",
+          normalized: true,
+        },
+      };
+
+      nonIntegerValues = {
+        propertyEnum: ["Other", "ValueA", "ValueB"],
+        propertyEnumArray: [["Other", "ValueA"], ["ValueB"], []],
+        propertyString: ["a", "bc", ""],
+        propertyBoolean: [true, false, false],
+      };
     });
 
-    const properties = {
-      propertyEnum: {
-        type: "ENUM",
-        enumType: "myEnum",
-        normalized: true,
-      },
-      propertyEnumArray: {
-        type: "ENUM",
-        array: true,
-        enumType: "myEnum",
-        normalized: true,
-      },
-      propertyString: {
-        type: "STRING",
-        normalized: true,
-      },
-      propertyBoolean: {
-        type: "BOOLEAN",
-        normalized: true,
-      },
-    };
+    it("normalizes scalar values", function () {
+      if (!FeatureDetection.supportsBigInt()) {
+        return;
+      }
 
-    const propertyValues = {
-      propertyEnum: ["Other", "ValueA", "ValueB"],
-      propertyEnumArray: [["Other", "ValueA"], ["ValueB"], []],
-      propertyString: ["a", "bc", ""],
-      propertyBoolean: [true, false, false],
-    };
-
-    for (const propertyId in properties) {
-      if (properties.hasOwnProperty(propertyId)) {
-        const property = new MetadataClassProperty({
-          id: propertyId,
-          property: properties[propertyId],
-          enums: {
-            myEnum: myEnum,
-          },
-        });
-        const length = propertyValues[propertyId].length;
-        for (let i = 0; i < length; ++i) {
-          const value = propertyValues[propertyId][i];
-          const normalizeValue = property.normalize(value);
-          expect(normalizeValue).toEqual(value);
+      for (const propertyId in scalarProperties) {
+        if (scalarProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: scalarProperties[propertyId],
+          });
+          const length = normalizedScalarValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const value = scalarValues[propertyId][i];
+            const normalizedValue = property.normalize(value);
+            expect(normalizedValue).toEqual(
+              normalizedScalarValues[propertyId][i]
+            );
+          }
         }
       }
-    }
+    });
+
+    it("unnormalizes scalar values", function () {
+      if (!FeatureDetection.supportsBigInt()) {
+        return;
+      }
+
+      for (const propertyId in scalarProperties) {
+        if (scalarProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: scalarProperties[propertyId],
+          });
+          const length = scalarValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const normalizedValue = normalizedScalarValues[propertyId][i];
+            const value = property.unnormalize(normalizedValue);
+            expect(value).toEqual(scalarValues[propertyId][i]);
+          }
+        }
+      }
+    });
+
+    it("normalizes array values", function () {
+      for (const propertyId in arrayProperties) {
+        if (arrayProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: arrayProperties[propertyId],
+          });
+          const length = normalizedArrayValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const value = arrayValues[propertyId][i];
+            const normalizedValue = property.normalize(clone(value, true));
+            expect(normalizedValue).toEqual(
+              normalizedArrayValues[propertyId][i]
+            );
+          }
+        }
+      }
+    });
+
+    it("unnormalizes array values", function () {
+      for (const propertyId in arrayProperties) {
+        if (arrayProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: arrayProperties[propertyId],
+          });
+          const length = arrayValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const normalizedValue = normalizedArrayValues[propertyId][i];
+            const value = property.unnormalize(clone(normalizedValue, true));
+            expect(value).toEqual(arrayValues[propertyId][i]);
+          }
+        }
+      }
+    });
+
+    it("normalizes vector and matrix values", function () {
+      for (const propertyId in vectorProperties) {
+        if (vectorProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: vectorProperties[propertyId],
+          });
+          const length = normalizedVectorValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const value = vectorValues[propertyId][i];
+            const normalizedValue = property.normalize(clone(value, true));
+            expect(normalizedValue).toEqual(
+              normalizedVectorValues[propertyId][i]
+            );
+          }
+        }
+      }
+    });
+
+    it("unnormalizes vector and matrix values", function () {
+      for (const propertyId in vectorProperties) {
+        if (vectorProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: vectorProperties[propertyId],
+          });
+          const length = vectorValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const normalizedValue = normalizedVectorValues[propertyId][i];
+            const value = property.unnormalize(clone(normalizedValue, true));
+            expect(value).toEqual(vectorValues[propertyId][i]);
+          }
+        }
+      }
+    });
+
+    it("normalizes nested arrays of vectors", function () {
+      for (const propertyId in arrayOfVectorProperties) {
+        if (arrayOfVectorProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: arrayOfVectorProperties[propertyId],
+          });
+          const length = normalizedArrayOfVectorValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const value = arrayOfVectorValues[propertyId][i];
+            const normalizedValue = property.normalize(clone(value, true));
+            expect(normalizedValue).toEqual(arrayOfVectorValues[propertyId][i]);
+          }
+        }
+      }
+    });
+
+    it("unnormalizes nested arrays of vectors", function () {
+      for (const propertyId in arrayOfVectorProperties) {
+        if (arrayOfVectorProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: arrayOfVectorProperties[propertyId],
+          });
+          const length = arrayOfVectorValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const normalizedValue =
+              normalizedArrayOfVectorValues[propertyId][i];
+            const value = property.unnormalize(clone(normalizedValue, true));
+            expect(value).toEqual(arrayOfVectorValues[propertyId][i]);
+          }
+        }
+      }
+    });
+
+    it("does not normalize non integer types", function () {
+      for (const propertyId in nonIntegerProperties) {
+        if (nonIntegerProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: nonIntegerProperties[propertyId],
+            enums: {
+              myEnum: myEnum,
+            },
+          });
+          const length = nonIntegerValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const value = nonIntegerValues[propertyId][i];
+            const normalizedValue = property.normalize(value);
+            expect(normalizedValue).toEqual(value);
+          }
+        }
+      }
+    });
+
+    it("does not unnormalize non integer types", function () {
+      for (const propertyId in nonIntegerProperties) {
+        if (nonIntegerProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: nonIntegerProperties[propertyId],
+            enums: {
+              myEnum: myEnum,
+            },
+          });
+          const length = nonIntegerValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const normalizedValue = nonIntegerValues[propertyId][i];
+            const value = property.unnormalize(normalizedValue);
+            expect(value).toEqual(normalizedValue);
+          }
+        }
+      }
+    });
   });
 
   describe("handleNoData", function () {
