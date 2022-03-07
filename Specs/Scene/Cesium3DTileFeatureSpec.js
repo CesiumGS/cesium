@@ -91,7 +91,7 @@ describe(
 
     describe("metadata", function () {
       const tilesetWithMetadataUrl =
-        "Data/Cesium3DTiles/Metadata/AllMetadataTypes/1.1/tileset.json";
+        "Data/Cesium3DTiles/Metadata/AllMetadataTypes/tileset_1.1.json";
 
       let scene;
       let tileset;
@@ -126,6 +126,57 @@ describe(
         });
       });
 
+      it("getPropertyInherited returns undefined for unknown property", function () {
+        const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
+        expect(feature.getPropertyInherited("unknown")).not.toBeDefined();
+      });
+
+      it("getPropertyInherited returns content property by semantic", function () {
+        const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
+        expect(feature.getPropertyInherited("HIGHLIGHT_COLOR")).toEqual(
+          new Cartesian4(255, 0, 0, 1.0)
+        );
+      });
+
+      it("getPropertyInherited returns content property", function () {
+        const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
+        expect(feature.getPropertyInherited("HIGHLIGHT_COLOR")).toEqual(
+          new Cartesian4(255, 0, 0, 1.0)
+        );
+        expect(feature.getPropertyInherited("triangleCount")).toBe(15000);
+      });
+
+      it("getPropertyInherited returns tile property by semantic", function () {
+        const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
+        expect(feature.getPropertyInherited("COLOR")).toEqual(
+          new Cartesian4(255, 255, 0, 1.0)
+        );
+      });
+
+      it("getPropertyInherited returns tile property", function () {
+        const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
+        expect(feature.getPropertyInherited("color")).toEqual(
+          new Cartesian4(255, 255, 0, 1.0)
+        );
+        expect(feature.getPropertyInherited("population")).toBe(50);
+      });
+
+      it("getPropertyInherited returns group property by semantic", function () {
+        let feature = new Cesium3DTileFeature(childContents["lr.b3dm"], 0);
+        expect(feature.getPropertyInherited("GROUP_NAME")).toBe("commercial");
+        feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
+        expect(feature.getPropertyInherited("GROUP_NAME")).toBe("residential");
+      });
+
+      it("getPropertyInherited returns group property", function () {
+        const feature = new Cesium3DTileFeature(childContents["lr.b3dm"], 0);
+        expect(feature.getPropertyInherited("majorIndustries")).toEqual([
+          "Finance",
+          "Manufacturing",
+        ]);
+        expect(feature.getPropertyInherited("businessCount")).toBe(143);
+      });
+
       it("getPropertyInherited returns tileset property by semantic", function () {
         const feature = new Cesium3DTileFeature(parentContent, 0);
         expect(feature.getPropertyInherited("DATE_ISO_8601")).toBe(
@@ -147,11 +198,34 @@ describe(
         expect(feature.getPropertyInherited("author")).toBe("Cesium");
         expect(feature.getPropertyInherited("tileCount")).toBe(5);
       });
+
+      it("resolves conflicting names from most specific to most general", function () {
+        const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
+        // content metadata is more specific than tile metadata so this returns
+        // red not cyan
+        expect(feature.getPropertyInherited("highlightColor")).toEqual(
+          new Cartesian4(255, 0, 0, 1.0)
+        );
+
+        // content metadata is more specific than tileset metadata so this returns
+        // "First Author" instead of "Cesium"
+        expect(feature.getPropertyInherited("author")).toEqual("First Author");
+
+        // tile metadata is more specific than tileset metadata so this returns
+        // yellow not magenta
+        expect(feature.getPropertyInherited("color")).toEqual(
+          new Cartesian4(255, 255, 0, 1.0)
+        );
+
+        // group metadata is more specific than tileset metadata, so this returns
+        // 2 not 5
+        expect(feature.getPropertyInherited("tileCount")).toEqual(2);
+      });
     });
 
     describe("3DTILES_metadata", function () {
       const tilesetWithMetadataExtensionUrl =
-        "Data/Cesium3DTiles/Metadata/AllMetadataTypes/1.0/tileset.json";
+        "Data/Cesium3DTiles/Metadata/AllMetadataTypes/tileset_1.0.json";
 
       let scene;
       let tileset;
@@ -283,10 +357,10 @@ describe(
       });
     });
 
-    describe("3DTILES_implicit_tiling metadata", function () {
+    describe("implicit tiling metadata", function () {
       describe("subtree metadata", function () {
         const tilesetWithSubtreeMetadataUrl =
-          "Data/Cesium3DTiles/Metadata/ImplicitSubtreeMetadata/tileset.json";
+          "Data/Cesium3DTiles/Metadata/ImplicitSubtreeMetadata/tileset_1.1.json";
         let scene;
         let tilesetWithSubtree;
         beforeAll(function () {
@@ -382,7 +456,7 @@ describe(
 
       describe("implicit content metadata", function () {
         const tilesetWithImplicitContentMetadataUrl =
-          "Data/Cesium3DTiles/Metadata/ImplicitContentMetadata/tileset.json";
+          "Data/Cesium3DTiles/Metadata/ImplicitContentMetadata/tileset_1.1.json";
 
         let scene;
         let tilesetWithImplicitContentMetadata;

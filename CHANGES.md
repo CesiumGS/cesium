@@ -10,6 +10,7 @@
     - Added support for subtree metadata. [#10093](https://github.com/CesiumGS/cesium/pull/10093)
     - Updated implicit tiling availability to match the latest schema. [#10107](https://github.com/CesiumGS/cesium/pull/10107)
     - Added support for content metadata in tilesets with implicit tiling. [#10123](https://github.com/CesiumGS/cesium/pull/10123)
+    - Implicit tile metadata is now stored in `tileMetadata` in the subtree JSON, rather than the `3DTILES_metadata` extension. [#10163] (https://github.com/CesiumGS/cesium/pull/10163)
   - Split `EXT_mesh_features` into `EXT_mesh_features`, `EXT_instance_features`, `EXT_structural_metadata` [#10199](https://github.com/CesiumGS/cesium/pull/10119)
   - `EXT_mesh_features`:
     - Updated feature ID parsing to match the latest schema [#10087](https://github.com/CesiumGS/cesium/pull/10087)
@@ -22,6 +23,9 @@
 - Updated extensions to match the latest 3D Tiles 1.1 schema. See the [latest schema PR](https://github.com/CesiumGS/3d-tiles/pull/634):
   - Version 1.1 tilesets are now supported. [#10155](https://github.com/CesiumGS/cesium/pull/10155)
   - Tileset metadata is now stored in `tilesetJson.metadata` rather than the `3DTILES_metadata` extension. [#10153](https://github.com/CesiumGS/cesium/pull/10153)
+  - Tile, content, and group metadata are now stored in `metadata` rather than the `3DTILES_metadata` extension.
+    [#10159](https://github.com/CesiumGS/cesium/pull/10159)
+  - Implicit tiling is now specified in `tile.implicitTiling` rather than the `3DTILES_implicit_tiling` extension. [#10169](https://github.com/CesiumGS/cesium/pull/10169)
 
 ### 1.91 - 2022-03-01
 

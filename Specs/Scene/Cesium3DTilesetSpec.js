@@ -5133,15 +5133,15 @@ describe(
       });
     });
 
-    describe("3DTILES_implicit_tiling", function () {
+    describe("implicit tiling", function () {
       const implicitTilesetUrl =
-        "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset.json";
+        "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset_1.1.json";
       const implicitTilesetWithJsonUrl =
-        "Data/Cesium3DTiles/Implicit/ImplicitTilesetWithJsonSubtree/tileset.json";
+        "Data/Cesium3DTiles/Implicit/ImplicitTilesetWithJsonSubtree/tileset_1.1.json";
       const implicitRootUrl =
-        "Data/Cesium3DTiles/Implicit/ImplicitRootTile/tileset.json";
+        "Data/Cesium3DTiles/Implicit/ImplicitRootTile/tileset_1.1.json";
       const implicitChildUrl =
-        "Data/Cesium3DTiles/Implicit/ImplicitChildTile/tileset.json";
+        "Data/Cesium3DTiles/Implicit/ImplicitChildTile/tileset_1.1.json";
 
       it("renders tileset", function () {
         return Cesium3DTilesTester.loadTileset(scene, implicitTilesetUrl).then(
@@ -5211,13 +5211,127 @@ describe(
       });
     });
 
+    describe("3DTILES_implicit_tiling", function () {
+      const implicitTilesetLegacyUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset_1.0.json";
+      const implicitTilesetWithJsonLegacyUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitTilesetWithJsonSubtree/tileset_1.0.json";
+      const implicitRootLegacyUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitRootTile/tileset_1.0.json";
+      const implicitChildLegacyUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitChildTile/tileset_1.0.json";
+
+      it("renders tileset (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitTilesetLegacyUrl
+        ).then(function (tileset) {
+          const statistics = tileset._statistics;
+          // root + implicit placeholder + 4 child tiles
+          expect(statistics.visited).toEqual(6);
+          // the implicit placeholder tile is not rendered
+          expect(statistics.numberOfCommands).toEqual(5);
+        });
+      });
+
+      it("renders tileset with JSON subtree file", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitTilesetWithJsonLegacyUrl
+        ).then(function (tileset) {
+          const statistics = tileset._statistics;
+          // root + implicit placeholder + 4 child tiles
+          expect(statistics.visited).toEqual(6);
+          // the implicit placeholder tile is not rendered
+          expect(statistics.numberOfCommands).toEqual(5);
+        });
+      });
+
+      it("detects and initializes an implicit tileset in root tile", function () {
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitRootLegacyUrl
+        ).then(function (tileset) {
+          const implicitTile = tileset.root;
+          expect(
+            endsWith(
+              implicitTile._contentResource.url,
+              "subtrees/0/0/0/0.subtree"
+            )
+          ).toEqual(true);
+          expect(implicitTile.implicitTileset).toBeDefined();
+          expect(implicitTile.implicitCoordinates).toBeDefined();
+          expect(implicitTile.implicitCoordinates.level).toEqual(0);
+          expect(implicitTile.implicitCoordinates.x).toEqual(0);
+          expect(implicitTile.implicitCoordinates.y).toEqual(0);
+          expect(implicitTile.implicitCoordinates.z).toEqual(0);
+        });
+      });
+
+      it("detects and initializes an implicit tileset in child tile (implicit)", function () {
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitChildLegacyUrl
+        ).then(function (tileset) {
+          const parentTile = tileset.root;
+          const implicitTile = parentTile.children[0];
+          expect(
+            endsWith(
+              implicitTile._contentResource.url,
+              "subtrees/0/0/0.subtree"
+            )
+          ).toEqual(true);
+          expect(implicitTile.implicitTileset).toBeDefined();
+          expect(implicitTile.implicitCoordinates).toBeDefined();
+          expect(implicitTile.implicitCoordinates.level).toEqual(0);
+          expect(implicitTile.implicitCoordinates.x).toEqual(0);
+          expect(implicitTile.implicitCoordinates.y).toEqual(0);
+        });
+      });
+    });
+
+    describe("multiple contents", function () {
+      const implicitMultipleContentsUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset_1.1.json";
+      const implicitMultipleContentsWithoutExtensionUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContentsWithoutExtension/tileset_1.1.json";
+
+      it("renders implicit tileset with multiple contents", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitMultipleContentsUrl
+        ).then(function (tileset) {
+          const statistics = tileset._statistics;
+          // implicit placeholder + transcoded root + 4 child tiles
+          expect(statistics.visited).toEqual(6);
+          // root content + 2 contents per child tile
+          expect(statistics.numberOfCommands).toEqual(9);
+        });
+      });
+
+      it("renders implicit tileset with multiple contents and without subtree extension", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitMultipleContentsWithoutExtensionUrl
+        ).then(function (tileset) {
+          const statistics = tileset._statistics;
+          // implicit placeholder + transcoded root + 4 child tiles
+          expect(statistics.visited).toEqual(6);
+          // root content + 2 contents per child tile
+          expect(statistics.numberOfCommands).toEqual(9);
+        });
+      });
+    });
+
     describe("3DTILES_multiple_contents", function () {
       const multipleContentsUrl =
         "Data/Cesium3DTiles/MultipleContents/MultipleContents/tileset.json";
-      const implicitMultipleContentsUrl =
-        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset.json";
-      const implicitMultipleContentsWithoutExtensionUrl =
-        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContentsWithoutExtension/tileset.json";
+      const implicitMultipleContentsLegacyUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset_1.0.json";
+      const implicitMultipleContentsWithoutExtensionLegacyUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContentsWithoutExtension/tileset_1.0.json";
 
       it("request statistics are updated correctly on success", function () {
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
@@ -5495,7 +5609,7 @@ describe(
       it("renders implicit tileset with multiple contents", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsUrl
+          implicitMultipleContentsLegacyUrl
         ).then(function (tileset) {
           const statistics = tileset._statistics;
           // implicit placeholder + transcoded root + 4 child tiles
@@ -5508,7 +5622,7 @@ describe(
       it("renders implicit tileset with multiple contents and without subtree extension", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsWithoutExtensionUrl
+          implicitMultipleContentsWithoutExtensionLegacyUrl
         ).then(function (tileset) {
           const statistics = tileset._statistics;
           // implicit placeholder + transcoded root + 4 child tiles
@@ -5519,41 +5633,36 @@ describe(
       });
     });
 
-    describe("3DTILES_metadata", function () {
+    const tilesetProperties = {
+      author: "Cesium",
+      date: "2021-03-23",
+      centerCartographic: [
+        -1.3196816996258511,
+        0.6988767486400521,
+        45.78600543644279,
+      ],
+      tileCount: 5,
+    };
+
+    describe("metadata", function () {
       const tilesetMetadataUrl =
-        "Data/Cesium3DTiles/Metadata/TilesetMetadata/1.1/tileset.json";
+        "Data/Cesium3DTiles/Metadata/TilesetMetadata/tileset_1.1.json";
       const tilesetWithExternalSchemaUrl =
-        "Data/Cesium3DTiles/Metadata/ExternalSchema/1.1/tileset.json";
+        "Data/Cesium3DTiles/Metadata/ExternalSchema/tileset_1.1.json";
       const tilesetWithGroupMetadataUrl =
-        "Data/Cesium3DTiles/Metadata/GroupMetadata/tileset.json";
-      const tilesetWithImplicitTileMetadataUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitTileMetadata/tileset.json";
+        "Data/Cesium3DTiles/Metadata/GroupMetadata/tileset_1.1.json";
       const tilesetWithExplicitTileMetadataUrl =
-        "Data/Cesium3DTiles/Metadata/TileMetadata/tileset.json";
-      const tilesetWithImplicitContentMetadataUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitContentMetadata/tileset.json";
+        "Data/Cesium3DTiles/Metadata/TileMetadata/tileset_1.1.json";
+      const tilesetWithImplicitTileMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitTileMetadata/tileset_1.1.json";
       const tilesetWithExplicitContentMetadataUrl =
-        "Data/Cesium3DTiles/Metadata/ContentMetadata/tileset.json";
-      const tilesetWithImplicitMultipleContentsMetadataUrl =
-        "Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset.json";
+        "Data/Cesium3DTiles/Metadata/ContentMetadata/tileset_1.1.json";
+      const tilesetWithImplicitContentMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitContentMetadata/tileset_1.1.json";
       const tilesetWithExplicitMultipleContentsMetadataUrl =
-        "Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset.json";
-
-      const tilesetMetadataLegacyUrl =
-        "Data/Cesium3DTiles/Metadata/TilesetMetadata/1.0/tileset.json";
-      const tilesetWithExternalSchemaLegacyUrl =
-        "Data/Cesium3DTiles/Metadata/ExternalSchema/1.0/tileset.json";
-
-      const tilesetProperties = {
-        author: "Cesium",
-        date: "2021-03-23",
-        centerCartographic: [
-          -1.3196816996258511,
-          0.6988767486400521,
-          45.78600543644279,
-        ],
-        tileCount: 5,
-      };
+        "Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset_1.1.json";
+      const tilesetWithImplicitMultipleContentsMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset_1.1.json";
 
       it("loads tileset metadata", function () {
         return Cesium3DTilesTester.loadTileset(scene, tilesetMetadataUrl).then(
@@ -5579,33 +5688,6 @@ describe(
             );
           }
         );
-      });
-
-      it("loads tileset metadata (legacy)", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          tilesetMetadataLegacyUrl
-        ).then(function (tileset) {
-          const metadata = tileset.metadata;
-          expect(metadata).toBeDefined();
-
-          const tilesetMetadata = metadata.tileset;
-          expect(function () {
-            return tilesetMetadata.getProperty("name");
-          }).toThrowDeveloperError();
-          expect(tilesetMetadata.getProperty("author")).toBe(
-            tilesetProperties.author
-          );
-          expect(tilesetMetadata.getPropertyBySemantic("DATE_ISO_8601")).toBe(
-            tilesetProperties.date
-          );
-          expect(tilesetMetadata.getProperty("centerCartographic")).toEqual(
-            Cartesian3.unpack(tilesetProperties.centerCartographic)
-          );
-          expect(tilesetMetadata.getProperty("tileCount")).toBe(
-            tilesetProperties.tileCount
-          );
-        });
       });
 
       it("loads group metadata", function () {
@@ -5679,36 +5761,10 @@ describe(
         );
       });
 
-      it("loads metadata with embedded schema (legacy)", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          tilesetMetadataLegacyUrl
-        ).then(function (tileset) {
-          const schema = tileset.metadata.schema;
-          expect(schema).toBeDefined();
-
-          const classes = schema.classes;
-          expect(classes.tileset).toBeDefined();
-        });
-      });
-
       it("loads metadata with external schema", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
           tilesetWithExternalSchemaUrl
-        ).then(function (tileset) {
-          const schema = tileset.metadata.schema;
-          expect(schema).toBeDefined();
-
-          const classes = schema.classes;
-          expect(classes.tileset).toBeDefined();
-        });
-      });
-
-      it("loads metadata with external schema and extension (legacy)", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          tilesetWithExternalSchemaLegacyUrl
         ).then(function (tileset) {
           const schema = tileset.metadata.schema;
           expect(schema).toBeDefined();
@@ -5920,6 +5976,40 @@ describe(
         });
       });
 
+      it("loads explicit tileset with multiple contents with metadata", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithExplicitMultipleContentsMetadataUrl
+        ).then(function (tileset) {
+          const content = tileset.root.content;
+          const batchedContent = content.innerContents[0];
+          const batchedContentMetadata = batchedContent.metadata;
+
+          expect(batchedContentMetadata.getProperty("highlightColor")).toEqual(
+            new Cartesian3(0, 0, 255)
+          );
+          expect(batchedContentMetadata.getProperty("author")).toEqual(
+            "Cesium"
+          );
+          expect(batchedContentMetadata.hasProperty("numberOfInstances")).toBe(
+            false
+          );
+
+          const instancedContent = content.innerContents[1];
+          const instancedContentMetadata = instancedContent.metadata;
+
+          expect(
+            instancedContentMetadata.getProperty("numberOfInstances")
+          ).toEqual(50);
+          expect(instancedContentMetadata.getProperty("author")).toEqual(
+            "Sample Author"
+          );
+          expect(instancedContentMetadata.hasProperty("highlightColor")).toBe(
+            false
+          );
+        });
+      });
+
       it("loads implicit tileset with multiple contents with metadata", function () {
         // this tileset is similar to other implicit tilesets, though
         // one tile is removed
@@ -5996,11 +6086,346 @@ describe(
           }
         });
       });
+    });
 
-      it("loads explicit tileset with multiple contents with metadata", function () {
+    describe("3DTILES_metadata", function () {
+      const tilesetMetadataLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/TilesetMetadata/tileset_1.0.json";
+      const tilesetWithExternalSchemaLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ExternalSchema/tileset_1.0.json";
+      const tilesetWithGroupMetadataLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/GroupMetadata/tileset_1.0.json";
+      const tilesetWithExplicitTileMetadataLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/TileMetadata/tileset_1.0.json";
+      const tilesetWithImplicitTileMetadataLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitTileMetadata/tileset_1.0.json";
+      const tilesetWithExplicitContentMetadataLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ContentMetadata/tileset_1.0.json";
+      const tilesetWithImplicitContentMetadataLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitContentMetadata/tileset_1.0.json";
+      const tilesetWithExplicitMultipleContentsMetadataLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset_1.0.json";
+      const tilesetWithImplicitMultipleContentsMetadataLegacyUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset_1.0.json";
+
+      it("loads tileset metadata (legacy)", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          tilesetWithExplicitMultipleContentsMetadataUrl
+          tilesetMetadataLegacyUrl
+        ).then(function (tileset) {
+          const metadata = tileset.metadata;
+          expect(metadata).toBeDefined();
+
+          const tilesetMetadata = metadata.tileset;
+          expect(function () {
+            return tilesetMetadata.getProperty("name");
+          }).toThrowDeveloperError();
+          expect(tilesetMetadata.getProperty("author")).toBe(
+            tilesetProperties.author
+          );
+          expect(tilesetMetadata.getPropertyBySemantic("DATE_ISO_8601")).toBe(
+            tilesetProperties.date
+          );
+          expect(tilesetMetadata.getProperty("centerCartographic")).toEqual(
+            Cartesian3.unpack(tilesetProperties.centerCartographic)
+          );
+          expect(tilesetMetadata.getProperty("tileCount")).toBe(
+            tilesetProperties.tileCount
+          );
+        });
+      });
+
+      it("loads group metadata (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithGroupMetadataLegacyUrl
+        ).then(function (tileset) {
+          const metadata = tileset.metadata;
+          expect(metadata).toBeDefined();
+
+          const groups = metadata.groups;
+          expect(groups).toBeDefined();
+
+          let group = groups.commercialDistrict;
+          expect(group).toBeDefined();
+          expect(group.getProperty("businessCount")).toBe(143);
+
+          group = groups.residentialDistrict;
+          expect(group).toBeDefined();
+          expect(group.getProperty("population")).toBe(300000);
+          expect(group.getProperty("neighborhoods")).toEqual([
+            "Hillside",
+            "Middletown",
+            "Western Heights",
+          ]);
+
+          group = groups.port;
+          expect(group).not.toBeDefined();
+        });
+      });
+
+      it("can access group metadata through contents (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithGroupMetadataLegacyUrl
+        ).then(function (tileset) {
+          const metadata = tileset.metadata;
+          const commercialDistrict = metadata.groups.commercialDistrict;
+          const residentialDistrict = metadata.groups.residentialDistrict;
+
+          // the parent tile in this dataset does not have a group defined,
+          // but its children do.
+          const parent = tileset.root;
+          const group = parent.content.groupMetadata;
+          expect(group).not.toBeDefined();
+
+          const expected = {
+            "ul.b3dm": residentialDistrict,
+            "ll.b3dm": residentialDistrict,
+            "ur.b3dm": commercialDistrict,
+            "lr.b3dm": commercialDistrict,
+          };
+
+          const childrenTiles = parent.children;
+          childrenTiles.forEach(function (tile) {
+            const uri = tile._header.content.uri;
+            expect(tile.content.groupMetadata).toBe(expected[uri]);
+          });
+        });
+      });
+
+      it("loads metadata with embedded schema (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetMetadataLegacyUrl
+        ).then(function (tileset) {
+          const schema = tileset.metadata.schema;
+          expect(schema).toBeDefined();
+
+          const classes = schema.classes;
+          expect(classes.tileset).toBeDefined();
+        });
+      });
+
+      it("loads metadata with external schema and extension (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithExternalSchemaLegacyUrl
+        ).then(function (tileset) {
+          const schema = tileset.metadata.schema;
+          expect(schema).toBeDefined();
+
+          const classes = schema.classes;
+          expect(classes.tileset).toBeDefined();
+        });
+      });
+
+      it("loads explicit tileset with tile metadata (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithExplicitTileMetadataLegacyUrl
+        ).then(function (tileset) {
+          const expected = {
+            "parent.b3dm": {
+              color: new Cartesian3(0.5, 0.0, 1.0),
+              population: 530,
+            },
+            "ll.b3dm": {
+              color: new Cartesian3(1.0, 1.0, 0.0),
+              population: 50,
+            },
+            "lr.b3dm": {
+              color: new Cartesian3(1.0, 0.0, 0.5),
+              population: 230,
+            },
+            "ur.b3dm": {
+              color: new Cartesian3(1.0, 0.5, 0.0),
+              population: 150,
+            },
+            "ul.b3dm": {
+              color: new Cartesian3(1.0, 0.0, 0.0),
+              population: 100,
+            },
+          };
+
+          const parent = tileset.root;
+          const tiles = [parent].concat(parent.children);
+          tiles.forEach(function (tile) {
+            const uri = tile._header.content.uri;
+            const expectedValues = expected[uri];
+            const metadata = tile.metadata;
+            expect(metadata.getProperty("color")).toEqual(expectedValues.color);
+            expect(metadata.getProperty("population")).toEqual(
+              expectedValues.population
+            );
+          });
+        });
+      });
+
+      it("loads implicit tileset with tile metadata (legacy)", function () {
+        // this tileset is similar to other implicit tilesets, though
+        // one tile is removed
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithImplicitTileMetadataLegacyUrl
+        ).then(function (tileset) {
+          const placeholderTile = tileset.root;
+
+          const transcodedRoot = placeholderTile.children[0];
+          const subtree = transcodedRoot.implicitSubtree;
+          expect(subtree).toBeDefined();
+
+          const metadataTable = subtree.tileMetadataTable;
+          expect(metadataTable).toBeDefined();
+          expect(metadataTable.count).toBe(4);
+          expect(metadataTable.hasProperty("color")).toBe(true);
+          expect(metadataTable.hasProperty("quadrant")).toBe(true);
+
+          const tileCount = 4;
+          const expectedQuadrants = [
+            "None",
+            "Southwest",
+            "",
+            "Northwest",
+            "Northeast",
+          ];
+          const expectedColors = [
+            new Cartesian3(255, 255, 255),
+            new Cartesian3(255, 0, 0),
+            Cartesian3.ZERO,
+            new Cartesian3(0, 255, 0),
+            new Cartesian3(0, 0, 255),
+          ];
+
+          const tiles = [transcodedRoot].concat(transcodedRoot.children);
+          expect(tiles.length).toBe(tileCount);
+
+          let i;
+          for (i = 0; i < tileCount; i++) {
+            const tile = tiles[i];
+            const index = tile.implicitCoordinates.tileIndex;
+            const metadata = tile.metadata;
+            if (!subtree.tileIsAvailableAtIndex(index)) {
+              expect(metadata.getProperty("quadrant")).not.toBeDefined();
+              expect(metadata.getProperty("color")).not.toBeDefined();
+            } else {
+              expect(metadata.getProperty("quadrant")).toBe(
+                expectedQuadrants[index]
+              );
+              expect(metadata.getProperty("color")).toEqual(
+                expectedColors[index]
+              );
+            }
+          }
+        });
+      });
+
+      it("loads explicit tileset with content metadata (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithExplicitContentMetadataLegacyUrl
+        ).then(function (tileset) {
+          const expected = {
+            "parent.b3dm": {
+              highlightColor: new Cartesian3(255, 0, 0),
+              author: "Cesium",
+            },
+            "ll.b3dm": {
+              highlightColor: new Cartesian3(255, 255, 255),
+              author: "First Company",
+            },
+            "lr.b3dm": {
+              highlightColor: new Cartesian3(255, 0, 255),
+              author: "Second Company",
+            },
+            "ur.b3dm": {
+              highlightColor: new Cartesian3(0, 255, 0),
+              author: "Third Company",
+            },
+            "ul.b3dm": {
+              highlightColor: new Cartesian3(0, 0, 255),
+              author: "Fourth Company",
+            },
+          };
+
+          const parent = tileset.root;
+          const tiles = [parent].concat(parent.children);
+          tiles.forEach(function (tile) {
+            const uri = tile._header.content.uri;
+            const content = tile.content;
+            const expectedValues = expected[uri];
+            const metadata = content.metadata;
+            expect(metadata.getProperty("highlightColor")).toEqual(
+              expectedValues.highlightColor
+            );
+            expect(metadata.getProperty("author")).toEqual(
+              expectedValues.author
+            );
+          });
+        });
+      });
+
+      it("loads implicit tileset with content metadata (legacy)", function () {
+        // this tileset is similar to other implicit tilesets, though
+        // one tile is removed
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithImplicitContentMetadataLegacyUrl
+        ).then(function (tileset) {
+          const placeholderTile = tileset.root;
+
+          const transcodedRoot = placeholderTile.children[0];
+          const subtree = transcodedRoot.implicitSubtree;
+          expect(subtree).toBeDefined();
+
+          const metadataTables = subtree.contentMetadataTables;
+          expect(metadataTables.length).toBe(1);
+
+          const metadataTable = metadataTables[0];
+
+          expect(metadataTable.count).toBe(4);
+          expect(metadataTable.hasProperty("height")).toBe(true);
+          expect(metadataTable.hasProperty("color")).toBe(true);
+
+          const tileCount = 4;
+
+          const expectedHeights = [10, 20, 0, 30, 40];
+          const expectedColors = [
+            new Cartesian3(255, 255, 255),
+            new Cartesian3(255, 0, 0),
+            Cartesian3.ZERO,
+            new Cartesian3(0, 255, 0),
+            new Cartesian3(0, 0, 255),
+          ];
+
+          const tiles = [transcodedRoot].concat(transcodedRoot.children);
+          expect(tiles.length).toBe(tileCount);
+
+          let i;
+          for (i = 0; i < tileCount; i++) {
+            const tile = tiles[i];
+            const content = tile.content;
+            const index = tile.implicitCoordinates.tileIndex;
+            const metadata = content.metadata;
+            if (!subtree.contentIsAvailableAtIndex(index, 0)) {
+              expect(metadata.getProperty("height")).not.toBeDefined();
+              expect(metadata.getProperty("color")).not.toBeDefined();
+            } else {
+              expect(metadata.getProperty("height")).toBe(
+                expectedHeights[index]
+              );
+              expect(metadata.getProperty("color")).toEqual(
+                expectedColors[index]
+              );
+            }
+          }
+        });
+      });
+
+      it("loads explicit tileset with multiple contents with metadata (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithExplicitMultipleContentsMetadataLegacyUrl
         ).then(function (tileset) {
           const content = tileset.root.content;
           const batchedContent = content.innerContents[0];
@@ -6028,6 +6453,83 @@ describe(
           expect(instancedContentMetadata.hasProperty("highlightColor")).toBe(
             false
           );
+        });
+      });
+
+      it("loads implicit tileset with multiple contents with metadata (legacy)", function () {
+        // this tileset is similar to other implicit tilesets, though
+        // one tile is removed
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithImplicitMultipleContentsMetadataLegacyUrl
+        ).then(function (tileset) {
+          const placeholderTile = tileset.root;
+
+          const transcodedRoot = placeholderTile.children[0];
+          const subtree = transcodedRoot.implicitSubtree;
+          expect(subtree).toBeDefined();
+
+          const metadataTables = subtree.contentMetadataTables;
+          expect(metadataTables.length).toBe(2);
+
+          const buildingMetadataTable = metadataTables[0];
+          const treeMetadataTable = metadataTables[1];
+
+          expect(buildingMetadataTable.count).toBe(5);
+          expect(buildingMetadataTable.hasProperty("height")).toBe(true);
+          expect(buildingMetadataTable.hasProperty("color")).toBe(true);
+
+          expect(treeMetadataTable.count).toBe(4);
+          expect(treeMetadataTable.hasProperty("age")).toBe(true);
+
+          const tileCount = 5;
+
+          const expectedHeights = [10, 20, 30, 40, 50];
+          const expectedColors = [
+            new Cartesian3(255, 255, 255),
+            new Cartesian3(255, 0, 0),
+            new Cartesian3(255, 255, 0),
+            new Cartesian3(0, 255, 0),
+            new Cartesian3(0, 0, 255),
+          ];
+
+          const expectedAges = [21, 7, 11, 16];
+
+          const tiles = [transcodedRoot].concat(transcodedRoot.children);
+          expect(tiles.length).toBe(tileCount);
+
+          let i;
+          for (i = 0; i < tileCount; i++) {
+            const tile = tiles[i];
+            const index = tile.implicitCoordinates.tileIndex;
+
+            let buildingMetadata;
+            if (i > 0) {
+              expect(tile.hasMultipleContents).toBe(true);
+              const buildingContent = tile.content.innerContents[0];
+              buildingMetadata = buildingContent.metadata;
+            } else {
+              expect(tile.hasMultipleContents).toBe(false);
+              buildingMetadata = tile.content.metadata;
+            }
+
+            expect(buildingMetadata.getProperty("height")).toBe(
+              expectedHeights[index]
+            );
+            expect(buildingMetadata.getProperty("color")).toEqual(
+              expectedColors[index]
+            );
+
+            if (i === 0) {
+              continue;
+            }
+
+            const treeContent = tile.content.innerContents[1];
+            const treeMetadata = treeContent.metadata;
+            expect(treeMetadata.getProperty("age")).toEqual(
+              expectedAges[index - 1]
+            );
+          }
         });
       });
     });

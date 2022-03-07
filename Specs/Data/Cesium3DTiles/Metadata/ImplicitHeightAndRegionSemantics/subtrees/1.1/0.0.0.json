@@ -1,0 +1,48 @@
+{
+    "buffers": [
+        {
+            "uri": "../metadata.bin",
+            "byteLength": 1344
+        }
+    ],
+    "bufferViews": [
+        {
+            "buffer": 0,
+            "byteOffset": 0,
+            "byteLength": 168
+        },
+        {
+            "buffer": 0,
+            "byteOffset": 168,
+            "byteLength": 168
+        },
+        {
+            "buffer": 0,
+            "byteOffset": 336,
+            "byteLength": 1008
+        }
+    ],
+    "tileAvailability": {
+        "constant": 1
+    },
+    "contentAvailability": {
+        "constant": 1
+    },
+    "childSubtreeAvailability": {
+        "constant": 0
+    },
+    "tileMetadata": {
+        "class": "tile",
+        "properties": {
+            "minimumHeight": {
+                "values": 0
+            },
+            "maximumHeight": {
+                "values": 1
+            },
+            "boundingRegion": {
+                "values": 2
+            }
+        }
+    }
+}

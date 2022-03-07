@@ -3,15 +3,15 @@ import defaultValue from "../Core/defaultValue.js";
 import MetadataEntity from "./MetadataEntity.js";
 
 /**
- * Metadata about the content of a 3D Tile. This represents the <code>3DTILES_metadata</code>
- * extension on a single {@link Cesium3DTileContent}
+ * Metadata about the content of a 3D Tile. This represents the content metadata JSON (3D Tiles 1.1)
+ * or the <code>3DTILES_metadata</code> extension on a single {@link Cesium3DTileContent}
  * <p>
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.content The extension JSON attached to the content.
- * @param {MetadataClass} options.class The class that the tile metadata conforms to.
+ * @param {Object} options.content Either the content metadata JSON (3D Tiles 1.1) or the extension JSON attached to the content.
+ * @param {MetadataClass} options.class The class that the content metadata conforms to.
  *
  * @alias ContentMetadata
  * @constructor

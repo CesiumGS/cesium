@@ -3,8 +3,9 @@ import defined from "../Core/defined.js";
 import hasExtension from "./hasExtension.js";
 
 /**
- * Check if a content has a <code>3DTILES_metadata</code> extension, and if so,
- * get the content metadata with the corresponding class.
+ * Check if a content has metadata, either defined in its metadata field (3D Tiles 1.1) or in
+ * the <code>3DTILES_metadata</code> extension. If defined, get the content metadata
+ * with the corresponding class.
  *
  * @function
  *
@@ -15,16 +16,21 @@ import hasExtension from "./hasExtension.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function findContentMetadata(tileset, contentHeader) {
-  if (hasExtension(contentHeader, "3DTILES_metadata")) {
-    const contentExtension = contentHeader.extensions["3DTILES_metadata"];
-    const classes = tileset.metadata.schema.classes;
-    if (defined(contentExtension.class)) {
-      const contentClass = classes[contentExtension.class];
-      return new ContentMetadata({
-        content: contentExtension,
-        class: contentClass,
-      });
-    }
+  const metadataJson = hasExtension(contentHeader, "3DTILES_metadata")
+    ? contentHeader.extensions["3DTILES_metadata"]
+    : contentHeader.metadata;
+
+  if (!defined(metadataJson)) {
+    return undefined;
+  }
+
+  const classes = tileset.metadata.schema.classes;
+  if (defined(metadataJson.class)) {
+    const contentClass = classes[metadataJson.class];
+    return new ContentMetadata({
+      content: metadataJson,
+      class: contentClass,
+    });
   }
 
   return undefined;

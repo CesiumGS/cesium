@@ -86,8 +86,7 @@ const Cesium3DTileContentType = {
    */
   GLTF_BINARY: "glb",
   /**
-   * For the <code>3DTILES_implicit_tiling</code> extension,
-   * availability bitstreams are stored in binary subtree files.
+   * For implicit tiling, availability bitstreams are stored in binary subtree files.
    * The magic number is <code>subt</code>
    *
    * @type {String}
@@ -97,8 +96,7 @@ const Cesium3DTileContentType = {
    */
   IMPLICIT_SUBTREE: "subt",
   /**
-   * For the <code>3DTILES_implicit_tiling</code> extension.
-   * Subtrees can also be represented as JSON files.
+   * For implicit tiling. Subtrees can also be represented as JSON files.
    *
    * @type {String}
    * @constant

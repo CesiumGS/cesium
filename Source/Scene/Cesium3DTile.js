@@ -32,6 +32,7 @@ import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
 import findContentMetadata from "./findContentMetadata.js";
 import findGroupMetadata from "./findGroupMetadata.js";
+import findTileMetadata from "./findTileMetadata.js";
 import hasExtension from "./hasExtension.js";
 import Multiple3DTileContent from "./Multiple3DTileContent.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
@@ -39,7 +40,6 @@ import SceneMode from "./SceneMode.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileBoundingS2Cell from "./TileBoundingS2Cell.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
-import TileMetadata from "./TileMetadata.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 import Pass from "../Renderer/Pass.js";
 
@@ -306,29 +306,16 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    */
   this.hasMultipleContents = hasMultipleContents;
 
-  let metadata;
-  if (hasExtension(header, "3DTILES_metadata")) {
-    // This assumes that tileset.metadata has been created before any
-    // tiles are constructed.
-    const extension = header.extensions["3DTILES_metadata"];
-    const classes = tileset.metadata.schema.classes;
-    const tileClass = classes[extension.class];
-    metadata = new TileMetadata({
-      tile: extension,
-      class: tileClass,
-    });
-  }
-
   /**
-   * When the <code>3DTILES_metadata</code> extension is used, this
-   * stores a {@link TileMetadata} object for accessing tile metadata.
+   * When tile metadata is present (3D Tiles 1.1) or the <code>3DTILES_metadata</code> extension is used,
+   * this stores a {@link TileMetadata} object for accessing tile metadata.
    *
    * @type {TileMetadata}
    * @readonly
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
-  this.metadata = metadata;
+  this.metadata = findTileMetadata(tileset, header);
 
   /**
    * The node in the tileset's LRU cache, used to determine when to unload a tile's content.
@@ -406,7 +393,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   /**
    * For implicit tiling, an ImplicitTileset object will be attached to a
-   * placeholder tile with the <code>3DTILES_implicit_tiling</code> extension.
+   * placeholder tile with either implicit tiling in the JSON (3D Tiles 1.1)
+   * or the <code>3DTILES_implicit_tiling</code> extension.
    * This way the {@link Implicit3DTileContent} can access the tile later once the content is fetched.
    *
    * @type {ImplicitTileset|undefined}

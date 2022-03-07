@@ -2,8 +2,7 @@ import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 
 /**
- * This class represents a single entity in the <code>MetadataTable</code> owned by an implicit subtree from the
- * <code>3DTILES_implicit_tiling</code> extension. The entity is specified by the entityId.
+ * This class represents a single entity in the <code>MetadataTable</code> owned by an implicit subtree. The entity is specified by the entityId.
  * <p>
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
