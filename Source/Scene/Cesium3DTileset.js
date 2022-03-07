@@ -1953,9 +1953,9 @@ Cesium3DTileset.prototype.loadTileset = function (
 };
 
 /**
- * Make a {@link Cesium3DTile} for a specific tile. If the tile has the
- * 3DTILES_implicit_tiling extension, it creates a placeholder tile instead
- * for lazy evaluation of the implicit tileset.
+ * Make a {@link Cesium3DTile} for a specific tile. If the tile's header has implicit
+ * tiling (3D Tiles 1.1) or uses the <code>3DTILES_implicit_tiling</code> extension,
+ * it creates a placeholder tile instead for lazy evaluation of the implicit tileset.
  *
  * @param {Cesium3DTileset} tileset The tileset
  * @param {Resource} baseResource The base resource for the tileset
@@ -1966,7 +1966,11 @@ Cesium3DTileset.prototype.loadTileset = function (
  * @private
  */
 function makeTile(tileset, baseResource, tileHeader, parentTile) {
-  if (hasExtension(tileHeader, "3DTILES_implicit_tiling")) {
+  const hasImplicitTiling =
+    defined(tileHeader.implicitTiling) ||
+    hasExtension(tileHeader, "3DTILES_implicit_tiling");
+
+  if (hasImplicitTiling) {
     const metadataSchema = defined(tileset.metadata)
       ? tileset.metadata.schema
       : undefined;

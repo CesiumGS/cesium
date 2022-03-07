@@ -2,12 +2,6 @@
   "asset": {
     "version": "1.1"
   },
-  "extensionsUsed": [
-    "3DTILES_implicit_tiling"
-  ],
-  "extensionsRequired": [
-    "3DTILES_implicit_tiling"
-  ],
   "schema": {
     "classes": {
       "tile": {
@@ -79,14 +73,12 @@
     "content": {
       "uri": "content/{level}/{x}/{y}.b3dm"
     },
-    "extensions": {
-      "3DTILES_implicit_tiling": {
-        "subdivisionScheme": "QUADTREE",
-        "subtreeLevels": 2,
-        "availableLevels": 2,
-        "subtrees": {
-          "uri": "subtrees/1.1/{level}.{x}.{y}.json"
-        }
+    "implicitTiling": {
+      "subdivisionScheme": "QUADTREE",
+      "subtreeLevels": 2,
+      "availableLevels": 2,
+      "subtrees": {
+        "uri": "subtrees/1.1/{level}.{x}.{y}.json"
       }
     },
     "geometricError": 70,
