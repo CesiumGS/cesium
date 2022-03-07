@@ -11,11 +11,11 @@ varying float v_opacity;
 void main(void)
 {
     vec4 positionWC = czm_model * position;
-    vec3 lightDirection = getLightDirection(czm_viewerPositionWC);
+    vec3 lightDirection = getLightDirection(positionWC.xyz);
 
 #ifndef PER_FRAGMENT_ATMOSPHERE
     computeAtmosphericScattering(
-        czm_viewerPositionWC,
+        positionWC.xyz,
         lightDirection,
         v_rayleighColor,
         v_mieColor,

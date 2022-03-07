@@ -36,10 +36,9 @@ void computeAtmosphericScattering(
     const float primaryRaySteps = 16.0;
     const float lightRaySteps = 4.0;
 
-
     // Setup the radii for the inner and outer ring of the atmosphere.
-    float atmosphereInnerRadius = u_radiiAndDynamicAtmosphereColor.x;
-    float atmosphereOuterRadius = atmosphereInnerRadius + ATMOSPHERE_THICKNESS;
+    float atmosphereInnerRadius = u_radiiAndDynamicAtmosphereColor.y;
+    float atmosphereOuterRadius = u_radiiAndDynamicAtmosphereColor.x;
 
     // Setup the primary ray: from the camera position to the vertex position.
     vec3 cameraToPositionWC = positionWC - czm_viewerPositionWC;
@@ -57,14 +56,10 @@ void computeAtmosphericScattering(
     }
 
     // Prevent Mie glow on objects right in front of the camera.
-    bool allowMie = MAX_RAY_HIT_DISTANCE > primaryRayAtmosphereIntersect.stop;
+    bool allowMie = length(cameraToPositionWC) > primaryRayAtmosphereIntersect.stop;
 
     primaryRayAtmosphereIntersect.start = max(primaryRayAtmosphereIntersect.start, 0.0);
-    primaryRayAtmosphereIntersect.stop = min(primaryRayAtmosphereIntersect.stop, MAX_RAY_HIT_DISTANCE);
-
-    if (primaryRayAtmosphereIntersect.start > primaryRayAtmosphereIntersect.stop) {
-        return;
-    }
+    primaryRayAtmosphereIntersect.stop = min(primaryRayAtmosphereIntersect.stop, length(cameraToPositionWC));
 
     // Setup for sampling positions along the ray - starting from the intersection with the outer ring of the atmosphere.
     float rayStepLength = (primaryRayAtmosphereIntersect.stop - primaryRayAtmosphereIntersect.start) / primaryRaySteps;

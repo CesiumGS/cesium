@@ -17,7 +17,7 @@ czm_raySegment czm_raySphereIntersectionInterval(czm_ray ray, vec3 center, float
     vec3 oc = o - center;
 
     float a = dot(d, d);
-    float b = 2.0 * dot(o, oc);
+    float b = 2.0 * dot(d, oc);
     float c = dot(oc, oc) - (radius * radius);
 
     float det = (b * b) - (4.0 * a * c);
