@@ -105,6 +105,7 @@ describe("Scene/MetadataEntity", function () {
             noData: [
               [0.0, 0.0],
               [0.0, 0.0],
+              [0.0, 0.0],
             ],
           },
           hasDefaultArrayOfVector: {
@@ -143,6 +144,7 @@ describe("Scene/MetadataEntity", function () {
     noDefaultArray: [0, 0, 0],
     hasDefaultArray: [],
     noDefaultArrayOfVector: [
+      [0.0, 0.0],
       [0.0, 0.0],
       [0.0, 0.0],
     ],

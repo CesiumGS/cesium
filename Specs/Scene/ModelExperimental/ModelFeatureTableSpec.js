@@ -7,29 +7,35 @@ import {
 import MetadataTester from "../../MetadataTester.js";
 
 describe("Scene/ModelExperimental/ModelFeatureTable", function () {
-  const properties = {
-    height: {
-      semantic: "HEIGHT_SEMANTIC",
-      type: "SCALAR",
-      componentType: "FLOAT32",
-    },
-    name: {
-      type: "STRING",
-    },
-    HEIGHT_SEMANTIC: {
-      type: "SCALAR",
-      componentType: "FLOAT32",
-    },
-  };
-  const propertyValues = {
-    height: [1.0, 2.0],
-    name: ["A", "B"],
-    HEIGHT_SEMANTIC: [3.0, 4.0],
-  };
+  let mockPropertyTable;
+  let properties;
+  let propertyValues;
+  beforeAll(function () {
+    properties = {
+      height: {
+        semantic: "HEIGHT_SEMANTIC",
+        type: "SCALAR",
+        componentType: "FLOAT32",
+      },
+      name: {
+        type: "STRING",
+      },
+      HEIGHT_SEMANTIC: {
+        type: "SCALAR",
+        componentType: "FLOAT32",
+      },
+    };
 
-  const mockPropertyTable = MetadataTester.createPropertyTable({
-    properties: properties,
-    propertyValues: propertyValues,
+    propertyValues = {
+      height: [1.0, 2.0],
+      name: ["A", "B"],
+      HEIGHT_SEMANTIC: [3.0, 4.0],
+    };
+
+    mockPropertyTable = MetadataTester.createPropertyTable({
+      properties: properties,
+      propertyValues: propertyValues,
+    });
   });
 
   it("creates ModelFeatures when model does not have content", function () {
