@@ -359,17 +359,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
     expect(results.sort()).toEqual(["author", "credits", "date"]);
   });
 
-  it("getProperty returns undefined when there's no properties", function () {
-    const subtreeMetadata = new ImplicitSubtreeMetadata({
-      subtreeMetadata: {},
-      class: {
-        properties: {},
-      },
-    });
-    expect(subtreeMetadata.getProperty("author")).toBeUndefined();
-  });
-
-  it("getProperty returns undefined when there's no property with the given property ID", function () {
+  it("getProperty throws when there's no property with the given property ID", function () {
     const subtreeClass = new MetadataClass({
       id: "subtree",
       class: {
@@ -389,7 +379,9 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
         },
       },
     });
-    expect(subtreeMetadata.getProperty("credits")).toBeUndefined();
+    expect(function () {
+      return subtreeMetadata.getProperty("credits");
+    }).toThrowDeveloperError();
   });
 
   it("getProperty returns the property value", function () {

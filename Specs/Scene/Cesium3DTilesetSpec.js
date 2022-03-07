@@ -5562,7 +5562,9 @@ describe(
             expect(metadata).toBeDefined();
 
             const tilesetMetadata = metadata.tileset;
-            expect(tilesetMetadata.getProperty("name")).not.toBeDefined();
+            expect(function () {
+              return tilesetMetadata.getProperty("name");
+            }).toThrowDeveloperError();
             expect(tilesetMetadata.getProperty("author")).toBe(
               tilesetProperties.author
             );
@@ -5588,7 +5590,9 @@ describe(
           expect(metadata).toBeDefined();
 
           const tilesetMetadata = metadata.tileset;
-          expect(tilesetMetadata.getProperty("name")).not.toBeDefined();
+          expect(function () {
+            return tilesetMetadata.getProperty("name");
+          }).toThrowDeveloperError();
           expect(tilesetMetadata.getProperty("author")).toBe(
             tilesetProperties.author
           );
