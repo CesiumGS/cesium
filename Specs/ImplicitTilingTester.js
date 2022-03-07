@@ -19,7 +19,7 @@ export default function ImplicitTilingTester() {}
  */
 
 /**
- * A description of 3DTILES_metadata properties stored in the subtree.
+ * A description of metadata properties stored in the subtree.
  * @typedef {Object} MetadataDescription
  * @property {Boolean} isInternal True if the metadata should be stored in the subtree file, false if the metadata should be stored in an external buffer.
  * @property {Array} propertyTables Array of property table objects to pass into {@link MetadataTester.createPropertyTables} in order to create the property table buffer views.
@@ -35,7 +35,7 @@ export default function ImplicitTilingTester() {}
  * @property {Boolean} [useMultipleContentsExtension] If true, use the 3DTILES_multiple_contents extension. Used to test backwards compatibility.
  * @property {AvailabilityDescription} childSubtreeAvailability A description of the child subtree availability bitstream to generate
  * @property {AvailabilityDescription} other A description of another bitstream. This is not used for availability, but rather to simulate extra buffer views.
- * @property {MetadataDescription} [metadata] For testing 3DTILES_metadata, additional options can be passed in here.
+ * @property {MetadataDescription} [metadata] For testing metadata, additional options can be passed in here.
  * @property {Boolean} [json] If true, return the result as a JSON with external buffers. Should not be true if any of the availability buffers are internal.
  * @private
  */

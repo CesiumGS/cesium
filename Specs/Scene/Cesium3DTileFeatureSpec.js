@@ -360,7 +360,7 @@ describe(
     describe("3DTILES_implicit_tiling metadata", function () {
       describe("subtree metadata", function () {
         const tilesetWithSubtreeMetadataUrl =
-          "Data/Cesium3DTiles/Metadata/ImplicitSubtreeMetadata/tileset.json";
+          "Data/Cesium3DTiles/Metadata/ImplicitSubtreeMetadata/tileset_1.1.json";
         let scene;
         let tilesetWithSubtree;
         beforeAll(function () {
@@ -456,7 +456,7 @@ describe(
 
       describe("implicit content metadata", function () {
         const tilesetWithImplicitContentMetadataUrl =
-          "Data/Cesium3DTiles/Metadata/ImplicitContentMetadata/tileset.json";
+          "Data/Cesium3DTiles/Metadata/ImplicitContentMetadata/tileset_1.1.json";
 
         let scene;
         let tilesetWithImplicitContentMetadata;

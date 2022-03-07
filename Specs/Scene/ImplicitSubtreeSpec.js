@@ -1477,7 +1477,7 @@ describe("Scene/ImplicitSubtree", function () {
     });
   });
 
-  describe("3DTILES_metadata", function () {
+  describe("metadata", function () {
     const tileProperties = {
       properties: {
         highlightColor: {

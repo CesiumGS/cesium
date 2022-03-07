@@ -1,0 +1,81 @@
+{
+  "asset": {
+    "version": "1.1"
+  },
+  "extensionsUsed": [
+    "3DTILES_implicit_tiling",
+    "3DTILES_multiple_contents"
+  ],
+  "extensionsRequired": [
+    "3DTILES_implicit_tiling",
+    "3DTILES_multiple_contents"
+  ],
+  "schema": {
+    "classes": {
+      "layer": {
+        "properties": {
+          "color": {
+            "type": "VEC3",
+            "componentType": "UINT8"
+          },
+          "priority": {
+            "type": "SCALAR",
+            "componentType": "UINT32"
+          }
+        }
+      }
+    }
+  },
+  "groups": {
+    "ground": {
+      "class": "layer",
+      "properties": {
+        "color": [120, 68, 32],
+        "priority": 0
+      }
+    },
+    "sky": {
+      "class": "layer",
+      "properties": {
+        "color": [206, 237, 242],
+        "priority": 1
+      }
+    }
+  },
+  "root": {
+    "boundingVolume": {
+      "region": [
+        -1.3197309591796106,
+        0.6988324218,
+        -1.3196290408203893,
+        0.6989155782,
+        0,
+        88
+      ]
+    },
+    "extensions": {
+      "3DTILES_implicit_tiling": {
+        "subdivisionScheme": "QUADTREE",
+        "subtreeLevels": 2,
+        "availableLevels": 2,
+        "subtrees": {
+          "uri": "subtrees/{level}.{x}.{y}.json"
+        }
+      },
+      "3DTILES_multiple_contents": {
+        "content": [
+          {
+            "uri": "ground/{level}/{x}/{y}.b3dm",
+            "group": "ground"
+          },
+          {
+            "uri": "sky/{level}/{x}/{y}.b3dm",
+            "group": "sky"
+          }
+        ]
+      }
+    },
+    "geometricError": 70,
+    "refine": "ADD"
+  }
+}

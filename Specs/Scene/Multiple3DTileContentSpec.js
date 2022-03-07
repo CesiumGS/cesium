@@ -300,7 +300,9 @@ describe(
       const withExplicitContentMetadataLegacyUrl =
         "./Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset_1.0.json";
       const withImplicitContentMetadataUrl =
-        "./Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset.json";
+        "./Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset_1.1.json";
+      const withImplicitContentMetadataLegacyUrl =
+        "./Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset_1.0.json";
 
       let metadataClass;
       let groupMetadata;
@@ -489,6 +491,35 @@ describe(
         return Cesium3DTilesTester.loadTileset(
           scene,
           withImplicitContentMetadataUrl
+        ).then(function (tileset) {
+          const placeholderTile = tileset.root;
+          const subtreeRootTile = placeholderTile.children[0];
+
+          // This retrieves the tile at (1, 1, 1)
+          const subtreeChildTile = subtreeRootTile.children[0];
+
+          const multipleContents = subtreeChildTile.content;
+          const innerContents = multipleContents.innerContents;
+
+          const buildingContent = innerContents[0];
+          const buildingMetadata = buildingContent.metadata;
+          expect(buildingMetadata).toBeDefined();
+          expect(buildingMetadata.getProperty("height")).toEqual(50);
+          expect(buildingMetadata.getProperty("color")).toEqual(
+            new Cartesian3(0, 0, 255)
+          );
+
+          const treeContent = innerContents[1];
+          const treeMetadata = treeContent.metadata;
+          expect(treeMetadata).toBeDefined();
+          expect(treeMetadata.getProperty("age")).toEqual(16);
+        });
+      });
+
+      it("initializes implicit content metadata for inner contents (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          withImplicitContentMetadataLegacyUrl
         ).then(function (tileset) {
           const placeholderTile = tileset.root;
           const subtreeRootTile = placeholderTile.children[0];
