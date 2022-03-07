@@ -98,7 +98,7 @@ Object.defineProperties(ImplicitSubtree.prototype, {
   },
 
   /**
-   * When subtree metadata is present (3D Tiles Next), this property stores an {@link ImplicitSubtreeMetadata} instance
+   * When subtree metadata is present (3D Tiles 1.1), this property stores an {@link ImplicitSubtreeMetadata} instance
    *
    * @type {ImplicitSubtreeMetadata}
    * @readonly
@@ -111,7 +111,7 @@ Object.defineProperties(ImplicitSubtree.prototype, {
   },
 
   /**
-   * When tile metadata is present (3D Tiles Next) or the <code>3DTILES_metadata</code> extension is used,
+   * When tile metadata is present (3D Tiles 1.1) or the <code>3DTILES_metadata</code> extension is used,
    * this property stores a {@link MetadataTable} instance for the tiles in the subtree.
    *
    * @type {MetadataTable}
@@ -125,7 +125,7 @@ Object.defineProperties(ImplicitSubtree.prototype, {
   },
 
   /**
-   * When tile metadata is present (3D Tiles Next) or the <code>3DTILES_metadata</code> extension is used,
+   * When tile metadata is present (3D Tiles 1.1) or the <code>3DTILES_metadata</code> extension is used,
    * this property stores the JSON from the extension. This is used by {@link TileMetadata}
    * to get the extras and extensions for the tiles in the subtree.
    *
@@ -140,7 +140,7 @@ Object.defineProperties(ImplicitSubtree.prototype, {
   },
 
   /**
-   * When content metadata is present (3D Tiles Next), this property stores
+   * When content metadata is present (3D Tiles 1.1), this property stores
    * an array of {@link MetadataTable} instances for the contents in the subtree.
    *
    * @type {Array}
@@ -154,7 +154,7 @@ Object.defineProperties(ImplicitSubtree.prototype, {
   },
 
   /**
-   * When content metadata is present (3D Tiles Next), this property
+   * When content metadata is present (3D Tiles 1.1), this property
    * an array of the JSONs from the extension. This is used to get the extras
    * and extensions for the contents in the subtree.
    *

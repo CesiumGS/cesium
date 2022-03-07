@@ -52,10 +52,10 @@
       "class": "building",
       "properties": {
         "height": {
-          "bufferView": 3
+          "values": 3
         },
         "color": {
-          "bufferView": 4
+          "values": 4
         }
       }
     }
@@ -64,10 +64,10 @@
     "class": "tile",
     "properties": {
       "quadrant": {
-        "bufferView": 1
+        "values": 1
       },
       "color": {
-        "bufferView": 2
+        "values": 2
       }
     }
   }

@@ -25,7 +25,7 @@
     "class": "tile",
     "properties": {
       "tileBounds": {
-        "bufferView": 0
+        "values": 0
       }
     }
   }

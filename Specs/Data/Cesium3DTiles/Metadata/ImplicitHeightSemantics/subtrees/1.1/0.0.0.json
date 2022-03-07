@@ -30,10 +30,10 @@
     "class": "tile",
     "properties": {
       "minimumHeight": {
-        "bufferView": 0
+        "values": 0
       },
       "maximumHeight": {
-        "bufferView": 1
+        "values": 1
       }
     }
   }

@@ -36,10 +36,10 @@
     "class": "tile",
     "properties": {
       "quadrant": {
-        "bufferView": 1
+        "values": 1
       },
       "color": {
-        "bufferView": 2
+        "values": 2
       }
     }
   }
