@@ -868,7 +868,6 @@ describe("Scene/MetadataTableProperty", function () {
         noData: [],
         default: [1, 1, 1],
       },
-      /*
       noDefaultArrayOfVector: {
         array: true,
         type: "VEC2",
@@ -891,7 +890,6 @@ describe("Scene/MetadataTableProperty", function () {
           [1.0, 1.0],
         ],
       },
-      */
     };
 
     const propertyValues = {
@@ -910,26 +908,11 @@ describe("Scene/MetadataTableProperty", function () {
         [1, 0, 0],
       ],
       hasDefaultArray: [[], [1, 2]],
-      /*
       noDefaultArrayOfVector: [
-        [
-          [0.0, 0.0],
-          [0.0, 0.0],
-          [0.0, 0.0],
-        ],
-        [
-          [1.0, 0.0],
-          [1.0, 1.0],
-          [0.0, 0.0],
-        ]
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [1.0, 0.0, 1.0, 1.0, 0.0, 0.0],
       ],
-      hasDefaultArrayOfVector: [
-        [], 
-        [
-          [1.0, 0.0]
-        ]
-      ]
-      */
+      hasDefaultArrayOfVector: [[], [1.0, 0.0]],
     };
 
     const expectedValues = {
@@ -945,25 +928,18 @@ describe("Scene/MetadataTableProperty", function () {
         [1, 1, 1],
         [1, 2],
       ],
-      /*
       noDefaultArrayOfVector: [
         undefined,
         [
           [1.0, 0.0],
           [1.0, 1.0],
           [0.0, 0.0],
-        ]
+        ],
       ],
       hasDefaultArrayOfVector: [
-        [
-          new Cartesian2(1.0, 1.0),
-          new Cartesian2(1.0, 1.0),
-        ],
-        [
-          new Cartesian2(1.0, 0.0)
-        ]
-      ]
-      */
+        [new Cartesian2(1.0, 1.0), new Cartesian2(1.0, 1.0)],
+        [new Cartesian2(1.0, 0.0)],
+      ],
     };
 
     for (const propertyId in properties) {
