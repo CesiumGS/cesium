@@ -20,11 +20,11 @@ All new code should have 100% code coverage and should pass all tests. Always ru
       - [Run Tests with a Specific Browser or Browsers](#run-tests-with-a-specific-browser-or-browsers)
       - [Run All Tests with WebGL Validation](#run-all-tests-with-webgl-validation)
       - [Run All Tests with WebGL Stub](#run-all-tests-with-webgl-stub)
-      - [Run All Tests Without `singleRun` to Enable Browser Debugging](#run-all-tests-without-singlerun-to-enable-browser-debugging)
       - [Run Only WebGL Tests with Karma](#run-only-webgl-tests-with-karma)
       - [Run Only Non-WebGL Tests with Karma](#run-only-non-webgl-tests-with-karma)
       - [Run All Tests Against the Minified Release Version of CesiumJS](#run-all-tests-against-the-minified-release-version-of-cesiumjs)
       - [Run a Single Test or Suite](#run-a-single-test-or-suite)
+      - [Using Browser Debugging Tools](#using-browser-debugging-tools)
   - [`testfailure` Label for Issues](#testfailure-label-for-issues)
   - [Writing Tests](#writing-tests)
     - [Directory Organization](#directory-organization)
@@ -189,10 +189,6 @@ It is also possible for Karma to run all tests against each browser installed on
 
 `npm run test-webgl-stub`
 
-#### Run All Tests Without `singleRun` to Enable Browser Debugging
-
-`npm run test -- --debug`
-
 #### Run Only WebGL Tests with Karma
 
 `npm run test-webgl`
@@ -214,6 +210,16 @@ Alternatively, a single test suite can be run from the command line with the `in
 `npm run test -- --includeName Core/Cartesian2`
 
 Similarly, test suites can be excluded with the `--excludeName` flag.
+
+#### Using Browser Debugging Tools
+
+If it is helpful to step through a unit test in a browser debugger, the `singleRun` Karma option can be disabled like so:
+
+`npm run test -- --debug`
+
+The `--debug` flag will prevent the Karma browser from closing after running the tests, and clicking the "Debug" button will open a new tab that can be used for placing breakpoints and stepping through the code.
+
+![](8.jpg)
 
 ## `testfailure` Label for Issues
 
