@@ -242,16 +242,16 @@
                 "componentType": "INT32",
                 "required": true
               },
+              "year": {
+                "type": "STRING",
+                "required": false,
+                "default": "2022"
+              },
               "employeeCount": {
                 "type": "SCALAR",
                 "componentType": "INT16",
                 "noData": -1,
                 "required": false
-              },
-              "year": {
-                "type": "STRING",
-                "required": false,
-                "default": "2022"
               }
             }
           }

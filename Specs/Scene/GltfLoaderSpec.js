@@ -71,6 +71,8 @@ describe(
       "./Data/Models/GltfLoader/Microcosm/glTF/microcosm_EXT_feature_metadata.gltf";
     const buildingsMetadata =
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
+    const buildingsMetadataLegacy =
+      "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata_EXT_feature_metadata.gltf";
     const weather = "./Data/Models/GltfLoader/Weather/glTF/weather.gltf";
     const weatherLegacy =
       "./Data/Models/GltfLoader/Weather/glTF/weather_EXT_feature_metadata.gltf";
@@ -1202,6 +1204,104 @@ describe(
           const expected = expectedEmployeeCounts[i];
           expect(propertyTable.getProperty(i, "employeeCount")).toBe(expected);
         }
+      });
+    });
+
+    it("loads BuildingsMetadata with EXT_feature_metadata", function () {
+      return loadGltf(buildingsMetadataLegacy).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const childNode = rootNode.children[0];
+        const primitive = childNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        const featureIdAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.FEATURE_ID,
+          0
+        );
+        const structuralMetadata = components.structuralMetadata;
+
+        expect(positionAttribute).toBeDefined();
+        expect(normalAttribute).toBeDefined();
+
+        expect(featureIdAttribute.name).toBe("_FEATURE_ID_0");
+        expect(featureIdAttribute.semantic).toBe(
+          VertexAttributeSemantic.FEATURE_ID
+        );
+        expect(featureIdAttribute.setIndex).toBe(0);
+        expect(featureIdAttribute.componentDatatype).toBe(
+          ComponentDatatype.FLOAT
+        );
+        expect(featureIdAttribute.type).toBe(AttributeType.SCALAR);
+        expect(featureIdAttribute.normalized).toBe(false);
+        expect(featureIdAttribute.count).toBe(240);
+        expect(featureIdAttribute.min).toBe(0);
+        expect(featureIdAttribute.max).toBe(9);
+        expect(featureIdAttribute.constant).toBe(0);
+        expect(featureIdAttribute.quantization).toBeUndefined();
+        expect(featureIdAttribute.typedArray).toBeUndefined();
+        expect(featureIdAttribute.buffer).toBeDefined();
+        expect(featureIdAttribute.byteOffset).toBe(0);
+        expect(featureIdAttribute.byteStride).toBe(4);
+
+        expect(primitive.featureIds.length).toBe(2);
+        expect(primitive.propertyTextureIds.length).toBe(0);
+
+        // feature ID via accessor
+        const featureIdAccessor = primitive.featureIds[0];
+        expect(featureIdAccessor).toBeInstanceOf(
+          ModelComponents.FeatureIdAttribute
+        );
+        expect(featureIdAccessor.featureCount).toEqual(10);
+        expect(featureIdAccessor.nullFeatureId).not.toBeDefined();
+        expect(featureIdAccessor.propertyTableId).toBe(0);
+        expect(featureIdAccessor.setIndex).toBe(0);
+
+        // feature ID range
+        const featureIdDefault = primitive.featureIds[1];
+        expect(featureIdDefault).toBeInstanceOf(
+          ModelComponents.FeatureIdImplicitRange
+        );
+        expect(featureIdDefault.featureCount).toEqual(10);
+        expect(featureIdDefault.nullFeatureId).not.toBeDefined();
+        expect(featureIdDefault.propertyTableId).toBe(0);
+        expect(featureIdDefault.setIndex).not.toBeDefined();
+        expect(featureIdDefault.offset).toBe(0);
+        expect(featureIdDefault.repeat).toBe(2);
+
+        const classDefinition = structuralMetadata.schema.classes.building;
+        const properties = classDefinition.properties;
+        expect(properties.height.componentType).toBe(
+          MetadataComponentType.FLOAT32
+        );
+        expect(properties.id.componentType).toBe(MetadataComponentType.INT32);
+
+        const propertyTable = structuralMetadata.getPropertyTable(0);
+        expect(propertyTable.id).toBe("buildings");
+        expect(propertyTable.count).toBe(10);
+        expect(propertyTable.class).toBe(classDefinition);
+        expect(propertyTable.getProperty(0, "height")).toBe(78.15579986572266);
+        expect(propertyTable.getProperty(0, "id")).toBe(0);
+        expect(propertyTable.getProperty(9, "height")).toBe(79.63207244873047);
+        expect(propertyTable.getProperty(9, "id")).toBe(9);
+
+        // All of the buildings should have the year of 2022
+        expect(propertyTable.getProperty(3, "year")).toBe("2022");
+        expect(propertyTable.getProperty(5, "year")).toBe("2022");
+        expect(propertyTable.getProperty(7, "year")).toBe("2022");
+
+        // noData didn't exist in EXT_feature_metadata so this property should
+        // not exist.
+        expect(propertyTable.hasProperty(3, "employeeCount")).toBe(false);
       });
     });
 
