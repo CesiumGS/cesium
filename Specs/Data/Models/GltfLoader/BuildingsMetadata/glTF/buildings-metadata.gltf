@@ -68,7 +68,7 @@
   "buffers": [
     {
       "name": "buffer",
-      "byteLength": 7520,
+      "byteLength": 7544,
       "uri": "buffer.bin"
     }
   ],
@@ -109,6 +109,11 @@
       "buffer": 0,
       "byteLength": 40,
       "byteOffset": 7480
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 7520,
+      "byteLength": 20
     }
   ],
   "materials": [
@@ -229,11 +234,24 @@
             "properties": {
               "height": {
                 "type": "SCALAR",
-                "componentType": "FLOAT32"
+                "componentType": "FLOAT32",
+                "required": true
               },
               "id": {
                 "type": "SCALAR",
-                "componentType": "INT32"
+                "componentType": "INT32",
+                "required": true
+              },
+              "employeeCount": {
+                "type": "SCALAR",
+                "componentType": "INT16",
+                "noData": -1,
+                "required": false
+              },
+              "year": {
+                "type": "STRING",
+                "required": false,
+                "default": "2022"
               }
             }
           }
@@ -250,6 +268,9 @@
             },
             "id": {
               "values": 5
+            },
+            "employeeCount": {
+              "values": 6
             }
           }
         }

@@ -1178,6 +1178,30 @@ describe(
         expect(propertyTable.getProperty(0, "id")).toBe(0);
         expect(propertyTable.getProperty(9, "height")).toBe(79.63207244873047);
         expect(propertyTable.getProperty(9, "id")).toBe(9);
+
+        // All of the buildings should have the year of 2022
+        expect(propertyTable.getProperty(3, "year")).toBe("2022");
+        expect(propertyTable.getProperty(5, "year")).toBe("2022");
+        expect(propertyTable.getProperty(7, "year")).toBe("2022");
+
+        // employee counts have a few noData values mixed in
+        const expectedEmployeeCounts = [
+          10,
+          33,
+          40,
+          undefined,
+          100,
+          45,
+          0,
+          1,
+          undefined,
+          undefined,
+        ];
+
+        for (let i = 0; i < expectedEmployeeCounts.length; i++) {
+          const expected = expectedEmployeeCounts[i];
+          expect(propertyTable.getProperty(i, "employeeCount")).toBe(expected);
+        }
       });
     });
 
