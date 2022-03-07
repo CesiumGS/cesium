@@ -30,6 +30,7 @@ describe(
     const tilesetResource = new Resource({
       url: "https://example.com/tileset.json",
     });
+
     const mockTileset = {
       modelMatrix: Matrix4.IDENTITY,
     };
@@ -48,14 +49,12 @@ describe(
           author: "Cesium",
         },
       },
-      extensions: {
-        "3DTILES_implicit_tiling": {
-          subdivisionScheme: "QUADTREE",
-          subtreeLevels: 2,
-          availableLevels: 2,
-          subtrees: {
-            uri: "https://example.com/{level}/{x}/{y}.subtree",
-          },
+      implicitTiling: {
+        subdivisionScheme: "QUADTREE",
+        subtreeLevels: 2,
+        availableLevels: 2,
+        subtrees: {
+          uri: "https://example.com/{level}/{x}/{y}.subtree",
         },
       },
       extras: {
@@ -63,11 +62,8 @@ describe(
       },
     };
 
-    const implicitTileset = new ImplicitTileset(
-      tilesetResource,
-      tileJson,
-      metadataSchema
-    );
+    let implicitTileset;
+    let rootCoordinates;
 
     const quadtreeJson = {
       tileAvailability: {
@@ -100,16 +96,6 @@ describe(
         isInternal: true,
       },
     }).subtreeBuffer;
-
-    const rootCoordinates = new ImplicitTileCoordinates({
-      subdivisionScheme: implicitTileset.subdivisionScheme,
-      subtreeLevels: implicitTileset.subtreeLevels,
-      level: 0,
-      x: 0,
-      y: 0,
-      z: 0,
-    });
-
     function gatherTilesPreorder(tile, minLevel, maxLevel, result) {
       const level = tile.implicitCoordinates.level;
       if (minLevel <= level && level <= maxLevel) {
@@ -138,6 +124,20 @@ describe(
 
     beforeAll(function () {
       scene = createScene();
+      implicitTileset = new ImplicitTileset(
+        tilesetResource,
+        tileJson,
+        metadataSchema
+      );
+
+      rootCoordinates = new ImplicitTileCoordinates({
+        subdivisionScheme: implicitTileset.subdivisionScheme,
+        subtreeLevels: implicitTileset.subtreeLevels,
+        level: 0,
+        x: 0,
+        y: 0,
+        z: 0,
+      });
     });
 
     afterAll(function () {
@@ -925,10 +925,10 @@ describe(
 
     describe("3DTILES_multiple_contents", function () {
       const implicitMultipleContentsUrl =
-        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset.json";
+        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset_1.1.json";
 
       const implicitMultipleContentsWithoutExtensionUrl =
-        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContentsWithoutExtension/tileset.json";
+        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContentsWithoutExtension/tileset_1.1.json";
 
       it("a single content is transcoded as a regular tile", function () {
         return Cesium3DTilesTester.loadTileset(
@@ -1049,7 +1049,7 @@ describe(
 
     describe("metadata", function () {
       const implicitTilesetUrl =
-        "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset.json";
+        "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset_1.1.json";
       const implicitGroupMetadataUrl =
         "Data/Cesium3DTiles/Metadata/ImplicitGroupMetadata/tileset_1.1.json";
       const implicitContentMetadataUrl =

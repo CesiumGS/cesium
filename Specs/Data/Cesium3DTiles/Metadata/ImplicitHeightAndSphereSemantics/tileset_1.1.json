@@ -2,12 +2,6 @@
   "asset": {
     "version": "1.1"
   },
-  "extensionsUsed": [
-    "3DTILES_implicit_tiling"
-  ],
-  "extensionsRequired": [
-    "3DTILES_implicit_tiling"
-  ],
   "schema": {
     "classes": {
       "tile": {
@@ -46,14 +40,12 @@
         10000
       ]
     },
-    "extensions": {
-      "3DTILES_implicit_tiling": {
-        "subdivisionScheme": "QUADTREE",
-        "subtreeLevels": 3,
-        "availableLevels": 3,
-        "subtrees": {
-          "uri": "subtrees/1.1/{level}.{x}.{y}.json"
-        }
+    "implicitTiling": {
+      "subdivisionScheme": "QUADTREE",
+      "subtreeLevels": 3,
+      "availableLevels": 3,
+      "subtrees": {
+        "uri": "subtrees/1.1/{level}.{x}.{y}.json"
       }
     }
   }

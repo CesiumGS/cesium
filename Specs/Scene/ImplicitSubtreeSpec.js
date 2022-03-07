@@ -127,16 +127,14 @@ describe("Scene/ImplicitSubtree", function () {
     content: {
       uri: "https://example.com/{level}/{x}/{y}.b3dm",
     },
-    extensions: {
-      "3DTILES_implicit_tiling": {
-        subdivisionScheme: "QUADTREE",
-        subtreeLevels: 2,
-        // This is artificially high for ease of testing. This field is
-        // not validated at runtime.
-        availableLevels: 4,
-        subtrees: {
-          uri: "https://example.com/{level}/{x}/{y}.subtree",
-        },
+    implicitTiling: {
+      subdivisionScheme: "QUADTREE",
+      subtreeLevels: 2,
+      // This is artificially high for ease of testing. This field is
+      // not validated at runtime.
+      availableLevels: 4,
+      subtrees: {
+        uri: "https://example.com/{level}/{x}/{y}.subtree",
       },
     },
   };
@@ -153,14 +151,12 @@ describe("Scene/ImplicitSubtree", function () {
     content: {
       uri: "https://example.com/{level}/{x}_{y}_{z}.b3dm",
     },
-    extensions: {
-      "3DTILES_implicit_tiling": {
-        subdivisionScheme: "OCTREE",
-        subtreeLevels: 2,
-        availableLevels: 4,
-        subtrees: {
-          uri: "https://example.com/{level}/{x}_{y}_{z}.subtree",
-        },
+    implicitTiling: {
+      subdivisionScheme: "OCTREE",
+      subtreeLevels: 2,
+      availableLevels: 4,
+      subtrees: {
+        uri: "https://example.com/{level}/{x}_{y}_{z}.subtree",
       },
     },
   };
@@ -1343,15 +1339,15 @@ describe("Scene/ImplicitSubtree", function () {
       boundingVolume: {
         region: [0, 0, Math.PI / 24, Math.PI / 24, 0, 1000.0],
       },
-      extensions: {
-        "3DTILES_implicit_tiling": {
-          subdivisionScheme: "QUADTREE",
-          subtreeLevels: 2,
-          availableLevels: 2,
-          subtrees: {
-            uri: "https://example.com/{level}/{x}/{y}.subtree",
-          },
+      implicitTiling: {
+        subdivisionScheme: "QUADTREE",
+        subtreeLevels: 2,
+        availableLevels: 2,
+        subtrees: {
+          uri: "https://example.com/{level}/{x}/{y}.subtree",
         },
+      },
+      extensions: {
         "3DTILES_multiple_contents": {
           content: [
             {

@@ -3,11 +3,9 @@
     "version": "1.1"
   },
   "extensionsUsed": [
-    "3DTILES_implicit_tiling",
     "3DTILES_multiple_contents"
   ],
   "extensionsRequired": [
-    "3DTILES_implicit_tiling",
     "3DTILES_multiple_contents"
   ],
   "schema": {
@@ -53,15 +51,15 @@
         88
       ]
     },
+    "implicitTiling": {
+      "subdivisionScheme": "QUADTREE",
+      "subtreeLevels": 2,
+      "availableLevels": 2,
+      "subtrees": {
+        "uri": "subtrees/{level}.{x}.{y}.json"
+      }
+    },
     "extensions": {
-      "3DTILES_implicit_tiling": {
-        "subdivisionScheme": "QUADTREE",
-        "subtreeLevels": 2,
-        "availableLevels": 2,
-        "subtrees": {
-          "uri": "subtrees/{level}.{x}.{y}.json"
-        }
-      },
       "3DTILES_multiple_contents": {
         "content": [
           {

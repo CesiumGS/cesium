@@ -5133,15 +5133,15 @@ describe(
       });
     });
 
-    describe("3DTILES_implicit_tiling", function () {
+    describe("implicit tiling", function () {
       const implicitTilesetUrl =
-        "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset.json";
+        "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset_1.1.json";
       const implicitTilesetWithJsonUrl =
-        "Data/Cesium3DTiles/Implicit/ImplicitTilesetWithJsonSubtree/tileset.json";
+        "Data/Cesium3DTiles/Implicit/ImplicitTilesetWithJsonSubtree/tileset_1.1.json";
       const implicitRootUrl =
-        "Data/Cesium3DTiles/Implicit/ImplicitRootTile/tileset.json";
+        "Data/Cesium3DTiles/Implicit/ImplicitRootTile/tileset_1.1.json";
       const implicitChildUrl =
-        "Data/Cesium3DTiles/Implicit/ImplicitChildTile/tileset.json";
+        "Data/Cesium3DTiles/Implicit/ImplicitChildTile/tileset_1.1.json";
 
       it("renders tileset", function () {
         return Cesium3DTilesTester.loadTileset(scene, implicitTilesetUrl).then(
@@ -5211,13 +5211,127 @@ describe(
       });
     });
 
+    describe("3DTILES_implicit_tiling", function () {
+      const implicitTilesetLegacyUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset_1.0.json";
+      const implicitTilesetWithJsonLegacyUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitTilesetWithJsonSubtree/tileset_1.0.json";
+      const implicitRootLegacyUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitRootTile/tileset_1.0.json";
+      const implicitChildLegacyUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitChildTile/tileset_1.0.json";
+
+      it("renders tileset (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitTilesetLegacyUrl
+        ).then(function (tileset) {
+          const statistics = tileset._statistics;
+          // root + implicit placeholder + 4 child tiles
+          expect(statistics.visited).toEqual(6);
+          // the implicit placeholder tile is not rendered
+          expect(statistics.numberOfCommands).toEqual(5);
+        });
+      });
+
+      it("renders tileset with JSON subtree file", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitTilesetWithJsonLegacyUrl
+        ).then(function (tileset) {
+          const statistics = tileset._statistics;
+          // root + implicit placeholder + 4 child tiles
+          expect(statistics.visited).toEqual(6);
+          // the implicit placeholder tile is not rendered
+          expect(statistics.numberOfCommands).toEqual(5);
+        });
+      });
+
+      it("detects and initializes an implicit tileset in root tile", function () {
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitRootLegacyUrl
+        ).then(function (tileset) {
+          const implicitTile = tileset.root;
+          expect(
+            endsWith(
+              implicitTile._contentResource.url,
+              "subtrees/0/0/0/0.subtree"
+            )
+          ).toEqual(true);
+          expect(implicitTile.implicitTileset).toBeDefined();
+          expect(implicitTile.implicitCoordinates).toBeDefined();
+          expect(implicitTile.implicitCoordinates.level).toEqual(0);
+          expect(implicitTile.implicitCoordinates.x).toEqual(0);
+          expect(implicitTile.implicitCoordinates.y).toEqual(0);
+          expect(implicitTile.implicitCoordinates.z).toEqual(0);
+        });
+      });
+
+      it("detects and initializes an implicit tileset in child tile (implicit)", function () {
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitChildLegacyUrl
+        ).then(function (tileset) {
+          const parentTile = tileset.root;
+          const implicitTile = parentTile.children[0];
+          expect(
+            endsWith(
+              implicitTile._contentResource.url,
+              "subtrees/0/0/0.subtree"
+            )
+          ).toEqual(true);
+          expect(implicitTile.implicitTileset).toBeDefined();
+          expect(implicitTile.implicitCoordinates).toBeDefined();
+          expect(implicitTile.implicitCoordinates.level).toEqual(0);
+          expect(implicitTile.implicitCoordinates.x).toEqual(0);
+          expect(implicitTile.implicitCoordinates.y).toEqual(0);
+        });
+      });
+    });
+
+    describe("multiple contents", function () {
+      const implicitMultipleContentsUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset_1.1.json";
+      const implicitMultipleContentsWithoutExtensionUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContentsWithoutExtension/tileset_1.1.json";
+
+      it("renders implicit tileset with multiple contents", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitMultipleContentsUrl
+        ).then(function (tileset) {
+          const statistics = tileset._statistics;
+          // implicit placeholder + transcoded root + 4 child tiles
+          expect(statistics.visited).toEqual(6);
+          // root content + 2 contents per child tile
+          expect(statistics.numberOfCommands).toEqual(9);
+        });
+      });
+
+      it("renders implicit tileset with multiple contents and without subtree extension", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitMultipleContentsWithoutExtensionUrl
+        ).then(function (tileset) {
+          const statistics = tileset._statistics;
+          // implicit placeholder + transcoded root + 4 child tiles
+          expect(statistics.visited).toEqual(6);
+          // root content + 2 contents per child tile
+          expect(statistics.numberOfCommands).toEqual(9);
+        });
+      });
+    });
+
     describe("3DTILES_multiple_contents", function () {
       const multipleContentsUrl =
         "Data/Cesium3DTiles/MultipleContents/MultipleContents/tileset.json";
-      const implicitMultipleContentsUrl =
-        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset.json";
-      const implicitMultipleContentsWithoutExtensionUrl =
-        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContentsWithoutExtension/tileset.json";
+      const implicitMultipleContentsLegacyUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset_1.0.json";
+      const implicitMultipleContentsWithoutExtensionLegacyUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContentsWithoutExtension/tileset_1.0.json";
 
       it("request statistics are updated correctly on success", function () {
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
@@ -5495,7 +5609,7 @@ describe(
       it("renders implicit tileset with multiple contents", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsUrl
+          implicitMultipleContentsLegacyUrl
         ).then(function (tileset) {
           const statistics = tileset._statistics;
           // implicit placeholder + transcoded root + 4 child tiles
@@ -5508,7 +5622,7 @@ describe(
       it("renders implicit tileset with multiple contents and without subtree extension", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsWithoutExtensionUrl
+          implicitMultipleContentsWithoutExtensionLegacyUrl
         ).then(function (tileset) {
           const statistics = tileset._statistics;
           // implicit placeholder + transcoded root + 4 child tiles

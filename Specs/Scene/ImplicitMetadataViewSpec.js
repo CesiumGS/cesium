@@ -157,14 +157,12 @@ describe("Scene/ImplicitMetadataView", function () {
     content: {
       uri: "https://example.com/{level}/{x}/{y}.b3dm",
     },
-    extensions: {
-      "3DTILES_implicit_tiling": {
-        subdivisionScheme: "QUADTREE",
-        subtreeLevels: 2,
-        availableLevels: 2,
-        subtrees: {
-          uri: "https://example.com/{level}/{x}/{y}.subtree",
-        },
+    implicitTiling: {
+      subdivisionScheme: "QUADTREE",
+      subtreeLevels: 2,
+      availableLevels: 2,
+      subtrees: {
+        uri: "https://example.com/{level}/{x}/{y}.subtree",
       },
     },
   };

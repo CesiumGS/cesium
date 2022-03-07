@@ -357,7 +357,7 @@ describe(
       });
     });
 
-    describe("3DTILES_implicit_tiling metadata", function () {
+    describe("implicit tiling metadata", function () {
       describe("subtree metadata", function () {
         const tilesetWithSubtreeMetadataUrl =
           "Data/Cesium3DTiles/Metadata/ImplicitSubtreeMetadata/tileset_1.1.json";

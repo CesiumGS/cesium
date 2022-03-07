@@ -17,7 +17,7 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * @constructor
  *
  * @param {Resource} baseResource The base resource for the tileset
- * @param {Object} tileJson The JSON header of the tile with the 3DTILES_implicit_tiling extension.
+ * @param {Object} tileJson The JSON header of the tile with either implicit tiling in the JSON (3D Tiles 1.1) or the 3DTILES_implicit_tiling extension.
  * @param {MetadataSchema} [metadataSchema] The metadata schema containing the implicit tile metadata class.
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -27,12 +27,12 @@ export default function ImplicitTileset(
   tileJson,
   metadataSchema
 ) {
-  const extension = tileJson.extensions["3DTILES_implicit_tiling"];
+  const implicitTiling = hasExtension(tileJson, "3DTILES_implicit_tiling")
+    ? tileJson.extensions["3DTILES_implicit_tiling"]
+    : tileJson.implicitTiling;
+
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object(
-    'tileJson.extensions["3DTILES_implicit_tiling"]',
-    extension
-  );
+  Check.typeOf.object("implicitTiling", implicitTiling);
   //>>includeEnd('debug');
 
   /**
@@ -102,7 +102,7 @@ export default function ImplicitTileset(
    * @private
    */
 
-  this.subtreeUriTemplate = new Resource({ url: extension.subtrees.uri });
+  this.subtreeUriTemplate = new Resource({ url: implicitTiling.subtrees.uri });
 
   /**
    * Template URIs for locating content resources, e.g.
@@ -155,7 +155,8 @@ export default function ImplicitTileset(
    * are removed:
    *
    * <ul>
-   * <li><code>tile.extensions["3DTILES_implicit_tiling"]</code> to prevent infinite loops of implicit tiling</li>
+   * <li><code>tile.implicitTiling</code> to prevent infinite loops of implicit tiling</li>
+   * <li><code>tile.extensions["3DTILES_implicit_tiling"]</code>, if used instead of tile.implicitTiling</li>
    * <li><code>tile.content</code> since this is handled separately</li>
    * <li><code>tile.extensions["3DTILES_multiple_contents"]</code>, again
    *  because contents are handled separately</li>
@@ -175,7 +176,7 @@ export default function ImplicitTileset(
    * @private
    */
   this.subdivisionScheme =
-    ImplicitSubdivisionScheme[extension.subdivisionScheme];
+    ImplicitSubdivisionScheme[implicitTiling.subdivisionScheme];
 
   /**
    * The branching factor for this tileset. Either 4 for quadtrees or 8 for
@@ -197,7 +198,7 @@ export default function ImplicitTileset(
    * @readonly
    * @private
    */
-  this.subtreeLevels = extension.subtreeLevels;
+  this.subtreeLevels = implicitTiling.subtreeLevels;
 
   /**
    * The number of levels containing available tiles in the tileset.
@@ -206,10 +207,10 @@ export default function ImplicitTileset(
    * @readonly
    * @private
    */
-  if (defined(extension.availableLevels)) {
-    this.availableLevels = extension.availableLevels;
+  if (defined(implicitTiling.availableLevels)) {
+    this.availableLevels = implicitTiling.availableLevels;
   } else {
-    this.availableLevels = extension.maximumLevel + 1;
+    this.availableLevels = implicitTiling.maximumLevel + 1;
   }
 }
 
@@ -218,7 +219,7 @@ export default function ImplicitTileset(
  * This handles both regular tiles and tiles with the
  * `3DTILES_multiple_contents` extension
  *
- * @param {Object} tileJson The JSON header of the tile with the 3DTILES_implicit_tiling extension.
+ * @param {Object} tileJson The JSON header of the tile with either implicit tiling in its JSON (3D Tiles 1.1) or the 3DTILES_implicit_tiling extension.
  * @return {Object[]} An array of JSON headers for the contents of each tile
  * @private
  */
@@ -238,15 +239,25 @@ function makeTileHeaderTemplate(tileJson) {
   const template = clone(tileJson, true);
 
   // remove the implicit tiling extension to prevent infinite loops
-  delete template.extensions["3DTILES_implicit_tiling"];
+  if (hasExtension(template, "3DTILES_implicit_tiling")) {
+    delete template.extensions["3DTILES_implicit_tiling"];
+  } else {
+    delete template.implicitTiling;
+  }
 
   // content is handled separately, so remove content-related properties
   delete template.content;
-  delete template.extensions["3DTILES_multiple_contents"];
+
+  if (hasExtension(template, "3DTILES_multiple_contents")) {
+    delete template.extensions["3DTILES_multiple_contents"];
+  }
 
   // if there are no other extensions, remove the extensions property to
   // keep each tile simple
-  if (Object.keys(template.extensions).length === 0) {
+  if (
+    defined(template.extensions) &&
+    Object.keys(template.extensions).length === 0
+  ) {
     delete template.extensions;
   }
 

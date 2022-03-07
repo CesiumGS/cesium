@@ -2,36 +2,8 @@
   "asset": {
     "version": "1.1"
   },
-  "extensionsUsed": [
-    "3DTILES_multiple_contents"
-  ],
   "extras": {
     "name": "Sample Implicit Tileset"
-  },
-  "schema": {
-    "classes": {
-      "building": {
-        "properties": {
-          "height": {
-            "type": "SCALAR",
-            "componentType": "UINT16",
-            "semantic": "_BUILDING_HEIGHT"
-          },
-          "color" : {
-            "type": "VEC3",
-            "componentType": "UINT8"
-          }
-        }
-      },
-      "tree": {
-        "properties": {
-          "age": {
-            "type": "SCALAR",
-            "componentType": "UINT16"
-          }
-        }
-      }
-    }
   },
   "geometricError": 240,
   "root": {

@@ -222,9 +222,8 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
   },
 
   /**
-   * Gets the metadata for this content if the content uses the
-   * <code>3DTILES_implicit_tiling</code> extension. If the extension is not used,
-   * this property should be undefined.
+   * Gets the metadata for this content, whether it is available explicitly or via
+   * implicit tiling. If there is no metadata, this property should be undefined.
    * <p>
    * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
    * not part of the public Cesium API.
