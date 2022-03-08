@@ -24,12 +24,10 @@
   "root": {
     "geometricError": 2048.0,
     "boundingVolume": {
-      "extensions": {
-        "3DTILES_bounding_volume_S2": {
-          "token": "1",
-          "minimumHeight": 0,
-          "maximumHeight": 10000
-        }
+      "s2Cell": {
+        "token": "1",
+        "minimumHeight": 0,
+        "maximumHeight": 10000
       }
     },
     "implicitTiling": {
