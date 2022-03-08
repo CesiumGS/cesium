@@ -6,38 +6,46 @@ As of CesiumJS 1.35, CesiumJS has over 8,800 tests with 93% code coverage. Cesiu
 
 All new code should have 100% code coverage and should pass all tests. Always run the tests before opening a pull request.
 
-- [Running the Tests](#running-the-tests)
-  - [Run All Tests](#run-all-tests)
-    - [Run with WebGL validation](#run-with-webgl-validation)
-    - [Run with WebGL stub](#run-with-webgl-stub)
-  - [Select a Test to Run](#select-a-test-to-run)
-  - [Run Only WebGL Tests](#run-only-webgl-tests)
-  - [Run Only Non-WebGL Tests](#run-only-non-webgl-tests)
-  - [Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)]()
-  - [Run All Tests with Coverage](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
-  - [Running Tests on the Command Line with Karma](#running-tests-on-the-command-line-with-karma)
-- [Testing Previous Versions of CesiumJS](#testing-previous-versions-of-cesium)
-- [`testfailure` Label for Issues](#testfailure-label-for-issues)
-- [Writing Tests](#writing-tests)
-  - [Directory Organization](#directory-organization)
-  - [Bottom-Up Unit Testing](#bottom-up-unit-testing)
-  - [Test Code is Code](#test-code-is-code)
-  - [Testing Basics](#testing-basics)
-  - [Comparing Floating-Point Values](#comparing-floating-point-values)
-  - [Testing Exceptions](#testing-exceptions)
-  - [Before and After Tests and Suites](#before-and-after-tests-and-suites)
-  - [Rendering Tests](#rendering-tests)
-  - [GLSL](#glsl)
-  - [Spies](#spies)
-  - [Test Data and Services](#test-data-and-services)
-  - [Promises](#promises)
-  - [Mocks](#mocks)
-  - [Categories](#categories)
-- [Manual Testing](#manual-testing)
-- [Pragmatic Advice](#pragmatic-advice)
-  - [Start with a Similar (Small) Test](#start-with-a-similar-small-test)
-  - [Debugger-Aided Incremental Improvements](#debugger-aided-incremental-improvements)
-- [Resources](#resources)
+- [Testing Guide](#testing-guide)
+  - [Running the Tests](#running-the-tests)
+    - [Run All Tests](#run-all-tests)
+      - [Run with WebGL validation](#run-with-webgl-validation)
+      - [Run with WebGL stub](#run-with-webgl-stub)
+    - [Select a Test to Run](#select-a-test-to-run)
+    - [Run Only WebGL Tests](#run-only-webgl-tests)
+    - [Run Only Non-WebGL Tests](#run-only-non-webgl-tests)
+    - [Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
+    - [Run Coverage](#run-coverage)
+    - [Running Tests on the Command Line with Karma](#running-tests-on-the-command-line-with-karma)
+      - [Run Tests with a Specific Browser or Browsers](#run-tests-with-a-specific-browser-or-browsers)
+      - [Run All Tests with WebGL Validation](#run-all-tests-with-webgl-validation)
+      - [Run All Tests with WebGL Stub](#run-all-tests-with-webgl-stub)
+      - [Run Only WebGL Tests with Karma](#run-only-webgl-tests-with-karma)
+      - [Run Only Non-WebGL Tests with Karma](#run-only-non-webgl-tests-with-karma)
+      - [Run All Tests Against the Minified Release Version of CesiumJS](#run-all-tests-against-the-minified-release-version-of-cesiumjs)
+      - [Run a Single Test or Suite](#run-a-single-test-or-suite)
+      - [Using Browser Debugging Tools](#using-browser-debugging-tools)
+  - [`testfailure` Label for Issues](#testfailure-label-for-issues)
+  - [Writing Tests](#writing-tests)
+    - [Directory Organization](#directory-organization)
+    - [Bottom-Up Unit Testing](#bottom-up-unit-testing)
+    - [Test Code is Code](#test-code-is-code)
+    - [Testing Basics](#testing-basics)
+    - [Comparing Floating-Point Values](#comparing-floating-point-values)
+    - [Testing Exceptions](#testing-exceptions)
+    - [Before and After Tests and Suites](#before-and-after-tests-and-suites)
+    - [Rendering Tests](#rendering-tests)
+    - [GLSL](#glsl)
+    - [Spies](#spies)
+    - [Test Data and Services](#test-data-and-services)
+    - [Promises](#promises)
+    - [Mocks](#mocks)
+    - [Categories](#categories)
+  - [Manual Testing](#manual-testing)
+  - [Pragmatic Advice](#pragmatic-advice)
+    - [Start with a Similar (Small) Test](#start-with-a-similar-small-test)
+    - [Debugger-Aided Incremental Improvements](#debugger-aided-incremental-improvements)
+  - [Resources](#resources)
 
 ## Running the Tests
 
@@ -109,7 +117,7 @@ The **Run All Tests against Combined File with Debug Code Removed** is the same 
 
 See the [Build Guide](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/BuildGuide/README.md#build-scripts) for all the CesiumJS build options.
 
-## Run Coverage
+### Run Coverage
 
 We use [istanbul](https://istanbul.js.org/) via [karma-coverage](https://github.com/karma-runner/karma-coverage) to generate code coverage reports. It is especially important to have outstanding code coverage since JavaScript doesn't have a compiler and linker to catch early errors.
 
@@ -196,6 +204,22 @@ It is also possible for Karma to run all tests against each browser installed on
 #### Run a Single Test or Suite
 
 Sometimes it is useful to run a single test or suite for easier debugging purposes. To do this simply change the `it` function call for the desired test to `fit`, the `f` stands for `focused` in Jasmine speak. Likewise, to run an entire suite, use `fdescribe` instead of `describe`.
+
+Alternatively, test suites can be run from the command line with the `includeName` flag. The argument value should be a substring of one or more test suite names, which are found in the `describe` function of the spec file. For example, the `Cartesian2` tests can be run with:
+
+`npm run test -- --includeName Cartesian2`
+
+Similarly, test suites can be excluded with the `--excludeName` flag.
+
+#### Using Browser Debugging Tools
+
+If it is helpful to step through a unit test in a browser debugger, run the tests with the `debug` flag:
+
+`npm run test -- --debug`
+
+The `--debug` flag will prevent the Karma browser from closing after running the tests, and clicking the "Debug" button will open a new tab that can be used for placing breakpoints and stepping through the code.
+
+![](8.jpg)
 
 ## `testfailure` Label for Issues
 
