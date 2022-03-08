@@ -266,44 +266,37 @@ Cesium3DTileFeature.prototype.getProperty = function (name) {
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
-  let value;
   const batchTable = content.batchTable;
   if (defined(batchTable)) {
-    value = batchTable.getPropertyBySemantic(batchId, name);
-    if (defined(value)) {
-      return value;
+    if (batchTable.hasPropertyBySemantic(batchId, name)) {
+      return batchTable.getPropertyBySemantic(batchId, name);
     }
 
-    value = batchTable.getProperty(batchId, name);
-    if (defined(value)) {
-      return value;
+    if (batchTable.hasProperty(batchId, name)) {
+      return batchTable.getProperty(batchId, name);
     }
   }
 
   const contentMetadata = content.metadata;
   if (defined(contentMetadata)) {
-    value = contentMetadata.getPropertyBySemantic(name);
-    if (defined(value)) {
-      return value;
+    if (contentMetadata.hasPropertyBySemantic(name)) {
+      return contentMetadata.getPropertyBySemantic(name);
     }
 
-    value = contentMetadata.getProperty(name);
-    if (defined(value)) {
-      return value;
+    if (contentMetadata.hasProperty(name)) {
+      return contentMetadata.getProperty(name);
     }
   }
 
   const tile = content.tile;
   const tileMetadata = tile.metadata;
   if (defined(tileMetadata)) {
-    value = tileMetadata.getPropertyBySemantic(name);
-    if (defined(value)) {
-      return value;
+    if (tileMetadata.hasPropertyBySemantic(name)) {
+      return tileMetadata.getPropertyBySemantic(name);
     }
 
-    value = tileMetadata.getProperty(name);
-    if (defined(value)) {
-      return value;
+    if (tileMetadata.hasProperty(name)) {
+      return tileMetadata.getProperty(name);
     }
   }
 
@@ -313,41 +306,35 @@ Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
   }
 
   if (defined(subtreeMetadata)) {
-    value = subtreeMetadata.getPropertyBySemantic(name);
-    if (defined(value)) {
-      return value;
+    if (subtreeMetadata.hasPropertyBySemantic(name)) {
+      return subtreeMetadata.getPropertyBySemantic(name);
     }
 
-    value = subtreeMetadata.getProperty(name);
-    if (defined(value)) {
-      return value;
+    if (subtreeMetadata.hasProperty(name)) {
+      return subtreeMetadata.getProperty(name);
     }
   }
 
   const groupMetadata = content.groupMetadata;
   if (defined(groupMetadata)) {
-    value = groupMetadata.getPropertyBySemantic(name);
-    if (defined(value)) {
-      return value;
+    if (groupMetadata.hasPropertyBySemantic(name)) {
+      return groupMetadata.getPropertyBySemantic(name);
     }
 
-    value = groupMetadata.getProperty(name);
-    if (defined(value)) {
-      return value;
+    if (groupMetadata.hasProperty(name)) {
+      return groupMetadata.getProperty(name);
     }
   }
 
   let tilesetMetadata = content.tileset.metadata;
   if (defined(tilesetMetadata) && defined(tilesetMetadata.tileset)) {
     tilesetMetadata = tilesetMetadata.tileset;
-    value = tilesetMetadata.getPropertyBySemantic(name);
-    if (defined(value)) {
-      return value;
+    if (tilesetMetadata.hasPropertyBySemantic(name)) {
+      return tilesetMetadata.getPropertyBySemantic(name);
     }
 
-    value = tilesetMetadata.getProperty(name);
-    if (defined(value)) {
-      return value;
+    if (tilesetMetadata.hasProperty(name)) {
+      return tilesetMetadata.getProperty(name);
     }
   }
 

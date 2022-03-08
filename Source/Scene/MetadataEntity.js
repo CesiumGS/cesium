@@ -1,4 +1,5 @@
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 
@@ -261,36 +262,36 @@ MetadataEntity.getProperty = function (
   Check.typeOf.string("propertyId", propertyId);
   Check.typeOf.object("properties", properties);
   Check.typeOf.object("classDefinition", classDefinition);
+
+  if (!defined(classDefinition.properties[propertyId])) {
+    throw new DeveloperError(`Class definition missing property ${propertyId}`);
+  }
   //>>includeEnd('debug');
 
+  const classProperty = classDefinition.properties[propertyId];
   let value = properties[propertyId];
 
-  let classProperty;
-  const classProperties = classDefinition.properties;
-  if (defined(classProperties)) {
-    classProperty = classProperties[propertyId];
+  // Clone array values
+  if (Array.isArray(value)) {
+    value = value.slice();
   }
 
-  if (!defined(value) && defined(classProperty)) {
-    value = classProperty.default;
+  // Arrays of vectors are represented as nested arrays in JSON
+  const enableNestedArrays = true;
+
+  // Handle noData and default
+  value = classProperty.handleNoData(value);
+  if (!defined(value) && defined(classProperty.default)) {
+    value = clone(classProperty.default, true);
+    return classProperty.unpackVectorAndMatrixTypes(value, enableNestedArrays);
   }
 
   if (!defined(value)) {
     return undefined;
   }
 
-  if (Array.isArray(value)) {
-    value = value.slice(); // clone
-  }
-
-  // Arrays of vectors are represented as nested arrays in JSON
-  const enableNestedArrays = true;
-  if (defined(classProperty)) {
-    value = classProperty.normalize(value);
-    value = classProperty.unpackVectorAndMatrixTypes(value, enableNestedArrays);
-  }
-
-  return value;
+  value = classProperty.normalize(value);
+  return classProperty.unpackVectorAndMatrixTypes(value, enableNestedArrays);
 };
 
 /**

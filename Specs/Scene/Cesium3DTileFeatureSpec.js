@@ -161,6 +161,22 @@ describe(
         expect(feature.getPropertyInherited("population")).toBe(50);
       });
 
+      it("getPropertyInherited returns default value", function () {
+        const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
+        expect(feature.getPropertyInherited("defaultColor")).toEqual(
+          new Cartesian4(255, 255, 255, 255)
+        );
+      });
+
+      it("getPropertyInherited handles noData", function () {
+        let feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
+        expect(feature.getPropertyInherited("averageTemperature")).toEqual(24);
+        feature = new Cesium3DTileFeature(childContents["ur.b3dm"], 0);
+        expect(
+          feature.getPropertyInherited("averageTemperature")
+        ).not.toBeDefined();
+      });
+
       it("getPropertyInherited returns group property by semantic", function () {
         let feature = new Cesium3DTileFeature(childContents["lr.b3dm"], 0);
         expect(feature.getPropertyInherited("GROUP_NAME")).toBe("commercial");
@@ -293,6 +309,13 @@ describe(
           new Cartesian4(255, 255, 0, 1.0)
         );
         expect(feature.getPropertyInherited("population")).toBe(50);
+      });
+
+      it("getPropertyInherited returns default value", function () {
+        const feature = new Cesium3DTileFeature(childContents["ll.b3dm"], 0);
+        expect(feature.getPropertyInherited("defaultColor")).toEqual(
+          new Cartesian4(255, 255, 255, 255)
+        );
       });
 
       it("getPropertyInherited returns group property by semantic", function () {

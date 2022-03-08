@@ -358,14 +358,6 @@ describe("Scene/TilesetMetadata", function () {
     expect(results.sort()).toEqual(["color", "height"]);
   });
 
-  it("getProperty returns undefined when there's no properties", function () {
-    const tilesetMetadata = new TilesetMetadata({
-      tileset: {},
-      class: {},
-    });
-    expect(tilesetMetadata.getProperty("height")).toBeUndefined();
-  });
-
   it("getProperty returns undefined when there's no property with the given property ID", function () {
     const buildingClass = new MetadataClass({
       id: "building",
@@ -387,7 +379,9 @@ describe("Scene/TilesetMetadata", function () {
         },
       },
     });
-    expect(tilesetMetadata.getProperty("color")).toBeUndefined();
+    expect(function () {
+      return tilesetMetadata.getProperty("color");
+    }).toThrowDeveloperError();
   });
 
   it("getProperty returns the property value", function () {

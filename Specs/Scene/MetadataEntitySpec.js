@@ -1,4 +1,5 @@
 import {
+  Cartesian2,
   Cartesian3,
   MetadataClass,
   MetadataEntity,
@@ -8,6 +9,7 @@ describe("Scene/MetadataEntity", function () {
   let classWithNoPropertiesDefinition;
   let classDefinition;
   let properties;
+  let classWithNoDataValues;
   beforeAll(function () {
     classWithNoPropertiesDefinition = new MetadataClass({
       id: "building",
@@ -21,6 +23,7 @@ describe("Scene/MetadataEntity", function () {
           name: {
             type: "STRING",
             semantic: "NAME",
+            required: true,
           },
           height: {
             type: "SCALAR",
@@ -33,6 +36,7 @@ describe("Scene/MetadataEntity", function () {
             componentType: "FLOAT32",
             array: true,
             count: 3,
+            required: true,
           },
           axisColors: {
             array: true,
@@ -40,6 +44,80 @@ describe("Scene/MetadataEntity", function () {
             type: "VEC3",
             componentType: "UINT8",
             normalized: true,
+            required: true,
+          },
+        },
+      },
+    });
+
+    classWithNoDataValues = new MetadataClass({
+      id: "noData",
+      class: {
+        properties: {
+          noDefault: {
+            type: "SCALAR",
+            componentType: "INT32",
+            required: false,
+            noData: -1,
+          },
+          hasDefault: {
+            type: "SCALAR",
+            componentType: "INT32",
+            required: false,
+            noData: -1,
+            default: 100,
+          },
+          noDefaultVector: {
+            type: "VEC2",
+            componentType: "FLOAT32",
+            required: false,
+            noData: [0.0, 0.0],
+          },
+          hasDefaultVector: {
+            type: "VEC2",
+            componentType: "FLOAT32",
+            required: false,
+            noData: [0.0, 0.0],
+            default: [100.0, 100.0],
+          },
+          noDefaultArray: {
+            array: true,
+            type: "SCALAR",
+            componentType: "UINT8",
+            count: 3,
+            required: false,
+            noData: [0, 0, 0],
+          },
+          hasDefaultArray: {
+            array: true,
+            type: "SCALAR",
+            componentType: "UINT8",
+            required: false,
+            noData: [],
+            default: [1, 1, 1],
+          },
+          noDefaultArrayOfVector: {
+            array: true,
+            type: "VEC2",
+            componentType: "FLOAT32",
+            count: 3,
+            required: false,
+            noData: [
+              [0.0, 0.0],
+              [0.0, 0.0],
+              [0.0, 0.0],
+            ],
+          },
+          hasDefaultArrayOfVector: {
+            array: true,
+            type: "VEC2",
+            componentType: "FLOAT32",
+            required: false,
+            noData: [],
+            default: [
+              [1.0, 1.0],
+              [1.0, 1.0],
+            ],
           },
         },
       },
@@ -57,6 +135,21 @@ describe("Scene/MetadataEntity", function () {
       ],
     };
   });
+
+  const noDataProperties = {
+    noDefault: -1,
+    hasDefault: -1,
+    noDefaultVector: [0.0, 0.0],
+    hasDefaultVector: [0.0, 0.0],
+    noDefaultArray: [0, 0, 0],
+    hasDefaultArray: [],
+    noDefaultArrayOfVector: [
+      [0.0, 0.0],
+      [0.0, 0.0],
+      [0.0, 0.0],
+    ],
+    hasDefaultArrayOfVector: [],
+  };
 
   it("throws when using MetadataEntity directly", function () {
     const entity = new MetadataEntity();
@@ -225,16 +318,10 @@ describe("Scene/MetadataEntity", function () {
     }).toThrowDeveloperError();
   });
 
-  it("getProperty returns undefined when there's no properties", function () {
-    expect(
-      MetadataEntity.getProperty("name", {}, classWithNoPropertiesDefinition)
-    ).toBeUndefined();
-  });
-
-  it("getProperty returns undefined when there's no property with the given property ID", function () {
-    expect(
-      MetadataEntity.getProperty("volume", properties, classDefinition)
-    ).toBeUndefined();
+  it("getProperty throws when there's no property with the given property ID", function () {
+    expect(function () {
+      return MetadataEntity.getProperty("volume", properties, classDefinition);
+    }).toThrowDeveloperError();
   });
 
   it("getProperty returns the property value", function () {
@@ -250,6 +337,65 @@ describe("Scene/MetadataEntity", function () {
     expect(
       MetadataEntity.getProperty("height", properties, classDefinition)
     ).toBe(10.0);
+  });
+
+  it("getProperty handles noData correctly", function () {
+    expect(
+      MetadataEntity.getProperty(
+        "noDefault",
+        noDataProperties,
+        classWithNoDataValues
+      )
+    ).not.toBeDefined();
+    expect(
+      MetadataEntity.getProperty(
+        "hasDefault",
+        noDataProperties,
+        classWithNoDataValues
+      )
+    ).toBe(100);
+    expect(
+      MetadataEntity.getProperty(
+        "noDefaultVector",
+        noDataProperties,
+        classWithNoDataValues
+      )
+    ).not.toBeDefined();
+    expect(
+      MetadataEntity.getProperty(
+        "hasDefaultVector",
+        noDataProperties,
+        classWithNoDataValues
+      )
+    ).toEqual(new Cartesian2(100.0, 100.0));
+    expect(
+      MetadataEntity.getProperty(
+        "noDefaultArray",
+        noDataProperties,
+        classWithNoDataValues
+      )
+    ).not.toBeDefined();
+    expect(
+      MetadataEntity.getProperty(
+        "hasDefaultArray",
+        noDataProperties,
+        classWithNoDataValues
+      )
+    ).toEqual([1, 1, 1]);
+    expect(
+      MetadataEntity.getProperty(
+        "noDefaultArrayOfVector",
+        noDataProperties,
+        classWithNoDataValues
+      )
+    ).not.toBeDefined();
+    expect(
+      MetadataEntity.getProperty(
+        "hasDefaultArrayOfVector",
+        noDataProperties,
+        classWithNoDataValues
+      )
+    ).toEqual([new Cartesian2(1.0, 1.0), new Cartesian2(1.0, 1.0)]);
   });
 
   it("getProperty throws without propertyId", function () {

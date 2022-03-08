@@ -392,16 +392,7 @@ describe("Scene/GroupMetadata", function () {
     expect(results.sort()).toEqual(["color", "height"]);
   });
 
-  it("getProperty returns undefined when there's no properties", function () {
-    const groupMetadata = new GroupMetadata({
-      id: "building",
-      group: {},
-      class: buildingClassWithNoProperties,
-    });
-    expect(groupMetadata.getProperty("height")).toBeUndefined();
-  });
-
-  it("getProperty returns undefined when there's no property with the given property ID", function () {
+  it("getProperty throws when there's no property with the given property ID", function () {
     const buildingClass = new MetadataClass({
       id: "building",
       class: {
@@ -423,7 +414,9 @@ describe("Scene/GroupMetadata", function () {
         },
       },
     });
-    expect(groupMetadata.getProperty("color")).toBeUndefined();
+    expect(function () {
+      return groupMetadata.getProperty("color");
+    }).toThrowDeveloperError();
   });
 
   it("getProperty returns the property value", function () {

@@ -824,6 +824,140 @@ describe("Scene/MetadataTableProperty", function () {
     expect(propertyUint8.get(0)).toBe(1.0);
   });
 
+  it("get handles noData correctly", function () {
+    const properties = {
+      noDefault: {
+        type: "SCALAR",
+        componentType: "INT32",
+        required: false,
+        noData: -1,
+      },
+      hasDefault: {
+        type: "SCALAR",
+        componentType: "INT32",
+        required: false,
+        noData: -1,
+        default: 100,
+      },
+      noDefaultVector: {
+        type: "VEC2",
+        componentType: "FLOAT32",
+        required: false,
+        noData: [0.0, 0.0],
+      },
+      hasDefaultVector: {
+        type: "VEC2",
+        componentType: "FLOAT32",
+        required: false,
+        noData: [0.0, 0.0],
+        default: [100.0, 100.0],
+      },
+      noDefaultArray: {
+        array: true,
+        type: "SCALAR",
+        componentType: "UINT8",
+        count: 3,
+        required: false,
+        noData: [0, 0, 0],
+      },
+      hasDefaultArray: {
+        array: true,
+        type: "SCALAR",
+        componentType: "UINT8",
+        required: false,
+        noData: [],
+        default: [1, 1, 1],
+      },
+      noDefaultArrayOfVector: {
+        array: true,
+        type: "VEC2",
+        componentType: "FLOAT32",
+        count: 3,
+        required: false,
+        noData: [
+          [0.0, 0.0],
+          [0.0, 0.0],
+        ],
+      },
+      hasDefaultArrayOfVector: {
+        array: true,
+        type: "VEC2",
+        componentType: "FLOAT32",
+        required: false,
+        noData: [],
+        default: [
+          [1.0, 1.0],
+          [1.0, 1.0],
+        ],
+      },
+    };
+
+    const propertyValues = {
+      noDefault: [-1, 0],
+      hasDefault: [-1, 0],
+      noDefaultVector: [
+        [0.0, 0.0],
+        [0.0, 1.0],
+      ],
+      hasDefaultVector: [
+        [0.0, 0.0],
+        [0.0, 1.0],
+      ],
+      noDefaultArray: [
+        [0, 0, 0],
+        [1, 0, 0],
+      ],
+      hasDefaultArray: [[], [1, 2]],
+      noDefaultArrayOfVector: [
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [1.0, 0.0, 1.0, 1.0, 0.0, 0.0],
+      ],
+      hasDefaultArrayOfVector: [[], [1.0, 0.0]],
+    };
+
+    const expectedValues = {
+      noDefault: [undefined, 0],
+      hasDefault: [100, 0],
+      noDefaultVector: [undefined, new Cartesian2(0.0, 1.0)],
+      hasDefaultVector: [
+        new Cartesian2(100.0, 100.0),
+        new Cartesian2(0.0, 1.0),
+      ],
+      noDefaultArray: [undefined, [1, 0, 0]],
+      hasDefaultArray: [
+        [1, 1, 1],
+        [1, 2],
+      ],
+      noDefaultArrayOfVector: [
+        undefined,
+        [
+          [1.0, 0.0],
+          [1.0, 1.0],
+          [0.0, 0.0],
+        ],
+      ],
+      hasDefaultArrayOfVector: [
+        [new Cartesian2(1.0, 1.0), new Cartesian2(1.0, 1.0)],
+        [new Cartesian2(1.0, 0.0)],
+      ],
+    };
+
+    for (const propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        const property = MetadataTester.createProperty({
+          property: properties[propertyId],
+          values: propertyValues[propertyId],
+        });
+
+        const length = expectedValues.length;
+        for (let i = 0; i < length; ++i) {
+          const value = property.get(i);
+          expect(value).toEqual(expectedValues[propertyId][i]);
+        }
+      }
+    }
+  });
+
   it("get throws without index", function () {
     const property = MetadataTester.createProperty({
       property: {
