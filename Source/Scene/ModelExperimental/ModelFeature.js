@@ -185,9 +185,8 @@ ModelFeature.prototype.getProperty = function (name) {
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ModelFeature.prototype.getPropertyInherited = function (name) {
-  const value = this._featureTable.getPropertyBySemantic(this._featureId, name);
-  if (defined(value)) {
-    return value;
+  if (this._featureTable.hasPropertyBySemantic(this._featureId, name)) {
+    return this._featureTable.getPropertyBySemantic(this._featureId, name);
   }
 
   return this._featureTable.getProperty(this._featureId, name);

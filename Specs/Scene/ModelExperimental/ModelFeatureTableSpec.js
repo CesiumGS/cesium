@@ -86,6 +86,20 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
     }
   });
 
+  it("hasPropertyBySemantic works", function () {
+    const table = new ModelFeatureTable({
+      model: {
+        type: ModelExperimentalType.GLTF,
+      },
+      propertyTable: mockPropertyTable,
+    });
+    const modelFeatures = table._features;
+    for (let i = 0; i < modelFeatures.length; i++) {
+      expect(table.hasPropertyBySemantic(i, "HEIGHT_SEMANTIC")).toEqual(true);
+      expect(table.hasPropertyBySemantic(i, "WIDTH_SEMANTIC")).toEqual(false);
+    }
+  });
+
   it("getFeature works", function () {
     const table = new ModelFeatureTable({
       model: {
