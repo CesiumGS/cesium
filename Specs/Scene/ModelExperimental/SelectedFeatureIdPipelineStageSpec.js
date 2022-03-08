@@ -98,8 +98,8 @@ describe(
           node: node,
         },
         model: {
-          featureIdLabel: 0,
-          instanceFeatureIdLabel: 0,
+          featureIdLabel: "featureId_0",
+          instanceFeatureIdLabel: "instanceFeatureId_0",
         },
         uniformMap: {},
         hasPropertyTable: false,
@@ -113,7 +113,7 @@ describe(
         const primitive = node.primitives[0];
         const frameState = scene.frameState;
         const renderResources = mockRenderResources(node);
-        renderResources.model.featureIdLabel = 1;
+        renderResources.model.featureIdLabel = "featureId_1";
 
         SelectedFeatureIdPipelineStage.process(
           renderResources,
@@ -128,12 +128,12 @@ describe(
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_SELECTED_FEATURE_ID",
           "HAS_SELECTED_FEATURE_ID_ATTRIBUTE",
-          "SELECTED_FEATURE_ID featureId_1",
+          "SELECTED_FEATURE_ID defaultIdsTest",
         ]);
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
           "HAS_SELECTED_FEATURE_ID",
           "HAS_SELECTED_FEATURE_ID_ATTRIBUTE",
-          "SELECTED_FEATURE_ID featureId_1",
+          "SELECTED_FEATURE_ID defaultIdsTest",
         ]);
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
           _shadersSelectedFeatureIdStageCommon,
@@ -151,7 +151,7 @@ describe(
         const primitive = node.primitives[0];
         const frameState = scene.frameState;
         const renderResources = mockRenderResources(node);
-        renderResources.model.featureIdLabel = 0;
+        renderResources.model.featureIdLabel = "landCover";
 
         SelectedFeatureIdPipelineStage.process(
           renderResources,
@@ -166,7 +166,7 @@ describe(
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
           "HAS_SELECTED_FEATURE_ID",
           "HAS_SELECTED_FEATURE_ID_TEXTURE",
-          "SELECTED_FEATURE_ID featureId_0",
+          "SELECTED_FEATURE_ID landCover",
         ]);
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, []);
         ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
@@ -182,7 +182,7 @@ describe(
         const primitive = node.primitives[0];
         const frameState = scene.frameState;
         const renderResources = mockRenderResources(node);
-        renderResources.model.instanceFeatureIdLabel = 1;
+        renderResources.model.instanceFeatureIdLabel = "section";
 
         SelectedFeatureIdPipelineStage.process(
           renderResources,
@@ -196,12 +196,12 @@ describe(
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_SELECTED_FEATURE_ID",
           "HAS_SELECTED_FEATURE_ID_ATTRIBUTE",
-          "SELECTED_FEATURE_ID instanceFeatureId_1",
+          "SELECTED_FEATURE_ID section",
         ]);
         ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
           "HAS_SELECTED_FEATURE_ID",
           "HAS_SELECTED_FEATURE_ID_ATTRIBUTE",
-          "SELECTED_FEATURE_ID instanceFeatureId_1",
+          "SELECTED_FEATURE_ID section",
         ]);
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
           _shadersSelectedFeatureIdStageCommon,
@@ -219,7 +219,7 @@ describe(
         const primitive = node.primitives[0];
         const frameState = scene.frameState;
         const renderResources = mockRenderResources(node);
-        renderResources.model.featureIdLabel = 6;
+        renderResources.model.featureIdLabel = "idsGWithNull";
 
         SelectedFeatureIdPipelineStage.process(
           renderResources,
@@ -235,7 +235,7 @@ describe(
           "HAS_NULL_FEATURE_ID",
           "HAS_SELECTED_FEATURE_ID",
           "HAS_SELECTED_FEATURE_ID_TEXTURE",
-          "SELECTED_FEATURE_ID featureId_6",
+          "SELECTED_FEATURE_ID idsGWithNull",
         ]);
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, []);
         ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [

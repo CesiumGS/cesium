@@ -124,6 +124,8 @@ function getSelectedFeatureIds(model, node, primitive) {
     );
 
     if (defined(featureIds)) {
+      // Either label could be used here, but prefer label as it may be more
+      // meaningful when debugging
       variableName = defaultValue(featureIds.label, featureIds.positionalLabel);
       return {
         featureIds: featureIds,
@@ -138,6 +140,7 @@ function getSelectedFeatureIds(model, node, primitive) {
     primitive.featureIds,
     model.featureIdLabel
   );
+  // again, prefer label for being more descriptive
   variableName = defaultValue(featureIds.label, featureIds.positionalLabel);
   return {
     featureIds: featureIds,

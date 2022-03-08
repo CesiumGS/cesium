@@ -278,7 +278,7 @@ describe("Scene/ModelExperimental/PickingPipelineStage", function () {
       shaderBuilder: new ShaderBuilder(),
       uniformMap: {},
       model: {
-        featureIdLabel: 0,
+        featureIdLabel: "featureId_0",
         type: ModelExperimentalType.GLTF,
         _resources: [],
         featureTables: [mockModelFeatureTable],
