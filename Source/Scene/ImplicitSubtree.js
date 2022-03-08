@@ -211,7 +211,7 @@ ImplicitSubtree.prototype.tileIsAvailableAtCoordinates = function (
  * Check if a specific tile's content is available at an index of the content availability bitstream
  *
  * @param {Number} index The index of the desired tile
- * @param {Number} [contentIndex=0] The index of the desired content when the <code>3DTILES_multiple_contents</code> extension is used.
+ * @param {Number} [contentIndex=0] The index of the desired content when multiple contents are used.
  * @returns {Boolean} The value of the i-th bit
  * @private
  */
@@ -368,7 +368,7 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
     constant: 0,
   };
 
-  // In the current schema, content availability is provided in an array in the subtree JSON
+  // In 3D Tiles 1.1, content availability is provided in an array in the subtree JSON
   // regardless of whether or not it contains multiple contents. This differs from previous
   // schema drafts, where content availability is either a single object in the subtree
   // JSON or as an array in the 3DTILES_multiple_contents extension.

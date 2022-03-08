@@ -30,7 +30,7 @@
         "subtreeLevels": 2,
         "availableLevels": 2,
         "subtrees": {
-          "uri": "subtrees/{level}.{x}.{y}.json"
+          "uri": "subtrees/1.0/{level}.{x}.{y}.json"
         }
       },
       "3DTILES_multiple_contents": {

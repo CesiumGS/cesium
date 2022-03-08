@@ -56,7 +56,17 @@ import Pass from "../Renderer/Pass.js";
 function Cesium3DTile(tileset, baseResource, header, parent) {
   this._tileset = tileset;
   this._header = header;
-  const contentHeader = header.content;
+
+  const hasContentsArray = defined(header.contents);
+  const hasMultipleContents =
+    (hasContentsArray && header.contents.length > 1) ||
+    hasExtension(header, "3DTILES_multiple_contents");
+
+  // In the 1.0 schema, content is stored in tile.content instead of tile.contents
+  const contentHeader =
+    hasContentsArray && !hasMultipleContents
+      ? header.contents[0]
+      : header.content;
 
   /**
    * The local transform of this tile.
@@ -197,15 +207,13 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   let content;
   let hasEmptyContent = false;
-  let hasMultipleContents = false;
   let contentState;
   let contentResource;
   let serverKey;
 
   baseResource = Resource.createIfNeeded(baseResource);
 
-  if (hasExtension(header, "3DTILES_multiple_contents")) {
-    hasMultipleContents = true;
+  if (hasMultipleContents) {
     contentState = Cesium3DTileContentState.UNLOADED;
     // Each content may have its own URI, but they all need to be resolved
     // relative to the tileset, so the base resource is used.
@@ -294,8 +302,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.hasImplicitContentMetadata = false;
 
   /**
-   * When <code>true</code>, the tile has multiple contents via the
-   * <code>3DTILES_multiple_contents</code> extension.
+   * When <code>true</code>, the tile has multiple contents, either in the tile JSON (3D Tiles 1.1)
+   * or via the <code>3DTILES_multiple_contents</code> extension.
    *
    * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_multiple_contents|3DTILES_multiple_contents extension}
    *
@@ -1052,11 +1060,11 @@ Cesium3DTile.prototype.requestContent = function () {
 };
 
 /**
- * The <code>3DTILES_multiple_contents</code> extension allows multiple
- * {@link Cesium3DTileContent} within a single tile. Due to differences
- * in request scheduling, this is handled separately.
+ * Multiple {@link Cesium3DTileContent}s are allowed within a single tile either through
+ * the tile JSON (3D Tiles 1.1) or the <code>3DTILES_multiple_contents</code> extension.
+ * Due to differences in request scheduling, this is handled separately.
  * <p>
- * This implementation of <code>3DTILES_multiple_contents</code> does not
+ * This implementation of multiple contents does not
  * support tile expiry like requestSingleContent does. If this changes,
  * note that the resource.setQueryParameters() details must go inside {@link Multiple3DTileContent} since that is per-request.
  * </p>
@@ -1070,13 +1078,15 @@ function requestMultipleContents(tile) {
   if (!defined(multipleContents)) {
     // Create the content object immediately, it will handle scheduling
     // requests for inner contents.
-    const extensionHeader =
-      tile._header.extensions["3DTILES_multiple_contents"];
+    const contentsJson = hasExtension(tile._header, "3DTILES_multiple_contents")
+      ? tile._header.extensions["3DTILES_multiple_contents"]
+      : tile._header;
+
     multipleContents = new Multiple3DTileContent(
       tileset,
       tile,
       tile._contentResource.clone(),
-      extensionHeader
+      contentsJson
     );
     tile._content = multipleContents;
   }
@@ -1295,7 +1305,9 @@ function makeContent(tile, arrayBuffer) {
     );
   }
 
-  const contentHeader = tile._header.content;
+  const contentHeader = defined(tile._header.contents)
+    ? tile._header.contents[0]
+    : tile._header.content;
 
   if (tile.hasImplicitContentMetadata) {
     const subtree = tile.implicitSubtree;
@@ -1847,7 +1859,7 @@ function updateContent(tile, tileset, frameState) {
   const content = tile._content;
   const expiredContent = tile._expiredContent;
 
-  // expired content is not supported for 3DTILES_multiple_contents
+  // expired content is not supported for multiple contents
   if (!tile.hasMultipleContents && defined(expiredContent)) {
     if (!tile.contentReady) {
       // Render the expired content while the content loads

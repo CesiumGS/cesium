@@ -20,8 +20,6 @@
       "maximum": 20
     }
   },
-  "extensionsRequired": ["3DTILES_multiple_contents"],
-  "extensionsUsed": ["3DTILES_multiple_contents"],
   "schema": {
     "classes": {
       "layer": {
@@ -73,19 +71,15 @@
       ]
     },
     "geometricError": 0,
-    "extensions": {
-      "3DTILES_multiple_contents": {
-        "content": [
-          {
-            "uri": "batched.b3dm",
-            "group": "buildings"
-          },
-          {
-            "uri": "instanced.i3dm",
-            "group": "cubes"
-          }
-        ]
+    "contents": [
+      {
+        "uri": "batched.b3dm",
+        "group": "buildings"
+      },
+      {
+        "uri": "instanced.i3dm",
+        "group": "cubes"
       }
-    }
+    ]
   }
 }

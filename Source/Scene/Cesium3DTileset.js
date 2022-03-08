@@ -3,7 +3,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
-import combine from "../Core/combine.js";
+import clone from "../Core/clone.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
@@ -583,7 +583,7 @@ function Cesium3DTileset(options) {
    * <li><code>message</code>: the error message.</li>
    * </ul>
    * <p>
-   * If the <code>3DTILES_multiple_contents</code> extension is used, this event is raised once per inner content with errors.
+   * If multiple contents are present, this event is raised once per inner content with errors.
    * </p>
    *
    * @type {Event}
@@ -1995,14 +1995,17 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
     const contentUri = implicitTileset.subtreeUriTemplate.getDerivedResource({
       templateValues: rootCoordinates.getTemplateValues(),
     }).url;
-    const contentJson = {
-      content: {
-        uri: contentUri,
-      },
-    };
 
     const deepCopy = true;
-    const tileJson = combine(contentJson, tileHeader, deepCopy);
+    const tileJson = clone(tileHeader, deepCopy);
+    // Replace contents with the subtree
+    tileJson.contents = [
+      {
+        uri: contentUri,
+      },
+    ];
+
+    delete tileJson.content;
 
     // The placeholder tile does not have any extensions. If there are any
     // extensions beyond 3DTILES_implicit_tiling, Implicit3DTileContent will

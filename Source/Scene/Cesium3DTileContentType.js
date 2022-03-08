@@ -114,8 +114,7 @@ const Cesium3DTileContentType = {
    */
   EXTERNAL_TILESET: "externalTileset",
   /**
-   * <code>3DTILES_multiple_contents</code> is a 3D Tiles
-   * extensions. This is handled separately from the other content types
+   * Multiple contents are handled separately from the other content types
    * due to differences in request scheduling.
    *
    * @type {String}

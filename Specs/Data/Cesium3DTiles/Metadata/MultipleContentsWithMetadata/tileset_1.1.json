@@ -20,12 +20,6 @@
       "maximum": 20
     }
   },
-  "extensionsRequired": [
-    "3DTILES_multiple_contents"
-  ],
-  "extensionsUsed": [
-    "3DTILES_multiple_contents"
-  ],
   "schema": {
     "classes": {
       "batched": {
@@ -66,31 +60,27 @@
       ]
     },
     "geometricError": 0,
-    "extensions": {
-      "3DTILES_multiple_contents": {
-        "content": [
-          {
-            "uri": "batched.b3dm",
-            "metadata": {
-              "class": "batched",
-              "properties": {
-                "highlightColor": [0, 0, 255],
-                "author": "Cesium"
-              }
-            }
-          },
-          {
-            "uri": "instanced.i3dm",
-            "metadata": {
-              "class": "instanced",
-              "properties": {
-                "numberOfInstances": 50,
-                "author": "Sample Author"
-              }
-            }
+    "contents": [
+      {
+        "uri": "batched.b3dm",
+        "metadata": {
+          "class": "batched",
+          "properties": {
+            "highlightColor": [0, 0, 255],
+            "author": "Cesium"
           }
-        ]
+        }
+      },
+      {
+        "uri": "instanced.i3dm",
+        "metadata": {
+          "class": "instanced",
+          "properties": {
+            "numberOfInstances": 50,
+            "author": "Sample Author"
+          }
+        }
       }
-    }
+    ]
   }
 }

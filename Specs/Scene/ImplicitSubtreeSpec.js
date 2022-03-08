@@ -1196,57 +1196,6 @@ describe("Scene/ImplicitSubtree", function () {
     });
   });
 
-  it("contentIsAvailableAtIndex works for multiple contents without extension", function () {
-    const subtreeDescription = {
-      tileAvailability: {
-        descriptor: 1,
-        lengthBits: 5,
-        isInternal: true,
-      },
-      contentAvailability: [
-        {
-          descriptor: 1,
-          lengthBits: 5,
-          isInternal: false,
-        },
-        {
-          descriptor: "10011",
-          lengthBits: 5,
-          isInternal: false,
-        },
-      ],
-      childSubtreeAvailability: {
-        descriptor: 0,
-        lengthBits: 16,
-        isInternal: true,
-      },
-    };
-
-    const results = ImplicitTilingTester.generateSubtreeBuffers(
-      subtreeDescription
-    );
-    const fetchExternal = spyOn(ResourceCache, "load").and.callFake(
-      fakeLoad(results.externalBuffer)
-    );
-
-    const subtree = new ImplicitSubtree(
-      subtreeResource,
-      undefined,
-      results.subtreeBuffer,
-      implicitQuadtree,
-      quadtreeCoordinates
-    );
-
-    return subtree.readyPromise.then(function () {
-      expect(fetchExternal).toHaveBeenCalled();
-      expectTileAvailability(subtree, subtreeDescription.tileAvailability);
-      expectContentAvailability(
-        subtree,
-        subtreeDescription.contentAvailability
-      );
-    });
-  });
-
   it("rejects ready promise on error", function () {
     const error = new Error("simulated error");
     spyOn(when, "all").and.returnValue(when.reject(error));
@@ -1332,7 +1281,7 @@ describe("Scene/ImplicitSubtree", function () {
     });
   });
 
-  describe("3DTILES_multiple_contents", function () {
+  describe("multiple contents", function () {
     const tileJson = {
       geometricError: 500,
       refine: "ADD",
@@ -1347,32 +1296,32 @@ describe("Scene/ImplicitSubtree", function () {
           uri: "https://example.com/{level}/{x}/{y}.subtree",
         },
       },
-      extensions: {
-        "3DTILES_multiple_contents": {
-          content: [
-            {
-              uri: "https://example.com/{level}/{x}/{y}.b3dm",
-            },
-            {
-              uri: "https://example.com/{level}/{x}/{y}.pnts",
-            },
-          ],
+      contents: [
+        {
+          uri: "https://example.com/{level}/{x}/{y}.b3dm",
         },
-      },
+        {
+          uri: "https://example.com/{level}/{x}/{y}.pnts",
+        },
+      ],
     };
 
-    const multipleContentsQuadtree = new ImplicitTileset(
-      tilesetResource,
-      tileJson,
-      metadataSchema
-    );
+    let multipleContentsQuadtree;
+    let multipleContentsCoordinates;
+    beforeAll(function () {
+      multipleContentsQuadtree = new ImplicitTileset(
+        tilesetResource,
+        tileJson,
+        metadataSchema
+      );
 
-    const multipleContentsCoordinates = new ImplicitTileCoordinates({
-      subdivisionScheme: multipleContentsQuadtree.subdivisionScheme,
-      subtreeLevels: multipleContentsQuadtree.subtreeLevels,
-      level: 0,
-      x: 0,
-      y: 0,
+      multipleContentsCoordinates = new ImplicitTileCoordinates({
+        subdivisionScheme: multipleContentsQuadtree.subdivisionScheme,
+        subtreeLevels: multipleContentsQuadtree.subtreeLevels,
+        level: 0,
+        x: 0,
+        y: 0,
+      });
     });
 
     it("contentIsAvailableAtIndex throws for out-of-bounds contentIndex", function () {
@@ -1399,7 +1348,6 @@ describe("Scene/ImplicitSubtree", function () {
           lengthBits: 16,
           isInternal: true,
         },
-        useMultipleContentsExtension: true,
       };
       const results = ImplicitTilingTester.generateSubtreeBuffers(
         subtreeDescription
@@ -1444,7 +1392,58 @@ describe("Scene/ImplicitSubtree", function () {
           lengthBits: 16,
           isInternal: true,
         },
-        useMultipleContentsExtension: true,
+      };
+
+      const results = ImplicitTilingTester.generateSubtreeBuffers(
+        subtreeDescription
+      );
+      const fetchExternal = spyOn(ResourceCache, "load").and.callFake(
+        fakeLoad(results.externalBuffer)
+      );
+
+      const subtree = new ImplicitSubtree(
+        subtreeResource,
+        undefined,
+        results.subtreeBuffer,
+        multipleContentsQuadtree,
+        multipleContentsCoordinates
+      );
+
+      return subtree.readyPromise.then(function () {
+        expect(fetchExternal).toHaveBeenCalled();
+        expectTileAvailability(subtree, subtreeDescription.tileAvailability);
+        expectContentAvailability(
+          subtree,
+          subtreeDescription.contentAvailability
+        );
+      });
+    });
+
+    it("contentIsAvailableAtIndex works for multiple contents (legacy)", function () {
+      const subtreeDescription = {
+        tileAvailability: {
+          descriptor: 1,
+          lengthBits: 5,
+          isInternal: true,
+        },
+        contentAvailability: [
+          {
+            descriptor: 1,
+            lengthBits: 5,
+            isInternal: false,
+          },
+          {
+            descriptor: "10011",
+            lengthBits: 5,
+            isInternal: false,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: 0,
+          lengthBits: 16,
+          isInternal: true,
+        },
+        useLegacySchema: true,
       };
 
       const results = ImplicitTilingTester.generateSubtreeBuffers(

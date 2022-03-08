@@ -2,9 +2,6 @@
   "asset": {
     "version": "1.1"
   },
-  "extensionsUsed": [
-    "3DTILES_multiple_contents"
-  ],
   "extras": {
     "name": "Sample Implicit Tileset"
   },
@@ -53,18 +50,14 @@
         "uri": "subtrees/{level}.{x}.{y}.json"
       }
     },
-    "extensions": {
-      "3DTILES_multiple_contents": {
-        "content": [
-          {
-            "uri": "ground/{level}/{x}/{y}.b3dm"
-          },
-          {
-            "uri": "sky/{level}/{x}/{y}.b3dm"
-          }
-        ]
+    "contents": [
+      {
+        "uri": "ground/{level}/{x}/{y}.b3dm"
+      },
+      {
+        "uri": "sky/{level}/{x}/{y}.b3dm"
       }
-    },
+    ],
     "geometricError": 70,
     "refine": "ADD"
   }

@@ -923,12 +923,9 @@ describe(
       });
     });
 
-    describe("3DTILES_multiple_contents", function () {
+    describe("multiple contents", function () {
       const implicitMultipleContentsUrl =
         "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset_1.1.json";
-
-      const implicitMultipleContentsWithoutExtensionUrl =
-        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContentsWithoutExtension/tileset_1.1.json";
 
       it("a single content is transcoded as a regular tile", function () {
         return Cesium3DTilesTester.loadTileset(
@@ -941,14 +938,14 @@ describe(
           expect(transcodedRoot.content).toBeInstanceOf(
             Batched3DModel3DTileContent
           );
-          expect(transcodedRootHeader.content).toEqual({
+          expect(transcodedRootHeader.contents[0]).toEqual({
             uri: "ground/0/0/0.b3dm",
           });
           expect(transcodedRootHeader.extensions).not.toBeDefined();
         });
       });
 
-      it("multiple contents are transcoded to a tile with a 3DTILES_multiple_contents extension", function () {
+      it("multiple contents are transcoded to a tile", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitMultipleContentsUrl
@@ -964,11 +961,56 @@ describe(
           }
         });
       });
+    });
 
-      it("multiple contents are transcoded from a subtree without multiple contents extension", function () {
+    describe("3DTILES_multiple_contents", function () {
+      const implicitMultipleContentsLegacyUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset_1.0.json";
+
+      // Same as above tileset, but with "content" instead of "contents"
+      const implicitMultipleContentsLegacyWithContentUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset_1.0_content.json";
+
+      it("a single content is transcoded as a regular tile (legacy)", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsWithoutExtensionUrl
+          implicitMultipleContentsLegacyUrl
+        ).then(function (tileset) {
+          // The root tile of this tileset only has one available content
+          const transcodedRoot = tileset.root.children[0];
+          const transcodedRootHeader = transcodedRoot._header;
+          expect(transcodedRoot.content).toBeInstanceOf(
+            Batched3DModel3DTileContent
+          );
+          expect(transcodedRootHeader.contents[0]).toEqual({
+            uri: "ground/0/0/0.b3dm",
+          });
+          expect(transcodedRootHeader.extensions).not.toBeDefined();
+        });
+      });
+
+      it("a single content is transcoded as a regular tile (legacy with 'content')", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitMultipleContentsLegacyWithContentUrl
+        ).then(function (tileset) {
+          // The root tile of this tileset only has one available content
+          const transcodedRoot = tileset.root.children[0];
+          const transcodedRootHeader = transcodedRoot._header;
+          expect(transcodedRoot.content).toBeInstanceOf(
+            Batched3DModel3DTileContent
+          );
+          expect(transcodedRootHeader.contents[0]).toEqual({
+            uri: "ground/0/0/0.b3dm",
+          });
+          expect(transcodedRootHeader.extensions).not.toBeDefined();
+        });
+      });
+
+      it("multiple contents are transcoded to a tile (legacy)", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitMultipleContentsLegacyUrl
         ).then(function (tileset) {
           const childTiles = tileset.root.children[0].children;
           for (let i = 0; i < childTiles.length; i++) {
@@ -982,7 +1024,24 @@ describe(
         });
       });
 
-      it("passes extensions through correctly", function () {
+      it("multiple contents are transcoded to a tile (legacy with 'content')", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitMultipleContentsLegacyWithContentUrl
+        ).then(function (tileset) {
+          const childTiles = tileset.root.children[0].children;
+          for (let i = 0; i < childTiles.length; i++) {
+            const childTile = childTiles[i];
+            const content = childTile.content;
+            expect(content).toBeInstanceOf(Multiple3DTileContent);
+
+            const childTileHeader = childTile._header;
+            expect(childTileHeader.content).not.toBeDefined();
+          }
+        });
+      });
+
+      it("passes extensions through correctly (legacy)", function () {
         const originalLoadJson = Cesium3DTileset.loadJson;
         const metadataExtension = {
           group: "buildings",
@@ -995,7 +1054,7 @@ describe(
           return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
             const multiContent =
               tilesetJson.root.extensions["3DTILES_multiple_contents"];
-            multiContent.content.forEach(function (content) {
+            multiContent.contents.forEach(function (content) {
               content.extensions = {
                 "3DTILES_metadata": metadataExtension,
               };
@@ -1008,20 +1067,20 @@ describe(
 
         return Cesium3DTilesTester.loadTileset(
           scene,
-          implicitMultipleContentsUrl
+          implicitMultipleContentsLegacyUrl
         ).then(function (tileset) {
           // the placeholder tile does not have any extensions.
           const placeholderTile = tileset.root;
           const placeholderHeader = placeholderTile._header;
           expect(placeholderHeader.extensions).not.toBeDefined();
-          expect(placeholderHeader.content.extensions).not.toBeDefined();
+          expect(placeholderHeader.contents[0].extensions).not.toBeDefined();
 
           const transcodedRoot = placeholderTile.children[0];
           const transcodedRootHeader = transcodedRoot._header;
           expect(transcodedRootHeader.extensions).toEqual({
             "3DTILES_extension": otherExtension,
           });
-          expect(transcodedRootHeader.content.extensions).toEqual({
+          expect(transcodedRootHeader.contents[0].extensions).toEqual({
             "3DTILES_metadata": metadataExtension,
           });
 
@@ -1034,8 +1093,7 @@ describe(
               otherExtension
             );
 
-            const innerContentHeaders =
-              childTileHeader.extensions["3DTILES_multiple_contents"].content;
+            const innerContentHeaders = childTileHeader.contents;
 
             innerContentHeaders.forEach(function (header) {
               expect(header.extensions).toEqual({
