@@ -69,7 +69,7 @@ export default function ImplicitTileset(
     // Merge the extension with the boundingVolume for consistency with 3D Tiles 1.1
     boundingVolume.s2Cell =
       boundingVolume.extensions["3DTILES_bounding_volume_S2"];
-    delete boundingVolume.extensions;
+    delete boundingVolume.extensions["3DTILES_bounding_volume_S2"];
   }
 
   if (
