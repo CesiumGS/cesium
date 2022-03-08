@@ -82,6 +82,18 @@
             "componentType": "UINT8",
             "semantic": "HIGHLIGHT_COLOR"
           },
+          "defaultColor": {
+            "type": "VEC4",
+            "componentType": "UINT8",
+            "semantic": "DEFAULT_COLOR",
+            "default": [255, 255, 255, 255]
+          },
+          "averageTemperature": {
+            "type": "SCALAR",
+            "componentType": "FLOAT32",
+            "semantic": "AVERAGE_TEMPERATURE",
+            "noData": -1
+          },
           "population": {
             "type": "SCALAR",
             "componentType": "UINT32"
@@ -174,7 +186,8 @@
       "properties": {
         "color": [127, 0, 255, 1.0],
         "highlightColor": [255, 255, 255, 1.0],
-        "population": 530
+        "population": 530,
+        "averageTemperature": -1
       }
     },
     "children": [
@@ -207,7 +220,8 @@
           "properties": {
             "color": [255, 255, 0, 1.0],
             "highlightColor": [255, 0, 255, 1.0],
-            "population": 50
+            "population": 50,
+            "averageTemperature": 24
           }
         }
       },
@@ -240,7 +254,8 @@
           "properties": {
             "color": [255, 0, 127, 1.0],
             "highlightColor": [0, 255, 255, 1.0],
-            "population": 230
+            "population": 230,
+            "averageTemperature": 25
           }
         }
       },
@@ -273,7 +288,8 @@
           "properties": {
             "color": [255, 127, 0, 1.0],
             "highlightColor": [0, 255, 0, 1.0],
-            "population": 150
+            "population": 150,
+            "averageTemperature": -1
           }
         }
       },
@@ -306,7 +322,8 @@
           "properties": {
             "color": [255, 0, 0, 1.0],
             "highlightColor": [0, 255, 0, 1.0],
-            "population": 100
+            "population": 100,
+            "averageTemperature": 26
           }
         }
       }

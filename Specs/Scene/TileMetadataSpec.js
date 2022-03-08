@@ -121,8 +121,10 @@ describe("Scene/TileMetadata", function () {
     expect(propertyIds).toEqual(["color", "isSquare"]);
   });
 
-  it("getProperty returns undefined if a property does not exist", function () {
-    expect(tileMetadata.getProperty("numberOfPoints")).not.toBeDefined();
+  it("getProperty returns throws if a property does not exist", function () {
+    expect(function () {
+      return tileMetadata.getProperty("height");
+    }).toThrowDeveloperError();
   });
 
   it("getProperty returns the property value", function () {

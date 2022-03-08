@@ -120,8 +120,10 @@ describe("Scene/ContentMetadata", function () {
     expect(propertyIds).toEqual(["author", "color"]);
   });
 
-  it("getProperty returns undefined if a property does not exist", function () {
-    expect(contentMetadata.getProperty("numberOfPoints")).not.toBeDefined();
+  it("getProperty throws if a property does not exist", function () {
+    expect(function () {
+      return contentMetadata.getProperty("numberOfPoints");
+    }).toThrowDeveloperError();
   });
 
   it("getProperty returns the property value", function () {

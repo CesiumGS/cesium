@@ -87,6 +87,13 @@
                 "componentType": "UINT8",
                 "semantic": "HIGHLIGHT_COLOR"
               },
+              "defaultColor": {
+                "type": "VEC4",
+                "componentType": "UINT8",
+                "semantic": "DEFAULT_COLOR",
+                "required": false,
+                "default": [255, 255, 255, 255]
+              },
               "population": {
                 "type": "SCALAR",
                 "componentType": "UINT32"

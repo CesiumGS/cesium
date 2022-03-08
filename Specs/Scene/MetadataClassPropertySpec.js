@@ -771,6 +771,89 @@ describe("Scene/MetadataClassProperty", function () {
     }
   });
 
+  describe("handleNoData", function () {
+    let properties;
+    beforeAll(function () {
+      properties = {
+        float: {
+          type: "SCALAR",
+          componentType: "FLOAT64",
+          noData: -1.0,
+        },
+        array: {
+          array: true,
+          count: 4,
+          type: "SCALAR",
+          componentType: "UINT8",
+          noData: [255, 255, 255, 255],
+        },
+        variableLengthArray: {
+          array: true,
+          type: "STRING",
+          noData: [],
+        },
+        arrayOfVector: {
+          array: true,
+          count: 2,
+          type: "VEC2",
+          componentType: "FLOAT32",
+          noData: [
+            [0, 0],
+            [0, 0],
+          ],
+        },
+      };
+    });
+
+    it("passes through valid values unchanged", function () {
+      const propertyValues = {
+        float: 1.0,
+        array: [0, 0, 0, 255],
+        variableLengthArray: ["Hello", "World"],
+        arrayOfVector: [
+          [1, 1],
+          [2, -1],
+        ],
+      };
+
+      for (const propertyId in properties) {
+        if (properties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: properties[propertyId],
+          });
+          const expected = propertyValues[propertyId];
+          const actual = property.handleNoData(expected);
+          expect(actual).toBe(expected);
+        }
+      }
+    });
+
+    it("converts noData values to undefined", function () {
+      const propertyValues = {
+        float: -1,
+        array: [255, 255, 255, 255],
+        variableLengthArray: [],
+        arrayOfVector: [
+          [0, 0],
+          [0, 0],
+        ],
+      };
+
+      for (const propertyId in properties) {
+        if (properties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: properties[propertyId],
+          });
+          const value = propertyValues[propertyId];
+          const actual = property.handleNoData(value);
+          expect(actual).not.toBeDefined();
+        }
+      }
+    });
+  });
+
   it("packVectorAndMatrixTypes packs vectors and matrices", function () {
     const properties = {
       propertyVec2: {
@@ -1557,7 +1640,7 @@ describe("Scene/MetadataClassProperty", function () {
         count: 5,
       },
       propertyBigIntArray: {
-        type: "ARRAY",
+        type: "SCALAR",
         componentType: "UINT64",
         array: true,
         count: 2,
@@ -1645,6 +1728,35 @@ describe("Scene/MetadataClassProperty", function () {
         new Matrix3(3, 0, 0, 0, 3, 0, 0, 0, 3),
       ])
     ).toBeUndefined();
+  });
+
+  it("validate returns error message if property is required but value is undefined", function () {
+    const property = new MetadataClassProperty({
+      id: "position",
+      property: {
+        type: "SCALAR",
+        componentType: "FLOAT32",
+        required: true,
+      },
+    });
+
+    expect(property.validate(undefined)).toBe(
+      "required property must have a value"
+    );
+  });
+
+  it("validate returns undefined if value is undefined but a default is available", function () {
+    const property = new MetadataClassProperty({
+      id: "position",
+      property: {
+        type: "SCALAR",
+        componentType: "FLOAT32",
+        required: true,
+        default: -1.0,
+      },
+    });
+
+    expect(property.validate(undefined)).not.toBeDefined();
   });
 
   it("validate returns error message if type is ARRAY and value is not an array", function () {

@@ -18,6 +18,7 @@
     - Updated metadata type parsing to match the latest schema [#10116](https://github.com/CesiumGS/cesium/pull/10116)
     - Updated property texture parsing to match the latest schema [#10122](https://github.com/CesiumGS/cesium/pull/10122)
     - Property tables now use `values`, `stringOffsets`, and `arrayOffsets` rather than `bufferView`, `stringOffsetBufferView`, and `arrayOffsetBufferView`, respectively. [#10151](https://github.com/CesiumGS/cesium/pull/10151)
+    - Added support for properties with `required`, `noData` and `default`. [#10172](https://github.com/CesiumGS/cesium/pull/10172)
   - `3DTILES_metadata`:
     - Added support for explicit content metadata. [#10150](https://github.com/CesiumGS/cesium/pull/10150)
 - Updated extensions to match the latest 3D Tiles 1.1 schema. See the [latest schema PR](https://github.com/CesiumGS/3d-tiles/pull/634):
