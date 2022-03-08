@@ -64,13 +64,21 @@ export default function ImplicitTileset(
    */
   this.metadataSchema = metadataSchema;
 
+  const boundingVolume = tileJson.boundingVolume;
+  if (hasExtension(boundingVolume, "3DTILES_bounding_volume_S2")) {
+    // Merge the extension with the boundingVolume for consistency with 3D Tiles 1.1
+    boundingVolume.s2Cell =
+      boundingVolume.extensions["3DTILES_bounding_volume_S2"];
+    delete boundingVolume.extensions;
+  }
+
   if (
-    !defined(tileJson.boundingVolume.box) &&
-    !defined(tileJson.boundingVolume.region) &&
-    !hasExtension(tileJson.boundingVolume, "3DTILES_bounding_volume_S2")
+    !defined(boundingVolume.box) &&
+    !defined(boundingVolume.region) &&
+    !defined(boundingVolume.s2Cell)
   ) {
     throw new RuntimeError(
-      "Only box, region and 3DTILES_bounding_volume_S2 are supported for implicit tiling"
+      "Only box, region and S2 cells are supported for implicit tiling"
     );
   }
 
@@ -82,7 +90,7 @@ export default function ImplicitTileset(
    * @readonly
    * @private
    */
-  this.boundingVolume = tileJson.boundingVolume;
+  this.boundingVolume = boundingVolume;
 
   /**
    * The refine strategy as a string, either 'ADD' or 'REPLACE'

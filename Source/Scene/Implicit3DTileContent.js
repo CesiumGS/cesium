@@ -527,11 +527,26 @@ function deriveChildTile(
 }
 
 /**
+ * Checks whether the bounding volume is an S2 cell, either specified by
+ * boundingVolume.s2Cell (3D Tiles 1.1) or by the 3DTILES_bounding_volume_S2 extension.
+ *
+ * @param {Object} [boundingVolume] The bounding volume
+ * @returns {Boolean} Whether the bounding volume is an S2 cell
+ * @private
+ */
+function hasS2BoundingVolume(boundingVolume) {
+  return (
+    defined(boundingVolume.s2Cell) ||
+    hasExtension(boundingVolume, "3DTILES_bounding_volume_S2")
+  );
+}
+
+/**
  * Checks whether the bounding volume's heights can be updated.
  * Returns true if the minimumHeight/maximumHeight parameter
  * is defined and the bounding volume is a region or S2 cell.
  *
- * @param {Object} [boundingVolume] The bounding voume
+ * @param {Object} [boundingVolume] The bounding volume
  * @param {Object} [tileBounds] The tile bounds
  * @param {Number} [tileBounds.minimumHeight] The minimum height
  * @param {Number} [tileBounds.maximumHeight] The maximum height
@@ -543,8 +558,7 @@ function canUpdateHeights(boundingVolume, tileBounds) {
     defined(boundingVolume) &&
     defined(tileBounds) &&
     (defined(tileBounds.minimumHeight) || defined(tileBounds.maximumHeight)) &&
-    (hasExtension(boundingVolume, "3DTILES_bounding_volume_S2") ||
-      defined(boundingVolume.region))
+    (hasS2BoundingVolume(boundingVolume) || defined(boundingVolume.region))
   );
 }
 
@@ -563,16 +577,23 @@ function canUpdateHeights(boundingVolume, tileBounds) {
  * @private
  */
 function updateHeights(boundingVolume, tileBounds) {
-  if (
-    hasExtension(boundingVolume, "3DTILES_bounding_volume_S2") &&
-    defined(tileBounds)
-  ) {
+  if (!defined(tileBounds)) {
+    return;
+  }
+
+  if (defined(boundingVolume.s2Cell)) {
+    updateS2CellHeights(
+      boundingVolume.s2Cell,
+      tileBounds.minimumHeight,
+      tileBounds.maximumHeight
+    );
+  } else if (hasExtension(boundingVolume, "3DTILES_bounding_volume_S2")) {
     updateS2CellHeights(
       boundingVolume.extensions["3DTILES_bounding_volume_S2"],
       tileBounds.minimumHeight,
       tileBounds.maximumHeight
     );
-  } else if (defined(boundingVolume.region) && defined(tileBounds)) {
+  } else if (defined(boundingVolume.region)) {
     updateRegionHeights(
       boundingVolume.region,
       tileBounds.minimumHeight,
@@ -755,7 +776,7 @@ function deriveBoundingVolume(
 ) {
   const rootBoundingVolume = implicitTileset.boundingVolume;
 
-  if (hasExtension(rootBoundingVolume, "3DTILES_bounding_volume_S2")) {
+  if (hasS2BoundingVolume(rootBoundingVolume)) {
     return deriveBoundingVolumeS2(
       parentIsPlaceholderTile,
       parentTile,
@@ -812,7 +833,7 @@ function deriveBoundingVolume(
  * @param {Number} x The x coordinate of the descendant tile
  * @param {Number} y The y coordinate of the descendant tile
  * @param {Number} [z] The z coordinate of the descendant tile (octree only)
- * @returns {Object} An object with the 3DTILES_bounding_volume_S2 extension.
+ * @returns {Object} An object with s2Cell defined.
  * @private
  */
 function deriveBoundingVolumeS2(
@@ -841,12 +862,10 @@ function deriveBoundingVolumeS2(
   // Handle the placeholder tile case, where we just duplicate the placeholder's bounding volume.
   if (parentIsPlaceholderTile) {
     return {
-      extensions: {
-        "3DTILES_bounding_volume_S2": {
-          token: S2Cell.getTokenFromId(boundingVolumeS2.s2Cell._cellId),
-          minimumHeight: boundingVolumeS2.minimumHeight,
-          maximumHeight: boundingVolumeS2.maximumHeight,
-        },
+      s2Cell: {
+        token: S2Cell.getTokenFromId(boundingVolumeS2.s2Cell._cellId),
+        minimumHeight: boundingVolumeS2.minimumHeight,
+        maximumHeight: boundingVolumeS2.maximumHeight,
       },
     };
   }
@@ -877,12 +896,10 @@ function deriveBoundingVolumeS2(
   }
 
   return {
-    extensions: {
-      "3DTILES_bounding_volume_S2": {
-        token: S2Cell.getTokenFromId(cell._cellId),
-        minimumHeight: minHeight,
-        maximumHeight: maxHeight,
-      },
+    s2Cell: {
+      token: S2Cell.getTokenFromId(cell._cellId),
+      minimumHeight: minHeight,
+      maximumHeight: maxHeight,
     },
   };
 }
