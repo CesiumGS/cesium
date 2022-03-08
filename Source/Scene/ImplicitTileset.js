@@ -243,30 +243,22 @@ function gatherContentHeaders(tileJson) {
 function makeTileHeaderTemplate(tileJson) {
   const template = clone(tileJson, true);
 
-  // remove the implicit tiling extension to prevent infinite loops
-  if (hasExtension(template, "3DTILES_implicit_tiling")) {
+  // Remove the implicit tiling extension to prevent infinite loops,
+  // as well as content-related properties since content is handled separately
+  if (defined(template.extensions)) {
     delete template.extensions["3DTILES_implicit_tiling"];
-  } else {
-    delete template.implicitTiling;
-  }
-
-  // content is handled separately, so remove content-related properties
-  if (hasExtension(template, "3DTILES_multiple_contents")) {
     delete template.extensions["3DTILES_multiple_contents"];
-  } else if (defined(template.contents)) {
-    delete template.contents;
-  } else if (defined(template.content)) {
-    delete template.content;
+
+    // if there are no other extensions, remove the extensions property to
+    // keep each tile simple
+    if (Object.keys(template.extensions).length === 0) {
+      delete template.extensions;
+    }
   }
 
-  // if there are no other extensions, remove the extensions property to
-  // keep each tile simple
-  if (
-    defined(template.extensions) &&
-    Object.keys(template.extensions).length === 0
-  ) {
-    delete template.extensions;
-  }
+  delete template.implicitTiling;
+  delete template.contents;
+  delete template.content;
 
   return template;
 }
