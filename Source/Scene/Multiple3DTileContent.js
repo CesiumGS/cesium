@@ -14,7 +14,7 @@ import findGroupMetadata from "./findGroupMetadata.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 
 /**
- * A collection of contents for tiles that use the <code>3DTILES_multiple_contents</code> extension.
+ * A collection of contents for tiles that have multiple contents, either via the tile JSON (3D Tiles 1.1) or the <code>3DTILES_multiple_contents</code> extension.
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
@@ -27,7 +27,7 @@ import preprocess3DTileContent from "./preprocess3DTileContent.js";
  * @param {Cesium3DTileset} tileset The tileset this content belongs to
  * @param {Cesium3DTile} tile The content this content belongs to
  * @param {Resource} tilesetResource The resource that points to the tileset. This will be used to derive each inner content's resource.
- * @param {Object} extensionJson The <code>3DTILES_multiple_contents</code> extension JSON
+ * @param {Object} contentsJson Either the tile JSON containing the contents array (3D Tiles 1.1), or <code>3DTILES_multiple_contents</code> extension JSON
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -36,14 +36,18 @@ export default function Multiple3DTileContent(
   tileset,
   tile,
   tilesetResource,
-  extensionJson
+  contentsJson
 ) {
   this._tileset = tileset;
   this._tile = tile;
   this._tilesetResource = tilesetResource;
   this._contents = [];
 
-  const contentHeaders = extensionJson.content;
+  // An older version of 3DTILES_multiple_contents used "content" instead of "contents"
+  const contentHeaders = defined(contentsJson.contents)
+    ? contentsJson.contents
+    : contentsJson.content;
+
   this._innerContentHeaders = contentHeaders;
   this._requestsInFlight = 0;
 
@@ -509,7 +513,7 @@ function createInnerContent(multipleContents, arrayBuffer, index) {
 
   if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
     throw new RuntimeError(
-      "External tilesets are disallowed inside the 3DTILES_multiple_contents extension"
+      "External tilesets are disallowed inside multiple contents"
     );
   }
 

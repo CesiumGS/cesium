@@ -363,6 +363,7 @@ describe(
           "Data/Cesium3DTiles/Metadata/ImplicitSubtreeMetadata/tileset_1.1.json";
         let scene;
         let tilesetWithSubtree;
+
         beforeAll(function () {
           scene = createScene();
 
@@ -389,7 +390,7 @@ describe(
 
           const children = rootChild.children;
           children.forEach(function (child) {
-            const uri = child._header.content.uri;
+            const uri = child._header.contents[0].uri;
             subtreeChildContents[uri] = child.content;
           });
         });
@@ -485,7 +486,7 @@ describe(
 
           const children = rootChild.children;
           children.forEach(function (child) {
-            const uri = child._header.content.uri;
+            const uri = child._header.contents[0].uri;
             subtreeChildContents[uri] = child.content;
           });
         });

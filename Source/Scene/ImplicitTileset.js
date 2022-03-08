@@ -108,7 +108,7 @@ export default function ImplicitTileset(
    * Template URIs for locating content resources, e.g.
    * <code>https://example.com/{level}/{x}/{y}.b3dm</code>.
    * <p>
-   * This is an array to support <code>3DTILES_multiple_contents</code>
+   * This is an array to support multiple contents.
    * </p>
    *
    * @type {Resource[]}
@@ -157,9 +157,9 @@ export default function ImplicitTileset(
    * <ul>
    * <li><code>tile.implicitTiling</code> to prevent infinite loops of implicit tiling</li>
    * <li><code>tile.extensions["3DTILES_implicit_tiling"]</code>, if used instead of tile.implicitTiling</li>
-   * <li><code>tile.content</code> since this is handled separately</li>
-   * <li><code>tile.extensions["3DTILES_multiple_contents"]</code>, again
-   *  because contents are handled separately</li>
+   * <li><code>tile.contents</code>, since contents are handled separately</li>
+   * <li><code>tile.content</code>, if used instead of tile.contents</li>
+   * <li><code>tile.extensions["3DTILES_multiple_contents"]</code>, if used instead of tile.contents or tile.content</li>
    * </ul>
    *
    * @type {Object}
@@ -216,8 +216,8 @@ export default function ImplicitTileset(
 
 /**
  * Gather JSON headers for all contents in the tile.
- * This handles both regular tiles and tiles with the
- * `3DTILES_multiple_contents` extension
+ * This handles both regular tiles and tiles with multiple contents, either
+ * in the contents array (3D Tiles 1.1) or the `3DTILES_multiple_contents` extension
  *
  * @param {Object} tileJson The JSON header of the tile with either implicit tiling (3D Tiles 1.1) or the 3DTILES_implicit_tiling extension.
  * @return {Object[]} An array of JSON headers for the contents of each tile
@@ -225,7 +225,12 @@ export default function ImplicitTileset(
  */
 function gatherContentHeaders(tileJson) {
   if (hasExtension(tileJson, "3DTILES_multiple_contents")) {
-    return tileJson.extensions["3DTILES_multiple_contents"].content;
+    const extension = tileJson.extensions["3DTILES_multiple_contents"];
+    return defined(extension.contents) ? extension.contents : extension.content;
+  }
+
+  if (defined(tileJson.contents)) {
+    return tileJson.contents;
   }
 
   if (defined(tileJson.content)) {
@@ -246,10 +251,12 @@ function makeTileHeaderTemplate(tileJson) {
   }
 
   // content is handled separately, so remove content-related properties
-  delete template.content;
-
   if (hasExtension(template, "3DTILES_multiple_contents")) {
     delete template.extensions["3DTILES_multiple_contents"];
+  } else if (defined(template.contents)) {
+    delete template.contents;
+  } else if (defined(template.content)) {
+    delete template.content;
   }
 
   // if there are no other extensions, remove the extensions property to

@@ -500,17 +500,8 @@ function deriveChildTile(
     boundingVolume: boundingVolume,
     geometricError: childGeometricError,
     refine: implicitTileset.refine,
+    contents: contentJsons,
   };
-
-  if (contentJsons.length === 1) {
-    tileJson.content = contentJsons[0];
-  } else if (contentJsons.length > 1) {
-    tileJson.extensions = {
-      "3DTILES_multiple_contents": {
-        content: contentJsons,
-      },
-    };
-  }
 
   // combine() is used to pass through any additional properties the
   // user specified such as extras or extensions.
@@ -1082,9 +1073,11 @@ function makePlaceholderChildSubtree(content, parentTile, childIndex) {
     boundingVolume: childBoundingVolume,
     geometricError: childGeometricError,
     refine: implicitTileset.refine,
-    content: {
-      uri: childContentUri,
-    },
+    contents: [
+      {
+        uri: childContentUri,
+      },
+    ],
   };
 
   const tile = makeTile(

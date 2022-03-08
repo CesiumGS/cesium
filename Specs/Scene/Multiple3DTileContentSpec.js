@@ -19,26 +19,39 @@ describe(
   function () {
     let scene;
 
-    // This scene is the same as Composite/Composite, just rephrased
-    // using 3DTILES_multiple_contents
+    // This scene is the same as Composite/Composite, just rephrased using multiple contents
     const centerLongitude = -1.31968;
     const centerLatitude = 0.698874;
     const multipleContentsUrl =
-      "./Data/Cesium3DTiles/MultipleContents/MultipleContents/tileset.json";
+      "./Data/Cesium3DTiles/MultipleContents/MultipleContents/tileset_1.1.json";
+    const multipleContentsLegacyUrl =
+      "./Data/Cesium3DTiles/MultipleContents/MultipleContents/tileset_1.0.json";
+
+    // Test for older version of 3DTILES_multiple_contents that uses "content" instead of "contents"
+    const multipleContentsLegacyWithContentUrl =
+      "./Data/Cesium3DTiles/MultipleContents/MultipleContents/tileset_1.0_content.json";
 
     const tilesetResource = new Resource({ url: "http://example.com" });
-    const extensionJson = {
-      content: [
-        {
-          uri: "pointcloud.pnts",
-        },
-        {
-          uri: "batched.b3dm",
-        },
-        {
-          uri: "gltfModel.glb",
-        },
-      ],
+
+    const contents = [
+      {
+        uri: "pointcloud.pnts",
+      },
+      {
+        uri: "batched.b3dm",
+      },
+      {
+        uri: "gltfModel.glb",
+      },
+    ];
+
+    const contentsJson = {
+      contents: contents,
+    };
+
+    // legacy
+    const contentJson = {
+      content: contents,
     };
 
     function makeGltfBuffer() {
@@ -128,14 +141,31 @@ describe(
       });
     }
 
-    it("innerContentUrls returns the urls from the extension", function () {
+    it("innerContentUrls returns the urls from object containing contents array", function () {
       const tileset = {};
       const tile = {};
       const content = new Multiple3DTileContent(
         tileset,
         tile,
         tilesetResource,
-        extensionJson
+        contentsJson
+      );
+
+      expect(content.innerContentUrls).toEqual([
+        "pointcloud.pnts",
+        "batched.b3dm",
+        "gltfModel.glb",
+      ]);
+    });
+
+    it("innerContentUrls returns the urls from object containing content (legacy)", function () {
+      const tileset = {};
+      const tile = {};
+      const content = new Multiple3DTileContent(
+        tileset,
+        tile,
+        tilesetResource,
+        contentJson
       );
 
       expect(content.innerContentUrls).toEqual([
@@ -156,7 +186,7 @@ describe(
         mockTileset,
         tile,
         tilesetResource,
-        extensionJson
+        contentsJson
       );
 
       expect(content.contentsFetchedPromise).not.toBeDefined();
@@ -179,7 +209,7 @@ describe(
         mockTileset,
         tile,
         tilesetResource,
-        extensionJson
+        contentsJson
       );
 
       expect(content.contentsFetchedPromise).not.toBeDefined();
@@ -201,7 +231,7 @@ describe(
         mockTileset,
         tile,
         tilesetResource,
-        extensionJson
+        contentsJson
       );
 
       const fetchArray = spyOn(
@@ -225,7 +255,7 @@ describe(
         mockTileset,
         tile,
         tilesetResource,
-        extensionJson
+        contentsJson
       );
 
       const fetchArray = spyOn(Resource.prototype, "fetchArrayBuffer");
@@ -247,12 +277,44 @@ describe(
       );
     });
 
+    it("renders multiple contents (legacy)", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        multipleContentsLegacyUrl
+      ).then(expectRenderMultipleContents);
+    });
+
+    it("renders multiple contents (legacy with 'content')", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        multipleContentsLegacyWithContentUrl
+      ).then(expectRenderMultipleContents);
+    });
+
     it("renders valid tiles after tile failure", function () {
       const originalLoadJson = Cesium3DTileset.loadJson;
       spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
         return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
+          const contents = tilesetJson.root.contents;
+          const badTile = {
+            uri: "nonexistent.b3dm",
+          };
+          contents.splice(1, 0, badTile);
+
+          return tilesetJson;
+        });
+      });
+      return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
+        expectRenderMultipleContents
+      );
+    });
+
+    it("renders valid tiles after tile failure (legacy)", function () {
+      const originalLoadJson = Cesium3DTileset.loadJson;
+      spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
+        return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
           const content =
-            tilesetJson.root.extensions["3DTILES_multiple_contents"].content;
+            tilesetJson.root.extensions["3DTILES_multiple_contents"].contents;
           const badTile = {
             uri: "nonexistent.b3dm",
           };
@@ -261,9 +323,10 @@ describe(
           return tilesetJson;
         });
       });
-      return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
-        expectRenderMultipleContents
-      );
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        multipleContentsLegacyUrl
+      ).then(expectRenderMultipleContents);
     });
 
     it("cancelRequests cancels in-flight requests", function () {
