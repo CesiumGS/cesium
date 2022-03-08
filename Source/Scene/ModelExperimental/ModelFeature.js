@@ -147,16 +147,6 @@ ModelFeature.prototype.hasProperty = function (name) {
 };
 
 /**
- * Returns whether the feature has a property with the given semantic.
- *
- * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {Boolean} Whether the feature has a property with the given semantic.
- */
-ModelFeature.prototype.hasPropertyBySemantic = function (name) {
-  return this._featureTable.hasProperty(this._featureId, name);
-};
-
-/**
  * Returns a copy of the value of the feature's property with the given name.
  *
  * @param {String} name The case-sensitive name of the property.

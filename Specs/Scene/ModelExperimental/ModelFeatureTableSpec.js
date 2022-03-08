@@ -95,9 +95,8 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
     });
     const modelFeatures = table._features;
     for (let i = 0; i < modelFeatures.length; i++) {
-      const feature = modelFeatures[i];
-      expect(feature.hasPropertyBySemantic("HEIGHT_SEMANTIC")).toEqual(true);
-      expect(feature.hasPropertyBySemantic("WIDTH_SEMANTIC")).toEqual(false);
+      expect(table.hasPropertyBySemantic(i, "HEIGHT_SEMANTIC")).toEqual(true);
+      expect(table.hasPropertyBySemantic(i, "WIDTH_SEMANTIC")).toEqual(false);
     }
   });
 
