@@ -44,8 +44,8 @@ import ShadowMode from "../ShadowMode.js";
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
- * @param {Number} [options.featureIdIndex=0] The index into the list of primitive feature IDs used for picking and styling. For EXT_feature_metadata, feature ID attributes are listed before feature ID textures. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
- * @param {Number} [options.instanceFeatureIdIndex=0] The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
@@ -125,11 +125,19 @@ export default function ModelExperimental(options) {
 
   this._style = undefined;
 
-  this._featureIdIndex = defaultValue(options.featureIdIndex, 0);
-  this._instanceFeatureIdIndex = defaultValue(
-    options.instanceFeatureIdIndex,
-    0
+  let featureIdLabel = defaultValue(options.featureIdLabel, "featureId_0");
+  if (typeof featureIdLabel === "number") {
+    featureIdLabel = `featureId_${featureIdLabel}`;
+  }
+  this._featureIdLabel = featureIdLabel;
+
+  let instanceFeatureIdLabel = defaultValue(
+    options.instanceFeatureIdLabel,
+    "instanceFeatureId_0"
   );
+  if (typeof instanceFeatureIdLabel === "number") {
+    instanceFeatureIdLabel = `instanceFeatureId_${instanceFeatureIdLabel}`;
+  }
 
   this._featureTables = [];
   this._featureTableId = undefined;
@@ -178,8 +186,8 @@ function createModelFeatureTables(model, structuralMetadata) {
 }
 
 function selectFeatureTableId(components, model) {
-  const featureIdIndex = model._featureIdIndex;
-  const instanceFeatureIdIndex = model._instanceFeatureIdIndex;
+  const featureIdLabel = model._featureIdLabel;
+  const instanceFeatureIdLabel = model._instanceFeatureIdLabel;
 
   let i, j;
   let featureIdAttribute;
@@ -190,7 +198,10 @@ function selectFeatureTableId(components, model) {
   for (i = 0; i < components.nodes.length; i++) {
     node = components.nodes[i];
     if (defined(node.instances)) {
-      featureIdAttribute = node.instances.featureIds[instanceFeatureIdIndex];
+      featureIdAttribute = ModelExperimentalUtility.getFeatureIdsByLabel(
+        node.instances.featureIds,
+        instanceFeatureIdLabel
+      );
       if (
         defined(featureIdAttribute) &&
         defined(featureIdAttribute.propertyTableId)
@@ -206,7 +217,10 @@ function selectFeatureTableId(components, model) {
     node = components.nodes[i];
     for (j = 0; j < node.primitives.length; j++) {
       const primitive = node.primitives[j];
-      const featureIds = primitive.featureIds[featureIdIndex];
+      const featureIds = ModelExperimentalUtility.getFeatureIdsByLabel(
+        primitive.featureIds,
+        featureIdLabel
+      );
 
       if (defined(featureIds)) {
         return featureIds.propertyTableId;
@@ -592,52 +606,82 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
-   * The index into the list of primitive feature IDs used for picking and
-   * styling. For EXT_feature_metadata, feature ID attributes are listed before
-   * feature ID textures. If both per-primitive and per-instance feature IDs are
-   * present, the instance feature IDs take priority.
+   * Label of the feature ID set to use for picking and styling.
+   * <p>
+   * For EXT_mesh_features, this is the feature ID's label property, or
+   * "featureId_N" (where N is the index in the featureIds array) when not
+   * specified. EXT_feature_metadata did not have a label field, so such
+   * feature ID sets are always labeled "featureId_N" where N is the index in
+   * the list of all feature Ids, where feature ID attributes are listed before
+   * feature ID textures.
+   * </p>
+   * <p>
+   * If featureIdLabel is set to an integer N, it is converted to
+   * the string "featureId_N" automatically. If both per-primitive and
+   * per-instance feature IDs are present, the instance feature IDs take
+   * priority.
+   * </p>
    *
    * @memberof ModelExperimental.prototype
    *
-   * @type {Number}
-   * @readonly
-   *
-   * @default 0
+   * @type {String}
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
-  featureIdIndex: {
+  featureIdLabel: {
     get: function () {
-      return this._featureIdIndex;
+      return this._featureIdLabel;
     },
     set: function (value) {
-      if (value !== this._featureIdIndex) {
+      // indices get converted into featureId_N
+      if (typeof value === "number") {
+        value = `featureId_${value}`;
+      }
+
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.string("value", value);
+      //>>includeEnd('debug');
+
+      if (value !== this._featureIdLabel) {
         this._featureTableIdDirty = true;
       }
 
-      this._featureIdIndex = value;
+      this._featureIdLabel = value;
     },
   },
 
   /**
-   * The index into the list of instance feature IDs used for picking and
-   * styling. If both per-primitive and per-instance feature IDs are present,
-   * the instance feature IDs take priority.
+   * Label of the instance feature ID set used for picking and styling.
+   * <p>
+   * If instanceFeatureIdLabel is set to an integer N, it is converted to
+   * the string "instanceFeatureId_N" automatically.
+   * If both per-primitive and per-instance feature IDs are present, the
+   * instance feature IDs take priority.
+   * </p>
    *
    * @memberof ModelExperimental.prototype
    *
-   * @type {Number}
-   *
-   * @default 0
+   * @type {String}
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
-  instanceFeatureIdIndex: {
+  instanceFeatureIdLabel: {
     get: function () {
-      return this._instanceFeatureIdIndex;
+      return this._instanceFeatureIdLabel;
     },
     set: function (value) {
-      if (value !== this._instanceFeatureIdIndex) {
+      // indices get converted into instanceFeatureId_N
+      if (typeof value === "number") {
+        value = `instanceFeatureId_${value}`;
+      }
+
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.string("value", value);
+      //>>includeEnd('debug');
+
+      if (value !== this._instanceFeatureIdLabel) {
         this._featureTableIdDirty = true;
       }
 
-      this._instanceFeatureIdIndex = value;
+      this._instanceFeatureIdLabel = value;
     },
   },
 
@@ -931,8 +975,8 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
- * @param {Number} [options.featureIdIndex=0] The index into the list of primitive feature IDs used for picking and styling. For EXT_feature_metadata, feature ID attributes are listed before feature ID textures. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
- * @param {Number} [options.instanceFeatureIdIndex=0] The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
@@ -991,8 +1035,8 @@ ModelExperimental.fromGltf = function (options) {
     color: options.color,
     colorBlendAmount: options.colorBlendAmount,
     colorBlendMode: options.colorBlendMode,
-    featureIdIndex: options.featureIdIndex,
-    instanceFeatureIdIndex: options.instanceFeatureIdIndex,
+    featureIdLabel: options.featureIdLabel,
+    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
     pointCloudShading: options.pointCloudShading,
     backFaceCulling: options.backFaceCulling,
     shadows: options.shadows,
@@ -1034,8 +1078,8 @@ ModelExperimental.fromB3dm = function (options) {
     color: options.color,
     colorBlendAmount: options.colorBlendAmount,
     colorBlendMode: options.colorBlendMode,
-    featureIdIndex: options.featureIdIndex,
-    instanceFeatureIdIndex: options.instanceFeatureIdIndex,
+    featureIdLabel: options.featureIdLabel,
+    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
   };
 
   const model = new ModelExperimental(modelOptions);
@@ -1067,8 +1111,8 @@ ModelExperimental.fromPnts = function (options) {
     color: options.color,
     colorBlendAmount: options.colorBlendAmount,
     colorBlendMode: options.colorBlendMode,
-    featureIdIndex: options.featureIdIndex,
-    instanceFeatureIdIndex: options.instanceFeatureIdIndex,
+    featureIdLabel: options.featureIdLabel,
+    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
   };
 
   const model = new ModelExperimental(modelOptions);

@@ -98,8 +98,8 @@ describe(
           node: node,
         },
         model: {
-          featureIdIndex: 0,
-          instanceFeatureIdIndex: 0,
+          featureIdLabel: 0,
+          instanceFeatureIdLabel: 0,
         },
         uniformMap: {},
         hasPropertyTable: false,
@@ -113,7 +113,7 @@ describe(
         const primitive = node.primitives[0];
         const frameState = scene.frameState;
         const renderResources = mockRenderResources(node);
-        renderResources.model.featureIdIndex = 1;
+        renderResources.model.featureIdLabel = 1;
 
         SelectedFeatureIdPipelineStage.process(
           renderResources,
@@ -151,7 +151,7 @@ describe(
         const primitive = node.primitives[0];
         const frameState = scene.frameState;
         const renderResources = mockRenderResources(node);
-        renderResources.model.featureIdIndex = 0;
+        renderResources.model.featureIdLabel = 0;
 
         SelectedFeatureIdPipelineStage.process(
           renderResources,
@@ -182,7 +182,7 @@ describe(
         const primitive = node.primitives[0];
         const frameState = scene.frameState;
         const renderResources = mockRenderResources(node);
-        renderResources.model.instanceFeatureIdIndex = 1;
+        renderResources.model.instanceFeatureIdLabel = 1;
 
         SelectedFeatureIdPipelineStage.process(
           renderResources,
@@ -219,7 +219,7 @@ describe(
         const primitive = node.primitives[0];
         const frameState = scene.frameState;
         const renderResources = mockRenderResources(node);
-        renderResources.model.featureIdIndex = 6;
+        renderResources.model.featureIdLabel = 6;
 
         SelectedFeatureIdPipelineStage.process(
           renderResources,

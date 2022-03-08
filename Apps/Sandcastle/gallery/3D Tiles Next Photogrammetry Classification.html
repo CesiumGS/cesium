@@ -231,7 +231,7 @@
           tileset.customShader = unlitShader;
           tileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT;
           tileset.colorBlendAmount = 0.5;
-          tileset.featureIdIndex = 0;
+          tileset.featureIdLabel = 0;
         }
 
         const showPhotogrammetry = defaults;
@@ -245,7 +245,7 @@
         function showAlternativeClassification() {
           showClassification();
           // This dataset has a second feature ID texture.
-          tileset.featureIdIndex = 1;
+          tileset.featureIdLabel = 1;
         }
 
         function translucentWindows() {

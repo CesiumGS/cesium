@@ -29,7 +29,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   const mockModel = {
     type: ModelExperimentalType.GLTF,
     allowPicking: true,
-    featureIdIndex: 0,
+    featureIdLabel: 0,
   };
 
   const emptyVertexShader =
@@ -136,7 +136,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       model: {
         type: ModelExperimentalType.GLTF,
         allowPicking: true,
-        instanceFeatureIdIndex: 1,
+        instanceFeatureIdLabel: 1,
         content: {},
       },
     });
@@ -170,7 +170,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       model: {
         type: ModelExperimentalType.GLTF,
         allowPicking: true,
-        featureIdIndex: 1,
+        featureIdLabel: 1,
         content: {},
       },
     });
@@ -198,7 +198,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       model: {
         type: ModelExperimentalType.GLTF,
         allowPicking: true,
-        featureIdIndex: 1,
+        featureIdLabel: 1,
         content: {},
       },
     });
@@ -331,7 +331,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       node: mockNode,
       model: {
         type: ModelExperimentalType.TILE_PNTS,
-        featureIdIndex: 0,
+        featureIdLabel: 0,
         pointCloudShading: pointCloudShading,
         content: {
           tileset: {
@@ -367,7 +367,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       node: mockNode,
       model: {
         type: ModelExperimentalType.GLTF,
-        featureIdIndex: 0,
+        featureIdLabel: 0,
         pointCloudShading: pointCloudShading,
       },
     });
@@ -398,7 +398,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       node: mockNode,
       model: {
         type: ModelExperimentalType.GLTF,
-        featureIdIndex: 0,
+        featureIdLabel: 0,
         pointCloudShading: pointCloudShading,
       },
     });
@@ -425,7 +425,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       node: mockNode,
       model: {
         type: ModelExperimentalType.GLTF,
-        featureIdIndex: 0,
+        featureIdLabel: 0,
         pointCloudShading: undefined,
       },
     });
