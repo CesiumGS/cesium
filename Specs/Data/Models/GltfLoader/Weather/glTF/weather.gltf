@@ -109,10 +109,12 @@
             "EXT_mesh_features": {
               "featureIds": [
                 {
+                  "label": "perPoint",
                   "propertyTable": 1,
                   "featureCount": 1000
                 },
                 {
+                  "label": "town",
                   "propertyTable": 0,
                   "attribute": 0,
                   "featureCount": 3

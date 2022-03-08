@@ -890,6 +890,8 @@ describe(
         expect(featureIdTexture.featureCount).toEqual(256);
         expect(featureIdTexture.nullFeatureId).not.toBeDefined();
         expect(featureIdTexture.propertyTableId).toBe(0);
+        expect(featureIdTexture.label).toBe("landCover");
+        expect(featureIdTexture.positionalLabel).toBe("featureId_0");
         expect(featureIdTexture.textureReader.channels).toBe("r");
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
         expect(featureIdTexture.textureReader.texture.width).toBe(256);
@@ -954,6 +956,8 @@ describe(
         expect(featureIdTexture.featureCount).toEqual(256);
         expect(featureIdTexture.nullFeatureId).not.toBeDefined();
         expect(featureIdTexture.propertyTableId).toBe(0);
+        expect(featureIdTexture.label).not.toBeDefined();
+        expect(featureIdTexture.positionalLabel).toBe("featureId_0");
         expect(featureIdTexture.textureReader.channels).toBe("r");
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
         expect(featureIdTexture.textureReader.texture.width).toBe(256);
@@ -1018,6 +1022,8 @@ describe(
         expect(featureIdTexture.featureCount).toEqual(1048576);
         expect(featureIdTexture.nullFeatureId).not.toBeDefined();
         expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.label).toBe("idsRGBA");
+        expect(featureIdTexture.positionalLabel).toBe("featureId_0");
         expect(featureIdTexture.textureReader.channels).toBe("rgba");
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
         const texture = featureIdTexture.textureReader.texture;
@@ -1032,6 +1038,8 @@ describe(
         expect(featureIdTexture.featureCount).toEqual(1048576);
         expect(featureIdTexture.nullFeatureId).not.toBeDefined();
         expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.label).toBe("idsRGB");
+        expect(featureIdTexture.positionalLabel).toBe("featureId_1");
         expect(featureIdTexture.textureReader.channels).toBe("rgb");
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
         // All the feature ID textures use the same glTF texture
@@ -1044,6 +1052,8 @@ describe(
         expect(featureIdTexture.featureCount).toEqual(256);
         expect(featureIdTexture.nullFeatureId).not.toBeDefined();
         expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.label).toBe("idsG");
+        expect(featureIdTexture.positionalLabel).toBe("featureId_2");
         expect(featureIdTexture.textureReader.channels).toBe("g");
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
         expect(featureIdTexture.textureReader.texture).toBe(texture);
@@ -1055,6 +1065,8 @@ describe(
         expect(featureIdTexture.featureCount).toEqual(65536);
         expect(featureIdTexture.nullFeatureId).not.toBeDefined();
         expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.label).toBe("idsBA");
+        expect(featureIdTexture.positionalLabel).toBe("featureId_3");
         expect(featureIdTexture.textureReader.channels).toBe("ba");
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
         expect(featureIdTexture.textureReader.texture).toBe(texture);
@@ -1066,6 +1078,8 @@ describe(
         expect(featureIdTexture.featureCount).toEqual(65536);
         expect(featureIdTexture.nullFeatureId).not.toBeDefined();
         expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.label).toBe("idsGR");
+        expect(featureIdTexture.positionalLabel).toBe("featureId_4");
         expect(featureIdTexture.textureReader.channels).toBe("gr");
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
         expect(featureIdTexture.textureReader.texture).toBe(texture);
@@ -1077,6 +1091,8 @@ describe(
         expect(featureIdTexture.featureCount).toEqual(1048576);
         expect(featureIdTexture.nullFeatureId).not.toBeDefined();
         expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.label).toBe("idsAGBB");
+        expect(featureIdTexture.positionalLabel).toBe("featureId_5");
         expect(featureIdTexture.textureReader.channels).toBe("agbb");
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
         expect(featureIdTexture.textureReader.texture).toBe(texture);
@@ -1088,6 +1104,8 @@ describe(
         expect(featureIdTexture.featureCount).toEqual(255);
         expect(featureIdTexture.nullFeatureId).toBe(10);
         expect(featureIdTexture.propertyTableId).not.toBeDefined();
+        expect(featureIdTexture.label).toBe("idsGWithNull");
+        expect(featureIdTexture.positionalLabel).toBe("featureId_6");
         expect(featureIdTexture.textureReader.channels).toBe("g");
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
         expect(featureIdTexture.textureReader.texture).toBe(texture);
@@ -1152,6 +1170,8 @@ describe(
         expect(featureIdAccessor.nullFeatureId).not.toBeDefined();
         expect(featureIdAccessor.propertyTableId).toBe(0);
         expect(featureIdAccessor.setIndex).toBe(0);
+        expect(featureIdAccessor.label).toBe("buildings");
+        expect(featureIdAccessor.positionalLabel).toBe("featureId_0");
 
         // Default feature ID
         const featureIdDefault = primitive.featureIds[1];
@@ -1164,6 +1184,8 @@ describe(
         expect(featureIdDefault.setIndex).not.toBeDefined();
         expect(featureIdDefault.offset).toBe(0);
         expect(featureIdDefault.repeat).toBe(1);
+        expect(featureIdDefault.label).toBe("defaultIdsTest");
+        expect(featureIdDefault.positionalLabel).toBe("featureId_1");
 
         const classDefinition = structuralMetadata.schema.classes.building;
         const properties = classDefinition.properties;
@@ -1265,6 +1287,8 @@ describe(
         expect(featureIdAccessor.nullFeatureId).not.toBeDefined();
         expect(featureIdAccessor.propertyTableId).toBe(0);
         expect(featureIdAccessor.setIndex).toBe(0);
+        expect(featureIdAccessor.label).not.toBeDefined();
+        expect(featureIdAccessor.positionalLabel).toBe("featureId_0");
 
         // feature ID range
         const featureIdDefault = primitive.featureIds[1];
@@ -1277,6 +1301,8 @@ describe(
         expect(featureIdDefault.setIndex).not.toBeDefined();
         expect(featureIdDefault.offset).toBe(0);
         expect(featureIdDefault.repeat).toBe(2);
+        expect(featureIdDefault.label).not.toBeDefined();
+        expect(featureIdDefault.positionalLabel).toBe("featureId_1");
 
         const classDefinition = structuralMetadata.schema.classes.building;
         const properties = classDefinition.properties;
@@ -1340,6 +1366,8 @@ describe(
         expect(featureIdAttributeMapping0.propertyTableId).toBe(1);
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
+        expect(featureIdAttributeMapping0.label).toBe("perPoint");
+        expect(featureIdAttributeMapping0.positionalLabel).toBe("featureId_0");
 
         const featureIdAttributeMapping1 = primitive.featureIds[1];
         expect(featureIdAttributeMapping1).toBeInstanceOf(
@@ -1349,6 +1377,8 @@ describe(
         expect(featureIdAttributeMapping1.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping1.propertyTableId).toBe(0);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
+        expect(featureIdAttributeMapping1.label).toBe("town");
+        expect(featureIdAttributeMapping1.positionalLabel).toBe("featureId_1");
 
         const weatherClass = structuralMetadata.schema.classes.weather;
         const weatherProperties = weatherClass.properties;
@@ -1445,6 +1475,8 @@ describe(
         expect(featureIdAttributeMapping0.propertyTableId).toBe(1);
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
+        expect(featureIdAttributeMapping0.label).not.toBeDefined();
+        expect(featureIdAttributeMapping0.positionalLabel).toBe("featureId_0");
 
         const featureIdAttributeMapping1 = primitive.featureIds[1];
         expect(featureIdAttributeMapping1).toBeInstanceOf(
@@ -1454,6 +1486,8 @@ describe(
         expect(featureIdAttributeMapping1.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping1.propertyTableId).toBe(0);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
+        expect(featureIdAttributeMapping1.label).not.toBeDefined();
+        expect(featureIdAttributeMapping1.positionalLabel).toBe("featureId_1");
 
         const weatherClass = structuralMetadata.schema.classes.weather;
         const weatherProperties = weatherClass.properties;
@@ -1570,6 +1604,8 @@ describe(
         expect(featureIdAttribute0.nullFeatureId).not.toBeDefined();
         expect(featureIdAttribute0.propertyTableId).not.toBeDefined();
         expect(featureIdAttribute0.setIndex).toBe(0);
+        expect(featureIdAttribute0.label).toBe("iteration");
+        expect(featureIdAttribute0.positionalLabel).toBe("featureId_0");
 
         const featureIdAttribute1 = primitive.featureIds[1];
         expect(featureIdAttribute1).toBeInstanceOf(
@@ -1579,6 +1615,8 @@ describe(
         expect(featureIdAttribute1.nullFeatureId).not.toBeDefined();
         expect(featureIdAttribute1.propertyTableId).not.toBeDefined();
         expect(featureIdAttribute1.setIndex).toBe(1);
+        expect(featureIdAttribute1.label).toBe("pointId");
+        expect(featureIdAttribute1.positionalLabel).toBe("featureId_1");
 
         const torusClass = structuralMetadata.schema.classes.torus;
         const torusProperties = torusClass.properties;
@@ -1748,6 +1786,10 @@ describe(
         expect(featureIdAttributeMapping0.propertyTableId).toBe(0);
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
+        expect(featureIdAttributeMapping0.label).toBe("perInstance");
+        expect(featureIdAttributeMapping0.positionalLabel).toBe(
+          "instanceFeatureId_0"
+        );
 
         const featureIdAttributeMapping1 = instances.featureIds[1];
         expect(featureIdAttributeMapping1).toBeInstanceOf(
@@ -1757,6 +1799,10 @@ describe(
         expect(featureIdAttributeMapping1.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping1.propertyTableId).toBe(1);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
+        expect(featureIdAttributeMapping1.label).toBe("section");
+        expect(featureIdAttributeMapping1.positionalLabel).toBe(
+          "instanceFeatureId_1"
+        );
 
         const boxClass = structuralMetadata.schema.classes.box;
         const boxProperties = boxClass.properties;
@@ -1939,6 +1985,10 @@ describe(
         expect(featureIdAttributeMapping0.propertyTableId).toBe(0);
         expect(featureIdAttributeMapping0.offset).toBe(0);
         expect(featureIdAttributeMapping0.repeat).toBe(1);
+        expect(featureIdAttributeMapping0.label).not.toBeDefined();
+        expect(featureIdAttributeMapping0.positionalLabel).toBe(
+          "instanceFeatureId_0"
+        );
 
         const featureIdAttributeMapping1 = instances.featureIds[1];
         expect(featureIdAttributeMapping1).toBeInstanceOf(
@@ -1948,6 +1998,10 @@ describe(
         expect(featureIdAttributeMapping1.nullFeatureId).not.toBeDefined();
         expect(featureIdAttributeMapping1.propertyTableId).toBe(1);
         expect(featureIdAttributeMapping1.setIndex).toBe(0);
+        expect(featureIdAttributeMapping1.label).not.toBeDefined();
+        expect(featureIdAttributeMapping1.positionalLabel).toBe(
+          "instanceFeatureId_1"
+        );
 
         const boxClass = structuralMetadata.schema.classes.box;
         const boxProperties = boxClass.properties;
