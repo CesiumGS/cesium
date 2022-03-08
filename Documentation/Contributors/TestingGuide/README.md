@@ -205,15 +205,15 @@ It is also possible for Karma to run all tests against each browser installed on
 
 Sometimes it is useful to run a single test or suite for easier debugging purposes. To do this simply change the `it` function call for the desired test to `fit`, the `f` stands for `focused` in Jasmine speak. Likewise, to run an entire suite, use `fdescribe` instead of `describe`.
 
-Alternatively, a single test suite can be run from the command line with the `includeName` option and a test name argument that matches the name in the `describe` function of the spec file. For example, the `Cartesian2` tests can be run with:
+Alternatively, test suites can be run from the command line with the `includeName` flag. The argument value should be a substring of one or more test suite names, which are found in the `describe` function of the spec file. For example, the `Cartesian2` tests can be run with:
 
-`npm run test -- --includeName Core/Cartesian2`
+`npm run test -- --includeName Cartesian2`
 
 Similarly, test suites can be excluded with the `--excludeName` flag.
 
 #### Using Browser Debugging Tools
 
-If it is helpful to step through a unit test in a browser debugger, the `singleRun` Karma option can be disabled like so:
+If it is helpful to step through a unit test in a browser debugger, run the tests with the `debug` flag:
 
 `npm run test -- --debug`
 

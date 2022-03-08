@@ -28,9 +28,9 @@ function customizeJasmine(
       return;
     }
 
-    if (includedName && name !== includedName) {
+    if (includedName && !name.includes(includedName)) {
       return;
-    } else if (excludedName && name === excludedName) {
+    } else if (excludedName && name.includes(excludedName)) {
       return;
     }
 
