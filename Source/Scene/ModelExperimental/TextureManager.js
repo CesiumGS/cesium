@@ -100,12 +100,11 @@ function createTexture(textureManager, loadedImage, context) {
   const wrapS = sampler.wrapS;
   const wrapT = sampler.wrapT;
 
-  const samplerRequiresMipmap =
+  const generateMipmap =
     minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST ||
     minFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR ||
     minFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST ||
     minFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
-  const generateMipmap = samplerRequiresMipmap;
   const requiresPowerOfTwo =
     generateMipmap ||
     wrapS === TextureWrap.REPEAT ||
@@ -120,7 +119,7 @@ function createTexture(textureManager, loadedImage, context) {
       !CesiumMath.isPowerOfTwo(textureUniform.height);
     if (!context.webgl2 && nonPowerOfTwo && requiresPowerOfTwo) {
       console.warn(
-        "Compressed texture uses REPEAT or MIRRORED_REPEAT texture wrap mode and dimensions are not powers of two. The texture may be rendered incorrectly."
+        "texture and dimensions are not powers of two. The texture may be rendered incorrectly."
       );
     }
 
