@@ -3,7 +3,8 @@
     "version": "1.0"
   },
   "extensionsUsed": [
-    "3DTILES_implicit_tiling"
+    "3DTILES_implicit_tiling",
+    "3DTILES_multiple_contents"
   ],
   "extensionsRequired": [
     "3DTILES_implicit_tiling"

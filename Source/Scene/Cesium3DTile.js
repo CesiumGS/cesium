@@ -62,7 +62,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
     (hasContentsArray && header.contents.length > 1) ||
     hasExtension(header, "3DTILES_multiple_contents");
 
-  // In an older schema, content is stored in tile.content instead of tile.contents
+  // In the 1.0 schema, content is stored in tile.content instead of tile.contents
   const contentHeader =
     hasContentsArray && !hasMultipleContents
       ? header.contents[0]

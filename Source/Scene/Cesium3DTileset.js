@@ -2005,6 +2005,10 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
       },
     ];
 
+    if (defined(tileJson.content)) {
+      delete tileJson.content;
+    }
+
     // The placeholder tile does not have any extensions. If there are any
     // extensions beyond 3DTILES_implicit_tiling, Implicit3DTileContent will
     // copy them to the transcoded tiles.

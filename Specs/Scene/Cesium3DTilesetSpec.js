@@ -5561,13 +5561,13 @@ describe(
         // else,each instance is a separate command.
         const i3dmCommands = scene.context.instancedArrays ? 1 : 25;
         const totalCommands = b3dmCommands + i3dmCommands;
-        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl)
-          .then(function (tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
+          function (tileset) {
             const statistics = tileset._statistics;
             expect(statistics.visited).toEqual(1);
             expect(statistics.numberOfCommands).toEqual(totalCommands);
-          })
-          .otherwise(console.error);
+          }
+        );
       });
 
       it("renders implicit tileset with multiple contents", function () {
