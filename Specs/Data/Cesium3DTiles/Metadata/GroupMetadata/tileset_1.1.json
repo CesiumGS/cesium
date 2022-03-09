@@ -31,21 +31,23 @@
       }
     }
   },
-  "groups": {
-    "residentialDistrict": {
+  "groups": [
+    {
+      "id": "residentialDistrict",
       "class": "residential",
       "properties": {
         "population": 300000,
         "neighborhoods": ["Hillside", "Middletown", "Western Heights"]
       }
     },
-    "commercialDistrict": {
+    {
+      "id": "commercialDistrict",
       "class": "commercial",
       "properties": {
         "businessCount": 143
       }
     }
-  },
+  ],
   "geometricError": 240,
   "root": {
     "boundingVolume": {
@@ -88,7 +90,7 @@
         "geometricError": 0,
         "content": {
           "uri": "ll.b3dm",
-          "group": "residentialDistrict"
+          "group": 0
         }
       },
       {
@@ -105,7 +107,7 @@
         "geometricError": 0,
         "content": {
           "uri": "ul.b3dm",
-          "group": "residentialDistrict"
+          "group": 0
         }
       },
       {
@@ -122,7 +124,7 @@
         "geometricError": 0,
         "content": {
           "uri": "lr.b3dm",
-          "group": "commercialDistrict"
+          "group": 1
         }
       },
       {
@@ -139,7 +141,7 @@
         "geometricError": 0,
         "content": {
           "uri": "ur.b3dm",
-          "group": "commercialDistrict"
+          "group": 1
         }
       }
     ]

@@ -1174,13 +1174,13 @@ describe(
           gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
 
           const groups = tileset.metadata.groups;
-          const ground = groups.ground;
+          const ground = groups[0];
           expect(ground.getProperty("color")).toEqual(
             new Cartesian3(120, 68, 32)
           );
           expect(ground.getProperty("priority")).toBe(0);
 
-          const sky = groups.sky;
+          const sky = groups[1];
           expect(sky.getProperty("color")).toEqual(
             new Cartesian3(206, 237, 242)
           );
@@ -1673,13 +1673,13 @@ describe(
           gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
 
           const groups = tileset.metadata.groups;
-          const ground = groups.ground;
+          const ground = groups[0];
           expect(ground.getProperty("color")).toEqual(
             new Cartesian3(120, 68, 32)
           );
           expect(ground.getProperty("priority")).toBe(0);
 
-          const sky = groups.sky;
+          const sky = groups[1];
           expect(sky.getProperty("color")).toEqual(
             new Cartesian3(206, 237, 242)
           );

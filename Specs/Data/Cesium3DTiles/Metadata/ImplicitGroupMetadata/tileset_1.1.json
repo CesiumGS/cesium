@@ -18,22 +18,24 @@
       }
     }
   },
-  "groups": {
-    "ground": {
+  "groups": [
+    {
+      "id": "ground",
       "class": "layer",
       "properties": {
         "color": [120, 68, 32],
         "priority": 0
       }
     },
-    "sky": {
+    {
+      "id": "sky",
       "class": "layer",
       "properties": {
         "color": [206, 237, 242],
         "priority": 1
       }
     }
-  },
+  ],
   "root": {
     "boundingVolume": {
       "region": [
@@ -56,11 +58,11 @@
     "contents": [
       {
         "uri": "ground/{level}/{x}/{y}.b3dm",
-        "group": "ground"
+        "group": 0
       },
       {
         "uri": "sky/{level}/{x}/{y}.b3dm",
-        "group": "sky"
+        "group": 1
       }
     ],
     "geometricError": 70,

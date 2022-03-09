@@ -26,8 +26,8 @@ describe("Scene/findGroupMetadata", function () {
 
     mockTileset = {
       metadata: {
-        groups: {
-          testGroup: new GroupMetadata({
+        groups: [
+          new GroupMetadata({
             id: "testGroup",
             class: layerClass,
             group: {
@@ -37,7 +37,8 @@ describe("Scene/findGroupMetadata", function () {
               },
             },
           }),
-        },
+        ],
+        groupIds: ["testGroup"],
       },
     };
   });
@@ -50,7 +51,18 @@ describe("Scene/findGroupMetadata", function () {
     expect(group).not.toBeDefined();
   });
 
-  it("returns the group metadata if there is a group", function () {
+  it("returns the group metadata if there is a group index", function () {
+    const contentHeader = {
+      uri: "https://example.com/model.b3dm",
+      group: 0,
+    };
+    const group = findGroupMetadata(mockTileset, contentHeader);
+    expect(group).toBeDefined();
+    expect(group.getProperty("name")).toBe("Test Layer testGroup");
+    expect(group.getProperty("elevation")).toBe(150.0);
+  });
+
+  it("returns the group metadata if there is a group with the same id (legacy)", function () {
     const contentHeader = {
       uri: "https://example.com/model.b3dm",
       group: "testGroup",
@@ -61,7 +73,7 @@ describe("Scene/findGroupMetadata", function () {
     expect(group.getProperty("elevation")).toBe(150.0);
   });
 
-  it("returns the group metadata if there is an extension", function () {
+  it("returns the group metadata if there is an extension (legacy)", function () {
     const contentHeader = {
       uri: "https://example.com/model.b3dm",
       extensions: {

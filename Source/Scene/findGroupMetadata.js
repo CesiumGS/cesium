@@ -18,10 +18,19 @@ export default function findGroupMetadata(tileset, contentHeader) {
   if (!defined(tileset.metadata)) {
     return undefined;
   }
+  const groups = tileset.metadata.groups;
 
   const group = hasExtension(contentHeader, "3DTILES_metadata")
     ? contentHeader.extensions["3DTILES_metadata"].group
     : contentHeader.group;
 
-  return tileset.metadata.groups[group];
+  if (typeof group === "number") {
+    return groups[group];
+  }
+
+  const index = tileset.metadata.groupIds.findIndex(function (id) {
+    return id === group;
+  });
+
+  return index >= 0 ? groups[index] : undefined;
 }

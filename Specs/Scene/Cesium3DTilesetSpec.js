@@ -5989,13 +5989,18 @@ describe(
           expect(metadata).toBeDefined();
 
           const groups = metadata.groups;
+          const groupIds = metadata.groupIds;
           expect(groups).toBeDefined();
+          expect(groupIds).toEqual([
+            "residentialDistrict",
+            "commercialDistrict",
+          ]);
 
-          let group = groups.commercialDistrict;
+          let group = groups[1];
           expect(group).toBeDefined();
           expect(group.getProperty("businessCount")).toBe(143);
 
-          group = groups.residentialDistrict;
+          group = groups[0];
           expect(group).toBeDefined();
           expect(group.getProperty("population")).toBe(300000);
           expect(group.getProperty("neighborhoods")).toEqual([
@@ -6003,9 +6008,6 @@ describe(
             "Middletown",
             "Western Heights",
           ]);
-
-          group = groups.port;
-          expect(group).not.toBeDefined();
         });
       });
 
@@ -6015,8 +6017,8 @@ describe(
           tilesetWithGroupMetadataUrl
         ).then(function (tileset) {
           const metadata = tileset.metadata;
-          const commercialDistrict = metadata.groups.commercialDistrict;
-          const residentialDistrict = metadata.groups.residentialDistrict;
+          const commercialDistrict = metadata.groups[1];
+          const residentialDistrict = metadata.groups[0];
 
           // the parent tile in this dataset does not have a group defined,
           // but its children do.
@@ -6434,13 +6436,18 @@ describe(
           expect(metadata).toBeDefined();
 
           const groups = metadata.groups;
+          const groupIds = metadata.groupIds;
           expect(groups).toBeDefined();
+          expect(groupIds).toEqual([
+            "commercialDistrict",
+            "residentialDistrict",
+          ]);
 
-          let group = groups.commercialDistrict;
+          let group = groups[0];
           expect(group).toBeDefined();
           expect(group.getProperty("businessCount")).toBe(143);
 
-          group = groups.residentialDistrict;
+          group = groups[1];
           expect(group).toBeDefined();
           expect(group.getProperty("population")).toBe(300000);
           expect(group.getProperty("neighborhoods")).toEqual([
@@ -6448,9 +6455,6 @@ describe(
             "Middletown",
             "Western Heights",
           ]);
-
-          group = groups.port;
-          expect(group).not.toBeDefined();
         });
       });
 
@@ -6460,8 +6464,8 @@ describe(
           tilesetWithGroupMetadataLegacyUrl
         ).then(function (tileset) {
           const metadata = tileset.metadata;
-          const commercialDistrict = metadata.groups.commercialDistrict;
-          const residentialDistrict = metadata.groups.residentialDistrict;
+          const commercialDistrict = metadata.groups[0];
+          const residentialDistrict = metadata.groups[1];
 
           // the parent tile in this dataset does not have a group defined,
           // but its children do.
