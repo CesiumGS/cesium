@@ -64,7 +64,7 @@ function Cesium3DTilesetMetadata(options) {
       );
     }
   } else if (defined(groupsJson)) {
-    // An older version of groups metadata stored groups in a dictionary
+    // An older version of group metadata stored groups in a dictionary
     // instead of an array.
     groupIds = Object.keys(groupsJson).sort();
     const length = groupIds.length;
