@@ -573,6 +573,39 @@ describe(
       });
     });
 
+    it("featureIdLabel setter works", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: buildingsMetadata,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.featureIdLabel).toBe("featureId_0");
+        model.featureIdLabel = "buildings";
+        expect(model.featureIdLabel).toBe("buildings");
+        model.featureIdLabel = 1;
+        expect(model.featureIdLabel).toBe("featureId_1");
+      });
+    });
+
+    it("instanceFeatureIdLabel setter works", function () {
+      if (webglStub) {
+        return;
+      }
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxInstanced,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.instanceFeatureIdLabel).toBe("instanceFeatureId_0");
+        model.instanceFeatureIdLabel = "section";
+        expect(model.instanceFeatureIdLabel).toBe("section");
+        model.instanceFeatureIdLabel = 1;
+        expect(model.instanceFeatureIdLabel).toBe("instanceFeatureId_1");
+      });
+    });
+
     it("initializes with model matrix", function () {
       const translation = new Cartesian3(10, 0, 0);
       const transform = Matrix4.fromTranslation(translation);
