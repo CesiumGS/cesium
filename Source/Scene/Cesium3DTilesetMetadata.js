@@ -47,23 +47,45 @@ function Cesium3DTilesetMetadata(options) {
     });
   }
 
+  let groupIds = [];
+  const groups = [];
   const groupsJson = metadataJson.groups;
-  const groups = {};
-  if (defined(groupsJson)) {
-    for (const groupId in groupsJson) {
+  if (Array.isArray(groupsJson)) {
+    const length = groupsJson.length;
+    for (let i = 0; i < length; i++) {
+      const group = groupsJson[i];
+      groupIds.push(group.id);
+      groups.push(
+        new GroupMetadata({
+          id: group.id,
+          group: group,
+          class: schema.classes[group.class],
+        })
+      );
+    }
+  } else if (defined(groupsJson)) {
+    // An older version of group metadata stored groups in a dictionary
+    // instead of an array.
+    groupIds = Object.keys(groupsJson).sort();
+    const length = groupIds.length;
+    for (let i = 0; i < length; i++) {
+      const groupId = groupIds[i];
       if (groupsJson.hasOwnProperty(groupId)) {
         const group = groupsJson[groupId];
-        groups[groupId] = new GroupMetadata({
-          id: groupId,
-          group: groupsJson[groupId],
-          class: schema.classes[group.class],
-        });
+        groups.push(
+          new GroupMetadata({
+            id: groupId,
+            group: groupsJson[groupId],
+            class: schema.classes[group.class],
+          })
+        );
       }
     }
   }
 
   this._schema = schema;
   this._groups = groups;
+  this._groupIds = groupIds;
   this._tileset = tileset;
 
   this._statistics = metadataJson.statistics;
@@ -90,13 +112,27 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * Metadata about groups of content.
    *
    * @memberof Cesium3DTilesetMetadata.prototype
-   * @type {Object.<String, GroupMetadata>}
+   * @type {GroupMetadata[]}
    * @readonly
    * @private
    */
   groups: {
     get: function () {
       return this._groups;
+    },
+  },
+
+  /**
+   * The IDs of the group metadata in the corresponding groups array.
+   *
+   * @memberof Cesium3DTilesetMetadata.prototype
+   * @type {String[]}
+   * @readonly
+   * @private
+   */
+  groupIds: {
+    get: function () {
+      return this._groupIds;
     },
   },
 

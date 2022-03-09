@@ -21,6 +21,7 @@
     - Added support for properties with `required`, `noData` and `default`. [#10172](https://github.com/CesiumGS/cesium/pull/10172)
   - `3DTILES_metadata`:
     - Added support for explicit content metadata. [#10150](https://github.com/CesiumGS/cesium/pull/10150)
+    - `tileset.groups` now stores group objects in an array instead of a dictionary. [#10179](https://github.com/CesiumGS/cesium/pull/10179)
   - `3DTILES_multiple_contents`:
     - Renamed `extension.content` as `extension.contents`. [#10174](https://github.com/CesiumGS/cesium/pull/10174)
 - Updated extensions to match the latest 3D Tiles 1.1 schema. See the [latest schema PR](https://github.com/CesiumGS/3d-tiles/pull/634):

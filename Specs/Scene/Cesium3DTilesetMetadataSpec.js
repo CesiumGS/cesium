@@ -39,7 +39,8 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
     });
 
     expect(metadata.schema).toBe(schema);
-    expect(metadata.groups).toEqual({});
+    expect(metadata.groups).toEqual([]);
+    expect(metadata.groupIds).toEqual([]);
     expect(metadata.tileset).toBeUndefined();
     expect(metadata.statistics).toBeUndefined();
     expect(metadata.extras).toBeUndefined();
@@ -71,20 +72,22 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
 
     const tilesetJson = {
       schema: schemaJson,
-      groups: {
-        neighborhoodA: {
+      groups: [
+        {
+          id: "neighborhoodA",
           class: "neighborhood",
           properties: {
             color: "RED",
           },
         },
-        neighborhoodB: {
+        {
+          id: "neighborhoodB",
           class: "neighborhood",
           properties: {
             color: "GREEN",
           },
         },
-      },
+      ],
       metadata: {
         class: "city",
         properties: {
@@ -115,12 +118,14 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
     expect(tilesetMetadata.class).toBe(cityClass);
     expect(tilesetMetadata.getProperty("name")).toBe("City");
 
-    const neighborhoodA = metadata.groups.neighborhoodA;
-    const neighborhoodB = metadata.groups.neighborhoodB;
+    const neighborhoodA = metadata.groups[0];
+    const neighborhoodB = metadata.groups[1];
 
+    expect(neighborhoodA.id).toBe(metadata.groupIds[0]);
     expect(neighborhoodA.class).toBe(neighborhoodClass);
     expect(neighborhoodA.getProperty("color")).toBe("RED");
     expect(neighborhoodB.class).toBe(neighborhoodClass);
+    expect(neighborhoodB.id).toBe(metadata.groupIds[1]);
     expect(neighborhoodB.getProperty("color")).toBe("GREEN");
 
     expect(metadata.statistics).toBe(statistics);
@@ -197,11 +202,13 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
     expect(tilesetMetadata.class).toBe(cityClass);
     expect(tilesetMetadata.getProperty("name")).toBe("City");
 
-    const neighborhoodA = metadata.groups.neighborhoodA;
-    const neighborhoodB = metadata.groups.neighborhoodB;
+    const neighborhoodA = metadata.groups[0];
+    const neighborhoodB = metadata.groups[1];
 
+    expect(neighborhoodA.id).toBe("neighborhoodA");
     expect(neighborhoodA.class).toBe(neighborhoodClass);
     expect(neighborhoodA.getProperty("color")).toBe("RED");
+    expect(neighborhoodB.id).toBe("neighborhoodB");
     expect(neighborhoodB.class).toBe(neighborhoodClass);
     expect(neighborhoodB.getProperty("color")).toBe("GREEN");
 

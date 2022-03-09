@@ -39,8 +39,9 @@
       }
     }
   },
-  "groups": {
-    "buildings": {
+  "groups": [
+    {
+      "id": "buildings",
       "class": "layer",
       "properties": {
         "color": [255, 127, 0],
@@ -48,7 +49,8 @@
         "isInstanced": false
       }
     },
-    "cubes": {
+    {
+      "id": "cubes",
       "class": "layer",
       "properties": {
         "color": [0, 255, 127],
@@ -56,7 +58,7 @@
         "isInstanced": true
       }
     }
-  },
+  ],
   "geometricError": 70,
   "root": {
     "refine": "ADD",
@@ -74,11 +76,11 @@
     "contents": [
       {
         "uri": "batched.b3dm",
-        "group": "buildings"
+        "group": 0
       },
       {
         "uri": "instanced.i3dm",
-        "group": "cubes"
+        "group": 1
       }
     ]
   }

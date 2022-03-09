@@ -135,8 +135,9 @@
       "tileCount": 5
     }
   },
-  "groups": {
-    "residentialDistrict": {
+  "groups": [
+    {
+      "id": "residentialDistrict",
       "class": "residential",
       "properties": {
         "name": "residential",
@@ -145,7 +146,8 @@
         "tileCount": 2
       }
     },
-    "commercialDistrict": {
+    {
+      "id": "commercialDistrict",
       "class": "commercial",
       "properties": {
         "name": "commercial",
@@ -153,7 +155,7 @@
         "majorIndustries": ["Finance", "Manufacturing"]
       }
     }
-  },
+  ],
   "geometricError": 240,
   "root": {
     "boundingVolume": {
@@ -205,7 +207,7 @@
         "geometricError": 0,
         "content": {
           "uri": "ll.b3dm",
-          "group": "residentialDistrict",
+          "group": 0,
           "metadata": {
             "class": "content",
             "properties": {
@@ -239,7 +241,7 @@
         "geometricError": 0,
         "content": {
           "uri": "lr.b3dm",
-          "group": "commercialDistrict",
+          "group": 1,
           "metadata": {
             "class": "content",
             "properties": {
@@ -273,7 +275,7 @@
         "geometricError": 0,
         "content": {
           "uri": "ur.b3dm",
-          "group": "commercialDistrict",
+          "group": 1,
           "metadata": {
             "class": "content",
             "properties": {
@@ -307,7 +309,7 @@
         "geometricError": 0,
         "content": {
           "uri": "ul.b3dm",
-          "group": "residentialDistrict",
+          "group": 0,
           "metadata": {
             "class": "content",
             "properties": {
