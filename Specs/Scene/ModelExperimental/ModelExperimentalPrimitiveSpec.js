@@ -29,7 +29,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   const mockModel = {
     type: ModelExperimentalType.GLTF,
     allowPicking: true,
-    featureIdLabel: 0,
+    featureIdLabel: "featureId_0",
   };
 
   const emptyVertexShader =
@@ -130,13 +130,22 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       primitive: mockPrimitive,
       node: {
         instances: {
-          featureIds: [{}, { propertyTableId: 0 }],
+          featureIds: [
+            {
+              label: "defaultIds",
+              positionalLabel: "instanceFeatureId_0",
+            },
+            {
+              propertyTableId: 0,
+              positionalLabel: "instanceFeatureId_1",
+            },
+          ],
         },
       },
       model: {
         type: ModelExperimentalType.GLTF,
         allowPicking: true,
-        instanceFeatureIdLabel: 1,
+        instanceFeatureIdLabel: "instanceFeatureId_1",
         content: {},
       },
     });
@@ -159,7 +168,16 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
   it("configures the pipeline stages for feature picking", function () {
     let primitive = new ModelExperimentalPrimitive({
       primitive: {
-        featureIds: [{}, { propertyTableId: 0 }],
+        featureIds: [
+          {
+            label: "defaultIds",
+            positionalLabel: "featureId_0",
+          },
+          {
+            propertyTableId: 0,
+            label: "pickingIds",
+          },
+        ],
         attributes: [
           {
             semantic: VertexAttributeSemantic.FEATURE_ID,
@@ -170,7 +188,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       model: {
         type: ModelExperimentalType.GLTF,
         allowPicking: true,
-        featureIdLabel: 1,
+        featureIdLabel: "pickingIds",
         content: {},
       },
     });
@@ -191,14 +209,17 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
 
     primitive = new ModelExperimentalPrimitive({
       primitive: {
-        featureIds: [{}, { propertyTableId: 0 }],
+        featureIds: [
+          { positionalLabel: "featureId_0" },
+          { propertyTableId: 0, positionalLabel: "featureId_1" },
+        ],
         attributes: [],
       },
       node: {},
       model: {
         type: ModelExperimentalType.GLTF,
         allowPicking: true,
-        featureIdLabel: 1,
+        featureIdLabel: "featureId_1",
         content: {},
       },
     });
@@ -331,7 +352,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       node: mockNode,
       model: {
         type: ModelExperimentalType.TILE_PNTS,
-        featureIdLabel: 0,
+        featureIdLabel: "featureId_0",
         pointCloudShading: pointCloudShading,
         content: {
           tileset: {
@@ -367,7 +388,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       node: mockNode,
       model: {
         type: ModelExperimentalType.GLTF,
-        featureIdLabel: 0,
+        featureIdLabel: "featureId_0",
         pointCloudShading: pointCloudShading,
       },
     });
@@ -398,7 +419,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       node: mockNode,
       model: {
         type: ModelExperimentalType.GLTF,
-        featureIdLabel: 0,
+        featureIdLabel: "featureId_0",
         pointCloudShading: pointCloudShading,
       },
     });
@@ -425,7 +446,7 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
       node: mockNode,
       model: {
         type: ModelExperimentalType.GLTF,
-        featureIdLabel: 0,
+        featureIdLabel: "featureId_0",
         pointCloudShading: undefined,
       },
     });

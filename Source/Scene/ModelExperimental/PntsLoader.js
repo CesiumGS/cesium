@@ -521,6 +521,7 @@ function makeComponents(loader, context) {
     const featureIdAttribute = new FeatureIdAttribute();
     featureIdAttribute.propertyTableId = 0;
     featureIdAttribute.setIndex = 0;
+    featureIdAttribute.positionalLabel = "featureId_0";
     primitive.featureIds.push(featureIdAttribute);
   }
 
