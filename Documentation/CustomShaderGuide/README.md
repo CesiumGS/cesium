@@ -68,7 +68,10 @@ const customShader = new Cesium.CustomShader(/* ... */);
 // Applying to all tiles in a tileset.
 const tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
   url: "http://example.com/tileset.json",
-  customShader: customShader
+  customShader: customShader,
+  // This is only needed for b3dm and i3dm tilesets. for glTF,
+  // ModelExperimental is always used.
+  enableModelExperimental: true,
 }));
 
 // Applying to a model directly
@@ -77,10 +80,6 @@ const model = Cesium.ModelExperimental.fromGltf({,
   customShader: customShader
 });
 ```
-
-**Note**: As of this writing, only tilesets that use the `3DTILES_content_gltf`
-extension will support `CustomShaders`. Future releases will add support for
-other formats such as b3dm.
 
 ## Uniforms
 
@@ -297,8 +296,12 @@ feature IDs appear in two places:
    shader as `(vsInput|fsInput).featureIds.instanceFeatureId_N` where `N` is the
    index of the feature IDs in the `featureIds` array.
 
-Furthermore, note that feature ID textures are only supported in the fragment
-shader.
+Furthermore, feature ID textures are only supported in the fragment shader.
+
+If a set of feature IDs includes a `label` property (new in `EXT_mesh_features`),
+that label will be available as an alias. For example, if `label: "alias"`, then
+`(vsInput|fsInput).featureIds.alias` would be available in the shader along
+with `featureId_N`.
 
 For example, suppose we had a glTF primitive with the following feature IDs:
 
@@ -318,8 +321,13 @@ For example, suppose we had a glTF primitive with the following feature IDs:
           {
             // Default feature IDs (instance ID)
             //
-            // Vertex Shader: vsInput.featureIds.instanceFeatureId_0
-            // Fragment Shader: fsInput.featureIds.instanceFeatureId_0
+            // Vertex Shader:
+            //   vsInput.featureIds.instanceFeatureId_0 OR
+            //   vsInput.featureIds.perInstance
+            // Fragment Shader:
+            //   fsInput.featureIds.instanceFeatureId_0 OR
+            //   fsInput.featureIds.perInstance
+            "label": "perInstance",
             "propertyTable": 0
           },
           {
@@ -330,9 +338,11 @@ For example, suppose we had a glTF primitive with the following feature IDs:
             //
             // Vertex Shader: vsInput.featureIds.instanceFeatureId_1
             // Fragment Shader: fsInput.featureIds.instanceFeatureId_1
+            //
+            // Since there is no label field, instanceFeatureId_1 must be used.
             "propertyTable": 1,
             "attribute": 0
-          }
+          },
         ]
       }
     }
@@ -354,7 +364,10 @@ For example, suppose we had a glTF primitive with the following feature IDs:
                 // Feature ID Texture
                 //
                 // Vertex Shader: (Not supported)
-                // Fragment Shader: fsInput.featureIds.featureId_0
+                // Fragment Shader:
+                //   fsInput.featureIds.featureId_0 OR
+                //   fsInput.featureIds.texture
+                "label": "texture",
                 "propertyTable": 2,
                 "index": 0,
                 "texCoord": 0,
@@ -363,8 +376,13 @@ For example, suppose we had a glTF primitive with the following feature IDs:
               {
                 // Default Feature IDs (vertex ID)
                 //
-                // Vertex Shader: vsInput.featureIds.featureId_1
-                // Fragment Shader: fsInput.featureIds.featureId_1
+                // Vertex Shader:
+                //   vsInput.featureIds.featureId_1 OR
+                //   vsInput.featureIds.perVertex
+                // Fragment Shader:
+                //   fsInput.featureIds.featureId_1 OR
+                //   fsInput.featureIds.perVertex
+                "label": "perVertex",
                 "propertyTable": 3,
               },
               {
@@ -374,6 +392,8 @@ For example, suppose we had a glTF primitive with the following feature IDs:
                 //
                 // Vertex Shader: vsInput.featureIds.featureId_2
                 // Fragment Shader: fsInput.featureIds.featureId_2
+                //
+                // Since there is no label, featureId_2 must be used.
                 "propertyTable": 4,
                 "attribute": 0
               },
