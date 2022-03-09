@@ -7,24 +7,16 @@ As of CesiumJS 1.35, CesiumJS has over 8,800 tests with 93% code coverage. Cesiu
 All new code should have 100% code coverage and should pass all tests. Always run the tests before opening a pull request.
 
 - [Testing Guide](#testing-guide)
-  - [Running the Tests](#running-the-tests)
-    - [Run All Tests](#run-all-tests)
-      - [Run with WebGL validation](#run-with-webgl-validation)
-      - [Run with WebGL stub](#run-with-webgl-stub)
-    - [Select a Test to Run](#select-a-test-to-run)
-    - [Run Only WebGL Tests](#run-only-webgl-tests)
-    - [Run Only Non-WebGL Tests](#run-only-non-webgl-tests)
-    - [Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
-    - [Run Coverage](#run-coverage)
-    - [Running Tests on the Command Line with Karma](#running-tests-on-the-command-line-with-karma)
-      - [Run Tests with a Specific Browser or Browsers](#run-tests-with-a-specific-browser-or-browsers)
-      - [Run All Tests with WebGL Validation](#run-all-tests-with-webgl-validation)
-      - [Run All Tests with WebGL Stub](#run-all-tests-with-webgl-stub)
-      - [Run Only WebGL Tests with Karma](#run-only-webgl-tests-with-karma)
-      - [Run Only Non-WebGL Tests with Karma](#run-only-non-webgl-tests-with-karma)
-      - [Run All Tests Against the Minified Release Version of CesiumJS](#run-all-tests-against-the-minified-release-version-of-cesiumjs)
-      - [Run a Single Test or Suite](#run-a-single-test-or-suite)
-      - [Using Browser Debugging Tools](#using-browser-debugging-tools)
+  - [Run Coverage](#run-coverage)
+  - [Running Tests on the Command Line with Karma](#running-tests-on-the-command-line-with-karma)
+    - [Run Tests with a Specific Browser or Browsers](#run-tests-with-a-specific-browser-or-browsers)
+    - [Run All Tests with WebGL Validation](#run-all-tests-with-webgl-validation)
+    - [Run All Tests with WebGL Stub](#run-all-tests-with-webgl-stub)
+    - [Run Only WebGL Tests with Karma](#run-only-webgl-tests-with-karma)
+    - [Run Only Non-WebGL Tests with Karma](#run-only-non-webgl-tests-with-karma)
+    - [Run All Tests Against the Minified Release Version of CesiumJS](#run-all-tests-against-the-minified-release-version-of-cesiumjs)
+    - [Run a Single Test or Suite](#run-a-single-test-or-suite)
+    - [Using Browser Debugging Tools](#using-browser-debugging-tools)
   - [`testfailure` Label for Issues](#testfailure-label-for-issues)
   - [Writing Tests](#writing-tests)
     - [Directory Organization](#directory-organization)
@@ -46,76 +38,6 @@ All new code should have 100% code coverage and should pass all tests. Always ru
     - [Start with a Similar (Small) Test](#start-with-a-similar-small-test)
     - [Debugger-Aided Incremental Improvements](#debugger-aided-incremental-improvements)
   - [Resources](#resources)
-
-## Running the Tests
-
-The CesiumJS tests are written in JavaScript and use [Jasmine](http://jasmine.github.io/), a behavior-driven testing framework. Jasmine calls an individual test, e.g., a function with one or more assertions, a **spec** (however, the Cesium team usually still say "test"), and a group of related tests, e.g., all the tests for `Cartesian3`, a **suite**. Jasmine also calls an assertion, an **expectation**.
-
-When running CesiumJS locally, [start the local server](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/BuildGuide#build-the-code) and browse to [http://localhost:8080/](http://localhost:8080/). There are several test options:
-
-### Run All Tests
-
-Runs all the tests. As of CesiumJS 1.15, on a decent laptop, they run in about a minute in Chrome. It is important that the tests run quickly so we run them often.
-
-When all the tests pass, the page looks like this:
-
-![](1.jpg)
-
-When one or more tests fail, the page looks like this:
-
-![](2.jpg)
-
-In this case, the number of failing tests is listed at the top, and details on each failure are listed below, including the expected and actual value of the failed expectation and the call stack. The top several functions of the call stack are inside Jasmine and can be ignored. Above, the file and line of interest for the first failing test starts with an `@`:
-
-```
-@http://localhost:8080/Specs/Renderer/FramebufferSpec.js:637:13
-```
-
-Click on the failed test to rerun just that test. This is useful for saving time when fixing an issue as it avoids rerunning all the tests. Always rerun _all_ the tests before opening a pull request.
-
-#### Run with WebGL validation
-
-The link to **Run with WebGL validation** passes a query parameter to the tests to enable extra low-level WebGL validation such as calling `gl.getError()` after each WebGL call. We use this when doing the monthly CesiumJS release and when making changes to CesiumJS's renderer.
-
-#### Run with WebGL stub
-
-The **Run with WebGL stub** link passes a query parameter to the tests to use CesiumJS's WebGL stub. This makes all WebGL calls a noop and ignores test expectations that rely on reading back from WebGL. This allows running the tests on CI where a reasonable WebGL implementation is not available and still getting full code coverage albeit not all verification.
-
-### Select a Test to Run
-
-This option loads the test page without running any tests.
-
-![](3.jpg)
-
-We can then use the browser's built-in search to find a test or suite and run only that. For example, below just the tests for `Cartesian3` were run.
-
-![](7.jpg)
-
-This uses a query parameter to select the test/suite to run so refreshing the page will run just that test/suite again.
-
-Often when developing, it is useful to run only one suite to save time, instead of all the tests, and then run all the tests before opening a pull request.
-
-### Run Only WebGL Tests
-
-Suites can have a category associated with them. This option runs all tests in the `WebGL` category, which includes all tests that use WebGL (basically anything that requires creating a `Viewer`, `CesiumWidget`, `Scene`, or `Context`).
-
-### Run Only Non-WebGL Tests
-
-Likewise, this option runs all tests not in the WebGL category.
-
-Perhaps surprisingly, this is the bulk of CesiumJS tests, which include math and geometry tests, imagery provider tests, data source tests, etc.
-
-These tests run quickly (for example, 15 seconds compared to 60) and are very reliable across systems since they do not rely on the underlying WebGL implementation, which can vary based on the browser, OS, driver, and GPU.
-
-### Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)
-
-Most test options load CesiumJS using the individual source files in the `Source` directory, which is great for debugging.
-
-However, many users build apps using the built Cesium.js in `Build/Cesium` (which is created, for example, by running `npm run combine`). This option runs the tests using this instead of individual CesiumJS source files.
-
-The **Run All Tests against Combined File with Debug Code Removed** is the same except it is for use with the release version of the built Cesium.js (which is created, for example, by running `npm run combineRelease`). The release version has `DeveloperError` exceptions optimized out so this test option makes `toThrowDeveloperError` always pass.
-
-See the [Build Guide](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/BuildGuide/README.md#build-scripts) for all the CesiumJS build options.
 
 ### Run Coverage
 
