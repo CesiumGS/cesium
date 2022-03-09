@@ -5934,6 +5934,55 @@ describe(
       tileCount: 5,
     };
 
+    describe("select feature IDs", function () {
+      const tilesetWithFeatureIdsUrl =
+        "Data/Cesium3DTiles/Metadata/StructuralMetadata/tileset_1.1.json";
+
+      it("featureIdLabel sets from string", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithFeatureIdsUrl
+        ).then(function (tileset) {
+          expect(tileset.featureIdLabel).toBe("featureId_0");
+          tileset.featureIdLabel = "buildings";
+          expect(tileset.featureIdLabel).toBe("buildings");
+        });
+      });
+
+      it("featureIdLabel sets from integer", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithFeatureIdsUrl
+        ).then(function (tileset) {
+          expect(tileset.featureIdLabel).toBe("featureId_0");
+          tileset.featureIdLabel = 1;
+          expect(tileset.featureIdLabel).toBe("featureId_1");
+        });
+      });
+
+      it("instanceFeatureIdLabel sets from string", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithFeatureIdsUrl
+        ).then(function (tileset) {
+          expect(tileset.instanceFeatureIdLabel).toBe("instanceFeatureId_0");
+          tileset.instanceFeatureIdLabel = "perInstance";
+          expect(tileset.instanceFeatureIdLabel).toBe("perInstance");
+        });
+      });
+
+      it("instanceFeatureIdLabel sets from integer", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithFeatureIdsUrl
+        ).then(function (tileset) {
+          expect(tileset.instanceFeatureIdLabel).toBe("instanceFeatureId_0");
+          tileset.instanceFeatureIdLabel = 1;
+          expect(tileset.instanceFeatureIdLabel).toBe("instanceFeatureId_1");
+        });
+      });
+    });
+
     describe("metadata", function () {
       const tilesetMetadataUrl =
         "Data/Cesium3DTiles/Metadata/TilesetMetadata/tileset_1.1.json";
