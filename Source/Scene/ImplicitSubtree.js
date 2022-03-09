@@ -353,8 +353,6 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
     }
   }
 
-  // TODO: FIGURE OUT FAILURE IN IMPLICIT SUBTREE SPEC
-
   let metadata;
   const schema = implicitTileset.metadataSchema;
   const subtreeMetadata = subtreeJson.subtreeMetadata;
