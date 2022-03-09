@@ -49,7 +49,7 @@
   "childSubtreeAvailability": {
     "constant": 0
   },
-  "contentMetadata": [
+  "propertyTables": [
     {
       "class": "building",
       "properties": {
@@ -69,5 +69,6 @@
         }
       }
     }
-  ]
+  ],
+  "contentMetadata": [0, 1]
 }

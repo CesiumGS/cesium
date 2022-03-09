@@ -31,18 +31,21 @@
     "childSubtreeAvailability": {
         "constant": 0
     },
-    "tileMetadata": {
-        "class": "tile",
-        "properties": {
-            "minimumHeight": {
-                "values": 0
-            },
-            "maximumHeight": {
-                "values": 1
-            },
-            "boundingRegion": {
-                "values": 2
+    "propertyTables": [
+        {
+            "class": "tile",
+            "properties": {
+                "minimumHeight": {
+                    "values": 0
+                },
+                "maximumHeight": {
+                    "values": 1
+                },
+                "boundingRegion": {
+                    "values": 2
+                }
             }
         }
-    }
+    ],
+    "tileMetadata": 0
 }

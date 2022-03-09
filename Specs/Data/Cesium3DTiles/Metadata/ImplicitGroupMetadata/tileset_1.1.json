@@ -2,12 +2,6 @@
   "asset": {
     "version": "1.1"
   },
-  "extensionsUsed": [
-    "3DTILES_multiple_contents"
-  ],
-  "extensionsRequired": [
-    "3DTILES_multiple_contents"
-  ],
   "schema": {
     "classes": {
       "layer": {
@@ -56,23 +50,19 @@
       "subtreeLevels": 2,
       "availableLevels": 2,
       "subtrees": {
-        "uri": "subtrees/{level}.{x}.{y}.json"
+        "uri": "subtrees/1.1/{level}.{x}.{y}.json"
       }
     },
-    "extensions": {
-      "3DTILES_multiple_contents": {
-        "content": [
-          {
-            "uri": "ground/{level}/{x}/{y}.b3dm",
-            "group": "ground"
-          },
-          {
-            "uri": "sky/{level}/{x}/{y}.b3dm",
-            "group": "sky"
-          }
-        ]
+    "contents": [
+      {
+        "uri": "ground/{level}/{x}/{y}.b3dm",
+        "group": "ground"
+      },
+      {
+        "uri": "sky/{level}/{x}/{y}.b3dm",
+        "group": "sky"
       }
-    },
+    ],
     "geometricError": 70,
     "refine": "ADD"
   }

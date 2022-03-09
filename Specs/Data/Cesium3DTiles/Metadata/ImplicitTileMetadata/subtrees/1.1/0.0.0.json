@@ -32,15 +32,18 @@
   "childSubtreeAvailability": {
     "constant": 0
   },
-  "tileMetadata": {
-    "class": "tile",
-    "properties": {
-      "quadrant": {
-        "values": 1
-      },
-      "color": {
-        "values": 2
+  "propertyTables": [
+    {
+      "class": "tile",
+      "properties": {
+        "quadrant": {
+          "values": 1
+        },
+        "color": {
+          "values": 2
+        }
       }
     }
-  }
+  ],
+  "tileMetadata": 0
 }
