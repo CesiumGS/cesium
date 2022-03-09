@@ -14,6 +14,7 @@
   - Split `EXT_mesh_features` into `EXT_mesh_features`, `EXT_instance_features`, `EXT_structural_metadata` [#10199](https://github.com/CesiumGS/cesium/pull/10119)
   - `EXT_mesh_features`:
     - Updated feature ID parsing to match the latest schema [#10087](https://github.com/CesiumGS/cesium/pull/10087)
+    - Added support for the `label` property. For picking and styling, `(tileset|model).featureIdIndex` (integer) is replaced with `(tileset|model).featureIdLabel` (a string). Similarly, `instanceFeatureIdIndex` becomes `instanceFeatureIdLabel`. For custom shaders, this adds support for `featureIds.{label}` aliases.[#10180](https://github.com/CesiumGS/cesium/pull/10180)
   - `EXT_structural_metadata`:
     - Updated metadata type parsing to match the latest schema [#10116](https://github.com/CesiumGS/cesium/pull/10116)
     - Updated property texture parsing to match the latest schema [#10122](https://github.com/CesiumGS/cesium/pull/10122)
