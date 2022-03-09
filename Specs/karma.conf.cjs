@@ -83,7 +83,7 @@ module.exports = function (config) {
       },
     },
 
-    // Rediculous large values because travis is slow.
+    // Ridiculous large values because travis is slow.
     captureTimeout: 120000,
     browserDisconnectTolerance: 3,
     browserDisconnectTimeout: 120000,
