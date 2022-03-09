@@ -543,7 +543,7 @@ describe(
       return loadAndZoomToModelExperimental(
         {
           gltf: boxInstanced,
-          instanceFeatureIdLabel: 1,
+          instanceFeatureIdLabel: "section",
         },
         scene
       ).then(function (model) {

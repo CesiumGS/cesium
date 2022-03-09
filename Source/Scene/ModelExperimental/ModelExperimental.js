@@ -138,6 +138,7 @@ export default function ModelExperimental(options) {
   if (typeof instanceFeatureIdLabel === "number") {
     instanceFeatureIdLabel = `instanceFeatureId_${instanceFeatureIdLabel}`;
   }
+  this._instanceFeatureIdLabel = instanceFeatureIdLabel;
 
   this._featureTables = [];
   this._featureTableId = undefined;
