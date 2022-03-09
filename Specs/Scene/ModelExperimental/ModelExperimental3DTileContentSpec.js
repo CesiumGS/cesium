@@ -14,7 +14,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
   const gltfContentUrl = "./Data/Cesium3DTiles/GltfContent/glTF/tileset.json";
   const glbContentUrl = "./Data/Cesium3DTiles/GltfContent/glb/tileset.json";
   const buildingsMetadataUrl =
-    "./Data/Cesium3DTiles/Metadata/StructuralMetadata/tileset.json";
+    "./Data/Cesium3DTiles/Metadata/StructuralMetadata/tileset_1.1.json";
   const withBatchTableUrl =
     "./Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json";
   const withoutBatchTableUrl =

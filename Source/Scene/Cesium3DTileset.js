@@ -100,8 +100,8 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
  * @param {Boolean} [options.vectorClassificationOnly=false] Indicates that only the tileset's vector tiles should be used for classification.
  * @param {Boolean} [options.vectorKeepDecodedPositions=false] Whether vector tiles should keep decoded positions in memory. This is used with {@link Cesium3DTileFeature.getPolylinePositions}.
- * @param {Number} [options.featureIdIndex=0] The index into the list of primitive feature IDs used for picking and styling. For EXT_feature_metadata, feature ID attributes are listed before feature ID textures. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
- * @param {Number} [options.instanceFeatureIdIndex=0] The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
@@ -960,6 +960,8 @@ function Cesium3DTileset(options) {
    * <p>
    * The value defaults to {@link ExperimentalFeatures.enableModelExperimental}.
    * </p>
+   *
+   * @memberof Cesium3DTileset.prototype
    * @type {Boolean}
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
@@ -968,26 +970,20 @@ function Cesium3DTileset(options) {
     ExperimentalFeatures.enableModelExperimental
   );
 
-  /**
-   * The index into the list of primitive feature IDs used for picking and
-   * styling. For EXT_feature_metadata, feature ID attributes are listed before
-   * feature ID textures. If both per-primitive and per-instance feature IDs are
-   * present, the instance feature IDs take priority.
-   *
-   * @type {Number}
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
-   */
-  this.featureIdIndex = defaultValue(options.featureIdIndex, 0);
+  let featureIdLabel = defaultValue(options.featureIdLabel, "featureId_0");
+  if (typeof featureIdLabel === "number") {
+    featureIdLabel = `featureId_${featureIdLabel}`;
+  }
+  this._featureIdLabel = featureIdLabel;
 
-  /**
-   * The index into the list of instance feature IDs used for picking and
-   * styling. If both per-primitive and per-instance feature IDs are present,
-   * the instance feature IDs take priority.
-   *
-   * @type {Number}
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
-   */
-  this.instanceFeatureIdIndex = defaultValue(options.instanceFeatureIdIndex, 0);
+  let instanceFeatureIdLabel = defaultValue(
+    options.instanceFeatureIdLabel,
+    "instanceFeatureId_0"
+  );
+  if (typeof instanceFeatureIdLabel === "number") {
+    instanceFeatureIdLabel = `instanceFeatureId_${instanceFeatureIdLabel}`;
+  }
+  this._instanceFeatureIdLabel = instanceFeatureIdLabel;
 
   this._schemaLoader = undefined;
 
@@ -1852,6 +1848,78 @@ Object.defineProperties(Cesium3DTileset.prototype, {
     },
     set: function (value) {
       this._showCreditsOnScreen = value;
+    },
+  },
+
+  /**
+   * Label of the feature ID set to use for picking and styling.
+   * <p>
+   * For EXT_mesh_features, this is the feature ID's label property, or
+   * "featureId_N" (where N is the index in the featureIds array) when not
+   * specified. EXT_feature_metadata did not have a label field, so such
+   * feature ID sets are always labeled "featureId_N" where N is the index in
+   * the list of all feature Ids, where feature ID attributes are listed before
+   * feature ID textures.
+   * </p>
+   * <p>
+   * If featureIdLabel is set to an integer N, it is converted to
+   * the string "featureId_N" automatically. If both per-primitive and
+   * per-instance feature IDs are present, the instance feature IDs take
+   * priority.
+   * </p>
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {String}
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  featureIdLabel: {
+    get: function () {
+      return this._featureIdLabel;
+    },
+    set: function (value) {
+      // indices get converted into featureId_N
+      if (typeof value === "number") {
+        value = `featureId_${value}`;
+      }
+
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.string("value", value);
+      //>>includeEnd('debug');
+
+      this._featureIdLabel = value;
+    },
+  },
+
+  /**
+   * Label of the instance feature ID set used for picking and styling.
+   * <p>
+   * If instanceFeatureIdLabel is set to an integer N, it is converted to
+   * the string "instanceFeatureId_N" automatically.
+   * If both per-primitive and per-instance feature IDs are present, the
+   * instance feature IDs take priority.
+   * </p>
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {String}
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  instanceFeatureIdLabel: {
+    get: function () {
+      return this._instanceFeatureIdLabel;
+    },
+    set: function (value) {
+      // indices get converted into instanceFeatureId_N
+      if (typeof value === "number") {
+        value = `instanceFeatureId_${value}`;
+      }
+
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.string("value", value);
+      //>>includeEnd('debug');
+
+      this._instanceFeatureIdLabel = value;
     },
   },
 });

@@ -99,10 +99,12 @@
             "EXT_mesh_features": {
               "featureIds": [
                 {
+                  "label": "iteration",
                   "featureCount": 30,
                   "attribute": 0
                 },
                 {
+                  "label": "pointId",
                   "featureCount": 20,
                   "attribute": 1
                 }

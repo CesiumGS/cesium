@@ -95,10 +95,12 @@
         "EXT_instance_features": {
           "featureIds": [
             {
+              "label": "perInstance",
               "propertyTable": 0,
               "featureCount": 4
             },
             {
+              "label": "section",
               "propertyTable": 1,
               "attribute": 0,
               "featureCount": 2

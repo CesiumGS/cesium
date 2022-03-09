@@ -813,12 +813,14 @@ function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
 }
 
 // for EXT_mesh_features
-function loadFeatureIdAttribute(featureIds) {
+function loadFeatureIdAttribute(featureIds, positionalLabel) {
   const featureIdAttribute = new FeatureIdAttribute();
   featureIdAttribute.featureCount = featureIds.featureCount;
   featureIdAttribute.nullFeatureId = featureIds.nullFeatureId;
   featureIdAttribute.propertyTableId = featureIds.propertyTable;
   featureIdAttribute.setIndex = featureIds.attribute;
+  featureIdAttribute.label = featureIds.label;
+  featureIdAttribute.positionalLabel = positionalLabel;
   return featureIdAttribute;
 }
 
@@ -826,24 +828,28 @@ function loadFeatureIdAttribute(featureIds) {
 function loadFeatureIdAttributeLegacy(
   gltfFeatureIdAttribute,
   featureTableId,
-  featureCount
+  featureCount,
+  positionalLabel
 ) {
   const featureIdAttribute = new FeatureIdAttribute();
   const featureIds = gltfFeatureIdAttribute.featureIds;
   featureIdAttribute.featureCount = featureCount;
   featureIdAttribute.propertyTableId = featureTableId;
   featureIdAttribute.setIndex = getSetIndex(featureIds.attribute);
+  featureIdAttribute.positionalLabel = positionalLabel;
   return featureIdAttribute;
 }
 
 // implicit ranges do not exist in EXT_mesh_features and EXT_instance_features,
 // but both default to the vertex/instance ID which is like
 // an implicit range of {offset: 0, repeat: 1}
-function loadDefaultFeatureIds(featureIds) {
+function loadDefaultFeatureIds(featureIds, positionalLabel) {
   const featureIdRange = new FeatureIdImplicitRange();
   featureIdRange.propertyTableId = featureIds.propertyTable;
   featureIdRange.featureCount = featureIds.featureCount;
   featureIdRange.nullFeatureId = featureIds.nullFeatureId;
+  featureIdRange.label = featureIds.label;
+  featureIdRange.positionalLabel = positionalLabel;
   featureIdRange.offset = 0;
   featureIdRange.repeat = 1;
   return featureIdRange;
@@ -853,7 +859,8 @@ function loadDefaultFeatureIds(featureIds) {
 function loadFeatureIdImplicitRangeLegacy(
   gltfFeatureIdAttribute,
   featureTableId,
-  featureCount
+  featureCount,
+  positionalLabel
 ) {
   const featureIdRange = new FeatureIdImplicitRange();
   const featureIds = gltfFeatureIdAttribute.featureIds;
@@ -865,6 +872,8 @@ function loadFeatureIdImplicitRangeLegacy(
   // The default is now undefined
   const divisor = defaultValue(featureIds.divisor, 0);
   featureIdRange.repeat = divisor === 0 ? undefined : divisor;
+
+  featureIdRange.positionalLabel = positionalLabel;
   return featureIdRange;
 }
 
@@ -873,13 +882,16 @@ function loadFeatureIdTexture(
   loader,
   gltf,
   gltfFeatureIdTexture,
-  supportedImageFormats
+  supportedImageFormats,
+  positionalLabel
 ) {
   const featureIdTexture = new FeatureIdTexture();
 
   featureIdTexture.featureCount = gltfFeatureIdTexture.featureCount;
   featureIdTexture.nullFeatureId = gltfFeatureIdTexture.nullFeatureId;
   featureIdTexture.propertyTableId = gltfFeatureIdTexture.propertyTable;
+  featureIdTexture.label = gltfFeatureIdTexture.label;
+  featureIdTexture.positionalLabel = positionalLabel;
 
   const textureInfo = gltfFeatureIdTexture.texture;
   featureIdTexture.textureReader = loadTexture(
@@ -910,7 +922,8 @@ function loadFeatureIdTextureLegacy(
   gltfFeatureIdTexture,
   featureTableId,
   supportedImageFormats,
-  featureCount
+  featureCount,
+  positionalLabel
 ) {
   const featureIdTexture = new FeatureIdTexture();
   const featureIds = gltfFeatureIdTexture.featureIds;
@@ -926,6 +939,7 @@ function loadFeatureIdTextureLegacy(
   );
 
   featureIdTexture.textureReader.channels = featureIds.channels;
+  featureIdTexture.positionalLabel = positionalLabel;
 
   return featureIdTexture;
 }
@@ -1059,6 +1073,7 @@ function loadPrimitiveFeatures(
 
   for (let i = 0; i < featureIdsArray.length; i++) {
     const featureIds = featureIdsArray[i];
+    const label = `featureId_${i}`;
 
     let featureIdComponent;
     if (defined(featureIds.texture)) {
@@ -1066,14 +1081,15 @@ function loadPrimitiveFeatures(
         loader,
         gltf,
         featureIds,
-        supportedImageFormats
+        supportedImageFormats,
+        label
       );
     } else if (defined(featureIds.attribute)) {
-      featureIdComponent = loadFeatureIdAttribute(featureIds);
+      featureIdComponent = loadFeatureIdAttribute(featureIds, label);
     } else {
       // default to vertex ID, in other words an implicit range with
       // offset: 0, repeat: 1
-      featureIdComponent = loadDefaultFeatureIds(featureIds);
+      featureIdComponent = loadDefaultFeatureIds(featureIds, label);
     }
 
     primitive.featureIds.push(featureIdComponent);
@@ -1091,6 +1107,8 @@ function loadPrimitiveFeaturesLegacy(
   // For looking up the featureCount for each set of feature IDs
   const featureTables = gltf.extensions.EXT_feature_metadata.featureTables;
 
+  let nextFeatureIdIndex = 0;
+
   // Feature ID Attributes
   const featureIdAttributes = metadataExtension.featureIdAttributes;
   if (defined(featureIdAttributes)) {
@@ -1102,19 +1120,23 @@ function loadPrimitiveFeaturesLegacy(
         featureTableId
       );
       const featureCount = featureTables[featureTableId].count;
+      const label = `featureId_${nextFeatureIdIndex}`;
+      nextFeatureIdIndex++;
 
       let featureIdComponent;
       if (defined(featureIdAttribute.featureIds.attribute)) {
         featureIdComponent = loadFeatureIdAttributeLegacy(
           featureIdAttribute,
           propertyTableId,
-          featureCount
+          featureCount,
+          label
         );
       } else {
         featureIdComponent = loadFeatureIdImplicitRangeLegacy(
           featureIdAttribute,
           propertyTableId,
-          featureCount
+          featureCount,
+          label
         );
       }
       primitive.featureIds.push(featureIdComponent);
@@ -1132,13 +1154,17 @@ function loadPrimitiveFeaturesLegacy(
         featureTableId
       );
       const featureCount = featureTables[featureTableId].count;
+      const featureIdLabel = `featureId_${nextFeatureIdIndex}`;
+      nextFeatureIdIndex++;
+
       const featureIdComponent = loadFeatureIdTextureLegacy(
         loader,
         gltf,
         featureIdTexture,
         propertyTableId,
         supportedImageFormats,
-        featureCount
+        featureCount,
+        featureIdLabel
       );
       // Feature ID textures are added after feature ID attributes in the list
       primitive.featureIds.push(featureIdComponent);
@@ -1251,14 +1277,15 @@ function loadInstanceFeatures(instances, instanceFeaturesExtension) {
 
   for (let i = 0; i < featureIdsArray.length; i++) {
     const featureIds = featureIdsArray[i];
+    const label = `instanceFeatureId_${i}`;
 
     let featureIdComponent;
     if (defined(featureIds.attribute)) {
-      featureIdComponent = loadFeatureIdAttribute(featureIds);
+      featureIdComponent = loadFeatureIdAttribute(featureIds, label);
     } else {
       // in EXT_instance_features, the default is to assign IDs by instance
       // ID. This can be expressed with offset: 0, repeat: 1
-      featureIdComponent = loadDefaultFeatureIds(featureIds);
+      featureIdComponent = loadDefaultFeatureIds(featureIds, label);
     }
 
     instances.featureIds.push(featureIdComponent);
@@ -1283,19 +1310,22 @@ function loadInstanceFeaturesLegacy(
       const featureTableId = featureIdAttribute.featureTable;
       const propertyTableId = sortedPropertyTableIds.indexOf(featureTableId);
       const featureCount = featureTables[featureTableId].count;
+      const label = `instanceFeatureId_${i}`;
 
       let featureIdComponent;
       if (defined(featureIdAttribute.featureIds.attribute)) {
         featureIdComponent = loadFeatureIdAttributeLegacy(
           featureIdAttribute,
           propertyTableId,
-          featureCount
+          featureCount,
+          label
         );
       } else {
         featureIdComponent = loadFeatureIdImplicitRangeLegacy(
           featureIdAttribute,
           propertyTableId,
-          featureCount
+          featureCount,
+          label
         );
       }
       instances.featureIds.push(featureIdComponent);

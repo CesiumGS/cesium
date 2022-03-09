@@ -140,6 +140,7 @@
             "EXT_mesh_features": {
               "featureIds": [
                 {
+                  "label": "idsRGBA",
                   "featureCount": 1048576,
                   "texture": {
                     "index": 1,
@@ -153,6 +154,7 @@
                   }
                 },
                 {
+                  "label": "idsRGB",
                   "featureCount": 1048576,
                   "texture": {
                     "index": 1,
@@ -165,6 +167,7 @@
                   }
                 },
                 {
+                  "label": "idsG",
                   "featureCount": 256,
                   "texture": {
                     "index": 1,
@@ -175,6 +178,7 @@
                   }
                 },
                 {
+                  "label": "idsBA",
                   "featureCount": 65536,
                   "texture": {
                     "index": 1,
@@ -186,6 +190,7 @@
                   }
                 },
                 {
+                  "label": "idsGR",
                   "featureCount": 65536,
                   "texture": {
                     "index": 1,
@@ -197,6 +202,7 @@
                   }
                 },
                 {
+                  "label": "idsAGBB",
                   "featureCount": 1048576,
                   "texture": {
                     "index": 1,
@@ -210,6 +216,7 @@
                   }
                 }, 
                 {
+                  "label": "idsGWithNull",
                   "featureCount": 255,
                   "nullFeatureId": 10,
                   "texture": {

@@ -174,13 +174,23 @@ describe(
           shaderBuilder,
           FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
           FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
-          ["    int featureId_0;", "    int featureId_1;"]
+          [
+            "    int featureId_0;",
+            "    int featureId_1;",
+            "    int perPoint;",
+            "    int town;",
+          ]
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
           FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
           FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
-          ["    int featureId_0;", "    int featureId_1;"]
+          [
+            "    int featureId_0;",
+            "    int featureId_1;",
+            "    int perPoint;",
+            "    int town;",
+          ]
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
@@ -198,6 +208,24 @@ describe(
           [
             "    featureIds.featureId_0 = int(czm_round(v_implicit_featureId_0));",
             "    featureIds.featureId_1 = int(czm_round(attributes.featureId_0));",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_VS,
+          FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_ID_ALIASES,
+          [
+            "    featureIds.perPoint = featureIds.featureId_0;",
+            "    featureIds.town = featureIds.featureId_1;",
+          ]
+        );
+        ShaderBuilderTester.expectHasFragmentFunction(
+          shaderBuilder,
+          FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_FS,
+          FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_ID_ALIASES,
+          [
+            "    featureIds.perPoint = featureIds.featureId_0;",
+            "    featureIds.town = featureIds.featureId_1;",
           ]
         );
         ShaderBuilderTester.expectHasVertexFunction(
@@ -262,13 +290,23 @@ describe(
           shaderBuilder,
           FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
           FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
-          ["    int featureId_0;", "    int featureId_1;"]
+          [
+            "    int featureId_0;",
+            "    int featureId_1;",
+            "    int buildings;",
+            "    int defaultIdsTest;",
+          ]
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
           FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
           FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
-          ["    int featureId_0;", "    int featureId_1;"]
+          [
+            "    int featureId_0;",
+            "    int featureId_1;",
+            "    int buildings;",
+            "    int defaultIdsTest;",
+          ]
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
@@ -286,6 +324,24 @@ describe(
           [
             "    featureIds.featureId_0 = int(czm_round(attributes.featureId_0));",
             "    featureIds.featureId_1 = int(czm_round(v_implicit_featureId_1));",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_VS,
+          FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_ID_ALIASES,
+          [
+            "    featureIds.buildings = featureIds.featureId_0;",
+            "    featureIds.defaultIdsTest = featureIds.featureId_1;",
+          ]
+        );
+        ShaderBuilderTester.expectHasFragmentFunction(
+          shaderBuilder,
+          FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_FS,
+          FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_ID_ALIASES,
+          [
+            "    featureIds.buildings = featureIds.featureId_0;",
+            "    featureIds.defaultIdsTest = featureIds.featureId_1;",
           ]
         );
         ShaderBuilderTester.expectHasVertexFunction(
@@ -356,7 +412,7 @@ describe(
           shaderBuilder,
           FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
           FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
-          ["    int featureId_0;"]
+          ["    int featureId_0;", "    int landCover;"]
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
@@ -371,6 +427,18 @@ describe(
           [
             "    featureIds.featureId_0 = czm_unpackUint(texture2D(u_featureIdTexture_0, v_texCoord_0).r);",
           ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_VS,
+          FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_ID_ALIASES,
+          []
+        );
+        ShaderBuilderTester.expectHasFragmentFunction(
+          shaderBuilder,
+          FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_FS,
+          FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_ID_ALIASES,
+          ["    featureIds.landCover = featureIds.featureId_0;"]
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
@@ -434,6 +502,13 @@ describe(
             "    int featureId_4;",
             "    int featureId_5;",
             "    int featureId_6;",
+            "    int idsRGBA;",
+            "    int idsRGB;",
+            "    int idsG;",
+            "    int idsBA;",
+            "    int idsGR;",
+            "    int idsAGBB;",
+            "    int idsGWithNull;",
           ]
         );
         ShaderBuilderTester.expectHasVertexFunction(
@@ -454,6 +529,26 @@ describe(
             "    featureIds.featureId_4 = czm_unpackUint(texture2D(u_featureIdTexture_4, v_texCoord_0).gr);",
             "    featureIds.featureId_5 = czm_unpackUint(texture2D(u_featureIdTexture_5, v_texCoord_0).agbb);",
             "    featureIds.featureId_6 = czm_unpackUint(texture2D(u_featureIdTexture_6, v_texCoord_0).g);",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_VS,
+          FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_ID_ALIASES,
+          []
+        );
+        ShaderBuilderTester.expectHasFragmentFunction(
+          shaderBuilder,
+          FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_FS,
+          FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_ID_ALIASES,
+          [
+            "    featureIds.idsRGBA = featureIds.featureId_0;",
+            "    featureIds.idsRGB = featureIds.featureId_1;",
+            "    featureIds.idsG = featureIds.featureId_2;",
+            "    featureIds.idsBA = featureIds.featureId_3;",
+            "    featureIds.idsGR = featureIds.featureId_4;",
+            "    featureIds.idsAGBB = featureIds.featureId_5;",
+            "    featureIds.idsGWithNull = featureIds.featureId_6;",
           ]
         );
         ShaderBuilderTester.expectHasVertexFunction(
@@ -515,13 +610,23 @@ describe(
           shaderBuilder,
           FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
           FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
-          ["    int instanceFeatureId_0;", "    int instanceFeatureId_1;"]
+          [
+            "    int instanceFeatureId_0;",
+            "    int instanceFeatureId_1;",
+            "    int perInstance;",
+            "    int section;",
+          ]
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
           FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
           FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
-          ["    int instanceFeatureId_0;", "    int instanceFeatureId_1;"]
+          [
+            "    int instanceFeatureId_0;",
+            "    int instanceFeatureId_1;",
+            "    int perInstance;",
+            "    int section;",
+          ]
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
@@ -539,6 +644,24 @@ describe(
           [
             "    featureIds.instanceFeatureId_0 = int(czm_round(v_implicit_instanceFeatureId_0));",
             "    featureIds.instanceFeatureId_1 = int(czm_round(v_instanceFeatureId_0));",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_VS,
+          FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_ID_ALIASES,
+          [
+            "    featureIds.perInstance = featureIds.instanceFeatureId_0;",
+            "    featureIds.section = featureIds.instanceFeatureId_1;",
+          ]
+        );
+        ShaderBuilderTester.expectHasFragmentFunction(
+          shaderBuilder,
+          FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_FS,
+          FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_ID_ALIASES,
+          [
+            "    featureIds.perInstance = featureIds.instanceFeatureId_0;",
+            "    featureIds.section = featureIds.instanceFeatureId_1;",
           ]
         );
         ShaderBuilderTester.expectHasVertexFunction(

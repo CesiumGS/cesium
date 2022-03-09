@@ -153,11 +153,13 @@
             "EXT_mesh_features": {
               "featureIds": [
                 {
+                  "label": "buildings",
                   "propertyTable": 0,
                   "attribute": 0,
                   "featureCount": 10
                 },
                 {
+                  "label": "defaultIdsTest",
                   "propertyTable": 0,
                   "featureCount": 5
                 }

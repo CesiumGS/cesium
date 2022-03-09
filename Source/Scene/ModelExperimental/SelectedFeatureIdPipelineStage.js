@@ -1,7 +1,9 @@
+import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import SelectedFeatureIdStageCommon from "../../Shaders/ModelExperimental/SelectedFeatureIdStageCommon.js";
 import ModelComponents from "../ModelComponents.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
  * The selected feature ID pipeline stage is responsible for handling the
@@ -116,10 +118,15 @@ function getSelectedFeatureIds(model, node, primitive) {
   // Check instances first, as this is the most specific type of
   // feature ID
   if (defined(node.instances)) {
-    featureIds = node.instances.featureIds[model.instanceFeatureIdIndex];
+    featureIds = ModelExperimentalUtility.getFeatureIdsByLabel(
+      node.instances.featureIds,
+      model.instanceFeatureIdLabel
+    );
 
     if (defined(featureIds)) {
-      variableName = `instanceFeatureId_${model.instanceFeatureIdIndex}`;
+      // Either label could be used here, but prefer label as it may be more
+      // meaningful when debugging
+      variableName = defaultValue(featureIds.label, featureIds.positionalLabel);
       return {
         featureIds: featureIds,
         variableName: variableName,
@@ -129,8 +136,12 @@ function getSelectedFeatureIds(model, node, primitive) {
     }
   }
 
-  featureIds = primitive.featureIds[model.featureIdIndex];
-  variableName = `featureId_${model.featureIdIndex}`;
+  featureIds = ModelExperimentalUtility.getFeatureIdsByLabel(
+    primitive.featureIds,
+    model.featureIdLabel
+  );
+  // again, prefer label for being more descriptive
+  variableName = defaultValue(featureIds.label, featureIds.positionalLabel);
   return {
     featureIds: featureIds,
     variableName: variableName,

@@ -107,6 +107,7 @@
                 {
                   "featureCount": 256,
                   "propertyTable": 0,
+                  "label": "landCover",
                   "texture": {
                     "index": 2,
                     "texCoord": 0,

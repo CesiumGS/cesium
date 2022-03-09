@@ -179,7 +179,10 @@ function inspectFeatureIds(model, node, primitive) {
   // Check instances first, as this is the most specific type of
   // feature ID
   if (defined(node.instances)) {
-    featureIds = node.instances.featureIds[model.instanceFeatureIdIndex];
+    featureIds = ModelExperimentalUtility.getFeatureIdsByLabel(
+      node.instances.featureIds,
+      model.instanceFeatureIdLabel
+    );
 
     if (defined(featureIds)) {
       return {
@@ -189,7 +192,10 @@ function inspectFeatureIds(model, node, primitive) {
     }
   }
 
-  featureIds = primitive.featureIds[model.featureIdIndex];
+  featureIds = ModelExperimentalUtility.getFeatureIdsByLabel(
+    primitive.featureIds,
+    model.featureIdLabel
+  );
   if (defined(featureIds)) {
     return {
       hasFeatureIds: true,

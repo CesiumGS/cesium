@@ -368,6 +368,25 @@ function FeatureIdAttribute() {
    * @private
    */
   this.setIndex = undefined;
+
+  /**
+   * The label to identify this set of feature IDs. This is used in picking,
+   * styling and shaders.
+   *
+   * @type {String}
+   * @private
+   */
+  this.label = undefined;
+
+  /**
+   * Label to identify this set of feature IDs by its position in the array.
+   * This will always be either "featureId_N" for primitives or
+   * "instanceFeatureId_N" for instances.
+   *
+   * @type {String}
+   * @private
+   */
+  this.positionalLabel = undefined;
 }
 
 /**
@@ -422,6 +441,25 @@ function FeatureIdImplicitRange() {
    * @private
    */
   this.repeat = undefined;
+
+  /**
+   * The label to identify this set of feature IDs. This is used in picking,
+   * styling and shaders.
+   *
+   * @type {String}
+   * @private
+   */
+  this.label = undefined;
+
+  /**
+   * Label to identify this set of feature IDs by its position in the array.
+   * This will always be either "featureId_N" for primitives or
+   * "instanceFeatureId_N" for instances.
+   *
+   * @type {String}
+   * @private
+   */
+  this.positionalLabel = undefined;
 }
 
 /**
@@ -465,6 +503,25 @@ function FeatureIdTexture() {
    * @private
    */
   this.textureReader = undefined;
+
+  /**
+   * The label to identify this set of feature IDs. This is used in picking,
+   * styling and shaders.
+   *
+   * @type {String}
+   * @private
+   */
+  this.label = undefined;
+
+  /**
+   * Label to identify this set of feature IDs by its position in the array.
+   * This will always be either "featureId_N" for primitives or
+   * "instanceFeatureId_N" for instances.
+   *
+   * @type {String}
+   * @private
+   */
+  this.positionalLabel = undefined;
 }
 
 /**

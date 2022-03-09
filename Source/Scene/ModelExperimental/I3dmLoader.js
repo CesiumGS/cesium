@@ -517,6 +517,7 @@ function createInstances(loader, components) {
   const featureIdInstanceAttribute = new FeatureIdAttribute();
   featureIdInstanceAttribute.propertyTableId = 0;
   featureIdInstanceAttribute.setIndex = 0;
+  featureIdInstanceAttribute.positionalLabel = "instanceFeatureId_0";
   instances.featureIds.push(featureIdInstanceAttribute);
 
   // Apply instancing to every node that has at least one primitive.
