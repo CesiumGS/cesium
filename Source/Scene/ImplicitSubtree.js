@@ -337,14 +337,23 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
   let tilePropertyTableJson;
   if (hasExtension(subtreeJson, "3DTILES_metadata")) {
     tilePropertyTableJson = subtreeJson.extensions["3DTILES_metadata"];
-  } else {
-    tilePropertyTableJson = subtreeJson.tileMetadata;
+  } else if (defined(subtreeJson.tileMetadata)) {
+    const propertyTableIndex = subtreeJson.tileMetadata;
+    tilePropertyTableJson = subtreeJson.propertyTables[propertyTableIndex];
   }
 
-  const contentPropertyTableJsons = defaultValue(
-    subtreeJson.contentMetadata,
-    []
-  );
+  const contentPropertyTableJsons = [];
+  if (defined(subtreeJson.contentMetadata)) {
+    const length = subtreeJson.contentMetadata.length;
+    for (let i = 0; i < length; i++) {
+      const propertyTableIndex = subtreeJson.contentMetadata[i];
+      contentPropertyTableJsons.push(
+        subtreeJson.propertyTables[propertyTableIndex]
+      );
+    }
+  }
+
+  // TODO: FIGURE OUT FAILURE IN IMPLICIT SUBTREE SPEC
 
   let metadata;
   const schema = implicitTileset.metadataSchema;

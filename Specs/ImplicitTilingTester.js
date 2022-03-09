@@ -448,6 +448,8 @@ function addMetadata(
     useLegacySchema
   );
 
+  const propertyTables = [];
+
   // Store results in subtree JSON -----------------------------------------
   if (useLegacySchema) {
     if (!defined(subtreeJson.extensions)) {
@@ -459,17 +461,19 @@ function addMetadata(
       properties: tileProperties,
     };
   } else {
-    subtreeJson.tileMetadata = {
+    const tilePropertyTable = {
       class: tileTable.class,
       properties: tileProperties,
       count: tileTable.count,
     };
+    propertyTables.push(tilePropertyTable);
+    subtreeJson.tileMetadata = 0;
   }
 
   // If they exist, handle the remaining property tables as content metadata
   const length = propertyTableResults.propertyTables.length;
   if (length > 1) {
-    const contentMetadataArray = [];
+    const contentMetadataIndices = [];
     for (let i = 1; i < length; i++) {
       const contentTable = propertyTableResults.propertyTables[i];
       const contentProperties = getPropertiesObjectFromPropertyTable(
@@ -483,11 +487,15 @@ function addMetadata(
         count: contentTable.count,
       };
 
-      contentMetadataArray.push(contentMetadata);
+      propertyTables.push(contentMetadata);
+      const contentMetadataIndex = useLegacySchema ? i - 1 : i;
+      contentMetadataIndices.push(contentMetadataIndex);
     }
 
-    subtreeJson.contentMetadata = contentMetadataArray;
+    subtreeJson.contentMetadata = contentMetadataIndices;
   }
+
+  subtreeJson.propertyTables = propertyTables;
 }
 
 function getPropertiesObjectFromPropertyTable(
