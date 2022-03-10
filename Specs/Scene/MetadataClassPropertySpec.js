@@ -896,6 +896,180 @@ describe("Scene/MetadataClassProperty", function () {
     });
   });
 
+  describe("value transform", function () {
+    let scalarProperties;
+    let scalarValues;
+    let transformedScalarValues;
+
+    let arrayProperties;
+    let arrayValues;
+    let transformedArrayValues;
+
+    let vectorProperties;
+    let vectorValues;
+    let transformedVectorValues;
+
+    let arrayOfVectorProperties;
+    let arrayOfVectorValues;
+    let transformedArrayOfVectorValues;
+
+    let myEnum;
+    let otherProperties;
+    let otherValues;
+    beforeAll(function () {
+      scalarProperties = {
+        propertyInt8: {
+          type: "SCALAR",
+          componentType: "INT8",
+          normalized: true,
+          offset: 1,
+          scale: 2,
+        },
+        propertyUint8: {
+          type: "SCALAR",
+          componentType: "UINT8",
+          normalized: true,
+          offset: 2,
+          scale: 2,
+        },
+        propertyInt16: {
+          type: "SCALAR",
+          componentType: "INT16",
+          normalized: true,
+          scale: 2,
+        },
+        propertyUint16: {
+          type: "SCALAR",
+          componentType: "UINT16",
+          normalized: true,
+          offset: 4,
+        },
+        propertyInt32: {
+          type: "SCALAR",
+          componentType: "INT32",
+          normalized: true,
+          offset: 0,
+          scale: 1,
+        },
+        propertyUint32: {
+          type: "SCALAR",
+          componentType: "UINT32",
+          normalized: true,
+          scale: 2,
+          offset: 2,
+        },
+        propertyInt64: {
+          type: "SCALAR",
+          componentType: "INT64",
+          normalized: true,
+          offset: -1,
+          scale: 0.5,
+        },
+        propertyUint64: {
+          type: "SCALAR",
+          componentType: "UINT64",
+          normalized: true,
+          offset: 1,
+          scale: 2,
+        },
+      };
+
+      scalarValues = {
+        propertyInt8: [-1.0, 0.0, 1.0],
+        propertyUint8: [0.0, 0.5, 1.0],
+        propertyInt16: [-1.0, 0.0, 1.0],
+        propertyUint16: [0.0, 0.5, 1.0],
+        propertyInt32: [-1.0, 0.0, 1.0],
+        propertyUint32: [0, 0.5, 1.0],
+        propertyInt64: [-1.0, 0.0, 1.0],
+        propertyUint64: [0, 0.5, 1.0],
+      };
+
+      transformedScalarValues = {
+        propertyInt8: [-1.0, 1.0, 3.0],
+        propertyUint8: [2.0, 3.0, 4.0],
+        propertyInt16: [-2.0, 0, 2.0],
+        propertyUint16: [4.0, 4.5, 5.0],
+        propertyInt32: [-1.0, 0, 1.0],
+        propertyUint32: [2.0, 3.0, 4.0],
+        propertyInt64: [-1.5, -1.0, -0.5],
+        propertyUint64: [1.0, 2.0, 3.0],
+      };
+    });
+
+    it("applies value transform for scalar values", function () {
+      if (!FeatureDetection.supportsBigInt()) {
+        return;
+      }
+
+      for (const propertyId in scalarProperties) {
+        if (scalarProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: scalarProperties[propertyId],
+          });
+          const length = transformedScalarValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const value = scalarValues[propertyId][i];
+            const transformedValue = property.applyValueTransform(value);
+            expect(transformedValue).toEqual(
+              transformedScalarValues[propertyId][i]
+            );
+          }
+        }
+      }
+    });
+
+    it("unapplies value transform for scalar values", function () {
+      if (!FeatureDetection.supportsBigInt()) {
+        return;
+      }
+
+      for (const propertyId in scalarProperties) {
+        if (scalarProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: scalarProperties[propertyId],
+          });
+          const length = scalarValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const transformedValue = transformedScalarValues[propertyId][i];
+            const value = property.unapplyValueTransform(transformedValue);
+            expect(value).toEqual(scalarValues[propertyId][i]);
+          }
+        }
+      }
+    });
+
+    it("applies value transform for vector and matrix values", function () {
+      fail();
+    });
+
+    it("unapplies value transform for vector and matrix values", function () {
+      fail();
+    });
+
+    it("applies value transform for array values", function () {
+      fail();
+    });
+
+    it("unapplies value transform for array values", function () {
+      fail();
+    });
+
+    it("applies value transform for arrays of vectors", function () {
+      fail();
+    });
+
+    it("unapplies value transform for arrays of vectors", function () {
+      fail();
+    });
+
+    it("does not transform other types", function () {
+      fail();
+    });
+  });
+
   describe("handleNoData", function () {
     let properties;
     beforeAll(function () {

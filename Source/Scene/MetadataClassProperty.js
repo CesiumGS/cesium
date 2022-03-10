@@ -648,7 +648,7 @@ MetadataClassProperty.prototype.applyValueTransform = function (value) {
     return value;
   }
 
-  return this.valueTransformInPlace(
+  return MetadataClassProperty.valueTransformInPlace(
     value,
     this._offset,
     this._scale,
@@ -661,7 +661,7 @@ MetadataClassProperty.prototype.unapplyValueTransform = function (value) {
     return value;
   }
 
-  return this.valueTransformInPlace(
+  return MetadataClassProperty.valueTransformInPlace(
     value,
     this._offset,
     this._scale,
@@ -1023,7 +1023,7 @@ function normalizeInPlace(values, valueType, normalizeFunction) {
   }
 
   for (let i = 0; i < values.length; i++) {
-    values[i] = normalizeInPlace(values[i], normalizeFunction);
+    values[i] = normalizeInPlace(values[i], valueType, normalizeFunction);
   }
 
   return values;
