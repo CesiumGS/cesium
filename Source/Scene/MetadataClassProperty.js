@@ -76,12 +76,13 @@ function MetadataClassProperty(options) {
   let scale = property.scale;
   const hasValueTransform = defined(offset) || defined(scale);
 
+  const enableNestedArrays = true;
   if (hasValueTransform && !defined(offset)) {
-    offset = this.expandConstant(0);
+    offset = this.expandConstant(0, enableNestedArrays);
   }
 
   if (hasValueTransform && !defined(scale)) {
-    scale = this.expandConstant(1);
+    scale = this.expandConstant(1, enableNestedArrays);
   }
 
   this._offset = offset;

@@ -400,6 +400,12 @@ MetadataComponentType.applyValueTransform = function (value, offset, scale) {
 };
 
 MetadataComponentType.unapplyValueTransform = function (value, offset, scale) {
+  // if the scale is 0, avoid a divide by zero error. The result can be any
+  // finite number, so 0.0 will do nicely.
+  if (scale === 0) {
+    return 0.0;
+  }
+
   return (value - offset) / scale;
 };
 
