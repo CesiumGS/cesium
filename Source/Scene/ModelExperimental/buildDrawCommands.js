@@ -74,6 +74,8 @@ export default function buildDrawCommands(
     primitiveRenderResources.boundingSphere
   );
 
+  // TODO: should scale get applied here?
+
   const command = new DrawCommand({
     boundingVolume: primitiveRenderResources.boundingSphere,
     modelMatrix: modelMatrix,

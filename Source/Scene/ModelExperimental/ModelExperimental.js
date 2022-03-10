@@ -103,11 +103,19 @@ export default function ModelExperimental(options) {
     defaultValue(options.modelMatrix, Matrix4.IDENTITY)
   );
   this._modelMatrix = Matrix4.clone(this.modelMatrix);
-
   this._scale = defaultValue(options.scale, 1.0);
   this._minimumPixelSize = defaultValue(options.minimumPixelSize, 0.0);
   this._maximumScale = options.maximumScale;
-  this._initialRadius = undefined;
+
+  /**
+   * Keeps track of whether or not the ModelExperimentalSceneGraph
+   * should call updateModelMatrix. This will be true if any of the
+   * model matrix, scale, minimum pixel size, or maximum scale are dirty.
+   *
+   * @type {boolean}
+   * @private
+   */
+  this._callUpdateModelMatrix = true;
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -146,7 +154,10 @@ export default function ModelExperimental(options) {
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._resources = [];
+
+  // Computation of the model's bounding sphere and its initial radius is done in ModelExperimentalSceneGraph
   this._boundingSphere = new BoundingSphere();
+  this._initialRadius = undefined;
 
   const pointCloudShading = new PointCloudShading(options.pointCloudShading);
   this._attenuation = pointCloudShading.attenuation;
@@ -684,6 +695,9 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._scale;
     },
     set: function (value) {
+      if (value !== this._scale) {
+        this._callUpdateModelMatrix = true;
+      }
       this._scale = value;
     },
   },
@@ -702,6 +716,9 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._minimumPixelSize;
     },
     set: function (value) {
+      if (value !== this._minimumPixelSize) {
+        this._callUpdateModelMatrix = true;
+      }
       this._minimumPixelSize = value;
     },
   },
@@ -718,6 +735,9 @@ Object.defineProperties(ModelExperimental.prototype, {
       return this._maximumScale;
     },
     set: function (value) {
+      if (value !== this._maximumScale) {
+        this._callUpdateModelMatrix = true;
+      }
       this._maximumScale = value;
     },
   },
@@ -846,17 +866,26 @@ ModelExperimental.prototype.update = function (frameState) {
     this._debugShowBoundingVolumeDirty = false;
   }
 
-  const scale = getScale(this, frameState);
-  this._sceneGraph.updateModelMatrix(scale);
-
   // This is done without a dirty flag so that the model matrix can be update in-place
-  // without needing to use a setter.
+  // without needing to use a setter
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
+    this._callUpdateModelMatrix = true;
+    Matrix4.clone(this.modelMatrix, this._modelMatrix);
     BoundingSphere.transform(
       this._sceneGraph.boundingSphere,
       this.modelMatrix,
       this._boundingSphere
     );
+  }
+
+  this._callUpdateModelMatrix =
+    this._callUpdateModelMatrix || this._minimumPixelSize > 0.0;
+
+  if (this._callUpdateModelMatrix) {
+    this._boundingSphere.radius = this._initialRadius * this._scale;
+    const scale = this._scale; //getScale(this, frameState);
+    this._sceneGraph.updateModelMatrix(scale);
+    this._callUpdateModelMatrix = false;
   }
 
   if (this._backFaceCullingDirty) {
@@ -918,7 +947,7 @@ const scratchPosition = new Cartesian3();
 function getScale(model, frameState) {
   let scale = model.scale;
 
-  if (model.minimumPixelSize !== 0.0) {
+  if (model.minimumPixelSize > 0.0) {
     // Compute size of bounding sphere in pixels
     const context = frameState.context;
     const maxPixelSize = Math.max(
@@ -930,11 +959,7 @@ function getScale(model, frameState) {
     scratchPosition.y = m[13];
     scratchPosition.z = m[14];
 
-    const radius = model.boundingSphere.radius;
-    if (!defined(model._initialRadius)) {
-      model._initialRadius = radius;
-    }
-
+    const radius = scratchBoundingSphere.radius;
     const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
 
     // metersPerPixel is always > 0.0

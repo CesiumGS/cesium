@@ -342,22 +342,16 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     }
   }
 
-  const scaledBoundingSphere = BoundingSphere.fromBoundingSpheres(
-    this._boundingSpheres
-  );
+  this._boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
+
   BoundingSphere.transform(
-    scaledBoundingSphere,
+    this._boundingSphere,
     model.modelMatrix,
     model._boundingSphere
   );
-  scaledBoundingSphere.center = Cartesian3.multiplyByScalar(
-    scaledBoundingSphere.center,
-    model.scale,
-    scaledBoundingSphere.center
-  );
-  scaledBoundingSphere.radius = model.scale * scaledBoundingSphere.radius;
 
-  this._boundingSphere = scaledBoundingSphere;
+  model._initialRadius = model._boundingSphere.radius;
+  model._boundingSphere.radius *= model._scale;
 };
 
 /**
@@ -402,15 +396,15 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function (scale) {
   const model = this._model;
   this._computedModelMatrix = Matrix4.clone(model.modelMatrix);
 
-  Matrix4.multiplyByUniformScale(
-    this._computedModelMatrix,
-    scale,
-    this._computedModelMatrix
-  );
-
   Matrix4.multiply(
     this._computedModelMatrix,
     this._modelComponents.transform,
+    this._computedModelMatrix
+  );
+
+  Matrix4.multiplyByUniformScale(
+    this._computedModelMatrix,
+    scale,
     this._computedModelMatrix
   );
 
