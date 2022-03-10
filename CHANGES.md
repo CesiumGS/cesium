@@ -2,6 +2,10 @@
 
 ### 1.92 - 2022-04-01
 
+##### Breaking Changes :mega:
+
+- Removed links to SpecRunner.html and related Jasmine files for running unit tests in browsers.
+
 ##### Fixes :wrench:
 
 - Fixed a bug where `pnts` tiles would crash when `Cesium.ExperimentalFeatures.enableModelExperimental` was true. [#10183](https://github.com/CesiumGS/cesium/pull/10183)
