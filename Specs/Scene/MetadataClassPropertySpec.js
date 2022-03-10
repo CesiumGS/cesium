@@ -399,7 +399,143 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   describe("expandConstant", function () {
-    fail();
+    it("works for scalars", function () {
+      const property = new MetadataClassProperty({
+        id: "propertyId",
+        property: {
+          type: "SCALAR",
+          componentType: "FLOAT32",
+        },
+      });
+
+      expect(property.expandConstant(1)).toBe(1);
+    });
+
+    it("works for vectors and matrices", function () {
+      let property = new MetadataClassProperty({
+        id: "propertyId",
+        property: {
+          type: "VEC3",
+          componentType: "FLOAT32",
+        },
+      });
+
+      expect(property.expandConstant(1)).toEqual([1, 1, 1]);
+
+      property = new MetadataClassProperty({
+        id: "propertyId",
+        property: {
+          type: "MAT3",
+          componentType: "FLOAT32",
+        },
+      });
+
+      expect(property.expandConstant(1)).toEqual([1, 1, 1, 1, 1, 1, 1, 1, 1]);
+    });
+
+    it("works for arrays of scalars", function () {
+      const property = new MetadataClassProperty({
+        id: "propertyId",
+        property: {
+          array: true,
+          count: 4,
+          type: "SCALAR",
+          componentType: "FLOAT32",
+        },
+      });
+
+      expect(property.expandConstant(1)).toEqual([1, 1, 1, 1]);
+    });
+
+    it("works for arrays of vectors and matrices", function () {
+      let property = new MetadataClassProperty({
+        id: "propertyId",
+        property: {
+          array: true,
+          count: 3,
+          type: "VEC3",
+          componentType: "FLOAT32",
+        },
+      });
+
+      const isNested = false;
+      expect(property.expandConstant(1, isNested)).toEqual([
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+      ]);
+
+      property = new MetadataClassProperty({
+        id: "propertyId",
+        property: {
+          array: true,
+          count: 2,
+          type: "MAT3",
+          componentType: "FLOAT32",
+        },
+      });
+
+      expect(property.expandConstant(1, isNested)).toEqual([
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+      ]);
+    });
+
+    it("works for nested arrays of vectors and matrices", function () {
+      let property = new MetadataClassProperty({
+        id: "propertyId",
+        property: {
+          array: true,
+          count: 3,
+          type: "VEC3",
+          componentType: "FLOAT32",
+        },
+      });
+
+      const isNested = true;
+      expect(property.expandConstant(1, isNested)).toEqual([
+        [1, 1, 1],
+        [1, 1, 1],
+        [1, 1, 1],
+      ]);
+
+      property = new MetadataClassProperty({
+        id: "propertyId",
+        property: {
+          array: true,
+          count: 2,
+          type: "MAT3",
+          componentType: "FLOAT32",
+        },
+      });
+
+      expect(property.expandConstant(1, isNested)).toEqual([
+        [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1],
+      ]);
+    });
   });
 
   describe("normalize and unnormalize", function () {
