@@ -1309,7 +1309,7 @@ describe("Scene/MetadataClassProperty", function () {
       }
     });
 
-    it("unapplies value transform for scalar values", function () {
+    it("un-applies value transform for scalar values", function () {
       if (!FeatureDetection.supportsBigInt()) {
         return;
       }
@@ -1344,6 +1344,24 @@ describe("Scene/MetadataClassProperty", function () {
       expect(property.unapplyValueTransform(35.0)).toBe(0.0);
     });
 
+    it("value transformations are no-ops for identity transformations", function () {
+      const valueTransformInPlace = spyOn(
+        MetadataClassProperty,
+        "valueTransformInPlace"
+      );
+      const property = new MetadataClassProperty({
+        id: "identityTransform",
+        property: {
+          type: "SCALAR",
+          componentType: "FLOAT32",
+        },
+      });
+
+      expect(property.applyValueTransform(5.0)).toBe(5.0);
+      expect(property.unapplyValueTransform(5.0)).toBe(5.0);
+      expect(valueTransformInPlace).not.toHaveBeenCalled();
+    });
+
     it("applies value transform for array values", function () {
       for (const propertyId in arrayProperties) {
         if (arrayProperties.hasOwnProperty(propertyId)) {
@@ -1365,7 +1383,7 @@ describe("Scene/MetadataClassProperty", function () {
       }
     });
 
-    it("unapplies value transform for array values", function () {
+    it("un-applies value transform for array values", function () {
       for (const propertyId in arrayProperties) {
         if (arrayProperties.hasOwnProperty(propertyId)) {
           const property = new MetadataClassProperty({
@@ -1384,12 +1402,31 @@ describe("Scene/MetadataClassProperty", function () {
       }
     });
 
-    it("applyValueTranform does not transform variable length arrays", function () {
-      fail();
-    });
+    it("value transforms do not transform variable length arrays", function () {
+      const valueTransformInPlace = spyOn(
+        MetadataClassProperty,
+        "valueTransformInPlace"
+      );
 
-    it("unapplyValueTransform does not transform variable length arrays", function () {
-      fail();
+      const property = new MetadataClassProperty({
+        id: "zeroScale",
+        property: {
+          type: "SCALAR",
+          componentType: "FLOAT32",
+          array: true,
+          // In this case the implementation should ignore offset/scale
+          offset: [1, 2, 3],
+          scale: [2, 2, 2],
+        },
+      });
+
+      const values = [-1.0, 0.0, 5.0, 4.0];
+      expect(property.applyValueTransform(clone(values, true))).toEqual(values);
+      expect(property.unapplyValueTransform(clone(values, true))).toEqual(
+        values
+      );
+
+      expect(valueTransformInPlace).not.toHaveBeenCalled();
     });
 
     it("applies value transform for vector and matrix values", function () {
@@ -1413,7 +1450,7 @@ describe("Scene/MetadataClassProperty", function () {
       }
     });
 
-    it("unapplies value transform for vector and matrix values", function () {
+    it("un-applies value transform for vector and matrix values", function () {
       for (const propertyId in vectorProperties) {
         if (vectorProperties.hasOwnProperty(propertyId)) {
           const property = new MetadataClassProperty({
@@ -1453,7 +1490,7 @@ describe("Scene/MetadataClassProperty", function () {
       }
     });
 
-    it("unapplies value transform for arrays of vectors", function () {
+    it("un-applies value transform for arrays of vectors", function () {
       for (const propertyId in arrayOfVectorProperties) {
         if (arrayOfVectorProperties.hasOwnProperty(propertyId)) {
           const property = new MetadataClassProperty({

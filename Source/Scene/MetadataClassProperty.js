@@ -645,7 +645,9 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
 };
 
 MetadataClassProperty.prototype.applyValueTransform = function (value) {
-  if (!this._hasValueTransform) {
+  // variable length arrays do not have a well-defined offset/scale so this
+  // is forbidden by the spec
+  if (!this._hasValueTransform || this._isVariableLengthArray) {
     return value;
   }
 
@@ -658,7 +660,9 @@ MetadataClassProperty.prototype.applyValueTransform = function (value) {
 };
 
 MetadataClassProperty.prototype.unapplyValueTransform = function (value) {
-  if (!this._hasValueTransform) {
+  // variable length arrays do not have a well-defined offset/scale so this
+  // is forbidden by the spec
+  if (!this._hasValueTransform || this._isVariableLengthArray) {
     return value;
   }
 
