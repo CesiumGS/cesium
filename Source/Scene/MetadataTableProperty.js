@@ -141,8 +141,15 @@ function MetadataTableProperty(options) {
     valueCount
   );
 
-  const offset = property.offset;
-  const scale = property.scale;
+  let offset = defaultValue(property.offset, classProperty.offset);
+  if (!defined(offset)) {
+    offset = classProperty.expandConstant(offset);
+  }
+
+  let scale = defaultValue(property.scale, classProperty.offset);
+  if (!defined(scale)) {
+    scale = classProperty.expandConstant(scale);
+  }
 
   let getValueFunction;
   let setValueFunction;
@@ -247,6 +254,7 @@ MetadataTableProperty.prototype.get = function (index) {
   }
 
   value = this._classProperty.normalize(value);
+  value = applyValueTransform(this, value);
   return this._classProperty.unpackVectorAndMatrixTypes(value);
 };
 
@@ -271,6 +279,7 @@ MetadataTableProperty.prototype.set = function (index, value) {
   //>>includeEnd('debug');
 
   value = classProperty.packVectorAndMatrixTypes(value);
+  value = unapplyValueTransform(this, value);
   value = classProperty.unnormalize(value);
 
   set(this, index, value);
@@ -619,6 +628,10 @@ function unpackValues(property) {
   }
   return unpackedValues;
 }
+
+function applyValueTransform(property, value) {}
+
+function unapplyValueTransform(property, value) {}
 
 function BufferView(bufferView, componentType, length) {
   const that = this;

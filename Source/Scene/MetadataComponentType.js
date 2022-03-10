@@ -395,6 +395,14 @@ MetadataComponentType.unnormalize = function (value, type) {
   return value;
 };
 
+MetadataComponentType.applyValueTransform = function (value, offset, scale) {
+  return scale * value + offset;
+};
+
+MetadataComponentType.unapplyValueTransform = function (value, offset, scale) {
+  return (value - offset) / scale;
+};
+
 /**
  * Gets the size in bytes for the numeric type.
  *
