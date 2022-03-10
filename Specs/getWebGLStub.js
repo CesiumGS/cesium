@@ -222,6 +222,7 @@ function getParameterStub(options) {
   parameterStubValues[WebGLConstants.MAX_TEXTURE_MAX_ANISOTROPY_EXT] = 16; // Assuming extension
   parameterStubValues[WebGLConstants.MAX_DRAW_BUFFERS] = 8; // Assuming extension
   parameterStubValues[WebGLConstants.MAX_COLOR_ATTACHMENTS] = 8; // Assuming extension
+  parameterStubValues[WebGLConstants.MAX_SAMPLES] = 8; // Assuming WebGL2
 
   return function (pname) {
     const value = parameterStubValues[pname];

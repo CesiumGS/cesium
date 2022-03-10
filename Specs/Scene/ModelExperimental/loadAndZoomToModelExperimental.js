@@ -24,6 +24,7 @@ function loadAndZoomToModelExperimental(options, scene) {
       minimumPixelSize: options.minimumPixelSize,
       scale: options.scale,
       maximumScale: options.maximumScale,
+      showCreditsOnScreen: options.showCreditsOnScreen,
     });
   } catch (error) {
     return when.reject(error);

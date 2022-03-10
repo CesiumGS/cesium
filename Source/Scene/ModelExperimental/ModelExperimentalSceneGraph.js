@@ -331,7 +331,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
         primitiveRenderResources.boundingSphere
       );
 
-      boundingSpheres.push(primitiveRenderResources.boundingSphere);
+      boundingSpheres.push(runtimePrimitive.boundingSphere);
 
       const drawCommands = buildDrawCommands(
         primitiveRenderResources,
@@ -347,15 +347,15 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   );
   BoundingSphere.transform(
     scaledBoundingSphere,
-    this._model.modelMatrix,
-    this._model._boundingSphere
+    model.modelMatrix,
+    model._boundingSphere
   );
   scaledBoundingSphere.center = Cartesian3.multiplyByScalar(
     scaledBoundingSphere.center,
-    this._model.scale,
+    model.scale,
     scaledBoundingSphere.center
   );
-  scaledBoundingSphere.radius = this._model.scale * scaledBoundingSphere.radius;
+  scaledBoundingSphere.radius = model.scale * scaledBoundingSphere.radius;
 
   this._boundingSphere = scaledBoundingSphere;
 };

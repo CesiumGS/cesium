@@ -21,6 +21,7 @@ const ContextLimits = {
   _maximumTextureFilterAnisotropy: 0,
   _maximumDrawBuffers: 0,
   _maximumColorAttachments: 0,
+  _maximumSamples: 0,
   _highpFloatSupported: false,
   _highpIntSupported: false,
 };
@@ -257,6 +258,17 @@ Object.defineProperties(ContextLimits, {
   maximumColorAttachments: {
     get: function () {
       return ContextLimits._maximumColorAttachments;
+    },
+  },
+
+  /**
+   * The maximum number of samples supported for multisampling.
+   * @memberof ContextLimits
+   * @type {Number}
+   */
+  maximumSamples: {
+    get: function () {
+      return ContextLimits._maximumSamples;
     },
   },
 

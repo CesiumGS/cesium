@@ -53,6 +53,7 @@ import ShadowMode from "../ShadowMode.js";
  * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
+ * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
@@ -162,6 +163,8 @@ export default function ModelExperimental(options) {
     options.debugShowBoundingVolume,
     false
   );
+
+  this._showCreditsOnScreen = defaultValue(options.showCreditsOnScreen, false);
 
   initialize(this);
 }
@@ -738,6 +741,22 @@ Object.defineProperties(ModelExperimental.prototype, {
       this._shadows = value;
     },
   },
+
+  /**
+   * Gets or sets whether the credits of the model will be displayed on the screen
+   * @memberof ModelExperimental.prototype
+   * @type {Boolean}
+   *
+   * @default false
+   */
+  showCreditsOnScreen: {
+    get: function () {
+      return this._showCreditsOnScreen;
+    },
+    set: function (value) {
+      this._showCreditsOnScreen = value;
+    },
+  },
 });
 
 /**
@@ -855,6 +874,16 @@ ModelExperimental.prototype.update = function (frameState) {
   // Check for show here because we still want the draw commands to be built so user can instantly see the model
   // when show is set to true.
   if (this._show) {
+    const asset = this._sceneGraph.components.asset;
+    const credits = asset.credits;
+
+    const length = credits.length;
+    for (let i = 0; i < length; i++) {
+      const credit = credits[i];
+      credit.showOnScreen = this._showCreditsOnScreen;
+      frameState.creditDisplay.addCredit(credit);
+    }
+
     const drawCommands = this._sceneGraph.getDrawCommands();
     frameState.commandList.push.apply(frameState.commandList, drawCommands);
   }
@@ -1022,7 +1051,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
  * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
- *
+ * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @returns {ModelExperimental} The newly created model.
  */
 ModelExperimental.fromGltf = function (options) {
@@ -1085,6 +1114,7 @@ ModelExperimental.fromGltf = function (options) {
     minimumPixelSize: options.minimumPixelSize,
     maximumScale: options.maximumScale,
     shadows: options.shadows,
+    showCreditsOnScreen: options.showCreditsOnScreen,
   };
   const model = new ModelExperimental(modelOptions);
 

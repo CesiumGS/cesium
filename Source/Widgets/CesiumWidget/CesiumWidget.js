@@ -146,6 +146,7 @@ function configureCameraFrustum(widget) {
  * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
  * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {Number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+ * @param {Number} [options.msaaSamples=1] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.
  *
  * @exception {DeveloperError} Element with id "container" does not exist in the document.
  *
@@ -273,6 +274,7 @@ function CesiumWidget(container, options) {
       requestRenderMode: options.requestRenderMode,
       maximumRenderTimeChange: options.maximumRenderTimeChange,
       depthPlaneEllipsoidOffset: options.depthPlaneEllipsoidOffset,
+      msaaSamples: options.msaaSamples,
     });
     this._scene = scene;
 

@@ -1041,6 +1041,361 @@ describe("Core/Rectangle", function () {
     }).toThrowDeveloperError();
   });
 
+  it("subsection works with a result parameter", function () {
+    const west = 0.0;
+    const east = 0.5;
+    const south = 0.0;
+    const north = 0.5;
+    const rectangle = new Rectangle(west, south, east, north);
+
+    const westLerp = 0.25;
+    const eastLerp = 0.75;
+    const southLerp = 0.25;
+    const northLerp = 0.75;
+
+    const expectedWest = 0.125;
+    const expectedEast = 0.375;
+    const expectedSouth = 0.125;
+    const expectedNorth = 0.375;
+    const expectedRectangle = new Rectangle(
+      expectedWest,
+      expectedSouth,
+      expectedEast,
+      expectedNorth
+    );
+
+    const subsection = new Rectangle();
+    const result = Rectangle.subsection(
+      rectangle,
+      westLerp,
+      southLerp,
+      eastLerp,
+      northLerp,
+      subsection
+    );
+
+    expect(result).toEqual(expectedRectangle);
+    expect(result).toBe(subsection);
+  });
+
+  it("subsection works with no result parameter", function () {
+    const west = 0.0;
+    const east = 0.5;
+    const south = 0.0;
+    const north = 0.5;
+    const rectangle = new Rectangle(west, south, east, north);
+
+    const westLerp = 0.25;
+    const eastLerp = 0.75;
+    const southLerp = 0.25;
+    const northLerp = 0.75;
+
+    const expectedWest = 0.125;
+    const expectedEast = 0.375;
+    const expectedSouth = 0.125;
+    const expectedNorth = 0.375;
+    const expectedRectangle = new Rectangle(
+      expectedWest,
+      expectedSouth,
+      expectedEast,
+      expectedNorth
+    );
+
+    const subsection = Rectangle.subsection(
+      rectangle,
+      westLerp,
+      southLerp,
+      eastLerp,
+      northLerp
+    );
+
+    expect(subsection).toEqual(expectedRectangle);
+  });
+
+  it("subsection works with empty range", function () {
+    const west = 0.0;
+    const east = 0.5;
+    const south = 0.0;
+    const north = 0.5;
+    const rectangle = new Rectangle(west, south, east, north);
+
+    const westLerp = 0.0;
+    const eastLerp = 0.0;
+    const southLerp = 0.0;
+    const northLerp = 0.0;
+
+    const expectedWest = west;
+    const expectedEast = west;
+    const expectedSouth = south;
+    const expectedNorth = south;
+    const expectedRectangle = new Rectangle(
+      expectedWest,
+      expectedSouth,
+      expectedEast,
+      expectedNorth
+    );
+
+    const subsection = Rectangle.subsection(
+      rectangle,
+      westLerp,
+      southLerp,
+      eastLerp,
+      northLerp
+    );
+
+    expect(subsection).toEqual(expectedRectangle);
+  });
+
+  it("subsection works with full range", function () {
+    const west = 0.1;
+    const east = 0.9;
+    const south = 0.1;
+    const north = 0.9;
+    const rectangle = new Rectangle(west, south, east, north);
+
+    const westLerp = 0.0;
+    const eastLerp = 1.0;
+    const southLerp = 0.0;
+    const northLerp = 1.0;
+
+    const expectedWest = west;
+    const expectedEast = east;
+    const expectedSouth = south;
+    const expectedNorth = north;
+    const expectedRectangle = new Rectangle(
+      expectedWest,
+      expectedSouth,
+      expectedEast,
+      expectedNorth
+    );
+
+    const subsection = Rectangle.subsection(
+      rectangle,
+      westLerp,
+      southLerp,
+      eastLerp,
+      northLerp
+    );
+
+    expect(subsection).toEqual(expectedRectangle);
+  });
+
+  it("subsection works with zero area rectangle", function () {
+    const west = 0.1;
+    const east = 0.1;
+    const south = 0.1;
+    const north = 0.1;
+    const rectangle = new Rectangle(west, south, east, north);
+
+    // These values should have no effect on the final result
+    // because the rectangle has zero area.
+    const westLerp = 0.22;
+    const eastLerp = 0.88;
+    const southLerp = 0.22;
+    const northLerp = 0.88;
+
+    const expectedWest = west;
+    const expectedEast = east;
+    const expectedSouth = south;
+    const expectedNorth = north;
+    const expectedRectangle = new Rectangle(
+      expectedWest,
+      expectedSouth,
+      expectedEast,
+      expectedNorth
+    );
+
+    const subsection = Rectangle.subsection(
+      rectangle,
+      westLerp,
+      southLerp,
+      eastLerp,
+      northLerp
+    );
+
+    expect(subsection).toEqual(expectedRectangle);
+  });
+
+  it("subsection works with rectangle that crosses IDL and subsection that crosses IDL", function () {
+    const west = CesiumMath.toRadians(+45);
+    const east = CesiumMath.toRadians(-45);
+    const south = CesiumMath.toRadians(-90);
+    const north = CesiumMath.toRadians(+90);
+    const rectangle = new Rectangle(west, south, east, north);
+
+    const westLerp = 0.25;
+    const eastLerp = 0.75;
+    const southLerp = 0.0;
+    const northLerp = 1.0;
+
+    const expectedWest = CesiumMath.toRadians(+112.5);
+    const expectedEast = CesiumMath.toRadians(-112.5);
+    const expectedSouth = south;
+    const expectedNorth = north;
+    const expectedRectangle = new Rectangle(
+      expectedWest,
+      expectedSouth,
+      expectedEast,
+      expectedNorth
+    );
+
+    const subsection = Rectangle.subsection(
+      rectangle,
+      westLerp,
+      southLerp,
+      eastLerp,
+      northLerp
+    );
+
+    expect(subsection).toEqualEpsilon(expectedRectangle, CesiumMath.EPSILON14);
+  });
+
+  it("subsection works with rectangle that crosses IDL and subsection that doesn't cross IDL", function () {
+    const west = CesiumMath.toRadians(+45);
+    const east = CesiumMath.toRadians(-45);
+    const south = CesiumMath.toRadians(-90);
+    const north = CesiumMath.toRadians(+90);
+    const rectangle = new Rectangle(west, south, east, north);
+
+    const westLerp = 0.75;
+    const eastLerp = 1.0;
+    const southLerp = 0.0;
+    const northLerp = 1.0;
+
+    const expectedWest = CesiumMath.toRadians(-112.5);
+    const expectedEast = east;
+    const expectedSouth = south;
+    const expectedNorth = north;
+    const expectedRectangle = new Rectangle(
+      expectedWest,
+      expectedSouth,
+      expectedEast,
+      expectedNorth
+    );
+
+    const subsection = Rectangle.subsection(
+      rectangle,
+      westLerp,
+      southLerp,
+      eastLerp,
+      northLerp
+    );
+
+    expect(subsection).toEqualEpsilon(expectedRectangle, CesiumMath.EPSILON14);
+  });
+
+  it("subsection works with rectangle that crosses IDL and subsection with full range", function () {
+    const west = CesiumMath.toRadians(+45);
+    const east = CesiumMath.toRadians(-45);
+    const south = CesiumMath.toRadians(-90);
+    const north = CesiumMath.toRadians(+90);
+    const rectangle = new Rectangle(west, south, east, north);
+
+    const westLerp = 0.0;
+    const eastLerp = 1.0;
+    const southLerp = 0.0;
+    const northLerp = 1.0;
+
+    const expectedWest = west;
+    const expectedEast = east;
+    const expectedSouth = south;
+    const expectedNorth = north;
+    const expectedRectangle = new Rectangle(
+      expectedWest,
+      expectedSouth,
+      expectedEast,
+      expectedNorth
+    );
+
+    const subsection = Rectangle.subsection(
+      rectangle,
+      westLerp,
+      southLerp,
+      eastLerp,
+      northLerp
+    );
+
+    expect(subsection).toEqualEpsilon(expectedRectangle, CesiumMath.EPSILON14);
+  });
+
+  it("subsection throws with no rectangle", function () {
+    expect(function () {
+      Rectangle.subsection(undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("subsection throws with no westLerp", function () {
+    expect(function () {
+      Rectangle.subsection(new Rectangle(), undefined, 0.0, 0.0, 0.0);
+    }).toThrowDeveloperError();
+  });
+
+  it("subsection throws with no southLerp", function () {
+    expect(function () {
+      Rectangle.subsection(new Rectangle(), 0.0, undefined, 0.0, 0.0);
+    }).toThrowDeveloperError();
+  });
+
+  it("subsection throws with no eastLerp", function () {
+    expect(function () {
+      Rectangle.subsection(new Rectangle(), 0.0, 0.0, undefined, 0.0);
+    }).toThrowDeveloperError();
+  });
+
+  it("subsection throws with no northLerp", function () {
+    expect(function () {
+      Rectangle.subsection(new Rectangle(), 0.0, 0.0, 0.0, undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("subsection throws with out of range westLerp", function () {
+    expect(function () {
+      Rectangle.subsection(new Rectangle(), -0.1, 0.0, 0.0, 0.0);
+    }).toThrowDeveloperError();
+    expect(function () {
+      Rectangle.subsection(new Rectangle(), 1.1, 0.0, 0.0, 0.0);
+    }).toThrowDeveloperError();
+    expect(function () {
+      Rectangle.subsection(new Rectangle(), 0.5, 0.0, 0.4, 0.0);
+    }).toThrowDeveloperError();
+  });
+
+  it("subsection throws with out of range southLerp", function () {
+    expect(function () {
+      Rectangle.subsection(new Rectangle(), 0.0, -0.1, 0.0, 0.0);
+    }).toThrowDeveloperError();
+    expect(function () {
+      Rectangle.subsection(new Rectangle(), 0.0, 1.1, 0.0, 0.0);
+    }).toThrowDeveloperError();
+    expect(function () {
+      Rectangle.subsection(new Rectangle(), 0.0, 0.5, 0.0, 0.4);
+    }).toThrowDeveloperError();
+  });
+
+  it("subsection throws with out of range eastLerp", function () {
+    expect(function () {
+      Rectangle.subsection(new Rectangle(), 0.0, 0.0, -0.1, 0.0);
+    }).toThrowDeveloperError();
+    expect(function () {
+      Rectangle.subsection(new Rectangle(), 0.0, 0.0, 1.1, 0.0);
+    }).toThrowDeveloperError();
+    expect(function () {
+      Rectangle.subsection(new Rectangle(), 0.5, 0.0, 0.4, 0.0);
+    }).toThrowDeveloperError();
+  });
+
+  it("subsection throws with out of range northLerp", function () {
+    expect(function () {
+      Rectangle.subsection(new Rectangle(), 0.0, 0.0, 0.0, -0.1);
+    }).toThrowDeveloperError();
+    expect(function () {
+      Rectangle.subsection(new Rectangle(), 0.0, 0.0, 0.0, 1.1);
+    }).toThrowDeveloperError();
+    expect(function () {
+      Rectangle.subsection(new Rectangle(), 0.0, 0.5, 0.0, 0.4);
+    }).toThrowDeveloperError();
+  });
+
   it("intersection throws with no rectangle", function () {
     expect(function () {
       Rectangle.intersection(undefined);
