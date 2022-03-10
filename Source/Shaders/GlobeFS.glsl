@@ -1,6 +1,7 @@
 uniform vec4 u_initialColor;
 
 #if TEXTURE_UNITS > 0
+uniform int u_layerIndex[TEXTURE_UNITS];
 uniform sampler2D u_dayTextures[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];
 uniform bool u_dayTextureUseWebMercatorT[TEXTURE_UNITS];
@@ -160,8 +161,13 @@ bool inTranslucencyRectangle()
 }
 #endif
 
+#ifdef APPLY_MATERIAL
+czm_materialInput materialInput;
+#endif
+
 vec4 sampleAndBlend(
     vec4 previousColor,
+    int layerIndex,
     sampler2D textureToSample,
     vec2 tileTextureCoordinates,
     vec4 textureCoordinateRectangle,
@@ -191,16 +197,26 @@ vec4 sampleAndBlend(
     alphaMultiplier = step(vec2(0.0), textureCoordinateRectangle.pq - tileTextureCoordinates);
     textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
 
-#if defined(APPLY_DAY_NIGHT_ALPHA) && defined(ENABLE_DAYNIGHT_SHADING)
-    textureAlpha *= mix(textureDayAlpha, textureNightAlpha, nightBlend);
-#endif
-
     vec2 translation = textureCoordinateTranslationAndScale.xy;
     vec2 scale = textureCoordinateTranslationAndScale.zw;
     vec2 textureCoordinates = tileTextureCoordinates * scale + translation;
     vec4 value = texture2D(textureToSample, textureCoordinates);
     vec3 color = value.rgb;
     float alpha = value.a;
+
+    #ifdef APPLY_MATERIAL
+    if (textureAlpha > 0.0) {
+        // itterate over the layerColor array to check for matching layerIndex and send color value to materialInput
+        //TODO: Find a different way to set pass layerColor values. Here, only the first two layers are handled as this loop leads to performance problems (shaders compilation time)
+        for (int i = 0; i < czm_layerColorNumber; i++) {
+            if (i == layerIndex) {materialInput.layerColor[i] = value; break;}
+        }
+    }
+    #endif
+
+#if defined(APPLY_DAY_NIGHT_ALPHA) && defined(ENABLE_DAYNIGHT_SHADING)
+    textureAlpha *= mix(textureDayAlpha, textureNightAlpha, nightBlend);
+#endif
 
 #ifdef APPLY_COLOR_TO_ALPHA
     vec3 colorDiff = abs(color.rgb - colorToAlpha.rgb);
@@ -382,11 +398,10 @@ void main()
 #endif
 
 #ifdef APPLY_MATERIAL
-    czm_materialInput materialInput;
     materialInput.st = v_textureCoordinates.st;
     materialInput.normalEC = normalize(v_normalEC);
     materialInput.positionToEyeEC = -v_positionEC;
-    materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(v_positionMC, normalize(v_normalEC));     
+    materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(v_positionMC, normalize(v_normalEC));
     materialInput.slope = v_slope;
     materialInput.height = v_height;
     materialInput.aspect = v_aspect;

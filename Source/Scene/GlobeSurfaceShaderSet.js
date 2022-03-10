@@ -334,6 +334,9 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
       computeDayColor +=
         "\
             color,\n\
+            u_layerIndex[" +
+        i +
+        "],\n\
             u_dayTextures[" +
         i +
         "],\n\

@@ -1589,6 +1589,9 @@ const scratchClippingPlanesMatrix = new Matrix4();
 const scratchInverseTransposeClippingPlanesMatrix = new Matrix4();
 function createTileUniformMap(frameState, globeSurfaceTileProvider) {
   const uniformMap = {
+    u_layerIndex: function () {
+      return this.properties.layerIndex;
+    },
     u_initialColor: function () {
       return this.properties.initialColor;
     },
@@ -1786,6 +1789,7 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
 
       terrainExaggerationAndRelativeHeight: new Cartesian2(1.0, 0.0),
 
+      layerIndex: [],
       dayTextures: [],
       dayTextureTranslationAndScale: [],
       dayTextureTexCoordsRectangle: [],
@@ -2505,7 +2509,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
           tileImagery
         );
       }
-
+      uniformMapProperties.layerIndex[numberOfDayTextures] =
+        imageryLayer._layerIndex;
       uniformMapProperties.dayTextures[numberOfDayTextures] = texture;
       uniformMapProperties.dayTextureTranslationAndScale[numberOfDayTextures] =
         tileImagery.textureTranslationAndScale;

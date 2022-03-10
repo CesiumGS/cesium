@@ -25,4 +25,5 @@ struct czm_materialInput
     float height;
     float slope;
     float aspect;
+    vec4 layerColor[czm_layerColorNumber];
 };
