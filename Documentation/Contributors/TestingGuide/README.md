@@ -7,16 +7,17 @@ As of CesiumJS 1.35, CesiumJS has over 8,800 tests with 93% code coverage. Cesiu
 All new code should have 100% code coverage and should pass all tests. Always run the tests before opening a pull request.
 
 - [Testing Guide](#testing-guide)
-  - [Run Coverage](#run-coverage)
-  - [Running Tests on the Command Line with Karma](#running-tests-on-the-command-line-with-karma)
-    - [Run Tests with a Specific Browser or Browsers](#run-tests-with-a-specific-browser-or-browsers)
-    - [Run All Tests with WebGL Validation](#run-all-tests-with-webgl-validation)
-    - [Run All Tests with WebGL Stub](#run-all-tests-with-webgl-stub)
-    - [Run Only WebGL Tests with Karma](#run-only-webgl-tests-with-karma)
-    - [Run Only Non-WebGL Tests with Karma](#run-only-non-webgl-tests-with-karma)
-    - [Run All Tests Against the Minified Release Version of CesiumJS](#run-all-tests-against-the-minified-release-version-of-cesiumjs)
-    - [Run a Single Test or Suite](#run-a-single-test-or-suite)
-    - [Using Browser Debugging Tools](#using-browser-debugging-tools)
+  - [Running the Tests](#running-the-tests)
+    - [Running Tests on the Command Line with Karma](#running-tests-on-the-command-line-with-karma)
+      - [Run Tests with a Specific Browser or Browsers](#run-tests-with-a-specific-browser-or-browsers)
+      - [Run All Tests with WebGL Validation](#run-all-tests-with-webgl-validation)
+      - [Run All Tests with WebGL Stub](#run-all-tests-with-webgl-stub)
+      - [Run Only WebGL Tests](#run-only-webgl-tests)
+      - [Run Only Non-WebGL Tests](#run-only-non-webgl-tests)
+      - [Run All Tests Against the Minified Release Version of CesiumJS](#run-all-tests-against-the-minified-release-version-of-cesiumjs)
+      - [Run a Single Test or Suite](#run-a-single-test-or-suite)
+      - [Using Browser Debugging Tools](#using-browser-debugging-tools)
+    - [Run Coverage](#run-coverage)
   - [`testfailure` Label for Issues](#testfailure-label-for-issues)
   - [Writing Tests](#writing-tests)
     - [Directory Organization](#directory-organization)
@@ -38,6 +39,92 @@ All new code should have 100% code coverage and should pass all tests. Always ru
     - [Start with a Similar (Small) Test](#start-with-a-similar-small-test)
     - [Debugger-Aided Incremental Improvements](#debugger-aided-incremental-improvements)
   - [Resources](#resources)
+
+## Running the Tests
+
+The CesiumJS tests are written in JavaScript and use [Jasmine](http://jasmine.github.io/), a behavior-driven testing framework. Jasmine calls an individual test, e.g., a function with one or more assertions, a **spec** (however, the Cesium team usually still say "test"), and a group of related tests, e.g., all the tests for `Cartesian3`, a **suite**. Jasmine also calls an assertion, an **expectation**.
+
+### Running Tests on the Command Line with Karma
+
+[Karma](http://karma-runner.github.io/0.13/index.html) is a tool which spawns a browser window, runs tests against that browser, and displays the results on the command line.
+
+To run all tests with Karma, run `npm run test`.
+
+When all tests pass, output looks like this:
+
+![](test.jpg)
+
+When one or more tests fail, output looks like this:
+
+![](test-fail.jpg)
+
+The failed tests will be listed by name, and details on each failure are listed below, including the expected and actual value of the failed expectation and the call stack.
+
+It is also possible for Karma to run all tests against each browser installed on the current system. To do so, run `npm run test-all`. Currently included are launchers for Chrome, Firefox, Edge, IE, and Safari.
+
+When running CesiumJS locally, first [build the code](https://github.com/CesiumGS/cesium/tree/main/Documentation/Contributors/BuildGuide#build-the-code) and choose any of the following test options:
+
+#### Run Tests with a Specific Browser or Browsers
+
+`npm run test -- --browsers Firefox,Chrome,Edge`
+
+#### Run All Tests with WebGL Validation
+
+This option enables extra low-level WebGL validation such as calling `gl.getError()` after each WebGL call.
+
+`npm run test-webgl-validation`
+
+#### Run All Tests with WebGL Stub
+
+This makes all WebGL calls a noop and ignores test expectations that rely on reading back from WebGL. This allows running the tests on CI where a reasonable WebGL implementation is not available and still getting full code coverage albeit not all verification.
+
+`npm run test-webgl-stub`
+
+#### Run Only WebGL Tests
+
+Suites can have a category associated with them. This option runs all tests in the `WebGL` category, which includes all tests that use WebGL (basically anything that requires creating a `Viewer`, `CesiumWidget`, `Scene`, or `Context`).
+
+`npm run test-webgl`
+
+#### Run Only Non-WebGL Tests
+
+Likewise, this option runs all tests not in the WebGL category.
+
+Perhaps surprisingly, this is the bulk of CesiumJS tests, which include math and geometry tests, imagery provider tests, data source tests, etc.
+
+These tests run quickly (for example, 15 seconds compared to 60) and are very reliable across systems since they do not rely on the underlying WebGL implementation, which can vary based on the browser, OS, driver, and GPU.
+
+`npm run test-non-webgl`
+
+#### Run All Tests Against the Minified Release Version of CesiumJS
+
+Most test options load CesiumJS using the individual source files in the `Source` directory, which is great for debugging.
+
+However, many users build apps using the built Cesium.js in `Build/Cesium` (which is created, for example, by running `npm run minifyRelease`). This option runs the tests using this instead of individual CesiumJS source files. The release version has `DeveloperError` exceptions optimized out so this test option makes `toThrowDeveloperError` always pass. See the [Build Guide](https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/BuildGuide/README.md#build-scripts) for all the CesiumJS build options.
+
+`npm run test-release`
+
+When testing against built Cesium.js, the specs need to be built as well with `npm run build-specs`.
+
+#### Run a Single Test or Suite
+
+Often when developing, it is useful to run only one suite to save time, instead of all the tests, and then run all the tests before opening a pull request. To do this simply change the `it` function call for the desired test to `fit`, the `f` stands for `focused` in Jasmine speak. Likewise, to run an entire suite, use `fdescribe` instead of `describe`.
+
+Alternatively, test suites can be run from the command line with the `includeName` flag. The argument value should be a substring of one or more test suite names, which are found in the `describe` function of the spec file. For example, the `Cartesian2` tests can be run with:
+
+`npm run test -- --includeName Cartesian2`
+
+Similarly, test suites can be excluded with the `--excludeName` flag.
+
+#### Using Browser Debugging Tools
+
+If it is helpful to step through a unit test in a browser debugger, run the tests with the `debug` flag:
+
+`npm run test -- --debug`
+
+The `--debug` flag will prevent the Karma browser from closing after running the tests, and clicking the "Debug" button will open a new tab that can be used for placing breakpoints and stepping through the code.
+
+![](8.jpg)
 
 ### Run Coverage
 
@@ -80,68 +167,6 @@ if (b) {
 It is possible to have 100% code coverage with two tests: one test where `a` and `b` are both `true`, and another where both are `false`; however, this only takes into account the case when `// Code block a.1` and `// Code block b.1` run together or when `// Code block a.2` and `// Code block b.2` run. There could be an issue when, for example, `// Code block a.1` and `// Code block b.2` run together.
 
 The number of linearly independent paths (four in this case) is called the **cyclomatic complexity**. Be mindful of this when writing tests. On one extreme, 100% code coverage is the least amount of testing, on the other extreme is covering the cyclomatic complexity, which quickly becomes unreasonable. Use your knowledge of the implementation to devise the best strategy.
-
-### Running Tests on the Command Line with Karma
-
-[Karma](http://karma-runner.github.io/0.13/index.html) is a tool which spawns a browser window, runs tests against that browser, and displays the results on the command line.
-
-To run all tests with Karma, run `npm run test`.
-
-When all tests pass, output looks like this:
-
-![](test.jpg)
-
-When one or more tests fail, output looks like this:
-
-![](test-fail.jpg)
-
-The failed tests will be listed by name, and details on each failure are listed below, including the expected and actual value of the failed expectation and the call stack.
-
-It is also possible for Karma to run all tests against each browser installed on the current system. To do so, run `npm run test-all`. Currently included are launchers for Chrome, Firefox, Edge, IE, and Safari.
-
-#### Run Tests with a Specific Browser or Browsers
-
-`npm run test -- --browsers Firefox,Chrome,Edge`
-
-#### Run All Tests with WebGL Validation
-
-`npm run test-webgl-validation`
-
-#### Run All Tests with WebGL Stub
-
-`npm run test-webgl-stub`
-
-#### Run Only WebGL Tests with Karma
-
-`npm run test-webgl`
-
-#### Run Only Non-WebGL Tests with Karma
-
-`npm run test-non-webgl`
-
-#### Run All Tests Against the Minified Release Version of CesiumJS
-
-`npm run test-release`
-
-#### Run a Single Test or Suite
-
-Sometimes it is useful to run a single test or suite for easier debugging purposes. To do this simply change the `it` function call for the desired test to `fit`, the `f` stands for `focused` in Jasmine speak. Likewise, to run an entire suite, use `fdescribe` instead of `describe`.
-
-Alternatively, test suites can be run from the command line with the `includeName` flag. The argument value should be a substring of one or more test suite names, which are found in the `describe` function of the spec file. For example, the `Cartesian2` tests can be run with:
-
-`npm run test -- --includeName Cartesian2`
-
-Similarly, test suites can be excluded with the `--excludeName` flag.
-
-#### Using Browser Debugging Tools
-
-If it is helpful to step through a unit test in a browser debugger, run the tests with the `debug` flag:
-
-`npm run test -- --debug`
-
-The `--debug` flag will prevent the Karma browser from closing after running the tests, and clicking the "Debug" button will open a new tab that can be used for placing breakpoints and stepping through the code.
-
-![](8.jpg)
 
 ## `testfailure` Label for Issues
 

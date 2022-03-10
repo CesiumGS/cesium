@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.92 - 2022-04-01
+
+##### Breaking Changes :mega:
+
+- Removed links to SpecRunner.html and related Jasmine files for running unit tests in browsers.
+
 ### 1.91 - 2022-03-01
 
 ##### Breaking Changes :mega:
