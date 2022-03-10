@@ -817,7 +817,7 @@ function Components() {
    * @type {ModelComponents.Asset}
    * @private
    */
-  this.asset = undefined;
+  this.asset = new Asset();
 
   /**
    * The default scene.

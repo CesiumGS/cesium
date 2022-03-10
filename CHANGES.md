@@ -34,6 +34,10 @@
   - Multiple contents are now provided in `tile.contents` rather than the `3DTILES_multiple_contents` extension. [#10174](https://github.com/CesiumGS/cesium/pull/10174)
   - S2 cell bounding volumes are now specified in `boundingVolume.s2Cell` rather than the `3DTILES_bounding_volume_s2` extension. [#10176](https://github.com/CesiumGS/cesium/pull/10176)
 
+##### Fixes :wrench:
+
+- Fixed a bug where `pnts` tiles would crash when `Cesium.ExperimentalFeatures.enableModelExperimental` was true. [#10183](https://github.com/CesiumGS/cesium/pull/10183)
+
 ### 1.91 - 2022-03-01
 
 ##### Breaking Changes :mega:
