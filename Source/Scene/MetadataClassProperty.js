@@ -570,6 +570,18 @@ function parseType(property, enums) {
 /**
  * Normalizes integer property values. If the property is not normalized
  * the value is returned unmodified.
+ * <p>
+ * Given the way normalization is defined in {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata#normalized-values|the 3D Metadata Specification},
+ * normalize and unnormalize are almost, but not quite inverses. In particular,
+ * the smallest signed integer value will be off by one after normalizing and
+ * unnormalizing. See
+ * {@link https://www.desmos.com/calculator/nledg1evut|this Desmos graph} for
+ * an example using INT8.
+ * </p>
+ * <p>
+ * Furthermore, for 64-bit integer types, there may be a loss of precision
+ * due to conversion to Number
+ * </p>
  *
  * @param {*} value The integer value or array of integer values.
  * @returns {*} The normalized value or array of normalized values.
@@ -591,6 +603,18 @@ MetadataClassProperty.prototype.normalize = function (value) {
 /**
  * Unnormalizes integer property values. If the property is not normalized
  * the value is returned unmodified.
+ * <p>
+ * Given the way normalization is defined in {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata#normalized-values|the 3D Metadata Specification},
+ * normalize and unnormalize are almost, but not quite inverses. In particular,
+ * the smallest signed integer value will be off by one after normalizing and
+ * unnormalizing. See
+ * {@link https://www.desmos.com/calculator/nledg1evut|this Desmos graph} for
+ * an example using INT8.
+ * </p>
+ * <p>
+ * Furthermore, for 64-bit integer types, there may be a loss of precision
+ * due to conversion to Number
+ * </p>
  *
  * @param {*} value The normalized value or array of normalized values.
  * @returns {*} The integer value or array of integer values.
