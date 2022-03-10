@@ -463,20 +463,20 @@ describe("Scene/MetadataClassProperty", function () {
       };
 
       scalarValues = {
-        propertyInt8: [-128, 0, 127],
+        propertyInt8: [-127, 0, 127],
         propertyUint8: [0, 51, 255],
-        propertyInt16: [-32768, 0, 32767],
+        propertyInt16: [-32767, 0, 32767],
         propertyUint16: [0, 13107, 65535],
-        propertyInt32: [-2147483648, 0, 2147483647],
+        propertyInt32: [-2147483647, 0, 2147483647],
         propertyUint32: [0, 858993459, 4294967295],
         propertyInt64: [
-          BigInt("-9223372036854775808"), // eslint-disable-line
+          BigInt("-9223372036854775807"), // eslint-disable-line
           BigInt(0), // eslint-disable-line
           BigInt("9223372036854775807"), // eslint-disable-line
         ],
         propertyUint64: [
           BigInt(0), // eslint-disable-line
-          BigInt("3689348814741910323"), // eslint-disable-line
+          BigInt("3689348814741910528"), // eslint-disable-line
           BigInt("18446744073709551615"), // eslint-disable-line
         ],
       };
@@ -522,7 +522,7 @@ describe("Scene/MetadataClassProperty", function () {
       };
 
       arrayValues = {
-        propertyInt8: [[-128, 0], [127], []],
+        propertyInt8: [[-127, 0], [127], []],
         propertyUint8: [
           [0, 255],
           [0, 51],
@@ -572,8 +572,8 @@ describe("Scene/MetadataClassProperty", function () {
 
       vectorValues = {
         vec4Int8: [
-          [-128, 0, 127, 0],
-          [-128, -128, -128, 0],
+          [-127, 0, 127, 0],
+          [-127, -127, -127, 0],
           [127, 127, 127, 127],
         ],
         mat2Uint8: [
@@ -829,7 +829,9 @@ describe("Scene/MetadataClassProperty", function () {
           for (let i = 0; i < length; ++i) {
             const value = arrayOfVectorValues[propertyId][i];
             const normalizedValue = property.normalize(clone(value, true));
-            expect(normalizedValue).toEqual(arrayOfVectorValues[propertyId][i]);
+            expect(normalizedValue).toEqual(
+              normalizedArrayOfVectorValues[propertyId][i]
+            );
           }
         }
       }
