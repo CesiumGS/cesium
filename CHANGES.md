@@ -9,6 +9,7 @@
 ##### Fixes :wrench:
 
 - Fixed a bug where `pnts` tiles would crash when `Cesium.ExperimentalFeatures.enableModelExperimental` was true. [#10183](https://github.com/CesiumGS/cesium/pull/10183)
+- Fixed an issue with Firefox and dimensionless SVG images. [#9188](https://github.com/CesiumGS/cesium/9188)
 
 ### 1.91 - 2022-03-01
 
