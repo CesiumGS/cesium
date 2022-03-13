@@ -6,6 +6,10 @@
 
 - Removed links to SpecRunner.html and related Jasmine files for running unit tests in browsers.
 
+##### Additions :tada:
+
+- `Cesium3DTileset` now has a `splitDirection` property, allowing the tileset to only be drawn on the left or right side of the screen. This is useful for visual comparison of tilesets.
+
 ##### Fixes :wrench:
 
 - Fixed a bug where `pnts` tiles would crash when `Cesium.ExperimentalFeatures.enableModelExperimental` was true. [#10183](https://github.com/CesiumGS/cesium/pull/10183)
