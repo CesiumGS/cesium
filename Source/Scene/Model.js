@@ -5721,7 +5721,7 @@ Model.prototype.update = function (frameState) {
       shouldRegenerateShaders = true;
     }
 
-    // Regenerate shaders if splitting was enabled/disable from last update
+    // Regenerate shaders if splitting was enabled/disabled from last update
     const splittingEnabled = this.splitDirection !== SplitDirection.NONE;
     if (this._splittingEnabled !== splittingEnabled) {
       this._splittingEnabled = splittingEnabled;

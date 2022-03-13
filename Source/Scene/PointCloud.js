@@ -611,6 +611,7 @@ function createResources(pointCloud, frameState) {
       ? pointCloud._translucentRenderState
       : pointCloud._opaqueRenderState,
     pass: isTranslucent ? Pass.TRANSLUCENT : pointCloud._opaquePass,
+    owner: pointCloud,
     castShadows: false,
     receiveShadows: false,
     pickId: pointCloud._pickIdLoaded(),
