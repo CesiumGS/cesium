@@ -126,7 +126,6 @@ const filesToConvertES6 = [
   "!Source/Workers/transferTypedArrayTest.js",
   "!Specs/karma-main.js",
   "!Specs/karma.conf.cjs",
-  "!Specs/spec-main.js",
   "!Specs/SpecList.js",
   "!Specs/TestWorkers/**",
 ];
@@ -273,19 +272,6 @@ gulp.task("build-specs", function buildSpecs() {
           file: "Build/Specs/Specs.js",
           format: "iife",
         });
-      })
-      .then(function () {
-        return rollup
-          .rollup({
-            input: "Specs/spec-main.js",
-            plugins: [removePragmas, externalCesium],
-          })
-          .then(function (bundle) {
-            return bundle.write({
-              file: "Build/Specs/spec-main.js",
-              format: "iife",
-            });
-          });
       })
       .then(function () {
         return rollup
@@ -958,7 +944,15 @@ gulp.task("coverage", function (done) {
       },
       client: {
         captureConsole: verbose,
-        args: [undefined, undefined, undefined, webglStub, undefined],
+        args: [
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          webglStub,
+          undefined,
+        ],
       },
     },
     function (e) {
@@ -993,6 +987,9 @@ gulp.task("test", function (done) {
   const release = argv.release ? argv.release : false;
   const failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
   const suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
+  const debug = argv.debug ? false : true;
+  const includeName = argv.includeName ? argv.includeName : "";
+  const excludeName = argv.excludeName ? argv.excludeName : "";
 
   let browsers = ["Chrome"];
   if (argv.browsers) {
@@ -1028,6 +1025,7 @@ gulp.task("test", function (done) {
   const karma = new Karma.Server(
     {
       configFile: karmaConfigFile,
+      singleRun: debug,
       browsers: browsers,
       specReporter: {
         suppressErrorSummary: false,
@@ -1045,6 +1043,8 @@ gulp.task("test", function (done) {
         args: [
           includeCategory,
           excludeCategory,
+          includeName,
+          excludeName,
           webglValidation,
           webglStub,
           release,
