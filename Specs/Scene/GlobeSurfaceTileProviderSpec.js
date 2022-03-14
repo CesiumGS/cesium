@@ -519,6 +519,35 @@ describe(
         });
       });
 
+      it("culls tiles but does not render fog visuals when renderable is false", function () {
+        expect(scene).toRender([0, 0, 0, 255]);
+        scene.imageryLayers.addImageryProvider(
+          new SingleTileImageryProvider({
+            url: "Data/Images/Red16x16.png",
+          })
+        );
+        const oldFog = scene.fog;
+        scene.fog = new Fog();
+        switchViewMode(
+          SceneMode.SCENE3D,
+          new GeographicProjection(Ellipsoid.WGS84)
+        );
+        scene.camera.lookUp(1.2); // Horizon-view
+
+        return updateUntilDone(scene.globe).then(function () {
+          expect(scene).notToRender([0, 0, 0, 255]);
+
+          scene.fog.enabled = true;
+          scene.fog.renderable = false;
+          scene.fog.density = 1.0;
+          scene.fog.screenSpaceErrorFactor = 0.0;
+
+          expect(scene).notToRender([0, 0, 0, 255]);
+
+          scene.fog = oldFog;
+        });
+      });
+
       it("culls tiles because of increased SSE", function () {
         expect(scene).toRender([0, 0, 0, 255]);
         scene.imageryLayers.addImageryProvider(

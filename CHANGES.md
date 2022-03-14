@@ -6,6 +6,10 @@
 
 - Removed links to SpecRunner.html and related Jasmine files for running unit tests in browsers.
 
+##### Additions :tada:
+
+- Added a 'renderable' property to 'Fog' to disable its visual rendering while preserving tiles culling at a distance
+
 ##### Fixes :wrench:
 
 - Fixed a bug where `pnts` tiles would crash when `Cesium.ExperimentalFeatures.enableModelExperimental` was true. [#10183](https://github.com/CesiumGS/cesium/pull/10183)
