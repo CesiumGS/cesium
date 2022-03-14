@@ -115,7 +115,7 @@ export default function ModelExperimental(options) {
    * @type {boolean}
    * @private
    */
-  this._callUpdateModelMatrix = true;
+  this._callUpdateModelMatrix = false;
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -902,7 +902,7 @@ ModelExperimental.prototype.update = function (frameState) {
 
   // Check for show here because we still want the draw commands to be built so user can instantly see the model
   // when show is set to true.
-  if (this._show) {
+  if (this._show && this.scale !== 0.0) {
     const asset = this._sceneGraph.components.asset;
     const credits = asset.credits;
 

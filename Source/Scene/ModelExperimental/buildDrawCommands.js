@@ -62,19 +62,20 @@ export default function buildDrawCommands(
   const pass = primitiveRenderResources.alphaOptions.pass;
 
   const sceneGraph = model.sceneGraph;
+  const scale = model.scale;
   const modelMatrix = Matrix4.multiply(
     sceneGraph.computedModelMatrix,
     primitiveRenderResources.transform,
     new Matrix4()
   );
 
+  Matrix4.multiplyByUniformScale(modelMatrix, scale, modelMatrix);
+
   BoundingSphere.transform(
     primitiveRenderResources.boundingSphere,
     modelMatrix,
     primitiveRenderResources.boundingSphere
   );
-
-  // TODO: should scale get applied here?
 
   const command = new DrawCommand({
     boundingVolume: primitiveRenderResources.boundingSphere,
