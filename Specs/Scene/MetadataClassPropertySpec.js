@@ -3046,4 +3046,62 @@ describe("Scene/MetadataClassProperty", function () {
       "value 1.1 is out of range for type UINT8 (normalized)"
     );
   });
+
+  describe("valueTransformInPlace", function () {
+    it("applies function to a scalar", function () {
+      const value = 1;
+      const offset = 1;
+      const scale = 2;
+      const result = MetadataClassProperty.valueTransformInPlace(
+        value,
+        offset,
+        scale,
+        MetadataComponentType.applyValueTransform
+      );
+
+      expect(result).toBe(3);
+    });
+
+    it("applies function to a flat array", function () {
+      const value = [1, 1, 1];
+      const offset = [1, 2, 3];
+      const scale = [2, 2, 2];
+      const result = MetadataClassProperty.valueTransformInPlace(
+        value,
+        offset,
+        scale,
+        MetadataComponentType.applyValueTransform
+      );
+      expect(result).toEqual([3, 4, 5]);
+    });
+
+    it("applies function to a nested array", function () {
+      const values = [
+        [1, 1, 1],
+        [1, 1, 1],
+        [1, 1, 1],
+      ];
+      const offset = [
+        [1, 2, 3],
+        [1, 2, 3],
+        [1, 2, 3],
+      ];
+      const scale = [
+        [2, 2, 2],
+        [2, 2, 2],
+        [2, 2, 2],
+      ];
+      const result = MetadataClassProperty.valueTransformInPlace(
+        values,
+        offset,
+        scale,
+        MetadataComponentType.applyValueTransform
+      );
+      expect(result).toEqual([
+        [3, 4, 5],
+        [3, 4, 5],
+        [3, 4, 5],
+      ]);
+    });
+  });
 });
