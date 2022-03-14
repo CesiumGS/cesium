@@ -126,7 +126,6 @@ const filesToConvertES6 = [
   "!Source/Workers/transferTypedArrayTest.js",
   "!Specs/karma-main.js",
   "!Specs/karma.conf.cjs",
-  "!Specs/spec-main.js",
   "!Specs/SpecList.js",
   "!Specs/TestWorkers/**",
 ];
@@ -273,19 +272,6 @@ gulp.task("build-specs", function buildSpecs() {
           file: "Build/Specs/Specs.js",
           format: "iife",
         });
-      })
-      .then(function () {
-        return rollup
-          .rollup({
-            input: "Specs/spec-main.js",
-            plugins: [removePragmas, externalCesium],
-          })
-          .then(function (bundle) {
-            return bundle.write({
-              file: "Build/Specs/spec-main.js",
-              format: "iife",
-            });
-          });
       })
       .then(function () {
         return rollup
