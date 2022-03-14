@@ -119,9 +119,6 @@ export default function ModelExperimentalSceneGraph(options) {
 
   this._boundingSphere = undefined;
   this._computedModelMatrix = Matrix4.clone(this._model.modelMatrix);
-  this._uniformScaleMatrix = Matrix4.fromUniformScale(
-    this._model._modifiedScale
-  );
 
   initialize(this);
 }
@@ -184,6 +181,12 @@ function initialize(sceneGraph) {
     sceneGraph._computedModelMatrix,
     components.upAxis,
     components.forwardAxis
+  );
+
+  Matrix4.multiplyByUniformScale(
+    sceneGraph._computedModelMatrix,
+    model._modifiedScale,
+    sceneGraph._computedModelMatrix
   );
 
   const rootNodes = scene.nodes;
@@ -397,8 +400,7 @@ ModelExperimentalSceneGraph.prototype.update = function (frameState) {
 ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
   const model = this._model;
   const scale = model._modifiedScale;
-  this._scale = scale;
-  this._computedModelMatrix = Matrix4.clone(model.modelMatrix);
+  Matrix4.clone(model.modelMatrix, this._computedModelMatrix);
 
   Matrix4.multiply(
     this._computedModelMatrix,
