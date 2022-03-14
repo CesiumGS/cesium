@@ -31,6 +31,8 @@ export default function PropertyAttributeProperty(options) {
   this._attribute = property.attribute;
   this._offset = property.offset;
   this._scale = property.scale;
+  this._min = property.min;
+  this._max = property.max;
 
   this._extras = property.extras;
   this._extensions = property.extensions;
