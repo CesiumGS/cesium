@@ -647,7 +647,9 @@ describe(
       );
       const implicitTilesetS2 = {
         boundingVolume: {
-          s2Cell: simpleBoundingVolumeS2,
+          extensions: {
+            "3DTILES_bounding_volume_S2": simpleBoundingVolumeS2,
+          },
         },
         subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
       };
@@ -722,7 +724,9 @@ describe(
         };
         let result = deriveBoundingVolumeS2(false, parentTile, 0, 1, 0, 0);
         expect(result).toEqual({
-          s2Cell: expected,
+          extensions: {
+            "3DTILES_bounding_volume_S2": expected,
+          },
         });
 
         parentTile._boundingVolume = new TileBoundingS2Cell({
@@ -737,7 +741,9 @@ describe(
         };
         result = deriveBoundingVolumeS2(false, parentTile, 0, 1, 0, 0);
         expect(result).toEqual({
-          s2Cell: expected,
+          extensions: {
+            "3DTILES_bounding_volume_S2": expected,
+          },
         });
       });
 
@@ -766,7 +772,9 @@ describe(
           0
         );
         expect(result0).toEqual({
-          s2Cell: expected0,
+          extensions: {
+            "3DTILES_bounding_volume_S2": expected0,
+          },
         });
         const result1 = deriveBoundingVolumeS2(
           false,
@@ -778,7 +786,9 @@ describe(
           0
         );
         expect(result1).toEqual({
-          s2Cell: expected1,
+          extensions: {
+            "3DTILES_bounding_volume_S2": expected1,
+          },
         });
       });
     });
@@ -1355,7 +1365,9 @@ describe(
           const subtreeRootTile = placeholderTile.children[0];
 
           const implicitS2Volume =
-            placeholderTile.implicitTileset.boundingVolume.s2Cell;
+            placeholderTile.implicitTileset.boundingVolume.extensions[
+              "3DTILES_bounding_volume_S2"
+            ];
           const minimumHeight = implicitS2Volume.minimumHeight;
           const maximumHeight = implicitS2Volume.maximumHeight;
 
@@ -1841,7 +1853,9 @@ describe(
           const subtreeRootTile = placeholderTile.children[0];
 
           const implicitS2Volume =
-            placeholderTile.implicitTileset.boundingVolume.s2Cell;
+            placeholderTile.implicitTileset.boundingVolume.extensions[
+              "3DTILES_bounding_volume_S2"
+            ];
           const minimumHeight = implicitS2Volume.minimumHeight;
           const maximumHeight = implicitS2Volume.maximumHeight;
 

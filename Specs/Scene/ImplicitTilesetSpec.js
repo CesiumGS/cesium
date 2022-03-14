@@ -146,16 +146,19 @@ describe("Scene/ImplicitTileset", function () {
     expect(implicitTileset.contentUriTemplates).toEqual([]);
   });
 
-  it("accepts tilesets with s2 bounding volumes", function () {
-    const tileJson = clone(implicitTileJson, true);
+  it("accepts tilesets with 3DTILES_bounding_volume_S2", function () {
+    const tileJson = clone(implicitTileLegacyJson, true);
     tileJson.boundingVolume = {
-      s2Cell: {
-        token: "1",
-        minimumHeight: 0,
-        maximumHeight: 100,
+      extensions: {
+        "3DTILES_bounding_volume_S2": {
+          token: "1",
+          minimumHeight: 0,
+          maximumHeight: 100,
+        },
       },
     };
-    const tileJsonS2 = tileJson.boundingVolume.s2Cell;
+    const tileJsonS2 =
+      tileJson.boundingVolume.extensions["3DTILES_bounding_volume_S2"];
 
     let metadataSchema;
     const implicitTileset = new ImplicitTileset(
@@ -163,7 +166,8 @@ describe("Scene/ImplicitTileset", function () {
       tileJson,
       metadataSchema
     );
-    const implicitTilesetS2 = implicitTileset.boundingVolume.s2Cell;
+    const implicitTilesetS2 =
+      implicitTileset.boundingVolume.extensions["3DTILES_bounding_volume_S2"];
     expect(implicitTilesetS2.token).toEqual(tileJsonS2.token);
     expect(implicitTilesetS2.minimumHeight).toEqual(tileJsonS2.minimumHeight);
     expect(implicitTilesetS2.maximumHeight).toEqual(tileJsonS2.maximumHeight);
@@ -268,32 +272,6 @@ describe("Scene/ImplicitTileset", function () {
         metadataSchema
       );
       expect(implicitTileset.contentUriTemplates).toEqual([]);
-    });
-
-    it("accepts tilesets with 3DTILES_bounding_volume_S2 (legacy)", function () {
-      const tileJson = clone(implicitTileLegacyJson, true);
-      tileJson.boundingVolume = {
-        extensions: {
-          "3DTILES_bounding_volume_S2": {
-            token: "1",
-            minimumHeight: 0,
-            maximumHeight: 100,
-          },
-        },
-      };
-      const tileJsonS2 =
-        tileJson.boundingVolume.extensions["3DTILES_bounding_volume_S2"];
-
-      let metadataSchema;
-      const implicitTileset = new ImplicitTileset(
-        baseResource,
-        tileJson,
-        metadataSchema
-      );
-      const implicitTilesetS2 = implicitTileset.boundingVolume.s2Cell;
-      expect(implicitTilesetS2.token).toEqual(tileJsonS2.token);
-      expect(implicitTilesetS2.minimumHeight).toEqual(tileJsonS2.minimumHeight);
-      expect(implicitTilesetS2.maximumHeight).toEqual(tileJsonS2.maximumHeight);
     });
 
     it("rejects bounding spheres (legacy)", function () {

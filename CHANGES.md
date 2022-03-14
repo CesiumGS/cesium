@@ -32,7 +32,6 @@
     [#10159](https://github.com/CesiumGS/cesium/pull/10159)
   - Implicit tiling is now specified in `tile.implicitTiling` rather than the `3DTILES_implicit_tiling` extension. [#10169](https://github.com/CesiumGS/cesium/pull/10169)
   - Multiple contents are now provided in `tile.contents` rather than the `3DTILES_multiple_contents` extension. [#10174](https://github.com/CesiumGS/cesium/pull/10174)
-  - S2 cell bounding volumes are now specified in `boundingVolume.s2Cell` rather than the `3DTILES_bounding_volume_s2` extension. [#10176](https://github.com/CesiumGS/cesium/pull/10176)
 
 ##### Fixes :wrench:
 
