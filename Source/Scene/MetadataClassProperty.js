@@ -77,11 +77,11 @@ function MetadataClassProperty(options) {
   const hasValueTransform = defined(offset) || defined(scale);
 
   const enableNestedArrays = true;
-  if (hasValueTransform && !defined(offset)) {
+  if (!defined(offset)) {
     offset = this.expandConstant(0, enableNestedArrays);
   }
 
-  if (hasValueTransform && !defined(scale)) {
+  if (!defined(scale)) {
     scale = this.expandConstant(1, enableNestedArrays);
   }
 
@@ -358,6 +358,49 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   semantic: {
     get: function () {
       return this._semantic;
+    },
+  },
+
+  /**
+   * True if offset/scale should be applied. If both offset/scale were
+   * undefined, they default to identity so this property is set false
+   *
+   * @memberof MetadataClassProperty.prototype
+   * @type {Boolean}
+   * @readonly
+   * @private
+   */
+  hasValueTransform: {
+    get: function () {
+      return this._hasValueTransform;
+    },
+  },
+
+  /**
+   * The offset to be added to property values as part of the value transform.
+   *
+   * @memberof MetadataClassProperty.prototype
+   * @type {Number|Number[]|Number[][]}
+   * @readonly
+   * @private
+   */
+  offset: {
+    get: function () {
+      return this._offset;
+    },
+  },
+
+  /**
+   * The scale to be multiplied to property values as part of the value transform.
+   *
+   * @memberof MetadataClassProperty.prototype
+   * @type {Number|Number[]|Number[][]}
+   * @readonly
+   * @private
+   */
+  scale: {
+    get: function () {
+      return this._scale;
     },
   },
 

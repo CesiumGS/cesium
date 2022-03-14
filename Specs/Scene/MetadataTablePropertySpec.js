@@ -170,6 +170,108 @@ describe("Scene/MetadataTableProperty", function () {
     expect(property.get(1)).toEqual(["dddd", "eeeee"]);
   });
 
+  it("creates with offset and scale", function () {
+    const property = new MetadataTableProperty({
+      count: 2,
+      property: {
+        values: 0,
+        offset: [
+          [-1, -1],
+          [-1, -1],
+        ],
+        scale: [
+          [2, 2],
+          [2, 2],
+        ],
+      },
+      classProperty: new MetadataClassProperty({
+        id: "property",
+        property: {
+          type: "VEC2",
+          componentType: "UINT8",
+          normalized: true,
+          array: true,
+          count: 2,
+          offset: [
+            [-1, -1],
+            [0, 0],
+          ],
+          scale: [
+            [2, 2],
+            [4, 4],
+          ],
+        },
+      }),
+      bufferViews: {
+        0: new Uint8Array([0, 127, 127, 255, 0, 0, 255, 255]),
+      },
+    });
+
+    expect(property.hasValueTransform).toBe(true);
+    expect(property.offset).toEqual([-1, -1, -1, -1]);
+    expect(property.scale).toEqual([2, 2, 2, 2]);
+  });
+
+  it("creates with offset and scale inherited from class property", function () {
+    const property = new MetadataTableProperty({
+      count: 2,
+      property: {
+        values: 0,
+      },
+      classProperty: new MetadataClassProperty({
+        id: "property",
+        property: {
+          type: "VEC2",
+          componentType: "UINT8",
+          normalized: true,
+          array: true,
+          count: 2,
+          offset: [
+            [-1, -1],
+            [-1, -1],
+          ],
+          scale: [
+            [2, 2],
+            [2, 2],
+          ],
+        },
+      }),
+      bufferViews: {
+        0: new Uint8Array([0, 127, 127, 255, 0, 0, 255, 255]),
+      },
+    });
+
+    expect(property.hasValueTransform).toBe(true);
+    expect(property.offset).toEqual([-1, -1, -1, -1]);
+    expect(property.scale).toEqual([2, 2, 2, 2]);
+  });
+
+  it("creates with default offset and scale", function () {
+    const property = new MetadataTableProperty({
+      count: 2,
+      property: {
+        values: 0,
+      },
+      classProperty: new MetadataClassProperty({
+        id: "property",
+        property: {
+          type: "VEC2",
+          componentType: "UINT8",
+          normalized: true,
+          array: true,
+          count: 2,
+        },
+      }),
+      bufferViews: {
+        0: new Uint8Array([0, 127, 127, 255, 0, 0, 255, 255]),
+      },
+    });
+
+    expect(property.hasValueTransform).toBe(false);
+    expect(property.offset).toEqual([0, 0, 0, 0]);
+    expect(property.scale).toEqual([1, 1, 1, 1]);
+  });
+
   it("constructor throws without count", function () {
     expect(function () {
       return new MetadataTableProperty({
@@ -808,7 +910,7 @@ describe("Scene/MetadataTableProperty", function () {
         componentType: "INT8",
         normalized: true,
       },
-      values: [-128],
+      values: [-127],
     });
 
     const propertyUint8 = MetadataTester.createProperty({
@@ -822,6 +924,39 @@ describe("Scene/MetadataTableProperty", function () {
 
     expect(propertyInt8.get(0)).toBe(-1.0);
     expect(propertyUint8.get(0)).toBe(1.0);
+  });
+
+  it("get applies offset/scale", function () {
+    const propertyInt8 = MetadataTester.createProperty({
+      property: {
+        type: "SCALAR",
+        componentType: "INT8",
+        normalized: true,
+        offset: 0.5,
+        scale: 0.5,
+      },
+      values: [-127],
+    });
+
+    const propertyArrayOfVector = MetadataTester.createProperty({
+      property: {
+        type: "VEC3",
+        componentType: "FLOAT32",
+        array: true,
+        count: 2,
+        scale: [
+          [2.0, 2.0, 2.0],
+          [1.0, 1.0, 1.0],
+        ],
+      },
+      values: [[1.0, 1.0, 1.0, 1.0, 2.0, 3.0]],
+    });
+
+    expect(propertyInt8.get(0)).toBe(0.0);
+    expect(propertyArrayOfVector.get(0)).toEqual([
+      new Cartesian3(2, 2, 2),
+      new Cartesian3(1, 2, 3),
+    ]);
   });
 
   it("get handles noData correctly", function () {
@@ -1857,6 +1992,45 @@ describe("Scene/MetadataTableProperty", function () {
 
     expect(propertyInt8.get(0)).toBe(-1.0);
     expect(propertyUint8.get(0)).toBe(1.0);
+  });
+
+  it("get applies offset/scale", function () {
+    const propertyInt8 = MetadataTester.createProperty({
+      property: {
+        type: "SCALAR",
+        componentType: "INT8",
+        normalized: true,
+        offset: 0.5,
+        scale: 0.5,
+      },
+      values: [-127],
+    });
+
+    const propertyArrayOfVector = MetadataTester.createProperty({
+      property: {
+        type: "VEC3",
+        componentType: "FLOAT32",
+        array: true,
+        count: 2,
+        scale: [
+          [2.0, 2.0, 2.0],
+          [1.0, 1.0, 1.0],
+        ],
+      },
+      values: [[1.0, 1.0, 1.0, 1.0, 2.0, 3.0]],
+    });
+
+    propertyInt8.set(0, 1.0);
+    propertyArrayOfVector.set(0, [
+      new Cartesian3(1, 1, 1),
+      new Cartesian3(2, 4, 8),
+    ]);
+
+    expect(propertyInt8.get(0)).toBe(1.0);
+    expect(propertyArrayOfVector.get(0)).toEqual([
+      new Cartesian3(1, 1, 1),
+      new Cartesian3(2, 4, 8),
+    ]);
   });
 
   it("set throws without index", function () {
