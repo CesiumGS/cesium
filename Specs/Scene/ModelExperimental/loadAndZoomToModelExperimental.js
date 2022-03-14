@@ -13,6 +13,9 @@ function loadAndZoomToModelExperimental(options, scene) {
       customShader: options.customShader,
       basePath: options.basePath,
       modelMatrix: options.modelMatrix,
+      scale: options.scale,
+      minimumPixelSize: options.minimumPixelSize,
+      maximumScale: options.maximumScale,
       allowPicking: options.allowPicking,
       upAxis: options.upAxis,
       forwardAxis: options.forwardAxis,
@@ -21,9 +24,6 @@ function loadAndZoomToModelExperimental(options, scene) {
       instanceFeatureIdIndex: options.instanceFeatureIdIndex,
       incrementallyLoadTextures: options.incrementallyLoadTextures,
       backFaceCulling: options.backFaceCulling,
-      minimumPixelSize: options.minimumPixelSize,
-      scale: options.scale,
-      maximumScale: options.maximumScale,
       showCreditsOnScreen: options.showCreditsOnScreen,
     });
   } catch (error) {

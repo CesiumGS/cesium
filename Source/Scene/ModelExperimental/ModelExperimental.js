@@ -104,18 +104,32 @@ export default function ModelExperimental(options) {
   );
   this._modelMatrix = Matrix4.clone(this.modelMatrix);
   this._scale = defaultValue(options.scale, 1.0);
+
   this._minimumPixelSize = defaultValue(options.minimumPixelSize, 0.0);
+
   this._maximumScale = options.maximumScale;
 
+  this._clampedScale = defined(this._maximumScale)
+    ? Math.min(this._scale, this._maximumScale)
+    : this._scale;
+
   /**
-   * Keeps track of whether or not the ModelExperimentalSceneGraph
-   * should call updateModelMatrix. This will be true if any of the
-   * model matrix, scale, minimum pixel size, or maximum scale are dirty.
+   * The true scale of the model after being affected by the model's scale,
+   * minimum pixel size, and maximum scale parameters.
    *
-   * @type {boolean}
+   * @type {Number}
    * @private
    */
-  this._callUpdateModelMatrix = false;
+  this._modifiedScale = this._clampedScale;
+
+  /**
+   * Whether or not the ModelExperimentalSceneGraph should call updateModelMatrix.
+   * This will be true if any of the model matrix, scale, minimum pixel size, or maximum scale are dirty.
+   *
+   * @type {Number}
+   * @private
+   */
+  this._updateModelMatrix = false;
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -696,7 +710,7 @@ Object.defineProperties(ModelExperimental.prototype, {
     },
     set: function (value) {
       if (value !== this._scale) {
-        this._callUpdateModelMatrix = true;
+        this._updateModelMatrix = true;
       }
       this._scale = value;
     },
@@ -717,7 +731,7 @@ Object.defineProperties(ModelExperimental.prototype, {
     },
     set: function (value) {
       if (value !== this._minimumPixelSize) {
-        this._callUpdateModelMatrix = true;
+        this._updateModelMatrix = true;
       }
       this._minimumPixelSize = value;
     },
@@ -736,7 +750,7 @@ Object.defineProperties(ModelExperimental.prototype, {
     },
     set: function (value) {
       if (value !== this._maximumScale) {
-        this._callUpdateModelMatrix = true;
+        this._updateModelMatrix = true;
       }
       this._maximumScale = value;
     },
@@ -869,7 +883,7 @@ ModelExperimental.prototype.update = function (frameState) {
   // This is done without a dirty flag so that the model matrix can be update in-place
   // without needing to use a setter
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
-    this._callUpdateModelMatrix = true;
+    this._updateModelMatrix = true;
     Matrix4.clone(this.modelMatrix, this._modelMatrix);
     BoundingSphere.transform(
       this._sceneGraph.boundingSphere,
@@ -878,14 +892,17 @@ ModelExperimental.prototype.update = function (frameState) {
     );
   }
 
-  this._callUpdateModelMatrix =
-    this._callUpdateModelMatrix || this._minimumPixelSize > 0.0;
+  this._updateModelMatrix =
+    this._updateModelMatrix || this._minimumPixelSize !== 0.0;
 
-  if (this._callUpdateModelMatrix) {
-    this._boundingSphere.radius = this._initialRadius * this._scale;
-    const scale = this._scale; //getScale(this, frameState);
-    this._sceneGraph.updateModelMatrix(scale);
-    this._callUpdateModelMatrix = false;
+  if (this._updateModelMatrix) {
+    this._clampedScale = defined(this._maximumScale)
+      ? Math.min(this._scale, this._maximumScale)
+      : this._scale;
+    this._boundingSphere.radius = this._initialRadius * this._clampedScale;
+    this._modifiedScale = getScale(this, frameState);
+    this._sceneGraph.updateModelMatrix();
+    this._updateModelMatrix = false;
   }
 
   if (this._backFaceCullingDirty) {
@@ -902,7 +919,7 @@ ModelExperimental.prototype.update = function (frameState) {
 
   // Check for show here because we still want the draw commands to be built so user can instantly see the model
   // when show is set to true.
-  if (this._show && this.scale !== 0.0) {
+  if (this._show && this._modifiedScale !== 0) {
     const asset = this._sceneGraph.components.asset;
     const credits = asset.credits;
 
@@ -947,7 +964,7 @@ const scratchPosition = new Cartesian3();
 function getScale(model, frameState) {
   let scale = model.scale;
 
-  if (model.minimumPixelSize > 0.0) {
+  if (model.minimumPixelSize !== 0.0) {
     // Compute size of bounding sphere in pixels
     const context = frameState.context;
     const maxPixelSize = Math.max(

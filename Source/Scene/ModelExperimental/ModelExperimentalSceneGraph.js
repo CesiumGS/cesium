@@ -1,6 +1,5 @@
 import buildDrawCommands from "./buildDrawCommands.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
 import defaultValue from "../../Core/defaultValue.js";
@@ -351,7 +350,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   );
 
   model._initialRadius = model._boundingSphere.radius;
-  model._boundingSphere.radius *= model._scale;
+  model._boundingSphere.radius *= model._clampedScale;
 };
 
 /**
@@ -392,8 +391,9 @@ ModelExperimentalSceneGraph.prototype.update = function (frameState) {
   }
 };
 
-ModelExperimentalSceneGraph.prototype.updateModelMatrix = function (scale) {
+ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
   const model = this._model;
+  const scale = model._modifiedScale;
   this._computedModelMatrix = Matrix4.clone(model.modelMatrix);
 
   Matrix4.multiply(

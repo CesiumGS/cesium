@@ -379,32 +379,6 @@ describe(
       });
     });
 
-    /*it("boundingSphere returns the bounding sphere when maximumScale is reached", function () {
-      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
-      const loadPromise = resource.fetchArrayBuffer();
-      return loadPromise.then(function (buffer) {
-        return loadAndZoomToModelExperimental(
-          {
-            gltf: new Uint8Array(buffer),
-            debugShowBoundingVolume: true,
-            scale: 20,
-            maximumScale: 10,
-          },
-          scene
-        ).then(function (model) {
-          scene.renderForSpecs();
-
-          const boundingSphere = model.boundingSphere;
-          expect(boundingSphere).toBeDefined();
-          expect(boundingSphere.center).toEqual(new Cartesian3());
-          expect(boundingSphere.radius).toEqualEpsilon(
-            8.660254037844386,
-            CesiumMath.EPSILON8
-          );
-        });
-      });
-    });*/
-
     // see https://github.com/CesiumGS/cesium/pull/10115
     xit("renders model with style", function () {
       return loadAndZoomToModelExperimental(
@@ -756,6 +730,103 @@ describe(
           expect(boundingSphere.radius).toEqual(0.0);
 
           model.scale = 1.0;
+          scene.renderForSpecs();
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqualEpsilon(
+            expectedRadius,
+            CesiumMath.EPSILON3
+          );
+        });
+      });
+    });
+
+    it("initializes with maximumScale", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: new Uint8Array(buffer),
+            upAxis: Axis.Z,
+            forwardAxis: Axis.X,
+            maximumScale: 0.0,
+          },
+          scene
+        ).then(function (model) {
+          const sceneGraph = model.sceneGraph;
+          scene.renderForSpecs();
+          expect(
+            Matrix4.equals(sceneGraph.computedModelMatrix, Matrix4.IDENTITY)
+          ).toBe(true);
+          verifyRender(model, false);
+          expect(model.boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(model.boundingSphere.radius).toEqual(0.0);
+        });
+      });
+    });
+
+    it("changing maximumScale works", function () {
+      const updateModelMatrix = spyOn(
+        ModelExperimentalSceneGraph.prototype,
+        "updateModelMatrix"
+      ).and.callThrough();
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          upAxis: Axis.Z,
+          forwardAxis: Axis.X,
+          scale: 2.0,
+        },
+        scene
+      ).then(function (model) {
+        const sceneGraph = model.sceneGraph;
+        scene.renderForSpecs();
+        expect(
+          Matrix4.equals(sceneGraph.computedModelMatrix, Matrix4.IDENTITY)
+        ).toBe(true);
+        verifyRender(model, true);
+
+        model.maximumScale = 0.0;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        verifyRender(model, false);
+
+        model.maximumScale = 1.0;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        verifyRender(model, true);
+      });
+    });
+
+    it("changing maximumScale affects bounding sphere", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: new Uint8Array(buffer),
+            debugShowBoundingVolume: true,
+            scale: 20,
+            maximumScale: 10,
+          },
+          scene
+        ).then(function (model) {
+          scene.renderForSpecs();
+
+          const expectedRadius = 0.866;
+          const boundingSphere = model.boundingSphere;
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqualEpsilon(
+            expectedRadius * 10.0,
+            CesiumMath.EPSILON3
+          );
+
+          model.maximumScale = 0.0;
+          scene.renderForSpecs();
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqual(0.0);
+
+          model.maximumScale = 1.0;
           scene.renderForSpecs();
           expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
           expect(boundingSphere.radius).toEqualEpsilon(
