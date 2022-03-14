@@ -1673,10 +1673,6 @@ Cesium3DTile.prototype.createBoundingVolume = function (
     throw new RuntimeError("boundingVolume must be defined");
   }
 
-  if (defined(boundingVolumeHeader.s2Cell)) {
-    return new TileBoundingS2Cell(boundingVolumeHeader.s2Cell);
-  }
-
   if (hasExtension(boundingVolumeHeader, "3DTILES_bounding_volume_S2")) {
     return new TileBoundingS2Cell(
       boundingVolumeHeader.extensions["3DTILES_bounding_volume_S2"]
@@ -1698,7 +1694,7 @@ Cesium3DTile.prototype.createBoundingVolume = function (
     return createSphere(boundingVolumeHeader.sphere, transform, result);
   }
   throw new RuntimeError(
-    "boundingVolume must contain a sphere, region, box, or S2 cell"
+    "boundingVolume must contain a sphere, region, or box"
   );
 };
 

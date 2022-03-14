@@ -65,17 +65,10 @@ export default function ImplicitTileset(
   this.metadataSchema = metadataSchema;
 
   const boundingVolume = tileJson.boundingVolume;
-  if (hasExtension(boundingVolume, "3DTILES_bounding_volume_S2")) {
-    // Merge the extension with the boundingVolume for consistency with 3D Tiles 1.1
-    boundingVolume.s2Cell =
-      boundingVolume.extensions["3DTILES_bounding_volume_S2"];
-    delete boundingVolume.extensions["3DTILES_bounding_volume_S2"];
-  }
-
   if (
     !defined(boundingVolume.box) &&
     !defined(boundingVolume.region) &&
-    !defined(boundingVolume.s2Cell)
+    !hasExtension(boundingVolume, "3DTILES_bounding_volume_S2")
   ) {
     throw new RuntimeError(
       "Only box, region and S2 cells are supported for implicit tiling"
