@@ -976,7 +976,7 @@ function getScale(model, frameState) {
     scratchPosition.y = m[13];
     scratchPosition.z = m[14];
 
-    const radius = scratchBoundingSphere.radius;
+    const radius = model.boundingSphere.radius;
     const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
 
     // metersPerPixel is always > 0.0
