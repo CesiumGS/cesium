@@ -1,6 +1,7 @@
 import {
   Cartesian2,
   Cartesian3,
+  Math as CesiumMath,
   MetadataClass,
   MetadataEntity,
 } from "../../Source/Cesium.js";
@@ -45,6 +46,22 @@ describe("Scene/MetadataEntity", function () {
             componentType: "UINT8",
             normalized: true,
             required: true,
+          },
+          temperature: {
+            type: "SCALAR",
+            componentType: "UINT8",
+            normalized: true,
+            offset: 32,
+            scale: 180,
+          },
+          temperatureArray: {
+            array: true,
+            count: 4,
+            type: "SCALAR",
+            componentType: "UINT8",
+            normalized: true,
+            offset: [32, 32, 32, 32],
+            scale: [180, 180, 180, 180],
           },
         },
       },
@@ -133,6 +150,8 @@ describe("Scene/MetadataEntity", function () {
         [0, 255, 0],
         [0, 0, 255],
       ],
+      temperature: 0,
+      temperatureArray: [0, 255, 255, 0],
     };
   });
 
@@ -285,7 +304,14 @@ describe("Scene/MetadataEntity", function () {
     // Includes height which has a default value
     expect(
       MetadataEntity.getPropertyIds(properties, classDefinition).sort()
-    ).toEqual(["axisColors", "height", "name", "position"]);
+    ).toEqual([
+      "axisColors",
+      "height",
+      "name",
+      "position",
+      "temperature",
+      "temperatureArray",
+    ]);
   });
 
   it("getPropertyIds uses results argument", function () {
@@ -302,6 +328,8 @@ describe("Scene/MetadataEntity", function () {
       "height",
       "name",
       "position",
+      "temperature",
+      "temperatureArray",
     ]);
   });
 
@@ -398,6 +426,20 @@ describe("Scene/MetadataEntity", function () {
     ).toEqual([new Cartesian2(1.0, 1.0), new Cartesian2(1.0, 1.0)]);
   });
 
+  it("handles offset and scale", function () {
+    expect(
+      MetadataEntity.getProperty("temperature", properties, classDefinition)
+    ).toEqual(32);
+
+    expect(
+      MetadataEntity.getProperty(
+        "temperatureArray",
+        properties,
+        classDefinition
+      )
+    ).toEqual([32, 212, 212, 32]);
+  });
+
   it("getProperty throws without propertyId", function () {
     expect(function () {
       MetadataEntity.getProperty(undefined, properties, classDefinition);
@@ -472,6 +514,36 @@ describe("Scene/MetadataEntity", function () {
     );
     expect(retrievedPosition).toEqual(axisColors);
     expect(retrievedPosition).not.toBe(axisColors); // The value is cloned
+  });
+
+  it("handles offset and scale", function () {
+    expect(
+      MetadataEntity.setProperty("temperature", 70, properties, classDefinition)
+    ).toBe(true);
+
+    // There is some expected loss of precision due to storing as a UINT8
+    // so the result is not 0
+    expect(
+      MetadataEntity.getProperty("temperature", properties, classDefinition)
+    ).toEqualEpsilon(70.11764705882354, CesiumMath.EPSILON15);
+
+    const values = [32, 32, 32, 32];
+    expect(
+      MetadataEntity.setProperty(
+        "temperatureArray",
+        values,
+        properties,
+        classDefinition
+      )
+    ).toBe(true);
+
+    const result = MetadataEntity.getProperty(
+      "temperatureArray",
+      properties,
+      classDefinition
+    );
+    expect(result).toEqual(values);
+    expect(result).not.toBe(values); // value should be cloned
   });
 
   it("setProperty throws without propertyId", function () {
