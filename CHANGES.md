@@ -2,6 +2,10 @@
 
 ### 1.92 - 2022-04-01
 
+##### Additions :tada:
+
+- Added `minimumPixelSize`, `scale`, and `maximumScale` to `ModelExperimental`. [#10092](https://github.com/CesiumGS/cesium/pull/10092)
+
 ##### Fixes :wrench:
 
 - Fixed a bug where `pnts` tiles would crash when `Cesium.ExperimentalFeatures.enableModelExperimental` was true. [#10183](https://github.com/CesiumGS/cesium/pull/10183)
@@ -20,7 +24,6 @@
 - Added the ability to toggle back-face culling in `ModelExperimental`. [#10070](https://github.com/CesiumGS/cesium/pull/10070)
 - Added `depthPlaneEllipsoidOffset` to `Viewer` and `Scene` constructors to address rendering artifacts below the WGS84 ellipsoid. [#9200](https://github.com/CesiumGS/cesium/pull/9200)
 - Added support for `debugColorTiles` in `ModelExperimental`. [#10071](https://github.com/CesiumGS/cesium/pull/10071)
-- Added `minimumPixelSize`, `scale`, and `maximumScale` to `ModelExperimental`. [#10092](https://github.com/CesiumGS/cesium/pull/10092)
 - Added support for shadows in `ModelExperimental`. [#10077](https://github.com/CesiumGS/cesium/pull/10077)
 - Added `packArray` and `unpackArray` for matrix types. [#10118](https://github.com/CesiumGS/cesium/pull/10118)
 - Added more affine transformation helper functions to `Matrix2`, `Matrix3`, and `Matrix4`. [#10124](https://github.com/CesiumGS/cesium/pull/10124)

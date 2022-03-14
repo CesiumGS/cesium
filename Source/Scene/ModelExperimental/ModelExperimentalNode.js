@@ -260,4 +260,9 @@ ModelExperimentalNode.prototype.updateModelMatrix = function () {
     this._transform,
     this._computedTransform
   );
+  Matrix4.multiplyByUniformScale(
+    this._computedTransform,
+    this._sceneGraph._scale,
+    this._computedTransform
+  );
 };

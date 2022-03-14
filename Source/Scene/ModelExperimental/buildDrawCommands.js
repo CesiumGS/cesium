@@ -62,28 +62,21 @@ export default function buildDrawCommands(
   const pass = primitiveRenderResources.alphaOptions.pass;
 
   const sceneGraph = model.sceneGraph;
-  const modelMatrix = Matrix4.multiply(
-    sceneGraph.computedModelMatrix,
+  const scaledTransform = Matrix4.multiply(
+    sceneGraph._uniformScaleMatrix,
     primitiveRenderResources.transform,
     new Matrix4()
   );
-  const boundingSphereModelMatrix = Matrix4.clone(modelMatrix);
 
-  Matrix4.multiplyByUniformScale(
-    modelMatrix,
-    model._modifiedScale,
-    modelMatrix
-  );
-
-  Matrix4.multiplyByUniformScale(
-    boundingSphereModelMatrix,
-    model._clampedScale,
-    boundingSphereModelMatrix
+  const modelMatrix = Matrix4.multiply(
+    sceneGraph.computedModelMatrix,
+    scaledTransform,
+    scaledTransform
   );
 
   BoundingSphere.transform(
     primitiveRenderResources.boundingSphere,
-    boundingSphereModelMatrix,
+    modelMatrix,
     primitiveRenderResources.boundingSphere
   );
 

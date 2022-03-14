@@ -109,6 +109,13 @@ export default function ModelExperimental(options) {
 
   this._maximumScale = options.maximumScale;
 
+  /**
+   * The scale value after being clamped by the maximum scale parameter.
+   * Used to adjust bounding spheres without repeated calculation.
+   *
+   * @type {Number}
+   * @private
+   */
   this._clampedScale = defined(this._maximumScale)
     ? Math.min(this._scale, this._maximumScale)
     : this._scale;
@@ -881,7 +888,7 @@ ModelExperimental.prototype.update = function (frameState) {
   }
 
   // This is done without a dirty flag so that the model matrix can be update in-place
-  // without needing to use a setter
+  // without needing to use a setter.
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
     this._updateModelMatrix = true;
     Matrix4.clone(this.modelMatrix, this._modelMatrix);
@@ -892,10 +899,7 @@ ModelExperimental.prototype.update = function (frameState) {
     );
   }
 
-  this._updateModelMatrix =
-    this._updateModelMatrix || this._minimumPixelSize !== 0.0;
-
-  if (this._updateModelMatrix) {
+  if (this._updateModelMatrix || this._minimumPixelSize !== 0.0) {
     this._clampedScale = defined(this._maximumScale)
       ? Math.min(this._scale, this._maximumScale)
       : this._scale;
