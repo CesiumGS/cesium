@@ -326,9 +326,7 @@ function prepareVertexAttribute(typedArray, name) {
   ) {
     oneTimeWarning(
       "Cast pnts property to floats",
-      'Point cloud property "' +
-        name +
-        '" will be casted to a float array because INT, UNSIGNED_INT, and DOUBLE are not valid WebGL vertex attribute types. Some precision may be lost.'
+      `Point cloud property "${name}" will be casted to a float array because INT, UNSIGNED_INT, and DOUBLE are not valid WebGL vertex attribute types. Some precision may be lost.`
     );
     return new Float32Array(typedArray);
   }
@@ -793,8 +791,9 @@ function createShaders(pointCloud, frameState, style) {
   for (name in styleableShaderAttributes) {
     if (styleableShaderAttributes.hasOwnProperty(name)) {
       attribute = styleableShaderAttributes[name];
-      variableSubstitutionMap[name] =
-        "czm_3dtiles_property_" + attribute.location;
+      variableSubstitutionMap[
+        name
+      ] = `czm_3dtiles_property_${attribute.location}`;
       propertyIdToAttributeMap[attribute.location] = attribute;
     }
   }
@@ -811,17 +810,17 @@ function createShaders(pointCloud, frameState, style) {
       "vec3 czm_3dtiles_builtin_property_NORMAL" +
       ")";
     colorStyleFunction = style.getColorShaderFunction(
-      "getColorFromStyle" + parameterList,
+      `getColorFromStyle${parameterList}`,
       variableSubstitutionMap,
       shaderState
     );
     showStyleFunction = style.getShowShaderFunction(
-      "getShowFromStyle" + parameterList,
+      `getShowFromStyle${parameterList}`,
       variableSubstitutionMap,
       shaderState
     );
     pointSizeStyleFunction = style.getPointSizeShaderFunction(
-      "getPointSizeFromStyle" + parameterList,
+      `getPointSizeFromStyle${parameterList}`,
       variableSubstitutionMap,
       shaderState
     );
@@ -914,16 +913,15 @@ function createShaders(pointCloud, frameState, style) {
     const propertyId = styleablePropertyIds[i];
     attribute = propertyIdToAttributeMap[propertyId];
     const componentCount = attribute.componentCount;
-    const attributeName = "czm_3dtiles_property_" + propertyId;
+    const attributeName = `czm_3dtiles_property_${propertyId}`;
     let attributeType;
     if (componentCount === 1) {
       attributeType = "float";
     } else {
-      attributeType = "vec" + componentCount;
+      attributeType = `vec${componentCount}`;
     }
 
-    attributeDeclarations +=
-      "attribute " + attributeType + " " + attributeName + "; \n";
+    attributeDeclarations += `attribute ${attributeType} ${attributeName}; \n`;
     attributeLocations[attributeName] = attribute.location;
   }
 

@@ -12,7 +12,7 @@ function BadGeometry() {
   ) {
     const parameters = queryToObject(window.location.search.substring(1));
     if (parameters.built) {
-      this._workerName = "../" + this._workerName;
+      this._workerName = `../${this._workerName}`;
     }
   }
 }

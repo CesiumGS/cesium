@@ -41,7 +41,7 @@ function reset() {
 
 function createShaderProgram(colorString) {
   const vs = "void main() { gl_Position = vec4(0.0, 0.0, 0.0, 1.0); }";
-  const fs = "void main() { gl_FragColor = vec4(" + colorString + "); }";
+  const fs = `void main() { gl_FragColor = vec4(${colorString}); }`;
 
   const vertexShaderSource = new ShaderSource({
     sources: [vs],

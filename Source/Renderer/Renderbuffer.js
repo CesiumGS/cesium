@@ -25,6 +25,7 @@ function Renderbuffer(options) {
   const height = defined(options.height)
     ? options.height
     : gl.drawingBufferHeight;
+  const numSamples = defaultValue(options.numSamples, 1);
 
   //>>includeStart('debug', pragmas.debug);
   if (!RenderbufferFormat.validate(format)) {
@@ -35,9 +36,7 @@ function Renderbuffer(options) {
 
   if (width > maximumRenderbufferSize) {
     throw new DeveloperError(
-      "Width must be less than or equal to the maximum renderbuffer size (" +
-        maximumRenderbufferSize +
-        ").  Check maximumRenderbufferSize."
+      `Width must be less than or equal to the maximum renderbuffer size (${maximumRenderbufferSize}).  Check maximumRenderbufferSize.`
     );
   }
 
@@ -45,9 +44,7 @@ function Renderbuffer(options) {
 
   if (height > maximumRenderbufferSize) {
     throw new DeveloperError(
-      "Height must be less than or equal to the maximum renderbuffer size (" +
-        maximumRenderbufferSize +
-        ").  Check maximumRenderbufferSize."
+      `Height must be less than or equal to the maximum renderbuffer size (${maximumRenderbufferSize}).  Check maximumRenderbufferSize.`
     );
   }
   //>>includeEnd('debug');
@@ -59,7 +56,17 @@ function Renderbuffer(options) {
   this._renderbuffer = this._gl.createRenderbuffer();
 
   gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
-  gl.renderbufferStorage(gl.RENDERBUFFER, format, width, height);
+  if (numSamples > 1) {
+    gl.renderbufferStorageMultisample(
+      gl.RENDERBUFFER,
+      numSamples,
+      format,
+      width,
+      height
+    );
+  } else {
+    gl.renderbufferStorage(gl.RENDERBUFFER, format, width, height);
+  }
   gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 }
 

@@ -98,7 +98,7 @@ function getWorkerUrl(moduleID) {
 
   if (isCrossOriginUrl(url)) {
     //to load cross-origin, create a shim worker from a blob URL
-    const script = 'importScripts("' + url + '");';
+    const script = `importScripts("${url}");`;
 
     let blob;
     try {
@@ -167,8 +167,7 @@ function getWebAssemblyLoaderConfig(processor, wasmOptions) {
   if (!FeatureDetection.supportsWebAssembly()) {
     if (!defined(wasmOptions.fallbackModulePath)) {
       throw new RuntimeError(
-        "This browser does not support Web Assembly, and no backup module was provided for " +
-          processor._workerPath
+        `This browser does not support Web Assembly, and no backup module was provided for ${processor._workerPath}`
       );
     }
 

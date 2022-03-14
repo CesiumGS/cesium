@@ -222,6 +222,7 @@ function getParameterStub(options) {
   parameterStubValues[WebGLConstants.MAX_TEXTURE_MAX_ANISOTROPY_EXT] = 16; // Assuming extension
   parameterStubValues[WebGLConstants.MAX_DRAW_BUFFERS] = 8; // Assuming extension
   parameterStubValues[WebGLConstants.MAX_COLOR_ATTACHMENTS] = 8; // Assuming extension
+  parameterStubValues[WebGLConstants.MAX_SAMPLES] = 8; // Assuming WebGL2
 
   return function (pname) {
     const value = parameterStubValues[pname];
@@ -229,7 +230,7 @@ function getParameterStub(options) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(value)) {
       throw new DeveloperError(
-        "A WebGL parameter stub for " + pname + " is not defined. Add it."
+        `A WebGL parameter stub for ${pname} is not defined. Add it.`
       );
     }
     //>>includeEnd('debug');
@@ -255,7 +256,7 @@ function getProgramParameterStub(program, pname) {
 
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    "A WebGL parameter stub for " + pname + " is not defined. Add it."
+    `A WebGL parameter stub for ${pname} is not defined. Add it.`
   );
   //>>includeEnd('debug');
 }
@@ -264,7 +265,7 @@ function getShaderParameterStub(shader, pname) {
   //>>includeStart('debug', pragmas.debug);
   if (pname !== WebGLConstants.COMPILE_STATUS) {
     throw new DeveloperError(
-      "A WebGL parameter stub for " + pname + " is not defined. Add it."
+      `A WebGL parameter stub for ${pname} is not defined. Add it.`
     );
   }
   //>>includeEnd('debug');

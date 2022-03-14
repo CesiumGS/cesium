@@ -428,8 +428,7 @@ PostProcessStageCollection.prototype.add = function (stage) {
     //>>includeStart('debug', pragmas.debug);
     if (defined(stageNames[currentStage.name])) {
       throw new DeveloperError(
-        currentStage.name +
-          " has already been added to the collection or does not have a unique name."
+        `${currentStage.name} has already been added to the collection or does not have a unique name.`
       );
     }
     //>>includeEnd('debug');

@@ -223,7 +223,7 @@ describe("Scene/TimeDynamicImagery", function () {
           );
           expect(
             timeDynamicImagery._tilesRequestedForInterval[count - 1].key
-          ).toEqual(x + "-" + y + "-" + level);
+          ).toEqual(`${x}-${y}-${level}`);
         }
       }
     }

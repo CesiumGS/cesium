@@ -34,7 +34,7 @@ export default function ShaderStruct(name) {
  * @param {String} identifier The identifier of the struct field
  */
 ShaderStruct.prototype.addField = function (type, identifier) {
-  const field = "    " + type + " " + identifier + ";";
+  const field = `    ${type} ${identifier};`;
   this.fields.push(field);
 };
 
@@ -49,5 +49,5 @@ ShaderStruct.prototype.generateGlslLines = function () {
     fields = ["    float _empty;"];
   }
 
-  return [].concat("struct " + this.name, "{", fields, "};");
+  return [].concat(`struct ${this.name}`, "{", fields, "};");
 };

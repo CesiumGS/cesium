@@ -178,9 +178,7 @@ function BingMapsImageryProvider(options) {
 
   this._proxy = options.proxy;
   this._credit = new Credit(
-    '<a href="http://www.bing.com"><img src="' +
-      BingMapsImageryProvider.logoUrl +
-      '" title="Bing Imagery"/></a>'
+    `<a href="http://www.bing.com"><img src="${BingMapsImageryProvider.logoUrl}" title="Bing Imagery"/></a>`
   );
 
   this._tilingScheme = new WebMercatorTilingScheme({
@@ -218,7 +216,7 @@ function BingMapsImageryProvider(options) {
   }
 
   const metadataResource = this._resource.getDerivedResource({
-    url: "REST/v1/Imagery/Metadata/" + this._mapStyle,
+    url: `REST/v1/Imagery/Metadata/${this._mapStyle}`,
     queryParameters: {
       incl: "ImageryProviders",
       key: this._key,
@@ -285,8 +283,7 @@ function BingMapsImageryProvider(options) {
   }
 
   function metadataFailure(e) {
-    const message =
-      "An error occurred while accessing " + metadataResource.url + ".";
+    const message = `An error occurred while accessing ${metadataResource.url}.`;
     metadataError = TileProviderError.handleError(
       metadataError,
       that,

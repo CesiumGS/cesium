@@ -111,7 +111,7 @@
           const slider = document.getElementById("slider");
           const splitPosition =
             (e.clientX - dragStartX) / slider.parentElement.offsetWidth;
-          slider.style.left = 100.0 * splitPosition + "%";
+          slider.style.left = `${100.0 * splitPosition}%`;
           viewer.scene.imagerySplitPosition = splitPosition;
         }
         //Sandcastle_End

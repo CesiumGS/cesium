@@ -142,7 +142,7 @@ function GoogleEarthEnterpriseTerrainProvider(options) {
     .then(function (result) {
       if (!metadata.terrainPresent) {
         const e = new RuntimeError(
-          "The server " + metadata.url + " doesn't have terrain"
+          `The server ${metadata.url} doesn't have terrain`
         );
         metadataError = TileProviderError.handleError(
           metadataError,
@@ -635,7 +635,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.loadTileDataAvailability = functi
 function buildTerrainResource(terrainProvider, quadKey, version, request) {
   version = defined(version) && version > 0 ? version : 1;
   return terrainProvider._metadata.resource.getDerivedResource({
-    url: "flatfile?f1c-0" + quadKey + "-t." + version.toString(),
+    url: `flatfile?f1c-0${quadKey}-t.${version.toString()}`,
     request: request,
   });
 }

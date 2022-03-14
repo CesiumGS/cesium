@@ -1,4 +1,5 @@
 import Axis from "../Axis.js";
+import Color from "../../Core/Color.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import Pass from "../../Renderer/Pass.js";
@@ -156,7 +157,12 @@ ModelExperimental3DTileContent.prototype.applyDebugSettings = function (
   enabled,
   color
 ) {
-  return;
+  color = enabled ? color : Color.WHITE;
+  if (this.featuresLength === 0) {
+    this._model.color = color;
+  } else if (defined(this.batchTable)) {
+    this.batchTable.setAllColor(color);
+  }
 };
 
 ModelExperimental3DTileContent.prototype.applyStyle = function (style) {
@@ -178,6 +184,9 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.pointCloudShading = tileset.pointCloudShading;
   model.featureIdIndex = tileset.featureIdIndex;
   model.instanceFeatureIdIndex = tileset.instanceFeatureIdIndex;
+  model.backFaceCulling = tileset.backFaceCulling;
+  model.shadows = tileset.shadows;
+  model.showCreditsOnScreen = tileset.showCreditsOnScreen;
 
   model.update(frameState);
 };
@@ -213,6 +222,8 @@ ModelExperimental3DTileContent.fromGltf = function (
     content: content,
     colorBlendMode: tileset.colorBlendMode,
     colorBlendAmount: tileset.colorBlendAmount,
+    backFaceCulling: tileset.backFaceCulling,
+    shadows: tileset.shadows,
   };
   content._model = ModelExperimental.fromGltf(modelOptions);
   return content;

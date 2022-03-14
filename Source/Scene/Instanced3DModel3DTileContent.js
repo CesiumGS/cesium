@@ -217,6 +217,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     specularEnvironmentMaps: tileset.specularEnvironmentMaps,
     backFaceCulling: tileset.backFaceCulling,
     showOutline: tileset.showOutline,
+    showCreditsOnScreen: tileset.showCreditsOnScreen,
   };
 
   if (gltfFormat === 0) {
@@ -489,9 +490,9 @@ Instanced3DModel3DTileContent.prototype.getFeature = function (batchId) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
     throw new DeveloperError(
-      "batchId is required and between zero and featuresLength - 1 (" +
-        (featuresLength - 1) +
-        ")."
+      `batchId is required and between zero and featuresLength - 1 (${
+        featuresLength - 1
+      }).`
     );
   }
   //>>includeEnd('debug');
@@ -531,6 +532,7 @@ Instanced3DModel3DTileContent.prototype.update = function (
   this._modelInstanceCollection.specularEnvironmentMaps = this._tileset.specularEnvironmentMaps;
   this._modelInstanceCollection.backFaceCulling = this._tileset.backFaceCulling;
   this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
+  this._modelInstanceCollection.showCreditsOnScreen = this._tileset.showCreditsOnScreen;
 
   const model = this._modelInstanceCollection._model;
 

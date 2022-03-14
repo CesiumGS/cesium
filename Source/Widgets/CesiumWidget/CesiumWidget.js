@@ -22,9 +22,7 @@ import Sun from "../../Scene/Sun.js";
 import getElement from "../getElement.js";
 
 function getDefaultSkyBoxUrl(suffix) {
-  return buildModuleUrl(
-    "Assets/Textures/SkyBox/tycho2t3_80_" + suffix + ".jpg"
-  );
+  return buildModuleUrl(`Assets/Textures/SkyBox/tycho2t3_80_${suffix}.jpg`);
 }
 
 function startRenderLoop(widget) {
@@ -148,6 +146,7 @@ function configureCameraFrustum(widget) {
  * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
  * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {Number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+ * @param {Number} [options.msaaSamples=1] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.
  *
  * @exception {DeveloperError} Element with id "container" does not exist in the document.
  *
@@ -274,6 +273,8 @@ function CesiumWidget(container, options) {
       mapMode2D: options.mapMode2D,
       requestRenderMode: options.requestRenderMode,
       maximumRenderTimeChange: options.maximumRenderTimeChange,
+      depthPlaneEllipsoidOffset: options.depthPlaneEllipsoidOffset,
+      msaaSamples: options.msaaSamples,
     });
     this._scene = scene;
 
@@ -653,8 +654,10 @@ CesiumWidget.prototype.showErrorPanel = function (title, message, error) {
   errorPanelScroller.className = "cesium-widget-errorPanel-scroll";
   content.appendChild(errorPanelScroller);
   function resizeCallback() {
-    errorPanelScroller.style.maxHeight =
-      Math.max(Math.round(element.clientHeight * 0.9 - 100), 30) + "px";
+    errorPanelScroller.style.maxHeight = `${Math.max(
+      Math.round(element.clientHeight * 0.9 - 100),
+      30
+    )}px`;
   }
   resizeCallback();
   if (defined(window.addEventListener)) {
@@ -685,7 +688,7 @@ CesiumWidget.prototype.showErrorPanel = function (title, message, error) {
 
       //IE8 does not have a console object unless the dev tools are open.
       if (typeof console !== "undefined") {
-        console.error(title + "\n" + message + "\n" + errorDetails);
+        console.error(`${title}\n${message}\n${errorDetails}`);
       }
 
       const errorMessageDetails = document.createElement("div");
@@ -709,7 +712,7 @@ CesiumWidget.prototype.showErrorPanel = function (title, message, error) {
       errorPanelScroller.appendChild(errorMessageDetails);
     }
 
-    errorMessage.innerHTML = "<p>" + message + "</p>";
+    errorMessage.innerHTML = `<p>${message}</p>`;
   }
 
   const buttonPanel = document.createElement("div");

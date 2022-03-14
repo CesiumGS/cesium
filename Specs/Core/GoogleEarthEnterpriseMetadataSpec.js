@@ -181,10 +181,10 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
     ) {
       expect(responseType).toEqual("arraybuffer");
       if (req === 0) {
-        expect(url).toEqual(baseurl + "dbRoot.v5?output=proto");
+        expect(url).toEqual(`${baseurl}dbRoot.v5?output=proto`);
         deferred.reject(); // Reject dbRoot request and use defaults
       } else {
-        expect(url).toEqual(baseurl + "flatfile?q2-0-q.1");
+        expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
         Resource._DefaultImplementations.loadWithXhr(
           "Data/GoogleEarthEnterprise/gee.metadata",
           responseType,
@@ -240,10 +240,10 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
     ) {
       expect(responseType).toEqual("arraybuffer");
       if (req === 0) {
-        expect(url).toEqual(baseurl + "dbRoot.v5?output=proto");
+        expect(url).toEqual(`${baseurl}dbRoot.v5?output=proto`);
         deferred.reject(); // Reject dbRoot request and use defaults
       } else {
-        expect(url).toEqual(baseurl + "flatfile?q2-0-q.1");
+        expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
         Resource._DefaultImplementations.loadWithXhr(
           "Data/GoogleEarthEnterprise/gee.metadata",
           responseType,

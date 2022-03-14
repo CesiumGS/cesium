@@ -102,6 +102,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Boolean} [options.vectorKeepDecodedPositions=false] Whether vector tiles should keep decoded positions in memory. This is used with {@link Cesium3DTileFeature.getPolylinePositions}.
  * @param {Number} [options.featureIdIndex=0] The index into the list of primitive feature IDs used for picking and styling. For EXT_feature_metadata, feature ID attributes are listed before feature ID textures. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Number} [options.instanceFeatureIdIndex=0] The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
@@ -177,6 +178,8 @@ function Cesium3DTileset(options) {
   this._previousModelMatrix = undefined;
   this._extras = undefined;
   this._credits = undefined;
+
+  this._showCreditsOnScreen = defaultValue(options.showCreditsOnScreen, false);
 
   this._cullWithChildrenBounds = defaultValue(
     options.cullWithChildrenBounds,
@@ -1043,7 +1046,7 @@ function Cesium3DTileset(options) {
         }
         for (let i = 0; i < extraCredits.length; ++i) {
           const credit = extraCredits[i];
-          credits.push(new Credit(credit.html, credit.showOnScreen));
+          credits.push(new Credit(credit.html, that._showCreditsOnScreen));
         }
       }
 
@@ -1834,6 +1837,23 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       return this._vectorKeepDecodedPositions;
     },
   },
+
+  /**
+   * Determines whether the credits of the tileset will be displayed on the screen
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {Boolean}
+   * @default false
+   */
+  showCreditsOnScreen: {
+    get: function () {
+      return this._showCreditsOnScreen;
+    },
+    set: function (value) {
+      this._showCreditsOnScreen = value;
+    },
+  },
 });
 
 /**
@@ -1882,7 +1902,7 @@ Cesium3DTileset.prototype.loadTileset = function (
   const tilesetVersion = asset.tilesetVersion;
   if (defined(tilesetVersion)) {
     // Append the tileset version to the resource
-    this._basePath += "?v=" + tilesetVersion;
+    this._basePath += `?v=${tilesetVersion}`;
     resource = resource.clone();
     resource.setQueryParameters({ v: tilesetVersion });
   }
@@ -2283,8 +2303,8 @@ function handleTileFailure(tileset, tile) {
         message: message,
       });
     } else {
-      console.log("A 3D tile failed to load: " + url);
-      console.log("Error: " + message);
+      console.log(`A 3D tile failed to load: ${url}`);
+      console.log(`Error: ${message}`);
     }
   };
 }
@@ -2379,38 +2399,38 @@ function addTileDebugLabel(tile, tileset, position) {
   let attributes = 0;
 
   if (tileset.debugShowGeometricError) {
-    labelString += "\nGeometric error: " + tile.geometricError;
+    labelString += `\nGeometric error: ${tile.geometricError}`;
     attributes++;
   }
 
   if (tileset.debugShowRenderingStatistics) {
-    labelString += "\nCommands: " + tile.commandsLength;
+    labelString += `\nCommands: ${tile.commandsLength}`;
     attributes++;
 
     // Don't display number of points or triangles if 0.
     const numberOfPoints = tile.content.pointsLength;
     if (numberOfPoints > 0) {
-      labelString += "\nPoints: " + tile.content.pointsLength;
+      labelString += `\nPoints: ${tile.content.pointsLength}`;
       attributes++;
     }
 
     const numberOfTriangles = tile.content.trianglesLength;
     if (numberOfTriangles > 0) {
-      labelString += "\nTriangles: " + tile.content.trianglesLength;
+      labelString += `\nTriangles: ${tile.content.trianglesLength}`;
       attributes++;
     }
 
-    labelString += "\nFeatures: " + tile.content.featuresLength;
+    labelString += `\nFeatures: ${tile.content.featuresLength}`;
     attributes++;
   }
 
   if (tileset.debugShowMemoryUsage) {
-    labelString +=
-      "\nTexture Memory: " +
-      formatMemoryString(tile.content.texturesByteLength);
-    labelString +=
-      "\nGeometry Memory: " +
-      formatMemoryString(tile.content.geometryByteLength);
+    labelString += `\nTexture Memory: ${formatMemoryString(
+      tile.content.texturesByteLength
+    )}`;
+    labelString += `\nGeometry Memory: ${formatMemoryString(
+      tile.content.geometryByteLength
+    )}`;
     attributes += 2;
   }
 
@@ -2419,11 +2439,11 @@ function addTileDebugLabel(tile, tileset, position) {
       labelString += "\nUrls:";
       const urls = tile.content.innerContentUrls;
       for (let i = 0; i < urls.length; i++) {
-        labelString += "\n- " + urls[i];
+        labelString += `\n- ${urls[i]}`;
       }
       attributes += urls.length;
     } else {
-      labelString += "\nUrl: " + tile._header.content.uri;
+      labelString += `\nUrl: ${tile._header.content.uri}`;
       attributes++;
     }
   }
@@ -2431,7 +2451,7 @@ function addTileDebugLabel(tile, tileset, position) {
   const newLabel = {
     text: labelString.substring(1),
     position: position,
-    font: 19 - attributes + "px sans-serif",
+    font: `${19 - attributes}px sans-serif`,
     showBackground: true,
     disableDepthTestDistance: Number.POSITIVE_INFINITY,
   };
@@ -2777,7 +2797,9 @@ function update(tileset, frameState, passStatistics, passOptions) {
     if (defined(credits) && statistics.selected !== 0) {
       const length = credits.length;
       for (let i = 0; i < length; ++i) {
-        frameState.creditDisplay.addCredit(credits[i]);
+        const credit = credits[i];
+        credit.showOnScreen = tileset._showCreditsOnScreen;
+        frameState.creditDisplay.addCredit(credit);
       }
     }
   }
@@ -2956,7 +2978,7 @@ Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
   for (let i = 0; i < extensionsRequired.length; i++) {
     if (!Cesium3DTileset.supportedExtensions[extensionsRequired[i]]) {
       throw new RuntimeError(
-        "Unsupported 3D Tiles Extension: " + extensionsRequired[i]
+        `Unsupported 3D Tiles Extension: ${extensionsRequired[i]}`
       );
     }
   }

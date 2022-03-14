@@ -102,9 +102,7 @@ function CubeMap(options) {
 
   if (size > ContextLimits.maximumCubeMapSize) {
     throw new DeveloperError(
-      "Width and height must be less than or equal to the maximum cube map size (" +
-        ContextLimits.maximumCubeMapSize +
-        ").  Check maximumCubeMapSize."
+      `Width and height must be less than or equal to the maximum cube map size (${ContextLimits.maximumCubeMapSize}).  Check maximumCubeMapSize.`
     );
   }
 

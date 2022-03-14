@@ -204,9 +204,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
   this._channel = options.channel;
   this._requestType = "ImageryMaps";
   this._credit = new Credit(
-    '<a href="http://www.google.com/enterprise/mapsearth/products/earthenterprise.html"><img src="' +
-      GoogleEarthEnterpriseMapsProvider.logoUrl +
-      '" title="Google Imagery"/></a>'
+    `<a href="http://www.google.com/enterprise/mapsearth/products/earthenterprise.html"><img src="${GoogleEarthEnterpriseMapsProvider.logoUrl}" title="Google Imagery"/></a>`
   );
 
   this._tilingScheme = undefined;
@@ -258,8 +256,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
     let message;
 
     if (!defined(layer)) {
-      message =
-        "Could not find layer with channel (id) of " + that._channel + ".";
+      message = `Could not find layer with channel (id) of ${that._channel}.`;
       metadataError = TileProviderError.handleError(
         metadataError,
         that,
@@ -274,8 +271,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
     }
 
     if (!defined(layer.version)) {
-      message =
-        "Could not find a version in channel (id) " + that._channel + ".";
+      message = `Could not find a version in channel (id) ${that._channel}.`;
       metadataError = TileProviderError.handleError(
         metadataError,
         that,
@@ -305,7 +301,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
         ellipsoid: options.ellipsoid,
       });
     } else {
-      message = "Unsupported projection " + data.projection + ".";
+      message = `Unsupported projection ${data.projection}.`;
       metadataError = TileProviderError.handleError(
         metadataError,
         that,
@@ -325,8 +321,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
   }
 
   function metadataFailure(e) {
-    const message =
-      "An error occurred while accessing " + metadataResource.url + ".";
+    const message = `An error occurred while accessing ${metadataResource.url}.`;
     metadataError = TileProviderError.handleError(
       metadataError,
       that,

@@ -10,6 +10,7 @@ import DeveloperError from "./DeveloperError.js";
 import getAbsoluteUri from "./getAbsoluteUri.js";
 import getBaseUri from "./getBaseUri.js";
 import getExtensionFromUri from "./getExtensionFromUri.js";
+import getImagePixels from "./getImagePixels.js";
 import isBlobUri from "./isBlobUri.js";
 import isCrossOriginUrl from "./isCrossOriginUrl.js";
 import isDataUri from "./isDataUri.js";
@@ -361,6 +362,13 @@ Resource.supportsImageBitmapOptions = function () {
   // Until the HTML folks figure out what to do about this, we need to actually try loading an image to
   // know if this browser supports passing options to the createImageBitmap function.
   // https://github.com/whatwg/html/pull/4248
+  //
+  // We also need to check whether the colorSpaceConversion option is supported.
+  // We do this by loading a PNG with an embedded color profile, first with
+  // colorSpaceConversion: "none" and then with colorSpaceConversion: "default".
+  // If the pixel color is different then we know the option is working.
+  // As of Webkit 17612.3.6.1.6 the createImageBitmap promise resolves but the
+  // option is not actually supported.
   if (defined(supportsImageBitmapOptionsPromise)) {
     return supportsImageBitmapOptionsPromise;
   }
@@ -371,20 +379,27 @@ Resource.supportsImageBitmapOptions = function () {
   }
 
   const imageDataUri =
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWP4////fwAJ+wP9CNHoHgAAAABJRU5ErkJggg==";
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAABGdBTUEAAE4g3rEiDgAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAADElEQVQI12Ng6GAAAAEUAIngE3ZiAAAAAElFTkSuQmCC";
 
   supportsImageBitmapOptionsPromise = Resource.fetchBlob({
     url: imageDataUri,
   })
     .then(function (blob) {
-      return createImageBitmap(blob, {
-        imageOrientation: "flipY",
-        premultiplyAlpha: "none",
-        colorSpaceConversion: "none",
-      });
+      const imageBitmapOptions = {
+        imageOrientation: "flipY", // default is "none"
+        premultiplyAlpha: "none", // default is "default"
+        colorSpaceConversion: "none", // default is "default"
+      };
+      return when.all([
+        createImageBitmap(blob, imageBitmapOptions),
+        createImageBitmap(blob),
+      ]);
     })
-    .then(function (imageBitmap) {
-      return true;
+    .then(function (imageBitmaps) {
+      // Check whether the colorSpaceConversion option had any effect on the green channel
+      const colorWithOptions = getImagePixels(imageBitmaps[0]);
+      const colorWithDefaults = getImagePixels(imageBitmaps[1]);
+      return colorWithOptions[1] !== colorWithDefaults[1];
     })
     .otherwise(function () {
       return false;
@@ -1265,8 +1280,9 @@ Resource.prototype.fetchJsonp = function (callbackParameterName) {
   //generate a unique function name
   let functionName;
   do {
-    functionName =
-      "loadJsonp" + CesiumMath.nextRandomNumber().toString().substring(2, 8);
+    functionName = `loadJsonp${CesiumMath.nextRandomNumber()
+      .toString()
+      .substring(2, 8)}`;
   } while (defined(window[functionName]));
 
   return fetchJsonp(this, callbackParameterName, functionName);
@@ -1459,7 +1475,7 @@ function decodeDataUri(dataUriRegexResult, responseType) {
       return JSON.parse(decodeDataUriText(isBase64, data));
     default:
       //>>includeStart('debug', pragmas.debug);
-      throw new DeveloperError("Unhandled responseType: " + responseType);
+      throw new DeveloperError(`Unhandled responseType: ${responseType}`);
     //>>includeEnd('debug');
   }
 }
@@ -1951,9 +1967,7 @@ Resource._Implementations.createImage = function (
           if (!defined(blob)) {
             deferred.reject(
               new RuntimeError(
-                "Successfully retrieved " +
-                  url +
-                  " but it contained no content."
+                `Successfully retrieved ${url} but it contained no content.`
               )
             );
             return;

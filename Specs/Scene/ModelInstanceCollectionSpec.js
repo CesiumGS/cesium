@@ -216,9 +216,10 @@ describe(
         expect(collection._cull).toEqual(true);
         expect(collection._model).toBeDefined();
         expect(collection._model.ready).toEqual(true);
+        expect(collection.showCreditsOnScreen).toEqual(false);
 
         if (collection._instancingSupported) {
-          expect(collection._model.cacheKey).toEqual(boxUrl + "#instanced");
+          expect(collection._model.cacheKey).toEqual(`${boxUrl}#instanced`);
         }
       });
     });

@@ -62,9 +62,7 @@ function createOsmBuildings(options) {
       Color.WHITE
     ).toCssColorString();
     style = new Cesium3DTileStyle({
-      color:
-        "Boolean(${feature['cesium#color']}) ? color(${feature['cesium#color']}) : " +
-        color,
+      color: `Boolean(\${feature['cesium#color']}) ? color(\${feature['cesium#color']}) : ${color}`,
     });
   }
 

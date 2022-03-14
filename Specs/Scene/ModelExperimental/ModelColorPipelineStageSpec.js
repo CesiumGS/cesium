@@ -86,4 +86,31 @@ describe("Scene/ModelExperimental/ModelColorPipelineStage", function () {
       )
     );
   });
+
+  it("configures the render state for transparent color", function () {
+    const mockModel = {
+      color: Color.RED.withAlpha(0.0),
+      colorBlendMode: ColorBlendMode.MIX,
+      colorBlendAmount: 0.25,
+    };
+    const defaultAlphaOptions = new ModelAlphaOptions();
+    defaultAlphaOptions.pass = Pass.OPAQUE;
+    const renderResources = {
+      shaderBuilder: new ShaderBuilder(),
+      uniformMap: {},
+      model: mockModel,
+      alphaOptions: defaultAlphaOptions,
+      renderStateOptions: {},
+    };
+    ModelColorPipelineStage.process(renderResources, mockModel);
+
+    const renderStateOptions = renderResources.renderStateOptions;
+    expect(renderStateOptions.colorMask).toEqual({
+      red: false,
+      green: false,
+      blue: false,
+      alpha: false,
+    });
+    expect(renderStateOptions.depthMask).toEqual(false);
+  });
 });

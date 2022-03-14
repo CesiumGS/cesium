@@ -320,6 +320,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       specularEnvironmentMaps: tileset.specularEnvironmentMaps,
       backFaceCulling: tileset.backFaceCulling,
       showOutline: tileset.showOutline,
+      showCreditsOnScreen: tileset.showCreditsOnScreen,
     });
     content._model.readyPromise.then(function (model) {
       model.activeAnimations.addAll({
@@ -370,9 +371,9 @@ Batched3DModel3DTileContent.prototype.getFeature = function (batchId) {
   const featuresLength = this.featuresLength;
   if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
     throw new DeveloperError(
-      "batchId is required and between zero and featuresLength - 1 (" +
-        (featuresLength - 1) +
-        ")."
+      `batchId is required and between zero and featuresLength - 1 (${
+        featuresLength - 1
+      }).`
     );
   }
   //>>includeEnd('debug');
@@ -433,6 +434,7 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
   model.specularEnvironmentMaps = tileset.specularEnvironmentMaps;
   model.backFaceCulling = tileset.backFaceCulling;
   model.debugWireframe = tileset.debugWireframe;
+  model.showCreditsOnScreen = tileset.showCreditsOnScreen;
 
   // Update clipping planes
   const tilesetClippingPlanes = tileset.clippingPlanes;

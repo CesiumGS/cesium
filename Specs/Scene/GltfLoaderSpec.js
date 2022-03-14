@@ -40,6 +40,8 @@ import waitForLoaderProcess from "../waitForLoaderProcess.js";
 describe(
   "Scene/GltfLoader",
   function () {
+    const boxWithCredits =
+      "./Data/Models/GltfLoader/BoxWithCopyright/glTF/Box.gltf";
     const boxInterleaved =
       "./Data/Models/GltfLoader/BoxInterleaved/glTF/BoxInterleaved.gltf";
     const boxTextured =
@@ -2589,6 +2591,26 @@ describe(
         expect(translationAttribute.buffer).toBeUndefined();
         expect(translationAttribute.byteOffset).toBe(0);
         expect(translationAttribute.byteStride).toBeUndefined();
+      });
+    });
+
+    it("parses copyright field", function () {
+      return loadGltf(boxWithCredits).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const asset = components.asset;
+        expect(asset).toBeDefined();
+
+        const expectedCredits = [
+          "First Source",
+          "Second Source",
+          "Third Source",
+        ];
+        const credits = asset.credits;
+        const length = credits.length;
+        expect(length).toBe(expectedCredits.length);
+        for (let i = 0; i < length; i++) {
+          expect(credits[i].html).toEqual(expectedCredits[i]);
+        }
       });
     });
   },

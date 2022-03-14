@@ -50,8 +50,7 @@ function ShadowVolumeAppearance(extentsCulling, planarExtents, appearance) {
     colorShaderDependencies.requiresNormalEC = !appearance.flat;
   } else {
     // Scan material source for what hookups are needed. Assume czm_materialInput materialInput.
-    const materialShaderSource =
-      appearance.material.shaderSource + "\n" + appearance.fragmentShaderSource;
+    const materialShaderSource = `${appearance.material.shaderSource}\n${appearance.fragmentShaderSource}`;
 
     colorShaderDependencies.normalEC =
       materialShaderSource.indexOf("materialInput.normalEC") !== -1 ||
@@ -270,11 +269,12 @@ function createShadowVolumeAppearanceVS(
       eastMostCartesian.x,
       longitudeExtentsEncodeScratch
     );
-    projectionExtentDefines.eastMostYhighDefine =
-      "EAST_MOST_X_HIGH " +
-      encoded.high.toFixed((encoded.high + "").length + 1);
-    projectionExtentDefines.eastMostYlowDefine =
-      "EAST_MOST_X_LOW " + encoded.low.toFixed((encoded.low + "").length + 1);
+    projectionExtentDefines.eastMostYhighDefine = `EAST_MOST_X_HIGH ${encoded.high.toFixed(
+      `${encoded.high}`.length + 1
+    )}`;
+    projectionExtentDefines.eastMostYlowDefine = `EAST_MOST_X_LOW ${encoded.low.toFixed(
+      `${encoded.low}`.length + 1
+    )}`;
 
     const westMostCartographic = longitudeExtentsCartographicScratch;
     westMostCartographic.longitude = -CesiumMath.PI;
@@ -288,11 +288,12 @@ function createShadowVolumeAppearanceVS(
       westMostCartesian.x,
       longitudeExtentsEncodeScratch
     );
-    projectionExtentDefines.westMostYhighDefine =
-      "WEST_MOST_X_HIGH " +
-      encoded.high.toFixed((encoded.high + "").length + 1);
-    projectionExtentDefines.westMostYlowDefine =
-      "WEST_MOST_X_LOW " + encoded.low.toFixed((encoded.low + "").length + 1);
+    projectionExtentDefines.westMostYhighDefine = `WEST_MOST_X_HIGH ${encoded.high.toFixed(
+      `${encoded.high}`.length + 1
+    )}`;
+    projectionExtentDefines.westMostYlowDefine = `WEST_MOST_X_LOW ${encoded.low.toFixed(
+      `${encoded.low}`.length + 1
+    )}`;
   }
 
   if (columbusView2D) {

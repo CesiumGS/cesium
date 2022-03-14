@@ -50,14 +50,14 @@ function errorToString(gl, error) {
       message += "CONTEXT_LOST_WEBGL lost";
       break;
     default:
-      message += "Unknown (" + error + ")";
+      message += `Unknown (${error})`;
   }
 
   return message;
 }
 
 function createErrorMessage(gl, glFunc, glFuncArguments, error) {
-  let message = errorToString(gl, error) + ": " + glFunc.name + "(";
+  let message = `${errorToString(gl, error)}: ${glFunc.name}(`;
 
   for (let i = 0; i < glFuncArguments.length; ++i) {
     if (i !== 0) {
@@ -83,12 +83,12 @@ function makeGetterSetter(gl, propertyName, logFunction) {
   return {
     get: function () {
       const value = gl[propertyName];
-      logFunction(gl, "get: " + propertyName, value);
+      logFunction(gl, `get: ${propertyName}`, value);
       return gl[propertyName];
     },
     set: function (value) {
       gl[propertyName] = value;
-      logFunction(gl, "set: " + propertyName, value);
+      logFunction(gl, `set: ${propertyName}`, value);
     },
   };
 }
@@ -255,6 +255,10 @@ function Context(canvas, options) {
   ContextLimits._maximumVertexUniformVectors = gl.getParameter(
     gl.MAX_VERTEX_UNIFORM_VECTORS
   ); // min: 128
+
+  ContextLimits._maximumSamples = this._webgl2
+    ? gl.getParameter(gl.MAX_SAMPLES)
+    : 0;
 
   const aliasedLineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE); // must include 1
   ContextLimits._minimumAliasedLineWidth = aliasedLineWidthRange[0];
@@ -595,6 +599,18 @@ Object.defineProperties(Context.prototype, {
   antialias: {
     get: function () {
       return this._antialias;
+    },
+  },
+
+  /**
+   * <code>true</code> if the WebGL context supports multisample antialiasing. Requires
+   * WebGL2.
+   * @memberof Context.prototype
+   * @type {Boolean}
+   */
+  msaa: {
+    get: function () {
+      return this._webgl2;
     },
   },
 

@@ -70,6 +70,9 @@ import TextureManager from "./TextureManager.js";
  * <p>
  * To enable the use of {@link ModelExperimental} in {@link Cesium3DTileset}, set {@link ExperimentalFeatures.enableModelExperimental} to <code>true</code> or tileset.enableModelExperimental to <code>true</code>.
  * </p>
+ * <p>
+ * See the {@link https://github.com/CesiumGS/cesium/tree/main/Documentation/CustomShaderGuide|Custom Shader Guide} for more detailed documentation.
+ * </p>
  *
  * @param {Object} options An object with the following options
  * @param {CustomShaderMode} [options.mode=CustomShaderMode.MODIFY_MATERIAL] The custom shader mode, which determines how the custom shader code is inserted into the fragment shader.
@@ -319,15 +322,15 @@ function expandCoordinateAbbreviations(variableName) {
   const eyeCoordinatesRegex = /^.*EC$/;
 
   if (modelCoordinatesRegex.test(variableName)) {
-    return variableName + " (model coordinates)";
+    return `${variableName} (model coordinates)`;
   }
 
   if (worldCoordinatesRegex.test(variableName)) {
-    return variableName + " (Cartesian world coordinates)";
+    return `${variableName} (Cartesian world coordinates)`;
   }
 
   if (eyeCoordinatesRegex.test(variableName)) {
-    return variableName + " (eye coordinates)";
+    return `${variableName} (eye coordinates)`;
   }
 
   return variableName;
@@ -340,13 +343,11 @@ function validateVariableUsage(
   vertexOrFragment
 ) {
   if (variableSet.hasOwnProperty(incorrectVariable)) {
-    const message =
-      expandCoordinateAbbreviations(incorrectVariable) +
-      " is not available in the " +
-      vertexOrFragment +
-      " shader. Did you mean " +
-      expandCoordinateAbbreviations(correctVariable) +
-      " instead?";
+    const message = `${expandCoordinateAbbreviations(
+      incorrectVariable
+    )} is not available in the ${vertexOrFragment} shader. Did you mean ${expandCoordinateAbbreviations(
+      correctVariable
+    )} instead?`;
     throw new DeveloperError(message);
   }
 }
@@ -395,9 +396,7 @@ CustomShader.prototype.setUniform = function (uniformName, value) {
   Check.defined("value", value);
   if (!defined(this.uniforms[uniformName])) {
     throw new DeveloperError(
-      "Uniform " +
-        uniformName +
-        " must be declared in the CustomShader constructor."
+      `Uniform ${uniformName} must be declared in the CustomShader constructor.`
     );
   }
   //>>includeEnd('debug');

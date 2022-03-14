@@ -133,10 +133,12 @@ describe("Core/ScreenSpaceEventHandler", function () {
   }
 
   function createMouseSpec(specFunction, eventType, button, modifier) {
-    let specName = keyForValue(ScreenSpaceEventType, eventType) + " action";
+    let specName = `${keyForValue(ScreenSpaceEventType, eventType)} action`;
     if (defined(modifier)) {
-      specName +=
-        " with " + keyForValue(KeyboardEventModifier, modifier) + " modifier";
+      specName += ` with ${keyForValue(
+        KeyboardEventModifier,
+        modifier
+      )} modifier`;
     }
     it(specName, function () {
       const eventOptions = {

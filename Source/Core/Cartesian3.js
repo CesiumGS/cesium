@@ -189,9 +189,11 @@ Cartesian3.packArray = function (array, result) {
   if (!defined(result)) {
     result = new Array(resultLength);
   } else if (!Array.isArray(result) && result.length !== resultLength) {
+    //>>includeStart('debug', pragmas.debug);
     throw new DeveloperError(
       "If result is a typed array, it must have exactly array.length * 3 elements"
     );
+    //>>includeEnd('debug');
   } else if (result.length !== resultLength) {
     result.length = resultLength;
   }
@@ -1183,6 +1185,6 @@ Cartesian3.prototype.equalsEpsilon = function (
  * @returns {String} A string representing this Cartesian in the format '(x, y, z)'.
  */
 Cartesian3.prototype.toString = function () {
-  return "(" + this.x + ", " + this.y + ", " + this.z + ")";
+  return `(${this.x}, ${this.y}, ${this.z})`;
 };
 export default Cartesian3;

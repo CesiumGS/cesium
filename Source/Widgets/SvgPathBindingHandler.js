@@ -54,12 +54,12 @@ const SvgPathBindingHandler = {
 
             svg.setAttribute("width", pathWidth);
             svg.setAttribute("height", pathHeight);
-            svg.setAttribute("viewBox", "0 0 " + pathWidth + " " + pathHeight);
+            svg.setAttribute("viewBox", `0 0 ${pathWidth} ${pathHeight}`);
 
             if (value.css) {
               svg.setAttribute(
                 "class",
-                svgClassName + " " + knockout.unwrap(value.css)
+                `${svgClassName} ${knockout.unwrap(value.css)}`
               );
             }
           },

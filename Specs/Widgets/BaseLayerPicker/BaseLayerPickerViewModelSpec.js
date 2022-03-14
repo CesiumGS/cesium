@@ -190,7 +190,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
 
     viewModel.selectedImagery = testProviderViewModel;
     expect(viewModel.buttonTooltip).toEqual(
-      testProviderViewModel.name + "\n" + testProviderViewModel3.name
+      `${testProviderViewModel.name}\n${testProviderViewModel3.name}`
     );
 
     viewModel.selectedImagery = undefined;

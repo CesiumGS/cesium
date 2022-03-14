@@ -353,7 +353,7 @@ Cesium3DTilesInspector.prototype.destroy = function () {
 function makeRangeInput(property, min, max, step, text, displayProperty) {
   displayProperty = defaultValue(displayProperty, property);
   const input = document.createElement("input");
-  input.setAttribute("data-bind", "value: " + displayProperty);
+  input.setAttribute("data-bind", `value: ${displayProperty}`);
   input.type = "number";
 
   const slider = document.createElement("input");
@@ -361,7 +361,7 @@ function makeRangeInput(property, min, max, step, text, displayProperty) {
   slider.min = min;
   slider.max = max;
   slider.step = step;
-  slider.setAttribute("data-bind", 'valueUpdate: "input", value: ' + property);
+  slider.setAttribute("data-bind", `valueUpdate: "input", value: ${property}`);
 
   const wrapper = document.createElement("div");
   wrapper.appendChild(slider);
@@ -380,10 +380,9 @@ function makeButton(action, text, active) {
   button.type = "button";
   button.textContent = text;
   button.className = "cesium-cesiumInspector-pickButton";
-  let binding = "click: " + action;
+  let binding = `click: ${action}`;
   if (defined(active)) {
-    binding +=
-      ', css: {"cesium-cesiumInspector-pickButtonHighlight" : ' + active + "}";
+    binding += `, css: {"cesium-cesiumInspector-pickButtonHighlight" : ${active}}`;
   }
   button.setAttribute("data-bind", binding);
 

@@ -259,7 +259,7 @@ Object.defineProperties(TimeDynamicPointCloud.prototype, {
 });
 
 function getFragmentShaderLoaded(fs) {
-  return "uniform vec4 czm_pickColor;\n" + fs;
+  return `uniform vec4 czm_pickColor;\n${fs}`;
 }
 
 function getUniformMapLoaded(stream) {
@@ -370,8 +370,8 @@ function handleFrameFailure(that, uri) {
         message: message,
       });
     } else {
-      console.log("A frame failed to load: " + uri);
-      console.log("Error: " + message);
+      console.log(`A frame failed to load: ${uri}`);
+      console.log(`Error: ${message}`);
     }
   };
 }

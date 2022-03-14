@@ -112,7 +112,7 @@
         // Change lineNumber to the local one for highlighting.
         /*eslint-disable no-empty*/
         try {
-          let pos = errorMsg.indexOf(Sandcastle.bucket + ":");
+          let pos = errorMsg.indexOf(`${Sandcastle.bucket}:`);
           if (pos < 0) {
             pos = errorMsg.indexOf("<anonymous>");
           }
@@ -154,7 +154,7 @@
       } catch (ex) {
         stack = ex.stack.toString();
       }
-      let needle = Sandcastle.bucket + ":"; // Firefox
+      let needle = `${Sandcastle.bucket}:`; // Firefox
       let pos = stack.indexOf(needle);
       if (pos < 0) {
         needle = " (<anonymous>:"; // Chrome

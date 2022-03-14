@@ -6,6 +6,8 @@ function customizeJasmine(
   env,
   includedCategory,
   excludedCategory,
+  includedName,
+  excludedName,
   webglValidation,
   webglStub,
   release
@@ -23,6 +25,12 @@ function customizeJasmine(
     if (includedCategory && categories !== includedCategory) {
       return;
     } else if (excludedCategory && categories === excludedCategory) {
+      return;
+    }
+
+    if (includedName && !name.includes(includedName)) {
+      return;
+    } else if (excludedName && name.includes(excludedName)) {
       return;
     }
 
@@ -44,7 +52,7 @@ function customizeJasmine(
             done();
           },
           function (e) {
-            done.fail("promise rejected: " + e.toString());
+            done.fail(`promise rejected: ${e.toString()}`);
           }
         );
       },
@@ -64,7 +72,7 @@ function customizeJasmine(
           done();
         },
         function (e) {
-          done.fail("promise rejected: " + e.toString());
+          done.fail(`promise rejected: ${e.toString()}`);
         }
       );
     });
@@ -81,7 +89,7 @@ function customizeJasmine(
           done();
         },
         function (e) {
-          done.fail("promise rejected: " + e.toString());
+          done.fail(`promise rejected: ${e.toString()}`);
         }
       );
     });
@@ -98,7 +106,7 @@ function customizeJasmine(
           done();
         },
         function (e) {
-          done.fail("promise rejected: " + e.toString());
+          done.fail(`promise rejected: ${e.toString()}`);
         }
       );
     });
@@ -115,7 +123,7 @@ function customizeJasmine(
           done();
         },
         function (e) {
-          done.fail("promise rejected: " + e.toString());
+          done.fail(`promise rejected: ${e.toString()}`);
         }
       );
     });

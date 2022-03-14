@@ -242,7 +242,7 @@ function decodePointCloud(parameters) {
   );
   if (!decodingStatus.ok() || dracoPointCloud.ptr === 0) {
     throw new RuntimeError(
-      "Error decoding draco point cloud: " + decodingStatus.error_msg()
+      `Error decoding draco point cloud: ${decodingStatus.error_msg()}`
     );
   }
 
@@ -288,17 +288,7 @@ function decodePrimitive(parameters) {
   const dracoDecoder = new draco.Decoder();
 
   // Skip all parameter types except generic
-  // Note: As a temporary work-around until GetAttributeByUniqueId() works after
-  // calling SkipAttributeTransform(), we will not skip attributes with multiple
-  // sets of data in the glTF.
-  const attributesToSkip = ["POSITION", "NORMAL"];
-  const compressedAttributes = parameters.compressedAttributes;
-  if (!defined(compressedAttributes["COLOR_1"])) {
-    attributesToSkip.push("COLOR");
-  }
-  if (!defined(compressedAttributes["TEXCOORD_1"])) {
-    attributesToSkip.push("TEX_COORD");
-  }
+  const attributesToSkip = ["POSITION", "NORMAL", "COLOR", "TEX_COORD"];
   if (parameters.dequantizeInShader) {
     for (let i = 0; i < attributesToSkip.length; ++i) {
       dracoDecoder.SkipAttributeTransform(draco[attributesToSkip[i]]);
@@ -318,44 +308,22 @@ function decodePrimitive(parameters) {
   const decodingStatus = dracoDecoder.DecodeBufferToMesh(buffer, dracoGeometry);
   if (!decodingStatus.ok() || dracoGeometry.ptr === 0) {
     throw new RuntimeError(
-      "Error decoding draco mesh geometry: " + decodingStatus.error_msg()
+      `Error decoding draco mesh geometry: ${decodingStatus.error_msg()}`
     );
   }
 
   draco.destroy(buffer);
 
   const attributeData = {};
+
+  const compressedAttributes = parameters.compressedAttributes;
   for (const attributeName in compressedAttributes) {
     if (compressedAttributes.hasOwnProperty(attributeName)) {
-      // Since GetAttributeByUniqueId() only works on attributes that we have not called
-      // SkipAttributeTransform() on, we must first store a `dracoAttributeName` in case
-      // we call GetAttributeId() instead.
-      let dracoAttributeName = attributeName;
-      if (attributeName === "TEXCOORD_0") {
-        dracoAttributeName = "TEX_COORD";
-      }
-      if (attributeName === "COLOR_0") {
-        dracoAttributeName = "COLOR";
-      }
-
-      let dracoAttribute;
-      if (attributesToSkip.includes(dracoAttributeName)) {
-        const dracoAttributeId = dracoDecoder.GetAttributeId(
-          dracoGeometry,
-          draco[dracoAttributeName]
-        );
-        dracoAttribute = dracoDecoder.GetAttribute(
-          dracoGeometry,
-          dracoAttributeId
-        );
-      } else {
-        const compressedAttribute = compressedAttributes[attributeName];
-        dracoAttribute = dracoDecoder.GetAttributeByUniqueId(
-          dracoGeometry,
-          compressedAttribute
-        );
-      }
-
+      const compressedAttribute = compressedAttributes[attributeName];
+      const dracoAttribute = dracoDecoder.GetAttributeByUniqueId(
+        dracoGeometry,
+        compressedAttribute
+      );
       attributeData[attributeName] = decodeAttribute(
         dracoGeometry,
         dracoDecoder,

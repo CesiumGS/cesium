@@ -1179,7 +1179,7 @@ Billboard.prototype._loadImage = function () {
       makeDirty(that, IMAGE_INDEX_INDEX);
     })
     .otherwise(function (error) {
-      console.error("Error loading image for billboard: " + error);
+      console.error(`Error loading image for billboard: ${error}`);
       that._imageIndexPromise = undefined;
     });
 };
