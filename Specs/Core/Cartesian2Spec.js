@@ -144,21 +144,6 @@ describe("Core/Cartesian2", function () {
 
     first.x = 1.0;
     second.x = 2.0;
-    expect(Cartesian2.minimumByComponent(first, second, first)).toEqual(
-      expected
-    );
-  });
-
-  it("minimumByComponent with a result parameter that is an input parameter", function () {
-    const first = new Cartesian2(2.0, 0.0);
-    const second = new Cartesian2(1.0, 0.0);
-    const expected = new Cartesian2(1.0, 0.0);
-    expect(Cartesian2.minimumByComponent(first, second, second)).toEqual(
-      expected
-    );
-
-    first.x = 1.0;
-    second.x = 2.0;
     expect(Cartesian2.minimumByComponent(first, second, second)).toEqual(
       expected
     );
@@ -271,21 +256,6 @@ describe("Core/Cartesian2", function () {
     const second = new Cartesian2(1.0, 0.0);
     const expected = new Cartesian2(2.0, 0.0);
     expect(Cartesian2.maximumByComponent(first, second, first)).toEqual(
-      expected
-    );
-
-    first.x = 1.0;
-    second.x = 2.0;
-    expect(Cartesian2.maximumByComponent(first, second, first)).toEqual(
-      expected
-    );
-  });
-
-  it("maximumByComponent with a result parameter that is an input parameter", function () {
-    const first = new Cartesian2(2.0, 0.0);
-    const second = new Cartesian2(1.0, 0.0);
-    const expected = new Cartesian2(2.0, 0.0);
-    expect(Cartesian2.maximumByComponent(first, second, second)).toEqual(
       expected
     );
 
@@ -413,21 +383,11 @@ describe("Core/Cartesian2", function () {
     const max = new Cartesian2(1.0, 1.0);
     const expected = new Cartesian2(0.0, 0.0);
     expect(Cartesian2.clamp(value, min, max, value)).toEqual(expected);
-  });
 
-  it("clamp with a result parameter that is an input parameter", function () {
-    const value = new Cartesian2(-1.0, -1.0);
-    const min = new Cartesian2(0.0, 0.0);
-    const max = new Cartesian2(1.0, 1.0);
-    const expected = new Cartesian2(0.0, 0.0);
+    Cartesian2.fromElements(-1.0, -1.0, value);
     expect(Cartesian2.clamp(value, min, max, min)).toEqual(expected);
-  });
 
-  it("clamp with a result parameter that is an input parameter", function () {
-    const value = new Cartesian2(-1.0, -1.0);
-    const min = new Cartesian2(0.0, 0.0);
-    const max = new Cartesian2(1.0, 1.0);
-    const expected = new Cartesian2(0.0, 0.0);
+    Cartesian2.fromElements(0.0, 0.0, value);
     expect(Cartesian2.clamp(value, min, max, max)).toEqual(expected);
   });
 

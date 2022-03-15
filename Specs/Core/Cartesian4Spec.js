@@ -223,21 +223,6 @@ describe("Core/Cartesian4", function () {
 
     first.x = 1.0;
     second.x = 2.0;
-    expect(Cartesian4.minimumByComponent(first, second, first)).toEqual(
-      expected
-    );
-  });
-
-  it("minimumByComponent with a result parameter that is an input parameter", function () {
-    const first = new Cartesian4(2.0, 0.0, 0.0, 0.0);
-    const second = new Cartesian4(1.0, 0.0, 0.0, 0.0);
-    const expected = new Cartesian4(1.0, 0.0, 0.0, 0.0);
-    expect(Cartesian4.minimumByComponent(first, second, second)).toEqual(
-      expected
-    );
-
-    first.x = 1.0;
-    second.x = 2.0;
     expect(Cartesian4.minimumByComponent(first, second, second)).toEqual(
       expected
     );
@@ -402,7 +387,7 @@ describe("Core/Cartesian4", function () {
 
     first.x = 1.0;
     second.x = 2.0;
-    expect(Cartesian4.maximumByComponent(first, second, first)).toEqual(
+    expect(Cartesian4.maximumByComponent(first, second, second)).toEqual(
       expected
     );
   });
@@ -571,21 +556,11 @@ describe("Core/Cartesian4", function () {
     const max = new Cartesian4(1.0, 1.0, 1.0, 1.0);
     const expected = new Cartesian4(0.0, 0.0, 0.0, 0.0);
     expect(Cartesian4.clamp(value, min, max, value)).toEqual(expected);
-  });
 
-  it("clamp with a result parameter that is an input parameter", function () {
-    const value = new Cartesian4(-1.0, -1.0, -1.0, -1.0);
-    const min = new Cartesian4(0.0, 0.0, 0.0, 0.0);
-    const max = new Cartesian4(1.0, 1.0, 1.0, 1.0);
-    const expected = new Cartesian4(0.0, 0.0, 0.0, 0.0);
+    Cartesian4.fromElements(-1.0, -1.0, -1.0, -1.0, value);
     expect(Cartesian4.clamp(value, min, max, min)).toEqual(expected);
-  });
 
-  it("clamp with a result parameter that is an input parameter", function () {
-    const value = new Cartesian4(-1.0, -1.0, -1.0, -1.0);
-    const min = new Cartesian4(0.0, 0.0, 0.0, 0.0);
-    const max = new Cartesian4(1.0, 1.0, 1.0, 1.0);
-    const expected = new Cartesian4(0.0, 0.0, 0.0, 0.0);
+    Cartesian4.fromElements(0.0, 0.0, 0.0, 0.0, min);
     expect(Cartesian4.clamp(value, min, max, max)).toEqual(expected);
   });
 
