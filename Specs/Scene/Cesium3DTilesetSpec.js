@@ -6075,22 +6075,27 @@ describe(
             "parent.b3dm": {
               color: new Cartesian3(0.5, 0.0, 1.0),
               population: 530,
+              areaPercentage: 100,
             },
             "ll.b3dm": {
               color: new Cartesian3(1.0, 1.0, 0.0),
               population: 50,
+              areaPercentage: 25,
             },
             "lr.b3dm": {
               color: new Cartesian3(1.0, 0.0, 0.5),
               population: 230,
+              areaPercentage: 25,
             },
             "ur.b3dm": {
               color: new Cartesian3(1.0, 0.5, 0.0),
               population: 150,
+              areaPercentage: 25,
             },
             "ul.b3dm": {
               color: new Cartesian3(1.0, 0.0, 0.0),
               population: 100,
+              areaPercentage: 25,
             },
           };
 
@@ -6103,6 +6108,11 @@ describe(
             expect(metadata.getProperty("color")).toEqual(expectedValues.color);
             expect(metadata.getProperty("population")).toEqual(
               expectedValues.population
+            );
+            // 25 can't be represented exactly when quantized as a UINT16
+            expect(metadata.getProperty("areaPercentage")).toEqualEpsilon(
+              expectedValues.areaPercentage,
+              CesiumMath.EPSILON2
             );
           });
         });
@@ -6523,22 +6533,27 @@ describe(
             "parent.b3dm": {
               color: new Cartesian3(0.5, 0.0, 1.0),
               population: 530,
+              areaPercentage: 100,
             },
             "ll.b3dm": {
               color: new Cartesian3(1.0, 1.0, 0.0),
               population: 50,
+              areaPercentage: 25,
             },
             "lr.b3dm": {
               color: new Cartesian3(1.0, 0.0, 0.5),
               population: 230,
+              areaPercentage: 25,
             },
             "ur.b3dm": {
               color: new Cartesian3(1.0, 0.5, 0.0),
               population: 150,
+              areaPercentage: 25,
             },
             "ul.b3dm": {
               color: new Cartesian3(1.0, 0.0, 0.0),
               population: 100,
+              areaPercentage: 25,
             },
           };
 
@@ -6551,6 +6566,11 @@ describe(
             expect(metadata.getProperty("color")).toEqual(expectedValues.color);
             expect(metadata.getProperty("population")).toEqual(
               expectedValues.population
+            );
+            // 25 can't be represented exactly when quantized as a UINT16
+            expect(metadata.getProperty("areaPercentage")).toEqualEpsilon(
+              expectedValues.areaPercentage,
+              CesiumMath.EPSILON2
             );
           });
         });
