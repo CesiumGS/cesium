@@ -140,50 +140,61 @@ describe("Core/Cartesian4", function () {
     expect(Cartesian4.minimumComponent(cartesian)).toEqual(cartesian.w);
   });
 
-  it("minimumByComponent without a result parameter", function () {
-    let first = new Cartesian4(2.0, 0.0, 0.0, 0.0);
-    let second = new Cartesian4(1.0, 0.0, 0.0, 0.0);
+  it("minimumByComponent", function () {
+    let first;
+    let second;
+    let expected;
     const result = new Cartesian4();
-    let expected = new Cartesian4(1.0, 0.0, 0.0, 0.0);
+
+    first = new Cartesian4(2.0, 0.0, 0.0, 0.0);
+    second = new Cartesian4(1.0, 0.0, 0.0, 0.0);
+    expected = new Cartesian4(1.0, 0.0, 0.0, 0.0);
     expect(Cartesian4.minimumByComponent(first, second, result)).toEqual(
       expected
     );
+
     first = new Cartesian4(1.0, 0.0, 0.0, 0.0);
     second = new Cartesian4(2.0, 0.0, 0.0, 0.0);
     expected = new Cartesian4(1.0, 0.0, 0.0, 0.0);
     expect(Cartesian4.minimumByComponent(first, second, result)).toEqual(
       expected
     );
+
     first = new Cartesian4(2.0, -15.0, 0.0, 0.0);
     second = new Cartesian4(1.0, -20.0, 0.0, 0.0);
     expected = new Cartesian4(1.0, -20.0, 0.0, 0.0);
     expect(Cartesian4.minimumByComponent(first, second, result)).toEqual(
       expected
     );
+
     first = new Cartesian4(2.0, -20.0, 0.0, 0.0);
     second = new Cartesian4(1.0, -15.0, 0.0, 0.0);
     expected = new Cartesian4(1.0, -20.0, 0.0, 0.0);
     expect(Cartesian4.minimumByComponent(first, second, result)).toEqual(
       expected
     );
+
     first = new Cartesian4(2.0, -15.0, 26.4, 0.0);
     second = new Cartesian4(1.0, -20.0, 26.5, 0.0);
     expected = new Cartesian4(1.0, -20.0, 26.4, 0.0);
     expect(Cartesian4.minimumByComponent(first, second, result)).toEqual(
       expected
     );
+
     first = new Cartesian4(2.0, -15.0, 26.5, 0.0);
     second = new Cartesian4(1.0, -20.0, 26.4, 0.0);
     expected = new Cartesian4(1.0, -20.0, 26.4, 0.0);
     expect(Cartesian4.minimumByComponent(first, second, result)).toEqual(
       expected
     );
+
     first = new Cartesian4(2.0, -15.0, 26.4, -450.0);
     second = new Cartesian4(1.0, -20.0, 26.5, 450.0);
     expected = new Cartesian4(1.0, -20.0, 26.4, -450.0);
     expect(Cartesian4.minimumByComponent(first, second, result)).toEqual(
       expected
     );
+
     first = new Cartesian4(2.0, -15.0, 26.5, 450.0);
     second = new Cartesian4(1.0, -20.0, 26.4, -450.0);
     expected = new Cartesian4(1.0, -20.0, 26.4, -450.0);
@@ -195,33 +206,40 @@ describe("Core/Cartesian4", function () {
   it("minimumByComponent with a result parameter", function () {
     const first = new Cartesian4(2.0, 0.0, 0.0, 0.0);
     const second = new Cartesian4(1.0, 0.0, 0.0, 0.0);
+    const expected = new Cartesian4(1.0, 0.0, 0.0, 0.0);
     const result = new Cartesian4();
     const returnedResult = Cartesian4.minimumByComponent(first, second, result);
     expect(returnedResult).toBe(result);
-    expect(returnedResult).toEqual(result);
+    expect(returnedResult).toEqual(expected);
   });
 
   it("minimumByComponent with a result parameter that is an input parameter", function () {
     const first = new Cartesian4(2.0, 0.0, 0.0, 0.0);
     const second = new Cartesian4(1.0, 0.0, 0.0, 0.0);
-    const result = new Cartesian4(1.0, 0.0, 0.0, 0.0);
-    expect(Cartesian4.minimumByComponent(first, second, first)).toEqual(result);
-    first.x = 1.0;
-    second.x = 2.0;
-    expect(Cartesian4.minimumByComponent(first, second, first)).toEqual(result);
-  });
-
-  it("minimumByComponent with a result parameter that is an input parameter", function () {
-    const first = new Cartesian4(2.0, 0.0, 0.0, 0.0);
-    const second = new Cartesian4(1.0, 0.0, 0.0, 0.0);
-    const result = new Cartesian4(1.0, 0.0, 0.0, 0.0);
-    expect(Cartesian4.minimumByComponent(first, second, second)).toEqual(
-      result
+    const expected = new Cartesian4(1.0, 0.0, 0.0, 0.0);
+    expect(Cartesian4.minimumByComponent(first, second, first)).toEqual(
+      expected
     );
+
+    first.x = 1.0;
+    second.x = 2.0;
+    expect(Cartesian4.minimumByComponent(first, second, first)).toEqual(
+      expected
+    );
+  });
+
+  it("minimumByComponent with a result parameter that is an input parameter", function () {
+    const first = new Cartesian4(2.0, 0.0, 0.0, 0.0);
+    const second = new Cartesian4(1.0, 0.0, 0.0, 0.0);
+    const expected = new Cartesian4(1.0, 0.0, 0.0, 0.0);
+    expect(Cartesian4.minimumByComponent(first, second, second)).toEqual(
+      expected
+    );
+
     first.x = 1.0;
     second.x = 2.0;
     expect(Cartesian4.minimumByComponent(first, second, second)).toEqual(
-      result
+      expected
     );
   });
 
@@ -240,91 +258,122 @@ describe("Core/Cartesian4", function () {
   it("minimumByComponent works when first's or second's X is lesser", function () {
     const first = new Cartesian4(2.0, 0.0, 0.0, 0.0);
     const second = new Cartesian4(1.0, 0.0, 0.0, 0.0);
-    const result = new Cartesian4(1.0, 0.0, 0.0, 0.0);
-    const r = new Cartesian4();
-    expect(Cartesian4.minimumByComponent(first, second, r)).toEqual(result);
+    const expected = new Cartesian4(1.0, 0.0, 0.0, 0.0);
+    const result = new Cartesian4();
+    expect(Cartesian4.minimumByComponent(first, second, result)).toEqual(
+      expected
+    );
+
     second.x = 3.0;
-    result.x = 2.0;
-    expect(Cartesian4.minimumByComponent(first, second, r)).toEqual(result);
+    expected.x = 2.0;
+    expect(Cartesian4.minimumByComponent(first, second, result)).toEqual(
+      expected
+    );
   });
 
   it("minimumByComponent works when first's or second's Y is lesser", function () {
     const first = new Cartesian4(0.0, 2.0, 0.0, 0.0);
     const second = new Cartesian4(0.0, 1.0, 0.0, 0.0);
-    const result = new Cartesian4(0.0, 1.0, 0.0, 0.0);
-    const r = new Cartesian4();
-    expect(Cartesian4.minimumByComponent(first, second, r)).toEqual(result);
+    const expected = new Cartesian4(0.0, 1.0, 0.0, 0.0);
+    const result = new Cartesian4();
+    expect(Cartesian4.minimumByComponent(first, second, result)).toEqual(
+      expected
+    );
+
     second.y = 3.0;
-    result.y = 2.0;
-    expect(Cartesian4.minimumByComponent(first, second, r)).toEqual(result);
+    expected.y = 2.0;
+    expect(Cartesian4.minimumByComponent(first, second, result)).toEqual(
+      expected
+    );
   });
 
   it("minimumByComponent works when first's or second's Z is lesser", function () {
     const first = new Cartesian4(0.0, 0.0, 2.0, 0.0);
     const second = new Cartesian4(0.0, 0.0, 1.0, 0.0);
-    const result = new Cartesian4(0.0, 0.0, 1.0, 0.0);
-    const r = new Cartesian4();
-    expect(Cartesian4.minimumByComponent(first, second, r)).toEqual(result);
+    const expected = new Cartesian4(0.0, 0.0, 1.0, 0.0);
+    const result = new Cartesian4();
+    expect(Cartesian4.minimumByComponent(first, second, result)).toEqual(
+      expected
+    );
+
     second.z = 3.0;
-    result.z = 2.0;
-    expect(Cartesian4.minimumByComponent(first, second, r)).toEqual(result);
+    expected.z = 2.0;
+    expect(Cartesian4.minimumByComponent(first, second, result)).toEqual(
+      expected
+    );
   });
 
   it("minimumByComponent works when first's or second's W is lesser", function () {
     const first = new Cartesian4(0.0, 0.0, 0.0, 2.0);
     const second = new Cartesian4(0.0, 0.0, 0.0, 1.0);
-    const result = new Cartesian4(0.0, 0.0, 0.0, 1.0);
-    const r = new Cartesian4();
-    expect(Cartesian4.minimumByComponent(first, second, r)).toEqual(result);
+    const expected = new Cartesian4(0.0, 0.0, 0.0, 1.0);
+    const result = new Cartesian4();
+    expect(Cartesian4.minimumByComponent(first, second, result)).toEqual(
+      expected
+    );
+
     second.w = 3.0;
-    result.w = 2.0;
-    expect(Cartesian4.minimumByComponent(first, second, r)).toEqual(result);
+    expected.w = 2.0;
+    expect(Cartesian4.minimumByComponent(first, second, result)).toEqual(
+      expected
+    );
   });
 
   it("maximumByComponent", function () {
-    let first = new Cartesian4(2.0, 0.0, 0.0, 0.0);
-    let second = new Cartesian4(1.0, 0.0, 0.0, 0.0);
+    let first;
+    let second;
+    let expected;
+
+    first = new Cartesian4(2.0, 0.0, 0.0, 0.0);
+    second = new Cartesian4(1.0, 0.0, 0.0, 0.0);
+    expected = new Cartesian4(2.0, 0.0, 0.0, 0.0);
     const result = new Cartesian4();
-    let expected = new Cartesian4(2.0, 0.0, 0.0, 0.0);
     expect(Cartesian4.maximumByComponent(first, second, result)).toEqual(
       expected
     );
+
     first = new Cartesian4(1.0, 0.0, 0.0, 0.0);
     second = new Cartesian4(2.0, 0.0, 0.0, 0.0);
     expected = new Cartesian4(2.0, 0.0, 0.0, 0.0);
     expect(Cartesian4.maximumByComponent(first, second, result)).toEqual(
       expected
     );
+
     first = new Cartesian4(2.0, -15.0, 0.0, 0.0);
     second = new Cartesian4(1.0, -20.0, 0.0, 0.0);
     expected = new Cartesian4(2.0, -15.0, 0.0, 0.0);
     expect(Cartesian4.maximumByComponent(first, second, result)).toEqual(
       expected
     );
+
     first = new Cartesian4(2.0, -20.0, 0.0, 0.0);
     second = new Cartesian4(1.0, -15.0, 0.0, 0.0);
     expected = new Cartesian4(2.0, -15.0, 0.0, 0.0);
     expect(Cartesian4.maximumByComponent(first, second, result)).toEqual(
       expected
     );
+
     first = new Cartesian4(2.0, -15.0, 26.4, 0.0);
     second = new Cartesian4(1.0, -20.0, 26.5, 0.0);
     expected = new Cartesian4(2.0, -15.0, 26.5, 0.0);
     expect(Cartesian4.maximumByComponent(first, second, result)).toEqual(
       expected
     );
+
     first = new Cartesian4(2.0, -15.0, 26.5, 0.0);
     second = new Cartesian4(1.0, -20.0, 26.4, 0.0);
     expected = new Cartesian4(2.0, -15.0, 26.5, 0.0);
     expect(Cartesian4.maximumByComponent(first, second, result)).toEqual(
       expected
     );
+
     first = new Cartesian4(2.0, -15.0, 26.5, 450.0);
     second = new Cartesian4(1.0, -20.0, 26.4, -450.0);
     expected = new Cartesian4(2.0, -15.0, 26.5, 450.0);
     expect(Cartesian4.maximumByComponent(first, second, result)).toEqual(
       expected
     );
+
     first = new Cartesian4(2.0, -15.0, 26.5, -450.0);
     second = new Cartesian4(1.0, -20.0, 26.4, 450.0);
     expected = new Cartesian4(2.0, -15.0, 26.5, 450.0);
@@ -333,27 +382,43 @@ describe("Core/Cartesian4", function () {
     );
   });
 
-  it("maximumByComponent with a result parameter that is an input parameter", function () {
+  it("maximumByComponent with a result parameter", function () {
     const first = new Cartesian4(2.0, 0.0, 0.0, 0.0);
     const second = new Cartesian4(1.0, 0.0, 0.0, 0.0);
-    const result = new Cartesian4(2.0, 0.0, 0.0, 0.0);
-    expect(Cartesian4.maximumByComponent(first, second, first)).toEqual(result);
-    first.x = 1.0;
-    second.x = 2.0;
-    expect(Cartesian4.maximumByComponent(first, second, first)).toEqual(result);
+    const expected = new Cartesian4(2.0, 0.0, 0.0, 0.0);
+    const result = new Cartesian4();
+    const returnedResult = Cartesian4.maximumByComponent(first, second, result);
+    expect(returnedResult).toBe(result);
+    expect(returnedResult).toEqual(expected);
   });
 
   it("maximumByComponent with a result parameter that is an input parameter", function () {
     const first = new Cartesian4(2.0, 0.0, 0.0, 0.0);
     const second = new Cartesian4(1.0, 0.0, 0.0, 0.0);
-    const result = new Cartesian4(2.0, 0.0, 0.0, 0.0);
-    expect(Cartesian4.maximumByComponent(first, second, second)).toEqual(
-      result
+    const expected = new Cartesian4(2.0, 0.0, 0.0, 0.0);
+    expect(Cartesian4.maximumByComponent(first, second, first)).toEqual(
+      expected
     );
+
+    first.x = 1.0;
+    second.x = 2.0;
+    expect(Cartesian4.maximumByComponent(first, second, first)).toEqual(
+      expected
+    );
+  });
+
+  it("maximumByComponent with a result parameter that is an input parameter", function () {
+    const first = new Cartesian4(2.0, 0.0, 0.0, 0.0);
+    const second = new Cartesian4(1.0, 0.0, 0.0, 0.0);
+    const expected = new Cartesian4(2.0, 0.0, 0.0, 0.0);
+    expect(Cartesian4.maximumByComponent(first, second, second)).toEqual(
+      expected
+    );
+
     first.x = 1.0;
     second.x = 2.0;
     expect(Cartesian4.maximumByComponent(first, second, second)).toEqual(
-      result
+      expected
     );
   });
 
@@ -372,45 +437,174 @@ describe("Core/Cartesian4", function () {
   it("maximumByComponent works when first's or second's X is greater", function () {
     const first = new Cartesian4(2.0, 0.0, 0.0, 0.0);
     const second = new Cartesian4(1.0, 0.0, 0.0, 0.0);
-    const result = new Cartesian4(2.0, 0.0, 0.0, 0.0);
-    const r = new Cartesian4();
-    expect(Cartesian4.maximumByComponent(first, second, r)).toEqual(result);
+    const expected = new Cartesian4(2.0, 0.0, 0.0, 0.0);
+    const result = new Cartesian4();
+    expect(Cartesian4.maximumByComponent(first, second, result)).toEqual(
+      expected
+    );
+
     second.x = 3.0;
-    result.x = 3.0;
-    expect(Cartesian4.maximumByComponent(first, second, r)).toEqual(result);
+    expected.x = 3.0;
+    expect(Cartesian4.maximumByComponent(first, second, result)).toEqual(
+      expected
+    );
   });
 
   it("maximumByComponent works when first's or second's Y is greater", function () {
     const first = new Cartesian4(0.0, 2.0, 0.0, 0.0);
     const second = new Cartesian4(0.0, 1.0, 0.0, 0.0);
-    const result = new Cartesian4(0.0, 2.0, 0.0, 0.0);
-    const r = new Cartesian4();
-    expect(Cartesian4.maximumByComponent(first, second, r)).toEqual(result);
+    const expected = new Cartesian4(0.0, 2.0, 0.0, 0.0);
+    const result = new Cartesian4();
+    expect(Cartesian4.maximumByComponent(first, second, result)).toEqual(
+      expected
+    );
+
     second.y = 3.0;
-    result.y = 3.0;
-    expect(Cartesian4.maximumByComponent(first, second, r)).toEqual(result);
+    expected.y = 3.0;
+    expect(Cartesian4.maximumByComponent(first, second, result)).toEqual(
+      expected
+    );
   });
 
   it("maximumByComponent works when first's or second's Z is greater", function () {
     const first = new Cartesian4(0.0, 0.0, 2.0, 0.0);
     const second = new Cartesian4(0.0, 0.0, 1.0, 0.0);
-    const result = new Cartesian4(0.0, 0.0, 2.0, 0.0);
-    const r = new Cartesian4();
-    expect(Cartesian4.maximumByComponent(first, second, r)).toEqual(result);
+    const expected = new Cartesian4(0.0, 0.0, 2.0, 0.0);
+    const result = new Cartesian4();
+    expect(Cartesian4.maximumByComponent(first, second, result)).toEqual(
+      expected
+    );
+
     second.z = 3.0;
-    result.z = 3.0;
-    expect(Cartesian4.maximumByComponent(first, second, r)).toEqual(result);
+    expected.z = 3.0;
+    expect(Cartesian4.maximumByComponent(first, second, result)).toEqual(
+      expected
+    );
   });
 
   it("maximumByComponent works when first's or second's W is greater", function () {
     const first = new Cartesian4(0.0, 0.0, 0.0, 2.0);
     const second = new Cartesian4(0.0, 0.0, 0.0, 1.0);
-    const result = new Cartesian4(0.0, 0.0, 0.0, 2.0);
-    const r = new Cartesian4();
-    expect(Cartesian4.maximumByComponent(first, second, r)).toEqual(result);
+    const expected = new Cartesian4(0.0, 0.0, 0.0, 2.0);
+    const result = new Cartesian4();
+    expect(Cartesian4.maximumByComponent(first, second, result)).toEqual(
+      expected
+    );
+
     second.w = 3.0;
-    result.w = 3.0;
-    expect(Cartesian4.maximumByComponent(first, second, r)).toEqual(result);
+    expected.w = 3.0;
+    expect(Cartesian4.maximumByComponent(first, second, result)).toEqual(
+      expected
+    );
+  });
+
+  it("clamp", function () {
+    let value;
+    let min;
+    let max;
+    let expected;
+    const result = new Cartesian4();
+
+    value = new Cartesian4(-1.0, 0.0, 0.0);
+    min = new Cartesian4(0.0, 0.0, 0.0);
+    max = new Cartesian4(1.0, 1.0, 1.0);
+    expected = new Cartesian4(0.0, 0.0, 0.0);
+    expect(Cartesian4.clamp(value, min, max, result)).toEqual(expected);
+
+    value = new Cartesian4(2.0, 0.0, 0.0);
+    min = new Cartesian4(0.0, 0.0, 0.0);
+    max = new Cartesian4(1.0, 1.0, 1.0);
+    expected = new Cartesian4(1.0, 0.0, 0.0);
+    expect(Cartesian4.clamp(value, min, max, result)).toEqual(expected);
+
+    value = new Cartesian4(0.0, -1.0, 0.0);
+    min = new Cartesian4(0.0, 0.0, 0.0);
+    max = new Cartesian4(1.0, 1.0, 1.0);
+    expected = new Cartesian4(0.0, 0.0, 0.0);
+    expect(Cartesian4.clamp(value, min, max, result)).toEqual(expected);
+
+    value = new Cartesian4(0.0, 2.0, 0.0);
+    min = new Cartesian4(0.0, 0.0, 0.0);
+    max = new Cartesian4(1.0, 1.0, 1.0);
+    expected = new Cartesian4(0.0, 1.0, 0.0);
+    expect(Cartesian4.clamp(value, min, max, result)).toEqual(expected);
+
+    value = new Cartesian4(0.0, 0.0, -1.0);
+    min = new Cartesian4(0.0, 0.0, 0.0);
+    max = new Cartesian4(1.0, 1.0, 1.0);
+    expected = new Cartesian4(0.0, 0.0, 0.0);
+    expect(Cartesian4.clamp(value, min, max, result)).toEqual(expected);
+
+    value = new Cartesian4(0.0, 0.0, 2.0);
+    min = new Cartesian4(0.0, 0.0, 0.0);
+    max = new Cartesian4(1.0, 1.0, 1.0);
+    expected = new Cartesian4(0.0, 0.0, 1.0);
+    expect(Cartesian4.clamp(value, min, max, result)).toEqual(expected);
+
+    value = new Cartesian4(-2.0, 3.0, 4.0);
+    min = new Cartesian4(0.0, 0.0, 0.0);
+    max = new Cartesian4(1.0, 1.0, 1.0);
+    expected = new Cartesian4(0.0, 1.0, 1.0);
+    expect(Cartesian4.clamp(value, min, max, result)).toEqual(expected);
+
+    value = new Cartesian4(0.0, 0.0, 0.0);
+    min = new Cartesian4(1.0, 2.0, 3.0);
+    max = new Cartesian4(1.0, 2.0, 3.0);
+    expected = new Cartesian4(1.0, 2.0, 3.0);
+    expect(Cartesian4.clamp(value, min, max, result)).toEqual(expected);
+  });
+
+  it("clamp with a result parameter", function () {
+    const value = new Cartesian4(-1.0, -1.0, -1.0, -1.0);
+    const min = new Cartesian4(0.0, 0.0, 0.0, 0.0);
+    const max = new Cartesian4(1.0, 1.0, 1.0, 1.0);
+    const expected = new Cartesian4(0.0, 0.0, 0.0, 0.0);
+    const result = new Cartesian4();
+    const returnedResult = Cartesian4.clamp(value, min, max, result);
+    expect(returnedResult).toBe(result);
+    expect(returnedResult).toEqual(expected);
+  });
+
+  it("clamp with a result parameter that is an input parameter", function () {
+    const value = new Cartesian4(-1.0, -1.0, -1.0, -1.0);
+    const min = new Cartesian4(0.0, 0.0, 0.0, 0.0);
+    const max = new Cartesian4(1.0, 1.0, 1.0, 1.0);
+    const expected = new Cartesian4(0.0, 0.0, 0.0, 0.0);
+    expect(Cartesian4.clamp(value, min, max, value)).toEqual(expected);
+  });
+
+  it("clamp with a result parameter that is an input parameter", function () {
+    const value = new Cartesian4(-1.0, -1.0, -1.0, -1.0);
+    const min = new Cartesian4(0.0, 0.0, 0.0, 0.0);
+    const max = new Cartesian4(1.0, 1.0, 1.0, 1.0);
+    const expected = new Cartesian4(0.0, 0.0, 0.0, 0.0);
+    expect(Cartesian4.clamp(value, min, max, min)).toEqual(expected);
+  });
+
+  it("clamp with a result parameter that is an input parameter", function () {
+    const value = new Cartesian4(-1.0, -1.0, -1.0, -1.0);
+    const min = new Cartesian4(0.0, 0.0, 0.0, 0.0);
+    const max = new Cartesian4(1.0, 1.0, 1.0, 1.0);
+    const expected = new Cartesian4(0.0, 0.0, 0.0, 0.0);
+    expect(Cartesian4.clamp(value, min, max, max)).toEqual(expected);
+  });
+
+  it("clamp throws without value", function () {
+    expect(function () {
+      Cartesian4.clamp();
+    }).toThrowDeveloperError();
+  });
+
+  it("clamp throws without min", function () {
+    expect(function () {
+      Cartesian4.clamp(new Cartesian4());
+    }).toThrowDeveloperError();
+  });
+
+  it("clamp throws without max", function () {
+    expect(function () {
+      Cartesian4.clamp(new Cartesian4(), new Cartesian4());
+    }).toThrowDeveloperError();
   });
 
   it("magnitudeSquared", function () {
@@ -1024,6 +1218,12 @@ describe("Core/Cartesian4", function () {
   it("maximumByComponent throws with no result", function () {
     expect(function () {
       Cartesian4.maximumByComponent(new Cartesian4(), new Cartesian4());
+    }).toThrowDeveloperError();
+  });
+
+  it("clamp throws with no result", function () {
+    expect(function () {
+      Cartesian4.clamp(new Cartesian4(), new Cartesian4(), new Cartesian4());
     }).toThrowDeveloperError();
   });
 

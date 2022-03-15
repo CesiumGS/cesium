@@ -897,23 +897,18 @@ CesiumMath.previousPowerOfTwo = function (n) {
 /**
  * Constraint a value to lie between two values.
  *
- * @param {Number} value The value to constrain.
+ * @param {Number} value The value to clamp.
  * @param {Number} min The minimum value.
  * @param {Number} max The maximum value.
- * @returns {Number} The value clamped so that min <= value <= max.
+ * @returns {Number} The clamped value such that min <= result <= max.
  */
 CesiumMath.clamp = function (value, min, max) {
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(value)) {
-    throw new DeveloperError("value is required");
-  }
-  if (!defined(min)) {
-    throw new DeveloperError("min is required.");
-  }
-  if (!defined(max)) {
-    throw new DeveloperError("max is required.");
-  }
+  Check.typeOf.number("value", value);
+  Check.typeOf.number("min", min);
+  Check.typeOf.number("max", max);
   //>>includeEnd('debug');
+
   return value < min ? min : value > max ? max : value;
 };
 
