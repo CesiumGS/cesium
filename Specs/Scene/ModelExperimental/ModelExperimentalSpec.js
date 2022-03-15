@@ -850,11 +850,7 @@ describe(
           },
           scene
         ).then(function (model) {
-          const sceneGraph = model.sceneGraph;
           scene.renderForSpecs();
-          expect(
-            Matrix4.equals(sceneGraph.computedModelMatrix, Matrix4.IDENTITY)
-          ).toBe(true);
           verifyRender(model, false);
           expect(model.boundingSphere.center).toEqual(Cartesian3.ZERO);
           expect(model.boundingSphere.radius).toEqual(0.0);
@@ -876,11 +872,7 @@ describe(
         },
         scene
       ).then(function (model) {
-        const sceneGraph = model.sceneGraph;
         scene.renderForSpecs();
-        expect(
-          Matrix4.equals(sceneGraph.computedModelMatrix, Matrix4.IDENTITY)
-        ).toBe(true);
         verifyRender(model, true);
 
         model.maximumScale = 0.0;
