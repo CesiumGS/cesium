@@ -2,9 +2,8 @@ uniform vec3 u_radiiAndDynamicAtmosphereColor;
 
 const float G = 0.9;
 const float ATMOSPHERE_THICKNESS = 111e3;
-const float MAX_RAY_HIT_DISTANCE = 10000000.0;
 const vec2 HEIGHT_SCALE = vec2(10e3, 3.2e3); // (Rayleigh, Mie) scales.
-const vec3 BETA_RAYLEIGH = vec3(5.5e-6, 13.0e-6, 22.4e-6);
+const vec3 BETA_RAYLEIGH = vec3(5.8e-6, 13.5e-6, 33.1e-6); // Better constants from Precomputed Atmospheric Scattering (https://hal.inria.fr/inria-00288758/document)
 const vec3 BETA_MIE = vec3(21e-6);
 const vec3 INTENSITY = vec3(100.0);
 
@@ -38,7 +37,7 @@ void computeAtmosphericScattering(
 
     // Setup the radii for the inner and outer ring of the atmosphere.
     float atmosphereInnerRadius = u_radiiAndDynamicAtmosphereColor.y;
-    float atmosphereOuterRadius = u_radiiAndDynamicAtmosphereColor.x;
+    float atmosphereOuterRadius = u_radiiAndDynamicAtmosphereColor.y + ATMOSPHERE_THICKNESS;
 
     // Setup the primary ray: from the camera position to the vertex position.
     vec3 cameraToPositionWC = positionWC - czm_viewerPositionWC;

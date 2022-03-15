@@ -97,7 +97,7 @@ float G = 0.9;
 float RAYLEIGH_HEIGHT_LIMIT = 10e3;
 float MIE_HEIGHT_LIMIT = 3.2e3;
 
-vec3 BETA_RAYLEIGH = vec3(5.5e-6, 13.0e-6, 22.4e-6);
+vec3 BETA_RAYLEIGH = vec3(5.8e-6, 13.5e-6, 33.1e-6); // Better constants from Precomputed Atmospheric Scattering (https://hal.inria.fr/inria-00288758/document)
 vec3 BETA_MIE = vec3(21e-6);
 vec3 BETA_AMBIENT = vec3(0.0);
 
