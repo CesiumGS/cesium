@@ -890,7 +890,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     patchRequestSchedulerToRejectRequest();
     const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server/",
-      maximumLevel: 10,
+      minimumLevel: 10,
     });
 
     // we expect that our minimum detail level was forced to 0, even though we requested 10.
@@ -907,7 +907,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server/",
       // a high minimum detail level
-      maximumLevel: 12,
+      minimumLevel: 12,
       // and a very small rectangle
       rectangle: new Rectangle(
         CesiumMath.toRadians(131.020889),
