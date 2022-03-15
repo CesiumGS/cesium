@@ -6,11 +6,15 @@
 
 - Removed links to SpecRunner.html and related Jasmine files for running unit tests in browsers.
 
+##### Additions :tada:
+
+- Added `Cartesian2.clamp`, `Cartesian3.clamp`, and `Cartesian4.clamp`. [#10197](https://github.com/CesiumGS/cesium/pull/10197)
+
 ##### Fixes :wrench:
 
 - Fixed a bug where `pnts` tiles would crash when `Cesium.ExperimentalFeatures.enableModelExperimental` was true. [#10183](https://github.com/CesiumGS/cesium/pull/10183)
 - Fixed an issue with Firefox and dimensionless SVG images. [#9188](https://github.com/CesiumGS/cesium/9188)
-- Fixed `ShadowMap` documentation for `options.pointLightRadius` type.[#10195](https://github.com/CesiumGS/cesium/pull/10195)
+- Fixed `ShadowMap` documentation for `options.pointLightRadius` type. [#10195](https://github.com/CesiumGS/cesium/pull/10195)
 
 ### 1.91 - 2022-03-01
 
