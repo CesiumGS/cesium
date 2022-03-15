@@ -8,6 +8,7 @@ import FeatureDetection from "../Core/FeatureDetection.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import MetadataComponentType from "./MetadataComponentType.js";
+import MetadataClassProperty from "./MetadataClassProperty.js";
 import MetadataType from "./MetadataType.js";
 
 /**
@@ -141,8 +142,25 @@ function MetadataTableProperty(options) {
     valueCount
   );
 
-  const offset = property.offset;
-  const scale = property.scale;
+  let offset = property.offset;
+  let scale = property.scale;
+
+  // This needs to be set before handling default values
+  const hasValueTransform =
+    classProperty.hasValueTransform || defined(offset) || defined(scale);
+
+  // If the table does not define an offset/scale, it inherits from the
+  // class property. The class property handles setting the default of identity:
+  // (offset 0, scale 1) with the same array shape as the property's type
+  // information.
+  offset = defaultValue(offset, classProperty.offset);
+  scale = defaultValue(scale, classProperty.scale);
+
+  // Since metadata table properties are stored as packed typed
+  // arrays, flatten the offset/scale to make it easier to apply the
+  // transformation by iteration.
+  offset = flatten(offset);
+  scale = flatten(scale);
 
   let getValueFunction;
   let setValueFunction;
@@ -186,7 +204,7 @@ function MetadataTableProperty(options) {
   this._max = property.max;
   this._offset = offset;
   this._scale = scale;
-  this._hasRescaling = defined(offset) || defined(scale);
+  this._hasValueTransform = hasValueTransform;
   this._getValue = getValueFunction;
   this._setValue = setValueFunction;
   this._unpackedValues = undefined;
@@ -195,6 +213,49 @@ function MetadataTableProperty(options) {
 }
 
 Object.defineProperties(MetadataTableProperty.prototype, {
+  /**
+   * True if offset/scale should be applied. If both offset/scale were
+   * undefined, they default to identity so this property is set false
+   *
+   * @memberof MetadataClassProperty.prototype
+   * @type {Boolean}
+   * @readonly
+   * @private
+   */
+  hasValueTransform: {
+    get: function () {
+      return this._hasValueTransform;
+    },
+  },
+
+  /**
+   * The offset to be added to property values as part of the value transform.
+   *
+   * @memberof MetadataClassProperty.prototype
+   * @type {Number|Number[]|Number[][]}
+   * @readonly
+   * @private
+   */
+  offset: {
+    get: function () {
+      return this._offset;
+    },
+  },
+
+  /**
+   * The scale to be multiplied to property values as part of the value transform.
+   *
+   * @memberof MetadataClassProperty.prototype
+   * @type {Number|Number[]|Number[][]}
+   * @readonly
+   * @private
+   */
+  scale: {
+    get: function () {
+      return this._scale;
+    },
+  },
+
   /**
    * Extras in the JSON object.
    *
@@ -247,6 +308,7 @@ MetadataTableProperty.prototype.get = function (index) {
   }
 
   value = this._classProperty.normalize(value);
+  value = applyValueTransform(this, value);
   return this._classProperty.unpackVectorAndMatrixTypes(value);
 };
 
@@ -271,6 +333,7 @@ MetadataTableProperty.prototype.set = function (index, value) {
   //>>includeEnd('debug');
 
   value = classProperty.packVectorAndMatrixTypes(value);
+  value = unapplyValueTransform(this, value);
   value = classProperty.unnormalize(value);
 
   set(this, index, value);
@@ -293,6 +356,24 @@ MetadataTableProperty.prototype.getTypedArray = function () {
 
   return undefined;
 };
+
+function flatten(values) {
+  if (!Array.isArray(values)) {
+    return values;
+  }
+
+  const result = [];
+  for (let i = 0; i < values.length; i++) {
+    const value = values[i];
+    if (Array.isArray(value)) {
+      result.push.apply(result, value);
+    } else {
+      result.push(value);
+    }
+  }
+
+  return result;
+}
 
 function checkIndex(table, index) {
   const count = table._count;
@@ -618,6 +699,36 @@ function unpackValues(property) {
     unpackedValues[i] = getArrayValues(property, classProperty, i);
   }
   return unpackedValues;
+}
+
+function applyValueTransform(property, value) {
+  const classProperty = property._classProperty;
+  const isVariableLengthArray = classProperty.isVariableLengthArray;
+  if (!property._hasValueTransform || isVariableLengthArray) {
+    return value;
+  }
+
+  return MetadataClassProperty.valueTransformInPlace(
+    value,
+    property._offset,
+    property._scale,
+    MetadataComponentType.applyValueTransform
+  );
+}
+
+function unapplyValueTransform(property, value) {
+  const classProperty = property._classProperty;
+  const isVariableLengthArray = classProperty.isVariableLengthArray;
+  if (!property._hasValueTransform || isVariableLengthArray) {
+    return value;
+  }
+
+  return MetadataClassProperty.valueTransformInPlace(
+    value,
+    property._offset,
+    property._scale,
+    MetadataComponentType.unapplyValueTransform
+  );
 }
 
 function BufferView(bufferView, componentType, length) {

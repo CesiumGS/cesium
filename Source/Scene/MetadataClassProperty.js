@@ -72,11 +72,22 @@ function MetadataClassProperty(options) {
   // properties that adjust the range of metadata values
   this._normalized = normalized;
 
-  const offset = property.offset;
-  const scale = property.scale;
+  let offset = property.offset;
+  let scale = property.scale;
+  const hasValueTransform = defined(offset) || defined(scale);
+
+  const enableNestedArrays = true;
+  if (!defined(offset)) {
+    offset = this.expandConstant(0, enableNestedArrays);
+  }
+
+  if (!defined(scale)) {
+    scale = this.expandConstant(1, enableNestedArrays);
+  }
+
   this._offset = offset;
   this._scale = scale;
-  this._hasRescaling = defined(offset) || defined(scale);
+  this._hasValueTransform = hasValueTransform;
 
   // sentinel value for missing data, and a default value to use
   // in its place if needed.
@@ -351,6 +362,49 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
+   * True if offset/scale should be applied. If both offset/scale were
+   * undefined, they default to identity so this property is set false
+   *
+   * @memberof MetadataClassProperty.prototype
+   * @type {Boolean}
+   * @readonly
+   * @private
+   */
+  hasValueTransform: {
+    get: function () {
+      return this._hasValueTransform;
+    },
+  },
+
+  /**
+   * The offset to be added to property values as part of the value transform.
+   *
+   * @memberof MetadataClassProperty.prototype
+   * @type {Number|Number[]|Number[][]}
+   * @readonly
+   * @private
+   */
+  offset: {
+    get: function () {
+      return this._offset;
+    },
+  },
+
+  /**
+   * The scale to be multiplied to property values as part of the value transform.
+   *
+   * @memberof MetadataClassProperty.prototype
+   * @type {Number|Number[]|Number[][]}
+   * @readonly
+   * @private
+   */
+  scale: {
+    get: function () {
+      return this._scale;
+    },
+  },
+
+  /**
    * Extras in the JSON object.
    *
    * @memberof MetadataClassProperty.prototype
@@ -593,11 +647,11 @@ MetadataClassProperty.prototype.normalize = function (value) {
     return value;
   }
 
-  const valueType = this._valueType;
-  const normalizeFunction = function (x) {
-    return MetadataComponentType.normalize(x, valueType);
-  };
-  return transformInPlace(value, normalizeFunction);
+  return normalizeInPlace(
+    value,
+    this._valueType,
+    MetadataComponentType.normalize
+  );
 };
 
 /**
@@ -626,11 +680,78 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
     return value;
   }
 
-  const valueType = this._valueType;
-  const unnormalizeFunction = function (x) {
-    return MetadataComponentType.unnormalize(x, valueType);
-  };
-  return transformInPlace(value, unnormalizeFunction);
+  return normalizeInPlace(
+    value,
+    this._valueType,
+    MetadataComponentType.unnormalize
+  );
+};
+
+MetadataClassProperty.prototype.applyValueTransform = function (value) {
+  // variable length arrays do not have a well-defined offset/scale so this
+  // is forbidden by the spec
+  if (!this._hasValueTransform || this._isVariableLengthArray) {
+    return value;
+  }
+
+  return MetadataClassProperty.valueTransformInPlace(
+    value,
+    this._offset,
+    this._scale,
+    MetadataComponentType.applyValueTransform
+  );
+};
+
+MetadataClassProperty.prototype.unapplyValueTransform = function (value) {
+  // variable length arrays do not have a well-defined offset/scale so this
+  // is forbidden by the spec
+  if (!this._hasValueTransform || this._isVariableLengthArray) {
+    return value;
+  }
+
+  return MetadataClassProperty.valueTransformInPlace(
+    value,
+    this._offset,
+    this._scale,
+    MetadataComponentType.unapplyValueTransform
+  );
+};
+
+MetadataClassProperty.prototype.expandConstant = function (
+  constant,
+  enableNestedArrays
+) {
+  enableNestedArrays = defaultValue(enableNestedArrays, false);
+  const isArray = this._isArray;
+  const arrayLength = this._arrayLength;
+  const componentCount = MetadataType.getComponentCount(this._type);
+  const isNested = isArray && componentCount > 1;
+
+  // scalar values can be returned directly
+  if (!isArray && componentCount === 1) {
+    return constant;
+  }
+
+  // vector and matrix values
+  if (!isArray) {
+    return new Array(componentCount).fill(constant);
+  }
+
+  // arrays of scalars
+  if (!isNested) {
+    return new Array(arrayLength).fill(constant);
+  }
+
+  // arrays of vectors/matrices: flattened
+  if (!enableNestedArrays) {
+    return new Array(this._arrayLength * componentCount).fill(constant);
+  }
+
+  // array of vectors/matrices: nested
+  const innerConstant = new Array(componentCount).fill(constant);
+  // This array fill duplicates the pointer to the inner arrays. Since this is
+  // intended for use with constants, no need to clone the array.
+  return new Array(this._arrayLength).fill(innerConstant);
 };
 
 /**
@@ -944,16 +1065,40 @@ function getNonFiniteErrorMessage(value, type) {
   return `value ${value} of type ${type} must be finite`;
 }
 
-function transformInPlace(value, transformationFunction) {
-  if (!Array.isArray(value)) {
-    return transformationFunction(value);
+function normalizeInPlace(values, valueType, normalizeFunction) {
+  if (!Array.isArray(values)) {
+    return normalizeFunction(values, valueType);
   }
 
-  for (let i = 0; i < value.length; i++) {
-    value[i] = transformInPlace(value[i], transformationFunction);
+  for (let i = 0; i < values.length; i++) {
+    values[i] = normalizeInPlace(values[i], valueType, normalizeFunction);
   }
 
-  return value;
+  return values;
 }
+
+MetadataClassProperty.valueTransformInPlace = function (
+  values,
+  offsets,
+  scales,
+  transformationFunction
+) {
+  if (!Array.isArray(values)) {
+    // transform a single value
+    return transformationFunction(values, offsets, scales);
+  }
+
+  for (let i = 0; i < values.length; i++) {
+    // offsets and scales must be the same array shape as values.
+    values[i] = MetadataClassProperty.valueTransformInPlace(
+      values[i],
+      offsets[i],
+      scales[i],
+      transformationFunction
+    );
+  }
+
+  return values;
+};
 
 export default MetadataClassProperty;

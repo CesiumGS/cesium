@@ -398,6 +398,146 @@ describe("Scene/MetadataClassProperty", function () {
     }).toThrowDeveloperError();
   });
 
+  describe("expandConstant", function () {
+    it("works for scalars", function () {
+      const property = new MetadataClassProperty({
+        id: "propertyId",
+        property: {
+          type: "SCALAR",
+          componentType: "FLOAT32",
+        },
+      });
+
+      expect(property.expandConstant(1)).toBe(1);
+    });
+
+    it("works for vectors and matrices", function () {
+      let property = new MetadataClassProperty({
+        id: "propertyId",
+        property: {
+          type: "VEC3",
+          componentType: "FLOAT32",
+        },
+      });
+
+      expect(property.expandConstant(1)).toEqual([1, 1, 1]);
+
+      property = new MetadataClassProperty({
+        id: "propertyId",
+        property: {
+          type: "MAT3",
+          componentType: "FLOAT32",
+        },
+      });
+
+      expect(property.expandConstant(1)).toEqual([1, 1, 1, 1, 1, 1, 1, 1, 1]);
+    });
+
+    it("works for arrays of scalars", function () {
+      const property = new MetadataClassProperty({
+        id: "propertyId",
+        property: {
+          array: true,
+          count: 4,
+          type: "SCALAR",
+          componentType: "FLOAT32",
+        },
+      });
+
+      expect(property.expandConstant(1)).toEqual([1, 1, 1, 1]);
+    });
+
+    it("works for arrays of vectors and matrices", function () {
+      let property = new MetadataClassProperty({
+        id: "propertyId",
+        property: {
+          array: true,
+          count: 3,
+          type: "VEC3",
+          componentType: "FLOAT32",
+        },
+      });
+
+      const isNested = false;
+      expect(property.expandConstant(1, isNested)).toEqual([
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+      ]);
+
+      property = new MetadataClassProperty({
+        id: "propertyId",
+        property: {
+          array: true,
+          count: 2,
+          type: "MAT3",
+          componentType: "FLOAT32",
+        },
+      });
+
+      expect(property.expandConstant(1, isNested)).toEqual([
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+      ]);
+    });
+
+    it("works for nested arrays of vectors and matrices", function () {
+      let property = new MetadataClassProperty({
+        id: "propertyId",
+        property: {
+          array: true,
+          count: 3,
+          type: "VEC3",
+          componentType: "FLOAT32",
+        },
+      });
+
+      const isNested = true;
+      expect(property.expandConstant(1, isNested)).toEqual([
+        [1, 1, 1],
+        [1, 1, 1],
+        [1, 1, 1],
+      ]);
+
+      property = new MetadataClassProperty({
+        id: "propertyId",
+        property: {
+          array: true,
+          count: 2,
+          type: "MAT3",
+          componentType: "FLOAT32",
+        },
+      });
+
+      expect(property.expandConstant(1, isNested)).toEqual([
+        [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1],
+      ]);
+    });
+  });
+
   describe("normalize and unnormalize", function () {
     let scalarProperties;
     let scalarValues;
@@ -676,21 +816,17 @@ describe("Scene/MetadataClassProperty", function () {
         propertyEnum: {
           type: "ENUM",
           enumType: "myEnum",
-          normalized: true,
         },
         propertyEnumArray: {
           type: "ENUM",
           array: true,
           enumType: "myEnum",
-          normalized: true,
         },
         propertyString: {
           type: "STRING",
-          normalized: true,
         },
         propertyBoolean: {
           type: "BOOLEAN",
-          normalized: true,
         },
       };
 
@@ -890,6 +1026,661 @@ describe("Scene/MetadataClassProperty", function () {
             const normalizedValue = nonIntegerValues[propertyId][i];
             const value = property.unnormalize(normalizedValue);
             expect(value).toEqual(normalizedValue);
+          }
+        }
+      }
+    });
+  });
+
+  describe("value transform", function () {
+    let scalarProperties;
+    let scalarValues;
+    let transformedScalarValues;
+
+    let arrayProperties;
+    let arrayValues;
+    let transformedArrayValues;
+
+    let vectorProperties;
+    let vectorValues;
+    let transformedVectorValues;
+
+    let arrayOfVectorProperties;
+    let arrayOfVectorValues;
+    let transformedArrayOfVectorValues;
+
+    let myEnum;
+    let otherProperties;
+    let otherValues;
+    beforeAll(function () {
+      scalarProperties = {
+        propertyInt8: {
+          type: "SCALAR",
+          componentType: "INT8",
+          normalized: true,
+          offset: 1,
+          scale: 2,
+        },
+        propertyUint8: {
+          type: "SCALAR",
+          componentType: "UINT8",
+          normalized: true,
+          offset: 2,
+          scale: 2,
+        },
+        propertyInt16: {
+          type: "SCALAR",
+          componentType: "INT16",
+          normalized: true,
+          scale: 2,
+        },
+        propertyUint16: {
+          type: "SCALAR",
+          componentType: "UINT16",
+          normalized: true,
+          offset: 4,
+        },
+        propertyInt32: {
+          type: "SCALAR",
+          componentType: "INT32",
+          normalized: true,
+          offset: 0,
+          scale: 1,
+        },
+        propertyUint32: {
+          type: "SCALAR",
+          componentType: "UINT32",
+          normalized: true,
+          scale: 2,
+          offset: 2,
+        },
+        propertyInt64: {
+          type: "SCALAR",
+          componentType: "INT64",
+          normalized: true,
+          offset: -1,
+          scale: 0.5,
+        },
+        propertyUint64: {
+          type: "SCALAR",
+          componentType: "UINT64",
+          normalized: true,
+          offset: 1,
+          scale: 2,
+        },
+        propertyFloat32: {
+          type: "SCALAR",
+          componentType: "FLOAT32",
+          offset: 8,
+          scale: 4,
+        },
+        propertyFloat64: {
+          type: "SCALAR",
+          componentType: "FLOAT64",
+          offset: 4,
+          scale: 2,
+        },
+      };
+
+      scalarValues = {
+        // Integer properties must be normalized to use valueTransform
+        propertyInt8: [-1.0, 0.0, 1.0],
+        propertyUint8: [0.0, 0.5, 1.0],
+        propertyInt16: [-1.0, 0.0, 1.0],
+        propertyUint16: [0.0, 0.5, 1.0],
+        propertyInt32: [-1.0, 0.0, 1.0],
+        propertyUint32: [0, 0.5, 1.0],
+        propertyInt64: [-1.0, 0.0, 1.0],
+        propertyUint64: [0, 0.5, 1.0],
+        // Float properties do not have such restriction
+        propertyFloat32: [-8.0, 3.0, 256.0],
+        propertyFloat64: [-4.5, 0.0, 45.0],
+      };
+
+      transformedScalarValues = {
+        propertyInt8: [-1.0, 1.0, 3.0],
+        propertyUint8: [2.0, 3.0, 4.0],
+        propertyInt16: [-2.0, 0, 2.0],
+        propertyUint16: [4.0, 4.5, 5.0],
+        propertyInt32: [-1.0, 0, 1.0],
+        propertyUint32: [2.0, 3.0, 4.0],
+        propertyInt64: [-1.5, -1.0, -0.5],
+        propertyUint64: [1.0, 2.0, 3.0],
+        propertyFloat32: [-24.0, 20.0, 1032.0],
+        propertyFloat64: [-5.0, 4.0, 94.0],
+      };
+
+      arrayProperties = {
+        propertyInt8: {
+          array: true,
+          count: 3,
+          type: "SCALAR",
+          componentType: "INT8",
+          normalized: true,
+          offset: [1, 2, 3],
+          scale: [2, 2, 2],
+        },
+        propertyFloat32: {
+          array: true,
+          count: 2,
+          type: "SCALAR",
+          componentType: "FLOAT32",
+          normalized: true,
+          offset: [-1, -1],
+          scale: [2, 1],
+        },
+        propertyDefaultOffset: {
+          array: true,
+          count: 2,
+          type: "SCALAR",
+          componentType: "FLOAT32",
+          normalized: true,
+          scale: [2, 2],
+        },
+        propertyDefaultScale: {
+          array: true,
+          count: 2,
+          type: "SCALAR",
+          componentType: "FLOAT32",
+          normalized: true,
+          offset: [1, 2],
+        },
+      };
+
+      arrayValues = {
+        propertyInt8: [
+          [-1.0, 0.0, 1.0],
+          [1.0, 1.0, 1.0],
+          [0.0, 0.5, 1.0],
+        ],
+        propertyFloat32: [
+          [0.0, 1.0],
+          [0.0, 0.125],
+          [1.0, 1.0],
+        ],
+        propertyDefaultOffset: [
+          [-1, 1],
+          [-2, 4],
+          [-0.5, 0.5],
+        ],
+        propertyDefaultScale: [
+          [-1, 1],
+          [-2, 4],
+          [-0.5, 0.5],
+        ],
+      };
+
+      transformedArrayValues = {
+        propertyInt8: [
+          [-1.0, 2.0, 5.0],
+          [3.0, 4.0, 5.0],
+          [1.0, 3.0, 5.0],
+        ],
+        propertyFloat32: [
+          [-1.0, 0.0],
+          [-1.0, -0.875],
+          [1.0, 0.0],
+        ],
+        propertyDefaultOffset: [
+          [-2, 2],
+          [-4, 8],
+          [-1, 1],
+        ],
+        propertyDefaultScale: [
+          [0, 3],
+          [-1, 6],
+          [0.5, 2.5],
+        ],
+      };
+
+      vectorProperties = {
+        vec4Int8: {
+          type: "VEC4",
+          componentType: "INT8",
+          normalized: true,
+          offset: [3, 3, 0, 1],
+          scale: [2, 8, 4, 1],
+        },
+        mat2Float32: {
+          type: "MAT2",
+          componentType: "FLOAT32",
+          normalized: true,
+          scale: [0.25, 0.25, 1.0, 1.0],
+        },
+      };
+
+      vectorValues = {
+        vec4Int8: [
+          [-1.0, 0.0, 1.0, 0],
+          [-1.0, -1.0, -1.0, 0],
+          [1.0, 1.0, 1.0, 1.0],
+        ],
+        mat2Float32: [
+          [0.0, 1.0, 0.0, 0.0],
+          [0.0, 0.25, 0.25, 0.0],
+          [1.0, 0.0, 0.0, 1.0],
+        ],
+      };
+
+      transformedVectorValues = {
+        vec4Int8: [
+          [1, 3, 4, 1],
+          [1, -5, -4, 1],
+          [5, 11, 4, 2],
+        ],
+        mat2Float32: [
+          [0.0, 0.25, 0.0, 0.0],
+          [0.0, 0.0625, 0.25, 0.0],
+          [0.25, 0.0, 0.0, 1.0],
+        ],
+      };
+
+      arrayOfVectorProperties = {
+        propertyVector: {
+          type: "VEC3",
+          componentType: "UINT8",
+          normalized: true,
+          array: true,
+          count: 2,
+          offset: [
+            [2, 2, 2],
+            [0, 1, 2],
+          ],
+        },
+        propertyMatrix: {
+          type: "MAT2",
+          componentType: "UINT8",
+          normalized: true,
+          array: true,
+          count: 2,
+          scale: [
+            [2, 2, 2, 1],
+            [1, 1, 1, 1],
+          ],
+        },
+      };
+
+      arrayOfVectorValues = {
+        propertyVector: [
+          [
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+          ],
+          [
+            [0.0, 0.0, 1.0],
+            [1.0, 1.0, 0.0],
+          ],
+        ],
+        propertyMatrix: [
+          [
+            [1.0, 1.0, 1.0, 1.0],
+            [0.25, 0.0, 0.0, 0.25],
+          ],
+          [
+            [0.0, -1.0, 1.0, 0.0],
+            [2.0, 0.0, 0.0, 2.0],
+          ],
+        ],
+      };
+
+      transformedArrayOfVectorValues = {
+        propertyVector: [
+          [
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+          ],
+          [
+            [0.0, 0.0, 1.0],
+            [1.0, 1.0, 0.0],
+          ],
+        ],
+        propertyMatrix: [
+          [
+            [1.0, 1.0, 1.0, 1.0],
+            [0.25, 0.0, 0.0, 0.25],
+          ],
+          [
+            [0.0, -1.0, 1.0, 0],
+            [2.0, 0.0, 0.0, 2.0],
+          ],
+        ],
+      };
+
+      transformedArrayOfVectorValues = {
+        propertyVector: [
+          [
+            [3.0, 2.0, 2.0],
+            [0.0, 2.0, 2.0],
+          ],
+          [
+            [2.0, 2.0, 3.0],
+            [1.0, 2.0, 2.0],
+          ],
+        ],
+        propertyMatrix: [
+          [
+            [2.0, 2.0, 2.0, 1.0],
+            [0.25, 0.0, 0.0, 0.25],
+          ],
+          [
+            [0.0, -2.0, 2.0, 0.0],
+            [2.0, 0.0, 0.0, 2.0],
+          ],
+        ],
+      };
+
+      myEnum = new MetadataEnum({
+        id: "myEnum",
+        enum: {
+          values: [
+            {
+              value: 0,
+              name: "ValueA",
+            },
+            {
+              value: 1,
+              name: "ValueB",
+            },
+            {
+              value: 999,
+              name: "Other",
+            },
+          ],
+        },
+      });
+
+      otherProperties = {
+        propertyEnum: {
+          type: "ENUM",
+          enumType: "myEnum",
+        },
+        propertyEnumArray: {
+          type: "ENUM",
+          array: true,
+          enumType: "myEnum",
+        },
+        propertyString: {
+          type: "STRING",
+        },
+        propertyBoolean: {
+          type: "BOOLEAN",
+        },
+        propertyIntegerNotNormalized: {
+          type: "SCALAR",
+          normalized: false,
+          offset: 1,
+          scale: 2,
+        },
+      };
+
+      otherValues = {
+        propertyEnum: ["Other", "ValueA", "ValueB"],
+        propertyEnumArray: [["Other", "ValueA"], ["ValueB"], []],
+        propertyString: ["a", "bc", ""],
+        propertyBoolean: [true, false, false],
+        propertyIntegerNotNormalized: [1.0, 2.0, 3.0],
+      };
+    });
+
+    it("applies value transform for scalar values", function () {
+      if (!FeatureDetection.supportsBigInt()) {
+        return;
+      }
+
+      for (const propertyId in scalarProperties) {
+        if (scalarProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: scalarProperties[propertyId],
+          });
+          const length = transformedScalarValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const value = scalarValues[propertyId][i];
+            const transformedValue = property.applyValueTransform(value);
+            expect(transformedValue).toEqual(
+              transformedScalarValues[propertyId][i]
+            );
+          }
+        }
+      }
+    });
+
+    it("un-applies value transform for scalar values", function () {
+      if (!FeatureDetection.supportsBigInt()) {
+        return;
+      }
+
+      for (const propertyId in scalarProperties) {
+        if (scalarProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: scalarProperties[propertyId],
+          });
+          const length = scalarValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const transformedValue = transformedScalarValues[propertyId][i];
+            const value = property.unapplyValueTransform(transformedValue);
+            expect(value).toEqual(scalarValues[propertyId][i]);
+          }
+        }
+      }
+    });
+
+    it("unapplyValueTransform returns 0 when scale is 0", function () {
+      const property = new MetadataClassProperty({
+        id: "zeroScale",
+        property: {
+          type: "SCALAR",
+          componentType: "FLOAT32",
+          offset: 1,
+          scale: 0,
+        },
+      });
+
+      expect(property.unapplyValueTransform(35.0)).toBe(0.0);
+    });
+
+    it("value transformations are no-ops for identity transformations", function () {
+      const valueTransformInPlace = spyOn(
+        MetadataClassProperty,
+        "valueTransformInPlace"
+      );
+      const property = new MetadataClassProperty({
+        id: "identityTransform",
+        property: {
+          type: "SCALAR",
+          componentType: "FLOAT32",
+        },
+      });
+
+      expect(property.applyValueTransform(5.0)).toBe(5.0);
+      expect(property.unapplyValueTransform(5.0)).toBe(5.0);
+      expect(valueTransformInPlace).not.toHaveBeenCalled();
+    });
+
+    it("applies value transform for array values", function () {
+      for (const propertyId in arrayProperties) {
+        if (arrayProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: arrayProperties[propertyId],
+          });
+          const length = transformedArrayValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const value = arrayValues[propertyId][i];
+            const transformedValue = property.applyValueTransform(
+              clone(value, true)
+            );
+            expect(transformedValue).toEqual(
+              transformedArrayValues[propertyId][i]
+            );
+          }
+        }
+      }
+    });
+
+    it("un-applies value transform for array values", function () {
+      for (const propertyId in arrayProperties) {
+        if (arrayProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: arrayProperties[propertyId],
+          });
+          const length = arrayValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const transformedValue = transformedArrayValues[propertyId][i];
+            const value = property.unapplyValueTransform(
+              clone(transformedValue, true)
+            );
+            expect(value).toEqual(arrayValues[propertyId][i]);
+          }
+        }
+      }
+    });
+
+    it("value transforms do not transform variable length arrays", function () {
+      const valueTransformInPlace = spyOn(
+        MetadataClassProperty,
+        "valueTransformInPlace"
+      );
+
+      const property = new MetadataClassProperty({
+        id: "zeroScale",
+        property: {
+          type: "SCALAR",
+          componentType: "FLOAT32",
+          array: true,
+          // In this case the implementation should ignore offset/scale
+          offset: [1, 2, 3],
+          scale: [2, 2, 2],
+        },
+      });
+
+      const values = [-1.0, 0.0, 5.0, 4.0];
+      expect(property.applyValueTransform(clone(values, true))).toEqual(values);
+      expect(property.unapplyValueTransform(clone(values, true))).toEqual(
+        values
+      );
+
+      expect(valueTransformInPlace).not.toHaveBeenCalled();
+    });
+
+    it("applies value transform for vector and matrix values", function () {
+      for (const propertyId in vectorProperties) {
+        if (vectorProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: vectorProperties[propertyId],
+          });
+          const length = transformedVectorValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const value = vectorValues[propertyId][i];
+            const transformedValue = property.applyValueTransform(
+              clone(value, true)
+            );
+            expect(transformedValue).toEqual(
+              transformedVectorValues[propertyId][i]
+            );
+          }
+        }
+      }
+    });
+
+    it("un-applies value transform for vector and matrix values", function () {
+      for (const propertyId in vectorProperties) {
+        if (vectorProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: vectorProperties[propertyId],
+          });
+          const length = vectorValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const transformedValue = transformedVectorValues[propertyId][i];
+            const value = property.unapplyValueTransform(
+              clone(transformedValue, true)
+            );
+            expect(value).toEqual(vectorValues[propertyId][i]);
+          }
+        }
+      }
+    });
+
+    it("applies value transform for arrays of vectors", function () {
+      for (const propertyId in arrayOfVectorProperties) {
+        if (arrayOfVectorProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: arrayOfVectorProperties[propertyId],
+          });
+          const length = transformedArrayOfVectorValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const value = arrayOfVectorValues[propertyId][i];
+            const transformedValue = property.applyValueTransform(
+              clone(value, true)
+            );
+            expect(transformedValue).toEqual(
+              transformedArrayOfVectorValues[propertyId][i]
+            );
+          }
+        }
+      }
+    });
+
+    it("un-applies value transform for arrays of vectors", function () {
+      for (const propertyId in arrayOfVectorProperties) {
+        if (arrayOfVectorProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: arrayOfVectorProperties[propertyId],
+          });
+          const length = arrayOfVectorValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const transformedValue =
+              transformedArrayOfVectorValues[propertyId][i];
+            const value = property.unapplyValueTransform(
+              clone(transformedValue, true)
+            );
+            expect(value).toEqual(arrayOfVectorValues[propertyId][i]);
+          }
+        }
+      }
+    });
+
+    it("does not apply transform to other types", function () {
+      for (const propertyId in otherProperties) {
+        if (otherProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: otherProperties[propertyId],
+            enums: {
+              myEnum: myEnum,
+            },
+          });
+          const length = otherValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const value = otherValues[propertyId][i];
+            const normalizedValue = property.normalize(value);
+            expect(normalizedValue).toEqual(value);
+          }
+        }
+      }
+    });
+
+    it("does not unaapply transform to other types", function () {
+      for (const propertyId in otherProperties) {
+        if (otherProperties.hasOwnProperty(propertyId)) {
+          const property = new MetadataClassProperty({
+            id: propertyId,
+            property: otherProperties[propertyId],
+            enums: {
+              myEnum: myEnum,
+            },
+          });
+          const length = otherValues[propertyId].length;
+          for (let i = 0; i < length; ++i) {
+            const value = otherValues[propertyId][i];
+            const normalizedValue = property.normalize(value);
+            expect(normalizedValue).toEqual(value);
           }
         }
       }
@@ -2254,5 +3045,63 @@ describe("Scene/MetadataClassProperty", function () {
     expect(propertyUint8.validate(1.1)).toBe(
       "value 1.1 is out of range for type UINT8 (normalized)"
     );
+  });
+
+  describe("valueTransformInPlace", function () {
+    it("applies function to a scalar", function () {
+      const value = 1;
+      const offset = 1;
+      const scale = 2;
+      const result = MetadataClassProperty.valueTransformInPlace(
+        value,
+        offset,
+        scale,
+        MetadataComponentType.applyValueTransform
+      );
+
+      expect(result).toBe(3);
+    });
+
+    it("applies function to a flat array", function () {
+      const value = [1, 1, 1];
+      const offset = [1, 2, 3];
+      const scale = [2, 2, 2];
+      const result = MetadataClassProperty.valueTransformInPlace(
+        value,
+        offset,
+        scale,
+        MetadataComponentType.applyValueTransform
+      );
+      expect(result).toEqual([3, 4, 5]);
+    });
+
+    it("applies function to a nested array", function () {
+      const values = [
+        [1, 1, 1],
+        [1, 1, 1],
+        [1, 1, 1],
+      ];
+      const offset = [
+        [1, 2, 3],
+        [1, 2, 3],
+        [1, 2, 3],
+      ];
+      const scale = [
+        [2, 2, 2],
+        [2, 2, 2],
+        [2, 2, 2],
+      ];
+      const result = MetadataClassProperty.valueTransformInPlace(
+        values,
+        offset,
+        scale,
+        MetadataComponentType.applyValueTransform
+      );
+      expect(result).toEqual([
+        [3, 4, 5],
+        [3, 4, 5],
+        [3, 4, 5],
+      ]);
+    });
   });
 });

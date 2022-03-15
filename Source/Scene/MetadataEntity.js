@@ -291,6 +291,7 @@ MetadataEntity.getProperty = function (
   }
 
   value = classProperty.normalize(value);
+  value = classProperty.applyValueTransform(value);
   return classProperty.unpackVectorAndMatrixTypes(value, enableNestedArrays);
 };
 
@@ -339,6 +340,7 @@ MetadataEntity.setProperty = function (
   const enableNestedArrays = true;
   if (defined(classProperty)) {
     value = classProperty.packVectorAndMatrixTypes(value, enableNestedArrays);
+    value = classProperty.unapplyValueTransform(value);
     value = classProperty.unnormalize(value);
   }
 

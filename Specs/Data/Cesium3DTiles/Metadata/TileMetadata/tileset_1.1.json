@@ -14,6 +14,12 @@
           "population": {
             "type": "SCALAR",
             "componentType": "UINT32"
+          },
+          "areaPercentage": {
+            "type": "SCALAR",
+            "componentType": "UINT16",
+            "normalized": true,
+            "scale": 100
           }
         }
       }
@@ -50,7 +56,8 @@
       "class": "tile",
       "properties": {
         "color": [0.5, 0.0, 1.0],
-        "population": 530
+        "population": 530,
+        "areaPercentage": 65535
       }
     },
     "children": [
@@ -73,7 +80,8 @@
           "class": "tile",
           "properties": {
             "color": [1.0, 1.0, 0.0],
-            "population": 50
+            "population": 50,
+            "areaPercentage": 16383
           }
         }
       },
@@ -96,7 +104,8 @@
           "class": "tile",
           "properties": {
             "color": [1.0, 0.0, 0.5],
-            "population": 230
+            "population": 230,
+            "areaPercentage": 16383
           }
         }
       },
@@ -119,7 +128,8 @@
           "class": "tile",
           "properties": {
             "color": [1.0, 0.5, 0.0],
-            "population": 150
+            "population": 150,
+            "areaPercentage": 16383
           }
         }
       },
@@ -142,7 +152,8 @@
           "class": "tile",
           "properties": {
             "color": [1.0, 0.0, 0.0],
-            "population": 100
+            "population": 100,
+            "areaPercentage": 16383
           }
         }
       }
