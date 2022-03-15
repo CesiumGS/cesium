@@ -127,7 +127,7 @@ export default function ModelExperimental(options) {
    * @type {Number}
    * @private
    */
-  this._modifiedScale = this._clampedScale;
+  this._computedScale = this._clampedScale;
 
   /**
    * Whether or not the ModelExperimentalSceneGraph should call updateModelMatrix.
@@ -904,7 +904,7 @@ ModelExperimental.prototype.update = function (frameState) {
       ? Math.min(this._scale, this._maximumScale)
       : this._scale;
     this._boundingSphere.radius = this._initialRadius * this._clampedScale;
-    this._modifiedScale = getScale(this, frameState);
+    this._computedScale = getScale(this, frameState);
     this._sceneGraph.updateModelMatrix();
     this._updateModelMatrix = false;
   }
@@ -923,7 +923,7 @@ ModelExperimental.prototype.update = function (frameState) {
 
   // Check for show here because we still want the draw commands to be built so user can instantly see the model
   // when show is set to true.
-  if (this._show && this._modifiedScale !== 0) {
+  if (this._show && this._computedScale !== 0) {
     const asset = this._sceneGraph.components.asset;
     const credits = asset.credits;
 

@@ -185,7 +185,7 @@ function initialize(sceneGraph) {
 
   Matrix4.multiplyByUniformScale(
     sceneGraph._computedModelMatrix,
-    model._modifiedScale,
+    model._computedScale,
     sceneGraph._computedModelMatrix
   );
 
@@ -399,11 +399,9 @@ ModelExperimentalSceneGraph.prototype.update = function (frameState) {
 
 ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
   const model = this._model;
-  const scale = model._modifiedScale;
-  Matrix4.clone(model.modelMatrix, this._computedModelMatrix);
 
   Matrix4.multiply(
-    this._computedModelMatrix,
+    model.modelMatrix,
     this._modelComponents.transform,
     this._computedModelMatrix
   );
@@ -416,7 +414,7 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
 
   Matrix4.multiplyByUniformScale(
     this._computedModelMatrix,
-    scale,
+    model._computedScale,
     this._computedModelMatrix
   );
 
