@@ -151,7 +151,7 @@ vec4 computeAtmosphereColor(
     vec3 rayleigh = rayleighPhase * rayleighColor;
     vec3 mie = miePhase * mieColor;
 
-    return vec4((rayleigh + mie) * INTENSITY, 1.0 - opacity);
+    return vec4((rayleigh + mie) * INTENSITY, opacity);
 }
 
 vec3 getLightDirection(vec3 positionWC)

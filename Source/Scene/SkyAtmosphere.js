@@ -112,8 +112,8 @@ function SkyAtmosphere(ellipsoid) {
   const radiiAndDynamicAtmosphereColor = new Cartesian3();
 
   radiiAndDynamicAtmosphereColor.x =
-    ellipsoid.minimumRadius * outerEllipsoidScale;
-  radiiAndDynamicAtmosphereColor.y = ellipsoid.minimumRadius;
+    ellipsoid.maximumRadius * outerEllipsoidScale;
+  radiiAndDynamicAtmosphereColor.y = ellipsoid.minimumRadius * 0.9985;
 
   // Toggles whether the sun position is used. 0 treats the sun as always directly overhead.
   radiiAndDynamicAtmosphereColor.z = 0;
