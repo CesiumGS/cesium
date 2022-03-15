@@ -19,6 +19,7 @@
     - Updated property texture parsing to match the latest schema [#10122](https://github.com/CesiumGS/cesium/pull/10122)
     - Property tables now use `values`, `stringOffsets`, and `arrayOffsets` rather than `bufferView`, `stringOffsetBufferView`, and `arrayOffsetBufferView`, respectively. [#10151](https://github.com/CesiumGS/cesium/pull/10151)
     - Added support for properties with `required`, `noData` and `default`. [#10172](https://github.com/CesiumGS/cesium/pull/10172)
+    - Added support for `offset` and `scale` for property tables [#10199](https://github.com/CesiumGS/cesium/pull/10199)
   - `3DTILES_metadata`:
     - Added support for explicit content metadata. [#10150](https://github.com/CesiumGS/cesium/pull/10150)
     - `tileset.groups` now stores group objects in an array instead of a dictionary. [#10179](https://github.com/CesiumGS/cesium/pull/10179)
