@@ -1204,6 +1204,18 @@ describe(
           const expected = expectedEmployeeCounts[i];
           expect(propertyTable.getProperty(i, "employeeCount")).toBe(expected);
         }
+
+        // the offset/scale from the property table should be used, so the
+        // temperatures should be between the range 18-24°C rather than
+        // the class property range of 0-100°C
+        for (let i = 0; i < 10; i++) {
+          const temperature = propertyTable.getProperty(
+            i,
+            "temperatureCelsius"
+          );
+          expect(temperature).toBeGreaterThanOrEqualTo(18);
+          expect(temperature).toBeLessThanOrEqualTo(24);
+        }
       });
     });
 

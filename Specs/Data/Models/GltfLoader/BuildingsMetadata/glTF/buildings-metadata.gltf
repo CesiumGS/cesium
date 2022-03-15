@@ -68,7 +68,7 @@
   "buffers": [
     {
       "name": "buffer",
-      "byteLength": 7544,
+      "byteLength": 7560,
       "uri": "buffer.bin"
     }
   ],
@@ -114,6 +114,11 @@
       "buffer": 0,
       "byteOffset": 7520,
       "byteLength": 20
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 7544,
+      "byteLength": 10
     }
   ],
   "materials": [
@@ -252,6 +257,11 @@
                 "componentType": "INT16",
                 "noData": -1,
                 "required": false
+              },
+              "temperatureCelsius": {
+                "type": "UINT8",
+                "normalized": true,
+                "scale": 100
               }
             }
           }
@@ -271,6 +281,11 @@
             },
             "employeeCount": {
               "values": 6
+            },
+            "temperatureCelsius": {
+              "values": 7,
+              "offset": 18,
+              "scale": 6
             }
           }
         }
