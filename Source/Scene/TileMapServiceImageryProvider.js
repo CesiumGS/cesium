@@ -385,7 +385,7 @@ TileMapServiceImageryProvider.prototype._metadataFailure = function (error) {
   const minimumLevel = calculateSafeMinimumDetailLevel(
     tilingScheme,
     rectangle,
-    options.maximumLevel
+    options.minimumLevel
   );
 
   const templateResource = this._tmsResource.getDerivedResource({
