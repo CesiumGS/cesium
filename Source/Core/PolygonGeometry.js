@@ -1155,13 +1155,15 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
   const hierarchy = results.hierarchy;
   const polygons = results.polygons;
 
+  const dummyFunction = function (identity) {
+    return identity;
+  };
+
   const textureCoordinatePolygons = textureCoordinates
     ? PolygonGeometryLibrary.polygonsFromHierarchy(
         textureCoordinates,
         true,
-        function (identity) {
-          return identity;
-        },
+        dummyFunction,
         false
       ).polygons
     : undefined;

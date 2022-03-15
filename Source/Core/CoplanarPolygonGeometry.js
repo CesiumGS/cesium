@@ -133,8 +133,9 @@ function createGeometryFromPolygon(
         hardcodedTextureCoordinates &&
         hardcodedTextureCoordinates.positions.length === length
       ) {
-        textureCoordinates[i * 2] = hardcodedTextureCoordinates.positions[i].x;
-        textureCoordinates[i * 2 + 1] =
+        textureCoordinates[stIndex++] =
+          hardcodedTextureCoordinates.positions[i].x;
+        textureCoordinates[stIndex++] =
           hardcodedTextureCoordinates.positions[i].y;
       } else {
         const p = Matrix3.multiplyByVector(
@@ -454,6 +455,7 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
   const polygonHierarchy = polygonGeometry._polygonHierarchy;
   const stRotation = polygonGeometry._stRotation;
   const textureCoordinates = polygonGeometry._textureCoordinates;
+  const hasTextureCoordinates = defined(textureCoordinates);
 
   let outerPositions = polygonHierarchy.positions;
   outerPositions = arrayRemoveDuplicates(
@@ -521,20 +523,22 @@ CoplanarPolygonGeometry.createGeometry = function (polygonGeometry) {
 
   const results = PolygonGeometryLibrary.polygonsFromHierarchy(
     polygonHierarchy,
-    defined(textureCoordinates),
+    hasTextureCoordinates,
     projectPoints,
     false
   );
   const hierarchy = results.hierarchy;
   const polygons = results.polygons;
 
+  const dummyFunction = function (identity) {
+    return identity;
+  };
+
   const textureCoordinatePolygons = textureCoordinates
     ? PolygonGeometryLibrary.polygonsFromHierarchy(
         textureCoordinates,
         true,
-        function (identity) {
-          return identity;
-        },
+        dummyFunction,
         false
       ).polygons
     : undefined;
