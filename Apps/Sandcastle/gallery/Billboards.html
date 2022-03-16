@@ -160,48 +160,45 @@
 
         function offsetByDistance() {
           Sandcastle.declare(offsetByDistance);
-          Cesium.when.all(
-            [
-              Cesium.Resource.fetchImage("../images/Cesium_Logo_overlay.png"),
-              Cesium.Resource.fetchImage("../images/facility.gif"),
-            ],
-            function (images) {
-              // As viewer zooms closer to facility billboard,
-              // increase pixelOffset on CesiumLogo billboard to this height
-              const facilityHeight = images[1].height;
+          Promise.all([
+            Cesium.Resource.fetchImage("../images/Cesium_Logo_overlay.png"),
+            Cesium.Resource.fetchImage("../images/facility.gif"),
+          ]).then(function (images) {
+            // As viewer zooms closer to facility billboard,
+            // increase pixelOffset on CesiumLogo billboard to this height
+            const facilityHeight = images[1].height;
 
-              // colocated billboards, separate as viewer gets closer
-              viewer.entities.add({
-                position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-                billboard: {
-                  image: images[1],
-                  horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
-                  verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-                },
-              });
-              viewer.entities.add({
-                position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-                billboard: {
-                  image: images[0],
-                  horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
-                  verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-                  pixelOffset: new Cesium.Cartesian2(0.0, -facilityHeight),
-                  pixelOffsetScaleByDistance: new Cesium.NearFarScalar(
-                    1.0e3,
-                    1.0,
-                    1.5e6,
-                    0.0
-                  ),
-                  translucencyByDistance: new Cesium.NearFarScalar(
-                    1.0e3,
-                    1.0,
-                    1.5e6,
-                    0.1
-                  ),
-                },
-              });
-            }
-          );
+            // colocated billboards, separate as viewer gets closer
+            viewer.entities.add({
+              position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+              billboard: {
+                image: images[1],
+                horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+              },
+            });
+            viewer.entities.add({
+              position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+              billboard: {
+                image: images[0],
+                horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                pixelOffset: new Cesium.Cartesian2(0.0, -facilityHeight),
+                pixelOffsetScaleByDistance: new Cesium.NearFarScalar(
+                  1.0e3,
+                  1.0,
+                  1.5e6,
+                  0.0
+                ),
+                translucencyByDistance: new Cesium.NearFarScalar(
+                  1.0e3,
+                  1.0,
+                  1.5e6,
+                  0.1
+                ),
+              },
+            });
+          });
         }
 
         function addMarkerBillboards() {

@@ -23,7 +23,6 @@ import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createCanvas from "../createCanvas.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 
 describe(
   "Scene/Pick",
@@ -1539,7 +1538,7 @@ describe(
               expect(result).toBeDefined();
             }
           );
-          return when.all([promise1, promise2]);
+          return Promise.all([promise1, promise2]);
         });
       });
 
@@ -1888,7 +1887,7 @@ describe(
           ).then(function (result) {
             expect(result.length).toBe(1);
           });
-          return when.all([promise1, promise2]);
+          return Promise.all([promise1, promise2]);
         });
       });
 
@@ -2142,7 +2141,7 @@ describe(
           ).then(function (updatedCartographics2) {
             expect(updatedCartographics2[0].height).toBeDefined();
           });
-          return when.all([promise1, promise2]);
+          return Promise.all([promise1, promise2]);
         });
       });
 
@@ -2450,7 +2449,7 @@ describe(
               expect(clampedCartesians2[0]).toBeDefined();
             }
           );
-          return when.all([promise1, promise2]);
+          return Promise.all([promise1, promise2]);
         });
       });
 

@@ -8,6 +8,7 @@ import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -31,7 +32,6 @@ import RenderState from "../Renderer/RenderState.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import VertexArray from "../Renderer/VertexArray.js";
-import when from "../ThirdParty/when.js";
 import BatchTable from "./BatchTable.js";
 import CullFace from "./CullFace.js";
 import DepthFunction from "./DepthFunction.js";
@@ -349,7 +349,7 @@ function Primitive(options) {
 
   this._createGeometryResults = undefined;
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   this._batchTable = undefined;
   this._batchTableAttributeIndices = undefined;
@@ -1251,12 +1251,12 @@ function loadAsynchronous(primitive, frameState) {
 
     primitive._state = PrimitiveState.CREATING;
 
-    when
-      .all(promises, function (results) {
+    Promise.all(promises)
+      .then(function (results) {
         primitive._createGeometryResults = results;
         primitive._state = PrimitiveState.CREATED;
       })
-      .otherwise(function (error) {
+      .catch(function (error) {
         setReady(primitive, frameState, PrimitiveState.FAILED, error);
       });
   } else if (primitive._state === PrimitiveState.CREATED) {
@@ -1290,30 +1290,35 @@ function loadAsynchronous(primitive, frameState) {
     primitive._createGeometryResults = undefined;
     primitive._state = PrimitiveState.COMBINING;
 
-    when(promise, function (packedResult) {
-      const result = PrimitivePipeline.unpackCombineGeometryResults(
-        packedResult
-      );
-      primitive._geometries = result.geometries;
-      primitive._attributeLocations = result.attributeLocations;
-      primitive.modelMatrix = Matrix4.clone(
-        result.modelMatrix,
-        primitive.modelMatrix
-      );
-      primitive._pickOffsets = result.pickOffsets;
-      primitive._offsetInstanceExtend = result.offsetInstanceExtend;
-      primitive._instanceBoundingSpheres = result.boundingSpheres;
-      primitive._instanceBoundingSpheresCV = result.boundingSpheresCV;
+    Promise.resolve(promise)
+      .then(function (packedResult) {
+        const result = PrimitivePipeline.unpackCombineGeometryResults(
+          packedResult
+        );
+        primitive._geometries = result.geometries;
+        primitive._attributeLocations = result.attributeLocations;
+        primitive.modelMatrix = Matrix4.clone(
+          result.modelMatrix,
+          primitive.modelMatrix
+        );
+        primitive._pickOffsets = result.pickOffsets;
+        primitive._offsetInstanceExtend = result.offsetInstanceExtend;
+        primitive._instanceBoundingSpheres = result.boundingSpheres;
+        primitive._instanceBoundingSpheresCV = result.boundingSpheresCV;
 
-      if (defined(primitive._geometries) && primitive._geometries.length > 0) {
-        primitive._recomputeBoundingSpheres = true;
-        primitive._state = PrimitiveState.COMBINED;
-      } else {
-        setReady(primitive, frameState, PrimitiveState.FAILED, undefined);
-      }
-    }).otherwise(function (error) {
-      setReady(primitive, frameState, PrimitiveState.FAILED, error);
-    });
+        if (
+          defined(primitive._geometries) &&
+          primitive._geometries.length > 0
+        ) {
+          primitive._recomputeBoundingSpheres = true;
+          primitive._state = PrimitiveState.COMBINED;
+        } else {
+          setReady(primitive, frameState, PrimitiveState.FAILED, undefined);
+        }
+      })
+      .catch(function (error) {
+        setReady(primitive, frameState, PrimitiveState.FAILED, error);
+      });
   }
 }
 

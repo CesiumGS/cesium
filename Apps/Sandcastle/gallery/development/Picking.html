@@ -393,7 +393,7 @@
                   );
                   camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
                 })
-                .otherwise(function (error) {
+                .catch(function (error) {
                   window.alert(error);
                 });
 
@@ -457,7 +457,7 @@
                     pickedFeature.color = Cesium.Color.YELLOW;
                   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
                 })
-                .otherwise(function (error) {
+                .catch(function (error) {
                   throw error;
                 });
             },
@@ -503,7 +503,7 @@
                     pickedFeature.color = Cesium.Color.YELLOW;
                   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
                 })
-                .otherwise(function (error) {
+                .catch(function (error) {
                   throw error;
                 });
             },
@@ -558,7 +558,7 @@
                     );
                   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
                 })
-                .otherwise(function (error) {
+                .catch(function (error) {
                   throw error;
                 });
             },
@@ -618,7 +618,7 @@
                     pickedFeature.color = Cesium.Color.YELLOW;
                   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
                 })
-                .otherwise(function (error) {
+                .catch(function (error) {
                   throw error;
                 });
             },
@@ -678,7 +678,7 @@
                     pickedFeature.color = Cesium.Color.YELLOW;
                   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
                 })
-                .otherwise(function (error) {
+                .catch(function (error) {
                   throw error;
                 });
             },

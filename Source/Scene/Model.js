@@ -10,6 +10,7 @@ import combine from "../Core/combine.js";
 import createGuid from "../Core/createGuid.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -51,7 +52,6 @@ import usesExtension from "./GltfPipeline/usesExtension.js";
 import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import parseGlb from "./GltfPipeline/parseGlb.js";
 import updateVersion from "./GltfPipeline/updateVersion.js";
-import when from "../ThirdParty/when.js";
 import Axis from "./Axis.js";
 import BlendingState from "./BlendingState.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
@@ -434,7 +434,7 @@ function Model(options) {
   this._allowPicking = defaultValue(options.allowPicking, true);
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   /**
    * The currently playing glTF animations.
@@ -870,11 +870,11 @@ Object.defineProperties(Model.prototype, {
    *
    * @example
    * // Play all animations at half-speed when the model is ready to render
-   * Cesium.when(model.readyPromise).then(function(model) {
+   * Promise.resolve(model.readyPromise).then(function(model) {
    *   model.activeAnimations.addAll({
    *     multiplier : 0.5
    *   });
-   * }).otherwise(function(error){
+   * }).catch(function(error){
    *   window.alert(error);
    * });
    *
@@ -1568,7 +1568,7 @@ Model.fromGltf = function (options) {
           }
         }
       })
-      .otherwise(
+      .catch(
         ModelUtility.getFailedLoadFunction(model, "model", modelResource.url)
       );
   } else if (!cachedGltf.ready) {
@@ -1928,7 +1928,7 @@ function parseShaders(model) {
       shaderResource
         .fetchText()
         .then(shaderLoad(model, shader.type, id))
-        .otherwise(
+        .catch(
           ModelUtility.getFailedLoadFunction(
             model,
             "shader",
@@ -2077,7 +2077,7 @@ function parseTextures(model, context, supportsWebP) {
       }
       promise
         .then(imageLoad(model, id, imageId))
-        .otherwise(
+        .catch(
           ModelUtility.getFailedLoadFunction(model, "image", imageResource.url)
         );
     }
@@ -2824,7 +2824,7 @@ function loadTexturesFromBufferViews(model) {
       const ktxBuffer = new Uint8Array(loadResources.getBuffer(bufferView));
       loadKTX2(ktxBuffer)
         .then(imageLoad(model, gltfTexture.id, imageId))
-        .otherwise(onerror);
+        .catch(onerror);
       ++model._loadResources.pendingTextureLoads;
     } else {
       const onload = getOnImageCreatedFromTypedArray(
@@ -2838,7 +2838,7 @@ function loadTexturesFromBufferViews(model) {
         skipColorSpaceConversion: true,
       })
         .then(onload)
-        .otherwise(onerror);
+        .catch(onerror);
       ++loadResources.pendingBufferViewToImage;
     }
   }
@@ -5393,7 +5393,7 @@ Model.prototype.update = function (frameState) {
       }
 
       if (!loadResources.finishedDecoding()) {
-        DracoLoader.decodeModel(this, context).otherwise(
+        DracoLoader.decodeModel(this, context).catch(
           ModelUtility.getFailedLoadFunction(this, "model", this.basePath)
         );
       }
@@ -5483,7 +5483,7 @@ Model.prototype.update = function (frameState) {
         .then(function () {
           that._shouldRegenerateShaders = true;
         })
-        .otherwise(function (error) {
+        .catch(function (error) {
           console.error(`Error loading specularEnvironmentMaps: ${error}`);
         });
     }

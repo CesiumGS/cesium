@@ -55,7 +55,7 @@ describe("Scene/Cesium3DTileStyle", function () {
       .then(function (style) {
         fail("should not resolve");
       })
-      .otherwise(function (error) {
+      .catch(function (error) {
         expect(tileStyle.ready).toEqual(false);
         expect(error.statusCode).toEqual(404);
       });
@@ -138,7 +138,7 @@ describe("Scene/Cesium3DTileStyle", function () {
         expect(style.labelVerticalOrigin).toEqual(new Expression("0"));
         expect(tileStyle.ready).toEqual(true);
       })
-      .otherwise(function () {
+      .catch(function () {
         fail("should load style.json");
       });
   });
@@ -224,44 +224,64 @@ describe("Scene/Cesium3DTileStyle", function () {
         expect(style.labelVerticalOrigin).toEqual(new Expression("0"));
         expect(tileStyle.ready).toEqual(true);
       })
-      .otherwise(function () {
+      .catch(function () {
         fail("should load style.json");
       });
   });
 
   it("sets show value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.show).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.show).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.show).toBeUndefined();
+        style = new Cesium3DTileStyle();
+      })
+      .then(function () {
+        expect(style.show).toBeUndefined();
+      });
   });
 
   it("sets show value to expression", function () {
     let style = new Cesium3DTileStyle({
       show: "true",
     });
-    expect(style.show).toEqual(new Expression("true"));
+    return style.readyPromise
+      .then(function () {
+        expect(style.show).toEqual(new Expression("true"));
 
-    style = new Cesium3DTileStyle({
-      show: "false",
-    });
-    expect(style.show).toEqual(new Expression("false"));
+        style = new Cesium3DTileStyle({
+          show: "false",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.show).toEqual(new Expression("false"));
 
-    style = new Cesium3DTileStyle({
-      show: "${height} * 10 >= 1000",
-    });
-    expect(style.show).toEqual(new Expression("${height} * 10 >= 1000"));
+        style = new Cesium3DTileStyle({
+          show: "${height} * 10 >= 1000",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.show).toEqual(new Expression("${height} * 10 >= 1000"));
 
-    style = new Cesium3DTileStyle({
-      show: true,
-    });
-    expect(style.show).toEqual(new Expression("true"));
+        style = new Cesium3DTileStyle({
+          show: true,
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.show).toEqual(new Expression("true"));
 
-    style = new Cesium3DTileStyle({
-      show: false,
-    });
-    expect(style.show).toEqual(new Expression("false"));
+        style = new Cesium3DTileStyle({
+          show: false,
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.show).toEqual(new Expression("false"));
+      });
   });
 
   it("sets show value to conditional", function () {
@@ -275,25 +295,28 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       show: jsonExp,
     });
-    expect(style.show).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.show).toEqual(new ConditionsExpression(jsonExp));
+    });
   });
 
   it("sets show expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", "false"],
+          ["true", "true"],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", "false"],
-        ["true", "true"],
-      ],
+      style.show = condExp;
+      expect(style.show).toEqual(condExp);
+
+      const exp = new Expression("false");
+      style.show = exp;
+      expect(style.show).toEqual(exp);
     });
-
-    style.show = condExp;
-    expect(style.show).toEqual(condExp);
-
-    const exp = new Expression("false");
-    style.show = exp;
-    expect(style.show).toEqual(exp);
   });
 
   it("sets show values in setter", function () {
@@ -301,79 +324,97 @@ describe("Scene/Cesium3DTileStyle", function () {
       showFactor: 10,
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.show = "${height} * ${showFactor} >= 1000";
+      expect(style.show).toEqual(
+        new Expression("${height} * ${showFactor} >= 1000", defines)
+      );
 
-    style.show = "${height} * ${showFactor} >= 1000";
-    expect(style.show).toEqual(
-      new Expression("${height} * ${showFactor} >= 1000", defines)
-    );
+      style.show = false;
+      expect(style.show).toEqual(new Expression("false"));
 
-    style.show = false;
-    expect(style.show).toEqual(new Expression("false"));
+      const jsonExp = {
+        conditions: [
+          ["${height} > ${showFactor}", "false"],
+          ["true", "true"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > ${showFactor}", "false"],
-        ["true", "true"],
-      ],
-    };
+      style.show = jsonExp;
+      expect(style.show).toEqual(new ConditionsExpression(jsonExp, defines));
 
-    style.show = jsonExp;
-    expect(style.show).toEqual(new ConditionsExpression(jsonExp, defines));
-
-    style.show = undefined;
-    expect(style.show).toBeUndefined();
+      style.show = undefined;
+      expect(style.show).toBeUndefined();
+    });
   });
 
   it("sets style.show values in setter", function () {
     const style = new Cesium3DTileStyle({});
-    style.show = "${height} * ${showFactor} >= 1000";
-    expect(style.style.show).toEqual("${height} * ${showFactor} >= 1000");
+    return style.readyPromise.then(function () {
+      style.show = "${height} * ${showFactor} >= 1000";
+      expect(style.style.show).toEqual("${height} * ${showFactor} >= 1000");
 
-    style.show = false;
-    expect(style.style.show).toEqual("false");
+      style.show = false;
+      expect(style.style.show).toEqual("false");
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > ${showFactor}", "false"],
-        ["true", "true"],
-      ],
-    };
+      const jsonExp = {
+        conditions: [
+          ["${height} > ${showFactor}", "false"],
+          ["true", "true"],
+        ],
+      };
 
-    style.show = jsonExp;
-    expect(style.style.show).toEqual(jsonExp);
+      style.show = jsonExp;
+      expect(style.style.show).toEqual(jsonExp);
 
-    style.show = undefined;
-    expect(style.style.show).toBeUndefined();
+      style.show = undefined;
+      expect(style.style.show).toBeUndefined();
+    });
   });
 
   it("sets color value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.color).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.color).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.color).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.color).toBeUndefined();
+      });
   });
 
   it("sets color value to expression", function () {
     let style = new Cesium3DTileStyle({
       color: 'color("red")',
     });
-    expect(style.color).toEqual(new Expression('color("red")'));
+    return style.readyPromise
+      .then(function () {
+        expect(style.color).toEqual(new Expression('color("red")'));
 
-    style = new Cesium3DTileStyle({
-      color: "rgba(30, 30, 30, 0.5)",
-    });
-    expect(style.color).toEqual(new Expression("rgba(30, 30, 30, 0.5)"));
+        style = new Cesium3DTileStyle({
+          color: "rgba(30, 30, 30, 0.5)",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.color).toEqual(new Expression("rgba(30, 30, 30, 0.5)"));
 
-    style = new Cesium3DTileStyle({
-      color:
-        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")',
-    });
-    expect(style.color).toEqual(
-      new Expression(
-        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
-      )
-    );
+        style = new Cesium3DTileStyle({
+          color:
+            '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")',
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.color).toEqual(
+          new Expression(
+            '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
+          )
+        );
+      });
   });
 
   it("sets color value to conditional", function () {
@@ -387,49 +428,53 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       color: jsonExp,
     });
-    expect(style.color).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.color).toEqual(new ConditionsExpression(jsonExp));
+    });
   });
 
   it("sets color expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      const exp = new Expression('color("red")');
+      style.color = exp;
+      expect(style.color).toEqual(exp);
 
-    const exp = new Expression('color("red")');
-    style.color = exp;
-    expect(style.color).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("blue")'],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("blue")'],
-      ],
+      style.color = condExp;
+      expect(style.color).toEqual(condExp);
+
+      style.color = undefined;
+      expect(style.color).toBeUndefined();
     });
-
-    style.color = condExp;
-    expect(style.color).toEqual(condExp);
-
-    style.color = undefined;
-    expect(style.color).toBeUndefined();
   });
 
   it("sets style.color expression in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      const stringExp = 'color("red")';
+      style.color = new Expression(stringExp);
+      expect(style.style.color).toEqual(stringExp);
 
-    const stringExp = 'color("red")';
-    style.color = new Expression(stringExp);
-    expect(style.style.color).toEqual(stringExp);
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("blue")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("blue")'],
-      ],
-    };
+      style.color = new ConditionsExpression(jsonExp);
+      expect(style.style.color).toEqual(jsonExp);
 
-    style.color = new ConditionsExpression(jsonExp);
-    expect(style.style.color).toEqual(jsonExp);
-
-    style.color = undefined;
-    expect(style.style.color).toBeUndefined();
+      style.color = undefined;
+      expect(style.style.color).toBeUndefined();
+    });
   });
 
   it("sets color values in setter", function () {
@@ -437,63 +482,80 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetColor: "red",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.color = 'color("${targetColor}")';
+      expect(style.color).toEqual(
+        new Expression('color("${targetColor}")', defines)
+      );
 
-    style.color = 'color("${targetColor}")';
-    expect(style.color).toEqual(
-      new Expression('color("${targetColor}")', defines)
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("${targetColor}")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("${targetColor}")'],
-      ],
-    };
-
-    style.color = jsonExp;
-    expect(style.color).toEqual(new ConditionsExpression(jsonExp, defines));
+      style.color = jsonExp;
+      expect(style.color).toEqual(new ConditionsExpression(jsonExp, defines));
+    });
   });
 
   it("sets style.color values in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.color = 'color("${targetColor}")';
+      expect(style.style.color).toEqual('color("${targetColor}")');
 
-    style.color = 'color("${targetColor}")';
-    expect(style.style.color).toEqual('color("${targetColor}")');
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("${targetColor}")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("${targetColor}")'],
-      ],
-    };
-
-    style.color = jsonExp;
-    expect(style.style.color).toEqual(jsonExp);
+      style.color = jsonExp;
+      expect(style.style.color).toEqual(jsonExp);
+    });
   });
 
   it("sets pointSize value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.pointSize).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.pointSize).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.pointSize).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.pointSize).toBeUndefined();
+      });
   });
 
   it("sets pointSize value to expression", function () {
     let style = new Cesium3DTileStyle({
       pointSize: "2",
     });
-    expect(style.pointSize).toEqual(new Expression("2"));
+    return style.readyPromise
+      .then(function () {
+        expect(style.pointSize).toEqual(new Expression("2"));
 
-    style = new Cesium3DTileStyle({
-      pointSize: "${height} / 10",
-    });
-    expect(style.pointSize).toEqual(new Expression("${height} / 10"));
+        style = new Cesium3DTileStyle({
+          pointSize: "${height} / 10",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.pointSize).toEqual(new Expression("${height} / 10"));
 
-    style = new Cesium3DTileStyle({
-      pointSize: 2,
-    });
-    expect(style.pointSize).toEqual(new Expression("2"));
+        style = new Cesium3DTileStyle({
+          pointSize: 2,
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.pointSize).toEqual(new Expression("2"));
+      });
   });
 
   it("sets pointSize value to conditional", function () {
@@ -507,58 +569,62 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       pointSize: jsonExp,
     });
-    expect(style.pointSize).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.pointSize).toEqual(new ConditionsExpression(jsonExp));
+    });
   });
 
   it("sets pointSize expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.pointSize = 2;
+      expect(style.pointSize).toEqual(new Expression("2"));
 
-    style.pointSize = 2;
-    expect(style.pointSize).toEqual(new Expression("2"));
+      const exp = new Expression("2");
+      style.pointSize = exp;
+      expect(style.pointSize).toEqual(exp);
 
-    const exp = new Expression("2");
-    style.pointSize = exp;
-    expect(style.pointSize).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "2.0"],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "2.0"],
-      ],
+      style.pointSize = condExp;
+      expect(style.pointSize).toEqual(condExp);
+
+      style.pointSize = undefined;
+      expect(style.pointSize).toBeUndefined();
     });
-
-    style.pointSize = condExp;
-    expect(style.pointSize).toEqual(condExp);
-
-    style.pointSize = undefined;
-    expect(style.pointSize).toBeUndefined();
   });
 
   it("sets style.pointSize expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.pointSize = new Expression("2");
+      expect(style.style.pointSize).toEqual("2");
 
-    style.pointSize = new Expression("2");
-    expect(style.style.pointSize).toEqual("2");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "2.0"],
+        ],
+      };
+      style.pointSize = new ConditionsExpression(jsonExp);
+      expect(style.style.pointSize).toEqual(jsonExp);
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "2.0"],
-      ],
-    };
-    style.pointSize = new ConditionsExpression(jsonExp);
-    expect(style.style.pointSize).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return 1;
+        },
+      };
+      style.pointSize = customExpression;
+      expect(style.style.pointSize).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return 1;
-      },
-    };
-    style.pointSize = customExpression;
-    expect(style.style.pointSize).toEqual(customExpression);
-
-    style.pointSize = undefined;
-    expect(style.style.pointSize).toBeUndefined();
+      style.pointSize = undefined;
+      expect(style.style.pointSize).toBeUndefined();
+    });
   });
 
   it("sets pointSize values in setter", function () {
@@ -566,24 +632,27 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetPointSize: "2.0",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.pointSize = 2;
+      expect(style.pointSize).toEqual(new Expression("2"));
 
-    style.pointSize = 2;
-    expect(style.pointSize).toEqual(new Expression("2"));
+      style.pointSize = "${targetPointSize} + 1.0";
+      expect(style.pointSize).toEqual(
+        new Expression("${targetPointSize} + 1.0", defines)
+      );
 
-    style.pointSize = "${targetPointSize} + 1.0";
-    expect(style.pointSize).toEqual(
-      new Expression("${targetPointSize} + 1.0", defines)
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "${targetPointSize}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "${targetPointSize}"],
-      ],
-    };
-
-    style.pointSize = jsonExp;
-    expect(style.pointSize).toEqual(new ConditionsExpression(jsonExp, defines));
+      style.pointSize = jsonExp;
+      expect(style.pointSize).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
+    });
   });
 
   it("sets style.pointSize values in setter", function () {
@@ -591,54 +660,70 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetPointSize: "2.0",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.pointSize = 2;
+      expect(style.style.pointSize).toEqual("2");
 
-    style.pointSize = 2;
-    expect(style.style.pointSize).toEqual("2");
+      style.pointSize = "${targetPointSize} + 1.0";
+      expect(style.style.pointSize).toEqual("${targetPointSize} + 1.0");
 
-    style.pointSize = "${targetPointSize} + 1.0";
-    expect(style.style.pointSize).toEqual("${targetPointSize} + 1.0");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "${targetPointSize}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "${targetPointSize}"],
-      ],
-    };
-
-    style.pointSize = jsonExp;
-    expect(style.style.pointSize).toEqual(jsonExp);
+      style.pointSize = jsonExp;
+      expect(style.style.pointSize).toEqual(jsonExp);
+    });
   });
 
   it("sets pointOutlineColor value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.pointOutlineColor).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.pointOutlineColor).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.pointOutlineColor).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.pointOutlineColor).toBeUndefined();
+      });
   });
 
   it("sets pointOutlineColor value to expression", function () {
     let style = new Cesium3DTileStyle({
       pointOutlineColor: 'color("red")',
     });
-    expect(style.pointOutlineColor).toEqual(new Expression('color("red")'));
+    return style.readyPromise
+      .then(function () {
+        expect(style.pointOutlineColor).toEqual(new Expression('color("red")'));
 
-    style = new Cesium3DTileStyle({
-      pointOutlineColor: "rgba(30, 30, 30, 0.5)",
-    });
-    expect(style.pointOutlineColor).toEqual(
-      new Expression("rgba(30, 30, 30, 0.5)")
-    );
+        style = new Cesium3DTileStyle({
+          pointOutlineColor: "rgba(30, 30, 30, 0.5)",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.pointOutlineColor).toEqual(
+          new Expression("rgba(30, 30, 30, 0.5)")
+        );
 
-    style = new Cesium3DTileStyle({
-      pointOutlineColor:
-        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")',
-    });
-    expect(style.pointOutlineColor).toEqual(
-      new Expression(
-        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
-      )
-    );
+        style = new Cesium3DTileStyle({
+          pointOutlineColor:
+            '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")',
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.pointOutlineColor).toEqual(
+          new Expression(
+            '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
+          )
+        );
+      });
   });
 
   it("sets pointOutlineColor value to conditional", function () {
@@ -652,59 +737,65 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       pointOutlineColor: jsonExp,
     });
-    expect(style.pointOutlineColor).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.pointOutlineColor).toEqual(
+        new ConditionsExpression(jsonExp)
+      );
+    });
   });
 
   it("sets pointOutlineColor expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      const exp = new Expression('color("red")');
+      style.pointOutlineColor = exp;
+      expect(style.pointOutlineColor).toEqual(exp);
 
-    const exp = new Expression('color("red")');
-    style.pointOutlineColor = exp;
-    expect(style.pointOutlineColor).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("blue")'],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("blue")'],
-      ],
+      style.pointOutlineColor = condExp;
+      expect(style.pointOutlineColor).toEqual(condExp);
+
+      style.pointOutlineColor = undefined;
+      expect(style.pointOutlineColor).toBeUndefined();
     });
-
-    style.pointOutlineColor = condExp;
-    expect(style.pointOutlineColor).toEqual(condExp);
-
-    style.pointOutlineColor = undefined;
-    expect(style.pointOutlineColor).toBeUndefined();
   });
 
   it("sets style.pointOutlineColor expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.pointOutlineColor = new Expression('color("red")');
+      expect(style.style.pointOutlineColor).toEqual('color("red")');
 
-    style.pointOutlineColor = new Expression('color("red")');
-    expect(style.style.pointOutlineColor).toEqual('color("red")');
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("blue")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("blue")'],
-      ],
-    };
+      style.pointOutlineColor = new ConditionsExpression(jsonExp);
+      expect(style.style.pointOutlineColor).toEqual(jsonExp);
 
-    style.pointOutlineColor = new ConditionsExpression(jsonExp);
-    expect(style.style.pointOutlineColor).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return Color.RED;
+        },
+        evaluateColor: function () {
+          return Color.RED;
+        },
+      };
+      style.pointOutlineColor = customExpression;
+      expect(style.style.pointOutlineColor).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return Color.RED;
-      },
-      evaluateColor: function () {
-        return Color.RED;
-      },
-    };
-    style.pointOutlineColor = customExpression;
-    expect(style.style.pointOutlineColor).toEqual(customExpression);
-
-    style.pointOutlineColor = undefined;
-    expect(style.style.pointOutlineColor).toBeUndefined();
+      style.pointOutlineColor = undefined;
+      expect(style.style.pointOutlineColor).toBeUndefined();
+    });
   });
 
   it("sets pointOutlineColor values in setter", function () {
@@ -712,23 +803,24 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetColor: "red",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.pointOutlineColor = 'color("${targetColor}")';
+      expect(style.pointOutlineColor).toEqual(
+        new Expression('color("${targetColor}")', defines)
+      );
 
-    style.pointOutlineColor = 'color("${targetColor}")';
-    expect(style.pointOutlineColor).toEqual(
-      new Expression('color("${targetColor}")', defines)
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("${targetColor}")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("${targetColor}")'],
-      ],
-    };
-
-    style.pointOutlineColor = jsonExp;
-    expect(style.pointOutlineColor).toEqual(
-      new ConditionsExpression(jsonExp, defines)
-    );
+      style.pointOutlineColor = jsonExp;
+      expect(style.pointOutlineColor).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
+    });
   });
 
   it("sets style.pointOutlineColor values in setter", function () {
@@ -736,44 +828,62 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetColor: "red",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.pointOutlineColor = 'color("${targetColor}")';
+      expect(style.style.pointOutlineColor).toEqual('color("${targetColor}")');
 
-    style.pointOutlineColor = 'color("${targetColor}")';
-    expect(style.style.pointOutlineColor).toEqual('color("${targetColor}")');
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("${targetColor}")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("${targetColor}")'],
-      ],
-    };
-
-    style.pointOutlineColor = jsonExp;
-    expect(style.style.pointOutlineColor).toEqual(jsonExp);
+      style.pointOutlineColor = jsonExp;
+      expect(style.style.pointOutlineColor).toEqual(jsonExp);
+    });
   });
 
   it("sets pointOutlineWidth value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.pointOutlineWidth).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.pointOutlineWidth).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.pointOutlineWidth).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.pointOutlineWidth).toBeUndefined();
+      });
   });
 
   it("sets pointOutlineWidth value to expression", function () {
     let style = new Cesium3DTileStyle({
       pointOutlineWidth: "2",
     });
-    expect(style.pointOutlineWidth).toEqual(new Expression("2"));
+    return style.readyPromise
+      .then(function () {
+        expect(style.pointOutlineWidth).toEqual(new Expression("2"));
 
-    style = new Cesium3DTileStyle({
-      pointOutlineWidth: "${height} / 10",
-    });
-    expect(style.pointOutlineWidth).toEqual(new Expression("${height} / 10"));
+        style = new Cesium3DTileStyle({
+          pointOutlineWidth: "${height} / 10",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.pointOutlineWidth).toEqual(
+          new Expression("${height} / 10")
+        );
 
-    style = new Cesium3DTileStyle({
-      pointOutlineWidth: 2,
-    });
-    expect(style.pointOutlineWidth).toEqual(new Expression("2"));
+        style = new Cesium3DTileStyle({
+          pointOutlineWidth: 2,
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.pointOutlineWidth).toEqual(new Expression("2"));
+      });
   });
 
   it("sets pointOutlineWidth value to conditional", function () {
@@ -787,58 +897,64 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       pointOutlineWidth: jsonExp,
     });
-    expect(style.pointOutlineWidth).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.pointOutlineWidth).toEqual(
+        new ConditionsExpression(jsonExp)
+      );
+    });
   });
 
   it("sets pointOutlineWidth expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.pointOutlineWidth = 2;
+      expect(style.pointOutlineWidth).toEqual(new Expression("2"));
 
-    style.pointOutlineWidth = 2;
-    expect(style.pointOutlineWidth).toEqual(new Expression("2"));
+      const exp = new Expression("2");
+      style.pointOutlineWidth = exp;
+      expect(style.pointOutlineWidth).toEqual(exp);
 
-    const exp = new Expression("2");
-    style.pointOutlineWidth = exp;
-    expect(style.pointOutlineWidth).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "2.0"],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "2.0"],
-      ],
+      style.pointOutlineWidth = condExp;
+      expect(style.pointOutlineWidth).toEqual(condExp);
+
+      style.pointOutlineWidth = undefined;
+      expect(style.pointOutlineWidth).toBeUndefined();
     });
-
-    style.pointOutlineWidth = condExp;
-    expect(style.pointOutlineWidth).toEqual(condExp);
-
-    style.pointOutlineWidth = undefined;
-    expect(style.pointOutlineWidth).toBeUndefined();
   });
 
   it("sets style.pointOutlineWidth expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.pointOutlineWidth = new Expression("2");
+      expect(style.style.pointOutlineWidth).toEqual("2");
 
-    style.pointOutlineWidth = new Expression("2");
-    expect(style.style.pointOutlineWidth).toEqual("2");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "2.0"],
+        ],
+      };
+      style.pointOutlineWidth = new ConditionsExpression(jsonExp);
+      expect(style.style.pointOutlineWidth).toEqual(jsonExp);
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "2.0"],
-      ],
-    };
-    style.pointOutlineWidth = new ConditionsExpression(jsonExp);
-    expect(style.style.pointOutlineWidth).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return 1;
+        },
+      };
+      style.pointOutlineWidth = customExpression;
+      expect(style.style.pointOutlineWidth).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return 1;
-      },
-    };
-    style.pointOutlineWidth = customExpression;
-    expect(style.style.pointOutlineWidth).toEqual(customExpression);
-
-    style.pointOutlineWidth = undefined;
-    expect(style.style.pointOutlineWidth).toBeUndefined();
+      style.pointOutlineWidth = undefined;
+      expect(style.style.pointOutlineWidth).toBeUndefined();
+    });
   });
 
   it("sets pointOutlineWidth values in setter", function () {
@@ -846,26 +962,27 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetPointSize: "2.0",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.pointOutlineWidth = 2;
+      expect(style.pointOutlineWidth).toEqual(new Expression("2"));
 
-    style.pointOutlineWidth = 2;
-    expect(style.pointOutlineWidth).toEqual(new Expression("2"));
+      style.pointOutlineWidth = "${targetPointSize} + 1.0";
+      expect(style.pointOutlineWidth).toEqual(
+        new Expression("${targetPointSize} + 1.0", defines)
+      );
 
-    style.pointOutlineWidth = "${targetPointSize} + 1.0";
-    expect(style.pointOutlineWidth).toEqual(
-      new Expression("${targetPointSize} + 1.0", defines)
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "${targetPointSize}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "${targetPointSize}"],
-      ],
-    };
-
-    style.pointOutlineWidth = jsonExp;
-    expect(style.pointOutlineWidth).toEqual(
-      new ConditionsExpression(jsonExp, defines)
-    );
+      style.pointOutlineWidth = jsonExp;
+      expect(style.pointOutlineWidth).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
+    });
   });
 
   it("sets style.pointOutlineWidth values in setter", function () {
@@ -873,52 +990,70 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetPointSize: "2.0",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.pointOutlineWidth = 2;
+      expect(style.style.pointOutlineWidth).toEqual("2");
 
-    style.pointOutlineWidth = 2;
-    expect(style.style.pointOutlineWidth).toEqual("2");
+      style.pointOutlineWidth = "${targetPointSize} + 1.0";
+      expect(style.style.pointOutlineWidth).toEqual("${targetPointSize} + 1.0");
 
-    style.pointOutlineWidth = "${targetPointSize} + 1.0";
-    expect(style.style.pointOutlineWidth).toEqual("${targetPointSize} + 1.0");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "${targetPointSize}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "${targetPointSize}"],
-      ],
-    };
-
-    style.pointOutlineWidth = jsonExp;
-    expect(style.style.pointOutlineWidth).toEqual(jsonExp);
+      style.pointOutlineWidth = jsonExp;
+      expect(style.style.pointOutlineWidth).toEqual(jsonExp);
+    });
   });
 
   it("sets labelColor value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.labelColor).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.labelColor).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.labelColor).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.labelColor).toBeUndefined();
+      });
   });
 
   it("sets labelColor value to expression", function () {
     let style = new Cesium3DTileStyle({
       labelColor: 'color("red")',
     });
-    expect(style.labelColor).toEqual(new Expression('color("red")'));
+    return style.readyPromise
+      .then(function () {
+        expect(style.labelColor).toEqual(new Expression('color("red")'));
 
-    style = new Cesium3DTileStyle({
-      labelColor: "rgba(30, 30, 30, 0.5)",
-    });
-    expect(style.labelColor).toEqual(new Expression("rgba(30, 30, 30, 0.5)"));
+        style = new Cesium3DTileStyle({
+          labelColor: "rgba(30, 30, 30, 0.5)",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.labelColor).toEqual(
+          new Expression("rgba(30, 30, 30, 0.5)")
+        );
 
-    style = new Cesium3DTileStyle({
-      labelColor:
-        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")',
-    });
-    expect(style.labelColor).toEqual(
-      new Expression(
-        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
-      )
-    );
+        style = new Cesium3DTileStyle({
+          labelColor:
+            '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")',
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.labelColor).toEqual(
+          new Expression(
+            '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
+          )
+        );
+      });
   });
 
   it("sets labelColor value to conditional", function () {
@@ -932,58 +1067,62 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       labelColor: jsonExp,
     });
-    expect(style.labelColor).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.labelColor).toEqual(new ConditionsExpression(jsonExp));
+    });
   });
 
   it("sets labelColor expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      const exp = new Expression('color("red")');
+      style.labelColor = exp;
+      expect(style.labelColor).toEqual(exp);
 
-    const exp = new Expression('color("red")');
-    style.labelColor = exp;
-    expect(style.labelColor).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("blue")'],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("blue")'],
-      ],
+      style.labelColor = condExp;
+      expect(style.labelColor).toEqual(condExp);
+
+      style.labelColor = undefined;
+      expect(style.labelColor).toBeUndefined();
     });
-
-    style.labelColor = condExp;
-    expect(style.labelColor).toEqual(condExp);
-
-    style.labelColor = undefined;
-    expect(style.labelColor).toBeUndefined();
   });
 
   it("sets style.labelColor expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.labelColor = new Expression('color("red")');
+      expect(style.style.labelColor).toEqual('color("red")');
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("blue")'],
+        ],
+      };
 
-    style.labelColor = new Expression('color("red")');
-    expect(style.style.labelColor).toEqual('color("red")');
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("blue")'],
-      ],
-    };
+      style.labelColor = new ConditionsExpression(jsonExp);
+      expect(style.style.labelColor).toEqual(jsonExp);
 
-    style.labelColor = new ConditionsExpression(jsonExp);
-    expect(style.style.labelColor).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return Color.RED;
+        },
+        evaluateColor: function () {
+          return Color.RED;
+        },
+      };
+      style.labelColor = customExpression;
+      expect(style.style.labelColor).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return Color.RED;
-      },
-      evaluateColor: function () {
-        return Color.RED;
-      },
-    };
-    style.labelColor = customExpression;
-    expect(style.style.labelColor).toEqual(customExpression);
-
-    style.labelColor = undefined;
-    expect(style.style.labelColor).toBeUndefined();
+      style.labelColor = undefined;
+      expect(style.style.labelColor).toBeUndefined();
+    });
   });
 
   it("sets labelColor values in setter", function () {
@@ -991,23 +1130,24 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetColor: "red",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.labelColor = 'color("${targetColor}")';
+      expect(style.labelColor).toEqual(
+        new Expression('color("${targetColor}")', defines)
+      );
 
-    style.labelColor = 'color("${targetColor}")';
-    expect(style.labelColor).toEqual(
-      new Expression('color("${targetColor}")', defines)
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("${targetColor}")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("${targetColor}")'],
-      ],
-    };
-
-    style.labelColor = jsonExp;
-    expect(style.labelColor).toEqual(
-      new ConditionsExpression(jsonExp, defines)
-    );
+      style.labelColor = jsonExp;
+      expect(style.labelColor).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
+    });
   });
 
   it("sets style.labelColor values in setter", function () {
@@ -1015,51 +1155,67 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetColor: "red",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.labelColor = 'color("${targetColor}")';
+      expect(style.style.labelColor).toEqual('color("${targetColor}")');
 
-    style.labelColor = 'color("${targetColor}")';
-    expect(style.style.labelColor).toEqual('color("${targetColor}")');
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("${targetColor}")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("${targetColor}")'],
-      ],
-    };
-
-    style.labelColor = jsonExp;
-    expect(style.style.labelColor).toEqual(jsonExp);
+      style.labelColor = jsonExp;
+      expect(style.style.labelColor).toEqual(jsonExp);
+    });
   });
 
   it("sets labelOutlineColor value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.labelOutlineColor).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.labelOutlineColor).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.labelOutlineColor).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.labelOutlineColor).toBeUndefined();
+      });
   });
 
   it("sets labelOutlineColor value to expression", function () {
     let style = new Cesium3DTileStyle({
       labelOutlineColor: 'color("red")',
     });
-    expect(style.labelOutlineColor).toEqual(new Expression('color("red")'));
+    return style.readyPromise
+      .then(function () {
+        expect(style.labelOutlineColor).toEqual(new Expression('color("red")'));
 
-    style = new Cesium3DTileStyle({
-      labelOutlineColor: "rgba(30, 30, 30, 0.5)",
-    });
-    expect(style.labelOutlineColor).toEqual(
-      new Expression("rgba(30, 30, 30, 0.5)")
-    );
+        style = new Cesium3DTileStyle({
+          labelOutlineColor: "rgba(30, 30, 30, 0.5)",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.labelOutlineColor).toEqual(
+          new Expression("rgba(30, 30, 30, 0.5)")
+        );
 
-    style = new Cesium3DTileStyle({
-      labelOutlineColor:
-        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")',
-    });
-    expect(style.labelOutlineColor).toEqual(
-      new Expression(
-        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
-      )
-    );
+        style = new Cesium3DTileStyle({
+          labelOutlineColor:
+            '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")',
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.labelOutlineColor).toEqual(
+          new Expression(
+            '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
+          )
+        );
+      });
   });
 
   it("sets labelOutlineColor value to conditional", function () {
@@ -1073,59 +1229,65 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       labelOutlineColor: jsonExp,
     });
-    expect(style.labelOutlineColor).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.labelOutlineColor).toEqual(
+        new ConditionsExpression(jsonExp)
+      );
+    });
   });
 
   it("sets labelOutlineColor expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      const exp = new Expression('color("red")');
+      style.labelOutlineColor = exp;
+      expect(style.labelOutlineColor).toEqual(exp);
 
-    const exp = new Expression('color("red")');
-    style.labelOutlineColor = exp;
-    expect(style.labelOutlineColor).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("blue")'],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("blue")'],
-      ],
+      style.labelOutlineColor = condExp;
+      expect(style.labelOutlineColor).toEqual(condExp);
+
+      style.labelOutlineColor = undefined;
+      expect(style.labelOutlineColor).toBeUndefined();
     });
-
-    style.labelOutlineColor = condExp;
-    expect(style.labelOutlineColor).toEqual(condExp);
-
-    style.labelOutlineColor = undefined;
-    expect(style.labelOutlineColor).toBeUndefined();
   });
 
   it("sets style.labelOutlineColor expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.labelOutlineColor = new Expression('color("red")');
+      expect(style.style.labelOutlineColor).toEqual('color("red")');
 
-    style.labelOutlineColor = new Expression('color("red")');
-    expect(style.style.labelOutlineColor).toEqual('color("red")');
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("blue")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("blue")'],
-      ],
-    };
+      style.labelOutlineColor = new ConditionsExpression(jsonExp);
+      expect(style.style.labelOutlineColor).toEqual(jsonExp);
 
-    style.labelOutlineColor = new ConditionsExpression(jsonExp);
-    expect(style.style.labelOutlineColor).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return Color.RED;
+        },
+        evaluateColor: function () {
+          return Color.RED;
+        },
+      };
+      style.labelOutlineColor = customExpression;
+      expect(style.style.labelOutlineColor).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return Color.RED;
-      },
-      evaluateColor: function () {
-        return Color.RED;
-      },
-    };
-    style.labelOutlineColor = customExpression;
-    expect(style.style.labelOutlineColor).toEqual(customExpression);
-
-    style.labelOutlineColor = undefined;
-    expect(style.style.labelOutlineColor).toBeUndefined();
+      style.labelOutlineColor = undefined;
+      expect(style.style.labelOutlineColor).toBeUndefined();
+    });
   });
 
   it("sets labelOutlineColor values in setter", function () {
@@ -1133,23 +1295,24 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetColor: "red",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.labelOutlineColor = 'color("${targetColor}")';
+      expect(style.labelOutlineColor).toEqual(
+        new Expression('color("${targetColor}")', defines)
+      );
 
-    style.labelOutlineColor = 'color("${targetColor}")';
-    expect(style.labelOutlineColor).toEqual(
-      new Expression('color("${targetColor}")', defines)
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("${targetColor}")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("${targetColor}")'],
-      ],
-    };
-
-    style.labelOutlineColor = jsonExp;
-    expect(style.labelOutlineColor).toEqual(
-      new ConditionsExpression(jsonExp, defines)
-    );
+      style.labelOutlineColor = jsonExp;
+      expect(style.labelOutlineColor).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
+    });
   });
 
   it("sets style.labelOutlineColor values in setter", function () {
@@ -1157,44 +1320,62 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetColor: "red",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.labelOutlineColor = 'color("${targetColor}")';
+      expect(style.style.labelOutlineColor).toEqual('color("${targetColor}")');
 
-    style.labelOutlineColor = 'color("${targetColor}")';
-    expect(style.style.labelOutlineColor).toEqual('color("${targetColor}")');
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("${targetColor}")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("${targetColor}")'],
-      ],
-    };
-
-    style.labelOutlineColor = jsonExp;
-    expect(style.style.labelOutlineColor).toEqual(jsonExp);
+      style.labelOutlineColor = jsonExp;
+      expect(style.style.labelOutlineColor).toEqual(jsonExp);
+    });
   });
 
   it("sets labelOutlineWidth value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.labelOutlineWidth).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.labelOutlineWidth).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.labelOutlineWidth).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.labelOutlineWidth).toBeUndefined();
+      });
   });
 
   it("sets labelOutlineWidth value to expression", function () {
     let style = new Cesium3DTileStyle({
       labelOutlineWidth: "2",
     });
-    expect(style.labelOutlineWidth).toEqual(new Expression("2"));
+    return style.readyPromise
+      .then(function () {
+        expect(style.labelOutlineWidth).toEqual(new Expression("2"));
 
-    style = new Cesium3DTileStyle({
-      labelOutlineWidth: "${height} / 10",
-    });
-    expect(style.labelOutlineWidth).toEqual(new Expression("${height} / 10"));
+        style = new Cesium3DTileStyle({
+          labelOutlineWidth: "${height} / 10",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.labelOutlineWidth).toEqual(
+          new Expression("${height} / 10")
+        );
 
-    style = new Cesium3DTileStyle({
-      labelOutlineWidth: 2,
-    });
-    expect(style.labelOutlineWidth).toEqual(new Expression("2"));
+        style = new Cesium3DTileStyle({
+          labelOutlineWidth: 2,
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.labelOutlineWidth).toEqual(new Expression("2"));
+      });
   });
 
   it("sets labelOutlineWidth value to conditional", function () {
@@ -1208,57 +1389,63 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       labelOutlineWidth: jsonExp,
     });
-    expect(style.labelOutlineWidth).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.labelOutlineWidth).toEqual(
+        new ConditionsExpression(jsonExp)
+      );
+    });
   });
 
   it("sets labelOutlineWidth expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.labelOutlineWidth = 2;
+      expect(style.labelOutlineWidth).toEqual(new Expression("2"));
 
-    style.labelOutlineWidth = 2;
-    expect(style.labelOutlineWidth).toEqual(new Expression("2"));
+      const exp = new Expression("2");
+      style.labelOutlineWidth = exp;
+      expect(style.labelOutlineWidth).toEqual(exp);
 
-    const exp = new Expression("2");
-    style.labelOutlineWidth = exp;
-    expect(style.labelOutlineWidth).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "2.0"],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "2.0"],
-      ],
+      style.labelOutlineWidth = condExp;
+      expect(style.labelOutlineWidth).toEqual(condExp);
+
+      style.labelOutlineWidth = undefined;
+      expect(style.labelOutlineWidth).toBeUndefined();
     });
-
-    style.labelOutlineWidth = condExp;
-    expect(style.labelOutlineWidth).toEqual(condExp);
-
-    style.labelOutlineWidth = undefined;
-    expect(style.labelOutlineWidth).toBeUndefined();
   });
 
   it("sets style.labelOutlineWidth expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.labelOutlineWidth = new Expression("2");
+      expect(style.style.labelOutlineWidth).toEqual("2");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "2.0"],
+        ],
+      };
+      style.labelOutlineWidth = new ConditionsExpression(jsonExp);
+      expect(style.style.labelOutlineWidth).toEqual(jsonExp);
 
-    style.labelOutlineWidth = new Expression("2");
-    expect(style.style.labelOutlineWidth).toEqual("2");
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "2.0"],
-      ],
-    };
-    style.labelOutlineWidth = new ConditionsExpression(jsonExp);
-    expect(style.style.labelOutlineWidth).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return 1;
+        },
+      };
+      style.labelOutlineWidth = customExpression;
+      expect(style.style.labelOutlineWidth).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return 1;
-      },
-    };
-    style.labelOutlineWidth = customExpression;
-    expect(style.style.labelOutlineWidth).toEqual(customExpression);
-
-    style.labelOutlineWidth = undefined;
-    expect(style.style.labelOutlineWidth).toBeUndefined();
+      style.labelOutlineWidth = undefined;
+      expect(style.style.labelOutlineWidth).toBeUndefined();
+    });
   });
 
   it("sets labelOutlineWidth values in setter", function () {
@@ -1266,26 +1453,27 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetLabelSize: "2.0",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.labelOutlineWidth = 2;
+      expect(style.labelOutlineWidth).toEqual(new Expression("2"));
 
-    style.labelOutlineWidth = 2;
-    expect(style.labelOutlineWidth).toEqual(new Expression("2"));
+      style.labelOutlineWidth = "${targetLabelSize} + 1.0";
+      expect(style.labelOutlineWidth).toEqual(
+        new Expression("${targetLabelSize} + 1.0", defines)
+      );
 
-    style.labelOutlineWidth = "${targetLabelSize} + 1.0";
-    expect(style.labelOutlineWidth).toEqual(
-      new Expression("${targetLabelSize} + 1.0", defines)
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "${targetLabelSize}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "${targetLabelSize}"],
-      ],
-    };
-
-    style.labelOutlineWidth = jsonExp;
-    expect(style.labelOutlineWidth).toEqual(
-      new ConditionsExpression(jsonExp, defines)
-    );
+      style.labelOutlineWidth = jsonExp;
+      expect(style.labelOutlineWidth).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
+    });
   });
 
   it("sets style.labelOutlineWidth values in setter", function () {
@@ -1293,47 +1481,63 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetLabelSize: "2.0",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.labelOutlineWidth = 2;
+      expect(style.style.labelOutlineWidth).toEqual("2");
 
-    style.labelOutlineWidth = 2;
-    expect(style.style.labelOutlineWidth).toEqual("2");
+      style.labelOutlineWidth = "${targetLabelSize} + 1.0";
+      expect(style.style.labelOutlineWidth).toEqual("${targetLabelSize} + 1.0");
 
-    style.labelOutlineWidth = "${targetLabelSize} + 1.0";
-    expect(style.style.labelOutlineWidth).toEqual("${targetLabelSize} + 1.0");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "${targetLabelSize}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "${targetLabelSize}"],
-      ],
-    };
-
-    style.labelOutlineWidth = jsonExp;
-    expect(style.style.labelOutlineWidth).toEqual(jsonExp);
+      style.labelOutlineWidth = jsonExp;
+      expect(style.style.labelOutlineWidth).toEqual(jsonExp);
+    });
   });
 
   it("sets font value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.font).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.font).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.font).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.font).toBeUndefined();
+      });
   });
 
   it("sets font value to expression", function () {
     let style = new Cesium3DTileStyle({
       font: "'24px Helvetica'",
     });
-    expect(style.font).toEqual(new Expression("'24px Helvetica'"));
+    return style.readyPromise
+      .then(function () {
+        expect(style.font).toEqual(new Expression("'24px Helvetica'"));
 
-    style = new Cesium3DTileStyle({
-      font: "${font}",
-    });
-    expect(style.font).toEqual(new Expression("${font}"));
+        style = new Cesium3DTileStyle({
+          font: "${font}",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.font).toEqual(new Expression("${font}"));
 
-    style = new Cesium3DTileStyle({
-      font: "'24px Helvetica'",
-    });
-    expect(style.font).toEqual(new Expression("'24px Helvetica'"));
+        style = new Cesium3DTileStyle({
+          font: "'24px Helvetica'",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.font).toEqual(new Expression("'24px Helvetica'"));
+      });
   });
 
   it("sets font value to conditional", function () {
@@ -1347,59 +1551,63 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       font: jsonExp,
     });
-    expect(style.font).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.font).toEqual(new ConditionsExpression(jsonExp));
+    });
   });
 
   it("sets font expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.font = "'24px Helvetica'";
+      expect(style.font).toEqual(new Expression("'24px Helvetica'"));
 
-    style.font = "'24px Helvetica'";
-    expect(style.font).toEqual(new Expression("'24px Helvetica'"));
+      const exp = new Expression("'24px Helvetica'");
+      style.font = exp;
+      expect(style.font).toEqual(exp);
 
-    const exp = new Expression("'24px Helvetica'");
-    style.font = exp;
-    expect(style.font).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", "'30px Helvetica'"],
+          ["true", "'24px Helvetica'"],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", "'30px Helvetica'"],
-        ["true", "'24px Helvetica'"],
-      ],
+      style.font = condExp;
+      expect(style.font).toEqual(condExp);
+
+      style.font = undefined;
+      expect(style.font).toBeUndefined();
     });
-
-    style.font = condExp;
-    expect(style.font).toEqual(condExp);
-
-    style.font = undefined;
-    expect(style.font).toBeUndefined();
   });
 
   it("sets style.font expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.font = new Expression("'24px Helvetica'");
+      expect(style.style.font).toEqual("'24px Helvetica'");
 
-    style.font = new Expression("'24px Helvetica'");
-    expect(style.style.font).toEqual("'24px Helvetica'");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "'30px Helvetica'"],
+          ["true", "'24px Helvetica'"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "'30px Helvetica'"],
-        ["true", "'24px Helvetica'"],
-      ],
-    };
+      style.font = new ConditionsExpression(jsonExp);
+      expect(style.style.font).toEqual(jsonExp);
 
-    style.font = new ConditionsExpression(jsonExp);
-    expect(style.style.font).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return "'24px Helvetica'";
+        },
+      };
+      style.font = customExpression;
+      expect(style.style.font).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return "'24px Helvetica'";
-      },
-    };
-    style.font = customExpression;
-    expect(style.style.font).toEqual(customExpression);
-
-    style.font = undefined;
-    expect(style.style.font).toBeUndefined();
+      style.font = undefined;
+      expect(style.style.font).toBeUndefined();
+    });
   });
 
   it("sets font values in setter", function () {
@@ -1407,22 +1615,23 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetFont: "'30px Helvetica'",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.font = "'24px Helvetica'";
+      expect(style.font).toEqual(new Expression("'24px Helvetica'"));
 
-    style.font = "'24px Helvetica'";
-    expect(style.font).toEqual(new Expression("'24px Helvetica'"));
+      style.font = "${targetFont}";
+      expect(style.font).toEqual(new Expression("${targetFont}", defines));
 
-    style.font = "${targetFont}";
-    expect(style.font).toEqual(new Expression("${targetFont}", defines));
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "'24px Helvetica'"],
+          ["true", "${targetFont}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "'24px Helvetica'"],
-        ["true", "${targetFont}"],
-      ],
-    };
-
-    style.font = jsonExp;
-    expect(style.font).toEqual(new ConditionsExpression(jsonExp, defines));
+      style.font = jsonExp;
+      expect(style.font).toEqual(new ConditionsExpression(jsonExp, defines));
+    });
   });
 
   it("sets style.font values in setter", function () {
@@ -1430,37 +1639,46 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetFont: "'30px Helvetica'",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.font = "'24px Helvetica'";
+      expect(style.style.font).toEqual("'24px Helvetica'");
 
-    style.font = "'24px Helvetica'";
-    expect(style.style.font).toEqual("'24px Helvetica'");
+      style.font = "${targetFont}";
+      expect(style.style.font).toEqual("${targetFont}");
 
-    style.font = "${targetFont}";
-    expect(style.style.font).toEqual("${targetFont}");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "'24px Helvetica'"],
+          ["true", "${targetFont}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "'24px Helvetica'"],
-        ["true", "${targetFont}"],
-      ],
-    };
-
-    style.font = jsonExp;
-    expect(style.style.font).toEqual(jsonExp);
+      style.font = jsonExp;
+      expect(style.style.font).toEqual(jsonExp);
+    });
   });
 
   it("sets labelStyle value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.labelStyle).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.labelStyle).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.labelStyle).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.labelStyle).toBeUndefined();
+      });
   });
 
   it("sets labelStyle value to expression", function () {
     const style = new Cesium3DTileStyle({
       labelStyle: "2",
     });
-    expect(style.labelStyle).toEqual(new Expression("2"));
+    return style.readyPromise.then(function () {
+      expect(style.labelStyle).toEqual(new Expression("2"));
+    });
   });
 
   it("sets labelStyle value to conditional", function () {
@@ -1474,58 +1692,62 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       labelStyle: jsonExp,
     });
-    expect(style.labelStyle).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.labelStyle).toEqual(new ConditionsExpression(jsonExp));
+    });
   });
 
   it("sets labelStyle expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.labelStyle = 2;
+      expect(style.labelStyle).toEqual(new Expression("2"));
 
-    style.labelStyle = 2;
-    expect(style.labelStyle).toEqual(new Expression("2"));
+      const exp = new Expression("2");
+      style.labelStyle = exp;
+      expect(style.labelStyle).toEqual(exp);
 
-    const exp = new Expression("2");
-    style.labelStyle = exp;
-    expect(style.labelStyle).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", "1"],
+          ["true", "2"],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", "1"],
-        ["true", "2"],
-      ],
+      style.labelStyle = condExp;
+      expect(style.labelStyle).toEqual(condExp);
+
+      style.labelStyle = undefined;
+      expect(style.labelStyle).toBeUndefined();
     });
-
-    style.labelStyle = condExp;
-    expect(style.labelStyle).toEqual(condExp);
-
-    style.labelStyle = undefined;
-    expect(style.labelStyle).toBeUndefined();
   });
 
   it("sets style.labelStyle expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.labelStyle = new Expression("2");
+      expect(style.style.labelStyle).toEqual("2");
 
-    style.labelStyle = new Expression("2");
-    expect(style.style.labelStyle).toEqual("2");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1"],
+          ["true", "2"],
+        ],
+      };
+      style.labelStyle = new ConditionsExpression(jsonExp);
+      expect(style.style.labelStyle).toEqual(jsonExp);
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1"],
-        ["true", "2"],
-      ],
-    };
-    style.labelStyle = new ConditionsExpression(jsonExp);
-    expect(style.style.labelStyle).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return 0;
+        },
+      };
+      style.labelStyle = customExpression;
+      expect(style.style.labelStyle).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return 0;
-      },
-    };
-    style.labelStyle = customExpression;
-    expect(style.style.labelStyle).toEqual(customExpression);
-
-    style.labelStyle = undefined;
-    expect(style.style.labelStyle).toBeUndefined();
+      style.labelStyle = undefined;
+      expect(style.style.labelStyle).toBeUndefined();
+    });
   });
 
   it("sets labelStyle values in setter", function () {
@@ -1533,26 +1755,27 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetLabelStyle: "2",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.labelStyle = 2;
+      expect(style.labelStyle).toEqual(new Expression("2"));
 
-    style.labelStyle = 2;
-    expect(style.labelStyle).toEqual(new Expression("2"));
+      style.labelStyle = "${targetLabelStyle}";
+      expect(style.labelStyle).toEqual(
+        new Expression("${targetLabelStyle}", defines)
+      );
 
-    style.labelStyle = "${targetLabelStyle}";
-    expect(style.labelStyle).toEqual(
-      new Expression("${targetLabelStyle}", defines)
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "${targetLabelStyle}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "${targetLabelStyle}"],
-      ],
-    };
-
-    style.labelStyle = jsonExp;
-    expect(style.labelStyle).toEqual(
-      new ConditionsExpression(jsonExp, defines)
-    );
+      style.labelStyle = jsonExp;
+      expect(style.labelStyle).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
+    });
   });
 
   it("sets style.labelStyle values in setter", function () {
@@ -1560,47 +1783,63 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetLabelStyle: "2",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.labelStyle = 2;
+      expect(style.style.labelStyle).toEqual("2");
 
-    style.labelStyle = 2;
-    expect(style.style.labelStyle).toEqual("2");
+      style.labelStyle = "${targetLabelStyle}";
+      expect(style.style.labelStyle).toEqual("${targetLabelStyle}");
 
-    style.labelStyle = "${targetLabelStyle}";
-    expect(style.style.labelStyle).toEqual("${targetLabelStyle}");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "${targetLabelStyle}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "${targetLabelStyle}"],
-      ],
-    };
-
-    style.labelStyle = jsonExp;
-    expect(style.style.labelStyle).toEqual(jsonExp);
+      style.labelStyle = jsonExp;
+      expect(style.style.labelStyle).toEqual(jsonExp);
+    });
   });
 
   it("sets labelText value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.labelText).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.labelText).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.labelText).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.labelText).toBeUndefined();
+      });
   });
 
   it("sets labelText value to expression", function () {
     let style = new Cesium3DTileStyle({
       labelText: "'test text'",
     });
-    expect(style.labelText).toEqual(new Expression("'test text'"));
+    return style.readyPromise
+      .then(function () {
+        expect(style.labelText).toEqual(new Expression("'test text'"));
 
-    style = new Cesium3DTileStyle({
-      labelText: "${text}",
-    });
-    expect(style.labelText).toEqual(new Expression("${text}"));
+        style = new Cesium3DTileStyle({
+          labelText: "${text}",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.labelText).toEqual(new Expression("${text}"));
 
-    style = new Cesium3DTileStyle({
-      labelText: "'test text'",
-    });
-    expect(style.labelText).toEqual(new Expression("'test text'"));
+        style = new Cesium3DTileStyle({
+          labelText: "'test text'",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.labelText).toEqual(new Expression("'test text'"));
+      });
   });
 
   it("sets labelText value to conditional", function () {
@@ -1614,59 +1853,63 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       labelText: jsonExp,
     });
-    expect(style.labelText).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.labelText).toEqual(new ConditionsExpression(jsonExp));
+    });
   });
 
   it("sets labelText expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.labelText = "'test text'";
+      expect(style.labelText).toEqual(new Expression("'test text'"));
 
-    style.labelText = "'test text'";
-    expect(style.labelText).toEqual(new Expression("'test text'"));
+      const exp = new Expression("'test text'");
+      style.labelText = exp;
+      expect(style.labelText).toEqual(exp);
 
-    const exp = new Expression("'test text'");
-    style.labelText = exp;
-    expect(style.labelText).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", "'test text 1'"],
+          ["true", "'test text 2'"],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", "'test text 1'"],
-        ["true", "'test text 2'"],
-      ],
+      style.labelText = condExp;
+      expect(style.labelText).toEqual(condExp);
+
+      style.labelText = undefined;
+      expect(style.labelText).toBeUndefined();
     });
-
-    style.labelText = condExp;
-    expect(style.labelText).toEqual(condExp);
-
-    style.labelText = undefined;
-    expect(style.labelText).toBeUndefined();
   });
 
   it("sets style.labelText expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.labelText = new Expression("'test text'");
+      expect(style.style.labelText).toEqual("'test text'");
 
-    style.labelText = new Expression("'test text'");
-    expect(style.style.labelText).toEqual("'test text'");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "'test text 1'"],
+          ["true", "'test text 2'"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "'test text 1'"],
-        ["true", "'test text 2'"],
-      ],
-    };
+      style.labelText = new ConditionsExpression(jsonExp);
+      expect(style.style.labelText).toEqual(jsonExp);
 
-    style.labelText = new ConditionsExpression(jsonExp);
-    expect(style.style.labelText).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return "'test text 1'";
+        },
+      };
+      style.labelText = customExpression;
+      expect(style.style.labelText).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return "'test text 1'";
-      },
-    };
-    style.labelText = customExpression;
-    expect(style.style.labelText).toEqual(customExpression);
-
-    style.labelText = undefined;
-    expect(style.style.labelText).toBeUndefined();
+      style.labelText = undefined;
+      expect(style.style.labelText).toBeUndefined();
+    });
   });
 
   it("sets labelText values in setter", function () {
@@ -1674,22 +1917,25 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetText: "'test text 1'",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.labelText = "'test text'";
+      expect(style.labelText).toEqual(new Expression("'test text'"));
 
-    style.labelText = "'test text'";
-    expect(style.labelText).toEqual(new Expression("'test text'"));
+      style.labelText = "${targetText}";
+      expect(style.labelText).toEqual(new Expression("${targetText}", defines));
 
-    style.labelText = "${targetText}";
-    expect(style.labelText).toEqual(new Expression("${targetText}", defines));
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "'test text 2'"],
+          ["true", "${targetText}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "'test text 2'"],
-        ["true", "${targetText}"],
-      ],
-    };
-
-    style.labelText = jsonExp;
-    expect(style.labelText).toEqual(new ConditionsExpression(jsonExp, defines));
+      style.labelText = jsonExp;
+      expect(style.labelText).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
+    });
   });
 
   it("sets style.labelText values in setter", function () {
@@ -1697,54 +1943,70 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetText: "'test text 1'",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.labelText = "'test text'";
+      expect(style.style.labelText).toEqual("'test text'");
 
-    style.labelText = "'test text'";
-    expect(style.style.labelText).toEqual("'test text'");
+      style.labelText = "${targetText}";
+      expect(style.style.labelText).toEqual("${targetText}");
 
-    style.labelText = "${targetText}";
-    expect(style.style.labelText).toEqual("${targetText}");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "'test text 2'"],
+          ["true", "${targetText}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "'test text 2'"],
-        ["true", "${targetText}"],
-      ],
-    };
-
-    style.labelText = jsonExp;
-    expect(style.style.labelText).toEqual(jsonExp);
+      style.labelText = jsonExp;
+      expect(style.style.labelText).toEqual(jsonExp);
+    });
   });
 
   it("sets backgroundColor value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.backgroundColor).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.backgroundColor).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.backgroundColor).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.backgroundColor).toBeUndefined();
+      });
   });
 
   it("sets backgroundColor value to expression", function () {
     let style = new Cesium3DTileStyle({
       backgroundColor: 'color("red")',
     });
-    expect(style.backgroundColor).toEqual(new Expression('color("red")'));
+    return style.readyPromise
+      .then(function () {
+        expect(style.backgroundColor).toEqual(new Expression('color("red")'));
 
-    style = new Cesium3DTileStyle({
-      backgroundColor: "rgba(30, 30, 30, 0.5)",
-    });
-    expect(style.backgroundColor).toEqual(
-      new Expression("rgba(30, 30, 30, 0.5)")
-    );
+        style = new Cesium3DTileStyle({
+          backgroundColor: "rgba(30, 30, 30, 0.5)",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.backgroundColor).toEqual(
+          new Expression("rgba(30, 30, 30, 0.5)")
+        );
 
-    style = new Cesium3DTileStyle({
-      backgroundColor:
-        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")',
-    });
-    expect(style.backgroundColor).toEqual(
-      new Expression(
-        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
-      )
-    );
+        style = new Cesium3DTileStyle({
+          backgroundColor:
+            '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")',
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.backgroundColor).toEqual(
+          new Expression(
+            '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
+          )
+        );
+      });
   });
 
   it("sets backgroundColor value to conditional", function () {
@@ -1758,59 +2020,63 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       backgroundColor: jsonExp,
     });
-    expect(style.backgroundColor).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.backgroundColor).toEqual(new ConditionsExpression(jsonExp));
+    });
   });
 
   it("sets backgroundColor expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      const exp = new Expression('color("red")');
+      style.backgroundColor = exp;
+      expect(style.backgroundColor).toEqual(exp);
 
-    const exp = new Expression('color("red")');
-    style.backgroundColor = exp;
-    expect(style.backgroundColor).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("blue")'],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("blue")'],
-      ],
+      style.backgroundColor = condExp;
+      expect(style.backgroundColor).toEqual(condExp);
+
+      style.backgroundColor = undefined;
+      expect(style.backgroundColor).toBeUndefined();
     });
-
-    style.backgroundColor = condExp;
-    expect(style.backgroundColor).toEqual(condExp);
-
-    style.backgroundColor = undefined;
-    expect(style.backgroundColor).toBeUndefined();
   });
 
   it("sets style.backgroundColor expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.backgroundColor = new Expression('color("red")');
+      expect(style.style.backgroundColor).toEqual('color("red")');
 
-    style.backgroundColor = new Expression('color("red")');
-    expect(style.style.backgroundColor).toEqual('color("red")');
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("blue")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("blue")'],
-      ],
-    };
+      style.backgroundColor = new ConditionsExpression(jsonExp);
+      expect(style.style.backgroundColor).toEqual(jsonExp);
 
-    style.backgroundColor = new ConditionsExpression(jsonExp);
-    expect(style.style.backgroundColor).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return Color.RED;
+        },
+        evaluateColor: function () {
+          return Color.RED;
+        },
+      };
+      style.backgroundColor = customExpression;
+      expect(style.style.backgroundColor).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return Color.RED;
-      },
-      evaluateColor: function () {
-        return Color.RED;
-      },
-    };
-    style.backgroundColor = customExpression;
-    expect(style.style.backgroundColor).toEqual(customExpression);
-
-    style.backgroundColor = undefined;
-    expect(style.style.backgroundColor).toBeUndefined();
+      style.backgroundColor = undefined;
+      expect(style.style.backgroundColor).toBeUndefined();
+    });
   });
 
   it("sets backgroundColor values in setter", function () {
@@ -1818,23 +2084,24 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetColor: "red",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.backgroundColor = 'color("${targetColor}")';
+      expect(style.backgroundColor).toEqual(
+        new Expression('color("${targetColor}")', defines)
+      );
 
-    style.backgroundColor = 'color("${targetColor}")';
-    expect(style.backgroundColor).toEqual(
-      new Expression('color("${targetColor}")', defines)
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("${targetColor}")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("${targetColor}")'],
-      ],
-    };
-
-    style.backgroundColor = jsonExp;
-    expect(style.backgroundColor).toEqual(
-      new ConditionsExpression(jsonExp, defines)
-    );
+      style.backgroundColor = jsonExp;
+      expect(style.backgroundColor).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
+    });
   });
 
   it("sets style.backgroundColor values in setter", function () {
@@ -1842,49 +2109,69 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetColor: "red",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.backgroundColor = 'color("${targetColor}")';
+      expect(style.style.backgroundColor).toEqual('color("${targetColor}")');
 
-    style.backgroundColor = 'color("${targetColor}")';
-    expect(style.style.backgroundColor).toEqual('color("${targetColor}")');
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("${targetColor}")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("${targetColor}")'],
-      ],
-    };
-
-    style.backgroundColor = jsonExp;
-    expect(style.style.backgroundColor).toEqual(jsonExp);
+      style.backgroundColor = jsonExp;
+      expect(style.style.backgroundColor).toEqual(jsonExp);
+    });
   });
 
   it("sets backgroundPadding value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.backgroundPadding).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.backgroundPadding).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.backgroundPadding).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.backgroundPadding).toBeUndefined();
+      });
   });
 
   it("sets backgroundPadding value to expression", function () {
     let style = new Cesium3DTileStyle({
       backgroundPadding: "vec2(1.0, 2.0)",
     });
-    expect(style.backgroundPadding).toEqual(new Expression("vec2(1.0, 2.0)"));
+    return style.readyPromise
+      .then(function () {
+        expect(style.backgroundPadding).toEqual(
+          new Expression("vec2(1.0, 2.0)")
+        );
 
-    style = new Cesium3DTileStyle({
-      backgroundPadding: "vec2(3.0, 4.0)",
-    });
-    expect(style.backgroundPadding).toEqual(new Expression("vec2(3.0, 4.0)"));
+        style = new Cesium3DTileStyle({
+          backgroundPadding: "vec2(3.0, 4.0)",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.backgroundPadding).toEqual(
+          new Expression("vec2(3.0, 4.0)")
+        );
 
-    style = new Cesium3DTileStyle({
-      backgroundPadding:
-        "(${height} * 10 >= 1000) ? vec2(1.0, 2.0) : vec2(3.0, 4.0)",
-    });
-    expect(style.backgroundPadding).toEqual(
-      new Expression(
-        "(${height} * 10 >= 1000) ? vec2(1.0, 2.0) : vec2(3.0, 4.0)"
-      )
-    );
+        style = new Cesium3DTileStyle({
+          backgroundPadding:
+            "(${height} * 10 >= 1000) ? vec2(1.0, 2.0) : vec2(3.0, 4.0)",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.backgroundPadding).toEqual(
+          new Expression(
+            "(${height} * 10 >= 1000) ? vec2(1.0, 2.0) : vec2(3.0, 4.0)"
+          )
+        );
+      });
   });
 
   it("sets backgroundPadding value to conditional", function () {
@@ -1898,56 +2185,62 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       backgroundPadding: jsonExp,
     });
-    expect(style.backgroundPadding).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.backgroundPadding).toEqual(
+        new ConditionsExpression(jsonExp)
+      );
+    });
   });
 
   it("sets backgroundPadding expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      const exp = new Expression("vec2(1.0, 2.0)");
+      style.backgroundPadding = exp;
+      expect(style.backgroundPadding).toEqual(exp);
 
-    const exp = new Expression("vec2(1.0, 2.0)");
-    style.backgroundPadding = exp;
-    expect(style.backgroundPadding).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", "vec2(1.0, 2.0)"],
+          ["true", "vec2(3.0, 4.0)"],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", "vec2(1.0, 2.0)"],
-        ["true", "vec2(3.0, 4.0)"],
-      ],
+      style.backgroundPadding = condExp;
+      expect(style.backgroundPadding).toEqual(condExp);
+
+      style.backgroundPadding = undefined;
+      expect(style.backgroundPadding).toBeUndefined();
     });
-
-    style.backgroundPadding = condExp;
-    expect(style.backgroundPadding).toEqual(condExp);
-
-    style.backgroundPadding = undefined;
-    expect(style.backgroundPadding).toBeUndefined();
   });
 
   it("sets style.backgroundPadding expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.backgroundPadding = new Expression("vec2(1.0, 2.0)");
+      expect(style.style.backgroundPadding).toEqual("vec2(1.0, 2.0)");
 
-    style.backgroundPadding = new Expression("vec2(1.0, 2.0)");
-    expect(style.style.backgroundPadding).toEqual("vec2(1.0, 2.0)");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "vec2(1.0, 2.0)"],
+          ["true", "vec2(3.0, 4.0)"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "vec2(1.0, 2.0)"],
-        ["true", "vec2(3.0, 4.0)"],
-      ],
-    };
+      const customExpression = {
+        evaluate: function () {
+          return new Cartesian2(1.0, 2.0);
+        },
+      };
+      style.labelText = customExpression;
+      expect(style.style.labelText).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return new Cartesian2(1.0, 2.0);
-      },
-    };
-    style.labelText = customExpression;
-    expect(style.style.labelText).toEqual(customExpression);
+      style.backgroundPadding = new ConditionsExpression(jsonExp);
+      expect(style.style.backgroundPadding).toEqual(jsonExp);
 
-    style.backgroundPadding = new ConditionsExpression(jsonExp);
-    expect(style.style.backgroundPadding).toEqual(jsonExp);
-
-    style.backgroundPadding = undefined;
-    expect(style.style.backgroundPadding).toBeUndefined();
+      style.backgroundPadding = undefined;
+      expect(style.style.backgroundPadding).toBeUndefined();
+    });
   });
 
   it("sets backgroundPadding values in setter", function () {
@@ -1955,23 +2248,24 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetPadding: "3.0, 4.0",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.backgroundPadding = 'vec2("${targetPadding}")';
+      expect(style.backgroundPadding).toEqual(
+        new Expression('vec2("${targetPadding}")', defines)
+      );
 
-    style.backgroundPadding = 'vec2("${targetPadding}")';
-    expect(style.backgroundPadding).toEqual(
-      new Expression('vec2("${targetPadding}")', defines)
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "vec2(1.0, 2.0)"],
+          ["true", 'vec2("${targetPadding}")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "vec2(1.0, 2.0)"],
-        ["true", 'vec2("${targetPadding}")'],
-      ],
-    };
-
-    style.backgroundPadding = jsonExp;
-    expect(style.backgroundPadding).toEqual(
-      new ConditionsExpression(jsonExp, defines)
-    );
+      style.backgroundPadding = jsonExp;
+      expect(style.backgroundPadding).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
+    });
   });
 
   it("sets style.backgroundPadding values in setter", function () {
@@ -1979,56 +2273,78 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetPadding: "3.0, 4.0",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.backgroundPadding = 'vec2("${targetPadding}")';
+      expect(style.style.backgroundPadding).toEqual('vec2("${targetPadding}")');
 
-    style.backgroundPadding = 'vec2("${targetPadding}")';
-    expect(style.style.backgroundPadding).toEqual('vec2("${targetPadding}")');
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "vec2(1.0, 2.0)"],
+          ["true", 'vec2("${targetPadding}")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "vec2(1.0, 2.0)"],
-        ["true", 'vec2("${targetPadding}")'],
-      ],
-    };
-
-    style.backgroundPadding = jsonExp;
-    expect(style.style.backgroundPadding).toEqual(jsonExp);
+      style.backgroundPadding = jsonExp;
+      expect(style.style.backgroundPadding).toEqual(jsonExp);
+    });
   });
 
   it("sets backgroundEnabled value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.backgroundEnabled).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.backgroundEnabled).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.backgroundEnabled).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.backgroundEnabled).toBeUndefined();
+      });
   });
 
   it("sets backgroundEnabled value to expression", function () {
     let style = new Cesium3DTileStyle({
       backgroundEnabled: "true",
     });
-    expect(style.backgroundEnabled).toEqual(new Expression("true"));
+    return style.readyPromise
+      .then(function () {
+        expect(style.backgroundEnabled).toEqual(new Expression("true"));
 
-    style = new Cesium3DTileStyle({
-      backgroundEnabled: "false",
-    });
-    expect(style.backgroundEnabled).toEqual(new Expression("false"));
+        style = new Cesium3DTileStyle({
+          backgroundEnabled: "false",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.backgroundEnabled).toEqual(new Expression("false"));
 
-    style = new Cesium3DTileStyle({
-      backgroundEnabled: "${height} * 10 >= 1000",
-    });
-    expect(style.backgroundEnabled).toEqual(
-      new Expression("${height} * 10 >= 1000")
-    );
+        style = new Cesium3DTileStyle({
+          backgroundEnabled: "${height} * 10 >= 1000",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.backgroundEnabled).toEqual(
+          new Expression("${height} * 10 >= 1000")
+        );
 
-    style = new Cesium3DTileStyle({
-      backgroundEnabled: true,
-    });
-    expect(style.backgroundEnabled).toEqual(new Expression("true"));
+        style = new Cesium3DTileStyle({
+          backgroundEnabled: true,
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.backgroundEnabled).toEqual(new Expression("true"));
 
-    style = new Cesium3DTileStyle({
-      backgroundEnabled: false,
-    });
-    expect(style.backgroundEnabled).toEqual(new Expression("false"));
+        style = new Cesium3DTileStyle({
+          backgroundEnabled: false,
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.backgroundEnabled).toEqual(new Expression("false"));
+      });
   });
 
   it("sets backgroundEnabled value to conditional", function () {
@@ -2042,50 +2358,56 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       backgroundEnabled: jsonExp,
     });
-    expect(style.backgroundEnabled).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.backgroundEnabled).toEqual(
+        new ConditionsExpression(jsonExp)
+      );
+    });
   });
 
   it("sets backgroundEnabled expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", "false"],
+          ["true", "true"],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", "false"],
-        ["true", "true"],
-      ],
+      style.backgroundEnabled = condExp;
+      expect(style.backgroundEnabled).toEqual(condExp);
+
+      const exp = new Expression("false");
+      style.backgroundEnabled = exp;
+      expect(style.backgroundEnabled).toEqual(exp);
     });
-
-    style.backgroundEnabled = condExp;
-    expect(style.backgroundEnabled).toEqual(condExp);
-
-    const exp = new Expression("false");
-    style.backgroundEnabled = exp;
-    expect(style.backgroundEnabled).toEqual(exp);
   });
 
   it("sets style.backgroundEnabled expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.backgroundEnabled = new Expression("false");
+      expect(style.style.backgroundEnabled).toEqual("false");
 
-    style.backgroundEnabled = new Expression("false");
-    expect(style.style.backgroundEnabled).toEqual("false");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "false"],
+          ["true", "true"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "false"],
-        ["true", "true"],
-      ],
-    };
+      style.backgroundEnabled = new ConditionsExpression(jsonExp);
+      expect(style.style.backgroundEnabled).toEqual(jsonExp);
 
-    style.backgroundEnabled = new ConditionsExpression(jsonExp);
-    expect(style.style.backgroundEnabled).toEqual(jsonExp);
-
-    const customExpression = {
-      evaluate: function () {
-        return true;
-      },
-    };
-    style.backgroundEnabled = customExpression;
-    expect(style.style.backgroundEnabled).toEqual(customExpression);
+      const customExpression = {
+        evaluate: function () {
+          return true;
+        },
+      };
+      style.backgroundEnabled = customExpression;
+      expect(style.style.backgroundEnabled).toEqual(customExpression);
+    });
   });
 
   it("sets backgroundEnabled values in setter", function () {
@@ -2093,29 +2415,30 @@ describe("Scene/Cesium3DTileStyle", function () {
       backgroundFactor: 10,
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.backgroundEnabled = "${height} * ${backgroundFactor} >= 1000";
+      expect(style.backgroundEnabled).toEqual(
+        new Expression("${height} * ${backgroundFactor} >= 1000", defines)
+      );
 
-    style.backgroundEnabled = "${height} * ${backgroundFactor} >= 1000";
-    expect(style.backgroundEnabled).toEqual(
-      new Expression("${height} * ${backgroundFactor} >= 1000", defines)
-    );
+      style.backgroundEnabled = false;
+      expect(style.backgroundEnabled).toEqual(new Expression("false"));
 
-    style.backgroundEnabled = false;
-    expect(style.backgroundEnabled).toEqual(new Expression("false"));
+      const jsonExp = {
+        conditions: [
+          ["${height} > ${backgroundFactor}", "false"],
+          ["true", "true"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > ${backgroundFactor}", "false"],
-        ["true", "true"],
-      ],
-    };
+      style.backgroundEnabled = jsonExp;
+      expect(style.backgroundEnabled).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
 
-    style.backgroundEnabled = jsonExp;
-    expect(style.backgroundEnabled).toEqual(
-      new ConditionsExpression(jsonExp, defines)
-    );
-
-    style.backgroundEnabled = undefined;
-    expect(style.backgroundEnabled).toBeUndefined();
+      style.backgroundEnabled = undefined;
+      expect(style.backgroundEnabled).toBeUndefined();
+    });
   });
 
   it("sets style.backgroundEnabled values in setter", function () {
@@ -2123,61 +2446,79 @@ describe("Scene/Cesium3DTileStyle", function () {
       backgroundFactor: 10,
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.backgroundEnabled = "${height} * ${backgroundFactor} >= 1000";
+      expect(style.style.backgroundEnabled).toEqual(
+        "${height} * ${backgroundFactor} >= 1000"
+      );
 
-    style.backgroundEnabled = "${height} * ${backgroundFactor} >= 1000";
-    expect(style.style.backgroundEnabled).toEqual(
-      "${height} * ${backgroundFactor} >= 1000"
-    );
+      style.backgroundEnabled = false;
+      expect(style.style.backgroundEnabled).toEqual("false");
 
-    style.backgroundEnabled = false;
-    expect(style.style.backgroundEnabled).toEqual("false");
+      const jsonExp = {
+        conditions: [
+          ["${height} > ${backgroundFactor}", "false"],
+          ["true", "true"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > ${backgroundFactor}", "false"],
-        ["true", "true"],
-      ],
-    };
+      style.backgroundEnabled = jsonExp;
+      expect(style.style.backgroundEnabled).toEqual(jsonExp);
 
-    style.backgroundEnabled = jsonExp;
-    expect(style.style.backgroundEnabled).toEqual(jsonExp);
-
-    style.backgroundEnabled = undefined;
-    expect(style.style.backgroundEnabled).toBeUndefined();
+      style.backgroundEnabled = undefined;
+      expect(style.style.backgroundEnabled).toBeUndefined();
+    });
   });
 
   it("sets scaleByDistance value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.scaleByDistance).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.scaleByDistance).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.scaleByDistance).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.scaleByDistance).toBeUndefined();
+      });
   });
 
   it("sets scaleByDistance value to expression", function () {
     let style = new Cesium3DTileStyle({
       scaleByDistance: "vec4(1.0, 2.0, 3.0, 4.0)",
     });
-    expect(style.scaleByDistance).toEqual(
-      new Expression("vec4(1.0, 2.0, 3.0, 4.0)")
-    );
 
-    style = new Cesium3DTileStyle({
-      scaleByDistance: "vec4(5.0, 6.0, 7.0, 8.0)",
-    });
-    expect(style.scaleByDistance).toEqual(
-      new Expression("vec4(5.0, 6.0, 7.0, 8.0)")
-    );
+    return style.readyPromise
+      .then(function () {
+        expect(style.scaleByDistance).toEqual(
+          new Expression("vec4(1.0, 2.0, 3.0, 4.0)")
+        );
 
-    style = new Cesium3DTileStyle({
-      scaleByDistance:
-        "(${height} * 10 >= 1000) ? vec4(1.0, 2.0, 3.0, 4.0) : vec4(5.0, 6.0, 7.0, 8.0)",
-    });
-    expect(style.scaleByDistance).toEqual(
-      new Expression(
-        "(${height} * 10 >= 1000) ? vec4(1.0, 2.0, 3.0, 4.0) : vec4(5.0, 6.0, 7.0, 8.0)"
-      )
-    );
+        style = new Cesium3DTileStyle({
+          scaleByDistance: "vec4(5.0, 6.0, 7.0, 8.0)",
+        });
+
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.scaleByDistance).toEqual(
+          new Expression("vec4(5.0, 6.0, 7.0, 8.0)")
+        );
+
+        style = new Cesium3DTileStyle({
+          scaleByDistance:
+            "(${height} * 10 >= 1000) ? vec4(1.0, 2.0, 3.0, 4.0) : vec4(5.0, 6.0, 7.0, 8.0)",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.scaleByDistance).toEqual(
+          new Expression(
+            "(${height} * 10 >= 1000) ? vec4(1.0, 2.0, 3.0, 4.0) : vec4(5.0, 6.0, 7.0, 8.0)"
+          )
+        );
+      });
   });
 
   it("sets scaleByDistance value to conditional", function () {
@@ -2191,56 +2532,61 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       scaleByDistance: jsonExp,
     });
-    expect(style.scaleByDistance).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.scaleByDistance).toEqual(new ConditionsExpression(jsonExp));
+    });
   });
 
   it("sets scaleByDistance expressions in setter", function () {
     const style = new Cesium3DTileStyle();
 
     const exp = new Expression("vec4(5.0, 6.0, 7.0, 8.0)");
-    style.scaleByDistance = exp;
-    expect(style.scaleByDistance).toEqual(exp);
+    return style.readyPromise.then(function () {
+      style.scaleByDistance = exp;
+      expect(style.scaleByDistance).toEqual(exp);
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", "vec4(1.0, 2.0, 3.0, 4.0)"],
-        ["true", "vec4(5.0, 6.0, 7.0, 8.0)"],
-      ],
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", "vec4(1.0, 2.0, 3.0, 4.0)"],
+          ["true", "vec4(5.0, 6.0, 7.0, 8.0)"],
+        ],
+      });
+
+      style.scaleByDistance = condExp;
+      expect(style.scaleByDistance).toEqual(condExp);
+
+      style.scaleByDistance = undefined;
+      expect(style.scaleByDistance).toBeUndefined();
     });
-
-    style.scaleByDistance = condExp;
-    expect(style.scaleByDistance).toEqual(condExp);
-
-    style.scaleByDistance = undefined;
-    expect(style.scaleByDistance).toBeUndefined();
   });
 
   it("sets style.scaleByDistance expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.scaleByDistance = new Expression("vec4(5.0, 6.0, 7.0, 8.0)");
+      expect(style.style.scaleByDistance).toEqual("vec4(5.0, 6.0, 7.0, 8.0)");
 
-    style.scaleByDistance = new Expression("vec4(5.0, 6.0, 7.0, 8.0)");
-    expect(style.style.scaleByDistance).toEqual("vec4(5.0, 6.0, 7.0, 8.0)");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "vec4(1.0, 2.0, 3.0, 4.0)"],
+          ["true", "vec4(5.0, 6.0, 7.0, 8.0)"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "vec4(1.0, 2.0, 3.0, 4.0)"],
-        ["true", "vec4(5.0, 6.0, 7.0, 8.0)"],
-      ],
-    };
+      style.scaleByDistance = new ConditionsExpression(jsonExp);
+      expect(style.style.scaleByDistance).toEqual(jsonExp);
 
-    style.scaleByDistance = new ConditionsExpression(jsonExp);
-    expect(style.style.scaleByDistance).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return new Cartesian4(1.0, 2.0, 3.0, 4.0);
+        },
+      };
+      style.scaleByDistance = customExpression;
+      expect(style.style.scaleByDistance).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return new Cartesian4(1.0, 2.0, 3.0, 4.0);
-      },
-    };
-    style.scaleByDistance = customExpression;
-    expect(style.style.scaleByDistance).toEqual(customExpression);
-
-    style.scaleByDistance = undefined;
-    expect(style.style.scaleByDistance).toBeUndefined();
+      style.scaleByDistance = undefined;
+      expect(style.style.scaleByDistance).toBeUndefined();
+    });
   });
 
   it("sets scaleByDistance values in setter", function () {
@@ -2248,23 +2594,24 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetScale: "1.0, 2.0, 3.0, 4.",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.scaleByDistance = 'vec4("${targetScale}")';
+      expect(style.scaleByDistance).toEqual(
+        new Expression('vec4("${targetScale}")', defines)
+      );
 
-    style.scaleByDistance = 'vec4("${targetScale}")';
-    expect(style.scaleByDistance).toEqual(
-      new Expression('vec4("${targetScale}")', defines)
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "vec4(5.0, 6.0, 7.0, 8.0)"],
+          ["true", 'vec4("${targetScale}")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "vec4(5.0, 6.0, 7.0, 8.0)"],
-        ["true", 'vec4("${targetScale}")'],
-      ],
-    };
-
-    style.scaleByDistance = jsonExp;
-    expect(style.scaleByDistance).toEqual(
-      new ConditionsExpression(jsonExp, defines)
-    );
+      style.scaleByDistance = jsonExp;
+      expect(style.scaleByDistance).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
+    });
   });
 
   it("sets style.scaleByDistance values in setter", function () {
@@ -2272,53 +2619,69 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetScale: "1.0, 2.0, 3.0, 4.",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.scaleByDistance = 'vec4("${targetScale}")';
+      expect(style.style.scaleByDistance).toEqual('vec4("${targetScale}")');
 
-    style.scaleByDistance = 'vec4("${targetScale}")';
-    expect(style.style.scaleByDistance).toEqual('vec4("${targetScale}")');
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "vec4(5.0, 6.0, 7.0, 8.0)"],
+          ["true", 'vec4("${targetScale}")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "vec4(5.0, 6.0, 7.0, 8.0)"],
-        ["true", 'vec4("${targetScale}")'],
-      ],
-    };
-
-    style.scaleByDistance = jsonExp;
-    expect(style.style.scaleByDistance).toEqual(jsonExp);
+      style.scaleByDistance = jsonExp;
+      expect(style.style.scaleByDistance).toEqual(jsonExp);
+    });
   });
 
   it("sets distanceDisplayCondition value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.distanceDisplayCondition).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.distanceDisplayCondition).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.distanceDisplayCondition).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.distanceDisplayCondition).toBeUndefined();
+      });
   });
 
   it("sets distanceDisplayCondition value to expression", function () {
     let style = new Cesium3DTileStyle({
       distanceDisplayCondition: "vec4(1.0, 2.0, 3.0, 4.0)",
     });
-    expect(style.distanceDisplayCondition).toEqual(
-      new Expression("vec4(1.0, 2.0, 3.0, 4.0)")
-    );
+    return style.readyPromise
+      .then(function () {
+        expect(style.distanceDisplayCondition).toEqual(
+          new Expression("vec4(1.0, 2.0, 3.0, 4.0)")
+        );
 
-    style = new Cesium3DTileStyle({
-      distanceDisplayCondition: "vec4(5.0, 6.0, 7.0, 8.0)",
-    });
-    expect(style.distanceDisplayCondition).toEqual(
-      new Expression("vec4(5.0, 6.0, 7.0, 8.0)")
-    );
+        style = new Cesium3DTileStyle({
+          distanceDisplayCondition: "vec4(5.0, 6.0, 7.0, 8.0)",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.distanceDisplayCondition).toEqual(
+          new Expression("vec4(5.0, 6.0, 7.0, 8.0)")
+        );
 
-    style = new Cesium3DTileStyle({
-      distanceDisplayCondition:
-        "(${height} * 10 >= 1000) ? vec4(1.0, 2.0, 3.0, 4.0) : vec4(5.0, 6.0, 7.0, 8.0)",
-    });
-    expect(style.distanceDisplayCondition).toEqual(
-      new Expression(
-        "(${height} * 10 >= 1000) ? vec4(1.0, 2.0, 3.0, 4.0) : vec4(5.0, 6.0, 7.0, 8.0)"
-      )
-    );
+        style = new Cesium3DTileStyle({
+          distanceDisplayCondition:
+            "(${height} * 10 >= 1000) ? vec4(1.0, 2.0, 3.0, 4.0) : vec4(5.0, 6.0, 7.0, 8.0)",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.distanceDisplayCondition).toEqual(
+          new Expression(
+            "(${height} * 10 >= 1000) ? vec4(1.0, 2.0, 3.0, 4.0) : vec4(5.0, 6.0, 7.0, 8.0)"
+          )
+        );
+      });
   });
 
   it("sets distanceDisplayCondition value to conditional", function () {
@@ -2332,60 +2695,66 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       distanceDisplayCondition: jsonExp,
     });
-    expect(style.distanceDisplayCondition).toEqual(
-      new ConditionsExpression(jsonExp)
-    );
+    return style.readyPromise.then(function () {
+      expect(style.distanceDisplayCondition).toEqual(
+        new ConditionsExpression(jsonExp)
+      );
+    });
   });
 
   it("sets distanceDisplayCondition expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      const exp = new Expression("vec4(5.0, 6.0, 7.0, 8.0)");
+      style.distanceDisplayCondition = exp;
+      expect(style.distanceDisplayCondition).toEqual(exp);
 
-    const exp = new Expression("vec4(5.0, 6.0, 7.0, 8.0)");
-    style.distanceDisplayCondition = exp;
-    expect(style.distanceDisplayCondition).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", "vec4(1.0, 2.0, 3.0, 4.0)"],
+          ["true", "vec4(5.0, 6.0, 7.0, 8.0)"],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", "vec4(1.0, 2.0, 3.0, 4.0)"],
-        ["true", "vec4(5.0, 6.0, 7.0, 8.0)"],
-      ],
+      style.distanceDisplayCondition = condExp;
+      expect(style.distanceDisplayCondition).toEqual(condExp);
+
+      style.distanceDisplayCondition = undefined;
+      expect(style.distanceDisplayCondition).toBeUndefined();
     });
-
-    style.distanceDisplayCondition = condExp;
-    expect(style.distanceDisplayCondition).toEqual(condExp);
-
-    style.distanceDisplayCondition = undefined;
-    expect(style.distanceDisplayCondition).toBeUndefined();
   });
 
   it("sets style.distanceDisplayCondition expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.distanceDisplayCondition = new Expression(
+        "vec4(5.0, 6.0, 7.0, 8.0)"
+      );
+      expect(style.style.distanceDisplayCondition).toEqual(
+        "vec4(5.0, 6.0, 7.0, 8.0)"
+      );
 
-    style.distanceDisplayCondition = new Expression("vec4(5.0, 6.0, 7.0, 8.0)");
-    expect(style.style.distanceDisplayCondition).toEqual(
-      "vec4(5.0, 6.0, 7.0, 8.0)"
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "vec4(1.0, 2.0, 3.0, 4.0)"],
+          ["true", "vec4(5.0, 6.0, 7.0, 8.0)"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "vec4(1.0, 2.0, 3.0, 4.0)"],
-        ["true", "vec4(5.0, 6.0, 7.0, 8.0)"],
-      ],
-    };
+      style.distanceDisplayCondition = new ConditionsExpression(jsonExp);
+      expect(style.style.distanceDisplayCondition).toEqual(jsonExp);
 
-    style.distanceDisplayCondition = new ConditionsExpression(jsonExp);
-    expect(style.style.distanceDisplayCondition).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return new Cartesian4(1.0, 2.0, 3.0, 4.0);
+        },
+      };
+      style.distanceDisplayCondition = customExpression;
+      expect(style.style.distanceDisplayCondition).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return new Cartesian4(1.0, 2.0, 3.0, 4.0);
-      },
-    };
-    style.distanceDisplayCondition = customExpression;
-    expect(style.style.distanceDisplayCondition).toEqual(customExpression);
-
-    style.distanceDisplayCondition = undefined;
-    expect(style.style.distanceDisplayCondition).toBeUndefined();
+      style.distanceDisplayCondition = undefined;
+      expect(style.style.distanceDisplayCondition).toBeUndefined();
+    });
   });
 
   it("sets distanceDisplayCondition values in setter", function () {
@@ -2393,23 +2762,24 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetTranslucency: "1.0, 2.0, 3.0, 4.",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.distanceDisplayCondition = 'vec4("${targetTranslucency}")';
+      expect(style.distanceDisplayCondition).toEqual(
+        new Expression('vec4("${targetTranslucency}")', defines)
+      );
 
-    style.distanceDisplayCondition = 'vec4("${targetTranslucency}")';
-    expect(style.distanceDisplayCondition).toEqual(
-      new Expression('vec4("${targetTranslucency}")', defines)
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "vec4(5.0, 6.0, 7.0, 8.0)"],
+          ["true", 'vec4("${targetTranslucency}")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "vec4(5.0, 6.0, 7.0, 8.0)"],
-        ["true", 'vec4("${targetTranslucency}")'],
-      ],
-    };
-
-    style.distanceDisplayCondition = jsonExp;
-    expect(style.distanceDisplayCondition).toEqual(
-      new ConditionsExpression(jsonExp, defines)
-    );
+      style.distanceDisplayCondition = jsonExp;
+      expect(style.distanceDisplayCondition).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
+    });
   });
 
   it("sets style.distanceDisplayCondition values in setter", function () {
@@ -2417,46 +2787,62 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetTranslucency: "1.0, 2.0, 3.0, 4.",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.distanceDisplayCondition = 'vec4("${targetTranslucency}")';
+      expect(style.style.distanceDisplayCondition).toEqual(
+        'vec4("${targetTranslucency}")'
+      );
 
-    style.distanceDisplayCondition = 'vec4("${targetTranslucency}")';
-    expect(style.style.distanceDisplayCondition).toEqual(
-      'vec4("${targetTranslucency}")'
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "vec4(5.0, 6.0, 7.0, 8.0)"],
+          ["true", 'vec4("${targetTranslucency}")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "vec4(5.0, 6.0, 7.0, 8.0)"],
-        ["true", 'vec4("${targetTranslucency}")'],
-      ],
-    };
-
-    style.distanceDisplayCondition = jsonExp;
-    expect(style.style.distanceDisplayCondition).toEqual(jsonExp);
+      style.distanceDisplayCondition = jsonExp;
+      expect(style.style.distanceDisplayCondition).toEqual(jsonExp);
+    });
   });
 
   it("sets heightOffset value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.heightOffset).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.heightOffset).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.heightOffset).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.heightOffset).toBeUndefined();
+      });
   });
 
   it("sets heightOffset value to expression", function () {
     let style = new Cesium3DTileStyle({
       heightOffset: "2",
     });
-    expect(style.heightOffset).toEqual(new Expression("2"));
+    return style.readyPromise
+      .then(function () {
+        expect(style.heightOffset).toEqual(new Expression("2"));
 
-    style = new Cesium3DTileStyle({
-      heightOffset: "${height} / 10",
-    });
-    expect(style.heightOffset).toEqual(new Expression("${height} / 10"));
+        style = new Cesium3DTileStyle({
+          heightOffset: "${height} / 10",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.heightOffset).toEqual(new Expression("${height} / 10"));
 
-    style = new Cesium3DTileStyle({
-      heightOffset: 2,
-    });
-    expect(style.heightOffset).toEqual(new Expression("2"));
+        style = new Cesium3DTileStyle({
+          heightOffset: 2,
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.heightOffset).toEqual(new Expression("2"));
+      });
   });
 
   it("sets heightOffset value to conditional", function () {
@@ -2470,59 +2856,63 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       heightOffset: jsonExp,
     });
-    expect(style.heightOffset).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.heightOffset).toEqual(new ConditionsExpression(jsonExp));
+    });
   });
 
   it("sets heightOffset expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.heightOffset = 2;
+      expect(style.heightOffset).toEqual(new Expression("2"));
 
-    style.heightOffset = 2;
-    expect(style.heightOffset).toEqual(new Expression("2"));
+      const exp = new Expression("2");
+      style.heightOffset = exp;
+      expect(style.heightOffset).toEqual(exp);
 
-    const exp = new Expression("2");
-    style.heightOffset = exp;
-    expect(style.heightOffset).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "2.0"],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "2.0"],
-      ],
+      style.heightOffset = condExp;
+      expect(style.heightOffset).toEqual(condExp);
+
+      style.heightOffset = undefined;
+      expect(style.heightOffset).toBeUndefined();
     });
-
-    style.heightOffset = condExp;
-    expect(style.heightOffset).toEqual(condExp);
-
-    style.heightOffset = undefined;
-    expect(style.heightOffset).toBeUndefined();
   });
 
   it("sets style.heightOffset expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.heightOffset = new Expression("2");
+      expect(style.style.heightOffset).toEqual("2");
 
-    style.heightOffset = new Expression("2");
-    expect(style.style.heightOffset).toEqual("2");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "2.0"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "2.0"],
-      ],
-    };
+      style.heightOffset = new ConditionsExpression(jsonExp);
+      expect(style.style.heightOffset).toEqual(jsonExp);
 
-    style.heightOffset = new ConditionsExpression(jsonExp);
-    expect(style.style.heightOffset).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return 2;
+        },
+      };
+      style.heightOffset = customExpression;
+      expect(style.style.heightOffset).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return 2;
-      },
-    };
-    style.heightOffset = customExpression;
-    expect(style.style.heightOffset).toEqual(customExpression);
-
-    style.heightOffset = undefined;
-    expect(style.style.heightOffset).toBeUndefined();
+      style.heightOffset = undefined;
+      expect(style.style.heightOffset).toBeUndefined();
+    });
   });
 
   it("sets heightOffset values in setter", function () {
@@ -2530,26 +2920,27 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetHeight: "2.0",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.heightOffset = 2;
+      expect(style.heightOffset).toEqual(new Expression("2"));
 
-    style.heightOffset = 2;
-    expect(style.heightOffset).toEqual(new Expression("2"));
+      style.heightOffset = "${targetHeight} + 1.0";
+      expect(style.heightOffset).toEqual(
+        new Expression("${targetHeight} + 1.0", defines)
+      );
 
-    style.heightOffset = "${targetHeight} + 1.0";
-    expect(style.heightOffset).toEqual(
-      new Expression("${targetHeight} + 1.0", defines)
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "${targetHeight}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "${targetHeight}"],
-      ],
-    };
-
-    style.heightOffset = jsonExp;
-    expect(style.heightOffset).toEqual(
-      new ConditionsExpression(jsonExp, defines)
-    );
+      style.heightOffset = jsonExp;
+      expect(style.heightOffset).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
+    });
   });
 
   it("sets style.heightOffset values in setter", function () {
@@ -2557,56 +2948,78 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetHeight: "2.0",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.heightOffset = "${targetHeight} + 1.0";
+      expect(style.style.heightOffset).toEqual("${targetHeight} + 1.0");
 
-    style.heightOffset = "${targetHeight} + 1.0";
-    expect(style.style.heightOffset).toEqual("${targetHeight} + 1.0");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "${targetHeight}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "${targetHeight}"],
-      ],
-    };
-
-    style.heightOffset = jsonExp;
-    expect(style.style.heightOffset).toEqual(jsonExp);
+      style.heightOffset = jsonExp;
+      expect(style.style.heightOffset).toEqual(jsonExp);
+    });
   });
 
   it("sets anchorLineEnabled value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.anchorLineEnabled).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.anchorLineEnabled).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.anchorLineEnabled).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.anchorLineEnabled).toBeUndefined();
+      });
   });
 
   it("sets anchorLineEnabled value to expression", function () {
     let style = new Cesium3DTileStyle({
       anchorLineEnabled: "true",
     });
-    expect(style.anchorLineEnabled).toEqual(new Expression("true"));
+    return style.readyPromise
+      .then(function () {
+        expect(style.anchorLineEnabled).toEqual(new Expression("true"));
 
-    style = new Cesium3DTileStyle({
-      anchorLineEnabled: "false",
-    });
-    expect(style.anchorLineEnabled).toEqual(new Expression("false"));
+        style = new Cesium3DTileStyle({
+          anchorLineEnabled: "false",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.anchorLineEnabled).toEqual(new Expression("false"));
 
-    style = new Cesium3DTileStyle({
-      anchorLineEnabled: "${height} * 10 >= 1000",
-    });
-    expect(style.anchorLineEnabled).toEqual(
-      new Expression("${height} * 10 >= 1000")
-    );
+        style = new Cesium3DTileStyle({
+          anchorLineEnabled: "${height} * 10 >= 1000",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.anchorLineEnabled).toEqual(
+          new Expression("${height} * 10 >= 1000")
+        );
 
-    style = new Cesium3DTileStyle({
-      anchorLineEnabled: true,
-    });
-    expect(style.anchorLineEnabled).toEqual(new Expression("true"));
+        style = new Cesium3DTileStyle({
+          anchorLineEnabled: true,
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.anchorLineEnabled).toEqual(new Expression("true"));
 
-    style = new Cesium3DTileStyle({
-      anchorLineEnabled: false,
-    });
-    expect(style.anchorLineEnabled).toEqual(new Expression("false"));
+        style = new Cesium3DTileStyle({
+          anchorLineEnabled: false,
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.anchorLineEnabled).toEqual(new Expression("false"));
+      });
   });
 
   it("sets anchorLineEnabled value to conditional", function () {
@@ -2620,50 +3033,56 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       anchorLineEnabled: jsonExp,
     });
-    expect(style.anchorLineEnabled).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.anchorLineEnabled).toEqual(
+        new ConditionsExpression(jsonExp)
+      );
+    });
   });
 
   it("sets anchorLineEnabled expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", "false"],
+          ["true", "true"],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", "false"],
-        ["true", "true"],
-      ],
+      style.anchorLineEnabled = condExp;
+      expect(style.anchorLineEnabled).toEqual(condExp);
+
+      const exp = new Expression("false");
+      style.anchorLineEnabled = exp;
+      expect(style.anchorLineEnabled).toEqual(exp);
     });
-
-    style.anchorLineEnabled = condExp;
-    expect(style.anchorLineEnabled).toEqual(condExp);
-
-    const exp = new Expression("false");
-    style.anchorLineEnabled = exp;
-    expect(style.anchorLineEnabled).toEqual(exp);
   });
 
   it("sets style.anchorLineEnabled expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.anchorLineEnabled = new Expression("false");
+      expect(style.style.anchorLineEnabled).toEqual("false");
 
-    style.anchorLineEnabled = new Expression("false");
-    expect(style.style.anchorLineEnabled).toEqual("false");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "false"],
+          ["true", "true"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "false"],
-        ["true", "true"],
-      ],
-    };
+      style.anchorLineEnabled = new ConditionsExpression(jsonExp);
+      expect(style.style.anchorLineEnabled).toEqual(jsonExp);
 
-    style.anchorLineEnabled = new ConditionsExpression(jsonExp);
-    expect(style.style.anchorLineEnabled).toEqual(jsonExp);
-
-    const customExpression = {
-      evaluate: function () {
-        return true;
-      },
-    };
-    style.anchorLineEnabled = customExpression;
-    expect(style.style.anchorLineEnabled).toEqual(customExpression);
+      const customExpression = {
+        evaluate: function () {
+          return true;
+        },
+      };
+      style.anchorLineEnabled = customExpression;
+      expect(style.style.anchorLineEnabled).toEqual(customExpression);
+    });
   });
 
   it("sets anchorLineEnabled values in setter", function () {
@@ -2671,29 +3090,30 @@ describe("Scene/Cesium3DTileStyle", function () {
       anchorFactor: 10,
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.anchorLineEnabled = "${height} * ${anchorFactor} >= 1000";
+      expect(style.anchorLineEnabled).toEqual(
+        new Expression("${height} * ${anchorFactor} >= 1000", defines)
+      );
 
-    style.anchorLineEnabled = "${height} * ${anchorFactor} >= 1000";
-    expect(style.anchorLineEnabled).toEqual(
-      new Expression("${height} * ${anchorFactor} >= 1000", defines)
-    );
+      style.anchorLineEnabled = false;
+      expect(style.anchorLineEnabled).toEqual(new Expression("false"));
 
-    style.anchorLineEnabled = false;
-    expect(style.anchorLineEnabled).toEqual(new Expression("false"));
+      const jsonExp = {
+        conditions: [
+          ["${height} > ${anchorFactor}", "false"],
+          ["true", "true"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > ${anchorFactor}", "false"],
-        ["true", "true"],
-      ],
-    };
+      style.anchorLineEnabled = jsonExp;
+      expect(style.anchorLineEnabled).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
 
-    style.anchorLineEnabled = jsonExp;
-    expect(style.anchorLineEnabled).toEqual(
-      new ConditionsExpression(jsonExp, defines)
-    );
-
-    style.anchorLineEnabled = undefined;
-    expect(style.anchorLineEnabled).toBeUndefined();
+      style.anchorLineEnabled = undefined;
+      expect(style.anchorLineEnabled).toBeUndefined();
+    });
   });
 
   it("sets style.anchorLineEnabled values in setter", function () {
@@ -2701,59 +3121,75 @@ describe("Scene/Cesium3DTileStyle", function () {
       anchorFactor: 10,
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.anchorLineEnabled = "${height} * ${anchorFactor} >= 1000";
+      expect(style.style.anchorLineEnabled).toEqual(
+        "${height} * ${anchorFactor} >= 1000"
+      );
 
-    style.anchorLineEnabled = "${height} * ${anchorFactor} >= 1000";
-    expect(style.style.anchorLineEnabled).toEqual(
-      "${height} * ${anchorFactor} >= 1000"
-    );
+      style.anchorLineEnabled = false;
+      expect(style.style.anchorLineEnabled).toEqual("false");
 
-    style.anchorLineEnabled = false;
-    expect(style.style.anchorLineEnabled).toEqual("false");
+      const jsonExp = {
+        conditions: [
+          ["${height} > ${anchorFactor}", "false"],
+          ["true", "true"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > ${anchorFactor}", "false"],
-        ["true", "true"],
-      ],
-    };
+      style.anchorLineEnabled = jsonExp;
+      expect(style.style.anchorLineEnabled).toEqual(jsonExp);
 
-    style.anchorLineEnabled = jsonExp;
-    expect(style.style.anchorLineEnabled).toEqual(jsonExp);
-
-    style.anchorLineEnabled = undefined;
-    expect(style.style.anchorLineEnabled).toBeUndefined();
+      style.anchorLineEnabled = undefined;
+      expect(style.style.anchorLineEnabled).toBeUndefined();
+    });
   });
 
   it("sets anchorLineColor value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.anchorLineColor).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.anchorLineColor).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.anchorLineColor).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.anchorLineColor).toBeUndefined();
+      });
   });
 
   it("sets anchorLineColor value to expression", function () {
     let style = new Cesium3DTileStyle({
       anchorLineColor: 'color("red")',
     });
-    expect(style.anchorLineColor).toEqual(new Expression('color("red")'));
+    return style.readyPromise
+      .then(function () {
+        expect(style.anchorLineColor).toEqual(new Expression('color("red")'));
 
-    style = new Cesium3DTileStyle({
-      anchorLineColor: "rgba(30, 30, 30, 0.5)",
-    });
-    expect(style.anchorLineColor).toEqual(
-      new Expression("rgba(30, 30, 30, 0.5)")
-    );
+        style = new Cesium3DTileStyle({
+          anchorLineColor: "rgba(30, 30, 30, 0.5)",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.anchorLineColor).toEqual(
+          new Expression("rgba(30, 30, 30, 0.5)")
+        );
 
-    style = new Cesium3DTileStyle({
-      anchorLineColor:
-        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")',
-    });
-    expect(style.anchorLineColor).toEqual(
-      new Expression(
-        '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
-      )
-    );
+        style = new Cesium3DTileStyle({
+          anchorLineColor:
+            '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")',
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.anchorLineColor).toEqual(
+          new Expression(
+            '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
+          )
+        );
+      });
   });
 
   it("sets anchorLineColor value to conditional", function () {
@@ -2767,59 +3203,63 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       anchorLineColor: jsonExp,
     });
-    expect(style.anchorLineColor).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.anchorLineColor).toEqual(new ConditionsExpression(jsonExp));
+    });
   });
 
   it("sets anchorLineColor expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      const exp = new Expression('color("red")');
+      style.anchorLineColor = exp;
+      expect(style.anchorLineColor).toEqual(exp);
 
-    const exp = new Expression('color("red")');
-    style.anchorLineColor = exp;
-    expect(style.anchorLineColor).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("blue")'],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("blue")'],
-      ],
+      style.anchorLineColor = condExp;
+      expect(style.anchorLineColor).toEqual(condExp);
+
+      style.anchorLineColor = undefined;
+      expect(style.anchorLineColor).toBeUndefined();
     });
-
-    style.anchorLineColor = condExp;
-    expect(style.anchorLineColor).toEqual(condExp);
-
-    style.anchorLineColor = undefined;
-    expect(style.anchorLineColor).toBeUndefined();
   });
 
   it("sets style.anchorLineColor expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.anchorLineColor = new Expression('color("red")');
+      expect(style.style.anchorLineColor).toEqual('color("red")');
 
-    style.anchorLineColor = new Expression('color("red")');
-    expect(style.style.anchorLineColor).toEqual('color("red")');
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("blue")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("blue")'],
-      ],
-    };
+      style.anchorLineColor = new ConditionsExpression(jsonExp);
+      expect(style.style.anchorLineColor).toEqual(jsonExp);
 
-    style.anchorLineColor = new ConditionsExpression(jsonExp);
-    expect(style.style.anchorLineColor).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return Color.RED;
+        },
+        evaluateColor: function () {
+          return Color.RED;
+        },
+      };
+      style.anchorLineColor = customExpression;
+      expect(style.style.anchorLineColor).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return Color.RED;
-      },
-      evaluateColor: function () {
-        return Color.RED;
-      },
-    };
-    style.anchorLineColor = customExpression;
-    expect(style.style.anchorLineColor).toEqual(customExpression);
-
-    style.anchorLineColor = undefined;
-    expect(style.style.anchorLineColor).toBeUndefined();
+      style.anchorLineColor = undefined;
+      expect(style.style.anchorLineColor).toBeUndefined();
+    });
   });
 
   it("sets anchorLineColor values in setter", function () {
@@ -2827,23 +3267,24 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetColor: "red",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.anchorLineColor = 'color("${targetColor}")';
+      expect(style.anchorLineColor).toEqual(
+        new Expression('color("${targetColor}")', defines)
+      );
 
-    style.anchorLineColor = 'color("${targetColor}")';
-    expect(style.anchorLineColor).toEqual(
-      new Expression('color("${targetColor}")', defines)
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("${targetColor}")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("${targetColor}")'],
-      ],
-    };
-
-    style.anchorLineColor = jsonExp;
-    expect(style.anchorLineColor).toEqual(
-      new ConditionsExpression(jsonExp, defines)
-    );
+      style.anchorLineColor = jsonExp;
+      expect(style.anchorLineColor).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
+    });
   });
 
   it("sets style.anchorLineColor values in setter", function () {
@@ -2851,44 +3292,60 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetColor: "red",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.anchorLineColor = 'color("${targetColor}")';
+      expect(style.style.anchorLineColor).toEqual('color("${targetColor}")');
 
-    style.anchorLineColor = 'color("${targetColor}")';
-    expect(style.style.anchorLineColor).toEqual('color("${targetColor}")');
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", 'color("cyan")'],
+          ["true", 'color("${targetColor}")'],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", 'color("cyan")'],
-        ["true", 'color("${targetColor}")'],
-      ],
-    };
-
-    style.anchorLineColor = jsonExp;
-    expect(style.style.anchorLineColor).toEqual(jsonExp);
+      style.anchorLineColor = jsonExp;
+      expect(style.style.anchorLineColor).toEqual(jsonExp);
+    });
   });
 
   it("sets image value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.image).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.image).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.image).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.image).toBeUndefined();
+      });
   });
 
   it("sets image value to expression", function () {
     let style = new Cesium3DTileStyle({
       image: "'url/to/image'",
     });
-    expect(style.image).toEqual(new Expression("'url/to/image'"));
+    return style.readyPromise
+      .then(function () {
+        expect(style.image).toEqual(new Expression("'url/to/image'"));
 
-    style = new Cesium3DTileStyle({
-      image: "${url}",
-    });
-    expect(style.image).toEqual(new Expression("${url}"));
+        style = new Cesium3DTileStyle({
+          image: "${url}",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.image).toEqual(new Expression("${url}"));
 
-    style = new Cesium3DTileStyle({
-      image: "'url/to/image'",
-    });
-    expect(style.image).toEqual(new Expression("'url/to/image'"));
+        style = new Cesium3DTileStyle({
+          image: "'url/to/image'",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.image).toEqual(new Expression("'url/to/image'"));
+      });
   });
 
   it("sets image value to conditional", function () {
@@ -2902,59 +3359,63 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       image: jsonExp,
     });
-    expect(style.image).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.image).toEqual(new ConditionsExpression(jsonExp));
+    });
   });
 
   it("sets image expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.image = "'url/to/image'";
+      expect(style.image).toEqual(new Expression("'url/to/image'"));
 
-    style.image = "'url/to/image'";
-    expect(style.image).toEqual(new Expression("'url/to/image'"));
+      const exp = new Expression("'url/to/image'");
+      style.image = exp;
+      expect(style.image).toEqual(exp);
 
-    const exp = new Expression("'url/to/image'");
-    style.image = exp;
-    expect(style.image).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", "'url/to/image1'"],
+          ["true", "'url/to/image2'"],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", "'url/to/image1'"],
-        ["true", "'url/to/image2'"],
-      ],
+      style.image = condExp;
+      expect(style.image).toEqual(condExp);
+
+      style.image = undefined;
+      expect(style.image).toBeUndefined();
     });
-
-    style.image = condExp;
-    expect(style.image).toEqual(condExp);
-
-    style.image = undefined;
-    expect(style.image).toBeUndefined();
   });
 
   it("sets style.image expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.image = new Expression("'url/to/image'");
+      expect(style.style.image).toEqual("'url/to/image'");
 
-    style.image = new Expression("'url/to/image'");
-    expect(style.style.image).toEqual("'url/to/image'");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "'url/to/image1'"],
+          ["true", "'url/to/image2'"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "'url/to/image1'"],
-        ["true", "'url/to/image2'"],
-      ],
-    };
+      style.image = new ConditionsExpression(jsonExp);
+      expect(style.style.image).toEqual(jsonExp);
 
-    style.image = new ConditionsExpression(jsonExp);
-    expect(style.style.image).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return "'url/to/image1'";
+        },
+      };
+      style.image = customExpression;
+      expect(style.style.image).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return "'url/to/image1'";
-      },
-    };
-    style.image = customExpression;
-    expect(style.style.image).toEqual(customExpression);
-
-    style.image = undefined;
-    expect(style.style.image).toBeUndefined();
+      style.image = undefined;
+      expect(style.style.image).toBeUndefined();
+    });
   });
 
   it("sets image values in setter", function () {
@@ -2962,22 +3423,23 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetUrl: "'url/to/image1'",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.image = "'url/to/image'";
+      expect(style.image).toEqual(new Expression("'url/to/image'"));
 
-    style.image = "'url/to/image'";
-    expect(style.image).toEqual(new Expression("'url/to/image'"));
+      style.image = "${targetUrl}";
+      expect(style.image).toEqual(new Expression("${targetUrl}", defines));
 
-    style.image = "${targetUrl}";
-    expect(style.image).toEqual(new Expression("${targetUrl}", defines));
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "'url/to/image2'"],
+          ["true", "${targetUrl}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "'url/to/image2'"],
-        ["true", "${targetUrl}"],
-      ],
-    };
-
-    style.image = jsonExp;
-    expect(style.image).toEqual(new ConditionsExpression(jsonExp, defines));
+      style.image = jsonExp;
+      expect(style.image).toEqual(new ConditionsExpression(jsonExp, defines));
+    });
   });
 
   it("sets style.image values in setter", function () {
@@ -2985,49 +3447,65 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetUrl: "'url/to/image1'",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.image = "'url/to/image'";
+      expect(style.style.image).toEqual("'url/to/image'");
 
-    style.image = "'url/to/image'";
-    expect(style.style.image).toEqual("'url/to/image'");
+      style.image = "${targetUrl}";
+      expect(style.style.image).toEqual("${targetUrl}");
 
-    style.image = "${targetUrl}";
-    expect(style.style.image).toEqual("${targetUrl}");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "'url/to/image2'"],
+          ["true", "${targetUrl}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "'url/to/image2'"],
-        ["true", "${targetUrl}"],
-      ],
-    };
-
-    style.image = jsonExp;
-    expect(style.style.image).toEqual(jsonExp);
+      style.image = jsonExp;
+      expect(style.style.image).toEqual(jsonExp);
+    });
   });
 
   it("sets disableDepthTestDistance value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.disableDepthTestDistance).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.disableDepthTestDistance).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.disableDepthTestDistance).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.disableDepthTestDistance).toBeUndefined();
+      });
   });
 
   it("sets disableDepthTestDistance value to expression", function () {
     let style = new Cesium3DTileStyle({
       disableDepthTestDistance: "2",
     });
-    expect(style.disableDepthTestDistance).toEqual(new Expression("2"));
+    return style.readyPromise
+      .then(function () {
+        expect(style.disableDepthTestDistance).toEqual(new Expression("2"));
 
-    style = new Cesium3DTileStyle({
-      disableDepthTestDistance: "${height} / 10",
-    });
-    expect(style.disableDepthTestDistance).toEqual(
-      new Expression("${height} / 10")
-    );
+        style = new Cesium3DTileStyle({
+          disableDepthTestDistance: "${height} / 10",
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.disableDepthTestDistance).toEqual(
+          new Expression("${height} / 10")
+        );
 
-    style = new Cesium3DTileStyle({
-      disableDepthTestDistance: 2,
-    });
-    expect(style.disableDepthTestDistance).toEqual(new Expression("2"));
+        style = new Cesium3DTileStyle({
+          disableDepthTestDistance: 2,
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.disableDepthTestDistance).toEqual(new Expression("2"));
+      });
   });
 
   it("sets disableDepthTestDistance value to conditional", function () {
@@ -3041,61 +3519,65 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       disableDepthTestDistance: jsonExp,
     });
-    expect(style.disableDepthTestDistance).toEqual(
-      new ConditionsExpression(jsonExp)
-    );
+    return style.readyPromise.then(function () {
+      expect(style.disableDepthTestDistance).toEqual(
+        new ConditionsExpression(jsonExp)
+      );
+    });
   });
 
   it("sets disableDepthTestDistance expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.disableDepthTestDistance = 2;
+      expect(style.disableDepthTestDistance).toEqual(new Expression("2"));
 
-    style.disableDepthTestDistance = 2;
-    expect(style.disableDepthTestDistance).toEqual(new Expression("2"));
+      const exp = new Expression("2");
+      style.disableDepthTestDistance = exp;
+      expect(style.disableDepthTestDistance).toEqual(exp);
 
-    const exp = new Expression("2");
-    style.disableDepthTestDistance = exp;
-    expect(style.disableDepthTestDistance).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "2.0"],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "2.0"],
-      ],
+      style.disableDepthTestDistance = condExp;
+      expect(style.disableDepthTestDistance).toEqual(condExp);
+
+      style.disableDepthTestDistance = undefined;
+      expect(style.disableDepthTestDistance).toBeUndefined();
     });
-
-    style.disableDepthTestDistance = condExp;
-    expect(style.disableDepthTestDistance).toEqual(condExp);
-
-    style.disableDepthTestDistance = undefined;
-    expect(style.disableDepthTestDistance).toBeUndefined();
   });
 
   it("sets style.disableDepthTestDistance expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.disableDepthTestDistance = new Expression("2");
+      expect(style.style.disableDepthTestDistance).toEqual("2");
 
-    style.disableDepthTestDistance = new Expression("2");
-    expect(style.style.disableDepthTestDistance).toEqual("2");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "2.0"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "2.0"],
-      ],
-    };
+      style.disableDepthTestDistance = new ConditionsExpression(jsonExp);
+      expect(style.style.disableDepthTestDistance).toEqual(jsonExp);
 
-    style.disableDepthTestDistance = new ConditionsExpression(jsonExp);
-    expect(style.style.disableDepthTestDistance).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return 1.0;
+        },
+      };
+      style.disableDepthTestDistance = customExpression;
+      expect(style.style.disableDepthTestDistance).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return 1.0;
-      },
-    };
-    style.disableDepthTestDistance = customExpression;
-    expect(style.style.disableDepthTestDistance).toEqual(customExpression);
-
-    style.disableDepthTestDistance = undefined;
-    expect(style.style.disableDepthTestDistance).toBeUndefined();
+      style.disableDepthTestDistance = undefined;
+      expect(style.style.disableDepthTestDistance).toBeUndefined();
+    });
   });
 
   it("sets disableDepthTestDistance values in setter", function () {
@@ -3103,41 +3585,49 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetDistance: "2.0",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.disableDepthTestDistance = 2;
+      expect(style.disableDepthTestDistance).toEqual(new Expression("2"));
 
-    style.disableDepthTestDistance = 2;
-    expect(style.disableDepthTestDistance).toEqual(new Expression("2"));
+      style.disableDepthTestDistance = "${targetDistance} + 1.0";
+      expect(style.disableDepthTestDistance).toEqual(
+        new Expression("${targetDistance} + 1.0", defines)
+      );
 
-    style.disableDepthTestDistance = "${targetDistance} + 1.0";
-    expect(style.disableDepthTestDistance).toEqual(
-      new Expression("${targetDistance} + 1.0", defines)
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1.0"],
+          ["true", "${targetDistance}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1.0"],
-        ["true", "${targetDistance}"],
-      ],
-    };
-
-    style.disableDepthTestDistance = jsonExp;
-    expect(style.disableDepthTestDistance).toEqual(
-      new ConditionsExpression(jsonExp, defines)
-    );
+      style.disableDepthTestDistance = jsonExp;
+      expect(style.disableDepthTestDistance).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
+    });
   });
 
   it("sets horizontalOrigin value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.horizontalOrigin).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.horizontalOrigin).toBeUndefined();
 
-    style = new Cesium3DTileStyle();
-    expect(style.horizontalOrigin).toBeUndefined();
+        style = new Cesium3DTileStyle();
+      })
+      .then(function () {
+        expect(style.horizontalOrigin).toBeUndefined();
+      });
   });
 
   it("sets horizontalOrigin value to expression", function () {
     const style = new Cesium3DTileStyle({
       horizontalOrigin: "1",
     });
-    expect(style.horizontalOrigin).toEqual(new Expression("1"));
+    return style.readyPromise.then(function () {
+      expect(style.horizontalOrigin).toEqual(new Expression("1"));
+    });
   });
 
   it("sets horizontalOrigin value to conditional", function () {
@@ -3151,59 +3641,63 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       horizontalOrigin: jsonExp,
     });
-    expect(style.horizontalOrigin).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.horizontalOrigin).toEqual(new ConditionsExpression(jsonExp));
+    });
   });
 
   it("sets horizontalOrigin expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.horizontalOrigin = 1;
+      expect(style.horizontalOrigin).toEqual(new Expression("1"));
 
-    style.horizontalOrigin = 1;
-    expect(style.horizontalOrigin).toEqual(new Expression("1"));
+      const exp = new Expression("1");
+      style.horizontalOrigin = exp;
+      expect(style.horizontalOrigin).toEqual(exp);
 
-    const exp = new Expression("1");
-    style.horizontalOrigin = exp;
-    expect(style.horizontalOrigin).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", "1"],
+          ["true", "-1"],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", "1"],
-        ["true", "-1"],
-      ],
+      style.horizontalOrigin = condExp;
+      expect(style.horizontalOrigin).toEqual(condExp);
+
+      style.horizontalOrigin = undefined;
+      expect(style.horizontalOrigin).toBeUndefined();
     });
-
-    style.horizontalOrigin = condExp;
-    expect(style.horizontalOrigin).toEqual(condExp);
-
-    style.horizontalOrigin = undefined;
-    expect(style.horizontalOrigin).toBeUndefined();
   });
 
   it("sets style.horizontalOrigin expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.horizontalOrigin = new Expression("1");
+      expect(style.style.horizontalOrigin).toEqual("1");
 
-    style.horizontalOrigin = new Expression("1");
-    expect(style.style.horizontalOrigin).toEqual("1");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1"],
+          ["true", "-1"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1"],
-        ["true", "-1"],
-      ],
-    };
+      style.horizontalOrigin = new ConditionsExpression(jsonExp);
+      expect(style.style.horizontalOrigin).toEqual(jsonExp);
 
-    style.horizontalOrigin = new ConditionsExpression(jsonExp);
-    expect(style.style.horizontalOrigin).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return 1;
+        },
+      };
+      style.horizontalOrigin = customExpression;
+      expect(style.style.horizontalOrigin).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return 1;
-      },
-    };
-    style.horizontalOrigin = customExpression;
-    expect(style.style.horizontalOrigin).toEqual(customExpression);
-
-    style.horizontalOrigin = undefined;
-    expect(style.style.horizontalOrigin).toBeUndefined();
+      style.horizontalOrigin = undefined;
+      expect(style.style.horizontalOrigin).toBeUndefined();
+    });
   });
 
   it("sets horizontalOrigin values in setter", function () {
@@ -3211,26 +3705,27 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetOrigin: "-1",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.horizontalOrigin = -1;
+      expect(style.horizontalOrigin).toEqual(new Expression("-1"));
 
-    style.horizontalOrigin = -1;
-    expect(style.horizontalOrigin).toEqual(new Expression("-1"));
+      style.horizontalOrigin = "${targetOrigin}";
+      expect(style.horizontalOrigin).toEqual(
+        new Expression("${targetOrigin}", defines)
+      );
 
-    style.horizontalOrigin = "${targetOrigin}";
-    expect(style.horizontalOrigin).toEqual(
-      new Expression("${targetOrigin}", defines)
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1"],
+          ["true", "${targetOrigin}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1"],
-        ["true", "${targetOrigin}"],
-      ],
-    };
-
-    style.horizontalOrigin = jsonExp;
-    expect(style.horizontalOrigin).toEqual(
-      new ConditionsExpression(jsonExp, defines)
-    );
+      style.horizontalOrigin = jsonExp;
+      expect(style.horizontalOrigin).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
+    });
   });
 
   it("sets style.horizontalOrigin values in setter", function () {
@@ -3238,37 +3733,45 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetOrigin: "-1",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.horizontalOrigin = -1;
+      expect(style.style.horizontalOrigin).toEqual("-1");
 
-    style.horizontalOrigin = -1;
-    expect(style.style.horizontalOrigin).toEqual("-1");
+      style.horizontalOrigin = "${targetOrigin}";
+      expect(style.style.horizontalOrigin).toEqual("${targetOrigin}");
 
-    style.horizontalOrigin = "${targetOrigin}";
-    expect(style.style.horizontalOrigin).toEqual("${targetOrigin}");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1"],
+          ["true", "${targetOrigin}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1"],
-        ["true", "${targetOrigin}"],
-      ],
-    };
-
-    style.horizontalOrigin = jsonExp;
-    expect(style.style.horizontalOrigin).toEqual(jsonExp);
+      style.horizontalOrigin = jsonExp;
+      expect(style.style.horizontalOrigin).toEqual(jsonExp);
+    });
   });
 
   it("sets verticalOrigin value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.verticalOrigin).toBeUndefined();
-
-    style = new Cesium3DTileStyle();
-    expect(style.verticalOrigin).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.verticalOrigin).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.verticalOrigin).toBeUndefined();
+      });
   });
 
   it("sets verticalOrigin value to expression", function () {
     const style = new Cesium3DTileStyle({
       verticalOrigin: "1",
     });
-    expect(style.verticalOrigin).toEqual(new Expression("1"));
+    return style.readyPromise.then(function () {
+      expect(style.verticalOrigin).toEqual(new Expression("1"));
+    });
   });
 
   it("sets verticalOrigin value to conditional", function () {
@@ -3282,59 +3785,63 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       verticalOrigin: jsonExp,
     });
-    expect(style.verticalOrigin).toEqual(new ConditionsExpression(jsonExp));
+    return style.readyPromise.then(function () {
+      expect(style.verticalOrigin).toEqual(new ConditionsExpression(jsonExp));
+    });
   });
 
   it("sets verticalOrigin expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.verticalOrigin = 1;
+      expect(style.verticalOrigin).toEqual(new Expression("1"));
 
-    style.verticalOrigin = 1;
-    expect(style.verticalOrigin).toEqual(new Expression("1"));
+      const exp = new Expression("1");
+      style.verticalOrigin = exp;
+      expect(style.verticalOrigin).toEqual(exp);
 
-    const exp = new Expression("1");
-    style.verticalOrigin = exp;
-    expect(style.verticalOrigin).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", "1"],
+          ["true", "-1"],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", "1"],
-        ["true", "-1"],
-      ],
+      style.verticalOrigin = condExp;
+      expect(style.verticalOrigin).toEqual(condExp);
+
+      style.verticalOrigin = undefined;
+      expect(style.verticalOrigin).toBeUndefined();
     });
-
-    style.verticalOrigin = condExp;
-    expect(style.verticalOrigin).toEqual(condExp);
-
-    style.verticalOrigin = undefined;
-    expect(style.verticalOrigin).toBeUndefined();
   });
 
-  it("sets style.styleverticalOrigin expressions in setter", function () {
+  it("sets style.verticalOrigin expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.verticalOrigin = new Expression("1");
+      expect(style.style.verticalOrigin).toEqual("1");
 
-    style.verticalOrigin = new Expression("1");
-    expect(style.style.verticalOrigin).toEqual("1");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1"],
+          ["true", "-1"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1"],
-        ["true", "-1"],
-      ],
-    };
+      style.verticalOrigin = new ConditionsExpression(jsonExp);
+      expect(style.style.verticalOrigin).toEqual(jsonExp);
 
-    style.verticalOrigin = new ConditionsExpression(jsonExp);
-    expect(style.style.verticalOrigin).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return 1;
+        },
+      };
+      style.verticalOrigin = customExpression;
+      expect(style.style.verticalOrigin).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return 1;
-      },
-    };
-    style.verticalOrigin = customExpression;
-    expect(style.style.verticalOrigin).toEqual(customExpression);
-
-    style.verticalOrigin = undefined;
-    expect(style.style.verticalOrigin).toBeUndefined();
+      style.verticalOrigin = undefined;
+      expect(style.style.verticalOrigin).toBeUndefined();
+    });
   });
 
   it("sets verticalOrigin values in setter", function () {
@@ -3342,26 +3849,27 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetOrigin: "-1",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.verticalOrigin = -1;
+      expect(style.verticalOrigin).toEqual(new Expression("-1"));
 
-    style.verticalOrigin = -1;
-    expect(style.verticalOrigin).toEqual(new Expression("-1"));
+      style.verticalOrigin = "${targetOrigin}";
+      expect(style.verticalOrigin).toEqual(
+        new Expression("${targetOrigin}", defines)
+      );
 
-    style.verticalOrigin = "${targetOrigin}";
-    expect(style.verticalOrigin).toEqual(
-      new Expression("${targetOrigin}", defines)
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1"],
+          ["true", "${targetOrigin}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1"],
-        ["true", "${targetOrigin}"],
-      ],
-    };
-
-    style.verticalOrigin = jsonExp;
-    expect(style.verticalOrigin).toEqual(
-      new ConditionsExpression(jsonExp, defines)
-    );
+      style.verticalOrigin = jsonExp;
+      expect(style.verticalOrigin).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
+    });
   });
 
   it("sets style.verticalOrigin values in setter", function () {
@@ -3369,37 +3877,45 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetOrigin: "-1",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.verticalOrigin = -1;
+      expect(style.style.verticalOrigin).toEqual("-1");
 
-    style.verticalOrigin = -1;
-    expect(style.style.verticalOrigin).toEqual("-1");
+      style.verticalOrigin = "${targetOrigin}";
+      expect(style.style.verticalOrigin).toEqual("${targetOrigin}");
 
-    style.verticalOrigin = "${targetOrigin}";
-    expect(style.style.verticalOrigin).toEqual("${targetOrigin}");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1"],
+          ["true", "${targetOrigin}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1"],
-        ["true", "${targetOrigin}"],
-      ],
-    };
-
-    style.verticalOrigin = jsonExp;
-    expect(style.style.verticalOrigin).toEqual(jsonExp);
+      style.verticalOrigin = jsonExp;
+      expect(style.style.verticalOrigin).toEqual(jsonExp);
+    });
   });
 
   it("sets labelHorizontalOrigin value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.labelHorizontalOrigin).toBeUndefined();
-
-    style = new Cesium3DTileStyle();
-    expect(style.labelHorizontalOrigin).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.labelHorizontalOrigin).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.labelHorizontalOrigin).toBeUndefined();
+      });
   });
 
   it("sets labelHorizontalOrigin value to expression", function () {
     const style = new Cesium3DTileStyle({
       labelHorizontalOrigin: "1",
     });
-    expect(style.labelHorizontalOrigin).toEqual(new Expression("1"));
+    return style.readyPromise.then(function () {
+      expect(style.labelHorizontalOrigin).toEqual(new Expression("1"));
+    });
   });
 
   it("sets labelHorizontalOrigin value to conditional", function () {
@@ -3413,61 +3929,65 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       labelHorizontalOrigin: jsonExp,
     });
-    expect(style.labelHorizontalOrigin).toEqual(
-      new ConditionsExpression(jsonExp)
-    );
+    return style.readyPromise.then(function () {
+      expect(style.labelHorizontalOrigin).toEqual(
+        new ConditionsExpression(jsonExp)
+      );
+    });
   });
 
   it("sets labelHorizontalOrigin expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.labelHorizontalOrigin = 1;
+      expect(style.labelHorizontalOrigin).toEqual(new Expression("1"));
 
-    style.labelHorizontalOrigin = 1;
-    expect(style.labelHorizontalOrigin).toEqual(new Expression("1"));
+      const exp = new Expression("1");
+      style.labelHorizontalOrigin = exp;
+      expect(style.labelHorizontalOrigin).toEqual(exp);
 
-    const exp = new Expression("1");
-    style.labelHorizontalOrigin = exp;
-    expect(style.labelHorizontalOrigin).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", "1"],
+          ["true", "-1"],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", "1"],
-        ["true", "-1"],
-      ],
+      style.labelHorizontalOrigin = condExp;
+      expect(style.labelHorizontalOrigin).toEqual(condExp);
+
+      style.labelHorizontalOrigin = undefined;
+      expect(style.labelHorizontalOrigin).toBeUndefined();
     });
-
-    style.labelHorizontalOrigin = condExp;
-    expect(style.labelHorizontalOrigin).toEqual(condExp);
-
-    style.labelHorizontalOrigin = undefined;
-    expect(style.labelHorizontalOrigin).toBeUndefined();
   });
 
   it("sets style.labelHorizontalOrigin expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.labelHorizontalOrigin = new Expression("1");
+      expect(style.style.labelHorizontalOrigin).toEqual("1");
 
-    style.labelHorizontalOrigin = new Expression("1");
-    expect(style.style.labelHorizontalOrigin).toEqual("1");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1"],
+          ["true", "-1"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1"],
-        ["true", "-1"],
-      ],
-    };
+      style.labelHorizontalOrigin = new ConditionsExpression(jsonExp);
+      expect(style.style.labelHorizontalOrigin).toEqual(jsonExp);
 
-    style.labelHorizontalOrigin = new ConditionsExpression(jsonExp);
-    expect(style.style.labelHorizontalOrigin).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return 1;
+        },
+      };
+      style.labelHorizontalOrigin = customExpression;
+      expect(style.style.labelHorizontalOrigin).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return 1;
-      },
-    };
-    style.labelHorizontalOrigin = customExpression;
-    expect(style.style.labelHorizontalOrigin).toEqual(customExpression);
-
-    style.labelHorizontalOrigin = undefined;
-    expect(style.style.labelHorizontalOrigin).toBeUndefined();
+      style.labelHorizontalOrigin = undefined;
+      expect(style.style.labelHorizontalOrigin).toBeUndefined();
+    });
   });
 
   it("sets labelHorizontalOrigin values in setter", function () {
@@ -3475,26 +3995,27 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetOrigin: "-1",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.labelHorizontalOrigin = -1;
+      expect(style.labelHorizontalOrigin).toEqual(new Expression("-1"));
 
-    style.labelHorizontalOrigin = -1;
-    expect(style.labelHorizontalOrigin).toEqual(new Expression("-1"));
+      style.labelHorizontalOrigin = "${targetOrigin}";
+      expect(style.labelHorizontalOrigin).toEqual(
+        new Expression("${targetOrigin}", defines)
+      );
 
-    style.labelHorizontalOrigin = "${targetOrigin}";
-    expect(style.labelHorizontalOrigin).toEqual(
-      new Expression("${targetOrigin}", defines)
-    );
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1"],
+          ["true", "${targetOrigin}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1"],
-        ["true", "${targetOrigin}"],
-      ],
-    };
-
-    style.labelHorizontalOrigin = jsonExp;
-    expect(style.labelHorizontalOrigin).toEqual(
-      new ConditionsExpression(jsonExp, defines)
-    );
+      style.labelHorizontalOrigin = jsonExp;
+      expect(style.labelHorizontalOrigin).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
+    });
   });
 
   it("sets style.labelHorizontalOrigin values in setter", function () {
@@ -3502,37 +4023,45 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetOrigin: "-1",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.labelHorizontalOrigin = -1;
+      expect(style.style.labelHorizontalOrigin).toEqual("-1");
 
-    style.labelHorizontalOrigin = -1;
-    expect(style.style.labelHorizontalOrigin).toEqual("-1");
+      style.labelHorizontalOrigin = "${targetOrigin}";
+      expect(style.style.labelHorizontalOrigin).toEqual("${targetOrigin}");
 
-    style.labelHorizontalOrigin = "${targetOrigin}";
-    expect(style.style.labelHorizontalOrigin).toEqual("${targetOrigin}");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1"],
+          ["true", "${targetOrigin}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1"],
-        ["true", "${targetOrigin}"],
-      ],
-    };
-
-    style.labelHorizontalOrigin = jsonExp;
-    expect(style.style.labelHorizontalOrigin).toEqual(jsonExp);
+      style.labelHorizontalOrigin = jsonExp;
+      expect(style.style.labelHorizontalOrigin).toEqual(jsonExp);
+    });
   });
 
   it("sets labelVerticalOrigin value to undefined if value not present", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.labelVerticalOrigin).toBeUndefined();
-
-    style = new Cesium3DTileStyle();
-    expect(style.labelVerticalOrigin).toBeUndefined();
+    return style.readyPromise
+      .then(function () {
+        expect(style.labelVerticalOrigin).toBeUndefined();
+        style = new Cesium3DTileStyle();
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.labelVerticalOrigin).toBeUndefined();
+      });
   });
 
   it("sets labelVerticalOrigin value to expression", function () {
     const style = new Cesium3DTileStyle({
       labelVerticalOrigin: "1",
     });
-    expect(style.labelVerticalOrigin).toEqual(new Expression("1"));
+    return style.readyPromise.then(function () {
+      expect(style.labelVerticalOrigin).toEqual(new Expression("1"));
+    });
   });
 
   it("sets labelVerticalOrigin value to conditional", function () {
@@ -3546,61 +4075,65 @@ describe("Scene/Cesium3DTileStyle", function () {
     const style = new Cesium3DTileStyle({
       labelVerticalOrigin: jsonExp,
     });
-    expect(style.labelVerticalOrigin).toEqual(
-      new ConditionsExpression(jsonExp)
-    );
+    return style.readyPromise.then(function () {
+      expect(style.labelVerticalOrigin).toEqual(
+        new ConditionsExpression(jsonExp)
+      );
+    });
   });
 
   it("sets labelVerticalOrigin expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.labelVerticalOrigin = 1;
+      expect(style.labelVerticalOrigin).toEqual(new Expression("1"));
 
-    style.labelVerticalOrigin = 1;
-    expect(style.labelVerticalOrigin).toEqual(new Expression("1"));
+      const exp = new Expression("1");
+      style.labelVerticalOrigin = exp;
+      expect(style.labelVerticalOrigin).toEqual(exp);
 
-    const exp = new Expression("1");
-    style.labelVerticalOrigin = exp;
-    expect(style.labelVerticalOrigin).toEqual(exp);
+      const condExp = new ConditionsExpression({
+        conditions: [
+          ["${height} > 2", "1"],
+          ["true", "-1"],
+        ],
+      });
 
-    const condExp = new ConditionsExpression({
-      conditions: [
-        ["${height} > 2", "1"],
-        ["true", "-1"],
-      ],
+      style.labelVerticalOrigin = condExp;
+      expect(style.labelVerticalOrigin).toEqual(condExp);
+
+      style.labelVerticalOrigin = undefined;
+      expect(style.labelVerticalOrigin).toBeUndefined();
     });
-
-    style.labelVerticalOrigin = condExp;
-    expect(style.labelVerticalOrigin).toEqual(condExp);
-
-    style.labelVerticalOrigin = undefined;
-    expect(style.labelVerticalOrigin).toBeUndefined();
   });
 
   it("sets style.labelVerticalOrigin expressions in setter", function () {
     const style = new Cesium3DTileStyle();
+    return style.readyPromise.then(function () {
+      style.labelVerticalOrigin = new Expression("1");
+      expect(style.style.labelVerticalOrigin).toEqual("1");
 
-    style.labelVerticalOrigin = new Expression("1");
-    expect(style.style.labelVerticalOrigin).toEqual("1");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1"],
+          ["true", "-1"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1"],
-        ["true", "-1"],
-      ],
-    };
+      style.labelVerticalOrigin = new ConditionsExpression(jsonExp);
+      expect(style.style.labelVerticalOrigin).toEqual(jsonExp);
 
-    style.labelVerticalOrigin = new ConditionsExpression(jsonExp);
-    expect(style.style.labelVerticalOrigin).toEqual(jsonExp);
+      const customExpression = {
+        evaluate: function () {
+          return 1;
+        },
+      };
+      style.labelVerticalOrigin = customExpression;
+      expect(style.style.labelVerticalOrigin).toEqual(customExpression);
 
-    const customExpression = {
-      evaluate: function () {
-        return 1;
-      },
-    };
-    style.labelVerticalOrigin = customExpression;
-    expect(style.style.labelVerticalOrigin).toEqual(customExpression);
-
-    style.labelVerticalOrigin = undefined;
-    expect(style.style.labelVerticalOrigin).toBeUndefined();
+      style.labelVerticalOrigin = undefined;
+      expect(style.style.labelVerticalOrigin).toBeUndefined();
+    });
   });
 
   it("sets labelVerticalOrigin values in setter", function () {
@@ -3609,25 +4142,27 @@ describe("Scene/Cesium3DTileStyle", function () {
     };
     const style = new Cesium3DTileStyle({ defines: defines });
 
-    style.labelVerticalOrigin = -1;
-    expect(style.labelVerticalOrigin).toEqual(new Expression("-1"));
+    return style.readyPromise.then(function () {
+      style.labelVerticalOrigin = -1;
+      expect(style.labelVerticalOrigin).toEqual(new Expression("-1"));
 
-    style.labelVerticalOrigin = "${targetOrigin}";
-    expect(style.labelVerticalOrigin).toEqual(
-      new Expression("${targetOrigin}", defines)
-    );
+      style.labelVerticalOrigin = "${targetOrigin}";
+      expect(style.labelVerticalOrigin).toEqual(
+        new Expression("${targetOrigin}", defines)
+      );
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1"],
-        ["true", "${targetOrigin}"],
-      ],
-    };
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1"],
+          ["true", "${targetOrigin}"],
+        ],
+      };
 
-    style.labelVerticalOrigin = jsonExp;
-    expect(style.labelVerticalOrigin).toEqual(
-      new ConditionsExpression(jsonExp, defines)
-    );
+      style.labelVerticalOrigin = jsonExp;
+      expect(style.labelVerticalOrigin).toEqual(
+        new ConditionsExpression(jsonExp, defines)
+      );
+    });
   });
 
   it("sets style.labelVerticalOrigin values in setter", function () {
@@ -3635,22 +4170,23 @@ describe("Scene/Cesium3DTileStyle", function () {
       targetOrigin: "-1",
     };
     const style = new Cesium3DTileStyle({ defines: defines });
+    return style.readyPromise.then(function () {
+      style.labelVerticalOrigin = -1;
+      expect(style.style.labelVerticalOrigin).toEqual("-1");
 
-    style.labelVerticalOrigin = -1;
-    expect(style.style.labelVerticalOrigin).toEqual("-1");
+      style.labelVerticalOrigin = "${targetOrigin}";
+      expect(style.style.labelVerticalOrigin).toEqual("${targetOrigin}");
 
-    style.labelVerticalOrigin = "${targetOrigin}";
-    expect(style.style.labelVerticalOrigin).toEqual("${targetOrigin}");
+      const jsonExp = {
+        conditions: [
+          ["${height} > 2", "1"],
+          ["true", "${targetOrigin}"],
+        ],
+      };
 
-    const jsonExp = {
-      conditions: [
-        ["${height} > 2", "1"],
-        ["true", "${targetOrigin}"],
-      ],
-    };
-
-    style.labelVerticalOrigin = jsonExp;
-    expect(style.style.labelVerticalOrigin).toEqual(jsonExp);
+      style.labelVerticalOrigin = jsonExp;
+      expect(style.style.labelVerticalOrigin).toEqual(jsonExp);
+    });
   });
 
   it("throws on accessing style if not ready", function () {
@@ -3902,38 +4438,42 @@ describe("Scene/Cesium3DTileStyle", function () {
         description: '"Hello, ${name}"',
       },
     });
-    expect(style.meta.description.evaluate(feature1)).toEqual("Hello, Hello");
+    return style.readyPromise
+      .then(function () {
+        expect(style.meta.description.evaluate(feature1)).toEqual(
+          "Hello, Hello"
+        );
 
-    style = new Cesium3DTileStyle({
-      meta: {
-        featureColor: "rgb(${red}, ${green}, ${blue})",
-        volume: "${Height} * ${Width} * ${Depth}",
-      },
-    });
-    expect(style.meta.featureColor.evaluateColor(feature1)).toEqual(
-      Color.fromBytes(38, 255, 82)
-    );
-    expect(style.meta.volume.evaluate(feature1)).toEqual(20 * 20 * 100);
+        style = new Cesium3DTileStyle({
+          meta: {
+            featureColor: "rgb(${red}, ${green}, ${blue})",
+            volume: "${Height} * ${Width} * ${Depth}",
+          },
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.meta.featureColor.evaluateColor(feature1)).toEqual(
+          Color.fromBytes(38, 255, 82)
+        );
+        expect(style.meta.volume.evaluate(feature1)).toEqual(20 * 20 * 100);
+      });
   });
 
   it("default meta has no properties", function () {
     let style = new Cesium3DTileStyle({});
-    expect(style.meta).toEqual({});
+    return style.readyPromise
+      .then(function () {
+        expect(style.meta).toEqual({});
 
-    style = new Cesium3DTileStyle({
-      meta: {},
-    });
-    expect(style.meta).toEqual({});
-  });
-
-  it("default meta has no properties", function () {
-    let style = new Cesium3DTileStyle({});
-    expect(style.meta).toEqual({});
-
-    style = new Cesium3DTileStyle({
-      meta: {},
-    });
-    expect(style.meta).toEqual({});
+        style = new Cesium3DTileStyle({
+          meta: {},
+        });
+        return style.readyPromise;
+      })
+      .then(function () {
+        expect(style.meta).toEqual({});
+      });
   });
 
   it("throws on accessing meta if not ready", function () {
@@ -3954,9 +4494,11 @@ describe("Scene/Cesium3DTileStyle", function () {
       pointSize: "1.0",
     });
 
-    expect(style.show.evaluate(undefined)).toEqual(true);
-    expect(style.color.evaluateColor(undefined)).toEqual(Color.WHITE);
-    expect(style.pointSize.evaluate(undefined)).toEqual(1.0);
+    return style.readyPromise.then(function () {
+      expect(style.show.evaluate(undefined)).toEqual(true);
+      expect(style.color.evaluateColor(undefined)).toEqual(Color.WHITE);
+      expect(style.pointSize.evaluate(undefined)).toEqual(1.0);
+    });
   });
 
   it("applies show style with variable", function () {
@@ -3964,8 +4506,10 @@ describe("Scene/Cesium3DTileStyle", function () {
       show: "${ZipCode} === '19341'",
     });
 
-    expect(style.show.evaluate(feature1)).toEqual(true);
-    expect(style.show.evaluate(feature2)).toEqual(false);
+    return style.readyPromise.then(function () {
+      expect(style.show.evaluate(feature1)).toEqual(true);
+      expect(style.show.evaluate(feature2)).toEqual(false);
+    });
   });
 
   it("applies show style with regexp and variables", function () {
@@ -3973,8 +4517,10 @@ describe("Scene/Cesium3DTileStyle", function () {
       show: "(regExp('^Chest').test(${County})) && (${YearBuilt} >= 1970)",
     });
 
-    expect(style.show.evaluate(feature1)).toEqual(true);
-    expect(style.show.evaluate(feature2)).toEqual(false);
+    return style.readyPromise.then(function () {
+      expect(style.show.evaluate(feature1)).toEqual(true);
+      expect(style.show.evaluate(feature2)).toEqual(false);
+    });
   });
 
   it("applies show style with conditional", function () {
@@ -3990,28 +4536,34 @@ describe("Scene/Cesium3DTileStyle", function () {
         ],
       },
     });
-    expect(style.show.evaluate(feature1)).toEqual(false);
-    expect(style.show.evaluate(feature2)).toEqual(true);
+    return style.readyPromise.then(function () {
+      expect(style.show.evaluate(feature1)).toEqual(false);
+      expect(style.show.evaluate(feature2)).toEqual(true);
+    });
   });
 
   it("applies color style variables", function () {
     const style = new Cesium3DTileStyle({
       color: "(${Temperature} > 90) ? color('red') : color('white')",
     });
-    expect(style.color.evaluateColor(feature1)).toEqual(Color.WHITE);
-    expect(style.color.evaluateColor(feature2)).toEqual(Color.RED);
+    return style.readyPromise.then(function () {
+      expect(style.color.evaluateColor(feature1)).toEqual(Color.WHITE);
+      expect(style.color.evaluateColor(feature2)).toEqual(Color.RED);
+    });
   });
 
   it("applies color style with new color", function () {
     const style = new Cesium3DTileStyle({
       color: "rgba(${red}, ${green}, ${blue}, (${volume} > 100 ? 0.5 : 1.0))",
     });
-    expect(style.color.evaluateColor(feature1)).toEqual(
-      new Color(38 / 255, 255 / 255, 82 / 255, 0.5)
-    );
-    expect(style.color.evaluateColor(feature2)).toEqual(
-      new Color(255 / 255, 30 / 255, 30 / 255, 1.0)
-    );
+    return style.readyPromise.then(function () {
+      expect(style.color.evaluateColor(feature1)).toEqual(
+        new Color(38 / 255, 255 / 255, 82 / 255, 0.5)
+      );
+      expect(style.color.evaluateColor(feature2)).toEqual(
+        new Color(255 / 255, 30 / 255, 30 / 255, 1.0)
+      );
+    });
   });
 
   it("applies color style that maps id to color", function () {
@@ -4027,8 +4579,10 @@ describe("Scene/Cesium3DTileStyle", function () {
         ],
       },
     });
-    expect(style.color.evaluateColor(feature1)).toEqual(Color.RED);
-    expect(style.color.evaluateColor(feature2)).toEqual(Color.LIME);
+    return style.readyPromise.then(function () {
+      expect(style.color.evaluateColor(feature1)).toEqual(Color.RED);
+      expect(style.color.evaluateColor(feature2)).toEqual(Color.LIME);
+    });
   });
 
   it("applies color style with conditional", function () {
@@ -4044,17 +4598,20 @@ describe("Scene/Cesium3DTileStyle", function () {
         ],
       },
     });
-    expect(style.color.evaluateColor(feature1)).toEqual(Color.BLUE);
-    expect(style.color.evaluateColor(feature2)).toEqual(Color.YELLOW);
+    return style.readyPromise.then(function () {
+      expect(style.color.evaluateColor(feature1)).toEqual(Color.BLUE);
+      expect(style.color.evaluateColor(feature2)).toEqual(Color.YELLOW);
+    });
   });
 
   it("applies pointSize style with variable", function () {
     const style = new Cesium3DTileStyle({
       pointSize: "${Temperature} / 10.0",
     });
-
-    expect(style.pointSize.evaluate(feature1)).toEqual(7.8);
-    expect(style.pointSize.evaluate(feature2)).toEqual(9.2);
+    return style.readyPromise.then(function () {
+      expect(style.pointSize.evaluate(feature1)).toEqual(7.8);
+      expect(style.pointSize.evaluate(feature2)).toEqual(9.2);
+    });
   });
 
   it("applies pointSize style with regexp and variables", function () {
@@ -4062,8 +4619,10 @@ describe("Scene/Cesium3DTileStyle", function () {
       pointSize: "(regExp('^Chest').test(${County})) ? 2.0 : 1.0",
     });
 
-    expect(style.pointSize.evaluate(feature1)).toEqual(2.0);
-    expect(style.pointSize.evaluate(feature2)).toEqual(1.0);
+    return style.readyPromise.then(function () {
+      expect(style.pointSize.evaluate(feature1)).toEqual(2.0);
+      expect(style.pointSize.evaluate(feature2)).toEqual(1.0);
+    });
   });
 
   it("applies pointSize style with conditional", function () {
@@ -4079,8 +4638,11 @@ describe("Scene/Cesium3DTileStyle", function () {
         ],
       },
     });
-    expect(style.pointSize.evaluate(feature1)).toEqual(6);
-    expect(style.pointSize.evaluate(feature2)).toEqual(3);
+
+    return style.readyPromise.then(function () {
+      expect(style.pointSize.evaluate(feature1)).toEqual(6);
+      expect(style.pointSize.evaluate(feature2)).toEqual(3);
+    });
   });
 
   it("applies with defines", function () {
@@ -4103,34 +4665,38 @@ describe("Scene/Cesium3DTileStyle", function () {
       },
     });
 
-    expect(style.color.evaluateColor(feature1)).toEqual(Color.RED);
-    expect(style.color.evaluateColor(feature2)).toEqual(Color.BLUE);
-    expect(style.show.evaluate(feature1)).toEqual(true);
-    expect(style.show.evaluate(feature2)).toEqual(false);
-    expect(style.pointSize.evaluate(feature1)).toEqual(114);
-    expect(style.pointSize.evaluate(feature2)).toEqual(44);
-    expect(style.meta.description.evaluate(feature1)).toEqual(
-      "Half height is 50"
-    );
-    expect(style.meta.description.evaluate(feature2)).toEqual(
-      "Half height is 19"
-    );
+    return style.readyPromise.then(function () {
+      expect(style.color.evaluateColor(feature1)).toEqual(Color.RED);
+      expect(style.color.evaluateColor(feature2)).toEqual(Color.BLUE);
+      expect(style.show.evaluate(feature1)).toEqual(true);
+      expect(style.show.evaluate(feature2)).toEqual(false);
+      expect(style.pointSize.evaluate(feature1)).toEqual(114);
+      expect(style.pointSize.evaluate(feature2)).toEqual(44);
+      expect(style.meta.description.evaluate(feature1)).toEqual(
+        "Half height is 50"
+      );
+      expect(style.meta.description.evaluate(feature2)).toEqual(
+        "Half height is 19"
+      );
+    });
   });
 
   it("return undefined shader functions when the style is empty", function () {
     // The default color style is white, the default show style is true, and the default pointSize is 1.0,
     // but the generated generated shader functions should just be undefined. We don't want all the points to be white.
     const style = new Cesium3DTileStyle({});
-    const colorFunction = style.getColorShaderFunction("getColor", {}, {});
-    const showFunction = style.getShowShaderFunction("getShow", {}, {});
-    const pointSizeFunction = style.getPointSizeShaderFunction(
-      "getPointSize",
-      {},
-      {}
-    );
-    expect(colorFunction).toBeUndefined();
-    expect(showFunction).toBeUndefined();
-    expect(pointSizeFunction).toBeUndefined();
+    return style.readyPromise.then(function () {
+      const colorFunction = style.getColorShaderFunction("getColor", {}, {});
+      const showFunction = style.getShowShaderFunction("getShow", {}, {});
+      const pointSizeFunction = style.getPointSizeShaderFunction(
+        "getPointSize",
+        {},
+        {}
+      );
+      expect(colorFunction).toBeUndefined();
+      expect(showFunction).toBeUndefined();
+      expect(pointSizeFunction).toBeUndefined();
+    });
   });
 
   it("gets variables", function () {
@@ -4144,8 +4710,9 @@ describe("Scene/Cesium3DTileStyle", function () {
       color: "${Height} * color('red')",
       show: "${Floors} > 10",
     });
-
-    const variables = style.getVariables();
-    expect(variables.sort()).toEqual(["Floors", "Height", "PointSize"]);
+    return style.readyPromise.then(function () {
+      const variables = style.getVariables();
+      expect(variables.sort()).toEqual(["Floors", "Height", "PointSize"]);
+    });
   });
 });

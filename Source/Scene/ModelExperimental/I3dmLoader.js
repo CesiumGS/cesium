@@ -5,6 +5,7 @@ import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
+import defer from "../../Core/defer.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import FeatureMetadata from "../FeatureMetadata.js";
@@ -21,7 +22,6 @@ import Quaternion from "../../Core/Quaternion.js";
 import ResourceLoader from "../ResourceLoader.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import Transforms from "../../Core/Transforms.js";
-import when from "../../ThirdParty/when.js";
 import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
 import AttributeType from "../AttributeType.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
@@ -97,7 +97,7 @@ function I3dmLoader(options) {
   this._loadAsTypedArray = loadAsTypedArray;
 
   this._state = I3dmLoaderState.UNLOADED;
-  this._promise = when.defer();
+  this._promise = defer();
 
   this._gltfLoader = undefined;
 
@@ -270,7 +270,7 @@ I3dmLoader.prototype.load = function () {
       that._state = I3dmLoaderState.READY;
       that._promise.resolve(that);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (that.isDestroyed()) {
         return;
       }

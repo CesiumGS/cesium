@@ -5,6 +5,7 @@ import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -13,7 +14,6 @@ import Sampler from "../Renderer/Sampler.js";
 import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
 import getComponentReader from "./GltfPipeline/getComponentReader.js";
 import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
-import when from "../ThirdParty/when.js";
 import AttributeType from "./AttributeType.js";
 import Axis from "./Axis.js";
 import GltfFeatureMetadataLoader from "./GltfFeatureMetadataLoader.js";
@@ -123,8 +123,8 @@ export default function GltfLoader(options) {
   this._gltfJsonLoader = undefined;
   this._state = GltfLoaderState.UNLOADED;
   this._textureState = GltfLoaderState.UNLOADED;
-  this._promise = when.defer();
-  this._texturesLoadedPromise = when.defer();
+  this._promise = defer();
+  this._texturesLoadedPromise = defer();
 
   // Loaders that need to be processed before the glTF becomes ready
   this._textureLoaders = [];
@@ -228,7 +228,7 @@ GltfLoader.prototype.load = function () {
       that._state = GltfLoaderState.LOADED;
       that._textureState = GltfLoaderState.LOADED;
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (that.isDestroyed()) {
         return;
       }
@@ -1490,22 +1490,21 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
     return loader.promise;
   });
 
-  when
-    .all(readyPromises)
+  Promise.all(readyPromises)
     .then(function () {
       if (loader.isDestroyed()) {
         return;
       }
       loader._state = GltfLoaderState.PROCESSED;
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (loader.isDestroyed()) {
         return;
       }
       handleError(loader, error);
     });
 
-  when.all(texturePromises).then(function () {
+  Promise.all(texturePromises).then(function () {
     if (loader.isDestroyed()) {
       return;
     }

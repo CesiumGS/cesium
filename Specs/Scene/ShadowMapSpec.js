@@ -31,7 +31,6 @@ import { ShadowMap } from "../../Source/Cesium.js";
 import { ShadowMode } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 
 describe(
   "Scene/ShadowMap",
@@ -216,7 +215,7 @@ describe(
       primitiveFloor = createPrimitive(floorTransform, 2.0, Color.RED);
       primitiveFloorRTC = createPrimitiveRTC(floorTransform, 2.0, Color.RED);
 
-      return when.all(modelPromises);
+      return Promise.all(modelPromises);
     });
 
     function createPrimitive(transform, size, color) {

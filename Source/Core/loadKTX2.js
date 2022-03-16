@@ -1,7 +1,6 @@
 import Check from "./Check.js";
 import Resource from "./Resource.js";
 import KTX2Transcoder from "./KTX2Transcoder.js";
-import when from "../ThirdParty/when.js";
 
 /**
  * Stores the supported formats that KTX2 can transcode to. Called during context creation.
@@ -71,7 +70,7 @@ loadKTX2.setKTX2SupportedFormats = function (
  *     const format = ktx2Data.internalFormat;
  *     const arrayBufferView = ktx2Data.bufferView;
  *     // use the data to create a texture
- * }).otherwise(function (error) {
+ * }).catch(function (error) {
  *     // an error occurred.
  * });
  *
@@ -90,7 +89,7 @@ function loadKTX2(resourceOrUrlOrBuffer) {
     resourceOrUrlOrBuffer instanceof ArrayBuffer ||
     ArrayBuffer.isView(resourceOrUrlOrBuffer)
   ) {
-    loadPromise = when.resolve(resourceOrUrlOrBuffer);
+    loadPromise = Promise.resolve(resourceOrUrlOrBuffer);
   } else {
     const resource = Resource.createIfNeeded(resourceOrUrlOrBuffer);
     loadPromise = resource.fetchArrayBuffer();

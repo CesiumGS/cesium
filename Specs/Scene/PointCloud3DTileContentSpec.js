@@ -18,7 +18,6 @@ import {
   Pass,
   PerspectiveFrustum,
   Transforms,
-  when,
 } from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createCanvas from "../createCanvas.js";
@@ -280,20 +279,22 @@ describe(
     });
 
     it("renders point cloud with draco encoded positions, normals, colors, and batch table properties", function () {
-      return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl).then(
-        function (tileset) {
+      return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl)
+        .then(function (tileset) {
           Cesium3DTilesTester.expectRender(scene, tileset);
           // Test that Draco-encoded batch table properties are functioning correctly
           tileset.style = new Cesium3DTileStyle({
             color: "vec4(Number(${secondaryColor}[0] < 1.0), 0.0, 0.0, 1.0)",
           });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
           expect(scene).toRenderAndCall(function (rgba) {
             // Produces a red color
             expect(rgba[0]).toBeGreaterThan(rgba[1]);
             expect(rgba[0]).toBeGreaterThan(rgba[2]);
           });
-        }
-      );
+        });
     });
 
     it("renders point cloud with draco encoded positions and uncompressed normals and colors", function () {
@@ -315,26 +316,28 @@ describe(
     });
 
     it("error decoding a draco point cloud causes loading to fail", function () {
-      return pollToPromise(function () {
+      const readyPromise = pollToPromise(function () {
         return DracoLoader._taskProcessorReady;
-      }).then(function () {
-        const decoder = DracoLoader._getDecoderTaskProcessor();
-        spyOn(decoder, "scheduleTask").and.returnValue(
-          when.reject({ message: "my error" })
-        );
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl).then(
-          function (tileset) {
-            const root = tileset.root;
-            return root.contentReadyPromise
-              .then(function () {
-                fail("should not resolve");
-              })
-              .otherwise(function (error) {
-                expect(error.message).toBe("my error");
-              });
-          }
-        );
       });
+      DracoLoader._getDecoderTaskProcessor();
+      return readyPromise
+        .then(function () {
+          const decoder = DracoLoader._getDecoderTaskProcessor();
+          spyOn(decoder, "scheduleTask").and.callFake(function () {
+            return Promise.reject({ message: "my error" });
+          });
+          return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl);
+        })
+        .then(function (tileset) {
+          const root = tileset.root;
+          return root.contentReadyPromise;
+        })
+        .then(function () {
+          fail("should not resolve");
+        })
+        .catch(function (error) {
+          expect(error.message).toBe("my error");
+        });
     });
 
     it("renders point cloud that are not defined relative to center", function () {
@@ -695,135 +698,180 @@ describe(
     });
 
     it("applies shader style", function () {
+      let tileset, content;
       return Cesium3DTilesTester.loadTileset(
         scene,
         pointCloudWithPerPointPropertiesUrl
-      ).then(function (tileset) {
-        const content = tileset.root.content;
+      )
+        .then(function (t) {
+          tileset = t;
+          content = tileset.root.content;
 
-        // Solid red color
-        tileset.style = new Cesium3DTileStyle({
-          color: 'color("red")',
-        });
-        expect(scene).toRender([255, 0, 0, 255]);
-        expect(content._pointCloud._styleTranslucent).toBe(false);
+          // Solid red color
+          tileset.style = new Cesium3DTileStyle({
+            color: 'color("red")',
+          });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
+          expect(scene).toRender([255, 0, 0, 255]);
+          expect(content._pointCloud._styleTranslucent).toBe(false);
 
-        // Applies translucency
-        tileset.style = new Cesium3DTileStyle({
-          color: "rgba(255, 0, 0, 0.005)",
-        });
-        expect(scene).toRenderAndCall(function (rgba) {
-          // Pixel is a darker red
-          expect(rgba[0]).toBeLessThan(255);
-          expect(rgba[1]).toBe(0);
-          expect(rgba[2]).toBe(0);
-          expect(rgba[3]).toBe(255);
-          expect(content._pointCloud._styleTranslucent).toBe(true);
-        });
+          // Applies translucency
+          tileset.style = new Cesium3DTileStyle({
+            color: "rgba(255, 0, 0, 0.005)",
+          });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
+          expect(scene).toRenderAndCall(function (rgba) {
+            // Pixel is a darker red
+            expect(rgba[0]).toBeLessThan(255);
+            expect(rgba[1]).toBe(0);
+            expect(rgba[2]).toBe(0);
+            expect(rgba[3]).toBe(255);
+            expect(content._pointCloud._styleTranslucent).toBe(true);
+          });
 
-        // Style with property
-        tileset.style = new Cesium3DTileStyle({
-          color: "color() * ${temperature}",
-        });
-        expect(scene).toRenderAndCall(function (rgba) {
-          // Pixel color is some shade of gray
-          expect(rgba[0]).toBe(rgba[1]);
-          expect(rgba[0]).toBe(rgba[2]);
-          expect(rgba[0]).toBeGreaterThan(0);
-          expect(rgba[0]).toBeLessThan(255);
-        });
+          // Style with property
+          tileset.style = new Cesium3DTileStyle({
+            color: "color() * ${temperature}",
+          });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
+          expect(scene).toRenderAndCall(function (rgba) {
+            // Pixel color is some shade of gray
+            expect(rgba[0]).toBe(rgba[1]);
+            expect(rgba[0]).toBe(rgba[2]);
+            expect(rgba[0]).toBeGreaterThan(0);
+            expect(rgba[0]).toBeLessThan(255);
+          });
 
-        // When no conditions are met the default color is white
-        tileset.style = new Cesium3DTileStyle({
-          color: {
-            conditions: [
-              ["${secondaryColor}[0] > 1.0", 'color("red")'], // This condition will not be met
-            ],
-          },
-        });
-        expect(scene).toRender([255, 255, 255, 255]);
+          // When no conditions are met the default color is white
+          tileset.style = new Cesium3DTileStyle({
+            color: {
+              conditions: [
+                ["${secondaryColor}[0] > 1.0", 'color("red")'], // This condition will not be met
+              ],
+            },
+          });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
+          expect(scene).toRender([255, 255, 255, 255]);
 
-        // Apply style with conditions
-        tileset.style = new Cesium3DTileStyle({
-          color: {
-            conditions: [
-              ["${temperature} < 0.1", 'color("#000099")'],
-              ["${temperature} < 0.2", 'color("#00cc99", 1.0)'],
-              ["${temperature} < 0.3", 'color("#66ff33", 0.5)'],
-              ["${temperature} < 0.4", "rgba(255, 255, 0, 0.1)"],
-              ["${temperature} < 0.5", "rgb(255, 128, 0)"],
-              ["${temperature} < 0.6", 'color("red")'],
-              ["${temperature} < 0.7", 'color("rgb(255, 102, 102)")'],
-              ["${temperature} < 0.8", "hsl(0.875, 1.0, 0.6)"],
-              ["${temperature} < 0.9", "hsla(0.83, 1.0, 0.5, 0.1)"],
-              ["true", 'color("#FFFFFF", 1.0)'],
-            ],
-          },
-        });
-        expect(scene).notToRender([0, 0, 0, 255]);
+          // Apply style with conditions
+          tileset.style = new Cesium3DTileStyle({
+            color: {
+              conditions: [
+                ["${temperature} < 0.1", 'color("#000099")'],
+                ["${temperature} < 0.2", 'color("#00cc99", 1.0)'],
+                ["${temperature} < 0.3", 'color("#66ff33", 0.5)'],
+                ["${temperature} < 0.4", "rgba(255, 255, 0, 0.1)"],
+                ["${temperature} < 0.5", "rgb(255, 128, 0)"],
+                ["${temperature} < 0.6", 'color("red")'],
+                ["${temperature} < 0.7", 'color("rgb(255, 102, 102)")'],
+                ["${temperature} < 0.8", "hsl(0.875, 1.0, 0.6)"],
+                ["${temperature} < 0.9", "hsla(0.83, 1.0, 0.5, 0.1)"],
+                ["true", 'color("#FFFFFF", 1.0)'],
+              ],
+            },
+          });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
+          expect(scene).notToRender([0, 0, 0, 255]);
 
-        // Apply show style
-        tileset.style = new Cesium3DTileStyle({
-          show: true,
-        });
-        expect(scene).notToRender([0, 0, 0, 255]);
+          // Apply show style
+          tileset.style = new Cesium3DTileStyle({
+            show: true,
+          });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
+          expect(scene).notToRender([0, 0, 0, 255]);
 
-        // Apply show style that hides all points
-        tileset.style = new Cesium3DTileStyle({
-          show: false,
-        });
-        expect(scene).toRender([0, 0, 0, 255]);
+          // Apply show style that hides all points
+          tileset.style = new Cesium3DTileStyle({
+            show: false,
+          });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
+          expect(scene).toRender([0, 0, 0, 255]);
 
-        // Apply show style with property
-        tileset.style = new Cesium3DTileStyle({
-          show: "${temperature} > 0.1",
-        });
-        expect(scene).notToRender([0, 0, 0, 255]);
-        tileset.style = new Cesium3DTileStyle({
-          show: "${temperature} > 1.0",
-        });
-        expect(scene).toRender([0, 0, 0, 255]);
+          // Apply show style with property
+          tileset.style = new Cesium3DTileStyle({
+            show: "${temperature} > 0.1",
+          });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
+          expect(scene).notToRender([0, 0, 0, 255]);
+          tileset.style = new Cesium3DTileStyle({
+            show: "${temperature} > 1.0",
+          });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
+          expect(scene).toRender([0, 0, 0, 255]);
 
-        // Apply style with point cloud semantics
-        tileset.style = new Cesium3DTileStyle({
-          color: "${COLOR} / 2.0",
-          show: "${POSITION}[0] > 0.5",
-        });
-        expect(scene).notToRender([0, 0, 0, 255]);
+          // Apply style with point cloud semantics
+          tileset.style = new Cesium3DTileStyle({
+            color: "${COLOR} / 2.0",
+            show: "${POSITION}[0] > 0.5",
+          });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
+          expect(scene).notToRender([0, 0, 0, 255]);
 
-        // Apply pointSize style
-        tileset.style = new Cesium3DTileStyle({
-          pointSize: 5.0,
+          // Apply pointSize style
+          tileset.style = new Cesium3DTileStyle({
+            pointSize: 5.0,
+          });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
+          expect(scene).notToRender([0, 0, 0, 255]);
         });
-        expect(scene).notToRender([0, 0, 0, 255]);
-      });
     });
 
     it("applies shader style with unicode property names", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
         pointCloudWithUnicodePropertyNamesUrl
-      ).then(function (tileset) {
-        tileset.style = new Cesium3DTileStyle({
-          color: "color() * ${feature['temperature ℃']}",
+      )
+        .then(function (tileset) {
+          tileset.style = new Cesium3DTileStyle({
+            color: "color() * ${feature['temperature ℃']}",
+          });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
+          expect(scene).toRenderAndCall(function (rgba) {
+            // Pixel color is some shade of gray
+            expect(rgba[0]).toBe(rgba[1]);
+            expect(rgba[0]).toBe(rgba[2]);
+            expect(rgba[0]).toBeGreaterThan(0);
+            expect(rgba[0]).toBeLessThan(255);
+          });
         });
-        expect(scene).toRenderAndCall(function (rgba) {
-          // Pixel color is some shade of gray
-          expect(rgba[0]).toBe(rgba[1]);
-          expect(rgba[0]).toBe(rgba[2]);
-          expect(rgba[0]).toBeGreaterThan(0);
-          expect(rgba[0]).toBeLessThan(255);
-        });
-      });
     });
 
     it("rebuilds shader style when expression changes", function () {
-      return Cesium3DTilesTester.loadTileset(scene, pointCloudTilesetUrl).then(
-        function (tileset) {
+      let tileset;
+      return Cesium3DTilesTester.loadTileset(scene, pointCloudTilesetUrl)
+        .then(function (t) {
+          tileset = t;
           // Solid red color
           tileset.style = new Cesium3DTileStyle({
             color: 'color("red")',
           });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
           expect(scene).toRender([255, 0, 0, 255]);
 
           tileset.style.color = new Expression('color("lime")');
@@ -853,71 +901,86 @@ describe(
           for (i = 0; i < commandsLength; ++i) {
             expect(commands[i].pass).not.toBe(Pass.TRANSLUCENT);
           }
-        }
-      );
+        });
     });
 
     it("applies shader style to point cloud with normals", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
         pointCloudQuantizedOctEncodedUrl
-      ).then(function (tileset) {
-        tileset.style = new Cesium3DTileStyle({
-          color: 'color("red")',
+      )
+        .then(function (tileset) {
+          tileset.style = new Cesium3DTileStyle({
+            color: 'color("red")',
+          });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
+          expect(scene).toRenderAndCall(function (rgba) {
+            expect(rgba[0]).toBeGreaterThan(0);
+            expect(rgba[0]).toBeLessThan(255);
+          });
         });
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(0);
-          expect(rgba[0]).toBeLessThan(255);
-        });
-      });
     });
 
     it("applies shader style to point cloud with normals", function () {
       return Cesium3DTilesTester.loadTileset(
         scene,
         pointCloudQuantizedOctEncodedUrl
-      ).then(function (tileset) {
-        tileset.style = new Cesium3DTileStyle({
-          color: 'color("red")',
+      )
+        .then(function (tileset) {
+          tileset.style = new Cesium3DTileStyle({
+            color: 'color("red")',
+          });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
+          expect(scene).toRenderAndCall(function (rgba) {
+            expect(rgba[0]).toBeGreaterThan(0);
+          });
         });
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(0);
-        });
-      });
     });
 
     it("applies shader style to point cloud without colors", function () {
-      return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(
-        function (tileset) {
+      return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl)
+        .then(function (tileset) {
           tileset.style = new Cesium3DTileStyle({
             color: 'color("red")',
           });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
           expect(scene).toRender([255, 0, 0, 255]);
-        }
-      );
+        });
     });
 
     it("throws if style references the NORMAL semantic but the point cloud does not have per-point normals", function () {
-      return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(
-        function (tileset) {
+      return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl)
+        .then(function (tileset) {
           tileset.style = new Cesium3DTileStyle({
             color: "${NORMAL}[0] > 0.5",
           });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
           expect(function () {
             scene.renderForSpecs();
           }).toThrowRuntimeError();
-        }
-      );
+        });
     });
 
     it("does not apply shader style if the point cloud has a batch table", function () {
-      return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(
-        function (tileset) {
-          const content = tileset.root.content;
-          const shaderProgram = content._pointCloud._drawCommand.shaderProgram;
+      let content, shaderProgram;
+      return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl)
+        .then(function (tileset) {
+          content = tileset.root.content;
+          shaderProgram = content._pointCloud._drawCommand.shaderProgram;
           tileset.style = new Cesium3DTileStyle({
             color: 'color("red")',
           });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
           scene.renderForSpecs();
           expect(content._pointCloud._drawCommand.shaderProgram).toBe(
             shaderProgram
@@ -925,21 +988,22 @@ describe(
 
           // Point cloud is styled through the batch table
           expect(scene).notToRender([0, 0, 0, 255]);
-        }
-      );
+        });
     });
 
     it("throws when shader style is invalid", function () {
-      return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(
-        function (tileset) {
+      return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl)
+        .then(function (tileset) {
           tileset.style = new Cesium3DTileStyle({
             show: '1 < "2"',
           });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
           expect(function () {
             scene.renderForSpecs();
           }).toThrowRuntimeError();
-        }
-      );
+        });
     });
 
     it("gets memory usage", function () {
@@ -961,7 +1025,7 @@ describe(
         1000 * 11, // 3 shorts (quantized xyz), 3 bytes (rgb), 2 bytes (oct-encoded normal)
       ];
 
-      return when.all(promises).then(function (tilesets) {
+      return Promise.all(promises).then(function (tilesets) {
         const length = tilesets.length;
         for (let i = 0; i < length; ++i) {
           const content = tilesets[i].root.content;
