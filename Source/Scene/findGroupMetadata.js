@@ -1,4 +1,4 @@
-import { defined } from "../Cesium.js";
+import defined from "../Core/defined.js";
 import hasExtension from "./hasExtension.js";
 
 /**
