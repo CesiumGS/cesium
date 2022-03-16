@@ -1902,6 +1902,24 @@ function loadImageElement(url, crossOrigin, deferred) {
   const image = new Image();
 
   image.onload = function () {
+    // work-around a known issue with Firefox and dimensionless SVG, see:
+    //   - https://github.com/whatwg/html/issues/3510
+    //   - https://bugzilla.mozilla.org/show_bug.cgi?id=700533
+    if (
+      image.naturalWidth === 0 &&
+      image.naturalHeight === 0 &&
+      image.width === 0 &&
+      image.height === 0
+    ) {
+      // these values affect rasterization and will likely mar the content
+      // until Firefox takes a stance on the issue, marred content is better than no content
+      // Chromium uses a more refined heuristic about its choice given nil viewBox, and a better stance and solution is
+      // proposed later in the original issue thread:
+      //   - Chromium behavior: https://github.com/CesiumGS/cesium/issues/9188#issuecomment-704400825
+      //   - Cesium's stance/solve: https://github.com/CesiumGS/cesium/issues/9188#issuecomment-720645777
+      image.width = 300;
+      image.height = 150;
+    }
     deferred.resolve(image);
   };
 

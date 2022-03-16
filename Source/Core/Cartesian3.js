@@ -326,6 +326,34 @@ Cartesian3.maximumByComponent = function (first, second, result) {
 };
 
 /**
+ * Constrain a value to lie between two values.
+ *
+ * @param {Cartesian3} cartesian The value to clamp.
+ * @param {Cartesian3} min The minimum bound.
+ * @param {Cartesian3} max The maximum bound.
+ * @param {Cartesian3} result The object into which to store the result.
+ * @returns {Cartesian3} The clamped value such that min <= value <= max.
+ */
+Cartesian3.clamp = function (value, min, max, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.typeOf.object("min", min);
+  Check.typeOf.object("max", max);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  const x = CesiumMath.clamp(value.x, min.x, max.x);
+  const y = CesiumMath.clamp(value.y, min.y, max.y);
+  const z = CesiumMath.clamp(value.z, min.z, max.z);
+
+  result.x = x;
+  result.y = y;
+  result.z = z;
+
+  return result;
+};
+
+/**
  * Computes the provided Cartesian's squared magnitude.
  *
  * @param {Cartesian3} cartesian The Cartesian instance whose squared magnitude is to be computed.

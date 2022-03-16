@@ -2,41 +2,20 @@
 
 ### 1.92 - 2022-04-01
 
+##### Breaking Changes :mega:
+
+- Removed links to SpecRunner.html and related Jasmine files for running unit tests in browsers.
+
 ##### Additions :tada:
 
-- Updated 3D Tiles Next extensions to match the latest specification. See the [latest specification PR](https://github.com/CesiumGS/3d-tiles/pull/630):
-  - `3DTILES_implicit_tiling`:
-    - Added support for JSON subtree files. [#10086](https://github.com/CesiumGS/cesium/pull/10086)
-    - Added support for subtree metadata. [#10093](https://github.com/CesiumGS/cesium/pull/10093)
-    - Updated implicit tiling availability to match the latest schema. [#10107](https://github.com/CesiumGS/cesium/pull/10107)
-    - Added support for content metadata in tilesets with implicit tiling. [#10123](https://github.com/CesiumGS/cesium/pull/10123)
-    - Implicit tile and content metadata is now stored in the `propertyTables` array in the subtree JSON. `tileMetadata` and `contentMetadata` are an index and array of indices respectively that point to the corresponding property tables. This eliminates the need for the `3DTILES_metadata` extension. [#10177](https://github.com/CesiumGS/cesium/pull/10177)
-  - Split `EXT_mesh_features` into `EXT_mesh_features`, `EXT_instance_features`, `EXT_structural_metadata` [#10199](https://github.com/CesiumGS/cesium/pull/10119)
-  - `EXT_mesh_features`:
-    - Updated feature ID parsing to match the latest schema [#10087](https://github.com/CesiumGS/cesium/pull/10087)
-    - Added support for the `label` property. For picking and styling, `(tileset|model).featureIdIndex` (integer) is replaced with `(tileset|model).featureIdLabel` (a string). Similarly, `instanceFeatureIdIndex` becomes `instanceFeatureIdLabel`. For custom shaders, this adds support for `featureIds.{label}` aliases.[#10180](https://github.com/CesiumGS/cesium/pull/10180)
-  - `EXT_structural_metadata`:
-    - Updated metadata type parsing to match the latest schema [#10116](https://github.com/CesiumGS/cesium/pull/10116)
-    - Updated property texture parsing to match the latest schema [#10122](https://github.com/CesiumGS/cesium/pull/10122)
-    - Property tables now use `values`, `stringOffsets`, and `arrayOffsets` rather than `bufferView`, `stringOffsetBufferView`, and `arrayOffsetBufferView`, respectively. [#10151](https://github.com/CesiumGS/cesium/pull/10151)
-    - Added support for properties with `required`, `noData` and `default`. [#10172](https://github.com/CesiumGS/cesium/pull/10172)
-    - Added support for `offset` and `scale` for property tables [#10199](https://github.com/CesiumGS/cesium/pull/10199)
-  - `3DTILES_metadata`:
-    - Added support for explicit content metadata. [#10150](https://github.com/CesiumGS/cesium/pull/10150)
-    - `tileset.groups` now stores group objects in an array instead of a dictionary. [#10179](https://github.com/CesiumGS/cesium/pull/10179)
-  - `3DTILES_multiple_contents`:
-    - Renamed `extension.content` as `extension.contents`. [#10174](https://github.com/CesiumGS/cesium/pull/10174)
-- Updated extensions to match the latest 3D Tiles 1.1 schema. See the [latest schema PR](https://github.com/CesiumGS/3d-tiles/pull/634):
-  - Version 1.1 tilesets are now supported. [#10155](https://github.com/CesiumGS/cesium/pull/10155)
-  - Tileset metadata is now stored in `tilesetJson.metadata` rather than the `3DTILES_metadata` extension. [#10153](https://github.com/CesiumGS/cesium/pull/10153)
-  - Tile, content, and group metadata are now stored in `metadata` rather than the `3DTILES_metadata` extension.
-    [#10159](https://github.com/CesiumGS/cesium/pull/10159)
-  - Implicit tiling is now specified in `tile.implicitTiling` rather than the `3DTILES_implicit_tiling` extension. [#10169](https://github.com/CesiumGS/cesium/pull/10169)
-  - Multiple contents are now provided in `tile.contents` rather than the `3DTILES_multiple_contents` extension. [#10174](https://github.com/CesiumGS/cesium/pull/10174)
+- Added `Cartesian2.clamp`, `Cartesian3.clamp`, and `Cartesian4.clamp`. [#10197](https://github.com/CesiumGS/cesium/pull/10197)
+- Added experimental support for the 3D Tiles 1.1 draft. #10189
 
 ##### Fixes :wrench:
 
 - Fixed a bug where `pnts` tiles would crash when `Cesium.ExperimentalFeatures.enableModelExperimental` was true. [#10183](https://github.com/CesiumGS/cesium/pull/10183)
+- Fixed an issue with Firefox and dimensionless SVG images. [#9188](https://github.com/CesiumGS/cesium/9188)
+- Fixed `ShadowMap` documentation for `options.pointLightRadius` type. [#10195](https://github.com/CesiumGS/cesium/pull/10195)
 
 ### 1.91 - 2022-03-01
 

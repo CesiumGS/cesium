@@ -1321,6 +1321,15 @@ describe("Core/Resource", function () {
     });
   });
 
+  it("can load a dimensionless SVG", function () {
+    return Resource.fetchImage("./Data/Images/Blue.svg").then(function (
+      loadedImage
+    ) {
+      expect(loadedImage.width).toBeGreaterThan(0);
+      expect(loadedImage.height).toBeGreaterThan(0);
+    });
+  });
+
   it("can load an image preferring blob", function () {
     return Resource.fetchImage("./Data/Images/Green.png", true).then(function (
       loadedImage
