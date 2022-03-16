@@ -1,5 +1,7 @@
 varying vec3 v_outerPositionWC;
 
+uniform vec3 u_hsbShift;
+
 #ifndef PER_FRAGMENT_ATMOSPHERE
 varying vec3 v_mieColor;
 varying vec3 v_rayleighColor;
@@ -29,5 +31,24 @@ void main (void)
     opacity = v_opacity;
 #endif
 
-    gl_FragColor = computeAtmosphereColor(v_outerPositionWC, lightDirection, rayleighColor, mieColor, opacity);
+    vec4 color = computeAtmosphereColor(v_outerPositionWC, lightDirection, rayleighColor, mieColor, opacity);
+
+#ifdef COLOR_CORRECT
+    // Convert rgb color to hsb
+    vec3 hsb = czm_RGBToHSB(color.rgb);
+    // Perform hsb shift
+    hsb.x += u_hsbShift.x; // hue
+    hsb.y = clamp(hsb.y + u_hsbShift.y, 0.0, 1.0); // saturation
+    hsb.z = hsb.z > czm_epsilon7 ? hsb.z + u_hsbShift.z : 0.0; // brightness
+    // Convert shifted hsb back to rgb
+    color.rgb = czm_HSBToRGB(hsb);
+#endif
+
+    // Apply tonemapping
+    float exposure = 1.0;
+    color = vec4(1.0 - exp(-exposure * color));
+    float gamma = 0.8;
+    color = pow(color, vec4(1.0 / gamma));
+
+    gl_FragColor= color;
 }
