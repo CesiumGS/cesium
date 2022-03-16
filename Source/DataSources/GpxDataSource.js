@@ -5,6 +5,7 @@ import ClockStep from "../Core/ClockStep.js";
 import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -21,7 +22,6 @@ import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import LabelStyle from "../Scene/LabelStyle.js";
 import VerticalOrigin from "../Scene/VerticalOrigin.js";
 import Autolinker from "../ThirdParty/Autolinker.js";
-import when from "../ThirdParty/when.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import ConstantProperty from "./ConstantProperty.js";
 import DataSource from "./DataSource.js";
@@ -62,7 +62,7 @@ const namespaces = {
 };
 
 function readBlobAsText(blob) {
-  const deferred = when.defer();
+  const deferred = defer();
   const reader = new FileReader();
   reader.addEventListener("load", function () {
     deferred.resolve(reader.result);
@@ -688,7 +688,7 @@ function load(dataSource, entityCollection, data, options) {
     }
   }
 
-  return when(promise)
+  return Promise.resolve(promise)
     .then(function (dataToLoad) {
       if (dataToLoad instanceof Blob) {
         return readBlobAsText(dataToLoad).then(function (text) {
@@ -728,10 +728,10 @@ function load(dataSource, entityCollection, data, options) {
       }
       return loadGpx(dataSource, dataToLoad, options);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       dataSource._error.raiseEvent(dataSource, error);
       console.log(error);
-      return when.reject(error);
+      return Promise.reject(error);
     });
 }
 
@@ -1013,11 +1013,11 @@ GpxDataSource.prototype.load = function (data, options) {
 
       return that;
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       DataSource.setLoading(that, false);
       that._error.raiseEvent(that, error);
       console.log(error);
-      return when.reject(error);
+      return Promise.reject(error);
     });
 };
 

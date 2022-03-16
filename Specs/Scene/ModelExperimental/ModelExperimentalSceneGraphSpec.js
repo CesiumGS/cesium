@@ -57,87 +57,102 @@ describe(
     });
 
     it("builds draw commands for all opaque styled features", function () {
-      return loadAndZoomToModelExperimental(
-        {
-          gltf: buildingsMetadata,
+      const style = new Cesium3DTileStyle({
+        color: {
+          conditions: [["${height} > 1", "color('red')"]],
         },
-        scene
-      ).then(function (model) {
-        model.style = new Cesium3DTileStyle({
-          color: {
-            conditions: [["${height} > 1", "color('red')"]],
-          },
-        });
-        const frameState = scene.frameState;
-        const sceneGraph = model._sceneGraph;
-        // Reset the draw commands so we can inspect the draw command generation.
-        model._drawCommandsBuilt = false;
-        frameState.commandList = [];
-        scene.renderForSpecs();
-
-        const drawCommands = sceneGraph.getDrawCommands();
-
-        expect(drawCommands.length).toEqual(1);
-        expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
-        expect(frameState.commandList.length).toEqual(1);
       });
+      return style.readyPromise
+        .then(function () {
+          return loadAndZoomToModelExperimental(
+            {
+              gltf: buildingsMetadata,
+            },
+            scene
+          );
+        })
+        .then(function (model) {
+          model.style = style;
+          const frameState = scene.frameState;
+          const sceneGraph = model._sceneGraph;
+          // Reset the draw commands so we can inspect the draw command generation.
+          model._drawCommandsBuilt = false;
+          frameState.commandList = [];
+          scene.renderForSpecs();
+
+          const drawCommands = sceneGraph.getDrawCommands();
+
+          expect(drawCommands.length).toEqual(1);
+          expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
+          expect(frameState.commandList.length).toEqual(1);
+        });
     });
 
     it("builds draw commands for all translucent styled features", function () {
-      return loadAndZoomToModelExperimental(
-        {
-          gltf: buildingsMetadata,
+      const style = new Cesium3DTileStyle({
+        color: {
+          conditions: [["${height} > 1", "color('red', 0.1)"]],
         },
-        scene
-      ).then(function (model) {
-        model.style = new Cesium3DTileStyle({
-          color: {
-            conditions: [["${height} > 1", "color('red', 0.1)"]],
-          },
-        });
-        const frameState = scene.frameState;
-        const sceneGraph = model._sceneGraph;
-        // Reset the draw commands so we can inspect the draw command generation.
-        model._drawCommandsBuilt = false;
-        frameState.commandList = [];
-        scene.renderForSpecs();
-
-        const drawCommands = sceneGraph.getDrawCommands();
-
-        expect(drawCommands.length).toEqual(1);
-        expect(drawCommands[0].pass).toEqual(Pass.TRANSLUCENT);
-        expect(frameState.commandList.length).toEqual(1);
       });
+      return style.readyPromise
+        .then(function () {
+          return loadAndZoomToModelExperimental(
+            {
+              gltf: buildingsMetadata,
+            },
+            scene
+          );
+        })
+        .then(function (model) {
+          model.style = style;
+          const frameState = scene.frameState;
+          const sceneGraph = model._sceneGraph;
+          // Reset the draw commands so we can inspect the draw command generation.
+          model._drawCommandsBuilt = false;
+          frameState.commandList = [];
+          scene.renderForSpecs();
+
+          const drawCommands = sceneGraph.getDrawCommands();
+
+          expect(drawCommands.length).toEqual(1);
+          expect(drawCommands[0].pass).toEqual(Pass.TRANSLUCENT);
+          expect(frameState.commandList.length).toEqual(1);
+        });
     });
 
     it("builds draw commands for both opaque and translucent styled features", function () {
-      return loadAndZoomToModelExperimental(
-        {
-          gltf: buildingsMetadata,
+      const style = new Cesium3DTileStyle({
+        color: {
+          conditions: [
+            ["${height} > 80", "color('red', 0.1)"],
+            ["true", "color('blue')"],
+          ],
         },
-        scene
-      ).then(function (model) {
-        model.style = new Cesium3DTileStyle({
-          color: {
-            conditions: [
-              ["${height} > 80", "color('red', 0.1)"],
-              ["true", "color('blue')"],
-            ],
-          },
-        });
-        const frameState = scene.frameState;
-        const sceneGraph = model._sceneGraph;
-        // Reset the draw commands so we can inspect the draw command generation.
-        model._drawCommandsBuilt = false;
-        frameState.commandList = [];
-        scene.renderForSpecs();
-
-        const drawCommands = sceneGraph.getDrawCommands();
-        expect(drawCommands.length).toEqual(2);
-        expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
-        expect(drawCommands[1].pass).toEqual(Pass.TRANSLUCENT);
-        expect(frameState.commandList.length).toEqual(2);
       });
+      return style.readyPromise
+        .then(function () {
+          return loadAndZoomToModelExperimental(
+            {
+              gltf: buildingsMetadata,
+            },
+            scene
+          );
+        })
+        .then(function (model) {
+          model.style = style;
+          const frameState = scene.frameState;
+          const sceneGraph = model._sceneGraph;
+          // Reset the draw commands so we can inspect the draw command generation.
+          model._drawCommandsBuilt = false;
+          frameState.commandList = [];
+          scene.renderForSpecs();
+
+          const drawCommands = sceneGraph.getDrawCommands();
+          expect(drawCommands.length).toEqual(2);
+          expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
+          expect(drawCommands[1].pass).toEqual(Pass.TRANSLUCENT);
+          expect(frameState.commandList.length).toEqual(2);
+        });
     });
 
     it("builds draw commands for each primitive", function () {

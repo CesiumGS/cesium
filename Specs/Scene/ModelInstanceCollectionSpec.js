@@ -14,7 +14,6 @@ import { ModelInstanceCollection } from "../../Source/Cesium.js";
 import { ShadowMode } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 
 describe(
   "Scene/ModelInstanceCollection",
@@ -290,7 +289,7 @@ describe(
         .then(function (collection) {
           fail("should not resolve");
         })
-        .otherwise(function (error) {
+        .catch(function (error) {
           expect(collection.ready).toEqual(false);
         });
     });
@@ -487,7 +486,7 @@ describe(
         })
       );
 
-      return when.all(promises).then(function () {
+      return Promise.all(promises).then(function () {
         const resourcesFirst = collections[0]._model._rendererResources;
         const resourcesSecond = collections[1]._model._rendererResources;
         let name;

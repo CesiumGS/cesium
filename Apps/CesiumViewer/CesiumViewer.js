@@ -158,7 +158,7 @@ function main() {
             viewer.flyTo(dataSource);
           }
         })
-        .otherwise(function (error) {
+        .catch(function (error) {
           showLoadError(source, error);
         });
     }

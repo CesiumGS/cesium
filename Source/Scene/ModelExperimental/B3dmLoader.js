@@ -5,6 +5,7 @@ import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
+import defer from "../../Core/defer.js";
 import defined from "../../Core/defined.js";
 import FeatureMetadata from "../FeatureMetadata.js";
 import GltfLoader from "../GltfLoader.js";
@@ -15,7 +16,6 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import parseBatchTable from "../parseBatchTable.js";
 import PropertyTable from "../PropertyTable.js";
 import ResourceLoader from "../ResourceLoader.js";
-import when from "../../ThirdParty/when.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 const B3dmLoaderState = {
@@ -88,7 +88,7 @@ function B3dmLoader(options) {
 
   this._state = B3dmLoaderState.UNLOADED;
 
-  this._promise = when.defer();
+  this._promise = defer();
 
   this._gltfLoader = undefined;
 
@@ -236,7 +236,7 @@ B3dmLoader.prototype.load = function () {
       that._state = B3dmLoaderState.READY;
       that._promise.resolve(that);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (that.isDestroyed()) {
         return;
       }

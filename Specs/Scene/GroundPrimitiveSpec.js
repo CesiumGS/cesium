@@ -240,7 +240,9 @@ describe(
       expect(primitive.geometryInstances).toBeDefined();
       scene.groundPrimitives.add(primitive);
       scene.renderForSpecs();
-      expect(primitive.geometryInstances).not.toBeDefined();
+      return primitive.readyPromise.then(function () {
+        expect(primitive.geometryInstances).not.toBeDefined();
+      });
     });
 
     it("does not release geometry instances when releaseGeometryInstances is false", function () {
@@ -257,7 +259,9 @@ describe(
       expect(primitive.geometryInstances).toBeDefined();
       scene.groundPrimitives.add(primitive);
       scene.renderForSpecs();
-      expect(primitive.geometryInstances).toBeDefined();
+      return primitive.readyPromise.then(function () {
+        expect(primitive.geometryInstances).toBeDefined();
+      });
     });
 
     it("adds afterRender promise to frame state", function () {

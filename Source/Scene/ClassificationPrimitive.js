@@ -1,6 +1,7 @@
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -12,7 +13,6 @@ import ShaderProgram from "../Renderer/ShaderProgram.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import ShadowVolumeAppearanceVS from "../Shaders/ShadowVolumeAppearanceVS.js";
 import ShadowVolumeFS from "../Shaders/ShadowVolumeFS.js";
-import when from "../ThirdParty/when.js";
 import BlendingState from "./BlendingState.js";
 import ClassificationType from "./ClassificationType.js";
 import DepthFunction from "./DepthFunction.js";
@@ -163,7 +163,7 @@ function ClassificationPrimitive(options) {
   this._commandsIgnoreShow = [];
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   this._primitive = undefined;
   this._pickPrimitive = options._pickPrimitive;

@@ -256,53 +256,52 @@
                   terrainSamplePositions.push(position);
                 }
 
-                Cesium.when(
+                Promise.resolve(
                   Cesium.sampleTerrainMostDetailed(
                     viewer.terrainProvider,
                     terrainSamplePositions
-                  ),
-                  function (samples) {
-                    let offset = 10.0;
-                    for (let i = 0; i < samples.length; ++i) {
-                      samples[i].height += offset;
-                    }
+                  )
+                ).then(function (samples) {
+                  let offset = 10.0;
+                  for (let i = 0; i < samples.length; ++i) {
+                    samples[i].height += offset;
+                  }
 
-                    viewer.entities.add({
-                      polyline: {
-                        positions: Cesium.Ellipsoid.WGS84.cartographicArrayToCartesianArray(
-                          samples
-                        ),
-                        arcType: Cesium.ArcType.NONE,
-                        width: 5,
-                        material: new Cesium.PolylineOutlineMaterialProperty({
-                          color: Cesium.Color.ORANGE,
+                  viewer.entities.add({
+                    polyline: {
+                      positions: Cesium.Ellipsoid.WGS84.cartographicArrayToCartesianArray(
+                        samples
+                      ),
+                      arcType: Cesium.ArcType.NONE,
+                      width: 5,
+                      material: new Cesium.PolylineOutlineMaterialProperty({
+                        color: Cesium.Color.ORANGE,
+                        outlineWidth: 2,
+                        outlineColor: Cesium.Color.BLACK,
+                      }),
+                      depthFailMaterial: new Cesium.PolylineOutlineMaterialProperty(
+                        {
+                          color: Cesium.Color.RED,
                           outlineWidth: 2,
                           outlineColor: Cesium.Color.BLACK,
-                        }),
-                        depthFailMaterial: new Cesium.PolylineOutlineMaterialProperty(
-                          {
-                            color: Cesium.Color.RED,
-                            outlineWidth: 2,
-                            outlineColor: Cesium.Color.BLACK,
-                          }
-                        ),
-                      },
-                    });
+                        }
+                      ),
+                    },
+                  });
 
-                    const target = new Cesium.Cartesian3(
-                      300770.50872389384,
-                      5634912.131394585,
-                      2978152.2865545116
-                    );
-                    offset = new Cesium.Cartesian3(
-                      6344.974098678562,
-                      -793.3419798081741,
-                      2499.9508860763162
-                    );
-                    viewer.camera.lookAt(target, offset);
-                    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-                  }
-                );
+                  const target = new Cesium.Cartesian3(
+                    300770.50872389384,
+                    5634912.131394585,
+                    2978152.2865545116
+                  );
+                  offset = new Cesium.Cartesian3(
+                    6344.974098678562,
+                    -793.3419798081741,
+                    2499.9508860763162
+                  );
+                  viewer.camera.lookAt(target, offset);
+                  viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+                });
               },
             },
             {

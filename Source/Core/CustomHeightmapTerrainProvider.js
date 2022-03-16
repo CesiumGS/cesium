@@ -1,4 +1,3 @@
-import when from "../ThirdParty/when.js";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
@@ -90,7 +89,7 @@ function CustomHeightmapTerrainProvider(options) {
   }
   this._credit = credit;
 
-  this._readyPromise = when.resolve(true);
+  this._readyPromise = Promise.resolve(true);
 }
 
 Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
@@ -239,7 +238,7 @@ CustomHeightmapTerrainProvider.prototype.requestTileGeometry = function (
   const width = this._width;
   const height = this._height;
 
-  return when(promise).then(function (heightmapData) {
+  return Promise.resolve(promise).then(function (heightmapData) {
     let buffer = heightmapData;
     if (Array.isArray(buffer)) {
       // HeightmapTerrainData expects a TypedArray, so convert from Number[] to Float64Array

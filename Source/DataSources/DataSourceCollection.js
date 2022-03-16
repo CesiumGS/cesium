@@ -4,7 +4,6 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import CesiumMath from "../Core/Math.js";
-import when from "../ThirdParty/when.js";
 
 /**
  * A collection of {@link DataSource} instances.
@@ -88,7 +87,7 @@ DataSourceCollection.prototype.add = function (dataSource) {
 
   const that = this;
   const dataSources = this._dataSources;
-  return when(dataSource, function (value) {
+  return Promise.resolve(dataSource).then(function (value) {
     //Only add the data source if removeAll has not been called
     //Since it was added.
     if (dataSources === that._dataSources) {
