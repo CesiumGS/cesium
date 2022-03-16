@@ -73,7 +73,7 @@
     "geometricError": 0,
     "extensions": {
       "3DTILES_multiple_contents": {
-        "content": [
+        "contents": [
           {
             "uri": "batched.b3dm",
             "extensions": {

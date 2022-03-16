@@ -377,8 +377,8 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
 
   // In 3D Tiles 1.1, content availability is provided in an array in the subtree JSON
   // regardless of whether or not it contains multiple contents. This differs from previous
-  // schema drafts, where content availability is either a single object in the subtree
-  // JSON or as an array in the 3DTILES_multiple_contents extension.
+  // schemas, where content availability is either a single object in the subtree JSON or
+  // as an array in the 3DTILES_multiple_contents extension.
   //
   // After identifying how availability is stored, put the results in this new array for consistent processing later
   subtreeJson.contentAvailabilityHeaders = [];
@@ -575,7 +575,7 @@ function markActiveBufferViews(subtreeJson, bufferViewHeaders) {
   const tileAvailabilityHeader = subtreeJson.tileAvailability;
 
   // Check for bitstream first, which is part of the current schema.
-  // bufferView is the name of the bitstream from an older schema draft.
+  // bufferView is the name of the bitstream from an older schema.
   if (defined(tileAvailabilityHeader.bitstream)) {
     header = bufferViewHeaders[tileAvailabilityHeader.bitstream];
   } else if (defined(tileAvailabilityHeader.bufferView)) {
@@ -643,7 +643,7 @@ function markActiveMetadataBufferViews(propertyTableJson, bufferViewHeaders) {
       header.isActive = true;
       header.bufferHeader.isActive = true;
 
-      // An older spec revision used stringOffsetBufferView
+      // An older spec used stringOffsetBufferView
       const stringOffsetBufferView = defaultValue(
         metadataHeader.stringOffsets,
         metadataHeader.stringOffsetBufferView
@@ -654,7 +654,7 @@ function markActiveMetadataBufferViews(propertyTableJson, bufferViewHeaders) {
         header.bufferHeader.isActive = true;
       }
 
-      // an older spec revision used arrayOffsetBufferView
+      // an older spec used arrayOffsetBufferView
       const arrayOffsetBufferView = defaultValue(
         metadataHeader.arrayOffsets,
         metadataHeader.arrayOffsetBufferView
@@ -840,7 +840,7 @@ function parseAvailabilityBitstream(
   let bufferView;
 
   // Check for bitstream first, which is part of the current schema.
-  // bufferView is the name of the bitstream from an older schema draft.
+  // bufferView is the name of the bitstream from an older schema.
   if (defined(availabilityJson.bitstream)) {
     bufferView = bufferViewsU8[availabilityJson.bitstream];
   } else if (defined(availabilityJson.bufferView)) {

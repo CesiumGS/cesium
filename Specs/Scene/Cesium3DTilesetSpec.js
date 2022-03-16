@@ -5234,7 +5234,7 @@ describe(
         });
       });
 
-      it("renders tileset with JSON subtree file", function () {
+      it("renders tileset with JSON subtree file (legacy)", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitTilesetWithJsonLegacyUrl
@@ -5247,7 +5247,7 @@ describe(
         });
       });
 
-      it("detects and initializes an implicit tileset in root tile", function () {
+      it("detects and initializes an implicit tileset in root tile (legacy)", function () {
         viewNothing();
         return Cesium3DTilesTester.loadTileset(
           scene,
@@ -5269,7 +5269,7 @@ describe(
         });
       });
 
-      it("detects and initializes an implicit tileset in child tile (implicit)", function () {
+      it("detects and initializes an implicit tileset in child tile (legacy)", function () {
         viewNothing();
         return Cesium3DTilesTester.loadTileset(
           scene,

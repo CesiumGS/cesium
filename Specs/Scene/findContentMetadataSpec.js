@@ -60,7 +60,7 @@ describe("Scene/findContentMetadata", function () {
     expect(metadata.getProperty("color")).toEqual(new Cartesian3(255, 255, 0));
   });
 
-  it("returns metadata if there is an extension", function () {
+  it("returns metadata if there is an extension (legacy)", function () {
     const contentHeader = {
       uri: "https://example.com/model.b3dm",
       extensions: {

@@ -228,7 +228,7 @@ describe(
         );
       });
 
-      it("assigning implicit content metadata propagates to inner contents", function () {
+      it("assigning explicit content metadata propagates to inner contents", function () {
         return Cesium3DTilesTester.loadTileset(scene, compositeUrl).then(
           function (tileset) {
             const content = tileset.root.content;

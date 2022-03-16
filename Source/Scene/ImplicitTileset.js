@@ -71,7 +71,7 @@ export default function ImplicitTileset(
     !hasExtension(boundingVolume, "3DTILES_bounding_volume_S2")
   ) {
     throw new RuntimeError(
-      "Only box, region and S2 cells are supported for implicit tiling"
+      "Only box, region and 3DTILES_bounding_volume_S2 are supported for implicit tiling"
     );
   }
 
@@ -123,7 +123,7 @@ export default function ImplicitTileset(
    * <code>extras</code> or <code>extensions</code> are preserved when
    * {@link Cesium3DTile}s are created for each tile.
    * <p>
-   * This is an array to support <code>3DTILES_multiple_contents</code>
+   * This is an array to support multiple contents.
    * </p>
    *
    * @type {Object[]}

@@ -65,7 +65,7 @@ describe("Scene/findTileMetadata", function () {
     expect(metadata.getProperty("color")).toEqual(new Cartesian3(255, 255, 0));
   });
 
-  it("returns metadata if there is an extension", function () {
+  it("returns metadata if there is an extension (legacy)", function () {
     const tileHeader = {
       boundingVolume: mockBoundingVolume,
       geometricError: 64,
