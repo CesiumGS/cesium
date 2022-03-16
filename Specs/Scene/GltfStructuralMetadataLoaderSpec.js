@@ -1,5 +1,6 @@
 import {
   clone,
+  defer,
   GltfBufferViewLoader,
   GltfStructuralMetadataLoader,
   GltfTextureLoader,
@@ -483,20 +484,11 @@ describe(
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
         Promise.resolve(image)
       );
-      let promise = new Promise(function (resolve, reject) {
-        if (rejectPromise) {
-          const error = new Error("404 Not Found");
-          reject(error);
-          return;
-        }
-        resolve(schemaJson);
-      });
-      if (rejectPromise) {
-        promise = promise.catch(function (e) {
-          // handle that error we just threw
-        });
-      }
-      spyOn(Resource.prototype, "fetchJson").and.returnValue(promise);
+      const deferredPromise = defer();
+      spyOn(Resource.prototype, "fetchJson").and.returnValue(
+        deferredPromise.promise
+      );
+
       const destroyBufferView = spyOn(
         GltfBufferViewLoader.prototype,
         "destroy"
@@ -527,10 +519,6 @@ describe(
         resource: schemaResource,
       });
 
-      if (rejectPromise) {
-        schemaCopy.promise.catch(function () {});
-      }
-
       structuralMetadataLoaderCopy.load();
 
       return waitForLoaderProcess(structuralMetadataLoaderCopy, scene).then(
@@ -550,9 +538,9 @@ describe(
           structuralMetadataLoader.destroy();
 
           if (rejectPromise) {
-            promise.reject(new Error());
+            deferredPromise.reject(new Error());
           } else {
-            promise.resolve(schemaJson);
+            deferredPromise.resolve(schemaJson);
           }
 
           expect(structuralMetadataLoader.structuralMetadata).not.toBeDefined();

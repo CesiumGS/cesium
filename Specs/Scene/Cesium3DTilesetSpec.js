@@ -5839,7 +5839,7 @@ describe(
               expect(statistics.numberOfTilesProcessing).toBe(1);
               expect(statistics.numberOfTilesWithContentReady).toBe(0);
             })
-            .otherwise(fail);
+            .catch(fail);
 
           return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
             function () {
@@ -5905,7 +5905,7 @@ describe(
               expect(statistics.numberOfTilesProcessing).toBe(1);
               expect(statistics.numberOfTilesWithContentReady).toBe(0);
             })
-            .otherwise(fail);
+            .catch(fail);
 
           return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
             function () {
@@ -6008,7 +6008,7 @@ describe(
             root: {},
           };
           const buffer = generateJsonBuffer(externalTileset).buffer;
-          return when.resolve(buffer);
+          return Promise.resolve(buffer);
         });
 
         viewNothing();
