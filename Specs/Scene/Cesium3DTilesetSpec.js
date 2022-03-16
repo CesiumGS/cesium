@@ -6130,7 +6130,7 @@ describe(
 
     describe("select feature IDs", function () {
       const tilesetWithFeatureIdsUrl =
-        "Data/Cesium3DTiles/Metadata/StructuralMetadata/tileset_1.1.json";
+        "Data/Cesium3DTiles/Metadata/StructuralMetadata/tileset.json";
 
       it("featureIdLabel sets from string", function () {
         return Cesium3DTilesTester.loadTileset(
