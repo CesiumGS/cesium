@@ -231,16 +231,21 @@ Cesium3DTileFeature.prototype.getProperty = function (name) {
 
 /**
  * Returns a copy of the feature's property with the given name, examining all
- * the metadata from 3D Tiles 1.0 formats, the EXT_mesh_features and legacy
- * EXT_feature_metadata glTF extensions, and the 3DTILES_metadata 3D Tiles
- * extension. Metadata is checked against name from most specific to most
- * general and the first match is returned. Metadata is checked in this order:
+ * the metadata from 3D Tiles 1.0 formats, the EXT_structural_metadata and legacy
+ * EXT_feature_metadata glTF extensions, and the metadata present either in the
+ * tileset JSON (3D Tiles 1.1) or in the 3DTILES_metadata 3D Tiles extension.
+ * Metadata is checked against name from most specific to most general and the
+ * first match is returned. Metadata is checked in this order:
  *
  * <ol>
- *   <li>Batch table (feature metadata) property by semantic</li>
- *   <li>Batch table (feature metadata) property by property ID</li>
+ *   <li>Batch table (structural metadata) property by semantic</li>
+ *   <li>Batch table (structural metadata) property by property ID</li>
+ *   <li>Content metadata property by semantic</li>
+ *   <li>Content metadata property by property</li>
  *   <li>Tile metadata property by semantic</li>
  *   <li>Tile metadata property by property ID</li>
+ *   <li>Subtree metadata property by semantic</li>
+ *   <li>Subtree metadata property by property ID</li>
  *   <li>Group metadata property by semantic</li>
  *   <li>Group metadata property by property ID</li>
  *   <li>Tileset metadata property by semantic</li>
@@ -249,7 +254,7 @@ Cesium3DTileFeature.prototype.getProperty = function (name) {
  * </ol>
  * <p>
  * For 3D Tiles Next details, see the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension}
- * for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features Extension}
+ * for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension}
  * for glTF. For the legacy glTF extension, see {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension}
  * </p>
  *
@@ -261,57 +266,75 @@ Cesium3DTileFeature.prototype.getProperty = function (name) {
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
-  let value;
   const batchTable = content.batchTable;
   if (defined(batchTable)) {
-    value = batchTable.getPropertyBySemantic(batchId, name);
-    if (defined(value)) {
-      return value;
+    if (batchTable.hasPropertyBySemantic(batchId, name)) {
+      return batchTable.getPropertyBySemantic(batchId, name);
     }
 
-    value = batchTable.getProperty(batchId, name);
-    if (defined(value)) {
-      return value;
+    if (batchTable.hasProperty(batchId, name)) {
+      return batchTable.getProperty(batchId, name);
     }
   }
 
-  const tileMetadata = content.tile.metadata;
-  if (defined(tileMetadata)) {
-    value = tileMetadata.getPropertyBySemantic(name);
-    if (defined(value)) {
-      return value;
+  const contentMetadata = content.metadata;
+  if (defined(contentMetadata)) {
+    if (contentMetadata.hasPropertyBySemantic(name)) {
+      return contentMetadata.getPropertyBySemantic(name);
     }
 
-    value = tileMetadata.getProperty(name);
-    if (defined(value)) {
-      return value;
+    if (contentMetadata.hasProperty(name)) {
+      return contentMetadata.getProperty(name);
+    }
+  }
+
+  const tile = content.tile;
+  const tileMetadata = tile.metadata;
+  if (defined(tileMetadata)) {
+    if (tileMetadata.hasPropertyBySemantic(name)) {
+      return tileMetadata.getPropertyBySemantic(name);
+    }
+
+    if (tileMetadata.hasProperty(name)) {
+      return tileMetadata.getProperty(name);
+    }
+  }
+
+  let subtreeMetadata;
+  if (defined(tile.implicitSubtree)) {
+    subtreeMetadata = tile.implicitSubtree.metadata;
+  }
+
+  if (defined(subtreeMetadata)) {
+    if (subtreeMetadata.hasPropertyBySemantic(name)) {
+      return subtreeMetadata.getPropertyBySemantic(name);
+    }
+
+    if (subtreeMetadata.hasProperty(name)) {
+      return subtreeMetadata.getProperty(name);
     }
   }
 
   const groupMetadata = content.groupMetadata;
   if (defined(groupMetadata)) {
-    value = groupMetadata.getPropertyBySemantic(name);
-    if (defined(value)) {
-      return value;
+    if (groupMetadata.hasPropertyBySemantic(name)) {
+      return groupMetadata.getPropertyBySemantic(name);
     }
 
-    value = groupMetadata.getProperty(name);
-    if (defined(value)) {
-      return value;
+    if (groupMetadata.hasProperty(name)) {
+      return groupMetadata.getProperty(name);
     }
   }
 
   let tilesetMetadata = content.tileset.metadata;
   if (defined(tilesetMetadata) && defined(tilesetMetadata.tileset)) {
     tilesetMetadata = tilesetMetadata.tileset;
-    value = tilesetMetadata.getPropertyBySemantic(name);
-    if (defined(value)) {
-      return value;
+    if (tilesetMetadata.hasPropertyBySemantic(name)) {
+      return tilesetMetadata.getPropertyBySemantic(name);
     }
 
-    value = tilesetMetadata.getProperty(name);
-    if (defined(value)) {
-      return value;
+    if (tilesetMetadata.hasProperty(name)) {
+      return tilesetMetadata.getProperty(name);
     }
   }
 
@@ -320,9 +343,9 @@ Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
 
 /**
  * Returns a copy of the value of the feature's property with the given name.
- * If the feature is contained within a tileset that uses the
- * <code>3DTILES_metadata</code> extension, tileset, group and tile metadata is
- * inherited.
+ * If the feature is contained within a tileset that has metadata (3D Tiles 1.1)
+ * or uses the <code>3DTILES_metadata</code> extension, tileset, group and tile
+ * metadata is inherited.
  * <p>
  * To resolve name conflicts, this method resolves names from most specific to
  * least specific by metadata granularity in the order: feature, tile, group,

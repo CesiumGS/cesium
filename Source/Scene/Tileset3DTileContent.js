@@ -21,6 +21,8 @@ function Tileset3DTileContent(tileset, tile, resource, json) {
   this._readyPromise = defer();
 
   this.featurePropertiesDirty = false;
+
+  this._metadata = undefined;
   this._groupMetadata = undefined;
 
   initialize(this, json);
@@ -96,6 +98,15 @@ Object.defineProperties(Tileset3DTileContent.prototype, {
   batchTable: {
     get: function () {
       return undefined;
+    },
+  },
+
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
     },
   },
 

@@ -16,7 +16,7 @@ import AttributeType from "../AttributeType.js";
 import Axis from "../Axis.js";
 import parseBatchTable from "../parseBatchTable.js";
 import DracoLoader from "../DracoLoader.js";
-import FeatureMetadata from "../FeatureMetadata.js";
+import StructuralMetadata from "../StructuralMetadata.js";
 import ResourceLoader from "../ResourceLoader.js";
 import MetadataClass from "../MetadataClass.js";
 import ModelComponents from "../ModelComponents.js";
@@ -284,7 +284,7 @@ function processDracoAttributes(loader, draco, result) {
   if (defined(result.BATCH_ID)) {
     const batchIds = result.BATCH_ID.array;
     parsedContent.batchIds = {
-      name: "FEATURE_ID",
+      name: "_FEATURE_ID",
       semantic: VertexAttributeSemantic.FEATURE_ID,
       setIndex: 0,
       typedArray: batchIds,
@@ -467,7 +467,7 @@ function makeAttributes(loader, parsedContent, context) {
   return attributes;
 }
 
-function makeFeatureMetadata(parsedContent) {
+function makeStructuralMetadata(parsedContent) {
   const batchLength = parsedContent.batchLength;
   const pointsLength = parsedContent.pointsLength;
   const batchTableBinary = parsedContent.batchTableBinary;
@@ -486,7 +486,7 @@ function makeFeatureMetadata(parsedContent) {
     name: MetadataClass.BATCH_TABLE_CLASS_NAME,
     count: pointsLength,
   });
-  return new FeatureMetadata({
+  return new StructuralMetadata({
     schema: {},
     propertyTables: [emptyPropertyTable],
   });
@@ -521,6 +521,7 @@ function makeComponents(loader, context) {
     const featureIdAttribute = new FeatureIdAttribute();
     featureIdAttribute.propertyTableId = 0;
     featureIdAttribute.setIndex = 0;
+    featureIdAttribute.positionalLabel = "featureId_0";
     primitive.featureIds.push(featureIdAttribute);
   }
 
@@ -535,7 +536,7 @@ function makeComponents(loader, context) {
   const components = new Components();
   components.scene = scene;
   components.nodes = [node];
-  components.featureMetadata = makeFeatureMetadata(parsedContent);
+  components.structuralMetadata = makeStructuralMetadata(parsedContent);
 
   if (defined(parsedContent.rtcCenter)) {
     components.transform = Matrix4.multiplyByTranslation(

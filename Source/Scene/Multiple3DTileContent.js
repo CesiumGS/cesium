@@ -9,11 +9,12 @@ import RequestType from "../Core/RequestType.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
+import findContentMetadata from "./findContentMetadata.js";
 import findGroupMetadata from "./findGroupMetadata.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 
 /**
- * A collection of contents for tiles that use the <code>3DTILES_multiple_contents</code> extension.
+ * A collection of contents for tiles that have multiple contents, either via the tile JSON (3D Tiles 1.1) or the <code>3DTILES_multiple_contents</code> extension.
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
@@ -26,7 +27,7 @@ import preprocess3DTileContent from "./preprocess3DTileContent.js";
  * @param {Cesium3DTileset} tileset The tileset this content belongs to
  * @param {Cesium3DTile} tile The content this content belongs to
  * @param {Resource} tilesetResource The resource that points to the tileset. This will be used to derive each inner content's resource.
- * @param {Object} extensionJson The <code>3DTILES_multiple_contents</code> extension JSON
+ * @param {Object} contentsJson Either the tile JSON containing the contents array (3D Tiles 1.1), or <code>3DTILES_multiple_contents</code> extension JSON
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -35,14 +36,18 @@ export default function Multiple3DTileContent(
   tileset,
   tile,
   tilesetResource,
-  extensionJson
+  contentsJson
 ) {
   this._tileset = tileset;
   this._tile = tile;
   this._tilesetResource = tilesetResource;
   this._contents = [];
 
-  const contentHeaders = extensionJson.content;
+  // An older version of 3DTILES_multiple_contents used "content" instead of "contents"
+  const contentHeaders = defined(contentsJson.contents)
+    ? contentsJson.contents
+    : contentsJson.content;
+
   this._innerContentHeaders = contentHeaders;
   this._requestsInFlight = 0;
 
@@ -219,6 +224,23 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
 
   /**
    * Part of the {@link Cesium3DTileContent} interface. <code>Multiple3DTileContent</code>
+   * always returns <code>undefined</code>.  Instead call <code>metadata</code> for a specific inner content.
+   * @memberof Multiple3DTileContent.prototype
+   * @private
+   */
+  metadata: {
+    get: function () {
+      return undefined;
+    },
+    set: function () {
+      //>>includeStart('debug', pragmas.debug);
+      throw new DeveloperError("Multiple3DTileContent cannot have metadata");
+      //>>includeEnd('debug');
+    },
+  },
+
+  /**
+   * Part of the {@link Cesium3DTileContent} interface. <code>Multiple3DTileContent</code>
    * always returns <code>undefined</code>.  Instead call <code>batchTable</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
    * @private
@@ -240,9 +262,11 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
       return undefined;
     },
     set: function () {
+      //>>includeStart('debug', pragmas.debug);
       throw new DeveloperError(
         "Multiple3DTileContent cannot have group metadata"
       );
+      //>>includeEnd('debug');
     },
   },
 
@@ -488,7 +512,7 @@ function createInnerContent(multipleContents, arrayBuffer, index) {
 
   if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
     throw new RuntimeError(
-      "External tilesets are disallowed inside the 3DTILES_multiple_contents extension"
+      "External tilesets are disallowed inside multiple contents"
     );
   }
 
@@ -499,28 +523,33 @@ function createInnerContent(multipleContents, arrayBuffer, index) {
 
   const tileset = multipleContents._tileset;
   const resource = multipleContents._innerContentResources[index];
+  const tile = multipleContents._tile;
 
   let content;
   const contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
   if (defined(preprocessed.binaryPayload)) {
     content = contentFactory(
       tileset,
-      multipleContents._tile,
+      tile,
       resource,
       preprocessed.binaryPayload.buffer,
       0
     );
   } else {
     // JSON formats
-    content = contentFactory(
-      tileset,
-      multipleContents._tile,
-      resource,
-      preprocessed.jsonPayload
-    );
+    content = contentFactory(tileset, tile, resource, preprocessed.jsonPayload);
   }
 
   const contentHeader = multipleContents._innerContentHeaders[index];
+
+  if (tile.hasImplicitContentMetadata) {
+    const subtree = tile.implicitSubtree;
+    const coordinates = tile.implicitCoordinates;
+    content.metadata = subtree.getContentMetadataView(coordinates, index);
+  } else if (!tile.hasImplicitContent) {
+    content.metadata = findContentMetadata(tileset, contentHeader);
+  }
+
   content.groupMetadata = findGroupMetadata(tileset, contentHeader);
   return content;
 }

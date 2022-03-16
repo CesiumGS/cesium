@@ -242,8 +242,10 @@ function combineShader(shaderSource, isFragmentShader, context) {
       "\
 #ifdef GL_FRAGMENT_PRECISION_HIGH\n\
     precision highp float;\n\
+    precision highp int;\n\
 #else\n\
     precision mediump float;\n\
+    precision mediump int;\n\
     #define highp mediump\n\
 #endif\n\n";
   }

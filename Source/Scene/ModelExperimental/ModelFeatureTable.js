@@ -193,6 +193,13 @@ ModelFeatureTable.prototype.hasProperty = function (featureId, propertyName) {
   return this._propertyTable.hasProperty(featureId, propertyName);
 };
 
+ModelFeatureTable.prototype.hasPropertyBySemantic = function (
+  featureId,
+  propertyName
+) {
+  return this._propertyTable.hasPropertyBySemantic(featureId, propertyName);
+};
+
 ModelFeatureTable.prototype.getProperty = function (featureId, name) {
   return this._propertyTable.getProperty(featureId, name);
 };

@@ -251,7 +251,7 @@ function initialize(pointCloud, options) {
     pointCloud._isRGB565 = colors.isRGB565;
   }
 
-  // PntsParser parses BATCH_ID as FEATURE_ID for EXT_mesh_features.
+  // PntsParser parses BATCH_ID as _FEATURE_ID_0 for EXT_mesh_features.
   // These properties aren't used but rename them to BATCH_ID to avoid
   // confusion when debugging.
   const batchIds = parsedContent.batchIds;
