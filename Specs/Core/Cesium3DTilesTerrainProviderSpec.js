@@ -26,7 +26,7 @@ describe("Core/Cesium3DTilesTerrainProvider", function () {
       .then(function (result) {
         fail("should not resolve");
       })
-      .otherwise(function (result) {
+      .catch(function (result) {
         expect(result).toBe(error);
         expect(provider.ready).toBe(false);
       });
@@ -41,7 +41,7 @@ describe("Core/Cesium3DTilesTerrainProvider", function () {
       .then(function (result) {
         fail("should not resolve");
       })
-      .otherwise(function (error) {
+      .catch(function (error) {
         expect(error.statusCode).toBe(404);
         expect(provider.ready).toBe(false);
       });
@@ -88,34 +88,6 @@ describe("Core/Cesium3DTilesTerrainProvider", function () {
       expect(result).toBe(true);
       expect(provider.ready).toBe(true);
     });
-  });
-
-  it("overrides static method loadJson", function () {
-    const path = "Data/Cesium3DTiles/Terrain/Test/tileset.json";
-    const invalidPath = "Data/Cesium3DTiles/Terrain/Test/invalid.json";
-    const originalLoadJson = Cesium3DTilesTerrainProvider.loadJson;
-
-    // override loadJson and replace incorrect url with correct url
-    Cesium3DTilesTerrainProvider.loadJson = function (tilesetUrl) {
-      return originalLoadJson(path);
-    };
-
-    // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
-    const provider = new Cesium3DTilesTerrainProvider({
-      url: invalidPath,
-    });
-
-    // restore original version
-    Cesium3DTilesTerrainProvider.loadJson = originalLoadJson;
-
-    return provider.readyPromise
-      .then(function (result) {
-        expect(result).toBe(true);
-        expect(provider.ready).toBe(true);
-      })
-      .otherwise(function (error) {
-        fail("should not fail");
-      });
   });
 
   it("logo is undefined if credit is not provided", function () {

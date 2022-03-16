@@ -249,7 +249,7 @@ function Cesium3DTilesTerrainProvider(options) {
 
       that._resource = resource;
 
-      const promise = Cesium3DTilesTerrainProvider.loadJson(resource);
+      const promise = resource.fetchJson();
       if (promise === undefined) {
         return Promise.reject("Could not load tileset JSON");
       }
@@ -260,8 +260,7 @@ function Cesium3DTilesTerrainProvider(options) {
       const child0Json = childrenJson[0];
       const child1Json = childrenJson[1];
 
-      const metadataSchemaJson =
-        tilesetJson["extensions"]["3DTILES_metadata"]["schema"];
+      const metadataSchemaJson = tilesetJson["schema"];
       const metadataSchema = new MetadataSchema(metadataSchemaJson);
 
       that._tileset0 = new ImplicitTileset(
@@ -282,19 +281,6 @@ function Cesium3DTilesTerrainProvider(options) {
       that._readyPromise.reject(error);
     });
 }
-
-/**
- * Provides a hook to override the method used to request the tileset json.
- * This can be used to retry requests, call a different URL, etc.
- * @param {Resource|String} tilesetUrl The url of the json file to be fetched.
- * @returns {Promise.<Object>|undefined} A promise that resolves with the fetched json data, or undefined if it couldn't be loaded.
- */
-Cesium3DTilesTerrainProvider.loadJson = function (tilesetUrl) {
-  // @ts-ignore
-  const resource = Resource.createIfNeeded(tilesetUrl);
-  const promise = resource.fetchJson();
-  return promise;
-};
 
 const scratchPromises = new Array(2);
 
@@ -371,6 +357,7 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
           const bufferU8 = new Uint8Array(arrayBuffer);
           subtree = new ImplicitSubtree(
             that._resource,
+            undefined,
             bufferU8,
             implicitTileset,
             subtreeCoord
@@ -410,36 +397,28 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
   promises[0] = subtreePromise;
   promises[1] = glbPromise;
   // @ts-ignore
-  return Promise.all(
-    promises,
-    // @ts-ignore
+  return Promise.all(promises).then(
     function (results) {
       /** @type {ImplicitSubtree} */
       const subtree = results[0];
       /** @type {ArrayBuffer} */
       const glbBuffer = results[1];
 
-      /** @type {MetadataTable} */
-      // @ts-ignore
-      const metadataTable = subtree.metadataTable;
-      // @ts-ignore
-      const packedIndex = subtree.getEntityId(tileCoord);
+      /** @type {ImplicitMetadataView} */
+      const metadataView = subtree.getTileMetadataView(tileCoord);
 
       // @ts-ignore
-      const minimumHeight = metadataTable.getPropertyBySemantic(
-        packedIndex,
+      const minimumHeight = metadataView.getPropertyBySemantic(
         MetadataSemantic.TILE_MINIMUM_HEIGHT
       );
 
       // @ts-ignore
-      const maximumHeight = metadataTable.getPropertyBySemantic(
-        packedIndex,
+      const maximumHeight = metadataView.getPropertyBySemantic(
         MetadataSemantic.TILE_MAXIMUM_HEIGHT
       );
 
       // @ts-ignore
-      const boundingSphereArray = metadataTable.getPropertyBySemantic(
-        packedIndex,
+      const boundingSphereArray = metadataView.getPropertyBySemantic(
         MetadataSemantic.TILE_BOUNDING_SPHERE
       );
       const boundingSphere = BoundingSphere.unpack(
@@ -449,8 +428,7 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
       );
 
       // @ts-ignore
-      const horizonOcclusionPoint = metadataTable.getPropertyBySemantic(
-        packedIndex,
+      const horizonOcclusionPoint = metadataView.getPropertyBySemantic(
         MetadataSemantic.TILE_HORIZON_OCCLUSION_POINT
       );
 
