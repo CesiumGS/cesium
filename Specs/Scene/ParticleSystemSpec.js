@@ -7,6 +7,7 @@ import { CircleEmitter } from "../../Source/Cesium.js";
 import { ParticleBurst } from "../../Source/Cesium.js";
 import { ParticleSystem } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
+import pollToPromise from "../pollToPromise.js";
 
 describe("Scene/ParticleSystem", function () {
   let scene;
@@ -362,7 +363,7 @@ describe("Scene/ParticleSystem", function () {
   });
 
   it("renders", function () {
-    scene.primitives.add(
+    const system = scene.primitives.add(
       new ParticleSystem({
         image: greenImage,
         emitter: new CircleEmitter(1.0),
@@ -378,9 +379,13 @@ describe("Scene/ParticleSystem", function () {
     // no particles emitted at time 0
     scene.renderForSpecs();
     // billboard collection needs to create texture atlas
-    scene.renderForSpecs();
-    // finally render
-    expect(scene).toRender([0, 255, 0, 255]);
+    return pollToPromise(function () {
+      scene.renderForSpecs();
+      return system._billboardCollection.get(0).ready;
+    }).then(function () {
+      // finally render
+      expect(scene).toRender([0, 255, 0, 255]);
+    });
   });
 
   it("isDestroyed", function () {

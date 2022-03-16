@@ -1,4 +1,5 @@
 import { CesiumTerrainProvider } from "../../Source/Cesium.js";
+import { defer } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { GeographicTilingScheme } from "../../Source/Cesium.js";
 import { getAbsoluteUri } from "../../Source/Cesium.js";
@@ -11,7 +12,6 @@ import { RequestScheduler } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
 import { TerrainProvider } from "../../Source/Cesium.js";
 import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 
 describe("Core/CesiumTerrainProvider", function () {
   beforeEach(function () {
@@ -139,15 +139,14 @@ describe("Core/CesiumTerrainProvider", function () {
       requestWaterMask: requestWaterMask,
     });
 
-    return pollToPromise(function () {
-      return terrainProvider.ready;
-    }).then(function () {
-      const promise = terrainProvider.requestTileGeometry(level, x, y);
-
-      return when(promise, f, function (error) {
+    return terrainProvider.readyPromise
+      .then(function () {
+        return terrainProvider.requestTileGeometry(level, x, y);
+      })
+      .then(f)
+      .catch(function (error) {
         expect("requestTileGeometry").toBe("returning a tile."); // test failure
       });
-    });
   }
 
   function createRequest() {
@@ -183,7 +182,7 @@ describe("Core/CesiumTerrainProvider", function () {
 
   it("resolves readyPromise when url promise is used", function () {
     const provider = new CesiumTerrainProvider({
-      url: when.resolve("made/up/url"),
+      url: Promise.resolve("made/up/url"),
     });
 
     return provider.readyPromise.then(function (result) {
@@ -208,16 +207,15 @@ describe("Core/CesiumTerrainProvider", function () {
   });
 
   it("rejects readyPromise when url rejects", function () {
-    const error = new Error();
     const provider = new CesiumTerrainProvider({
-      url: when.reject(error),
+      url: Promise.reject(new Error("my message")),
     });
     return provider.readyPromise
       .then(function () {
         fail("should not resolve");
       })
-      .otherwise(function (result) {
-        expect(result).toBe(error);
+      .catch(function (result) {
+        expect(result.message).toBe("my message");
         expect(provider.ready).toBe(false);
       });
   });
@@ -366,9 +364,7 @@ describe("Core/CesiumTerrainProvider", function () {
       requestWaterMask: true,
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider._tileCredits[0].html).toBe(
         "This is a child tileset! This amazing data is courtesy The Amazing Data Source!"
       );
@@ -402,7 +398,7 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = when.defer();
+    const deferred = defer();
 
     provider.errorEvent.addEventListener(function (e) {
       deferred.resolve(e);
@@ -420,7 +416,7 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = when.defer();
+    const deferred = defer();
 
     provider.errorEvent.addEventListener(function (e) {
       deferred.resolve(e);
@@ -438,7 +434,7 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = when.defer();
+    const deferred = defer();
 
     provider.errorEvent.addEventListener(function (e) {
       deferred.resolve(e);
@@ -473,7 +469,7 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = when.defer();
+    const deferred = defer();
 
     provider.errorEvent.addEventListener(function (e) {
       deferred.resolve(e);
@@ -493,7 +489,7 @@ describe("Core/CesiumTerrainProvider", function () {
       url: "made/up/url",
     });
 
-    const deferred = when.defer();
+    const deferred = defer();
 
     provider.errorEvent.addEventListener(function (e) {
       deferred.resolve(e);
@@ -612,27 +608,35 @@ describe("Core/CesiumTerrainProvider", function () {
         url: "made/up/url",
       });
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
-        spyOn(Resource._Implementations, "loadWithXhr");
-        provider.requestTileGeometry(0, 0, 0);
-        expect(
-          Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
-        ).toContain("foo0.com");
-        provider.requestTileGeometry(1, 0, 0);
-        expect(
-          Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
-        ).toContain("foo1.com");
-        provider.requestTileGeometry(1, -1, 0);
-        expect(
-          Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
-        ).toContain("foo2.com");
-        provider.requestTileGeometry(1, 0, 1);
-        expect(
-          Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
-        ).toContain("foo3.com");
-      });
+      spyOn(Resource._Implementations, "loadWithXhr").and.callThrough();
+
+      return provider.readyPromise
+        .then(function () {
+          return provider.requestTileGeometry(0, 0, 0);
+        })
+        .catch(function () {
+          expect(
+            Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
+          ).toContain("foo0.com");
+          return provider.requestTileGeometry(1, 0, 0);
+        })
+        .catch(function () {
+          expect(
+            Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
+          ).toContain("foo1.com");
+          return provider.requestTileGeometry(1, -1, 0);
+        })
+        .catch(function () {
+          expect(
+            Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
+          ).toContain("foo2.com");
+          return provider.requestTileGeometry(1, 0, 1);
+        })
+        .catch(function () {
+          expect(
+            Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
+          ).toContain("foo3.com");
+        });
     });
 
     it("supports scheme-less template URLs in layer.json resolved with absolute URL", function () {
@@ -644,27 +648,35 @@ describe("Core/CesiumTerrainProvider", function () {
         url: url,
       });
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
-        spyOn(Resource._Implementations, "loadWithXhr");
-        provider.requestTileGeometry(0, 0, 0);
-        expect(
-          Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
-        ).toContain("foo0.com");
-        provider.requestTileGeometry(1, 0, 0);
-        expect(
-          Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
-        ).toContain("foo1.com");
-        provider.requestTileGeometry(1, -1, 0);
-        expect(
-          Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
-        ).toContain("foo2.com");
-        provider.requestTileGeometry(1, 0, 1);
-        expect(
-          Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
-        ).toContain("foo3.com");
-      });
+      spyOn(Resource._Implementations, "loadWithXhr").and.callThrough();
+
+      return provider.readyPromise
+        .then(function () {
+          return provider.requestTileGeometry(0, 0, 0);
+        })
+        .catch(function () {
+          expect(
+            Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
+          ).toContain("foo0.com");
+          return provider.requestTileGeometry(1, 0, 0);
+        })
+        .catch(function () {
+          expect(
+            Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
+          ).toContain("foo1.com");
+          return provider.requestTileGeometry(1, -1, 0);
+        })
+        .catch(function () {
+          expect(
+            Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
+          ).toContain("foo2.com");
+          return provider.requestTileGeometry(1, 0, 1);
+        })
+        .catch(function () {
+          expect(
+            Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
+          ).toContain("foo3.com");
+        });
     });
 
     it("provides HeightmapTerrainData", function () {
@@ -678,7 +690,7 @@ describe("Core/CesiumTerrainProvider", function () {
         overrideMimeType
       ) {
         // Just return any old file, as long as its big enough
-        Resource._DefaultImplementations.loadWithXhr(
+        return Resource._DefaultImplementations.loadWithXhr(
           "Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json",
           responseType,
           method,

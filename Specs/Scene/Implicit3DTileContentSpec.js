@@ -935,6 +935,11 @@ describe(
             });
 
             tilesetJson.root.extensions["3DTILES_extension"] = otherExtension;
+            tilesetJson.extensionsUsed.push("3DTILES_metadata");
+            tilesetJson.extensions = {};
+            tilesetJson.extensions["3DTILES_metadata"] = {
+              schema: {},
+            };
             return tilesetJson;
           });
         });

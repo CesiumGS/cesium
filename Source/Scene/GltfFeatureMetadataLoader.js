@@ -1,8 +1,8 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import when from "../ThirdParty/when.js";
 import parseFeatureMetadata from "./parseFeatureMetadata.js";
 import parseFeatureMetadataLegacy from "./parseFeatureMetadataLegacy.js";
 import ResourceCache from "./ResourceCache.js";
@@ -69,7 +69,7 @@ export default function GltfFeatureMetadataLoader(options) {
   this._schemaLoader = undefined;
   this._featureMetadata = undefined;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = when.defer();
+  this._promise = defer();
 }
 
 if (defined(Object.create)) {
@@ -136,8 +136,7 @@ GltfFeatureMetadataLoader.prototype.load = function () {
 
   const that = this;
 
-  when
-    .all([bufferViewsPromise, texturesPromise, schemaPromise])
+  Promise.all([bufferViewsPromise, texturesPromise, schemaPromise])
     .then(function (results) {
       if (that.isDestroyed()) {
         return;
@@ -164,7 +163,7 @@ GltfFeatureMetadataLoader.prototype.load = function () {
       that._state = ResourceLoaderState.READY;
       that._promise.resolve(that);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (that.isDestroyed()) {
         return;
       }
@@ -258,7 +257,7 @@ function loadBufferViews(featureMetadataLoader) {
   }
 
   // Return a promise to a map of buffer view IDs to typed arrays
-  return when.all(bufferViewPromises).then(function () {
+  return Promise.all(bufferViewPromises).then(function () {
     const bufferViews = {};
     for (const bufferViewId in bufferViewLoaders) {
       if (bufferViewLoaders.hasOwnProperty(bufferViewId)) {
@@ -359,7 +358,7 @@ function loadTextures(featureMetadataLoader) {
   }
 
   // Return a promise to a map of texture IDs to Texture objects
-  return when.all(texturePromises).then(function () {
+  return Promise.all(texturePromises).then(function () {
     const textures = {};
     for (const textureId in textureLoaders) {
       if (textureLoaders.hasOwnProperty(textureId)) {

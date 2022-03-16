@@ -1,9 +1,9 @@
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import getMagic from "../Core/getMagic.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import when from "../ThirdParty/when.js";
 
 /**
  * Represents the contents of a
@@ -30,7 +30,7 @@ function Composite3DTileContent(
   this._tile = tile;
   this._resource = resource;
   this._contents = [];
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
   this._groupMetadata = undefined;
 
   initialize(this, arrayBuffer, byteOffset, factory);
@@ -239,12 +239,11 @@ function initialize(content, arrayBuffer, byteOffset, factory) {
     byteOffset += tileByteLength;
   }
 
-  when
-    .all(contentPromises)
+  Promise.all(contentPromises)
     .then(function () {
       content._readyPromise.resolve(content);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       content._readyPromise.reject(error);
     });
 }

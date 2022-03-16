@@ -8,7 +8,6 @@ import {
   GroupMetadata,
   RequestScheduler,
   Resource,
-  when,
 } from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
@@ -162,7 +161,7 @@ describe(
       expect(content.contentsFetchedPromise).not.toBeDefined();
 
       spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
-        return when.resolve(makeGltfBuffer());
+        return Promise.resolve(makeGltfBuffer());
       });
       content.requestInnerContents();
       expect(content.contentsFetchedPromise).toBeDefined();
@@ -208,7 +207,7 @@ describe(
         Resource.prototype,
         "fetchArrayBuffer"
       ).and.callFake(function () {
-        return when.resolve(makeGltfBuffer());
+        return Promise.resolve(makeGltfBuffer());
       });
       expect(content.requestInnerContents()).toBe(0);
       expect(fetchArray.calls.count()).toBe(3);

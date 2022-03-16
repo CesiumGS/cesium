@@ -4,16 +4,21 @@
 
 ##### Breaking Changes :mega:
 
+- Removed `Cesium.when`. Any `Promise`in the Cesium API has changed to the native `Promise` API. Code bases using cesium will likely need updates after this change. See the [upgrade guide](https://community.cesium.com/t/cesiumjs-is-switching-from-when-js-to-native-promises-which-will-be-a-breaking-change-in-1-92/17213) for instructions on how to update your code base to be compliant with native promises.
+- `ArcGisMapServerImageryProvider.readyPromise` will not reject if there is a failure unless the request cannot be retried.
+- `SingleTileImageryProvider.readyPromise` will not reject if there is a failure unless the request cannot be retried.
 - Removed links to SpecRunner.html and related Jasmine files for running unit tests in browsers.
 
 ##### Additions :tada:
 
 - Added `minimumPixelSize`, `scale`, and `maximumScale` to `ModelExperimental`. [#10092](https://github.com/CesiumGS/cesium/pull/10092)
+- Added `Cartesian2.clamp`, `Cartesian3.clamp`, and `Cartesian4.clamp`. [#10197](https://github.com/CesiumGS/cesium/pull/10197)
 
 ##### Fixes :wrench:
 
 - Fixed a bug where `pnts` tiles would crash when `Cesium.ExperimentalFeatures.enableModelExperimental` was true. [#10183](https://github.com/CesiumGS/cesium/pull/10183)
-- Fixed `ShadowMap` documentation for `options.pointLightRadius` type.[#10195](https://github.com/CesiumGS/cesium/pull/10195)
+- Fixed an issue with Firefox and dimensionless SVG images. [#9188](https://github.com/CesiumGS/cesium/9188)
+- Fixed `ShadowMap` documentation for `options.pointLightRadius` type. [#10195](https://github.com/CesiumGS/cesium/pull/10195)
 
 ### 1.91 - 2022-03-01
 

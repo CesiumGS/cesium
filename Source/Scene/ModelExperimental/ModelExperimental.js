@@ -3,6 +3,7 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import defined from "../../Core/defined.js";
+import defer from "../../Core/defer.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import GltfLoader from "../GltfLoader.js";
@@ -11,7 +12,6 @@ import ModelExperimentalType from "./ModelExperimentalType.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import Pass from "../../Renderer/Pass.js";
 import Resource from "../../Core/Resource.js";
-import when from "../../ThirdParty/when.js";
 import destroyObject from "../../Core/destroyObject.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
@@ -142,7 +142,7 @@ export default function ModelExperimental(options) {
   this._drawCommandsBuilt = false;
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
   this._customShader = options.customShader;
   this._content = options.content;
 
@@ -277,20 +277,20 @@ function initialize(model) {
       });
       model._resourcesLoaded = true;
     })
-    .otherwise(
+    .catch(
       ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
     );
 
   // Transcoded .pnts models do not have textures
   const texturesLoadedPromise = defaultValue(
     loader.texturesLoadedPromise,
-    when.resolve()
+    Promise.resolve()
   );
   texturesLoadedPromise
     .then(function () {
       model._texturesLoaded = true;
     })
-    .otherwise(
+    .catch(
       ModelExperimentalUtility.getFailedLoadFunction(model, "model", resource)
     );
 }

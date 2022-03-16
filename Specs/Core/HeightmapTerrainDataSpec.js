@@ -3,7 +3,6 @@ import { GeographicTilingScheme } from "../../Source/Cesium.js";
 import { HeightmapEncoding } from "../../Source/Cesium.js";
 import { HeightmapTerrainData } from "../../Source/Cesium.js";
 import { TerrainData } from "../../Source/Cesium.js";
-import { when } from "../../Source/Cesium.js";
 
 describe("Core/HeightmapTerrainData", function () {
   it("conforms to TerrainData interface", function () {
@@ -140,7 +139,7 @@ describe("Core/HeightmapTerrainData", function () {
         }
       }
       expect(promises.length).toBe(TerrainData.maximumAsynchronousTasks);
-      return when.all(promises);
+      return Promise.all(promises);
     });
 
     it("disables throttling for asynchronous tasks", function () {
@@ -161,7 +160,7 @@ describe("Core/HeightmapTerrainData", function () {
         }
       }
       expect(promises.length).toBe(taskCount);
-      return when.all(promises);
+      return Promise.all(promises);
     });
   });
 

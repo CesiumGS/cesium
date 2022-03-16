@@ -3,6 +3,7 @@ import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
 import { clone } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
+import { defined } from "../../Source/Cesium.js";
 import { DistanceDisplayCondition } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
@@ -60,6 +61,23 @@ describe(
       scene.primitives.removeAll();
       points = points && !points.isDestroyed() && points.destroy();
     });
+
+    function allPrimitivesReady(points) {
+      // render until all labels have been updated
+      return pollToPromise(function () {
+        scene.renderForSpecs();
+        const backgroundBillboard = points._labelCollection._backgroundBillboardCollection.get(
+          0
+        );
+        return (
+          points._labelCollection._backgroundImageReady &&
+          (!defined(backgroundBillboard) || backgroundBillboard.ready) &&
+          points._labelCollection._labelsToUpdate.length === 0 &&
+          (!defined(points._billboardCollection.get(0)) ||
+            points._billboardCollection.get(0).ready)
+        );
+      });
+    }
 
     function loadPoints(points) {
       let ready = false;
@@ -144,17 +162,21 @@ describe(
           maximumHeight: maxHeight,
         })
       );
-      return loadPoints(points).then(function () {
-        const features = [];
-        points.createFeatures(mockTileset, features);
-        points.applyStyle(undefined, features);
+      return loadPoints(points)
+        .then(function () {
+          const features = [];
+          points.createFeatures(mockTileset, features);
+          points.applyStyle(undefined, features);
 
-        scene.camera.lookAt(
-          Cartesian3.fromDegrees(0.0, 0.0, 30.0),
-          new Cartesian3(0.0, 0.0, 50.0)
-        );
-        expect(scene).toRender([255, 255, 255, 255]);
-      });
+          scene.camera.lookAt(
+            Cartesian3.fromDegrees(0.0, 0.0, 30.0),
+            new Cartesian3(0.0, 0.0, 50.0)
+          );
+          return allPrimitivesReady(points);
+        })
+        .then(function () {
+          expect(scene).toRender([255, 255, 255, 255]);
+        });
     });
 
     it("renders multiple points", function () {
@@ -190,22 +212,31 @@ describe(
       const style = new Cesium3DTileStyle({
         verticalOrigin: VerticalOrigin.BOTTOM,
       });
-      return loadPoints(points).then(function () {
-        const features = [];
-        points.createFeatures(mockTileset, features);
-        points.applyStyle(style, features);
+      return loadPoints(points)
+        .then(function () {
+          const features = [];
+          points.createFeatures(mockTileset, features);
+          points.applyStyle(style, features);
 
-        for (let i = 0; i < cartoPositions.length; ++i) {
-          const position = ellipsoid.cartographicToCartesian(cartoPositions[i]);
+          // Look at first feature to load primitives
+          const position = ellipsoid.cartographicToCartesian(cartoPositions[0]);
           scene.camera.lookAt(position, new Cartesian3(0.0, 0.0, 50.0));
-          expect(scene).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toBeGreaterThan(0);
-            expect(rgba[0]).toEqual(rgba[1]);
-            expect(rgba[0]).toEqual(rgba[2]);
-            expect(rgba[3]).toEqual(255);
-          });
-        }
-      });
+          return allPrimitivesReady(points);
+        })
+        .then(function () {
+          for (let i = 0; i < cartoPositions.length; ++i) {
+            const position = ellipsoid.cartographicToCartesian(
+              cartoPositions[i]
+            );
+            scene.camera.lookAt(position, new Cartesian3(0.0, 0.0, 50.0));
+            expect(scene).toRenderAndCall(function (rgba) {
+              expect(rgba[0]).toBeGreaterThan(0);
+              expect(rgba[0]).toEqual(rgba[1]);
+              expect(rgba[0]).toEqual(rgba[2]);
+              expect(rgba[3]).toEqual(255);
+            });
+          }
+        });
     });
 
     it("picks a point", function () {
@@ -231,30 +262,34 @@ describe(
           maximumHeight: maxHeight,
         })
       );
-      return loadPoints(points).then(function () {
-        scene.camera.lookAt(
-          Cartesian3.fromDegrees(0.0, 0.0, 10.0),
-          new Cartesian3(0.0, 0.0, 50.0)
-        );
+      const features = [];
+      const getFeature = mockTileset.getFeature;
+      return loadPoints(points)
+        .then(function () {
+          scene.camera.lookAt(
+            Cartesian3.fromDegrees(0.0, 0.0, 10.0),
+            new Cartesian3(0.0, 0.0, 50.0)
+          );
 
-        const features = [];
-        points.createFeatures(mockTileset, features);
-        points.applyStyle(undefined, features);
+          points.createFeatures(mockTileset, features);
+          points.applyStyle(undefined, features);
 
-        const getFeature = mockTileset.getFeature;
-        mockTileset.getFeature = function (index) {
-          return features[index];
-        };
+          mockTileset.getFeature = function (index) {
+            return features[index];
+          };
 
-        scene.frameState.passes.pick = true;
-        batchTable.update(mockTileset, scene.frameState);
-        expect(scene).toPickAndCall(function (result) {
-          expect(result).toBe(features[0]);
+          scene.frameState.passes.pick = true;
+          batchTable.update(mockTileset, scene.frameState);
+          return allPrimitivesReady(points);
+        })
+        .then(function () {
+          expect(scene).toPickAndCall(function (result) {
+            expect(result).toBe(features[0]);
+          });
+          scene.frameState.passes.pick = false;
+
+          mockTileset.getFeature = getFeature;
         });
-        scene.frameState.passes.pick = false;
-
-        mockTileset.getFeature = getFeature;
-      });
     });
 
     it("renders multiple points with style", function () {
@@ -322,67 +357,78 @@ describe(
         labelVerticalOrigin: `${VerticalOrigin.BOTTOM}`,
       });
 
-      return loadPoints(points).then(function () {
-        const features = [];
-        points.createFeatures(mockTilesetClone, features);
-        points.applyStyle(style, features);
+      return style.readyPromise
+        .then(function () {
+          return loadPoints(points);
+        })
+        .then(function () {
+          const features = [];
+          points.createFeatures(mockTilesetClone, features);
+          points.applyStyle(style, features);
 
-        let i;
-        for (i = 0; i < features.length; ++i) {
-          const feature = features[i];
-          expect(feature.show).toEqual(true);
-          expect(feature.pointSize).toEqual(10.0);
-          expect(feature.color).toEqual(new Color(1.0, 1.0, 0.0, 0.5));
-          expect(feature.pointOutlineColor).toEqual(
-            new Color(1.0, 1.0, 0.0, 1.0)
-          );
-          expect(feature.pointOutlineWidth).toEqual(11.0 * i);
-          expect(feature.labelColor).toEqual(new Color(1.0, 1.0, 0.0, 1.0));
-          expect(feature.labelOutlineColor).toEqual(
-            new Color(1.0, 1.0, 0.0, 0.5)
-          );
-          expect(feature.labelOutlineWidth).toEqual(1.0);
-          expect(feature.font).toEqual("30px sans-serif");
-          expect(feature.labelStyle).toEqual(LabelStyle.FILL_AND_OUTLINE);
-          expect(feature.labelText).toEqual("test");
-          expect(feature.backgroundColor).toEqual(
-            new Color(1.0, 1.0, 0.0, 0.2)
-          );
-          expect(feature.backgroundPadding).toEqual(new Cartesian2(10, 11));
-          expect(feature.backgroundEnabled).toEqual(true);
-          expect(feature.scaleByDistance).toEqual(
-            new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0)
-          );
-          expect(feature.translucencyByDistance).toEqual(
-            new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0)
-          );
-          expect(feature.distanceDisplayCondition).toEqual(
-            new DistanceDisplayCondition(0.1, 1.0e6)
-          );
-          expect(feature.heightOffset).toEqual(0.0);
-          expect(feature.anchorLineEnabled).toEqual(true);
-          expect(feature.anchorLineColor).toEqual(
-            new Color(1.0, 1.0, 0.0, 1.0)
-          );
-          expect(feature.disableDepthTestDistance).toEqual(1.0e6);
-          expect(feature.horizontalOrigin).toEqual(HorizontalOrigin.CENTER);
-          expect(feature.verticalOrigin).toEqual(VerticalOrigin.CENTER);
-          expect(feature.labelHorizontalOrigin).toEqual(HorizontalOrigin.RIGHT);
-          expect(feature.labelVerticalOrigin).toEqual(VerticalOrigin.BOTTOM);
-        }
-
-        let position;
-        for (i = 0; i < cartoPositions.length; ++i) {
-          position = ellipsoid.cartographicToCartesian(cartoPositions[i]);
+          let i;
+          for (i = 0; i < features.length; ++i) {
+            const feature = features[i];
+            expect(feature.show).toEqual(true);
+            expect(feature.pointSize).toEqual(10.0);
+            expect(feature.color).toEqual(new Color(1.0, 1.0, 0.0, 0.5));
+            expect(feature.pointOutlineColor).toEqual(
+              new Color(1.0, 1.0, 0.0, 1.0)
+            );
+            expect(feature.pointOutlineWidth).toEqual(11.0 * i);
+            expect(feature.labelColor).toEqual(new Color(1.0, 1.0, 0.0, 1.0));
+            expect(feature.labelOutlineColor).toEqual(
+              new Color(1.0, 1.0, 0.0, 0.5)
+            );
+            expect(feature.labelOutlineWidth).toEqual(1.0);
+            expect(feature.font).toEqual("30px sans-serif");
+            expect(feature.labelStyle).toEqual(LabelStyle.FILL_AND_OUTLINE);
+            expect(feature.labelText).toEqual("test");
+            expect(feature.backgroundColor).toEqual(
+              new Color(1.0, 1.0, 0.0, 0.2)
+            );
+            expect(feature.backgroundPadding).toEqual(new Cartesian2(10, 11));
+            expect(feature.backgroundEnabled).toEqual(true);
+            expect(feature.scaleByDistance).toEqual(
+              new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0)
+            );
+            expect(feature.translucencyByDistance).toEqual(
+              new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0)
+            );
+            expect(feature.distanceDisplayCondition).toEqual(
+              new DistanceDisplayCondition(0.1, 1.0e6)
+            );
+            expect(feature.heightOffset).toEqual(0.0);
+            expect(feature.anchorLineEnabled).toEqual(true);
+            expect(feature.anchorLineColor).toEqual(
+              new Color(1.0, 1.0, 0.0, 1.0)
+            );
+            expect(feature.disableDepthTestDistance).toEqual(1.0e6);
+            expect(feature.horizontalOrigin).toEqual(HorizontalOrigin.CENTER);
+            expect(feature.verticalOrigin).toEqual(VerticalOrigin.CENTER);
+            expect(feature.labelHorizontalOrigin).toEqual(
+              HorizontalOrigin.RIGHT
+            );
+            expect(feature.labelVerticalOrigin).toEqual(VerticalOrigin.BOTTOM);
+          }
+          // Look at first feature to load all primitives
+          const position = ellipsoid.cartographicToCartesian(cartoPositions[0]);
           scene.camera.lookAt(position, new Cartesian3(0.0, 0.0, 50.0));
-          expect(scene).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toBeGreaterThan(0);
-            expect(rgba[1]).toBeGreaterThan(0);
-            expect(rgba[2]).toEqual(0);
-            expect(rgba[3]).toEqual(255);
-          });
-        }
-      });
+          return allPrimitivesReady(points);
+        })
+        .then(function () {
+          let position;
+          for (let i = 0; i < cartoPositions.length; ++i) {
+            position = ellipsoid.cartographicToCartesian(cartoPositions[i]);
+            scene.camera.lookAt(position, new Cartesian3(0.0, 0.0, 50.0));
+            expect(scene).toRenderAndCall(function (rgba) {
+              expect(rgba[0]).toBeGreaterThan(0);
+              expect(rgba[1]).toBeGreaterThan(0);
+              expect(rgba[2]).toEqual(0);
+              expect(rgba[3]).toEqual(255);
+            });
+          }
+        });
     });
 
     it("renders a point with an image", function () {
@@ -471,38 +517,42 @@ describe(
       const style = new Cesium3DTileStyle({
         verticalOrigin: VerticalOrigin.BOTTOM,
       });
-      return loadPoints(points).then(function () {
-        const features = [];
-        points.createFeatures(mockTileset, features);
-        points.applyStyle(style, features);
-        points.applyDebugSettings(true, Color.YELLOW);
+      let position;
+      return loadPoints(points)
+        .then(function () {
+          const features = [];
+          points.createFeatures(mockTileset, features);
+          points.applyStyle(style, features);
+          points.applyDebugSettings(true, Color.YELLOW);
 
-        let i;
-        let position;
-        for (i = 0; i < cartoPositions.length; ++i) {
-          position = ellipsoid.cartographicToCartesian(cartoPositions[i]);
+          position = ellipsoid.cartographicToCartesian(cartoPositions[0]);
           scene.camera.lookAt(position, new Cartesian3(0.0, 0.0, 50.0));
-          expect(scene).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toBeGreaterThan(0);
-            expect(rgba[1]).toBeGreaterThan(0);
-            expect(rgba[2]).toEqual(0);
-            expect(rgba[3]).toEqual(255);
-          });
-        }
+          return allPrimitivesReady(points);
+        })
+        .then(function () {
+          for (let i = 0; i < cartoPositions.length; ++i) {
+            position = ellipsoid.cartographicToCartesian(cartoPositions[i]);
+            scene.camera.lookAt(position, new Cartesian3(0.0, 0.0, 50.0));
+            expect(scene).toRenderAndCall(function (rgba) {
+              expect(rgba[0]).toBeGreaterThan(0);
+              expect(rgba[1]).toBeGreaterThan(0);
+              expect(rgba[2]).toEqual(0);
+              expect(rgba[3]).toEqual(255);
+            });
+          }
 
-        points.applyDebugSettings(false);
-
-        for (i = 0; i < cartoPositions.length; ++i) {
-          position = ellipsoid.cartographicToCartesian(cartoPositions[i]);
-          scene.camera.lookAt(position, new Cartesian3(0.0, 0.0, 50.0));
-          expect(scene).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toBeGreaterThan(0);
-            expect(rgba[0]).toEqual(rgba[1]);
-            expect(rgba[0]).toEqual(rgba[2]);
-            expect(rgba[3]).toEqual(255);
-          });
-        }
-      });
+          points.applyDebugSettings(false);
+          for (let i = 0; i < cartoPositions.length; ++i) {
+            position = ellipsoid.cartographicToCartesian(cartoPositions[i]);
+            scene.camera.lookAt(position, new Cartesian3(0.0, 0.0, 50.0));
+            expect(scene).toRenderAndCall(function (rgba) {
+              expect(rgba[0]).toBeGreaterThan(0);
+              expect(rgba[0]).toEqual(rgba[1]);
+              expect(rgba[0]).toEqual(rgba[2]);
+              expect(rgba[3]).toEqual(255);
+            });
+          }
+        });
     });
 
     it("isDestroyed", function () {

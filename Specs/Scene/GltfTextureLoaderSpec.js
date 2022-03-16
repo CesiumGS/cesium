@@ -1,5 +1,6 @@
 import {
   clone,
+  defer,
   GltfImageLoader,
   GltfTextureLoader,
   GltfLoaderUtil,
@@ -9,7 +10,6 @@ import {
   SupportedImageFormats,
   Texture,
   TextureMinificationFilter,
-  when,
 } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import loaderProcess from "../loaderProcess.js";
@@ -236,7 +236,7 @@ describe(
     it("rejects promise if image fails to load", function () {
       const error = new Error("404 Not Found");
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        when.reject(error)
+        Promise.reject(error)
       );
 
       const textureLoader = new GltfTextureLoader({
@@ -254,7 +254,7 @@ describe(
         .then(function (textureLoader) {
           fail();
         })
-        .otherwise(function (runtimeError) {
+        .catch(function (runtimeError) {
           expect(runtimeError.message).toBe(
             "Failed to load texture\nFailed to load image: image.png\n404 Not Found"
           );
@@ -263,7 +263,7 @@ describe(
 
     it("loads texture", function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        when.resolve(image)
+        Promise.resolve(image)
       );
 
       // Simulate JobScheduler not being ready for a few frames
@@ -305,7 +305,7 @@ describe(
 
     it("creates texture synchronously", function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        when.resolve(image)
+        Promise.resolve(image)
       );
 
       const textureLoader = new GltfTextureLoader({
@@ -430,7 +430,7 @@ describe(
 
     it("generates mipmap if sampler requires it", function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        when.resolve(image)
+        Promise.resolve(image)
       );
 
       const generateMipmap = spyOn(
@@ -460,7 +460,7 @@ describe(
 
     it("generates power-of-two texture if sampler requires it", function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        when.resolve(imageNpot)
+        Promise.resolve(imageNpot)
       );
 
       const textureLoader = new GltfTextureLoader({
@@ -484,7 +484,7 @@ describe(
 
     it("does not generate power-of-two texture if sampler does not require it", function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        when.resolve(imageNpot)
+        Promise.resolve(imageNpot)
       );
 
       const textureLoader = new GltfTextureLoader({
@@ -508,7 +508,7 @@ describe(
 
     it("destroys texture loader", function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        when.resolve(image)
+        Promise.resolve(image)
       );
 
       const unloadImage = spyOn(
@@ -550,7 +550,7 @@ describe(
     });
 
     function resolveImageAfterDestroy(reject) {
-      const deferredPromise = when.defer();
+      const deferredPromise = defer();
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
         deferredPromise.promise
       );

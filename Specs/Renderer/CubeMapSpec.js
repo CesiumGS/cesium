@@ -13,7 +13,6 @@ import { TextureMagnificationFilter } from "../../Source/Cesium.js";
 import { TextureMinificationFilter } from "../../Source/Cesium.js";
 import { TextureWrap } from "../../Source/Cesium.js";
 import createContext from "../createContext.js";
-import { when } from "../../Source/Cesium.js";
 
 describe(
   "Renderer/CubeMap",
@@ -123,7 +122,7 @@ describe(
         )
       );
 
-      return when.all(promises);
+      return Promise.all(promises);
     });
 
     afterAll(function () {

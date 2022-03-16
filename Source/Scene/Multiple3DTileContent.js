@@ -1,3 +1,4 @@
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -6,7 +7,6 @@ import RequestScheduler from "../Core/RequestScheduler.js";
 import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import when from "../ThirdParty/when.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
 import findGroupMetadata from "./findGroupMetadata.js";
@@ -72,7 +72,7 @@ export default function Multiple3DTileContent(
 
   // undefined until the first time requests are scheduled
   this._contentsFetchedPromise = undefined;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 }
 
 Object.defineProperties(Multiple3DTileContent.prototype, {
@@ -342,7 +342,7 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
   // set up the deferred promise the first time requestInnerContent()
   // is called.
   if (!defined(this._contentsFetchedPromise)) {
-    this._contentsFetchedPromise = when.defer();
+    this._contentsFetchedPromise = defer();
   }
 
   createInnerContents(this);
@@ -417,7 +417,7 @@ function requestInnerContent(
       updatePendingRequests(multipleContents, -1);
       return arrayBuffer;
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       // Short circuit if another inner content was canceled.
       if (originalCancelCount < multipleContents._cancelCount) {
         return undefined;
@@ -436,8 +436,7 @@ function requestInnerContent(
 
 function createInnerContents(multipleContents) {
   const originalCancelCount = multipleContents._cancelCount;
-  when
-    .all(multipleContents._arrayFetchPromises)
+  Promise.all(multipleContents._arrayFetchPromises)
     .then(function (arrayBuffers) {
       if (originalCancelCount < multipleContents._cancelCount) {
         return undefined;
@@ -477,7 +476,7 @@ function createInnerContents(multipleContents) {
         multipleContents._contentsFetchedPromise.resolve();
       }
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (defined(multipleContents._contentsFetchedPromise)) {
         multipleContents._contentsFetchedPromise.reject(error);
       }
@@ -531,12 +530,11 @@ function awaitReadyPromises(multipleContents) {
     return content.readyPromise;
   });
 
-  when
-    .all(readyPromises)
+  Promise.all(readyPromises)
     .then(function () {
       multipleContents._readyPromise.resolve(multipleContents);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       multipleContents._readyPromise.reject(error);
     });
 }

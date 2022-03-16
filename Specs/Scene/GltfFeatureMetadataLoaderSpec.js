@@ -7,7 +7,6 @@ import {
   Resource,
   ResourceCache,
   SupportedImageFormats,
-  when,
 } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import loaderProcess from "../loaderProcess.js";
@@ -216,13 +215,13 @@ describe(
     });
 
     it("rejects promise if buffer view fails to load", function () {
-      const error = new Error("404 Not Found");
-      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.reject(error)
-      );
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
+        const error = new Error("404 Not Found");
+        return Promise.reject(error);
+      });
 
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        when.resolve(image)
+        Promise.resolve(image)
       );
 
       const featureMetadataLoader = new GltfFeatureMetadataLoader({
@@ -239,7 +238,7 @@ describe(
         .then(function (featureMetadataLoader) {
           fail();
         })
-        .otherwise(function (runtimeError) {
+        .catch(function (runtimeError) {
           expect(runtimeError.message).toBe(
             "Failed to load feature metadata\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
           );
@@ -248,13 +247,13 @@ describe(
 
     it("rejects promise if texture fails to load", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(buffer)
+        Promise.resolve(buffer)
       );
 
-      const error = new Error("404 Not Found");
-      spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        when.reject(error)
-      );
+      spyOn(Resource.prototype, "fetchImage").and.callFake(function () {
+        const error = new Error("404 Not Found");
+        return Promise.reject(error);
+      });
 
       const featureMetadataLoader = new GltfFeatureMetadataLoader({
         gltf: gltf,
@@ -270,7 +269,7 @@ describe(
         .then(function (featureMetadataLoader) {
           fail();
         })
-        .otherwise(function (runtimeError) {
+        .catch(function (runtimeError) {
           expect(runtimeError.message).toBe(
             "Failed to load feature metadata\nFailed to load texture\nFailed to load image: map.png\n404 Not Found"
           );
@@ -279,17 +278,17 @@ describe(
 
     it("rejects promise if external schema fails to load", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(buffer)
+        Promise.resolve(buffer)
       );
 
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        when.resolve(image)
+        Promise.resolve(image)
       );
 
-      const error = new Error("404 Not Found");
-      spyOn(Resource.prototype, "fetchJson").and.returnValue(
-        when.reject(error)
-      );
+      spyOn(Resource.prototype, "fetchJson").and.callFake(function () {
+        const error = new Error("404 Not Found");
+        return Promise.reject(error);
+      });
 
       const featureMetadataLoader = new GltfFeatureMetadataLoader({
         gltf: gltfSchemaUri,
@@ -305,7 +304,7 @@ describe(
         .then(function (featureMetadataLoader) {
           fail();
         })
-        .otherwise(function (runtimeError) {
+        .catch(function (runtimeError) {
           expect(runtimeError.message).toBe(
             "Failed to load feature metadata\nFailed to load schema: https://example.com/schema.json\n404 Not Found"
           );
@@ -314,11 +313,11 @@ describe(
 
     it("loads feature metadata", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(buffer)
+        Promise.resolve(buffer)
       );
 
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        when.resolve(image)
+        Promise.resolve(image)
       );
 
       const featureMetadataLoader = new GltfFeatureMetadataLoader({
@@ -380,15 +379,15 @@ describe(
 
     it("loads feature metadata with external schema", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(buffer)
+        Promise.resolve(buffer)
       );
 
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        when.resolve(image)
+        Promise.resolve(image)
       );
 
       spyOn(Resource.prototype, "fetchJson").and.returnValue(
-        when.resolve(schemaJson)
+        Promise.resolve(schemaJson)
       );
 
       const featureMetadataLoader = new GltfFeatureMetadataLoader({
@@ -416,15 +415,15 @@ describe(
 
     it("destroys feature metadata", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(buffer)
+        Promise.resolve(buffer)
       );
 
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        when.resolve(image)
+        Promise.resolve(image)
       );
 
       spyOn(Resource.prototype, "fetchJson").and.returnValue(
-        when.resolve(schemaJson)
+        Promise.resolve(schemaJson)
       );
 
       const destroyBufferView = spyOn(
@@ -469,18 +468,27 @@ describe(
       });
     });
 
-    function resolveAfterDestroy(reject) {
+    function resolveAfterDestroy(rejectPromise) {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(buffer)
+        Promise.resolve(buffer)
       );
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        when.resolve(image)
+        Promise.resolve(image)
       );
-      const deferredPromise = when.defer();
-      spyOn(Resource.prototype, "fetchJson").and.returnValue(
-        deferredPromise.promise
-      );
-
+      let promise = new Promise(function (resolve, reject) {
+        if (rejectPromise) {
+          const error = new Error("404 Not Found");
+          reject(error);
+          return;
+        }
+        resolve(schemaJson);
+      });
+      if (rejectPromise) {
+        promise = promise.catch(function (e) {
+          // handle that error we just threw
+        });
+      }
+      spyOn(Resource.prototype, "fetchJson").and.returnValue(promise);
       const destroyBufferView = spyOn(
         GltfBufferViewLoader.prototype,
         "destroy"
@@ -511,10 +519,14 @@ describe(
         resource: schemaResource,
       });
 
+      if (rejectPromise) {
+        schemaCopy.promise.catch(function () {});
+      }
+
       featureMetadataLoaderCopy.load();
 
       return waitForLoaderProcess(featureMetadataLoaderCopy, scene).then(
-        function (featureMetadataLoaderCopy) {
+        function () {
           // Ignore featureMetadataLoaderCopy destroying its buffer views
           destroyBufferView.calls.reset();
 
@@ -528,12 +540,6 @@ describe(
           expect(featureMetadataLoader.featureMetadata).not.toBeDefined();
           featureMetadataLoader.load();
           featureMetadataLoader.destroy();
-
-          if (reject) {
-            deferredPromise.reject(new Error());
-          } else {
-            deferredPromise.resolve(schemaJson);
-          }
 
           expect(featureMetadataLoader.featureMetadata).not.toBeDefined();
           expect(featureMetadataLoader.isDestroyed()).toBe(true);
@@ -550,11 +556,11 @@ describe(
     }
 
     it("handles resolving resources after destroy", function () {
-      resolveAfterDestroy(false);
+      return resolveAfterDestroy(false);
     });
 
     it("handles rejecting resources after destroy", function () {
-      resolveAfterDestroy(true);
+      return resolveAfterDestroy(true);
     });
   },
   "WebGL"
