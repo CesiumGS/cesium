@@ -225,7 +225,9 @@ describe(
       expect(primitive.geometryInstances).toBeDefined();
       scene.primitives.add(primitive);
       scene.renderForSpecs();
-      expect(primitive.geometryInstances).not.toBeDefined();
+      return primitive.readyPromise.then(function () {
+        expect(primitive.geometryInstances).not.toBeDefined();
+      });
     });
 
     it("does not release geometry instances when releaseGeometryInstances is false", function () {

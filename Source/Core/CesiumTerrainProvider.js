@@ -1,9 +1,9 @@
-import when from "../ThirdParty/when.js";
 import AttributeCompression from "./AttributeCompression.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
+import defer from "./defer.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Event from "./Event.js";
@@ -114,7 +114,7 @@ function CesiumTerrainProvider(options) {
 
   this._availability = undefined;
 
-  const deferred = when.defer();
+  const deferred = defer();
   this._ready = false;
   this._readyPromise = deferred;
   this._tileCredits = undefined;
@@ -128,7 +128,7 @@ function CesiumTerrainProvider(options) {
   let attribution = "";
   const overallAvailability = [];
   let overallMaxZoom = 0;
-  when(options.url)
+  Promise.resolve(options.url)
     .then(function (url) {
       const resource = Resource.createIfNeeded(url);
       resource.appendForwardSlash();
@@ -142,7 +142,7 @@ function CesiumTerrainProvider(options) {
 
       requestLayerJson();
     })
-    .otherwise(function (e) {
+    .catch(function (e) {
       deferred.reject(e);
     });
 
@@ -383,7 +383,7 @@ function CesiumTerrainProvider(options) {
         console.log(
           "A layer.json can't have a parentUrl if it does't have an available array."
         );
-        return when.resolve();
+        return Promise.resolve();
       }
       lastResource = lastResource.getDerivedResource({
         url: parentUrl,
@@ -393,10 +393,12 @@ function CesiumTerrainProvider(options) {
         url: "layer.json",
       });
       const parentMetadata = layerJsonResource.fetchJson();
-      return when(parentMetadata, parseMetadataSuccess, parseMetadataFailure);
+      return Promise.resolve(parentMetadata)
+        .then(parseMetadataSuccess)
+        .catch(parseMetadataFailure);
     }
 
-    return when.resolve();
+    return Promise.resolve();
   }
 
   function parseMetadataFailure(data) {
@@ -471,9 +473,9 @@ function CesiumTerrainProvider(options) {
   }
 
   function requestLayerJson() {
-    when(layerJsonResource.fetchJson())
+    Promise.resolve(layerJsonResource.fetchJson())
       .then(metadataSuccess)
-      .otherwise(metadataFailure);
+      .catch(metadataFailure);
   }
 }
 
@@ -844,7 +846,7 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
 
 function requestTileGeometry(provider, x, y, level, layerToUse, request) {
   if (!defined(layerToUse)) {
-    return when.reject(new RuntimeError("Terrain tile doesn't exist"));
+    return Promise.reject(new RuntimeError("Terrain tile doesn't exist"));
   }
 
   const urlTemplates = layerToUse.tileUrlTemplates;

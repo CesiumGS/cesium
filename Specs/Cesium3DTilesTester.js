@@ -187,7 +187,7 @@ Cesium3DTilesTester.rejectsReadyPromiseOnError = function (
     .then(function (content) {
       fail("should not resolve");
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       expect(error).toBeDefined();
     });
 };

@@ -1,9 +1,9 @@
 import {
+  defer,
   Resource,
   ResourceCache,
   ResourceLoaderState,
   MetadataSchemaLoader,
-  when,
 } from "../../Source/Cesium.js";
 
 describe("Scene/MetadataSchemaLoader", function () {
@@ -63,8 +63,10 @@ describe("Scene/MetadataSchemaLoader", function () {
   });
 
   it("rejects promise if schema cannot be fetched", function () {
-    const error = new Error("404 Not Found");
-    spyOn(Resource.prototype, "fetchJson").and.returnValue(when.reject(error));
+    spyOn(Resource.prototype, "fetchJson").and.callFake(function () {
+      const error = new Error("404 Not Found");
+      return Promise.reject(error);
+    });
 
     const schemaLoader = new MetadataSchemaLoader({
       resource: resource,
@@ -76,7 +78,7 @@ describe("Scene/MetadataSchemaLoader", function () {
       .then(function (schemaLoader) {
         fail();
       })
-      .otherwise(function (runtimeError) {
+      .catch(function (runtimeError) {
         expect(runtimeError.message).toBe(
           "Failed to load schema: https://example.com/schema.json\n404 Not Found"
         );
@@ -103,7 +105,7 @@ describe("Scene/MetadataSchemaLoader", function () {
 
   it("loads external schema", function () {
     const fetchJson = spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      when.resolve(schemaJson)
+      Promise.resolve(schemaJson)
     );
 
     const schemaLoader = new MetadataSchemaLoader({
@@ -128,7 +130,7 @@ describe("Scene/MetadataSchemaLoader", function () {
 
   it("destroys schema", function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      when.resolve(schemaJson)
+      Promise.resolve(schemaJson)
     );
 
     const schemaLoader = new MetadataSchemaLoader({
@@ -150,7 +152,7 @@ describe("Scene/MetadataSchemaLoader", function () {
   });
 
   function resolveJsonAfterDestroy(reject) {
-    const deferredPromise = when.defer();
+    const deferredPromise = defer();
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
       deferredPromise.promise
     );

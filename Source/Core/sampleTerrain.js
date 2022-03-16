@@ -1,4 +1,3 @@
-import when from "../ThirdParty/when.js";
 import Check from "./Check.js";
 
 /**
@@ -32,7 +31,7 @@ import Check from "./Check.js";
  *     Cesium.Cartographic.fromDegrees(87.0, 28.0)
  * ];
  * const promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
- * Cesium.when(promise, function(updatedPositions) {
+ * Promise.resolve(promise).then(function(updatedPositions) {
  *     // positions[0].height and positions[1].height have been updated.
  *     // updatedPositions is just a reference to positions.
  * });
@@ -90,11 +89,11 @@ function doSampling(terrainProvider, level, positions) {
     );
     const tilePromise = requestPromise
       .then(createInterpolateFunction(tileRequest))
-      .otherwise(createMarkFailedFunction(tileRequest));
+      .catch(createMarkFailedFunction(tileRequest));
     tilePromises.push(tilePromise);
   }
 
-  return when.all(tilePromises, function () {
+  return Promise.all(tilePromises).then(function () {
     return positions;
   });
 }
@@ -153,7 +152,7 @@ function createInterpolateFunction(tileRequest) {
 
     if (!isMeshRequired) {
       // all position heights were interpolated - we don't need the mesh
-      return when.resolve();
+      return Promise.resolve();
     }
 
     // create the mesh - and interpolate all the positions again

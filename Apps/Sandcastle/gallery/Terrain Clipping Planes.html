@@ -328,7 +328,7 @@
               );
               viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
             })
-            .otherwise(function (error) {
+            .catch(function (error) {
               throw error;
             });
         }

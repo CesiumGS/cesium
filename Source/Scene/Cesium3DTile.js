@@ -4,6 +4,7 @@ import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import CullingVolume from "../Core/CullingVolume.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -22,7 +23,6 @@ import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import when from "../ThirdParty/when.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
@@ -1097,8 +1097,8 @@ function requestMultipleContents(tile) {
   }
 
   tile._contentState = Cesium3DTileContentState.LOADING;
-  tile._contentReadyToProcessPromise = when.defer();
-  tile._contentReadyPromise = when.defer();
+  tile._contentReadyToProcessPromise = defer();
+  tile._contentReadyPromise = defer();
 
   multipleContents.contentsFetchedPromise
     .then(function () {
@@ -1138,7 +1138,7 @@ function requestMultipleContents(tile) {
         tile._contentReadyPromise.resolve(content);
       });
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       multipleContentFailed(tile, tileset, error);
     });
 
@@ -1188,8 +1188,8 @@ function requestSingleContent(tile) {
   const previousState = tile._contentState;
   const tileset = tile._tileset;
   tile._contentState = Cesium3DTileContentState.LOADING;
-  tile._contentReadyToProcessPromise = when.defer();
-  tile._contentReadyPromise = when.defer();
+  tile._contentReadyToProcessPromise = defer();
+  tile._contentReadyPromise = defer();
   ++tileset.statistics.numberOfPendingRequests;
 
   promise
@@ -1228,7 +1228,7 @@ function requestSingleContent(tile) {
         tile._contentReadyPromise.resolve(content);
       });
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (request.state === RequestState.CANCELLED) {
         // Cancelled due to low priority - try again later.
         tile._contentState = previousState;

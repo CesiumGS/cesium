@@ -1221,6 +1221,7 @@ describe("Core/Transforms", function () {
       Transforms.earthOrientationParameters = new EarthOrientationParameters(
         eopDescription
       );
+      Transforms.iau2006XysData = new Iau2006XysData();
       const preloadInterval = new TimeInterval({
         start: start,
         stop: stop,

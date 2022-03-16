@@ -1,6 +1,5 @@
 import {
   Cartesian3,
-  Cesium3DTileset,
   Cesium3DTileStyle,
   ClassificationType,
   Color,
@@ -331,16 +330,26 @@ describe(
       tileset.style = new Cesium3DTileStyle({
         show: "false",
       });
-      expectRender(scene, [255, 0, 0, 255]);
-      tileset.style = new Cesium3DTileStyle({
-        show: "true",
-      });
-      expectRender(scene, [255, 255, 255, 255]);
+      return tileset.style.readyPromise
+        .then(function () {
+          expectRender(scene, [255, 0, 0, 255]);
+          tileset.style = new Cesium3DTileStyle({
+            show: "true",
+          });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
+          expectRender(scene, [255, 255, 255, 255]);
 
-      tileset.style = new Cesium3DTileStyle({
-        color: "rgba(0, 0, 255, 1.0)",
-      });
-      expectRender(scene, [0, 0, 255, 255]);
+          tileset.style = new Cesium3DTileStyle({
+            color: "rgba(0, 0, 255, 1.0)",
+          });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
+          expectRender(scene, [0, 0, 255, 255]);
+          return tileset;
+        });
     }
 
     it("renders on 3D Tiles", function () {
@@ -348,17 +357,20 @@ describe(
       scene.primitives.add(tilesetPrimitive);
       return Cesium3DTilesTester.loadTileset(scene, geometryBoxes, {
         classificationType: ClassificationType.CESIUM_3D_TILE,
-      }).then(function (tileset) {
-        globePrimitive.show = false;
-        tilesetPrimitive.show = true;
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-        globePrimitive.show = true;
-        tilesetPrimitive.show = false;
-        expectRender(scene, depthColor);
-        globePrimitive.show = true;
-        tilesetPrimitive.show = true;
-      });
+      })
+        .then(function (tileset) {
+          globePrimitive.show = false;
+          tilesetPrimitive.show = true;
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+          globePrimitive.show = true;
+          tilesetPrimitive.show = false;
+          expectRender(scene, depthColor);
+          globePrimitive.show = true;
+          tilesetPrimitive.show = true;
+        });
     });
 
     it("renders on globe", function () {
@@ -366,17 +378,20 @@ describe(
       scene.primitives.add(tilesetPrimitive);
       return Cesium3DTilesTester.loadTileset(scene, geometryBoxes, {
         classificationType: ClassificationType.TERRAIN,
-      }).then(function (tileset) {
-        globePrimitive.show = false;
-        tilesetPrimitive.show = true;
-        expectRender(scene, depthColor);
-        globePrimitive.show = true;
-        tilesetPrimitive.show = false;
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-        globePrimitive.show = true;
-        tilesetPrimitive.show = true;
-      });
+      })
+        .then(function (tileset) {
+          globePrimitive.show = false;
+          tilesetPrimitive.show = true;
+          expectRender(scene, depthColor);
+          globePrimitive.show = true;
+          tilesetPrimitive.show = false;
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+          globePrimitive.show = true;
+          tilesetPrimitive.show = true;
+        });
     });
 
     it("renders on 3D Tiles and globe", function () {
@@ -384,28 +399,34 @@ describe(
       scene.primitives.add(tilesetPrimitive);
       return Cesium3DTilesTester.loadTileset(scene, geometryBoxes, {
         classificationType: ClassificationType.BOTH,
-      }).then(function (tileset) {
-        globePrimitive.show = false;
-        tilesetPrimitive.show = true;
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-        globePrimitive.show = true;
-        tilesetPrimitive.show = false;
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-        globePrimitive.show = true;
-        tilesetPrimitive.show = true;
-      });
+      })
+        .then(function (tileset) {
+          globePrimitive.show = false;
+          tilesetPrimitive.show = true;
+          return verifyRender(tileset, scene);
+        })
+        .then(function (tileset) {
+          verifyPick(scene);
+          globePrimitive.show = true;
+          tilesetPrimitive.show = false;
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+          globePrimitive.show = true;
+          tilesetPrimitive.show = true;
+        });
     });
 
     it("renders boxes", function () {
       scene.primitives.add(globePrimitive);
-      return Cesium3DTilesTester.loadTileset(scene, geometryBoxes).then(
-        function (tileset) {
-          verifyRender(tileset, scene);
+      return Cesium3DTilesTester.loadTileset(scene, geometryBoxes)
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
           verifyPick(scene);
-        }
-      );
+        });
     });
 
     it("renders batched boxes", function () {
@@ -413,21 +434,24 @@ describe(
       return Cesium3DTilesTester.loadTileset(
         scene,
         geometryBoxesBatchedChildren
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      )
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders boxes with a batch table", function () {
       scene.primitives.add(globePrimitive);
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        geometryBoxesWithBatchTable
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      return Cesium3DTilesTester.loadTileset(scene, geometryBoxesWithBatchTable)
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders batched boxes with a batch table", function () {
@@ -435,31 +459,35 @@ describe(
       return Cesium3DTilesTester.loadTileset(
         scene,
         geometryBoxesBatchedChildrenWithBatchTable
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      )
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders boxes with batch ids", function () {
       scene.primitives.add(globePrimitive);
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        geometryBoxesWithBatchIds
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      return Cesium3DTilesTester.loadTileset(scene, geometryBoxesWithBatchIds)
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders cylinders", function () {
       scene.primitives.add(globePrimitive);
-      return Cesium3DTilesTester.loadTileset(scene, geometryCylinders).then(
-        function (tileset) {
-          verifyRender(tileset, scene);
+      return Cesium3DTilesTester.loadTileset(scene, geometryCylinders)
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
           verifyPick(scene);
-        }
-      );
+        });
     });
 
     it("renders batched cylinders", function () {
@@ -467,10 +495,13 @@ describe(
       return Cesium3DTilesTester.loadTileset(
         scene,
         geometryCylindersBatchedChildren
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      )
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders cylinders with a batch table", function () {
@@ -478,10 +509,13 @@ describe(
       return Cesium3DTilesTester.loadTileset(
         scene,
         geometryCylindersWithBatchTable
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      )
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders batched cylinders with a batch table", function () {
@@ -489,10 +523,13 @@ describe(
       return Cesium3DTilesTester.loadTileset(
         scene,
         geometryCylindersBatchedChildrenWithBatchTable
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      )
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders cylinders with batch ids", function () {
@@ -500,20 +537,24 @@ describe(
       return Cesium3DTilesTester.loadTileset(
         scene,
         geometryCylindersWithBatchIds
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      )
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders ellipsoids", function () {
       scene.primitives.add(globePrimitive);
-      return Cesium3DTilesTester.loadTileset(scene, geometryEllipsoids).then(
-        function (tileset) {
-          verifyRender(tileset, scene);
+      return Cesium3DTilesTester.loadTileset(scene, geometryEllipsoids)
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
           verifyPick(scene);
-        }
-      );
+        });
     });
 
     it("renders batched ellipsoids", function () {
@@ -521,10 +562,13 @@ describe(
       return Cesium3DTilesTester.loadTileset(
         scene,
         geometryEllipsoidsBatchedChildren
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      )
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders ellipsoids with a batch table", function () {
@@ -532,10 +576,13 @@ describe(
       return Cesium3DTilesTester.loadTileset(
         scene,
         geometryEllipsoidsWithBatchTable
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      )
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders batched ellipsoids with a batch table", function () {
@@ -543,10 +590,13 @@ describe(
       return Cesium3DTilesTester.loadTileset(
         scene,
         geometryEllipsoidsBatchedChildrenWithBatchTable
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      )
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders ellipsoids with batch ids", function () {
@@ -554,20 +604,24 @@ describe(
       return Cesium3DTilesTester.loadTileset(
         scene,
         geometryEllipsoidsWithBatchIds
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      )
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders spheres", function () {
       scene.primitives.add(globePrimitive);
-      return Cesium3DTilesTester.loadTileset(scene, geometrySpheres).then(
-        function (tileset) {
-          verifyRender(tileset, scene);
+      return Cesium3DTilesTester.loadTileset(scene, geometrySpheres)
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
           verifyPick(scene);
-        }
-      );
+        });
     });
 
     it("renders batched spheres", function () {
@@ -575,10 +629,13 @@ describe(
       return Cesium3DTilesTester.loadTileset(
         scene,
         geometrySpheresBatchedChildren
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      )
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders spheres with a batch table", function () {
@@ -586,10 +643,13 @@ describe(
       return Cesium3DTilesTester.loadTileset(
         scene,
         geometrySpheresWithBatchTable
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      )
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders batched spheres with a batch table", function () {
@@ -597,53 +657,57 @@ describe(
       return Cesium3DTilesTester.loadTileset(
         scene,
         geometrySpheresBatchedChildrenWithBatchTable
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      )
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders spheres with batch ids", function () {
       scene.primitives.add(globePrimitive);
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        geometrySpheresWithBatchIds
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      return Cesium3DTilesTester.loadTileset(scene, geometrySpheresWithBatchIds)
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders all geometries", function () {
       scene.primitives.add(globePrimitive);
-      return Cesium3DTilesTester.loadTileset(scene, geometryAll).then(function (
-        tileset
-      ) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      return Cesium3DTilesTester.loadTileset(scene, geometryAll)
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders batched all geometries", function () {
       scene.primitives.add(globePrimitive);
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        geometryAllBatchedChildren
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      return Cesium3DTilesTester.loadTileset(scene, geometryAllBatchedChildren)
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders all geometries with a batch table", function () {
       scene.primitives.add(globePrimitive);
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        geometryAllWithBatchTable
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      return Cesium3DTilesTester.loadTileset(scene, geometryAllWithBatchTable)
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders batched all geometries with a batch table", function () {
@@ -651,21 +715,24 @@ describe(
       return Cesium3DTilesTester.loadTileset(
         scene,
         geometryAllBatchedChildrenWithBatchTable
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      )
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders all geometries with batch ids", function () {
       scene.primitives.add(globePrimitive);
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        geometryAllWithBatchIds
-      ).then(function (tileset) {
-        verifyRender(tileset, scene);
-        verifyPick(scene);
-      });
+      return Cesium3DTilesTester.loadTileset(scene, geometryAllWithBatchIds)
+        .then(function (tileset) {
+          return verifyRender(tileset, scene);
+        })
+        .then(function () {
+          verifyPick(scene);
+        });
     });
 
     it("renders all geometries with debug color", function () {
@@ -793,12 +860,14 @@ describe(
     });
 
     it("destroys", function () {
-      const tileset = new Cesium3DTileset({
-        url: geometryBoxesWithBatchTable,
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        geometryBoxesWithBatchTable
+      ).then(function (tileset) {
+        expect(tileset.isDestroyed()).toEqual(false);
+        scene.primitives.remove(tileset);
+        expect(tileset.isDestroyed()).toEqual(true);
       });
-      expect(tileset.isDestroyed()).toEqual(false);
-      tileset.destroy();
-      expect(tileset.isDestroyed()).toEqual(true);
     });
 
     describe("metadata", function () {

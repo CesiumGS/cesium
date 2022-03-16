@@ -1,7 +1,7 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
-import when from "../ThirdParty/when.js";
 import DracoLoader from "./DracoLoader.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
@@ -54,7 +54,7 @@ export default function GltfDracoLoader(options) {
   this._decodePromise = undefined;
   this._decodedData = undefined;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = when.defer();
+  this._promise = defer();
 }
 
 if (defined(Object.create)) {
@@ -134,7 +134,7 @@ GltfDracoLoader.prototype.load = function () {
       that._bufferViewTypedArray = bufferViewLoader.typedArray;
       that._state = ResourceLoaderState.PROCESSING;
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (that.isDestroyed()) {
         return;
       }
@@ -211,7 +211,7 @@ GltfDracoLoader.prototype.process = function (frameState) {
       that._state = ResourceLoaderState.READY;
       that._promise.resolve(that);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (that.isDestroyed()) {
         return;
       }

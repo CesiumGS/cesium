@@ -7,7 +7,6 @@ import {
   MetadataSchema,
   Resource,
   ResourceCache,
-  when,
 } from "../../Source/Cesium.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
 import MetadataTester from "../MetadataTester.js";
@@ -97,7 +96,7 @@ describe("Scene/ImplicitSubtree", function () {
         typedArray: arrayBuffer,
       };
       options.resourceLoader._promise = {
-        promise: when.resolve(fakeCacheResource),
+        promise: Promise.resolve(fakeCacheResource),
       };
     };
   }
@@ -669,7 +668,7 @@ describe("Scene/ImplicitSubtree", function () {
     const fetchExternal = spyOn(
       Resource.prototype,
       "fetchArrayBuffer"
-    ).and.returnValue(when.resolve(results.externalBuffer));
+    ).and.returnValue(Promise.resolve(results.externalBuffer));
     const subtree = new ImplicitSubtree(
       subtreeResource,
       undefined,
@@ -908,35 +907,37 @@ describe("Scene/ImplicitSubtree", function () {
       x: 0,
       y: 0,
     });
-    const indexFull = subtree.getTileIndex(implicitCoordinatesFull);
-    expect(indexFull).toBe(1);
-    expect(subtree.tileIsAvailableAtIndex(indexFull)).toEqual(true);
-    expect(
-      subtree.tileIsAvailableAtCoordinates(implicitCoordinatesFull)
-    ).toEqual(true);
-    expect(subtree.contentIsAvailableAtIndex(indexFull)).toEqual(true);
-    expect(
-      subtree.contentIsAvailableAtCoordinates(implicitCoordinatesFull)
-    ).toEqual(true);
+    return subtree.readyPromise.then(function () {
+      const indexFull = subtree.getTileIndex(implicitCoordinatesFull);
+      expect(indexFull).toBe(1);
+      expect(subtree.tileIsAvailableAtIndex(indexFull)).toEqual(true);
+      expect(
+        subtree.tileIsAvailableAtCoordinates(implicitCoordinatesFull)
+      ).toEqual(true);
+      expect(subtree.contentIsAvailableAtIndex(indexFull)).toEqual(true);
+      expect(
+        subtree.contentIsAvailableAtCoordinates(implicitCoordinatesFull)
+      ).toEqual(true);
 
-    // level offset: 1, morton index: 3, so tile index is 1 + 3 = 4
-    const implicitCoordinatesEmpty = new ImplicitTileCoordinates({
-      subdivisionScheme: implicitQuadtree.subdivisionScheme,
-      subtreeLevels: implicitQuadtree.subtreeLevels,
-      level: 1,
-      x: 1,
-      y: 1,
+      // level offset: 1, morton index: 3, so tile index is 1 + 3 = 4
+      const implicitCoordinatesEmpty = new ImplicitTileCoordinates({
+        subdivisionScheme: implicitQuadtree.subdivisionScheme,
+        subtreeLevels: implicitQuadtree.subtreeLevels,
+        level: 1,
+        x: 1,
+        y: 1,
+      });
+      const indexEmpty = subtree.getTileIndex(implicitCoordinatesEmpty);
+      expect(indexEmpty).toBe(4);
+      expect(subtree.tileIsAvailableAtIndex(indexEmpty)).toEqual(false);
+      expect(
+        subtree.tileIsAvailableAtCoordinates(implicitCoordinatesEmpty)
+      ).toEqual(false);
+      expect(subtree.contentIsAvailableAtIndex(indexEmpty)).toEqual(false);
+      expect(
+        subtree.contentIsAvailableAtCoordinates(implicitCoordinatesEmpty)
+      ).toEqual(false);
     });
-    const indexEmpty = subtree.getTileIndex(implicitCoordinatesEmpty);
-    expect(indexEmpty).toBe(4);
-    expect(subtree.tileIsAvailableAtIndex(indexEmpty)).toEqual(false);
-    expect(
-      subtree.tileIsAvailableAtCoordinates(implicitCoordinatesEmpty)
-    ).toEqual(false);
-    expect(subtree.contentIsAvailableAtIndex(indexEmpty)).toEqual(false);
-    expect(
-      subtree.contentIsAvailableAtCoordinates(implicitCoordinatesEmpty)
-    ).toEqual(false);
   });
 
   it("getChildSubtreeIndex throws for a tile not in the child subtrees", function () {
@@ -1045,29 +1046,31 @@ describe("Scene/ImplicitSubtree", function () {
       y: 0,
     });
 
-    // morton index is 0, so child subtree index is 0
-    const indexFull = subtree.getChildSubtreeIndex(implicitCoordinatesFull);
-    expect(indexFull).toBe(0);
-    expect(subtree.childSubtreeIsAvailableAtIndex(indexFull)).toEqual(true);
-    expect(
-      subtree.childSubtreeIsAvailableAtCoordinates(implicitCoordinatesFull)
-    ).toEqual(true);
+    return subtree.readyPromise.then(function () {
+      // morton index is 0, so child subtree index is 0
+      const indexFull = subtree.getChildSubtreeIndex(implicitCoordinatesFull);
+      expect(indexFull).toBe(0);
+      expect(subtree.childSubtreeIsAvailableAtIndex(indexFull)).toEqual(true);
+      expect(
+        subtree.childSubtreeIsAvailableAtCoordinates(implicitCoordinatesFull)
+      ).toEqual(true);
 
-    const implicitCoordinatesEmpty = new ImplicitTileCoordinates({
-      subdivisionScheme: implicitQuadtree.subdivisionScheme,
-      subtreeLevels: implicitQuadtree.subtreeLevels,
-      level: 2,
-      x: 1,
-      y: 1,
+      const implicitCoordinatesEmpty = new ImplicitTileCoordinates({
+        subdivisionScheme: implicitQuadtree.subdivisionScheme,
+        subtreeLevels: implicitQuadtree.subtreeLevels,
+        level: 2,
+        x: 1,
+        y: 1,
+      });
+
+      // morton index is 3, so child subtree index is 3
+      const indexEmpty = subtree.getChildSubtreeIndex(implicitCoordinatesEmpty);
+      expect(indexEmpty).toBe(3);
+      expect(subtree.childSubtreeIsAvailableAtIndex(indexEmpty)).toEqual(false);
+      expect(
+        subtree.childSubtreeIsAvailableAtCoordinates(implicitCoordinatesEmpty)
+      ).toEqual(false);
     });
-
-    // morton index is 3, so child subtree index is 3
-    const indexEmpty = subtree.getChildSubtreeIndex(implicitCoordinatesEmpty);
-    expect(indexEmpty).toBe(3);
-    expect(subtree.childSubtreeIsAvailableAtIndex(indexEmpty)).toEqual(false);
-    expect(
-      subtree.childSubtreeIsAvailableAtCoordinates(implicitCoordinatesEmpty)
-    ).toEqual(false);
   });
 
   it("computes parent Morton index", function () {
@@ -1198,7 +1201,9 @@ describe("Scene/ImplicitSubtree", function () {
 
   it("rejects ready promise on error", function () {
     const error = new Error("simulated error");
-    spyOn(when, "all").and.returnValue(when.reject(error));
+    spyOn(Promise, "all").and.callFake(function () {
+      return Promise.reject(error);
+    });
     const subtreeDescription = {
       tileAvailability: {
         descriptor: 1,
@@ -1233,7 +1238,7 @@ describe("Scene/ImplicitSubtree", function () {
       .then(function () {
         fail();
       })
-      .otherwise(function (error) {
+      .catch(function (error) {
         expect(error).toEqual(error);
       });
   });

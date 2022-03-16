@@ -9,7 +9,6 @@ import createCanvas from "../createCanvas.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 import ViewportPrimitive from "../ViewportPrimitive.js";
-import { when } from "../../Source/Cesium.js";
 
 describe(
   "Scene/PostProcessStageLibrary",
@@ -70,8 +69,8 @@ describe(
         .then(function () {
           return model;
         })
-        .otherwise(function () {
-          return when.reject(model);
+        .catch(function () {
+          return Promise.reject(model);
         });
     }
 

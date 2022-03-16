@@ -1,14 +1,18 @@
-import { DefaultProxy } from "../../Source/Cesium.js";
-import { defaultValue } from "../../Source/Cesium.js";
-import { queryToObject } from "../../Source/Cesium.js";
-import { Request } from "../../Source/Cesium.js";
-import { RequestErrorEvent } from "../../Source/Cesium.js";
-import { RequestScheduler } from "../../Source/Cesium.js";
-import { Resource } from "../../Source/Cesium.js";
+import {
+  DefaultProxy,
+  defaultValue,
+  defer,
+  defined,
+  queryToObject,
+  Request,
+  RequestErrorEvent,
+  RequestScheduler,
+  Resource,
+  Uri,
+} from "../../Source/Cesium.js";
 import createCanvas from "../createCanvas.js";
-import { Uri } from "../../Source/Cesium.js";
-import { when } from "../../Source/Cesium.js";
 import dataUriToBuffer from "../dataUriToBuffer.js";
+import pollToPromise from "../pollToPromise.js";
 
 describe("Core/Resource", function () {
   const dataUri =
@@ -109,6 +113,7 @@ describe("Core/Resource", function () {
     expect(promise).toBeUndefined();
 
     RequestScheduler.maximumRequests = oldMaximumRequests;
+    return promise;
   });
 
   it("appendForwardSlash appends a /", function () {
@@ -588,12 +593,16 @@ describe("Core/Resource", function () {
       retryAttempts: 3,
     });
 
-    const promises = [];
-    for (let i = 0; i < 6; ++i) {
-      promises.push(resource.retryOnError());
+    let promise = resource.retryOnError();
+    const promises = [promise];
+    for (let i = 1; i < 6; ++i) {
+      promise = promise.then(function (result) {
+        return resource.retryOnError();
+      });
+      promises.push(promise);
     }
 
-    when.all(promises).then(function (result) {
+    return Promise.all(promises).then(function (result) {
       expect(result).toEqual([true, true, true, false, false, false]);
       expect(cb.calls.count()).toEqual(3);
       expect(resource._retryCount).toEqual(3);
@@ -613,12 +622,16 @@ describe("Core/Resource", function () {
       retryAttempts: 4,
     });
 
-    const promises = [];
-    for (let i = 0; i < 6; ++i) {
-      promises.push(resource.retryOnError());
+    let promise = resource.retryOnError();
+    const promises = [promise];
+    for (let i = 1; i < 6; ++i) {
+      promise = promise.then(function (result) {
+        return resource.retryOnError();
+      });
+      promises.push(promise);
     }
 
-    when.all(promises).then(function (result) {
+    return Promise.all(promises).then(function (result) {
       expect(result).toEqual([false, true, false, true, false, false]);
       expect(cb.calls.count()).toEqual(4);
       expect(resource._retryCount).toEqual(4);
@@ -934,7 +947,7 @@ describe("Core/Resource", function () {
 
   it("static fetchArrayBuffer calls correct method", function () {
     const url = "http://test.com/data";
-    const expectedResult = when.resolve();
+    const expectedResult = Promise.resolve();
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       expectedResult
     );
@@ -947,7 +960,7 @@ describe("Core/Resource", function () {
 
   it("fetchArrayBuffer calls fetch with expected parameters", function () {
     const url = "http://test.com/data";
-    const expectedResult = when.resolve();
+    const expectedResult = Promise.resolve();
     spyOn(Resource.prototype, "fetch").and.returnValue(expectedResult);
     const result = Resource.fetchArrayBuffer(url);
     expect(result).toBe(expectedResult);
@@ -960,7 +973,7 @@ describe("Core/Resource", function () {
 
   it("static fetchBlob calls correct method", function () {
     const url = "http://test.com/data";
-    spyOn(Resource.prototype, "fetchBlob").and.returnValue(when.resolve());
+    spyOn(Resource.prototype, "fetchBlob").and.returnValue(Promise.resolve());
     return Resource.fetchBlob(url).then(function () {
       expect(Resource.prototype.fetchBlob).toHaveBeenCalled();
     });
@@ -968,7 +981,7 @@ describe("Core/Resource", function () {
 
   it("fetchBlob calls fetch with expected parameters", function () {
     const url = "http://test.com/data";
-    const expectedResult = when.resolve();
+    const expectedResult = Promise.resolve();
     spyOn(Resource.prototype, "fetch").and.returnValue(expectedResult);
     const result = Resource.fetchBlob(url);
     expect(result).toBe(expectedResult);
@@ -981,7 +994,7 @@ describe("Core/Resource", function () {
 
   it("fetchArrayBuffer calls fetch with expected parameters", function () {
     const url = "http://test.com/data";
-    const expectedResult = when.resolve();
+    const expectedResult = Promise.resolve();
     spyOn(Resource.prototype, "fetch").and.returnValue(expectedResult);
     const result = Resource.fetchArrayBuffer(url);
     expect(result).toBe(expectedResult);
@@ -994,7 +1007,7 @@ describe("Core/Resource", function () {
 
   it("static fetchImage calls correct method", function () {
     const url = "http://test.com/data";
-    spyOn(Resource.prototype, "fetchImage").and.returnValue(when.resolve());
+    spyOn(Resource.prototype, "fetchImage").and.returnValue(Promise.resolve());
     return Resource.fetchImage(url).then(function () {
       expect(Resource.prototype.fetchImage).toHaveBeenCalled();
     });
@@ -1002,7 +1015,7 @@ describe("Core/Resource", function () {
 
   it("static fetchText calls correct method", function () {
     const url = "http://test.com/data";
-    spyOn(Resource.prototype, "fetchText").and.returnValue(when.resolve());
+    spyOn(Resource.prototype, "fetchText").and.returnValue(Promise.resolve());
     return Resource.fetchText(url).then(function () {
       expect(Resource.prototype.fetchText).toHaveBeenCalled();
     });
@@ -1010,7 +1023,7 @@ describe("Core/Resource", function () {
 
   it("fetchText calls fetch with expected parameters", function () {
     const url = "http://test.com/data";
-    const expectedResult = when.resolve();
+    const expectedResult = Promise.resolve();
     spyOn(Resource.prototype, "fetch").and.returnValue(expectedResult);
     const result = Resource.fetchText(url);
     expect(result).toBe(expectedResult);
@@ -1023,7 +1036,7 @@ describe("Core/Resource", function () {
 
   it("static fetchJson calls correct method", function () {
     const url = "http://test.com/data";
-    spyOn(Resource.prototype, "fetchJson").and.returnValue(when.resolve());
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(Promise.resolve());
     return Resource.fetchJson(url).then(function () {
       expect(Resource.prototype.fetchJson).toHaveBeenCalled();
     });
@@ -1032,7 +1045,7 @@ describe("Core/Resource", function () {
   it("fetchJson calls fetch with expected parameters and parses result", function () {
     const expectedResult = { x: 123 };
     spyOn(Resource.prototype, "fetch").and.returnValue(
-      when.resolve(JSON.stringify(expectedResult))
+      Promise.resolve(JSON.stringify(expectedResult))
     );
     return Resource.fetchJson("url").then(function (result) {
       expect(result).toEqual(expectedResult);
@@ -1047,7 +1060,7 @@ describe("Core/Resource", function () {
 
   it("static fetchXML calls correct method", function () {
     const url = "http://test.com/data";
-    spyOn(Resource.prototype, "fetchXML").and.returnValue(when.resolve());
+    spyOn(Resource.prototype, "fetchXML").and.returnValue(Promise.resolve());
     return Resource.fetchXML(url).then(function () {
       expect(Resource.prototype.fetchXML).toHaveBeenCalled();
     });
@@ -1055,7 +1068,7 @@ describe("Core/Resource", function () {
 
   it("fetchXML calls fetch with expected parameters", function () {
     const url = "http://test.com/data";
-    const expectedResult = when.resolve();
+    const expectedResult = Promise.resolve();
     spyOn(Resource.prototype, "fetch").and.returnValue(expectedResult);
     const result = Resource.fetchXML(url);
     expect(result).toBe(expectedResult);
@@ -1069,7 +1082,7 @@ describe("Core/Resource", function () {
 
   it("static fetchJsonp calls correct method", function () {
     const url = "http://test.com/data";
-    spyOn(Resource.prototype, "fetchJsonp").and.returnValue(when.resolve());
+    spyOn(Resource.prototype, "fetchJsonp").and.returnValue(Promise.resolve());
     return Resource.fetchJsonp(url).then(function () {
       expect(Resource.prototype.fetchJsonp).toHaveBeenCalled();
     });
@@ -1077,7 +1090,7 @@ describe("Core/Resource", function () {
 
   it("static fetch calls correct method", function () {
     const url = "http://test.com/data";
-    spyOn(Resource.prototype, "fetch").and.returnValue(when.resolve());
+    spyOn(Resource.prototype, "fetch").and.returnValue(Promise.resolve());
     return Resource.fetch(url).then(function () {
       expect(Resource.prototype.fetch).toHaveBeenCalled();
     });
@@ -1111,7 +1124,7 @@ describe("Core/Resource", function () {
 
   it("static delete calls correct method", function () {
     const url = "http://test.com/data";
-    spyOn(Resource.prototype, "delete").and.returnValue(when.resolve());
+    spyOn(Resource.prototype, "delete").and.returnValue(Promise.resolve());
     return Resource.delete(url).then(function () {
       expect(Resource.prototype.delete).toHaveBeenCalled();
     });
@@ -1145,7 +1158,7 @@ describe("Core/Resource", function () {
 
   it("static head calls correct method", function () {
     const url = "http://test.com/data";
-    spyOn(Resource.prototype, "head").and.returnValue(when.resolve({}));
+    spyOn(Resource.prototype, "head").and.returnValue(Promise.resolve({}));
     return Resource.head(url).then(function () {
       expect(Resource.prototype.head).toHaveBeenCalled();
     });
@@ -1230,7 +1243,7 @@ describe("Core/Resource", function () {
 
   it("static options calls correct method", function () {
     const url = "http://test.com/data";
-    spyOn(Resource.prototype, "options").and.returnValue(when.resolve({}));
+    spyOn(Resource.prototype, "options").and.returnValue(Promise.resolve({}));
     return Resource.options(url).then(function () {
       expect(Resource.prototype.options).toHaveBeenCalled();
     });
@@ -1487,7 +1500,7 @@ describe("Core/Resource", function () {
       }
 
       spyOn(Resource, "supportsImageBitmapOptions").and.returnValue(
-        when.resolve(false)
+        Promise.resolve(false)
       );
       spyOn(window, "createImageBitmap").and.callThrough();
 
@@ -1511,7 +1524,7 @@ describe("Core/Resource", function () {
         .then(function () {
           fail("expected promise to reject");
         })
-        .otherwise(function (error) {
+        .catch(function (error) {
           expect(error).toBeInstanceOf(RequestErrorEvent);
         });
     });
@@ -1523,7 +1536,7 @@ describe("Core/Resource", function () {
 
       // Force the fetching of a bad blob that is not an image to trigger the error
       spyOn(Resource.prototype, "fetch").and.returnValue(
-        when.resolve(new Blob([new Uint8Array([])], { type: "text/plain" }))
+        Promise.resolve(new Blob([new Uint8Array([])], { type: "text/plain" }))
       );
 
       return Resource.fetchImage({
@@ -1534,7 +1547,7 @@ describe("Core/Resource", function () {
         .then(function () {
           fail("expected promise to reject");
         })
-        .otherwise(function (error) {
+        .catch(function (error) {
           expect(error.blob).toBeInstanceOf(Blob);
         });
     });
@@ -1546,7 +1559,7 @@ describe("Core/Resource", function () {
       // specific functionality of this code path. For example, the crossOrigin
       // restriction does not apply to images loaded with ImageBitmap.
       spyOn(Resource, "supportsImageBitmapOptions").and.returnValue(
-        when.resolve(false)
+        Promise.resolve(false)
       );
     });
 
@@ -1561,93 +1574,138 @@ describe("Core/Resource", function () {
 
     it("sets the crossOrigin property for cross-origin images", function () {
       const fakeImage = {};
-      const imageConstructorSpy = spyOn(window, "Image").and.returnValue(
-        fakeImage
+      const deferred = defer();
+      const imageConstructorSpy = spyOn(window, "Image").and.callFake(
+        function () {
+          deferred.resolve();
+          return fakeImage;
+        }
       );
 
-      Resource.fetchImage("http://example.invalid/someImage.png");
-      expect(imageConstructorSpy).toHaveBeenCalled();
-      expect(fakeImage.crossOrigin).toEqual("");
+      // mock image loading so that the promise resolves
+      deferred.promise.then(function () {
+        fakeImage.onload();
+      });
+
+      return Resource.fetchImage("http://example.invalid/someImage.png").then(
+        function () {
+          expect(imageConstructorSpy).toHaveBeenCalled();
+          expect(fakeImage.crossOrigin).toEqual("");
+        }
+      );
     });
 
     it("does not set the crossOrigin property for non-cross-origin images", function () {
       const fakeImage = {};
-      const imageConstructorSpy = spyOn(window, "Image").and.returnValue(
-        fakeImage
+      const deferred = defer();
+      const imageConstructorSpy = spyOn(window, "Image").and.callFake(
+        function () {
+          deferred.resolve();
+          return fakeImage;
+        }
       );
 
-      Resource.fetchImage("./someImage.png");
-      expect(imageConstructorSpy).toHaveBeenCalled();
-      expect(fakeImage.crossOrigin).toBeUndefined();
+      // mock image loading so that the promise resolves
+      deferred.promise.then(function () {
+        fakeImage.onload();
+      });
+
+      return Resource.fetchImage("./someImage.png").then(function () {
+        expect(imageConstructorSpy).toHaveBeenCalled();
+        expect(fakeImage.crossOrigin).toBeUndefined();
+      });
     });
 
     it("does not set the crossOrigin property for data URIs", function () {
       const fakeImage = {};
-      const imageConstructorSpy = spyOn(window, "Image").and.returnValue(
-        fakeImage
+      const deferred = defer();
+      const imageConstructorSpy = spyOn(window, "Image").and.callFake(
+        function () {
+          deferred.resolve();
+          return fakeImage;
+        }
       );
 
-      Resource.fetchImage(dataUri);
-      expect(imageConstructorSpy).toHaveBeenCalled();
-      expect(fakeImage.crossOrigin).toBeUndefined();
+      // mock image loading so that the promise resolves
+      deferred.promise.then(function () {
+        fakeImage.onload();
+      });
+
+      return Resource.fetchImage(dataUri).then(function () {
+        expect(imageConstructorSpy).toHaveBeenCalled();
+        expect(fakeImage.crossOrigin).toBeUndefined();
+      });
     });
 
     it("resolves the promise when the image loads", function () {
       const fakeImage = {};
-      spyOn(window, "Image").and.returnValue(fakeImage);
+      const deferred = defer();
+      spyOn(window, "Image").and.callFake(function () {
+        deferred.resolve();
+        return fakeImage;
+      });
 
       let success = false;
       let failure = false;
       let loadedImage;
 
-      when(
-        Resource.fetchImage(dataUri),
-        function (image) {
+      deferred.promise.then(function () {
+        // neither callback has fired yet
+        expect(success).toEqual(false);
+        expect(failure).toEqual(false);
+
+        fakeImage.onload();
+      });
+
+      const promise = Promise.resolve(Resource.fetchImage(dataUri))
+        .then(function (image) {
           success = true;
           loadedImage = image;
-        },
-        function () {
+        })
+        .catch(function () {
           failure = true;
-        }
-      );
+        });
 
-      // neither callback has fired yet
-      expect(success).toEqual(false);
-      expect(failure).toEqual(false);
-
-      fakeImage.onload();
-      expect(success).toEqual(true);
-      expect(failure).toEqual(false);
-      expect(loadedImage).toBe(fakeImage);
+      return promise.finally(function () {
+        expect(success).toEqual(true);
+        expect(failure).toEqual(false);
+        expect(loadedImage).toBe(fakeImage);
+      });
     });
 
     it("rejects the promise when the image errors", function () {
+      const deferred = defer();
       const fakeImage = {};
-      spyOn(window, "Image").and.returnValue(fakeImage);
+      spyOn(window, "Image").and.callFake(function () {
+        deferred.resolve();
+        return fakeImage;
+      });
 
       let success = false;
       let failure = false;
       let loadedImage;
 
-      when(
-        Resource.fetchImage(dataUri),
-        function (image) {
+      deferred.promise.then(function () {
+        // neither callback has fired yet
+        expect(success).toEqual(false);
+        expect(failure).toEqual(false);
+
+        fakeImage.onerror(new Error());
+      });
+
+      return Resource.fetchImage(dataUri)
+        .then(function (image) {
           success = true;
           loadedImage = image;
-        },
-        function () {
+        })
+        .catch(function () {
           failure = true;
-        }
-      );
-
-      // neither callback has fired yet
-      expect(success).toEqual(false);
-      expect(failure).toEqual(false);
-
-      fakeImage.onerror();
-      expect(success).toEqual(false);
-      expect(failure).toEqual(true);
-      expect(loadedImage).toBeUndefined();
+        })
+        .finally(function () {
+          expect(success).toEqual(false);
+          expect(failure).toEqual(true);
+          expect(loadedImage).toBeUndefined();
+        });
     });
 
     it("Calls loadWithXhr with blob response type if headers is set", function () {
@@ -1720,8 +1778,13 @@ describe("Core/Resource", function () {
 
     describe("retries when Resource has the callback set", function () {
       it("rejects after too many retries", function () {
-        const fakeImage = {};
-        spyOn(window, "Image").and.returnValue(fakeImage);
+        let deferred = defer();
+        let fakeImage = {};
+        spyOn(window, "Image").and.callFake(function () {
+          deferred.resolve();
+          fakeImage = {};
+          return fakeImage;
+        });
 
         const cb = jasmine.createSpy("retry").and.returnValue(true);
 
@@ -1731,41 +1794,47 @@ describe("Core/Resource", function () {
           retryAttempts: 1,
         });
 
-        const promise = resource.fetchImage();
+        deferred.promise
+          .then(function () {
+            fakeImage.onerror("some error"); // This should retry
 
-        expect(promise).toBeDefined();
+            deferred = defer();
+            return deferred.promise;
+          })
+          .then(function () {
+            fakeImage.onerror(); // This fails because we only retry once
+          });
 
         let success = false;
         let failure = false;
-        promise
+        return resource
+          .fetchImage()
           .then(function () {
             success = true;
           })
-          .otherwise(function () {
+          .catch(function () {
             failure = true;
+          })
+          .finally(function () {
+            expect(cb.calls.count()).toEqual(1);
+            const receivedResource = cb.calls.argsFor(0)[0];
+            expect(receivedResource.url).toEqual(resource.url);
+            expect(receivedResource._retryCount).toEqual(1);
+            expect(cb.calls.argsFor(0)[1]).toEqual("some error");
+
+            expect(success).toBe(false);
+            expect(failure).toBe(true);
           });
-
-        expect(success).toBe(false);
-        expect(failure).toBe(false);
-
-        fakeImage.onerror("some error"); // This should retry
-        expect(success).toBe(false);
-        expect(failure).toBe(false);
-
-        expect(cb.calls.count()).toEqual(1);
-        const receivedResource = cb.calls.argsFor(0)[0];
-        expect(receivedResource.url).toEqual(resource.url);
-        expect(receivedResource._retryCount).toEqual(1);
-        expect(cb.calls.argsFor(0)[1]).toEqual("some error");
-
-        fakeImage.onerror(); // This fails because we only retry once
-        expect(success).toBe(false);
-        expect(failure).toBe(true);
       });
 
       it("rejects after callback returns false", function () {
-        const fakeImage = {};
-        spyOn(window, "Image").and.returnValue(fakeImage);
+        const deferred = defer();
+        let fakeImage = {};
+        spyOn(window, "Image").and.callFake(function () {
+          deferred.resolve();
+          fakeImage = {};
+          return fakeImage;
+        });
 
         const cb = jasmine.createSpy("retry").and.returnValue(false);
 
@@ -1775,37 +1844,40 @@ describe("Core/Resource", function () {
           retryAttempts: 2,
         });
 
-        const promise = resource.fetchImage();
-
-        expect(promise).toBeDefined();
+        deferred.promise.then(function () {
+          fakeImage.onerror("some error"); // This fails because the callback returns false
+        });
 
         let success = false;
         let failure = false;
-        promise
+        return resource
+          .fetchImage()
           .then(function (value) {
             success = true;
           })
-          .otherwise(function (error) {
+          .catch(function (error) {
             failure = true;
+          })
+          .finally(function () {
+            expect(success).toBe(false);
+            expect(failure).toBe(true);
+
+            expect(cb.calls.count()).toEqual(1);
+            const receivedResource = cb.calls.argsFor(0)[0];
+            expect(receivedResource.url).toEqual(resource.url);
+            expect(receivedResource._retryCount).toEqual(1);
+            expect(cb.calls.argsFor(0)[1]).toEqual("some error");
           });
-
-        expect(success).toBe(false);
-        expect(failure).toBe(false);
-
-        fakeImage.onerror("some error"); // This fails because the callback returns false
-        expect(success).toBe(false);
-        expect(failure).toBe(true);
-
-        expect(cb.calls.count()).toEqual(1);
-        const receivedResource = cb.calls.argsFor(0)[0];
-        expect(receivedResource.url).toEqual(resource.url);
-        expect(receivedResource._retryCount).toEqual(1);
-        expect(cb.calls.argsFor(0)[1]).toEqual("some error");
       });
 
       it("resolves after retry", function () {
-        const fakeImage = {};
-        spyOn(window, "Image").and.returnValue(fakeImage);
+        let deferred = defer();
+        let fakeImage = {};
+        spyOn(window, "Image").and.callFake(function () {
+          deferred.resolve();
+          fakeImage = {};
+          return fakeImage;
+        });
 
         const cb = jasmine.createSpy("retry").and.returnValue(true);
 
@@ -1815,36 +1887,38 @@ describe("Core/Resource", function () {
           retryAttempts: 1,
         });
 
-        const promise = resource.fetchImage();
+        deferred.promise
+          .then(function () {
+            fakeImage.onerror("some error"); // This should retry
 
-        expect(promise).toBeDefined();
+            deferred = defer();
+            return deferred.promise;
+          })
+          .then(function () {
+            fakeImage.onload(); // This succeeds
+          });
 
         let success = false;
         let failure = false;
-        promise
+        return resource
+          .fetchImage()
           .then(function (value) {
             success = true;
           })
-          .otherwise(function (error) {
+          .catch(function (error) {
             failure = true;
+          })
+          .finally(function () {
+            expect(cb.calls.count()).toEqual(1);
+            const receivedResource = cb.calls.argsFor(0)[0];
+            expect(receivedResource.url).toEqual(resource.url);
+            expect(receivedResource._retryCount).toEqual(1);
+            expect(cb.calls.argsFor(0)[1]).toEqual("some error");
+
+            fakeImage.onload();
+            expect(success).toBe(true);
+            expect(failure).toBe(false);
           });
-
-        expect(success).toBe(false);
-        expect(failure).toBe(false);
-
-        fakeImage.onerror("some error"); // This should retry
-        expect(success).toBe(false);
-        expect(failure).toBe(false);
-
-        expect(cb.calls.count()).toEqual(1);
-        const receivedResource = cb.calls.argsFor(0)[0];
-        expect(receivedResource.url).toEqual(resource.url);
-        expect(receivedResource._retryCount).toEqual(1);
-        expect(cb.calls.argsFor(0)[1]).toEqual("some error");
-
-        fakeImage.onload();
-        expect(success).toBe(true);
-        expect(failure).toBe(false);
       });
     });
   });
@@ -2011,7 +2085,7 @@ describe("Core/Resource", function () {
             .then(function () {
               fail("expected promise to reject");
             })
-            .otherwise(function (err) {
+            .catch(function (err) {
               expect(err).toBeInstanceOf(RequestErrorEvent);
             });
         });
@@ -2024,7 +2098,7 @@ describe("Core/Resource", function () {
             .then(function () {
               fail("expected promise to reject");
             })
-            .otherwise(function (err) {
+            .catch(function (err) {
               expect(err).toBeDefined();
               expect(err).toBeInstanceOf(Error);
             });
@@ -2068,6 +2142,7 @@ describe("Core/Resource", function () {
 
     describe("URL loading using mocked XHR", function () {
       let fakeXHR;
+      let requestConstructorSpy;
 
       beforeEach(function () {
         fakeXHR = jasmine.createSpyObj("XMLHttpRequest", [
@@ -2101,7 +2176,9 @@ describe("Core/Resource", function () {
           fakeXHR.simulateHttpResponse(200, responseText);
         };
 
-        spyOn(window, "XMLHttpRequest").and.returnValue(fakeXHR);
+        requestConstructorSpy = spyOn(window, "XMLHttpRequest").and.returnValue(
+          fakeXHR
+        );
       });
 
       describe("returns a promise that rejects when the request", function () {
@@ -2110,15 +2187,15 @@ describe("Core/Resource", function () {
             url: "http://example.invalid",
           });
 
-          expect(promise).toBeDefined();
-
           let resolvedValue;
           let rejectedError;
-          promise
+          expect(promise).toBeDefined();
+
+          const handledPromise = promise
             .then(function (value) {
               resolvedValue = value;
             })
-            .otherwise(function (error) {
+            .catch(function (error) {
               rejectedError = error;
             });
 
@@ -2126,8 +2203,11 @@ describe("Core/Resource", function () {
           expect(rejectedError).toBeUndefined();
 
           fakeXHR.simulateError();
-          expect(resolvedValue).toBeUndefined();
-          expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
+
+          return handledPromise.finally(function () {
+            expect(resolvedValue).toBeUndefined();
+            expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
+          });
         });
 
         it("results in an HTTP status code less than 200", function () {
@@ -2139,11 +2219,11 @@ describe("Core/Resource", function () {
 
           let resolvedValue;
           let rejectedError;
-          promise
+          const handledPromise = promise
             .then(function (value) {
               resolvedValue = value;
             })
-            .otherwise(function (error) {
+            .catch(function (error) {
               rejectedError = error;
             });
 
@@ -2151,8 +2231,11 @@ describe("Core/Resource", function () {
           expect(rejectedError).toBeUndefined();
 
           fakeXHR.simulateHttpResponse(199);
-          expect(resolvedValue).toBeUndefined();
-          expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
+
+          return handledPromise.finally(function () {
+            expect(resolvedValue).toBeUndefined();
+            expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
+          });
         });
 
         it("is an image with status code 204 with preferImageBitmap", function () {
@@ -2160,9 +2243,17 @@ describe("Core/Resource", function () {
             return;
           }
 
+          spyOn(Resource.prototype, "fetchBlob").and.callFake(function () {
+            return Promise.resolve({});
+          });
+
           const promise = Resource.fetchImage({
             url: "./Data/Images/Green.png",
             preferImageBitmap: true,
+            // We only load with xhr if the resource has headers
+            headers: {
+              "a-header": true,
+            },
           });
 
           expect(promise).toBeDefined();
@@ -2170,12 +2261,12 @@ describe("Core/Resource", function () {
           let resolved = false;
           let resolvedValue;
           let rejectedError;
-          promise
+          const handledPromise = promise
             .then(function (value) {
               resolved = true;
               resolvedValue = value;
             })
-            .otherwise(function (error) {
+            .catch(function (error) {
               rejectedError = error;
             });
 
@@ -2183,9 +2274,12 @@ describe("Core/Resource", function () {
           expect(rejectedError).toBeUndefined();
 
           fakeXHR.simulateHttpResponse(204);
-          expect(resolved).toBe(false);
-          expect(resolvedValue).toBeUndefined();
-          expect(rejectedError).toBeDefined();
+
+          return handledPromise.finally(function () {
+            expect(resolved).toBe(false);
+            expect(resolvedValue).toBeUndefined();
+            expect(rejectedError).toBeDefined();
+          });
         });
 
         it("resolves undefined for status code 204", function () {
@@ -2198,12 +2292,12 @@ describe("Core/Resource", function () {
           let resolved = false;
           let resolvedValue;
           let rejectedError;
-          promise
+          const handledPromise = promise
             .then(function (value) {
               resolved = true;
               resolvedValue = value;
             })
-            .otherwise(function (error) {
+            .catch(function (error) {
               rejectedError = error;
             });
 
@@ -2211,9 +2305,12 @@ describe("Core/Resource", function () {
           expect(rejectedError).toBeUndefined();
 
           fakeXHR.simulateHttpResponse(204);
-          expect(resolved).toBe(true);
-          expect(resolvedValue).toBeUndefined();
-          expect(rejectedError).toBeUndefined();
+
+          return handledPromise.finally(function () {
+            expect(resolved).toBe(true);
+            expect(resolvedValue).toBeUndefined();
+            expect(rejectedError).toBeUndefined();
+          });
         });
       });
 
@@ -2228,11 +2325,11 @@ describe("Core/Resource", function () {
 
           let resolvedValue;
           let rejectedError;
-          promise
+          const handledPromise = promise
             .then(function (value) {
               resolvedValue = value;
             })
-            .otherwise(function (error) {
+            .catch(function (error) {
               rejectedError = error;
             });
 
@@ -2244,9 +2341,13 @@ describe("Core/Resource", function () {
               .createSpy("hasChildNodes")
               .and.returnValue(true),
           };
+
           fakeXHR.simulateResponseXMLLoad(responseXML);
-          expect(resolvedValue).toEqual(responseXML);
-          expect(rejectedError).toBeUndefined();
+
+          return handledPromise.finally(function () {
+            expect(resolvedValue).toEqual(responseXML);
+            expect(rejectedError).toBeUndefined();
+          });
         });
 
         it("a null response with a document responseType and non-null responseXML with child nodes", function () {
@@ -2259,11 +2360,11 @@ describe("Core/Resource", function () {
 
           let resolvedValue;
           let rejectedError;
-          promise
+          const handledPromise = promise
             .then(function (value) {
               resolvedValue = value;
             })
-            .otherwise(function (error) {
+            .catch(function (error) {
               rejectedError = error;
             });
 
@@ -2276,8 +2377,11 @@ describe("Core/Resource", function () {
               .and.returnValue(true),
           };
           fakeXHR.simulateResponseXMLLoad(responseXML);
-          expect(resolvedValue).toEqual(responseXML);
-          expect(rejectedError).toBeUndefined();
+
+          return handledPromise.finally(function () {
+            expect(resolvedValue).toEqual(responseXML);
+            expect(rejectedError).toBeUndefined();
+          });
         });
 
         it("a null response with a '' responseType and non-null responseText", function () {
@@ -2290,11 +2394,11 @@ describe("Core/Resource", function () {
 
           let resolvedValue;
           let rejectedError;
-          promise
+          const handledPromise = promise
             .then(function (value) {
               resolvedValue = value;
             })
-            .otherwise(function (error) {
+            .catch(function (error) {
               rejectedError = error;
             });
 
@@ -2303,8 +2407,11 @@ describe("Core/Resource", function () {
 
           const responseText = "hello world";
           fakeXHR.simulateResponseTextLoad(responseText);
-          expect(resolvedValue).toEqual(responseText);
-          expect(rejectedError).toBeUndefined();
+
+          return handledPromise.finally(function () {
+            expect(resolvedValue).toEqual(responseText);
+            expect(rejectedError).toBeUndefined();
+          });
         });
 
         it("a null response with a text responseType and non-null responseText", function () {
@@ -2317,11 +2424,11 @@ describe("Core/Resource", function () {
 
           let resolvedValue;
           let rejectedError;
-          promise
+          const handledPromise = promise
             .then(function (value) {
               resolvedValue = value;
             })
-            .otherwise(function (error) {
+            .catch(function (error) {
               rejectedError = error;
             });
 
@@ -2330,8 +2437,11 @@ describe("Core/Resource", function () {
 
           const responseText = "hello world";
           fakeXHR.simulateResponseTextLoad(responseText);
-          expect(resolvedValue).toEqual(responseText);
-          expect(rejectedError).toBeUndefined();
+
+          return handledPromise.finally(function () {
+            expect(resolvedValue).toEqual(responseText);
+            expect(rejectedError).toBeUndefined();
+          });
         });
       });
 
@@ -2349,34 +2459,29 @@ describe("Core/Resource", function () {
 
           expect(promise).toBeDefined();
 
-          let resolvedValue;
-          let rejectedError;
-          promise
-            .then(function (value) {
-              resolvedValue = value;
-            })
-            .otherwise(function (error) {
-              rejectedError = error;
-            });
-
-          expect(resolvedValue).toBeUndefined();
-          expect(rejectedError).toBeUndefined();
-
           fakeXHR.simulateError(); // This should retry
-          expect(resolvedValue).toBeUndefined();
-          expect(rejectedError).toBeUndefined();
+          // Wait for the next request to be created, then simulate error
+          pollToPromise(function () {
+            return requestConstructorSpy.calls.count() > 1;
+          }).then(function () {
+            fakeXHR.simulateError(); // This fails because we only retry once
+          });
 
-          expect(cb.calls.count()).toEqual(1);
-          const receivedResource = cb.calls.argsFor(0)[0];
-          expect(receivedResource.url).toEqual(resource.url);
-          expect(receivedResource._retryCount).toEqual(1);
-          expect(cb.calls.argsFor(0)[1] instanceof RequestErrorEvent).toBe(
-            true
-          );
+          return promise
+            .then(function () {
+              fail();
+            })
+            .catch(function (error) {
+              expect(error).toBeInstanceOf(RequestErrorEvent);
 
-          fakeXHR.simulateError(); // This fails because we only retry once
-          expect(resolvedValue).toBeUndefined();
-          expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
+              expect(cb.calls.count()).toEqual(1);
+              const receivedResource = cb.calls.argsFor(0)[0];
+              expect(receivedResource.url).toEqual(resource.url);
+              expect(receivedResource._retryCount).toEqual(1);
+              expect(cb.calls.argsFor(0)[1] instanceof RequestErrorEvent).toBe(
+                true
+              );
+            });
         });
 
         it("rejects after callback returns false", function () {
@@ -2389,33 +2494,24 @@ describe("Core/Resource", function () {
           });
 
           const promise = loadWithXhr(resource);
-
           expect(promise).toBeDefined();
 
-          let resolvedValue;
-          let rejectedError;
-          promise
-            .then(function (value) {
-              resolvedValue = value;
-            })
-            .otherwise(function (error) {
-              rejectedError = error;
-            });
-
-          expect(resolvedValue).toBeUndefined();
-          expect(rejectedError).toBeUndefined();
-
           fakeXHR.simulateError(); // This fails because the callback returns false
-          expect(resolvedValue).toBeUndefined();
-          expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
+          return promise
+            .then(function () {
+              fail();
+            })
+            .catch(function (error) {
+              expect(error).toBeInstanceOf(RequestErrorEvent);
 
-          expect(cb.calls.count()).toEqual(1);
-          const receivedResource = cb.calls.argsFor(0)[0];
-          expect(receivedResource.url).toEqual(resource.url);
-          expect(receivedResource._retryCount).toEqual(1);
-          expect(cb.calls.argsFor(0)[1] instanceof RequestErrorEvent).toBe(
-            true
-          );
+              expect(cb.calls.count()).toEqual(1);
+              const receivedResource = cb.calls.argsFor(0)[0];
+              expect(receivedResource.url).toEqual(resource.url);
+              expect(receivedResource._retryCount).toEqual(1);
+              expect(cb.calls.argsFor(0)[1] instanceof RequestErrorEvent).toBe(
+                true
+              );
+            });
         });
 
         it("resolves after retry", function () {
@@ -2428,37 +2524,28 @@ describe("Core/Resource", function () {
           });
 
           const promise = loadWithXhr(resource);
-
           expect(promise).toBeDefined();
 
-          let resolvedValue;
-          let rejectedError;
-          promise
-            .then(function (value) {
-              resolvedValue = value;
-            })
-            .otherwise(function (error) {
-              rejectedError = error;
-            });
-
-          expect(resolvedValue).toBeUndefined();
-          expect(rejectedError).toBeUndefined();
-
           fakeXHR.simulateError(); // This should retry
-          expect(resolvedValue).toBeUndefined();
-          expect(rejectedError).toBeUndefined();
 
-          expect(cb.calls.count()).toEqual(1);
-          const receivedResource = cb.calls.argsFor(0)[0];
-          expect(receivedResource.url).toEqual(resource.url);
-          expect(receivedResource._retryCount).toEqual(1);
-          expect(cb.calls.argsFor(0)[1] instanceof RequestErrorEvent).toBe(
-            true
-          );
+          // Wait for the next request to be created, then simulate success
+          pollToPromise(function () {
+            return requestConstructorSpy.calls.count() > 1;
+          }).then(function () {
+            fakeXHR.simulateHttpResponse(200, "OK");
+          });
 
-          fakeXHR.simulateHttpResponse(200, "OK");
-          expect(resolvedValue).toBeDefined();
-          expect(rejectedError).toBeUndefined();
+          return promise.then(function (value) {
+            expect(value).toBeDefined();
+
+            expect(cb.calls.count()).toEqual(1);
+            const receivedResource = cb.calls.argsFor(0)[0];
+            expect(receivedResource.url).toEqual(resource.url);
+            expect(receivedResource._retryCount).toEqual(1);
+            expect(cb.calls.argsFor(0)[1] instanceof RequestErrorEvent).toBe(
+              true
+            );
+          });
         });
       });
     });
@@ -2468,18 +2555,19 @@ describe("Core/Resource", function () {
     it("returns a promise that resolves when the request loads", function () {
       const testUrl = "http://example.invalid/testuri";
       spyOn(Resource._Implementations, "loadAndExecuteScript").and.callFake(
-        function (url, name, deffered) {
+        function (url, name, deferred) {
           expect(url).toContain(testUrl);
           expect(name).toContain("loadJsonp");
-          expect(deffered).toBeDefined();
+          expect(deferred).toBeDefined();
+          deferred.resolve();
         }
       );
-      Resource.fetchJsonp(testUrl);
+      return Resource.fetchJsonp(testUrl);
     });
 
     it("returns a promise that rejects when the request errors", function () {
       const testUrl = "http://example.invalid/testuri";
-      return Resource.fetchJsonp(testUrl).otherwise(function (error) {
+      return Resource.fetchJsonp(testUrl).catch(function (error) {
         expect(error).toBeDefined();
       });
     });
@@ -2492,19 +2580,15 @@ describe("Core/Resource", function () {
       spyOn(Resource._Implementations, "loadAndExecuteScript").and.callFake(
         function (url, functionName, deferred) {
           expect(url).toContain("callback=loadJsonp");
+          deferred.resolve();
         }
       );
-      Resource.fetchJsonp(testUrl, options);
+      return Resource.fetchJsonp(testUrl, options);
     });
 
     describe("retries when Resource has the callback set", function () {
       it("rejects after too many retries", function () {
-        //const cb = jasmine.createSpy('retry').and.returnValue(true);
-        const cb = jasmine
-          .createSpy("retry")
-          .and.callFake(function (resource, error) {
-            return true;
-          });
+        const cb = jasmine.createSpy("retry").and.returnValue(true);
 
         let lastDeferred;
         spyOn(Resource._Implementations, "loadAndExecuteScript").and.callFake(
@@ -2520,35 +2604,29 @@ describe("Core/Resource", function () {
         });
 
         const promise = resource.fetchJsonp();
-
         expect(promise).toBeDefined();
 
-        let resolvedValue;
-        let rejectedError;
-        promise
-          .then(function (value) {
-            resolvedValue = value;
-          })
-          .otherwise(function (error) {
-            rejectedError = error;
-          });
-
-        expect(resolvedValue).toBeUndefined();
-        expect(rejectedError).toBeUndefined();
-
         lastDeferred.reject("some error"); // This should retry
-        expect(resolvedValue).toBeUndefined();
-        expect(rejectedError).toBeUndefined();
+        lastDeferred = undefined;
+        pollToPromise(function () {
+          return defined(lastDeferred);
+        }).then(function () {
+          lastDeferred.reject("another error"); // This fails because we only retry once
+        });
 
-        expect(cb.calls.count()).toEqual(1);
-        const receivedResource = cb.calls.argsFor(0)[0];
-        expect(receivedResource.url).toEqual(resource.url);
-        expect(receivedResource._retryCount).toEqual(1);
-        expect(cb.calls.argsFor(0)[1]).toEqual("some error");
+        return promise
+          .then(function () {
+            fail();
+          })
+          .catch(function (error) {
+            expect(cb.calls.count()).toEqual(1);
+            const receivedResource = cb.calls.argsFor(0)[0];
+            expect(receivedResource.url).toEqual(resource.url);
+            expect(receivedResource._retryCount).toEqual(1);
+            expect(cb.calls.argsFor(0)[1]).toEqual("some error");
 
-        lastDeferred.reject("another error"); // This fails because we only retry once
-        expect(resolvedValue).toBeUndefined();
-        expect(rejectedError).toEqual("another error");
+            expect(error).toEqual("another error");
+          });
       });
 
       it("rejects after callback returns false", function () {
@@ -2568,31 +2646,22 @@ describe("Core/Resource", function () {
         });
 
         const promise = resource.fetchJsonp();
-
         expect(promise).toBeDefined();
 
-        let resolvedValue;
-        let rejectedError;
-        promise
-          .then(function (value) {
-            resolvedValue = value;
-          })
-          .otherwise(function (error) {
-            rejectedError = error;
-          });
-
-        expect(resolvedValue).toBeUndefined();
-        expect(rejectedError).toBeUndefined();
-
         lastDeferred.reject("some error"); // This fails because the callback returns false
-        expect(resolvedValue).toBeUndefined();
-        expect(rejectedError).toEqual("some error");
 
-        expect(cb.calls.count()).toEqual(1);
-        const receivedResource = cb.calls.argsFor(0)[0];
-        expect(receivedResource.url).toEqual(resource.url);
-        expect(receivedResource._retryCount).toEqual(1);
-        expect(cb.calls.argsFor(0)[1]).toEqual("some error");
+        return promise
+          .then(function () {
+            fail();
+          })
+          .catch(function (error) {
+            expect(cb.calls.count()).toEqual(1);
+            const receivedResource = cb.calls.argsFor(0)[0];
+            expect(receivedResource.url).toEqual(resource.url);
+            expect(receivedResource._retryCount).toEqual(1);
+            expect(cb.calls.argsFor(0)[1]).toEqual("some error");
+            expect(error).toEqual("some error");
+          });
       });
 
       it("resolves after retry", function () {
@@ -2614,37 +2683,27 @@ describe("Core/Resource", function () {
         });
 
         const promise = resource.fetchJsonp();
-
         expect(promise).toBeDefined();
 
-        let resolvedValue;
-        let rejectedError;
-        promise
-          .then(function (value) {
-            resolvedValue = value;
-          })
-          .otherwise(function (error) {
-            rejectedError = error;
-          });
-
-        expect(resolvedValue).toBeUndefined();
-        expect(rejectedError).toBeUndefined();
-
         lastDeferred.reject("some error"); // This should retry
-        expect(resolvedValue).toBeUndefined();
-        expect(rejectedError).toBeUndefined();
+        lastDeferred = undefined;
+        pollToPromise(function () {
+          return defined(lastDeferred);
+        }).then(function () {
+          const uri = new Uri(lastUrl);
+          const query = queryToObject(uri.query());
+          window[query.callback]("something good");
+          lastDeferred.resolve(); // This should resolve
+        });
+        return promise.then(function (result) {
+          expect(result).toEqual("something good");
 
-        expect(cb.calls.count()).toEqual(1);
-        const receivedResource = cb.calls.argsFor(0)[0];
-        expect(receivedResource.url).toEqual(resource.url);
-        expect(receivedResource._retryCount).toEqual(1);
-        expect(cb.calls.argsFor(0)[1]).toEqual("some error");
-
-        const uri = new Uri(lastUrl);
-        const query = queryToObject(uri.query());
-        window[query.callback]("something good");
-        expect(resolvedValue).toEqual("something good");
-        expect(rejectedError).toBeUndefined();
+          expect(cb.calls.count()).toEqual(1);
+          const receivedResource = cb.calls.argsFor(0)[0];
+          expect(receivedResource.url).toEqual(resource.url);
+          expect(receivedResource._retryCount).toEqual(1);
+          expect(cb.calls.argsFor(0)[1]).toEqual("some error");
+        });
       });
     });
   });

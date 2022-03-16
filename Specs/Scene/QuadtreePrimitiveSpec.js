@@ -2,6 +2,7 @@ import MockTerrainProvider from "../MockTerrainProvider.js";
 import TerrainTileProcessor from "../TerrainTileProcessor.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
+import { defer } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { EventHelper } from "../../Source/Cesium.js";
@@ -19,7 +20,6 @@ import { QuadtreeTileLoadState } from "../../Source/Cesium.js";
 import { SceneMode } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 
 describe("Scene/QuadtreePrimitive", function () {
   describe("selectTilesForRendering", function () {
@@ -101,7 +101,7 @@ describe("Scene/QuadtreePrimitive", function () {
     });
 
     function process(quadtreePrimitive, callback) {
-      const deferred = when.defer();
+      const deferred = defer();
 
       function next() {
         ++frameState.frameNumber;

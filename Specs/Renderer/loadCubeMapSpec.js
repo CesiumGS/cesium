@@ -127,7 +127,7 @@ describe(
         .then(function (cubeMap) {
           fail("should not be called");
         })
-        .otherwise(function () {});
+        .catch(function () {});
     });
 
     it("calls error function when negativeX does not exist", function () {
@@ -142,7 +142,7 @@ describe(
         .then(function (cubeMap) {
           fail("should not be called");
         })
-        .otherwise(function () {});
+        .catch(function () {});
     });
 
     it("calls error function when positiveY does not exist", function () {
@@ -157,7 +157,7 @@ describe(
         .then(function (cubeMap) {
           fail("should not be called");
         })
-        .otherwise(function () {});
+        .catch(function () {});
     });
 
     it("calls error function when negativeY does not exist", function () {
@@ -172,7 +172,7 @@ describe(
         .then(function (cubeMap) {
           fail("should not be called");
         })
-        .otherwise(function () {});
+        .catch(function () {});
     });
 
     it("calls error function when positiveZ does not exist", function () {
@@ -187,7 +187,7 @@ describe(
         .then(function (cubeMap) {
           fail("should not be called");
         })
-        .otherwise(function () {});
+        .catch(function () {});
     });
 
     it("calls error function when negativeZ does not exist", function () {
@@ -202,7 +202,7 @@ describe(
         .then(function (cubeMap) {
           fail("should not be called");
         })
-        .otherwise(function () {});
+        .catch(function () {});
     });
 
     it("throws without a context", function () {

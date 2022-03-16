@@ -475,11 +475,17 @@ function initialize(content, arrayBuffer, byteOffset) {
   content._modelInstanceCollection = new ModelInstanceCollection(
     collectionOptions
   );
-  content._modelInstanceCollection.readyPromise.then(function (collection) {
-    collection.activeAnimations.addAll({
-      loop: ModelAnimationLoop.REPEAT,
+  content._modelInstanceCollection.readyPromise
+    .catch(function () {
+      // Any readyPromise failure is handled in modelInstanceCollection
+    })
+    .then(function (collection) {
+      if (content._modelInstanceCollection.ready) {
+        collection.activeAnimations.addAll({
+          loop: ModelAnimationLoop.REPEAT,
+        });
+      }
     });
-  });
 }
 
 function createFeatures(content) {

@@ -1,18 +1,18 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import hasExtension from "./hasExtension.js";
 import ImplicitAvailabilityBitstream from "./ImplicitAvailabilityBitstream.js";
+import ImplicitMetadataView from "./ImplicitMetadataView.js";
 import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 import ImplicitSubtreeMetadata from "./ImplicitSubtreeMetadata.js";
 import MetadataTable from "./MetadataTable.js";
 import ResourceCache from "./ResourceCache.js";
-import when from "../ThirdParty/when.js";
-import ImplicitMetadataView from "./ImplicitMetadataView.js";
 
 /**
  * An object representing a single subtree in an implicit tileset
@@ -65,7 +65,7 @@ export default function ImplicitSubtree(
   this._subtreeLevels = implicitTileset.subtreeLevels;
   this._subdivisionScheme = implicitTileset.subdivisionScheme;
   this._branchingFactor = implicitTileset.branchingFactor;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   // properties for metadata
   this._metadata = undefined;
@@ -429,7 +429,7 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
 
       subtree._readyPromise.resolve(subtree);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       subtree._readyPromise.reject(error);
     });
 }
@@ -692,15 +692,15 @@ function requestActiveBuffers(subtree, bufferHeaders, internalBuffer) {
   for (let i = 0; i < bufferHeaders.length; i++) {
     const bufferHeader = bufferHeaders[i];
     if (!bufferHeader.isActive) {
-      promises.push(when.resolve(undefined));
+      promises.push(Promise.resolve(undefined));
     } else if (bufferHeader.isExternal) {
       const promise = requestExternalBuffer(subtree, bufferHeader);
       promises.push(promise);
     } else {
-      promises.push(when.resolve(internalBuffer));
+      promises.push(Promise.resolve(internalBuffer));
     }
   }
-  return when.all(promises).then(function (bufferResults) {
+  return Promise.all(promises).then(function (bufferResults) {
     const buffersU8 = {};
     for (let i = 0; i < bufferResults.length; i++) {
       const result = bufferResults[i];

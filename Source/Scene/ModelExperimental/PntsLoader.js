@@ -4,11 +4,11 @@ import Color from "../../Core/Color.js";
 import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
+import defer from "../../Core/defer.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import MersenneTwister from "../../ThirdParty/mersenne-twister.js";
-import when from "../../ThirdParty/when.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import AlphaMode from "../AlphaMode.js";
@@ -64,7 +64,7 @@ export default function PntsLoader(options) {
   this._decodePromise = undefined;
   this._decodedAttributes = undefined;
 
-  this._promise = when.defer();
+  this._promise = defer();
   this._state = ResourceLoaderState.UNLOADED;
   this._buffers = [];
 
@@ -164,7 +164,7 @@ function decodeDraco(loader, context) {
   let decodePromise;
   if (!defined(draco)) {
     // The draco extension wasn't present,
-    decodePromise = when.resolve();
+    decodePromise = Promise.resolve();
   } else {
     decodePromise = DracoLoader.decodePointCloud(draco, context);
   }
@@ -188,7 +188,7 @@ function decodeDraco(loader, context) {
       loader._state = ResourceLoaderState.READY;
       loader._promise.resolve(loader);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       loader.unload();
       loader._state = ResourceLoaderState.FAILED;
       const errorMessage = "Failed to load Draco";
