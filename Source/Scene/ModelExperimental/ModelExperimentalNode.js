@@ -255,7 +255,7 @@ ModelExperimentalNode.prototype.configurePipeline = function () {
  */
 ModelExperimentalNode.prototype.updateModelMatrix = function () {
   this._transformDirty = true;
-  Matrix4.multiply(
+  Matrix4.multiplyTransformation(
     this._sceneGraph.computedModelMatrix,
     this._transform,
     this._computedTransform

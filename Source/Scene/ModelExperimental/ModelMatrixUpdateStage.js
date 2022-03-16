@@ -28,19 +28,17 @@ ModelMatrixUpdateStage.name = "ModelMatrixUpdateStage"; // Helps with debugging
  */
 ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
   if (runtimeNode._transformDirty) {
-    updateRuntimeNode(runtimeNode, sceneGraph, runtimeNode.transform);
+    updateRuntimeNode(runtimeNode, sceneGraph);
     runtimeNode._transformDirty = false;
   }
 };
-
-const transformScratch = new Matrix4();
 
 /**
  * Recursively update all child runtime nodes and their runtime primitives.
  *
  * @private
  */
-function updateRuntimeNode(runtimeNode, sceneGraph, transform) {
+function updateRuntimeNode(runtimeNode, sceneGraph) {
   let i, j;
 
   for (i = 0; i < runtimeNode.runtimePrimitives.length; i++) {
@@ -50,7 +48,7 @@ function updateRuntimeNode(runtimeNode, sceneGraph, transform) {
 
       Matrix4.multiplyTransformation(
         sceneGraph._computedModelMatrix,
-        transform,
+        runtimeNode.transform,
         drawCommand.modelMatrix
       );
 
@@ -67,13 +65,8 @@ function updateRuntimeNode(runtimeNode, sceneGraph, transform) {
       const childRuntimeNode =
         sceneGraph._runtimeNodes[runtimeNode.children[i]];
 
-      Matrix4.multiplyTransformation(
-        runtimeNode.transform,
-        childRuntimeNode.transform,
-        transformScratch
-      );
-
-      updateRuntimeNode(childRuntimeNode, sceneGraph, transformScratch);
+      updateRuntimeNode(childRuntimeNode, sceneGraph);
+      childRuntimeNode._transformDirty = false;
     }
   }
 }

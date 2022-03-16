@@ -171,10 +171,10 @@ function initialize(sceneGraph) {
   const scene = components.scene;
   const model = sceneGraph._model;
 
-  sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
+  Matrix4.multiplyTransformation(
     model.modelMatrix,
     components.transform,
-    new Matrix4()
+    sceneGraph._computedModelMatrix
   );
 
   ModelExperimentalUtility.correctModelMatrix(
@@ -400,7 +400,7 @@ ModelExperimentalSceneGraph.prototype.update = function (frameState) {
 ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
   const model = this._model;
 
-  Matrix4.multiply(
+  Matrix4.multiplyTransformation(
     model.modelMatrix,
     this._modelComponents.transform,
     this._computedModelMatrix

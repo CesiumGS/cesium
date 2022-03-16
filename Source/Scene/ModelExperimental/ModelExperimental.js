@@ -35,6 +35,9 @@ import ShadowMode from "../ShadowMode.js";
  * @param {Object} options Object with the following properties:
  * @param {Resource} options.resource The Resource to the 3D model.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
+ * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
+ * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
+ * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
  * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
  * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
@@ -49,9 +52,6 @@ import ShadowMode from "../ShadowMode.js";
  * @param {Number} [options.instanceFeatureIdIndex=0] The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
- * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
- * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
- * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -685,6 +685,8 @@ Object.defineProperties(ModelExperimental.prototype, {
    * culling is disabled. Back faces are not culled if the model's color is
    * translucent.
    *
+   * @memberof ModelExperimental.prototype
+   *
    * @type {Boolean}
    *
    * @default true
@@ -707,6 +709,8 @@ Object.defineProperties(ModelExperimental.prototype, {
    * Values greater than <code>1.0</code> increase the size of the model; values
    * less than <code>1.0</code> decrease.
    *
+   * @memberof ModelExperimental.prototype
+   *
    * @type {Number}
    *
    * @default 1.0
@@ -727,6 +731,8 @@ Object.defineProperties(ModelExperimental.prototype, {
    * The approximate minimum pixel size of the model regardless of zoom.
    * This can be used to ensure that a model is visible even when the viewer
    * zooms out.  When <code>0.0</code>, no minimum size is enforced.
+   *
+   * @memberof ModelExperimental.prototype
    *
    * @type {Number}
    *
@@ -749,6 +755,8 @@ Object.defineProperties(ModelExperimental.prototype, {
    * an upper limit to the {@link Model#minimumPixelSize}, ensuring that the model
    * is never an unreasonable scale.
    *
+   * @memberof ModelExperimental.prototype
+   *
    * @type {Number}
    */
   maximumScale: {
@@ -765,7 +773,9 @@ Object.defineProperties(ModelExperimental.prototype, {
 
   /**
    * Determines whether the model casts or receives shadows from light sources.
-   *
+
+   * @memberof ModelExperimental.prototype
+   * 
    * @type {ShadowMode}
    *
    * @default ShadowMode.ENABLED
@@ -785,7 +795,9 @@ Object.defineProperties(ModelExperimental.prototype, {
 
   /**
    * Gets or sets whether the credits of the model will be displayed on the screen
+   *
    * @memberof ModelExperimental.prototype
+   *
    * @type {Boolean}
    *
    * @default false
@@ -1075,6 +1087,9 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {String|Resource|Uint8Array|Object} options.gltf A Resource/URL to a glTF/glb file, a binary glTF buffer, or a JSON object containing the glTF contents
  * @param {String|Resource} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
+ * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
+ * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
+ * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
@@ -1093,9 +1108,6 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Number} [options.instanceFeatureIdIndex=0] The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
- * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
- * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
- * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @returns {ModelExperimental} The newly created model.
@@ -1142,6 +1154,9 @@ ModelExperimental.fromGltf = function (options) {
     resource: loaderOptions.gltfResource,
     type: type,
     modelMatrix: options.modelMatrix,
+    scale: options.scale,
+    minimumPixelSize: options.minimumPixelSize,
+    maximumScale: options.maximumScale,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
     cull: options.cull,
     opaquePass: options.opaquePass,
@@ -1156,9 +1171,6 @@ ModelExperimental.fromGltf = function (options) {
     instanceFeatureIdIndex: options.instanceFeatureIdIndex,
     pointCloudShading: options.pointCloudShading,
     backFaceCulling: options.backFaceCulling,
-    scale: options.scale,
-    minimumPixelSize: options.minimumPixelSize,
-    maximumScale: options.maximumScale,
     shadows: options.shadows,
     showCreditsOnScreen: options.showCreditsOnScreen,
   };
