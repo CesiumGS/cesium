@@ -101,7 +101,7 @@ vec3 BETA_RAYLEIGH = vec3(5.8e-6, 13.5e-6, 33.1e-6); // Better constants from Pr
 vec3 BETA_MIE = vec3(21e-6);
 vec3 BETA_AMBIENT = vec3(0.0);
 
-vec3 LIGHT_INTENSITY = vec3(100.0);
+vec3 LIGHT_INTENSITY = vec3(50.0);
 
 
 void computeScattering(

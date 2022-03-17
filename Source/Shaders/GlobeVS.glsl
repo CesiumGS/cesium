@@ -43,6 +43,7 @@ varying float v_distance;
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
 varying vec3 v_fogMieColor;
 varying vec3 v_fogRayleighColor;
+varying float v_fogOpacity;
 #endif
 
 // These functions are generated at runtime.
@@ -212,6 +213,7 @@ void main()
     AtmosphereColor atmosFogColor = computeGroundAtmosphereFromSpace(position3DWC, false, vec3(0.0));
     v_fogMieColor = atmosFogColor.mie;
     v_fogRayleighColor = atmosFogColor.rayleigh;
+    v_fogOpacity = atmosFogColor.opacity;
 #endif
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(UNDERGROUND_COLOR) || defined(TRANSLUCENT)

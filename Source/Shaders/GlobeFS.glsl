@@ -123,6 +123,7 @@ varying float v_distance;
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
 varying vec3 v_fogRayleighColor;
 varying vec3 v_fogMieColor;
+varying float v_fogOpacity;
 #endif
 
 #ifdef GROUND_ATMOSPHERE
@@ -451,8 +452,10 @@ void main()
 #ifdef GROUND_ATMOSPHERE
     if (!czm_backFacing())
     {
-        vec3 groundAtmosphereColor = computeGroundAtmosphereColor(fogColor, finalColor, atmosphereLightDirection, cameraDist);
-        finalColor = vec4(mix(finalColor.rgb, groundAtmosphereColor, fade), finalColor.a);
+        // Blend in atmosphere
+        vec3 origin = vec3(0.0);
+        vec4 blendColor = computeFinalColor(origin, atmosphereLightDirection, v_fogRayleighColor, v_fogMieColor, v_fogOpacity);
+        finalColor = finalColor * (blendColor.a) + blendColor;
     }
 #endif
 
@@ -474,14 +477,8 @@ void main()
       finalColor.a *= interpolateByDistance(alphaByDistance, v_distance);
     }
 #endif
-    // Blend in atmosphere
-    vec3 emptyVec3 = vec3(0.0);
     
-    vec4 blendColor = computeFinalColor(emptyVec3, atmosphereLightDirection, v_fogRayleighColor, v_fogMieColor, 0.5);
-    
-    
-    
-    gl_FragColor =  mix(finalColor, blendColor, 0.25);
+    gl_FragColor =  finalColor;
 }
 
 #ifdef GROUND_ATMOSPHERE
