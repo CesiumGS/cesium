@@ -539,10 +539,7 @@ describe(
 
           scene.fog.enabled = true;
           scene.fog.renderable = false;
-          scene.fog.density = 1.0;
-          scene.fog.screenSpaceErrorFactor = 0.0;
-          scene.fog.enabled = true;
-          scene.fog.density = 1.0;
+          scene.fog.density = 0.001;
           scene.fog.screenSpaceErrorFactor = 0.0;
 
           let result;
