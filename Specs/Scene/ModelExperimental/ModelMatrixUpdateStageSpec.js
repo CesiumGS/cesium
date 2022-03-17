@@ -248,6 +248,84 @@ describe(
         ).toBe(true);
       });
     });
+
+    it("updates with new model matrix and model scale", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: airplane,
+        },
+        scene
+      ).then(function (model) {
+        const sceneGraph = model._sceneGraph;
+
+        const rotation = Quaternion.fromAxisAngle(
+          Cartesian3.UNIT_Y,
+          CesiumMath.toRadians(180)
+        );
+        const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
+          new Cartesian3(10, 0, 0),
+          rotation,
+          new Cartesian3(1, 1, 1)
+        );
+
+        const modelScale = 5.0;
+        const scaledModelMatrix = Matrix4.multiplyByUniformScale(
+          modelMatrix,
+          modelScale,
+          new Matrix4()
+        );
+
+        const rootNode = sceneGraph._runtimeNodes[2];
+        const staticChildNode = sceneGraph._runtimeNodes[0];
+        const transformedChildNode = sceneGraph._runtimeNodes[1];
+
+        const rootPrimitive = rootNode.runtimePrimitives[0];
+        const staticChildPrimitive = staticChildNode.runtimePrimitives[0];
+        const transformedChildPrimitive =
+          transformedChildNode.runtimePrimitives[0];
+
+        const rootDrawCommand = rootPrimitive.drawCommands[0];
+        const staticChildDrawCommand = staticChildPrimitive.drawCommands[0];
+        const transformedChildDrawCommand =
+          transformedChildPrimitive.drawCommands[0];
+
+        const expectedRootModelMatrix = Matrix4.multiplyTransformation(
+          scaledModelMatrix,
+          rootDrawCommand.modelMatrix,
+          new Matrix4()
+        );
+        const expectedStaticChildModelMatrix = Matrix4.multiplyTransformation(
+          expectedRootModelMatrix,
+          staticChildNode.transform,
+          new Matrix4()
+        );
+        const expectedTransformedChildModelMatrix = Matrix4.multiplyTransformation(
+          expectedRootModelMatrix,
+          transformedChildNode.transform,
+          new Matrix4()
+        );
+
+        model.modelMatrix = modelMatrix;
+        model.scale = modelScale;
+        scene.renderForSpecs();
+
+        expect(
+          Matrix4.equals(rootDrawCommand.modelMatrix, expectedRootModelMatrix)
+        ).toBe(true);
+        expect(
+          Matrix4.equals(
+            staticChildDrawCommand.modelMatrix,
+            expectedStaticChildModelMatrix
+          )
+        ).toBe(true);
+        expect(
+          Matrix4.equals(
+            transformedChildDrawCommand.modelMatrix,
+            expectedTransformedChildModelMatrix
+          )
+        ).toBe(true);
+      });
+    });
   },
   "WebGL"
 );

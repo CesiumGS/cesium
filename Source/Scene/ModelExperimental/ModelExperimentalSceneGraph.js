@@ -418,15 +418,12 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
     this._computedModelMatrix
   );
 
+  // Mark all root nodes as dirty. Any and all children will be
+  // affected recursively in the update stage.
   const rootNodes = this._rootNodes;
-  // update new transforms here
   for (let i = 0; i < rootNodes.length; i++) {
     const node = this._runtimeNodes[rootNodes[i]];
-    // mark root nodes dirty here,
     node._transformDirty = true;
-    // children will be affected recursively in the update stage
-
-    //node.updateModelMatrix();
   }
 };
 

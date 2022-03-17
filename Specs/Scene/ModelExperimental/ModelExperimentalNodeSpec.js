@@ -135,15 +135,6 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     expect(Matrix4.equals(runtimeNode.transformToRoot, transformToRoot)).toBe(
       true
     );
-
-    /*const expectedComputedTransform = Matrix4.multiplyTransformation(
-      sceneGraph.computedModelMatrix,
-      transform,
-      new Matrix4()
-    );
-    expect(
-      Matrix4.equals(runtimeNode.computedTransform, expectedComputedTransform)
-    ).toEqual(true);*/
   }
 
   it("getChild throws for undefined index", function () {

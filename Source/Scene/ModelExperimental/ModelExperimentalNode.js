@@ -35,12 +35,16 @@ export default function ModelExperimentalNode(options) {
 
   const sceneGraph = options.sceneGraph;
   const transform = options.transform;
+  const transformToRoot = options.transformToRoot;
 
   this._sceneGraph = sceneGraph;
   this._children = options.children;
   this._node = options.node;
 
   const components = sceneGraph.components;
+
+  this._transform = Matrix4.clone(transform);
+  this._transformToRoot = Matrix4.clone(transformToRoot);
 
   this._originalTransform = Matrix4.clone(transform);
   this._axisCorrectedTransform = Matrix4.clone(transform);
@@ -50,19 +54,6 @@ export default function ModelExperimentalNode(options) {
     components.forwardAxis
   );
 
-  // current local transform of the node, can be changed by user
-  this._transform = Matrix4.clone(transform);
-
-  // all ancestors transforms excluding this node's transform
-  // this is only updated when an ancestor's transform is changed
-  this._transformToRoot = options.transformToRoot;
-
-  // delete this, not necessary
-  /*this._computedTransform = Matrix4.multiplyTransformation(
-    sceneGraph.computedModelMatrix,
-    transform,
-    new Matrix4()
-  );*/
   this._transformDirty = false;
 
   /**
@@ -167,25 +158,6 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
         this._sceneGraph.components.upAxis,
         this._sceneGraph.components.forwardAxis
       );
-
-      /*// this has to be replaced by a dirty flag
-      Matrix4.multiplyTransformation(
-        this._sceneGraph.computedModelMatrix,
-        value,
-        this._computedTransform
-      );*/
-    },
-  },
-
-  /**
-   * The node's axis corrected local space transform.
-   * @type {Matrix4}
-   * @private
-   * @readonly
-   */
-  axisCorrectedTransform: {
-    get: function () {
-      return this._axisCorrectedTransform;
     },
   },
 
@@ -205,17 +177,17 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   },
 
   /**
-   * The node's world space model transform.
-   *
-   * @memberof ModelExperimentalNode.prototype
+   * The node's axis corrected local space transform.
    * @type {Matrix4}
+   * @private
    * @readonly
-   
-  computedTransform: {
+   */
+  axisCorrectedTransform: {
     get: function () {
-      return this._computedTransform;
+      return this._axisCorrectedTransform;
     },
   },
+
   /**
    * The node's original local space transform, as specified in the model.
    *
@@ -276,16 +248,4 @@ ModelExperimentalNode.prototype.configurePipeline = function () {
   }
 
   updateStages.push(ModelMatrixUpdateStage);
-};
-
-/**
- * @private
- */
-ModelExperimentalNode.prototype.updateModelMatrix = function () {
-  this._transformDirty = true;
-  Matrix4.multiplyTransformation(
-    this._sceneGraph.computedModelMatrix,
-    this._transform,
-    this._computedTransform
-  );
 };

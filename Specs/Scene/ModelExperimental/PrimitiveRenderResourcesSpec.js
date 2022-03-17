@@ -235,13 +235,9 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     );
 
     expect(primitiveResources.runtimeNode).toBe(runtimeNode);
-
-    const expectedTransform = Matrix4.multiplyTransformation(
-      runtimeNode.transformToRoot,
-      runtimeNode.transform,
-      new Matrix4()
-    );
-    expect(primitiveResources.transform).toEqual(expectedTransform);
+    expect(
+      Matrix4.equals(primitiveResources.transform, nodeResources.transform)
+    ).toBe(true);
     expect(primitiveResources.attributes).toEqual([]);
 
     // The primitive should have inherited the renderStateOptions of the node's
