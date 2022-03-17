@@ -120,7 +120,7 @@ function processPropertyAttributes(
 }
 
 function addPropertyAttributeProperty(
-  shaderBuilder,
+  renderResources,
   attributeInfo,
   propertyId,
   property
@@ -131,6 +131,8 @@ function addPropertyAttributeProperty(
   // TODO: Is it safe to assume that the attribute type matches the final GLSL
   // type? in particular, is normalization handled properly?
   const glslType = attributeInfo.glslType;
+
+  const shaderBuilder = renderResources.shaderBuilder;
 
   // declare the struct field, e.g.
   // struct Metadata {
@@ -147,9 +149,20 @@ function addPropertyAttributeProperty(
     metadataVariable
   );
 
-  // TODO: apply offset/scale where applicable.
-  // TODO: This will require adding uniforms
-  const unpackedValue = `attributes.${attributeVariable}`;
+  let unpackedValue = `attributes.${attributeVariable}`;
+
+  // handle offset/scale transform. This wraps the GLSL expression with
+  // the czm_valueTransform() call.
+  if (property.hasValueTransform) {
+    unpackedValue = addValueTransformUniforms(unpackedValue, {
+      renderResources: renderResources,
+      glslType: glslType,
+      metadataVariable: metadataVariable,
+      shaderDestination: ShaderDestination.BOTH,
+      offset: property.offset,
+      scale: property.scale,
+    });
+  }
 
   // assign the result to the metadata struct property.
   // e.g. metadata.property = unpackingSteps(attributes.property);
@@ -162,6 +175,28 @@ function addPropertyAttributeProperty(
     MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
     [initializationLine]
   );
+}
+
+function addValueTransformUniforms(valueExpression, options) {
+  const metadataVariable = options.metadataVariable;
+  const offsetUniformName = `u_${metadataVariable}_offset`;
+  const scaleUniformName = `u_${metadataVariable}_scale`;
+
+  const renderResources = options.renderResources;
+  const shaderBuilder = renderResources.shaderBuilder;
+  const glslType = options.glslType;
+  shaderBuilder.addUniform(glslType, offsetUniformName, ShaderDestination.BOTH);
+  shaderBuilder.addUniform(glslType, scaleUniformName, ShaderDestination.BOTH);
+
+  const uniformMap = renderResources.uniformMap;
+  uniformMap[offsetUniformName] = function () {
+    return options.offset;
+  };
+  uniformMap[scaleUniformName] = function () {
+    return options.scale;
+  };
+
+  return `czm_valueTransform(${offsetUniformName}, ${scaleUniformName}, ${valueExpression})`;
 }
 
 function sanitizeGlslIdentifier(identifier) {

@@ -1,5 +1,6 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
+import defined from "../Core/defined.js";
 
 /**
  * A property in a property attribute from EXT_structural_metadata.
@@ -30,10 +31,31 @@ export default function PropertyAttributeProperty(options) {
 
   this._attribute = property.attribute;
   this._classProperty = classProperty;
-  this._offset = property.offset;
-  this._scale = property.scale;
   this._min = property.min;
   this._max = property.max;
+
+  let offset = property.offset;
+  let scale = property.scale;
+
+  // This needs to be set before handling default values
+  const hasValueTransform =
+    classProperty.hasValueTransform || defined(offset) || defined(scale);
+
+  // If the property attribute does not define an offset/scale, it inherits from
+  // the class property. The class property handles setting the default of
+  // identity: (offset 0, scale 1) with the same scalar/vector/matrix types.
+  // array types are disallowed by the spec.
+  offset = defaultValue(offset, classProperty.offset);
+  scale = defaultValue(scale, classProperty.scale);
+
+  // offset and scale are applied on the GPU, so unpack the values
+  // as math types we can use in uniform callbacks.
+  offset = classProperty.unpackVectorAndMatrixTypes(offset);
+  scale = classProperty.unpackVectorAndMatrixTypes(scale);
+
+  this._offset = offset;
+  this._scale = scale;
+  this._hasValueTransform = hasValueTransform;
 
   this._extras = property.extras;
   this._extensions = property.extensions;
