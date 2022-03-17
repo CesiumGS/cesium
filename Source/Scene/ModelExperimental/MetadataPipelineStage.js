@@ -153,6 +153,10 @@ function addPropertyAttributeProperty(
   // e.g. metadata.property = unpackingSteps(attributes.property);
   const initializationLine = `metadata.${metadataVariable} = ${unpackedValue};`;
   shaderBuilder.addFunctionLines(
+    MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
+    [initializationLine]
+  );
+  shaderBuilder.addFunctionLines(
     MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
     [initializationLine]
   );

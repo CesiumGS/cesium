@@ -10,12 +10,13 @@ import createScene from "../../createScene.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
-describe(
+fdescribe(
   "Scene/ModelExperimental/MetadataPipelineStage",
   function () {
+    const pointCloudWithPropertyAttributes =
+      "./Data/Models/GltfLoader/PointCloudWithPropertyAttributes/glTF/PointCloudWithPropertyAttributes.gltf";
     const boxTexturedBinary =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
-    const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
 
     let scene;
     const gltfLoaders = [];
@@ -68,7 +69,7 @@ describe(
       return {
         shaderBuilder: new ShaderBuilder(),
         model: {
-          featureMetadata: components.featureMetadata,
+          structuralMetadata: components.structuralMetadata,
         },
         uniformMap: {},
       };
@@ -122,8 +123,10 @@ describe(
       });
     });
 
-    it("Adds property textures to the shader", function () {
-      return loadGltf(microcosm).then(function (gltfLoader) {
+    it("Adds property attributes to the shader", function () {
+      return loadGltf(pointCloudWithPropertyAttributes).then(function (
+        gltfLoader
+      ) {
         const components = gltfLoader.components;
         const node = components.nodes[0];
         const primitive = node.primitives[0];
@@ -137,26 +140,32 @@ describe(
           shaderBuilder,
           MetadataPipelineStage.STRUCT_ID_METADATA_VS,
           MetadataPipelineStage.STRUCT_NAME_METADATA,
-          []
+          ["    float circleT;", "    float iteration;", "    float pointId;"]
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
           MetadataPipelineStage.STRUCT_ID_METADATA_FS,
           MetadataPipelineStage.STRUCT_NAME_METADATA,
-          ["    float vegetationDensity;"]
+          ["    float circleT;", "    float iteration;", "    float pointId;"]
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
           MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
-          []
+          [
+            "    metadata.circleT = attributes.circle_t;",
+            "    metadata.iteration = attributes.featureId_0;",
+            "    metadata.pointId = attributes.featureId_1;",
+          ]
         );
         ShaderBuilderTester.expectHasFragmentFunction(
           shaderBuilder,
           MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
           [
-            "    metadata.vegetationDensity = texture2D(u_propertyTexture_0, attributes.texCoord_0).r;",
+            "    metadata.circleT = attributes.circle_t;",
+            "    metadata.iteration = attributes.featureId_0;",
+            "    metadata.pointId = attributes.featureId_1;",
           ]
         );
         ShaderBuilderTester.expectHasVertexFunction(
@@ -166,15 +175,9 @@ describe(
           []
         );
         ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
-        ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
-          "uniform sampler2D u_propertyTexture_0;",
-        ]);
+        ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
 
-        const uniformMap = renderResources.uniformMap;
-        const propertyTexture0 = components.featureMetadata.getPropertyTexture(
-          0
-        );
-        expect(uniformMap.u_propertyTexture_0()).toBe(propertyTexture0.texture);
+        expect(renderResources.uniformMap).toEqual({});
       });
     });
   },
