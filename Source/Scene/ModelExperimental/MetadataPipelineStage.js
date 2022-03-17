@@ -149,7 +149,6 @@ function addPropertyAttributeProperty(
 
   // TODO: apply offset/scale where applicable.
   // TODO: This will require adding uniforms
-  // TODO: and a builtin function since matrices need to be multiplied with matrixCompMult
   const unpackedValue = `attributes.${attributeVariable}`;
 
   // assign the result to the metadata struct property.
