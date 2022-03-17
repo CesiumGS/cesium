@@ -10,7 +10,7 @@ import createScene from "../../createScene.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 
-fdescribe(
+describe(
   "Scene/ModelExperimental/MetadataPipelineStage",
   function () {
     const pointCloudWithPropertyAttributes =

@@ -84,6 +84,27 @@ ModelExperimentalUtility.getAttributeBySemantic = function (
 };
 
 /**
+ * Similar to getAttributeBySemantic, but search using the name field only,
+ * as custom attributes do not have a semantic.
+ *
+ * @param {ModelComponents.Primitive|ModelComponents.Instances} object The primitive components or instances object
+ * @param {String} name The name of the attribute as it appears in the model file.
+ * @return {ModelComponents.Attribute} The selected attribute, or undefined if not found.
+ *
+ * @private
+ */
+ModelExperimentalUtility.getAttributeByName = function (object, name) {
+  const attributes = object.attributes;
+  const attributesLength = attributes.length;
+  for (let i = 0; i < attributesLength; ++i) {
+    const attribute = attributes[i];
+    if (attribute.name === name) {
+      return attribute;
+    }
+  }
+};
+
+/**
  * Find a feature ID from an array with label or positionalLabel matching the
  * given label
  * @param {Array.<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange|ModelComponents.FeatureIdTexture>} featureIds

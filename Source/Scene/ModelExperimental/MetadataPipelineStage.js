@@ -100,11 +100,9 @@ function processPropertyAttributes(
         // Get information about the attribute the same way as the
         // GeometryPipelineStage to ensure we have the correct GLSL type and
         // variable name.
-        // TODO: This might not work if the property points to _FEATURE_ID_0 due to the set index
-        const attributeSemantic = property.attribute;
-        const modelAttribute = ModelExperimentalUtility.getAttributeBySemantic(
+        const modelAttribute = ModelExperimentalUtility.getAttributeByName(
           primitive,
-          attributeSemantic
+          property.attribute
         );
         const attributeInfo = ModelExperimentalUtility.getAttributeInfo(
           modelAttribute
@@ -138,6 +136,11 @@ function addPropertyAttributeProperty(
   // struct Metadata {
   //   float property;
   // }
+  shaderBuilder.addStructField(
+    MetadataPipelineStage.STRUCT_ID_METADATA_VS,
+    glslType,
+    metadataVariable
+  );
   shaderBuilder.addStructField(
     MetadataPipelineStage.STRUCT_ID_METADATA_FS,
     glslType,
