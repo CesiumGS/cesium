@@ -96,7 +96,7 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    *
    * @private
    */
-  this.transform = Matrix4.multiply(
+  this.transform = Matrix4.multiplyTransformation(
     runtimeNode.transformToRoot,
     runtimeNode.transform,
     new Matrix4()

@@ -118,7 +118,7 @@ export default function ModelExperimentalSceneGraph(options) {
   this.modelPipelineStages = [];
 
   this._boundingSphere = undefined;
-  this._computedModelMatrix = Matrix4.clone(this._model.modelMatrix);
+  this._computedModelMatrix = new Matrix4();
 
   initialize(this);
 }
@@ -190,13 +190,14 @@ function initialize(sceneGraph) {
   );
 
   const rootNodes = scene.nodes;
+  const transformToRoot = Matrix4.IDENTITY;
   for (let i = 0; i < rootNodes.length; i++) {
     const rootNode = scene.nodes[i];
 
     const rootNodeIndex = traverseSceneGraph(
       sceneGraph,
       rootNode,
-      Matrix4.IDENTITY
+      transformToRoot
     );
 
     sceneGraph._rootNodes.push(rootNodeIndex);
@@ -209,7 +210,7 @@ function initialize(sceneGraph) {
  *
  * @param {ModelSceneGraph} sceneGraph The scene graph
  * @param {ModelComponents.Node} node The current node
- * @param {Matrix4} transformToRoot The computed model space transform of this node's ancestors.
+ * @param {Matrix4} transformToRoot The transforms of this node's ancestors.
  *
  * @returns {Number} The index of this node in the runtimeNodes array.
  *
@@ -225,7 +226,7 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   if (defined(node.children)) {
     for (i = 0; i < node.children.length; i++) {
       const childNode = node.children[i];
-      const childNodeTransformToRoot = Matrix4.multiply(
+      const childNodeTransformToRoot = Matrix4.multiplyTransformation(
         transformToRoot,
         transform,
         new Matrix4()

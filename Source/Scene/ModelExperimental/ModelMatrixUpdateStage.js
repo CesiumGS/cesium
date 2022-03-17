@@ -41,7 +41,7 @@ ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
 function updateRuntimeNode(runtimeNode, sceneGraph, transformToRoot) {
   let i, j;
 
-  const sceneGraphTransform = Matrix4.multiply(
+  const sceneGraphTransform = Matrix4.multiplyTransformation(
     transformToRoot,
     runtimeNode.transform,
     new Matrix4()
