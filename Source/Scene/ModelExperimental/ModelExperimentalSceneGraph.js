@@ -192,13 +192,11 @@ function initialize(sceneGraph) {
   const rootNodes = scene.nodes;
   for (let i = 0; i < rootNodes.length; i++) {
     const rootNode = scene.nodes[i];
-    const rootNodeTransform = ModelExperimentalUtility.getNodeTransform(
-      rootNode
-    );
+
     const rootNodeIndex = traverseSceneGraph(
       sceneGraph,
       rootNode,
-      rootNodeTransform
+      Matrix4.IDENTITY
     );
 
     sceneGraph._rootNodes.push(rootNodeIndex);
@@ -211,31 +209,32 @@ function initialize(sceneGraph) {
  *
  * @param {ModelSceneGraph} sceneGraph The scene graph
  * @param {ModelComponents.Node} node The current node
- * @param {Matrix4} transform The current computed transform for this node.
+ * @param {Matrix4} transformToRoot The computed model space transform of this node's ancestors.
  *
  * @returns {Number} The index of this node in the runtimeNodes array.
  *
  * @private
  */
-function traverseSceneGraph(sceneGraph, node, transform) {
+function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   // The indices of the children of this node in the runtimeNodes array.
   const childrenIndices = [];
+  const transform = ModelExperimentalUtility.getNodeTransform(node);
 
   // Traverse through scene graph.
   let i;
   if (defined(node.children)) {
     for (i = 0; i < node.children.length; i++) {
       const childNode = node.children[i];
-      const childNodeTransform = Matrix4.multiply(
+      const childNodeTransformToRoot = Matrix4.multiply(
+        transformToRoot,
         transform,
-        ModelExperimentalUtility.getNodeTransform(childNode),
         new Matrix4()
       );
 
       const childIndex = traverseSceneGraph(
         sceneGraph,
         childNode,
-        childNodeTransform
+        childNodeTransformToRoot
       );
       childrenIndices.push(childIndex);
     }
@@ -245,6 +244,7 @@ function traverseSceneGraph(sceneGraph, node, transform) {
   const runtimeNode = new ModelExperimentalNode({
     node: node,
     transform: transform,
+    transformToRoot: transformToRoot,
     children: childrenIndices,
     sceneGraph: sceneGraph,
   });
@@ -419,9 +419,14 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
   );
 
   const rootNodes = this._rootNodes;
+  // update new transforms here
   for (let i = 0; i < rootNodes.length; i++) {
     const node = this._runtimeNodes[rootNodes[i]];
-    node.updateModelMatrix();
+    // mark root nodes dirty here,
+    node._transformDirty = true;
+    // children will be affected recursively in the update stage
+
+    //node.updateModelMatrix();
   }
 };
 

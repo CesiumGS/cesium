@@ -7,6 +7,7 @@ import BlendingState from "../BlendingState.js";
 import DepthFunction from "../DepthFunction.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelLightingOptions from "./ModelLightingOptions.js";
+import NodeRenderResources from "./NodeRenderResources.js";
 
 /**
  * Each node may have many mesh primitives. Most model pipeline stages operate
@@ -112,14 +113,14 @@ export default function PrimitiveRenderResources(
   this.alphaOptions = clone(nodeRenderResources.alphaOptions);
 
   /**
-   * The model space transform for this primitive. This is cloned from the
-   * node render resources as the primitive may further modify it
+   * The scene graph transform for this primitive. This is cloned from the
+   * node render resources as the primitive may further modify it.
    *
    * @type {Matrix4}
    *
    * @private
    */
-  this.transform = nodeRenderResources.runtimeNode.transform.clone();
+  this.transform = Matrix4.clone(nodeRenderResources.transform);
 
   /**
    * An object used to build a shader incrementally. This is cloned from the

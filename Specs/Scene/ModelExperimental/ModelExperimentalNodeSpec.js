@@ -13,6 +13,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     transform: Matrix4.IDENTITY,
   };
   const transform = Matrix4.clone(Matrix4.IDENTITY);
+  const transformToRoot = Matrix4.clone(Matrix4.IDENTITY);
   const mockSceneGraph = {
     computedModelMatrix: Matrix4.clone(Matrix4.IDENTITY),
     runtimeNodes: [mockChildNode, mockNode],
@@ -27,6 +28,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
       return new ModelExperimentalNode({
         node: undefined,
         transform: transform,
+        transformToRoot: transformToRoot,
         sceneGraph: mockSceneGraph,
         children: [],
       });
@@ -38,6 +40,19 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
       return new ModelExperimentalNode({
         node: mockNode,
         transform: undefined,
+        transformToRoot: transformToRoot,
+        sceneGraph: mockSceneGraph,
+        children: [],
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("throws for undefined transform to root", function () {
+    expect(function () {
+      return new ModelExperimentalNode({
+        node: mockNode,
+        transform: transform,
+        transformToRoot: undefined,
         sceneGraph: mockSceneGraph,
         children: [],
       });
@@ -49,6 +64,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
       return new ModelExperimentalNode({
         node: mockNode,
         transform: transform,
+        transformToRoot: transformToRoot,
         sceneGraph: undefined,
         children: [],
       });
@@ -61,6 +77,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
         node: mockNode,
         transform: transform,
         sceneGraph: mockSceneGraph,
+        trasnformToRoot: transformToRoot,
         children: undefined,
       });
     }).toThrowDeveloperError();
@@ -70,6 +87,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     const node = new ModelExperimentalNode({
       node: mockNode,
       transform: transform,
+      transformToRoot: transformToRoot,
       sceneGraph: mockSceneGraph,
       children: [],
     });
@@ -78,7 +96,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     expect(node.sceneGraph).toBe(mockSceneGraph);
     expect(node.children.length).toEqual(0);
 
-    verifyTransforms(transform, mockSceneGraph, node);
+    verifyTransforms(transform, transformToRoot, node);
 
     expect(node.pipelineStages).toEqual([]);
     expect(node.updateStages).toEqual([ModelMatrixUpdateStage]);
@@ -94,6 +112,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     const node = new ModelExperimentalNode({
       node: instancedMockNode,
       transform: transform,
+      transformToRoot: transformToRoot,
       sceneGraph: mockSceneGraph,
       children: [],
     });
@@ -102,7 +121,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     expect(node.sceneGraph).toBe(mockSceneGraph);
     expect(node.children.length).toEqual(0);
 
-    verifyTransforms(transform, mockSceneGraph, node);
+    verifyTransforms(transform, transformToRoot, node);
 
     expect(node.pipelineStages.length).toBe(1);
     expect(node.pipelineStages[0]).toEqual(InstancingPipelineStage);
@@ -110,24 +129,28 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     expect(node.runtimePrimitives).toEqual([]);
   });
 
-  function verifyTransforms(transform, sceneGraph, runtimeNode) {
+  function verifyTransforms(transform, transformToRoot, runtimeNode) {
     expect(Matrix4.equals(runtimeNode.transform, transform)).toBe(true);
     expect(Matrix4.equals(runtimeNode.originalTransform, transform)).toBe(true);
+    expect(Matrix4.equals(runtimeNode.transformToRoot, transformToRoot)).toBe(
+      true
+    );
 
-    const expectedComputedTransform = Matrix4.multiplyTransformation(
+    /*const expectedComputedTransform = Matrix4.multiplyTransformation(
       sceneGraph.computedModelMatrix,
       transform,
       new Matrix4()
     );
     expect(
       Matrix4.equals(runtimeNode.computedTransform, expectedComputedTransform)
-    ).toEqual(true);
+    ).toEqual(true);*/
   }
 
   it("getChild throws for undefined index", function () {
     const node = new ModelExperimentalNode({
       node: mockNode,
       transform: transform,
+      transformToRoot: transformToRoot,
       sceneGraph: mockSceneGraph,
       children: [0],
     });
@@ -141,6 +164,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     const node = new ModelExperimentalNode({
       node: mockNode,
       transform: transform,
+      transformToRoot: transformToRoot,
       sceneGraph: mockSceneGraph,
       children: [0],
     });
@@ -154,6 +178,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     const node = new ModelExperimentalNode({
       node: mockNode,
       transform: transform,
+      transformToRoot: transformToRoot,
       sceneGraph: mockSceneGraph,
       children: [0],
     });
@@ -170,6 +195,7 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     const node = new ModelExperimentalNode({
       node: mockNode,
       transform: transform,
+      transformToRoot: transformToRoot,
       sceneGraph: mockSceneGraph,
       children: [0],
     });
@@ -179,24 +205,25 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     expect(child.transform).toBeDefined();
   });
 
-  it("updateModelMatrix works", function () {
+  it("sets transform without replacing original", function () {
     const node = new ModelExperimentalNode({
       node: mockNode,
       transform: transform,
+      transformToRoot: transformToRoot,
       sceneGraph: mockSceneGraph,
       children: [0],
     });
 
-    const expectedNodeTransform = Matrix4.multiplyByTranslation(
-      mockSceneGraph.computedModelMatrix,
+    const newTransform = Matrix4.multiplyByTranslation(
+      Matrix4.IDENTITY,
       new Cartesian3(10, 0, 0),
-      mockSceneGraph.computedModelMatrix
+      new Matrix4()
     );
 
-    node.updateModelMatrix();
+    node.transform = newTransform;
 
-    expect(Matrix4.equals(node.computedTransform, expectedNodeTransform)).toBe(
-      true
-    );
+    expect(node._transformDirty).toBe(true);
+    expect(Matrix4.equals(node.transform, newTransform)).toBe(true);
+    expect(Matrix4.equals(node.originalTransform, transform)).toBe(true);
   });
 });

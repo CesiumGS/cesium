@@ -8,12 +8,13 @@ import ModelMatrixUpdateStage from "./ModelMatrixUpdateStage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
- * An in-memory representation of a node as part of
- * the {@link ModelExperimentalSceneGraph}
+ * An in-memory representation of a node as part of the {@link ModelExperimentalSceneGraph}.
+ *
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.Node} options.node The corresponding node components from the 3D model
- * @param {Matrix4} options.transform The model space transform of this node.
+ * @param {Matrix4} options.transform The local space transform of this node.
+ * @param {Matrix4} options.transformToRoot The transforms of all the node's ancestors, excluding the node's own transform.
  * @param {ModelExperimentalSceneGraph} options.sceneGraph The scene graph this node belongs to.
  * @param {Number[]} options.children The indices of the children of this node in the runtime nodes array of the scene graph.
  *
@@ -27,6 +28,7 @@ export default function ModelExperimentalNode(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.node", options.node);
   Check.typeOf.object("options.transform", options.transform);
+  Check.typeOf.object("options.transformToRoot", options.transformToRoot);
   Check.typeOf.object("options.sceneGraph", options.sceneGraph);
   Check.typeOf.object("options.children", options.children);
   //>>includeEnd('debug');
@@ -47,12 +49,20 @@ export default function ModelExperimentalNode(options) {
     components.upAxis,
     components.forwardAxis
   );
+
+  // current local transform of the node, can be changed by user
   this._transform = Matrix4.clone(transform);
-  this._computedTransform = Matrix4.multiplyTransformation(
+
+  // all ancestors transforms excluding this node's transform
+  // this is only updated when an ancestor's transform is changed
+  this._transformToRoot = options.transformToRoot;
+
+  // delete this, not necessary
+  /*this._computedTransform = Matrix4.multiplyTransformation(
     sceneGraph.computedModelMatrix,
     transform,
     new Matrix4()
-  );
+  );*/
   this._transformDirty = false;
 
   /**
@@ -128,7 +138,8 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   },
 
   /**
-   * The node's model space transform.
+   * The node's local space transform. This can be changed externally so animation
+   * can be driven by another source, not just an animation in the model's asset.
    * <p>
    * For changes to take effect, this property must be assigned to;
    * setting individual elements of the matrix will not work.
@@ -156,16 +167,18 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
         this._sceneGraph.components.upAxis,
         this._sceneGraph.components.forwardAxis
       );
+
+      /*// this has to be replaced by a dirty flag
       Matrix4.multiplyTransformation(
         this._sceneGraph.computedModelMatrix,
         value,
         this._computedTransform
-      );
+      );*/
     },
   },
 
   /**
-   * The node's axis corrected model space transform.
+   * The node's axis corrected local space transform.
    * @type {Matrix4}
    * @private
    * @readonly
@@ -177,19 +190,34 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   },
 
   /**
-   * The node's world space model transform.
+   * The transforms of all the node's ancestors. Multiplying this with the node's
+   * local transform will result in a transform from the node's local space to
+   * the model's scene graph space.
    *
    * @memberof ModelExperimentalNode.prototype
    * @type {Matrix4}
    * @readonly
    */
+  transformToRoot: {
+    get: function () {
+      return this._transformToRoot;
+    },
+  },
+
+  /**
+   * The node's world space model transform.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {Matrix4}
+   * @readonly
+   
   computedTransform: {
     get: function () {
       return this._computedTransform;
     },
   },
   /**
-   * The node's original model space transform.
+   * The node's original local space transform, as specified in the model.
    *
    * @memberof ModelExperimentalNode.prototype
    * @type {Matrix4}

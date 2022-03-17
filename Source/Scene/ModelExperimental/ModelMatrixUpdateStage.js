@@ -28,7 +28,7 @@ ModelMatrixUpdateStage.name = "ModelMatrixUpdateStage"; // Helps with debugging
  */
 ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
   if (runtimeNode._transformDirty) {
-    updateRuntimeNode(runtimeNode, sceneGraph);
+    updateRuntimeNode(runtimeNode, sceneGraph, runtimeNode.transformToRoot);
     runtimeNode._transformDirty = false;
   }
 };
@@ -38,8 +38,14 @@ ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
  *
  * @private
  */
-function updateRuntimeNode(runtimeNode, sceneGraph) {
+function updateRuntimeNode(runtimeNode, sceneGraph, transformToRoot) {
   let i, j;
+
+  const sceneGraphTransform = Matrix4.multiply(
+    transformToRoot,
+    runtimeNode.transform,
+    new Matrix4()
+  );
 
   for (i = 0; i < runtimeNode.runtimePrimitives.length; i++) {
     const runtimePrimitive = runtimeNode.runtimePrimitives[i];
@@ -48,10 +54,9 @@ function updateRuntimeNode(runtimeNode, sceneGraph) {
 
       Matrix4.multiplyTransformation(
         sceneGraph._computedModelMatrix,
-        runtimeNode.transform,
+        sceneGraphTransform,
         drawCommand.modelMatrix
       );
-
       BoundingSphere.transform(
         runtimePrimitive.boundingSphere,
         drawCommand.modelMatrix,
@@ -65,7 +70,10 @@ function updateRuntimeNode(runtimeNode, sceneGraph) {
       const childRuntimeNode =
         sceneGraph._runtimeNodes[runtimeNode.children[i]];
 
-      updateRuntimeNode(childRuntimeNode, sceneGraph);
+      // Update transformToRoot to accommodate changes in the transforms of this node and its ancestors
+      Matrix4.clone(sceneGraphTransform, childRuntimeNode._transformToRoot);
+
+      updateRuntimeNode(childRuntimeNode, sceneGraph, sceneGraphTransform);
       childRuntimeNode._transformDirty = false;
     }
   }

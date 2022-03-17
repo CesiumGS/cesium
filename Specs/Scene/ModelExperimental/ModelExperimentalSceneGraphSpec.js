@@ -233,16 +233,16 @@ describe(
         expect(modelComponents.upAxis).toEqual(Axis.Z);
         expect(modelComponents.forwardAxis).toEqual(Axis.X);
 
-        expect(runtimeNodes[1].transform).toEqual(
-          ModelExperimentalUtility.getNodeTransform(modelComponents.nodes[0])
+        const parentTransform = ModelExperimentalUtility.getNodeTransform(
+          modelComponents.nodes[0]
         );
-        expect(runtimeNodes[0].transform).toEqual(
-          Matrix4.multiplyTransformation(
-            runtimeNodes[1].transform,
-            ModelExperimentalUtility.getNodeTransform(modelComponents.nodes[1]),
-            new Matrix4()
-          )
+        const childTransform = ModelExperimentalUtility.getNodeTransform(
+          modelComponents.nodes[1]
         );
+        expect(runtimeNodes[1].transform).toEqual(parentTransform);
+        expect(runtimeNodes[1].transformToRoot).toEqual(Matrix4.IDENTITY);
+        expect(runtimeNodes[0].transform).toEqual(childTransform);
+        expect(runtimeNodes[0].transformToRoot).toEqual(parentTransform);
       });
     });
 
