@@ -7,7 +7,6 @@ import BlendingState from "../BlendingState.js";
 import DepthFunction from "../DepthFunction.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelLightingOptions from "./ModelLightingOptions.js";
-import NodeRenderResources from "./NodeRenderResources.js";
 
 /**
  * Each node may have many mesh primitives. Most model pipeline stages operate
