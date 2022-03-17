@@ -698,6 +698,33 @@ describe(
       });
     });
 
+    it("initializes with light color", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl, lightColor: Cartesian3.ZERO },
+        scene
+      ).then(function (model) {
+        verifyRender(model, false);
+      });
+    });
+
+    it("changing light color works", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl },
+        scene
+      ).then(function (model) {
+        verifyRender(model, true);
+
+        model.lightColor = Cartesian3.ZERO;
+        verifyRender(model, false);
+
+        model.lightColor = new Cartesian3(1.0, 0.0, 0.0);
+        verifyRender(model, true);
+
+        model.lightColor = undefined;
+        verifyRender(model, true);
+      });
+    });
+
     it("enables back-face culling", function () {
       return loadAndZoomToModelExperimental(
         {

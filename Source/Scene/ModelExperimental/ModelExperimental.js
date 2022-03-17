@@ -1,4 +1,5 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import defined from "../../Core/defined.js";
@@ -47,6 +48,7 @@ import ShadowMode from "../ShadowMode.js";
  * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
+ * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
@@ -151,6 +153,8 @@ export default function ModelExperimental(options) {
   const pointCloudShading = new PointCloudShading(options.pointCloudShading);
   this._attenuation = pointCloudShading.attenuation;
   this._pointCloudShading = pointCloudShading;
+
+  this._lightColor = Cartesian3.clone(options.lightColor);
 
   this._backFaceCulling = defaultValue(options.backFaceCulling, true);
   this._backFaceCullingDirty = false;
@@ -687,6 +691,27 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Cartesian3}
+   * @default undefined
+   */
+  lightColor: {
+    get: function () {
+      return this._lightColor;
+    },
+    set: function (value) {
+      if (defined(value) !== defined(this._lightColor)) {
+        this.resetDrawCommands();
+      }
+
+      this._lightColor = Cartesian3.clone(value, this._lightColor);
+    },
+  },
+
+  /**
    * Whether to cull back-facing geometry. When true, back face culling is
    * determined by the material's doubleSided property; when false, back face
    * culling is disabled. Back faces are not culled if the model's color is
@@ -979,6 +1004,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
+ * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
@@ -1039,6 +1065,7 @@ ModelExperimental.fromGltf = function (options) {
     featureIdLabel: options.featureIdLabel,
     instanceFeatureIdLabel: options.instanceFeatureIdLabel,
     pointCloudShading: options.pointCloudShading,
+    lightColor: options.lightColor,
     backFaceCulling: options.backFaceCulling,
     shadows: options.shadows,
     showCreditsOnScreen: options.showCreditsOnScreen,

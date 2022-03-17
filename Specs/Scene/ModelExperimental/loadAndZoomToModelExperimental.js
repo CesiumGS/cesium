@@ -20,6 +20,7 @@ function loadAndZoomToModelExperimental(options, scene) {
         featureIdLabel: options.featureIdLabel,
         instanceFeatureIdLabel: options.instanceFeatureIdLabel,
         incrementallyLoadTextures: options.incrementallyLoadTextures,
+        lightColor: options.lightColor,
         backFaceCulling: options.backFaceCulling,
         showCreditsOnScreen: options.showCreditsOnScreen,
       });
