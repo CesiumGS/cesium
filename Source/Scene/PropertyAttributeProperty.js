@@ -29,6 +29,7 @@ export default function PropertyAttributeProperty(options) {
   //>>includeEnd('debug');
 
   this._attribute = property.attribute;
+  this._classProperty = classProperty;
   this._offset = property.offset;
   this._scale = property.scale;
   this._min = property.min;
