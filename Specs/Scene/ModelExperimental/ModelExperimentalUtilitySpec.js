@@ -9,7 +9,6 @@ import {
   Quaternion,
   TranslationRotationScale,
   VertexAttributeSemantic,
-  appendForwardSlash,
 } from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
