@@ -43,15 +43,15 @@ export default function ModelExperimentalNode(options) {
 
   const components = sceneGraph.components;
 
-  this._transform = Matrix4.clone(transform);
-  this._transformToRoot = Matrix4.clone(transformToRoot);
+  this._transform = Matrix4.clone(transform, this._transform);
+  this._transformToRoot = Matrix4.clone(transformToRoot, this._transformToRoot);
 
-  this._originalTransform = Matrix4.clone(transform);
-  this._axisCorrectedTransform = Matrix4.clone(transform);
-  ModelExperimentalUtility.correctModelMatrix(
-    this._axisCorrectedTransform,
+  this._originalTransform = Matrix4.clone(transform, this._originalTransform);
+  this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
+    transform,
     components.upAxis,
-    components.forwardAxis
+    components.forwardAxis,
+    this._axisCorrectedTransform
   );
 
   this._transformDirty = false;
@@ -149,14 +149,11 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
       }
       this._transformDirty = true;
       this._transform = Matrix4.clone(value, this._transform);
-      this._axisCorrectedTransform = Matrix4.clone(
+      this._axisCorrectedTransform = ModelExperimentalUtility.correctModelMatrix(
         value,
-        this._axisCorrectedTransform
-      );
-      ModelExperimentalUtility.correctModelMatrix(
-        this._axisCorrectedTransform,
         this._sceneGraph.components.upAxis,
-        this._sceneGraph.components.forwardAxis
+        this._sceneGraph.components.forwardAxis,
+        this._axisCorrectedTransform
       );
     },
   },
