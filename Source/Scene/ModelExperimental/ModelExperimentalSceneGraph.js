@@ -118,7 +118,7 @@ export default function ModelExperimentalSceneGraph(options) {
   this.modelPipelineStages = [];
 
   this._boundingSphere = undefined;
-  this._computedModelMatrix = new Matrix4();
+  this._computedModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
   initialize(this);
 }
@@ -177,15 +177,16 @@ function initialize(sceneGraph) {
     sceneGraph._computedModelMatrix
   );
 
-  ModelExperimentalUtility.correctModelMatrix(
+  sceneGraph._computedModelMatrix = ModelExperimentalUtility.correctModelMatrix(
     sceneGraph._computedModelMatrix,
     components.upAxis,
-    components.forwardAxis
+    components.forwardAxis,
+    sceneGraph._computedModelMatrix
   );
 
   sceneGraph._computedModelMatrix = Matrix4.multiplyByUniformScale(
     sceneGraph._computedModelMatrix,
-    model._computedScale,
+    model.computedScale,
     sceneGraph._computedModelMatrix
   );
 
@@ -407,15 +408,16 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
     this._computedModelMatrix
   );
 
-  ModelExperimentalUtility.correctModelMatrix(
+  this._computedModelMatrix = ModelExperimentalUtility.correctModelMatrix(
     this._computedModelMatrix,
     this._modelComponents.upAxis,
-    this._modelComponents.forwardAxis
+    this._modelComponents.forwardAxis,
+    this._computedModelMatrix
   );
 
   this._computedModelMatrix = Matrix4.multiplyByUniformScale(
     this._computedModelMatrix,
-    model._computedScale,
+    model.computedScale,
     this._computedModelMatrix
   );
 

@@ -120,13 +120,6 @@ export default function ModelExperimental(options) {
     ? Math.min(this._scale, this._maximumScale)
     : this._scale;
 
-  /**
-   * The true scale of the model after being affected by the model's scale,
-   * minimum pixel size, and maximum scale parameters.
-   *
-   * @type {Number}
-   * @private
-   */
   this._computedScale = this._clampedScale;
 
   /**
@@ -724,6 +717,21 @@ Object.defineProperties(ModelExperimental.prototype, {
         this._updateModelMatrix = true;
       }
       this._scale = value;
+    },
+  },
+
+  /**
+   * The true scale of the model after being affected by the model's scale,
+   * minimum pixel size, and maximum scale parameters.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Number}
+   * @private
+   */
+  computedScale: {
+    get: function () {
+      return this._computedScale;
     },
   },
 
