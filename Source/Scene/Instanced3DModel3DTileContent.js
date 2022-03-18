@@ -48,6 +48,9 @@ function Instanced3DModel3DTileContent(
   this._tile = tile;
   this._resource = resource;
   this._modelInstanceCollection = undefined;
+
+  this._metadata = undefined;
+
   this._batchTable = undefined;
   this._features = undefined;
 
@@ -136,6 +139,15 @@ Object.defineProperties(Instanced3DModel3DTileContent.prototype, {
   url: {
     get: function () {
       return this._resource.getUrlComponent(true);
+    },
+  },
+
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
     },
   },
 

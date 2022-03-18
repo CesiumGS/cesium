@@ -28,8 +28,14 @@ FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_VS =
   "initializeFeatureIdsVS";
 FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS =
   "initializeFeatureIdsFS";
+FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_VS =
+  "initializeFeatureIdAliasesVS";
+FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_FS =
+  "initializeFeatureIdAliasesFS";
 FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_IDS =
   "void initializeFeatureIds(out FeatureIds featureIds, ProcessedAttributes attributes)";
+FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_ID_ALIASES =
+  "void initializeFeatureIdAliases(inout FeatureIds featureIds)";
 FeatureIdPipelineStage.FUNCTION_ID_SET_FEATURE_ID_VARYINGS =
   "setFeatureIdVaryings";
 FeatureIdPipelineStage.FUNCTION_SIGNATURE_SET_FEATURE_ID_VARYINGS =
@@ -94,6 +100,19 @@ function declareStructsAndFunctions(shaderBuilder) {
     ShaderDestination.FRAGMENT
   );
 
+  // declare the initializeFeatureIdAliases() function. The details may differ
+  // between vertex and fragment shader
+  shaderBuilder.addFunction(
+    FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_VS,
+    FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_ID_ALIASES,
+    ShaderDestination.VERTEX
+  );
+  shaderBuilder.addFunction(
+    FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_FS,
+    FeatureIdPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_FEATURE_ID_ALIASES,
+    ShaderDestination.FRAGMENT
+  );
+
   // declare the setFeatureIdVaryings() function in the vertex shader only
   shaderBuilder.addFunction(
     FeatureIdPipelineStage.FUNCTION_ID_SET_FEATURE_ID_VARYINGS,
@@ -108,7 +127,7 @@ function processInstanceFeatureIds(renderResources, instances, frameState) {
 
   for (let i = 0; i < featureIdsArray.length; i++) {
     const featureIds = featureIdsArray[i];
-    const variableName = `instanceFeatureId_${i}`;
+    const variableName = featureIds.positionalLabel;
 
     if (featureIds instanceof ModelComponents.FeatureIdAttribute) {
       processInstanceAttribute(renderResources, featureIds, variableName);
@@ -123,6 +142,11 @@ function processInstanceFeatureIds(renderResources, instances, frameState) {
         frameState
       );
     }
+
+    const label = featureIds.label;
+    if (defined(label)) {
+      addAlias(renderResources, variableName, label, ShaderDestination.BOTH);
+    }
   }
 }
 
@@ -136,7 +160,9 @@ function processPrimitiveFeatureIds(renderResources, primitive, frameState) {
 
   for (let i = 0; i < featureIdsArray.length; i++) {
     const featureIds = featureIdsArray[i];
-    const variableName = `featureId_${i}`;
+    const variableName = featureIds.positionalLabel;
+
+    let aliasDestination = ShaderDestination.BOTH;
     if (featureIds instanceof ModelComponents.FeatureIdAttribute) {
       processAttribute(renderResources, featureIds, variableName);
     } else if (featureIds instanceof ModelComponents.FeatureIdImplicitRange) {
@@ -150,6 +176,12 @@ function processPrimitiveFeatureIds(renderResources, primitive, frameState) {
       );
     } else {
       processTexture(renderResources, featureIds, variableName, i, frameState);
+      aliasDestination = ShaderDestination.FRAGMENT;
+    }
+
+    const label = featureIds.label;
+    if (defined(label)) {
+      addAlias(renderResources, variableName, label, aliasDestination);
     }
   }
 }
@@ -163,30 +195,30 @@ function processInstanceAttribute(
   // Example:
   // struct FeatureIds {
   //   ...
-  //   float instanceFeatureId_n;
+  //   int instanceFeatureId_n;
   //   ...
   // }
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
-    "float",
+    "int",
     variableName
   );
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
-    "float",
+    "int",
     variableName
   );
 
   // Initialize the field from the corresponding attribute.
-  // Example: featureIds.instanceFeatureId_n = attributes.instanceFeatureId_0;
+  // Example: featureIds.instanceFeatureId_n = int(czm_round(attributes.instanceFeatureId_0));
   const setIndex = featureIdAttribute.setIndex;
   const prefix = variableName.replace(/_\d+$/, "_");
 
   const attributeName = `a_${prefix}${setIndex}`;
   const varyingName = `v_${prefix}${setIndex}`;
-  const vertexLine = `featureIds.${variableName} = ${attributeName};`;
-  const fragmentLine = `featureIds.${variableName} = ${varyingName};`;
+  const vertexLine = `featureIds.${variableName} = int(czm_round(${attributeName}));`;
+  const fragmentLine = `featureIds.${variableName} = int(czm_round(${varyingName}));`;
 
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_VS,
@@ -214,18 +246,18 @@ function processAttribute(renderResources, featureIdAttribute, variableName) {
   // Example:
   // struct FeatureIds {
   //   ...
-  //   float featureId_n;
+  //   int featureId_n;
   //   ...
   // }
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
-    "float",
+    "int",
     variableName
   );
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
-    "float",
+    "int",
     variableName
   );
 
@@ -237,7 +269,7 @@ function processAttribute(renderResources, featureIdAttribute, variableName) {
   const prefix = variableName.replace(/_\d+$/, "_");
 
   const initializationLines = [
-    `featureIds.${variableName} = attributes.${prefix}${setIndex};`,
+    `featureIds.${variableName} = int(czm_round(attributes.${prefix}${setIndex}));`,
   ];
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_VS,
@@ -282,17 +314,17 @@ function processImplicitRange(
   // Example:
   // struct FeatureIds {
   //   ...
-  //   float featureId_n;
+  //   int featureId_n;
   //   ...
   // }
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
-    "float",
+    "int",
     variableName
   );
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
-    "float",
+    "int",
     variableName
   );
 
@@ -310,11 +342,11 @@ function processImplicitRange(
   // featureIds.featureId_n = v_implicit_featureId_n; (FS)
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_VS,
-    [`featureIds.${variableName} = ${implicitAttributeName};`]
+    [`featureIds.${variableName} = int(czm_round(${implicitAttributeName}));`]
   );
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,
-    [`featureIds.${variableName} = ${implicitVaryingName};`]
+    [`featureIds.${variableName} = int(czm_round(${implicitVaryingName}));`]
   );
 }
 
@@ -337,17 +369,19 @@ function processTexture(
     );
   };
 
+  const channels = textureReader.channels;
+
   // Add a field to the FeatureIds struct in the fragment shader only
   // Example:
   // struct FeatureIds {
   //   ...
-  //   float featureId_n;
+  //   int featureId_n;
   //   ...
   // }
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addStructField(
     FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
-    "float",
+    "int",
     variableName
   );
 
@@ -358,19 +392,58 @@ function processTexture(
     ShaderDestination.FRAGMENT
   );
 
-  // Initialize the FeatureIds struct in the fragment shader.
-  // Example:
-  // featureIds.featureId_n = floor(texture2D(u_featureIdTexture_m, attributes.texCoord_p).r * 255.0 + 0.5);
-
+  // Read one or more channels from the texture
+  // example: texture2D(u_featureIdTexture_0, v_texCoord_1).rg
   const texCoord = `v_texCoord_${textureReader.texCoord}`;
+  const textureRead = `texture2D(${uniformName}, ${texCoord}).${channels}`;
 
-  // The current EXT_mesh_features spec requires a single channel.
-  const channel = textureReader.channels;
-  const textureRead = `texture2D(${uniformName}, ${texCoord}).${channel}`;
-  const rounded = `floor(${textureRead} * 255.0 + 0.5)`;
+  // Finally, assign to the struct field. Example:
+  // featureIds.featureId_0 = unpacked;
+  const initializationLine = `featureIds.${variableName} = czm_unpackUint(${textureRead});`;
+
   shaderBuilder.addFunctionLines(
     FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_IDS_FS,
-    [`featureIds.${variableName} = ${rounded};`]
+    [initializationLine]
+  );
+}
+
+function addAlias(renderResources, variableName, alias, shaderDestination) {
+  // Add a field to the FeatureIds struct.
+  // Example:
+  // struct FeatureIds {
+  //   ...
+  //   int alias;
+  //   ...
+  // }
+  const shaderBuilder = renderResources.shaderBuilder;
+  const updateVS = ShaderDestination.includesVertexShader(shaderDestination);
+  if (updateVS) {
+    shaderBuilder.addStructField(
+      FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_VS,
+      "int",
+      alias
+    );
+  }
+  shaderBuilder.addStructField(
+    FeatureIdPipelineStage.STRUCT_ID_FEATURE_IDS_FS,
+    "int",
+    alias
+  );
+
+  // Initialize the field from the original variable
+  // Example: featureIds.alias = featureIds.featureId_n;
+  const initializationLines = [
+    `featureIds.${alias} = featureIds.${variableName};`,
+  ];
+  if (updateVS) {
+    shaderBuilder.addFunctionLines(
+      FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_VS,
+      initializationLines
+    );
+  }
+  shaderBuilder.addFunctionLines(
+    FeatureIdPipelineStage.FUNCTION_ID_INITIALIZE_FEATURE_ID_ALIASES_FS,
+    initializationLines
   );
 }
 

@@ -81,18 +81,6 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     ],
   };
 
-  const runtimePrimitive = new ModelExperimentalPrimitive({
-    primitive: primitive,
-    node: mockNode,
-    model: mockModel,
-  });
-
-  const runtimePrimitiveWithoutIndices = new ModelExperimentalPrimitive({
-    primitive: primitiveWithoutIndices,
-    node: mockNode,
-    model: mockModel,
-  });
-
   const expectedDepthTest = {
     depthTest: {
       enabled: true,
@@ -100,6 +88,22 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     },
     blending: BlendingState.DISABLED,
   };
+
+  let runtimePrimitive;
+  let runtimePrimitiveWithoutIndices;
+  beforeAll(function () {
+    runtimePrimitive = new ModelExperimentalPrimitive({
+      primitive: primitive,
+      node: mockNode,
+      model: mockModel,
+    });
+
+    runtimePrimitiveWithoutIndices = new ModelExperimentalPrimitive({
+      primitive: primitiveWithoutIndices,
+      node: mockNode,
+      model: mockModel,
+    });
+  });
 
   it("throws for undefined nodeRenderResources", function () {
     expect(function () {

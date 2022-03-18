@@ -83,6 +83,29 @@ ModelExperimentalUtility.getAttributeBySemantic = function (
   }
 };
 
+/**
+ * Find a feature ID from an array with label or positionalLabel matching the
+ * given label
+ * @param {Array.<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange|ModelComponents.FeatureIdTexture>} featureIds
+ * @param {String} label the label to search for
+ * @return {ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange|ModelComponents.FeatureIdTexture} The feature ID set if found, otherwise <code>undefined</code>
+ *
+ * @private
+ */
+ModelExperimentalUtility.getFeatureIdsByLabel = function (featureIds, label) {
+  for (let i = 0; i < featureIds.length; i++) {
+    const featureIdSet = featureIds[i];
+    if (
+      featureIdSet.positionalLabel === label ||
+      featureIdSet.label === label
+    ) {
+      return featureIdSet;
+    }
+  }
+
+  return undefined;
+};
+
 ModelExperimentalUtility.hasQuantizedAttributes = function (attributes) {
   if (!defined(attributes)) {
     return false;

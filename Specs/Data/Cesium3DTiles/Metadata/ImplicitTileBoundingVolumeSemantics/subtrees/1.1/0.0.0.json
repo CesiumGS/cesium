@@ -1,0 +1,35 @@
+{
+  "buffers": [
+    {
+      "uri": "../metadata.bin",
+      "byteLength": 56160
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 56160
+    }
+  ],
+  "tileAvailability": {
+    "constant": 1
+  },
+  "contentAvailability": {
+    "constant": 0
+  },
+  "childSubtreeAvailability": {
+    "constant": 0
+  },
+  "propertyTables": [
+    {
+      "class": "tile",
+      "properties": {
+        "tileBounds": {
+          "values": 0
+        }
+      }
+    }
+  ],
+  "tileMetadata": 0
+}

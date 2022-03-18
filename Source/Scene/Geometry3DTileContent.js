@@ -35,6 +35,8 @@ function Geometry3DTileContent(
   this._contentReadyPromise = undefined;
   this._readyPromise = defer();
 
+  this._metadata = undefined;
+
   this._batchTable = undefined;
   this._features = undefined;
 
@@ -117,6 +119,15 @@ Object.defineProperties(Geometry3DTileContent.prototype, {
   url: {
     get: function () {
       return this._resource.getUrlComponent(true);
+    },
+  },
+
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
     },
   },
 

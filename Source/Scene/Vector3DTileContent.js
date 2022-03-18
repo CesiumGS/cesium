@@ -44,6 +44,8 @@ function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
   this._contentReadyPromise = undefined;
   this._readyPromise = defer();
 
+  this._metadata = undefined;
+
   this._batchTable = undefined;
   this._features = undefined;
 
@@ -140,6 +142,15 @@ Object.defineProperties(Vector3DTileContent.prototype, {
   url: {
     get: function () {
       return this._resource.getUrlComponent(true);
+    },
+  },
+
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
     },
   },
 

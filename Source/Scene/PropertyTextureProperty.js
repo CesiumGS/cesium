@@ -3,10 +3,10 @@ import defaultValue from "../Core/defaultValue.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 
 /**
- * A property in a feature texture.
+ * A property in a property texture.
  *
  * <p>
- * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features Extension} as well as the
+ * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension} as well as the
  * previous {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
  * </p>
  *
@@ -33,12 +33,18 @@ function PropertyTextureProperty(options) {
   Check.typeOf.object("options.textures", textures);
   //>>includeEnd('debug');
 
-  const textureInfo = property.texture;
+  // in EXT_structural_metadata, the property is a valid glTF textureInfo
+  const textureInfo = property;
   const textureReader = GltfLoaderUtil.createModelTextureReader({
     textureInfo: textureInfo,
-    channels: property.channels,
+    channels: reformatChannels(property.channels),
     texture: textures[textureInfo.index],
   });
+
+  this._offset = property.offset;
+  this._scale = property.scale;
+  this._min = property.min;
+  this._max = property.max;
 
   this._textureReader = textureReader;
   this._classProperty = classProperty;
@@ -89,5 +95,21 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
     },
   },
 });
+
+/**
+ * Reformat from an array of channel indices like <code>[0, 1]</code> to a
+ * string of channels as would be used in GLSL swizzling (e.g. "rg")
+ *
+ * @param {Number[]} channels the channel indices
+ * @return {String} The channels as a string of "r", "g", "b" or "a" characters.
+ * @private
+ */
+function reformatChannels(channels) {
+  return channels
+    .map(function (channelIndex) {
+      return "rgba".charAt(channelIndex);
+    })
+    .join("");
+}
 
 export default PropertyTextureProperty;

@@ -562,7 +562,7 @@ describe(
       return loadAndZoomToModelExperimental(
         {
           gltf: boxInstanced,
-          instanceFeatureIdIndex: 1,
+          instanceFeatureIdLabel: "section",
         },
         scene
       ).then(function (model) {
@@ -589,6 +589,39 @@ describe(
         scene
       ).then(function (model) {
         expect(model.featureTableId).toEqual(0);
+      });
+    });
+
+    it("featureIdLabel setter works", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: buildingsMetadata,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.featureIdLabel).toBe("featureId_0");
+        model.featureIdLabel = "buildings";
+        expect(model.featureIdLabel).toBe("buildings");
+        model.featureIdLabel = 1;
+        expect(model.featureIdLabel).toBe("featureId_1");
+      });
+    });
+
+    it("instanceFeatureIdLabel setter works", function () {
+      if (webglStub) {
+        return;
+      }
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxInstanced,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.instanceFeatureIdLabel).toBe("instanceFeatureId_0");
+        model.instanceFeatureIdLabel = "section";
+        expect(model.instanceFeatureIdLabel).toBe("section");
+        model.instanceFeatureIdLabel = 1;
+        expect(model.instanceFeatureIdLabel).toBe("instanceFeatureId_1");
       });
     });
 

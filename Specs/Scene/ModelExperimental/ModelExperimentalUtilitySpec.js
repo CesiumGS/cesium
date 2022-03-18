@@ -379,4 +379,37 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
       )
     ).toBeUndefined();
   });
+
+  it("getFeatureIdsByLabel gets feature ID sets by label", function () {
+    const featureIds = [{ label: "perVertex" }, { label: "perFace" }];
+
+    expect(
+      ModelExperimentalUtility.getFeatureIdsByLabel(featureIds, "perVertex")
+    ).toBe(featureIds[0]);
+    expect(
+      ModelExperimentalUtility.getFeatureIdsByLabel(featureIds, "perFace")
+    ).toBe(featureIds[1]);
+  });
+
+  it("getFeatureIdsByLabel gets feature ID sets by positional label", function () {
+    const featureIds = [
+      { positionalLabel: "featureId_0" },
+      { positionalLabel: "featureId_1" },
+    ];
+
+    expect(
+      ModelExperimentalUtility.getFeatureIdsByLabel(featureIds, "featureId_0")
+    ).toBe(featureIds[0]);
+    expect(
+      ModelExperimentalUtility.getFeatureIdsByLabel(featureIds, "featureId_1")
+    ).toBe(featureIds[1]);
+  });
+
+  it("getFeatureIdsByLabel returns undefined for unknown label", function () {
+    const featureIds = [{ label: "perVertex" }, { label: "perFace" }];
+
+    expect(
+      ModelExperimentalUtility.getFeatureIdsByLabel(featureIds, "other")
+    ).not.toBeDefined();
+  });
 });

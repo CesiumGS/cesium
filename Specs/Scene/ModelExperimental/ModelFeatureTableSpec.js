@@ -7,27 +7,35 @@ import {
 import MetadataTester from "../../MetadataTester.js";
 
 describe("Scene/ModelExperimental/ModelFeatureTable", function () {
-  const properties = {
-    height: {
-      semantic: "HEIGHT_SEMANTIC",
-      componentType: "FLOAT32",
-    },
-    name: {
-      componentType: "STRING",
-    },
-    HEIGHT_SEMANTIC: {
-      componentType: "FLOAT32",
-    },
-  };
-  const propertyValues = {
-    height: [1.0, 2.0],
-    name: ["A", "B"],
-    HEIGHT_SEMANTIC: [3.0, 4.0],
-  };
+  let mockPropertyTable;
+  let properties;
+  let propertyValues;
+  beforeAll(function () {
+    properties = {
+      height: {
+        semantic: "HEIGHT_SEMANTIC",
+        type: "SCALAR",
+        componentType: "FLOAT32",
+      },
+      name: {
+        type: "STRING",
+      },
+      HEIGHT_SEMANTIC: {
+        type: "SCALAR",
+        componentType: "FLOAT32",
+      },
+    };
 
-  const mockPropertyTable = MetadataTester.createPropertyTable({
-    properties: properties,
-    propertyValues: propertyValues,
+    propertyValues = {
+      height: [1.0, 2.0],
+      name: ["A", "B"],
+      HEIGHT_SEMANTIC: [3.0, 4.0],
+    };
+
+    mockPropertyTable = MetadataTester.createPropertyTable({
+      properties: properties,
+      propertyValues: propertyValues,
+    });
   });
 
   it("creates ModelFeatures when model does not have content", function () {
@@ -75,6 +83,20 @@ describe("Scene/ModelExperimental/ModelFeatureTable", function () {
       const feature = modelFeatures[i];
       expect(feature.hasProperty("height")).toEqual(true);
       expect(feature.hasProperty("width")).toEqual(false);
+    }
+  });
+
+  it("hasPropertyBySemantic works", function () {
+    const table = new ModelFeatureTable({
+      model: {
+        type: ModelExperimentalType.GLTF,
+      },
+      propertyTable: mockPropertyTable,
+    });
+    const modelFeatures = table._features;
+    for (let i = 0; i < modelFeatures.length; i++) {
+      expect(table.hasPropertyBySemantic(i, "HEIGHT_SEMANTIC")).toEqual(true);
+      expect(table.hasPropertyBySemantic(i, "WIDTH_SEMANTIC")).toEqual(false);
     }
   });
 
