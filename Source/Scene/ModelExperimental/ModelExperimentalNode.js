@@ -13,8 +13,8 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
  *
  * @param {Object} options An object containing the following options:
  * @param {ModelComponents.Node} options.node The corresponding node components from the 3D model
- * @param {Matrix4} options.transform The local space transform of this node.
- * @param {Matrix4} options.transformToRoot The transforms of all the node's ancestors, excluding the node's own transform.
+ * @param {Matrix4} options.transform The transform of this node, excluding transforms from the node's ancestors or children.
+ * @param {Matrix4} options.transformToRoot The product of the transforms of all the node's ancestors, excluding the node's own transform.
  * @param {ModelExperimentalSceneGraph} options.sceneGraph The scene graph this node belongs to.
  * @param {Number[]} options.children The indices of the children of this node in the runtime nodes array of the scene graph.
  *
@@ -177,7 +177,7 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   },
 
   /**
-   * The node's axis corrected local space transform.
+   * The node's axis corrected local space transform. Used in instancing.
    * @type {Matrix4}
    * @private
    * @readonly
@@ -189,7 +189,7 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   },
 
   /**
-   * The node's original local space transform, as specified in the model.
+   * The node's original transform, as specified in the model. Does not include transformations from the node's ancestors.
    *
    * @memberof ModelExperimentalNode.prototype
    * @type {Matrix4}

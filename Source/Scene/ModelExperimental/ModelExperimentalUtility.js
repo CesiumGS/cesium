@@ -212,13 +212,25 @@ ModelExperimentalUtility.correctModelMatrix = function (
   forwardAxis
 ) {
   if (upAxis === Axis.Y) {
-    Matrix4.multiplyTransformation(modelMatrix, Axis.Y_UP_TO_Z_UP, modelMatrix);
+    modelMatrix = Matrix4.multiplyTransformation(
+      modelMatrix,
+      Axis.Y_UP_TO_Z_UP,
+      modelMatrix
+    );
   } else if (upAxis === Axis.X) {
-    Matrix4.multiplyTransformation(modelMatrix, Axis.X_UP_TO_Z_UP, modelMatrix);
+    modelMatrix = Matrix4.multiplyTransformation(
+      modelMatrix,
+      Axis.X_UP_TO_Z_UP,
+      modelMatrix
+    );
   }
 
   if (forwardAxis === Axis.Z) {
     // glTF 2.0 has a Z-forward convention that must be adapted here to X-forward.
-    Matrix4.multiplyTransformation(modelMatrix, Axis.Z_UP_TO_X_UP, modelMatrix);
+    modelMatrix = Matrix4.multiplyTransformation(
+      modelMatrix,
+      Axis.Z_UP_TO_X_UP,
+      modelMatrix
+    );
   }
 };

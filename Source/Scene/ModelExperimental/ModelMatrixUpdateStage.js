@@ -52,12 +52,12 @@ function updateRuntimeNode(runtimeNode, sceneGraph, transformToRoot) {
     for (j = 0; j < runtimePrimitive.drawCommands.length; j++) {
       const drawCommand = runtimePrimitive.drawCommands[j];
 
-      Matrix4.multiplyTransformation(
+      drawCommand.modelMatrix = Matrix4.multiplyTransformation(
         sceneGraph._computedModelMatrix,
         sceneGraphTransform,
         drawCommand.modelMatrix
       );
-      BoundingSphere.transform(
+      drawCommand.boundingVolume = BoundingSphere.transform(
         runtimePrimitive.boundingSphere,
         drawCommand.modelMatrix,
         drawCommand.boundingVolume
@@ -71,7 +71,10 @@ function updateRuntimeNode(runtimeNode, sceneGraph, transformToRoot) {
         sceneGraph._runtimeNodes[runtimeNode.children[i]];
 
       // Update transformToRoot to accommodate changes in the transforms of this node and its ancestors
-      Matrix4.clone(sceneGraphTransform, childRuntimeNode._transformToRoot);
+      childRuntimeNode._transformToRoot = Matrix4.clone(
+        sceneGraphTransform,
+        childRuntimeNode._transformToRoot
+      );
 
       updateRuntimeNode(childRuntimeNode, sceneGraph, sceneGraphTransform);
       childRuntimeNode._transformDirty = false;

@@ -69,7 +69,7 @@ export default function buildDrawCommands(
     new Matrix4()
   );
 
-  BoundingSphere.transform(
+  primitiveRenderResources.boundingSphere = BoundingSphere.transform(
     primitiveRenderResources.boundingSphere,
     modelMatrix,
     primitiveRenderResources.boundingSphere

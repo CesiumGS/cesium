@@ -171,7 +171,7 @@ function initialize(sceneGraph) {
   const scene = components.scene;
   const model = sceneGraph._model;
 
-  Matrix4.multiplyTransformation(
+  sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
     model.modelMatrix,
     components.transform,
     sceneGraph._computedModelMatrix
@@ -183,7 +183,7 @@ function initialize(sceneGraph) {
     components.forwardAxis
   );
 
-  Matrix4.multiplyByUniformScale(
+  sceneGraph._computedModelMatrix = Matrix4.multiplyByUniformScale(
     sceneGraph._computedModelMatrix,
     model._computedScale,
     sceneGraph._computedModelMatrix
@@ -350,7 +350,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
 
   this._boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
 
-  BoundingSphere.transform(
+  model._boundingSphere = BoundingSphere.transform(
     this._boundingSphere,
     model.modelMatrix,
     model._boundingSphere
@@ -401,7 +401,7 @@ ModelExperimentalSceneGraph.prototype.update = function (frameState) {
 ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
   const model = this._model;
 
-  Matrix4.multiplyTransformation(
+  this._computedModelMatrix = Matrix4.multiplyTransformation(
     model.modelMatrix,
     this._modelComponents.transform,
     this._computedModelMatrix
@@ -413,7 +413,7 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
     this._modelComponents.forwardAxis
   );
 
-  Matrix4.multiplyByUniformScale(
+  this._computedModelMatrix = Matrix4.multiplyByUniformScale(
     this._computedModelMatrix,
     model._computedScale,
     this._computedModelMatrix

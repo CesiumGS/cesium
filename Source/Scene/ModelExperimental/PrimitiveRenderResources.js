@@ -112,14 +112,14 @@ export default function PrimitiveRenderResources(
   this.alphaOptions = clone(nodeRenderResources.alphaOptions);
 
   /**
-   * The scene graph transform for this primitive. This is cloned from the
-   * node render resources as the primitive may further modify it.
+   * The transform from the node's local space to scene graph space for this primitive.
+   * This is cloned from the node render resources as the primitive may further modify it.
    *
    * @type {Matrix4}
    *
    * @private
    */
-  this.transform = Matrix4.clone(nodeRenderResources.transform);
+  this.transform = nodeRenderResources.transform;
 
   /**
    * An object used to build a shader incrementally. This is cloned from the

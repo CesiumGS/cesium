@@ -90,7 +90,7 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
   this.runtimeNode = runtimeNode;
 
   /**
-   * The scene graph transform for this node.
+   * The transform from the node's local space to scene graph space for this node.
    *
    * @type {Matrix4}
    *
