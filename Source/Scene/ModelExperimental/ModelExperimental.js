@@ -903,8 +903,8 @@ ModelExperimental.prototype.update = function (frameState) {
   // without needing to use a setter.
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
     this._updateModelMatrix = true;
-    Matrix4.clone(this.modelMatrix, this._modelMatrix);
-    BoundingSphere.transform(
+    this._modelMatrix = Matrix4.clone(this.modelMatrix, this._modelMatrix);
+    this._boundingSphere = BoundingSphere.transform(
       this._sceneGraph.boundingSphere,
       this.modelMatrix,
       this._boundingSphere
@@ -1200,6 +1200,9 @@ ModelExperimental.fromB3dm = function (options) {
     resource: loaderOptions.b3dmResource,
     type: ModelExperimentalType.TILE_B3DM,
     modelMatrix: options.modelMatrix,
+    scale: options.scale,
+    minimumPixelSize: options.minimumPixelSize,
+    maximumScale: options.maximumScale,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
     cull: options.cull,
     opaquePass: options.opaquePass,
@@ -1212,6 +1215,10 @@ ModelExperimental.fromB3dm = function (options) {
     colorBlendMode: options.colorBlendMode,
     featureIdIndex: options.featureIdIndex,
     instanceFeatureIdIndex: options.instanceFeatureIdIndex,
+    pointCloudShading: options.pointCloudShading,
+    backFaceCulling: options.backFaceCulling,
+    shadows: options.shadows,
+    showCreditsOnScreen: options.showCreditsOnScreen,
   };
 
   const model = new ModelExperimental(modelOptions);
@@ -1233,6 +1240,9 @@ ModelExperimental.fromPnts = function (options) {
     resource: options.resource,
     type: ModelExperimentalType.TILE_PNTS,
     modelMatrix: options.modelMatrix,
+    scale: options.scale,
+    minimumPixelSize: options.minimumPixelSize,
+    maximumScale: options.maximumScale,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
     cull: options.cull,
     opaquePass: options.opaquePass,
@@ -1245,6 +1255,10 @@ ModelExperimental.fromPnts = function (options) {
     colorBlendMode: options.colorBlendMode,
     featureIdIndex: options.featureIdIndex,
     instanceFeatureIdIndex: options.instanceFeatureIdIndex,
+    pointCloudShading: options.pointCloudShading,
+    backFaceCulling: options.backFaceCulling,
+    shadows: options.shadows,
+    showCreditsOnScreen: options.showCreditsOnScreen,
   };
 
   const model = new ModelExperimental(modelOptions);
@@ -1272,6 +1286,9 @@ ModelExperimental.fromI3dm = function (options) {
     resource: loaderOptions.i3dmResource,
     type: ModelExperimentalType.TILE_I3DM,
     modelMatrix: options.modelMatrix,
+    scale: options.scale,
+    minimumPixelSize: options.minimumPixelSize,
+    maximumScale: options.maximumScale,
     debugShowBoundingVolume: options.debugShowBoundingVolume,
     cull: options.cull,
     opaquePass: options.opaquePass,
@@ -1279,8 +1296,15 @@ ModelExperimental.fromI3dm = function (options) {
     customShader: options.customShader,
     content: options.content,
     show: options.show,
-    featureIdAttributeIndex: options.featureIdAttributeIndex,
-    featureIdTextureIndex: options.featureIdTextureIndex,
+    color: options.color,
+    colorBlendAmount: options.colorBlendAmount,
+    colorBlendMode: options.colorBlendMode,
+    featureIdIndex: options.featureIdIndex,
+    instanceFeatureIdIndex: options.instanceFeatureIdIndex,
+    pointCloudShading: options.pointCloudShading,
+    backFaceCulling: options.backFaceCulling,
+    shadows: options.shadows,
+    showCreditsOnScreen: options.showCreditsOnScreen,
   };
   const model = new ModelExperimental(modelOptions);
   return model;
