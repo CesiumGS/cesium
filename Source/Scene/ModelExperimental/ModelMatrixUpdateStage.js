@@ -28,33 +28,36 @@ ModelMatrixUpdateStage.name = "ModelMatrixUpdateStage"; // Helps with debugging
  */
 ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
   if (runtimeNode._transformDirty) {
-    updateRuntimeNode(runtimeNode, sceneGraph, runtimeNode.transform);
+    updateRuntimeNode(runtimeNode, sceneGraph, runtimeNode.transformToRoot);
     runtimeNode._transformDirty = false;
   }
 };
-
-const transformScratch = new Matrix4();
 
 /**
  * Recursively update all child runtime nodes and their runtime primitives.
  *
  * @private
  */
-function updateRuntimeNode(runtimeNode, sceneGraph, transform) {
+function updateRuntimeNode(runtimeNode, sceneGraph, transformToRoot) {
   let i, j;
+
+  const sceneGraphTransform = Matrix4.multiplyTransformation(
+    transformToRoot,
+    runtimeNode.transform,
+    new Matrix4()
+  );
 
   for (i = 0; i < runtimeNode.runtimePrimitives.length; i++) {
     const runtimePrimitive = runtimeNode.runtimePrimitives[i];
     for (j = 0; j < runtimePrimitive.drawCommands.length; j++) {
       const drawCommand = runtimePrimitive.drawCommands[j];
 
-      Matrix4.multiplyTransformation(
+      drawCommand.modelMatrix = Matrix4.multiplyTransformation(
         sceneGraph._computedModelMatrix,
-        transform,
+        sceneGraphTransform,
         drawCommand.modelMatrix
       );
-
-      BoundingSphere.transform(
+      drawCommand.boundingVolume = BoundingSphere.transform(
         runtimePrimitive.boundingSphere,
         drawCommand.modelMatrix,
         drawCommand.boundingVolume
@@ -67,13 +70,14 @@ function updateRuntimeNode(runtimeNode, sceneGraph, transform) {
       const childRuntimeNode =
         sceneGraph._runtimeNodes[runtimeNode.children[i]];
 
-      Matrix4.multiplyTransformation(
-        runtimeNode.transform,
-        childRuntimeNode.transform,
-        transformScratch
+      // Update transformToRoot to accommodate changes in the transforms of this node and its ancestors
+      childRuntimeNode._transformToRoot = Matrix4.clone(
+        sceneGraphTransform,
+        childRuntimeNode._transformToRoot
       );
 
-      updateRuntimeNode(childRuntimeNode, sceneGraph, transformScratch);
+      updateRuntimeNode(childRuntimeNode, sceneGraph, sceneGraphTransform);
+      childRuntimeNode._transformDirty = false;
     }
   }
 }

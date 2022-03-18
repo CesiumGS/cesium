@@ -22,9 +22,9 @@
  */
 
 /**
- * @private
  * Creates a deferred object, containing a promise object, and functions to resolve or reject the promise.
  * @returns {defer.deferred}
+ * @private
  */
 function defer() {
   let resolve;
