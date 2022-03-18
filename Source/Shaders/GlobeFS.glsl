@@ -9,6 +9,14 @@ uniform bool u_dayTextureUseWebMercatorT[TEXTURE_UNITS];
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
 #endif
 
+#ifdef APPLY_SHOW_INVERT_COLOR
+uniform bool u_dayTextureShowInvertColor[TEXTURE_UNITS];
+#endif
+
+#ifdef APPLY_FILTER_COLOR
+uniform vec4 u_dayTextureFilterColor[TEXTURE_UNITS];
+#endif
+
 #ifdef APPLY_DAY_NIGHT_ALPHA
 uniform float u_dayTextureNightAlpha[TEXTURE_UNITS];
 uniform float u_dayTextureDayAlpha[TEXTURE_UNITS];
@@ -167,6 +175,8 @@ vec4 sampleAndBlend(
     vec4 textureCoordinateRectangle,
     vec4 textureCoordinateTranslationAndScale,
     float textureAlpha,
+    bool textureShowInvertColor,
+    vec4 textureFilterColor,
     float textureNightAlpha,
     float textureDayAlpha,
     float textureBrightness,
@@ -214,6 +224,20 @@ vec4 sampleAndBlend(
     alpha = tempColor.a;
 #else
     color = pow(color, vec3(textureOneOverGamma));
+#endif
+
+#ifdef APPLY_SHOW_INVERT_COLOR
+    if (textureShowInvertColor) {
+        color.r = 1.0 - color.r;
+        color.g = 1.0 - color.g;
+        color.b = 1.0 - color.b;
+    }
+#endif
+
+#ifdef APPLY_FILTER_COLOR
+    color.r = color.r * textureFilterColor.x;
+    color.g = color.g * textureFilterColor.y;
+    color.b = color.b * textureFilterColor.z;
 #endif
 
 #ifdef APPLY_SPLIT

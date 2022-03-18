@@ -80,6 +80,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
   const applySaturation = options.applySaturation;
   const applyGamma = options.applyGamma;
   const applyAlpha = options.applyAlpha;
+  const applyShowInvertColor = options.applyShowInvertColor;
+  const applyFilterColor = options.applyFilterColor;
   const applyDayNightAlpha = options.applyDayNightAlpha;
   const applySplit = options.applySplit;
   const showReflectiveOcean = options.showReflectiveOcean;
@@ -227,6 +229,12 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     if (applyAlpha) {
       fs.defines.push("APPLY_ALPHA");
     }
+    if (applyShowInvertColor) {
+      fs.defines.push("APPLY_SHOW_INVERT_COLOR");
+    }
+    if (applyFilterColor) {
+      fs.defines.push("APPLY_FILTER_COLOR");
+    }
     if (applyDayNightAlpha) {
       fs.defines.push("APPLY_DAY_NIGHT_ALPHA");
     }
@@ -335,6 +343,14 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
             u_dayTextureTexCoordsRectangle[${i}],\n\
             u_dayTextureTranslationAndScale[${i}],\n\
             ${applyAlpha ? `u_dayTextureAlpha[${i}]` : "1.0"},\n\
+            ${
+              applyShowInvertColor
+                ? `u_dayTextureShowInvertColor[${i}]`
+                : "false"
+            },\n\
+            ${
+              applyFilterColor ? `u_dayTextureFilterColor[${i}]` : "vec4(0.0)"
+            },\n\
             ${applyDayNightAlpha ? `u_dayTextureNightAlpha[${i}]` : "1.0"},\n${
         applyDayNightAlpha ? `u_dayTextureDayAlpha[${i}]` : "1.0"
       },\n${applyBrightness ? `u_dayTextureBrightness[${i}]` : "0.0"},\n\

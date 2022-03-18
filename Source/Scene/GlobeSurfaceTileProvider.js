@@ -1587,6 +1587,7 @@ GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden = function (
 
 const scratchClippingPlanesMatrix = new Matrix4();
 const scratchInverseTransposeClippingPlanesMatrix = new Matrix4();
+
 function createTileUniformMap(frameState, globeSurfaceTileProvider) {
   const uniformMap = {
     u_initialColor: function () {
@@ -1660,6 +1661,12 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     },
     u_dayTextureAlpha: function () {
       return this.properties.dayTextureAlpha;
+    },
+    u_dayTextureShowInvertColor: function () {
+      return this.properties.dayTextureShowInvertColor;
+    },
+    u_dayTextureFilterColor: function () {
+      return this.properties.dayTextureFilterColor;
     },
     u_dayTextureNightAlpha: function () {
       return this.properties.dayTextureNightAlpha;
@@ -1791,6 +1798,8 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       dayTextureTexCoordsRectangle: [],
       dayTextureUseWebMercatorT: [],
       dayTextureAlpha: [],
+      dayTextureShowInvertColor: [],
+      dayTextureFilterColor: [],
       dayTextureNightAlpha: [],
       dayTextureDayAlpha: [],
       dayTextureBrightness: [],
@@ -2000,6 +2009,8 @@ const surfaceShaderSetOptionsScratch = {
   applySaturation: undefined,
   applyGamma: undefined,
   applyAlpha: undefined,
+  applyShowInvertColor: undefined,
+  applyFilterColor: undefined,
   applyDayNightAlpha: undefined,
   applySplit: undefined,
   showReflectiveOcean: undefined,
@@ -2463,6 +2474,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     let applySaturation = false;
     let applyGamma = false;
     let applyAlpha = false;
+    let applyShowInvertColor = false;
+    let applyFilterColor = false;
     let applyDayNightAlpha = false;
     let applySplit = false;
     let applyCutout = false;
@@ -2519,6 +2532,24 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       applyAlpha =
         applyAlpha ||
         uniformMapProperties.dayTextureAlpha[numberOfDayTextures] !== 1.0;
+
+      uniformMapProperties.dayTextureShowInvertColor[numberOfDayTextures] =
+        imageryLayer.showInvertColor;
+      applyShowInvertColor =
+        applyShowInvertColor ||
+        uniformMapProperties.dayTextureShowInvertColor[numberOfDayTextures] !==
+          false;
+
+      uniformMapProperties.dayTextureFilterColor[
+        numberOfDayTextures
+      ] = new Cartesian4(
+        imageryLayer.filterColor.red,
+        imageryLayer.filterColor.green,
+        imageryLayer.filterColor.blue,
+        1.0
+      );
+      applyFilterColor =
+        applyFilterColor || imageryLayer.filterColor !== Cesium.Color.WHITE;
 
       uniformMapProperties.dayTextureNightAlpha[numberOfDayTextures] =
         imageryLayer.nightAlpha;
@@ -2679,6 +2710,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     surfaceShaderSetOptions.applySaturation = applySaturation;
     surfaceShaderSetOptions.applyGamma = applyGamma;
     surfaceShaderSetOptions.applyAlpha = applyAlpha;
+    surfaceShaderSetOptions.applyShowInvertColor = applyShowInvertColor;
+    surfaceShaderSetOptions.applyFilterColor = applyFilterColor;
     surfaceShaderSetOptions.applyDayNightAlpha = applyDayNightAlpha;
     surfaceShaderSetOptions.applySplit = applySplit;
     surfaceShaderSetOptions.enableFog = applyFog;

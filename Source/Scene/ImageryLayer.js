@@ -54,6 +54,10 @@ import TileImagery from "./TileImagery.js";
  *                          current frame state, this layer, and the x, y, and level coordinates of the
  *                          imagery tile for which the alpha is required, and it is expected to return
  *                          the alpha value to use for the tile.
+ * @param {Bool} [options.showInvertColor=false] The showInvertColor of the this layer, with true representing the color of this layer will be inverted
+ *                          and false representing no effect.
+ * @param {Color} [options.filterColor=Cesium.Color.WHITE] The filterColor value of this layer, the color of this layer will be changed by the value,
+ *                          this only takes effect by RGB, the alpha doesn't included, and Cesium.Color(1.0, 1.0, 1.0, 1.0) of the filterColor value respresenting no effect.
  * @param {Number|Function} [options.nightAlpha=1.0] The alpha blending value of this layer on the night side of the globe, from 0.0 to 1.0.
  *                          This can either be a simple number or a function with the signature
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
@@ -141,6 +145,31 @@ function ImageryLayer(imageryProvider, options) {
   this.alpha = defaultValue(
     options.alpha,
     defaultValue(imageryProvider.defaultAlpha, 1.0)
+  );
+
+  /**
+   * The showInvertColor of the this layer, with true representing the color of this layer will be inverted
+   * and false representing no effect.
+   *
+   * @type {Bool}
+   * @default false
+   */
+  this.showInvertColor = defaultValue(
+    options.showInvertColor,
+    defaultValue(imageryProvider.defaultShowInvertColor, false)
+  );
+
+  /**
+   * The filterColor value of this layer, the color of this layer will be changed by the value,
+   * this only takes effect by RGB, the alpha doesn't included,
+   * and Cesium.Color(1.0, 1.0, 1.0, 1.0) of the filterColor value respresenting no effect.
+   *
+   * @type {Color}
+   * @default Cesium.Color.WHITE
+   */
+  this.filterColor = defaultValue(
+    options.filterColor,
+    defaultValue(imageryProvider.defaultFilterColor, Cesium.Color.WHITE)
   );
 
   /**

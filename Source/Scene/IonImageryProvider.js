@@ -75,6 +75,25 @@ function IonImageryProvider(options) {
   this.defaultAlpha = undefined;
 
   /**
+   * The showInvertColor of the this layer, with true representing the color of this layer will be inverted
+   * and false representing no effect.
+   *
+   * @type {Bool|undefined}
+   * @default undefined
+   */
+  this.defaultShowInvertColor = undefined;
+
+  /**
+   * The filterColor value of this layer, the color of this layer will be changed by the value,
+   * this only takes effect by RGB, the alpha doesn't included,
+   * and Cesium.Color(1.0, 1.0, 1.0, 1.0) of the filterColor value respresenting no effect.
+   *
+   * @type {Color|undefined}
+   * @default undefined
+   */
+  this.defaultFilterColor = undefined;
+
+  /**
    * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
