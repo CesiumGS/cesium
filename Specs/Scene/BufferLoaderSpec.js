@@ -1,8 +1,8 @@
 import {
   BufferLoader,
+  defer,
   Resource,
   ResourceCache,
-  when,
 } from "../../Source/Cesium.js";
 
 describe("Scene/BufferLoader", function () {
@@ -34,9 +34,9 @@ describe("Scene/BufferLoader", function () {
 
   it("rejects promise if buffer cannot be fetched", function () {
     const error = new Error("404 Not Found");
-    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.reject(error)
-    );
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
+      return Promise.reject(error);
+    });
 
     const bufferLoader = new BufferLoader({
       resource: resource,
@@ -48,7 +48,7 @@ describe("Scene/BufferLoader", function () {
       .then(function (bufferLoader) {
         fail();
       })
-      .otherwise(function (runtimeError) {
+      .catch(function (runtimeError) {
         expect(runtimeError.message).toBe(
           "Failed to load external buffer: https://example.com/external.bin\n404 Not Found"
         );
@@ -70,7 +70,7 @@ describe("Scene/BufferLoader", function () {
     const fetchBuffer = spyOn(
       Resource.prototype,
       "fetchArrayBuffer"
-    ).and.returnValue(when.resolve(arrayBuffer));
+    ).and.returnValue(Promise.resolve(arrayBuffer));
 
     const bufferLoader = new BufferLoader({
       resource: resource,
@@ -86,7 +86,7 @@ describe("Scene/BufferLoader", function () {
 
   it("destroys buffer", function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.resolve(arrayBuffer)
+      Promise.resolve(arrayBuffer)
     );
 
     const bufferLoader = new BufferLoader({
@@ -108,7 +108,7 @@ describe("Scene/BufferLoader", function () {
   });
 
   function resolveAfterDestroy(reject) {
-    const deferredPromise = when.defer();
+    const deferredPromise = defer();
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       deferredPromise.promise
     );

@@ -1,6 +1,6 @@
-import when from "../ThirdParty/when.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
+import defer from "./defer.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -55,7 +55,7 @@ function VRTheWorldTerrainProvider(options) {
 
   this._errorEvent = new Event();
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   this._terrainDataStructure = {
     heightScale: 1.0 / 1000.0,
@@ -145,7 +145,7 @@ function VRTheWorldTerrainProvider(options) {
   }
 
   function requestMetadata() {
-    when(that._resource.fetchXML(), metadataSuccess, metadataFailure);
+    that._resource.fetchXML().then(metadataSuccess).catch(metadataFailure);
   }
 
   requestMetadata();
@@ -310,7 +310,7 @@ VRTheWorldTerrainProvider.prototype.requestTileGeometry = function (
   }
 
   const that = this;
-  return when(promise).then(function (image) {
+  return Promise.resolve(promise).then(function (image) {
     return new HeightmapTerrainData({
       buffer: getImagePixels(image),
       width: that._heightmapWidth,

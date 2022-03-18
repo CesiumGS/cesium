@@ -47,7 +47,6 @@ require({
   "dojo/parser",
   "dojo/promise/all",
   "dojo/query",
-  "dojo/when",
   "dojo/request/script",
   "Sandcastle/LinkButton",
   "ThirdParty/clipboard.min",
@@ -92,7 +91,6 @@ require({
   parser,
   all,
   query,
-  when,
   dojoscript,
   LinkButton,
   ClipboardJS,
@@ -1470,7 +1468,7 @@ require({
     });
   }
 
-  when(promise).then(function () {
+  Promise.resolve(promise).then(function () {
     dom.byId("searchDemos").appendChild(galleryErrorMsg);
     searchContainer = registry.byId("searchContainer");
 

@@ -91,9 +91,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       layers: "someLayer",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(typeof provider.hasAlphaChannel).toBe("boolean");
     });
   });
@@ -106,9 +104,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       ellipsoid: ellipsoid,
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider.tilingScheme.ellipsoid).toEqual(ellipsoid);
     });
   });
@@ -124,9 +120,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       spyOn(Resource._Implementations, "createImage").and.callFake(function (
         request,
         crossOrigin,
@@ -158,9 +152,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       spyOn(Resource._Implementations, "createImage").and.callFake(function (
         request,
         crossOrigin,
@@ -191,9 +183,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       spyOn(Resource._Implementations, "createImage").and.callFake(function (
         request,
         crossOrigin,
@@ -225,9 +215,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       spyOn(Resource._Implementations, "createImage").and.callFake(function (
         request,
         crossOrigin,
@@ -259,9 +247,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       spyOn(Resource._Implementations, "createImage").and.callFake(function (
         request,
         crossOrigin,
@@ -293,9 +279,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       spyOn(Resource._Implementations, "createImage").and.callFake(function (
         request,
         crossOrigin,
@@ -327,9 +311,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       spyOn(Resource._Implementations, "createImage").and.callFake(function (
         request,
         crossOrigin,
@@ -360,9 +342,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       spyOn(Resource._Implementations, "createImage").and.callFake(function (
         request,
         crossOrigin,
@@ -393,9 +373,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       spyOn(Resource._Implementations, "createImage").and.callFake(function (
         request,
         crossOrigin,
@@ -425,9 +403,12 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     spyOn(ImageryProvider, "loadImage");
-    provider.requestImage(0, 0, 0);
-    const url = ImageryProvider.loadImage.calls.mostRecent().args[1].url;
-    expect("123".indexOf(url.substring(0, 1))).toBeGreaterThanOrEqualTo(0);
+
+    return provider.readyPromise.then(function () {
+      provider.requestImage(0, 0, 0);
+      const url = ImageryProvider.loadImage.calls.mostRecent().args[1].url;
+      expect("123".indexOf(url.substring(0, 1))).toBeGreaterThanOrEqualTo(0);
+    });
   });
 
   it("supports subdomains array in URL", function () {
@@ -438,11 +419,13 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     });
 
     spyOn(ImageryProvider, "loadImage");
-    provider.requestImage(0, 0, 0);
-    const url = ImageryProvider.loadImage.calls.mostRecent().args[1].url;
-    expect(
-      ["foo", "bar"].indexOf(url.substring(0, 3))
-    ).toBeGreaterThanOrEqualTo(0);
+    return provider.readyPromise.then(function () {
+      provider.requestImage(0, 0, 0);
+      const url = ImageryProvider.loadImage.calls.mostRecent().args[1].url;
+      expect(
+        ["foo", "bar"].indexOf(url.substring(0, 3))
+      ).toBeGreaterThanOrEqualTo(0);
+    });
   });
 
   it("supports a question mark at the end of the URL", function () {
@@ -451,9 +434,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       layers: "someLayer",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       spyOn(Resource._Implementations, "createImage").and.callFake(function (
         request,
         crossOrigin,
@@ -478,9 +459,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       layers: "someLayer",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       spyOn(Resource._Implementations, "createImage").and.callFake(function (
         request,
         crossOrigin,
@@ -507,9 +486,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       layers: "someLayer",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       spyOn(Resource._Implementations, "createImage").and.callFake(function (
         request,
         crossOrigin,
@@ -539,9 +516,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       layers: "someLayer",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       spyOn(Resource._Implementations, "createImage").and.callFake(function (
         request,
         crossOrigin,
@@ -571,9 +546,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     expect(provider.url).toEqual("made/up/wms/server");
     expect(provider.layers).toEqual("someLayer");
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider.tileWidth).toEqual(256);
       expect(provider.tileHeight).toEqual(256);
       expect(provider.maximumLevel).toBeUndefined();
@@ -613,9 +586,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     expect(provider.url).toEqual("made/up/wms/server");
     expect(provider.layers).toEqual("someLayer");
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider.tileWidth).toEqual(256);
       expect(provider.tileHeight).toEqual(256);
       expect(provider.maximumLevel).toBeUndefined();
@@ -668,9 +639,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     expect(provider.url).toEqual("made/up/wms/server");
     expect(provider.layers).toEqual("someLayer");
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider.tileWidth).toEqual(256);
       expect(provider.tileHeight).toEqual(256);
       expect(provider.maximumLevel).toBeUndefined();
@@ -720,9 +689,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     expect(provider.url).toEqual("made/up/wms/server");
     expect(provider.layers).toEqual("someLayer");
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider.tileWidth).toEqual(256);
       expect(provider.tileHeight).toEqual(256);
       expect(provider.maximumLevel).toBeUndefined();
@@ -775,9 +742,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     expect(provider.url).toEqual("made/up/wms/server");
     expect(provider.layers).toEqual("someLayer");
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider.tileWidth).toEqual(256);
       expect(provider.tileHeight).toEqual(256);
       expect(provider.maximumLevel).toBeUndefined();
@@ -830,9 +795,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     expect(provider.url).toEqual("made/up/wms/server");
     expect(provider.layers).toEqual("someLayer");
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider.tileWidth).toEqual(256);
       expect(provider.tileHeight).toEqual(256);
       expect(provider.maximumLevel).toBeUndefined();
@@ -885,9 +848,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     expect(provider.url).toEqual("made/up/wms/server");
     expect(provider.layers).toEqual("someLayer");
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider.tileWidth).toEqual(256);
       expect(provider.tileHeight).toEqual(256);
       expect(provider.maximumLevel).toBeUndefined();
@@ -935,9 +896,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       },
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       spyOn(Resource._Implementations, "createImage").and.callFake(function (
         request,
         crossOrigin,
@@ -968,14 +927,18 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       url: "made/up/wms/server?foo=bar",
       layers: "someLayer",
     });
-    expect(provider.credit).toBeUndefined();
+    expect(function () {
+      return provider.credit;
+    }).toThrowDeveloperError();
 
     const providerWithCredit = new WebMapServiceImageryProvider({
       url: "made/up/wms/server?foo=bar",
       layers: "someLayer",
       credit: "Thanks to our awesome made up source of this imagery!",
     });
-    expect(providerWithCredit.credit).toBeDefined();
+    return provider.readyPromise.then(function () {
+      expect(providerWithCredit.credit).toBeDefined();
+    });
   });
 
   it("uses rectangle passed to constructor", function () {
@@ -986,9 +949,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       rectangle: rectangle,
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider.tileWidth).toEqual(256);
       expect(provider.tileHeight).toEqual(256);
       expect(provider.maximumLevel).toBeUndefined();
@@ -1007,7 +968,9 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       layers: "someLayer",
       maximumLevel: 5,
     });
-    expect(provider.maximumLevel).toEqual(5);
+    return provider.readyPromise.then(function () {
+      expect(provider.maximumLevel).toEqual(5);
+    });
   });
 
   it("uses minimumLevel passed to constructor", function () {
@@ -1016,7 +979,9 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       layers: "someLayer",
       minimumLevel: 1,
     });
-    expect(provider.minimumLevel).toEqual(1);
+    return provider.readyPromise.then(function () {
+      expect(provider.minimumLevel).toEqual(1);
+    });
   });
 
   it("uses tilingScheme passed to constructor", function () {
@@ -1026,7 +991,9 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       layers: "someLayer",
       tilingScheme: tilingScheme,
     });
-    expect(provider.tilingScheme).toBe(tilingScheme);
+    return provider.readyPromise.then(function () {
+      expect(provider.tilingScheme).toBe(tilingScheme);
+    });
   });
 
   it("uses tileWidth passed to constructor", function () {
@@ -1035,7 +1002,9 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       layers: "someLayer",
       tileWidth: 123,
     });
-    expect(provider.tileWidth).toBe(123);
+    return provider.readyPromise.then(function () {
+      expect(provider.tileWidth).toBe(123);
+    });
   });
 
   it("uses tileHeight passed to constructor", function () {
@@ -1044,7 +1013,9 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       layers: "someLayer",
       tileWidth: 456,
     });
-    expect(provider.tileWidth).toBe(456);
+    return provider.readyPromise.then(function () {
+      expect(provider.tileWidth).toBe(456);
+    });
   });
 
   it("raises error event when image cannot be loaded", function () {
@@ -1053,9 +1024,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       layers: "someLayer",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       const layer = new ImageryLayer(provider);
 
       let tries = 0;
@@ -1133,9 +1102,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         );
       };
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
         return provider
           .pickFeatures(0, 0, 0, 0.5, 0.5)
           .then(function (pickResult) {
@@ -1179,9 +1146,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         );
       };
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
         return provider
           .pickFeatures(0, 0, 0, 0.5, 0.5)
           .then(function (pickResult) {
@@ -1222,9 +1187,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         );
       };
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
         return provider
           .pickFeatures(0, 0, 0, 0.5, 0.5)
           .then(function (pickResult) {
@@ -1265,9 +1228,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         );
       };
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
         return provider
           .pickFeatures(0, 0, 0, 0.5, 0.5)
           .then(function (pickResult) {
@@ -1308,9 +1269,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         );
       };
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
         return provider
           .pickFeatures(0, 0, 0, 0.5, 0.5)
           .then(function (pickResult) {
@@ -1351,9 +1310,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         );
       };
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
         return provider
           .pickFeatures(0, 0, 0, 0.5, 0.5)
           .then(function (pickResult) {
@@ -1394,9 +1351,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         );
       };
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
         return provider
           .pickFeatures(0, 0, 0, 0.5, 0.5)
           .then(function (pickResult) {
@@ -1412,9 +1367,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         getFeatureInfoFormats: [],
       });
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
         expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
       });
     });
@@ -1426,11 +1379,8 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         enablePickFeatures: false,
       });
 
-      expect(provider.enablePickFeatures).toBe(false);
-
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
+        expect(provider.enablePickFeatures).toBe(false);
         expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
       });
     });
@@ -1442,12 +1392,9 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         enablePickFeatures: true,
       });
 
-      provider.enablePickFeatures = false;
-      expect(provider.enablePickFeatures).toBe(false);
-
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
+        provider.enablePickFeatures = false;
+        expect(provider.enablePickFeatures).toBe(false);
         expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
       });
     });
@@ -1459,12 +1406,9 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         enablePickFeatures: false,
       });
 
-      provider.enablePickFeatures = true;
-      expect(provider.enablePickFeatures).toBe(true);
-
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
+        provider.enablePickFeatures = true;
+        expect(provider.enablePickFeatures).toBe(true);
         expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).not.toBeUndefined();
       });
     });
@@ -1498,9 +1442,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         );
       };
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
         return provider
           .pickFeatures(0, 0, 0, 0.5, 0.5)
           .then(function (pickResult) {
@@ -1521,9 +1463,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         getFeatureInfoFormats: [new GetFeatureInfoFormat("json")],
       });
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
         Resource._Implementations.loadWithXhr = function (
           url,
           responseType,
@@ -1556,7 +1496,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           .then(function (features) {
             expect(features.length).toBe(0);
           })
-          .otherwise(function () {});
+          .catch(function () {});
       });
     });
 
@@ -1596,9 +1536,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         );
       };
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
         return provider.pickFeatures(0, 0, 0, 0.5, 0.5);
       });
     });
@@ -1639,9 +1577,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         );
       };
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
         return provider.pickFeatures(0, 0, 0, 0.5, 0.5);
       });
     });
@@ -1678,9 +1614,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           overrideMimeType
         );
       };
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
         return provider.pickFeatures(0, 0, 0, 0.5, 0.5);
       });
     });
@@ -1702,9 +1636,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         ],
       });
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
         Resource._Implementations.loadWithXhr = function (
           url,
           responseType,
@@ -1770,9 +1702,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         );
       };
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
         return provider
           .pickFeatures(0, 0, 0, 0.5, 0.5)
           .then(function (pickResult) {
@@ -1835,9 +1765,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       };
 
       let entry;
-      return pollToPromise(function () {
-        return provider.ready;
-      })
+      return provider.readyPromise
         .then(function () {
           clock.currentTime = JulianDate.fromIso8601("2017-04-26T23:59:56Z");
           return provider.requestImage(0, 0, 0, new Request());
@@ -1894,9 +1822,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       };
 
       let entry;
-      return pollToPromise(function () {
-        return provider.ready;
-      })
+      return provider.readyPromise
         .then(function () {
           return provider.requestImage(0, 0, 0, new Request());
         })
@@ -1961,9 +1887,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       provider._reload = jasmine.createSpy();
       spyOn(provider._timeDynamicImagery, "getFromCache").and.callThrough();
 
-      return pollToPromise(function () {
-        return provider.ready;
-      })
+      return provider.readyPromise
         .then(function () {
           clock.currentTime = JulianDate.fromIso8601("2017-04-26T23:59:59Z");
           return provider.requestImage(0, 0, 0, new Request());
@@ -2023,9 +1947,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       provider._reload = jasmine.createSpy();
       spyOn(provider._timeDynamicImagery, "getFromCache").and.callThrough();
 
-      return pollToPromise(function () {
-        return provider.ready;
-      })
+      return provider.readyPromise
         .then(function () {
           return provider.requestImage(0, 0, 0, new Request());
         })
@@ -2046,9 +1968,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       getFeatureInfoUrl: featureUrl,
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider._pickFeaturesResource.url).toContain(featureUrl);
     });
   });
@@ -2061,9 +1981,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       layers: "someLayer",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider._pickFeaturesResource.url).not.toContain(featureUrl);
       expect(provider._pickFeaturesResource.url).toContain(getCapabilitiesUrl);
     });

@@ -48,6 +48,9 @@ function Instanced3DModel3DTileContent(
   this._tile = tile;
   this._resource = resource;
   this._modelInstanceCollection = undefined;
+
+  this._metadata = undefined;
+
   this._batchTable = undefined;
   this._features = undefined;
 
@@ -136,6 +139,15 @@ Object.defineProperties(Instanced3DModel3DTileContent.prototype, {
   url: {
     get: function () {
       return this._resource.getUrlComponent(true);
+    },
+  },
+
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
     },
   },
 
@@ -463,11 +475,17 @@ function initialize(content, arrayBuffer, byteOffset) {
   content._modelInstanceCollection = new ModelInstanceCollection(
     collectionOptions
   );
-  content._modelInstanceCollection.readyPromise.then(function (collection) {
-    collection.activeAnimations.addAll({
-      loop: ModelAnimationLoop.REPEAT,
+  content._modelInstanceCollection.readyPromise
+    .catch(function () {
+      // Any readyPromise failure is handled in modelInstanceCollection
+    })
+    .then(function (collection) {
+      if (content._modelInstanceCollection.ready) {
+        collection.activeAnimations.addAll({
+          loop: ModelAnimationLoop.REPEAT,
+        });
+      }
     });
-  });
 }
 
 function createFeatures(content) {

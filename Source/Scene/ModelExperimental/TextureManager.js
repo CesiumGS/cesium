@@ -40,7 +40,7 @@ function fetchTexture2D(textureManager, textureId, textureUniform) {
         textureUniform: textureUniform,
       });
     })
-    .otherwise(function () {
+    .catch(function () {
       const texture = textureManager._textures[textureId];
       if (defined(texture) && texture !== textureManager._defaultTexture) {
         texture.destroy();

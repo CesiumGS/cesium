@@ -3,9 +3,10 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
-import combine from "../Core/combine.js";
+import clone from "../Core/clone.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -23,7 +24,6 @@ import Transforms from "../Core/Transforms.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
-import when from "../ThirdParty/when.js";
 import Axis from "./Axis.js";
 import Cesium3DTile from "./Cesium3DTile.js";
 import Cesium3DTileColorBlendMode from "./Cesium3DTileColorBlendMode.js";
@@ -100,8 +100,8 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
  * @param {Boolean} [options.vectorClassificationOnly=false] Indicates that only the tileset's vector tiles should be used for classification.
  * @param {Boolean} [options.vectorKeepDecodedPositions=false] Whether vector tiles should keep decoded positions in memory. This is used with {@link Cesium3DTileFeature.getPolylinePositions}.
- * @param {Number} [options.featureIdIndex=0] The index into the list of primitive feature IDs used for picking and styling. For EXT_feature_metadata, feature ID attributes are listed before feature ID textures. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
- * @param {Number} [options.instanceFeatureIdIndex=0] The index into the list of instance feature IDs used for picking and styling. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
@@ -278,7 +278,7 @@ function Cesium3DTileset(options) {
 
   this._tileDebugLabels = undefined;
 
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   this._classificationType = options.classificationType;
 
@@ -583,7 +583,7 @@ function Cesium3DTileset(options) {
    * <li><code>message</code>: the error message.</li>
    * </ul>
    * <p>
-   * If the <code>3DTILES_multiple_contents</code> extension is used, this event is raised once per inner content with errors.
+   * If multiple contents are present, this event is raised once per inner content with errors.
    * </p>
    *
    * @type {Event}
@@ -943,8 +943,8 @@ function Cesium3DTileset(options) {
   this.examineVectorLinesFunction = undefined;
 
   /**
-   * If the 3DTILES_metadata extension is used, this stores
-   * a {@link Cesium3DTilesetMetadata} object to access metadata.
+   * If metadata is present (3D Tiles 1.1) or the 3DTILES_metadata extension is used,
+   * this stores a {@link Cesium3DTilesetMetadata} object to access metadata.
    *
    * @type {Cesium3DTilesetMetadata|undefined}
    * @private
@@ -960,6 +960,8 @@ function Cesium3DTileset(options) {
    * <p>
    * The value defaults to {@link ExperimentalFeatures.enableModelExperimental}.
    * </p>
+   *
+   * @memberof Cesium3DTileset.prototype
    * @type {Boolean}
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
@@ -968,32 +970,26 @@ function Cesium3DTileset(options) {
     ExperimentalFeatures.enableModelExperimental
   );
 
-  /**
-   * The index into the list of primitive feature IDs used for picking and
-   * styling. For EXT_feature_metadata, feature ID attributes are listed before
-   * feature ID textures. If both per-primitive and per-instance feature IDs are
-   * present, the instance feature IDs take priority.
-   *
-   * @type {Number}
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
-   */
-  this.featureIdIndex = defaultValue(options.featureIdIndex, 0);
+  let featureIdLabel = defaultValue(options.featureIdLabel, "featureId_0");
+  if (typeof featureIdLabel === "number") {
+    featureIdLabel = `featureId_${featureIdLabel}`;
+  }
+  this._featureIdLabel = featureIdLabel;
 
-  /**
-   * The index into the list of instance feature IDs used for picking and
-   * styling. If both per-primitive and per-instance feature IDs are present,
-   * the instance feature IDs take priority.
-   *
-   * @type {Number}
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
-   */
-  this.instanceFeatureIdIndex = defaultValue(options.instanceFeatureIdIndex, 0);
+  let instanceFeatureIdLabel = defaultValue(
+    options.instanceFeatureIdLabel,
+    "instanceFeatureId_0"
+  );
+  if (typeof instanceFeatureIdLabel === "number") {
+    instanceFeatureIdLabel = `instanceFeatureId_${instanceFeatureIdLabel}`;
+  }
+  this._instanceFeatureIdLabel = instanceFeatureIdLabel;
 
   this._schemaLoader = undefined;
 
   const that = this;
   let resource;
-  when(options.url)
+  Promise.resolve(options.url)
     .then(function (url) {
       let basePath;
       resource = Resource.createIfNeeded(url);
@@ -1079,7 +1075,7 @@ function Cesium3DTileset(options) {
 
       that._readyPromise.resolve(that);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       that._readyPromise.reject(error);
     });
 }
@@ -1854,6 +1850,78 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       this._showCreditsOnScreen = value;
     },
   },
+
+  /**
+   * Label of the feature ID set to use for picking and styling.
+   * <p>
+   * For EXT_mesh_features, this is the feature ID's label property, or
+   * "featureId_N" (where N is the index in the featureIds array) when not
+   * specified. EXT_feature_metadata did not have a label field, so such
+   * feature ID sets are always labeled "featureId_N" where N is the index in
+   * the list of all feature Ids, where feature ID attributes are listed before
+   * feature ID textures.
+   * </p>
+   * <p>
+   * If featureIdLabel is set to an integer N, it is converted to
+   * the string "featureId_N" automatically. If both per-primitive and
+   * per-instance feature IDs are present, the instance feature IDs take
+   * priority.
+   * </p>
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {String}
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  featureIdLabel: {
+    get: function () {
+      return this._featureIdLabel;
+    },
+    set: function (value) {
+      // indices get converted into featureId_N
+      if (typeof value === "number") {
+        value = `featureId_${value}`;
+      }
+
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.string("value", value);
+      //>>includeEnd('debug');
+
+      this._featureIdLabel = value;
+    },
+  },
+
+  /**
+   * Label of the instance feature ID set used for picking and styling.
+   * <p>
+   * If instanceFeatureIdLabel is set to an integer N, it is converted to
+   * the string "instanceFeatureId_N" automatically.
+   * If both per-primitive and per-instance feature IDs are present, the
+   * instance feature IDs take priority.
+   * </p>
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {String}
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  instanceFeatureIdLabel: {
+    get: function () {
+      return this._instanceFeatureIdLabel;
+    },
+    set: function (value) {
+      // indices get converted into instanceFeatureId_N
+      if (typeof value === "number") {
+        value = `instanceFeatureId_${value}`;
+      }
+
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.string("value", value);
+      //>>includeEnd('debug');
+
+      this._instanceFeatureIdLabel = value;
+    },
+  },
 });
 
 /**
@@ -1889,8 +1957,14 @@ Cesium3DTileset.prototype.loadTileset = function (
   if (!defined(asset)) {
     throw new RuntimeError("Tileset must have an asset property.");
   }
-  if (asset.version !== "0.0" && asset.version !== "1.0") {
-    throw new RuntimeError("The tileset must be 3D Tiles version 0.0 or 1.0.");
+  if (
+    asset.version !== "0.0" &&
+    asset.version !== "1.0" &&
+    asset.version !== "1.1"
+  ) {
+    throw new RuntimeError(
+      "The tileset must be 3D Tiles version 0.0, 1.0, or 1.1"
+    );
   }
 
   if (defined(tilesetJson.extensionsRequired)) {
@@ -1947,9 +2021,9 @@ Cesium3DTileset.prototype.loadTileset = function (
 };
 
 /**
- * Make a {@link Cesium3DTile} for a specific tile. If the tile has the
- * 3DTILES_implicit_tiling extension, it creates a placeholder tile instead
- * for lazy evaluation of the implicit tileset.
+ * Make a {@link Cesium3DTile} for a specific tile. If the tile's header has implicit
+ * tiling (3D Tiles 1.1) or uses the <code>3DTILES_implicit_tiling</code> extension,
+ * it creates a placeholder tile instead for lazy evaluation of the implicit tileset.
  *
  * @param {Cesium3DTileset} tileset The tileset
  * @param {Resource} baseResource The base resource for the tileset
@@ -1960,7 +2034,11 @@ Cesium3DTileset.prototype.loadTileset = function (
  * @private
  */
 function makeTile(tileset, baseResource, tileHeader, parentTile) {
-  if (hasExtension(tileHeader, "3DTILES_implicit_tiling")) {
+  const hasImplicitTiling =
+    defined(tileHeader.implicitTiling) ||
+    hasExtension(tileHeader, "3DTILES_implicit_tiling");
+
+  if (hasImplicitTiling) {
     const metadataSchema = defined(tileset.metadata)
       ? tileset.metadata.schema
       : undefined;
@@ -1985,14 +2063,17 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
     const contentUri = implicitTileset.subtreeUriTemplate.getDerivedResource({
       templateValues: rootCoordinates.getTemplateValues(),
     }).url;
-    const contentJson = {
-      content: {
-        uri: contentUri,
-      },
-    };
 
     const deepCopy = true;
-    const tileJson = combine(contentJson, tileHeader, deepCopy);
+    const tileJson = clone(tileHeader, deepCopy);
+    // Replace contents with the subtree
+    tileJson.contents = [
+      {
+        uri: contentUri,
+      },
+    ];
+
+    delete tileJson.content;
 
     // The placeholder tile does not have any extensions. If there are any
     // extensions beyond 3DTILES_implicit_tiling, Implicit3DTileContent will
@@ -2009,9 +2090,8 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
 }
 
 /**
- * If the <code>3DTILES_metadata</code> extension is present, initialize the
- * {@link Cesium3DTilesetMetadata} instance. This is asynchronous since
- * metadata schemas may be external.
+ * If tileset metadata is present, initialize the {@link Cesium3DTilesetMetadata}
+ * instance. This is asynchronous since metadata schemas may be external.
  *
  * @param {Cesium3DTileset} tileset The tileset
  * @param {Object} tilesetJson The tileset JSON
@@ -2019,31 +2099,32 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
  * @private
  */
 function processMetadataExtension(tileset, tilesetJson) {
-  if (!hasExtension(tilesetJson, "3DTILES_metadata")) {
-    return when.resolve(tilesetJson);
-  }
-
-  const extension = tilesetJson.extensions["3DTILES_metadata"];
+  const metadataJson = hasExtension(tilesetJson, "3DTILES_metadata")
+    ? tilesetJson.extensions["3DTILES_metadata"]
+    : tilesetJson;
 
   let schemaLoader;
-  if (defined(extension.schemaUri)) {
+  if (defined(metadataJson.schemaUri)) {
     const resource = tileset._resource.getDerivedResource({
-      url: extension.schemaUri,
+      url: metadataJson.schemaUri,
     });
     schemaLoader = ResourceCache.loadSchema({
       resource: resource,
     });
-  } else {
+  } else if (defined(metadataJson.schema)) {
     schemaLoader = ResourceCache.loadSchema({
-      schema: extension.schema,
+      schema: metadataJson.schema,
     });
+  } else {
+    return Promise.resolve(tilesetJson);
   }
+
   tileset._schemaLoader = schemaLoader;
 
   return schemaLoader.promise.then(function (schemaLoader) {
     tileset.metadata = new Cesium3DTilesetMetadata({
       schema: schemaLoader.schema,
-      extension: extension,
+      metadataJson: metadataJson,
     });
 
     return tilesetJson;
@@ -2183,7 +2264,7 @@ function requestContent(tileset, tile) {
   tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
   tile.contentReadyPromise
     .then(handleTileSuccess(tileset, tile))
-    .otherwise(handleTileFailure(tileset, tile));
+    .catch(handleTileFailure(tileset, tile));
 }
 
 function sortRequestByPriority(a, b) {

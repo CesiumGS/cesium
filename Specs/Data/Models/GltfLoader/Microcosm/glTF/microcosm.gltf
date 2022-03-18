@@ -3,15 +3,17 @@
     "version": "2.0"
   },
   "extensionsUsed": [
-    "EXT_mesh_features"
+    "EXT_mesh_features",
+    "EXT_structural_metadata"
   ],
   "extensions": {
-    "EXT_mesh_features": {
+    "EXT_structural_metadata": {
       "schema": {
         "classes": {
           "vegetation": {
             "properties": {
               "vegetationDensity": {
+                "type": "SCALAR",
                 "componentType": "UINT8",
                 "normalized": true
               }
@@ -20,7 +22,7 @@
           "landCover": {
             "properties": {
               "name": {
-                "componentType": "STRING"
+                "type": "STRING"
               },
               "color": {
                 "type": "VEC3",
@@ -37,11 +39,11 @@
           "count": 256,
           "properties": {
             "name": {
-              "bufferView": 4,
-              "stringOffsetBufferView": 5
+              "values": 4,
+              "stringOffsets": 5
             },
             "color": {
-              "bufferView": 6
+              "values": 6
             }
           }
         }
@@ -50,12 +52,12 @@
         {
           "name": "Vegetation",
           "class": "vegetation",
-          "index": 1,
-          "texCoord": 0,
           "properties": {
-            "vegetationDensity": [
-              0
-            ]
+            "vegetationDensity": {
+              "index": 1,
+              "texCoord": 0,
+              "channels": [0]
+            }
           }
         }
       ]
@@ -101,16 +103,20 @@
           "material": 0,
           "extensions": {
             "EXT_mesh_features": {
-              "propertyTables": [
-                0
-              ],
               "featureIds": [
                 {
-                  "index": 2,
-                  "texCoord": 0,
-                  "channel": 0
+                  "featureCount": 256,
+                  "propertyTable": 0,
+                  "label": "landCover",
+                  "texture": {
+                    "index": 2,
+                    "texCoord": 0,
+                    "channels": [0] 
+                  }
                 }
-              ],
+              ]
+            },
+            "EXT_structural_metadata": {
               "propertyTextures": [
                 0
               ]

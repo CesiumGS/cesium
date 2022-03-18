@@ -1,4 +1,3 @@
-import when from "../ThirdParty/when.js";
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartesian4 from "./Cartesian4.js";
@@ -660,13 +659,12 @@ const j2000ttDays = 2451545.0;
  *
  * @example
  * const interval = new Cesium.TimeInterval(...);
- * when(Cesium.Transforms.preloadIcrfFixed(interval), function() {
+ * Promise.resolve(Cesium.Transforms.preloadIcrfFixed(interval)).then(function() {
  *     // the data is now loaded
  * });
  *
  * @see Transforms.computeIcrfToFixedMatrix
  * @see Transforms.computeFixedToIcrfMatrix
- * @see when
  */
 Transforms.preloadIcrfFixed = function (timeInterval) {
   const startDayTT = timeInterval.start.dayNumber;
@@ -682,7 +680,7 @@ Transforms.preloadIcrfFixed = function (timeInterval) {
   );
   const eopPromise = Transforms.earthOrientationParameters.getPromiseToLoad();
 
-  return when.all([xysPromise, eopPromise]);
+  return Promise.all([xysPromise, eopPromise]);
 };
 
 /**

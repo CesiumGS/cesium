@@ -212,7 +212,9 @@ describe(
       expect(groundPolylinePrimitive.geometryInstances).toBeDefined();
       scene.groundPrimitives.add(groundPolylinePrimitive);
       scene.renderForSpecs();
-      expect(groundPolylinePrimitive.geometryInstances).not.toBeDefined();
+      return groundPolylinePrimitive.readyPromise.then(function () {
+        expect(groundPolylinePrimitive.geometryInstances).not.toBeDefined();
+      });
     });
 
     it("does not release geometry instances when releaseGeometryInstances is false", function () {
@@ -229,7 +231,9 @@ describe(
       expect(groundPolylinePrimitive.geometryInstances).toBeDefined();
       scene.groundPrimitives.add(groundPolylinePrimitive);
       scene.renderForSpecs();
-      expect(groundPolylinePrimitive.geometryInstances).toBeDefined();
+      return groundPolylinePrimitive.readyPromise.then(function () {
+        expect(groundPolylinePrimitive.geometryInstances).toBeDefined();
+      });
     });
 
     it("adds afterRender promise to frame state", function () {

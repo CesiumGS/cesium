@@ -7,6 +7,7 @@ import { ClockStep } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { combine } from "../../Source/Cesium.js";
 import { Credit } from "../../Source/Cesium.js";
+import { defer } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { Event } from "../../Source/Cesium.js";
 import { HeadingPitchRange } from "../../Source/Cesium.js";
@@ -37,7 +38,6 @@ import { LabelStyle } from "../../Source/Cesium.js";
 import { SceneMode } from "../../Source/Cesium.js";
 import createCamera from "../createCamera.js";
 import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 
 describe("DataSources/KmlDataSource", function () {
   const parser = new DOMParser();
@@ -194,7 +194,7 @@ describe("DataSources/KmlDataSource", function () {
       .then(function (blob) {
         return dataSource.load(blob);
       })
-      .otherwise(function (e) {
+      .catch(function (e) {
         expect(e).toBeInstanceOf(RuntimeError);
         expect(spy).toHaveBeenCalled();
       });
@@ -205,7 +205,7 @@ describe("DataSources/KmlDataSource", function () {
       .then(function (blob) {
         return KmlDataSource.load(blob, options);
       })
-      .otherwise(function (e) {
+      .catch(function (e) {
         expect(e).toBeInstanceOf(RuntimeError);
         expect(e.message).toEqual("KMZ file does not contain a KML document.");
       });
@@ -353,26 +353,26 @@ describe("DataSources/KmlDataSource", function () {
   });
 
   it("load rejects nonexistent URL", function () {
-    return KmlDataSource.load("test.invalid", options).otherwise(function (e) {
+    return KmlDataSource.load("test.invalid", options).catch(function (e) {
       expect(e).toBeInstanceOf(RequestErrorEvent);
     });
   });
 
   it("load rejects loading non-KML URL", function () {
-    return KmlDataSource.load("Data/Images/Blue.png", options).otherwise(
-      function (e) {
-        expect(e).toBeInstanceOf(RuntimeError);
-      }
-    );
+    return KmlDataSource.load("Data/Images/Blue.png", options).catch(function (
+      e
+    ) {
+      expect(e).toBeInstanceOf(RuntimeError);
+    });
   });
 
   it("load rejects valid KMZ zip URL with no KML contained", function () {
-    return KmlDataSource.load("Data/KML/empty.kmz", options).otherwise(
-      function (e) {
-        expect(e).toBeInstanceOf(RuntimeError);
-        expect(e.message).toEqual("KMZ file does not contain a KML document.");
-      }
-    );
+    return KmlDataSource.load("Data/KML/empty.kmz", options).catch(function (
+      e
+    ) {
+      expect(e).toBeInstanceOf(RuntimeError);
+      expect(e.message).toEqual("KMZ file does not contain a KML document.");
+    });
   });
 
   it("if load contains <icon> tag with no image included, no image is added", function () {
@@ -4585,7 +4585,7 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = when.defer();
+    const requestNetworkLink = defer();
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
       responseType,
@@ -4615,7 +4615,7 @@ describe("DataSources/KmlDataSource", function () {
             </Url>\
           </NetworkLink>';
 
-    const requestNetworkLink = when.defer();
+    const requestNetworkLink = defer();
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
       responseType,
@@ -4646,7 +4646,7 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = when.defer();
+    const requestNetworkLink = defer();
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
       responseType,
@@ -4680,7 +4680,7 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = when.defer();
+    const requestNetworkLink = defer();
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
       responseType,
@@ -4714,7 +4714,7 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = when.defer();
+    const requestNetworkLink = defer();
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
       responseType,
@@ -4750,7 +4750,7 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = when.defer();
+    const requestNetworkLink = defer();
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
       responseType,
@@ -4786,7 +4786,7 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = when.defer();
+    const requestNetworkLink = defer();
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
       responseType,
@@ -4821,7 +4821,7 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = when.defer();
+    const requestNetworkLink = defer();
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
       responseType,

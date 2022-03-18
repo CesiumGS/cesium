@@ -436,7 +436,7 @@ function clearNodeTransformationsArticulationsScratch(entity, modelHash) {
 }
 
 function checkModelLoad(model, entity, modelHash) {
-  model.readyPromise.otherwise(function (error) {
+  model.readyPromise.catch(function (error) {
     console.error(error);
     modelHash[entity.id].loadFail = true;
   });

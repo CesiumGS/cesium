@@ -1,7 +1,6 @@
 import defined from "../Core/defined.js";
 import Rectangle from "../Core/Rectangle.js";
 import sampleTerrainMostDetailed from "../Core/sampleTerrainMostDetailed.js";
-import when from "../ThirdParty/when.js";
 import SceneMode from "./SceneMode.js";
 
 /**
@@ -29,7 +28,7 @@ function computeFlyToLocationForRectangle(rectangle, scene) {
   }
 
   if (!defined(terrainProvider)) {
-    return when.resolve(positionWithoutTerrain);
+    return Promise.resolve(positionWithoutTerrain);
   }
 
   return terrainProvider.readyPromise.then(function () {

@@ -5,14 +5,19 @@ import {
 } from "../../Source/Cesium.js";
 
 describe("Scene/GroupMetadata", function () {
+  const buildingClassWithNoProperties = new MetadataClass({
+    id: "building",
+    class: {},
+  });
+
   it("creates group metadata with default values", function () {
     const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
+      class: buildingClassWithNoProperties,
     });
 
     expect(groupMetadata.id).toBe("building");
-    expect(groupMetadata.class).toBeUndefined();
     expect(groupMetadata.extras).toBeUndefined();
     expect(groupMetadata.extensions).toBeUndefined();
   });
@@ -64,7 +69,9 @@ describe("Scene/GroupMetadata", function () {
   it("constructor throws without id", function () {
     expect(function () {
       return new GroupMetadata({
+        id: undefined,
         group: {},
+        class: buildingClassWithNoProperties,
       });
     }).toThrowDeveloperError();
   });
@@ -73,6 +80,18 @@ describe("Scene/GroupMetadata", function () {
     expect(function () {
       return new GroupMetadata({
         id: "building",
+        group: undefined,
+        class: buildingClassWithNoProperties,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("constructor throws without class", function () {
+    expect(function () {
+      return new GroupMetadata({
+        id: "building",
+        group: {},
+        class: undefined,
       });
     }).toThrowDeveloperError();
   });
@@ -81,6 +100,7 @@ describe("Scene/GroupMetadata", function () {
     const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
+      class: buildingClassWithNoProperties,
     });
     expect(groupMetadata.hasProperty("height")).toBe(false);
   });
@@ -91,6 +111,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
+            type: "SCALAR",
             componentType: "FLOAT32",
           },
         },
@@ -115,6 +136,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
+            type: "SCALAR",
             componentType: "FLOAT32",
           },
         },
@@ -139,13 +161,15 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
+            type: "SCALAR",
             componentType: "FLOAT32",
-            optional: true,
+            required: false,
             default: 10.0,
           },
         },
       },
     });
+
     const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
@@ -159,6 +183,7 @@ describe("Scene/GroupMetadata", function () {
     const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
+      class: buildingClassWithNoProperties,
     });
 
     expect(function () {
@@ -168,6 +193,7 @@ describe("Scene/GroupMetadata", function () {
 
   it("hasPropertyBySemantic returns false when there's no properties", function () {
     const groupMetadata = new GroupMetadata({
+      class: buildingClassWithNoProperties,
       id: "building",
       group: {},
     });
@@ -180,6 +206,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
+            type: "SCALAR",
             componentType: "FLOAT32",
           },
         },
@@ -204,6 +231,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
+            type: "SCALAR",
             componentType: "FLOAT32",
             semantic: "HEIGHT",
           },
@@ -229,14 +257,16 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
+            type: "SCALAR",
             componentType: "FLOAT32",
             semantic: "HEIGHT",
-            optional: true,
+            required: false,
             default: 10.0,
           },
         },
       },
     });
+
     const groupMetadata = new GroupMetadata({
       class: buildingClass,
       id: "building",
@@ -250,6 +280,7 @@ describe("Scene/GroupMetadata", function () {
     const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
+      class: buildingClassWithNoProperties,
     });
 
     expect(function () {
@@ -261,6 +292,7 @@ describe("Scene/GroupMetadata", function () {
     const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
+      class: buildingClassWithNoProperties,
     });
 
     expect(groupMetadata.getPropertyIds().length).toBe(0);
@@ -272,10 +304,11 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
+            type: "SCALAR",
             componentType: "FLOAT32",
           },
           color: {
-            componentType: "STRING",
+            type: "STRING",
           },
         },
       },
@@ -301,12 +334,13 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
+            type: "SCALAR",
             componentType: "FLOAT32",
-            optional: true,
+            required: false,
             default: 10.0,
           },
           color: {
-            componentType: "STRING",
+            type: "STRING",
           },
         },
       },
@@ -330,10 +364,11 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
+            type: "SCALAR",
             componentType: "FLOAT32",
           },
           color: {
-            componentType: "STRING",
+            type: "STRING",
           },
         },
       },
@@ -357,20 +392,13 @@ describe("Scene/GroupMetadata", function () {
     expect(results.sort()).toEqual(["color", "height"]);
   });
 
-  it("getProperty returns undefined when there's no properties", function () {
-    const groupMetadata = new GroupMetadata({
-      id: "building",
-      group: {},
-    });
-    expect(groupMetadata.getProperty("height")).toBeUndefined();
-  });
-
-  it("getProperty returns undefined when there's no property with the given property ID", function () {
+  it("getProperty throws when there's no property with the given property ID", function () {
     const buildingClass = new MetadataClass({
       id: "building",
       class: {
         properties: {
           height: {
+            type: "SCALAR",
             componentType: "FLOAT32",
           },
         },
@@ -386,7 +414,9 @@ describe("Scene/GroupMetadata", function () {
         },
       },
     });
-    expect(groupMetadata.getProperty("color")).toBeUndefined();
+    expect(function () {
+      return groupMetadata.getProperty("color");
+    }).toThrowDeveloperError();
   });
 
   it("getProperty returns the property value", function () {
@@ -427,7 +457,7 @@ describe("Scene/GroupMetadata", function () {
           position: {
             type: "VEC3",
             componentType: "FLOAT32",
-            optional: true,
+            required: false,
             default: position,
           },
         },
@@ -448,6 +478,7 @@ describe("Scene/GroupMetadata", function () {
     const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
+      class: buildingClassWithNoProperties,
     });
 
     expect(function () {
@@ -459,6 +490,7 @@ describe("Scene/GroupMetadata", function () {
     const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
+      class: buildingClassWithNoProperties,
     });
 
     const position = [0.0, 0.0, 0.0];
@@ -498,6 +530,7 @@ describe("Scene/GroupMetadata", function () {
     const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
+      class: buildingClassWithNoProperties,
     });
 
     expect(function () {
@@ -509,6 +542,7 @@ describe("Scene/GroupMetadata", function () {
     const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
+      class: buildingClassWithNoProperties,
     });
 
     expect(function () {
@@ -520,6 +554,7 @@ describe("Scene/GroupMetadata", function () {
     const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
+      class: buildingClassWithNoProperties,
     });
     expect(groupMetadata.getPropertyBySemantic("_HEIGHT")).toBeUndefined();
   });
@@ -530,6 +565,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
+            type: "SCALAR",
             componentType: "FLOAT32",
           },
         },
@@ -555,6 +591,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
+            type: "SCALAR",
             componentType: "FLOAT32",
             semantic: "_HEIGHT",
           },
@@ -579,6 +616,7 @@ describe("Scene/GroupMetadata", function () {
     const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
+      class: buildingClassWithNoProperties,
     });
 
     expect(function () {
@@ -592,6 +630,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
+            type: "SCALAR",
             componentType: "FLOAT32",
             semantic: "_HEIGHT",
           },
@@ -619,6 +658,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
+            type: "SCALAR",
             componentType: "FLOAT32",
           },
         },
@@ -642,6 +682,7 @@ describe("Scene/GroupMetadata", function () {
     const groupMetadata = new GroupMetadata({
       id: "building",
       group: {},
+      class: buildingClassWithNoProperties,
     });
 
     expect(function () {
@@ -655,6 +696,7 @@ describe("Scene/GroupMetadata", function () {
       class: {
         properties: {
           height: {
+            type: "SCALAR",
             componentType: "FLOAT32",
             semantic: "_HEIGHT",
           },

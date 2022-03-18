@@ -242,6 +242,8 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     });
     expect(provider.errorEvent).toBeDefined();
     expect(provider.errorEvent).toBe(provider.errorEvent);
+
+    return provider.readyPromise;
   });
 
   it("returns reasonable geometric error for various levels", function () {
@@ -272,6 +274,8 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     expect(function () {
       provider.getLevelMaximumGeometricError(0);
     }).toThrowDeveloperError();
+
+    return provider.readyPromise;
   });
 
   it("getTilingScheme must not be called before isReady returns true", function () {
@@ -282,6 +286,8 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     expect(function () {
       return provider.tilingScheme;
     }).toThrowDeveloperError();
+
+    return provider.readyPromise;
   });
 
   it("logo is undefined if credit is not provided", function () {
@@ -313,6 +319,9 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
       url: "made/up/url",
     });
     expect(provider.hasWaterMask).toBe(false);
+    return provider.readyPromise.catch(function (error) {
+      expect(error).toBeInstanceOf(RuntimeError);
+    });
   });
 
   it("is not ready immediately", function () {
@@ -320,6 +329,9 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
       url: "made/up/url",
     });
     expect(provider.ready).toBe(false);
+    return provider.readyPromise.catch(function (error) {
+      expect(error).toBeInstanceOf(RuntimeError);
+    });
   });
 
   it("detects WebMercator tiling scheme", function () {
@@ -365,7 +377,7 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
       url: baseUrl,
     });
 
-    return terrainProvider.readyPromise.then(fail).otherwise(function (error) {
+    return terrainProvider.readyPromise.then(fail).catch(function (error) {
       expect(error).toBeInstanceOf(RuntimeError);
     });
   });
@@ -379,7 +391,7 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
       url: baseUrl,
     });
 
-    return terrainProvider.readyPromise.then(fail).otherwise(function (error) {
+    return terrainProvider.readyPromise.then(fail).catch(function (error) {
       expect(error).toBeInstanceOf(RuntimeError);
     });
   });
@@ -428,6 +440,8 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
       expect(function () {
         terrainProvider.requestTileGeometry(0, 0, 0);
       }).toThrowDeveloperError();
+
+      return terrainProvider.readyPromise;
     });
 
     it("provides HeightmapTerrainData", function () {
@@ -489,6 +503,12 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
         for (i = 0; i < deferreds.length; ++i) {
           deferreds[i].resolve();
         }
+
+        return Promise.all(
+          deferreds.map(function (deferred) {
+            return deferred.promise;
+          })
+        );
       });
     });
   });

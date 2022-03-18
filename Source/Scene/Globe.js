@@ -20,7 +20,6 @@ import Texture from "../Renderer/Texture.js";
 import GlobeFS from "../Shaders/GlobeFS.js";
 import GlobeVS from "../Shaders/GlobeVS.js";
 import GroundAtmosphere from "../Shaders/GroundAtmosphere.js";
-import when from "../ThirdParty/when.js";
 import GlobeSurfaceShaderSet from "./GlobeSurfaceShaderSet.js";
 import GlobeSurfaceTileProvider from "./GlobeSurfaceTileProvider.js";
 import GlobeTranslucency from "./GlobeTranslucency.js";
@@ -937,7 +936,7 @@ Globe.prototype.beginFrame = function (frameState) {
     const oceanNormalMapUrl = oceanNormalMapResource.url;
     if (defined(oceanNormalMapUrl)) {
       const that = this;
-      when(oceanNormalMapResource.fetchImage(), function (image) {
+      oceanNormalMapResource.fetchImage().then(function (image) {
         if (oceanNormalMapUrl !== that._oceanNormalMapResource.url) {
           // url changed while we were loading
           return;

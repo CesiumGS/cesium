@@ -26,6 +26,7 @@ export default function ModelExperimental3DTileContent(
   this._resource = resource;
 
   this._model = undefined;
+  this._metadata = undefined;
   this._groupMetadata = undefined;
 }
 
@@ -118,6 +119,15 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
     },
   },
 
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
+    },
+  },
+
   groupMetadata: {
     get: function () {
       return this._groupMetadata;
@@ -182,8 +192,8 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.modelMatrix = tile.computedTransform;
   model.customShader = tileset.customShader;
   model.pointCloudShading = tileset.pointCloudShading;
-  model.featureIdIndex = tileset.featureIdIndex;
-  model.instanceFeatureIdIndex = tileset.instanceFeatureIdIndex;
+  model.featureIdLabel = tileset.featureIdLabel;
+  model.instanceFeatureIdLabel = tileset.instanceFeatureIdLabel;
   model.backFaceCulling = tileset.backFaceCulling;
   model.shadows = tileset.shadows;
   model.showCreditsOnScreen = tileset.showCreditsOnScreen;

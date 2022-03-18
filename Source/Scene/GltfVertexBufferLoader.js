@@ -1,11 +1,11 @@
 import arrayFill from "../Core/arrayFill.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
-import when from "../ThirdParty/when.js";
 import AttributeType from "./AttributeType.js";
 import JobType from "./JobType.js";
 import ModelComponents from "./ModelComponents.js";
@@ -113,7 +113,7 @@ export default function GltfVertexBufferLoader(options) {
   this._typedArray = undefined;
   this._buffer = undefined;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = when.defer();
+  this._promise = defer();
 }
 
 if (defined(Object.create)) {
@@ -298,7 +298,7 @@ function loadFromDraco(vertexBufferLoader) {
       vertexBufferLoader._typedArray = typedArray;
       vertexBufferLoader._state = ResourceLoaderState.PROCESSING;
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (vertexBufferLoader.isDestroyed()) {
         return;
       }
@@ -326,7 +326,7 @@ function loadFromBufferView(vertexBufferLoader) {
       vertexBufferLoader._typedArray = bufferViewLoader.typedArray;
       vertexBufferLoader._state = ResourceLoaderState.PROCESSING;
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (vertexBufferLoader.isDestroyed()) {
         return;
       }

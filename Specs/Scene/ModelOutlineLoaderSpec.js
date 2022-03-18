@@ -1,4 +1,4 @@
-import { Cartesian3, Model, when } from "../../Source/Cesium.js";
+import { Cartesian3, Model } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 import GltfBuilder from "./GltfBuilder.js";
@@ -774,7 +774,7 @@ function waitForReady(scene, model) {
     .then(function () {
       return model;
     })
-    .otherwise(function () {
-      return when.reject(model);
+    .catch(function () {
+      return Promise.reject(model);
     });
 }

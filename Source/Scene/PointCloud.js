@@ -7,6 +7,7 @@ import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import CesiumMath from "../Core/Math.js";
@@ -24,7 +25,6 @@ import RenderState from "../Renderer/RenderState.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import MersenneTwister from "../ThirdParty/mersenne-twister.js";
-import when from "../ThirdParty/when.js";
 import BlendingState from "./BlendingState.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import DracoLoader from "./DracoLoader.js";
@@ -106,7 +106,7 @@ function PointCloud(options) {
   this._mode = undefined;
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
   this._pointsLength = 0;
   this._geometryByteLength = 0;
 
@@ -251,7 +251,7 @@ function initialize(pointCloud, options) {
     pointCloud._isRGB565 = colors.isRGB565;
   }
 
-  // PntsParser parses BATCH_ID as FEATURE_ID for EXT_mesh_features.
+  // PntsParser parses BATCH_ID as _FEATURE_ID_0 for EXT_mesh_features.
   // These properties aren't used but rename them to BATCH_ID to avoid
   // confusion when debugging.
   const batchIds = parsedContent.batchIds;
@@ -1245,7 +1245,7 @@ function decodeDraco(pointCloud, context) {
 
           parsedContent.styleableProperties = styleableProperties;
         })
-        .otherwise(function (error) {
+        .catch(function (error) {
           pointCloud._decodingState = DecodingState.FAILED;
           pointCloud._readyPromise.reject(error);
         });

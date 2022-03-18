@@ -3,10 +3,11 @@
     "version": "2.0"
   },
   "extensionsUsed": [
-    "EXT_mesh_features"
+    "EXT_mesh_features",
+    "EXT_structural_metadata"
   ],
   "extensions": {
-    "EXT_mesh_features": {
+    "EXT_structural_metadata": {
       "schema": {
         "classes": {
           "weather": {
@@ -14,10 +15,12 @@
             "properties": {
               "airTemperature": {
                 "name": "Air Temperature",
+                "type": "SCALAR",
                 "componentType": "FLOAT32"
               },
               "airPressure": {
                 "name": "Air Pressure",
+                "type": "SCALAR",
                 "componentType": "FLOAT32"
               },
               "windVelocity": {
@@ -32,10 +35,11 @@
             "properties": {
               "name": {
                 "name": "Name",
-                "componentType": "STRING"
+                "type": "STRING"
               },
               "population": {
                 "name": "Population",
+                "type": "SCALAR",
                 "componentType": "UINT16"
               }
             }
@@ -49,11 +53,11 @@
           "count": 3,
           "properties": {
             "name": {
-              "bufferView": 5,
-              "stringOffsetBufferView": 6
+              "values": 5,
+              "stringOffsets": 6
             },
             "population": {
-              "bufferView": 7
+              "values": 7
             }
           }
         },
@@ -63,13 +67,13 @@
           "count": 1000,
           "properties": {
             "airTemperature": {
-              "bufferView": 2
+              "values": 2
             },
             "airPressure": {
-              "bufferView": 3
+              "values": 3
             },
             "windVelocity": {
-              "bufferView": 4
+              "values": 4
             }
           }
         }
@@ -98,22 +102,22 @@
         {
           "attributes": {
             "POSITION": 0,
-            "FEATURE_ID_0": 1
+            "_FEATURE_ID_0": 1
           },
           "mode": 0,
           "extensions": {
             "EXT_mesh_features": {
-              "propertyTables": [
-                1,
-                0
-              ],
               "featureIds": [
                 {
-                  "offset": 0,
-                  "repeat": 1
+                  "label": "perPoint",
+                  "propertyTable": 1,
+                  "featureCount": 1000
                 },
                 {
-                  "attribute": 0
+                  "label": "town",
+                  "propertyTable": 0,
+                  "attribute": 0,
+                  "featureCount": 3
                 }
               ]
             }
