@@ -37,6 +37,7 @@ describe(
     const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
     const boxInstanced =
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
+    const boxUnlitUrl = "./Data/Models/GltfLoader/BoxUnlit/glTF/BoxUnlit.gltf";
     const boxBackFaceCullingUrl =
       "./Data/Models/Box-Back-Face-Culling/Box-Back-Face-Culling.gltf";
     const boxBackFaceCullingOffset = new HeadingPitchRange(Math.PI / 2, 0, 2.0);
@@ -723,6 +724,17 @@ describe(
         model.lightColor = undefined;
         verifyRender(model, true);
       });
+    });
+
+    it("light color doesn't affect unlit models", function () {
+      return loadAndZoomToModelExperimental({ gltf: boxUnlitUrl }, scene).then(
+        function (model) {
+          verifyRender(model, true);
+
+          model.lightColor = Cartesian3.ZERO;
+          verifyRender(model, true);
+        }
+      );
     });
 
     it("enables back-face culling", function () {
