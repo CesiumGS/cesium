@@ -35,6 +35,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
   const runtimeNode = new ModelExperimentalNode({
     node: mockNode,
     transform: Matrix4.IDENTITY,
+    transformToRoot: Matrix4.fromTranslation(new Cartesian3(1, 2, 3)),
     sceneGraph: mockSceneGraph,
     children: [],
   });
@@ -238,7 +239,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     );
 
     expect(primitiveResources.runtimeNode).toBe(runtimeNode);
-    expect(primitiveResources.modelMatrix).toEqual(runtimeNode.modelMatrix);
+    expect(primitiveResources.transform).toBe(nodeResources.transform);
     expect(primitiveResources.attributes).toEqual([]);
 
     // The primitive should have inherited the renderStateOptions of the node's
