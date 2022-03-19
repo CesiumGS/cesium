@@ -62,13 +62,14 @@ export default function buildDrawCommands(
   const pass = primitiveRenderResources.alphaOptions.pass;
 
   const sceneGraph = model.sceneGraph;
+
   const modelMatrix = Matrix4.multiply(
     sceneGraph.computedModelMatrix,
     primitiveRenderResources.transform,
     new Matrix4()
   );
 
-  BoundingSphere.transform(
+  primitiveRenderResources.boundingSphere = BoundingSphere.transform(
     primitiveRenderResources.boundingSphere,
     modelMatrix,
     primitiveRenderResources.boundingSphere

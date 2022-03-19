@@ -118,7 +118,7 @@ export default function ModelExperimentalSceneGraph(options) {
   this.modelPipelineStages = [];
 
   this._boundingSphere = undefined;
-  this._computedModelMatrix = Matrix4.clone(this._model.modelMatrix);
+  this._computedModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
   initialize(this);
 }
@@ -174,25 +174,31 @@ function initialize(sceneGraph) {
   sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
     model.modelMatrix,
     components.transform,
-    new Matrix4()
+    sceneGraph._computedModelMatrix
   );
 
-  ModelExperimentalUtility.correctModelMatrix(
+  sceneGraph._computedModelMatrix = ModelExperimentalUtility.correctModelMatrix(
     sceneGraph._computedModelMatrix,
     components.upAxis,
-    components.forwardAxis
+    components.forwardAxis,
+    sceneGraph._computedModelMatrix
+  );
+
+  sceneGraph._computedModelMatrix = Matrix4.multiplyByUniformScale(
+    sceneGraph._computedModelMatrix,
+    model.computedScale,
+    sceneGraph._computedModelMatrix
   );
 
   const rootNodes = scene.nodes;
+  const transformToRoot = Matrix4.IDENTITY;
   for (let i = 0; i < rootNodes.length; i++) {
     const rootNode = scene.nodes[i];
-    const rootNodeTransform = ModelExperimentalUtility.getNodeTransform(
-      rootNode
-    );
+
     const rootNodeIndex = traverseSceneGraph(
       sceneGraph,
       rootNode,
-      rootNodeTransform
+      transformToRoot
     );
 
     sceneGraph._rootNodes.push(rootNodeIndex);
@@ -205,31 +211,32 @@ function initialize(sceneGraph) {
  *
  * @param {ModelSceneGraph} sceneGraph The scene graph
  * @param {ModelComponents.Node} node The current node
- * @param {Matrix4} transform The current computed transform for this node.
+ * @param {Matrix4} transformToRoot The transforms of this node's ancestors.
  *
  * @returns {Number} The index of this node in the runtimeNodes array.
  *
  * @private
  */
-function traverseSceneGraph(sceneGraph, node, transform) {
+function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   // The indices of the children of this node in the runtimeNodes array.
   const childrenIndices = [];
+  const transform = ModelExperimentalUtility.getNodeTransform(node);
 
   // Traverse through scene graph.
   let i;
   if (defined(node.children)) {
     for (i = 0; i < node.children.length; i++) {
       const childNode = node.children[i];
-      const childNodeTransform = Matrix4.multiply(
+      const childNodeTransformToRoot = Matrix4.multiplyTransformation(
+        transformToRoot,
         transform,
-        ModelExperimentalUtility.getNodeTransform(childNode),
         new Matrix4()
       );
 
       const childIndex = traverseSceneGraph(
         sceneGraph,
         childNode,
-        childNodeTransform
+        childNodeTransformToRoot
       );
       childrenIndices.push(childIndex);
     }
@@ -239,6 +246,7 @@ function traverseSceneGraph(sceneGraph, node, transform) {
   const runtimeNode = new ModelExperimentalNode({
     node: node,
     transform: transform,
+    transformToRoot: transformToRoot,
     children: childrenIndices,
     sceneGraph: sceneGraph,
   });
@@ -342,11 +350,15 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
   }
 
   this._boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
-  BoundingSphere.transform(
+
+  model._boundingSphere = BoundingSphere.transform(
     this._boundingSphere,
     model.modelMatrix,
     model._boundingSphere
   );
+
+  model._initialRadius = model._boundingSphere.radius;
+  model._boundingSphere.radius *= model._clampedScale;
 };
 
 /**
@@ -388,23 +400,33 @@ ModelExperimentalSceneGraph.prototype.update = function (frameState) {
 };
 
 ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
-  this._computedModelMatrix = Matrix4.clone(this._model.modelMatrix);
-  Matrix4.multiply(
-    this._computedModelMatrix,
+  const model = this._model;
+
+  this._computedModelMatrix = Matrix4.multiplyTransformation(
+    model.modelMatrix,
     this._modelComponents.transform,
     this._computedModelMatrix
   );
 
-  ModelExperimentalUtility.correctModelMatrix(
+  this._computedModelMatrix = ModelExperimentalUtility.correctModelMatrix(
     this._computedModelMatrix,
     this._modelComponents.upAxis,
-    this._modelComponents.forwardAxis
+    this._modelComponents.forwardAxis,
+    this._computedModelMatrix
   );
 
+  this._computedModelMatrix = Matrix4.multiplyByUniformScale(
+    this._computedModelMatrix,
+    model.computedScale,
+    this._computedModelMatrix
+  );
+
+  // Mark all root nodes as dirty. Any and all children will be
+  // affected recursively in the update stage.
   const rootNodes = this._rootNodes;
   for (let i = 0; i < rootNodes.length; i++) {
     const node = this._runtimeNodes[rootNodes[i]];
-    node.updateModelMatrix();
+    node._transformDirty = true;
   }
 };
 
