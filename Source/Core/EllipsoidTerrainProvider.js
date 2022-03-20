@@ -1,4 +1,3 @@
-import when from "../ThirdParty/when.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -43,7 +42,7 @@ function EllipsoidTerrainProvider(options) {
   );
 
   this._errorEvent = new Event();
-  this._readyPromise = when.resolve(true);
+  this._readyPromise = Promise.resolve(true);
 }
 
 Object.defineProperties(EllipsoidTerrainProvider.prototype, {
@@ -176,7 +175,7 @@ EllipsoidTerrainProvider.prototype.requestTileGeometry = function (
 ) {
   const width = 16;
   const height = 16;
-  return when.resolve(
+  return Promise.resolve(
     new HeightmapTerrainData({
       buffer: new Uint8Array(width * height),
       width: width,

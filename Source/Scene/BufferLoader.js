@@ -1,7 +1,7 @@
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import when from "../ThirdParty/when.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 
@@ -42,7 +42,7 @@ export default function BufferLoader(options) {
   this._resource = resource;
   this._cacheKey = cacheKey;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = when.defer();
+  this._promise = defer();
 }
 
 if (defined(Object.create)) {
@@ -117,7 +117,7 @@ function loadExternalBuffer(bufferLoader) {
       bufferLoader._state = ResourceLoaderState.READY;
       bufferLoader._promise.resolve(bufferLoader);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (bufferLoader.isDestroyed()) {
         return;
       }

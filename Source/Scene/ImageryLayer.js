@@ -31,7 +31,6 @@ import TextureWrap from "../Renderer/TextureWrap.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import ReprojectWebMercatorFS from "../Shaders/ReprojectWebMercatorFS.js";
 import ReprojectWebMercatorVS from "../Shaders/ReprojectWebMercatorVS.js";
-import when from "../ThirdParty/when.js";
 import Imagery from "./Imagery.js";
 import ImageryState from "./ImageryState.js";
 import SplitDirection from "./SplitDirection.js";
@@ -1009,7 +1008,13 @@ ImageryLayer.prototype._requestImagery = function (imagery) {
       );
     }
 
-    when(imagePromise, success, failure);
+    imagePromise
+      .then(function (image) {
+        success(image);
+      })
+      .catch(function (e) {
+        failure(e);
+      });
   }
 
   doRequest();

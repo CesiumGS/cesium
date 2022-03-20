@@ -1,7 +1,6 @@
 import {
   FeatureDetection,
   MetadataComponentType,
-  MetadataType,
 } from "../../Source/Cesium.js";
 
 describe("Scene/MetadataComponentType", function () {
@@ -168,16 +167,6 @@ describe("Scene/MetadataComponentType", function () {
     expect(
       MetadataComponentType.isNumericType(MetadataComponentType.FLOAT64)
     ).toBe(true);
-    expect(
-      MetadataComponentType.isNumericType(MetadataComponentType.BOOLEAN)
-    ).toBe(false);
-    expect(
-      MetadataComponentType.isNumericType(MetadataComponentType.STRING)
-    ).toBe(false);
-    expect(
-      MetadataComponentType.isNumericType(MetadataComponentType.ENUM)
-    ).toBe(false);
-    expect(MetadataComponentType.isNumericType(MetadataType.ARRAY)).toBe(false);
   });
 
   it("isNumericType throws without type", function () {
@@ -217,16 +206,6 @@ describe("Scene/MetadataComponentType", function () {
     expect(
       MetadataComponentType.isIntegerType(MetadataComponentType.FLOAT64)
     ).toBe(false);
-    expect(
-      MetadataComponentType.isIntegerType(MetadataComponentType.BOOLEAN)
-    ).toBe(false);
-    expect(
-      MetadataComponentType.isIntegerType(MetadataComponentType.STRING)
-    ).toBe(false);
-    expect(
-      MetadataComponentType.isIntegerType(MetadataComponentType.ENUM)
-    ).toBe(false);
-    expect(MetadataComponentType.isIntegerType(MetadataType.ARRAY)).toBe(false);
   });
 
   it("isIntegerType throws without type", function () {
@@ -266,18 +245,6 @@ describe("Scene/MetadataComponentType", function () {
     expect(
       MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.FLOAT64)
     ).toBe(false);
-    expect(
-      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.BOOLEAN)
-    ).toBe(false);
-    expect(
-      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.STRING)
-    ).toBe(false);
-    expect(
-      MetadataComponentType.isUnsignedIntegerType(MetadataComponentType.ENUM)
-    ).toBe(false);
-    expect(
-      MetadataComponentType.isUnsignedIntegerType(MetadataType.ARRAY)
-    ).toBe(false);
   });
 
   it("isUnsignedIntegerType throws without type", function () {
@@ -288,12 +255,17 @@ describe("Scene/MetadataComponentType", function () {
 
   it("normalizes signed integers", function () {
     const signedTypes = ["INT8", "INT16", "INT32"];
+
+    // Aside from -1.0, 0.0, and -1.0 there's no common normalized value that
+    // can be checked for signed types. So hardcode some values.
+    const middle = [0.5039370078740157, 0.500015259254738, 0.5000000002328306];
+
     for (let i = 0; i < signedTypes.length; ++i) {
       const type = signedTypes[i];
       const min = MetadataComponentType.getMinimum(MetadataComponentType[type]);
       const max = MetadataComponentType.getMaximum(MetadataComponentType[type]);
-      const values = [min, min / 2, 0, max / 2, max];
-      const expectedResults = [-1.0, -0.5, 0.0, 0.5, 1.0];
+      const values = [min, min + 1, min / 2, 0, (max + 1) / 2, max];
+      const expectedResults = [-1.0, -1.0, -middle[i], 0.0, middle[i], 1.0];
       for (let j = 0; j < values.length; ++j) {
         const result = MetadataComponentType.normalize(values[j], type);
         expect(result).toBe(expectedResults[j]);
@@ -306,8 +278,8 @@ describe("Scene/MetadataComponentType", function () {
     for (let i = 0; i < unsignedTypes.length; ++i) {
       const type = unsignedTypes[i];
       const max = MetadataComponentType.getMaximum(MetadataComponentType[type]);
-      const values = [0, max / 4, max / 2, max];
-      const expectedResults = [0.0, 0.25, 0.5, 1.0];
+      const values = [0, max / 5, max];
+      const expectedResults = [0.0, 0.2, 1.0];
       for (let j = 0; j < values.length; ++j) {
         const result = MetadataComponentType.normalize(values[j], type);
         expect(result).toBe(expectedResults[j]);
@@ -322,9 +294,18 @@ describe("Scene/MetadataComponentType", function () {
 
     const min = MetadataComponentType.getMinimum(MetadataComponentType.INT64);
     const max = MetadataComponentType.getMaximum(MetadataComponentType.INT64);
-    // eslint-disable-next-line no-undef
-    const values = [min, min / BigInt(2), 0, max / BigInt(2), max];
-    const expectedResults = [-1.0, -0.5, 0.0, 0.5, 1.0];
+    const values = [
+      min,
+      // eslint-disable-next-line no-undef
+      min + BigInt(1),
+      // eslint-disable-next-line no-undef
+      min / BigInt(2),
+      0,
+      // eslint-disable-next-line no-undef
+      (max + BigInt(1)) / BigInt(2),
+      max,
+    ];
+    const expectedResults = [-1.0, -1.0, -0.5, 0.0, 0.5, 1.0];
     for (let j = 0; j < values.length; ++j) {
       const result = MetadataComponentType.normalize(
         values[j],
@@ -341,8 +322,8 @@ describe("Scene/MetadataComponentType", function () {
 
     const max = MetadataComponentType.getMaximum(MetadataComponentType.UINT64);
     // eslint-disable-next-line no-undef
-    const values = [BigInt(0), max / BigInt(4), max / BigInt(2), max];
-    const expectedResults = [0.0, 0.25, 0.5, 1.0];
+    const values = [BigInt(0), max / BigInt(5), max];
+    const expectedResults = [0.0, 0.2, 1.0];
     for (let j = 0; j < values.length; ++j) {
       const result = MetadataComponentType.normalize(
         values[j],
@@ -378,12 +359,25 @@ describe("Scene/MetadataComponentType", function () {
 
   it("unnormalizes signed numbers", function () {
     const signedTypes = ["INT8", "INT16", "INT32"];
+
+    // Aside from -1.0, 0.0, and -1.0 there's no common normalized value that
+    // can be checked for signed types. So hardcode some values.
+    const middle = [0.5039370078740157, 0.500015259254738, 0.5000000002328306];
+
     for (let i = 0; i < signedTypes.length; ++i) {
       const type = signedTypes[i];
       const min = MetadataComponentType.getMinimum(MetadataComponentType[type]);
       const max = MetadataComponentType.getMaximum(MetadataComponentType[type]);
-      const values = [-1.0, -0.5, 0.0, 0.5, 1.0];
-      const expectedResults = [min, min / 2, 0, max / 2, max];
+      const values = [-1.0, -middle[i], -0.5, 0.0, middle[i], 0.5, 1.0];
+      const expectedResults = [
+        min + 1,
+        min / 2,
+        min / 2,
+        0,
+        (max + 1) / 2,
+        (max + 1) / 2,
+        max,
+      ];
       for (let j = 0; j < values.length; ++j) {
         const result = MetadataComponentType.unnormalize(values[j], type);
         expect(result).toBe(expectedResults[j]);
@@ -396,8 +390,8 @@ describe("Scene/MetadataComponentType", function () {
     for (let i = 0; i < unsignedTypes.length; ++i) {
       const type = unsignedTypes[i];
       const max = MetadataComponentType.getMaximum(MetadataComponentType[type]);
-      const values = [0.0, 0.25, 0.5, 1.0];
-      const expectedResults = [0, max / 4, max / 2, max];
+      const values = [0.0, 0.2, 0.5, 1.0];
+      const expectedResults = [0, max / 5, (max + 1) / 2, max];
       for (let j = 0; j < values.length; ++j) {
         const result = MetadataComponentType.unnormalize(values[j], type);
         expect(result).toBe(expectedResults[j]);
@@ -414,15 +408,14 @@ describe("Scene/MetadataComponentType", function () {
     const max = MetadataComponentType.getMaximum(MetadataComponentType.INT64);
     const values = [-1.0, -0.5, 0.0, 0.5, 1.0];
 
-    // Unnormalization is not always exact since it must be through Float64 math
-    // first, hence the + BigInt(1)
     const expectedResults = [
-      min,
+      min + BigInt(1), // eslint-disable-line
       min / BigInt(2), // eslint-disable-line
       BigInt(0), // eslint-disable-line
-      max / BigInt(2) + BigInt(1), // eslint-disable-line
+      (max + BigInt(1)) / BigInt(2), // eslint-disable-line
       max,
     ];
+
     for (let i = 0; i < values.length; ++i) {
       const result = MetadataComponentType.unnormalize(
         values[i],
@@ -438,14 +431,14 @@ describe("Scene/MetadataComponentType", function () {
     }
 
     const max = MetadataComponentType.getMaximum(MetadataComponentType.UINT64);
-    const values = [0.0, 0.25, 0.5, 1.0];
+    const values = [0.0, 0.2, 0.5, 1.0];
 
-    // Unnormalization is not always exact since it must be through Float64 math
-    // first, hence the + BigInt(1)
+    // Second result is max / 5
+    // Third result is (max + 1) / 2
     const expectedResults = [
       BigInt(0), // eslint-disable-line
-      max / BigInt(4) + BigInt(1), // eslint-disable-line
-      max / BigInt(2) + BigInt(1), // eslint-disable-line
+      BigInt(3689348814741910323), // eslint-disable-line
+      BigInt(9223372036854775808), // eslint-disable-line
       max,
     ];
     for (let i = 0; i < values.length; ++i) {
@@ -460,7 +453,7 @@ describe("Scene/MetadataComponentType", function () {
   it("unnormalize clamps values outside the range", function () {
     expect(
       MetadataComponentType.unnormalize(-1.1, MetadataComponentType.INT8)
-    ).toBe(-128);
+    ).toBe(-127);
     expect(
       MetadataComponentType.unnormalize(-0.1, MetadataComponentType.UINT8)
     ).toBe(0);
@@ -486,7 +479,7 @@ describe("Scene/MetadataComponentType", function () {
 
   it("unnormalize throws if type is not an integer type", function () {
     expect(function () {
-      MetadataComponentType.unnormalize(10.0, MetadataComponentType.STRING);
+      MetadataComponentType.unnormalize(10.0, MetadataComponentType.FLOAT32);
     }).toThrowDeveloperError();
   });
 

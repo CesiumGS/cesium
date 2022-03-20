@@ -763,8 +763,8 @@ Cesium3DTilePointFeature.prototype.getProperty = function (name) {
 
 /**
  * Returns a copy of the value of the feature's property with the given name.
- * If the feature is contained within a tileset that uses the
- * <code>3DTILES_metadata</code> extension, tileset, group and tile metadata is
+ * If the feature is contained within a tileset that has metadata (3D Tiles 1.1)
+ * or uses the <code>3DTILES_metadata</code> extension, tileset, group and tile metadata is
  * inherited.
  * <p>
  * To resolve name conflicts, this method resolves names from most specific to

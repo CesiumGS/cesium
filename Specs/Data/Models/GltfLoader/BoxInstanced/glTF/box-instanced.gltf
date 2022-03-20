@@ -3,22 +3,24 @@
     "version": "2.0"
   },
   "extensionsUsed": [
-    "EXT_mesh_features",
+    "EXT_instance_features",
+    "EXT_structural_metadata",
     "EXT_mesh_gpu_instancing"
   ],
   "extensionsRequired": [
     "EXT_mesh_gpu_instancing"
   ],
   "extensions": {
-    "EXT_mesh_features": {
+    "EXT_structural_metadata": {
       "schema": {
         "classes": {
           "box": {
             "properties": {
               "name": {
-                "componentType": "STRING"
+                "type": "STRING"
               },
               "volume": {
+                "type": "SCALAR",
                 "componentType": "FLOAT32"
               }
             }
@@ -26,9 +28,10 @@
           "section": {
             "properties": {
               "name": {
-                "componentType": "STRING"
+                "type": "STRING"
               },
               "id": {
+                "type": "SCALAR",
                 "componentType": "UINT16"
               }
             }
@@ -43,11 +46,11 @@
           "properties": {
             "name": {
               "stringOffsetType": "UINT16",
-              "bufferView": 7,
-              "stringOffsetBufferView": 8
+              "values": 7,
+              "stringOffsets": 8
             },
             "volume": {
-              "bufferView": 9
+              "values": 9
             }
           }
         },
@@ -58,11 +61,11 @@
           "properties": {
             "name": {
               "stringOffsetType": "UINT16",
-              "bufferView": 10,
-              "stringOffsetBufferView": 11
+              "values": 10,
+              "stringOffsets": 11
             },
             "id": {
-              "bufferView": 12
+              "values": 12
             }
           }
         }
@@ -86,21 +89,21 @@
             "TRANSLATION": 3,
             "ROTATION": 4,
             "SCALE": 5,
-            "FEATURE_ID_0": 6
+            "_FEATURE_ID_0": 6
           }
         },
-        "EXT_mesh_features": {
-          "propertyTables": [
-            0,
-            1
-          ],
+        "EXT_instance_features": {
           "featureIds": [
             {
-              "offset": 0,
-              "repeat": 1
+              "label": "perInstance",
+              "propertyTable": 0,
+              "featureCount": 4
             },
             {
-              "attribute": 0
+              "label": "section",
+              "propertyTable": 1,
+              "attribute": 0,
+              "featureCount": 2
             }
           ]
         }

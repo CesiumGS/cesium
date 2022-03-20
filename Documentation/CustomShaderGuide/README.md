@@ -68,7 +68,10 @@ const customShader = new Cesium.CustomShader(/* ... */);
 // Applying to all tiles in a tileset.
 const tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
   url: "http://example.com/tileset.json",
-  customShader: customShader
+  customShader: customShader,
+  // This is only needed for b3dm and i3dm tilesets. for glTF,
+  // ModelExperimental is always used.
+  enableModelExperimental: true,
 }));
 
 // Applying to a model directly
@@ -77,10 +80,6 @@ const model = Cesium.ModelExperimental.fromGltf({,
   customShader: customShader
 });
 ```
-
-**Note**: As of this writing, only tilesets that use the `3DTILES_content_gltf`
-extension will support `CustomShaders`. Future releases will add support for
-other formats such as b3dm.
 
 ## Uniforms
 
@@ -265,6 +264,13 @@ This struct is dynamically generated to gather all the various feature IDs into
 a single collection, regardless of whether the value came from an attribute,
 texture or varying.
 
+Feature IDs are represented as a GLSL `int`, though in WebGL 1 this has a couple
+limitations:
+
+- Above `2^24`, values may have a loss of precision since WebGL 1 implements
+  `highp int` as a floating point value.
+- Ideally the type would be `uint` but this is not available until WebGL 2
+
 ### 3D Tiles 1.0 Batch IDs
 
 In 3D Tiles 1.0, the same concept of identifying features within a primitive
@@ -274,24 +280,28 @@ to a single feature ID, always with index 0:
 - `vsInput.featureIds.featureId_0` (Vertex shader)
 - `fsInput.featureIds.featureId_0` (Fragment shader)
 
-### `EXT_mesh_features` Feature IDs
+### `EXT_mesh_features`/`EXT_instance_features` Feature IDs
 
-When the glTF extension `EXT_mesh_features` is used, feature IDs appear in
-two places:
+When the glTF extensions `EXT_mesh_features` or `EXT_instance_features` are used,
+feature IDs appear in two places:
 
 1. Any glTF primitive can have a `featureIds` array. The `featureIds` array may
    contain feature ID attributes, implicit feature ID attributes, and/or feature
    ID textures. Regardless of the type of feature IDs, they all appear in the
    custom shader as `(vsInput|fsInput).featureIds.featureId_N` where `N` is the
    index of the feature IDs in the `featureIds` array.
-2. Any glTF node with the `EXT_mesh_gpu_instancing` and `EXT_mesh_features` may
+2. Any glTF node with the `EXT_mesh_gpu_instancing` and `EXT_instance_features` may
    define feature IDs. These may be feature ID attributes or implicit feature ID
    attributes, but not feature ID textures. These will appear in the custom
    shader as `(vsInput|fsInput).featureIds.instanceFeatureId_N` where `N` is the
    index of the feature IDs in the `featureIds` array.
 
-Furthermore, note that feature ID textures are only supported in the fragment
-shader.
+Furthermore, feature ID textures are only supported in the fragment shader.
+
+If a set of feature IDs includes a `label` property (new in `EXT_mesh_features`),
+that label will be available as an alias. For example, if `label: "alias"`, then
+`(vsInput|fsInput).featureIds.alias` would be available in the shader along
+with `featureId_N`.
 
 For example, suppose we had a glTF primitive with the following feature IDs:
 
@@ -303,30 +313,36 @@ For example, suppose we had a glTF primitive with the following feature IDs:
       "EXT_mesh_gpu_instancing": {
         "attributes": {
           "TRANSLATION": 3,
-          "FEATURE_ID_0": 4
+          "_FEATURE_ID_0": 4
         }
       },
-      "EXT_mesh_features": {
-        "propertyTables": [0, 1],
+      "EXT_instance_features": {
         "featureIds": [
           {
-            // Feature ID attribute from implicit range
+            // Default feature IDs (instance ID)
             //
-            // Vertex Shader: vsInput.featureIds.instanceFeatureId_0
-            // Fragment Shader: fsInput.featureIds.instanceFeatureId_0
-            "offset": 0,
-            "repeat": 1
+            // Vertex Shader:
+            //   vsInput.featureIds.instanceFeatureId_0 OR
+            //   vsInput.featureIds.perInstance
+            // Fragment Shader:
+            //   fsInput.featureIds.instanceFeatureId_0 OR
+            //   fsInput.featureIds.perInstance
+            "label": "perInstance",
+            "propertyTable": 0
           },
           {
-            // Feature ID attribute. This corresponds to FEATURE_ID_0 from the
+            // Feature ID attribute. This corresponds to _FEATURE_ID_0 from the
             // instancing extension above. Note that this is
             // labeled as instanceFeatureId_1 since it is the second feature ID
             // set in the featureIds array
             //
             // Vertex Shader: vsInput.featureIds.instanceFeatureId_1
             // Fragment Shader: fsInput.featureIds.instanceFeatureId_1
+            //
+            // Since there is no label field, instanceFeatureId_1 must be used.
+            "propertyTable": 1,
             "attribute": 0
-          }
+          },
         ]
       }
     }
@@ -338,46 +354,57 @@ For example, suppose we had a glTF primitive with the following feature IDs:
       {
         "attributes": {
           "POSITION": 0,
-          "FEATURE_ID_0": 1,
-          "FEATURE_ID_1": 2
+          "_FEATURE_ID_0": 1,
+          "_FEATURE_ID_1": 2
         },
         "extensions": {
           "EXT_mesh_features": {
-            "propertyTables": [2, 3, 4, 5],
             "featureIds": [
               {
                 // Feature ID Texture
                 //
                 // Vertex Shader: (Not supported)
-                // Fragment Shader: fsInput.featureIds.featureId_0
+                // Fragment Shader:
+                //   fsInput.featureIds.featureId_0 OR
+                //   fsInput.featureIds.texture
+                "label": "texture",
+                "propertyTable": 2,
                 "index": 0,
                 "texCoord": 0,
                 "channel": 0
               },
               {
-                // Implicit Feature ID attribute
+                // Default Feature IDs (vertex ID)
                 //
-                // Vertex Shader: vsInput.featureIds.featureId_1
-                // Fragment Shader: fsInput.featureIds.featureId_1
-                "offset": 0,
-                "repeat": 3
+                // Vertex Shader:
+                //   vsInput.featureIds.featureId_1 OR
+                //   vsInput.featureIds.perVertex
+                // Fragment Shader:
+                //   fsInput.featureIds.featureId_1 OR
+                //   fsInput.featureIds.perVertex
+                "label": "perVertex",
+                "propertyTable": 3,
               },
               {
-                // Feature ID Attribute (FEATURE_ID_0). Note that this
+                // Feature ID Attribute (_FEATURE_ID_0). Note that this
                 // is labeled featureId_2 for its index in the featureIds
                 // array
                 //
                 // Vertex Shader: vsInput.featureIds.featureId_2
                 // Fragment Shader: fsInput.featureIds.featureId_2
+                //
+                // Since there is no label, featureId_2 must be used.
+                "propertyTable": 4,
                 "attribute": 0
               },
               {
-                // Feature ID Attribute (FEATURE_ID_1). Note that this
+                // Feature ID Attribute (_FEATURE_ID_1). Note that this
                 // is labeled featureId_3 for its index in the featureIds
                 // array
                 //
                 // Vertex Shader: vsInput.featureIds.featureId_3
                 // Fragment Shader: fsInput.featureIds.featureId_3
+                "propertyTable": 5,
                 "attribute": 1
               }
             ]
@@ -434,7 +461,7 @@ to the `EXT_feature_metadata` extension:
                 }
               },
               {
-                // Feature ID attribute. This corresponds to FEATURE_ID_0 from the
+                // Feature ID attribute. This corresponds to _FEATURE_ID_0 from the
                 // instancing extension above. Note that this is
                 // labeled as instanceFeatureId_1 since it is the second feature ID
                 // set in the featureIds array
@@ -477,7 +504,7 @@ to the `EXT_feature_metadata` extension:
                 }
               },
               {
-                // Feature ID Attribute (FEATURE_ID_0). Note that this
+                // Feature ID Attribute (_FEATURE_ID_0). Note that this
                 // is labeled featureId_1 for its index in the featureIds
                 // array
                 //
@@ -489,7 +516,7 @@ to the `EXT_feature_metadata` extension:
                 }
               },
               {
-                // Feature ID Attribute (FEATURE_ID_1). Note that this
+                // Feature ID Attribute (_FEATURE_ID_1). Note that this
                 // is labeled featureId_2 for its index in the featureIds
                 // array
                 //

@@ -173,6 +173,10 @@ function addSemanticDefine(shaderBuilder, attribute) {
       shaderBuilder.addDefine("HAS_TANGENTS");
       break;
     case VertexAttributeSemantic.FEATURE_ID:
+      // `_FEATURE_ID starts with an underscore so no need to double the
+      // underscore.
+      shaderBuilder.addDefine(`HAS${semantic}_${setIndex}`);
+      break;
     case VertexAttributeSemantic.TEXCOORD:
     case VertexAttributeSemantic.COLOR:
       shaderBuilder.addDefine(`HAS_${semantic}_${setIndex}`);

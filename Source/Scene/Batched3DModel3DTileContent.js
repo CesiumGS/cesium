@@ -49,6 +49,8 @@ function Batched3DModel3DTileContent(
     ? undefined
     : tileset.classificationType;
 
+  this._metadata = undefined;
+
   // Populate from gltf when available
   this._batchIdAttributeName = undefined;
   this._diffuseAttributeOrUniformName = {};
@@ -129,6 +131,15 @@ Object.defineProperties(Batched3DModel3DTileContent.prototype, {
   url: {
     get: function () {
       return this._resource.getUrlComponent(true);
+    },
+  },
+
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
     },
   },
 

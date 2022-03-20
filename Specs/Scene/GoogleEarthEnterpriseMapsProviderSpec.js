@@ -141,7 +141,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       .then(function () {
         fail("should not resolve");
       })
-      .otherwise(function (e) {
+      .catch(function (e) {
         expect(provider.ready).toBe(false);
         expect(e.message).toContain(url);
       });
@@ -342,13 +342,11 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       channel: channel,
     });
 
-    expect(provider.url).toEqual(url);
-    expect(provider.path).toEqual(path);
-    expect(provider.version).toEqual(version);
-    expect(provider.channel).toEqual(channel);
-
-    return pollToPromise(function () {
-      return provider.ready;
+    return provider.readyPromise.then(function () {
+      expect(provider.url).toEqual(url);
+      expect(provider.path).toEqual(path);
+      expect(provider.version).toEqual(version);
+      expect(provider.channel).toEqual(channel);
     });
   });
 
@@ -365,12 +363,14 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       errorEventRaised = true;
     });
 
-    return pollToPromise(function () {
-      return provider.ready || errorEventRaised;
-    }).then(function () {
-      expect(provider.ready).toEqual(false);
-      expect(errorEventRaised).toEqual(true);
-    });
+    return provider.readyPromise
+      .catch(function (e) {
+        // catch error and continue
+      })
+      .finally(function () {
+        expect(provider.ready).toEqual(false);
+        expect(errorEventRaised).toEqual(true);
+      });
   });
 
   it("raises error event when image cannot be loaded", function () {
@@ -470,9 +470,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       }
     };
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       const imagery = new Imagery(layer, 0, 0, 0);
       imagery.addReference();
       layer._requestImagery(imagery);
@@ -655,12 +653,14 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       errorEventRaised = true;
     });
 
-    return pollToPromise(function () {
-      return provider.ready || errorEventRaised;
-    }).then(function () {
-      expect(provider.ready).toEqual(false);
-      expect(errorEventRaised).toEqual(true);
-    });
+    return provider.readyPromise
+      .catch(function (e) {
+        // catch error and continue
+      })
+      .finally(function () {
+        expect(provider.ready).toEqual(false);
+        expect(errorEventRaised).toEqual(true);
+      });
   });
 
   it("raises error when channel version cannot be found", function () {
@@ -696,12 +696,14 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       errorEventRaised = true;
     });
 
-    return pollToPromise(function () {
-      return provider.ready || errorEventRaised;
-    }).then(function () {
-      expect(provider.ready).toEqual(false);
-      expect(errorEventRaised).toEqual(true);
-    });
+    return provider.readyPromise
+      .catch(function (e) {
+        // catch error and continue
+      })
+      .finally(function () {
+        expect(provider.ready).toEqual(false);
+        expect(errorEventRaised).toEqual(true);
+      });
   });
 
   it("raises error when unsupported projection is specified", function () {
@@ -737,11 +739,13 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       errorEventRaised = true;
     });
 
-    return pollToPromise(function () {
-      return provider.ready || errorEventRaised;
-    }).then(function () {
-      expect(provider.ready).toEqual(false);
-      expect(errorEventRaised).toEqual(true);
-    });
+    return provider.readyPromise
+      .catch(function (e) {
+        // catch error
+      })
+      .finally(function () {
+        expect(provider.ready).toEqual(false);
+        expect(errorEventRaised).toEqual(true);
+      });
   });
 });

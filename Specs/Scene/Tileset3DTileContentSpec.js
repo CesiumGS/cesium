@@ -2,6 +2,7 @@ import {
   Cartesian3,
   HeadingPitchRange,
   MetadataClass,
+  ContentMetadata,
   GroupMetadata,
 } from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
@@ -67,29 +68,63 @@ describe(
       );
     });
 
-    describe("3DTILES_metadata", function () {
-      const metadataClass = new MetadataClass({
-        id: "test",
-        class: {
-          properties: {
-            name: {
-              componentType: "STRING",
-            },
-            height: {
-              componentType: "FLOAT32",
+    describe("metadata", function () {
+      let metadataClass;
+      let groupMetadata;
+      let contentMetadataClass;
+      let contentMetadata;
+
+      beforeAll(function () {
+        metadataClass = new MetadataClass({
+          id: "test",
+          class: {
+            properties: {
+              name: {
+                type: "STRING",
+              },
+              height: {
+                type: "SCALAR",
+                componentType: "FLOAT32",
+              },
             },
           },
-        },
-      });
-      const groupMetadata = new GroupMetadata({
-        id: "testGroup",
-        group: {
-          properties: {
-            name: "Test Group",
-            height: 35.6,
+        });
+
+        groupMetadata = new GroupMetadata({
+          id: "testGroup",
+          group: {
+            properties: {
+              name: "Test Group",
+              height: 35.6,
+            },
           },
-        },
-        class: metadataClass,
+          class: metadataClass,
+        });
+
+        contentMetadataClass = new MetadataClass({
+          id: "contentTest",
+          class: {
+            properties: {
+              author: {
+                type: "STRING",
+              },
+              color: {
+                type: "VEC3",
+                componentType: "UINT8",
+              },
+            },
+          },
+        });
+
+        contentMetadata = new ContentMetadata({
+          content: {
+            properties: {
+              author: "Test Author",
+              color: [255, 0, 0],
+            },
+          },
+          class: contentMetadataClass,
+        });
       });
 
       it("assigns groupMetadata", function () {
@@ -100,6 +135,17 @@ describe(
           const content = tileset.root.content;
           content.groupMetadata = groupMetadata;
           expect(content.groupMetadata).toBe(groupMetadata);
+        });
+      });
+
+      it("assigns metadata", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetOfTilesetsUrl
+        ).then(function (tileset) {
+          const content = tileset.root.content;
+          content.metadata = contentMetadata;
+          expect(content.metadata).toBe(contentMetadata);
         });
       });
     });

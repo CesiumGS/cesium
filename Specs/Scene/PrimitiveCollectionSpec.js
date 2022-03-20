@@ -11,6 +11,7 @@ import { Primitive } from "../../Source/Cesium.js";
 import { PrimitiveCollection } from "../../Source/Cesium.js";
 import { VerticalOrigin } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
+import pollToPromise from "../pollToPromise.js";
 
 describe(
   "Scene/PrimitiveCollection",
@@ -41,6 +42,21 @@ describe(
         primitives && !primitives.isDestroyed() && primitives.destroy();
     });
 
+    function allLabelsReady(labels) {
+      // render until all labels have been updated
+      return pollToPromise(function () {
+        scene.renderForSpecs();
+        const backgroundBillboard = labels._backgroundBillboardCollection.get(
+          0
+        );
+        return (
+          labels._backgroundImageReady &&
+          (!defined(backgroundBillboard) || backgroundBillboard.ready) &&
+          labels._labelsToUpdate.length === 0
+        );
+      });
+    }
+
     function createLabels(position) {
       position = defaultValue(position, {
         x: -1.0,
@@ -70,6 +86,22 @@ describe(
         appearance: new PerInstanceColorAppearance(),
         releaseGeometryInstances: true,
         asynchronous: false,
+      });
+    }
+
+    function verifyLabelsRender(primitives, labels, color) {
+      scene.primitives.removeAll();
+      scene.camera.setView({ destination: rectangle });
+
+      expect(scene).toRender([0, 0, 0, 255]);
+
+      scene.primitives.add(primitives);
+      return allLabelsReady(labels).then(function () {
+        if (defined(color)) {
+          expect(scene).toRender(color);
+        } else {
+          expect(scene).notToRender([0, 0, 0, 255]);
+        }
       });
     }
 
@@ -284,13 +316,15 @@ describe(
     });
 
     it("renders a primitive added with add()", function () {
-      primitives.add(createLabels());
-      verifyPrimitivesRender(primitives);
+      const labels = createLabels();
+      primitives.add(labels);
+      return verifyLabelsRender(primitives, labels);
     });
 
     it("does not render", function () {
       primitives.show = false;
-      primitives.add(createLabels());
+      const labels = createLabels();
+      primitives.add(labels);
       verifyPrimitivesRender(primitives, [0, 0, 0, 255]);
     });
 
@@ -302,18 +336,20 @@ describe(
       otherPrimitives.destroyPrimitives = false;
       otherPrimitives.add(p);
 
-      verifyPrimitivesRender(primitives);
-      verifyPrimitivesRender(otherPrimitives);
+      return verifyLabelsRender(primitives, p).then(function () {
+        verifyPrimitivesRender(otherPrimitives);
 
-      otherPrimitives.destroy();
+        otherPrimitives.destroy();
+      });
     });
 
     it("renders child composites", function () {
       const children = new PrimitiveCollection();
-      children.add(createLabels());
+      const labels = createLabels();
+      children.add(labels);
       primitives.add(children);
 
-      verifyPrimitivesRender(primitives);
+      return verifyLabelsRender(primitives, labels);
     });
 
     it("picks a primitive added with add()", function () {
@@ -321,9 +357,9 @@ describe(
       const l = labels.get(0);
       primitives.add(labels);
 
-      verifyPrimitivesRender(primitives);
-
-      expect(scene).toPickPrimitive(l);
+      return verifyLabelsRender(primitives, labels).then(function () {
+        expect(scene).toPickPrimitive(l);
+      });
     });
 
     it("does not pick", function () {
@@ -345,9 +381,9 @@ describe(
       children.add(labels);
       primitives.add(children);
 
-      verifyPrimitivesRender(primitives);
-
-      expect(scene).toPickPrimitive(l);
+      return verifyLabelsRender(primitives, labels).then(function () {
+        expect(scene).toPickPrimitive(l);
+      });
     });
 
     it("picks a primitive added with render order (0)", function () {

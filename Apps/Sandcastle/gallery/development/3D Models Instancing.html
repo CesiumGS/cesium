@@ -81,7 +81,7 @@
                 collection._boundingSphere.radius
               );
             })
-            .otherwise(function (error) {
+            .catch(function (error) {
               window.alert(error);
             });
         }
@@ -113,7 +113,7 @@
                   loop: Cesium.ModelAnimationLoop.REPEAT,
                 });
               })
-              .otherwise(function (error) {
+              .catch(function (error) {
                 window.alert(error);
               });
           }
