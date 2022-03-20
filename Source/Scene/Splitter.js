@@ -22,7 +22,7 @@ const Splitter = {
       "void main() \n" +
       "{ \n" +
       // Don't split when rendering the shadow map, because it is rendered from
-      // the perpsective of a totally different camera.
+      // the perspective of a totally different camera.
       "#ifndef SHADOW_MAP\n" +
       "    if (czm_splitDirection < 0.0 && gl_FragCoord.x > czm_splitPosition) discard; \n" +
       "    if (czm_splitDirection > 0.0 && gl_FragCoord.x < czm_splitPosition) discard; \n" +
