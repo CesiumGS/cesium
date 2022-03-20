@@ -60,6 +60,14 @@ export default function preprocess3DTileContent(arrayBuffer) {
     };
   }
 
+  if (defined(json.tileAvailability)) {
+    return {
+      // Most likely a subtree JSON.
+      contentType: Cesium3DTileContentType.IMPLICIT_SUBTREE_JSON,
+      jsonPayload: json,
+    };
+  }
+
   throw new RuntimeError("Invalid tile content.");
 }
 

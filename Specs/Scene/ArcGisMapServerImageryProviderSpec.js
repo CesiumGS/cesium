@@ -81,7 +81,8 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
   function stubJSONPCall(baseUrl, result, withProxy, token) {
     Resource._Implementations.loadAndExecuteScript = function (
       url,
-      functionName
+      functionName,
+      deferred
     ) {
       expectCorrectUrl(baseUrl, url, functionName, withProxy, token);
       setTimeout(function () {
@@ -180,7 +181,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       .then(function () {
         fail("should not resolve");
       })
-      .otherwise(function (e) {
+      .catch(function (e) {
         expect(e.message).toContain(baseUrl);
         expect(provider.ready).toBe(false);
       });
@@ -197,9 +198,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
     expect(provider.url).toEqual(baseUrl);
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider.tileWidth).toEqual(128);
       expect(provider.tileHeight).toEqual(256);
       expect(provider.maximumLevel).toEqual(2);
@@ -310,9 +309,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
     expect(provider.url).toEqual(baseUrl);
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider.tileWidth).toEqual(128);
       expect(provider.tileHeight).toEqual(256);
       expect(provider.maximumLevel).toEqual(2);
@@ -396,9 +393,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
     expect(provider.url).toEqual(baseUrl);
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider.tileWidth).toEqual(256);
       expect(provider.tileHeight).toEqual(256);
       expect(provider.maximumLevel).toBeUndefined();
@@ -474,9 +469,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
     expect(provider.url).toEqual(baseUrl);
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider.tileWidth).toEqual(128);
       expect(provider.tileHeight).toEqual(512);
       expect(provider.maximumLevel).toBeUndefined();
@@ -548,9 +541,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     expect(provider.url).toEqual(baseUrl);
     expect(provider.token).toEqual(token);
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider.tileWidth).toEqual(128);
       expect(provider.tileHeight).toEqual(256);
       expect(provider.maximumLevel).toEqual(2);
@@ -674,12 +665,14 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       }
     });
 
-    return pollToPromise(function () {
-      return provider.ready || tries >= 3;
-    }).then(function () {
-      expect(provider.ready).toEqual(false);
-      expect(tries).toEqual(3);
-    });
+    return provider.readyPromise
+      .then(function () {
+        fail();
+      })
+      .catch(function () {
+        expect(provider.ready).toEqual(false);
+        expect(tries).toEqual(3);
+      });
   });
 
   it("raises error on invalid URL", function () {
@@ -697,12 +690,14 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       errorEventRaised = true;
     });
 
-    return pollToPromise(function () {
-      return provider.ready || errorEventRaised;
-    }).then(function () {
-      expect(provider.ready).toEqual(false);
-      expect(errorEventRaised).toEqual(true);
-    });
+    return provider.readyPromise
+      .then(function () {
+        fail();
+      })
+      .catch(function () {
+        expect(provider.ready).toEqual(false);
+        expect(errorEventRaised).toEqual(true);
+      });
   });
 
   it("raises error event when image cannot be loaded", function () {
@@ -751,9 +746,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       }
     };
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       const imagery = new Imagery(layer, 0, 0, 0);
       imagery.addReference();
       layer._requestImagery(imagery);
@@ -822,9 +815,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
     expect(provider.url).toEqual(baseUrl);
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       const projection = new WebMercatorProjection();
       const sw = projection.unproject(
         new Cartesian2(1.1148026611962173e7, -6443518.758206591)
@@ -895,9 +886,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
     expect(provider.url).toEqual(baseUrl);
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider.rectangle.west).toBeGreaterThanOrEqualTo(-Math.PI);
       expect(provider.rectangle.east).toBeLessThanOrEqualTo(Math.PI);
       expect(provider.rectangle.south).toBeGreaterThanOrEqualTo(
@@ -962,9 +951,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
     expect(provider.url).toEqual(baseUrl);
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
+    return provider.readyPromise.then(function () {
       expect(provider.rectangle).toEqual(
         Rectangle.fromDegrees(-123.4, -23.2, 100.7, 45.2)
       );
@@ -1033,12 +1020,14 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       }
     });
 
-    return pollToPromise(function () {
-      return provider.ready || tries >= 3;
-    }).then(function () {
-      expect(provider.ready).toEqual(false);
-      expect(tries).toEqual(3);
-    });
+    return provider.readyPromise
+      .then(function () {
+        fail();
+      })
+      .catch(function () {
+        expect(provider.ready).toEqual(false);
+        expect(tries).toEqual(3);
+      });
   });
 
   describe("pickFeatures", function () {
@@ -1069,9 +1058,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         );
       };
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
         return provider
           .pickFeatures(0, 0, 0, 0.5, 0.5)
           .then(function (pickResult) {
@@ -1116,9 +1103,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         );
       };
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
         return provider
           .pickFeatures(0, 0, 0, 0.5, 0.5)
           .then(function (pickResult) {
@@ -1141,9 +1126,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         enablePickFeatures: false,
       });
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
         expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
       });
     });
@@ -1157,9 +1140,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
       provider.enablePickFeatures = false;
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
+      return provider.readyPromise.then(function () {
         expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
       });
     });
@@ -1173,11 +1154,34 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
       provider.enablePickFeatures = true;
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
-        expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).not.toBeUndefined();
-      });
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType
+      ) {
+        expect(url).toContain("identify");
+        Resource._DefaultImplementations.loadWithXhr(
+          "Data/ArcGIS/identify-WebMercator.json",
+          responseType,
+          method,
+          data,
+          headers,
+          deferred,
+          overrideMimeType
+        );
+      };
+
+      return provider.readyPromise
+        .then(function () {
+          return provider.pickFeatures(0, 0, 0, 0.5, 0.5);
+        })
+        .then(function (value) {
+          expect(value).toBeDefined();
+        });
     });
 
     it("picks from individual layers", function () {
@@ -1211,15 +1215,13 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         );
       };
 
-      return pollToPromise(function () {
-        return provider.ready;
-      }).then(function () {
-        return provider
-          .pickFeatures(0, 0, 0, 0.5, 0.5)
-          .then(function (pickResult) {
-            expect(pickResult.length).toBe(1);
-          });
-      });
+      return provider.readyPromise
+        .then(function () {
+          return provider.pickFeatures(0, 0, 0, 0.5, 0.5);
+        })
+        .then(function (pickResult) {
+          expect(pickResult.length).toBe(1);
+        });
     });
   });
 });

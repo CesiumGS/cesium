@@ -1,8 +1,10 @@
+import defined from "../Core/defined.js";
 import hasExtension from "./hasExtension.js";
 
 /**
- * Check if a content has a <code>3DTILES_metadata</code> extension, and if so,
- * look up the group from the <code>3DTILES_metadata.groups</code> object.
+ * Check if a content has metadata, either defined in its metadata field (3D Tiles 1.1)
+ * or in the <code>3DTILES_metadata</code> extension. If so, look up the group with the
+ * corresponding ID.
  *
  * @function
  *
@@ -13,11 +15,22 @@ import hasExtension from "./hasExtension.js";
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function findGroupMetadata(tileset, contentHeader) {
-  if (hasExtension(contentHeader, "3DTILES_metadata")) {
-    const extension = contentHeader.extensions["3DTILES_metadata"];
-    const groupId = extension.group;
-    return tileset.metadata.groups[groupId];
+  if (!defined(tileset.metadata)) {
+    return undefined;
+  }
+  const groups = tileset.metadata.groups;
+
+  const group = hasExtension(contentHeader, "3DTILES_metadata")
+    ? contentHeader.extensions["3DTILES_metadata"].group
+    : contentHeader.group;
+
+  if (typeof group === "number") {
+    return groups[group];
   }
 
-  return undefined;
+  const index = tileset.metadata.groupIds.findIndex(function (id) {
+    return id === group;
+  });
+
+  return index >= 0 ? groups[index] : undefined;
 }

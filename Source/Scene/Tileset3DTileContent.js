@@ -1,5 +1,5 @@
+import defer from "../Core/defer.js";
 import destroyObject from "../Core/destroyObject.js";
-import when from "../ThirdParty/when.js";
 
 /**
  * Represents content for a tile in a
@@ -18,9 +18,11 @@ function Tileset3DTileContent(tileset, tile, resource, json) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   this.featurePropertiesDirty = false;
+
+  this._metadata = undefined;
   this._groupMetadata = undefined;
 
   initialize(this, json);
@@ -96,6 +98,15 @@ Object.defineProperties(Tileset3DTileContent.prototype, {
   batchTable: {
     get: function () {
       return undefined;
+    },
+  },
+
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
     },
   },
 

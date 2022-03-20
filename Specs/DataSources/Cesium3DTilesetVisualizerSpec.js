@@ -32,10 +32,22 @@ describe(
       scene.destroyForSpecs();
     });
 
-    afterEach(function () {
-      if (defined(visualizer)) {
-        visualizer = visualizer.destroy();
+    function allPrimitivesReady() {
+      const promises = [];
+      for (let i = 0; i < scene.primitives.length; ++i) {
+        promises.push(scene.primitives.get(i).readyPromise);
       }
+      return Promise.all(promises).catch(function (e) {
+        // 404 errors
+      });
+    }
+
+    afterEach(function () {
+      return allPrimitivesReady().then(function () {
+        if (defined(visualizer)) {
+          visualizer = visualizer.destroy();
+        }
+      });
     });
 
     it("constructor throws if no scene is passed.", function () {
@@ -160,12 +172,13 @@ describe(
       );
       testObject.tileset = tileset;
       visualizer.update(time);
-
-      expect(scene.primitives.length).toEqual(1);
-      visualizer.update(time);
-      entityCollection.removeAll();
-      visualizer.update(time);
-      expect(scene.primitives.length).toEqual(0);
+      return allPrimitivesReady().then(function () {
+        expect(scene.primitives.length).toEqual(1);
+        visualizer.update(time);
+        entityCollection.removeAll();
+        visualizer.update(time);
+        expect(scene.primitives.length).toEqual(0);
+      });
     });
 
     it("Visualizer sets id property.", function () {
@@ -245,13 +258,14 @@ describe(
       const result = new BoundingSphere();
       let state = visualizer.getBoundingSphere(testObject, result);
       expect(state).toBe(BoundingSphereState.PENDING);
-      return pollToPromise(function () {
-        scene.render();
-        state = visualizer.getBoundingSphere(testObject, result);
-        return state !== BoundingSphereState.PENDING;
-      }).then(function () {
-        expect(state).toBe(BoundingSphereState.FAILED);
-      });
+      return allPrimitivesReady()
+        .catch(function (e) {
+          // 404 error
+        })
+        .finally(function () {
+          state = visualizer.getBoundingSphere(testObject, result);
+          expect(state).toBe(BoundingSphereState.FAILED);
+        });
     });
 
     it("Compute bounding sphere throws without entity.", function () {

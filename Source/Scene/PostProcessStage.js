@@ -18,7 +18,6 @@ import Texture from "../Renderer/Texture.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
-import when from "../ThirdParty/when.js";
 import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
 
 /**
@@ -710,7 +709,7 @@ function updateUniformTextures(stage, context) {
 
   if (promises.length > 0) {
     stage._ready = false;
-    stage._texturePromise = when.all(promises).then(function () {
+    stage._texturePromise = Promise.all(promises).then(function () {
       stage._ready = true;
       stage._texturePromise = undefined;
     });

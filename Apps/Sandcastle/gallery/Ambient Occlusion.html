@@ -133,7 +133,7 @@
           .then(function (tileset) {
             viewer.scene.primitives.add(tileset);
           })
-          .otherwise(function (error) {
+          .catch(function (error) {
             console.log(error);
           });
 

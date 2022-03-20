@@ -2,6 +2,7 @@ import {
   Buffer,
   clone,
   ComponentDatatype,
+  defer,
   DracoLoader,
   GltfBufferViewLoader,
   GltfDracoLoader,
@@ -9,7 +10,6 @@ import {
   JobScheduler,
   Resource,
   ResourceCache,
-  when,
 } from "../../Source/Cesium.js";
 import concatTypedArrays from "../concatTypedArrays.js";
 import createScene from "../createScene.js";
@@ -331,10 +331,10 @@ describe(
     });
 
     it("rejects promise if buffer view fails to load", function () {
-      const error = new Error("404 Not Found");
-      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.reject(error)
-      );
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
+        const error = new Error("404 Not Found");
+        return Promise.reject(error);
+      });
 
       const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
@@ -350,7 +350,7 @@ describe(
         .then(function (indexBufferLoader) {
           fail();
         })
-        .otherwise(function (runtimeError) {
+        .catch(function (runtimeError) {
           expect(runtimeError.message).toBe(
             "Failed to load index buffer\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
           );
@@ -359,13 +359,13 @@ describe(
 
     it("rejects promise if draco fails to load", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(dracoArrayBuffer)
+        Promise.resolve(dracoArrayBuffer)
       );
 
-      const error = new Error("Draco decode failed");
-      spyOn(DracoLoader, "decodeBufferView").and.returnValue(
-        when.reject(error)
-      );
+      spyOn(DracoLoader, "decodeBufferView").and.callFake(function () {
+        const error = new Error("Draco decode failed");
+        return Promise.reject(error);
+      });
 
       const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
@@ -382,7 +382,7 @@ describe(
         .then(function (indexBufferLoader) {
           fail();
         })
-        .otherwise(function (runtimeError) {
+        .catch(function (runtimeError) {
           expect(runtimeError.message).toBe(
             "Failed to load index buffer\nFailed to load Draco\nDraco decode failed"
           );
@@ -391,7 +391,7 @@ describe(
 
     it("loads from accessor", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(arrayBuffer)
+        Promise.resolve(arrayBuffer)
       );
 
       // Simulate JobScheduler not being ready for a few frames
@@ -432,7 +432,7 @@ describe(
 
     it("creates index buffer synchronously", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(arrayBuffer)
+        Promise.resolve(arrayBuffer)
       );
 
       const indexBufferLoader = new GltfIndexBufferLoader({
@@ -457,7 +457,7 @@ describe(
 
     it("loads as typed array", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(arrayBuffer)
+        Promise.resolve(arrayBuffer)
       );
 
       spyOn(Buffer, "createIndexBuffer").and.callThrough();
@@ -486,7 +486,7 @@ describe(
 
     function loadIndices(accessorId, expectedByteLength) {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(arrayBuffer)
+        Promise.resolve(arrayBuffer)
       );
 
       const indexBufferLoader = new GltfIndexBufferLoader({
@@ -524,7 +524,7 @@ describe(
 
     it("loads from draco", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(arrayBuffer)
+        Promise.resolve(arrayBuffer)
       );
 
       // Simulate decodeBufferView not being ready for a few frames
@@ -532,7 +532,7 @@ describe(
       let processCallsCount = 0;
       spyOn(DracoLoader, "decodeBufferView").and.callFake(function () {
         if (processCallsCount++ === processCallsTotal) {
-          return when.resolve(decodeDracoResults);
+          return Promise.resolve(decodeDracoResults);
         }
         return undefined;
       });
@@ -560,11 +560,11 @@ describe(
 
     it("uses the decoded data's type instead of the accessor component type", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(arrayBuffer)
+        Promise.resolve(arrayBuffer)
       );
 
       spyOn(DracoLoader, "decodeBufferView").and.returnValue(
-        when.resolve(decodeDracoResults)
+        Promise.resolve(decodeDracoResults)
       );
 
       const clonedGltf = clone(gltfDraco, true);
@@ -591,7 +591,7 @@ describe(
 
     it("destroys index buffer loaded from buffer view", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(arrayBuffer)
+        Promise.resolve(arrayBuffer)
       );
 
       const unloadBufferView = spyOn(
@@ -631,11 +631,11 @@ describe(
 
     it("destroys index buffer loaded from draco", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(arrayBuffer)
+        Promise.resolve(arrayBuffer)
       );
 
       spyOn(DracoLoader, "decodeBufferView").and.returnValue(
-        when.resolve(decodeDracoResults)
+        Promise.resolve(decodeDracoResults)
       );
 
       const unloadDraco = spyOn(
@@ -675,7 +675,7 @@ describe(
     });
 
     function resolveBufferViewAfterDestroy(reject) {
-      const deferredPromise = when.defer();
+      const deferredPromise = defer();
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         deferredPromise.promise
       );
@@ -722,18 +722,10 @@ describe(
       resolveBufferViewAfterDestroy(true);
     });
 
-    function resolveDracoAfterDestroy(reject) {
+    function resolveDracoAfterDestroy(rejectPromise) {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(arrayBuffer)
+        Promise.resolve(arrayBuffer)
       );
-
-      const deferredPromise = when.defer();
-      const decodeBufferView = spyOn(
-        DracoLoader,
-        "decodeBufferView"
-      ).and.callFake(function () {
-        return deferredPromise.promise;
-      });
 
       // Load a copy of the draco loader into the cache so that the draco loader
       // promise resolves even if the index buffer loader is destroyed
@@ -753,32 +745,51 @@ describe(
         draco: dracoExtension,
       });
 
+      let promise = new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          loaderProcess(indexBufferLoader, scene);
+          if (rejectPromise) {
+            reject(new Error());
+          } else {
+            resolve(decodeDracoResults);
+          }
+        }, 1);
+      });
+      if (rejectPromise) {
+        promise = promise.catch(function (e) {
+          // swallow that error we just threw
+        });
+      }
+
+      const decodeBufferView = spyOn(
+        DracoLoader,
+        "decodeBufferView"
+      ).and.callFake(function () {
+        return promise;
+      });
+
       expect(indexBufferLoader.buffer).not.toBeDefined();
 
       indexBufferLoader.load();
       loaderProcess(indexBufferLoader, scene);
-      expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
+      return promise.finally(function () {
+        expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
 
-      indexBufferLoader.destroy();
+        indexBufferLoader.destroy();
 
-      if (reject) {
-        deferredPromise.reject(new Error());
-      } else {
-        deferredPromise.resolve(decodeDracoResults);
-      }
+        expect(indexBufferLoader.buffer).not.toBeDefined();
+        expect(indexBufferLoader.isDestroyed()).toBe(true);
 
-      expect(indexBufferLoader.buffer).not.toBeDefined();
-      expect(indexBufferLoader.isDestroyed()).toBe(true);
-
-      ResourceCache.unload(dracoLoaderCopy);
+        ResourceCache.unload(dracoLoaderCopy);
+      });
     }
 
     it("handles resolving draco after destroy", function () {
-      resolveDracoAfterDestroy(false);
+      return resolveDracoAfterDestroy(false);
     });
 
     it("handles rejecting draco after destroy", function () {
-      resolveDracoAfterDestroy(true);
+      return resolveDracoAfterDestroy(true);
     });
   },
   "WebGL"

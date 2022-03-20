@@ -4,6 +4,7 @@ import { CesiumTerrainProvider } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { Credit } from "../../Source/Cesium.js";
 import { CreditDisplay } from "../../Source/Cesium.js";
+import { defaultValue } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { EllipsoidTerrainProvider } from "../../Source/Cesium.js";
@@ -166,9 +167,11 @@ describe(
             ) {
               expect(tile.data.imagery.length).toBeGreaterThan(0);
               for (let i = 0; i < tile.data.imagery.length; ++i) {
-                expect(tile.data.imagery[i].readyImagery.imageryLayer).toEqual(
-                  layer
+                const imagery = defaultValue(
+                  tile.data.imagery[i].readyImagery,
+                  tile.data.imagery[i].loadingImagery
                 );
+                expect(imagery.imageryLayer).toEqual(layer);
               }
             });
 
@@ -241,13 +244,15 @@ describe(
               let indexOfLastLayer1 = -1;
               let indexOfFirstLayer2 = tile.data.imagery.length;
               for (let i = 0; i < tile.data.imagery.length; ++i) {
-                if (tile.data.imagery[i].readyImagery.imageryLayer === layer1) {
+                const imagery = defaultValue(
+                  tile.data.imagery[i].readyImagery,
+                  tile.data.imagery[i].loadingImagery
+                );
+                if (imagery.imageryLayer === layer1) {
                   indexOfFirstLayer1 = Math.min(indexOfFirstLayer1, i);
                   indexOfLastLayer1 = i;
                 } else {
-                  expect(
-                    tile.data.imagery[i].readyImagery.imageryLayer
-                  ).toEqual(layer2);
+                  expect(imagery.imageryLayer).toEqual(layer2);
                   indexOfFirstLayer2 = Math.min(indexOfFirstLayer2, i);
                 }
               }
@@ -448,7 +453,7 @@ describe(
       );
 
       return updateUntilDone(scene.globe).then(function () {
-        expect(scene).notToRender([0, 0, 128, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
       });
     });
 

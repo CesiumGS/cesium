@@ -1,9 +1,9 @@
 import {
   BufferLoader,
+  defer,
   GltfBufferViewLoader,
   Resource,
   ResourceCache,
-  when,
 } from "../../Source/Cesium.js";
 
 describe("Scene/GltfBufferViewLoader", function () {
@@ -172,9 +172,9 @@ describe("Scene/GltfBufferViewLoader", function () {
 
   it("rejects promise if buffer fails to load", function () {
     const error = new Error("404 Not Found");
-    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.reject(error)
-    );
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
+      return Promise.reject(error);
+    });
 
     const bufferViewLoader = new GltfBufferViewLoader({
       resourceCache: ResourceCache,
@@ -190,7 +190,7 @@ describe("Scene/GltfBufferViewLoader", function () {
       .then(function (bufferViewLoader) {
         fail();
       })
-      .otherwise(function (runtimeError) {
+      .catch(function (runtimeError) {
         expect(runtimeError.message).toBe(
           "Failed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
         );
@@ -220,7 +220,7 @@ describe("Scene/GltfBufferViewLoader", function () {
 
   it("loads buffer view for external buffer", function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.resolve(bufferArrayBuffer)
+      Promise.resolve(bufferArrayBuffer)
     );
 
     const bufferViewLoader = new GltfBufferViewLoader({
@@ -239,7 +239,7 @@ describe("Scene/GltfBufferViewLoader", function () {
 
   it("destroys buffer view", function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.resolve(bufferArrayBuffer)
+      Promise.resolve(bufferArrayBuffer)
     );
 
     const unloadBuffer = spyOn(
@@ -272,7 +272,7 @@ describe("Scene/GltfBufferViewLoader", function () {
   });
 
   it("decodes positions with EXT_meshopt_compression", function () {
-    ResourceCache.loadEmbeddedBuffer({
+    const bufferLoader = ResourceCache.loadEmbeddedBuffer({
       parentResource: gltfResource,
       bufferId: 0,
       typedArray: meshoptPositionTypedArray,
@@ -287,18 +287,21 @@ describe("Scene/GltfBufferViewLoader", function () {
     });
 
     bufferViewLoader.load();
-    bufferViewLoader.process({});
-
-    return bufferViewLoader.promise.then(function (bufferViewLoader) {
-      const decodedPositionBase64 = getBase64FromTypedArray(
-        bufferViewLoader.typedArray
-      );
-      expect(decodedPositionBase64).toEqual(fallbackPositionBufferBase64);
-    });
+    return bufferLoader.promise
+      .then(function () {
+        bufferViewLoader.process({});
+        return bufferViewLoader.promise;
+      })
+      .then(function (bufferViewLoader) {
+        const decodedPositionBase64 = getBase64FromTypedArray(
+          bufferViewLoader.typedArray
+        );
+        expect(decodedPositionBase64).toEqual(fallbackPositionBufferBase64);
+      });
   });
 
   function resolveAfterDestroy(reject) {
-    const deferredPromise = when.defer();
+    const deferredPromise = defer();
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       deferredPromise.promise
     );

@@ -12,7 +12,6 @@ import CesiumMath from "../Core/Math.js";
 import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
-import when from "../ThirdParty/when.js";
 import ImageryProvider from "./ImageryProvider.js";
 
 const templateRegex = /{[^}]+}/g;
@@ -193,7 +192,7 @@ function UrlTemplateImageryProvider(options) {
   if (!defined(options)) {
     throw new DeveloperError("options is required.");
   }
-  if (!when.isPromise(options) && !defined(options.url)) {
+  if (!defined(options.then) && !defined(options.url)) {
     throw new DeveloperError("options is required.");
   }
   //>>includeEnd('debug');
@@ -653,7 +652,7 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
  */
 UrlTemplateImageryProvider.prototype.reinitialize = function (options) {
   const that = this;
-  that._readyPromise = when(options).then(function (properties) {
+  that._readyPromise = Promise.resolve(options).then(function (properties) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(properties)) {
       throw new DeveloperError("options is required.");
@@ -825,7 +824,7 @@ UrlTemplateImageryProvider.prototype.pickFeatures = function (
   function doRequest() {
     if (formatIndex >= that._getFeatureInfoFormats.length) {
       // No valid formats, so no features picked.
-      return when([]);
+      return Promise.resolve([]);
     }
 
     const format = that._getFeatureInfoFormats[formatIndex];
@@ -842,18 +841,18 @@ UrlTemplateImageryProvider.prototype.pickFeatures = function (
     ++formatIndex;
 
     if (format.type === "json") {
-      return resource.fetchJson().then(format.callback).otherwise(doRequest);
+      return resource.fetchJson().then(format.callback).catch(doRequest);
     } else if (format.type === "xml") {
-      return resource.fetchXML().then(format.callback).otherwise(doRequest);
+      return resource.fetchXML().then(format.callback).catch(doRequest);
     } else if (format.type === "text" || format.type === "html") {
-      return resource.fetchText().then(format.callback).otherwise(doRequest);
+      return resource.fetchText().then(format.callback).catch(doRequest);
     }
     return resource
       .fetch({
         responseType: format.format,
       })
       .then(handleResponse.bind(undefined, format))
-      .otherwise(doRequest);
+      .catch(doRequest);
   }
 
   return doRequest();

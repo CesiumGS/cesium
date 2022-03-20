@@ -42,13 +42,13 @@ describe("DataSources/GpxDataSource", function () {
   });
 
   it("load rejects nonexistent URL", function () {
-    return GpxDataSource.load("test.invalid").otherwise(function (e) {
+    return GpxDataSource.load("test.invalid").catch(function (e) {
       expect(e).toBeInstanceOf(RequestErrorEvent);
     });
   });
 
   it("load rejects loading non-GPX URL", function () {
-    return GpxDataSource.load("Data/Images/Blue.png").otherwise(function (e) {
+    return GpxDataSource.load("Data/Images/Blue.png").catch(function (e) {
       expect(e).toBeInstanceOf(RuntimeError);
     });
   });
@@ -280,11 +280,11 @@ describe("DataSources/GpxDataSource", function () {
                 <wpt lat="hello" lon="world">\
                 </wpt>\
             </gpx>';
-    return GpxDataSource.load(
-      parser.parseFromString(gpx, "text/xml")
-    ).otherwise(function (e) {
-      expect(e).toBeInstanceOf(DeveloperError);
-    });
+    return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).catch(
+      function (e) {
+        expect(e).toBeInstanceOf(DeveloperError);
+      }
+    );
   });
 
   it("Waypoint: throws when no coordinates are given", function () {
@@ -294,11 +294,11 @@ describe("DataSources/GpxDataSource", function () {
                 <wpt>\
                 </wpt>\
             </gpx>';
-    return GpxDataSource.load(
-      parser.parseFromString(gpx, "text/xml")
-    ).otherwise(function (e) {
-      expect(e).toBeInstanceOf(DeveloperError);
-    });
+    return GpxDataSource.load(parser.parseFromString(gpx, "text/xml")).catch(
+      function (e) {
+        expect(e).toBeInstanceOf(DeveloperError);
+      }
+    );
   });
 
   it("Waypoint: handles simple waypoint", function () {

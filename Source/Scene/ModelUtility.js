@@ -180,7 +180,7 @@ ModelUtility.parseBuffers = function (model, bufferLoad) {
       bufferResource
         .fetchArrayBuffer()
         .then(bufferLoad(model, bufferViewId))
-        .otherwise(
+        .catch(
           ModelUtility.getFailedLoadFunction(
             model,
             "buffer",

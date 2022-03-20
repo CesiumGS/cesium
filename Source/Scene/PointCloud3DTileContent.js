@@ -36,6 +36,9 @@ function PointCloud3DTileContent(
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
+
+  this._metadata = undefined;
+
   this._pickId = undefined; // Only defined when batchTable is undefined
   this._batchTable = undefined; // Used when feature table contains BATCH_ID semantic
   this._styleDirty = false;
@@ -126,6 +129,15 @@ Object.defineProperties(PointCloud3DTileContent.prototype, {
   url: {
     get: function () {
       return this._resource.getUrlComponent(true);
+    },
+  },
+
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
     },
   },
 

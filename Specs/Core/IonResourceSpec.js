@@ -1,9 +1,9 @@
+import { defer } from "../../Source/Cesium.js";
 import { Ion } from "../../Source/Cesium.js";
 import { IonResource } from "../../Source/Cesium.js";
 import { RequestErrorEvent } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
 import { RuntimeError } from "../../Source/Cesium.js";
-import { when } from "../../Source/Cesium.js";
 
 describe("Core/IonResource", function () {
   const assetId = 123890213;
@@ -68,7 +68,7 @@ describe("Core/IonResource", function () {
       resourceEndpoint
     );
     spyOn(resourceEndpoint, "fetchJson").and.returnValue(
-      when.resolve(tilesEndpoint)
+      Promise.resolve(tilesEndpoint)
     );
 
     return IonResource.fromAssetId(tilesAssetId, options).then(function (
@@ -90,7 +90,7 @@ describe("Core/IonResource", function () {
       resourceEndpoint
     );
     spyOn(resourceEndpoint, "fetchJson").and.returnValue(
-      when.resolve(externalEndpoint)
+      Promise.resolve(externalEndpoint)
     );
 
     return IonResource.fromAssetId(123890213).then(function (resource) {
@@ -126,7 +126,7 @@ describe("Core/IonResource", function () {
       attributions: [],
     })
       .then(fail)
-      .otherwise(function (e) {
+      .catch(function (e) {
         expect(e).toBeInstanceOf(RuntimeError);
       });
   });
@@ -293,7 +293,7 @@ describe("Core/IonResource", function () {
     });
 
     function testCallback(resource, event) {
-      const deferred = when.defer();
+      const deferred = defer();
       spyOn(endpointResource, "fetchJson").and.returnValue(deferred.promise);
 
       const newEndpoint = {

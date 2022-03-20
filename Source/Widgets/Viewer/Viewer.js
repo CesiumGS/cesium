@@ -3,6 +3,7 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartographic from "../../Core/Cartographic.js";
 import Clock from "../../Core/Clock.js";
 import defaultValue from "../../Core/defaultValue.js";
+import defer from "../../Core/defer.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import DeveloperError from "../../Core/DeveloperError.js";
@@ -24,7 +25,6 @@ import ImageryLayer from "../../Scene/ImageryLayer.js";
 import SceneMode from "../../Scene/SceneMode.js";
 import TimeDynamicPointCloud from "../../Scene/TimeDynamicPointCloud.js";
 import knockout from "../../ThirdParty/knockout.js";
-import when from "../../ThirdParty/when.js";
 import Animation from "../Animation/Animation.js";
 import AnimationViewModel from "../Animation/AnimationViewModel.js";
 import BaseLayerPicker from "../BaseLayerPicker/BaseLayerPicker.js";
@@ -179,8 +179,7 @@ function pickImageryLayerFeature(viewer, windowPosition) {
     description: "Loading feature information...",
   });
 
-  when(
-    imageryLayerFeaturePromise,
+  imageryLayerFeaturePromise.then(
     function (features) {
       // Has this async pick been superseded by a later one?
       if (viewer.selectedEntity !== loadingMessage) {
@@ -2077,12 +2076,12 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
   //bounding spheres have been computed.  Therefore we create and return
   //a deferred which will be resolved as part of the post-render step in the
   //frame that actually performs the zoom
-  const zoomPromise = when.defer();
+  const zoomPromise = defer();
   that._zoomPromise = zoomPromise;
   that._zoomIsFlight = isFlight;
   that._zoomOptions = options;
 
-  when(zoomTarget, function (zoomTarget) {
+  Promise.resolve(zoomTarget).then(function (zoomTarget) {
     //Only perform the zoom if it wasn't cancelled before the promise resolved.
     if (that._zoomPromise !== zoomPromise) {
       return;

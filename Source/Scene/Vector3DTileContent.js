@@ -1,5 +1,6 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -10,7 +11,6 @@ import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Rectangle from "../Core/Rectangle.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import when from "../ThirdParty/when.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
 import Vector3DTilePoints from "./Vector3DTilePoints.js";
@@ -42,7 +42,9 @@ function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
   this._points = undefined;
 
   this._contentReadyPromise = undefined;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
+
+  this._metadata = undefined;
 
   this._batchTable = undefined;
   this._features = undefined;
@@ -140,6 +142,15 @@ Object.defineProperties(Vector3DTileContent.prototype, {
   url: {
     get: function () {
       return this._resource.getUrlComponent(true);
+    },
+  },
+
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
     },
   },
 
@@ -709,12 +720,15 @@ Vector3DTileContent.prototype.update = function (tileset, frameState) {
       : undefined;
 
     const that = this;
-    this._contentReadyPromise = when
-      .all([pointsPromise, polygonPromise, polylinePromise])
+    this._contentReadyPromise = Promise.all([
+      pointsPromise,
+      polygonPromise,
+      polylinePromise,
+    ])
       .then(function () {
         that._readyPromise.resolve(that);
       })
-      .otherwise(function (error) {
+      .catch(function (error) {
         that._readyPromise.reject(error);
       });
   }

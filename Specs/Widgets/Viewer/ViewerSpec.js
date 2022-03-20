@@ -708,14 +708,14 @@ describe(
       dataSource.clock.multiplier = 20.0;
 
       viewer = createViewer(container);
-      viewer.dataSources.add(dataSource);
-
-      expect(viewer.clock.startTime).toEqual(dataSource.clock.startTime);
-      expect(viewer.clock.stopTime).toEqual(dataSource.clock.stopTime);
-      expect(viewer.clock.currentTime).toEqual(dataSource.clock.currentTime);
-      expect(viewer.clock.clockRange).toEqual(dataSource.clock.clockRange);
-      expect(viewer.clock.clockStep).toEqual(dataSource.clock.clockStep);
-      expect(viewer.clock.multiplier).toEqual(dataSource.clock.multiplier);
+      return viewer.dataSources.add(dataSource).then(function () {
+        expect(viewer.clock.startTime).toEqual(dataSource.clock.startTime);
+        expect(viewer.clock.stopTime).toEqual(dataSource.clock.stopTime);
+        expect(viewer.clock.currentTime).toEqual(dataSource.clock.currentTime);
+        expect(viewer.clock.clockRange).toEqual(dataSource.clock.clockRange);
+        expect(viewer.clock.clockStep).toEqual(dataSource.clock.clockStep);
+        expect(viewer.clock.multiplier).toEqual(dataSource.clock.multiplier);
+      });
     });
 
     it("sets the clock for multiple data sources", function () {
@@ -727,45 +727,60 @@ describe(
         "2013-08-02T00:00Z"
       );
 
+      let dataSource2, dataSource3;
       viewer = createViewer(container);
-      viewer.dataSources.add(dataSource1);
+      return viewer.dataSources
+        .add(dataSource1)
+        .then(function () {
+          expect(viewer.clockTrackedDataSource).toBe(dataSource1);
+          expect(viewer.clock.startTime).toEqual(dataSource1.clock.startTime);
 
-      expect(viewer.clockTrackedDataSource).toBe(dataSource1);
-      expect(viewer.clock.startTime).toEqual(dataSource1.clock.startTime);
+          dataSource2 = new MockDataSource();
+          dataSource2.clock = new DataSourceClock();
+          dataSource2.clock.startTime = JulianDate.fromIso8601(
+            "2014-08-01T18:00Z"
+          );
+          dataSource2.clock.stopTime = JulianDate.fromIso8601(
+            "2014-08-21T02:00Z"
+          );
+          dataSource2.clock.currentTime = JulianDate.fromIso8601(
+            "2014-08-02T00:00Z"
+          );
 
-      const dataSource2 = new MockDataSource();
-      dataSource2.clock = new DataSourceClock();
-      dataSource2.clock.startTime = JulianDate.fromIso8601("2014-08-01T18:00Z");
-      dataSource2.clock.stopTime = JulianDate.fromIso8601("2014-08-21T02:00Z");
-      dataSource2.clock.currentTime = JulianDate.fromIso8601(
-        "2014-08-02T00:00Z"
-      );
+          viewer.dataSources.add(dataSource2);
+        })
+        .then(function () {
+          expect(viewer.clockTrackedDataSource).toBe(dataSource2);
+          expect(viewer.clock.startTime).toEqual(dataSource2.clock.startTime);
 
-      viewer.dataSources.add(dataSource2);
-      expect(viewer.clockTrackedDataSource).toBe(dataSource2);
-      expect(viewer.clock.startTime).toEqual(dataSource2.clock.startTime);
+          dataSource3 = new MockDataSource();
+          dataSource3.clock = new DataSourceClock();
+          dataSource3.clock.startTime = JulianDate.fromIso8601(
+            "2015-08-01T18:00Z"
+          );
+          dataSource3.clock.stopTime = JulianDate.fromIso8601(
+            "2015-08-21T02:00Z"
+          );
+          dataSource3.clock.currentTime = JulianDate.fromIso8601(
+            "2015-08-02T00:00Z"
+          );
 
-      const dataSource3 = new MockDataSource();
-      dataSource3.clock = new DataSourceClock();
-      dataSource3.clock.startTime = JulianDate.fromIso8601("2015-08-01T18:00Z");
-      dataSource3.clock.stopTime = JulianDate.fromIso8601("2015-08-21T02:00Z");
-      dataSource3.clock.currentTime = JulianDate.fromIso8601(
-        "2015-08-02T00:00Z"
-      );
+          viewer.dataSources.add(dataSource3);
+        })
+        .then(function () {
+          expect(viewer.clockTrackedDataSource).toBe(dataSource3);
+          expect(viewer.clock.startTime).toEqual(dataSource3.clock.startTime);
 
-      viewer.dataSources.add(dataSource3);
-      expect(viewer.clockTrackedDataSource).toBe(dataSource3);
-      expect(viewer.clock.startTime).toEqual(dataSource3.clock.startTime);
+          // Removing the last dataSource moves the clock to second-last.
+          viewer.dataSources.remove(dataSource3);
+          expect(viewer.clockTrackedDataSource).toBe(dataSource2);
+          expect(viewer.clock.startTime).toEqual(dataSource2.clock.startTime);
 
-      // Removing the last dataSource moves the clock to second-last.
-      viewer.dataSources.remove(dataSource3);
-      expect(viewer.clockTrackedDataSource).toBe(dataSource2);
-      expect(viewer.clock.startTime).toEqual(dataSource2.clock.startTime);
-
-      // Removing the first data source has no effect, because it's not active.
-      viewer.dataSources.remove(dataSource1);
-      expect(viewer.clockTrackedDataSource).toBe(dataSource2);
-      expect(viewer.clock.startTime).toEqual(dataSource2.clock.startTime);
+          // Removing the first data source has no effect, because it's not active.
+          viewer.dataSources.remove(dataSource1);
+          expect(viewer.clockTrackedDataSource).toBe(dataSource2);
+          expect(viewer.clock.startTime).toEqual(dataSource2.clock.startTime);
+        });
     });
 
     it("updates the clock when the data source changes", function () {
@@ -781,32 +796,34 @@ describe(
       dataSource.clock.multiplier = 20.0;
 
       viewer = createViewer(container);
-      viewer.dataSources.add(dataSource);
+      return viewer.dataSources.add(dataSource).then(function () {
+        dataSource.clock.startTime = JulianDate.fromIso8601(
+          "2014-08-01T18:00Z"
+        );
+        dataSource.clock.stopTime = JulianDate.fromIso8601("2014-08-21T02:00Z");
+        dataSource.clock.currentTime = JulianDate.fromIso8601(
+          "2014-08-02T00:00Z"
+        );
+        dataSource.clock.clockRange = ClockRange.UNBOUNDED;
+        dataSource.clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+        dataSource.clock.multiplier = 10.0;
 
-      dataSource.clock.startTime = JulianDate.fromIso8601("2014-08-01T18:00Z");
-      dataSource.clock.stopTime = JulianDate.fromIso8601("2014-08-21T02:00Z");
-      dataSource.clock.currentTime = JulianDate.fromIso8601(
-        "2014-08-02T00:00Z"
-      );
-      dataSource.clock.clockRange = ClockRange.UNBOUNDED;
-      dataSource.clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-      dataSource.clock.multiplier = 10.0;
+        dataSource.changedEvent.raiseEvent(dataSource);
 
-      dataSource.changedEvent.raiseEvent(dataSource);
+        expect(viewer.clock.startTime).toEqual(dataSource.clock.startTime);
+        expect(viewer.clock.stopTime).toEqual(dataSource.clock.stopTime);
+        expect(viewer.clock.currentTime).toEqual(dataSource.clock.currentTime);
+        expect(viewer.clock.clockRange).toEqual(dataSource.clock.clockRange);
+        expect(viewer.clock.clockStep).toEqual(dataSource.clock.clockStep);
+        expect(viewer.clock.multiplier).toEqual(dataSource.clock.multiplier);
 
-      expect(viewer.clock.startTime).toEqual(dataSource.clock.startTime);
-      expect(viewer.clock.stopTime).toEqual(dataSource.clock.stopTime);
-      expect(viewer.clock.currentTime).toEqual(dataSource.clock.currentTime);
-      expect(viewer.clock.clockRange).toEqual(dataSource.clock.clockRange);
-      expect(viewer.clock.clockStep).toEqual(dataSource.clock.clockStep);
-      expect(viewer.clock.multiplier).toEqual(dataSource.clock.multiplier);
+        dataSource.clock.clockStep = ClockStep.SYSTEM_CLOCK;
+        dataSource.clock.multiplier = 1.0;
 
-      dataSource.clock.clockStep = ClockStep.SYSTEM_CLOCK;
-      dataSource.clock.multiplier = 1.0;
+        dataSource.changedEvent.raiseEvent(dataSource);
 
-      dataSource.changedEvent.raiseEvent(dataSource);
-
-      expect(viewer.clock.clockStep).toEqual(dataSource.clock.clockStep);
+        expect(viewer.clock.clockStep).toEqual(dataSource.clock.clockStep);
+      });
     });
 
     it("can manually control the clock tracking", function () {
@@ -821,36 +838,48 @@ describe(
       viewer = createViewer(container, {
         automaticallyTrackDataSourceClocks: false,
       });
-      viewer.dataSources.add(dataSource1);
 
-      // Because of the above Viewer option, data sources are not automatically
-      // selected for clock tracking.
-      expect(viewer.clockTrackedDataSource).not.toBeDefined();
-      // The mock data source time is in the past, so will not be the default time.
-      expect(viewer.clock.startTime).not.toEqual(dataSource1.clock.startTime);
+      let dataSource2;
+      return viewer.dataSources
+        .add(dataSource1)
+        .then(function () {
+          // Because of the above Viewer option, data sources are not automatically
+          // selected for clock tracking.
+          expect(viewer.clockTrackedDataSource).not.toBeDefined();
+          // The mock data source time is in the past, so will not be the default time.
+          expect(viewer.clock.startTime).not.toEqual(
+            dataSource1.clock.startTime
+          );
 
-      // Manually set the first data source as the tracked data source.
-      viewer.clockTrackedDataSource = dataSource1;
-      expect(viewer.clockTrackedDataSource).toBe(dataSource1);
-      expect(viewer.clock.startTime).toEqual(dataSource1.clock.startTime);
+          // Manually set the first data source as the tracked data source.
+          viewer.clockTrackedDataSource = dataSource1;
+          expect(viewer.clockTrackedDataSource).toBe(dataSource1);
+          expect(viewer.clock.startTime).toEqual(dataSource1.clock.startTime);
 
-      const dataSource2 = new MockDataSource();
-      dataSource2.clock = new DataSourceClock();
-      dataSource2.clock.startTime = JulianDate.fromIso8601("2014-08-01T18:00Z");
-      dataSource2.clock.stopTime = JulianDate.fromIso8601("2014-08-21T02:00Z");
-      dataSource2.clock.currentTime = JulianDate.fromIso8601(
-        "2014-08-02T00:00Z"
-      );
+          dataSource2 = new MockDataSource();
+          dataSource2.clock = new DataSourceClock();
+          dataSource2.clock.startTime = JulianDate.fromIso8601(
+            "2014-08-01T18:00Z"
+          );
+          dataSource2.clock.stopTime = JulianDate.fromIso8601(
+            "2014-08-21T02:00Z"
+          );
+          dataSource2.clock.currentTime = JulianDate.fromIso8601(
+            "2014-08-02T00:00Z"
+          );
 
-      // Adding a second data source in manual mode still leaves the first one tracked.
-      viewer.dataSources.add(dataSource2);
-      expect(viewer.clockTrackedDataSource).toBe(dataSource1);
-      expect(viewer.clock.startTime).toEqual(dataSource1.clock.startTime);
+          // Adding a second data source in manual mode still leaves the first one tracked.
+          viewer.dataSources.add(dataSource2);
+        })
+        .then(function () {
+          expect(viewer.clockTrackedDataSource).toBe(dataSource1);
+          expect(viewer.clock.startTime).toEqual(dataSource1.clock.startTime);
 
-      // Removing the tracked data source in manual mode turns off tracking, even
-      // if other data sources remain available for tracking.
-      viewer.dataSources.remove(dataSource1);
-      expect(viewer.clockTrackedDataSource).not.toBeDefined();
+          // Removing the tracked data source in manual mode turns off tracking, even
+          // if other data sources remain available for tracking.
+          viewer.dataSources.remove(dataSource1);
+          expect(viewer.clockTrackedDataSource).not.toBeDefined();
+        });
     });
 
     it("shows the error panel when render throws", function () {
@@ -863,7 +892,7 @@ describe(
 
       return pollToPromise(function () {
         return !viewer.useDefaultRenderLoop;
-      }).then(function () {
+      }).catch(function () {
         expect(
           viewer._element.querySelector(".cesium-widget-errorPanel")
         ).not.toBeNull();
@@ -904,7 +933,7 @@ describe(
 
       return pollToPromise(function () {
         return !viewer.useDefaultRenderLoop;
-      }).then(function () {
+      }).catch(function () {
         expect(
           viewer._element.querySelector(".cesium-widget-errorPanel")
         ).toBeNull();
@@ -1188,7 +1217,6 @@ describe(
           expectedBoundingSphere.radius
         );
 
-        const promise = viewer.zoomTo(tileset);
         let wasCompleted = false;
         spyOn(viewer.camera, "viewBoundingSphere").and.callFake(function (
           boundingSphere,
@@ -1198,6 +1226,7 @@ describe(
           expect(offset).toEqual(expectedOffset);
           wasCompleted = true;
         });
+        const promise = viewer.zoomTo(tileset);
 
         viewer._postRender();
 
@@ -1787,25 +1816,28 @@ describe(
 
       //one data source that is added before mixing in
       const preMixinDataSource = new MockDataSource();
-      viewer.dataSources.add(preMixinDataSource);
-
       //one data source that is added after mixing in
       const postMixinDataSource = new MockDataSource();
-      viewer.dataSources.add(postMixinDataSource);
+      return viewer.dataSources
+        .add(preMixinDataSource)
+        .then(function () {
+          viewer.dataSources.add(postMixinDataSource);
+        })
+        .then(function () {
+          const preMixinListenerCount =
+            preMixinDataSource.entities.collectionChanged._listeners.length;
+          const postMixinListenerCount =
+            postMixinDataSource.entities.collectionChanged._listeners.length;
 
-      const preMixinListenerCount =
-        preMixinDataSource.entities.collectionChanged._listeners.length;
-      const postMixinListenerCount =
-        postMixinDataSource.entities.collectionChanged._listeners.length;
+          viewer = viewer.destroy();
 
-      viewer = viewer.destroy();
-
-      expect(
-        preMixinDataSource.entities.collectionChanged._listeners.length
-      ).not.toEqual(preMixinListenerCount);
-      expect(
-        postMixinDataSource.entities.collectionChanged._listeners.length
-      ).not.toEqual(postMixinListenerCount);
+          expect(
+            preMixinDataSource.entities.collectionChanged._listeners.length
+          ).not.toEqual(preMixinListenerCount);
+          expect(
+            postMixinDataSource.entities.collectionChanged._listeners.length
+          ).not.toEqual(postMixinListenerCount);
+        });
     });
   },
   "WebGL"

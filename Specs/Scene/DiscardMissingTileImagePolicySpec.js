@@ -2,7 +2,6 @@ import { Cartesian2 } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
 import { DiscardMissingTileImagePolicy } from "../../Source/Cesium.js";
 import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 
 describe("Scene/DiscardMissingTileImagePolicy", function () {
   let supportsImageBitmapOptions;
@@ -122,7 +121,7 @@ describe("Scene/DiscardMissingTileImagePolicy", function () {
         })
       );
 
-      return when.all(promises, function (results) {
+      return Promise.all(promises, function (results) {
         const redImage = results[0];
         const greenImage = results[1];
 
@@ -148,7 +147,7 @@ describe("Scene/DiscardMissingTileImagePolicy", function () {
         })
       );
 
-      return when.all(promises, function (results) {
+      return Promise.all(promises, function (results) {
         const transparentImage = results[0];
         expect(policy.shouldDiscardImage(transparentImage)).toEqual(true);
       });
@@ -172,7 +171,7 @@ describe("Scene/DiscardMissingTileImagePolicy", function () {
         })
       );
 
-      return when.all(promises, function (results) {
+      return Promise.all(promises, function (results) {
         const transparentImage = results[0];
         expect(policy.shouldDiscardImage(transparentImage)).toEqual(false);
       });

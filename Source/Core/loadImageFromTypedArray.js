@@ -1,4 +1,3 @@
-import when from "../ThirdParty/when.js";
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
@@ -29,7 +28,7 @@ function loadImageFromTypedArray(options) {
   return Resource.supportsImageBitmapOptions()
     .then(function (result) {
       if (result) {
-        return when(
+        return Promise.resolve(
           Resource.createImageBitmapFromBlob(blob, {
             flipY: flipY,
             premultiplyAlpha: false,
@@ -55,11 +54,11 @@ function loadImageFromTypedArray(options) {
       }
       return result;
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (defined(blobUrl)) {
         window.URL.revokeObjectURL(blobUrl);
       }
-      return when.reject(error);
+      return Promise.reject(error);
     });
 }
 export default loadImageFromTypedArray;

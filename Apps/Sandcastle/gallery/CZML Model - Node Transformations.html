@@ -105,7 +105,7 @@
           .then(function (dataSource) {
             viewer.trackedEntity = dataSource.entities.getById("model");
           })
-          .otherwise(function (error) {
+          .catch(function (error) {
             window.alert(error);
           }); //Sandcastle_End
         Sandcastle.finishedLoading();

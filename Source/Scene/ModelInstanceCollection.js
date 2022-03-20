@@ -6,6 +6,7 @@ import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -21,7 +22,6 @@ import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import ForEach from "./GltfPipeline/ForEach.js";
-import when from "../ThirdParty/when.js";
 import Model from "./Model.js";
 import ModelInstance from "./ModelInstance.js";
 import ModelUtility from "./ModelUtility.js";
@@ -95,7 +95,7 @@ function ModelInstanceCollection(options) {
   this._dynamic = defaultValue(options.dynamic, false);
   this._allowPicking = defaultValue(options.allowPicking, true);
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
   this._state = LoadState.NEEDS_LOAD;
   this._dirty = false;
 
@@ -1046,7 +1046,7 @@ ModelInstanceCollection.prototype.update = function (frameState) {
     this._instancingSupported = context.instancedArrays;
     createModel(this, context);
     const that = this;
-    this._model.readyPromise.otherwise(function (error) {
+    this._model.readyPromise.catch(function (error) {
       that._state = LoadState.FAILED;
       that._readyPromise.reject(error);
     });

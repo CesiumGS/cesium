@@ -105,7 +105,7 @@
                   entity.properties.Population / 50.0;
               }
             })
-            .otherwise(function (error) {
+            .catch(function (error) {
               //Display any errrors encountered while loading.
               window.alert(error);
             });
