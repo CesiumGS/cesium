@@ -222,13 +222,13 @@ ModelExperimental3DTileContent.fromGltf = function (
 
   const additionalOptions = {
     gltf: gltf,
+    basePath: resource,
   };
 
   const modelOptions = makeModelOptions(
     tileset,
     tile,
     content,
-    resource,
     additionalOptions
   );
   content._model = ModelExperimental.fromGltf(modelOptions);
@@ -247,13 +247,13 @@ ModelExperimental3DTileContent.fromB3dm = function (
   const additionalOptions = {
     arrayBuffer: arrayBuffer,
     byteOffset: byteOffset,
+    resource: resource,
   };
 
   const modelOptions = makeModelOptions(
     tileset,
     tile,
     content,
-    resource,
     additionalOptions
   );
   content._model = ModelExperimental.fromB3dm(modelOptions);
@@ -272,13 +272,13 @@ ModelExperimental3DTileContent.fromI3dm = function (
   const additionalOptions = {
     arrayBuffer: arrayBuffer,
     byteOffset: byteOffset,
+    resource: resource,
   };
 
   const modelOptions = makeModelOptions(
     tileset,
     tile,
     content,
-    resource,
     additionalOptions
   );
   content._model = ModelExperimental.fromI3dm(modelOptions);
@@ -297,22 +297,21 @@ ModelExperimental3DTileContent.fromPnts = function (
   const additionalOptions = {
     arrayBuffer: arrayBuffer,
     byteOffset: byteOffset,
+    resource: resource,
   };
 
   const modelOptions = makeModelOptions(
     tileset,
     tile,
     content,
-    resource,
     additionalOptions
   );
   content._model = ModelExperimental.fromPnts(modelOptions);
   return content;
 };
 
-function makeModelOptions(tileset, tile, content, resource, additionalOptions) {
+function makeModelOptions(tileset, tile, content, additionalOptions) {
   const mainOptions = {
-    resource: resource,
     cull: false, // The model is already culled by 3D Tiles
     releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
     opaquePass: Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
