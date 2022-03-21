@@ -194,6 +194,7 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.pointCloudShading = tileset.pointCloudShading;
   model.featureIdLabel = tileset.featureIdLabel;
   model.instanceFeatureIdLabel = tileset.instanceFeatureIdLabel;
+  model.lightColor = tileset.lightColor;
   model.backFaceCulling = tileset.backFaceCulling;
   model.shadows = tileset.shadows;
   model.showCreditsOnScreen = tileset.showCreditsOnScreen;
@@ -232,8 +233,10 @@ ModelExperimental3DTileContent.fromGltf = function (
     content: content,
     colorBlendMode: tileset.colorBlendMode,
     colorBlendAmount: tileset.colorBlendAmount,
+    lightColor: tileset.lightColor,
     backFaceCulling: tileset.backFaceCulling,
     shadows: tileset.shadows,
+    showCreditsOnScreen: tileset.showCreditsOnScreen,
   };
   content._model = ModelExperimental.fromGltf(modelOptions);
   return content;
@@ -263,6 +266,10 @@ ModelExperimental3DTileContent.fromB3dm = function (
     content: content,
     colorBlendMode: tileset.colorBlendMode,
     colorBlendAmount: tileset.colorBlendAmount,
+    lightColor: tileset.lightColor,
+    backFaceCulling: tileset.backFaceCulling,
+    shadows: tileset.shadows,
+    showCreditsOnScreen: tileset.showCreditsOnScreen,
   };
   content._model = ModelExperimental.fromB3dm(modelOptions);
   return content;
@@ -292,6 +299,10 @@ ModelExperimental3DTileContent.fromI3dm = function (
     content: content,
     colorBlendMode: tileset.colorBlendMode,
     colorBlendAmount: tileset.colorBlendAmount,
+    lightColor: tileset.lightColor,
+    backFaceCulling: tileset.backFaceCulling,
+    shadows: tileset.shadows,
+    showCreditsOnScreen: tileset.showCreditsOnScreen,
   };
   content._model = ModelExperimental.fromI3dm(modelOptions);
   return content;
@@ -321,6 +332,10 @@ ModelExperimental3DTileContent.fromPnts = function (
     content: content,
     colorBlendMode: tileset.colorBlendMode,
     colorBlendAmount: tileset.colorBlendAmount,
+    lightColor: tileset.lightColor,
+    backFaceCulling: tileset.backFaceCulling,
+    shadows: tileset.shadows,
+    showCreditsOnScreen: tileset.showCreditsOnScreen,
   };
   content._model = ModelExperimental.fromPnts(modelOptions);
   return content;

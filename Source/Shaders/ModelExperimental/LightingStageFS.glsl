@@ -6,7 +6,11 @@ vec3 computePbrLighting(czm_modelMaterial inputMaterial)
     pbrParameters.f0 = inputMaterial.specular;
     pbrParameters.roughness = inputMaterial.roughness;
     
+    #ifdef USE_CUSTOM_LIGHT_COLOR
+    vec3 lightColorHdr = model_lightColorHdr;
+    #else
     vec3 lightColorHdr = czm_lightColorHdr;
+    #endif
 
     vec3 color = inputMaterial.diffuse;
     #ifdef HAS_NORMALS
