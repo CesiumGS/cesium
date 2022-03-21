@@ -6,7 +6,6 @@ import { DeveloperError } from "../Source/Cesium.js";
 import { FeatureDetection } from "../Source/Cesium.js";
 import { Math as CesiumMath } from "../Source/Cesium.js";
 import { PrimitiveType } from "../Source/Cesium.js";
-import { RuntimeError } from "../Source/Cesium.js";
 import { Buffer } from "../Source/Cesium.js";
 import { BufferUsage } from "../Source/Cesium.js";
 import { ClearCommand } from "../Source/Cesium.js";
@@ -80,22 +79,6 @@ function makeThrowFunction(debug, Type, name) {
 
 function createDefaultMatchers(debug) {
   return {
-    toBeGreaterThanOrEqualTo: function (util, customEqualityTesters) {
-      return {
-        compare: function (actual, expected) {
-          return { pass: actual >= expected };
-        },
-      };
-    },
-
-    toBeLessThanOrEqualTo: function (util, customEqualityTesters) {
-      return {
-        compare: function (actual, expected) {
-          return { pass: actual <= expected };
-        },
-      };
-    },
-
     toBeBetween: function (util, customEqualityTesters) {
       return {
         compare: function (actual, lower, upper) {
@@ -217,36 +200,6 @@ function createDefaultMatchers(debug) {
           }
 
           return { pass: true };
-        },
-      };
-    },
-
-    toBeInstanceOf: function (util, customEqualityTesters) {
-      return {
-        compare: function (actual, expectedConstructor) {
-          const result = {};
-          if (expectedConstructor === String) {
-            result.pass =
-              typeof actual === "string" || actual instanceof String;
-          } else if (expectedConstructor === Number) {
-            result.pass =
-              typeof actual === "number" || actual instanceof Number;
-          } else if (expectedConstructor === Function) {
-            result.pass =
-              typeof actual === "function" || actual instanceof Function;
-          } else if (expectedConstructor === Object) {
-            result.pass = actual !== null && typeof actual === "object";
-          } else if (expectedConstructor === Boolean) {
-            result.pass = typeof actual === "boolean";
-          } else {
-            result.pass = actual instanceof expectedConstructor;
-          }
-          result.message = `Expected ${Object.prototype.toString.call(
-            actual
-          )} to be instance of ${
-            expectedConstructor.name
-          }, but was instance of ${actual && actual.constructor.name}`;
-          return result;
         },
       };
     },
@@ -659,15 +612,58 @@ function createDefaultMatchers(debug) {
         },
       };
     },
+
     toThrowDeveloperError: makeThrowFunction(
       debug,
       DeveloperError,
       "DeveloperError"
     ),
 
-    toThrowRuntimeError: makeThrowFunction(true, RuntimeError, "RuntimeError"),
+    toThrowError: function (util, customEqualityTesters) {
+      return {
+        compare: function (actual, expected) {
+          // based on the built-in Jasmine toThrow matcher
+          const name = expected ? expected.name : "Error";
+          const noOp = !debug && name === "DeveloperError";
+          if (noOp) {
+            return {
+              pass: true,
+            };
+          }
+          let result = false;
+          let exception;
 
-    toThrowSyntaxError: makeThrowFunction(true, SyntaxError, "SyntaxError"),
+          if (typeof actual !== "function") {
+            throw new Error("Actual is not a function");
+          }
+
+          try {
+            actual();
+          } catch (e) {
+            exception = e;
+          }
+
+          if (exception) {
+            result = exception.name === name;
+          }
+
+          let message;
+          if (result) {
+            message = [
+              `Expected function not to throw ${name}, but it threw`,
+              exception.message || exception,
+            ].join(" ");
+          } else {
+            message = `Expected function to throw ${name}.`;
+          }
+
+          return {
+            pass: result,
+            message: message,
+          };
+        },
+      };
+    },
   };
 }
 

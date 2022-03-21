@@ -407,7 +407,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     return provider.readyPromise.then(function () {
       provider.requestImage(0, 0, 0);
       const url = ImageryProvider.loadImage.calls.mostRecent().args[1].url;
-      expect("123".indexOf(url.substring(0, 1))).toBeGreaterThanOrEqualTo(0);
+      expect("123".indexOf(url.substring(0, 1))).toBeGreaterThanOrEqual(0);
     });
   });
 
@@ -424,7 +424,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       const url = ImageryProvider.loadImage.calls.mostRecent().args[1].url;
       expect(
         ["foo", "bar"].indexOf(url.substring(0, 3))
-      ).toBeGreaterThanOrEqualTo(0);
+      ).toBeGreaterThanOrEqual(0);
     });
   });
 

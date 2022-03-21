@@ -709,9 +709,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        expect(["a", "b", "c"].indexOf(request.url)).toBeGreaterThanOrEqualTo(
-          0
-        );
+        expect(["a", "b", "c"].indexOf(request.url)).toBeGreaterThanOrEqual(0);
 
         // Just return any old image.
         Resource._DefaultImplementations.createImage(
@@ -742,9 +740,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        expect(["1", "2", "3"].indexOf(request.url)).toBeGreaterThanOrEqualTo(
-          0
-        );
+        expect(["1", "2", "3"].indexOf(request.url)).toBeGreaterThanOrEqual(0);
 
         // Just return any old image.
         Resource._DefaultImplementations.createImage(
@@ -775,7 +771,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
         crossOrigin,
         deferred
       ) {
-        expect(["foo", "bar"].indexOf(request.url)).toBeGreaterThanOrEqualTo(0);
+        expect(["foo", "bar"].indexOf(request.url)).toBeGreaterThanOrEqual(0);
 
         // Just return any old image.
         Resource._DefaultImplementations.createImage(

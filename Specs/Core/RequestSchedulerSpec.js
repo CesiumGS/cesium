@@ -534,7 +534,7 @@ describe("Core/RequestScheduler", function () {
     while (requestHeap.length > 0) {
       request = requestHeap.pop();
       requests.push(request);
-      expect(request.testId).toBeGreaterThanOrEqualTo(currentTestId);
+      expect(request.testId).toBeGreaterThanOrEqual(currentTestId);
       currentTestId = request.testId;
     }
 
@@ -547,7 +547,7 @@ describe("Core/RequestScheduler", function () {
 
     while (requestHeap.length > 0) {
       request = requestHeap.pop();
-      expect(request.testId).toBeLessThanOrEqualTo(currentTestId);
+      expect(request.testId).toBeLessThanOrEqual(currentTestId);
       currentTestId = request.testId;
     }
   });

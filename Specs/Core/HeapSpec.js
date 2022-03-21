@@ -74,9 +74,9 @@ describe("Core/Heap", function () {
       pass = pass && checkHeap(heap, comparator);
     }
     expect(pass).toBe(true);
-    expect(heap.length).toBeLessThanOrEqualTo(heap.maximumLength);
+    expect(heap.length).toBeLessThanOrEqual(heap.maximumLength);
     // allowed one extra slot for swapping
-    expect(heap.internalArray.length).toBeLessThanOrEqualTo(
+    expect(heap.internalArray.length).toBeLessThanOrEqual(
       heap.maximumLength + 1
     );
   });
@@ -185,7 +185,7 @@ describe("Core/Heap", function () {
     while (heap.length > 0) {
       element = heap.pop();
       elements.push(element);
-      expect(element.id).toBeGreaterThanOrEqualTo(currentId);
+      expect(element.id).toBeGreaterThanOrEqual(currentId);
       currentId = element.id;
     }
 
@@ -203,7 +203,7 @@ describe("Core/Heap", function () {
     heap.resort();
     while (heap.length > 0) {
       element = heap.pop();
-      expect(element.id).toBeLessThanOrEqualTo(currentId);
+      expect(element.id).toBeLessThanOrEqual(currentId);
       currentId = element.id;
     }
   });

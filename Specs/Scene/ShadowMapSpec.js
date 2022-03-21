@@ -1375,7 +1375,7 @@ describe(
       }
 
       // When using WebGL, this value is 8. When using the stub, this value is 4.
-      expect(spy1.calls.count()).toBeLessThanOrEqualTo(8);
+      expect(spy1.calls.count()).toBeLessThanOrEqual(8);
       expect(spy2.calls.count()).toEqual(4);
 
       box.show = false;

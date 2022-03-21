@@ -850,11 +850,11 @@ describe(
         for (const tileID in drawCommandsPerTile) {
           if (drawCommandsPerTile.hasOwnProperty(tileID)) {
             ++tileCount;
-            expect(drawCommandsPerTile[tileID]).toBeGreaterThanOrEqualTo(2);
+            expect(drawCommandsPerTile[tileID]).toBeGreaterThanOrEqual(2);
           }
         }
 
-        expect(tileCount).toBeGreaterThanOrEqualTo(1);
+        expect(tileCount).toBeGreaterThanOrEqual(1);
       });
     });
 
