@@ -51,6 +51,7 @@ import ShadowMode from "../ShadowMode.js";
  * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
+ * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
@@ -185,6 +186,8 @@ export default function ModelExperimental(options) {
   const pointCloudShading = new PointCloudShading(options.pointCloudShading);
   this._attenuation = pointCloudShading.attenuation;
   this._pointCloudShading = pointCloudShading;
+
+  this._lightColor = Cartesian3.clone(options.lightColor);
 
   this._backFaceCulling = defaultValue(options.backFaceCulling, true);
   this._backFaceCullingDirty = false;
@@ -721,6 +724,27 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Cartesian3}
+   * @default undefined
+   */
+  lightColor: {
+    get: function () {
+      return this._lightColor;
+    },
+    set: function (value) {
+      if (defined(value) !== defined(this._lightColor)) {
+        this.resetDrawCommands();
+      }
+
+      this._lightColor = Cartesian3.clone(value, this._lightColor);
+    },
+  },
+
+  /**
    * Whether to cull back-facing geometry. When true, back face culling is
    * determined by the material's doubleSided property; when false, back face
    * culling is disabled. Back faces are not culled if the model's color is
@@ -1166,6 +1190,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
+ * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
@@ -1208,31 +1233,9 @@ ModelExperimental.fromGltf = function (options) {
     ? ModelExperimentalType.TILE_GLTF
     : ModelExperimentalType.GLTF;
 
-  const modelOptions = {
-    loader: loader,
-    resource: loaderOptions.gltfResource,
-    type: type,
-    modelMatrix: options.modelMatrix,
-    scale: options.scale,
-    minimumPixelSize: options.minimumPixelSize,
-    maximumScale: options.maximumScale,
-    debugShowBoundingVolume: options.debugShowBoundingVolume,
-    cull: options.cull,
-    opaquePass: options.opaquePass,
-    allowPicking: options.allowPicking,
-    customShader: options.customShader,
-    content: options.content,
-    show: options.show,
-    color: options.color,
-    colorBlendAmount: options.colorBlendAmount,
-    colorBlendMode: options.colorBlendMode,
-    featureIdLabel: options.featureIdLabel,
-    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
-    pointCloudShading: options.pointCloudShading,
-    backFaceCulling: options.backFaceCulling,
-    shadows: options.shadows,
-    showCreditsOnScreen: options.showCreditsOnScreen,
-  };
+  const modelOptions = makeModelOptions(loader, type, options);
+  modelOptions.resource = loaderOptions.gltfResource;
+
   const model = new ModelExperimental(modelOptions);
 
   return model;
@@ -1254,32 +1257,11 @@ ModelExperimental.fromB3dm = function (options) {
 
   const loader = new B3dmLoader(loaderOptions);
 
-  const modelOptions = {
-    loader: loader,
-    resource: loaderOptions.b3dmResource,
-    type: ModelExperimentalType.TILE_B3DM,
-    modelMatrix: options.modelMatrix,
-    scale: options.scale,
-    minimumPixelSize: options.minimumPixelSize,
-    maximumScale: options.maximumScale,
-    debugShowBoundingVolume: options.debugShowBoundingVolume,
-    cull: options.cull,
-    opaquePass: options.opaquePass,
-    allowPicking: options.allowPicking,
-    customShader: options.customShader,
-    content: options.content,
-    show: options.show,
-    color: options.color,
-    colorBlendAmount: options.colorBlendAmount,
-    colorBlendMode: options.colorBlendMode,
-    featureIdLabel: options.featureIdLabel,
-    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
-    pointCloudShading: options.pointCloudShading,
-    backFaceCulling: options.backFaceCulling,
-    shadows: options.shadows,
-    showCreditsOnScreen: options.showCreditsOnScreen,
-  };
-
+  const modelOptions = makeModelOptions(
+    loader,
+    ModelExperimentalType.TILE_B3DM,
+    options
+  );
   const model = new ModelExperimental(modelOptions);
   return model;
 };
@@ -1294,32 +1276,11 @@ ModelExperimental.fromPnts = function (options) {
   };
   const loader = new PntsLoader(loaderOptions);
 
-  const modelOptions = {
-    loader: loader,
-    resource: options.resource,
-    type: ModelExperimentalType.TILE_PNTS,
-    modelMatrix: options.modelMatrix,
-    scale: options.scale,
-    minimumPixelSize: options.minimumPixelSize,
-    maximumScale: options.maximumScale,
-    debugShowBoundingVolume: options.debugShowBoundingVolume,
-    cull: options.cull,
-    opaquePass: options.opaquePass,
-    allowPicking: options.allowPicking,
-    customShader: options.customShader,
-    content: options.content,
-    show: options.show,
-    color: options.color,
-    colorBlendAmount: options.colorBlendAmount,
-    colorBlendMode: options.colorBlendMode,
-    featureIdLabel: options.featureIdLabel,
-    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
-    pointCloudShading: options.pointCloudShading,
-    backFaceCulling: options.backFaceCulling,
-    shadows: options.shadows,
-    showCreditsOnScreen: options.showCreditsOnScreen,
-  };
-
+  const modelOptions = makeModelOptions(
+    loader,
+    ModelExperimentalType.TILE_PNTS,
+    options
+  );
   const model = new ModelExperimental(modelOptions);
   return model;
 };
@@ -1337,34 +1298,13 @@ ModelExperimental.fromI3dm = function (options) {
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
   };
-
   const loader = new I3dmLoader(loaderOptions);
 
-  const modelOptions = {
-    loader: loader,
-    resource: loaderOptions.i3dmResource,
-    type: ModelExperimentalType.TILE_I3DM,
-    modelMatrix: options.modelMatrix,
-    scale: options.scale,
-    minimumPixelSize: options.minimumPixelSize,
-    maximumScale: options.maximumScale,
-    debugShowBoundingVolume: options.debugShowBoundingVolume,
-    cull: options.cull,
-    opaquePass: options.opaquePass,
-    allowPicking: options.allowPicking,
-    customShader: options.customShader,
-    content: options.content,
-    show: options.show,
-    color: options.color,
-    colorBlendAmount: options.colorBlendAmount,
-    colorBlendMode: options.colorBlendMode,
-    featureIdIndex: options.featureIdIndex,
-    instanceFeatureIdIndex: options.instanceFeatureIdIndex,
-    pointCloudShading: options.pointCloudShading,
-    backFaceCulling: options.backFaceCulling,
-    shadows: options.shadows,
-    showCreditsOnScreen: options.showCreditsOnScreen,
-  };
+  const modelOptions = makeModelOptions(
+    loader,
+    ModelExperimentalType.TILE_I3DM,
+    options
+  );
   const model = new ModelExperimental(modelOptions);
   return model;
 };
@@ -1407,3 +1347,32 @@ ModelExperimental.prototype.applyStyle = function (style) {
 
   this.resetDrawCommands();
 };
+
+function makeModelOptions(loader, modelType, options) {
+  return {
+    loader: loader,
+    type: modelType,
+    resource: options.resource,
+    modelMatrix: options.modelMatrix,
+    scale: options.scale,
+    minimumPixelSize: options.minimumPixelSize,
+    maximumScale: options.maximumScale,
+    debugShowBoundingVolume: options.debugShowBoundingVolume,
+    cull: options.cull,
+    opaquePass: options.opaquePass,
+    allowPicking: options.allowPicking,
+    customShader: options.customShader,
+    content: options.content,
+    show: options.show,
+    color: options.color,
+    colorBlendAmount: options.colorBlendAmount,
+    colorBlendMode: options.colorBlendMode,
+    featureIdLabel: options.featureIdLabel,
+    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
+    pointCloudShading: options.pointCloudShading,
+    lightColor: options.lightColor,
+    backFaceCulling: options.backFaceCulling,
+    shadows: options.shadows,
+    showCreditsOnScreen: options.showCreditsOnScreen,
+  };
+}

@@ -1626,7 +1626,6 @@ Object.defineProperties(Scene.prototype, {
    * The sample rate of multisample antialiasing (values greater than 1 enable MSAA).
    * @memberof Scene.prototype
    * @type {Number}
-   * @readonly
    * @default 1
    */
   msaaSamples: {
