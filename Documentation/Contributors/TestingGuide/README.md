@@ -581,7 +581,7 @@ beforeAll(function () {
     })
   );
 
-  return when.all(modelPromises);
+  return Promise.all(modelPromises);
 });
 ```
 
