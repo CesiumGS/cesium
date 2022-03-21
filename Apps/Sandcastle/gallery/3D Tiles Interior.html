@@ -44,11 +44,6 @@
         });
         viewer.scene.primitives.add(tileset);
 
-        const initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
-          100.0,
-          -15.0,
-          0.0
-        );
         viewer.scene.camera.setView({
           destination: initialPosition,
           orientation: initialOrientation,
