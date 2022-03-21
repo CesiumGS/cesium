@@ -15,6 +15,7 @@
 - Added `Cartesian2.clamp`, `Cartesian3.clamp`, and `Cartesian4.clamp`. [#10197](https://github.com/CesiumGS/cesium/pull/10197)
 - Added experimental support for the [3D Tiles 1.1 draft](https://github.com/CesiumGS/3d-tiles/pull/666). [#10189](https://github.com/CesiumGS/cesium/pull/10189)
 - Added `lightColor` to `ModelExperimental` [#10207](https://github.com/CesiumGS/cesium/pull/10207)
+- Added three camera positions to the 3D Tiles Interior sandcastle [#10217](https://github.com/CesiumGS/cesium/pull/10217)
 
 ##### Fixes :wrench:
 
