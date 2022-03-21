@@ -44,7 +44,30 @@
         });
         viewer.scene.primitives.add(tileset);
 
-        const cameraLocation = [];
+        const cameraLocation = [
+          {
+            destination: new Cesium.Cartesian3(
+              -1111589.6633510825,
+              -5855885.231846953,
+              2262561.0299875494
+            ),
+            orientation: {
+              heading: 1.7019461751391587,
+              pitch: 0.018231068030469588,
+            },
+          },
+          {
+            destination: new Cesium.Cartesian3(
+              -1111584.5593897987,
+              -5855886.685241452,
+              2262561.3698870735
+            ),
+            orientation: {
+              heading: 1.7019461754602023,
+              pitch: 0.018231067533736267,
+            },
+          },
+        ];
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
