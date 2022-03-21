@@ -9,7 +9,7 @@ vec3 computePbrLighting(czm_modelMaterial inputMaterial)
     #ifdef USE_CUSTOM_LIGHT_COLOR
     vec3 lightColorHdr = model_lightColorHdr;
     #else
-    vec3 lightColorHdr = czm_lightColor;
+    vec3 lightColorHdr = czm_lightColorHdr;
     #endif
 
     vec3 color = inputMaterial.diffuse;
