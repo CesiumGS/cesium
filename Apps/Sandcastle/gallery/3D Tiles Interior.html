@@ -44,11 +44,6 @@
         });
         viewer.scene.primitives.add(tileset);
 
-        viewer.scene.camera.setView({
-          destination: initialPosition,
-          orientation: initialOrientation,
-          endTransform: Cesium.Matrix4.IDENTITY,
-        });
         //Sandcastle_End
         Sandcastle.finishedLoading();
       }
