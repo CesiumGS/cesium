@@ -1234,8 +1234,6 @@ ModelExperimental.fromGltf = function (options) {
     : ModelExperimentalType.GLTF;
 
   const modelOptions = makeModelOptions(loader, type, options);
-  // Due to the logic above for determining the resources, use the computed
-  // resource.
   modelOptions.resource = loaderOptions.gltfResource;
 
   const model = new ModelExperimental(modelOptions);
