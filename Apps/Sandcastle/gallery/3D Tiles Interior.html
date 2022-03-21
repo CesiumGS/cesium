@@ -80,6 +80,18 @@
           },
         ];
 
+        Sandcastle.addToolbarButton("Exterior View", function () {
+          viewer.camera.flyTo(cameraLocations[0]);
+        });
+
+        Sandcastle.addToolbarButton("Wall View", function () {
+          viewer.camera.flyTo(cameraLocations[1]);
+        });
+
+        Sandcastle.addToolbarButton("Interior View", function () {
+          viewer.camera.flyTo(cameraLocations[2]);
+        });
+
         viewer.camera.flyTo(cameraLocations[2]);
         //Sandcastle_End
         Sandcastle.finishedLoading();
