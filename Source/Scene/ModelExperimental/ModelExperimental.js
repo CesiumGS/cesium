@@ -1353,8 +1353,8 @@ ModelExperimental.prototype.applyStyle = function (style) {
 function makeModelOptions(loader, modelType, options) {
   return {
     loader: loader,
-    resource: options.resource,
     type: modelType,
+    resource: options.resource,
     modelMatrix: options.modelMatrix,
     scale: options.scale,
     minimumPixelSize: options.minimumPixelSize,
