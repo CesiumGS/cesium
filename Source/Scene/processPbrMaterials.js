@@ -1012,13 +1012,13 @@ function generateTechnique(
     fragmentShader +=
       "    vec3 specularIBL = czm_sampleOctahedralProjection(czm_specularEnvironmentMaps, czm_specularEnvironmentMapSize, cubeDir,  roughness * czm_specularEnvironmentMapsMaximumLOD, czm_specularEnvironmentMapsMaximumLOD);\n";
     fragmentShader += "#endif \n";
-    fragmentShader += "    specularIBL *= F * brdfLut.x + brdfLut.y;\n";
+    fragmentShader += "    specularIBL *= specularColor * brdfLut.x + brdfLut.y;\n";
     fragmentShader += "#else \n";
     fragmentShader += "    vec3 specularIBL = vec3(0.0); \n";
     fragmentShader += "#endif \n";
 
     fragmentShader +=
-      "    color += diffuseIrradiance * diffuseColor + specularColor * specularIBL;\n";
+      "    color += diffuseIrradiance * diffuseColor + specularIBL;\n";
 
     fragmentShader += "#endif \n";
   } else {
