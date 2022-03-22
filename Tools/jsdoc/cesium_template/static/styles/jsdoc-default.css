@@ -311,6 +311,14 @@ nav a:active {
   color: #5c5954;
 }
 
+.help {
+  margin-top: 12px;
+  text-align: center;
+  background-color: #deedf8;
+  font-size: 130%;
+  padding: 10px;
+}
+
 footer {
   display: block;
   padding: 6px 6px 100%; /* Large bottom padding, so #anchors scroll correctly. */
