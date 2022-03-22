@@ -618,52 +618,6 @@ function createDefaultMatchers(debug) {
       DeveloperError,
       "DeveloperError"
     ),
-
-    toThrowError: function (util, customEqualityTesters) {
-      return {
-        compare: function (actual, expected) {
-          // based on the built-in Jasmine toThrow matcher
-          const name = expected ? expected.name : "Error";
-          const noOp = !debug && name === "DeveloperError";
-          if (noOp) {
-            return {
-              pass: true,
-            };
-          }
-          let result = false;
-          let exception;
-
-          if (typeof actual !== "function") {
-            throw new Error("Actual is not a function");
-          }
-
-          try {
-            actual();
-          } catch (e) {
-            exception = e;
-          }
-
-          if (exception) {
-            result = exception.name === name;
-          }
-
-          let message;
-          if (result) {
-            message = [
-              `Expected function not to throw ${name}, but it threw`,
-              exception.message || exception,
-            ].join(" ");
-          } else {
-            message = `Expected function to throw ${name}.`;
-          }
-
-          return {
-            pass: result,
-            message: message,
-          };
-        },
-      };
-    },
   };
 }
 
