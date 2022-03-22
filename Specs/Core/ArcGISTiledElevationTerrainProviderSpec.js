@@ -286,9 +286,6 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     expect(function () {
       return provider.tilingScheme;
     }).toThrowDeveloperError();
-    // expect(function () {
-    //   return provider.tilingScheme;
-    // }).toThrowDeveloperError();
 
     return provider.readyPromise;
   });
