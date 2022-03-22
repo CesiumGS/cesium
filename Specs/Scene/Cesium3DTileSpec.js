@@ -10,6 +10,7 @@ import { Cesium3DTile } from "../../Source/Cesium.js";
 import { Cesium3DTilePass } from "../../Source/Cesium.js";
 import { Cesium3DTileRefine } from "../../Source/Cesium.js";
 import { Cesium3DTilesetHeatmap } from "../../Source/Cesium.js";
+import { RuntimeError } from "../../Source/Cesium.js";
 import { TileBoundingRegion } from "../../Source/Cesium.js";
 import { TileOrientedBoundingBox } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
@@ -144,7 +145,7 @@ describe(
           tileWithoutBoundingVolume,
           undefined
         );
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("throws if boundingVolume does not contain a sphere, region, or box", function () {
@@ -157,7 +158,7 @@ describe(
           tileWithoutBoundingVolume,
           undefined
         );
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("logs deprecation warning if refine is lowercase", function () {
@@ -638,7 +639,7 @@ describe(
       tile2.priorityDeferred = true;
       tile2.updatePriority();
       const foveatedDeferralPenalty = 10000000.0;
-      expect(tile2._priority).toBeGreaterThanOrEqualTo(foveatedDeferralPenalty);
+      expect(tile2._priority).toBeGreaterThanOrEqual(foveatedDeferralPenalty);
       tile2._priorityDeferred = false;
     });
   },

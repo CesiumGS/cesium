@@ -18,6 +18,7 @@ import {
   GroupMetadata,
   Pass,
   PerspectiveFrustum,
+  RuntimeError,
   Transforms,
 } from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
@@ -966,7 +967,7 @@ describe(
         .then(function () {
           expect(function () {
             scene.renderForSpecs();
-          }).toThrowRuntimeError();
+          }).toThrowError(RuntimeError);
         });
     });
 
@@ -1003,7 +1004,7 @@ describe(
         .then(function () {
           expect(function () {
             scene.renderForSpecs();
-          }).toThrowRuntimeError();
+          }).toThrowError(RuntimeError);
         });
     });
 

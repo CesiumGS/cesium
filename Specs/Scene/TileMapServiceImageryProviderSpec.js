@@ -562,28 +562,28 @@ describe("Scene/TileMapServiceImageryProvider", function () {
         CesiumMath.toRadians(-180.0),
         CesiumMath.EPSILON14
       );
-      expect(provider.rectangle.west).toBeGreaterThanOrEqualTo(
+      expect(provider.rectangle.west).toBeGreaterThanOrEqual(
         provider.tilingScheme.rectangle.west
       );
       expect(provider.rectangle.east).toEqualEpsilon(
         CesiumMath.toRadians(180.0),
         CesiumMath.EPSILON14
       );
-      expect(provider.rectangle.east).toBeLessThanOrEqualTo(
+      expect(provider.rectangle.east).toBeLessThanOrEqual(
         provider.tilingScheme.rectangle.east
       );
       expect(provider.rectangle.south).toEqualEpsilon(
         -WebMercatorProjection.MaximumLatitude,
         CesiumMath.EPSILON14
       );
-      expect(provider.rectangle.south).toBeGreaterThanOrEqualTo(
+      expect(provider.rectangle.south).toBeGreaterThanOrEqual(
         provider.tilingScheme.rectangle.south
       );
       expect(provider.rectangle.north).toEqualEpsilon(
         WebMercatorProjection.MaximumLatitude,
         CesiumMath.EPSILON14
       );
-      expect(provider.rectangle.north).toBeLessThanOrEqualTo(
+      expect(provider.rectangle.north).toBeLessThanOrEqual(
         provider.tilingScheme.rectangle.north
       );
     });

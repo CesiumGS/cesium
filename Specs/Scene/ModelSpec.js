@@ -33,6 +33,7 @@ import { HeightReference } from "../../Source/Cesium.js";
 import { Model } from "../../Source/Cesium.js";
 import { ModelAnimationLoop } from "../../Source/Cesium.js";
 import { DepthFunction } from "../../Source/Cesium.js";
+import { RuntimeError } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 import ModelOutlineLoader from "../../Source/Scene/ModelOutlineLoader.js";
@@ -1498,7 +1499,7 @@ describe(
         return new Model({
           gltf: arrayBuffer,
         });
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("Throws because of an invalid Binary glTF header - version", function () {
@@ -1513,7 +1514,7 @@ describe(
         return new Model({
           gltf: arrayBuffer,
         });
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("renders a model with the CESIUM_RTC extension", function () {

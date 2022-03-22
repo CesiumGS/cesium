@@ -10,6 +10,7 @@ import { ContextLimits } from "../../Source/Cesium.js";
 import { Batched3DModel3DTileContent } from "../../Source/Cesium.js";
 import { Cesium3DTileBatchTable } from "../../Source/Cesium.js";
 import { Cesium3DTileStyle } from "../../Source/Cesium.js";
+import { RuntimeError } from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 import concatTypedArrays from "../concatTypedArrays.js";
@@ -419,7 +420,7 @@ describe(
           batchTableJson,
           batchTableBinary
         );
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("throws if the binary property does not specify a type", function () {
@@ -437,7 +438,7 @@ describe(
           batchTableJson,
           batchTableBinary
         );
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("throws if a binary property exists but there is no batchTableBinary", function () {
@@ -450,7 +451,7 @@ describe(
       };
       expect(function () {
         return new Cesium3DTileBatchTable(mockTileset, 2, batchTableJson);
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("getProperty and setProperty work for binary properties", function () {

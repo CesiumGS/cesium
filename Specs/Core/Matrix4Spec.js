@@ -5,6 +5,7 @@ import { Matrix3 } from "../../Source/Cesium.js";
 import { Matrix4 } from "../../Source/Cesium.js";
 import { Quaternion } from "../../Source/Cesium.js";
 import { TranslationRotationScale } from "../../Source/Cesium.js";
+import { RuntimeError } from "../../Source/Cesium.js";
 import createPackableSpecs from "../createPackableSpecs.js";
 import createPackableArraySpecs from "../createPackableArraySpecs.js";
 
@@ -4756,7 +4757,7 @@ describe("Core/Matrix4", function () {
     );
     expect(function () {
       Matrix4.inverse(matrix, new Matrix4());
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 
   it("inverseTransformation throws without matrix parameter", function () {
@@ -5070,7 +5071,7 @@ describe("Core/Matrix4", function () {
         13, 14, 15, 16
       ),
       new Matrix4(
-        1, 2, 3, 4, 
+        1, 2, 3, 4,
         1, 2, 3, 4,
         1, 2, 3, 4,
         1, 2, 3, 4
