@@ -1,5 +1,4 @@
 import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Cartographic from "../Core/Cartographic.js";
@@ -12,6 +11,7 @@ import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
@@ -21,6 +21,7 @@ import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
+import ImageBasedLighting from "./ImageBasedLighting.js";
 import loadImageFromTypedArray from "../Core/loadImageFromTypedArray.js";
 import loadKTX2 from "../Core/loadKTX2.js";
 import CesiumMath from "../Core/Math.js";
@@ -219,11 +220,12 @@ const uriToGuid = {};
  * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
  * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
- * @param {Cartesian2} [options.imageBasedLightingFactor=Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
- * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
- * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
- * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+ * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting for this tileset.
+ * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
+ * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
+ * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
+ * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
  * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if {@link Model#color} is translucent or {@link Model#silhouetteSize} is greater than 0.0.
@@ -671,15 +673,23 @@ function Model(options) {
   this._sourceVersion = undefined;
   this._sourceKHRTechniquesWebGL = undefined;
 
-  this._imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
-  Cartesian2.clone(
-    options.imageBasedLightingFactor,
-    this._imageBasedLightingFactor
-  );
   this._lightColor = Cartesian3.clone(options.lightColor);
 
-  this._luminanceAtZenith = undefined;
-  this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.2);
+  if (defined(options.imageBasedLighting)) {
+    this._imageBasedLighting = options.imageBasedLighting;
+  } else {
+    deprecationWarning(
+      "ModelImageBasedLightingConstructor",
+      "Individual image-based lighting parameters were deprecated in Cesium 1.92. They will be removed in version 1.94. Use options.imageBasedLighting instead."
+    );
+    // Create image-based lighting from the old constructor parameters.
+    this._imageBasedLighting = new ImageBasedLighting({
+      imageBasedLightingFactor: options.imageBasedLightingFactor,
+      luminanceAtZenith: options.luminanceAtZenith,
+      sphericalHarmonicCoefficients: options.sphericalHarmonicCoefficients,
+      specularEnvironmentMaps: options.specularEnvironmentMaps,
+    });
+  }
 
   this._sphericalHarmonicCoefficients = options.sphericalHarmonicCoefficients;
   this._specularEnvironmentMaps = options.specularEnvironmentMaps;
@@ -1156,48 +1166,10 @@ Object.defineProperties(Model.prototype, {
    */
   imageBasedLightingFactor: {
     get: function () {
-      return this._imageBasedLightingFactor;
+      return this._imageBasedLighting.imageBasedLightingFactor;
     },
     set: function (value) {
-      //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.object("imageBasedLightingFactor", value);
-      Check.typeOf.number.greaterThanOrEquals(
-        "imageBasedLightingFactor.x",
-        value.x,
-        0.0
-      );
-      Check.typeOf.number.lessThanOrEquals(
-        "imageBasedLightingFactor.x",
-        value.x,
-        1.0
-      );
-      Check.typeOf.number.greaterThanOrEquals(
-        "imageBasedLightingFactor.y",
-        value.y,
-        0.0
-      );
-      Check.typeOf.number.lessThanOrEquals(
-        "imageBasedLightingFactor.y",
-        value.y,
-        1.0
-      );
-      //>>includeEnd('debug');
-      const imageBasedLightingFactor = this._imageBasedLightingFactor;
-      if (
-        value === imageBasedLightingFactor ||
-        Cartesian2.equals(value, imageBasedLightingFactor)
-      ) {
-        return;
-      }
-      this._shouldRegenerateShaders =
-        this._shouldRegenerateShaders ||
-        (this._imageBasedLightingFactor.x > 0.0 && value.x === 0.0) ||
-        (this._imageBasedLightingFactor.x === 0.0 && value.x > 0.0);
-      this._shouldRegenerateShaders =
-        this._shouldRegenerateShaders ||
-        (this._imageBasedLightingFactor.y > 0.0 && value.y === 0.0) ||
-        (this._imageBasedLightingFactor.y === 0.0 && value.y > 0.0);
-      Cartesian2.clone(value, this._imageBasedLightingFactor);
+      this._imageBasedLighting.imageBasedLightingFactor = value;
     },
   },
 
@@ -1242,18 +1214,10 @@ Object.defineProperties(Model.prototype, {
    */
   luminanceAtZenith: {
     get: function () {
-      return this._luminanceAtZenith;
+      return this._imageBasedLighting.luminanceAtZenith;
     },
     set: function (value) {
-      const lum = this._luminanceAtZenith;
-      if (value === lum) {
-        return;
-      }
-      this._shouldRegenerateShaders =
-        this._shouldRegenerateShaders ||
-        (defined(lum) && !defined(value)) ||
-        (defined(value) && !defined(lum));
-      this._luminanceAtZenith = value;
+      this._imageBasedLighting.luminanceAtZenith = value;
     },
   },
 
@@ -1460,6 +1424,12 @@ function containsGltfMagic(uint8Array) {
  * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
  * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
+ * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
+ * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting for this tileset.
+ * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
+ * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
+ * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
+ * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
  * @param {Credit|String} [options.credit] A credit for the model, which is displayed on the canvas.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if {@link Model#color} is translucent or {@link Model#silhouetteSize} is greater than 0.0.
@@ -2531,9 +2501,8 @@ function createProgram(programToCreate, model, context) {
     drawFS = `uniform vec4 czm_pickColor;\n${drawFS}`;
   }
 
-  const useIBL =
-    model._imageBasedLightingFactor.x > 0.0 ||
-    model._imageBasedLightingFactor.y > 0.0;
+  const imageBasedLighting = model._imageBasedLighting;
+  const useIBL = imageBasedLighting.enabled;
   if (useIBL) {
     drawFS = `#define USE_IBL_LIGHTING \n\n${drawFS}`;
   }
@@ -2591,7 +2560,7 @@ function createProgram(programToCreate, model, context) {
     }
   }
 
-  if (defined(model._luminanceAtZenith)) {
+  if (defined(imageBasedLighting.luminanceAtZenith)) {
     drawFS = `${
       "#define USE_SUN_LUMINANCE \n" + "uniform float gltf_luminanceAtZenith;\n"
     }${drawFS}`;
@@ -2647,9 +2616,8 @@ function recreateProgram(programToCreate, model, context) {
     drawFS = `uniform vec4 czm_pickColor;\n${drawFS}`;
   }
 
-  const useIBL =
-    model._imageBasedLightingFactor.x > 0.0 ||
-    model._imageBasedLightingFactor.y > 0.0;
+  const imageBasedLighting = model._imageBasedLighting;
+  const useIBL = imageBasedLighting.enabled;
   if (useIBL) {
     drawFS = `#define USE_IBL_LIGHTING \n\n${drawFS}`;
   }
@@ -2707,7 +2675,7 @@ function recreateProgram(programToCreate, model, context) {
     }
   }
 
-  if (defined(model._luminanceAtZenith)) {
+  if (defined(imageBasedLighting.luminanceAtZenith)) {
     drawFS = `${
       "#define USE_SUN_LUMINANCE \n" + "uniform float gltf_luminanceAtZenith;\n"
     }${drawFS}`;
@@ -3810,7 +3778,7 @@ function createColorBlendFunction(model) {
 
 function createIBLFactorFunction(model) {
   return function () {
-    return model._imageBasedLightingFactor;
+    return model._imageBasedLighting.imageBasedLightingFactor;
   };
 }
 
@@ -3822,7 +3790,7 @@ function createLightColorFunction(model) {
 
 function createLuminanceAtZenithFunction(model) {
   return function () {
-    return model.luminanceAtZenith;
+    return model._imageBasedLighting.luminanceAtZenith;
   };
 }
 
@@ -5467,6 +5435,8 @@ Model.prototype.update = function (frameState) {
     }
   }
 
+  const imageBasedLighting = this._imageBasedLighting;
+  imageBasedLighting.update(frameState);
   const iblSupported = OctahedralProjectedCubeMap.isSupported(context);
   if (this._shouldUpdateSpecularMapAtlas && iblSupported) {
     this._shouldUpdateSpecularMapAtlas = false;
@@ -5514,6 +5484,7 @@ Model.prototype.update = function (frameState) {
 
   this._shouldRegenerateShaders =
     this._shouldRegenerateShaders ||
+    this._imageBasedLighting.shouldRegenerateShaders ||
     recompileWithDefaultAtlas ||
     recompileWithoutDefaultAtlas ||
     recompileWithDefaultSHCoeffs ||

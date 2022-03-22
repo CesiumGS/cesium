@@ -24,17 +24,61 @@ const scratchIBLReferenceFrameMatrix3 = new Matrix3();
  */
 export default function ImageBasedLighting(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const imageBasedLightingFactor = defined(options.imageBasedLightingFactor)
+    ? Cartesian2.clone(options.imageBasedLightingFactor)
+    : new Cartesian2(1.0, 1.0);
 
-  const imageBasedLightingFactor = Cartesian2.clone(
-    options.imageBasedLightingFactor
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object(
+    "options.imageBasedLightingFactor",
+    imageBasedLightingFactor
   );
-  this._imageBasedLightingFactor = defaultValue(
-    imageBasedLightingFactor,
-    new Cartesian2(1.0, 1.0)
+  Check.typeOf.number.greaterThanOrEquals(
+    "options.imageBasedLightingFactor.x",
+    imageBasedLightingFactor.x,
+    0.0
   );
+  Check.typeOf.number.lessThanOrEquals(
+    "options.imageBasedLightingFactor.x",
+    imageBasedLightingFactor.x,
+    1.0
+  );
+  Check.typeOf.number.greaterThanOrEquals(
+    "options.imageBasedLightingFactor.y",
+    imageBasedLightingFactor.y,
+    0.0
+  );
+  Check.typeOf.number.lessThanOrEquals(
+    "options.imageBasedLightingFactor.y",
+    imageBasedLightingFactor.y,
+    1.0
+  );
+  //>>includeEnd('debug');
 
-  this._luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.2);
-  this._sphericalHarmonicCoefficients = options.sphericalHarmonicCoefficients;
+  this._imageBasedLightingFactor = imageBasedLightingFactor;
+
+  const luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.2);
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("options.luminanceAtZenith", luminanceAtZenith);
+  //>>includeEnd('debug');
+
+  this._luminanceAtZenith = luminanceAtZenith;
+
+  const sphericalHarmonicCoefficients = options.sphericalHarmonicCoefficients;
+
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    defined(sphericalHarmonicCoefficients) &&
+    (!Array.isArray(sphericalHarmonicCoefficients) ||
+      sphericalHarmonicCoefficients.length !== 9)
+  ) {
+    throw new DeveloperError(
+      "options.sphericalHarmonicCoefficients must be an array of 9 Cartesian3 values."
+    );
+  }
+  //>>includeEnd('debug');
+  this._sphericalHarmonicCoefficients = sphericalHarmonicCoefficients;
 
   // The specular environment map texture is created in update();
   this._specularEnvironmentMaps = options.specularEnvironmentMaps;
@@ -43,18 +87,27 @@ export default function ImageBasedLighting(options) {
 
   this._useDefaultSpecularMaps = false;
   this._useDefaultSphericalHarmonics = false;
-  this._shouldRegenerateShaders = true;
+  this._shouldRegenerateShaders = false;
 
   // The model/tileset will set this with a setter after construction.
   this._referenceMatrix = Matrix3.clone(Matrix3.IDENTITY);
   // Derived from the reference matrix and the current view matrix
   this._iblReferenceFrameMatrix = Matrix3.clone(Matrix3.IDENTITY);
+
+  // Store the previous frame number to prevent redundant update calls
+  this._previousFrameNumber = undefined;
+
+  // Keeps track of the last values for use during update logic
+  this._previousImageBasedLightingFactor = imageBasedLightingFactor;
+  this._previousLuminanceAtZenith = luminanceAtZenith;
 }
 
 Object.defineProperties(ImageBasedLighting.prototype, {
   /**
-   * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This cartesian is used to scale the final
-   * diffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
+   * Cesium adds lighting from the earth, sky, atmosphere, and star skybox.
+   * This cartesian is used to scale the final diffuse and specular lighting
+   * contribution from those sources to the final color. A value of 0.0 will
+   * disable those light sources.
    *
    * @memberof ImageBasedLighting.prototype
    *
@@ -89,18 +142,10 @@ Object.defineProperties(ImageBasedLighting.prototype, {
         1.0
       );
       //>>includeEnd('debug');
-
-      const imageBasedLightingFactor = this._imageBasedLightingFactor;
-      if (!Cartesian2.equals(value, imageBasedLightingFactor)) {
-        this._shouldRegenerateShaders =
-          this._shouldRegenerateShaders ||
-          (imageBasedLightingFactor.x > 0.0 && value.x === 0.0) ||
-          (imageBasedLightingFactor.x === 0.0 && value.x > 0.0);
-        this._shouldRegenerateShaders =
-          this._shouldRegenerateShaders ||
-          (imageBasedLightingFactor.y > 0.0 && value.y === 0.0) ||
-          (imageBasedLightingFactor.y === 0.0 && value.y > 0.0);
-      }
+      this._previousImageBasedLightingFactor = Cartesian2.clone(
+        this._imageBasedLightingFactor,
+        this._previousImageBasedLightingFactor
+      );
       this._imageBasedLightingFactor = Cartesian2.clone(
         value,
         this._imageBasedLightingFactor
@@ -109,30 +154,26 @@ Object.defineProperties(ImageBasedLighting.prototype, {
   },
 
   /**
-   * The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
-   * This is used when {@link Cesium3DTileset#specularEnvironmentMaps} and {@link Cesium3DTileset#sphericalHarmonicCoefficients} are not defined.
+   * The sun's luminance at the zenith in kilo candela per meter squared
+   * to use for this model's procedural environment map. This is used when
+   * {@link ImageBasedLighting#specularEnvironmentMaps} and {@link ImageBasedLighting#sphericalHarmonicCoefficients}
+   * are not defined.
    *
    * @memberof ImageBasedLighting.prototype
    *
    * @type {Number}
    * @default 0.2
-   *
    */
   luminanceAtZenith: {
     get: function () {
       return this._luminanceAtZenith;
     },
     set: function (value) {
-      const lum = this._luminanceAtZenith;
-      if (value !== lum) {
-        this._shouldRegenerateShaders =
-          this._shouldRegenerateShaders ||
-          (defined(lum) && !defined(value)) ||
-          (defined(value) && !defined(lum));
-      }
+      this._previousLuminanceAtZenith = this._luminanceAtZenith;
       this._luminanceAtZenith = value;
     },
   },
+
   /**
    * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, a diffuse irradiance
    * computed from the atmosphere color is used.
@@ -163,8 +204,8 @@ Object.defineProperties(ImageBasedLighting.prototype, {
         );
       }
       //>>includeEnd('debug');
-      if (value === this._sphericalHarmonicCoefficients) {
-        this._shouldRegenerateShaders = true;
+      if (value !== this._sphericalHarmonicCoefficients) {
+        // TODO: FIX
       }
       this._sphericalHarmonicCoefficients = value;
     },
@@ -183,8 +224,8 @@ Object.defineProperties(ImageBasedLighting.prototype, {
       return this._specularEnvironmentMaps;
     },
     set: function (value) {
-      this._shouldUpdateSpecularMapAtlas =
-        this._shouldUpdateSpecularMapAtlas ||
+      this._specularEnvironmentMapAtlasDirty =
+        this._specularEnvironmentMapAtlasDirty ||
         value !== this._specularEnvironmentMaps;
       this._specularEnvironmentMaps = value;
     },
@@ -206,8 +247,8 @@ Object.defineProperties(ImageBasedLighting.prototype, {
   },
 
   /**
-   * Whether or not the owner of these properties should regenerate its shaders, based
-   * on the properties and resources have changed.
+   * Whether or not the models that use this lighting should regenerate their shaders,
+   * based on the properties and resources have changed.
    *
    * @memberof ImageBasedLighting.prototype
    * @type {Boolean}
@@ -225,7 +266,9 @@ Object.defineProperties(ImageBasedLighting.prototype, {
    * is either the model's modelMatrix, or another reference matrix (e.g. the
    * tileset modelMatrix).
    *
+   * @memberof ImageBasedLighting.prototype
    * @type {Matrix4}
+   *
    * @private
    */
   referenceMatrix: {
@@ -240,7 +283,9 @@ Object.defineProperties(ImageBasedLighting.prototype, {
   /**
    * The reference frame for image-based lighting, derived from the reference matrix and the current view matrix.
    *
+   * @memberof ImageBasedLighting.prototype
    * @type {Matrix4}
+   *
    * @private
    */
   iblReferenceFrameMatrix: {
@@ -248,9 +293,51 @@ Object.defineProperties(ImageBasedLighting.prototype, {
       return this._iblReferenceFrameMatrix;
     },
   },
+
+  /**
+   * Whether or not to use the default spherical harmonic coefficients.
+   *
+   * @memberof ImageBasedLighting.prototype
+   * @type {Boolean}
+   *
+   * @private
+   */
+  useDefaultSphericalHarmonics: {
+    get: function () {
+      return this._useDefaultSphericalHarmonics;
+    },
+  },
+
+  /**
+   * Whether or not to use the default specular environment maps.
+   *
+   * @memberof ImageBasedLighting.prototype
+   * @type {Boolean}
+   *
+   * @private
+   */
+  useDefaultSpecularMaps: {
+    get: function () {
+      return this._useDefaultSpecularMaps;
+    },
+  },
+
+  /**
+   * The texture atlas for the specular environment maps.
+   *
+   * @memberof ImageBasedLighting.prototype
+   * @type {OctahedralProjectedCubeMap}
+   *
+   * @private
+   */
+  specularEnvironmentMapAtlas: {
+    get: function () {
+      return this._specularEnvironmentMapAtlas;
+    },
+  },
 });
 
-function createSpecularMapAtlas(imageBasedLighting, context) {
+function createSpecularEnvironmentMapAtlas(imageBasedLighting, context) {
   if (!OctahedralProjectedCubeMap.isSupported(context)) {
     return;
   }
@@ -280,14 +367,38 @@ function createSpecularMapAtlas(imageBasedLighting, context) {
 }
 
 ImageBasedLighting.prototype.update = function (frameState) {
-  this._shouldRegenerateShaders = false;
-  frameState.brdfLutGenerator.update(frameState);
+  if (frameState.frameNumber === this._previousFrameNumber) {
+    return;
+  }
 
+  this._previousFrameNumber = frameState.frameNumber;
   const context = frameState.context;
 
-  if (this._specularMapAtlasDirty) {
-    createSpecularMapAtlas(this, context);
-    this._specularMapAtlasDirty = false;
+  frameState.brdfLutGenerator.update(frameState);
+  this._shouldRegenerateShaders = false;
+
+  const iblFactor = this._imageBasedLightingFactor;
+  const previousIBLFactor = this._previousImageBasedLightingFactor;
+  if (!Cartesian2.equals(iblFactor, previousIBLFactor)) {
+    this._shouldRegenerateShaders =
+      (iblFactor.x > 0.0 && previousIBLFactor.x === 0.0) ||
+      (iblFactor.x === 0.0 && previousIBLFactor.x > 0.0);
+    this._shouldRegenerateShaders =
+      this._shouldRegenerateShaders ||
+      (iblFactor.y > 0.0 && previousIBLFactor.y === 0.0) ||
+      (iblFactor.y === 0.0 && previousIBLFactor.y > 0.0);
+  }
+
+  if (this._luminanceAtZenith !== this._previousLuminanceAtZenith) {
+    this._shouldRegenerateShaders =
+      this._shouldRegenerateShaders ||
+      defined(this._luminanceAtZenith) !==
+        defined(this._previousLuminanceAtZenith);
+  }
+
+  if (this._specularEnvironmentMapAtlasDirty) {
+    createSpecularEnvironmentMapAtlas(this, context);
+    this._specularEnvironmentMapAtlasDirty = false;
   }
 
   if (defined(this._specularEnvironmentMapAtlas)) {
@@ -354,6 +465,13 @@ ImageBasedLighting.prototype.update = function (frameState) {
       this._iblReferenceFrameMatrix
     );
   }
+
+  this._previousImageBasedLightingFactor = Cartesian2.clone(
+    this._imageBasedLightingFactor,
+    this._previousImageBasedLightingFactor
+  );
+
+  this._previousLuminanceAtZenith = this._luminanceAtZenith;
 };
 
 ImageBasedLighting.prototype.isDestroyed = function () {

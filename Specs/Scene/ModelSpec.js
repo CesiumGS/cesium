@@ -857,7 +857,7 @@ describe(
       texturedBoxModel.distanceDisplayCondition = undefined;
     });
 
-    it("renders with spherical harmonics", function () {
+    it("renders with spherical harmonic coefficients", function () {
       if (!scene.highDynamicRangeSupported) {
         return;
       }
@@ -956,7 +956,7 @@ describe(
       });
     });
 
-    it("distanceDisplayCondition throws when ner >= far", function () {
+    it("distanceDisplayCondition throws when near >= far", function () {
       expect(function () {
         texturedBoxModel.distanceDisplayCondition = new DistanceDisplayCondition(
           100.0,
@@ -3845,13 +3845,27 @@ describe(
       });
     });
 
-    it("renders with imageBaseLightingFactor", function () {
+    it("renders with imageBasedLightingFactor", function () {
       return loadModel(boxPbrUrl).then(function (model) {
         model.show = true;
         model.zoomTo();
         expect(scene).toRenderAndCall(function (rgba) {
           expect(rgba).not.toEqual([0, 0, 0, 255]);
           model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+          expect(scene).notToRender(rgba);
+
+          primitives.remove(model);
+        });
+      });
+    });
+
+    it("renders with luminanceAtZenith", function () {
+      return loadModel(boxPbrUrl).then(function (model) {
+        model.show = true;
+        model.zoomTo();
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          model.luminanceAtZenith = 0.0;
           expect(scene).notToRender(rgba);
 
           primitives.remove(model);
