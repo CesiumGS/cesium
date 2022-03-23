@@ -21,7 +21,7 @@ vec3 czm_valueTransform(vec3 offset, vec3 scale, vec3 value) {
   return scale * value + offset;
 }
 
-vec4 czm_valueTransform(vec3 offset, vec3 scale, vec3 value) {
+vec4 czm_valueTransform(vec4 offset, vec4 scale, vec4 value) {
   return scale * value + offset;
 }
 
