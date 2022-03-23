@@ -288,7 +288,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       [
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
-        "   Metadata metadata;",
+        "    Metadata metadata;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -298,7 +298,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       [
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
-        "   Metadata metadata;",
+        "    Metadata metadata;",
       ]
     );
 
@@ -376,7 +376,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       [
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
-        "   Metadata metadata;",
+        "    Metadata metadata;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -386,7 +386,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       [
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
-        "   Metadata metadata;",
+        "    Metadata metadata;",
       ]
     );
 
@@ -465,7 +465,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       [
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
-        "   Metadata metadata;",
+        "    Metadata metadata;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -475,7 +475,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       [
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
-        "   Metadata metadata;",
+        "    Metadata metadata;",
       ]
     );
 
@@ -550,7 +550,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       [
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
-        "   Metadata metadata;",
+        "    Metadata metadata;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -560,7 +560,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       [
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
-        "   Metadata metadata;",
+        "    Metadata metadata;",
       ]
     );
 
@@ -635,7 +635,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       [
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
-        "   Metadata metadata;",
+        "    Metadata metadata;",
       ]
     );
   });
@@ -689,7 +689,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       [
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
-        "   Metadata metadata;",
+        "    Metadata metadata;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -699,7 +699,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       [
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
-        "   Metadata metadata;",
+        "    Metadata metadata;",
       ]
     );
 
@@ -768,7 +768,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       [
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
-        "   Metadata metadata;",
+        "    Metadata metadata;",
       ]
     );
     ShaderBuilderTester.expectHasFragmentStruct(
@@ -778,7 +778,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       [
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
-        "   Metadata metadata;",
+        "    Metadata metadata;",
       ]
     );
 
@@ -952,7 +952,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       [
         "    Attributes attributes;",
         "    FeatureIds featureIds;",
-        "   Metadata metadata;",
+        "    Metadata metadata;",
       ]
     );
 
