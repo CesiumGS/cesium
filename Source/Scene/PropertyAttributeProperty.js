@@ -77,6 +77,49 @@ Object.defineProperties(PropertyAttributeProperty.prototype, {
   },
 
   /**
+   * True if offset/scale should be applied. If both offset/scale were
+   * undefined, they default to identity so this property is set false
+   *
+   * @memberof MetadataClassProperty.prototype
+   * @type {Boolean}
+   * @readonly
+   * @private
+   */
+  hasValueTransform: {
+    get: function () {
+      return this._hasValueTransform;
+    },
+  },
+
+  /**
+   * The offset to be added to property values as part of the value transform.
+   *
+   * @memberof MetadataClassProperty.prototype
+   * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @readonly
+   * @private
+   */
+  offset: {
+    get: function () {
+      return this._offset;
+    },
+  },
+
+  /**
+   * The scale to be multiplied to property values as part of the value transform.
+   *
+   * @memberof MetadataClassProperty.prototype
+   * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @readonly
+   * @private
+   */
+  scale: {
+    get: function () {
+      return this._scale;
+    },
+  },
+
+  /**
    * Extras in the JSON object.
    *
    * @memberof PropertyAttributeProperty.prototype

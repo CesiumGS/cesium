@@ -140,13 +140,29 @@ describe(
           shaderBuilder,
           MetadataPipelineStage.STRUCT_ID_METADATA_VS,
           MetadataPipelineStage.STRUCT_NAME_METADATA,
-          ["    float circleT;", "    float iteration;", "    float pointId;"]
+          [
+            "    float circleT;",
+            "    float iteration;",
+            "    float pointId;",
+            "    float toroidalNormalized;",
+            "    float poloidalNormalized;",
+            "    float toroidalAngle;",
+            "    float poloidalAngle;",
+          ]
         );
         ShaderBuilderTester.expectHasFragmentStruct(
           shaderBuilder,
           MetadataPipelineStage.STRUCT_ID_METADATA_FS,
           MetadataPipelineStage.STRUCT_NAME_METADATA,
-          ["    float circleT;", "    float iteration;", "    float pointId;"]
+          [
+            "    float circleT;",
+            "    float iteration;",
+            "    float pointId;",
+            "    float toroidalNormalized;",
+            "    float poloidalNormalized;",
+            "    float toroidalAngle;",
+            "    float poloidalAngle;",
+          ]
         );
         ShaderBuilderTester.expectHasVertexFunction(
           shaderBuilder,
@@ -156,6 +172,10 @@ describe(
             "    metadata.circleT = attributes.circle_t;",
             "    metadata.iteration = attributes.featureId_0;",
             "    metadata.pointId = attributes.featureId_1;",
+            "    metadata.toroidalNormalized = czm_valueTransform(u_toroidalNormalized_offset, u_toroidalNormalized_scale, attributes.featureId_0);",
+            "    metadata.poloidalNormalized = czm_valueTransform(u_poloidalNormalized_offset, u_poloidalNormalized_scale, attributes.featureId_1);",
+            "    metadata.toroidalAngle = czm_valueTransform(u_toroidalAngle_offset, u_toroidalAngle_scale, attributes.featureId_0);",
+            "    metadata.poloidalAngle = czm_valueTransform(u_poloidalAngle_offset, u_poloidalAngle_scale, attributes.featureId_1);",
           ]
         );
         ShaderBuilderTester.expectHasFragmentFunction(
@@ -166,6 +186,10 @@ describe(
             "    metadata.circleT = attributes.circle_t;",
             "    metadata.iteration = attributes.featureId_0;",
             "    metadata.pointId = attributes.featureId_1;",
+            "    metadata.toroidalNormalized = czm_valueTransform(u_toroidalNormalized_offset, u_toroidalNormalized_scale, attributes.featureId_0);",
+            "    metadata.poloidalNormalized = czm_valueTransform(u_poloidalNormalized_offset, u_poloidalNormalized_scale, attributes.featureId_1);",
+            "    metadata.toroidalAngle = czm_valueTransform(u_toroidalAngle_offset, u_toroidalAngle_scale, attributes.featureId_0);",
+            "    metadata.poloidalAngle = czm_valueTransform(u_poloidalAngle_offset, u_poloidalAngle_scale, attributes.featureId_1);",
           ]
         );
         ShaderBuilderTester.expectHasVertexFunction(
@@ -174,10 +198,41 @@ describe(
           MetadataPipelineStage.FUNCTION_SIGNATURE_SET_METADATA_VARYINGS,
           []
         );
-        ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
-        ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, []);
+        ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+          "uniform float u_toroidalNormalized_offset;",
+          "uniform float u_toroidalNormalized_scale;",
+          "uniform float u_poloidalNormalized_offset;",
+          "uniform float u_poloidalNormalized_scale;",
+          "uniform float u_toroidalAngle_offset;",
+          "uniform float u_toroidalAngle_scale;",
+          "uniform float u_poloidalAngle_offset;",
+          "uniform float u_poloidalAngle_scale;",
+        ]);
+        ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+          "uniform float u_toroidalNormalized_offset;",
+          "uniform float u_toroidalNormalized_scale;",
+          "uniform float u_poloidalNormalized_offset;",
+          "uniform float u_poloidalNormalized_scale;",
+          "uniform float u_toroidalAngle_offset;",
+          "uniform float u_toroidalAngle_scale;",
+          "uniform float u_poloidalAngle_offset;",
+          "uniform float u_poloidalAngle_scale;",
+        ]);
 
-        expect(renderResources.uniformMap).toEqual({});
+        // The offsets and scales should be exactly as they appear in the glTF
+        const uniformMap = renderResources.uniformMap;
+        expect(uniformMap.u_toroidalNormalized_offset()).toBe(0);
+        expect(uniformMap.u_toroidalNormalized_scale()).toBe(
+          0.034482758620689655
+        );
+        expect(uniformMap.u_poloidalNormalized_offset()).toBe(0);
+        expect(uniformMap.u_poloidalNormalized_scale()).toBe(
+          0.05263157894736842
+        );
+        expect(uniformMap.u_toroidalAngle_offset()).toBe(0);
+        expect(uniformMap.u_toroidalAngle_scale()).toBe(0.21666156231653746);
+        expect(uniformMap.u_poloidalAngle_offset()).toBe(-3.141592653589793);
+        expect(uniformMap.u_poloidalAngle_scale()).toBe(0.3306939635357677);
       });
     });
   },

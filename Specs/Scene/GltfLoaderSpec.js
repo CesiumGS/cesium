@@ -1657,6 +1657,37 @@ describe(
         expect(propertyAttribute.getProperty("pointId").attribute).toBe(
           "_FEATURE_ID_1"
         );
+
+        // A few more properties were added to test offset/scale
+        const toroidalNormalized = propertyAttribute.getProperty(
+          "toroidalNormalized"
+        );
+        expect(toroidalNormalized.attribute).toBe("_FEATURE_ID_0");
+        expect(toroidalNormalized.hasValueTransform).toBe(true);
+        expect(toroidalNormalized.offset).toBe(0);
+        expect(toroidalNormalized.scale).toBe(0.034482758620689655);
+
+        const poloidalNormalized = propertyAttribute.getProperty(
+          "poloidalNormalized"
+        );
+        expect(poloidalNormalized.attribute).toBe("_FEATURE_ID_1");
+        expect(poloidalNormalized.hasValueTransform).toBe(true);
+        expect(poloidalNormalized.offset).toBe(0);
+        expect(poloidalNormalized.scale).toBe(0.05263157894736842);
+
+        // These two properties have offset/scale in both the class definition
+        // and the property attribute. The latter should be used.
+        const toroidalAngle = propertyAttribute.getProperty("toroidalAngle");
+        expect(toroidalAngle.attribute).toBe("_FEATURE_ID_0");
+        expect(toroidalAngle.hasValueTransform).toBe(true);
+        expect(toroidalAngle.offset).toBe(0);
+        expect(toroidalAngle.scale).toBe(0.21666156231653746);
+
+        const poloidalAngle = propertyAttribute.getProperty("poloidalAngle");
+        expect(poloidalAngle.attribute).toBe("_FEATURE_ID_1");
+        expect(poloidalAngle.hasValueTransform).toBe(true);
+        expect(poloidalAngle.offset).toBe(-3.141592653589793);
+        expect(poloidalAngle.scale).toBe(0.3306939635357677);
       });
     });
 

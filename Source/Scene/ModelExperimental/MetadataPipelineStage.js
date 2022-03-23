@@ -37,11 +37,7 @@ MetadataPipelineStage.process = function (
     return;
   }
 
-  processPropertyAttributes(primitive, renderResources, structuralMetadata);
-
-  // Coming Soon:
-  //processPropertyTextures(renderResources, featureMetadata);
-  //processPropertyTables(renderResources, featureMetadata);
+  processPropertyAttributes(renderResources, primitive, structuralMetadata);
 };
 
 function declareStructsAndFunctions(shaderBuilder) {
@@ -79,12 +75,11 @@ function declareStructsAndFunctions(shaderBuilder) {
 }
 
 function processPropertyAttributes(
-  primitive,
   renderResources,
+  primitive,
   structuralMetadata
 ) {
   const propertyAttributes = structuralMetadata.propertyAttributes;
-  const shaderBuilder = renderResources.shaderBuilder;
 
   if (!defined(propertyAttributes)) {
     return;
@@ -109,7 +104,7 @@ function processPropertyAttributes(
         );
 
         addPropertyAttributeProperty(
-          shaderBuilder,
+          renderResources,
           attributeInfo,
           propertyId,
           property
