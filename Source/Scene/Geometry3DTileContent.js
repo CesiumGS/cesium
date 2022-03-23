@@ -44,7 +44,7 @@ function Geometry3DTileContent(
    * Part of the {@link Cesium3DTileContent} interface.
    */
   this.featurePropertiesDirty = false;
-  this._groupMetadata = undefined;
+  this._group = undefined;
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -137,12 +137,12 @@ Object.defineProperties(Geometry3DTileContent.prototype, {
     },
   },
 
-  groupMetadata: {
+  group: {
     get: function () {
-      return this._groupMetadata;
+      return this._group;
     },
     set: function (value) {
-      this._groupMetadata = value;
+      this._group = value;
     },
   },
 });

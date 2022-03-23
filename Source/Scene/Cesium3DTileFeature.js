@@ -315,7 +315,9 @@ Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
     }
   }
 
-  const groupMetadata = content.groupMetadata;
+  const groupMetadata = defined(content.group)
+    ? content.group.metadata
+    : undefined;
   if (defined(groupMetadata)) {
     if (groupMetadata.hasPropertyBySemantic(name)) {
       return groupMetadata.getPropertyBySemantic(name);

@@ -59,7 +59,7 @@ function Batched3DModel3DTileContent(
   this._contentModelMatrix = undefined;
 
   this.featurePropertiesDirty = false;
-  this._groupMetadata = undefined;
+  this._group = undefined;
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -149,12 +149,12 @@ Object.defineProperties(Batched3DModel3DTileContent.prototype, {
     },
   },
 
-  groupMetadata: {
+  group: {
     get: function () {
-      return this._groupMetadata;
+      return this._group;
     },
     set: function (value) {
-      this._groupMetadata = value;
+      this._group = value;
     },
   },
 });

@@ -4,7 +4,7 @@ import {
   MetadataClass,
 } from "../../Source/Cesium.js";
 
-describe("Scene/findTileMetadata", function () {
+fdescribe("Scene/findTileMetadata", function () {
   let tileClass;
   let mockTileset;
   beforeAll(function () {
@@ -25,11 +25,9 @@ describe("Scene/findTileMetadata", function () {
     });
 
     mockTileset = {
-      metadata: {
-        schema: {
-          classes: {
-            tile: tileClass,
-          },
+      schema: {
+        classes: {
+          tile: tileClass,
         },
       },
     };

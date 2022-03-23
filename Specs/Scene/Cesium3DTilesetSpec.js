@@ -6265,7 +6265,7 @@ describe(
           // the parent tile in this dataset does not have a group defined,
           // but its children do.
           const parent = tileset.root;
-          const group = parent.content.groupMetadata;
+          const group = parent.content.group;
           expect(group).not.toBeDefined();
 
           const expected = {
@@ -6278,7 +6278,7 @@ describe(
           const childrenTiles = parent.children;
           childrenTiles.forEach(function (tile) {
             const uri = tile._header.content.uri;
-            expect(tile.content.groupMetadata).toBe(expected[uri]);
+            expect(tile.content.group.metadata).toBe(expected[uri]);
           });
         });
       });
@@ -6722,7 +6722,7 @@ describe(
           // the parent tile in this dataset does not have a group defined,
           // but its children do.
           const parent = tileset.root;
-          const group = parent.content.groupMetadata;
+          const group = parent.content.group;
           expect(group).not.toBeDefined();
 
           const expected = {
@@ -6735,7 +6735,7 @@ describe(
           const childrenTiles = parent.children;
           childrenTiles.forEach(function (tile) {
             const uri = tile._header.content.uri;
-            expect(tile.content.groupMetadata).toBe(expected[uri]);
+            expect(tile.content.group.metadata).toBe(expected[uri]);
           });
         });
       });

@@ -1,5 +1,6 @@
 import {
   Cartesian3,
+  Cesium3DContentGroup,
   Cesium3DTileset,
   Color,
   HeadingPitchRange,
@@ -397,27 +398,29 @@ describe(
         });
       });
 
-      it("groupMetadata returns undefined", function () {
+      it("group metadata returns undefined", function () {
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
           function (tileset) {
             const content = tileset.root.content;
-            expect(content.groupMetadata).not.toBeDefined();
+            expect(content.group).not.toBeDefined();
           }
         );
       });
 
-      it("assigning groupMetadata throws", function () {
+      it("assigning group metadata throws", function () {
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
           function (tileset) {
             expect(function () {
               const content = tileset.root.content;
-              content.groupMetadata = groupMetadata;
+              content.group = new Cesium3DContentGroup({
+                metadata: groupMetadata,
+              });
             }).toThrowDeveloperError();
           }
         );
       });
 
-      it("initializes groupMetadata for inner contents", function () {
+      it("initializes group metadata for inner contents", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
           withGroupMetadataUrl
@@ -426,7 +429,7 @@ describe(
           const innerContents = multipleContents.innerContents;
 
           const buildingsContent = innerContents[0];
-          let groupMetadata = buildingsContent.groupMetadata;
+          let groupMetadata = buildingsContent.group.metadata;
           expect(groupMetadata).toBeDefined();
           expect(groupMetadata.getProperty("color")).toEqual(
             new Cartesian3(255, 127, 0)
@@ -435,7 +438,7 @@ describe(
           expect(groupMetadata.getProperty("isInstanced")).toBe(false);
 
           const cubesContent = innerContents[1];
-          groupMetadata = cubesContent.groupMetadata;
+          groupMetadata = cubesContent.group.metadata;
           expect(groupMetadata).toBeDefined();
           expect(groupMetadata.getProperty("color")).toEqual(
             new Cartesian3(0, 255, 127)
@@ -445,7 +448,7 @@ describe(
         });
       });
 
-      it("initializes groupMetadata for inner contents (legacy)", function () {
+      it("initializes group metadata for inner contents (legacy)", function () {
         return Cesium3DTilesTester.loadTileset(
           scene,
           withGroupMetadataLegacyUrl
@@ -454,7 +457,7 @@ describe(
           const innerContents = multipleContents.innerContents;
 
           const buildingsContent = innerContents[0];
-          let groupMetadata = buildingsContent.groupMetadata;
+          let groupMetadata = buildingsContent.group.metadata;
           expect(groupMetadata).toBeDefined();
           expect(groupMetadata.getProperty("color")).toEqual(
             new Cartesian3(255, 127, 0)
@@ -463,7 +466,7 @@ describe(
           expect(groupMetadata.getProperty("isInstanced")).toBe(false);
 
           const cubesContent = innerContents[1];
-          groupMetadata = cubesContent.groupMetadata;
+          groupMetadata = cubesContent.group.metadata;
           expect(groupMetadata).toBeDefined();
           expect(groupMetadata.getProperty("color")).toEqual(
             new Cartesian3(0, 255, 127)
