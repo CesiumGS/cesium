@@ -455,7 +455,7 @@ void main()
         // Blend in atmosphere
         vec3 origin = vec3(0.0);
         vec4 blendColor = computeFinalColor(origin, atmosphereLightDirection, v_fogRayleighColor, v_fogMieColor, v_fogOpacity);
-        finalColor = finalColor * (blendColor.a) + blendColor;
+        finalColor = finalColor * (1.0 - blendColor.a) + blendColor;
     }
 #endif
 

@@ -19,7 +19,7 @@ void main (void)
 
 #ifdef PER_FRAGMENT_ATMOSPHERE
     computeAtmosphericScattering(
-        czm_viewerPositionWC,
+        v_outerPositionWC,
         lightDirection,
         rayleighColor,
         mieColor,
