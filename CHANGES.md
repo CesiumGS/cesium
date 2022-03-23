@@ -8,6 +8,7 @@
 - `ArcGisMapServerImageryProvider.readyPromise` will not reject if there is a failure unless the request cannot be retried.
 - `SingleTileImageryProvider.readyPromise` will not reject if there is a failure unless the request cannot be retried.
 - Removed links to SpecRunner.html and related Jasmine files for running unit tests in browsers.
+- Tilesets and models should now specify image-based lighting parameters in `ImageBasedLighting` instead of as individual options. The individual parameters are deprecated and will be removed in Cesium 1.94. [#10226](https://github.com/CesiumGS/cesium/pull/10226)
 
 ##### Additions :tada:
 

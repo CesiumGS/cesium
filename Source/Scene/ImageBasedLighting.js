@@ -21,6 +21,7 @@ const scratchIBLReferenceFrameMatrix3 = new Matrix3();
  * Otherwise, the application is responsible for calling destroy().
  *</p>
  *
+ * @alias ImageBasedLighting
  * @constructor
  *
  * @param {Cartesian2} [options.imageBasedLightingFactor=Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
@@ -281,6 +282,8 @@ Object.defineProperties(ImageBasedLighting.prototype, {
    *
    * @memberof ImageBasedLighting.prototype
    * @type {Boolean}
+   *
+   * @private
    */
   enabled: {
     get: function () {
@@ -535,10 +538,37 @@ ImageBasedLighting.prototype.update = function (frameState) {
   }
 };
 
+/**
+ * Returns true if this object was destroyed; otherwise, false.
+ * <br /><br />
+ * If this object was destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
+ * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ *
+ * @see ImageBasedLighting#destroy
+ * @private
+ */
 ImageBasedLighting.prototype.isDestroyed = function () {
   return false;
 };
 
+/**
+ * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+ * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+ * <br /><br />
+ * Once an object is destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+ * assign the return value (<code>undefined</code>) to the object as done in the example.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @example
+ * imageBasedLighting = imageBasedLighting && imageBasedLighting.destroy();
+ *
+ * @see ImageBasedLighting#isDestroyed
+ * @private
+ */
 ImageBasedLighting.prototype.destroy = function () {
   this._specularEnvironmentMapAtlas =
     this._specularEnvironmentMapAtlas &&

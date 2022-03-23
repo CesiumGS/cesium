@@ -326,6 +326,7 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     colorBlendMode: tileset.colorBlendMode,
     colorBlendAmount: tileset.colorBlendAmount,
     lightColor: tileset.lightColor,
+    imageBasedLighting: tileset.imageBasedLighting,
     featureIdLabel: tileset.featureIdLabel,
     instanceFeatureIdLabel: tileset.instanceFeatureIdLabel,
     pointCloudShading: tileset.pointCloudShading,

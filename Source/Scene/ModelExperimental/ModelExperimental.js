@@ -1238,6 +1238,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
+ * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
@@ -1418,6 +1419,7 @@ function makeModelOptions(loader, modelType, options) {
     instanceFeatureIdLabel: options.instanceFeatureIdLabel,
     pointCloudShading: options.pointCloudShading,
     lightColor: options.lightColor,
+    imageBasedLighting: options.imageBasedLighting,
     backFaceCulling: options.backFaceCulling,
     shadows: options.shadows,
     showCreditsOnScreen: options.showCreditsOnScreen,
