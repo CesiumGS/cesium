@@ -1404,6 +1404,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * @memberof Cesium3DTileset.prototype
    *
    * @type {TilesetMetadata}
+   * @private
    * @readonly
    *
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -1425,6 +1426,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * @memberof Cesium3DTileset.prototype
    *
    * @type {MetadataSchema}
+   * @private
    * @readonly
    *
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
