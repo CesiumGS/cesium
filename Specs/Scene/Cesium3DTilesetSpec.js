@@ -4819,7 +4819,7 @@ describe(
               expect(statistics.numberOfCommands).toBe(3); // One for each level of the tree
               expect(
                 statistics.numberOfTilesWithContentReady
-              ).toBeGreaterThanOrEqualTo(3);
+              ).toBeGreaterThanOrEqual(3);
               expect(statistics.selected).toBe(3);
               expect(statistics.visited).toBeGreaterThan(3);
               expect(statistics.numberOfTilesTotal).toBe(21);

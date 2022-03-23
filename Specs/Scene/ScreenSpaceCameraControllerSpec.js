@@ -1881,7 +1881,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     updateController();
 
-    expect(camera.positionCartographic.height).toBeGreaterThanOrEqualTo(
+    expect(camera.positionCartographic.height).toBeGreaterThanOrEqual(
       controller.minimumZoomDistance
     );
   });

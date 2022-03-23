@@ -1,5 +1,6 @@
 import { FeatureDetection } from "../../Source/Cesium.js";
 import { TaskProcessor } from "../../Source/Cesium.js";
+import { RuntimeError } from "../../Source/Cesium.js";
 import absolutize from "../absolutize.js";
 
 describe("Core/TaskProcessor", function () {
@@ -240,6 +241,6 @@ describe("Core/TaskProcessor", function () {
         modulePath: "TestWasm/testWasmWrapper",
         wasmBinaryFile: binaryUrl,
       });
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 });

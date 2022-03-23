@@ -49,7 +49,7 @@ describe("Scene/SphereEmitter", function () {
 
     for (let i = 0; i < 1000; ++i) {
       emitter.emit(particle);
-      expect(Cartesian3.magnitude(particle.position)).toBeLessThanOrEqualTo(
+      expect(Cartesian3.magnitude(particle.position)).toBeLessThanOrEqual(
         emitter.radius
       );
       expect(particle.velocity).toEqual(

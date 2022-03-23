@@ -7,6 +7,7 @@ import {
   MetadataSchema,
   Resource,
   ResourceCache,
+  RuntimeError,
 } from "../../Source/Cesium.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
 import MetadataTester from "../MetadataTester.js";
@@ -848,7 +849,7 @@ describe("Scene/ImplicitSubtree", function () {
         y: 0,
       });
       return subtree.getTileIndex(implicitCoordinates);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
     expect(function () {
       const implicitCoordinates = new ImplicitTileCoordinates({
         subdivisionScheme: implicitQuadtree.subdivisionScheme,
@@ -858,7 +859,7 @@ describe("Scene/ImplicitSubtree", function () {
         y: 0,
       });
       return subtree.getTileIndex(implicitCoordinates);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 
   it("getTileIndex computes bit index for a tile in the subtree", function () {
@@ -987,7 +988,7 @@ describe("Scene/ImplicitSubtree", function () {
         y: 0,
       });
       return subtree.getChildSubtreeIndex(implicitCoordinates);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
     expect(function () {
       const implicitCoordinates = new ImplicitTileCoordinates({
         subdivisionScheme: implicitQuadtree.subdivisionScheme,
@@ -997,7 +998,7 @@ describe("Scene/ImplicitSubtree", function () {
         y: 0,
       });
       return subtree.getChildSubtreeIndex(implicitCoordinates);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 
   it("getChildSubtreeIndex computes bit index for a tile in the subtree", function () {

@@ -2,6 +2,7 @@ import {
   B3dmParser,
   Cartesian3,
   HeadingPitchRange,
+  RuntimeError,
 } from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
@@ -49,7 +50,7 @@ describe(
       });
       expect(function () {
         B3dmParser.parse(arrayBuffer);
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("throws with empty gltf", function () {
@@ -57,7 +58,7 @@ describe(
       const arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer();
       expect(function () {
         B3dmParser.parse(arrayBuffer);
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("throws on undefined arrayBuffer", function () {

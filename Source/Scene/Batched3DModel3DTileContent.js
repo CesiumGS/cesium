@@ -446,6 +446,7 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
   model.backFaceCulling = tileset.backFaceCulling;
   model.debugWireframe = tileset.debugWireframe;
   model.showCreditsOnScreen = tileset.showCreditsOnScreen;
+  model.splitDirection = tileset.splitDirection;
 
   // Update clipping planes
   const tilesetClippingPlanes = tileset.clippingPlanes;

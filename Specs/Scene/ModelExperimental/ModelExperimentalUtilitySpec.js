@@ -1,5 +1,6 @@
 import {
   AttributeType,
+  Axis,
   Cartesian3,
   Math as CesiumMath,
   InstanceAttributeSemantic,
@@ -249,6 +250,42 @@ describe("Scene/ModelExperimental/ModelExperimentalUtility", function () {
       9.526279441628825,
       CesiumMath.EPSILON8
     );
+  });
+
+  it("correctModelMatrix works", function () {
+    const modelMatrix = Matrix4.IDENTITY;
+
+    const expectedYToZMatrix = Axis.Y_UP_TO_Z_UP;
+    const expectedXToZMatrix = Axis.X_UP_TO_Z_UP;
+    const expectedCombinedMatrix = Matrix4.multiplyTransformation(
+      expectedYToZMatrix,
+      Axis.Z_UP_TO_X_UP,
+      new Matrix4()
+    );
+
+    const resultMatrix = ModelExperimentalUtility.correctModelMatrix(
+      modelMatrix,
+      Axis.Y,
+      Axis.X,
+      new Matrix4()
+    );
+    expect(Matrix4.equals(resultMatrix, expectedYToZMatrix)).toBe(true);
+
+    ModelExperimentalUtility.correctModelMatrix(
+      modelMatrix,
+      Axis.X,
+      Axis.Y,
+      resultMatrix
+    );
+    expect(Matrix4.equals(resultMatrix, expectedXToZMatrix)).toBe(true);
+
+    ModelExperimentalUtility.correctModelMatrix(
+      modelMatrix,
+      Axis.Y,
+      Axis.Z,
+      resultMatrix
+    );
+    expect(Matrix4.equals(resultMatrix, expectedCombinedMatrix)).toBe(true);
   });
 
   it("getAttributeBySemantic works", function () {

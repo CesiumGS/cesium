@@ -27,6 +27,7 @@ import ModelInstance from "./ModelInstance.js";
 import ModelUtility from "./ModelUtility.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
+import SplitDirection from "./SplitDirection.js";
 
 const LoadState = {
   NEEDS_LOAD: 0,
@@ -65,6 +66,7 @@ const LoadState = {
  * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
+ * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this collection.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for the collection.
  * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the instances in wireframe.
  * @exception {DeveloperError} Must specify either <options.gltf> or <options.url>, but not both.
@@ -143,6 +145,17 @@ function ModelInstanceCollection(options) {
   this._shadows = this.shadows;
 
   this._pickIdLoaded = options.pickIdLoaded;
+
+  /**
+   * The {@link SplitDirection} to apply to this collection.
+   *
+   * @type {SplitDirection}
+   * @default {@link SplitDirection.NONE}
+   */
+  this.splitDirection = defaultValue(
+    options.splitDirection,
+    SplitDirection.NONE
+  );
 
   this.debugShowBoundingVolume = defaultValue(
     options.debugShowBoundingVolume,
@@ -1048,6 +1061,7 @@ ModelInstanceCollection.prototype.update = function (frameState) {
   model.sphericalHarmonicCoefficients = this.sphericalHarmonicCoefficients;
   model.specularEnvironmentMaps = this.specularEnvironmentMaps;
   model.showCreditsOnScreen = this.showCreditsOnScreen;
+  model.splitDirection = this.splitDirection;
 
   model.update(frameState);
 

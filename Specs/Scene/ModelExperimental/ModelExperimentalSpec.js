@@ -37,6 +37,7 @@ describe(
     const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
     const boxInstanced =
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
+    const boxUnlitUrl = "./Data/Models/PBR/BoxUnlit/BoxUnlit.gltf";
     const boxBackFaceCullingUrl =
       "./Data/Models/Box-Back-Face-Culling/Box-Back-Face-Culling.gltf";
     const boxBackFaceCullingOffset = new HeadingPitchRange(Math.PI / 2, 0, 2.0);
@@ -70,9 +71,12 @@ describe(
       camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
     }
 
-    function verifyRender(model, shouldRender) {
+    function verifyRender(model, shouldRender, zoomToModel) {
       expect(model.ready).toBe(true);
-      zoomTo(model);
+      zoomToModel = defaultValue(zoomToModel, true);
+      if (zoomToModel) {
+        zoomTo(model);
+      }
       expect({
         scene: scene,
         time: JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC")),
@@ -698,94 +702,350 @@ describe(
       });
     });
 
-    it("enables back-face culling", function () {
+    it("initializes with light color", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl, lightColor: Cartesian3.ZERO },
+        scene
+      ).then(function (model) {
+        verifyRender(model, false);
+      });
+    });
+
+    it("changing light color works", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl },
+        scene
+      ).then(function (model) {
+        model.lightColor = Cartesian3.ZERO;
+        verifyRender(model, false);
+
+        model.lightColor = new Cartesian3(1.0, 0.0, 0.0);
+        verifyRender(model, true);
+
+        model.lightColor = undefined;
+        verifyRender(model, true);
+      });
+    });
+
+    it("light color doesn't affect unlit models", function () {
+      return loadAndZoomToModelExperimental({ gltf: boxUnlitUrl }, scene).then(
+        function (model) {
+          verifyRender(model, true);
+
+          model.lightColor = Cartesian3.ZERO;
+          verifyRender(model, true);
+        }
+      );
+    });
+
+    it("initializes with scale", function () {
       return loadAndZoomToModelExperimental(
         {
-          gltf: boxBackFaceCullingUrl,
-          backFaceCulling: true,
-          offset: boxBackFaceCullingOffset,
+          gltf: boxTexturedGlbUrl,
+          upAxis: Axis.Z,
+          forwardAxis: Axis.X,
+          scale: 0.0,
         },
         scene
       ).then(function (model) {
-        const renderOptions = {
-          scene: scene,
-          time: new JulianDate(2456659.0004050927),
-        };
+        scene.renderForSpecs();
 
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).toEqual([0, 0, 0, 255]);
+        verifyRender(model, false);
+        expect(model.boundingSphere.center).toEqual(Cartesian3.ZERO);
+        expect(model.boundingSphere.radius).toEqual(0.0);
+      });
+    });
+
+    it("changing scale works", function () {
+      const updateModelMatrix = spyOn(
+        ModelExperimentalSceneGraph.prototype,
+        "updateModelMatrix"
+      ).and.callThrough();
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          upAxis: Axis.Z,
+          forwardAxis: Axis.X,
+        },
+        scene
+      ).then(function (model) {
+        verifyRender(model, true);
+        model.scale = 0.0;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        verifyRender(model, false);
+
+        model.scale = 1.0;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        verifyRender(model, true);
+      });
+    });
+
+    it("changing scale affects bounding sphere", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: new Uint8Array(buffer),
+            scale: 10,
+          },
+          scene
+        ).then(function (model) {
+          scene.renderForSpecs();
+
+          const expectedRadius = 0.866;
+          const boundingSphere = model.boundingSphere;
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqualEpsilon(
+            expectedRadius * 10.0,
+            CesiumMath.EPSILON3
+          );
+
+          model.scale = 0.0;
+          scene.renderForSpecs();
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqual(0.0);
+
+          model.scale = 1.0;
+          scene.renderForSpecs();
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqualEpsilon(
+            expectedRadius,
+            CesiumMath.EPSILON3
+          );
         });
       });
     });
 
-    it("disables back-face culling", function () {
-      return loadAndZoomToModelExperimental(
-        {
-          gltf: boxBackFaceCullingUrl,
-          backFaceCulling: false,
-          offset: boxBackFaceCullingOffset,
-        },
-        scene
-      ).then(function (model) {
-        const renderOptions = {
-          scene: scene,
-          time: new JulianDate(2456659.0004050927),
-        };
+    it("initializes with minimumPixelSize", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: new Uint8Array(buffer),
+            upAxis: Axis.Z,
+            forwardAxis: Axis.X,
+            minimumPixelSize: 1,
+            offset: new HeadingPitchRange(0, 0, 500),
+          },
+          scene
+        ).then(function (model) {
+          const expectedRadius = 0.866;
+          scene.renderForSpecs();
+          verifyRender(model, true, false);
 
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          // Verify that minimumPixelSize didn't affect other parameters
+          expect(model.scale).toEqual(1.0);
+          expect(model.boundingSphere.radius).toEqualEpsilon(
+            expectedRadius,
+            CesiumMath.EPSILON3
+          );
         });
       });
     });
 
-    it("ignores back-face culling when translucent", function () {
+    it("changing minimumPixelSize works", function () {
+      const updateModelMatrix = spyOn(
+        ModelExperimentalSceneGraph.prototype,
+        "updateModelMatrix"
+      ).and.callThrough();
       return loadAndZoomToModelExperimental(
         {
-          gltf: boxBackFaceCullingUrl,
-          backFaceCulling: true,
-          offset: boxBackFaceCullingOffset,
+          gltf: boxTexturedGlbUrl,
+          upAxis: Axis.Z,
+          forwardAxis: Axis.X,
+          minimumPixelSize: 1,
+          offset: new HeadingPitchRange(0, 0, 500),
         },
         scene
       ).then(function (model) {
-        const renderOptions = {
-          scene: scene,
-          time: new JulianDate(2456659.0004050927),
-        };
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        verifyRender(model, true, false);
 
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).toEqual([0, 0, 0, 255]);
-        });
+        model.minimumPixelSize = 0.0;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        verifyRender(model, false, false);
 
-        model.color = new Color(0, 0, 1.0, 0.5);
+        model.minimumPixelSize = 1;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        verifyRender(model, true, false);
+      });
+    });
 
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual([0, 0, 0, 255]);
+    it("changing minimumPixelSize doesn't affect bounding sphere or scale", function () {
+      const updateModelMatrix = spyOn(
+        ModelExperimentalSceneGraph.prototype,
+        "updateModelMatrix"
+      ).and.callThrough();
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          upAxis: Axis.Z,
+          forwardAxis: Axis.X,
+          minimumPixelSize: 1,
+          offset: new HeadingPitchRange(0, 0, 500),
+        },
+        scene
+      ).then(function (model) {
+        const expectedRadius = 0.866;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        expect(model.scale).toEqual(1.0);
+        expect(model.boundingSphere.radius).toEqualEpsilon(
+          expectedRadius,
+          CesiumMath.EPSILON3
+        );
+
+        model.minimumPixelSize = 0.0;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        expect(model.scale).toEqual(1.0);
+        expect(model.boundingSphere.radius).toEqualEpsilon(
+          expectedRadius,
+          CesiumMath.EPSILON3
+        );
+
+        model.minimumPixelSize = 1;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        expect(model.scale).toEqual(1.0);
+        expect(model.boundingSphere.radius).toEqualEpsilon(
+          expectedRadius,
+          CesiumMath.EPSILON3
+        );
+      });
+    });
+
+    it("initializes with maximumScale", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: new Uint8Array(buffer),
+            upAxis: Axis.Z,
+            forwardAxis: Axis.X,
+            maximumScale: 0.0,
+          },
+          scene
+        ).then(function (model) {
+          scene.renderForSpecs();
+          verifyRender(model, false);
+          expect(model.boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(model.boundingSphere.radius).toEqual(0.0);
         });
       });
     });
 
-    it("toggles back-face culling at runtime", function () {
+    it("changing maximumScale works", function () {
+      const updateModelMatrix = spyOn(
+        ModelExperimentalSceneGraph.prototype,
+        "updateModelMatrix"
+      ).and.callThrough();
       return loadAndZoomToModelExperimental(
         {
-          gltf: boxBackFaceCullingUrl,
-          backFaceCulling: false,
-          offset: boxBackFaceCullingOffset,
+          gltf: boxTexturedGlbUrl,
+          upAxis: Axis.Z,
+          forwardAxis: Axis.X,
+          scale: 2.0,
         },
         scene
       ).then(function (model) {
-        const renderOptions = {
-          scene: scene,
-          time: new JulianDate(2456659.0004050927),
-        };
+        scene.renderForSpecs();
+        verifyRender(model, true);
 
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        model.maximumScale = 0.0;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        verifyRender(model, false);
+
+        model.maximumScale = 1.0;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        verifyRender(model, true);
+      });
+    });
+
+    it("changing maximumScale affects bounding sphere", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: new Uint8Array(buffer),
+            debugShowBoundingVolume: true,
+            scale: 20,
+            maximumScale: 10,
+          },
+          scene
+        ).then(function (model) {
+          scene.renderForSpecs();
+
+          const expectedRadius = 0.866;
+          const boundingSphere = model.boundingSphere;
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqualEpsilon(
+            expectedRadius * 10.0,
+            CesiumMath.EPSILON3
+          );
+
+          model.maximumScale = 0.0;
+          scene.renderForSpecs();
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqual(0.0);
+
+          model.maximumScale = 1.0;
+          scene.renderForSpecs();
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqualEpsilon(
+            expectedRadius,
+            CesiumMath.EPSILON3
+          );
         });
+      });
+    });
 
-        model.backFaceCulling = true;
+    it("changing maximumScale affects minimumPixelSize", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: new Uint8Array(buffer),
+            debugShowBoundingVolume: true,
+            minimumPixelSize: 1,
+            maximumScale: 10,
+          },
+          scene
+        ).then(function (model) {
+          scene.renderForSpecs();
 
-        expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).toEqual([0, 0, 0, 255]);
+          const expectedRadius = 0.866;
+          const boundingSphere = model.boundingSphere;
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqualEpsilon(
+            expectedRadius,
+            CesiumMath.EPSILON3
+          );
+
+          model.maximumScale = 0.0;
+          scene.renderForSpecs();
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqual(0.0);
+
+          model.maximumScale = 10.0;
+          scene.renderForSpecs();
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqualEpsilon(
+            expectedRadius,
+            CesiumMath.EPSILON3
+          );
         });
       });
     });
