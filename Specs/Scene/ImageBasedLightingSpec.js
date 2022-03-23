@@ -1,4 +1,8 @@
-import { Cartesian2, ImageBasedLighting } from "../../Source/Cesium.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  ImageBasedLighting,
+} from "../../Source/Cesium.js";
 
 describe("Scene/ImageBasedLighting", function () {
   it("constructs with default values", function () {
@@ -52,7 +56,7 @@ describe("Scene/ImageBasedLighting", function () {
     }).toThrowDeveloperError();
   });
 
-  it("enabled works", function () {
+  it("enabled returns correct values", function () {
     const imageBasedLighting = new ImageBasedLighting();
     expect(imageBasedLighting.enabled).toBe(true);
 
@@ -61,5 +65,29 @@ describe("Scene/ImageBasedLighting", function () {
 
     imageBasedLighting.imageBasedLightingFactor = new Cartesian2(0.5, 0.0);
     expect(imageBasedLighting.enabled).toBe(true);
+  });
+
+  it("useSphericalHarmonicCoefficients returns correct values", function () {
+    // These are dummy values, not meant to represent valid spherical harmonic coefficients.
+    const testCoefficients = [
+      new Cartesian3(1, 1, 1),
+      new Cartesian3(2, 2, 2),
+      new Cartesian3(3, 3, 3),
+      new Cartesian3(4, 4, 4),
+      new Cartesian3(5, 5, 5),
+      new Cartesian3(6, 6, 6),
+      new Cartesian3(7, 7, 7),
+      new Cartesian3(8, 8, 8),
+      new Cartesian3(9, 9, 9),
+    ];
+
+    const imageBasedLighting = new ImageBasedLighting();
+    expect(imageBasedLighting.useSphericalHarmonicCoefficients).toBe(false);
+
+    imageBasedLighting.sphericalHarmonicCoefficients = testCoefficients;
+    expect(imageBasedLighting.useSphericalHarmonicCoefficients).toBe(true);
+
+    imageBasedLighting.sphericalHarmonicCoefficients = undefined;
+    expect(imageBasedLighting.useSphericalHarmonicCoefficients).toBe(false);
   });
 });

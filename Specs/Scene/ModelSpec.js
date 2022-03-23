@@ -939,13 +939,14 @@ describe(
         m.specularEnvironmentMaps =
           "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2";
 
+        const ibl = m.imageBasedLighting;
         return pollToPromise(function () {
           scene.highDynamicRange = true;
           scene.render();
           scene.highDynamicRange = false;
           return (
-            defined(m._specularEnvironmentMapAtlas) &&
-            m._specularEnvironmentMapAtlas.ready
+            defined(ibl.specularEnvironmentMapAtlas) &&
+            ibl.specularEnvironmentMapAtlas.ready
           );
         }).then(function () {
           scene.highDynamicRange = true;
