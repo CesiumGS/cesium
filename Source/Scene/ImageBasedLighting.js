@@ -89,6 +89,8 @@ export default function ImageBasedLighting(options) {
   this._specularEnvironmentMaps = options.specularEnvironmentMaps;
   this._specularEnvironmentMapAtlas = undefined;
   this._specularEnvironmentMapAtlasDirty = true;
+  this._specularEnvironmentMapLoaded = false;
+  this._previousSpecularEnvironmentMapLoaded = false;
 
   this._useDefaultSpecularMaps = false;
   this._useDefaultSphericalHarmonics = false;
@@ -228,9 +230,12 @@ Object.defineProperties(ImageBasedLighting.prototype, {
       return this._specularEnvironmentMaps;
     },
     set: function (value) {
-      this._specularEnvironmentMapAtlasDirty =
-        this._specularEnvironmentMapAtlasDirty ||
-        value !== this._specularEnvironmentMaps;
+      if (value !== this._specularEnvironmentMaps) {
+        this._specularEnvironmentMapAtlasDirty =
+          this._specularEnvironmentMapAtlasDirty ||
+          value !== this._specularEnvironmentMaps;
+        this._specularEnvironmentMapLoaded = false;
+      }
       this._specularEnvironmentMaps = value;
     },
   },
@@ -393,7 +398,7 @@ function createSpecularEnvironmentMapAtlas(imageBasedLighting, context) {
 
     atlas.readyPromise
       .then(function () {
-        imageBasedLighting._shouldRegenerateShaders = true;
+        imageBasedLighting._specularEnvironmentMapLoaded = true;
       })
       .catch(function (error) {
         console.error(`Error loading specularEnvironmentMaps: ${error}`);
@@ -453,6 +458,13 @@ ImageBasedLighting.prototype.update = function (frameState) {
 
     this._previousSphericalHarmonicCoefficients = this._sphericalHarmonicCoefficients;
   }
+
+  this._shouldRegenerateShaders =
+    this._shouldRegenerateShaders ||
+    this._previousSpecularEnvironmentMapLoaded !==
+      this._specularEnvironmentMapLoaded;
+
+  this._previousSpecularEnvironmentMapLoaded = this._specularEnvironmentMapLoaded;
 
   if (this._specularEnvironmentMapAtlasDirty) {
     createSpecularEnvironmentMapAtlas(this, context);
