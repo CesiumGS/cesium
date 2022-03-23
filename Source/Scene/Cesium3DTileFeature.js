@@ -326,9 +326,8 @@ Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
     }
   }
 
-  let tilesetMetadata = content.tileset.metadata;
-  if (defined(tilesetMetadata) && defined(tilesetMetadata.tileset)) {
-    tilesetMetadata = tilesetMetadata.tileset;
+  const tilesetMetadata = content.tileset.metadata;
+  if (defined(tilesetMetadata)) {
     if (tilesetMetadata.hasPropertyBySemantic(name)) {
       return tilesetMetadata.getPropertyBySemantic(name);
     }
