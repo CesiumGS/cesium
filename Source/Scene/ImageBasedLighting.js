@@ -17,7 +17,8 @@ const scratchIBLReferenceFrameMatrix3 = new Matrix3();
  * <p>
  * If specular environment maps are used, {@link ImageBasedLighting#destroy} must be called
  * when the image-based lighting is no longer needed to clean up GPU resources properly.
- * The application is responsible for calling this method.
+ * If a model or tileset creates an instance of ImageBasedLighting, it will handle this.
+ * Otherwise, the application is responsible for calling destroy().
  *</p>
  *
  * @constructor
@@ -105,7 +106,9 @@ export default function ImageBasedLighting(options) {
   this._previousFrameNumber = undefined;
 
   // Keeps track of the last values for use during update logic
-  this._previousImageBasedLightingFactor = imageBasedLightingFactor;
+  this._previousImageBasedLightingFactor = Cartesian2.clone(
+    imageBasedLightingFactor
+  );
   this._previousLuminanceAtZenith = luminanceAtZenith;
   this._previousSphericalHarmonicCoefficients = sphericalHarmonicCoefficients;
 }

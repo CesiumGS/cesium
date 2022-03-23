@@ -870,7 +870,9 @@ Cesium3DTileBatchTable.prototype.addDerivedCommands = function (
 
   for (let i = commandStart; i < commandEnd; ++i) {
     const command = commandList[i];
-    let derivedCommands = command.derivedCommands.tileset;
+    let derivedCommands = defined(command.derivedCommands)
+      ? command.derivedCommands.tileset
+      : undefined;
     if (!defined(derivedCommands) || command.dirty) {
       derivedCommands = {};
       command.derivedCommands.tileset = derivedCommands;

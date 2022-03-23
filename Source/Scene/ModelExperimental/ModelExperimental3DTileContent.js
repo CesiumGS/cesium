@@ -195,6 +195,7 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.featureIdLabel = tileset.featureIdLabel;
   model.instanceFeatureIdLabel = tileset.instanceFeatureIdLabel;
   model.lightColor = tileset.lightColor;
+  model.imageBasedLighting = tileset.imageBasedLighting;
   model.backFaceCulling = tileset.backFaceCulling;
   model.shadows = tileset.shadows;
   model.showCreditsOnScreen = tileset.showCreditsOnScreen;

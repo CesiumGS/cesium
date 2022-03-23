@@ -7,6 +7,7 @@ import defer from "../../Core/defer.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import GltfLoader from "../GltfLoader.js";
+import ImageBasedLighting from "../ImageBasedLighting.js";
 import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
 import ModelExperimentalType from "./ModelExperimentalType.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
@@ -52,6 +53,7 @@ import ShadowMode from "../ShadowMode.js";
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
+ * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
@@ -188,6 +190,11 @@ export default function ModelExperimental(options) {
   this._pointCloudShading = pointCloudShading;
 
   this._lightColor = Cartesian3.clone(options.lightColor);
+
+  this._imageBasedLighting = defined(options.imageBasedLighting)
+    ? options.imageBasedLighting
+    : new ImageBasedLighting();
+  this._shouldDestroyImageBasedLighting = !defined(options.imageBasedLighting);
 
   this._backFaceCulling = defaultValue(options.backFaceCulling, true);
   this._backFaceCullingDirty = false;
@@ -725,7 +732,10 @@ Object.defineProperties(ModelExperimental.prototype, {
 
   /**
    * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
-   *
+   * <p>
+   * Disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code> will make the
+   * model much darker. Here, increasing the intensity of the light source will make the model brighter.
+   * </p>
    * @memberof ModelExperimental.prototype
    *
    * @type {Cartesian3}
@@ -741,6 +751,35 @@ Object.defineProperties(ModelExperimental.prototype, {
       }
 
       this._lightColor = Cartesian3.clone(value, this._lightColor);
+    },
+  },
+
+  /**
+   * The properties for managing image-based lighting on this model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {ImageBasedLighting}
+   */
+  imageBasedLighting: {
+    get: function () {
+      return this._imageBasedLighting;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("imageBasedLighting", this._imageBasedLighting);
+      //>>includeEnd('debug');
+
+      if (value !== this._imageBasedLighting) {
+        if (
+          this._shouldDestroyImageBasedLighting &&
+          !this._imageBasedLighting.isDestroyed()
+        ) {
+          this._imageBasedLighting.destroy();
+        }
+        this._imageBasedLighting = value;
+        this._shouldDestroyImageBasedLighting = false;
+      }
     },
   },
 
@@ -1142,6 +1181,14 @@ ModelExperimental.prototype.destroy = function () {
   }
 
   this.destroyResources();
+
+  if (
+    this._shouldDestroyImageBasedLighting &&
+    !this._imageBasedLighting.isDestroyed()
+  ) {
+    this._imageBasedLighting.destroy();
+  }
+  this._imageBasedLighting = undefined;
 
   destroyObject(this);
 };

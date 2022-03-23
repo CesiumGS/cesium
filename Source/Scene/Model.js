@@ -221,7 +221,7 @@ const uriToGuid = {};
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
  * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
- * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting for this tileset.
+ * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
  * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
  * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
  * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
@@ -674,12 +674,18 @@ function Model(options) {
 
   this._lightColor = Cartesian3.clone(options.lightColor);
 
+  const hasIndividualIBLParameters =
+    defined(options.imageBasedLightingFactor) ||
+    defined(options.luminanceAtZenith) ||
+    defined(options.sphericalHarmonicCoefficients) ||
+    defined(options.specularEnvironmentMaps);
+
   if (defined(options.imageBasedLighting)) {
     this._imageBasedLighting = options.imageBasedLighting;
     this._shouldDestroyImageBasedLighting = false;
-  } else {
+  } else if (hasIndividualIBLParameters) {
     deprecationWarning(
-      "ModelImageBasedLightingConstructor",
+      "ImageBasedLightingConstructor",
       "Individual image-based lighting parameters were deprecated in Cesium 1.92. They will be removed in version 1.94. Use options.imageBasedLighting instead."
     );
     // Create image-based lighting from the old constructor parameters.
@@ -689,6 +695,9 @@ function Model(options) {
       sphericalHarmonicCoefficients: options.sphericalHarmonicCoefficients,
       specularEnvironmentMaps: options.specularEnvironmentMaps,
     });
+    this._shouldDestroyImageBasedLighting = true;
+  } else {
+    this._imageBasedLighting = new ImageBasedLighting();
     this._shouldDestroyImageBasedLighting = true;
   }
 
@@ -1149,41 +1158,6 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * The properties for managing image-based lighting on this model.
-   *
-   * @memberof Model.prototype
-   *
-   * @type {ImageBasedLighting}
-   */
-  imageBasedLighting: {
-    get: function () {
-      return this._imageBasedLighting;
-    },
-    set: function (value) {
-      this._imageBasedLighting = value;
-      this._shouldRegenerateShaders = true;
-    },
-  },
-
-  /**
-   * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This cartesian is used to scale the final
-   * diffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
-   *
-   * @memberof Model.prototype
-   *
-   * @type {Cartesian2}
-   * @default Cartesian2(1.0, 1.0)
-   */
-  imageBasedLightingFactor: {
-    get: function () {
-      return this._imageBasedLighting.imageBasedLightingFactor;
-    },
-    set: function (value) {
-      this._imageBasedLighting.imageBasedLightingFactor = value;
-    },
-  },
-
-  /**
    * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
    * <p>
    * For example, disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cesium.Cartesian2(0.0, 0.0)</code> will make the
@@ -1209,6 +1183,54 @@ Object.defineProperties(Model.prototype, {
         (defined(lightColor) && !defined(value)) ||
         (defined(value) && !defined(lightColor));
       this._lightColor = Cartesian3.clone(value, lightColor);
+    },
+  },
+
+  /**
+   * The properties for managing image-based lighting on this model.
+   *
+   * @memberof Model.prototype
+   *
+   * @type {ImageBasedLighting}
+   */
+  imageBasedLighting: {
+    get: function () {
+      return this._imageBasedLighting;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("imageBasedLighting", this._imageBasedLighting);
+      //>>includeEnd('debug');
+
+      if (value !== this._imageBasedLighting) {
+        if (
+          this._shouldDestroyImageBasedLighting &&
+          !this._imageBasedLighting.isDestroyed()
+        ) {
+          this._imageBasedLighting.destroy();
+        }
+        this._imageBasedLighting = value;
+        this._shouldDestroyImageBasedLighting = false;
+        this._shouldRegenerateShaders = true;
+      }
+    },
+  },
+
+  /**
+   * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This cartesian is used to scale the final
+   * diffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
+   *
+   * @memberof Model.prototype
+   *
+   * @type {Cartesian2}
+   * @default Cartesian2(1.0, 1.0)
+   */
+  imageBasedLightingFactor: {
+    get: function () {
+      return this._imageBasedLighting.imageBasedLightingFactor;
+    },
+    set: function (value) {
+      this._imageBasedLighting.imageBasedLightingFactor = value;
     },
   },
 

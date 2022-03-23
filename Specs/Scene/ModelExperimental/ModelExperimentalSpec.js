@@ -1050,6 +1050,98 @@ describe(
       });
     });
 
+    it("enables back-face culling", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxBackFaceCullingUrl,
+          backFaceCulling: true,
+          offset: boxBackFaceCullingOffset,
+        },
+        scene
+      ).then(function (model) {
+        const renderOptions = {
+          scene: scene,
+          time: new JulianDate(2456659.0004050927),
+        };
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual([0, 0, 0, 255]);
+        });
+      });
+    });
+
+    it("disables back-face culling", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxBackFaceCullingUrl,
+          backFaceCulling: false,
+          offset: boxBackFaceCullingOffset,
+        },
+        scene
+      ).then(function (model) {
+        const renderOptions = {
+          scene: scene,
+          time: new JulianDate(2456659.0004050927),
+        };
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        });
+      });
+    });
+
+    it("ignores back-face culling when translucent", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxBackFaceCullingUrl,
+          backFaceCulling: true,
+          offset: boxBackFaceCullingOffset,
+        },
+        scene
+      ).then(function (model) {
+        const renderOptions = {
+          scene: scene,
+          time: new JulianDate(2456659.0004050927),
+        };
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual([0, 0, 0, 255]);
+        });
+
+        model.color = new Color(0, 0, 1.0, 0.5);
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        });
+      });
+    });
+
+    it("toggles back-face culling at runtime", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxBackFaceCullingUrl,
+          backFaceCulling: false,
+          offset: boxBackFaceCullingOffset,
+        },
+        scene
+      ).then(function (model) {
+        const renderOptions = {
+          scene: scene,
+          time: new JulianDate(2456659.0004050927),
+        };
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        });
+
+        model.backFaceCulling = true;
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual([0, 0, 0, 255]);
+        });
+      });
+    });
+
     it("ignores back-face culling toggles when translucent", function () {
       return loadAndZoomToModelExperimental(
         {
