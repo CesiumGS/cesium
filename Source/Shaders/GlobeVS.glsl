@@ -41,9 +41,15 @@ varying float v_distance;
 #endif
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
-varying vec3 v_fogMieColor;
-varying vec3 v_fogRayleighColor;
-varying float v_fogOpacity;
+varying vec3 v_atmosphereRayleighColor;
+varying vec3 v_atmosphereMieColor;
+varying float v_atmosphereOpacity;
+#endif
+
+#if defined(DYNAMIC_ATMOSPHERE_LIGHTING_FROM_SUN)
+    vec3 atmosphereLightDirection = czm_sunDirectionWC;
+#else
+    vec3 atmosphereLightDirection = czm_lightDirectionWC;
 #endif
 
 // These functions are generated at runtime.
@@ -210,10 +216,18 @@ void main()
 #endif
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
-    AtmosphereColor atmosFogColor = computeGroundAtmosphereFromSpace(position3DWC, false, vec3(0.0));
-    v_fogMieColor = atmosFogColor.mie;
-    v_fogRayleighColor = atmosFogColor.rayleigh;
-    v_fogOpacity = atmosFogColor.opacity;
+
+    bool dynamicLighting = false;
+
+#if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
+    dynamicLighting = true;
+#endif
+
+    AtmosphereColor atmosColor = computeGroundAtmosphereFromSpace(position3DWC, dynamicLighting, atmosphereLightDirection);
+ 
+    v_atmosphereRayleighColor = atmosColor.rayleigh;
+    v_atmosphereMieColor = atmosColor.mie;
+    v_atmosphereOpacity = atmosColor.opacity;
 #endif
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(UNDERGROUND_COLOR) || defined(TRANSLUCENT)

@@ -15,9 +15,8 @@ float MIE_HEIGHT_LIMIT = 3.2e3;
 
 vec3 BETA_RAYLEIGH = vec3(5.8e-6, 13.5e-6, 33.1e-6); // Better constants from Precomputed Atmospheric Scattering (https://hal.inria.fr/inria-00288758/document)
 vec3 BETA_MIE = vec3(21e-6);
-vec3 BETA_AMBIENT = vec3(0.0);
 
-vec3 LIGHT_INTENSITY = vec3(25.0);
+vec3 LIGHT_INTENSITY = vec3(14.0);
 
 void computeScattering(
     vec3 start,
@@ -49,7 +48,9 @@ void computeScattering(
         return;
     }
 
+    // The ray should start from the first intersection with the outer atmopshere, or from the camera position, if it is inside the atmosphere.
     viewpointAtmosphereIntersect.start = max(viewpointAtmosphereIntersect.start, 0.0);
+    // The ray should end at the exit from the atmosphere or at the distance to the vertex, whichever is smaller.
     viewpointAtmosphereIntersect.stop = min(viewpointAtmosphereIntersect.stop, maxDistance);
 
     // Set up for sampling positions along the ray - starting from the intersection with the outer ring of the atmosphere.
@@ -143,7 +144,7 @@ AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos, bool dynamicLightin
 {
     vec3 cameraToPositionRay = v3Pos - czm_viewerPositionWC;
     vec3 direction = normalize(cameraToPositionRay);
-    vec3 lightDirection = normalize(czm_sunPositionWC);
+    vec3 lightDirection = czm_branchFreeTernary(dynamicLighting, lightDirectionWC, normalize(v3Pos));
 
     float dist = length(cameraToPositionRay);
 
