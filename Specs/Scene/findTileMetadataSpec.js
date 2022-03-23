@@ -4,7 +4,7 @@ import {
   MetadataClass,
 } from "../../Source/Cesium.js";
 
-fdescribe("Scene/findTileMetadata", function () {
+describe("Scene/findTileMetadata", function () {
   let tileClass;
   let mockTileset;
   beforeAll(function () {
