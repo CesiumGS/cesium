@@ -6202,10 +6202,7 @@ describe(
       it("loads tileset metadata", function () {
         return Cesium3DTilesTester.loadTileset(scene, tilesetMetadataUrl).then(
           function (tileset) {
-            const metadata = tileset.metadata;
-            expect(metadata).toBeDefined();
-
-            const tilesetMetadata = metadata.tileset;
+            const tilesetMetadata = tileset.metadata;
             expect(function () {
               return tilesetMetadata.getProperty("name");
             }).toThrowDeveloperError();
@@ -6230,7 +6227,7 @@ describe(
           scene,
           tilesetWithGroupMetadataUrl
         ).then(function (tileset) {
-          const metadata = tileset.metadata;
+          const metadata = tileset.metadataExtension;
           expect(metadata).toBeDefined();
 
           const groups = metadata.groups;
@@ -6261,14 +6258,14 @@ describe(
           scene,
           tilesetWithGroupMetadataUrl
         ).then(function (tileset) {
-          const metadata = tileset.metadata;
+          const metadata = tileset.metadataExtension;
           const commercialDistrict = metadata.groups[1];
           const residentialDistrict = metadata.groups[0];
 
           // the parent tile in this dataset does not have a group defined,
           // but its children do.
           const parent = tileset.root;
-          const group = parent.content.groupMetadata;
+          const group = parent.content.group;
           expect(group).not.toBeDefined();
 
           const expected = {
@@ -6281,7 +6278,7 @@ describe(
           const childrenTiles = parent.children;
           childrenTiles.forEach(function (tile) {
             const uri = tile._header.content.uri;
-            expect(tile.content.groupMetadata).toBe(expected[uri]);
+            expect(tile.content.group.metadata).toBe(expected[uri]);
           });
         });
       });
@@ -6289,7 +6286,7 @@ describe(
       it("loads metadata with embedded schema", function () {
         return Cesium3DTilesTester.loadTileset(scene, tilesetMetadataUrl).then(
           function (tileset) {
-            const schema = tileset.metadata.schema;
+            const schema = tileset.schema;
             expect(schema).toBeDefined();
 
             const classes = schema.classes;
@@ -6303,7 +6300,7 @@ describe(
           scene,
           tilesetWithExternalSchemaUrl
         ).then(function (tileset) {
-          const schema = tileset.metadata.schema;
+          const schema = tileset.schema;
           expect(schema).toBeDefined();
 
           const classes = schema.classes;
@@ -6660,7 +6657,7 @@ describe(
           scene,
           tilesetMetadataLegacyUrl
         ).then(function (tileset) {
-          const metadata = tileset.metadata;
+          const metadata = tileset.metadataExtension;
           expect(metadata).toBeDefined();
 
           const tilesetMetadata = metadata.tileset;
@@ -6687,7 +6684,7 @@ describe(
           scene,
           tilesetWithGroupMetadataLegacyUrl
         ).then(function (tileset) {
-          const metadata = tileset.metadata;
+          const metadata = tileset.metadataExtension;
           expect(metadata).toBeDefined();
 
           const groups = metadata.groups;
@@ -6718,14 +6715,14 @@ describe(
           scene,
           tilesetWithGroupMetadataLegacyUrl
         ).then(function (tileset) {
-          const metadata = tileset.metadata;
+          const metadata = tileset.metadataExtension;
           const commercialDistrict = metadata.groups[0];
           const residentialDistrict = metadata.groups[1];
 
           // the parent tile in this dataset does not have a group defined,
           // but its children do.
           const parent = tileset.root;
-          const group = parent.content.groupMetadata;
+          const group = parent.content.group;
           expect(group).not.toBeDefined();
 
           const expected = {
@@ -6738,7 +6735,7 @@ describe(
           const childrenTiles = parent.children;
           childrenTiles.forEach(function (tile) {
             const uri = tile._header.content.uri;
-            expect(tile.content.groupMetadata).toBe(expected[uri]);
+            expect(tile.content.group.metadata).toBe(expected[uri]);
           });
         });
       });
@@ -6748,7 +6745,7 @@ describe(
           scene,
           tilesetMetadataLegacyUrl
         ).then(function (tileset) {
-          const schema = tileset.metadata.schema;
+          const schema = tileset.schema;
           expect(schema).toBeDefined();
 
           const classes = schema.classes;
@@ -6761,7 +6758,7 @@ describe(
           scene,
           tilesetWithExternalSchemaLegacyUrl
         ).then(function (tileset) {
-          const schema = tileset.metadata.schema;
+          const schema = tileset.schema;
           expect(schema).toBeDefined();
 
           const classes = schema.classes;

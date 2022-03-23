@@ -7,6 +7,7 @@ import RequestScheduler from "../Core/RequestScheduler.js";
 import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import RuntimeError from "../Core/RuntimeError.js";
+import Cesium3DContentGroup from "./Cesium3DContentGroup.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
 import findContentMetadata from "./findContentMetadata.js";
@@ -253,11 +254,11 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
 
   /**
    * Part of the {@link Cesium3DTileContent} interface. <code>Multiple3DTileContent</code>
-   * always returns <code>undefined</code>.  Instead call <code>groupMetadata</code> for a specific inner content.
+   * always returns <code>undefined</code>.  Instead call <code>group</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
    * @private
    */
-  groupMetadata: {
+  group: {
     get: function () {
       return undefined;
     },
@@ -550,7 +551,12 @@ function createInnerContent(multipleContents, arrayBuffer, index) {
     content.metadata = findContentMetadata(tileset, contentHeader);
   }
 
-  content.groupMetadata = findGroupMetadata(tileset, contentHeader);
+  const groupMetadata = findGroupMetadata(tileset, contentHeader);
+  if (defined(groupMetadata)) {
+    content.group = new Cesium3DContentGroup({
+      metadata: groupMetadata,
+    });
+  }
   return content;
 }
 

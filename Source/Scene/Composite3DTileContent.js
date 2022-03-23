@@ -33,7 +33,7 @@ function Composite3DTileContent(
   this._readyPromise = defer();
 
   this._metadata = undefined;
-  this._groupMetadata = undefined;
+  this._group = undefined;
 
   initialize(this, arrayBuffer, byteOffset, factory);
 }
@@ -195,16 +195,16 @@ Object.defineProperties(Composite3DTileContent.prototype, {
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
-  groupMetadata: {
+  group: {
     get: function () {
-      return this._groupMetadata;
+      return this._group;
     },
     set: function (value) {
-      this._groupMetadata = value;
+      this._group = value;
       const contents = this._contents;
       const length = contents.length;
       for (let i = 0; i < length; ++i) {
-        contents[i].groupMetadata = value;
+        contents[i].group = value;
       }
     },
   },

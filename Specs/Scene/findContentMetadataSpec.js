@@ -24,11 +24,9 @@ describe("Scene/findContentMetadata", function () {
       },
     });
     mockTileset = {
-      metadata: {
-        schema: {
-          classes: {
-            content: contentClass,
-          },
+      schema: {
+        classes: {
+          content: contentClass,
         },
       },
     };

@@ -24,7 +24,7 @@ export default function findContentMetadata(tileset, contentHeader) {
     return undefined;
   }
 
-  const classes = tileset.metadata.schema.classes;
+  const classes = tileset.schema.classes;
   if (defined(metadataJson.class)) {
     const contentClass = classes[metadataJson.class];
     return new ContentMetadata({

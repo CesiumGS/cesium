@@ -28,7 +28,7 @@ export default function ModelExperimental3DTileContent(
 
   this._model = undefined;
   this._metadata = undefined;
-  this._groupMetadata = undefined;
+  this._group = undefined;
 }
 
 Object.defineProperties(ModelExperimental3DTileContent.prototype, {
@@ -129,12 +129,12 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
     },
   },
 
-  groupMetadata: {
+  group: {
     get: function () {
-      return this._groupMetadata;
+      return this._group;
     },
     set: function (value) {
-      this._groupMetadata = value;
+      this._group = value;
     },
   },
 });

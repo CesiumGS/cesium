@@ -1,6 +1,7 @@
 import {
   Batched3DModel3DTileContent,
   Cartesian3,
+  Cesium3DContentGroup,
   Cesium3DTile,
   Cesium3DTileRefine,
   Cesium3DTileset,
@@ -1168,12 +1169,14 @@ describe(
         });
       });
 
-      it("assigns groupMetadata", function () {
+      it("assigns group metadata", function () {
         return Cesium3DTilesTester.loadTileset(scene, implicitTilesetUrl).then(
           function (tileset) {
             const content = tileset.root.content;
-            content.groupMetadata = groupMetadata;
-            expect(content.groupMetadata).toBe(groupMetadata);
+            content.group = new Cesium3DContentGroup({
+              metadata: groupMetadata,
+            });
+            expect(content.group.metadata).toBe(groupMetadata);
           }
         );
       });
@@ -1188,7 +1191,7 @@ describe(
           const tiles = [];
           gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
 
-          const groups = tileset.metadata.groups;
+          const groups = tileset.metadataExtension.groups;
           const ground = groups[0];
           expect(ground.getProperty("color")).toEqual(
             new Cartesian3(120, 68, 32)
@@ -1205,11 +1208,11 @@ describe(
             if (tile.hasMultipleContents) {
               // child tiles have multiple contents
               const contents = tile.content.innerContents;
-              expect(contents[0].groupMetadata).toBe(ground);
-              expect(contents[1].groupMetadata).toBe(sky);
+              expect(contents[0].group.metadata).toBe(ground);
+              expect(contents[1].group.metadata).toBe(sky);
             } else {
               // parent tile is a single b3dm tile
-              expect(tile.content.groupMetadata).toBe(ground);
+              expect(tile.content.group.metadata).toBe(ground);
             }
           });
         });
@@ -1687,7 +1690,7 @@ describe(
           const tiles = [];
           gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
 
-          const groups = tileset.metadata.groups;
+          const groups = tileset.metadataExtension.groups;
           const ground = groups[0];
           expect(ground.getProperty("color")).toEqual(
             new Cartesian3(120, 68, 32)
@@ -1704,11 +1707,11 @@ describe(
             if (tile.hasMultipleContents) {
               // child tiles have multiple contents
               const contents = tile.content.innerContents;
-              expect(contents[0].groupMetadata).toBe(ground);
-              expect(contents[1].groupMetadata).toBe(sky);
+              expect(contents[0].group.metadata).toBe(ground);
+              expect(contents[1].group.metadata).toBe(sky);
             } else {
               // parent tile is a single b3dm tile
-              expect(tile.content.groupMetadata).toBe(ground);
+              expect(tile.content.group.metadata).toBe(ground);
             }
           });
         });

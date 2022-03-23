@@ -955,15 +955,10 @@ function Cesium3DTileset(options) {
    */
   this.examineVectorLinesFunction = undefined;
 
-  /**
-   * If metadata is present (3D Tiles 1.1) or the 3DTILES_metadata extension is used,
-   * this stores a {@link Cesium3DTilesetMetadata} object to access metadata.
-   *
-   * @type {Cesium3DTilesetMetadata|undefined}
-   * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
-   */
-  this.metadata = undefined;
+  // this is the underlying Cesium3DTileMetadata object, whether it came from
+  // the 3DTILES_metadata extension or a 3D Tiles 1.1 tileset JSON. Getters
+  // like tileset.metadata and tileset.schema will delegate to this object.
+  this._metadataExtension = undefined;
 
   this._customShader = options.customShader;
 
@@ -1382,6 +1377,67 @@ Object.defineProperties(Cesium3DTileset.prototype, {
     },
     set: function (value) {
       this._customShader = value;
+    },
+  },
+
+  /**
+   * The tileset's schema, groups, tileset metadata and other details from the
+   * 3DTILES_metadata extension or a 3D Tiles 1.1 tileset JSON. This getter is
+   * for internal use by other classes.
+   *
+   * @memberof Cesium3DTileset.prototype
+   * @type {Cesium3DTilesetMetadata}
+   * @private
+   * @readonly
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  metadataExtension: {
+    get: function () {
+      return this._metadataExtension;
+    },
+  },
+
+  /**
+   * The metadata properties attached to the tileset as a whole.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {TilesetMetadata}
+   * @private
+   * @readonly
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  metadata: {
+    get: function () {
+      if (defined(this._metadataExtension)) {
+        return this._metadataExtension.tileset;
+      }
+
+      return undefined;
+    },
+  },
+
+  /**
+   * The metadata schema used in this tileset. Shorthand for
+   * <code>tileset.metadataExtension.schema</code>
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {MetadataSchema}
+   * @private
+   * @readonly
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  schema: {
+    get: function () {
+      if (defined(this._metadataExtension)) {
+        return this._metadataExtension.schema;
+      }
+
+      return undefined;
     },
   },
 
@@ -2052,9 +2108,7 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
     hasExtension(tileHeader, "3DTILES_implicit_tiling");
 
   if (hasImplicitTiling) {
-    const metadataSchema = defined(tileset.metadata)
-      ? tileset.metadata.schema
-      : undefined;
+    const metadataSchema = tileset.schema;
 
     const implicitTileset = new ImplicitTileset(
       baseResource,
@@ -2135,7 +2189,7 @@ function processMetadataExtension(tileset, tilesetJson) {
   tileset._schemaLoader = schemaLoader;
 
   return schemaLoader.promise.then(function (schemaLoader) {
-    tileset.metadata = new Cesium3DTilesetMetadata({
+    tileset._metadataExtension = new Cesium3DTilesetMetadata({
       schema: schemaLoader.schema,
       metadataJson: metadataJson,
     });
