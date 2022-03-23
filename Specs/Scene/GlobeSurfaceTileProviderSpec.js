@@ -22,12 +22,12 @@ import { Globe } from "../../Source/Cesium.js";
 import { GlobeSurfaceShaderSet } from "../../Source/Cesium.js";
 import { GlobeSurfaceTileProvider } from "../../Source/Cesium.js";
 import { ImageryLayerCollection } from "../../Source/Cesium.js";
-import { ImagerySplitDirection } from "../../Source/Cesium.js";
 import { Model } from "../../Source/Cesium.js";
 import { QuadtreeTile } from "../../Source/Cesium.js";
 import { QuadtreeTileProvider } from "../../Source/Cesium.js";
 import { SceneMode } from "../../Source/Cesium.js";
 import { SingleTileImageryProvider } from "../../Source/Cesium.js";
+import { SplitDirection } from "../../Source/Cesium.js";
 import { WebMapServiceImageryProvider } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
@@ -524,6 +524,43 @@ describe(
         });
       });
 
+      it("culls tiles but does not render fog visuals when renderable is false", function () {
+        expect(scene).toRender([0, 0, 0, 255]);
+        scene.imageryLayers.addImageryProvider(
+          new SingleTileImageryProvider({
+            url: "Data/Images/Red16x16.png",
+          })
+        );
+        const oldFog = scene.fog;
+        scene.fog = new Fog();
+        switchViewMode(
+          SceneMode.SCENE3D,
+          new GeographicProjection(Ellipsoid.WGS84)
+        );
+        scene.camera.lookUp(1.2); // Horizon-view
+
+        return updateUntilDone(scene.globe).then(function () {
+          expect(scene).notToRender([0, 0, 0, 255]);
+
+          scene.fog.enabled = true;
+          scene.fog.renderable = false;
+          scene.fog.density = 0.001;
+          scene.fog.screenSpaceErrorFactor = 0.0;
+
+          let result;
+          expect(scene).toRenderAndCall(function (rgba) {
+            result = rgba;
+            expect(rgba).not.toEqual([0, 0, 0, 255]);
+          });
+
+          scene.fog.renderable = false;
+          expect(scene).notToRender(result);
+          expect(scene).notToRender([0, 0, 0, 255]);
+
+          scene.fog = oldFog;
+        });
+      });
+
       it("culls tiles because of increased SSE", function () {
         expect(scene).toRender([0, 0, 0, 255]);
         scene.imageryLayers.addImageryProvider(
@@ -635,7 +672,7 @@ describe(
       layer.gamma = 0.321;
       layer.saturation = 0.123;
       layer.hue = 0.456;
-      layer.splitDirection = ImagerySplitDirection.LEFT;
+      layer.splitDirection = SplitDirection.LEFT;
 
       switchViewMode(
         SceneMode.SCENE3D,
@@ -666,9 +703,7 @@ describe(
           expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0 / 0.321]);
           expect(uniforms.u_dayTextureSaturation()).toEqual([0.123]);
           expect(uniforms.u_dayTextureHue()).toEqual([0.456]);
-          expect(uniforms.u_dayTextureSplit()).toEqual([
-            ImagerySplitDirection.LEFT,
-          ]);
+          expect(uniforms.u_dayTextureSplit()).toEqual([SplitDirection.LEFT]);
         }
 
         expect(tileCommandCount).toBeGreaterThan(0);
@@ -850,11 +885,11 @@ describe(
         for (const tileID in drawCommandsPerTile) {
           if (drawCommandsPerTile.hasOwnProperty(tileID)) {
             ++tileCount;
-            expect(drawCommandsPerTile[tileID]).toBeGreaterThanOrEqualTo(2);
+            expect(drawCommandsPerTile[tileID]).toBeGreaterThanOrEqual(2);
           }
         }
 
-        expect(tileCount).toBeGreaterThanOrEqualTo(1);
+        expect(tileCount).toBeGreaterThanOrEqual(1);
       });
     });
 

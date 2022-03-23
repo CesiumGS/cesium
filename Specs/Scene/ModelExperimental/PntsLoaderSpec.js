@@ -8,6 +8,7 @@ import {
   PntsLoader,
   Resource,
   ResourceCache,
+  RuntimeError,
   VertexAttributeSemantic,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
@@ -88,7 +89,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
   function expectLoadError(arrayBuffer) {
     expect(function () {
       return loadPntsArrayBuffer(arrayBuffer);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   }
 
   function expectEmptyMetadata(structuralMetadata) {

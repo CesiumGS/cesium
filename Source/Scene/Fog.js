@@ -18,6 +18,13 @@ function Fog() {
    */
   this.enabled = true;
   /**
+   * <code>true</code> if fog is renderable in shaders, <code>false</code> otherwise.
+   * This allows to benefits from optimized tile loading strategy based on fog density without the actual visual rendering.
+   * @type {Boolean}
+   * @default true
+   */
+  this.renderable = true;
+  /**
    * A scalar that determines the density of the fog. Terrain that is in full fog are culled.
    * The density of the fog increases as this number approaches 1.0 and becomes less dense as it approaches zero.
    * The more dense the fog is, the more aggressively the terrain is culled. For example, if the camera is a height of
@@ -153,6 +160,8 @@ Fog.prototype.update = function (frameState) {
   if (!enabled) {
     return;
   }
+
+  frameState.fog.renderable = this.renderable;
 
   const camera = frameState.camera;
   const positionCartographic = camera.positionCartographic;

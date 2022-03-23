@@ -355,6 +355,7 @@ PointCloud3DTileContent.prototype.update = function (tileset, frameState) {
   pointCloud.normalShading = pointCloudShading.normalShading;
   pointCloud.geometricError = getGeometricError(this);
   pointCloud.geometricErrorScale = pointCloudShading.geometricErrorScale;
+  pointCloud.splitDirection = tileset.splitDirection;
   if (
     defined(pointCloudShading) &&
     defined(pointCloudShading.maximumAttenuation)

@@ -9,6 +9,7 @@ import { Resource } from "../Source/Cesium.js";
 import { Cesium3DTileContentFactory } from "../Source/Cesium.js";
 import { Cesium3DTileset } from "../Source/Cesium.js";
 import { TileBoundingSphere } from "../Source/Cesium.js";
+import { RuntimeError } from "../Source/Cesium.js";
 import pollToPromise from "./pollToPromise.js";
 
 const mockTile = {
@@ -135,7 +136,7 @@ Cesium3DTilesTester.loadTileExpectError = function (scene, arrayBuffer, type) {
       arrayBuffer,
       0
     );
-  }).toThrowRuntimeError();
+  }).toThrowError(RuntimeError);
 };
 
 Cesium3DTilesTester.loadTile = function (scene, arrayBuffer, type) {

@@ -1280,32 +1280,9 @@ ModelExperimental.fromGltf = function (options) {
     ? ModelExperimentalType.TILE_GLTF
     : ModelExperimentalType.GLTF;
 
-  const modelOptions = {
-    loader: loader,
-    resource: loaderOptions.gltfResource,
-    type: type,
-    modelMatrix: options.modelMatrix,
-    scale: options.scale,
-    minimumPixelSize: options.minimumPixelSize,
-    maximumScale: options.maximumScale,
-    debugShowBoundingVolume: options.debugShowBoundingVolume,
-    cull: options.cull,
-    opaquePass: options.opaquePass,
-    allowPicking: options.allowPicking,
-    customShader: options.customShader,
-    content: options.content,
-    show: options.show,
-    color: options.color,
-    colorBlendAmount: options.colorBlendAmount,
-    colorBlendMode: options.colorBlendMode,
-    featureIdLabel: options.featureIdLabel,
-    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
-    pointCloudShading: options.pointCloudShading,
-    lightColor: options.lightColor,
-    backFaceCulling: options.backFaceCulling,
-    shadows: options.shadows,
-    showCreditsOnScreen: options.showCreditsOnScreen,
-  };
+  const modelOptions = makeModelOptions(loader, type, options);
+  modelOptions.resource = loaderOptions.gltfResource;
+
   const model = new ModelExperimental(modelOptions);
 
   return model;
@@ -1327,33 +1304,11 @@ ModelExperimental.fromB3dm = function (options) {
 
   const loader = new B3dmLoader(loaderOptions);
 
-  const modelOptions = {
-    loader: loader,
-    resource: loaderOptions.b3dmResource,
-    type: ModelExperimentalType.TILE_B3DM,
-    modelMatrix: options.modelMatrix,
-    scale: options.scale,
-    minimumPixelSize: options.minimumPixelSize,
-    maximumScale: options.maximumScale,
-    debugShowBoundingVolume: options.debugShowBoundingVolume,
-    cull: options.cull,
-    opaquePass: options.opaquePass,
-    allowPicking: options.allowPicking,
-    customShader: options.customShader,
-    content: options.content,
-    show: options.show,
-    color: options.color,
-    colorBlendAmount: options.colorBlendAmount,
-    colorBlendMode: options.colorBlendMode,
-    featureIdLabel: options.featureIdLabel,
-    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
-    pointCloudShading: options.pointCloudShading,
-    lightColor: options.lightColor,
-    backFaceCulling: options.backFaceCulling,
-    shadows: options.shadows,
-    showCreditsOnScreen: options.showCreditsOnScreen,
-  };
-
+  const modelOptions = makeModelOptions(
+    loader,
+    ModelExperimentalType.TILE_B3DM,
+    options
+  );
   const model = new ModelExperimental(modelOptions);
   return model;
 };
@@ -1368,33 +1323,11 @@ ModelExperimental.fromPnts = function (options) {
   };
   const loader = new PntsLoader(loaderOptions);
 
-  const modelOptions = {
-    loader: loader,
-    resource: options.resource,
-    type: ModelExperimentalType.TILE_PNTS,
-    modelMatrix: options.modelMatrix,
-    scale: options.scale,
-    minimumPixelSize: options.minimumPixelSize,
-    maximumScale: options.maximumScale,
-    debugShowBoundingVolume: options.debugShowBoundingVolume,
-    cull: options.cull,
-    opaquePass: options.opaquePass,
-    allowPicking: options.allowPicking,
-    customShader: options.customShader,
-    content: options.content,
-    show: options.show,
-    color: options.color,
-    colorBlendAmount: options.colorBlendAmount,
-    colorBlendMode: options.colorBlendMode,
-    featureIdLabel: options.featureIdLabel,
-    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
-    pointCloudShading: options.pointCloudShading,
-    lightColor: options.lightColor,
-    backFaceCulling: options.backFaceCulling,
-    shadows: options.shadows,
-    showCreditsOnScreen: options.showCreditsOnScreen,
-  };
-
+  const modelOptions = makeModelOptions(
+    loader,
+    ModelExperimentalType.TILE_PNTS,
+    options
+  );
   const model = new ModelExperimental(modelOptions);
   return model;
 };
@@ -1412,35 +1345,13 @@ ModelExperimental.fromI3dm = function (options) {
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
   };
-
   const loader = new I3dmLoader(loaderOptions);
 
-  const modelOptions = {
-    loader: loader,
-    resource: loaderOptions.i3dmResource,
-    type: ModelExperimentalType.TILE_I3DM,
-    modelMatrix: options.modelMatrix,
-    scale: options.scale,
-    minimumPixelSize: options.minimumPixelSize,
-    maximumScale: options.maximumScale,
-    debugShowBoundingVolume: options.debugShowBoundingVolume,
-    cull: options.cull,
-    opaquePass: options.opaquePass,
-    allowPicking: options.allowPicking,
-    customShader: options.customShader,
-    content: options.content,
-    show: options.show,
-    color: options.color,
-    colorBlendAmount: options.colorBlendAmount,
-    colorBlendMode: options.colorBlendMode,
-    featureIdIndex: options.featureIdIndex,
-    instanceFeatureIdIndex: options.instanceFeatureIdIndex,
-    pointCloudShading: options.pointCloudShading,
-    lightColor: options.lightColor,
-    backFaceCulling: options.backFaceCulling,
-    shadows: options.shadows,
-    showCreditsOnScreen: options.showCreditsOnScreen,
-  };
+  const modelOptions = makeModelOptions(
+    loader,
+    ModelExperimentalType.TILE_I3DM,
+    options
+  );
   const model = new ModelExperimental(modelOptions);
   return model;
 };
@@ -1483,3 +1394,32 @@ ModelExperimental.prototype.applyStyle = function (style) {
 
   this.resetDrawCommands();
 };
+
+function makeModelOptions(loader, modelType, options) {
+  return {
+    loader: loader,
+    type: modelType,
+    resource: options.resource,
+    modelMatrix: options.modelMatrix,
+    scale: options.scale,
+    minimumPixelSize: options.minimumPixelSize,
+    maximumScale: options.maximumScale,
+    debugShowBoundingVolume: options.debugShowBoundingVolume,
+    cull: options.cull,
+    opaquePass: options.opaquePass,
+    allowPicking: options.allowPicking,
+    customShader: options.customShader,
+    content: options.content,
+    show: options.show,
+    color: options.color,
+    colorBlendAmount: options.colorBlendAmount,
+    colorBlendMode: options.colorBlendMode,
+    featureIdLabel: options.featureIdLabel,
+    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
+    pointCloudShading: options.pointCloudShading,
+    lightColor: options.lightColor,
+    backFaceCulling: options.backFaceCulling,
+    shadows: options.shadows,
+    showCreditsOnScreen: options.showCreditsOnScreen,
+  };
+}

@@ -1,6 +1,7 @@
 import {
   Cesium3DTileContentType,
   preprocess3DTileContent,
+  RuntimeError,
 } from "../../Source/Cesium.js";
 
 describe("Scene/preprocess3DTileContent", function () {
@@ -78,6 +79,6 @@ describe("Scene/preprocess3DTileContent", function () {
     expect(function () {
       const payload = makeBinaryFile("fake");
       preprocess3DTileContent(payload.buffer);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 });
