@@ -10,10 +10,12 @@ import ModelExperimentalPrimitive from "./ModelExperimentalPrimitive.js";
 import ModelExperimentalNode from "./ModelExperimentalNode.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelRenderResources from "./ModelRenderResources.js";
+import ModelSplitterPipelineStage from "./ModelSplitterPipelineStage.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
 import RenderState from "../../Renderer/RenderState.js";
 import ShadowMode from "../ShadowMode.js";
+import SplitDirection from "../SplitDirection.js";
 
 /**
  * An in memory representation of the scene graph for a {@link ModelExperimental}
@@ -373,8 +375,16 @@ ModelExperimentalSceneGraph.prototype.configurePipeline = function () {
   modelPipelineStages.length = 0;
 
   const model = this._model;
+
   if (defined(model.color)) {
     modelPipelineStages.push(ModelColorPipelineStage);
+  }
+
+  if (
+    defined(model.splitDirection) &&
+    model.splitDirection !== SplitDirection.NONE
+  ) {
+    modelPipelineStages.push(ModelSplitterPipelineStage);
   }
 };
 

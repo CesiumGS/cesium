@@ -199,6 +199,7 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.backFaceCulling = tileset.backFaceCulling;
   model.shadows = tileset.shadows;
   model.showCreditsOnScreen = tileset.showCreditsOnScreen;
+  model.splitDirection = tileset.splitDirection;
 
   model.update(frameState);
 };
@@ -331,6 +332,7 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     backFaceCulling: tileset.backFaceCulling,
     shadows: tileset.shadows,
     showCreditsOnScreen: tileset.showCreditsOnScreen,
+    splitDirection: tileset.splitDirection,
   };
 
   return combine(additionalOptions, mainOptions);

@@ -21,6 +21,7 @@ import PntsLoader from "./PntsLoader.js";
 import Color from "../../Core/Color.js";
 import I3dmLoader from "./I3dmLoader.js";
 import ShadowMode from "../ShadowMode.js";
+import SplitDirection from "../SplitDirection.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
@@ -55,6 +56,7 @@ import ShadowMode from "../ShadowMode.js";
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
+ * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
@@ -202,6 +204,11 @@ export default function ModelExperimental(options) {
   );
 
   this._showCreditsOnScreen = defaultValue(options.showCreditsOnScreen, false);
+
+  this._splitDirection = defaultValue(
+    options.splitDirection,
+    SplitDirection.NONE
+  );
 
   initialize(this);
 }
@@ -855,7 +862,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * Determines whether the model casts or receives shadows from light sources.
 
    * @memberof ModelExperimental.prototype
-   * 
+   *
    * @type {ShadowMode}
    *
    * @default ShadowMode.ENABLED
@@ -888,6 +895,26 @@ Object.defineProperties(ModelExperimental.prototype, {
     },
     set: function (value) {
       this._showCreditsOnScreen = value;
+    },
+  },
+
+  /**
+   * The {@link SplitDirection} to apply to this model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {SplitDirection}
+   * @default {@link SplitDirection.NONE}
+   */
+  splitDirection: {
+    get: function () {
+      return this._splitDirection;
+    },
+    set: function (value) {
+      if (this._splitDirection !== value) {
+        this.resetDrawCommands();
+      }
+      this._splitDirection = value;
     },
   },
 });
@@ -1194,6 +1221,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
+ * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
  * @returns {ModelExperimental} The newly created model.
  */
 ModelExperimental.fromGltf = function (options) {
@@ -1374,5 +1402,6 @@ function makeModelOptions(loader, modelType, options) {
     backFaceCulling: options.backFaceCulling,
     shadows: options.shadows,
     showCreditsOnScreen: options.showCreditsOnScreen,
+    splitDirection: options.splitDirection,
   };
 }
