@@ -1,4 +1,8 @@
-import { getStringFromTypedArray, I3dmParser } from "../../Source/Cesium.js";
+import {
+  getStringFromTypedArray,
+  I3dmParser,
+  RuntimeError,
+} from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 
 describe(
@@ -16,7 +20,7 @@ describe(
       });
       expect(function () {
         I3dmParser.parse(arrayBuffer);
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("throws if there is no feature table json", function () {
@@ -25,7 +29,7 @@ describe(
       });
       expect(function () {
         I3dmParser.parse(arrayBuffer);
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("throws with invalid glTF format", function () {
@@ -34,7 +38,7 @@ describe(
       });
       expect(function () {
         I3dmParser.parse(arrayBuffer);
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("throws if there is no glTF", function () {
@@ -43,7 +47,7 @@ describe(
       });
       expect(function () {
         I3dmParser.parse(arrayBuffer);
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("prints deprecation warning if glTF is not 4-byte aligned", function () {

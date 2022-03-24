@@ -1957,22 +1957,22 @@ describe(
 
             expect(
               Math.abs(getGlyphBillboardVertexTranslate(label, 0).x)
-            ).toBeLessThanOrEqualTo(Math.abs(offset0.x));
+            ).toBeLessThanOrEqual(Math.abs(offset0.x));
             expect(
               Math.abs(getGlyphBillboardVertexTranslate(label, 0).y)
-            ).toBeLessThanOrEqualTo(Math.abs(offset0.y));
+            ).toBeLessThanOrEqual(Math.abs(offset0.y));
             expect(
               Math.abs(getGlyphBillboardVertexTranslate(label, 1).x)
-            ).toBeLessThanOrEqualTo(Math.abs(offset1.x));
+            ).toBeLessThanOrEqual(Math.abs(offset1.x));
             expect(
               Math.abs(getGlyphBillboardVertexTranslate(label, 1).y)
-            ).toBeLessThanOrEqualTo(Math.abs(offset1.y));
+            ).toBeLessThanOrEqual(Math.abs(offset1.y));
             expect(
               Math.abs(getGlyphBillboardVertexTranslate(label, 2).x)
-            ).toBeLessThanOrEqualTo(Math.abs(offset2.x));
+            ).toBeLessThanOrEqual(Math.abs(offset2.x));
             expect(
               Math.abs(getGlyphBillboardVertexTranslate(label, 2).y)
-            ).toBeLessThanOrEqualTo(Math.abs(offset2.y));
+            ).toBeLessThanOrEqual(Math.abs(offset2.y));
           });
         });
 
@@ -2329,7 +2329,7 @@ describe(
           expected.center,
           CesiumMath.EPSILON8
         );
-        expect(actual.radius).toBeGreaterThanOrEqualTo(expected.radius);
+        expect(actual.radius).toBeGreaterThanOrEqual(expected.radius);
         scene.screenSpaceCameraController.enableCollisionDetection = originalEnableCollisionDetection;
       });
     });

@@ -12,6 +12,7 @@ import { Matrix3 } from "../../Source/Cesium.js";
 import { Matrix4 } from "../../Source/Cesium.js";
 import { Quaternion } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
+import { RuntimeError } from "../../Source/Cesium.js";
 import { TimeInterval } from "../../Source/Cesium.js";
 import { Transforms } from "../../Source/Cesium.js";
 
@@ -1575,7 +1576,7 @@ describe("Core/Transforms", function () {
       }).then(function () {
         expect(function () {
           return Transforms.computeIcrfToFixedMatrix(time);
-        }).toThrowRuntimeError();
+        }).toThrowError(RuntimeError);
       });
     });
 
@@ -1588,7 +1589,7 @@ describe("Core/Transforms", function () {
       }).then(function () {
         expect(function () {
           return Transforms.computeIcrfToFixedMatrix(time);
-        }).toThrowRuntimeError();
+        }).toThrowError(RuntimeError);
       });
     });
 

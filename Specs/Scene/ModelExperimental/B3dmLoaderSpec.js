@@ -6,6 +6,7 @@ import {
   Matrix4,
   Resource,
   ResourceCache,
+  RuntimeError,
 } from "../../../Source/Cesium.js";
 import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 import createScene from "../../createScene.js";
@@ -74,7 +75,7 @@ describe("Scene/ModelExperimental/B3dmLoader", function () {
     const resource = new Resource("http://example.com/test.b3dm");
     expect(function () {
       return loadB3dmArrayBuffer(resource, arrayBuffer);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   }
 
   it("loads BatchedNoBatchIds", function () {

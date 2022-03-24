@@ -2096,7 +2096,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   const hasVertexNormals =
     tileProvider.terrainProvider.ready &&
     tileProvider.terrainProvider.hasVertexNormals;
-  const enableFog = frameState.fog.enabled && !cameraUnderground;
+  const enableFog =
+    frameState.fog.enabled && frameState.fog.renderable && !cameraUnderground;
   const showGroundAtmosphere =
     tileProvider.showGroundAtmosphere && frameState.mode === SceneMode.SCENE3D;
   const castShadows =

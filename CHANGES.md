@@ -13,13 +13,17 @@
 
 - Added `minimumPixelSize`, `scale`, and `maximumScale` to `ModelExperimental`. [#10092](https://github.com/CesiumGS/cesium/pull/10092)
 - Added `Cartesian2.clamp`, `Cartesian3.clamp`, and `Cartesian4.clamp`. [#10197](https://github.com/CesiumGS/cesium/pull/10197)
-- Added experimental support for the [3D Tiles 1.1 draft](https://github.com/CesiumGS/3d-tiles/pull/666). #10189
 - `Cesium3DTileset` now has a `splitDirection` property, allowing the tileset to only be drawn on the left or right side of the screen. This is useful for visual comparison of tilesets.
+- Added experimental support for the [3D Tiles 1.1 draft](https://github.com/CesiumGS/3d-tiles/pull/666). [#10189](https://github.com/CesiumGS/cesium/pull/10189)
+- Added `lightColor` to `ModelExperimental` [#10207](https://github.com/CesiumGS/cesium/pull/10207)
+- Added a 'renderable' property to 'Fog' to disable its visual rendering while preserving tiles culling at a distance
+- Refactored metadata API so `tileset.metadata` and `content.group.metadata` are more symmetric with `content.metadata` and `tile.metadata`. [#10224](https://github.com/CesiumGS/cesium/pull/10224)
 
 ##### Fixes :wrench:
 
+- Fixed `Scene` documentation for `msaaSamples` property. [#10205](https://github.com/CesiumGS/cesium/pull/10205)
 - Fixed a bug where `pnts` tiles would crash when `Cesium.ExperimentalFeatures.enableModelExperimental` was true. [#10183](https://github.com/CesiumGS/cesium/pull/10183)
-- Fixed an issue with Firefox and dimensionless SVG images. [#9188](https://github.com/CesiumGS/cesium/9188)
+- Fixed an issue with Firefox and dimensionless SVG images. [#9191](https://github.com/CesiumGS/cesium/pull/9191)
 - Fixed `ShadowMap` documentation for `options.pointLightRadius` type. [#10195](https://github.com/CesiumGS/cesium/pull/10195)
 - Fixed evaluation of `minimumLevel` on metadataFailure for TileMapServiceImageryProvider.
 

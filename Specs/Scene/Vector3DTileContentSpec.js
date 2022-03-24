@@ -1,5 +1,6 @@
 import {
   Cartesian3,
+  Cesium3DContentGroup,
   Cesium3DTileset,
   Cesium3DTileStyle,
   ClassificationType,
@@ -1133,12 +1134,14 @@ xdescribe(
         });
       });
 
-      it("assigns groupMetadata", function () {
+      it("assigns group metadata", function () {
         return Cesium3DTilesTester.loadTileset(scene, vectorPoints).then(
           function (tileset) {
             const content = tileset.root.content;
-            content.groupMetadata = groupMetadata;
-            expect(content.groupMetadata).toBe(groupMetadata);
+            content.group = new Cesium3DContentGroup({
+              metadata: groupMetadata,
+            });
+            expect(content.group.metadata).toBe(groupMetadata);
           }
         );
       });

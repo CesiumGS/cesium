@@ -40,9 +40,7 @@ describe("Scene/ConeEmitter", function () {
       );
 
       // acos(dot(unit v, unit z)) <= angle
-      expect(Math.acos(particle.velocity.z)).toBeLessThanOrEqualTo(
-        emitter.angle
-      );
+      expect(Math.acos(particle.velocity.z)).toBeLessThanOrEqual(emitter.angle);
     }
   });
 });

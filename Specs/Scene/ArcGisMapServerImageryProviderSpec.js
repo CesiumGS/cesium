@@ -887,12 +887,12 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     expect(provider.url).toEqual(baseUrl);
 
     return provider.readyPromise.then(function () {
-      expect(provider.rectangle.west).toBeGreaterThanOrEqualTo(-Math.PI);
-      expect(provider.rectangle.east).toBeLessThanOrEqualTo(Math.PI);
-      expect(provider.rectangle.south).toBeGreaterThanOrEqualTo(
+      expect(provider.rectangle.west).toBeGreaterThanOrEqual(-Math.PI);
+      expect(provider.rectangle.east).toBeLessThanOrEqual(Math.PI);
+      expect(provider.rectangle.south).toBeGreaterThanOrEqual(
         -WebMercatorProjection.MaximumLatitude
       );
-      expect(provider.rectangle.north).toBeLessThanOrEqualTo(
+      expect(provider.rectangle.north).toBeLessThanOrEqual(
         WebMercatorProjection.MaximumLatitude
       );
     });

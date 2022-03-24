@@ -315,7 +315,9 @@ Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
     }
   }
 
-  const groupMetadata = content.groupMetadata;
+  const groupMetadata = defined(content.group)
+    ? content.group.metadata
+    : undefined;
   if (defined(groupMetadata)) {
     if (groupMetadata.hasPropertyBySemantic(name)) {
       return groupMetadata.getPropertyBySemantic(name);
@@ -326,9 +328,8 @@ Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
     }
   }
 
-  let tilesetMetadata = content.tileset.metadata;
-  if (defined(tilesetMetadata) && defined(tilesetMetadata.tileset)) {
-    tilesetMetadata = tilesetMetadata.tileset;
+  const tilesetMetadata = content.tileset.metadata;
+  if (defined(tilesetMetadata)) {
     if (tilesetMetadata.hasPropertyBySemantic(name)) {
       return tilesetMetadata.getPropertyBySemantic(name);
     }

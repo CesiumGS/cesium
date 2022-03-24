@@ -8,6 +8,7 @@ import { BufferUsage } from "../../Source/Cesium.js";
 import { ClearCommand } from "../../Source/Cesium.js";
 import { DrawCommand } from "../../Source/Cesium.js";
 import { ShaderProgram } from "../../Source/Cesium.js";
+import { RuntimeError } from "../../Source/Cesium.js";
 import { VertexArray } from "../../Source/Cesium.js";
 import createContext from "../createContext.js";
 
@@ -700,7 +701,7 @@ describe(
           geometry: geometry,
           interleave: true,
         });
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("throws with duplicate indices", function () {

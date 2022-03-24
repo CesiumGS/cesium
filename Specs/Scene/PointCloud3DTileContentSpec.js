@@ -1,5 +1,6 @@
 import {
   Cartesian3,
+  Cesium3DContentGroup,
   Cesium3DTilePass,
   Cesium3DTileRefine,
   Cesium3DTileStyle,
@@ -18,6 +19,7 @@ import {
   GroupMetadata,
   Pass,
   PerspectiveFrustum,
+  RuntimeError,
   Transforms,
 } from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
@@ -966,7 +968,7 @@ describe(
         .then(function () {
           expect(function () {
             scene.renderForSpecs();
-          }).toThrowRuntimeError();
+          }).toThrowError(RuntimeError);
         });
     });
 
@@ -1003,7 +1005,7 @@ describe(
         .then(function () {
           expect(function () {
             scene.renderForSpecs();
-          }).toThrowRuntimeError();
+          }).toThrowError(RuntimeError);
         });
     });
 
@@ -1298,8 +1300,10 @@ describe(
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(
           function (tileset) {
             const content = tileset.root.content;
-            content.groupMetadata = groupMetadata;
-            expect(content.groupMetadata).toBe(groupMetadata);
+            content.group = new Cesium3DContentGroup({
+              metadata: groupMetadata,
+            });
+            expect(content.group.metadata).toBe(groupMetadata);
           }
         );
       });
