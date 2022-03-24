@@ -974,6 +974,9 @@ ModelExperimental.prototype.update = function (frameState) {
     this._attenuation = this.pointCloudShading.attenuation;
   }
 
+  // Update the image-based lighting for this model to detect any changes in parameters.
+  this._imageBasedLighting.update(frameState);
+
   // short-circuit if the model resources aren't ready.
   if (!this._resourcesLoaded) {
     return;
