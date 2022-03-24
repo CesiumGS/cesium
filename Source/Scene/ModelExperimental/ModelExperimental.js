@@ -136,6 +136,17 @@ export default function ModelExperimental(options) {
    */
   this._updateModelMatrix = false;
 
+  /**
+   * If defined, this matrix is used to transform miscellaneous properties like
+   * image-based lighting instead of the modelMatrix. This is so that when models
+   * are part of a tileset these properties get transformed relative to common reference
+   * (such as the root).
+   *
+   * @type {Matrix4}
+   * @private
+   */
+  this.referenceMatrix = undefined;
+
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
 
@@ -786,6 +797,7 @@ Object.defineProperties(ModelExperimental.prototype, {
         }
         this._imageBasedLighting = value;
         this._shouldDestroyImageBasedLighting = false;
+        this.resetDrawCommands();
       }
     },
   },
@@ -1001,8 +1013,14 @@ ModelExperimental.prototype.update = function (frameState) {
     this._attenuation = this.pointCloudShading.attenuation;
   }
 
+  const referenceMatrix = defaultValue(this.referenceMatrix, this.modelMatrix);
+  this._imageBasedLighting.referenceMatrix = referenceMatrix;
+
   // Update the image-based lighting for this model to detect any changes in parameters.
   this._imageBasedLighting.update(frameState);
+  if (this._imageBasedLighting.shouldRegenerateShaders) {
+    this.resetDrawCommands();
+  }
 
   // short-circuit if the model resources aren't ready.
   if (!this._resourcesLoaded) {

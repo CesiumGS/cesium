@@ -267,7 +267,7 @@ Object.defineProperties(ImageBasedLighting.prototype, {
    * The reference frame for image-based lighting, derived from the reference matrix and the current view matrix.
    *
    * @memberof ImageBasedLighting.prototype
-   * @type {Matrix4}
+   * @type {Matrix3}
    *
    * @private
    */
