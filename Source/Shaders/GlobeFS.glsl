@@ -442,6 +442,8 @@ void main()
         AtmosphereColor atmosphereColor;
         vec3 positionWC;
 
+        // When the camera is far away (camera distance > nightFadeOutDistance), the scattering is computed in the fragment shader.
+        // Otherwise, the scattering is computed in the vertex shader.
         #ifndef PER_FRAGMENT_GROUND_ATMOSPHERE
             atmosphereColor.rayleigh = v_atmosphereRayleighColor;
             atmosphereColor.mie = v_atmosphereMieColor;
@@ -457,10 +459,12 @@ void main()
             atmosphereColor = computeGroundAtmosphereFromSpace(positionWC, dynamicLighting, atmosphereLightDirection);
         #endif
 
-        // Compute the true ground atmosphere color at the world position.
+        atmosphereColor.rayleigh = colorCorrect(atmosphereColor.rayleigh);
+        atmosphereColor.mie = colorCorrect(atmosphereColor.mie);
+
         vec4 groundAtmosphereColor = computeFinalColor(positionWC, atmosphereLightDirection, atmosphereColor.rayleigh, atmosphereColor.mie, atmosphereColor.opacity);
 
-        // If there is fog, apply it.
+        // Fog is applied to tiles selected for fog, close to the Eartth.
         #ifdef FOG
             vec3 fogColor = groundAtmosphereColor.rgb;
             
@@ -470,16 +474,25 @@ void main()
                 fogColor *= darken;                
             #endif
 
+            #ifndef HDR
+                fogColor = vec3(1.0) - exp(-fExposure * fogColor);
+            #endif
+
             #ifdef HDR
                 const float modifier = 0.15;
                 finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb, modifier), finalColor.a);
             #else
                 finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb), finalColor.a);
             #endif
+        #else
+            #ifndef HDR
+                groundAtmosphereColor.rgb = vec3(1.0) - exp(-fExposure * groundAtmosphereColor.rgb);
+            #endif
+            
+            float transmittance = (1.0 - groundAtmosphereColor.a);
+            vec3 finalAtmosphereColor = finalColor.rgb * transmittance + groundAtmosphereColor.rgb;
+            finalColor.rgb = mix(finalColor.rgb, finalAtmosphereColor, fade);
         #endif
-
-        vec3 finalAtmosphereColor = finalColor.rgb * (1.0 - groundAtmosphereColor.a) + groundAtmosphereColor.rgb;
-        finalColor.rgb = mix(finalColor.rgb, finalAtmosphereColor, fade);
     }
 #endif
 
