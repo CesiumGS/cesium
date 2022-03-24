@@ -566,7 +566,7 @@ BillboardCollection.prototype._updateBillboard = function (
   billboard,
   propertyChanged
 ) {
-  if (!billboard._dirty) {
+  if (billboard._dirty) {
     this._billboardsToUpdate[this._billboardsToUpdateIndex++] = billboard;
   }
 
