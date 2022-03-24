@@ -196,6 +196,7 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.featureIdLabel = tileset.featureIdLabel;
   model.instanceFeatureIdLabel = tileset.instanceFeatureIdLabel;
   model.lightColor = tileset.lightColor;
+  model.imageBasedLighting = tileset.imageBasedLighting;
   model.backFaceCulling = tileset.backFaceCulling;
   model.shadows = tileset.shadows;
   model.showCreditsOnScreen = tileset.showCreditsOnScreen;
@@ -326,6 +327,7 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     colorBlendMode: tileset.colorBlendMode,
     colorBlendAmount: tileset.colorBlendAmount,
     lightColor: tileset.lightColor,
+    imageBasedLighting: tileset.imageBasedLighting,
     featureIdLabel: tileset.featureIdLabel,
     instanceFeatureIdLabel: tileset.instanceFeatureIdLabel,
     pointCloudShading: tileset.pointCloudShading,

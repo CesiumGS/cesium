@@ -1,8 +1,10 @@
 import { arrayFill } from "../Source/Cesium.js";
+import { Cartesian2 } from "../Source/Cesium.js";
 import { Color } from "../Source/Cesium.js";
 import { defaultValue } from "../Source/Cesium.js";
 import { defined } from "../Source/Cesium.js";
 import { JulianDate } from "../Source/Cesium.js";
+import { ImageBasedLighting } from "../Source/Cesium.js";
 import { Resource } from "../Source/Cesium.js";
 import { Cesium3DTileContentFactory } from "../Source/Cesium.js";
 import { Cesium3DTileset } from "../Source/Cesium.js";
@@ -169,10 +171,9 @@ Cesium3DTilesTester.rejectsReadyPromiseOnError = function (
     _statistics: {
       batchTableByteLength: 0,
     },
-    imageBasedLightingFactor: {
-      x: 1,
-      y: 1,
-    },
+    imageBasedLighting: new ImageBasedLighting({
+      imageBasedLighting: new Cartesian2(1, 1),
+    }),
   };
   const url = Resource.createIfNeeded("");
   const content = Cesium3DTileContentFactory[type](
