@@ -120,7 +120,7 @@ varying float v_aspect;
 varying float v_distance;
 #endif
 
-#if defined(GROUND_ATMOSPHERE)
+#if defined(GROUND_ATMOSPHERE) || defined(FOG)
 varying vec3 v_atmosphereRayleighColor;
 varying vec3 v_atmosphereMieColor;
 varying float v_atmosphereOpacity;
@@ -284,10 +284,6 @@ vec3 colorCorrect(vec3 rgb) {
 vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates, float nightBlend);
 vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float specularMapValue, float fade);
 
-#ifdef GROUND_ATMOSPHERE
-vec4 computeGroundAtmosphereColor(vec3 positionWC, AtmosphereColor atmosphereColor, vec4 finalColor, vec3 atmosphereLightDirection, float cameraDist);
-#endif
-
 const float fExposure = 2.0;
 
 vec3 computeEllipsoidPosition()
@@ -434,34 +430,13 @@ void main()
     finalColor = vec4(mix(finalColor.rgb, u_fillHighlightColor.rgb, u_fillHighlightColor.a), finalColor.a);
 #endif
 
-// #if defined(FOG) || defined(GROUND_ATMOSPHERE)
-//     vec3 fogColor = colorCorrect(v_fogMieColor) + finalColor.rgb * colorCorrect(v_fogRayleighColor);
-// #ifndef HDR
-//     fogColor = vec3(1.0) - exp(-fExposure * fogColor);
-// #endif
-// #endif
-
 #if defined(DYNAMIC_ATMOSPHERE_LIGHTING_FROM_SUN)
     vec3 atmosphereLightDirection = czm_sunDirectionWC;
 #else
     vec3 atmosphereLightDirection = czm_lightDirectionWC;
 #endif
 
-// #ifdef FOG
-// #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
-//     float darken = clamp(dot(normalize(czm_viewerPositionWC), atmosphereLightDirection), u_minimumBrightness, 1.0);
-//     fogColor *= darken;
-// #endif
-
-// #ifdef HDR
-//     const float modifier = 0.15;
-//     finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor, modifier), finalColor.a);
-// #else
-//     finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor), finalColor.a);
-// #endif
-// #endif
-
-#ifdef GROUND_ATMOSPHERE
+#if defined(GROUND_ATMOSPHERE) || defined(FOG)
     if (!czm_backFacing())
     {
         AtmosphereColor atmosphereColor;
@@ -471,8 +446,7 @@ void main()
             atmosphereColor.rayleigh = v_atmosphereRayleighColor;
             atmosphereColor.mie = v_atmosphereMieColor;
             atmosphereColor.opacity = v_atmosphereOpacity;
-            positionWC = v_positionMC;
-            
+            positionWC = v_positionMC;            
         #else
             bool dynamicLighting = false;
             #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
@@ -483,14 +457,29 @@ void main()
             atmosphereColor = computeGroundAtmosphereFromSpace(positionWC, dynamicLighting, atmosphereLightDirection);
         #endif
 
-        vec4 groundAtmosphereColor = computeGroundAtmosphereColor(positionWC, atmosphereColor, finalColor, atmosphereLightDirection, cameraDist);
+        // Compute the true ground atmosphere color at the world position.
+        vec4 groundAtmosphereColor = computeFinalColor(positionWC, atmosphereLightDirection, atmosphereColor.rayleigh, atmosphereColor.mie, atmosphereColor.opacity);
 
+        // If there is fog, apply it.
         #ifdef FOG
-        float darken = clamp(dot(normalize(czm_viewerPositionWC), atmosphereLightDirection), u_minimumBrightness, 1.0);
-        finalColor = vec4(czm_fog(v_distance, finalColor.rgb, groundAtmosphereColor.rgb * darken * groundAtmosphereColor.a), finalColor.a);
+            vec3 fogColor = groundAtmosphereColor.rgb;
+            
+            // If there is lighting, apply that to the fog.
+            #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
+                float darken = clamp(dot(normalize(czm_viewerPositionWC), atmosphereLightDirection), u_minimumBrightness, 1.0);
+                fogColor *= darken;                
+            #endif
+
+            #ifdef HDR
+                const float modifier = 0.15;
+                finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb, modifier), finalColor.a);
+            #else
+                finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb), finalColor.a);
+            #endif
         #endif
 
-        finalColor = finalColor * (1.0 - groundAtmosphereColor.a) + groundAtmosphereColor;
+        vec3 finalAtmosphereColor = finalColor.rgb * (1.0 - groundAtmosphereColor.a) + groundAtmosphereColor.rgb;
+        finalColor.rgb = mix(finalColor.rgb, finalAtmosphereColor, fade);
     }
 #endif
 
@@ -516,32 +505,6 @@ void main()
     gl_FragColor =  finalColor;
 }
 
-#if defined(GROUND_ATMOSPHERE)
-vec4 computeGroundAtmosphereColor(vec3 positionWC, AtmosphereColor atmosphereColor, vec4 finalColor, vec3 atmosphereLightDirection, float cameraDist)
-{
-
-    vec4 groundAtmosphereColor = computeFinalColor(positionWC, atmosphereLightDirection, atmosphereColor.rayleigh, atmosphereColor.mie, atmosphereColor.opacity);
-
-
-
-    // TODO - Something with this
-    // float fadeInDist = u_nightFadeDistance.x;
-    // float fadeOutDist = u_nightFadeDistance.y;
-    // float sunlitAtmosphereIntensity = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
-
-#ifdef HDR
-    // Some tweaking to make HDR look better
-    sunlitAtmosphereIntensity = max(sunlitAtmosphereIntensity * sunlitAtmosphereIntensity, 0.03);
-#endif
-
-#ifdef HDR
-    // Some tweaking to make HDR look better
-    groundAtmosphereColor = czm_saturation(groundAtmosphereColor, 1.6);
-#endif
-
-    return groundAtmosphereColor;
-}
-#endif
 
 #ifdef SHOW_REFLECTIVE_OCEAN
 
