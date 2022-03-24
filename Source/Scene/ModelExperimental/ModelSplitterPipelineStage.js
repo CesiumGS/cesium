@@ -10,6 +10,7 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
  * @private
  */
 const ModelSplitterPipelineStage = {};
+ModelSplitterPipelineStage.name = "ModelSplitterPipelineStage"; // Helps with debugging
 
 ModelSplitterPipelineStage.SPLIT_DIRECTION_UNIFORM_NAME =
   "model_splitDirection";

@@ -862,7 +862,7 @@ Object.defineProperties(ModelExperimental.prototype, {
    * Determines whether the model casts or receives shadows from light sources.
 
    * @memberof ModelExperimental.prototype
-   * 
+   *
    * @type {ShadowMode}
    *
    * @default ShadowMode.ENABLED
@@ -1221,6 +1221,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
+ * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
  * @returns {ModelExperimental} The newly created model.
  */
 ModelExperimental.fromGltf = function (options) {
@@ -1401,5 +1402,6 @@ function makeModelOptions(loader, modelType, options) {
     backFaceCulling: options.backFaceCulling,
     shadows: options.shadows,
     showCreditsOnScreen: options.showCreditsOnScreen,
+    splitDirection: options.splitDirection,
   };
 }
