@@ -987,7 +987,8 @@ gulp.task("test", function (done) {
   const release = argv.release ? argv.release : false;
   const failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
   const suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
-  const debug = argv.debug ? false : true;
+  const singleRun = argv.debug ? false : true;
+  const html = argv.html ? true : false;
   const includeName = argv.includeName ? argv.includeName : "";
   const excludeName = argv.excludeName ? argv.excludeName : "";
 
@@ -1022,10 +1023,15 @@ gulp.task("test", function (done) {
     ];
   }
 
+  const reporters = ["spec", "longest"];
+  if (html) {
+    reporters.push("kjhtml");
+  }
+
   const karma = new Karma.Server(
     {
       configFile: karmaConfigFile,
-      singleRun: debug,
+      singleRun: singleRun,
       browsers: browsers,
       specReporter: {
         suppressErrorSummary: false,
@@ -1038,6 +1044,7 @@ gulp.task("test", function (done) {
       },
       logLevel: verbose ? Karma.constants.LOG_INFO : Karma.constants.LOG_ERROR,
       files: files,
+      reporters: reporters,
       client: {
         captureConsole: verbose,
         args: [
