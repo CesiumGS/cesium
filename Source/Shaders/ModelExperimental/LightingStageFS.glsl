@@ -24,7 +24,7 @@ vec3 computePbrLighting(czm_modelMaterial inputMaterial, ProcessedAttributes att
 
         #ifdef USE_IBL_LIGHTING
         color += imageBasedLightingStage(
-            v_positionEC,
+            attributes.positionEC,
             inputMaterial.normalEC,
             czm_lightDirectionEC,
             lightColorHdr,

@@ -132,7 +132,7 @@ vec3 textureIBL(
     vec3 specularIBL = vec3(0.0); 
     #endif
 
-    return diffuseIrradiance * diffuseColor + specularColor * specularIBL;
+    return diffuseColor * diffuseIrradiance + specularColor * specularIBL;
 }
 
 vec3 imageBasedLightingStage(
