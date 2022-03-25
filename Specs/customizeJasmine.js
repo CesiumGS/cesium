@@ -126,6 +126,7 @@ function customizeJasmine(
     window.webglStub = true;
   }
 
+  env.hideDisabled(true);
   //env.catchExceptions(true);
 
   env.beforeEach(function () {
