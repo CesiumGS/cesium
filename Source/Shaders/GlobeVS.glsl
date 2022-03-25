@@ -215,7 +215,7 @@ void main()
     v_positionMC = position3DWC;  // position in model coordinates
 #endif
 
-#if defined(FOG) || defined(GROUND_ATMOSPHERE)
+#if defined(FOG) || (defined(GROUND_ATMOSPHERE) && !defined(PER_FRAGMENT_GROUND_ATMOSPHERE))
 
     bool dynamicLighting = false;
 

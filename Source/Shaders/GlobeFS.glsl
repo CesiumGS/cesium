@@ -439,6 +439,11 @@ void main()
 #if defined(GROUND_ATMOSPHERE) || defined(FOG)
     if (!czm_backFacing())
     {
+        bool dynamicLighting = false;
+        #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
+            dynamicLighting = true;          
+        #endif
+
         AtmosphereColor atmosphereColor;
         vec3 positionWC;
 
@@ -450,11 +455,6 @@ void main()
             atmosphereColor.opacity = v_atmosphereOpacity;
             positionWC = v_positionMC;            
         #else
-            bool dynamicLighting = false;
-            #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
-                dynamicLighting = true;
-            #endif
-
             positionWC = computeEllipsoidPosition();
             atmosphereColor = computeGroundAtmosphereFromSpace(positionWC, dynamicLighting, atmosphereLightDirection);
         #endif
@@ -462,7 +462,7 @@ void main()
         atmosphereColor.rayleigh = colorCorrect(atmosphereColor.rayleigh);
         atmosphereColor.mie = colorCorrect(atmosphereColor.mie);
 
-        vec4 groundAtmosphereColor = computeFinalColor(positionWC, atmosphereLightDirection, atmosphereColor.rayleigh, atmosphereColor.mie, atmosphereColor.opacity);
+        vec4 groundAtmosphereColor = computeFinalColor(positionWC, dynamicLighting, atmosphereLightDirection, atmosphereColor.rayleigh, atmosphereColor.mie, atmosphereColor.opacity);
 
         // Fog is applied to tiles selected for fog, close to the Eartth.
         #ifdef FOG

@@ -32,7 +32,7 @@ void computeScattering(
 
     vec2 HEIGHT_SCALE = vec2(RAYLEIGH_HEIGHT_LIMIT, MIE_HEIGHT_LIMIT);
 
-    float planetRadius = 6356752.3142;
+    float planetRadius = (length(czm_viewerPositionWC) - czm_eyeHeight) - (6378137.0 - 6356752.3142451);
     float AtmosphereRadius = planetRadius + ATMOSPHERE_THICKNESS;
 
     // Initialize the default scattering amounts to 0.
@@ -119,8 +119,9 @@ void computeScattering(
     opacity = length(exp(-((BETA_MIE * opticalDepth.y) + (BETA_RAYLEIGH * opticalDepth.x))));
 }
 
-vec4 computeFinalColor(vec3 positionWC, vec3 lightDirection, vec3 rayleighColor, vec3 mieColor, float opacity)
+vec4 computeFinalColor(vec3 positionWC, bool dynamicLighting, vec3 lightDirectionWC, vec3 rayleighColor, vec3 mieColor, float opacity)
 {
+    vec3 lightDirection = czm_branchFreeTernary(dynamicLighting, lightDirectionWC, normalize(positionWC));
     vec3 cameraToPositionRay = positionWC - czm_viewerPositionWC;
     vec3 direction = normalize(cameraToPositionRay);
 
