@@ -117,7 +117,14 @@ GeometryPipelineStage.process = function (renderResources, primitive) {
       index = 0;
     } else {
       // The attribute index is taken from the node render resources, which may have added some attributes of its own.
-      index = renderResources.attributeIndex++;
+      index = renderResources.attributeIndex;
+
+      // Most attribute types fit in a single vec4, but matrices require
+      // multiple attribute locations
+      // TODO: not quite right, we really need to upload 4 separate attributes...
+      renderResources.attributeIndex += AttributeType.getAttributeLocationCount(
+        attribute.type
+      );
     }
     processAttribute(renderResources, attribute, index);
   }
