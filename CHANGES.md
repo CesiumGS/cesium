@@ -26,6 +26,7 @@
 - Fixed an issue with Firefox and dimensionless SVG images. [#9191](https://github.com/CesiumGS/cesium/pull/9191)
 - Fixed `ShadowMap` documentation for `options.pointLightRadius` type. [#10195](https://github.com/CesiumGS/cesium/pull/10195)
 - Fixed evaluation of `minimumLevel` on metadataFailure for TileMapServiceImageryProvider.
+- Fixed a bug where models without normals would render as solid black. Now such models will fall back to unlit shading. [#10237](https://github.com/CesiumGS/cesium/pull/10237)
 
 ##### Deprecated :hourglass_flowing_sand:
 
