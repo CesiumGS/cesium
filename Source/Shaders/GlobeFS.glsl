@@ -441,7 +441,7 @@ void main()
     {
         bool dynamicLighting = false;
         #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
-            dynamicLighting = true;          
+            dynamicLighting = true;     
         #endif
 
         AtmosphereColor atmosphereColor;
@@ -475,15 +475,13 @@ void main()
             #endif
 
             #ifndef HDR
-                fogColor = vec3(1.0) - exp(-fExposure * fogColor);
+                fogColor.rgb = czm_acesTonemapping(fogColor.rgb);
+                fogColor.rgb = czm_inverseGamma(fogColor.rgb);
             #endif
+            
+            const float modifier = 0.175;
+            finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb, modifier), finalColor.a);
 
-            #ifdef HDR
-                const float modifier = 0.15;
-                finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb, modifier), finalColor.a);
-            #else
-                finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb), finalColor.a);
-            #endif
         #else
             #ifndef HDR
                 groundAtmosphereColor.rgb = vec3(1.0) - exp(-fExposure * groundAtmosphereColor.rgb);

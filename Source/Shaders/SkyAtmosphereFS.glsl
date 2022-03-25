@@ -44,11 +44,10 @@ void main (void)
     color.rgb = czm_HSBToRGB(hsb);
 #endif
 
-    // Apply tonemapping
-    float exposure = 1.0;
-    color = vec4(1.0 - exp(-exposure * color));
-    float gamma = 0.8;
-    color = pow(color, vec4(1.0 / gamma));
+#ifndef HDR
+    color.rgb = czm_acesTonemapping(color.rgb);
+    color.rgb = czm_inverseGamma(color.rgb);
+#endif
 
     gl_FragColor= color;
 }
