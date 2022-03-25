@@ -237,6 +237,35 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.BLEND);
   });
 
+  it("unlit and translucency work even if no shader code is present", function () {
+    const shaderBuilder = new ShaderBuilder();
+    const model = {
+      customShader: new CustomShader({
+        lightingModel: LightingModel.PBR,
+        isTranslucent: true,
+      }),
+    };
+    const renderResources = {
+      shaderBuilder: shaderBuilder,
+      model: model,
+      lightingOptions: new ModelLightingOptions(),
+      alphaOptions: new ModelAlphaOptions(),
+    };
+
+    CustomShaderPipelineStage.process(renderResources, primitive);
+
+    expect(renderResources.alphaOptions.pass).toBe(Pass.TRANSLUCENT);
+    expect(renderResources.alphaOptions.alphaMode).toBe(AlphaMode.BLEND);
+
+    expect(renderResources.lightingOptions.lightingModel).toBe(
+      LightingModel.PBR
+    );
+
+    // the shader code proper gets optimized out
+    ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, []);
+    ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, []);
+  });
+
   it("generates shader code from built-in attributes", function () {
     const shaderBuilder = new ShaderBuilder();
     const model = {
