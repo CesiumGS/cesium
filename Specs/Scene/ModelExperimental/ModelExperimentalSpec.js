@@ -1,6 +1,8 @@
 import {
+  Cartesian2,
   Cesium3DTileStyle,
   FeatureDetection,
+  ImageBasedLighting,
   JulianDate,
   defaultValue,
   Matrix4,
@@ -736,6 +738,66 @@ describe(
           verifyRender(model, true);
         }
       );
+    });
+
+    it("initializes with imageBasedLighting", function () {
+      const ibl = new ImageBasedLighting({
+        imageBasedLightingFactor: Cartesian2.ZERO,
+        luminanceAtZenith: 0.5,
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl, imageBasedLighting: ibl },
+        scene
+      ).then(function (model) {
+        expect(model.imageBasedLighting).toBe(ibl);
+      });
+    });
+
+    it("creates default imageBasedLighting", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl },
+        scene
+      ).then(function (model) {
+        const imageBasedLighting = model.imageBasedLighting;
+        expect(imageBasedLighting).toBeDefined();
+        expect(
+          Cartesian2.equals(
+            imageBasedLighting.imageBasedLightingFactor,
+            new Cartesian2(1, 1)
+          )
+        ).toBe(true);
+        expect(imageBasedLighting.luminanceAtZenith).toBe(0.2);
+        expect(
+          imageBasedLighting.sphericalHarmonicCoefficients
+        ).toBeUndefined();
+        expect(imageBasedLighting.specularEnvironmentMaps).toBeUndefined();
+      });
+    });
+
+    it("changing imageBasedLighting works", function () {
+      const imageBasedLighting = new ImageBasedLighting({
+        imageBasedLightingFactor: Cartesian2.ZERO,
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl },
+        scene
+      ).then(function (model) {
+        const renderOptions = {
+          scene: scene,
+          time: new JulianDate(2456659.0004050927),
+        };
+
+        let result;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          result = rgba;
+        });
+
+        model.imageBasedLighting = imageBasedLighting;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual(result);
+        });
+      });
     });
 
     it("initializes with scale", function () {

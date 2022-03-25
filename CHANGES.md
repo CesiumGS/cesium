@@ -16,6 +16,7 @@
 - `Cesium3DTileset` now has a `splitDirection` property, allowing the tileset to only be drawn on the left or right side of the screen. This is useful for visual comparison of tilesets.
 - Added experimental support for the [3D Tiles 1.1 draft](https://github.com/CesiumGS/3d-tiles/pull/666). [#10189](https://github.com/CesiumGS/cesium/pull/10189)
 - Added `lightColor` to `ModelExperimental` [#10207](https://github.com/CesiumGS/cesium/pull/10207)
+- Added image-based lighting to `ModelExperimental`. [#10234](https://github.com/CesiumGS/cesium/pull/10234)
 - Added a 'renderable' property to 'Fog' to disable its visual rendering while preserving tiles culling at a distance
 - Refactored metadata API so `tileset.metadata` and `content.group.metadata` are more symmetric with `content.metadata` and `tile.metadata`. [#10224](https://github.com/CesiumGS/cesium/pull/10224)
 

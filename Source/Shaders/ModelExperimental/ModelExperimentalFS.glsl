@@ -59,7 +59,7 @@ void main()
     customShaderStage(material, attributes, featureIds);
     #endif
 
-    lightingStage(material);
+    lightingStage(material, attributes);
 
     #ifdef HAS_SELECTED_FEATURE_ID
     cpuStylingStage(material, selectedFeature);

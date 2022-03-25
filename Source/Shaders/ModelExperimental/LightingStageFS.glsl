@@ -1,5 +1,5 @@
 #ifdef LIGHTING_PBR
-vec3 computePbrLighting(czm_modelMaterial inputMaterial)
+vec3 computePbrLighting(czm_modelMaterial inputMaterial, ProcessedAttributes attributes)
 {
     czm_pbrParameters pbrParameters;
     pbrParameters.diffuseColor = inputMaterial.diffuse;
@@ -15,12 +15,22 @@ vec3 computePbrLighting(czm_modelMaterial inputMaterial)
     vec3 color = inputMaterial.diffuse;
     #ifdef HAS_NORMALS
     color = czm_pbrLighting(
-        v_positionEC,
+        attributes.positionEC,
         inputMaterial.normalEC,
         czm_lightDirectionEC,
         lightColorHdr,
         pbrParameters
     );
+
+        #ifdef USE_IBL_LIGHTING
+        color += imageBasedLightingStage(
+            attributes.positionEC,
+            inputMaterial.normalEC,
+            czm_lightDirectionEC,
+            lightColorHdr,
+            pbrParameters
+        );
+        #endif
     #endif
 
     color *= inputMaterial.occlusion;
@@ -38,14 +48,14 @@ vec3 computePbrLighting(czm_modelMaterial inputMaterial)
 }
 #endif
 
-void lightingStage(inout czm_modelMaterial material)
+void lightingStage(inout czm_modelMaterial material, ProcessedAttributes attributes)
 {
     // Even though the lighting will only set the diffuse color,
     // pass all other properties so further stages have access to them.
     vec3 color = vec3(0.0);
 
     #ifdef LIGHTING_PBR
-    color = computePbrLighting(material);
+    color = computePbrLighting(material, attributes);
     #else // unlit
     color = material.diffuse;
     #endif
