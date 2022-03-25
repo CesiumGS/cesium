@@ -36,8 +36,9 @@ void computeAtmosphericScattering(
     const float lightRaySteps = 4.0;
 
     // Setup the radii for the inner and outer ring of the atmosphere.
-    float atmosphereInnerRadius = u_radiiAndDynamicAtmosphereColor.y;
-    float atmosphereOuterRadius = u_radiiAndDynamicAtmosphereColor.y + ATMOSPHERE_THICKNESS;
+    float ellipsoidRadiiDifference = u_radiiAndDynamicAtmosphereColor.x - u_radiiAndDynamicAtmosphereColor.y;
+    float atmosphereInnerRadius = (length(czm_viewerPositionWC) - czm_eyeHeight) - ellipsoidRadiiDifference;
+    float atmosphereOuterRadius = atmosphereInnerRadius + ATMOSPHERE_THICKNESS;
 
     // Setup the primary ray: from the camera position to the vertex position.
     vec3 cameraToPositionWC = positionWC - czm_viewerPositionWC;
