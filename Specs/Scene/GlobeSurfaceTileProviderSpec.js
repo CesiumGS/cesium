@@ -543,7 +543,6 @@ describe(
           expect(scene).notToRender([0, 0, 0, 255]);
 
           scene.fog.enabled = true;
-          scene.fog.renderable = false;
           scene.fog.density = 0.001;
           scene.fog.screenSpaceErrorFactor = 0.0;
 
