@@ -12,6 +12,7 @@ import DequantizationPipelineStage from "./DequantizationPipelineStage.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
+import MetadataPipelineStage from "./MetadataPipelineStage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
 import PointCloudAttenuationPipelineStage from "./PointCloudAttenuationPipelineStage.js";
@@ -151,7 +152,10 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
     pipelineStages.push(MaterialPipelineStage);
   }
 
+  // These stages are always run to ensure structs
+  // are declared to avoid compilation errors.
   pipelineStages.push(FeatureIdPipelineStage);
+  pipelineStages.push(MetadataPipelineStage);
 
   if (featureIdFlags.hasPropertyTable) {
     pipelineStages.push(SelectedFeatureIdPipelineStage);

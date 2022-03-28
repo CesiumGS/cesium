@@ -8,6 +8,7 @@ import CustomShaderStageFS from "../../Shaders/ModelExperimental/CustomShaderSta
 import AlphaMode from "../AlphaMode.js";
 import CustomShaderMode from "./CustomShaderMode.js";
 import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
+import MetadataPipelineStage from "./MetadataPipelineStage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
@@ -512,6 +513,12 @@ function addVertexLinesToShader(shaderBuilder, vertexLines) {
     FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
     "featureIds"
   );
+  // Add Metadata struct from the metadata stage
+  shaderBuilder.addStructField(
+    structId,
+    MetadataPipelineStage.STRUCT_NAME_METADATA,
+    "metadata"
+  );
 
   const functionId =
     CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS;
@@ -561,6 +568,12 @@ function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
     structId,
     FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
     "featureIds"
+  );
+  // Add Metadata struct from the metadata stage
+  shaderBuilder.addStructField(
+    structId,
+    MetadataPipelineStage.STRUCT_NAME_METADATA,
+    "metadata"
   );
 
   const functionId =

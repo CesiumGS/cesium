@@ -17,6 +17,7 @@ import {
   InstanceAttributeSemantic,
   JobScheduler,
   PrimitiveType,
+  Matrix2,
   Matrix4,
   MetadataComponentType,
   MetadataType,
@@ -78,6 +79,8 @@ describe(
       "./Data/Models/GltfLoader/Weather/glTF/weather_EXT_feature_metadata.gltf";
     const pointCloudWithPropertyAttributes =
       "./Data/Models/GltfLoader/PointCloudWithPropertyAttributes/glTF/PointCloudWithPropertyAttributes.gltf";
+    const boxWithPropertyAttributes =
+      "./Data/Models/GltfLoader/BoxTexturedWithPropertyAttributes/glTF/BoxTexturedWithPropertyAttributes.gltf";
     const boxInstanced =
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
     const boxInstancedLegacy =
@@ -1657,6 +1660,263 @@ describe(
         expect(propertyAttribute.getProperty("pointId").attribute).toBe(
           "_FEATURE_ID_1"
         );
+
+        // A few more properties were added to test offset/scale
+        const toroidalNormalized = propertyAttribute.getProperty(
+          "toroidalNormalized"
+        );
+        expect(toroidalNormalized.attribute).toBe("_FEATURE_ID_0");
+        expect(toroidalNormalized.hasValueTransform).toBe(true);
+        expect(toroidalNormalized.offset).toBe(0);
+        expect(toroidalNormalized.scale).toBe(0.034482758620689655);
+
+        const poloidalNormalized = propertyAttribute.getProperty(
+          "poloidalNormalized"
+        );
+        expect(poloidalNormalized.attribute).toBe("_FEATURE_ID_1");
+        expect(poloidalNormalized.hasValueTransform).toBe(true);
+        expect(poloidalNormalized.offset).toBe(0);
+        expect(poloidalNormalized.scale).toBe(0.05263157894736842);
+
+        // These two properties have offset/scale in both the class definition
+        // and the property attribute. The latter should be used.
+        const toroidalAngle = propertyAttribute.getProperty("toroidalAngle");
+        expect(toroidalAngle.attribute).toBe("_FEATURE_ID_0");
+        expect(toroidalAngle.hasValueTransform).toBe(true);
+        expect(toroidalAngle.offset).toBe(0);
+        expect(toroidalAngle.scale).toBe(0.21666156231653746);
+
+        const poloidalAngle = propertyAttribute.getProperty("poloidalAngle");
+        expect(poloidalAngle.attribute).toBe("_FEATURE_ID_1");
+        expect(poloidalAngle.hasValueTransform).toBe(true);
+        expect(poloidalAngle.offset).toBe(-3.141592653589793);
+        expect(poloidalAngle.scale).toBe(0.3306939635357677);
+      });
+    });
+
+    it("loads BoxTexturedWithPropertyAttributes", function () {
+      return loadGltf(boxWithPropertyAttributes).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const nodes = components.nodes;
+        const rootNode = scene.nodes[0];
+        const childNode = rootNode.children[0];
+        const primitive = childNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        const texcoordAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
+        const warpMatrixAttribute = getAttributeByName(
+          attributes,
+          "_WARP_MATRIX"
+        );
+        const temperaturesAttribute = getAttributeByName(
+          attributes,
+          "_TEMPERATURES"
+        );
+
+        const indices = primitive.indices;
+        const material = primitive.material;
+        const metallicRoughness = material.metallicRoughness;
+
+        expect(primitive.attributes.length).toBe(5);
+        expect(primitive.primitiveType).toBe(PrimitiveType.TRIANGLES);
+
+        expect(positionAttribute.name).toBe("POSITION");
+        expect(positionAttribute.semantic).toBe(
+          VertexAttributeSemantic.POSITION
+        );
+        expect(positionAttribute.setIndex).toBeUndefined();
+        expect(positionAttribute.componentDatatype).toBe(
+          ComponentDatatype.FLOAT
+        );
+        expect(positionAttribute.type).toBe(AttributeType.VEC3);
+        expect(positionAttribute.normalized).toBe(false);
+        expect(positionAttribute.count).toBe(24);
+        expect(positionAttribute.min).toEqual(new Cartesian3(-0.5, -0.5, -0.5));
+        expect(positionAttribute.max).toEqual(new Cartesian3(0.5, 0.5, 0.5));
+        expect(positionAttribute.constant).toEqual(Cartesian3.ZERO);
+        expect(positionAttribute.quantization).toBeUndefined();
+        expect(positionAttribute.typedArray).toBeUndefined();
+        expect(positionAttribute.buffer).toBeDefined();
+        expect(positionAttribute.byteOffset).toBe(288);
+        expect(positionAttribute.byteStride).toBe(12);
+
+        expect(normalAttribute.name).toBe("NORMAL");
+        expect(normalAttribute.semantic).toBe(VertexAttributeSemantic.NORMAL);
+        expect(normalAttribute.setIndex).toBeUndefined();
+        expect(normalAttribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
+        expect(normalAttribute.type).toBe(AttributeType.VEC3);
+        expect(normalAttribute.normalized).toBe(false);
+        expect(normalAttribute.count).toBe(24);
+        expect(normalAttribute.min).toEqual(new Cartesian3(-1.0, -1.0, -1.0));
+        expect(normalAttribute.max).toEqual(new Cartesian3(1.0, 1.0, 1.0));
+        expect(normalAttribute.constant).toEqual(Cartesian3.ZERO);
+        expect(normalAttribute.quantization).toBeUndefined();
+        expect(normalAttribute.typedArray).toBeUndefined();
+        expect(normalAttribute.buffer).toBeDefined();
+        expect(normalAttribute.byteOffset).toBe(0);
+        expect(normalAttribute.byteStride).toBe(12);
+
+        expect(texcoordAttribute.name).toBe("TEXCOORD_0");
+        expect(texcoordAttribute.semantic).toBe(
+          VertexAttributeSemantic.TEXCOORD
+        );
+        expect(texcoordAttribute.setIndex).toBe(0);
+        expect(texcoordAttribute.componentDatatype).toBe(
+          ComponentDatatype.FLOAT
+        );
+        expect(texcoordAttribute.type).toBe(AttributeType.VEC2);
+        expect(texcoordAttribute.normalized).toBe(false);
+        expect(texcoordAttribute.count).toBe(24);
+        expect(texcoordAttribute.min).toEqual(new Cartesian2(0.0, 0.0));
+        expect(texcoordAttribute.max).toEqual(new Cartesian2(6.0, 1.0));
+        expect(texcoordAttribute.constant).toEqual(Cartesian2.ZERO);
+        expect(texcoordAttribute.quantization).toBeUndefined();
+        expect(texcoordAttribute.typedArray).toBeUndefined();
+        expect(texcoordAttribute.buffer).toBeDefined();
+        expect(texcoordAttribute.byteOffset).toBe(0);
+        expect(texcoordAttribute.byteStride).toBe(8);
+
+        expect(warpMatrixAttribute.name).toBe("_WARP_MATRIX");
+        expect(warpMatrixAttribute.semantic).toBeUndefined();
+        expect(warpMatrixAttribute.setIndex).toBeUndefined();
+        expect(warpMatrixAttribute.componentDatatype).toBe(
+          ComponentDatatype.FLOAT
+        );
+        expect(warpMatrixAttribute.type).toBe(AttributeType.MAT2);
+        expect(warpMatrixAttribute.normalized).toBe(false);
+        expect(warpMatrixAttribute.count).toBe(24);
+        expect(warpMatrixAttribute.min).toBeUndefined();
+        expect(warpMatrixAttribute.max).toBeUndefined();
+        expect(warpMatrixAttribute.constant).toEqual(Matrix2.ZERO);
+        expect(warpMatrixAttribute.quantization).toBeUndefined();
+        expect(warpMatrixAttribute.typedArray).toBeUndefined();
+        expect(warpMatrixAttribute.buffer).toBeDefined();
+        expect(warpMatrixAttribute.byteOffset).toBe(0);
+        expect(warpMatrixAttribute.byteStride).toBe(16);
+
+        expect(temperaturesAttribute.name).toBe("_TEMPERATURES");
+        expect(temperaturesAttribute.semantic).toBeUndefined();
+        expect(temperaturesAttribute.setIndex).toBeUndefined();
+        expect(temperaturesAttribute.componentDatatype).toBe(
+          ComponentDatatype.UNSIGNED_SHORT
+        );
+        expect(temperaturesAttribute.type).toBe(AttributeType.VEC2);
+        expect(temperaturesAttribute.normalized).toBe(true);
+        expect(temperaturesAttribute.count).toBe(24);
+        expect(temperaturesAttribute.min).toBeUndefined();
+        expect(temperaturesAttribute.max).toBeUndefined();
+        expect(temperaturesAttribute.constant).toEqual(Cartesian2.ZERO);
+        expect(temperaturesAttribute.quantization).toBeUndefined();
+        expect(temperaturesAttribute.typedArray).toBeUndefined();
+        expect(temperaturesAttribute.buffer).toBeDefined();
+        expect(temperaturesAttribute.byteOffset).toBe(0);
+        expect(temperaturesAttribute.byteStride).toBe(4);
+
+        expect(indices.indexDatatype).toBe(IndexDatatype.UNSIGNED_SHORT);
+        expect(indices.count).toBe(36);
+        expect(indices.buffer).toBeDefined();
+        expect(indices.buffer.sizeInBytes).toBe(72);
+
+        expect(positionAttribute.buffer).toBe(normalAttribute.buffer);
+        expect(positionAttribute.buffer).not.toBe(texcoordAttribute.buffer);
+
+        expect(positionAttribute.buffer.sizeInBytes).toBe(576);
+        expect(texcoordAttribute.buffer.sizeInBytes).toBe(192);
+
+        expect(metallicRoughness.baseColorFactor).toEqual(
+          new Cartesian4(1.0, 1.0, 1.0, 1.0)
+        );
+        expect(metallicRoughness.metallicFactor).toBe(0.0);
+        expect(metallicRoughness.roughnessFactor).toBe(1.0);
+        expect(metallicRoughness.baseColorTexture.texture.width).toBe(256);
+        expect(metallicRoughness.baseColorTexture.texture.height).toBe(256);
+        expect(metallicRoughness.baseColorTexture.texCoord).toBe(0);
+
+        const sampler = metallicRoughness.baseColorTexture.texture.sampler;
+        expect(sampler.wrapS).toBe(TextureWrap.REPEAT);
+        expect(sampler.wrapT).toBe(TextureWrap.REPEAT);
+        expect(sampler.magnificationFilter).toBe(
+          TextureMagnificationFilter.LINEAR
+        );
+        expect(sampler.minificationFilter).toBe(
+          TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
+        );
+
+        expect(nodes.length).toBe(2);
+        expect(scene.nodes.length).toBe(1);
+
+        const structuralMetadata = components.structuralMetadata;
+        const boxClass = structuralMetadata.schema.classes.warpedBox;
+        const boxProperties = boxClass.properties;
+
+        const warpMatrixProperty = boxProperties.warpMatrix;
+        expect(warpMatrixProperty.type).toBe(MetadataType.MAT2);
+        expect(warpMatrixProperty.componentType).toBe(
+          MetadataComponentType.FLOAT32
+        );
+        expect(warpMatrixProperty.hasValueTransform).toBe(false);
+
+        const transformedWarpMatrixProperty =
+          boxProperties.transformedWarpMatrix;
+        expect(transformedWarpMatrixProperty.type).toBe(MetadataType.MAT2);
+        expect(transformedWarpMatrixProperty.componentType).toBe(
+          MetadataComponentType.FLOAT32
+        );
+        expect(transformedWarpMatrixProperty.hasValueTransform).toBe(true);
+        expect(transformedWarpMatrixProperty.offset).toEqual([
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+        ]);
+        expect(transformedWarpMatrixProperty.scale).toEqual([2, 2, 2, 2]);
+
+        const temperaturesProperty = boxProperties.temperatures;
+        expect(temperaturesProperty.type).toBe(MetadataType.VEC2);
+        expect(temperaturesProperty.componentType).toBe(
+          MetadataComponentType.UINT16
+        );
+        expect(temperaturesProperty.normalized).toBe(true);
+        expect(temperaturesProperty.hasValueTransform).toBe(true);
+        expect(temperaturesProperty.offset).toEqual([20, 10]);
+        expect(temperaturesProperty.scale).toEqual([5, 20]);
+
+        const propertyAttribute = structuralMetadata.getPropertyAttribute(0);
+        expect(propertyAttribute.id).toBe(0);
+        expect(propertyAttribute.name).toBeUndefined();
+        expect(propertyAttribute.class).toBe(boxClass);
+
+        const warpMatrix = propertyAttribute.getProperty("warpMatrix");
+        expect(warpMatrix.attribute).toBe("_WARP_MATRIX");
+        expect(warpMatrix.hasValueTransform).toBe(false);
+
+        const transformedWarpMatrix = propertyAttribute.getProperty(
+          "transformedWarpMatrix"
+        );
+        expect(transformedWarpMatrix.attribute).toBe("_WARP_MATRIX");
+        expect(transformedWarpMatrix.hasValueTransform).toBe(true);
+        expect(transformedWarpMatrix.offset).toEqual(
+          new Matrix2(0.5, 0.5, 0.5, 0.5)
+        );
+        expect(transformedWarpMatrix.scale).toEqual(new Matrix2(2, 2, 2, 2));
+
+        const temperatures = propertyAttribute.getProperty("temperatures");
+        expect(temperatures.attribute).toBe("_TEMPERATURES");
+        expect(temperatures.hasValueTransform).toBe(true);
+        expect(temperatures.offset).toEqual(new Cartesian2(20, 10));
+        expect(temperatures.scale).toEqual(new Cartesian2(5, 20));
       });
     });
 

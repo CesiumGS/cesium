@@ -484,6 +484,21 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * The structural metadata from the EXT_structural_metadata extension
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {StructuralMetadata}
+   * @readonly
+   * @private
+   */
+  structuralMetadata: {
+    get: function () {
+      return this._sceneGraph.components.structuralMetadata;
+    },
+  },
+
+  /**
    * The ID for the feature table to use for picking and styling in this model.
    *
    * @memberof ModelExperimental.prototype
