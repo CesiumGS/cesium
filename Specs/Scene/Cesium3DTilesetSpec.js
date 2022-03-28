@@ -6231,12 +6231,7 @@ describe(
           expect(metadata).toBeDefined();
 
           const groups = metadata.groups;
-          const groupIds = metadata.groupIds;
           expect(groups).toBeDefined();
-          expect(groupIds).toEqual([
-            "residentialDistrict",
-            "commercialDistrict",
-          ]);
 
           let group = groups[1];
           expect(group).toBeDefined();
