@@ -50,6 +50,14 @@ void computeAtmosphericScattering(
     // Calculate intersection from the camera to the outer ring of the atmosphere.
     czm_raySegment primaryRayAtmosphereIntersect = czm_raySphereIntersectionInterval(primaryRay, origin, atmosphereOuterRadius);
 
+    // Return empty colors if intersects with globe geometry, if globe is translucent and camera is inside atmosphere.
+    #if defined(GLOBE_TRANSLUCENT) && defined(SKY_FROM_ATMOSPHERE)
+        czm_raySegment primaryRayEarthIntersect = czm_raySphereIntersectionInterval(primaryRay, origin, atmosphereInnerRadius + ellipsoidRadiiDifference);
+        if (primaryRayEarthIntersect.start > 0.0 && primaryRayEarthIntersect.stop > 0.0) {
+            return;
+        }
+    #endif
+
     // Return empty colors if no intersection with the atmosphere geometry.
     if (primaryRayAtmosphereIntersect == czm_emptyRaySegment) {
         return;
