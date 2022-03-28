@@ -123,8 +123,9 @@ function addPropertyAttributeProperty(
   const metadataVariable = sanitizeGlslIdentifier(propertyId);
   const attributeVariable = attributeInfo.variableName;
 
-  // TODO: Is it safe to assume that the attribute type matches the final GLSL
-  // type? in particular, is normalization handled properly?
+  // in WebGL 1, attributes must have floating point components, so it's safe
+  // to assume here that the types will match. Even if the property was
+  // normalized, this is handled at upload time, not in the shader.
   const glslType = attributeInfo.glslType;
 
   const shaderBuilder = renderResources.shaderBuilder;

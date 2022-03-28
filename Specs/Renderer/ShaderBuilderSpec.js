@@ -562,7 +562,9 @@ describe(
     it("setPositionAttribute creates a position attribute in location 0", function () {
       const shaderBuilder = new ShaderBuilder();
 
-      // even though these are declared out of order, the results to
+      // Even though these are declared out of order, position will always
+      // be assigned to location 0, and other attributes are assigned to
+      // locations 1 or greater.
       const normalLocation = shaderBuilder.addAttribute("vec3", "a_normal");
       const positionLocation = shaderBuilder.setPositionAttribute(
         "vec3",
@@ -629,7 +631,6 @@ describe(
     it("addAttribute creates an attribute in the vertex shader", function () {
       const shaderBuilder = new ShaderBuilder();
 
-      // even though these are declared out of order, the results to
       const colorLocation = shaderBuilder.addAttribute("vec4", "a_color");
       const normalLocation = shaderBuilder.addAttribute("vec3", "a_normal");
       expect(colorLocation).toBe(1);
@@ -652,7 +653,6 @@ describe(
     it("addAttribute handles matrix attribute locations correctly", function () {
       const shaderBuilder = new ShaderBuilder();
 
-      // even though these are declared out of order, the results to
       const matrixLocation = shaderBuilder.addAttribute("mat3", "a_warpMatrix");
       const colorLocation = shaderBuilder.addAttribute("vec3", "a_color");
       expect(matrixLocation).toBe(1);

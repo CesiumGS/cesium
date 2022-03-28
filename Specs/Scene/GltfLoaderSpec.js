@@ -1729,30 +1729,6 @@ describe(
         const material = primitive.material;
         const metallicRoughness = material.metallicRoughness;
 
-        // prettier-ignore
-        const rootMatrix = new Matrix4(
-          1.0, 0.0, 0.0, 0.0,
-          0.0, 0.0, 1.0, 0.0,
-          0.0, -1.0, 0.0, 0.0,
-          0.0, 0.0, 0.0, 1.0
-        );
-
-        const childMatrix = Matrix4.IDENTITY;
-
-        expect(rootNode.children.length).toBe(1);
-        expect(rootNode.primitives.length).toBe(0);
-        expect(rootNode.matrix).toEqual(rootMatrix);
-        expect(rootNode.translation).toBeUndefined();
-        expect(rootNode.rotation).toBeUndefined();
-        expect(rootNode.scale).toBeUndefined();
-
-        expect(childNode.children.length).toBe(0);
-        expect(childNode.primitives.length).toBe(1);
-        expect(childNode.matrix).toEqual(childMatrix);
-        expect(childNode.translation).toBeUndefined();
-        expect(childNode.rotation).toBeUndefined();
-        expect(childNode.scale).toBeUndefined();
-
         expect(primitive.attributes.length).toBe(5);
         expect(primitive.primitiveType).toBe(PrimitiveType.TRIANGLES);
 
