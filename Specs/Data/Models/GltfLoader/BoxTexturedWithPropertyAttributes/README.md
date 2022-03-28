@@ -1,6 +1,6 @@
 # Box Textured with Property Attributes
 
-This is a variation on BoxTextured that adds EXT_structural_metadata to put matrices and normalized vectors at each vertex. This model is contrived; it was designed for unit testing only.
+This is a variation on BoxTextured that adds EXT_structural_metadata to put matrices and normalized vectors at each vertex. This model is quite contrived; it was designed for unit testing only.
 
 ## Screenshot
 

@@ -1,7 +1,6 @@
 import numpy
 
 VERTEX_COUNT = 24
-SCALE_OPTIONS = [0.25, 0.5, 1.0, 2.0, 4.0]
 ROW_STRIDE = 2
 ROWS_PER_MATRIX = 2
 COLUMNS_PER_MATRIX = 4
@@ -20,6 +19,13 @@ def make_scale(scale_factor):
         dtype=numpy.float32
     )
 
+MATRICES = [
+    make_scale(0.25),
+    make_scale(0.5),
+    make_scale(1.0),
+    make_scale(2.0),
+]
+
 def set_mat2(big_matrix, vertex_id, matrix):
     start_row = vertex_id * 2
     end_row = start_row + 2
@@ -32,11 +38,8 @@ def make_warp_matrices():
     )
 
     for i in range(VERTEX_COUNT):
-        scale_factor = SCALE_OPTIONS[i % len(SCALE_OPTIONS)]
-        scale_matrix = make_scale(scale_factor)
-        set_mat2(buffer_view, i, scale_matrix)
-    
-    print(buffer_view.shape)
+        warp_matrix = MATRICES[i % len(MATRICES)]
+        set_mat2(buffer_view, i, warp_matrix)
 
     # The individual matrices are stored column-major, but
     # the overall bufferView should be exported row-by-row
