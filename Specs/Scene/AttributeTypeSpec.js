@@ -58,13 +58,15 @@ describe("Scene/AttributeType", function () {
   });
 
   it("getAttributeLocationCount works", function () {
-    expect(AttributeType.getNumberOfComponents(AttributeType.SCALAR)).toBe(1);
-    expect(AttributeType.getNumberOfComponents(AttributeType.VEC2)).toBe(1);
-    expect(AttributeType.getNumberOfComponents(AttributeType.VEC3)).toBe(1);
-    expect(AttributeType.getNumberOfComponents(AttributeType.VEC4)).toBe(1);
-    expect(AttributeType.getNumberOfComponents(AttributeType.MAT2)).toBe(2);
-    expect(AttributeType.getNumberOfComponents(AttributeType.MAT3)).toBe(3);
-    expect(AttributeType.getNumberOfComponents(AttributeType.MAT4)).toBe(4);
+    expect(AttributeType.getAttributeLocationCount(AttributeType.SCALAR)).toBe(
+      1
+    );
+    expect(AttributeType.getAttributeLocationCount(AttributeType.VEC2)).toBe(1);
+    expect(AttributeType.getAttributeLocationCount(AttributeType.VEC3)).toBe(1);
+    expect(AttributeType.getAttributeLocationCount(AttributeType.VEC4)).toBe(1);
+    expect(AttributeType.getAttributeLocationCount(AttributeType.MAT2)).toBe(2);
+    expect(AttributeType.getAttributeLocationCount(AttributeType.MAT3)).toBe(3);
+    expect(AttributeType.getAttributeLocationCount(AttributeType.MAT4)).toBe(4);
   });
 
   it("getNumberOfComponents throws with invalid type", function () {
