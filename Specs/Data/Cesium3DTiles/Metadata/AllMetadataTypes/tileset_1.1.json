@@ -137,7 +137,6 @@
   },
   "groups": [
     {
-      "id": "residentialDistrict",
       "class": "residential",
       "properties": {
         "name": "residential",
@@ -147,7 +146,6 @@
       }
     },
     {
-      "id": "commercialDistrict",
       "class": "commercial",
       "properties": {
         "name": "commercial",

@@ -66,14 +66,14 @@ describe("Scene/GroupMetadata", function () {
     );
   });
 
-  it("constructor throws without id", function () {
+  it("constructor handles undefined id", function () {
     expect(function () {
       return new GroupMetadata({
         id: undefined,
         group: {},
         class: buildingClassWithNoProperties,
       });
-    }).toThrowDeveloperError();
+    }).not.toThrowDeveloperError();
   });
 
   it("constructor throws without group", function () {
