@@ -649,6 +649,31 @@ describe(
       expect(shaderProgram._attributeLocations).toEqual(expectedLocations);
     });
 
+    it("addAttribute handles matrix attribute locations correctly", function () {
+      const shaderBuilder = new ShaderBuilder();
+
+      // even though these are declared out of order, the results to
+      const matrixLocation = shaderBuilder.addAttribute("mat3", "a_warpMatrix");
+      const colorLocation = shaderBuilder.addAttribute("vec3", "a_color");
+      expect(matrixLocation).toBe(1);
+
+      // this is 4 because the mat3 takes up locations 1, 2 and 3
+      expect(colorLocation).toBe(4);
+      const shaderProgram = shaderBuilder.buildShaderProgram(context);
+      const expectedAttributes = [
+        "attribute mat3 a_warpMatrix;",
+        "attribute vec3 a_color;",
+      ];
+      checkVertexShader(shaderProgram, [], expectedAttributes);
+      checkFragmentShader(shaderProgram, [], []);
+      const expectedLocations = {
+        a_warpMatrix: 1,
+        a_color: 4,
+      };
+      expect(shaderBuilder.attributeLocations).toEqual(expectedLocations);
+      expect(shaderProgram._attributeLocations).toEqual(expectedLocations);
+    });
+
     it("addVarying throws for undefined type", function () {
       const shaderBuilder = new ShaderBuilder();
       expect(function () {
