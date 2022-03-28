@@ -26,7 +26,7 @@ export default function findTileMetadata(tileset, tileHeader) {
     return undefined;
   }
 
-  const classes = tileset.metadata.schema.classes;
+  const classes = tileset.schema.classes;
   if (defined(metadataJson.class)) {
     const tileClass = classes[metadataJson.class];
     return new TileMetadata({

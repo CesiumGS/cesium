@@ -750,8 +750,8 @@ describe(
       scene.camera.setView({ destination: rectangle1 });
       expect(scene).toRenderAndCall(function (rgba) {
         expect(rgba[0]).not.toEqual(0);
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[2]).toBeGreaterThanOrEqualTo(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[2]).toBeGreaterThanOrEqual(0);
         expect(rgba[3]).toEqual(255);
       });
     });

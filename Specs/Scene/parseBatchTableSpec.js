@@ -6,6 +6,7 @@ import {
   MetadataClass,
   MetadataComponentType,
   MetadataType,
+  RuntimeError,
 } from "../../Source/Cesium.js";
 
 describe("Scene/parseBatchTable", function () {
@@ -398,6 +399,6 @@ describe("Scene/parseBatchTable", function () {
         batchTable: binaryBatchTable,
         binaryBody: undefined,
       });
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 });

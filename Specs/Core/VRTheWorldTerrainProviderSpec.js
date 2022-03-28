@@ -262,9 +262,9 @@ describe("Core/VRTheWorldTerrainProvider", function () {
         crossOrigin,
         deferred
       ) {
-        expect(
-          request.url.indexOf(".tif?cesium=true")
-        ).toBeGreaterThanOrEqualTo(0);
+        expect(request.url.indexOf(".tif?cesium=true")).toBeGreaterThanOrEqual(
+          0
+        );
 
         // Just return any old image.
         Resource._DefaultImplementations.createImage(

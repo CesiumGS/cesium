@@ -14,6 +14,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
 import ExperimentalFeatures from "../Core/ExperimentalFeatures.js";
+import ImageBasedLighting from "./ImageBasedLighting.js";
 import JulianDate from "../Core/JulianDate.js";
 import ManagedArray from "../Core/ManagedArray.js";
 import CesiumMath from "../Core/Math.js";
@@ -46,6 +47,7 @@ import PointCloudShading from "./PointCloudShading.js";
 import ResourceCache from "./ResourceCache.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
+import SplitDirection from "./SplitDirection.js";
 import StencilConstants from "./StencilConstants.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
@@ -91,11 +93,12 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this tileset. See {@link Cesium3DTileset#classificationType} for details about restrictions and limitations.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid determining the size and shape of the globe.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
- * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales the diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
  * @param {Cartesian3} [options.lightColor] The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
- * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
- * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
- * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+ * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting for this tileset.
+ * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales the diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
+ * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
+ * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
+ * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps. Deprecated in Cesium 1.92, will be removed in Cesium 1.94.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
  * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
  * @param {Boolean} [options.vectorClassificationOnly=false] Indicates that only the tileset's vector tiles should be used for classification.
@@ -103,6 +106,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
+ * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this tileset.
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
@@ -719,16 +723,37 @@ function Cesium3DTileset(options) {
   this._clippingPlanes = undefined;
   this.clippingPlanes = options.clippingPlanes;
 
-  this._imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
-  Cartesian2.clone(
-    options.imageBasedLightingFactor,
-    this._imageBasedLightingFactor
-  );
+  const hasIndividualIBLParameters =
+    defined(options.imageBasedLightingFactor) ||
+    defined(options.luminanceAtZenith) ||
+    defined(options.sphericalHarmonicCoefficients) ||
+    defined(options.specularEnvironmentMaps);
+
+  if (defined(options.imageBasedLighting)) {
+    this._imageBasedLighting = options.imageBasedLighting;
+    this._shouldDestroyImageBasedLighting = false;
+  } else if (hasIndividualIBLParameters) {
+    deprecationWarning(
+      "ImageBasedLightingConstructor",
+      "Individual image-based lighting parameters were deprecated in Cesium 1.92. They will be removed in version 1.94. Use options.imageBasedLighting instead."
+    );
+    // Create image-based lighting from the old constructor parameters.
+    this._imageBasedLighting = new ImageBasedLighting({
+      imageBasedLightingFactor: options.imageBasedLightingFactor,
+      luminanceAtZenith: options.luminanceAtZenith,
+      sphericalHarmonicCoefficients: options.sphericalHarmonicCoefficients,
+      specularEnvironmentMaps: options.specularEnvironmentMaps,
+    });
+    this._shouldDestroyImageBasedLighting = true;
+  } else {
+    this._imageBasedLighting = new ImageBasedLighting();
+    this._shouldDestroyImageBasedLighting = true;
+  }
 
   /**
    * The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
    * <p>
-   * For example, disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code> will make the
+   * For example, disabling additional light sources by setting <code>model.imageBasedLighting.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code> will make the
    * model much darker. Here, increasing the intensity of the light source will make the model brighter.
    * </p>
    *
@@ -736,44 +761,6 @@ function Cesium3DTileset(options) {
    * @default undefined
    */
   this.lightColor = options.lightColor;
-
-  /**
-   * The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
-   * This is used when {@link Cesium3DTileset#specularEnvironmentMaps} and {@link Cesium3DTileset#sphericalHarmonicCoefficients} are not defined.
-   *
-   * @type Number
-   *
-   * @default 0.2
-   *
-   */
-  this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.2);
-
-  /**
-   * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, a diffuse irradiance
-   * computed from the atmosphere color is used.
-   * <p>
-   * There are nine <code>Cartesian3</code> coefficients.
-   * The order of the coefficients is: L<sub>00</sub>, L<sub>1-1</sub>, L<sub>10</sub>, L<sub>11</sub>, L<sub>2-2</sub>, L<sub>2-1</sub>, L<sub>20</sub>, L<sub>21</sub>, L<sub>22</sub>
-   * </p>
-   *
-   * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
-   * {@link https://github.com/google/filament/releases|Google's Filament project}. This will also generate a KTX file that can be
-   * supplied to {@link Cesium3DTileset#specularEnvironmentMaps}.
-   *
-   * @type {Cartesian3[]}
-   * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
-   * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
-   */
-  this.sphericalHarmonicCoefficients = options.sphericalHarmonicCoefficients;
-
-  /**
-   * A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
-   *
-   * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
-   * @type {String}
-   * @see Cesium3DTileset#sphericalHarmonicCoefficients
-   */
-  this.specularEnvironmentMaps = options.specularEnvironmentMaps;
 
   /**
    * Whether to cull back-facing geometry. When true, back face culling is determined
@@ -795,6 +782,17 @@ function Cesium3DTileset(options) {
    * @default true
    */
   this.showOutline = defaultValue(options.showOutline, true);
+
+  /**
+   * The {@link SplitDirection} to apply to this tileset.
+   *
+   * @type {SplitDirection}
+   * @default {@link SplitDirection.NONE}
+   */
+  this.splitDirection = defaultValue(
+    options.splitDirection,
+    SplitDirection.NONE
+  );
 
   /**
    * This property is for debugging only; it is not optimized for production use.
@@ -942,15 +940,10 @@ function Cesium3DTileset(options) {
    */
   this.examineVectorLinesFunction = undefined;
 
-  /**
-   * If metadata is present (3D Tiles 1.1) or the 3DTILES_metadata extension is used,
-   * this stores a {@link Cesium3DTilesetMetadata} object to access metadata.
-   *
-   * @type {Cesium3DTilesetMetadata|undefined}
-   * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
-   */
-  this.metadata = undefined;
+  // this is the underlying Cesium3DTileMetadata object, whether it came from
+  // the 3DTILES_metadata extension or a 3D Tiles 1.1 tileset JSON. Getters
+  // like tileset.metadata and tileset.schema will delegate to this object.
+  this._metadataExtension = undefined;
 
   this._customShader = options.customShader;
 
@@ -1373,6 +1366,67 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
+   * The tileset's schema, groups, tileset metadata and other details from the
+   * 3DTILES_metadata extension or a 3D Tiles 1.1 tileset JSON. This getter is
+   * for internal use by other classes.
+   *
+   * @memberof Cesium3DTileset.prototype
+   * @type {Cesium3DTilesetMetadata}
+   * @private
+   * @readonly
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  metadataExtension: {
+    get: function () {
+      return this._metadataExtension;
+    },
+  },
+
+  /**
+   * The metadata properties attached to the tileset as a whole.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {TilesetMetadata}
+   * @private
+   * @readonly
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  metadata: {
+    get: function () {
+      if (defined(this._metadataExtension)) {
+        return this._metadataExtension.tileset;
+      }
+
+      return undefined;
+    },
+  },
+
+  /**
+   * The metadata schema used in this tileset. Shorthand for
+   * <code>tileset.metadataExtension.schema</code>
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {MetadataSchema}
+   * @private
+   * @readonly
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  schema: {
+    get: function () {
+      if (defined(this._metadataExtension)) {
+        return this._metadataExtension.schema;
+      }
+
+      return undefined;
+    },
+  },
+
+  /**
    * The maximum screen space error used to drive level of detail refinement.  This value helps determine when a tile
    * refines to its descendants, and therefore plays a major role in balancing performance with visual quality.
    * <p>
@@ -1761,6 +1815,34 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
+   * The properties for managing image-based lighting on this tileset.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {ImageBasedLighting}
+   */
+  imageBasedLighting: {
+    get: function () {
+      return this._imageBasedLighting;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("imageBasedLighting", this._imageBasedLighting);
+      //>>includeEnd('debug');
+      if (value !== this._imageBasedLighting) {
+        if (
+          this._shouldDestroyImageBasedLighting &&
+          !this._imageBasedLighting.isDestroyed()
+        ) {
+          this._imageBasedLighting.destroy();
+        }
+        this._imageBasedLighting = value;
+        this._shouldDestroyImageBasedLighting = false;
+      }
+    },
+  },
+
+  /**
    * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This cartesian is used to scale the final
    * diffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
    *
@@ -1771,33 +1853,75 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    */
   imageBasedLightingFactor: {
     get: function () {
-      return this._imageBasedLightingFactor;
+      return this._imageBasedLighting.imageBasedLightingFactor;
     },
     set: function (value) {
-      //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.object("imageBasedLightingFactor", value);
-      Check.typeOf.number.greaterThanOrEquals(
-        "imageBasedLightingFactor.x",
-        value.x,
-        0.0
-      );
-      Check.typeOf.number.lessThanOrEquals(
-        "imageBasedLightingFactor.x",
-        value.x,
-        1.0
-      );
-      Check.typeOf.number.greaterThanOrEquals(
-        "imageBasedLightingFactor.y",
-        value.y,
-        0.0
-      );
-      Check.typeOf.number.lessThanOrEquals(
-        "imageBasedLightingFactor.y",
-        value.y,
-        1.0
-      );
-      //>>includeEnd('debug');
-      Cartesian2.clone(value, this._imageBasedLightingFactor);
+      this._imageBasedLighting.imageBasedLightingFactor = value;
+    },
+  },
+
+  /**
+   * The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
+   * This is used when {@link Cesium3DTileset#specularEnvironmentMaps} and {@link Cesium3DTileset#sphericalHarmonicCoefficients} are not defined.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {Number}
+   * @default 0.2
+   */
+  luminanceAtZenith: {
+    get: function () {
+      return this._imageBasedLighting.luminanceAtZenith;
+    },
+    set: function (value) {
+      this._imageBasedLighting.luminanceAtZenith = value;
+    },
+  },
+
+  /**
+   * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, a diffuse irradiance
+   * computed from the atmosphere color is used.
+   * <p>
+   * There are nine <code>Cartesian3</code> coefficients.
+   * The order of the coefficients is: L<sub>0,0</sub>, L<sub>1,-1</sub>, L<sub>1,0</sub>, L<sub>1,1</sub>, L<sub>2,-2</sub>, L<sub>2,-1</sub>, L<sub>2,0</sub>, L<sub>2,1</sub>, L<sub>2,2</sub>
+   * </p>
+   *
+   * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
+   * {@link https://github.com/google/filament/releases|Google's Filament project}. This will also generate a KTX file that can be
+   * supplied to {@link Cesium3DTileset#specularEnvironmentMaps}.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {Cartesian3[]}
+   *
+   * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+   * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
+   */
+  sphericalHarmonicCoefficients: {
+    get: function () {
+      return this._imageBasedLighting.sphericalHarmonicCoefficients;
+    },
+    set: function (value) {
+      this._imageBasedLighting.sphericalHarmonicCoefficients = value;
+    },
+  },
+
+  /**
+   * A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {String}
+   *
+   * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+   * @see Cesium3DTileset#sphericalHarmonicCoefficients
+   */
+  specularEnvironmentMaps: {
+    get: function () {
+      return this._imageBasedLighting.specularEnvironmentMaps;
+    },
+    set: function (value) {
+      this._imageBasedLighting.specularEnvironmentMaps = value;
     },
   },
 
@@ -2039,9 +2163,7 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
     hasExtension(tileHeader, "3DTILES_implicit_tiling");
 
   if (hasImplicitTiling) {
-    const metadataSchema = defined(tileset.metadata)
-      ? tileset.metadata.schema
-      : undefined;
+    const metadataSchema = tileset.schema;
 
     const implicitTileset = new ImplicitTileset(
       baseResource,
@@ -2122,7 +2244,7 @@ function processMetadataExtension(tileset, tilesetJson) {
   tileset._schemaLoader = schemaLoader;
 
   return schemaLoader.promise.then(function (schemaLoader) {
-    tileset.metadata = new Cesium3DTilesetMetadata({
+    tileset._metadataExtension = new Cesium3DTilesetMetadata({
       schema: schemaLoader.schema,
       metadataJson: metadataJson,
     });
@@ -3032,8 +3154,16 @@ Cesium3DTileset.prototype.destroy = function () {
       }
     }
   }
-
   this._root = undefined;
+
+  if (
+    this._shouldDestroyImageBasedLighting &&
+    !this._imageBasedLighting.isDestroyed()
+  ) {
+    this._imageBasedLighting.destroy();
+  }
+  this._imageBasedLighting = undefined;
+
   return destroyObject(this);
 };
 

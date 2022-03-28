@@ -72,6 +72,26 @@ CustomShaderPipelineStage.process = function (
   const shaderBuilder = renderResources.shaderBuilder;
   const customShader = renderResources.model.customShader;
 
+  // Check the lighting model and translucent options first, as sometimes
+  // these are used even if there is no vertex or fragment shader text.
+
+  // if present, the lighting model overrides the material's lighting model.
+  if (defined(customShader.lightingModel)) {
+    renderResources.lightingOptions.lightingModel = customShader.lightingModel;
+  }
+
+  const alphaOptions = renderResources.alphaOptions;
+  if (customShader.isTranslucent) {
+    alphaOptions.pass = Pass.TRANSLUCENT;
+    alphaOptions.alphaMode = AlphaMode.BLEND;
+  } else {
+    // Use the default pass (either OPAQUE or 3D_TILES), regardless of whether
+    // the material pipeline stage used translucent. The default is configured
+    // in AlphaPipelineStage
+    alphaOptions.pass = undefined;
+    alphaOptions.alphaMode = AlphaMode.OPAQUE;
+  }
+
   // Generate lines of code for the shader, but don't add them to the shader
   // yet.
   const generatedCode = generateShaderLines(customShader, primitive);
@@ -130,23 +150,6 @@ CustomShaderPipelineStage.process = function (
       const varyingType = varyings[varyingName];
       shaderBuilder.addVarying(varyingType, varyingName);
     }
-  }
-
-  // if present, the lighting model overrides the material's lighting model.
-  if (defined(customShader.lightingModel)) {
-    renderResources.lightingOptions.lightingModel = customShader.lightingModel;
-  }
-
-  const alphaOptions = renderResources.alphaOptions;
-  if (customShader.isTranslucent) {
-    alphaOptions.pass = Pass.TRANSLUCENT;
-    alphaOptions.alphaMode = AlphaMode.BLEND;
-  } else {
-    // Use the default pass (either OPAQUE or 3D_TILES), regardless of whether
-    // the material pipeline stage used translucent. The default is configured
-    // in AlphaPipelineStage
-    alphaOptions.pass = undefined;
-    alphaOptions.alphaMode = AlphaMode.OPAQUE;
   }
 
   renderResources.uniformMap = combine(

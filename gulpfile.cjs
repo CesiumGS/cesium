@@ -1772,20 +1772,13 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
 }
 
 function createJsHintOptions() {
-  const primary = JSON.parse(
-    fs.readFileSync(path.join("Apps", ".jshintrc"), "utf8")
-  );
-  const gallery = JSON.parse(
+  const jshintrc = JSON.parse(
     fs.readFileSync(path.join("Apps", "Sandcastle", ".jshintrc"), "utf8")
   );
-  primary.jasmine = false;
-  primary.predef = gallery.predef;
-  primary.unused = gallery.unused;
-  primary.esversion = gallery.esversion;
 
   const contents = `\
 // This file is automatically rebuilt by the Cesium build process.\n\
-const sandcastleJsHintOptions = ${JSON.stringify(primary, null, 4)};\n`;
+const sandcastleJsHintOptions = ${JSON.stringify(jshintrc, null, 4)};\n`;
 
   fs.writeFileSync(
     path.join("Apps", "Sandcastle", "jsHintOptions.js"),

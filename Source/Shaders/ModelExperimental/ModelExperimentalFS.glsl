@@ -33,8 +33,12 @@ vec4 handleAlpha(vec3 color, float alpha)
 
 SelectedFeature selectedFeature;
 
-void main() 
+void main()
 {
+    #ifdef HAS_MODEL_SPLITTER
+    modelSplitterStage();
+    #endif
+
     czm_modelMaterial material = defaultModelMaterial();
 
     ProcessedAttributes attributes;
@@ -58,15 +62,15 @@ void main()
     customShaderStage(material, attributes, featureIds, metadata);
     #endif
 
-    lightingStage(material);
+    lightingStage(material, attributes);
 
     #ifdef HAS_SELECTED_FEATURE_ID
     cpuStylingStage(material, selectedFeature);
     #endif
-    
+
     #ifdef HAS_MODEL_COLOR
     modelColorStage(material);
-    #endif 
+    #endif
 
     vec4 color = handleAlpha(material.diffuse, material.alpha);
 

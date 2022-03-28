@@ -5,6 +5,7 @@ import {
   ImplicitTileset,
   MetadataSchema,
   Resource,
+  RuntimeError,
 } from "../../Source/Cesium.js";
 
 describe("Scene/ImplicitTileset", function () {
@@ -183,7 +184,7 @@ describe("Scene/ImplicitTileset", function () {
     let metadataSchema; // intentionally left undefined
     expect(function () {
       return new ImplicitTileset(baseResource, tileJson, metadataSchema);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 
   describe("3DTILES_implicit_tiling", function () {
@@ -284,7 +285,7 @@ describe("Scene/ImplicitTileset", function () {
       let metadataSchema; // intentionally left undefined
       expect(function () {
         return new ImplicitTileset(baseResource, tileJson, metadataSchema);
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
   });
 

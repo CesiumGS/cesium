@@ -1,4 +1,5 @@
 import BoundingSphere from "../../Core/BoundingSphere.js";
+import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import defined from "../../Core/defined.js";
@@ -6,6 +7,7 @@ import defer from "../../Core/defer.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import GltfLoader from "../GltfLoader.js";
+import ImageBasedLighting from "../ImageBasedLighting.js";
 import ModelExperimentalSceneGraph from "./ModelExperimentalSceneGraph.js";
 import ModelExperimentalType from "./ModelExperimentalType.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
@@ -20,6 +22,7 @@ import PntsLoader from "./PntsLoader.js";
 import Color from "../../Core/Color.js";
 import I3dmLoader from "./I3dmLoader.js";
 import ShadowMode from "../ShadowMode.js";
+import SplitDirection from "../SplitDirection.js";
 
 /**
  * A 3D model. This is a new architecture that is more decoupled than the older {@link Model}. This class is still experimental.
@@ -34,6 +37,9 @@ import ShadowMode from "../ShadowMode.js";
  * @param {Object} options Object with the following properties:
  * @param {Resource} options.resource The Resource to the 3D model.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY]  The 4x4 transformation matrix that transforms the model from model to world coordinates.
+ * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
+ * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
+ * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
  * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
  * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
@@ -47,9 +53,12 @@ import ShadowMode from "../ShadowMode.js";
  * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
+ * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
+ * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
+ * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 export default function ModelExperimental(options) {
@@ -99,6 +108,44 @@ export default function ModelExperimental(options) {
     defaultValue(options.modelMatrix, Matrix4.IDENTITY)
   );
   this._modelMatrix = Matrix4.clone(this.modelMatrix);
+  this._scale = defaultValue(options.scale, 1.0);
+
+  this._minimumPixelSize = defaultValue(options.minimumPixelSize, 0.0);
+
+  this._maximumScale = options.maximumScale;
+
+  /**
+   * The scale value after being clamped by the maximum scale parameter.
+   * Used to adjust bounding spheres without repeated calculation.
+   *
+   * @type {Number}
+   * @private
+   */
+  this._clampedScale = defined(this._maximumScale)
+    ? Math.min(this._scale, this._maximumScale)
+    : this._scale;
+
+  this._computedScale = this._clampedScale;
+
+  /**
+   * Whether or not the ModelExperimentalSceneGraph should call updateModelMatrix.
+   * This will be true if any of the model matrix, scale, minimum pixel size, or maximum scale are dirty.
+   *
+   * @type {Number}
+   * @private
+   */
+  this._updateModelMatrix = false;
+
+  /**
+   * If defined, this matrix is used to transform miscellaneous properties like
+   * image-based lighting instead of the modelMatrix. This is so that when models
+   * are part of a tileset these properties get transformed relative to common reference
+   * (such as the root).
+   *
+   * @type {Matrix4}
+   * @private
+   */
+  this.referenceMatrix = undefined;
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -146,11 +193,21 @@ export default function ModelExperimental(options) {
 
   // Keeps track of resources that need to be destroyed when the Model is destroyed.
   this._resources = [];
+
+  // Computation of the model's bounding sphere and its initial radius is done in ModelExperimentalSceneGraph
   this._boundingSphere = new BoundingSphere();
+  this._initialRadius = undefined;
 
   const pointCloudShading = new PointCloudShading(options.pointCloudShading);
   this._attenuation = pointCloudShading.attenuation;
   this._pointCloudShading = pointCloudShading;
+
+  this._lightColor = Cartesian3.clone(options.lightColor);
+
+  this._imageBasedLighting = defined(options.imageBasedLighting)
+    ? options.imageBasedLighting
+    : new ImageBasedLighting();
+  this._shouldDestroyImageBasedLighting = !defined(options.imageBasedLighting);
 
   this._backFaceCulling = defaultValue(options.backFaceCulling, true);
   this._backFaceCullingDirty = false;
@@ -165,6 +222,11 @@ export default function ModelExperimental(options) {
   );
 
   this._showCreditsOnScreen = defaultValue(options.showCreditsOnScreen, false);
+
+  this._splitDirection = defaultValue(
+    options.splitDirection,
+    SplitDirection.NONE
+  );
 
   initialize(this);
 }
@@ -702,10 +764,66 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
+   * <p>
+   * Disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code> will make the
+   * model much darker. Here, increasing the intensity of the light source will make the model brighter.
+   * </p>
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Cartesian3}
+   * @default undefined
+   */
+  lightColor: {
+    get: function () {
+      return this._lightColor;
+    },
+    set: function (value) {
+      if (defined(value) !== defined(this._lightColor)) {
+        this.resetDrawCommands();
+      }
+
+      this._lightColor = Cartesian3.clone(value, this._lightColor);
+    },
+  },
+
+  /**
+   * The properties for managing image-based lighting on this model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {ImageBasedLighting}
+   */
+  imageBasedLighting: {
+    get: function () {
+      return this._imageBasedLighting;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.object("imageBasedLighting", this._imageBasedLighting);
+      //>>includeEnd('debug');
+
+      if (value !== this._imageBasedLighting) {
+        if (
+          this._shouldDestroyImageBasedLighting &&
+          !this._imageBasedLighting.isDestroyed()
+        ) {
+          this._imageBasedLighting.destroy();
+        }
+        this._imageBasedLighting = value;
+        this._shouldDestroyImageBasedLighting = false;
+        this.resetDrawCommands();
+      }
+    },
+  },
+
+  /**
    * Whether to cull back-facing geometry. When true, back face culling is
    * determined by the material's doubleSided property; when false, back face
    * culling is disabled. Back faces are not culled if the model's color is
    * translucent.
+   *
+   * @memberof ModelExperimental.prototype
    *
    * @type {Boolean}
    *
@@ -725,7 +843,91 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * A uniform scale applied to this model before the {@link Model#modelMatrix}.
+   * Values greater than <code>1.0</code> increase the size of the model; values
+   * less than <code>1.0</code> decrease.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Number}
+   *
+   * @default 1.0
+   */
+  scale: {
+    get: function () {
+      return this._scale;
+    },
+    set: function (value) {
+      if (value !== this._scale) {
+        this._updateModelMatrix = true;
+      }
+      this._scale = value;
+    },
+  },
+
+  /**
+   * The true scale of the model after being affected by the model's scale,
+   * minimum pixel size, and maximum scale parameters.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Number}
+   * @private
+   */
+  computedScale: {
+    get: function () {
+      return this._computedScale;
+    },
+  },
+
+  /**
+   * The approximate minimum pixel size of the model regardless of zoom.
+   * This can be used to ensure that a model is visible even when the viewer
+   * zooms out.  When <code>0.0</code>, no minimum size is enforced.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Number}
+   *
+   * @default 0.0
+   */
+  minimumPixelSize: {
+    get: function () {
+      return this._minimumPixelSize;
+    },
+    set: function (value) {
+      if (value !== this._minimumPixelSize) {
+        this._updateModelMatrix = true;
+      }
+      this._minimumPixelSize = value;
+    },
+  },
+
+  /**
+   * The maximum scale size for a model. This can be used to give
+   * an upper limit to the {@link Model#minimumPixelSize}, ensuring that the model
+   * is never an unreasonable scale.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {Number}
+   */
+  maximumScale: {
+    get: function () {
+      return this._maximumScale;
+    },
+    set: function (value) {
+      if (value !== this._maximumScale) {
+        this._updateModelMatrix = true;
+      }
+      this._maximumScale = value;
+    },
+  },
+
+  /**
    * Determines whether the model casts or receives shadows from light sources.
+
+   * @memberof ModelExperimental.prototype
    *
    * @type {ShadowMode}
    *
@@ -746,7 +948,9 @@ Object.defineProperties(ModelExperimental.prototype, {
 
   /**
    * Gets or sets whether the credits of the model will be displayed on the screen
+   *
    * @memberof ModelExperimental.prototype
+   *
    * @type {Boolean}
    *
    * @default false
@@ -757,6 +961,26 @@ Object.defineProperties(ModelExperimental.prototype, {
     },
     set: function (value) {
       this._showCreditsOnScreen = value;
+    },
+  },
+
+  /**
+   * The {@link SplitDirection} to apply to this model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {SplitDirection}
+   * @default {@link SplitDirection.NONE}
+   */
+  splitDirection: {
+    get: function () {
+      return this._splitDirection;
+    },
+    set: function (value) {
+      if (this._splitDirection !== value) {
+        this.resetDrawCommands();
+      }
+      this._splitDirection = value;
     },
   },
 });
@@ -802,6 +1026,15 @@ ModelExperimental.prototype.update = function (frameState) {
   if (this.pointCloudShading.attenuation !== this._attenuation) {
     this.resetDrawCommands();
     this._attenuation = this.pointCloudShading.attenuation;
+  }
+
+  const referenceMatrix = defaultValue(this.referenceMatrix, this.modelMatrix);
+  this._imageBasedLighting.referenceMatrix = referenceMatrix;
+
+  // Update the image-based lighting for this model to detect any changes in parameters.
+  this._imageBasedLighting.update(frameState);
+  if (this._imageBasedLighting.shouldRegenerateShaders) {
+    this.resetDrawCommands();
   }
 
   // short-circuit if the model resources aren't ready.
@@ -851,13 +1084,23 @@ ModelExperimental.prototype.update = function (frameState) {
   // This is done without a dirty flag so that the model matrix can be update in-place
   // without needing to use a setter.
   if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
-    this._sceneGraph.updateModelMatrix(this);
-    this._modelMatrix = Matrix4.clone(this.modelMatrix);
-    BoundingSphere.transform(
+    this._updateModelMatrix = true;
+    this._modelMatrix = Matrix4.clone(this.modelMatrix, this._modelMatrix);
+    this._boundingSphere = BoundingSphere.transform(
       this._sceneGraph.boundingSphere,
       this.modelMatrix,
       this._boundingSphere
     );
+  }
+
+  if (this._updateModelMatrix || this._minimumPixelSize !== 0.0) {
+    this._clampedScale = defined(this._maximumScale)
+      ? Math.min(this._scale, this._maximumScale)
+      : this._scale;
+    this._boundingSphere.radius = this._initialRadius * this._clampedScale;
+    this._computedScale = getScale(this, frameState);
+    this._sceneGraph.updateModelMatrix();
+    this._updateModelMatrix = false;
   }
 
   if (this._backFaceCullingDirty) {
@@ -874,7 +1117,7 @@ ModelExperimental.prototype.update = function (frameState) {
 
   // Check for show here because we still want the draw commands to be built so user can instantly see the model
   // when show is set to true.
-  if (this._show) {
+  if (this._show && this._computedScale !== 0) {
     const asset = this._sceneGraph.components.asset;
     const credits = asset.credits;
 
@@ -903,6 +1146,58 @@ function updateFeatureTableId(model) {
     // This in turn triggers a rebuild of the draw commands.
     model.applyStyle(model._style);
   }
+}
+
+const scratchBoundingSphere = new BoundingSphere();
+
+function scaleInPixels(positionWC, radius, frameState) {
+  scratchBoundingSphere.center = positionWC;
+  scratchBoundingSphere.radius = radius;
+  return frameState.camera.getPixelSize(
+    scratchBoundingSphere,
+    frameState.context.drawingBufferWidth,
+    frameState.context.drawingBufferHeight
+  );
+}
+
+const scratchPosition = new Cartesian3();
+
+function getScale(model, frameState) {
+  let scale = model.scale;
+
+  if (model.minimumPixelSize !== 0.0) {
+    // Compute size of bounding sphere in pixels
+    const context = frameState.context;
+    const maxPixelSize = Math.max(
+      context.drawingBufferWidth,
+      context.drawingBufferHeight
+    );
+    const m = model.modelMatrix;
+    scratchPosition.x = m[12];
+    scratchPosition.y = m[13];
+    scratchPosition.z = m[14];
+
+    const radius = model.boundingSphere.radius;
+    const metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
+
+    // metersPerPixel is always > 0.0
+    const pixelsPerMeter = 1.0 / metersPerPixel;
+    const diameterInPixels = Math.min(
+      pixelsPerMeter * (2.0 * radius),
+      maxPixelSize
+    );
+
+    // Maintain model's minimum pixel size
+    if (diameterInPixels < model.minimumPixelSize) {
+      scale =
+        (model.minimumPixelSize * metersPerPixel) /
+        (2.0 * model._initialRadius);
+    }
+  }
+
+  return defined(model.maximumScale)
+    ? Math.min(model.maximumScale, scale)
+    : scale;
 }
 
 /**
@@ -950,6 +1245,14 @@ ModelExperimental.prototype.destroy = function () {
 
   this.destroyResources();
 
+  if (
+    this._shouldDestroyImageBasedLighting &&
+    !this._imageBasedLighting.isDestroyed()
+  ) {
+    this._imageBasedLighting.destroy();
+  }
+  this._imageBasedLighting = undefined;
+
   destroyObject(this);
 };
 
@@ -977,6 +1280,9 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {String|Resource|Uint8Array|Object} options.gltf A Resource/URL to a glTF/glb file, a binary glTF buffer, or a JSON object containing the glTF contents
  * @param {String|Resource} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
+ * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
+ * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
+ * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
  * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
  * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
@@ -994,9 +1300,12 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
+ * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
+ * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
  * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
+ * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
  * @returns {ModelExperimental} The newly created model.
  */
 ModelExperimental.fromGltf = function (options) {
@@ -1036,28 +1345,9 @@ ModelExperimental.fromGltf = function (options) {
     ? ModelExperimentalType.TILE_GLTF
     : ModelExperimentalType.GLTF;
 
-  const modelOptions = {
-    loader: loader,
-    resource: loaderOptions.gltfResource,
-    type: type,
-    modelMatrix: options.modelMatrix,
-    debugShowBoundingVolume: options.debugShowBoundingVolume,
-    cull: options.cull,
-    opaquePass: options.opaquePass,
-    allowPicking: options.allowPicking,
-    customShader: options.customShader,
-    content: options.content,
-    show: options.show,
-    color: options.color,
-    colorBlendAmount: options.colorBlendAmount,
-    colorBlendMode: options.colorBlendMode,
-    featureIdLabel: options.featureIdLabel,
-    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
-    pointCloudShading: options.pointCloudShading,
-    backFaceCulling: options.backFaceCulling,
-    shadows: options.shadows,
-    showCreditsOnScreen: options.showCreditsOnScreen,
-  };
+  const modelOptions = makeModelOptions(loader, type, options);
+  modelOptions.resource = loaderOptions.gltfResource;
+
   const model = new ModelExperimental(modelOptions);
 
   return model;
@@ -1079,25 +1369,11 @@ ModelExperimental.fromB3dm = function (options) {
 
   const loader = new B3dmLoader(loaderOptions);
 
-  const modelOptions = {
-    loader: loader,
-    resource: loaderOptions.b3dmResource,
-    type: ModelExperimentalType.TILE_B3DM,
-    modelMatrix: options.modelMatrix,
-    debugShowBoundingVolume: options.debugShowBoundingVolume,
-    cull: options.cull,
-    opaquePass: options.opaquePass,
-    allowPicking: options.allowPicking,
-    customShader: options.customShader,
-    content: options.content,
-    show: options.show,
-    color: options.color,
-    colorBlendAmount: options.colorBlendAmount,
-    colorBlendMode: options.colorBlendMode,
-    featureIdLabel: options.featureIdLabel,
-    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
-  };
-
+  const modelOptions = makeModelOptions(
+    loader,
+    ModelExperimentalType.TILE_B3DM,
+    options
+  );
   const model = new ModelExperimental(modelOptions);
   return model;
 };
@@ -1112,25 +1388,11 @@ ModelExperimental.fromPnts = function (options) {
   };
   const loader = new PntsLoader(loaderOptions);
 
-  const modelOptions = {
-    loader: loader,
-    resource: options.resource,
-    type: ModelExperimentalType.TILE_PNTS,
-    modelMatrix: options.modelMatrix,
-    debugShowBoundingVolume: options.debugShowBoundingVolume,
-    cull: options.cull,
-    opaquePass: options.opaquePass,
-    allowPicking: options.allowPicking,
-    customShader: options.customShader,
-    content: options.content,
-    show: options.show,
-    color: options.color,
-    colorBlendAmount: options.colorBlendAmount,
-    colorBlendMode: options.colorBlendMode,
-    featureIdLabel: options.featureIdLabel,
-    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
-  };
-
+  const modelOptions = makeModelOptions(
+    loader,
+    ModelExperimentalType.TILE_PNTS,
+    options
+  );
   const model = new ModelExperimental(modelOptions);
   return model;
 };
@@ -1148,24 +1410,13 @@ ModelExperimental.fromI3dm = function (options) {
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
   };
-
   const loader = new I3dmLoader(loaderOptions);
 
-  const modelOptions = {
-    loader: loader,
-    resource: loaderOptions.i3dmResource,
-    type: ModelExperimentalType.TILE_I3DM,
-    modelMatrix: options.modelMatrix,
-    debugShowBoundingVolume: options.debugShowBoundingVolume,
-    cull: options.cull,
-    opaquePass: options.opaquePass,
-    allowPicking: options.allowPicking,
-    customShader: options.customShader,
-    content: options.content,
-    show: options.show,
-    featureIdAttributeIndex: options.featureIdAttributeIndex,
-    featureIdTextureIndex: options.featureIdTextureIndex,
-  };
+  const modelOptions = makeModelOptions(
+    loader,
+    ModelExperimentalType.TILE_I3DM,
+    options
+  );
   const model = new ModelExperimental(modelOptions);
   return model;
 };
@@ -1208,3 +1459,34 @@ ModelExperimental.prototype.applyStyle = function (style) {
 
   this.resetDrawCommands();
 };
+
+function makeModelOptions(loader, modelType, options) {
+  return {
+    loader: loader,
+    type: modelType,
+    resource: options.resource,
+    modelMatrix: options.modelMatrix,
+    scale: options.scale,
+    minimumPixelSize: options.minimumPixelSize,
+    maximumScale: options.maximumScale,
+    debugShowBoundingVolume: options.debugShowBoundingVolume,
+    cull: options.cull,
+    opaquePass: options.opaquePass,
+    allowPicking: options.allowPicking,
+    customShader: options.customShader,
+    content: options.content,
+    show: options.show,
+    color: options.color,
+    colorBlendAmount: options.colorBlendAmount,
+    colorBlendMode: options.colorBlendMode,
+    featureIdLabel: options.featureIdLabel,
+    instanceFeatureIdLabel: options.instanceFeatureIdLabel,
+    pointCloudShading: options.pointCloudShading,
+    lightColor: options.lightColor,
+    imageBasedLighting: options.imageBasedLighting,
+    backFaceCulling: options.backFaceCulling,
+    shadows: options.shadows,
+    showCreditsOnScreen: options.showCreditsOnScreen,
+    splitDirection: options.splitDirection,
+  };
+}

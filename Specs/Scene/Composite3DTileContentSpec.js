@@ -1,5 +1,6 @@
 import {
   Cartesian3,
+  Cesium3DContentGroup,
   Color,
   ContentMetadata,
   HeadingPitchRange,
@@ -213,16 +214,18 @@ describe(
         });
       });
 
-      it("assigning groupMetadata propagates to inner contents", function () {
+      it("assigning group metadata propagates to inner contents", function () {
         return Cesium3DTilesTester.loadTileset(scene, compositeUrl).then(
           function (tileset) {
             const content = tileset.root.content;
-            content.groupMetadata = groupMetadata;
-            expect(content.groupMetadata).toBe(groupMetadata);
+            content.group = new Cesium3DContentGroup({
+              metadata: groupMetadata,
+            });
+            expect(content.group.metadata).toBe(groupMetadata);
 
             const innerContents = content.innerContents;
             for (let i = 0; i < innerContents.length; i++) {
-              expect(innerContents[i].groupMetadata).toBe(groupMetadata);
+              expect(innerContents[i].group.metadata).toBe(groupMetadata);
             }
           }
         );

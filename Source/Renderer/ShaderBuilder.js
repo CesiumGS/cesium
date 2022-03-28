@@ -269,7 +269,7 @@ ShaderBuilder.prototype.addFunctionLines = function (functionName, lines) {
  * // creates the line "uniform vec3 u_resolution;"
  * shaderBuilder.addUniform("vec3", "u_resolution", ShaderDestination.FRAGMENT);
  * // creates the line "uniform float u_time;" in both shaders
- * shaderBuilder.addDefine("float", "u_time", ShaderDestination.BOTH);
+ * shaderBuilder.addUniform("float", "u_time", ShaderDestination.BOTH);
  */
 ShaderBuilder.prototype.addUniform = function (type, identifier, destination) {
   //>>includeStart('debug', pragmas.debug);

@@ -25,11 +25,9 @@ describe("Scene/findTileMetadata", function () {
     });
 
     mockTileset = {
-      metadata: {
-        schema: {
-          classes: {
-            tile: tileClass,
-          },
+      schema: {
+        classes: {
+          tile: tileClass,
         },
       },
     };

@@ -1,5 +1,6 @@
 import {
   Cartesian3,
+  Cesium3DContentGroup,
   ContentMetadata,
   defined,
   ExperimentalFeatures,
@@ -300,13 +301,13 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
       });
     });
 
-    it("assigns groupMetadata", function () {
+    it("assigns group metadata", function () {
       setCamera(centerLongitude, centerLatitude, 15.0);
       return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
         function (tileset) {
           const content = tileset.root.content;
-          content.groupMetadata = groupMetadata;
-          expect(content.groupMetadata).toBe(groupMetadata);
+          content.group = new Cesium3DContentGroup({ metadata: groupMetadata });
+          expect(content.group.metadata).toBe(groupMetadata);
         }
       );
     });

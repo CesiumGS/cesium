@@ -25,7 +25,7 @@ describe("Scene/findGroupMetadata", function () {
     });
 
     mockTileset = {
-      metadata: {
+      metadataExtension: {
         groups: [
           new GroupMetadata({
             id: "testGroup",

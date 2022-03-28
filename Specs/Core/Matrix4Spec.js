@@ -5,6 +5,7 @@ import { Matrix3 } from "../../Source/Cesium.js";
 import { Matrix4 } from "../../Source/Cesium.js";
 import { Quaternion } from "../../Source/Cesium.js";
 import { TranslationRotationScale } from "../../Source/Cesium.js";
+import { RuntimeError } from "../../Source/Cesium.js";
 import createPackableSpecs from "../createPackableSpecs.js";
 import createPackableArraySpecs from "../createPackableArraySpecs.js";
 
@@ -1509,11 +1510,13 @@ describe("Core/Matrix4", function () {
   });
 
   it("setScale works", function () {
-    const matrix = Matrix4.clone(Matrix4.IDENTITY);
-    const result = new Matrix4();
-    const newScale = new Cartesian3(2.0, 3.0, 4.0);
+    const oldScale = new Cartesian3(2.0, 3.0, 4.0);
+    const newScale = new Cartesian3(5.0, 6.0, 7.0);
 
-    expect(Matrix4.getScale(matrix, new Cartesian3())).toEqual(Cartesian3.ONE);
+    const matrix = Matrix4.fromScale(oldScale, new Matrix4());
+    const result = new Matrix4();
+
+    expect(Matrix4.getScale(matrix, new Cartesian3())).toEqual(oldScale);
 
     const returnedResult = Matrix4.setScale(matrix, newScale, result);
 
@@ -4754,7 +4757,7 @@ describe("Core/Matrix4", function () {
     );
     expect(function () {
       Matrix4.inverse(matrix, new Matrix4());
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 
   it("inverseTransformation throws without matrix parameter", function () {
@@ -5068,7 +5071,7 @@ describe("Core/Matrix4", function () {
         13, 14, 15, 16
       ),
       new Matrix4(
-        1, 2, 3, 4, 
+        1, 2, 3, 4,
         1, 2, 3, 4,
         1, 2, 3, 4,
         1, 2, 3, 4

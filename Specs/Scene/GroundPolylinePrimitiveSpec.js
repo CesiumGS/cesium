@@ -533,9 +533,9 @@ describe(
 
       scene.camera.lookAt(lookPosition, Cartesian3.UNIT_Z);
       expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[2]).toBeGreaterThanOrEqualTo(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[2]).toBeGreaterThanOrEqual(0);
         expect(rgba[3]).toEqual(255);
       });
     });
@@ -556,9 +556,9 @@ describe(
 
       scene.camera.lookAt(lookPosition, Cartesian3.UNIT_Z);
       expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[2]).toBeGreaterThanOrEqualTo(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[2]).toBeGreaterThanOrEqual(0);
         expect(rgba[3]).toEqual(255);
       });
     });

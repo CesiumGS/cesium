@@ -1238,8 +1238,8 @@ describe(
             i,
             "temperatureCelsius"
           );
-          expect(temperature).toBeGreaterThanOrEqualTo(18);
-          expect(temperature).toBeLessThanOrEqualTo(24);
+          expect(temperature).toBeGreaterThanOrEqual(18);
+          expect(temperature).toBeLessThanOrEqual(24);
         }
       });
     });

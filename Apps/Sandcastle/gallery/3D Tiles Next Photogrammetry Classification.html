@@ -139,7 +139,7 @@
               if (featureId == CLOCK) {
                 // Shiny brass
                 material.specular = vec3(0.98, 0.90, 0.59);
-                material.roughness = 0.3;
+                material.roughness = 0.1;
               } else if (
                 featureId == STREET_LIGHT ||
                 featureId == AIR_CONDITIONER_BLACK ||
@@ -184,7 +184,7 @@
             
               if (u_selectedFeature < NOTHING_SELECTED && featureId == u_selectedFeature) {
                 material.specular = vec3(1.00, 0.85, 0.57);
-                material.roughness = 0.3;
+                material.roughness = 0.1;
               }
             }
             `,

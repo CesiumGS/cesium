@@ -562,28 +562,28 @@ describe("Scene/TileMapServiceImageryProvider", function () {
         CesiumMath.toRadians(-180.0),
         CesiumMath.EPSILON14
       );
-      expect(provider.rectangle.west).toBeGreaterThanOrEqualTo(
+      expect(provider.rectangle.west).toBeGreaterThanOrEqual(
         provider.tilingScheme.rectangle.west
       );
       expect(provider.rectangle.east).toEqualEpsilon(
         CesiumMath.toRadians(180.0),
         CesiumMath.EPSILON14
       );
-      expect(provider.rectangle.east).toBeLessThanOrEqualTo(
+      expect(provider.rectangle.east).toBeLessThanOrEqual(
         provider.tilingScheme.rectangle.east
       );
       expect(provider.rectangle.south).toEqualEpsilon(
         -WebMercatorProjection.MaximumLatitude,
         CesiumMath.EPSILON14
       );
-      expect(provider.rectangle.south).toBeGreaterThanOrEqualTo(
+      expect(provider.rectangle.south).toBeGreaterThanOrEqual(
         provider.tilingScheme.rectangle.south
       );
       expect(provider.rectangle.north).toEqualEpsilon(
         WebMercatorProjection.MaximumLatitude,
         CesiumMath.EPSILON14
       );
-      expect(provider.rectangle.north).toBeLessThanOrEqualTo(
+      expect(provider.rectangle.north).toBeLessThanOrEqual(
         provider.tilingScheme.rectangle.north
       );
     });
@@ -892,7 +892,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     patchRequestSchedulerToRejectRequest();
     const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server/",
-      maximumLevel: 10,
+      minimumLevel: 10,
     });
 
     // we expect that our minimum detail level was forced to 0, even though we requested 10.
@@ -909,7 +909,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     const provider = new TileMapServiceImageryProvider({
       url: "made/up/tms/server/",
       // a high minimum detail level
-      maximumLevel: 12,
+      minimumLevel: 12,
       // and a very small rectangle
       rectangle: new Rectangle(
         CesiumMath.toRadians(131.020889),
