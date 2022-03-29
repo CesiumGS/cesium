@@ -33,6 +33,11 @@ void main (void)
 
     vec4 color = computeAtmosphereColor(v_outerPositionWC, lightDirection, rayleighColor, mieColor, opacity);
 
+#ifndef HDR
+    color.rgb = czm_acesTonemapping(color.rgb);
+    color.rgb = czm_inverseGamma(color.rgb);
+#endif
+
 #ifdef COLOR_CORRECT
     // Convert rgb color to hsb
     vec3 hsb = czm_RGBToHSB(color.rgb);
@@ -42,11 +47,6 @@ void main (void)
     hsb.z = hsb.z > czm_epsilon7 ? hsb.z + u_hsbShift.z : 0.0; // brightness
     // Convert shifted hsb back to rgb
     color.rgb = czm_HSBToRGB(hsb);
-#endif
-
-#ifndef HDR
-    color.rgb = czm_acesTonemapping(color.rgb);
-    color.rgb = czm_inverseGamma(color.rgb);
 #endif
 
     gl_FragColor= color;
