@@ -1,0 +1,26 @@
+{
+  "asset" : {
+    "version" : "1.0"
+  },
+  "geometricError" : 2.0,
+  "root" : {
+    "content" : {
+      "uri" : "SimplePropertyTexture.gltf"
+    },
+    "boundingVolume" : {
+      "box" : [
+        0.5, 0.0, 0.5,
+        0.5, 0.0, 0.0,
+        0.0, 0.01, 0.0,
+        0.0, 0.0, 0.5]
+    },
+    "geometricError" : 0.0
+  },
+  "extensionsUsed" : [ "3DTILES_content_gltf" ],
+  "extensionsRequired" : [ "3DTILES_content_gltf" ],
+  "extensions": {
+    "3DTILES_content_gltf": {
+      "extensionsUsed": ["EXT_mesh_features"]
+    }
+  }
+}
