@@ -38,6 +38,7 @@ MetadataPipelineStage.process = function (
   }
 
   processPropertyAttributes(renderResources, primitive, structuralMetadata);
+  processPropertyTextures(renderResources, structuralMetadata);
 };
 
 function declareStructsAndFunctions(shaderBuilder) {
@@ -172,6 +173,100 @@ function addPropertyAttributeProperty(
   );
 }
 
+function processPropertyTextures(renderResources, structuralMetadata) {
+  const propertyTextures = structuralMetadata.propertyTextures;
+
+  if (!defined(propertyTextures)) {
+    return;
+  }
+
+  for (let i = 0; i < propertyTextures.length; i++) {
+    const propertyTexture = propertyTextures[i];
+
+    const properties = propertyTexture.properties;
+    for (const propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        const property = properties[propertyId];
+        if (property.isGpuCompatible()) {
+          addPropertyTextureProperty(renderResources, propertyId, property);
+        }
+      }
+    }
+  }
+}
+
+function addPropertyTextureProperty(renderResources, propertyId, property) {
+  // Property texture properties may share the same physical texture, so only
+  // add the texture uniform the first time we encounter it.
+  const textureReader = property.textureReader;
+  const textureIndex = textureReader.index;
+  const textureUniformName = `u_propertyTexture_${textureIndex}`;
+  if (!renderResources.uniformMap.hasOwnProperty(textureUniformName)) {
+    addPropertyTextureUniform(
+      renderResources,
+      textureUniformName,
+      textureReader
+    );
+  }
+
+  const metadataVariable = sanitizeGlslIdentifier(propertyId);
+  const glslType = property.getGlslType();
+
+  const shaderBuilder = renderResources.shaderBuilder;
+  shaderBuilder.addStructField(
+    MetadataPipelineStage.STRUCT_ID_METADATA_FS,
+    glslType,
+    metadataVariable
+  );
+
+  const texCoord = textureReader.texCoord;
+  const texCoordVariable = `attributes.texCoord_${texCoord}`;
+  const channels = textureReader.channels;
+  let unpackedValue = `texture2D(${textureUniformName}, ${texCoordVariable}).${channels}`;
+
+  // Some types need an unpacking step or two. For example, since texture reads
+  // are always normalized, UINT8 (not normalized) properties need to be
+  // un-normalized in the shader.
+  unpackedValue = property.unpackInShader(unpackedValue);
+
+  // handle offset/scale transform. This wraps the GLSL expression with
+  // the czm_valueTransform() call.
+  if (property.hasValueTransform) {
+    unpackedValue = addValueTransformUniforms(unpackedValue, {
+      renderResources: renderResources,
+      glslType: glslType,
+      metadataVariable: metadataVariable,
+      shaderDestination: ShaderDestination.BOTH,
+      offset: property.offset,
+      scale: property.scale,
+    });
+  }
+
+  const initializationLine = `metadata.${metadataVariable} = ${unpackedValue};`;
+  shaderBuilder.addFunctionLines(
+    MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
+    [initializationLine]
+  );
+}
+
+function addPropertyTextureUniform(
+  renderResources,
+  uniformName,
+  textureReader
+) {
+  const shaderBuilder = renderResources.shaderBuilder;
+  shaderBuilder.addUniform(
+    "sampler2D",
+    uniformName,
+    ShaderDestination.FRAGMENT
+  );
+
+  const uniformMap = renderResources.uniformMap;
+  uniformMap[uniformName] = function () {
+    return textureReader.texture;
+  };
+}
+
 function addValueTransformUniforms(valueExpression, options) {
   const metadataVariable = options.metadataVariable;
   const offsetUniformName = `u_${metadataVariable}_offset`;
@@ -180,8 +275,9 @@ function addValueTransformUniforms(valueExpression, options) {
   const renderResources = options.renderResources;
   const shaderBuilder = renderResources.shaderBuilder;
   const glslType = options.glslType;
-  shaderBuilder.addUniform(glslType, offsetUniformName, ShaderDestination.BOTH);
-  shaderBuilder.addUniform(glslType, scaleUniformName, ShaderDestination.BOTH);
+  const shaderDestination = options.shaderDestination;
+  shaderBuilder.addUniform(glslType, offsetUniformName, shaderDestination);
+  shaderBuilder.addUniform(glslType, scaleUniformName, shaderDestination);
 
   const uniformMap = renderResources.uniformMap;
   uniformMap[offsetUniformName] = function () {

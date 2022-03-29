@@ -1,6 +1,10 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
+import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
+//import MetadataType from "./MetadataType.js";
+import MetadataComponentType from "./MetadataComponentType.js";
 
 /**
  * A property in a property texture.
@@ -41,10 +45,31 @@ function PropertyTextureProperty(options) {
     texture: textures[textureInfo.index],
   });
 
-  this._offset = property.offset;
-  this._scale = property.scale;
   this._min = property.min;
   this._max = property.max;
+
+  let offset = property.offset;
+  let scale = property.scale;
+
+  // This needs to be set before handling default values
+  const hasValueTransform =
+    classProperty.hasValueTransform || defined(offset) || defined(scale);
+
+  // If the property attribute does not define an offset/scale, it inherits from
+  // the class property. The class property handles setting the default of
+  // identity: (offset 0, scale 1) with the same scalar/vector/matrix types.
+  // array types are disallowed by the spec.
+  offset = defaultValue(offset, classProperty.offset);
+  scale = defaultValue(scale, classProperty.scale);
+
+  // offset and scale are applied on the GPU, so unpack the values
+  // as math types we can use in uniform callbacks.
+  offset = classProperty.unpackVectorAndMatrixTypes(offset);
+  scale = classProperty.unpackVectorAndMatrixTypes(scale);
+
+  this._offset = offset;
+  this._scale = scale;
+  this._hasValueTransform = hasValueTransform;
 
   this._textureReader = textureReader;
   this._classProperty = classProperty;
@@ -64,6 +89,49 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
   textureReader: {
     get: function () {
       return this._textureReader;
+    },
+  },
+
+  /**
+   * True if offset/scale should be applied. If both offset/scale were
+   * undefined, they default to identity so this property is set false
+   *
+   * @memberof PropertyTextureProperty.prototype
+   * @type {Boolean}
+   * @readonly
+   * @private
+   */
+  hasValueTransform: {
+    get: function () {
+      return this._hasValueTransform;
+    },
+  },
+
+  /**
+   * The offset to be added to property values as part of the value transform.
+   *
+   * @memberof PropertyTextureProperty.prototype
+   * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @readonly
+   * @private
+   */
+  offset: {
+    get: function () {
+      return this._offset;
+    },
+  },
+
+  /**
+   * The scale to be multiplied to property values as part of the value transform.
+   *
+   * @memberof PropertyTextureProperty.prototype
+   * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @readonly
+   * @private
+   */
+  scale: {
+    get: function () {
+      return this._scale;
     },
   },
 
@@ -95,6 +163,51 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
     },
   },
 });
+
+PropertyTextureProperty.prototype.isGpuCompatible = function () {
+  const classProperty = this._classProperty;
+  const componentType = classProperty.componentType;
+
+  // iteration 0: just support uint8 normalized
+  if (
+    componentType === MetadataComponentType.UINT8 &&
+    classProperty.normalized
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
+PropertyTextureProperty.prototype.getGlslType = function () {
+  // iteration 0: just support uint8 normalized
+  return "float";
+};
+
+PropertyTextureProperty.prototype.unpackInShader = function (packedValueGlsl) {
+  const classProperty = this._classProperty;
+  const isUint8 = classProperty.componentType === MetadataComponentType.UINT8;
+  const isNormalized = classProperty.normalized;
+
+  // no unpacking needed if the type matches the default for textures
+  if (isUint8 && isNormalized) {
+    return packedValueGlsl;
+  }
+
+  /*
+  if (isUint8) {
+    // un-normalize the result and cast to an integer type
+    const glslType = this.getGlslType();
+    return `${glslType}(255.0 * ${packedValueGlsl})`;
+  }
+  */
+
+  //>>includeStart('debug', pragmas.debug);
+  throw new DeveloperError(
+    "Only component types [UINT8, normalized UINT8] are supported in property textures"
+  );
+  //>>includeEnd('debug');
+};
 
 /**
  * Reformat from an array of channel indices like <code>[0, 1]</code> to a

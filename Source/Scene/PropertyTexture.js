@@ -101,6 +101,21 @@ Object.defineProperties(PropertyTexture.prototype, {
   },
 
   /**
+   * The properties in this property texture.
+   *
+   * @memberof PropertyTexture.prototype
+   *
+   * @type {PropertyTextureProperty}
+   * @readonly
+   * @private
+   */
+  properties: {
+    get: function () {
+      return this._properties;
+    },
+  },
+
+  /**
    * Extras in the JSON object.
    *
    * @memberof PropertyTexture.prototype
