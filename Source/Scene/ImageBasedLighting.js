@@ -1,15 +1,10 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Check from "../Core/Check.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
 import defined from "../Core/defined.js";
 import defaultValue from "../Core/defaultValue.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import OctahedralProjectedCubeMap from "./OctahedralProjectedCubeMap.js";
-
-const scratchIBLReferenceFrameMatrix4 = new Matrix4();
-const scratchIBLReferenceFrameMatrix3 = new Matrix3();
 
 /**
  * Properties for managing image-based lighting on tilesets and models.
@@ -97,11 +92,6 @@ export default function ImageBasedLighting(options) {
   this._useDefaultSpecularMaps = false;
   this._useDefaultSphericalHarmonics = false;
   this._shouldRegenerateShaders = false;
-
-  // The model/tileset will set this with a setter after construction.
-  this._referenceMatrix = Matrix3.clone(Matrix3.IDENTITY);
-  // Derived from the reference matrix and the current view matrix
-  this._iblReferenceFrameMatrix = Matrix3.clone(Matrix3.IDENTITY);
 
   // Store the previous frame number to prevent redundant update calls
   this._previousFrameNumber = undefined;
@@ -241,39 +231,6 @@ Object.defineProperties(ImageBasedLighting.prototype, {
         this._specularEnvironmentMapLoaded = false;
       }
       this._specularEnvironmentMaps = value;
-    },
-  },
-
-  /**
-   * The reference frame to use for transforming the image-based lighting. This
-   * is either the model's modelMatrix, or another reference matrix (e.g. the
-   * tileset modelMatrix).
-   *
-   * @memberof ImageBasedLighting.prototype
-   * @type {Matrix4}
-   *
-   * @private
-   */
-  referenceMatrix: {
-    get: function () {
-      return this._referenceMatrix;
-    },
-    set: function (value) {
-      this._referenceMatrix = value;
-    },
-  },
-
-  /**
-   * The reference frame for image-based lighting, derived from the reference matrix and the current view matrix.
-   *
-   * @memberof ImageBasedLighting.prototype
-   * @type {Matrix3}
-   *
-   * @private
-   */
-  iblReferenceFrameMatrix: {
-    get: function () {
-      return this._iblReferenceFrameMatrix;
     },
   },
 
@@ -510,32 +467,6 @@ ImageBasedLighting.prototype.update = function (frameState) {
   this._useDefaultSphericalHarmonics =
     !defined(this._sphericalHarmonicCoefficients) &&
     defined(frameState.sphericalHarmonicCoefficients);
-
-  const useSHC = this.useSphericalHarmonicCoefficients;
-  const useSEM = this.useSpecularEnvironmentMaps;
-
-  if (useSHC || useSEM) {
-    let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
-    let iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
-
-    iblReferenceFrameMatrix4 = Matrix4.multiply(
-      context.uniformState.view3D,
-      this._referenceMatrix,
-      iblReferenceFrameMatrix4
-    );
-    iblReferenceFrameMatrix3 = Matrix4.getMatrix3(
-      iblReferenceFrameMatrix4,
-      iblReferenceFrameMatrix3
-    );
-    iblReferenceFrameMatrix3 = Matrix3.getRotation(
-      iblReferenceFrameMatrix3,
-      iblReferenceFrameMatrix3
-    );
-    this._iblReferenceFrameMatrix = Matrix3.transpose(
-      iblReferenceFrameMatrix3,
-      this._iblReferenceFrameMatrix
-    );
-  }
 };
 
 /**
