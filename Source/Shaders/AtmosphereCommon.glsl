@@ -35,8 +35,13 @@ void computeAtmosphericScattering(
     const float primaryRaySteps = 16.0;
     const float lightRaySteps = 4.0;
 
+    // Adjust the radius of the sky atmosphere, so at far away distances, low LOD tiles don't show gaps.
+    float distMin = u_radiiAndDynamicAtmosphereColor.x / 4.0;
+    float distMax = u_radiiAndDynamicAtmosphereColor.x;
+    float distAdjust = 10e3 * clamp((czm_eyeHeight - distMin) / (distMax - distMin), 0.2, 1.2);
+
     // Setup the radii for the inner and outer ring of the atmosphere.
-    float ellipsoidRadiiDifference = u_radiiAndDynamicAtmosphereColor.x - u_radiiAndDynamicAtmosphereColor.y;
+    float ellipsoidRadiiDifference = (u_radiiAndDynamicAtmosphereColor.x - u_radiiAndDynamicAtmosphereColor.y) + distAdjust;
     float atmosphereInnerRadius = (length(czm_viewerPositionWC) - czm_eyeHeight) - ellipsoidRadiiDifference;
     float atmosphereOuterRadius = atmosphereInnerRadius + ATMOSPHERE_THICKNESS;
 
