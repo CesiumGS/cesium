@@ -2,6 +2,7 @@ import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import ColorBlendMode from "../ColorBlendMode.js";
+import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import defined from "../../Core/defined.js";
 import defer from "../../Core/defer.js";
 import defaultValue from "../../Core/defaultValue.js";
@@ -54,6 +55,7 @@ import SplitDirection from "../SplitDirection.js";
  * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
+ * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
@@ -139,9 +141,9 @@ export default function ModelExperimental(options) {
 
   /**
    * If defined, this matrix is used to transform miscellaneous properties like
-   * image-based lighting instead of the modelMatrix. This is so that when models
-   * are part of a tileset these properties get transformed relative to common reference
-   * (such as the root).
+   * clipping planes and image-based lighting instead of the modelMatrix. This is
+   * so that when models are part of a tileset, these properties get transformed
+   * relative to a common reference (such as the root).
    *
    * @type {Matrix4}
    * @private
@@ -158,6 +160,7 @@ export default function ModelExperimental(options) {
   this._content = options.content;
 
   this._texturesLoaded = false;
+  this._defaultTexture = undefined;
 
   const color = options.color;
   this._color = defaultValue(color) ? Color.clone(color) : undefined;
@@ -203,6 +206,17 @@ export default function ModelExperimental(options) {
   const pointCloudShading = new PointCloudShading(options.pointCloudShading);
   this._attenuation = pointCloudShading.attenuation;
   this._pointCloudShading = pointCloudShading;
+
+  // If the given clipping planes don't have an owner, make this model its owner.
+  // Otherwise, the clipping planes are passed down from a tileset.
+  const clippingPlanes = options.clippingPlanes;
+  if (defined(clippingPlanes) && clippingPlanes.owner === undefined) {
+    ClippingPlaneCollection.setOwner(clippingPlanes, this, "_clippingPlanes");
+  } else {
+    this._clippingPlanes = clippingPlanes;
+  }
+  this._clippingPlanesState = 0; // Used for checking if shaders need to be regenerated due to clipping plane changes.
+  this._clippingPlanesMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from reference matrix and the current view matrix
 
   this._lightColor = Cartesian3.clone(options.lightColor);
 
@@ -766,6 +780,26 @@ Object.defineProperties(ModelExperimental.prototype, {
   },
 
   /**
+   * The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+   *
+   * @memberof ModelExperimental.prototype
+   *
+   * @type {ClippingPlaneCollection}
+   */
+  clippingPlanes: {
+    get: function () {
+      return this._clippingPlanes;
+    },
+    set: function (value) {
+      if (value !== this._clippingPlanes) {
+        // Handle destroying old clipping planes, new clipping planes ownership
+        ClippingPlaneCollection.setOwner(value, this, "_clippingPlanes");
+        this.resetDrawCommands();
+      }
+    },
+  },
+
+  /**
    * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
    * <p>
    * Disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code> will make the
@@ -1002,6 +1036,7 @@ ModelExperimental.prototype.resetDrawCommands = function () {
 
 const scratchIBLReferenceFrameMatrix4 = new Matrix4();
 const scratchIBLReferenceFrameMatrix3 = new Matrix3();
+const scratchClippingPlanesMatrix = new Matrix4();
 
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -1068,6 +1103,39 @@ ModelExperimental.prototype.update = function (frameState) {
   if (this._imageBasedLighting.shouldRegenerateShaders) {
     this.resetDrawCommands();
   }
+
+  // Update the clipping planes collection for this model to detect any changes.
+  let currentClippingPlanesState = 0;
+  if (this.isClippingEnabled()) {
+    if (this._clippingPlanes.owner === this) {
+      this._clippingPlanes.update(frameState);
+    }
+
+    let clippingPlanesMatrix = scratchClippingPlanesMatrix;
+    clippingPlanesMatrix = Matrix4.multiply(
+      context.uniformState.view3D,
+      referenceMatrix,
+      clippingPlanesMatrix
+    );
+    clippingPlanesMatrix = Matrix4.multiply(
+      clippingPlanesMatrix,
+      this._clippingPlanes.modelMatrix,
+      clippingPlanesMatrix
+    );
+    this._clippingPlanesMatrix = Matrix4.inverseTranspose(
+      clippingPlanesMatrix,
+      this._clippingPlanesMatrix
+    );
+
+    currentClippingPlanesState = this._clippingPlanes.clippingPlanesState;
+  }
+
+  if (currentClippingPlanesState !== this._clippingPlanesState) {
+    this.resetDrawCommands();
+    this._clippingPlanesState = currentClippingPlanesState;
+  }
+
+  this._defaultTexture = context.defaultTexture;
 
   // short-circuit if the model resources aren't ready.
   if (!this._resourcesLoaded) {
@@ -1233,6 +1301,21 @@ function getScale(model, frameState) {
 }
 
 /**
+ * Gets whether or not clipping planes are enabled for this model.
+ *
+ * @returns {Boolean} <code>true</code> if clipping planes are enabled for this model, <code>false</code>.
+ * @private
+ */
+ModelExperimental.prototype.isClippingEnabled = function () {
+  const clippingPlanes = this._clippingPlanes;
+  return (
+    defined(clippingPlanes) &&
+    clippingPlanes.enabled &&
+    clippingPlanes.length !== 0
+  );
+};
+
+/**
  * Returns true if this object was destroyed; otherwise, false.
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
@@ -1277,6 +1360,18 @@ ModelExperimental.prototype.destroy = function () {
 
   this.destroyResources();
 
+  // Only destroy the ClippingPlaneCollection if this is the owner.
+  const clippingPlaneCollection = this._clippingPlanes;
+  if (
+    defined(clippingPlaneCollection) &&
+    !clippingPlaneCollection.isDestroyed() &&
+    clippingPlaneCollection.owner === this
+  ) {
+    clippingPlaneCollection.destroy();
+  }
+  this._clippingPlanes = undefined;
+
+  // Only destroy the ImageBasedLighting if this is the owner.
   if (
     this._shouldDestroyImageBasedLighting &&
     !this._imageBasedLighting.isDestroyed()
@@ -1332,6 +1427,7 @@ ModelExperimental.prototype.destroyResources = function () {
  * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
+ * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
@@ -1514,6 +1610,7 @@ function makeModelOptions(loader, modelType, options) {
     featureIdLabel: options.featureIdLabel,
     instanceFeatureIdLabel: options.instanceFeatureIdLabel,
     pointCloudShading: options.pointCloudShading,
+    clippingPlanes: options.clippingPlanes,
     lightColor: options.lightColor,
     imageBasedLighting: options.imageBasedLighting,
     backFaceCulling: options.backFaceCulling,
