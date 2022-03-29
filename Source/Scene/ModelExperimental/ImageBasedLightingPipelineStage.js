@@ -121,7 +121,7 @@ ImageBasedLightingPipelineStage.process = function (
       return imageBasedLighting.imageBasedLightingFactor;
     },
     model_iblReferenceFrameMatrix: function () {
-      return imageBasedLighting.iblReferenceFrameMatrix;
+      return model._iblReferenceFrameMatrix;
     },
     model_luminanceAtZenith: function () {
       return imageBasedLighting.luminanceAtZenith;

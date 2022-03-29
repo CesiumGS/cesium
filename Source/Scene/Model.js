@@ -613,6 +613,7 @@ function Model(options) {
 
   this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
   this._clippingPlanesMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from reference matrix and the current view matrix
+  this._iblReferenceFrameMatrix = Matrix3.clone(Matrix3.IDENTITY); // Derived from reference matrix and the current view matrix
   this._initialRadius = undefined; // Radius without model's scale property, model-matrix scale, animations, or skins
   this._boundingSphere = undefined;
   this._scaledBoundingSphere = new BoundingSphere();
@@ -3768,7 +3769,7 @@ function createClippingPlanesMatrixFunction(model) {
 
 function createIBLReferenceFrameMatrixFunction(model) {
   return function () {
-    return model._imageBasedLighting.iblReferenceFrameMatrix;
+    return model._iblReferenceFrameMatrix;
   };
 }
 
@@ -5219,6 +5220,8 @@ function distanceDisplayConditionVisible(model, frameState) {
   return distance2 >= nearSquared && distance2 <= farSquared;
 }
 
+const scratchIBLReferenceFrameMatrix4 = new Matrix4();
+const scratchIBLReferenceFrameMatrix3 = new Matrix3();
 const scratchClippingPlanesMatrix = new Matrix4();
 
 /**
@@ -5576,7 +5579,32 @@ Model.prototype.update = function (frameState) {
     // models are part of a tileset these properties get transformed relative to
     // a common reference (such as the root).
     const referenceMatrix = defaultValue(this.referenceMatrix, modelMatrix);
-    this._imageBasedLighting.referenceMatrix = referenceMatrix;
+
+    if (
+      this._imageBasedLighting.useSphericalHarmonicCoefficients ||
+      this._imageBasedLighting.useSpecularEnvironmentMaps
+    ) {
+      let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
+      let iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
+
+      iblReferenceFrameMatrix4 = Matrix4.multiply(
+        context.uniformState.view3D,
+        referenceMatrix,
+        iblReferenceFrameMatrix4
+      );
+      iblReferenceFrameMatrix3 = Matrix4.getMatrix3(
+        iblReferenceFrameMatrix4,
+        iblReferenceFrameMatrix3
+      );
+      iblReferenceFrameMatrix3 = Matrix3.getRotation(
+        iblReferenceFrameMatrix3,
+        iblReferenceFrameMatrix3
+      );
+      this._iblReferenceFrameMatrix = Matrix3.transpose(
+        iblReferenceFrameMatrix3,
+        this._iblReferenceFrameMatrix
+      );
+    }
 
     this._shouldRegenerateShaders =
       this._shouldRegenerateShaders ||

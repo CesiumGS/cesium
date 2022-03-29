@@ -14,6 +14,7 @@ import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import Pass from "../../Renderer/Pass.js";
 import Resource from "../../Core/Resource.js";
 import destroyObject from "../../Core/destroyObject.js";
+import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelFeatureTable from "./ModelFeatureTable.js";
 import PointCloudShading from "../PointCloudShading.js";
@@ -146,6 +147,7 @@ export default function ModelExperimental(options) {
    * @private
    */
   this.referenceMatrix = undefined;
+  this._iblReferenceFrameMatrix = Matrix3.clone(Matrix3.IDENTITY); // Derived from reference matrix and the current view matrix
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -998,6 +1000,9 @@ ModelExperimental.prototype.resetDrawCommands = function () {
   this._drawCommandsBuilt = false;
 };
 
+const scratchIBLReferenceFrameMatrix4 = new Matrix4();
+const scratchIBLReferenceFrameMatrix3 = new Matrix3();
+
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
  * get the draw commands needed to render this primitive.
@@ -1028,11 +1033,38 @@ ModelExperimental.prototype.update = function (frameState) {
     this._attenuation = this.pointCloudShading.attenuation;
   }
 
+  const context = frameState.context;
   const referenceMatrix = defaultValue(this.referenceMatrix, this.modelMatrix);
-  this._imageBasedLighting.referenceMatrix = referenceMatrix;
 
   // Update the image-based lighting for this model to detect any changes in parameters.
   this._imageBasedLighting.update(frameState);
+
+  if (
+    this._imageBasedLighting.useSphericalHarmonicCoefficients ||
+    this._imageBasedLighting.useSpecularEnvironmentMaps
+  ) {
+    let iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
+    let iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
+
+    iblReferenceFrameMatrix4 = Matrix4.multiply(
+      context.uniformState.view3D,
+      referenceMatrix,
+      iblReferenceFrameMatrix4
+    );
+    iblReferenceFrameMatrix3 = Matrix4.getMatrix3(
+      iblReferenceFrameMatrix4,
+      iblReferenceFrameMatrix3
+    );
+    iblReferenceFrameMatrix3 = Matrix3.getRotation(
+      iblReferenceFrameMatrix3,
+      iblReferenceFrameMatrix3
+    );
+    this._iblReferenceFrameMatrix = Matrix3.transpose(
+      iblReferenceFrameMatrix3,
+      this._iblReferenceFrameMatrix
+    );
+  }
+
   if (this._imageBasedLighting.shouldRegenerateShaders) {
     this.resetDrawCommands();
   }
