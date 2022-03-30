@@ -1,4 +1,4 @@
-#ifdef USE_FLOAT_CLIPPING_PLANES_TEXTURE
+#ifdef USE_CLIPPING_PLANES_FLOAT_TEXTURE
 vec4 getClippingPlane(
     highp sampler2D packedClippingPlanes,
     int clippingPlaneNumber,

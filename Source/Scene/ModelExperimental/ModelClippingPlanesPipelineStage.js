@@ -2,7 +2,6 @@ import Cartesian2 from "../../Core/Cartesian2.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import combine from "../../Core/combine.js";
 import Color from "../../Core/Color.js";
-import defined from "../../Core/defined.js";
 import ModelClippingPlanesStageFS from "../../Shaders/ModelExperimental/ModelClippingPlanesStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
@@ -64,7 +63,7 @@ ModelClippingPlanesPipelineStage.process = function (
 
   if (ClippingPlaneCollection.useFloatTexture(context)) {
     shaderBuilder.addDefine(
-      "USE_FLOAT_CLIPPING_PLANES_TEXTURE",
+      "USE_CLIPPING_PLANES_FLOAT_TEXTURE",
       undefined,
       ShaderDestination.FRAGMENT
     );
@@ -108,11 +107,11 @@ ModelClippingPlanesPipelineStage.process = function (
 
   const uniformMap = {
     model_clippingPlanes: function () {
-      return model._clippingPlanes.texture;
+      return clippingPlanes.texture;
     },
     model_clippingPlanesEdgeStyle: function () {
-      const style = Color.clone(model._clippingPlanes.edgeColor);
-      style.alpha = model._clippingPlanes.edgeWidth;
+      const style = Color.clone(clippingPlanes.edgeColor);
+      style.alpha = clippingPlanes.edgeWidth;
       return style;
     },
     model_clippingPlanesMatrix: function () {
