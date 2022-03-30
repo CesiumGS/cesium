@@ -17,7 +17,6 @@ All new code should have 100% code coverage and should pass all tests. Always ru
       - [Run All Tests Against the Minified Release Version of CesiumJS](#run-all-tests-against-the-minified-release-version-of-cesiumjs)
       - [Run a Single Test or Suite](#run-a-single-test-or-suite)
       - [Using Browser Debugging Tools](#using-browser-debugging-tools)
-      - [Using the Karma Jasmine HTML Reporter](#using-the-karma-jasmine-html-reporter)
     - [Run Coverage](#run-coverage)
   - [`testfailure` Label for Issues](#testfailure-label-for-issues)
   - [Writing Tests](#writing-tests)
@@ -121,17 +120,9 @@ If it is helpful to step through a unit test in a browser debugger, run the test
 
 `npm run test -- --debug`
 
-The `--debug` flag will prevent the Karma browser from closing after running the tests, and clicking the "Debug" button will open a new tab that can be used for placing breakpoints and stepping through the code.
+The `--debug` flag will prevent the Karma browser from closing after running the tests and will open an additional "Debug" tab that can be used for placing breakpoints and stepping through the code. When the `debug` flag is enabled, the `karma-jamsine-html-reporter` is used to output a clickable list of tests sorted by test suite upon completion.
 
 ![](8.jpg)
-
-#### Using the Karma Jasmine HTML Reporter
-
-For additional options to run specs in a browser, the `html` flag will enable the `karma-jamsine-html-reporter` plugin:
-
-`npm run test -- --html`
-
-This can be helpful when used with the `--debug` flag (so Karma's browser window doesn't close) as it'll output a clickable list of tests sorted by test suite upon completion.
 
 ### Run Coverage
 

@@ -127,7 +127,6 @@ function customizeJasmine(
   }
 
   env.hideDisabled(true);
-  //env.catchExceptions(true);
 
   env.beforeEach(function () {
     addDefaultMatchers(!release).call(env);

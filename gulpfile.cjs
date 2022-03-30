@@ -987,14 +987,15 @@ gulp.task("test", function (done) {
   const release = argv.release ? argv.release : false;
   const failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
   const suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
-  const singleRun = argv.debug ? false : true;
-  const html = argv.html ? true : false;
+  const debug = argv.debug ? true : false;
   const includeName = argv.includeName ? argv.includeName : "";
   const excludeName = argv.excludeName ? argv.excludeName : "";
 
   let browsers = ["Chrome"];
   if (argv.browsers) {
     browsers = argv.browsers.split(",");
+  } else if (debug) {
+    browsers = ["ChromeDebug"];
   }
 
   let files = [
@@ -1024,14 +1025,14 @@ gulp.task("test", function (done) {
   }
 
   const reporters = ["spec", "longest"];
-  if (html) {
+  if (debug) {
     reporters.push("kjhtml");
   }
 
   const karma = new Karma.Server(
     {
       configFile: karmaConfigFile,
-      singleRun: singleRun,
+      singleRun: !debug,
       browsers: browsers,
       specReporter: {
         suppressErrorSummary: false,

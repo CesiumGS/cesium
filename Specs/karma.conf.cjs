@@ -81,6 +81,10 @@ module.exports = function (config) {
         base: "ChromeHeadless",
         flags: ["--no-sandbox"],
       },
+      ChromeDebug: {
+        base: "Chrome",
+        flags: ["http://localhost:9876/debug.html"],
+      },
     },
 
     // Ridiculous large values because travis is slow.
