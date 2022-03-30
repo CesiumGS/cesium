@@ -1,5 +1,6 @@
 import {
   combine,
+  Cartesian2,
   GltfLoader,
   MetadataPipelineStage,
   Resource,
@@ -334,6 +335,7 @@ describe(
             "    int uint8Property;",
             "    ivec3 uint8vec3Property;",
             "    vec3 arrayProperty;",
+            "    vec2 valueTransformProperty;",
           ]
         );
         ShaderBuilderTester.expectHasVertexFunction(
@@ -351,6 +353,7 @@ describe(
             "    metadata.uint8Property = int(255.0 * texture2D(u_propertyTexture_1, attributes.texCoord_0).r);",
             "    metadata.uint8vec3Property = ivec3(255.0 * texture2D(u_propertyTexture_1, attributes.texCoord_0).rgb);",
             "    metadata.arrayProperty = texture2D(u_propertyTexture_1, attributes.texCoord_0).rgb;",
+            "    metadata.valueTransformProperty = czm_valueTransform(u_valueTransformProperty_offset, u_valueTransformProperty_scale, texture2D(u_propertyTexture_1, attributes.texCoord_0).rg);",
           ]
         );
         ShaderBuilderTester.expectHasVertexFunction(
@@ -362,6 +365,8 @@ describe(
         ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
         ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
           "uniform sampler2D u_propertyTexture_1;",
+          "uniform vec2 u_valueTransformProperty_offset;",
+          "uniform vec2 u_valueTransformProperty_scale;",
         ]);
 
         // everything shares the same texture.
@@ -372,6 +377,13 @@ describe(
         const uniformMap = renderResources.uniformMap;
         expect(uniformMap.u_propertyTexture_1()).toBe(
           texture1.textureReader.texture
+        );
+
+        expect(uniformMap.u_valueTransformProperty_offset()).toEqual(
+          new Cartesian2(1, 1)
+        );
+        expect(uniformMap.u_valueTransformProperty_scale()).toEqual(
+          new Cartesian2(2, 2)
         );
       });
     });

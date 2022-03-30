@@ -11,12 +11,13 @@ This model contains the following metadata properties to set up several
 different test cases. The properties share the same texture, reinterpreting the
 bytes as necessary.
 
-| property ID         | Type                            | Channels |
-| ------------------- | ------------------------------- | -------- |
-| `vec2Property`      | `VEC2` of `UINT8` (normalized)  | `gb`     |
-| `uint8Property`     | `UINT8`                         | `r`      |
-| `uint8vec3Property` | `VEC3` of `UINT8`               | `rgb`    |
-| `arrayProperty`     | array of 3 `UINT8` (normalized) | `rgb`    |
+| property ID              | Type                                          | Channels |
+| ------------------------ | --------------------------------------------- | -------- |
+| `vec2Property`           | `VEC2` of `UINT8` (normalized)                | `gb`     |
+| `uint8Property`          | `UINT8`                                       | `r`      |
+| `uint8vec3Property`      | `VEC3` of `UINT8`                             | `rgb`    |
+| `arrayProperty`          | array of 3 `UINT8` (normalized)               | `rgb`    |
+| `valueTransformProperty` | `VEC2` of `UINT8` (normalized + offset/scale) | `rg`     |
 
 ## License
 

@@ -25,6 +25,13 @@
                 "type": "SCALAR",
                 "componentType": "UINT8",
                 "normalized": true
+              },
+              "valueTransformProperty": {
+                "type": "VEC2",
+                "componentType": "UINT8",
+                "normalized": true,
+                "offset": [1, 1],
+                "scale": [2, 2]
               }
             }
           }
@@ -65,6 +72,14 @@
                 0,
                 1,
                 2
+              ]
+            },
+            "valueTransformProperty": {
+              "index": 1,
+              "texCoord": 0,
+              "channels": [
+                0, 
+                1
               ]
             }
           }

@@ -236,7 +236,7 @@ function addPropertyTextureProperty(renderResources, propertyId, property) {
       renderResources: renderResources,
       glslType: glslType,
       metadataVariable: metadataVariable,
-      shaderDestination: ShaderDestination.BOTH,
+      shaderDestination: ShaderDestination.FRAGMENT,
       offset: property.offset,
       scale: property.scale,
     });
