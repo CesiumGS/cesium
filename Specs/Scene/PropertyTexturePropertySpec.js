@@ -1,7 +1,7 @@
 import {
   PropertyTextureProperty,
   Matrix3,
-  MetadataClass,
+  MetadataClassProperty,
   PixelDatatype,
   PixelFormat,
   Texture,
@@ -19,21 +19,15 @@ describe(
     let propertyTextureProperty;
 
     beforeAll(function () {
-      const classDefinition = new MetadataClass({
-        id: "map",
-        class: {
-          properties: {
-            color: {
-              array: true,
-              type: "SCALAR",
-              componentType: "UINT8",
-              count: 3,
-            },
-          },
+      const classProperty = new MetadataClassProperty({
+        id: "color",
+        property: {
+          array: true,
+          type: "SCALAR",
+          componentType: "UINT8",
+          count: 3,
         },
       });
-
-      classProperty = classDefinition.properties.color;
 
       context = createContext();
 
@@ -82,6 +76,24 @@ describe(
       context.destroyForSpecs();
     });
 
+    function makeProperty(options) {
+      const classProperty = new MetadataClassProperty({
+        id: "propertyId",
+        property: options.property,
+      });
+      return new PropertyTextureProperty({
+        property: {
+          channels: options.channels,
+          index: 0,
+          texCoord: 0,
+        },
+        classProperty: classProperty,
+        textures: {
+          0: texture,
+        },
+      });
+    }
+
     it("creates property texture property", function () {
       expect(propertyTextureProperty.extras).toBe(extras);
       expect(propertyTextureProperty.extensions).toBe(extensions);
@@ -128,6 +140,225 @@ describe(
           textures: undefined,
         });
       }).toThrowDeveloperError();
+    });
+
+    it("isGpuCompatible returns true for UINT8-based properties", function () {
+      const properties = [
+        makeProperty({
+          channels: [0],
+          property: {
+            type: "SCALAR",
+            componentType: "UINT8",
+            normalized: true,
+          },
+        }),
+        makeProperty({
+          channels: [0, 1],
+          property: {
+            type: "VEC2",
+            componentType: "UINT8",
+          },
+        }),
+        makeProperty({
+          channels: [0, 1, 2, 3],
+          property: {
+            array: true,
+            count: 4,
+            type: "SCALAR",
+            componentType: "UINT8",
+            normalized: true,
+          },
+        }),
+      ];
+
+      for (let i = 0; i < properties.length; i++) {
+        expect(properties[i].isGpuCompatible()).toBe(true);
+      }
+    });
+
+    it("isGpuCompatible returns false for other types", function () {
+      const properties = [
+        makeProperty({
+          channels: [0],
+          property: {
+            type: "SCALAR",
+            componentType: "INT8",
+          },
+        }),
+        makeProperty({
+          channels: [0, 1],
+          property: {
+            type: "VEC2",
+            componentType: "UINT16",
+          },
+        }),
+        makeProperty({
+          channels: [0, 1, 2, 3],
+          property: {
+            array: true,
+            type: "SCALAR",
+            componentType: "UINT8",
+            normalized: true,
+          },
+        }),
+        makeProperty({
+          channels: [0, 1, 2, 3],
+          property: {
+            type: "STRING",
+          },
+        }),
+        makeProperty({
+          channels: [0, 1, 2, 3],
+          property: {
+            type: "MAT2",
+            componentType: "UINT8",
+          },
+        }),
+      ];
+
+      for (let i = 0; i < properties.length; i++) {
+        expect(properties[i].isGpuCompatible()).toBe(false);
+      }
+    });
+
+    it("getGlslType returns floating point types for normalized UINT8 properties", function () {
+      const properties = [
+        makeProperty({
+          channels: [0],
+          property: {
+            type: "SCALAR",
+            componentType: "UINT8",
+            normalized: true,
+          },
+        }),
+        makeProperty({
+          channels: [0, 1],
+          property: {
+            type: "VEC2",
+            componentType: "UINT8",
+            normalized: true,
+          },
+        }),
+        makeProperty({
+          channels: [0, 1, 2],
+          property: {
+            array: true,
+            count: 3,
+            type: "SCALAR",
+            componentType: "UINT8",
+            normalized: true,
+          },
+        }),
+      ];
+
+      const expectedTypes = ["float", "vec2", "vec3"];
+
+      for (let i = 0; i < properties.length; i++) {
+        expect(properties[i].getGlslType()).toBe(expectedTypes[i]);
+      }
+    });
+
+    it("getGlslType returns integer types for non-normalized UINT8 properties", function () {
+      const properties = [
+        makeProperty({
+          channels: [0],
+          property: {
+            type: "SCALAR",
+            componentType: "UINT8",
+          },
+        }),
+        makeProperty({
+          channels: [0, 1],
+          property: {
+            type: "VEC2",
+            componentType: "UINT8",
+          },
+        }),
+        makeProperty({
+          channels: [0, 1, 2],
+          property: {
+            array: true,
+            count: 3,
+            type: "SCALAR",
+            componentType: "UINT8",
+          },
+        }),
+      ];
+
+      const expectedTypes = ["int", "ivec2", "ivec3"];
+
+      for (let i = 0; i < properties.length; i++) {
+        expect(properties[i].getGlslType()).toBe(expectedTypes[i]);
+      }
+    });
+
+    it("unpackInShader passes through normalized values unchanged", function () {
+      const properties = [
+        makeProperty({
+          channels: [0],
+          property: {
+            type: "SCALAR",
+            componentType: "UINT8",
+            normalized: true,
+          },
+        }),
+        makeProperty({
+          channels: [0, 1],
+          property: {
+            type: "VEC2",
+            componentType: "UINT8",
+            normalized: true,
+          },
+        }),
+        makeProperty({
+          channels: [0, 1, 2],
+          property: {
+            array: true,
+            count: 3,
+            type: "SCALAR",
+            componentType: "UINT8",
+            normalized: true,
+          },
+        }),
+      ];
+
+      for (let i = 0; i < properties.length; i++) {
+        expect(properties[i].unpackInShader("x")).toBe("x");
+      }
+    });
+
+    it("unpackInShader un-normalizes integer values", function () {
+      const properties = [
+        makeProperty({
+          channels: [0],
+          property: {
+            type: "SCALAR",
+            componentType: "UINT8",
+          },
+        }),
+        makeProperty({
+          channels: [0, 1],
+          property: {
+            type: "VEC2",
+            componentType: "UINT8",
+          },
+        }),
+        makeProperty({
+          channels: [0, 1, 2],
+          property: {
+            array: true,
+            count: 3,
+            type: "SCALAR",
+            componentType: "UINT8",
+          },
+        }),
+      ];
+
+      const expectedTypes = ["int", "ivec2", "ivec3"];
+      for (let i = 0; i < properties.length; i++) {
+        const expected = `${expectedTypes[i]}(255.0 * x)`;
+        expect(properties[i].unpackInShader("x")).toEqual(expected);
+      }
     });
   },
   "WebGL"

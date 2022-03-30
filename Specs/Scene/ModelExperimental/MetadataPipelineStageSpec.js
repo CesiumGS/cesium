@@ -303,6 +303,11 @@ describe(
         );
       });
     });
+
+    // I want to test:
+    // -- vecN properties
+    // -- ivecN properties
+    // -- array properties
   },
   "WebGL"
 );
