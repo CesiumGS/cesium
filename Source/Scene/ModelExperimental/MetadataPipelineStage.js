@@ -4,6 +4,16 @@ import MetadataStageFS from "../../Shaders/ModelExperimental/MetadataStageFS.js"
 import MetadataStageVS from "../../Shaders/ModelExperimental/MetadataStageVS.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
+/**
+ * The metadata pipeline stage processes metadata properties from
+ * EXT_structural_metadata and inserts them into a struct in the shader.
+ * This struct will be used by {@link CustomShaderPipelineStage} to allow the
+ * user to access metadata using {@link CustomShader}
+ *
+ * @namespace MetadataPipelineStage
+ *
+ * @private
+ */
 const MetadataPipelineStage = {};
 MetadataPipelineStage.name = "MetadataPipelineStage";
 
@@ -20,6 +30,21 @@ MetadataPipelineStage.FUNCTION_ID_SET_METADATA_VARYINGS = "setMetadataVaryings";
 MetadataPipelineStage.FUNCTION_SIGNATURE_SET_METADATA_VARYINGS =
   "void setMetadataVaryings()";
 
+/**
+ * Process a primitive. This modifies the following parts of the render
+ * resources:
+ * <ul>
+ *   <li>Adds a Metadata struct to the shader</li>
+ *   <li>If the primitive has structural metadata, properties are added to the Metadata struct</li>
+ *   <li>dynamic functions are added to the shader to initialize the metadata properties</li>
+ *   <li>Adds uniforms for property textures to the uniform map as needed</li>
+ *   <li>Adds uniforms for offset/scale to the uniform map as needed</li>
+ * </ul>
+ * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
+ * @param {ModelComponents.Primitive} primitive The primitive to be rendered
+ * @param {FrameState} frameState The frame state
+ * @returns
+ */
 MetadataPipelineStage.process = function (
   renderResources,
   primitive,
