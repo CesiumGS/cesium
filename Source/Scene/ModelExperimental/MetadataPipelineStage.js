@@ -43,7 +43,7 @@ MetadataPipelineStage.FUNCTION_SIGNATURE_SET_METADATA_VARYINGS =
  * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
  * @param {ModelComponents.Primitive} primitive The primitive to be rendered
  * @param {FrameState} frameState The frame state
- * @returns
+ * @private
  */
 MetadataPipelineStage.process = function (
   renderResources,
