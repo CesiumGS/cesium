@@ -15,6 +15,8 @@ describe(
   function () {
     const pointCloudWithPropertyAttributes =
       "./Data/Models/GltfLoader/PointCloudWithPropertyAttributes/glTF/PointCloudWithPropertyAttributes.gltf";
+    const simplePropertyTexture =
+      "./Data/Models/GltfLoader/SimplePropertyTexture/SimplePropertyTexture.gltf";
     const boxTexturedBinary =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
 
@@ -233,6 +235,72 @@ describe(
         expect(uniformMap.u_toroidalAngle_scale()).toBe(0.21666156231653746);
         expect(uniformMap.u_poloidalAngle_offset()).toBe(-3.141592653589793);
         expect(uniformMap.u_poloidalAngle_scale()).toBe(0.3306939635357677);
+      });
+    });
+
+    it("Adds property textures to the shader", function () {
+      return loadGltf(simplePropertyTexture).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const node = components.nodes[0];
+        const primitive = node.primitives[0];
+        const frameState = scene.frameState;
+        const renderResources = mockRenderResources(components);
+
+        MetadataPipelineStage.process(renderResources, primitive, frameState);
+
+        const shaderBuilder = renderResources.shaderBuilder;
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          MetadataPipelineStage.STRUCT_ID_METADATA_VS,
+          MetadataPipelineStage.STRUCT_NAME_METADATA,
+          []
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          MetadataPipelineStage.STRUCT_ID_METADATA_FS,
+          MetadataPipelineStage.STRUCT_NAME_METADATA,
+          [
+            "    float insulation;",
+            "    int insideTemperature;",
+            "    int outsideTemperature;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
+          MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
+          []
+        );
+        ShaderBuilderTester.expectHasFragmentFunction(
+          shaderBuilder,
+          MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
+          MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
+          [
+            "    metadata.insulation = texture2D(u_propertyTexture_1, attributes.texCoord_0).b;",
+            "    metadata.insideTemperature = int(255.0 * texture2D(u_propertyTexture_1, attributes.texCoord_0).r);",
+            "    metadata.outsideTemperature = int(255.0 * texture2D(u_propertyTexture_1, attributes.texCoord_0).g);",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          MetadataPipelineStage.FUNCTION_ID_SET_METADATA_VARYINGS,
+          MetadataPipelineStage.FUNCTION_SIGNATURE_SET_METADATA_VARYINGS,
+          []
+        );
+        ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+          "uniform sampler2D u_propertyTexture_1;",
+        ]);
+
+        const structuralMetadata = renderResources.model.structuralMetadata;
+        const propertyTexture1 = structuralMetadata.getPropertyTexture(0);
+        const texture1 = propertyTexture1.getProperty("insulation");
+
+        // The offsets and scales should be exactly as they appear in the glTF
+        const uniformMap = renderResources.uniformMap;
+        expect(uniformMap.u_propertyTexture_1()).toBe(
+          texture1.textureReader.texture
+        );
       });
     });
   },
