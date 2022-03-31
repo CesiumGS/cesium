@@ -47,10 +47,6 @@
         });
         const scene = viewer.scene;
 
-        scene.logarithmicDepthBuffer = true;
-        scene.camera.frustum.near = 0.1;
-        scene.camera.frustum.far = 10000000000.0;
-
         scene.globe.depthTestAgainstTerrain = false;
 
         // MAXAR OWT Muscatatuk photogrammetry dataset with property textures
@@ -58,7 +54,6 @@
         const tileset = viewer.scene.primitives.add(
           new Cesium.Cesium3DTileset({
             url: Cesium.IonResource.fromAssetId(905848),
-            enableModelExperimental: true,
           })
         );
 
