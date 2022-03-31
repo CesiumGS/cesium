@@ -44,7 +44,6 @@ float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix) 
     
     #ifdef UNION_CLIPPING_REGIONS
     float clipAmount; // For union planes, we want to get the min distance. So we set the initial value to the first plane distance in the loop below.
-    bool breakAndDiscard = false;
     #else
     float clipAmount = 0.0;
     bool clipped = true;
