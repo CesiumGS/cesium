@@ -4,6 +4,16 @@ import MetadataStageFS from "../../Shaders/ModelExperimental/MetadataStageFS.js"
 import MetadataStageVS from "../../Shaders/ModelExperimental/MetadataStageVS.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
+/**
+ * The metadata pipeline stage processes metadata properties from
+ * EXT_structural_metadata and inserts them into a struct in the shader.
+ * This struct will be used by {@link CustomShaderPipelineStage} to allow the
+ * user to access metadata using {@link CustomShader}
+ *
+ * @namespace MetadataPipelineStage
+ *
+ * @private
+ */
 const MetadataPipelineStage = {};
 MetadataPipelineStage.name = "MetadataPipelineStage";
 
@@ -20,6 +30,21 @@ MetadataPipelineStage.FUNCTION_ID_SET_METADATA_VARYINGS = "setMetadataVaryings";
 MetadataPipelineStage.FUNCTION_SIGNATURE_SET_METADATA_VARYINGS =
   "void setMetadataVaryings()";
 
+/**
+ * Process a primitive. This modifies the following parts of the render
+ * resources:
+ * <ul>
+ *   <li>Adds a Metadata struct to the shader</li>
+ *   <li>If the primitive has structural metadata, properties are added to the Metadata struct</li>
+ *   <li>dynamic functions are added to the shader to initialize the metadata properties</li>
+ *   <li>Adds uniforms for property textures to the uniform map as needed</li>
+ *   <li>Adds uniforms for offset/scale to the uniform map as needed</li>
+ * </ul>
+ * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
+ * @param {ModelComponents.Primitive} primitive The primitive to be rendered
+ * @param {FrameState} frameState The frame state
+ * @private
+ */
 MetadataPipelineStage.process = function (
   renderResources,
   primitive,
@@ -38,6 +63,7 @@ MetadataPipelineStage.process = function (
   }
 
   processPropertyAttributes(renderResources, primitive, structuralMetadata);
+  processPropertyTextures(renderResources, structuralMetadata);
 };
 
 function declareStructsAndFunctions(shaderBuilder) {
@@ -173,6 +199,100 @@ function addPropertyAttributeProperty(
   );
 }
 
+function processPropertyTextures(renderResources, structuralMetadata) {
+  const propertyTextures = structuralMetadata.propertyTextures;
+
+  if (!defined(propertyTextures)) {
+    return;
+  }
+
+  for (let i = 0; i < propertyTextures.length; i++) {
+    const propertyTexture = propertyTextures[i];
+
+    const properties = propertyTexture.properties;
+    for (const propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        const property = properties[propertyId];
+        if (property.isGpuCompatible()) {
+          addPropertyTextureProperty(renderResources, propertyId, property);
+        }
+      }
+    }
+  }
+}
+
+function addPropertyTextureProperty(renderResources, propertyId, property) {
+  // Property texture properties may share the same physical texture, so only
+  // add the texture uniform the first time we encounter it.
+  const textureReader = property.textureReader;
+  const textureIndex = textureReader.index;
+  const textureUniformName = `u_propertyTexture_${textureIndex}`;
+  if (!renderResources.uniformMap.hasOwnProperty(textureUniformName)) {
+    addPropertyTextureUniform(
+      renderResources,
+      textureUniformName,
+      textureReader
+    );
+  }
+
+  const metadataVariable = sanitizeGlslIdentifier(propertyId);
+  const glslType = property.getGlslType();
+
+  const shaderBuilder = renderResources.shaderBuilder;
+  shaderBuilder.addStructField(
+    MetadataPipelineStage.STRUCT_ID_METADATA_FS,
+    glslType,
+    metadataVariable
+  );
+
+  const texCoord = textureReader.texCoord;
+  const texCoordVariable = `attributes.texCoord_${texCoord}`;
+  const channels = textureReader.channels;
+  let unpackedValue = `texture2D(${textureUniformName}, ${texCoordVariable}).${channels}`;
+
+  // Some types need an unpacking step or two. For example, since texture reads
+  // are always normalized, UINT8 (not normalized) properties need to be
+  // un-normalized in the shader.
+  unpackedValue = property.unpackInShader(unpackedValue);
+
+  // handle offset/scale transform. This wraps the GLSL expression with
+  // the czm_valueTransform() call.
+  if (property.hasValueTransform) {
+    unpackedValue = addValueTransformUniforms(unpackedValue, {
+      renderResources: renderResources,
+      glslType: glslType,
+      metadataVariable: metadataVariable,
+      shaderDestination: ShaderDestination.FRAGMENT,
+      offset: property.offset,
+      scale: property.scale,
+    });
+  }
+
+  const initializationLine = `metadata.${metadataVariable} = ${unpackedValue};`;
+  shaderBuilder.addFunctionLines(
+    MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
+    [initializationLine]
+  );
+}
+
+function addPropertyTextureUniform(
+  renderResources,
+  uniformName,
+  textureReader
+) {
+  const shaderBuilder = renderResources.shaderBuilder;
+  shaderBuilder.addUniform(
+    "sampler2D",
+    uniformName,
+    ShaderDestination.FRAGMENT
+  );
+
+  const uniformMap = renderResources.uniformMap;
+  uniformMap[uniformName] = function () {
+    return textureReader.texture;
+  };
+}
+
 function addValueTransformUniforms(valueExpression, options) {
   const metadataVariable = options.metadataVariable;
   const offsetUniformName = `u_${metadataVariable}_offset`;
@@ -181,8 +301,9 @@ function addValueTransformUniforms(valueExpression, options) {
   const renderResources = options.renderResources;
   const shaderBuilder = renderResources.shaderBuilder;
   const glslType = options.glslType;
-  shaderBuilder.addUniform(glslType, offsetUniformName, ShaderDestination.BOTH);
-  shaderBuilder.addUniform(glslType, scaleUniformName, ShaderDestination.BOTH);
+  const shaderDestination = options.shaderDestination;
+  shaderBuilder.addUniform(glslType, offsetUniformName, shaderDestination);
+  shaderBuilder.addUniform(glslType, scaleUniformName, shaderDestination);
 
   const uniformMap = renderResources.uniformMap;
   uniformMap[offsetUniformName] = function () {
