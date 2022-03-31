@@ -1,5 +1,6 @@
 import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 
@@ -442,6 +443,87 @@ MetadataComponentType.getSizeInBytes = function (type) {
       return 4;
     case MetadataComponentType.FLOAT64:
       return 8;
+  }
+};
+
+/**
+ * Gets the type from a {@link ComponentDatatype}.
+ *
+ * @param {ComponentDatatype} componentDatatype The component datatype.
+ * @returns {MetadataComponentType} The metadata component type.
+ *
+ * @private
+ */
+MetadataComponentType.fromComponentDatatype = function (componentDatatype) {
+  switch (componentDatatype) {
+    case ComponentDatatype.BYTE:
+      return MetadataComponentType.INT8;
+    case ComponentDatatype.UNSIGNED_BYTE:
+      return MetadataComponentType.UINT8;
+    case ComponentDatatype.SHORT:
+      return MetadataComponentType.INT16;
+    case ComponentDatatype.UNSIGNED_SHORT:
+      return MetadataComponentType.UINT16;
+    case ComponentDatatype.INT:
+      return MetadataComponentType.INT32;
+    case ComponentDatatype.UNSIGNED_INT:
+      return MetadataComponentType.UINT32;
+    case ComponentDatatype.FLOAT:
+      return MetadataComponentType.FLOAT32;
+    case ComponentDatatype.DOUBLE:
+      return MetadataComponentType.FLOAT64;
+  }
+};
+
+MetadataComponentType.toComponentDatatype = function (type) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!MetadataComponentType.isNumericType(type)) {
+    throw new DeveloperError("type must be a numeric type");
+  }
+  //>>includeEnd('debug');
+  switch (type) {
+    case MetadataComponentType.INT8:
+      return ComponentDatatype.BYTE;
+    case MetadataComponentType.UINT8:
+      return ComponentDatatype.UNSIGNED_BYTE;
+    case MetadataComponentType.INT16:
+      return ComponentDatatype.SHORT;
+    case MetadataComponentType.UINT16:
+      return ComponentDatatype.UNSIGNED_SHORT;
+    case MetadataComponentType.INT32:
+      return ComponentDatatype.INT;
+    case MetadataComponentType.UINT32:
+      return ComponentDatatype.UNSIGNED_INT;
+    case MetadataComponentType.FLOAT32:
+      return ComponentDatatype.FLOAT;
+    case MetadataComponentType.FLOAT64:
+      return ComponentDatatype.DOUBLE;
+  }
+};
+
+MetadataComponentType.toTypedArrayType = function (type) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!MetadataComponentType.isNumericType(type)) {
+    throw new DeveloperError("type must be a numeric type");
+  }
+  //>>includeEnd('debug');
+  switch (type) {
+    case MetadataComponentType.INT8:
+      return Int8Array;
+    case MetadataComponentType.UINT8:
+      return Uint8Array;
+    case MetadataComponentType.INT16:
+      return Int16Array;
+    case MetadataComponentType.UINT16:
+      return Uint16Array;
+    case MetadataComponentType.INT32:
+      return Int32Array;
+    case MetadataComponentType.UINT32:
+      return Uint32Array;
+    case MetadataComponentType.FLOAT32:
+      return Float32Array;
+    case MetadataComponentType.FLOAT64:
+      return Float64Array;
   }
 };
 

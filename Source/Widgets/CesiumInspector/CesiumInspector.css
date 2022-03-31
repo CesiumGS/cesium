@@ -54,7 +54,7 @@
   margin: 5px 0;
   font-family: sans-serif;
   font-size: 10pt;
-  width: 185px;
+  width: 100%;
 }
 
 .cesium-cesiumInspector-frustumStatistics {

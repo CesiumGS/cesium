@@ -148,6 +148,13 @@ const vertexlogDepthRegex = /\s+czm_vertexLogDepth\(/;
 const extensionRegex = /\s*#extension\s+GL_EXT_frag_depth\s*:\s*enable/;
 
 function getLogDepthShaderProgram(context, shaderProgram) {
+  const disableLogDepthWrite =
+    shaderProgram.fragmentShaderSource.defines.indexOf("LOG_DEPTH_READ_ONLY") >=
+    0;
+  if (disableLogDepthWrite) {
+    return shaderProgram;
+  }
+
   let shader = context.shaderCache.getDerivedShaderProgram(
     shaderProgram,
     "logDepth"

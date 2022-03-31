@@ -985,6 +985,21 @@ function loadPrimitive(
   );
   const draco = extensions.KHR_draco_mesh_compression;
 
+  const extVox = extensions.EXT_primitive_voxels;
+  if (defined(extVox)) {
+    const voxel = new ModelComponents.Voxel();
+    voxel.dimensions = fromArray(Cartesian3, extVox.dimensions);
+    if (defined(extVox.bounds)) {
+      voxel.minBounds = fromArray(Cartesian3, extVox.bounds.min);
+      voxel.maxBounds = fromArray(Cartesian3, extVox.bounds.max);
+    }
+    if (defined(extVox.padding)) {
+      voxel.paddingBefore = fromArray(Cartesian3, extVox.padding.before);
+      voxel.paddingAfter = fromArray(Cartesian3, extVox.padding.after);
+    }
+    primitive.voxel = voxel;
+  }
+
   const attributes = gltfPrimitive.attributes;
   if (defined(attributes)) {
     for (const semantic in attributes) {

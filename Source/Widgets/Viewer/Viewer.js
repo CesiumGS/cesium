@@ -24,6 +24,7 @@ import computeFlyToLocationForRectangle from "../../Scene/computeFlyToLocationFo
 import ImageryLayer from "../../Scene/ImageryLayer.js";
 import SceneMode from "../../Scene/SceneMode.js";
 import TimeDynamicPointCloud from "../../Scene/TimeDynamicPointCloud.js";
+import VoxelPrimitive from "../../Scene/VoxelPrimitive.js";
 import knockout from "../../ThirdParty/knockout.js";
 import Animation from "../Animation/Animation.js";
 import AnimationViewModel from "../Animation/AnimationViewModel.js";
@@ -2103,14 +2104,11 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
       return;
     }
 
-    //If the zoom target is a Cesium3DTileset
-    if (zoomTarget instanceof Cesium3DTileset) {
-      that._zoomTarget = zoomTarget;
-      return;
-    }
-
-    //If the zoom target is a TimeDynamicPointCloud
-    if (zoomTarget instanceof TimeDynamicPointCloud) {
+    if (
+      zoomTarget instanceof Cesium3DTileset ||
+      zoomTarget instanceof TimeDynamicPointCloud ||
+      zoomTarget instanceof VoxelPrimitive
+    ) {
       that._zoomTarget = zoomTarget;
       return;
     }
@@ -2189,47 +2187,11 @@ function updateZoomTarget(viewer) {
   const zoomOptions = defaultValue(viewer._zoomOptions, {});
   let options;
 
-  // If zoomTarget was Cesium3DTileset
-  if (target instanceof Cesium3DTileset) {
-    return target.readyPromise.then(function () {
-      const boundingSphere = target.boundingSphere;
-      // If offset was originally undefined then give it base value instead of empty object
-      if (!defined(zoomOptions.offset)) {
-        zoomOptions.offset = new HeadingPitchRange(
-          0.0,
-          -0.5,
-          boundingSphere.radius
-        );
-      }
-
-      options = {
-        offset: zoomOptions.offset,
-        duration: zoomOptions.duration,
-        maximumHeight: zoomOptions.maximumHeight,
-        complete: function () {
-          zoomPromise.resolve(true);
-        },
-        cancel: function () {
-          zoomPromise.resolve(false);
-        },
-      };
-
-      if (viewer._zoomIsFlight) {
-        camera.flyToBoundingSphere(target.boundingSphere, options);
-      } else {
-        camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
-        camera.lookAtTransform(Matrix4.IDENTITY);
-
-        // Finish the promise
-        zoomPromise.resolve(true);
-      }
-
-      clearZoom(viewer);
-    });
-  }
-
-  // If zoomTarget was TimeDynamicPointCloud
-  if (target instanceof TimeDynamicPointCloud) {
+  if (
+    target instanceof Cesium3DTileset ||
+    target instanceof TimeDynamicPointCloud ||
+    target instanceof VoxelPrimitive
+  ) {
     return target.readyPromise.then(function () {
       const boundingSphere = target.boundingSphere;
       // If offset was originally undefined then give it base value instead of empty object

@@ -81,7 +81,7 @@ vec4 czm_windowToEyeCoordinates(vec4 fragmentCoordinate)
 vec4 czm_windowToEyeCoordinates(vec2 fragmentCoordinateXY, float depthOrLogDepth)
 {
     // See reverseLogDepth.glsl. This is separate to re-use the pow.
-#ifdef LOG_DEPTH
+#if defined(LOG_DEPTH) || defined(LOG_DEPTH_READ_ONLY)
     float near = czm_currentFrustum.x;
     float far = czm_currentFrustum.y;
     float log2Depth = depthOrLogDepth * czm_log2FarDepthFromNearPlusOne;
