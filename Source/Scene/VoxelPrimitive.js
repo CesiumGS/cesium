@@ -19,7 +19,6 @@ import ShaderDestination from "../Renderer/ShaderDestination.js";
 import BlendingState from "./BlendingState.js";
 import CullFace from "./CullFace.js";
 import CustomShader from "./ModelExperimental/CustomShader.js";
-import CustomShaderPipelineStage from "./ModelExperimental/CustomShaderPipelineStage.js";
 import Material from "./Material.js";
 import PolylineCollection from "./PolylineCollection.js";
 import VoxelShapeType from "./VoxelShapeType.js";
@@ -27,8 +26,7 @@ import VoxelTraversal from "./VoxelTraversal.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import ShaderBuilder from "../Renderer/ShaderBuilder.js";
-// import VoxelFS from "../Shaders/VoxelFS.js";
-import VoxelFS_String from "./VoxelFS_String.js";
+import VoxelFS from "../Shaders/VoxelFS.js";
 import VoxelVS from "../Shaders/VoxelVS.js";
 import MetadataType from "./MetadataType.js";
 /**
@@ -1339,12 +1337,12 @@ VoxelPrimitive.prototype.update = function (frameState) {
     uniforms.octreeLeafNodeTilesPerRow = traversal.leafNodeTilesPerRow;
     uniforms.octreeLeafNodeTexelSizeUv = traversal.leafNodeTexelSizeUv;
 
-    uniforms.megatextureTextures = [];
     const megatextures = traversal.megatextures;
     const megatexture = megatextures[0];
     const megatextureLength = megatextures.length;
+    uniforms.megatextureTextures = new Array(megatextureLength);
     for (let i = 0; i < megatextureLength; i++) {
-      uniforms.megatextureTextures.push(megatextures[i].texture);
+      uniforms.megatextureTextures[i] = megatextures[i].texture;
     }
 
     uniforms.megatextureSliceDimensions = Cartesian2.clone(
@@ -1586,20 +1584,53 @@ VoxelPrimitive.prototype.update = function (frameState) {
 };
 
 /**
+ * @param {MetadataType} type
+ */
+function getGlslType(type) {
+  if (type === MetadataType.SCALAR) {
+    return "float";
+  } else if (type === MetadataType.VEC2) {
+    return "vec2";
+  } else if (type === MetadataType.VEC3) {
+    return "vec3";
+  } else if (type === MetadataType.VEC4) {
+    return "vec4";
+  }
+  return "vec4";
+}
+/**
+ * @param {MetadataType} type
+ */
+function getGlslTextureSwizzle(type) {
+  if (type === MetadataType.SCALAR) {
+    return ".r";
+  } else if (type === MetadataType.VEC2) {
+    return ".ra";
+  } else if (type === MetadataType.VEC3) {
+    return ".rgb";
+  } else if (type === MetadataType.VEC4) {
+    return "";
+  }
+  return "";
+}
+
+/**
+ * @param {MetadataType} type
+ * @param {Number} index
+ */
+function getGlslField(type, index) {
+  if (type === MetadataType.SCALAR) {
+    return "";
+  }
+  return `.[${index}]`;
+}
+
+/**
  * @param {VoxelPrimitive} that
  * @param {Context} context
  * @private
  */
 function buildDrawCommands(that, context) {
-  // const renderResources
-  // CustomShaderPipelineStage.process(renderResources, primitive);
-
-  // TODO: questions about custom shaders:
-  // - where should attribute min/max go?
-  // - should shader builder call `fromCache` or `replaceCache`
-
-  // return;
-
   const provider = that._provider;
   const shapeType = provider.shape;
   const names = provider.names;
@@ -1622,22 +1653,25 @@ function buildDrawCommands(that, context) {
   const customShader = that._customShader;
   const attributeLength = types.length;
 
-  // Vertex shader
-
   const shaderBuilder = new ShaderBuilder();
-  shaderBuilder.addVertexLines([VoxelVS]);
+
+  // Vertex shader
+  shaderBuilder.addVertexLines(["#line 0", VoxelVS]);
+  shaderBuilder.setPositionAttribute("vec4", "a_position");
 
   // Fragment shader
+  shaderBuilder.addFragmentLines([
+    customShader.fragmentShaderText,
+    "#line 0",
+    VoxelFS,
+  ]);
 
-  const fragmentStructId = CustomShaderPipelineStage.STRUCT_ID_FRAGMENT_INPUT;
-  const fragmentStructName =
-    CustomShaderPipelineStage.STRUCT_NAME_FRAGMENT_INPUT;
-
-  const attributeStructId = CustomShaderPipelineStage.STRUCT_ID_ATTRIBUTES_FS;
-  const attributeStructName = CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES;
+  const fragmentStructId = "FragmentInput";
+  const fragmentStructName = "FragmentInput";
+  const attributeStructId = "Attributes";
+  const attributeStructName = "Attributes";
   const attributeFieldName = "attributes";
-
-  const voxelStructId = "VoxelFS";
+  const voxelStructId = "Voxel";
   const voxelStructName = "Voxel";
   const voxelFieldName = "voxel";
 
@@ -1647,49 +1681,6 @@ function buildDrawCommands(that, context) {
     attributeStructName,
     ShaderDestination.FRAGMENT
   );
-
-  /**
-   *
-   * @param {MetadataType} type
-   */
-  function getGlslType(type) {
-    if (type === MetadataType.SCALAR) {
-      return "float";
-    } else if (type === MetadataType.VEC2) {
-      return "vec2";
-    } else if (type === MetadataType.VEC3) {
-      return "vec3";
-    } else if (type === MetadataType.VEC4) {
-      return "vec4";
-    }
-    return "vec4";
-  }
-  /**
-   * @param {MetadataType} type
-   */
-  function getGlslTextureSwizzle(type) {
-    if (type === MetadataType.SCALAR) {
-      return ".r";
-    } else if (type === MetadataType.VEC2) {
-      return ".ra";
-    } else if (type === MetadataType.VEC3) {
-      return ".rgb";
-    } else if (type === MetadataType.VEC4) {
-      return "";
-    }
-    return "";
-  }
-
-  /**
-   * @param {MetadataType} type
-   * @param {Number} index
-   */
-  function getGlslField(type, index) {
-    if (type === MetadataType.SCALAR) {
-      return "";
-    }
-    return `.[${index}]`;
-  }
 
   for (let i = 0; i < attributeLength; i++) {
     const name = names[i];
@@ -1731,265 +1722,22 @@ function buildDrawCommands(that, context) {
     fragmentStructName,
     ShaderDestination.FRAGMENT
   );
-
   shaderBuilder.addStructField(
     fragmentStructId,
     attributeStructName,
     attributeFieldName
   );
-
   shaderBuilder.addStructField(
     fragmentStructId,
     voxelStructName,
     voxelFieldName
   );
 
-  // Custom shader
-  shaderBuilder.addFragmentLines([customShader.fragmentShaderText]);
-
-  // Voxel shader
-  shaderBuilder.addFragmentLines(["#line 0", VoxelFS_String]);
-  shaderBuilder.addDefine(
-    "METADATA_COUNT",
-    attributeLength,
-    ShaderDestination.FRAGMENT
-  );
   shaderBuilder.addUniform(
     "sampler2D",
     "u_megatextureTextures[METADATA_COUNT]",
     ShaderDestination.FRAGMENT
   );
-
-  shaderBuilder.addDefine(
-    `SHAPE_${shapeType}`,
-    undefined,
-    ShaderDestination.FRAGMENT
-  );
-
-  if (
-    !Cartesian3.equals(paddingBefore, Cartesian3.ZERO) ||
-    !Cartesian3.equals(paddingAfter, Cartesian3.ZERO)
-  ) {
-    shaderBuilder.addDefine("PADDING", undefined, ShaderDestination.FRAGMENT);
-  }
-
-  if (depthTest) {
-    shaderBuilder.addDefine(
-      "DEPTH_TEST",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-
-  // Allow reading from log depth texture, but don't write log depth anywhere.
-  // Note: This needs to be set even if depthTest is off because it affects the
-  // derived command system.
-  if (useLogDepth) {
-    shaderBuilder.addDefine(
-      "LOG_DEPTH_READ_ONLY",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-
-  if (jitter) {
-    shaderBuilder.addDefine("JITTER", undefined, ShaderDestination.FRAGMENT);
-  }
-
-  if (nearestSampling) {
-    shaderBuilder.addDefine(
-      "NEAREST_SAMPLING",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-
-  if (despeckle) {
-    shaderBuilder.addDefine("DESPECKLE", undefined, ShaderDestination.FRAGMENT);
-  }
-
-  const sampleCount = keyframeCount > 1 ? 2 : 1;
-  shaderBuilder.addDefine(
-    "SAMPLE_COUNT",
-    `${sampleCount}`,
-    ShaderDestination.FRAGMENT
-  );
-
-  const ShapeConstructor = VoxelShapeType.toShapeConstructor(shapeType);
-  const defaultMinBounds = ShapeConstructor.DefaultMinBounds;
-  const defaultMaxBounds = ShapeConstructor.DefaultMaxBounds;
-
-  const isDefaultMinX = minBounds.x === defaultMinBounds.x;
-  const isDefaultMinY = minBounds.y === defaultMinBounds.y;
-  const isDefaultMinZ = minBounds.z === defaultMinBounds.z;
-  const isDefaultMaxX = maxBounds.x === defaultMaxBounds.x;
-  const isDefaultMaxY = maxBounds.y === defaultMaxBounds.y;
-  const isDefaultMaxZ = maxBounds.z === defaultMaxBounds.z;
-
-  if (
-    !isDefaultMinX ||
-    !isDefaultMinY ||
-    !isDefaultMinZ ||
-    !isDefaultMaxX ||
-    !isDefaultMaxY ||
-    !isDefaultMaxZ
-  ) {
-    shaderBuilder.addDefine("BOUNDS", undefined, ShaderDestination.FRAGMENT);
-  }
-
-  if (!isDefaultMinX) {
-    shaderBuilder.addDefine(
-      "BOUNDS_0_MIN",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-  if (!isDefaultMaxX) {
-    shaderBuilder.addDefine(
-      "BOUNDS_0_MAX",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-
-  if (!isDefaultMinY) {
-    shaderBuilder.addDefine(
-      "BOUNDS_1_MIN",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-  if (!isDefaultMaxY) {
-    shaderBuilder.addDefine(
-      "BOUNDS_1_MAX",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-
-  if (!isDefaultMinZ) {
-    shaderBuilder.addDefine(
-      "BOUNDS_2_MIN",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-  if (!isDefaultMaxZ) {
-    shaderBuilder.addDefine(
-      "BOUNDS_2_MAX",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-
-  let intersectionCount = 0;
-  if (shapeType === VoxelShapeType.BOX) {
-    // A bounded box is still a box, so it has the same number of shape intersections: 1
-    intersectionCount = 1;
-  } else if (shapeType === VoxelShapeType.ELLIPSOID) {
-    // Intersects an outer ellipsoid for the max radius
-    {
-      shaderBuilder.addDefine(
-        "BOUNDS_2_MAX_IDX",
-        intersectionCount,
-        ShaderDestination.FRAGMENT
-      );
-      intersectionCount++;
-    }
-
-    // Intersects an inner ellipsoid for the min radius
-    if (!isDefaultMinZ) {
-      shaderBuilder.addDefine(
-        "BOUNDS_2_MIN_IDX",
-        intersectionCount,
-        ShaderDestination.FRAGMENT
-      );
-      intersectionCount++;
-    }
-
-    // Intersects a cone for min latitude
-    if (!isDefaultMinY) {
-      shaderBuilder.addDefine(
-        "BOUNDS_1_MIN_IDX",
-        intersectionCount,
-        ShaderDestination.FRAGMENT
-      );
-      intersectionCount++;
-    }
-
-    // Intersects a cone for max latitude
-    if (!isDefaultMaxY) {
-      shaderBuilder.addDefine(
-        "BOUNDS_1_MAX_IDX",
-        intersectionCount,
-        ShaderDestination.FRAGMENT
-      );
-      intersectionCount++;
-    }
-
-    // Intersects a wedge for the min and max longitude
-    if (!isDefaultMinX || !isDefaultMaxX) {
-      shaderBuilder.addDefine(
-        "BOUNDS_0_MIN_MAX_IDX",
-        intersectionCount,
-        ShaderDestination.FRAGMENT
-      );
-      intersectionCount++;
-    }
-  } else if (shapeType === VoxelShapeType.CYLINDER) {
-    // Intersects a capped cylinder for the max radius
-    // The min and max height are handled as part of the capped cylinder intersection
-    {
-      shaderBuilder.addDefine(
-        "BOUNDS_0_MAX_IDX",
-        intersectionCount,
-        ShaderDestination.FRAGMENT
-      );
-      intersectionCount++;
-    }
-
-    // Intersects an inner infinite cylinder for the min radius
-    if (!isDefaultMinX) {
-      shaderBuilder.addDefine(
-        "BOUNDS_0_MIN_IDX",
-        intersectionCount,
-        ShaderDestination.FRAGMENT
-      );
-      intersectionCount++;
-    }
-
-    // Intersects a wedge for the min and max theta
-    if (!isDefaultMinZ || !isDefaultMaxZ) {
-      shaderBuilder.addDefine(
-        "BOUNDS_2_MIN_MAX_IDX",
-        intersectionCount,
-        ShaderDestination.FRAGMENT
-      );
-      intersectionCount++;
-    }
-  }
-
-  // The intersection count is multiplied by 2 because there is an enter and exit for each intersection
-  shaderBuilder.addDefine(
-    "SHAPE_INTERSECTION_COUNT",
-    intersectionCount * 2,
-    ShaderDestination.FRAGMENT
-  );
-
-  if (
-    minClippingBounds.x !== defaultMinBounds.x ||
-    minClippingBounds.y !== defaultMinBounds.y ||
-    minClippingBounds.z !== defaultMinBounds.z ||
-    maxClippingBounds.x !== defaultMaxBounds.x ||
-    maxClippingBounds.y !== defaultMaxBounds.y ||
-    maxClippingBounds.z !== defaultMaxBounds.z
-  ) {
-    shaderBuilder.addDefine(
-      "CLIPPING_BOUNDS",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
 
   // clearAttributes function
   {
@@ -2116,156 +1864,6 @@ function buildDrawCommands(that, context) {
     }
   }
 
-  // for (i = 0; i < propertiesLength; i++) {
-  //   property = properties[i];
-  //   type = property.type;
-  //   name = property.name;
-  //   channelCount = AttributeType.getNumberOfComponents(type);
-  //   minValue = property.min;
-  //   maxValue = property.max;
-  //   sampleType = getStyleInputSampleType(property);
-  //   sampleScale = getTypeScale(property);
-
-  //   const mins = [];
-  //   const maxs = [];
-
-  //   if (channelCount === 1) {
-  //     mins.push(`${sampleScale} * ${toTypedString(minValue, property)}`);
-  //     maxs.push(`${sampleScale} * ${toTypedString(maxValue, property)}`);
-  //   } else {
-  //     mins.push(`${sampleScale} * ${toTypedString(minValue.x, property)}`);
-  //     maxs.push(`${sampleScale} * ${toTypedString(maxValue.x, property)}`);
-
-  //     mins.push(`${sampleScale} * ${toTypedString(minValue.y, property)}`);
-  //     maxs.push(`${sampleScale} * ${toTypedString(maxValue.y, property)}`);
-
-  //     if (channelCount >= 3) {
-  //       mins.push(`${sampleScale} * ${toTypedString(minValue.z, property)}`);
-  //       maxs.push(`${sampleScale} * ${toTypedString(maxValue.z, property)}`);
-  //     }
-  //     if (channelCount >= 4) {
-  //       mins.push(`${sampleScale} * ${toTypedString(minValue.w, property)}`);
-  //       maxs.push(`${sampleScale} * ${toTypedString(maxValue.w, property)}`);
-  //     }
-  //   }
-
-  //   const minVec = `${sampleType}(${mins.join(", ")})`;
-  //   const maxVec = `${sampleType}(${maxs.join(", ")})`;
-
-  //   shaderBuilder.addFunctionLines("setMinMax", [
-  //     `styleInput.${name}Minimum = ${minVec};`,
-  //     `styleInput.${name}Maximum = ${maxVec};`,
-  //   ]);
-  // }
-
-  // const styleShaderSource = primitive._styleMaterial.shaderSource;
-  // shaderBuilder.addDefine("STYLE_USE_NORMAL");
-  // if (styleShaderSource.includes("styleInput.positionEC")) {
-  //   shaderBuilder.addDefine("STYLE_USE_POSITION_EC");
-  // }
-  // shaderBuilder.addFragmentLines([styleShaderSource]);
-
-  // Generate shaders
-  shaderBuilder.setPositionAttribute("vec4", "a_position");
-
-  // // set normals
-  // const setNormalsArgs = [
-  //   `in vec3 normalLocal[${propertiesLength}]`,
-  //   `in vec3 normalWorld[${propertiesLength}]`,
-  //   `in vec3 normalView[${propertiesLength}]`,
-  //   `in bool normalValid[${propertiesLength}]`,
-  //   "inout StyleInput styleInput",
-  // ];
-
-  // const setNormalsSig = `void setStyleInputNormals(${setNormalsArgs.join(
-  //   ", "
-  // )})`;
-
-  // shaderBuilder.addFunction(
-  //   "setNormals",
-  //   setNormalsSig,
-  //   ShaderDestination.FRAGMENT
-  // );
-
-  // for (i = 0; i < propertiesLength; i++) {
-  //   property = properties[i];
-  //   name = property.name;
-  //   shaderBuilder.addFunctionLines("setNormals", [
-  //     `styleInput.${name}NormalLocal` + ` = normalLocal[${i}];`,
-  //     `styleInput.${name}NormalWorld` + ` = normalWorld[${i}];`,
-  //     `styleInput.${name}NormalView` + ` = normalView[${i}];`,
-  //     `styleInput.${name}NormalValid` + ` = normalValid[${i}];`,
-  //   ]);
-  // }
-
-  // // set samples
-  // const setSamplesFunctionId = "setSamples";
-  // const setSamplesDefinition = `void setSamples(in vec4 samples[${attributeLength}], inout ${CustomShaderPipelineStage.STRUCT_NAME_ATTRIBUTES} ${attributesFieldName})`;
-
-  // shaderBuilder.addFunction(
-  //   setSamplesFunctionId,
-  //   setSamplesDefinition,
-  //   ShaderDestination.FRAGMENT
-  // );
-
-  // for (let i = 0; i < attributeLength; i++) {
-  //   const name = names[i];
-  //   // const scaleVar = `scale_${name}`;
-
-  //   shaderBuilder.addFunctionLines(setSamplesFunctionId, [
-  //     // `vec4 ${scaleVar} = vec4(${sampleScale});`,
-  //     // `attributes.${name} = ${sampleType}(${scaleVar} * samples[${i}]${swizzler});`,
-  //     `${attributesFieldName}.${name} = `,
-  //   ]);
-  // }
-
-  // shaderBuilder.addFunction(
-  //   "decodeSamples",
-  //   "void decodeTextureSamples(inout vec4 samples[METADATA_COUNT])",
-  //   ShaderDestination.FRAGMENT
-  // );
-
-  // shaderBuilder.addFunctionLines("decodeSamples", ["vec4 sample;"]);
-
-  // for (i = 0; i < propertiesLength; i++) {
-  //   property = properties[i];
-  //   type = property.type;
-  //   channelCount = AttributeType.getNumberOfComponents(type);
-
-  //   shaderBuilder.addFunctionLines("decodeSamples", [
-  //     `sample = samples[${i}];`,
-  //   ]);
-
-  //   if (!defined(channelCount) || channelCount === 1) {
-  //     shaderBuilder.addFunctionLines("decodeSamples", [
-  //       "sample = vec4(1.0, 1.0, 1.0, sample.r);",
-  //     ]);
-  //   } else if (channelCount === 2) {
-  //     shaderBuilder.addFunctionLines("decodeSamples", [
-  //       "sample = vec4(sample.r, sample.a, 1.0, 1.0);",
-  //     ]);
-  //   }
-
-  //   if (type === MetadataType.UINT8) {
-  //     shaderBuilder.addFunctionLines("decodeSamples", [
-  //       `sample = mix(u_minimumValues[${i}], u_maximumValues[${i}], sample);`,
-  //     ]);
-  //   }
-
-  //   shaderBuilder.addFunctionLines("decodeSamples", [
-  //     `samples[${i}] = sample;`,
-  //   ]);
-  // }
-
-  // Looping over the sampler array was causing strange rendering artifacts even though the shader compiled fine.
-  // Unroling the for loop fixed the problem.
-  // for (int i = 0; i < METADATA_COUNT; i++)
-  // {
-  //     vec4 value0 = texture2D(u_megatextureTextures[i], uv0);
-  //     vec4 value1 = texture2D(u_megatextureTextures[i], uv1);
-  //     samples[i] = mix(value0, value1, lerp);
-  // }
-
   const sampleFrom2DMegatextureId = "sampleFrom2DMegatextureAtUv";
   const sampleFrom2DMegatextureName = "sampleFrom2DMegatextureAtUv";
   shaderBuilder.addFunction(
@@ -2290,13 +1888,242 @@ function buildDrawCommands(that, context) {
     `return attributes;`,
   ]);
 
-  // shaderBuilder.addFunctionLines("sampleUv", [
-  //   "decodeTextureSamples(samples);",
-  // ]);
+  shaderBuilder.addDefine(
+    "METADATA_COUNT",
+    attributeLength,
+    ShaderDestination.FRAGMENT
+  );
 
-  // const voxelPrimitive = renderResources.model.voxelPrimitive;
-  // addRuntimeVoxelProperties(shaderBuilder, voxelPrimitive);
-  // // primitive.update(frameState);
+  shaderBuilder.addDefine(
+    `SHAPE_${shapeType}`,
+    undefined,
+    ShaderDestination.FRAGMENT
+  );
+
+  if (
+    !Cartesian3.equals(paddingBefore, Cartesian3.ZERO) ||
+    !Cartesian3.equals(paddingAfter, Cartesian3.ZERO)
+  ) {
+    shaderBuilder.addDefine("PADDING", undefined, ShaderDestination.FRAGMENT);
+  }
+
+  if (depthTest) {
+    shaderBuilder.addDefine(
+      "DEPTH_TEST",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+
+  // Allow reading from log depth texture, but don't write log depth anywhere.
+  // Note: This needs to be set even if depthTest is off because it affects the
+  // derived command system.
+  if (useLogDepth) {
+    shaderBuilder.addDefine(
+      "LOG_DEPTH_READ_ONLY",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+
+  if (jitter) {
+    shaderBuilder.addDefine("JITTER", undefined, ShaderDestination.FRAGMENT);
+  }
+
+  if (nearestSampling) {
+    shaderBuilder.addDefine(
+      "NEAREST_SAMPLING",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+
+  if (despeckle) {
+    shaderBuilder.addDefine("DESPECKLE", undefined, ShaderDestination.FRAGMENT);
+  }
+
+  const sampleCount = keyframeCount > 1 ? 2 : 1;
+  shaderBuilder.addDefine(
+    "SAMPLE_COUNT",
+    `${sampleCount}`,
+    ShaderDestination.FRAGMENT
+  );
+
+  const ShapeConstructor = VoxelShapeType.toShapeConstructor(shapeType);
+  const defaultMinBounds = ShapeConstructor.DefaultMinBounds;
+  const defaultMaxBounds = ShapeConstructor.DefaultMaxBounds;
+
+  const isDefaultMinX = minBounds.x === defaultMinBounds.x;
+  const isDefaultMinY = minBounds.y === defaultMinBounds.y;
+  const isDefaultMinZ = minBounds.z === defaultMinBounds.z;
+  const isDefaultMaxX = maxBounds.x === defaultMaxBounds.x;
+  const isDefaultMaxY = maxBounds.y === defaultMaxBounds.y;
+  const isDefaultMaxZ = maxBounds.z === defaultMaxBounds.z;
+  const useBounds =
+    !isDefaultMinX ||
+    !isDefaultMinY ||
+    !isDefaultMinZ ||
+    !isDefaultMaxX ||
+    !isDefaultMaxY ||
+    !isDefaultMaxZ;
+
+  if (useBounds) {
+    shaderBuilder.addDefine("BOUNDS", undefined, ShaderDestination.FRAGMENT);
+  }
+
+  if (!isDefaultMinX) {
+    shaderBuilder.addDefine(
+      "BOUNDS_0_MIN",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+  if (!isDefaultMaxX) {
+    shaderBuilder.addDefine(
+      "BOUNDS_0_MAX",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+  if (!isDefaultMinY) {
+    shaderBuilder.addDefine(
+      "BOUNDS_1_MIN",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+  if (!isDefaultMaxY) {
+    shaderBuilder.addDefine(
+      "BOUNDS_1_MAX",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+  if (!isDefaultMinZ) {
+    shaderBuilder.addDefine(
+      "BOUNDS_2_MIN",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+  if (!isDefaultMaxZ) {
+    shaderBuilder.addDefine(
+      "BOUNDS_2_MAX",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+
+  let intersectionCount = 0;
+  if (shapeType === VoxelShapeType.BOX) {
+    // A bounded box is still a box, so it has the same number of shape intersections: 1
+    intersectionCount = 1;
+  } else if (shapeType === VoxelShapeType.ELLIPSOID) {
+    // Intersects an outer ellipsoid for the max radius
+    {
+      shaderBuilder.addDefine(
+        "BOUNDS_2_MAX_IDX",
+        intersectionCount,
+        ShaderDestination.FRAGMENT
+      );
+      intersectionCount++;
+    }
+
+    // Intersects an inner ellipsoid for the min radius
+    if (!isDefaultMinZ) {
+      shaderBuilder.addDefine(
+        "BOUNDS_2_MIN_IDX",
+        intersectionCount,
+        ShaderDestination.FRAGMENT
+      );
+      intersectionCount++;
+    }
+
+    // Intersects a cone for min latitude
+    if (!isDefaultMinY) {
+      shaderBuilder.addDefine(
+        "BOUNDS_1_MIN_IDX",
+        intersectionCount,
+        ShaderDestination.FRAGMENT
+      );
+      intersectionCount++;
+    }
+
+    // Intersects a cone for max latitude
+    if (!isDefaultMaxY) {
+      shaderBuilder.addDefine(
+        "BOUNDS_1_MAX_IDX",
+        intersectionCount,
+        ShaderDestination.FRAGMENT
+      );
+      intersectionCount++;
+    }
+
+    // Intersects a wedge for the min and max longitude
+    if (!isDefaultMinX || !isDefaultMaxX) {
+      shaderBuilder.addDefine(
+        "BOUNDS_0_MIN_MAX_IDX",
+        intersectionCount,
+        ShaderDestination.FRAGMENT
+      );
+      intersectionCount++;
+    }
+  } else if (shapeType === VoxelShapeType.CYLINDER) {
+    // Intersects a capped cylinder for the max radius
+    // The min and max height are handled as part of the capped cylinder intersection
+    {
+      shaderBuilder.addDefine(
+        "BOUNDS_0_MAX_IDX",
+        intersectionCount,
+        ShaderDestination.FRAGMENT
+      );
+      intersectionCount++;
+    }
+
+    // Intersects an inner infinite cylinder for the min radius
+    if (!isDefaultMinX) {
+      shaderBuilder.addDefine(
+        "BOUNDS_0_MIN_IDX",
+        intersectionCount,
+        ShaderDestination.FRAGMENT
+      );
+      intersectionCount++;
+    }
+
+    // Intersects a wedge for the min and max theta
+    if (!isDefaultMinZ || !isDefaultMaxZ) {
+      shaderBuilder.addDefine(
+        "BOUNDS_2_MIN_MAX_IDX",
+        intersectionCount,
+        ShaderDestination.FRAGMENT
+      );
+      intersectionCount++;
+    }
+  }
+
+  // The intersection count is multiplied by 2 because there is an enter and exit for each intersection
+  shaderBuilder.addDefine(
+    "SHAPE_INTERSECTION_COUNT",
+    intersectionCount * 2,
+    ShaderDestination.FRAGMENT
+  );
+
+  const useClippingBounds =
+    minClippingBounds.x !== defaultMinBounds.x ||
+    minClippingBounds.y !== defaultMinBounds.y ||
+    minClippingBounds.z !== defaultMinBounds.z ||
+    maxClippingBounds.x !== defaultMaxBounds.x ||
+    maxClippingBounds.y !== defaultMaxBounds.y ||
+    maxClippingBounds.z !== defaultMaxBounds.z;
+
+  if (useClippingBounds) {
+    shaderBuilder.addDefine(
+      "CLIPPING_BOUNDS",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
+
   const shaderBuilderPick = shaderBuilder.clone();
   shaderBuilderPick.addDefine("PICKING", undefined, ShaderDestination.FRAGMENT);
 
@@ -2315,10 +2142,7 @@ function buildDrawCommands(that, context) {
     blending: BlendingState.ALPHA_BLEND,
   });
 
-  // var baseUniformMap = that._uniformMap;
-  // var uniformMap = combine(baseUniformMap, styleUniformMap);
   const uniformMap = that._uniformMap;
-
   const viewportQuadVertexArray = context.getViewportQuadVertexArray();
   const drawCommand = new DrawCommand({
     vertexArray: viewportQuadVertexArray,
@@ -2329,9 +2153,6 @@ function buildDrawCommands(that, context) {
     pass: Pass.VOXELS,
     executeInClosestFrustum: true,
     owner: this,
-    // boundingVolume: primitiveRenderResources.boundingSphere,
-    // modelMatrix: primitiveRenderResources.modelMatrix,
-    // debugShowBoundingVolume : true
   });
 
   const drawCommandPick = DrawCommand.shallowClone(
@@ -2355,8 +2176,6 @@ function buildDrawCommands(that, context) {
 
   that._drawCommand = drawCommand;
   that._drawCommandPick = drawCommandPick;
-
-  console.log(drawCommand.shaderProgram._fragmentShaderText);
 }
 
 /**
