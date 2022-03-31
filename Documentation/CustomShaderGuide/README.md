@@ -564,10 +564,11 @@ model from the
 glTF extension (or the older
 [`EXT_feature_metadata`](https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata) extension).
 
-The following types of metadata are currently supported. We plan to add more
-in the near future:
+The following types of metadata are currently supported:
 
 - property attributes from the `EXT_structural_metadata` glTF extension.
+- property textures from the `EXT_structural_metadata` glTF extension. Only
+  types with `componentType: UINT8` are currently supported.
 
 Regardless of the source of metadata, the properties are collected into a single
 struct by property ID. For example, if the metadata class looked like this:
