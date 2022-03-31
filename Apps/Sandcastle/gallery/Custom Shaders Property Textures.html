@@ -53,9 +53,11 @@
 
         scene.globe.depthTestAgainstTerrain = false;
 
+        // MAXAR OWT Muscatatuk photogrammetry dataset with property textures
+        // containing horizontal and vertical uncertainty
         const tileset = viewer.scene.primitives.add(
           new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(1234), // TODO: need updated asset ID
+            url: Cesium.IonResource.fromAssetId(905848),
             enableModelExperimental: true,
           })
         );
