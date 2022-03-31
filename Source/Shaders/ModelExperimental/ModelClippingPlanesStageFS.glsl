@@ -8,7 +8,7 @@ vec4 getClippingPlane(
     int pixX = clippingPlaneNumber - (pixY * CLIPPING_PLANES_TEXTURE_WIDTH);
     float pixelWidth = 1.0 / float(CLIPPING_PLANES_TEXTURE_WIDTH);
     float pixelHeight = 1.0 / float(CLIPPING_PLANES_TEXTURE_HEIGHT);
-    float u = (float(pixX) + 0.5) * pixelWidth;// sample from center of pixel
+    float u = (float(pixX) + 0.5) * pixelWidth; // sample from center of pixel
     float v = (float(pixY) + 0.5) * pixelHeight;
     vec4 plane = texture2D(packedClippingPlanes, vec2(u, v));
     return czm_transformPlane(plane, transform);
@@ -59,8 +59,7 @@ float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix) 
         #ifdef UNION_CLIPPING_REGIONS
         clipAmount = czm_branchFreeTernary(i == 0, amount, min(amount, clipAmount));
         if (amount <= 0.0) {
-            breakAndDiscard = true;
-            break; // HLSL compiler bug if we discard here: https://bugs.chromium.org/p/angleproject/issues/detail?id=1945#c6
+            discard;
         }
         #else
         clipAmount = max(amount, clipAmount);
@@ -68,15 +67,12 @@ float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix) 
         #endif
     }
 
-    #ifdef UNION_CLIPPING_REGIONS
-    if (breakAndDiscard) {
-        discard;
-    }
-    #else
+    #ifndef UNION_CLIPPING_REGIONS
     if (clipped) {
         discard;
     }
     #endif
+    
     return clipAmount;
 }
 

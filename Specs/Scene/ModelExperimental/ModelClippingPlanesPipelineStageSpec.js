@@ -6,6 +6,7 @@ import {
   Matrix4,
   ModelClippingPlanesPipelineStage,
   ShaderBuilder,
+  _shadersModelClippingPlanesStageFS,
 } from "../../../Source/Cesium.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
@@ -61,7 +62,6 @@ describe("Scene/ModelExperimental/ModelClippingPlanesPipelineStage", function ()
 
     const uniformMap = renderResources.uniformMap;
 
-    console.log("uho h");
     expect(uniformMap.model_clippingPlanes()).toBeDefined();
 
     const edgeColor = clippingPlanes.edgeColor;
@@ -81,6 +81,10 @@ describe("Scene/ModelExperimental/ModelClippingPlanesPipelineStage", function ()
         mockModel._clippingPlanesMatrix
       )
     ).toBe(true);
+
+    ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
+      _shadersModelClippingPlanesStageFS,
+    ]);
   });
 
   it("configures the render resources for unioned clipping planes", function () {

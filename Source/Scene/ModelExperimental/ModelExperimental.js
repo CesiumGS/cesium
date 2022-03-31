@@ -215,7 +215,7 @@ export default function ModelExperimental(options) {
   } else {
     this._clippingPlanes = clippingPlanes;
   }
-  this._clippingPlanesState = 0; // Used for checking if shaders need to be regenerated due to clipping plane changes.
+  this._clippingPlanesState = 0; // If this value changes, the shaders need to be regenerated.
   this._clippingPlanesMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from reference matrix and the current view matrix
 
   this._lightColor = Cartesian3.clone(options.lightColor);

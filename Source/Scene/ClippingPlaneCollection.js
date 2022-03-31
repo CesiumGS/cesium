@@ -246,7 +246,7 @@ Object.defineProperties(ClippingPlaneCollection.prototype, {
    * Returns a Number encapsulating the state for this ClippingPlaneCollection.
    *
    * Clipping mode is encoded in the sign of the number, which is just the plane count.
-   * Used for checking if shader regeneration is necessary.
+   * If this value changes, then shader regeneration is necessary.
    *
    * @memberof ClippingPlaneCollection.prototype
    * @returns {Number} A Number that describes the ClippingPlaneCollection's state.

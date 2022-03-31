@@ -5,6 +5,7 @@ import {
   ImageBasedLightingPipelineStage,
   Matrix3,
   ShaderBuilder,
+  _shadersImageBasedLightingStageFS,
 } from "../../../Source/Cesium.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
@@ -44,6 +45,10 @@ describe("Scene/ModelExperimental/ImageBasedLightingPipelineStage", function () 
       "uniform vec2 model_iblFactor;",
       "uniform mat3 model_iblReferenceFrameMatrix;",
       "uniform float model_luminanceAtZenith;",
+    ]);
+
+    ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
+      _shadersImageBasedLightingStageFS,
     ]);
 
     const uniformMap = renderResources.uniformMap;

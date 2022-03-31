@@ -20,6 +20,7 @@
 - Added a 'renderable' property to 'Fog' to disable its visual rendering while preserving tiles culling at a distance
 - Refactored metadata API so `tileset.metadata` and `content.group.metadata` are more symmetric with `content.metadata` and `tile.metadata`. [#10224](https://github.com/CesiumGS/cesium/pull/10224)
 - Added support for `EXT_structural_metadata` property attributes in `CustomShader` [#10228](https://github.com/CesiumGS/cesium/pull/10228)
+- Added clipping planes to `ModelExperimental`. [#10250](https://github.com/CesiumGS/cesium/pull/10250)
 
 ##### Fixes :wrench:
 
