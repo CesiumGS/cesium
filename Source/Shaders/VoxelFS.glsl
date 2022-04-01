@@ -1,78 +1,155 @@
-// world space: Cartesian WGS84
-// local space: Cartesian [-0.5, 0.5] aligned with shape.
-//   For box, the origin is the center of the box, and the six sides sit on the planes x = -0.5, x = 0.5 etc.
-//   For cylinder, the origin is the center of the cylinder with the cylinder enclosed by the [-0.5, 0.5] box on xy-plane. Positive x-axis points to theta = 0. The top and bottom caps sit at planes z = -0.5, z = 0.5. Positive y points to theta = pi/2
-//   For ellipsoid, the origin is the center of the ellipsoid. The maximum height of the ellipsoid touches -0.5, 0.5 in xyz directions.
-// intersection space: local space times 2 to be [-1, 1]. Used for ray intersection calculation
-// UV space: local space plus 0.5 to be [0, 1].
-// shape space: In the coordinate system of the shape [0, 1]
-//      For box, this is the same as UV space
-//      For cylinder, the coordinate system is (radius, theta, z). theta = 0 is aligned with x axis
-//      For ellipsoid, the coordinate system is (longitude, latitude, height). where 0 is the minimum value in each dimension, and 1 is the max.
+/*
+Don't delete this comment!
+Some shader code is dynamically generated in VoxelPrimitive.js to support custom shaders with arbitrary metadata.
+Below is an example of how this code might look. Properties like "temperature" and "direction" are just examples.
 
+// Defines
+#define PROPERTY_COUNT ###
+#define SAMPLE_COUNT ###
+#define SHAPE_BOX
+#define SHAPE_ELLIPSOID
+#define SHAPE_CYLINDER
+#define SHAPE_INTERSECTION_COUNT ###
+#define MEGATEXTURE_2D
+#define MEGATEXTURE_3D
+#define DEPTH_TEST
+#define JITTER
+#define NEAREST_SAMPLING
+#define DESPECKLE
+#define STATISTICS
+#define PADDING
+#define BOUNDS
+#define CLIPPING_BOUNDS
+#define PICKING
 
-// TODO is this necessary? Or should it go somewhere else?
-precision highp int;
+// Uniforms
+uniform sampler2D u_megatextureTextures[PROPERTY_COUNT];
 
-// Defines that are filled in from VoxelPrimitive.js
-// #define METADATA_COUNT XYZ
-// #define SAMPLE_COUNT XYZ
-// #define NEAREST_SAMPLING
+// Structs
+struct PropertyStatistics_temperature {
+    float min;
+    float max;
+};
+struct PropertyStatistics_direction {
+    vec3 min;
+    vec3 max;
+};
+struct Statistics {
+    PropertyStatistics_temperature temperature;
+    PropertyStatistics_direction direction;
+};
+struct Metadata {
+    Statistics statistics;
+    float temperature;
+    vec3 direction;
+};
+struct VoxelProperty_temperature {
+    vec3 partialDerivativeLocal;
+    vec3 partialDerivativeWorld;
+    vec3 partialDerivativeView;
+    bool partialDerivativeValid;
+};
+struct VoxelProperty_direction {
+    mat3 partialDerivativeLocal;
+    mat3 partialDerivativeWorld;
+    mat3 partialDerivativeView;
+    bool partialDerivativeValid;
+};
+struct Voxel {
+    VoxelProperty_temperature temperature;
+    VoxelProperty_direction direction;
+    vec3 positionEC;
+    vec3 positionUv;
+    vec3 positionUvShapeSpace;
+    vec3 positionUvLocal;
+    vec3 viewDirUv;
+    vec3 viewDirWorld;
+    float travelDistance;
+};
+struct FragmentInput {
+    Metadata metadata;
+    Voxel voxel;
+};
+struct Properties {
+    // This struct is similar to Metadata but is not part of the custom shader API and
+    // is intended to be used internally as a lightweight way to pass around properties.
+    float temperature;
+    vec3 direction;
+};
 
-// Uniforms that are filled in from VoxelPrimitive.js
-// uniform sampler2D u_megatextureTextures[METADATA_COUNT];
+// Functions
+Properties clearProperties() {
+    Properties properties;
+    properties.temperature = 0.0;
+    properties.direction = vec3(0.0);
+    return properties;
+}
+Properties sumProperties(Properties propertiesA, Properties propertiesB) {
+    Properties properties;
+    properties.temperature = propertiesA.temperature + propertiesB.temperature;
+    properties.direction = propertiesA.direction + propertiesB.direction;
+    return properties;
+}
+Properties mixProperties(Properties propertiesA, Properties propertiesB, float mixFactor) {
+    Properties properties;
+    properties.temperature = mix(propertiesA.temperature, propertiesB.temperature, mixFactor);
+    properties.direction = mix(propertiesA.direction, propertiesB.direction, mixFactor);
+    return properties;
+}
+void copyPropertiesToMetadata(in Properties properties, inout Metadata metadata) {
+    metadata.temperature = properties.temperature;
+    metadata.direction = properties.direction;
+}
+void setStatistics(inout Statistics statistics) {
+    // Assume the "direction" property has no min/max 
+    statistics.temperature.min = 20.0;
+    statistics.temperature.max = 50.0;
+}
+Properties getPropertiesFrom2DMegatextureAtUv(vec2 texcoord) {
+    Properties properties;
+    properties.temperature = texture2D(u_megatextureTextures[0], texcoord).r;
+    properties.direction = texture2D(u_megatextureTextures[1], texcoord).rgb;
+    return properties;
+}
+Properties getPropertiesFrom3DMegatextureAtUv(vec3 texcoord) {
+    Properties properties;
+    properties.temperature = texture3D(u_megatextureTextures[0], texcoord).r;
+    properties.direction = texture3D(u_megatextureTextures[1], texcoord).rgb;
+    return properties;
+}
+void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
+    vec3 direction = fsInput.metadata.direction;
+    float temperature = fsInput.metadata.temperature;
+    float minTemperature = fsInput.metadata.statistics.temperature.min;
+    float maxTemperature = fsInput.metadata.statistics.temperature.max;
+    
+    material.diffuse = abs(direction);
+    material.alpha = (temperature - minTemperature) / (maxTemperature - minTemperature);
+}
+*/
 
-// Functions that are filled in from VoxelPrimitive.js
-// Attributes sampleFrom2DMegatextureAtUv(vec2 uv);
-// Attributes clearAttributes();
-// Attributes sumAttributes(Attributes attributesA, Attributes attributesB);
-// Attributes mixAttributes(Attributes attributesA, Attributes attributesB, float mixFactor);
-// void setMinMaxAttributes(inout Voxel voxel);
-
-#define OCTREE_MAX_LEVELS 32
-
+// These octree flags must be in sync with GpuOctreeFlag in VoxelTraversal.js
 #define OCTREE_FLAG_INTERNAL 0
 #define OCTREE_FLAG_LEAF 1
 #define OCTREE_FLAG_PACKED_LEAF_FROM_PARENT 2
 
-struct OctreeNodeData {
-    int data;
-    int flag;
-};
+#define STEP_COUNT_MAX 1000 // Harcoded value because GLSL doesn't like variable length loops
+#define OCTREE_MAX_LEVELS 32 // Harcoded value because GLSL doesn't like variable length loops
+#define ALPHA_ACCUM_MAX 0.98 // Must be > 0.0 and <= 1.0
 
-struct SampleData {
-   int megatextureIndex;
-   int levelsAbove;
-   #if (SAMPLE_COUNT > 1)
-   float weight;
-   #endif
-};
-
-#if defined(SHAPE_ELLIPSOID)
-uniform float u_ellipsoidHeightDifferenceUv;
-uniform vec3 u_ellipsoidOuterRadiiLocal; // [0,1]
-uniform vec3 u_ellipsoidInverseRadiiSquaredLocal;
-#endif
-
-// 2D megatexture
+#if defined(MEGATEXTURE_2D)
 uniform ivec2 u_megatextureSliceDimensions; // number of slices per tile, in two dimensions
 uniform ivec2 u_megatextureTileDimensions; // number of tiles per megatexture, in two dimensions
 uniform vec2 u_megatextureVoxelSizeUv;
 uniform vec2 u_megatextureSliceSizeUv;
 uniform vec2 u_megatextureTileSizeUv;
+#endif
 
 uniform ivec3 u_dimensions; // does not include padding
 #if defined(PADDING)
 uniform ivec3 u_paddingBefore;
 uniform ivec3 u_paddingAfter;
 #endif
-
-uniform vec4 u_minimumValues[METADATA_COUNT];
-uniform vec4 u_maximumValues[METADATA_COUNT];
-// uniform bool u_voxelQuantization[METADATA_COUNT];
-uniform int u_channelCount[METADATA_COUNT];
-
-uniform float u_stepSize;
 
 uniform sampler2D u_octreeInternalNodeTexture;
 uniform vec2 u_octreeInternalNodeTexelSizeUv;
@@ -86,6 +163,7 @@ uniform mat4 u_transformPositionUvToView;
 uniform mat3 u_transformDirectionViewToLocal;
 uniform mat3 u_transformNormalLocalToWorld;
 uniform vec3 u_cameraPositionUv;
+uniform float u_stepSize;
 
 #if defined(BOUNDS)
 uniform vec3 u_minBounds; // Bounds from the voxel primitive
@@ -101,19 +179,38 @@ uniform vec3 u_minClippingBounds;
 uniform vec3 u_maxClippingBounds;
 #endif
 
+#if defined(SHAPE_ELLIPSOID)
+uniform float u_ellipsoidHeightDifferenceUv;
+uniform vec3 u_ellipsoidOuterRadiiLocal; // [0,1]
+uniform vec3 u_ellipsoidInverseRadiiSquaredLocal;
+#endif
+
 #if defined(PICKING)
 uniform vec4 u_pickColor;
 #endif
+
+struct OctreeNodeData {
+    int data;
+    int flag;
+};
+
+struct SampleData {
+   int megatextureIndex;
+   int levelsAbove;
+   #if (SAMPLE_COUNT > 1)
+   float weight;
+   #endif
+};
 
 // --------------------------------------------------------
 // Misc math
 // --------------------------------------------------------
 
 #if defined(JITTER)
-#define HASHSCALE1 50.0
-float hash12(vec2 p)
+#define HASHSCALE 50.0
+float hash(vec2 p)
 {
-	vec3 p3 = fract(vec3(p.xyx) * HASHSCALE1);
+	vec3 p3 = fract(vec3(p.xyx) * HASHSCALE);
 	p3 += dot(p3, p3.yzx + 19.19);
 	return fract((p3.x + p3.y) * p3.z);
 }
@@ -146,9 +243,15 @@ int normU8x2_toInt(vec2 value) {
 float normU8x2_toFloat(vec2 value) {
     return float(normU8x2_toInt(value)) / 65535.0;
 }
+vec2 index1DTo2DTexcoord(int index, ivec2 dimensions, vec2 uvScale)
+{
+    int indexX = intMod(index, dimensions.x);
+    int indexY = index / dimensions.x;
+    return vec2(indexX, indexY) * uvScale;
+}
 
 // --------------------------------------------------------
-// Intersection tests, coordinate conversions, etc
+// Intersection tests, shape coordinate conversions, etc
 // --------------------------------------------------------
 
 struct Ray
@@ -164,7 +267,7 @@ const float InfHit = czm_infinity;
 vec2 resolveIntersections(vec2 intersections[SHAPE_INTERSECTION_COUNT])
 {
     // TODO: completely skip shape if both of its Ts are below 0.0?
-    vec2 tEntryExit = vec2(NoHit, NoHit);
+    vec2 entryExitT = vec2(NoHit, NoHit);
 
     // Sort the intersections from min T to max T with bubble sort.
     // Note: If this sorting function changes, some of the intersection test may
@@ -213,19 +316,19 @@ vec2 resolveIntersections(vec2 intersections[SHAPE_INTERSECTION_COUNT])
         
         // entering positive or exiting negative
         if (surroundCount == 1 && surroundIsPositive && enter == currShapeIsPositive) {
-            tEntryExit.x = t;
+            entryExitT.x = t;
         }
         
         // exiting positive or entering negative after being inside positive
         // TODO: Can this be simplified?
         if ((!enter && currShapeIsPositive && surroundCount == 0) || (enter && !currShapeIsPositive && surroundCount == 2 && surroundIsPositive)) {
-            tEntryExit.y = t;
+            entryExitT.y = t;
 
             // entry and exit have been found, so the loop can stop
             break;
         }
     }
-    return tEntryExit;
+    return entryExitT;
 }
 #endif
 
@@ -701,6 +804,47 @@ float ellipseDistanceIterative (vec2 p, in vec2 ab) {
 }
 #endif
 
+vec2 intersectShape(vec3 positionUv, vec3 directionUv) {
+    // Do a ray-shape intersection to find the exact starting and ending points.
+    // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
+    // Direction is scaled as well to be in sync with position. 
+    Ray ray = Ray(positionUv * 2.0 - 1.0, directionUv * 2.0);
+
+    #if defined(SHAPE_BOX)
+        vec2 entryExitT = intersectBoxShape(ray);
+    #elif defined(SHAPE_CYLINDER)
+        vec2 entryExitT = intersectCylinderShape(ray);
+    #elif defined(SHAPE_ELLIPSOID)
+        vec2 entryExitT = intersectEllipsoidShape(ray);
+    #endif
+
+    if (entryExitT.x < 0.0 && entryExitT.y < 0.0) {
+        // Intersection is invalid when start and end are behind the ray.
+        return vec2(NoHit, NoHit);
+    }
+
+    // Set start to 0 when ray is inside the shape.
+    entryExitT.x = max(entryExitT.x, 0.0);
+
+    return entryExitT;
+}
+
+#if defined(DEPTH_TEST)
+float intersectDepth(vec2 fragCoord, vec2 screenUv, vec3 viewPosUv, vec3 viewDirUv) {
+    float logDepthOrDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, screenUv));
+    if (logDepthOrDepth != 0.0) {
+        // Calculate how far the ray must travel before it hits the depth buffer.
+        vec4 eyeCoordinateDepth = czm_windowToEyeCoordinates(fragCoord, logDepthOrDepth);
+        eyeCoordinateDepth /= eyeCoordinateDepth.w;
+        vec3 depthPositionUv = vec3(u_transformPositionViewToUv * eyeCoordinateDepth);
+        return dot(viewDirUv, depthPositionUv - viewPosUv);
+    } else {
+        // There's no depth at this position so set it to some really far value.
+        return czm_infinity;
+    }
+}
+#endif
+
 #if defined(SHAPE_BOX)
 vec3 transformFromUvToBoxSpace(in vec3 positionUv) {
     return positionUv;
@@ -771,7 +915,7 @@ vec3 transformFromUvToShapeSpace(in vec3 positionUv) {
     #if defined(BOUNDS)
         positionShape = (positionShape - u_minBoundsUv) * u_inverseBoundsUv; // [0,1]
         // TODO: This breaks down when minBounds == maxBounds. To fix it, this
-        // function would have to know if ray is intersecting the front or back of a shape
+        // function would have to know if ray is intersecting the front or back of the shape
         // and set the shape space position to 1 (front) or 0 (back) accordingly.
     #endif
 
@@ -828,43 +972,9 @@ vec3 transformFromShapeSpaceToUv(in vec3 positionUvShapeSpace) {
 // Megatexture
 // --------------------------------------------------------
 
-#if defined(MEGATEXTURE_IS_3D)
-// TODO: 3D textures have not been implemented yet
-
-void sampleFrom3DMegatextureAtUv(vec3 uv, out Attributes attributes)
-{
-    // Looping over the sampler array was causing strange rendering artifacts even though the shader compiled fine.
-    // Unroling the for loop fixed the problem.
-
-    // for (int i = 0; i < METADATA_COUNT; i++)
-    // {
-    //     samples[i] = texture3D(u_megatextureTextures[i], uv);
-    // }
-
-    #if (METADATA_COUNT >= 1)
-    samples[0] = texture3D(u_megatextureTextures[0], uv); 
-    #endif
-    #if (METADATA_COUNT >= 2)
-    samples[1] = texture3D(u_megatextureTextures[1], uv); 
-    #endif
-    #if (METADATA_COUNT >= 3)
-    samples[2] = texture3D(u_megatextureTextures[2], uv); 
-    #endif
-    #if (METADATA_COUNT >= 4)
-    samples[3] = texture3D(u_megatextureTextures[3], uv); 
-    #endif
-
-    decodeTextureSamples(samples);
-}
-
-// TODO: this function has not been implemented
-vec3 indexToUv3D(int index, ivec3 dimensions, vec3 uvScale)
-{
-    return vec3(0.0);
-}
-
-// TODO: this function has not been tested
-void sampleFromMegatextureAtVoxelCoord(vec3 voxelCoord, ivec3 voxelDims, int tileIndex, out Attributes attributes)
+// TODO: 3D megatexture has not been implemented yet
+#if defined(MEGATEXTURE_3D)
+Properties getPropertiesFromMegatextureAtVoxelCoord(vec3 voxelCoord, ivec3 voxelDims, int tileIndex)
 {
     // Tile location
     vec3 tileUvOffset = indexToUv3d(tileIndex, u_megatextureTileDimensions, u_megatextureTileSizeUv);
@@ -875,33 +985,36 @@ void sampleFromMegatextureAtVoxelCoord(vec3 voxelCoord, ivec3 voxelDims, int til
     // Final location in the megatexture
     vec3 uv = tileUvOffset + voxelUvOffset;
 
-    for (int i = 0; i < METADATA_COUNT; i++) {
+    for (int i = 0; i < PROPERTY_COUNT; i++) {
         vec4 sample = texture3D(u_megatextureTextures[i], uv);
         samples[i] = decodeTextureSample(sample);
     }
 }
-
-#else // MEGATEXTURE_IS_2D
+#elif defined(MEGATEXTURE_2D)
 /*
-    How 3D data is stored in a 2D megatexture
+    How is 3D data stored in a 2D megatexture?
 
-    2D megatexture with a single 2x2x2 voxel tile:
-    The tile is split into two "slices" by Z:
+    In this example there is only one loaded tile and it has 2x2x2 voxels (8 voxels total).
+    The data is sliced by Z. The data at Z = 0 is placed in texels (0,0), (0,1), (1,0), (1,1) and
+    the data at Z = 1 is placed in texels (2,0), (2,1), (3,0), (3,1).
+    Note that there could be empty space in the megatexture because it's a power of two.
 
       0   1   2   3
     +---+---+---+---+
     |   |   |   |   | 3
     +---+---+---+---+
     |   |   |   |   | 2
-    +---+---+---+---+
+    +-------+-------+
     |010|110|011|111| 1
-    +---+---+---+---+
+    |--- ---|--- ---|
     |000|100|001|101| 0
-    +---+---+---+---+
+    +-------+-------+
 
-    (The megatexture likes to be power of two even if it means some empty space)
-
-    When the 3D coordinate's Z value is between two slices:
+    When doing linear interpolation the megatexture needs to be sampled twice: once for
+    the Z slice above the voxel coordinate and once for the slice below. The two slices
+    are interpolated with fract(coord.z - 0.5). For example, a Z coordinate of 1.0 is
+    halfway between two Z slices so the interpolation factor is 0.5. Below is a side view
+    of the 3D voxel grid with voxel coordinates on the left side.
 
     2 +---+
       |001|
@@ -909,16 +1022,9 @@ void sampleFromMegatextureAtVoxelCoord(vec3 voxelCoord, ivec3 voxelDims, int til
       |000|
     0 +---+
 
-    The interpolation between the bottom and the top voxel is 0.5
-    More generally, the interpolation is: fract(coord.z - 0.5)
+    When doing nearest neighbor the megatexture only needs to be sampled once at the closest Z slice.
 */
-
-vec2 indexToUv2D(int index, ivec2 dimensions, vec2 uvScale) {
-    int indexX = intMod(index, dimensions.x);
-    int indexY = index / dimensions.x;
-    return vec2(indexX, indexY) * uvScale;
-}
-Attributes sampleFrom2DMegatextureAtVoxelCoord(vec3 voxelCoord, ivec3 voxelDims, int tileIndex)
+Properties getPropertiesFrom2DMegatextureAtVoxelCoord(vec3 voxelCoord, ivec3 voxelDims, int tileIndex)
 {
     #if defined(NEAREST_SAMPLING)
         // Round to the center of the nearest voxel
@@ -926,35 +1032,35 @@ Attributes sampleFrom2DMegatextureAtVoxelCoord(vec3 voxelCoord, ivec3 voxelDims,
     #endif
 
     // Tile location
-    vec2 tileUvOffset = indexToUv2D(tileIndex, u_megatextureTileDimensions, u_megatextureTileSizeUv);
+    vec2 tileUvOffset = index1DTo2DTexcoord(tileIndex, u_megatextureTileDimensions, u_megatextureTileSizeUv);
 
-    // Slice locations
+    // Slice location
     float slice = voxelCoord.z - 0.5;
-    float sliceLerp = fract(slice);
     int sliceIndex = int(floor(slice));
     int sliceIndex0 = intMax(sliceIndex, 0);
-    int sliceIndex1 = intMin(sliceIndex + 1, voxelDims.z - 1);
-    vec2 sliceUvOffset0 = indexToUv2D(sliceIndex0, u_megatextureSliceDimensions, u_megatextureSliceSizeUv);
-    vec2 sliceUvOffset1 = indexToUv2D(sliceIndex1, u_megatextureSliceDimensions, u_megatextureSliceSizeUv);
+    vec2 sliceUvOffset0 = index1DTo2DTexcoord(sliceIndex0, u_megatextureSliceDimensions, u_megatextureSliceSizeUv);
 
     // Voxel location
     vec2 voxelUvOffset = clamp(voxelCoord.xy, vec2(0.5), vec2(voxelDims.xy) - vec2(0.5)) * u_megatextureVoxelSizeUv;
 
     // Final location in the megatexture
     vec2 uv0 = tileUvOffset + sliceUvOffset0 + voxelUvOffset;
-    vec2 uv1 = tileUvOffset + sliceUvOffset1 + voxelUvOffset;
 
     #if defined(NEAREST_SAMPLING)
-        return sampleFrom2DMegatextureAtUv(uv0);
+        return getPropertiesFrom2DMegatextureAtUv(uv0);
     #else
-        Attributes attributes0 = sampleFrom2DMegatextureAtUv(uv0);
-        Attributes attributes1 = sampleFrom2DMegatextureAtUv(uv1);
-        return mixAttributes(attributes0, attributes1, sliceLerp);
+        float sliceLerp = fract(slice);
+        int sliceIndex1 = intMin(sliceIndex + 1, voxelDims.z - 1);
+        vec2 sliceUvOffset1 = index1DTo2DTexcoord(sliceIndex1, u_megatextureSliceDimensions, u_megatextureSliceSizeUv);
+        vec2 uv1 = tileUvOffset + sliceUvOffset1 + voxelUvOffset;
+        Properties properties0 = getPropertiesFrom2DMegatextureAtUv(uv0);
+        Properties properties1 = getPropertiesFrom2DMegatextureAtUv(uv1);
+        return mixProperties(properties0, properties1, sliceLerp);
     #endif
 }
 #endif
 
-Attributes sampleFromMegatextureAtTileUv(vec3 tileUv, int tileIndex) {
+Properties getPropertiesFromMegatextureAtTileUv(vec3 tileUv, int tileIndex) {
     vec3 voxelCoord = tileUv * vec3(u_dimensions);
     ivec3 dimensions = u_dimensions;
 
@@ -963,15 +1069,49 @@ Attributes sampleFromMegatextureAtTileUv(vec3 tileUv, int tileIndex) {
         voxelCoord += vec3(u_paddingBefore);
     #endif
 
-    #if defined(MEGATEXTURE_IS_3D)
-        return sampleFrom3DMegatextureAtVoxelCoord(voxelCoord, dimensions, tileIndex);
+    #if defined(MEGATEXTURE_3D)
+        return getPropertiesFrom3DMegatextureAtVoxelCoord(voxelCoord, dimensions, tileIndex);
+    #elif defined(MEGATEXTURE_2D)
+        return getPropertiesFrom2DMegatextureAtVoxelCoord(voxelCoord, dimensions, tileIndex);
+    #endif
+}
+
+vec3 computeAncestorUv(vec3 positionUvLocal, int levelsAbove, ivec4 octreeCoords) {
+    if (levelsAbove > 0) {
+        // In some cases positionUvLocal goes outside the 0 to 1 bounds, such as when sampling neighbor voxels on the edge of a tile.
+        // This needs to be handled carefully, especially for mixed resolution, or else the wrong part of the tile is read.
+        // https://www.wolframalpha.com/input/?i=sign%28x%29+*+max%280%2C+%28abs%28x-0.5%29-0.5%29%29
+        vec3 overflow = sign(positionUvLocal) * max(abs(positionUvLocal - vec3(0.5)) - vec3(0.5), vec3(0.0));
+        positionUvLocal = clamp(positionUvLocal, vec3(0.0), vec3(1.0 - czm_epsilon6)); // epsilon to avoid fract(1) = 0 situation
+
+        // Calcuate a new local uv relative to the ancestor tile.
+        float levelsAboveFactor = 1.0 / pow(2.0, float(levelsAbove));
+        positionUvLocal = fract((vec3(octreeCoords.xyz) + positionUvLocal) * levelsAboveFactor) + overflow * levelsAboveFactor;
+    } else {
+        positionUvLocal = clamp(positionUvLocal, vec3(0.0), vec3(1.0));
+    }
+    return positionUvLocal;
+}
+
+// Convert an array of mixed-resolution sample datas to a final weighted properties.
+Properties getPropertiesFromMegatextureAtLocalPosition(vec3 positionUvLocal, ivec4 octreeCoords, SampleData sampleDatas[SAMPLE_COUNT]) {
+    #if (SAMPLE_COUNT == 1)
+        vec3 actualUv = computeAncestorUv(positionUvLocal, sampleDatas[0].levelsAbove, octreeCoords);
+        return getPropertiesFromMegatextureAtTileUv(actualUv, sampleDatas[0].megatextureIndex);
     #else
-        return sampleFrom2DMegatextureAtVoxelCoord(voxelCoord, dimensions, tileIndex);
+        // When more than one sample is taken the accumulator needs to start at 0
+        Properties properties = clearProperties();
+        for (int i = 0; i < SAMPLE_COUNT; i++) {
+            vec3 actualUv = computeAncestorUv(positionUvLocal, sampleDatas[i].levelsAbove, octreeCoords);
+            Properties tempProperties = getPropertiesFromMegatextureAtTileUv(actualUvLocal, sampleDatas[i].megatextureIndex);        
+            properties = sumProperties(properties, tempProperties)
+        }
+        return properties;
     #endif
 }
 
 // --------------------------------------------------------
-// Octree traversal
+// Tree traversal
 // --------------------------------------------------------
 
 void getOctreeLeafData(OctreeNodeData data, inout SampleData sampleDatas[SAMPLE_COUNT]) {
@@ -1118,236 +1258,36 @@ void traverseOctreeFromExisting(in vec3 positionUv, out vec3 positionUvShapeSpac
     }
 }
 
-// Convert an array of mixed-resolution sample datas to a final weighted sample.
-Attributes getSamplesAtLocalPosition(in vec3 positionUvLocal, in ivec4 octreeCoords, in SampleData sampleDatas[SAMPLE_COUNT]) {
-    // In some cases positionUvLocal goes outside the 0 to 1 bounds, such as when sampling neighbor voxels on the edge of a tile.
-    // This needs to be handled carefully, especially for mixed resolution, or else the wrong part of the tile is read.
-    // https://www.wolframalpha.com/input/?i=sign%28x%29+*+max%280%2C+%28abs%28x-0.5%29-0.5%29%29
-    vec3 overflow = sign(positionUvLocal) * max(abs(positionUvLocal - vec3(0.5)) - vec3(0.5), vec3(0.0));
-    positionUvLocal = clamp(positionUvLocal, vec3(0.0), vec3(1.0 - czm_epsilon6)); // epsilon to avoid fract(1) = 0 situation
-
-    Attributes attributes;
-
-    // When more than one sample is taken the accumulator needs to start at 0
-    #if (SAMPLE_COUNT > 1)
-        attributes = clearAttributes();
-    #endif
-
-    for (int i = 0; i < SAMPLE_COUNT; i++) {
-        SampleData sampleData = sampleDatas[i];
-        vec3 actualUvLocal = positionUvLocal;
-        int levelsAbove = sampleData.levelsAbove;
-        if (levelsAbove > 0) {
-            // Calcuate a new local uv relative to the ancestor tile.
-            float levelsAboveFactor = 1.0 / pow(2.0, float(levelsAbove));
-            actualUvLocal = fract((vec3(octreeCoords.xyz) + positionUvLocal) * levelsAboveFactor) + overflow * levelsAboveFactor;
-        }
-
-        Attributes tempAttributes = sampleFromMegatextureAtTileUv(actualUvLocal, sampleData.megatextureIndex);
-        
-        #if (SAMPLE_COUNT == 1)
-            attributes = tempAttributes;
-        #else
-            attributes = sumAttributes(attributes, tempAttributes)
-        #endif
-    }
-    return attributes;
-}
-
-Attributes getSamplesAtPosition(vec3 positionUv, vec4 outOfBoundsValue) {
-    vec3 positionUvShapeSpace;
-    vec3 positionUvLocal;
-    float levelStepMult;
-    ivec4 octreeCoords;
-    int parentOctreeIndex;
-    SampleData sampleDatas[SAMPLE_COUNT];
-    traverseOctree(positionUv, positionUvShapeSpace, positionUvLocal, levelStepMult, octreeCoords, parentOctreeIndex, sampleDatas);
-    return getSamplesAtLocalPosition(positionUvLocal, octreeCoords, sampleDatas);  
-}
-Attributes getSamplesAtPosition(vec3 positionUv) {
-    return getSamplesAtPosition(positionUv, vec4(0.0));
-}
-
-// void getNormalAtPosition(ivec4 octreeCoords, vec3 positionUvShapeSpace, vec3 positionUvLocal, SampleData sampleDatas[SAMPLE_COUNT], out vec3 normalLocalSpace[METADATA_COUNT], out vec3 normalWorldSpace[METADATA_COUNT], out vec3 normalViewSpace[METADATA_COUNT], out bool valid[METADATA_COUNT]) {
-//     for (int i = 0; i < METADATA_COUNT; i++){
-//         valid[i] = true;
-//     }
-
-//     Attributes attributes;
-//     #define USE_SIMPLE_NORMALS
-//     #if defined(NEIGHBORS_INCLUDED_ON_TILE_EDGES) || defined(USE_SIMPLE_NORMALS)
-//         // There might be small seam artifacts when the edge count is 1 or less.
-//         float sampleL[METADATA_COUNT];
-//         float sampleR[METADATA_COUNT];
-//         float sampleD[METADATA_COUNT];
-//         float sampleU[METADATA_COUNT];
-//         float sampleB[METADATA_COUNT];
-//         float sampleF[METADATA_COUNT];
-//         getSamplesAtLocalPosition(positionUvLocal + vec3(-1.0, 0.0, 0.0) / vec3(u_dimensions), octreeCoords, sampleDatas, attributes);
-//         for(int i = 0; i < METADATA_COUNT; i++) {
-//             sampleL[i] = attributes[i].a;
-//         }
-//         getSamplesAtLocalPosition(positionUvLocal + vec3(+1.0, 0.0, 0.0) / vec3(u_dimensions), octreeCoords, sampleDatas, attributes);
-//         for(int i = 0; i < METADATA_COUNT; i++) {
-//             sampleR[i] = attributes[i].a;
-//         }
-//         getSamplesAtLocalPosition(positionUvLocal + vec3(0.0, -1.0, 0.0) / vec3(u_dimensions), octreeCoords, sampleDatas, attributes);
-//         for(int i = 0; i < METADATA_COUNT; i++) {
-//             sampleD[i] = attributes[i].a;
-//         }
-//         getSamplesAtLocalPosition(positionUvLocal + vec3(0.0, +1.0, 0.0) / vec3(u_dimensions), octreeCoords, sampleDatas, attributes);
-//         for(int i = 0; i < METADATA_COUNT; i++) {
-//             sampleU[i] = attributes[i].a;
-//         }
-//         getSamplesAtLocalPosition(positionUvLocal + vec3(0.0, 0.0, -1.0) / vec3(u_dimensions), octreeCoords, sampleDatas, attributes);
-//         for(int i = 0; i < METADATA_COUNT; i++) {
-//             sampleB[i] = attributes[i].a;
-//         }
-//         getSamplesAtLocalPosition(positionUvLocal + vec3(0.0, 0.0, +1.0) / vec3(u_dimensions), octreeCoords, sampleDatas, attributes);
-//         for(int i = 0; i < METADATA_COUNT; i++) {
-//             sampleF[i] = attributes[i].a;
-//         }
-//     #else
-//         float dimAtLevel = pow(2.0, float(octreeCoords.w));
-//         vec3 voxelSizeShapeSpace = 1.0 / (dimAtLevel * vec3(u_dimensions));
-
-//         // There might be small seam artifacts when the edge count is 0
-//         float sampleL[METADATA_COUNT];
-//         float sampleR[METADATA_COUNT];
-//         float sampleD[METADATA_COUNT];
-//         float sampleU[METADATA_COUNT];
-//         float sampleB[METADATA_COUNT];
-//         float sampleF[METADATA_COUNT];
-//         getSamplesAtPosition(transformFromShapeSpaceToUv(positionUvShapeSpace - vec3(voxelSizeShapeSpace.x, 0.0, 0.0), attributes));
-//         for(int i; i<METADATA_COUNT; i++) {
-//             sampleL[i] = attributes[i].a;
-//         }
-//         getSampleAtPosition(transformFromShapeSpaceToUv(positionUvShapeSpace + vec3(voxelSizeShapeSpace.x, 0.0, 0.0))).a;
-//         for(int i; i<METADATA_COUNT; i++) {
-//             sampleR[i] = attributes[i].a;
-//         }
-//         getSampleAtPosition(transformFromShapeSpaceToUv(positionUvShapeSpace - vec3(0.0, voxelSizeShapeSpace.y, 0.0))).a;
-//         for(int i; i<METADATA_COUNT; i++) {
-//             sampleD[i] = attributes[i].a;
-//         }
-//         getSampleAtPosition(transformFromShapeSpaceToUv(positionUvShapeSpace + vec3(0.0, voxelSizeShapeSpace.y, 0.0))).a;
-//         for(int i; i<METADATA_COUNT; i++) {
-//             sampleU[i] = attributes[i].a;
-//         }
-//         getSampleAtPosition(transformFromShapeSpaceToUv(positionUvShapeSpace - vec3(0.0, 0.0, voxelSizeShapeSpace.z))).a;
-//         for(int i; i<METADATA_COUNT; i++) {
-//             sampleB[i] = attributes[i].a;
-//         }
-//         getSampleAtPosition(transformFromShapeSpaceToUv(positionUvShapeSpace + vec3(0.0, 0.0, voxelSizeShapeSpace.z))).a;
-//         for(int i; i<METADATA_COUNT; i++) {
-//             sampleF[i] = attributes[i].a;
-//         }
-//     #endif
-
-//     for (int i = 0; i < METADATA_COUNT; i++) {
-//         valid[i] = inRange(sampleL[i], u_minimumValues[i].a, u_maximumValues[i].a) &&
-//                 inRange(sampleR[i], u_minimumValues[i].a, u_maximumValues[i].a) &&
-//                 inRange(sampleD[i], u_minimumValues[i].a, u_maximumValues[i].a) &&
-//                 inRange(sampleU[i], u_minimumValues[i].a, u_maximumValues[i].a) &&
-//                 inRange(sampleB[i], u_minimumValues[i].a, u_maximumValues[i].a) &&
-//                 inRange(sampleF[i], u_minimumValues[i].a, u_maximumValues[i].a);    
-
-//         normalLocalSpace[i] = normalize(vec3(sampleR[i] - sampleL[i], sampleU[i] - sampleD[i], sampleF[i] - sampleB[i]));
-
-//         #if defined(SHAPE_ELLIPSOID)
-//             float longitudeMin = u_ellipsoidLongitudeBounds.x;
-//             float longitudeMax = u_ellipsoidLongitudeBounds.y;
-//             float latitudeMin = u_ellipsoidLatitudeBounds.x;
-//             float latitudeMax = u_ellipsoidLatitudeBounds.y;
-//             float longitude = mix(longitudeMin, longitudeMax, positionUvShapeSpace.x) + 0.2 * normalLocalSpace[i].x;
-//             float latitude = mix(latitudeMin, latitudeMax, positionUvShapeSpace.y) + 0.2 * normalLocalSpace[i].y;
-
-//             float cosLatitude = cos(latitude);
-//             float x = cosLatitude * cos(longitude);
-//             float y = cosLatitude * sin(longitude);
-//             float z = sin(latitude);
-//             normalWorldSpace[i] = normalize(vec3(x, y, z));
-//         #elif defined(SHAPE_CYLINDER)
-//             float angle = czm_twoPi * positionUvShapeSpace.y + 0.02 * 0.5 * czm_pi * normalLocalSpace[i].y;
-//             float x = cos(angle);
-//             float y = sin(angle);
-//             float z = normalLocalSpace[i].z;
-//             normalWorldSpace[i] = normalize(u_modelToWorldNormal * vec3(x, y, z));
-//         #endif
-
-//         normalViewSpace[i] = normalize(czm_viewRotation * normalWorldSpace[i]);
-//     }
-// }
-
-vec2 intersectShape(vec3 positionUv, vec3 directionUv) {
-    // Do a ray-shape intersection to find the exact starting and ending points.
-    // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
-    // Direction is scaled as well to be in sync with position. 
-    Ray ray = Ray(positionUv * 2.0 - 1.0, directionUv * 2.0);
-
-    #if defined(SHAPE_BOX)
-        vec2 tEntryExit = intersectBoxShape(ray);
-    #elif defined(SHAPE_CYLINDER)
-        vec2 tEntryExit = intersectCylinderShape(ray);
-    #elif defined(SHAPE_ELLIPSOID)
-        vec2 tEntryExit = intersectEllipsoidShape(ray);
-    #endif
-
-    if (tEntryExit.x < 0.0 && tEntryExit.y < 0.0) {
-        // Intersection is invalid when start and end are behind the ray.
-        return vec2(NoHit, NoHit);
-    }
-
-    // Set start to 0 when ray is inside the shape.
-    tEntryExit.x = max(tEntryExit.x, 0.0);
-
-    return tEntryExit;
-}
-
 void main()
 {
     vec4 fragCoord = gl_FragCoord;
-    vec2 uv = (fragCoord.xy - czm_viewport.xy) / czm_viewport.zw;
+    vec2 screenUv = (fragCoord.xy - czm_viewport.xy) / czm_viewport.zw;
     vec4 eyeCoordinate = czm_windowToEyeCoordinates(fragCoord);
     vec3 eyeDirection = normalize(eyeCoordinate.xyz);
     vec3 viewDirWorld = normalize(czm_inverseViewRotation * eyeDirection); // normalize again just in case
     vec3 viewDirUv = normalize(u_transformDirectionViewToLocal * eyeDirection); // normalize again just in case
     vec3 viewPosUv = u_cameraPositionUv;
+    vec2 entryExitT = intersectShape(viewPosUv, viewDirUv);
 
-    vec2 tEntryExit = intersectShape(viewPosUv, viewDirUv);
-
-    // If the shape was completely missed, don't render anything and exit early.
-    if (tEntryExit == vec2(NoHit, NoHit)) {
+    // Exit early if the shape was completely missed.
+    if (entryExitT == vec2(NoHit, NoHit)) {
         discard;
     }
 
-    float currT = tEntryExit.x;
-    float endT = tEntryExit.y;
-    vec3 positionUv = viewPosUv + tEntryExit.x * viewDirUv;
+    float currT = entryExitT.x;
+    float endT = entryExitT.y;
+    vec3 positionUv = viewPosUv + currT * viewDirUv;
     
     #if defined(DEPTH_TEST)
-        // If the depth is in front of the shape, discard early. Otherwise, calculate how
-        // far the ray will travel before it hits the depth buffer.
-        float logDepthOrDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, uv));
+        float depthT = intersectDepth(fragCoord.xy, screenUv, viewPosUv, viewDirUv);
 
-        // If there's no depth at this position set it to some really large value.
-        float depthT = czm_infinity;
-
-        if (logDepthOrDepth != 0.0) {
-            vec4 eyeCoordinateDepth = czm_windowToEyeCoordinates(fragCoord.xy, logDepthOrDepth);
-            eyeCoordinateDepth /= eyeCoordinateDepth.w;
-            vec3 depthPositionUv = vec3(u_transformPositionViewToUv * eyeCoordinateDepth);
-            depthT = dot(viewDirUv, depthPositionUv - viewPosUv);
-
-            // Exit early if the depth is before the start position.
-            if (depthT <= currT) {
-                discard;
-            }
+        // Exit early if the depth is before the start position.
+        if (depthT <= currT) {
+            discard;
         }
     #endif
 
     vec4 colorAccum = vec4(0.0);
-    const float alphaAccumMax = 0.98;
 
     #if defined(DESPECKLE)
         vec4 colorAccumTemp = vec4(0.0);
@@ -1355,6 +1295,7 @@ void main()
         int nonZeroMax = 3;
     #endif
 
+    // Traverse the tree from the start position
     vec3 positionUvShapeSpace;
     vec3 positionUvLocal;
     float levelStepMult;
@@ -1362,17 +1303,27 @@ void main()
     int parentOctreeIndex;
     SampleData sampleDatas[SAMPLE_COUNT];
     traverseOctree(positionUv, positionUvShapeSpace, positionUvLocal, levelStepMult, octreeCoords, parentOctreeIndex, sampleDatas);
+    
+    // Adjust the step size based on the level in the tree
     float stepT = u_stepSize * levelStepMult;
 
     #if defined(JITTER)
-        float noise = hash12(uv); // [0,1]
-        positionUv += noise * stepT * viewDirUv;
+        float noise = hash(screenUv); // [0,1]
         currT += noise * stepT;
+        positionUv += noise * stepT * viewDirUv;
     #endif
 
-    const int stepCountMax = 1000;
-    for (int stepCount = 0; stepCount < stepCountMax; stepCount++) {
-        FragmentInput fragmentInput;
+    FragmentInput fragmentInput;
+    #if defined(STATISTICS)
+        setStatistics(fragmentInput.metadata.statistics);
+    #endif
+
+    for (int stepCount = 0; stepCount < STEP_COUNT_MAX; stepCount++) {
+        // Read properties from the megatexture based on the traversal state
+        Properties properties = getPropertiesFromMegatextureAtLocalPosition(positionUvLocal, octreeCoords, sampleDatas);
+        
+        // Prepare the custom shader inputs
+        copyPropertiesToMetadata(properties, fragmentInput.metadata);
         fragmentInput.voxel.positionUv = positionUv;
         fragmentInput.voxel.positionUvShapeSpace = positionUvShapeSpace;
         fragmentInput.voxel.positionUvLocal = positionUvLocal;
@@ -1380,35 +1331,21 @@ void main()
         fragmentInput.voxel.viewDirWorld = viewDirWorld;
         fragmentInput.voxel.travelDistance = stepT;
 
-        #if defined(HAS_MIN_MAX)
-            setMinMaxAttributes(fragmentInput.voxel);
-        #endif
-
-        fragmentInput.attributes = getSamplesAtLocalPosition(positionUvLocal, octreeCoords, sampleDatas);
-
-        // #if defined(STYLE_USE_NORMAL)
-        //     vec3 normalLocal[METADATA_COUNT];
-        //     vec3 normalWorld[METADATA_COUNT];
-        //     vec3 normalView[METADATA_COUNT];
-        //     bool normalValid[METADATA_COUNT];
-        //     getNormalAtPosition(octreeCoords, positionUvShapeSpace, positionUvLocal, sampleDatas, normalLocal, normalWorld, normalView, normalValid);
-        //     setStyleInputNormals(normalLocal, normalWorld, normalView, normalValid, styleInput);
-        // #endif
-
         #if defined(STYLE_USE_POSITION_EC)
             styleInput.positionEC = vec3(u_transformPositionUvToView * vec4(positionUv, 1.0));
         #endif
 
+        // Run the custom shader
         czm_modelMaterial materialOutput;
         fragmentMain(fragmentInput, materialOutput);
-        vec4 finalSample = vec4(materialOutput.diffuse, materialOutput.alpha);
 
         // Sanitize the custom shader output
-        finalSample = max(finalSample, vec4(0.0));
-        finalSample.a = min(finalSample.a, 1.0);
+        vec4 color = vec4(materialOutput.diffuse, materialOutput.alpha);
+        color.rgb = max(color.rgb, vec3(0.0));
+        color.a = clamp(color.a, 0.0, 1.0);
 
         #if defined(DESPECKLE)
-            if (finalSample.a < (1.0 - alphaAccumMax)) {
+            if (color.a < (1.0 - ALPHA_ACCUM_MAX)) {
                 float partialAlpha = float(nonZeroCount) / float(nonZeroMax);
                 colorAccum.a += partialAlpha * (colorAccumTemp.a - colorAccum.a);
                 colorAccum.rgb += partialAlpha * colorAccumTemp.rgb;
@@ -1419,7 +1356,7 @@ void main()
                 if (nonZeroCount == 1) {
                     colorAccumTemp.a = colorAccum.a;
                 }
-                colorAccumTemp += (1.0 - colorAccumTemp.a) * vec4(finalSample.rgb * finalSample.a, finalSample.a);
+                colorAccumTemp += (1.0 - colorAccumTemp.a) * vec4(color.rgb * color.a, color.a);
 
                 if (nonZeroCount >= nonZeroMax) {
                     colorAccum.a = colorAccumTemp.a;
@@ -1429,12 +1366,13 @@ void main()
                 }
             }
         #else
-            colorAccum += (1.0 - colorAccum.a) * vec4(finalSample.rgb * finalSample.a, finalSample.a);
+            // Pre-multiplied alpha blend
+            colorAccum += (1.0 - colorAccum.a) * vec4(color.rgb * color.a, color.a);
         #endif
 
         // Stop traversing if the alpha has been fully saturated
-        if (colorAccum.a > alphaAccumMax) {
-            colorAccum.a = alphaAccumMax;
+        if (colorAccum.a > ALPHA_ACCUM_MAX) {
+            colorAccum.a = ALPHA_ACCUM_MAX;
             break;
         }
 
@@ -1442,38 +1380,41 @@ void main()
         currT += stepT;
         positionUv += stepT * viewDirUv;
 
-        // Check if the ray is occluded by the depth
+        // Exit early if the ray is occluded by depth texture
         #if defined(DEPTH_TEST)
             if (currT >= depthT) {
                 break;
             }
         #endif
 
-        // Check if the ray has entered empty space. If so, do another intersection test
-        // to see if there is more of the shape to intersect. If there isn't, the raymarch is over. 
+        // Do another intersection test against the shape if the ray has entered empty space
         if (currT > endT) {
-            vec2 tEntryExit = intersectShape(positionUv, viewDirUv);
-            if (tEntryExit == vec2(NoHit, NoHit)) {
+            vec2 entryExitT = intersectShape(positionUv, viewDirUv);
+
+            // Stop raymarching if it doesn't hit anything
+            if (entryExitT == vec2(NoHit, NoHit)) {
                 break;
-            }        
-            currT += tEntryExit.x;
-            endT += tEntryExit.y;
-            positionUv += tEntryExit.x * viewDirUv;
+            }
+
+            currT += entryExitT.x;
+            endT += entryExitT.y;
+            positionUv += entryExitT.x * viewDirUv;
         }
 
-        // Traverse the octree from the current ray position.
-        // This is an optimized alternative to traverseOctree that expects the
-        // ray to stay in the same tile on average. Otherwise it will traverse
-        // upwards and back downwards.
+        // Traverse the tree from the current ray position.
+        // This is similar to traverseOctree but is optimized for the common
+        // case where the ray is in the same tile as the previous step.
         traverseOctreeFromExisting(positionUv, positionUvShapeSpace, positionUvLocal, levelStepMult, octreeCoords, parentOctreeIndex, sampleDatas);
+
+        // Adjust the step size based on the level in the tree
         stepT = u_stepSize * levelStepMult;
     }
 
-    // Convert the alpha from [0,alphaAccumMax] to [0,1]
-    colorAccum.a /= alphaAccumMax;
+    // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]
+    colorAccum.a /= ALPHA_ACCUM_MAX;
 
     #if defined(PICKING)
-        // If alpha is 0.0, there is nothing to pick
+        // If alpha is 0.0 there is nothing to pick
         if (colorAccum.a == 0.0) {
             discard;
         }

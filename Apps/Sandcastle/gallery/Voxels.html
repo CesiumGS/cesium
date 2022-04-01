@@ -356,7 +356,7 @@
         const customShaderColor = new Cesium.CustomShader({
           fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
           {
-              material.diffuse = fsInput.attributes.color.rgb;
+              material.diffuse = fsInput.metadata.color.rgb;
               material.alpha = 1.0;
           }`,
         });
@@ -364,7 +364,7 @@
         const customShaderAlpha = new Cesium.CustomShader({
           fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
           {
-              material.diffuse = vec3(1.0);//fsInput.attributes.a);
+              material.diffuse = vec3(1.0);//fsInput.metadata.a);
               material.alpha = 1.0;
           }`,
         });

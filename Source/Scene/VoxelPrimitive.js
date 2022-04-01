@@ -1583,8 +1583,12 @@ VoxelPrimitive.prototype.update = function (frameState) {
   }
 };
 
+// Shader builder helpers
+
 /**
  * @param {MetadataType} type
+ * @returns {String}
+ * @private
  */
 function getGlslType(type) {
   if (type === MetadataType.SCALAR) {
@@ -1596,10 +1600,11 @@ function getGlslType(type) {
   } else if (type === MetadataType.VEC4) {
     return "vec4";
   }
-  return "vec4";
 }
 /**
  * @param {MetadataType} type
+ * @returns {String}
+ * @private
  */
 function getGlslTextureSwizzle(type) {
   if (type === MetadataType.SCALAR) {
@@ -1611,12 +1616,45 @@ function getGlslTextureSwizzle(type) {
   } else if (type === MetadataType.VEC4) {
     return "";
   }
-  return "";
+}
+
+/**
+ * @param {MetadataType} type
+ * @returns {String}
+ * @private
+ */
+function getGlslPartialDerivativeType(type) {
+  if (type === MetadataType.SCALAR) {
+    return "vec3";
+  } else if (type === MetadataType.VEC2) {
+    return "mat2";
+  } else if (type === MetadataType.VEC3) {
+    return "mat3";
+  } else if (type === MetadataType.VEC4) {
+    return "mat4";
+  }
+}
+
+/**
+ * GLSL needs to have `.0` at the end of whole number floats or else it's
+ * treated like an integer.
+ * @param {Number} number
+ * @returns {String}
+ * @private
+ */
+function getGlslNumberAsFloat(number) {
+  let numberString = number.toString();
+  if (numberString.indexOf(".") === -1) {
+    numberString = `${number}.0`;
+  }
+  return numberString;
 }
 
 /**
  * @param {MetadataType} type
  * @param {Number} index
+ * @returns {String}
+ * @private
  */
 function getGlslField(type, index) {
   if (type === MetadataType.SCALAR) {
@@ -1652,250 +1690,39 @@ function buildDrawCommands(that, context) {
   const nearestSampling = that._nearestSampling;
   const customShader = that._customShader;
   const attributeLength = types.length;
+  const hasStatistics = defined(minimumValues) && defined(maximumValues);
+
+  // Build shader
 
   const shaderBuilder = new ShaderBuilder();
 
   // Vertex shader
-  shaderBuilder.addVertexLines(["#line 0", VoxelVS]);
-  shaderBuilder.setPositionAttribute("vec4", "a_position");
+
+  shaderBuilder.addVertexLines([VoxelVS]);
 
   // Fragment shader
+
   shaderBuilder.addFragmentLines([
     customShader.fragmentShaderText,
     "#line 0",
     VoxelFS,
   ]);
 
-  const fragmentStructId = "FragmentInput";
-  const fragmentStructName = "FragmentInput";
-  const attributeStructId = "Attributes";
-  const attributeStructName = "Attributes";
-  const attributeFieldName = "attributes";
-  const voxelStructId = "Voxel";
-  const voxelStructName = "Voxel";
-  const voxelFieldName = "voxel";
-
-  // Attribute struct
-  shaderBuilder.addStruct(
-    attributeStructId,
-    attributeStructName,
-    ShaderDestination.FRAGMENT
-  );
-
-  for (let i = 0; i < attributeLength; i++) {
-    const name = names[i];
-    const type = types[i];
-    const glslType = getGlslType(type);
-    shaderBuilder.addStructField(attributeStructId, glslType, name);
-  }
-
-  // Voxel struct
-  shaderBuilder.addStruct(
-    voxelStructId,
-    voxelStructName,
-    ShaderDestination.FRAGMENT
-  );
-
-  for (let i = 0; i < attributeLength; i++) {
-    const name = names[i];
-    const type = types[i];
-    const glslType = getGlslType(type);
-    shaderBuilder.addStructField(voxelStructId, glslType, `${name}Minimum`);
-    shaderBuilder.addStructField(voxelStructId, glslType, `${name}Maximum`);
-    shaderBuilder.addStructField(voxelStructId, "vec3", `${name}NormalLocal`);
-    shaderBuilder.addStructField(voxelStructId, "vec3", `${name}NormalWorld`);
-    shaderBuilder.addStructField(voxelStructId, "vec3", `${name}NormalView`);
-    shaderBuilder.addStructField(voxelStructId, "bool", `${name}NormalValid`);
-  }
-
-  shaderBuilder.addStructField(voxelStructId, "vec3", "positionEC");
-  shaderBuilder.addStructField(voxelStructId, "vec3", "positionUv");
-  shaderBuilder.addStructField(voxelStructId, "vec3", "positionUvShapeSpace");
-  shaderBuilder.addStructField(voxelStructId, "vec3", "positionUvLocal");
-  shaderBuilder.addStructField(voxelStructId, "vec3", "viewDirUv");
-  shaderBuilder.addStructField(voxelStructId, "vec3", "viewDirWorld");
-  shaderBuilder.addStructField(voxelStructId, "float", "travelDistance");
-
-  // FragmentInput struct
-  shaderBuilder.addStruct(
-    fragmentStructId,
-    fragmentStructName,
-    ShaderDestination.FRAGMENT
-  );
-  shaderBuilder.addStructField(
-    fragmentStructId,
-    attributeStructName,
-    attributeFieldName
-  );
-  shaderBuilder.addStructField(
-    fragmentStructId,
-    voxelStructName,
-    voxelFieldName
-  );
-
-  shaderBuilder.addUniform(
-    "sampler2D",
-    "u_megatextureTextures[METADATA_COUNT]",
-    ShaderDestination.FRAGMENT
-  );
-
-  // clearAttributes function
-  {
-    const clearAttributesFunctionId = "clearAttributes";
-    const clearAttributesFunctionName = "clearAttributes";
-
-    shaderBuilder.addFunction(
-      clearAttributesFunctionId,
-      `${attributeStructName} ${clearAttributesFunctionName}()`,
-      ShaderDestination.FRAGMENT
-    );
-
-    shaderBuilder.addFunctionLines(clearAttributesFunctionId, [
-      `${attributeStructName} attributes;`,
-    ]);
-
-    for (let i = 0; i < attributeLength; i++) {
-      const name = names[i];
-      const type = types[i];
-      const componentType = componentTypes[i];
-      const glslType = getGlslType(type, componentType);
-      shaderBuilder.addFunctionLines(clearAttributesFunctionId, [
-        `attributes.${name} = ${glslType}(0.0);`,
-      ]);
-    }
-    shaderBuilder.addFunctionLines(clearAttributesFunctionId, [
-      `return attributes;`,
-    ]);
-  }
-
-  // sumAttributes function
-  {
-    const sumAttributesFunctionId = "sumAttributes";
-    const sumAttributesFunctionName = "sumAttributes";
-    const sumAttributesFunctionDeclaration = `${attributeStructName} ${sumAttributesFunctionName}(${attributeStructName} attributesA, ${attributeStructName} attributesB)`;
-
-    shaderBuilder.addFunction(
-      sumAttributesFunctionId,
-      sumAttributesFunctionDeclaration,
-      ShaderDestination.FRAGMENT
-    );
-
-    shaderBuilder.addFunctionLines(sumAttributesFunctionId, [
-      `${attributeStructName} attributes;`,
-    ]);
-    for (let i = 0; i < attributeLength; i++) {
-      const name = names[i];
-      shaderBuilder.addFunctionLines(sumAttributesFunctionId, [
-        `${attributeFieldName}.${name} = attributesA.${name} + attributesB.${name};`,
-      ]);
-    }
-    shaderBuilder.addFunctionLines(sumAttributesFunctionId, [
-      `return attributes;`,
-    ]);
-  }
-
-  // mixAttributes
-  {
-    const mixAttributesFunctionId = "mixAttributes";
-    const mixAttributesFunctionName = "mixAttributes";
-    const mixAttributesFieldAttributesA = "attributesA";
-    const mixAttributesFieldAttributesB = "attributesB";
-    const mixAttributesFieldMixAmount = "mixFactor";
-    shaderBuilder.addFunction(
-      mixAttributesFunctionId,
-      `${attributeStructName} ${mixAttributesFunctionName}(${attributeStructName} ${mixAttributesFieldAttributesA}, ${attributeStructName} ${mixAttributesFieldAttributesB}, float ${mixAttributesFieldMixAmount})`,
-      ShaderDestination.FRAGMENT
-    );
-
-    shaderBuilder.addFunctionLines(mixAttributesFunctionId, [
-      `${attributeStructName} attributes;`,
-    ]);
-    for (let i = 0; i < attributeLength; i++) {
-      const name = names[i];
-      shaderBuilder.addFunctionLines(mixAttributesFunctionId, [
-        `attributes.${name} = mix(${mixAttributesFieldAttributesA}.${name}, ${mixAttributesFieldAttributesB}.${name}, ${mixAttributesFieldMixAmount});`,
-      ]);
-    }
-    shaderBuilder.addFunctionLines(mixAttributesFunctionId, [
-      `return attributes;`,
-    ]);
-  }
-
-  // setMinMaxAttributes function
-  if (defined(minimumValues) && defined(maximumValues)) {
-    shaderBuilder.addDefine(
-      "HAS_MIN_MAX",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-    const minMaxAttributesFunctionId = "setMinMaxAttributes";
-    const minMaxAttributesFunctionName = "setMinMaxAttributes";
-    shaderBuilder.addFunction(
-      minMaxAttributesFunctionId,
-      `void ${minMaxAttributesFunctionName}(inout ${voxelStructName} ${voxelFieldName})`,
-      ShaderDestination.FRAGMENT
-    );
-    for (let i = 0; i < attributeLength; i++) {
-      const name = names[i];
-      const type = types[i];
-      const componentCount = MetadataType.getComponentCount(type);
-      for (let j = 0; j < componentCount; j++) {
-        const minimumValue = minimumValues[i][j];
-        const maximumValue = maximumValues[i][j];
-
-        // glsl needs to have `.0` at the end of whole numbers floats.
-        let minimumValueString = minimumValue.toString();
-        if (minimumValueString.indexOf(".") === -1) {
-          minimumValueString = `${minimumValue}.0`;
-        }
-        let maximumValueString = maximumValue.toString();
-        if (maximumValueString.indexOf(".") === -1) {
-          maximumValueString = `${maximumValue}.0`;
-        }
-
-        const glslField = getGlslField(type, j);
-        const minLine = `${voxelFieldName}.${name}Minimum${glslField} = ${minimumValueString};`;
-        const maxLine = `${voxelFieldName}.${name}Maximum${glslField} = ${maximumValueString};`;
-        shaderBuilder.addFunctionLines(minMaxAttributesFunctionId, [
-          minLine,
-          maxLine,
-        ]);
-      }
-    }
-  }
-
-  const sampleFrom2DMegatextureId = "sampleFrom2DMegatextureAtUv";
-  const sampleFrom2DMegatextureName = "sampleFrom2DMegatextureAtUv";
-  shaderBuilder.addFunction(
-    sampleFrom2DMegatextureId,
-    `${attributeStructName} ${sampleFrom2DMegatextureName}(vec2 uv)`,
-    ShaderDestination.FRAGMENT
-  );
-
-  shaderBuilder.addFunctionLines(sampleFrom2DMegatextureId, [
-    `${attributeStructName} attributes;`,
-  ]);
-  for (let i = 0; i < attributeLength; i++) {
-    const name = names[i];
-    const type = types[i];
-    const componentType = componentTypes[i];
-    const glslTextureSwizzle = getGlslTextureSwizzle(type, componentType);
-    shaderBuilder.addFunctionLines(sampleFrom2DMegatextureId, [
-      `attributes.${name} = texture2D(u_megatextureTextures[${i}], uv)${glslTextureSwizzle};`,
-    ]);
-  }
-  shaderBuilder.addFunctionLines(sampleFrom2DMegatextureId, [
-    `return attributes;`,
-  ]);
+  // Fragment shader defines
 
   shaderBuilder.addDefine(
     "METADATA_COUNT",
     attributeLength,
     ShaderDestination.FRAGMENT
   );
-
   shaderBuilder.addDefine(
     `SHAPE_${shapeType}`,
+    undefined,
+    ShaderDestination.FRAGMENT
+  );
+
+  shaderBuilder.addDefine(
+    "MEGATEXTURE_2D",
     undefined,
     ShaderDestination.FRAGMENT
   );
@@ -1906,7 +1733,6 @@ function buildDrawCommands(that, context) {
   ) {
     shaderBuilder.addDefine("PADDING", undefined, ShaderDestination.FRAGMENT);
   }
-
   if (depthTest) {
     shaderBuilder.addDefine(
       "DEPTH_TEST",
@@ -1925,7 +1751,6 @@ function buildDrawCommands(that, context) {
       ShaderDestination.FRAGMENT
     );
   }
-
   if (jitter) {
     shaderBuilder.addDefine("JITTER", undefined, ShaderDestination.FRAGMENT);
   }
@@ -1937,9 +1762,15 @@ function buildDrawCommands(that, context) {
       ShaderDestination.FRAGMENT
     );
   }
-
   if (despeckle) {
     shaderBuilder.addDefine("DESPECKLE", undefined, ShaderDestination.FRAGMENT);
+  }
+  if (hasStatistics) {
+    shaderBuilder.addDefine(
+      "STATISTICS",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
   }
 
   const sampleCount = keyframeCount > 1 ? 2 : 1;
@@ -1952,7 +1783,6 @@ function buildDrawCommands(that, context) {
   const ShapeConstructor = VoxelShapeType.toShapeConstructor(shapeType);
   const defaultMinBounds = ShapeConstructor.DefaultMinBounds;
   const defaultMaxBounds = ShapeConstructor.DefaultMaxBounds;
-
   const isDefaultMinX = minBounds.x === defaultMinBounds.x;
   const isDefaultMinY = minBounds.y === defaultMinBounds.y;
   const isDefaultMinZ = minBounds.z === defaultMinBounds.z;
@@ -1966,11 +1796,9 @@ function buildDrawCommands(that, context) {
     !isDefaultMaxX ||
     !isDefaultMaxY ||
     !isDefaultMaxZ;
-
   if (useBounds) {
     shaderBuilder.addDefine("BOUNDS", undefined, ShaderDestination.FRAGMENT);
   }
-
   if (!isDefaultMinX) {
     shaderBuilder.addDefine(
       "BOUNDS_0_MIN",
@@ -2013,7 +1841,6 @@ function buildDrawCommands(that, context) {
       ShaderDestination.FRAGMENT
     );
   }
-
   let intersectionCount = 0;
   if (shapeType === VoxelShapeType.BOX) {
     // A bounded box is still a box, so it has the same number of shape intersections: 1
@@ -2028,7 +1855,6 @@ function buildDrawCommands(that, context) {
       );
       intersectionCount++;
     }
-
     // Intersects an inner ellipsoid for the min radius
     if (!isDefaultMinZ) {
       shaderBuilder.addDefine(
@@ -2038,7 +1864,6 @@ function buildDrawCommands(that, context) {
       );
       intersectionCount++;
     }
-
     // Intersects a cone for min latitude
     if (!isDefaultMinY) {
       shaderBuilder.addDefine(
@@ -2048,7 +1873,6 @@ function buildDrawCommands(that, context) {
       );
       intersectionCount++;
     }
-
     // Intersects a cone for max latitude
     if (!isDefaultMaxY) {
       shaderBuilder.addDefine(
@@ -2058,7 +1882,6 @@ function buildDrawCommands(that, context) {
       );
       intersectionCount++;
     }
-
     // Intersects a wedge for the min and max longitude
     if (!isDefaultMinX || !isDefaultMaxX) {
       shaderBuilder.addDefine(
@@ -2079,7 +1902,6 @@ function buildDrawCommands(that, context) {
       );
       intersectionCount++;
     }
-
     // Intersects an inner infinite cylinder for the min radius
     if (!isDefaultMinX) {
       shaderBuilder.addDefine(
@@ -2089,7 +1911,6 @@ function buildDrawCommands(that, context) {
       );
       intersectionCount++;
     }
-
     // Intersects a wedge for the min and max theta
     if (!isDefaultMinZ || !isDefaultMaxZ) {
       shaderBuilder.addDefine(
@@ -2100,14 +1921,12 @@ function buildDrawCommands(that, context) {
       intersectionCount++;
     }
   }
-
   // The intersection count is multiplied by 2 because there is an enter and exit for each intersection
   shaderBuilder.addDefine(
     "SHAPE_INTERSECTION_COUNT",
     intersectionCount * 2,
     ShaderDestination.FRAGMENT
   );
-
   const useClippingBounds =
     minClippingBounds.x !== defaultMinBounds.x ||
     minClippingBounds.y !== defaultMinBounds.y ||
@@ -2115,7 +1934,6 @@ function buildDrawCommands(that, context) {
     maxClippingBounds.x !== defaultMaxBounds.x ||
     maxClippingBounds.y !== defaultMaxBounds.y ||
     maxClippingBounds.z !== defaultMaxBounds.z;
-
   if (useClippingBounds) {
     shaderBuilder.addDefine(
       "CLIPPING_BOUNDS",
@@ -2124,12 +1942,309 @@ function buildDrawCommands(that, context) {
     );
   }
 
+  // Fragment shader uniforms
+
+  shaderBuilder.addUniform(
+    "sampler2D",
+    "u_megatextureTextures[METADATA_COUNT]",
+    ShaderDestination.FRAGMENT
+  );
+
+  // Fragment shader structs
+
+  // PropertyStatistics structs
+  for (let i = 0; i < attributeLength; i++) {
+    const name = names[i];
+    const type = types[i];
+    const propertyStatisticsStructId = `PropertyStatistics_${name}`;
+    const propertyStatisticsStructName = `PropertyStatistics_${name}`;
+    shaderBuilder.addStruct(
+      propertyStatisticsStructId,
+      propertyStatisticsStructName,
+      ShaderDestination.FRAGMENT
+    );
+    const glslType = getGlslType(type);
+    shaderBuilder.addStructField(propertyStatisticsStructId, glslType, "min");
+    shaderBuilder.addStructField(propertyStatisticsStructId, glslType, "max");
+  }
+
+  // Statistics struct
+  const statisticsStructId = "Statistics";
+  const statisticsStructName = "Statistics";
+  const statisticsFieldName = "statistics";
+  shaderBuilder.addStruct(
+    statisticsStructId,
+    statisticsStructName,
+    ShaderDestination.FRAGMENT
+  );
+  for (let i = 0; i < attributeLength; i++) {
+    const name = names[i];
+    const propertyStructName = `PropertyStatistics_${name}`;
+    const propertyFieldName = name;
+    shaderBuilder.addStructField(
+      statisticsStructId,
+      propertyStructName,
+      propertyFieldName
+    );
+  }
+
+  // Metadata struct
+  const metadataStructId = "Metadata";
+  const metadataStructName = "Metadata";
+  const metadataFieldName = "metadata";
+  shaderBuilder.addStruct(
+    metadataStructId,
+    metadataStructName,
+    ShaderDestination.FRAGMENT
+  );
+  shaderBuilder.addStructField(
+    metadataStructId,
+    statisticsStructName,
+    statisticsFieldName
+  );
+  for (let i = 0; i < attributeLength; i++) {
+    const name = names[i];
+    const type = types[i];
+    const glslType = getGlslType(type);
+    shaderBuilder.addStructField(metadataStructId, glslType, name);
+  }
+
+  // VoxelProperty structs
+  for (let i = 0; i < attributeLength; i++) {
+    const name = names[i];
+    const type = types[i];
+    const glslType = getGlslPartialDerivativeType(type);
+    const voxelPropertyStructId = `VoxelProperty_${name}`;
+    const voxelPropertyStructName = `VoxelProperty_${name}`;
+    shaderBuilder.addStruct(
+      voxelPropertyStructId,
+      voxelPropertyStructName,
+      ShaderDestination.FRAGMENT
+    );
+    shaderBuilder.addStructField(
+      voxelPropertyStructId,
+      glslType,
+      "partialDerivativeLocal"
+    );
+    shaderBuilder.addStructField(
+      voxelPropertyStructId,
+      glslType,
+      "partialDerivativeWorld"
+    );
+    shaderBuilder.addStructField(
+      voxelPropertyStructId,
+      glslType,
+      "partialDerivativeView"
+    );
+    shaderBuilder.addStructField(
+      voxelPropertyStructId,
+      glslType,
+      "partialDerivativeValid"
+    );
+  }
+
+  // Voxel struct
+  const voxelStructId = "Voxel";
+  const voxelStructName = "Voxel";
+  const voxelFieldName = "voxel";
+  shaderBuilder.addStruct(
+    voxelStructId,
+    voxelStructName,
+    ShaderDestination.FRAGMENT
+  );
+  for (let i = 0; i < attributeLength; i++) {
+    const name = names[i];
+    const voxelPropertyStructName = `VoxelProperty_${name}`;
+    shaderBuilder.addStructField(voxelStructId, voxelPropertyStructName, name);
+  }
+  shaderBuilder.addStructField(voxelStructId, "vec3", "positionEC");
+  shaderBuilder.addStructField(voxelStructId, "vec3", "positionUv");
+  shaderBuilder.addStructField(voxelStructId, "vec3", "positionUvShapeSpace");
+  shaderBuilder.addStructField(voxelStructId, "vec3", "positionUvLocal");
+  shaderBuilder.addStructField(voxelStructId, "vec3", "viewDirUv");
+  shaderBuilder.addStructField(voxelStructId, "vec3", "viewDirWorld");
+  shaderBuilder.addStructField(voxelStructId, "float", "travelDistance");
+
+  // FragmentInput struct
+  const fragmentInputStructId = "FragmentInput";
+  const fragmentInputStructName = "FragmentInput";
+  shaderBuilder.addStruct(
+    fragmentInputStructId,
+    fragmentInputStructName,
+    ShaderDestination.FRAGMENT
+  );
+  shaderBuilder.addStructField(
+    fragmentInputStructId,
+    metadataStructName,
+    metadataFieldName
+  );
+  shaderBuilder.addStructField(
+    fragmentInputStructId,
+    voxelStructName,
+    voxelFieldName
+  );
+
+  // Properties struct
+  const propertiesStructId = "Properties";
+  const propertiesStructName = "Properties";
+  const propertiesFieldName = "properties";
+  shaderBuilder.addStruct(
+    propertiesStructId,
+    propertiesStructName,
+    ShaderDestination.FRAGMENT
+  );
+  for (let i = 0; i < attributeLength; i++) {
+    const name = names[i];
+    const type = types[i];
+    const glslType = getGlslType(type);
+    shaderBuilder.addStructField(propertiesStructId, glslType, name);
+  }
+
+  // Fragment shader functions
+
+  // clearProperties function
+  {
+    const functionId = "clearProperties";
+    shaderBuilder.addFunction(
+      functionId,
+      `${propertiesStructName} clearProperties()`,
+      ShaderDestination.FRAGMENT
+    );
+    shaderBuilder.addFunctionLines(functionId, [
+      `${propertiesStructName} ${propertiesFieldName};`,
+    ]);
+    for (let i = 0; i < attributeLength; i++) {
+      const name = names[i];
+      const type = types[i];
+      const componentType = componentTypes[i];
+      const glslType = getGlslType(type, componentType);
+      shaderBuilder.addFunctionLines(functionId, [
+        `${propertiesFieldName}.${name} = ${glslType}(0.0);`,
+      ]);
+    }
+    shaderBuilder.addFunctionLines(functionId, [
+      `return ${propertiesFieldName};`,
+    ]);
+  }
+
+  // sumProperties function
+  {
+    const functionId = "sumProperties";
+    shaderBuilder.addFunction(
+      functionId,
+      `${propertiesStructName} sumProperties(${propertiesStructName} propertiesA, ${propertiesStructName} propertiesB)`,
+      ShaderDestination.FRAGMENT
+    );
+    shaderBuilder.addFunctionLines(functionId, [
+      `${propertiesStructName} ${propertiesFieldName};`,
+    ]);
+    for (let i = 0; i < attributeLength; i++) {
+      const name = names[i];
+      shaderBuilder.addFunctionLines(functionId, [
+        `${propertiesFieldName}.${name} = propertiesA.${name} + propertiesB.${name};`,
+      ]);
+    }
+    shaderBuilder.addFunctionLines(functionId, [
+      `return ${propertiesFieldName};`,
+    ]);
+  }
+
+  // mixProperties
+  {
+    const functionId = "mixProperties";
+    shaderBuilder.addFunction(
+      functionId,
+      `${propertiesStructName} mixProperties(${propertiesStructName} propertiesA, ${propertiesStructName} propertiesB, float mixFactor)`,
+      ShaderDestination.FRAGMENT
+    );
+    shaderBuilder.addFunctionLines(functionId, [
+      `${propertiesStructName} ${propertiesFieldName};`,
+    ]);
+    for (let i = 0; i < attributeLength; i++) {
+      const name = names[i];
+      shaderBuilder.addFunctionLines(functionId, [
+        `${propertiesFieldName}.${name} = mix(propertiesA.${name}, propertiesB.${name}, mixFactor);`,
+      ]);
+    }
+    shaderBuilder.addFunctionLines(functionId, [
+      `return ${propertiesFieldName};`,
+    ]);
+  }
+
+  // copyPropertiesToMetadata
+  {
+    const functionId = "copyPropertiesToMetadata";
+    shaderBuilder.addFunction(
+      functionId,
+      `void copyPropertiesToMetadata(in ${propertiesStructName} ${propertiesFieldName}, inout ${metadataStructName} ${metadataFieldName})`,
+      ShaderDestination.FRAGMENT
+    );
+    for (let i = 0; i < attributeLength; i++) {
+      const name = names[i];
+      shaderBuilder.addFunctionLines(functionId, [
+        `${metadataFieldName}.${name} = ${propertiesFieldName}.${name};`,
+      ]);
+    }
+  }
+
+  // setStatistics function
+  if (hasStatistics) {
+    const functionId = "setStatistics";
+    shaderBuilder.addFunction(
+      functionId,
+      `void setStatistics(inout ${statisticsStructName} ${statisticsFieldName})`,
+      ShaderDestination.FRAGMENT
+    );
+    for (let i = 0; i < attributeLength; i++) {
+      const name = names[i];
+      const type = types[i];
+      const componentCount = MetadataType.getComponentCount(type);
+      for (let j = 0; j < componentCount; j++) {
+        const glslField = getGlslField(type, j);
+        const minimumValue = minimumValues[i][j];
+        const maximumValue = maximumValues[i][j];
+        shaderBuilder.addFunctionLines(functionId, [
+          `${statisticsFieldName}.${name}.min${glslField} = ${getGlslNumberAsFloat(
+            minimumValue
+          )};`,
+          `${statisticsFieldName}.${name}.max${glslField} = ${getGlslNumberAsFloat(
+            maximumValue
+          )};`,
+        ]);
+      }
+    }
+  }
+
+  // getPropertiesFrom2DMegatextureAtUv
+  {
+    const functionId = "getPropertiesFrom2DMegatextureAtUv";
+    shaderBuilder.addFunction(
+      functionId,
+      `${propertiesStructName} getPropertiesFrom2DMegatextureAtUv(vec2 texcoord)`,
+      ShaderDestination.FRAGMENT
+    );
+    shaderBuilder.addFunctionLines(functionId, [
+      `${propertiesStructName} ${propertiesFieldName};`,
+    ]);
+    for (let i = 0; i < attributeLength; i++) {
+      const name = names[i];
+      const type = types[i];
+      const componentType = componentTypes[i];
+      const glslTextureSwizzle = getGlslTextureSwizzle(type, componentType);
+      shaderBuilder.addFunctionLines(functionId, [
+        `properties.${name} = texture2D(u_megatextureTextures[${i}], texcoord)${glslTextureSwizzle};`,
+      ]);
+    }
+    shaderBuilder.addFunctionLines(functionId, [
+      `return ${propertiesFieldName};`,
+    ]);
+  }
+
+  // Compile shaders
   const shaderBuilderPick = shaderBuilder.clone();
   shaderBuilderPick.addDefine("PICKING", undefined, ShaderDestination.FRAGMENT);
-
   const shaderProgram = shaderBuilder.buildShaderProgram(context);
   const shaderProgramPick = shaderBuilderPick.buildShaderProgram(context);
-
   const renderState = RenderState.fromCache({
     cull: {
       enabled: true,
@@ -2142,6 +2257,7 @@ function buildDrawCommands(that, context) {
     blending: BlendingState.ALPHA_BLEND,
   });
 
+  // Create the draw commands
   const uniformMap = that._uniformMap;
   const viewportQuadVertexArray = context.getViewportQuadVertexArray();
   const drawCommand = new DrawCommand({
@@ -2155,6 +2271,7 @@ function buildDrawCommands(that, context) {
     owner: this,
   });
 
+  // Create the pick draw command
   const drawCommandPick = DrawCommand.shallowClone(
     drawCommand,
     new DrawCommand()
@@ -2176,6 +2293,8 @@ function buildDrawCommands(that, context) {
 
   that._drawCommand = drawCommand;
   that._drawCommandPick = drawCommandPick;
+
+  // console.log(drawCommand.shaderProgram._fragmentShaderText);
 }
 
 /**
@@ -2237,20 +2356,6 @@ VoxelPrimitive.prototype.destroy = function () {
   // TODO: I assume the custom shader does not have to be destroyed
 
   return destroyObject(this);
-};
-
-VoxelPrimitive.prototype.queryMetadataAtCartographic = function (
-  cartographic,
-  metadata
-) {
-  return this._traversal.getMetadataAtCartographic(cartographic, metadata);
-};
-
-VoxelPrimitive.prototype.queryMetadataAtCartesian = function (
-  cartesian,
-  metadata
-) {
-  return this._traversal.getMetadataAtWorldCartesian(cartesian, metadata);
 };
 
 const corners = new Array(
