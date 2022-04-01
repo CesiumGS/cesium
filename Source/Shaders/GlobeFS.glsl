@@ -449,14 +449,14 @@ void main()
 
         // When the camera is far away (camera distance > nightFadeOutDistance), the scattering is computed in the fragment shader.
         // Otherwise, the scattering is computed in the vertex shader.
-        #ifndef PER_FRAGMENT_GROUND_ATMOSPHERE
+        #ifdef PER_FRAGMENT_GROUND_ATMOSPHERE
+            positionWC = computeEllipsoidPosition();
+            atmosphereColor = computeGroundAtmosphereFromSpace(positionWC, dynamicLighting, atmosphereLightDirection);
+        #else
             atmosphereColor.rayleigh = v_atmosphereRayleighColor;
             atmosphereColor.mie = v_atmosphereMieColor;
             atmosphereColor.opacity = v_atmosphereOpacity;
-            positionWC = v_positionMC;            
-        #else
-            positionWC = computeEllipsoidPosition();
-            atmosphereColor = computeGroundAtmosphereFromSpace(positionWC, dynamicLighting, atmosphereLightDirection);
+            positionWC = v_positionMC;
         #endif
 
         atmosphereColor.rayleigh = colorCorrect(atmosphereColor.rayleigh);

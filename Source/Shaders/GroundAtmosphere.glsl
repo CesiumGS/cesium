@@ -16,10 +16,11 @@ float MIE_HEIGHT_LIMIT = 3.2e3;
 vec3 BETA_RAYLEIGH = vec3(5.8e-6, 13.5e-6, 33.1e-6); // Better constants from Precomputed Atmospheric Scattering (https://hal.inria.fr/inria-00288758/document)
 vec3 BETA_MIE = vec3(21e-6);
 
-vec3 LIGHT_INTENSITY = vec3(14.0);
+vec3 LIGHT_INTENSITY = vec3(15.0);
 
 void computeScattering(
     vec3 start,
+    vec3 pos,
     vec3 direction,
     float maxDistance,
     vec3 lightDirection,
@@ -32,7 +33,7 @@ void computeScattering(
 
     vec2 HEIGHT_SCALE = vec2(RAYLEIGH_HEIGHT_LIMIT, MIE_HEIGHT_LIMIT);
 
-    float planetRadius = (length(czm_viewerPositionWC) - czm_eyeHeight) - (6378137.0 - 6356752.3142451);
+    float planetRadius = length(pos);
     float AtmosphereRadius = planetRadius + ATMOSPHERE_THICKNESS;
 
     // Initialize the default scattering amounts to 0.
@@ -155,6 +156,7 @@ AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos, bool dynamicLightin
 
     computeScattering(
         czm_viewerPositionWC,
+        v3Pos,
         direction,
         dist,
         lightDirection,

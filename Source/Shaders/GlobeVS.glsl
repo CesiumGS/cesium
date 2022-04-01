@@ -195,11 +195,12 @@ void main()
 
     gl_Position = getPosition(position, height, textureCoordinates);
 
+    v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
+    v_positionMC = position3DWC;  // position in model coordinates
+
     v_textureCoordinates = vec3(textureCoordinates, webMercatorT);
 
 #if defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL) || defined(APPLY_MATERIAL)
-    v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
-    v_positionMC = position3DWC;  // position in model coordinates
     vec3 normalMC = czm_octDecode(encodedNormal);
 
 #if defined(EXAGGERATION) && defined(GEODETIC_SURFACE_NORMALS)
@@ -210,9 +211,6 @@ void main()
 
     v_normalMC = normalMC;
     v_normalEC = czm_normal3D * v_normalMC;
-#elif defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING) || defined(GENERATE_POSITION) || defined(HDR)
-    v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
-    v_positionMC = position3DWC;  // position in model coordinates
 #endif
 
 #if defined(FOG) || (defined(GROUND_ATMOSPHERE) && !defined(PER_FRAGMENT_GROUND_ATMOSPHERE))
