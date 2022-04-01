@@ -266,6 +266,10 @@ describe(
     });
 
     it("renders terrain with enableLighting", function () {
+      const renderOptions = {
+        scene: scene,
+        time: new JulianDate(2557522.0),
+      };
       globe.enableLighting = true;
 
       const layerCollection = globe.imageryLayers;
@@ -307,10 +311,10 @@ describe(
         });
 
         return updateUntilDone(globe).then(function () {
-          expect(scene).notToRender([0, 0, 0, 255]);
+          expect(renderOptions).notToRender([0, 0, 0, 255]);
 
           scene.globe.show = false;
-          expect(scene).toRender([0, 0, 0, 255]);
+          expect(renderOptions).toRender([0, 0, 0, 255]);
         });
       });
     });
@@ -321,8 +325,6 @@ describe(
         time: new JulianDate(2557522.0),
       };
       globe.enableLighting = true;
-      globe.dynamicAtmosphereLighting = true;
-      globe.dynamicAtmosphereLightingFromSun = true;
 
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
@@ -366,12 +368,10 @@ describe(
           let initialRgba;
           expect(renderOptions).toRenderAndCall(function (rgba) {
             initialRgba = rgba;
-            expect(initialRgba).not.toEqual([0, 0, 0, 255]);
+            expect(renderOptions).notToRender([0, 0, 0, 255]);
           });
           globe.lambertDiffuseMultiplier = 10.0;
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            expect(rgba).not.toEqual(initialRgba);
-          });
+          expect(renderOptions).notToRender(initialRgba);
         });
       });
     });
