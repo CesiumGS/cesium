@@ -316,6 +316,8 @@ describe(
 
     it("renders terrain with lambertDiffuseMultiplier", function () {
       globe.enableLighting = true;
+      globe.dynamicAtmosphereLighting = true;
+      globe.dynamicAtmosphereLightingFromSun = true;
 
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
