@@ -1005,27 +1005,23 @@ VoxelPrimitive.prototype.update = function (frameState) {
 
     const dimensions = provider.dimensions;
     const shapeType = provider.shape;
-    const ShapeConstructor = VoxelShapeType.toShapeConstructor(shapeType);
-    const minBounds = defaultValue(
-      provider.minBounds,
-      ShapeConstructor.DefaultMinBounds
-    );
-    const maxBounds = defaultValue(
-      provider.maxBounds,
-      ShapeConstructor.DefaultMaxBounds
-    );
+    const defaultMinBounds = VoxelShapeType.getMinBounds(shapeType);
+    const defaultMaxBounds = VoxelShapeType.getMaxBounds(shapeType);
+    const minBounds = defaultValue(provider.minBounds, defaultMinBounds);
+    const maxBounds = defaultValue(provider.maxBounds, defaultMaxBounds);
     const minimumValues = provider.minimumValues;
     const maximumValues = provider.maximumValues;
 
+    const ShapeConstructor = VoxelShapeType.getShapeConstructor(shapeType);
     this._shape = new ShapeConstructor();
     this._minBounds = Cartesian3.clone(minBounds, this._minBounds);
     this._maxBounds = Cartesian3.clone(maxBounds, this._maxBounds);
     this._minClippingBounds = Cartesian3.clone(
-      ShapeConstructor.DefaultMinBounds,
+      defaultMinBounds,
       this._minClippingBounds
     );
     this._maxClippingBounds = Cartesian3.clone(
-      ShapeConstructor.DefaultMaxBounds,
+      defaultMaxBounds,
       this._maxClippingBounds
     );
     this._paddingBefore = Cartesian3.clone(
@@ -1096,9 +1092,8 @@ VoxelPrimitive.prototype.update = function (frameState) {
     }
 
     if (minBoundsDirty || maxBoundsDirty) {
-      const ShapeConstructor = VoxelShapeType.toShapeConstructor(shapeType);
-      const defaultMinBounds = ShapeConstructor.DefaultMinBounds;
-      const defaultMaxBounds = ShapeConstructor.DefaultMaxBounds;
+      const defaultMinBounds = VoxelShapeType.getMinBounds(shapeType);
+      const defaultMaxBounds = VoxelShapeType.getMaxBounds(shapeType);
       const isDefaultBoundsMinX = minBounds.x === defaultMinBounds.x;
       const isDefaultBoundsMinY = minBounds.y === defaultMinBounds.y;
       const isDefaultBoundsMinZ = minBounds.z === defaultMinBounds.z;
@@ -1435,9 +1430,8 @@ VoxelPrimitive.prototype.update = function (frameState) {
       const maxClipDirty = !Cartesian3.equals(maxClip, maxClipOld);
       const clippingBoundsDirty = minClipDirty || maxClipDirty;
       if (clippingBoundsDirty) {
-        const ShapeConstructor = VoxelShapeType.toShapeConstructor(shapeType);
-        const defaultMinBounds = ShapeConstructor.DefaultMinBounds;
-        const defaultMaxBounds = ShapeConstructor.DefaultMaxBounds;
+        const defaultMinBounds = VoxelShapeType.getMinBounds(shapeType);
+        const defaultMaxBounds = VoxelShapeType.getMaxBounds(shapeType);
         const isDefaultClippingBoundsMinX = minClip.x === defaultMinBounds.x;
         const isDefaultClippingBoundsMinY = minClip.y === defaultMinBounds.y;
         const isDefaultClippingBoundsMinZ = minClip.z === defaultMinBounds.z;
@@ -1780,9 +1774,8 @@ function buildDrawCommands(that, context) {
     ShaderDestination.FRAGMENT
   );
 
-  const ShapeConstructor = VoxelShapeType.toShapeConstructor(shapeType);
-  const defaultMinBounds = ShapeConstructor.DefaultMinBounds;
-  const defaultMaxBounds = ShapeConstructor.DefaultMaxBounds;
+  const defaultMinBounds = VoxelShapeType.getMinBounds(shapeType);
+  const defaultMaxBounds = VoxelShapeType.getMaxBounds(shapeType);
   const isDefaultMinX = minBounds.x === defaultMinBounds.x;
   const isDefaultMinY = minBounds.y === defaultMinBounds.y;
   const isDefaultMinZ = minBounds.z === defaultMinBounds.z;

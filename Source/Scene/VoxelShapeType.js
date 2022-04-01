@@ -8,12 +8,9 @@ import VoxelEllipsoidShape from "./VoxelEllipsoidShape.js";
  * An enum of voxel shapes supported by <code>EXT_primitive_voxels</code>. The shape controls
  * how the voxel grid is mapped to 3D space.
  *
+ * @namespace
  * @enum VoxelShapeType
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
- * @see VoxelShape
- * @see VoxelBoxShape
- * @see VoxelEllipsoidShape
- * @see VoxelCylinderShape
  */
 const VoxelShapeType = {
   /**
@@ -43,8 +40,48 @@ const VoxelShapeType = {
 };
 
 /**
+ * Gets the minimum bounds as defined by <code>EXT_primitive_voxels</code>.
+ * @param {VoxelShapeType} shapeType The voxel shape type.
+ * @returns {Cartesian3} The minimum bounds.
+ */
+VoxelShapeType.getMinBounds = function (shapeType) {
+  switch (shapeType) {
+    case VoxelShapeType.BOX:
+      return VoxelBoxShape.DefaultMinBounds;
+    case VoxelShapeType.ELLIPSOID:
+      return VoxelEllipsoidShape.DefaultMinBounds;
+    case VoxelShapeType.CYLINDER:
+      return VoxelCylinderShape.DefaultMinBounds;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError(`Invalid shape type ${shapeType}`);
+    //>>includeEnd('debug');
+  }
+};
+
+/**
+ * Gets the maximum bounds as defined by <code>EXT_primitive_voxels</code>.
+ * @param {VoxelShapeType} shapeType The voxel shape type.
+ * @returns {Cartesian3} The maximum bounds.
+ */
+VoxelShapeType.getMaxBounds = function (shapeType) {
+  switch (shapeType) {
+    case VoxelShapeType.BOX:
+      return VoxelBoxShape.DefaultMaxBounds;
+    case VoxelShapeType.ELLIPSOID:
+      return VoxelEllipsoidShape.DefaultMaxBounds;
+    case VoxelShapeType.CYLINDER:
+      return VoxelCylinderShape.DefaultMaxBounds;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError(`Invalid shape type ${shapeType}`);
+    //>>includeEnd('debug');
+  }
+};
+
+/**
  * Converts a primitive type to a voxel shape. glTF voxel primitive types are
- * defined in </code>EXT_primitive_voxels</code>.
+ * defined by </code>EXT_primitive_voxels</code>.
  * @param {PrimitiveType} primitiveType The primitive type.
  * @returns {VoxelShapeType} The shape type.
  * @private
@@ -53,10 +90,10 @@ VoxelShapeType.fromPrimitiveType = function (primitiveType) {
   switch (primitiveType) {
     case PrimitiveType.VOXEL_BOX:
       return VoxelShapeType.BOX;
-    case PrimitiveType.VOXEL_CYLINDER:
-      return VoxelShapeType.CYLINDER;
     case PrimitiveType.VOXEL_ELLIPSOID:
       return VoxelShapeType.ELLIPSOID;
+    case PrimitiveType.VOXEL_CYLINDER:
+      return VoxelShapeType.CYLINDER;
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError(`Invalid primitive type ${primitiveType}`);
@@ -72,14 +109,14 @@ VoxelShapeType.fromPrimitiveType = function (primitiveType) {
  * @returns {Function} The shape's constructor.
  * @private
  */
-VoxelShapeType.toShapeConstructor = function (shapeType) {
+VoxelShapeType.getShapeConstructor = function (shapeType) {
   switch (shapeType) {
     case VoxelShapeType.BOX:
       return VoxelBoxShape;
-    case VoxelShapeType.CYLINDER:
-      return VoxelCylinderShape;
     case VoxelShapeType.ELLIPSOID:
       return VoxelEllipsoidShape;
+    case VoxelShapeType.CYLINDER:
+      return VoxelCylinderShape;
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError(`Invalid shape type ${shapeType}`);
