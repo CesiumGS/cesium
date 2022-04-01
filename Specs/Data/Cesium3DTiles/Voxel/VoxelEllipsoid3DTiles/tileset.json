@@ -1,1 +1,65 @@
-{"asset":{"version":"1.1"},"schemaUri":"schema.json","statistics":{"classes":{"voxel":{"properties":{"a":{"min":0.0,"max":1.0}}},"tile":{"count":1}}},"geometricError":0.0,"root":{"geometricError":0.0,"refine":"REPLACE","boundingVolume":{"region":[0.0,0.0,1.0,1.0,-1.0,0.0]},"content":{"uri":"{level}/{x}/{y}/{z}/tile.gltf"},"implicitTiling":{"subdivisionScheme":"OCTREE","subtreeLevels":3,"availableLevels":1,"subtrees":{"uri":"{level}/{x}/{y}/{z}/subtree.bin"}},"transform":[6378137.0,0.0,0.0,0.0,0.0,6378137.0,0.0,0.0,0.0,0.0,6356752.314245179,0.0,0.0,0.0,0.0,1.0]}}
+{
+  "asset": {
+    "version": "1.1"
+  },
+  "schemaUri": "schema.json",
+  "statistics": {
+    "classes": {
+      "voxel": {
+        "properties": {
+          "a": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        }
+      },
+      "tile": {
+        "count": 1
+      }
+    }
+  },
+  "geometricError": 0.0,
+  "root": {
+    "geometricError": 0.0,
+    "refine": "REPLACE",
+    "boundingVolume": {
+      "region": [
+        0.0,
+        0.0,
+        1.0,
+        1.0,
+        -1.0,
+        0.0
+      ]
+    },
+    "content": {
+      "uri": "{level}/{x}/{y}/{z}/tile.gltf"
+    },
+    "implicitTiling": {
+      "subdivisionScheme": "OCTREE",
+      "subtreeLevels": 3,
+      "availableLevels": 1,
+      "subtrees": {
+        "uri": "{level}/{x}/{y}/{z}/subtree.bin"
+      }
+    },
+    "transform": [
+      6378137.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      6378137.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      6356752.314245179,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  }
+}
