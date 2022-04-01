@@ -1,5 +1,42 @@
 # Change Log
 
+### 1.92 - 2022-04-01
+
+##### Breaking Changes :mega:
+
+- Removed `Cesium.when`. Any `Promise` in the Cesium API has changed to the native `Promise` API. Code bases using cesium will likely need updates after this change. See the [upgrade guide](https://community.cesium.com/t/cesiumjs-is-switching-from-when-js-to-native-promises-which-will-be-a-breaking-change-in-1-92/17213) for instructions on how to update your code base to be compliant with native promises.
+- `ArcGisMapServerImageryProvider.readyPromise` will not reject if there is a failure unless the request cannot be retried.
+- `SingleTileImageryProvider.readyPromise` will not reject if there is a failure unless the request cannot be retried.
+- Removed links to SpecRunner.html and related Jasmine files for running unit tests in browsers.
+
+##### Additions :tada:
+
+- Added experimental support for the [3D Tiles 1.1 draft](https://github.com/CesiumGS/3d-tiles/pull/666). [#10189](https://github.com/CesiumGS/cesium/pull/10189)
+- Added support for `EXT_structural_metadata` property attributes in `CustomShader` [#10228](https://github.com/CesiumGS/cesium/pull/10228)
+- Added partial support for `EXT_structural_metadata` property textures in `CustomShader` [#10247](https://github.com/CesiumGS/cesium/pull/10247)
+- Added `minimumPixelSize`, `scale`, and `maximumScale` to `ModelExperimental`. [#10092](https://github.com/CesiumGS/cesium/pull/10092)
+- `Cesium3DTileset` now has a `splitDirection` property, allowing the tileset to only be drawn on the left or right side of the screen. This is useful for visual comparison of tilesets. [#10193](https://github.com/CesiumGS/cesium/pull/10193)
+- Added `lightColor` to `ModelExperimental` [#10207](https://github.com/CesiumGS/cesium/pull/10207)
+- Added image-based lighting to `ModelExperimental`. [#10234](https://github.com/CesiumGS/cesium/pull/10234)
+- Added clipping planes to `ModelExperimental`. [#10250](https://github.com/CesiumGS/cesium/pull/10250)
+- Added `Cartesian2.clamp`, `Cartesian3.clamp`, and `Cartesian4.clamp`. [#10197](https://github.com/CesiumGS/cesium/pull/10197)
+- Added a 'renderable' property to 'Fog' to disable its visual rendering while preserving tiles culling at a distance. [#10186](https://github.com/CesiumGS/cesium/pull/10186)
+- Refactored metadata API so `tileset.metadata` and `content.group.metadata` are more symmetric with `content.metadata` and `tile.metadata`. [#10224](https://github.com/CesiumGS/cesium/pull/10224)
+
+##### Fixes :wrench:
+
+- Fixed `Scene` documentation for `msaaSamples` property. [#10205](https://github.com/CesiumGS/cesium/pull/10205)
+- Fixed a bug where `pnts` tiles would crash when `Cesium.ExperimentalFeatures.enableModelExperimental` was true. [#10183](https://github.com/CesiumGS/cesium/pull/10183)
+- Fixed an issue with Firefox and dimensionless SVG images. [#9191](https://github.com/CesiumGS/cesium/pull/9191)
+- Fixed `ShadowMap` documentation for `options.pointLightRadius` type. [#10195](https://github.com/CesiumGS/cesium/pull/10195)
+- Fixed evaluation of `minimumLevel` on metadataFailure for TileMapServiceImageryProvider. [#10198](https://github.com/CesiumGS/cesium/pull/10198)
+- Fixed a bug where models without normals would render as solid black. Now, such models will use unlit shading. [#10237](https://github.com/CesiumGS/cesium/pull/10237)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `ImagerySplitDirection` and `Scene.imagerySplitPosition` have been deprecated and will be removed in CesiumJS 1.94. Use `SplitDirection` and `Scene.splitPosition` instead.
+- Tilesets and models should now specify image-based lighting parameters in `ImageBasedLighting` instead of as individual options. The individual parameters are deprecated and will be removed in CesiumJS 1.94. [#10226](https://github.com/CesiumGS/cesium/pull/10226)
+
 ### 1.91 - 2022-03-01
 
 ##### Breaking Changes :mega:

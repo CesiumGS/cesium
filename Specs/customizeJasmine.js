@@ -1,4 +1,3 @@
-import { when } from "../Source/Cesium.js";
 import addDefaultMatchers from "./addDefaultMatchers.js";
 import equalsMethodEqualityTester from "./equalsMethodEqualityTester.js";
 
@@ -6,6 +5,8 @@ function customizeJasmine(
   env,
   includedCategory,
   excludedCategory,
+  includedName,
+  excludedName,
   webglValidation,
   webglStub,
   release
@@ -26,6 +27,12 @@ function customizeJasmine(
       return;
     }
 
+    if (includedName && !name.includes(includedName)) {
+      return;
+    } else if (excludedName && name.includes(excludedName)) {
+      return;
+    }
+
     originalDescribe(name, suite, categories);
   };
 
@@ -37,16 +44,14 @@ function customizeJasmine(
     originalIt(
       description,
       function (done) {
-        const result = f();
-        when(
-          result,
-          function () {
+        const result = f(done);
+        Promise.resolve(result)
+          .then(function () {
             done();
-          },
-          function (e) {
+          })
+          .catch(function (e) {
             done.fail(`promise rejected: ${e.toString()}`);
-          }
-        );
+          });
       },
       timeout,
       categories
@@ -57,16 +62,14 @@ function customizeJasmine(
 
   window.beforeEach = function (f) {
     originalBeforeEach(function (done) {
-      const result = f();
-      when(
-        result,
-        function () {
+      const result = f(done);
+      Promise.resolve(result)
+        .then(function () {
           done();
-        },
-        function (e) {
+        })
+        .catch(function (e) {
           done.fail(`promise rejected: ${e.toString()}`);
-        }
-      );
+        });
     });
   };
 
@@ -74,16 +77,14 @@ function customizeJasmine(
 
   window.afterEach = function (f) {
     originalAfterEach(function (done) {
-      const result = f();
-      when(
-        result,
-        function () {
+      const result = f(done);
+      Promise.resolve(result)
+        .then(function () {
           done();
-        },
-        function (e) {
+        })
+        .catch(function (e) {
           done.fail(`promise rejected: ${e.toString()}`);
-        }
-      );
+        });
     });
   };
 
@@ -91,16 +92,14 @@ function customizeJasmine(
 
   window.beforeAll = function (f) {
     originalBeforeAll(function (done) {
-      const result = f();
-      when(
-        result,
-        function () {
+      const result = f(done);
+      Promise.resolve(result)
+        .then(function () {
           done();
-        },
-        function (e) {
+        })
+        .catch(function (e) {
           done.fail(`promise rejected: ${e.toString()}`);
-        }
-      );
+        });
     });
   };
 
@@ -108,16 +107,14 @@ function customizeJasmine(
 
   window.afterAll = function (f) {
     originalAfterAll(function (done) {
-      const result = f();
-      when(
-        result,
-        function () {
+      const result = f(done);
+      Promise.resolve(result)
+        .then(function () {
           done();
-        },
-        function (e) {
+        })
+        .catch(function (e) {
           done.fail(`promise rejected: ${e.toString()}`);
-        }
-      );
+        });
     });
   };
 

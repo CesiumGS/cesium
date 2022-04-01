@@ -37,6 +37,7 @@ import TextureManager from "./TextureManager.js";
  * @typedef {Object} VertexVariableSets
  * @property {VariableSet} attributeSet A set of all unique attributes used in the vertex shader via the <code>vsInput.attributes</code> struct.
  * @property {VariableSet} featureIdSet A set of all unique feature ID sets used in the vertex shader via the <code>vsInput.featureIds</code> struct.
+ * @property {VariableSet} metadataSet A set of all unique metadata properties used in the vertex shader via the <code>vsInput.metadata</code> struct.
  * @private
  */
 
@@ -45,6 +46,7 @@ import TextureManager from "./TextureManager.js";
  * @typedef {Object} FragmentVariableSets
  * @property {VariableSet} attributeSet A set of all unique attributes used in the fragment shader via the <code>fsInput.attributes</code> struct
  * @property {VariableSet} featureIdSet A set of all unique feature ID sets used in the fragment shader via the <code>fsInput.featureIds</code> struct.
+ * @property {VariableSet} metadataSet A set of all unique metadata properties used in the fragment shader via the <code>fsInput.metadata</code> struct.
  * @property {VariableSet} materialSet A set of all material variables such as diffuse, specular or alpha that are used in the fragment shader via the <code>material</code> struct.
  * @private
  */
@@ -212,6 +214,7 @@ export default function CustomShader(options) {
   this.usedVariablesVertex = {
     attributeSet: {},
     featureIdSet: {},
+    metadataSet: {},
   };
   /**
    * A collection of variables used in <code>fragmentShaderText</code>. This
@@ -222,6 +225,7 @@ export default function CustomShader(options) {
   this.usedVariablesFragment = {
     attributeSet: {},
     featureIdSet: {},
+    metadataSet: {},
     materialSet: {},
   };
 
@@ -291,6 +295,7 @@ function getVariables(shaderText, regex, outputSet) {
 function findUsedVariables(customShader) {
   const attributeRegex = /[vf]sInput\.attributes\.(\w+)/g;
   const featureIdRegex = /[vf]sInput\.featureIds\.(\w+)/g;
+  const metadataRegex = /[vf]sInput\.metadata.(\w+)/g;
   let attributeSet;
 
   const vertexShaderText = customShader.vertexShaderText;
@@ -300,6 +305,9 @@ function findUsedVariables(customShader) {
 
     attributeSet = customShader.usedVariablesVertex.featureIdSet;
     getVariables(vertexShaderText, featureIdRegex, attributeSet);
+
+    attributeSet = customShader.usedVariablesVertex.metadataSet;
+    getVariables(vertexShaderText, metadataRegex, attributeSet);
   }
 
   const fragmentShaderText = customShader.fragmentShaderText;
@@ -309,6 +317,9 @@ function findUsedVariables(customShader) {
 
     attributeSet = customShader.usedVariablesFragment.featureIdSet;
     getVariables(fragmentShaderText, featureIdRegex, attributeSet);
+
+    attributeSet = customShader.usedVariablesFragment.metadataSet;
+    getVariables(fragmentShaderText, metadataRegex, attributeSet);
 
     const materialRegex = /material\.(\w+)/g;
     const materialSet = customShader.usedVariablesFragment.materialSet;

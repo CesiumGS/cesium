@@ -10,12 +10,12 @@ import TilesetMetadata from "./TilesetMetadata.js";
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles.
  * </p>
  * <p>
- * This object represents the <code>3DTILES_metadata</code> object which
- * contains the schema ({@link MetadataSchema}), tileset metadata ({@link TilesetMetadata}), group metadata (dictionary of {@link GroupMetadata}), and metadata statistics (dictionary)
+ * This object represents the tileset JSON (3D Tiles 1.1) or the <code>3DTILES_metadata</code> object that contains
+ * the schema ({@link MetadataSchema}), tileset metadata ({@link TilesetMetadata}), group metadata (dictionary of {@link GroupMetadata}), and metadata statistics (dictionary)
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {String} options.extension The extension JSON object.
+ * @param {Object} options.metadataJson Either the tileset JSON (3D Tiles 1.1) or the <code>3DTILES_metadata</code> extension object that contains the tileset metadata.
  * @param {MetadataSchema} options.schema The parsed schema.
  *
  * @alias Cesium3DTilesetMetadata
@@ -25,45 +25,70 @@ import TilesetMetadata from "./TilesetMetadata.js";
  */
 function Cesium3DTilesetMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const extension = options.extension;
+  const metadataJson = options.metadataJson;
 
   // The calling code is responsible for loading the schema.
   // This keeps metadata parsing synchronous.
   const schema = options.schema;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.extension", extension);
+  Check.typeOf.object("options.metadataJson", metadataJson);
   Check.typeOf.object("options.schema", schema);
   //>>includeEnd('debug');
 
-  const groups = {};
-  if (defined(extension.groups)) {
-    for (const groupId in extension.groups) {
-      if (extension.groups.hasOwnProperty(groupId)) {
-        const group = extension.groups[groupId];
-        groups[groupId] = new GroupMetadata({
-          id: groupId,
-          group: extension.groups[groupId],
+  // An older schema stored the tileset metadata in the "tileset" property.
+  const metadata = defaultValue(metadataJson.metadata, metadataJson.tileset);
+
+  let tileset;
+  if (defined(metadata)) {
+    tileset = new TilesetMetadata({
+      tileset: metadata,
+      class: schema.classes[metadata.class],
+    });
+  }
+
+  let groupIds = [];
+  const groups = [];
+  const groupsJson = metadataJson.groups;
+  if (Array.isArray(groupsJson)) {
+    const length = groupsJson.length;
+    for (let i = 0; i < length; i++) {
+      const group = groupsJson[i];
+      groups.push(
+        new GroupMetadata({
+          group: group,
           class: schema.classes[group.class],
-        });
+        })
+      );
+    }
+  } else if (defined(groupsJson)) {
+    // An older version of group metadata stored groups in a dictionary
+    // instead of an array.
+    groupIds = Object.keys(groupsJson).sort();
+    const length = groupIds.length;
+    for (let i = 0; i < length; i++) {
+      const groupId = groupIds[i];
+      if (groupsJson.hasOwnProperty(groupId)) {
+        const group = groupsJson[groupId];
+        groups.push(
+          new GroupMetadata({
+            id: groupId,
+            group: groupsJson[groupId],
+            class: schema.classes[group.class],
+          })
+        );
       }
     }
   }
 
-  let tileset;
-  if (defined(extension.tileset)) {
-    tileset = new TilesetMetadata({
-      tileset: extension.tileset,
-      class: schema.classes[extension.tileset.class],
-    });
-  }
-
   this._schema = schema;
   this._groups = groups;
+  this._groupIds = groupIds;
   this._tileset = tileset;
-  this._statistics = extension.statistics;
-  this._extras = extension.extras;
-  this._extensions = extension.extensions;
+
+  this._statistics = metadataJson.statistics;
+  this._extras = metadataJson.extras;
+  this._extensions = metadataJson.extensions;
 }
 
 Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
@@ -85,13 +110,28 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * Metadata about groups of content.
    *
    * @memberof Cesium3DTilesetMetadata.prototype
-   * @type {Object.<String, GroupMetadata>}
+   * @type {GroupMetadata[]}
    * @readonly
    * @private
    */
   groups: {
     get: function () {
       return this._groups;
+    },
+  },
+
+  /**
+   * The IDs of the group metadata in the corresponding groups dictionary.
+   * Only populated if using the legacy schema.
+   *
+   * @memberof Cesium3DTilesetMetadata.prototype
+   * @type {String[]}
+   * @readonly
+   * @private
+   */
+  groupIds: {
+    get: function () {
+      return this._groupIds;
     },
   },
 

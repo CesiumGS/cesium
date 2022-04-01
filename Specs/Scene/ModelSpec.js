@@ -1,4 +1,4 @@
-import { Cartesian2 } from "../../Source/Cesium.js";
+import { Cartesian2, ImageBasedLighting } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Cartesian4 } from "../../Source/Cesium.js";
 import { CesiumTerrainProvider } from "../../Source/Cesium.js";
@@ -33,9 +33,9 @@ import { HeightReference } from "../../Source/Cesium.js";
 import { Model } from "../../Source/Cesium.js";
 import { ModelAnimationLoop } from "../../Source/Cesium.js";
 import { DepthFunction } from "../../Source/Cesium.js";
+import { RuntimeError } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 import ModelOutlineLoader from "../../Source/Scene/ModelOutlineLoader.js";
 
 describe(
@@ -194,7 +194,7 @@ describe(
       );
       modelPromises.push(FeatureDetection.supportsWebP.initialize());
 
-      return when.all(modelPromises);
+      return Promise.all(modelPromises);
     });
 
     afterAll(function () {
@@ -251,8 +251,8 @@ describe(
         .then(function () {
           return model;
         })
-        .otherwise(function () {
-          return when.reject(model);
+        .catch(function () {
+          return Promise.reject(model);
         });
     }
 
@@ -546,7 +546,7 @@ describe(
     });
 
     it("renders in 2D over the IDL", function () {
-      return when(loadModel(texturedBoxUrl)).then(function (model) {
+      return Promise.resolve(loadModel(texturedBoxUrl)).then(function (model) {
         model.modelMatrix = Transforms.eastNorthUpToFixedFrame(
           Cartesian3.fromDegrees(180.0, 0.0, 100.0)
         );
@@ -738,7 +738,7 @@ describe(
           .then(function (model) {
             fail("should not resolve");
           })
-          .otherwise(function (error) {
+          .catch(function (error) {
             expect(model.ready).toEqual(false);
             primitives.remove(model);
           });
@@ -858,106 +858,7 @@ describe(
       texturedBoxModel.distanceDisplayCondition = undefined;
     });
 
-    it("renders with spherical harmonics", function () {
-      if (!scene.highDynamicRangeSupported) {
-        return;
-      }
-
-      return loadModel(boomBoxUrl).then(function (m) {
-        m.scale = 20.0; // Source model is very small, so scale up a bit
-
-        const L00 = new Cartesian3(
-          0.692622075009195,
-          0.4543516001819,
-          0.36910172299235
-        ); // L00, irradiance, pre-scaled base
-        const L1_1 = new Cartesian3(
-          0.289407068366422,
-          0.16789310162658,
-          0.106174907004792
-        ); // L1-1, irradiance, pre-scaled base
-        const L10 = new Cartesian3(
-          -0.591502034778913,
-          -0.28152432317119,
-          0.124647554708491
-        ); // L10, irradiance, pre-scaled base
-        const L11 = new Cartesian3(
-          0.34945458117126,
-          0.163273486841657,
-          -0.03095643545207
-        ); // L11, irradiance, pre-scaled base
-        const L2_2 = new Cartesian3(
-          0.22171176447426,
-          0.11771991868122,
-          0.031381053430064
-        ); // L2-2, irradiance, pre-scaled base
-        const L2_1 = new Cartesian3(
-          -0.348955284677868,
-          -0.187256994042823,
-          -0.026299717727617
-        ); // L2-1, irradiance, pre-scaled base
-        const L20 = new Cartesian3(
-          0.119982671127227,
-          0.076784552175028,
-          0.055517838847755
-        ); // L20, irradiance, pre-scaled base
-        const L21 = new Cartesian3(
-          -0.545546043202299,
-          -0.279787444030397,
-          -0.086854000285261
-        ); // L21, irradiance, pre-scaled base
-        const L22 = new Cartesian3(
-          0.160417569726332,
-          0.120896423762313,
-          0.121102528320197
-        ); // L22, irradiance, pre-scaled base
-        m.sphericalHarmonicCoefficients = [
-          L00,
-          L1_1,
-          L10,
-          L11,
-          L2_2,
-          L2_1,
-          L20,
-          L21,
-          L22,
-        ];
-
-        scene.highDynamicRange = true;
-        verifyRender(m);
-        primitives.remove(m);
-        scene.highDynamicRange = false;
-      });
-    });
-
-    it("renders with specular environment map", function () {
-      if (!scene.highDynamicRangeSupported) {
-        return;
-      }
-
-      return loadModel(boomBoxUrl).then(function (m) {
-        m.scale = 20.0; // Source model is very small, so scale up a bit
-        m.specularEnvironmentMaps =
-          "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2";
-
-        return pollToPromise(function () {
-          scene.highDynamicRange = true;
-          scene.render();
-          scene.highDynamicRange = false;
-          return (
-            defined(m._specularEnvironmentMapAtlas) &&
-            m._specularEnvironmentMapAtlas.ready
-          );
-        }).then(function () {
-          scene.highDynamicRange = true;
-          verifyRender(m);
-          primitives.remove(m);
-          scene.highDynamicRange = false;
-        });
-      });
-    });
-
-    it("distanceDisplayCondition throws when ner >= far", function () {
+    it("distanceDisplayCondition throws when near >= far", function () {
       expect(function () {
         texturedBoxModel.distanceDisplayCondition = new DistanceDisplayCondition(
           100.0,
@@ -1262,10 +1163,21 @@ describe(
           })
         );
 
-        expect(function () {
+        return pollToPromise(function () {
           scene.renderForSpecs();
-        }).toThrowRuntimeError();
-        primitives.remove(model);
+          return model.ready;
+        })
+          .then(function () {
+            fail();
+          })
+          .catch(function (e) {
+            expect(e.message).toBe(
+              "Unsupported glTF Extension: NOT_supported_extension"
+            );
+          })
+          .finally(function () {
+            primitives.remove(model);
+          });
       });
     });
 
@@ -1278,10 +1190,21 @@ describe(
           })
         );
 
-        expect(function () {
+        return pollToPromise(function () {
           scene.renderForSpecs();
-        }).toThrowRuntimeError();
-        primitives.remove(model);
+          return model.ready;
+        })
+          .then(function () {
+            fail();
+          })
+          .catch(function (e) {
+            expect(e.message).toBe(
+              "Unsupported glTF Extension: CESIUM_binary_glTF"
+            );
+          })
+          .finally(function () {
+            primitives.remove(model);
+          });
       });
     });
 
@@ -1296,11 +1219,22 @@ describe(
           })
         );
 
-        expect(function () {
+        return pollToPromise(function () {
           scene.renderForSpecs();
-        }).toThrowRuntimeError();
-        primitives.remove(model);
-        FeatureDetection.supportsWebP._result = supportsWebP;
+          return model.ready;
+        })
+          .then(function () {
+            fail();
+          })
+          .catch(function (e) {
+            expect(e.message).toBe(
+              "Loaded model requires WebP but browser does not support it."
+            );
+          })
+          .finally(function () {
+            primitives.remove(model);
+            FeatureDetection.supportsWebP._result = supportsWebP;
+          });
       });
     });
 
@@ -1466,7 +1400,7 @@ describe(
         return new Model({
           gltf: arrayBuffer,
         });
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("Throws because of an invalid Binary glTF header - version", function () {
@@ -1481,7 +1415,7 @@ describe(
         return new Model({
           gltf: arrayBuffer,
         });
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
     });
 
     it("renders a model with the CESIUM_RTC extension", function () {
@@ -2564,7 +2498,7 @@ describe(
 
       expect(gltfCache[key].count).toEqual(2);
 
-      return when.all([promise, promise2], function (models) {
+      return Promise.all([promise, promise2]).then(function (models) {
         const m = models[0];
         const m2 = models[1];
 
@@ -2607,30 +2541,33 @@ describe(
       expect(gltfCache[key].count).toEqual(1);
       expect(gltfCache[key].ready).toEqual(false);
 
-      return promise.then(function (m) {
-        // Render scene to progressively load the model
-        scene.renderForSpecs();
+      let m;
+      return promise
+        .then(function (model) {
+          // Render scene to progressively load the model
+          scene.renderForSpecs();
 
-        // Cache hit after JSON request completed.
-        let m2;
-        loadModel(boxUrl, {
-          cacheKey: key,
-        }).then(function (model) {
-          m2 = model;
+          m = model;
+
+          // Cache hit after JSON request completed.
+          return loadModel(boxUrl, {
+            cacheKey: key,
+          });
+        })
+        .then(function (model) {
+          const m2 = model;
+          expect(gltfCache[key].ready).toEqual(true);
+          expect(gltfCache[key].count).toEqual(2);
+
+          verifyRender(m);
+          verifyRender(m2);
+
+          primitives.remove(m);
+          expect(gltfCache[key].count).toEqual(1);
+
+          primitives.remove(m2);
+          expect(gltfCache[key]).not.toBeDefined();
         });
-
-        expect(gltfCache[key].ready).toEqual(true);
-        expect(gltfCache[key].count).toEqual(2);
-
-        verifyRender(m);
-        verifyRender(m2);
-
-        primitives.remove(m);
-        expect(gltfCache[key].count).toEqual(1);
-
-        primitives.remove(m2);
-        expect(gltfCache[key]).not.toBeDefined();
-      });
     });
 
     it("Cache with a custom cacheKey the Model Constructor (1/2)", function () {
@@ -2782,32 +2719,40 @@ describe(
     });
 
     it("Loads with incrementallyLoadTextures set to true", function () {
+      let model, loadedColor;
       return loadModelJson(texturedBoxModel.gltf, {
         incrementallyLoadTextures: true,
         show: true,
-      }).then(function (m) {
-        // Get the rendered color of the model before textures are loaded
-        let loadedColor;
+      })
+        .then(function (m) {
+          // Get the rendered color of the model before textures are loaded
+          m.zoomTo();
+          expect(scene).toRenderAndCall(function (rgba) {
+            expect(rgba).not.toEqual([0, 0, 0, 255]);
+            loadedColor = rgba;
+          });
 
-        m.zoomTo();
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual([0, 0, 0, 255]);
-          loadedColor = rgba;
-        });
+          model = m;
 
-        return pollToPromise(
-          function () {
-            // Render scene to progressively load textures
-            scene.renderForSpecs();
-            // Textures have finished loading
-            return m.pendingTextureLoads === 0;
-          },
-          { timeout: 10000 }
-        ).then(function () {
+          // Render at least once to initialize
+          scene.renderForSpecs();
+        })
+        .then(function () {
+          return pollToPromise(
+            function () {
+              // Render scene to progressively load textures
+              scene.renderForSpecs();
+              // Textures have finished loading
+              return model.pendingTextureLoads === 0;
+            },
+            { timeout: 10000 }
+          );
+        })
+        .then(function () {
+          scene.renderForSpecs();
           expect(scene).notToRender(loadedColor);
-          primitives.remove(m);
+          primitives.remove(model);
         });
-      });
     });
 
     it("Loads with incrementallyLoadTextures set to false", function () {
@@ -3239,7 +3184,7 @@ describe(
         .then(function () {
           fail("should not resolve");
         })
-        .otherwise(function (e) {
+        .catch(function (e) {
           expect(e).toBeDefined();
           primitives.remove(model);
           context._elementIndexUint = uint32Supported;
@@ -3367,37 +3312,46 @@ describe(
     });
 
     it("error decoding a draco compressed glTF causes model loading to fail", function () {
-      const decoder = DracoLoader._getDecoderTaskProcessor();
-      spyOn(decoder, "scheduleTask").and.returnValue(
-        when.reject({ message: "my error" })
-      );
-
-      const model = primitives.add(
-        Model.fromGltf({
-          url: dracoCompressedModelUrl,
-          dequantizeInShader: false,
-        })
-      );
-
-      return pollToPromise(
-        function () {
-          scene.renderForSpecs();
-          return model._state === 3; // FAILED
-        },
-        { timeout: 10000 }
-      ).then(function () {
-        model.readyPromise
-          .then(function (e) {
-            fail("should not resolve");
-          })
-          .otherwise(function (e) {
-            expect(e).toBeDefined();
-            expect(e.message).toEqual(
-              "Failed to load model: ./Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf\nmy error"
-            );
-            primitives.remove(model);
-          });
+      let model;
+      const readyPromise = pollToPromise(function () {
+        return DracoLoader._taskProcessorReady;
       });
+      DracoLoader._getDecoderTaskProcessor();
+      return readyPromise
+        .then(function () {
+          const decoder = DracoLoader._getDecoderTaskProcessor();
+          spyOn(decoder, "scheduleTask").and.callFake(function () {
+            return Promise.reject({ message: "my error" });
+          });
+
+          model = primitives.add(
+            Model.fromGltf({
+              url: dracoCompressedModelUrl,
+              dequantizeInShader: false,
+            })
+          );
+
+          return Promise.all([
+            pollToPromise(
+              function () {
+                scene.renderForSpecs();
+                return model._state === 3; // FAILED
+              },
+              { timeout: 10000 }
+            ),
+            model.readyPromise,
+          ]);
+        })
+        .then(function (e) {
+          fail("should not resolve");
+        })
+        .catch(function (e) {
+          expect(e).toBeDefined();
+          expect(e.message).toEqual(
+            "Failed to load model: ./Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf\nmy error"
+          );
+          primitives.remove(model);
+        });
     });
 
     it("loads a draco compressed glTF and dequantizes in the shader", function () {
@@ -3793,7 +3747,34 @@ describe(
       });
     });
 
-    it("renders with imageBaseLightingFactor", function () {
+    it("renders with imageBasedLighting", function () {
+      return loadModel(boxPbrUrl).then(function (model) {
+        model.show = true;
+        model.zoomTo();
+
+        const modelIBL = model.imageBasedLighting;
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+
+          const ibl = new ImageBasedLighting({
+            imageBasedLightingFactor: new Cartesian2(0.0, 0.0),
+          });
+          model.imageBasedLighting = ibl;
+          expect(model.imageBasedLighting !== modelIBL);
+          expect(modelIBL.isDestroyed()).toBe(true);
+
+          expect(scene).notToRender(rgba);
+
+          ibl.imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
+          expect(scene).toRender(rgba);
+
+          ibl.destroy();
+          primitives.remove(model);
+        });
+      });
+    });
+
+    it("renders with imageBasedLightingFactor", function () {
       return loadModel(boxPbrUrl).then(function (model) {
         model.show = true;
         model.zoomTo();
@@ -3803,6 +3784,120 @@ describe(
           expect(scene).notToRender(rgba);
 
           primitives.remove(model);
+        });
+      });
+    });
+
+    it("renders with luminanceAtZenith", function () {
+      return loadModel(boxPbrUrl).then(function (model) {
+        model.show = true;
+        model.zoomTo();
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          model.luminanceAtZenith = 0.0;
+          expect(scene).notToRender(rgba);
+
+          primitives.remove(model);
+        });
+      });
+    });
+
+    it("renders with spherical harmonic coefficients", function () {
+      if (!scene.highDynamicRangeSupported) {
+        return;
+      }
+
+      return loadModel(boomBoxUrl).then(function (m) {
+        m.scale = 20.0; // Source model is very small, so scale up a bit
+
+        const L00 = new Cartesian3(
+          0.692622075009195,
+          0.4543516001819,
+          0.36910172299235
+        ); // L00, irradiance, pre-scaled base
+        const L1_1 = new Cartesian3(
+          0.289407068366422,
+          0.16789310162658,
+          0.106174907004792
+        ); // L1-1, irradiance, pre-scaled base
+        const L10 = new Cartesian3(
+          -0.591502034778913,
+          -0.28152432317119,
+          0.124647554708491
+        ); // L10, irradiance, pre-scaled base
+        const L11 = new Cartesian3(
+          0.34945458117126,
+          0.163273486841657,
+          -0.03095643545207
+        ); // L11, irradiance, pre-scaled base
+        const L2_2 = new Cartesian3(
+          0.22171176447426,
+          0.11771991868122,
+          0.031381053430064
+        ); // L2-2, irradiance, pre-scaled base
+        const L2_1 = new Cartesian3(
+          -0.348955284677868,
+          -0.187256994042823,
+          -0.026299717727617
+        ); // L2-1, irradiance, pre-scaled base
+        const L20 = new Cartesian3(
+          0.119982671127227,
+          0.076784552175028,
+          0.055517838847755
+        ); // L20, irradiance, pre-scaled base
+        const L21 = new Cartesian3(
+          -0.545546043202299,
+          -0.279787444030397,
+          -0.086854000285261
+        ); // L21, irradiance, pre-scaled base
+        const L22 = new Cartesian3(
+          0.160417569726332,
+          0.120896423762313,
+          0.121102528320197
+        ); // L22, irradiance, pre-scaled base
+        m.sphericalHarmonicCoefficients = [
+          L00,
+          L1_1,
+          L10,
+          L11,
+          L2_2,
+          L2_1,
+          L20,
+          L21,
+          L22,
+        ];
+
+        scene.highDynamicRange = true;
+        verifyRender(m);
+        primitives.remove(m);
+        scene.highDynamicRange = false;
+      });
+    });
+
+    it("renders with specular environment map", function () {
+      if (!scene.highDynamicRangeSupported) {
+        return;
+      }
+
+      return loadModel(boomBoxUrl).then(function (m) {
+        m.scale = 20.0; // Source model is very small, so scale up a bit
+        m.specularEnvironmentMaps =
+          "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2";
+
+        const ibl = m.imageBasedLighting;
+        return pollToPromise(function () {
+          scene.highDynamicRange = true;
+          scene.render();
+          scene.highDynamicRange = false;
+          return (
+            defined(ibl.specularEnvironmentMapAtlas) &&
+            ibl.specularEnvironmentMapAtlas.ready
+          );
+        }).then(function () {
+          scene.highDynamicRange = true;
+          verifyRender(m);
+          primitives.remove(m);
+          scene.highDynamicRange = false;
         });
       });
     });
@@ -4246,7 +4341,7 @@ describe(
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           show: true,
-        }).otherwise(function (error) {
+        }).catch(function (error) {
           expect(error.message).toEqual(
             "Height reference is not supported without a scene and globe."
           );
@@ -4276,7 +4371,7 @@ describe(
           position: Cartesian3.fromDegrees(-72.0, 40.0),
           scene: scene,
           show: true,
-        }).otherwise(function (error) {
+        }).catch(function (error) {
           expect(error.message).toEqual(
             "Height reference is not supported without a scene and globe."
           );

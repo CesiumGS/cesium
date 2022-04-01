@@ -1,18 +1,22 @@
 /*global __karma__*/
 import customizeJasmine from "./customizeJasmine.js";
 
-let included = "";
-let excluded = "";
+let includeCategory = "";
+let excludeCategory = "";
+let includeName = "";
+let excludeName = "";
 let webglValidation = false;
 let webglStub = false;
 let release = false;
 
 if (__karma__.config.args) {
-  included = __karma__.config.args[0];
-  excluded = __karma__.config.args[1];
-  webglValidation = __karma__.config.args[2];
-  webglStub = __karma__.config.args[3];
-  release = __karma__.config.args[4];
+  includeCategory = __karma__.config.args[0];
+  excludeCategory = __karma__.config.args[1];
+  includeName = __karma__.config.args[2];
+  excludeName = __karma__.config.args[3];
+  webglValidation = __karma__.config.args[4];
+  webglStub = __karma__.config.args[5];
+  release = __karma__.config.args[6];
 }
 
 if (release) {
@@ -24,8 +28,10 @@ if (release) {
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
 customizeJasmine(
   jasmine.getEnv(),
-  included,
-  excluded,
+  includeCategory,
+  excludeCategory,
+  includeName,
+  excludeName,
   webglValidation,
   webglStub,
   release

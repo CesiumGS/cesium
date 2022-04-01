@@ -130,7 +130,6 @@ const filesToConvertES6 = [
   "!Source/Workers/transferTypedArrayTest.js",
   "!Specs/karma-main.js",
   "!Specs/karma.conf.cjs",
-  "!Specs/spec-main.js",
   "!Specs/SpecList.js",
   "!Specs/TestWorkers/**",
 ];
@@ -277,19 +276,6 @@ gulp.task("build-specs", function buildSpecs() {
           file: "Build/Specs/Specs.js",
           format: "iife",
         });
-      })
-      .then(function () {
-        return rollup
-          .rollup({
-            input: "Specs/spec-main.js",
-            plugins: [removePragmas, externalCesium],
-          })
-          .then(function (bundle) {
-            return bundle.write({
-              file: "Build/Specs/spec-main.js",
-              format: "iife",
-            });
-          });
       })
       .then(function () {
         return rollup
@@ -936,7 +922,15 @@ gulp.task("coverage", function (done) {
       },
       client: {
         captureConsole: verbose,
-        args: [undefined, undefined, undefined, webglStub, undefined],
+        args: [
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          webglStub,
+          undefined,
+        ],
       },
     },
     function (e) {
@@ -971,6 +965,9 @@ gulp.task("test", function (done) {
   const release = argv.release ? argv.release : false;
   const failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
   const suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
+  const debug = argv.debug ? false : true;
+  const includeName = argv.includeName ? argv.includeName : "";
+  const excludeName = argv.excludeName ? argv.excludeName : "";
 
   let browsers = ["Chrome"];
   if (argv.browsers) {
@@ -1006,6 +1003,7 @@ gulp.task("test", function (done) {
   const karma = new Karma.Server(
     {
       configFile: karmaConfigFile,
+      singleRun: debug,
       browsers: browsers,
       specReporter: {
         suppressErrorSummary: false,
@@ -1023,6 +1021,8 @@ gulp.task("test", function (done) {
         args: [
           includeCategory,
           excludeCategory,
+          includeName,
+          excludeName,
           webglValidation,
           webglStub,
           release,
@@ -1747,20 +1747,13 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
 }
 
 function createJsHintOptions() {
-  const primary = JSON.parse(
-    fs.readFileSync(path.join("Apps", ".jshintrc"), "utf8")
-  );
-  const gallery = JSON.parse(
+  const jshintrc = JSON.parse(
     fs.readFileSync(path.join("Apps", "Sandcastle", ".jshintrc"), "utf8")
   );
-  primary.jasmine = false;
-  primary.predef = gallery.predef;
-  primary.unused = gallery.unused;
-  primary.esversion = gallery.esversion;
 
   const contents = `\
 // This file is automatically rebuilt by the Cesium build process.\n\
-const sandcastleJsHintOptions = ${JSON.stringify(primary, null, 4)};\n`;
+const sandcastleJsHintOptions = ${JSON.stringify(jshintrc, null, 4)};\n`;
 
   fs.writeFileSync(
     path.join("Apps", "Sandcastle", "jsHintOptions.js"),

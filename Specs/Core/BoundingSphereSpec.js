@@ -1029,7 +1029,7 @@ describe("Core/BoundingSphere", function () {
     // account for this possibility.
     distanceFromCenter -= CesiumMath.EPSILON9;
 
-    expect(distanceFromCenter).toBeLessThanOrEqualTo(boundingSphere.radius);
+    expect(distanceFromCenter).toBeLessThanOrEqual(boundingSphere.radius);
   }
 
   it("fromRectangleWithHeights2D includes specified min and max heights", function () {

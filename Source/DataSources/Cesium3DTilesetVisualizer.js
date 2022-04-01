@@ -241,7 +241,7 @@ function removeTileset(visualizer, entity, tilesetHash, primitives) {
 }
 
 function checkLoad(primitive, entity, tilesetHash) {
-  primitive.readyPromise.otherwise(function (error) {
+  primitive.readyPromise.catch(function (error) {
     console.error(error);
     tilesetHash[entity.id].loadFail = true;
   });

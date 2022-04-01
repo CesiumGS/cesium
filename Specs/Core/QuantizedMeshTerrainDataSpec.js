@@ -6,7 +6,6 @@ import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { QuantizedMeshTerrainData } from "../../Source/Cesium.js";
 import { TerrainData } from "../../Source/Cesium.js";
 import { TerrainMesh } from "../../Source/Cesium.js";
-import { when } from "../../Source/Cesium.js";
 
 describe("Core/QuantizedMeshTerrainData", function () {
   it("conforms to TerrainData interface", function () {
@@ -101,7 +100,7 @@ describe("Core/QuantizedMeshTerrainData", function () {
 
       const tilingScheme = new GeographicTilingScheme();
 
-      return when(
+      return Promise.resolve(
         data.createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
       )
         .then(function () {
@@ -109,7 +108,7 @@ describe("Core/QuantizedMeshTerrainData", function () {
           const sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
           const nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
           const nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 1, 1);
-          return when.join(swPromise, sePromise, nwPromise, nePromise);
+          return Promise.all([swPromise, sePromise, nwPromise, nePromise]);
         })
         .then(function (upsampleResults) {
           expect(upsampleResults.length).toBe(4);
@@ -197,7 +196,7 @@ describe("Core/QuantizedMeshTerrainData", function () {
 
       const tilingScheme = new GeographicTilingScheme();
 
-      return when(
+      return Promise.resolve(
         data.createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
       )
         .then(function () {
@@ -205,7 +204,7 @@ describe("Core/QuantizedMeshTerrainData", function () {
           const sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
           const nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
           const nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 1, 1);
-          return when.join(swPromise, sePromise, nwPromise, nePromise);
+          return Promise.all([swPromise, sePromise, nwPromise, nePromise]);
         })
         .then(function (upsampleResults) {
           expect(upsampleResults.length).toBe(4);
@@ -266,7 +265,7 @@ describe("Core/QuantizedMeshTerrainData", function () {
       });
 
       const tilingScheme = new GeographicTilingScheme();
-      return when(
+      return Promise.resolve(
         data.createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
       )
         .then(function () {
@@ -377,13 +376,13 @@ describe("Core/QuantizedMeshTerrainData", function () {
       });
 
       const tilingScheme = new GeographicTilingScheme();
-      return when(
+      return Promise.resolve(
         data.createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 })
       )
         .then(function () {
           const nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
           const nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
-          return when.join(nwPromise, nePromise);
+          return Promise.all([nwPromise, nePromise]);
         })
         .then(function (upsampleResults) {
           expect(upsampleResults.length).toBe(2);
@@ -628,7 +627,7 @@ describe("Core/QuantizedMeshTerrainData", function () {
         }
       }
       expect(promises.length).toBe(TerrainData.maximumAsynchronousTasks);
-      return when.all(promises);
+      return Promise.all(promises);
     });
 
     it("disables throttling for asynchronous tasks", function () {
@@ -649,7 +648,7 @@ describe("Core/QuantizedMeshTerrainData", function () {
         }
       }
       expect(promises.length).toBe(taskCount);
-      return when.all(promises);
+      return Promise.all(promises);
     });
   });
 

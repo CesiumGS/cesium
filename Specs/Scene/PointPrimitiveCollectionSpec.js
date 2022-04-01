@@ -937,7 +937,7 @@ describe(
         expected.center,
         CesiumMath.EPSILON8
       );
-      expect(actual.radius).toBeGreaterThanOrEqualTo(expected.radius);
+      expect(actual.radius).toBeGreaterThanOrEqual(expected.radius);
     });
 
     it("computes bounding sphere in 2D", function () {

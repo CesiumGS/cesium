@@ -137,11 +137,10 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       url: "made/up/osm/server/",
     });
 
-    expect(provider.url).toContain("made/up/osm/server/");
-
     return pollToPromise(function () {
       return provider.ready;
     }).then(function () {
+      expect(provider.url).toContain("made/up/osm/server/");
       expect(provider.tileWidth).toEqual(256);
       expect(provider.tileHeight).toEqual(256);
       expect(provider.maximumLevel).toBeUndefined();
@@ -174,7 +173,9 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
     const provider = new OpenStreetMapImageryProvider({
       url: "made/up/osm/server",
     });
-    expect(provider.credit).toBeDefined();
+    return provider.readyPromise.then(function () {
+      expect(provider.credit).toBeDefined();
+    });
   });
 
   it("turns the supplied credit into a logo", function () {
@@ -182,7 +183,9 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       url: "made/up/osm/server",
       credit: "Thanks to our awesome made up source of this imagery!",
     });
-    expect(providerWithCredit.credit).toBeDefined();
+    return providerWithCredit.readyPromise.then(function () {
+      expect(providerWithCredit.credit).toBeDefined();
+    });
   });
 
   it("rectangle passed to constructor does not affect tile numbering", function () {
@@ -244,7 +247,9 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       url: "made/up/osm/server",
       maximumLevel: 5,
     });
-    expect(provider.maximumLevel).toEqual(5);
+    return provider.readyPromise.then(function () {
+      expect(provider.maximumLevel).toEqual(5);
+    });
   });
 
   it("uses minimumLevel passed to constructor", function () {
@@ -252,7 +257,9 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       url: "made/up/osm/server",
       minimumLevel: 1,
     });
-    expect(provider.minimumLevel).toEqual(1);
+    return provider.readyPromise.then(function () {
+      expect(provider.minimumLevel).toEqual(1);
+    });
   });
 
   it("raises error event when image cannot be loaded", function () {

@@ -1,4 +1,3 @@
-import when from "../ThirdParty/when.js";
 import Cartesian2 from "./Cartesian2.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
@@ -24,7 +23,7 @@ const scratchCartesian2 = new Cartesian2();
  *     Cesium.Cartographic.fromDegrees(87.0, 28.0)
  * ];
  * const promise = Cesium.sampleTerrainMostDetailed(terrainProvider, positions);
- * Cesium.when(promise, function(updatedPositions) {
+ * Promise.resolve(promise).then(function(updatedPositions) {
  *     // positions[0].height and positions[1].height have been updated.
  *     // updatedPositions is just a reference to positions.
  * });
@@ -84,10 +83,9 @@ function sampleTerrainMostDetailed(terrainProvider, positions) {
       atLevel.push(position);
     }
 
-    return when
-      .all(promises)
+    return Promise.all(promises)
       .then(function () {
-        return when.all(
+        return Promise.all(
           byLevel.map(function (positionsAtLevel, index) {
             if (defined(positionsAtLevel)) {
               return sampleTerrain(terrainProvider, index, positionsAtLevel);

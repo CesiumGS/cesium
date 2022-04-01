@@ -1,6 +1,10 @@
 import {
+  Cartesian2,
   Cesium3DTileStyle,
+  ClippingPlane,
+  ClippingPlaneCollection,
   FeatureDetection,
+  ImageBasedLighting,
   JulianDate,
   defaultValue,
   Matrix4,
@@ -11,7 +15,6 @@ import {
   Cartesian3,
   defined,
   HeadingPitchRange,
-  when,
   ShaderProgram,
   ModelFeature,
   Axis,
@@ -38,6 +41,7 @@ describe(
     const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
     const boxInstanced =
       "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
+    const boxUnlitUrl = "./Data/Models/PBR/BoxUnlit/BoxUnlit.gltf";
     const boxBackFaceCullingUrl =
       "./Data/Models/Box-Back-Face-Culling/Box-Back-Face-Culling.gltf";
     const boxBackFaceCullingOffset = new HeadingPitchRange(Math.PI / 2, 0, 2.0);
@@ -71,9 +75,12 @@ describe(
       camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
     }
 
-    function verifyRender(model, shouldRender) {
+    function verifyRender(model, shouldRender, zoomToModel) {
       expect(model.ready).toBe(true);
-      zoomTo(model);
+      zoomToModel = defaultValue(zoomToModel, true);
+      if (zoomToModel) {
+        zoomTo(model);
+      }
       expect({
         scene: scene,
         time: JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC")),
@@ -166,7 +173,9 @@ describe(
       });
     });
 
-    it("rejects ready promise when texture fails to load", function () {
+    // Throws an extraneous promise through the texture loader which cannot be cleanly caught
+    // https://github.com/CesiumGS/cesium/issues/10178
+    xit("rejects ready promise when texture fails to load", function () {
       const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
       return resource.fetchJson().then(function (gltf) {
         gltf.images[0].uri = "non-existent-path.png";
@@ -181,13 +190,15 @@ describe(
           .then(function (model) {
             fail();
           })
-          .otherwise(function (error) {
+          .catch(function (error) {
             expect(error).toBeDefined();
           });
       });
     });
 
-    it("rejects ready promise when external buffer fails to load", function () {
+    // Throws an extraneous promise through the texture loader which cannot be cleanly caught
+    // https://github.com/CesiumGS/cesium/issues/10178
+    xit("rejects ready promise when external buffer fails to load", function () {
       const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
       return resource.fetchJson().then(function (gltf) {
         gltf.buffers[0].uri = "non-existent-path.bin";
@@ -201,7 +212,7 @@ describe(
           .then(function (model) {
             fail();
           })
-          .otherwise(function (error) {
+          .catch(function (error) {
             expect(error).toBeDefined();
           });
       });
@@ -381,41 +392,54 @@ describe(
 
     // see https://github.com/CesiumGS/cesium/pull/10115
     xit("renders model with style", function () {
-      return loadAndZoomToModelExperimental(
-        { gltf: buildingsMetadata },
-        scene
-      ).then(function (model) {
-        // Renders without style.
-        verifyRender(model, true);
+      let model;
+      let style;
+      return loadAndZoomToModelExperimental({ gltf: buildingsMetadata }, scene)
+        .then(function (result) {
+          model = result;
+          // Renders without style.
+          verifyRender(model, true);
 
-        // Renders with opaque style.
-        model.style = new Cesium3DTileStyle({
-          color: {
-            conditions: [["${height} > 1", "color('red')"]],
-          },
+          // Renders with opaque style.
+          style = new Cesium3DTileStyle({
+            color: {
+              conditions: [["${height} > 1", "color('red')"]],
+            },
+          });
+          return style.readyPromise;
+        })
+        .then(function () {
+          model.style = style;
+          verifyRender(model, true);
+
+          // Renders with translucent style.
+          style = new Cesium3DTileStyle({
+            color: {
+              conditions: [["${height} > 1", "color('red', 0.5)"]],
+            },
+          });
+          return style.readyPromise;
+        })
+        .then(function () {
+          model.style = style;
+          verifyRender(model, true);
+
+          // Does not render when style disables show.
+          style = new Cesium3DTileStyle({
+            color: {
+              conditions: [["${height} > 1", "color('red', 0.0)"]],
+            },
+          });
+          return style.readyPromise;
+        })
+        .then(function () {
+          model.style = style;
+          verifyRender(model, false);
+
+          // Render when style is removed.
+          model.style = undefined;
+          verifyRender(model, true);
         });
-        verifyRender(model, true);
-
-        // Renders with translucent style.
-        model.style = new Cesium3DTileStyle({
-          color: {
-            conditions: [["${height} > 1", "color('red', 0.5)"]],
-          },
-        });
-        verifyRender(model, true);
-
-        // Does not render when style disables show.
-        model.style = new Cesium3DTileStyle({
-          color: {
-            conditions: [["${height} > 1", "color('red', 0.0)"]],
-          },
-        });
-        verifyRender(model, false);
-
-        // Render when style is removed.
-        model.style = undefined;
-        verifyRender(model, true);
-      });
     });
 
     it("fromGltf throws with undefined options", function () {
@@ -543,7 +567,7 @@ describe(
       return loadAndZoomToModelExperimental(
         {
           gltf: boxInstanced,
-          instanceFeatureIdIndex: 1,
+          instanceFeatureIdLabel: "section",
         },
         scene
       ).then(function (model) {
@@ -570,6 +594,39 @@ describe(
         scene
       ).then(function (model) {
         expect(model.featureTableId).toEqual(0);
+      });
+    });
+
+    it("featureIdLabel setter works", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: buildingsMetadata,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.featureIdLabel).toBe("featureId_0");
+        model.featureIdLabel = "buildings";
+        expect(model.featureIdLabel).toBe("buildings");
+        model.featureIdLabel = 1;
+        expect(model.featureIdLabel).toBe("featureId_1");
+      });
+    });
+
+    it("instanceFeatureIdLabel setter works", function () {
+      if (webglStub) {
+        return;
+      }
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxInstanced,
+        },
+        scene
+      ).then(function (model) {
+        expect(model.instanceFeatureIdLabel).toBe("instanceFeatureId_0");
+        model.instanceFeatureIdLabel = "section";
+        expect(model.instanceFeatureIdLabel).toBe("section");
+        model.instanceFeatureIdLabel = 1;
+        expect(model.instanceFeatureIdLabel).toBe("instanceFeatureId_1");
       });
     });
 
@@ -646,6 +703,414 @@ describe(
 
         expect(model.boundingSphere.center).toEqual(translation);
         verifyRender(model, false);
+      });
+    });
+
+    it("initializes with light color", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl, lightColor: Cartesian3.ZERO },
+        scene
+      ).then(function (model) {
+        verifyRender(model, false);
+      });
+    });
+
+    it("changing light color works", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl },
+        scene
+      ).then(function (model) {
+        model.lightColor = Cartesian3.ZERO;
+        verifyRender(model, false);
+
+        model.lightColor = new Cartesian3(1.0, 0.0, 0.0);
+        verifyRender(model, true);
+
+        model.lightColor = undefined;
+        verifyRender(model, true);
+      });
+    });
+
+    it("light color doesn't affect unlit models", function () {
+      return loadAndZoomToModelExperimental({ gltf: boxUnlitUrl }, scene).then(
+        function (model) {
+          verifyRender(model, true);
+
+          model.lightColor = Cartesian3.ZERO;
+          verifyRender(model, true);
+        }
+      );
+    });
+
+    it("initializes with imageBasedLighting", function () {
+      const ibl = new ImageBasedLighting({
+        imageBasedLightingFactor: Cartesian2.ZERO,
+        luminanceAtZenith: 0.5,
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl, imageBasedLighting: ibl },
+        scene
+      ).then(function (model) {
+        expect(model.imageBasedLighting).toBe(ibl);
+      });
+    });
+
+    it("creates default imageBasedLighting", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl },
+        scene
+      ).then(function (model) {
+        const imageBasedLighting = model.imageBasedLighting;
+        expect(imageBasedLighting).toBeDefined();
+        expect(
+          Cartesian2.equals(
+            imageBasedLighting.imageBasedLightingFactor,
+            new Cartesian2(1, 1)
+          )
+        ).toBe(true);
+        expect(imageBasedLighting.luminanceAtZenith).toBe(0.2);
+        expect(
+          imageBasedLighting.sphericalHarmonicCoefficients
+        ).toBeUndefined();
+        expect(imageBasedLighting.specularEnvironmentMaps).toBeUndefined();
+      });
+    });
+
+    it("changing imageBasedLighting works", function () {
+      const imageBasedLighting = new ImageBasedLighting({
+        imageBasedLightingFactor: Cartesian2.ZERO,
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGltfUrl },
+        scene
+      ).then(function (model) {
+        const renderOptions = {
+          scene: scene,
+          time: new JulianDate(2456659.0004050927),
+        };
+
+        let result;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          result = rgba;
+        });
+
+        model.imageBasedLighting = imageBasedLighting;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual(result);
+        });
+      });
+    });
+
+    it("initializes with scale", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          upAxis: Axis.Z,
+          forwardAxis: Axis.X,
+          scale: 0.0,
+        },
+        scene
+      ).then(function (model) {
+        scene.renderForSpecs();
+
+        verifyRender(model, false);
+        expect(model.boundingSphere.center).toEqual(Cartesian3.ZERO);
+        expect(model.boundingSphere.radius).toEqual(0.0);
+      });
+    });
+
+    it("changing scale works", function () {
+      const updateModelMatrix = spyOn(
+        ModelExperimentalSceneGraph.prototype,
+        "updateModelMatrix"
+      ).and.callThrough();
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          upAxis: Axis.Z,
+          forwardAxis: Axis.X,
+        },
+        scene
+      ).then(function (model) {
+        verifyRender(model, true);
+        model.scale = 0.0;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        verifyRender(model, false);
+
+        model.scale = 1.0;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        verifyRender(model, true);
+      });
+    });
+
+    it("changing scale affects bounding sphere", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: new Uint8Array(buffer),
+            scale: 10,
+          },
+          scene
+        ).then(function (model) {
+          scene.renderForSpecs();
+
+          const expectedRadius = 0.866;
+          const boundingSphere = model.boundingSphere;
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqualEpsilon(
+            expectedRadius * 10.0,
+            CesiumMath.EPSILON3
+          );
+
+          model.scale = 0.0;
+          scene.renderForSpecs();
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqual(0.0);
+
+          model.scale = 1.0;
+          scene.renderForSpecs();
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqualEpsilon(
+            expectedRadius,
+            CesiumMath.EPSILON3
+          );
+        });
+      });
+    });
+
+    it("initializes with minimumPixelSize", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: new Uint8Array(buffer),
+            upAxis: Axis.Z,
+            forwardAxis: Axis.X,
+            minimumPixelSize: 1,
+            offset: new HeadingPitchRange(0, 0, 500),
+          },
+          scene
+        ).then(function (model) {
+          const expectedRadius = 0.866;
+          scene.renderForSpecs();
+          verifyRender(model, true, false);
+
+          // Verify that minimumPixelSize didn't affect other parameters
+          expect(model.scale).toEqual(1.0);
+          expect(model.boundingSphere.radius).toEqualEpsilon(
+            expectedRadius,
+            CesiumMath.EPSILON3
+          );
+        });
+      });
+    });
+
+    it("changing minimumPixelSize works", function () {
+      const updateModelMatrix = spyOn(
+        ModelExperimentalSceneGraph.prototype,
+        "updateModelMatrix"
+      ).and.callThrough();
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          upAxis: Axis.Z,
+          forwardAxis: Axis.X,
+          minimumPixelSize: 1,
+          offset: new HeadingPitchRange(0, 0, 500),
+        },
+        scene
+      ).then(function (model) {
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        verifyRender(model, true, false);
+
+        model.minimumPixelSize = 0.0;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        verifyRender(model, false, false);
+
+        model.minimumPixelSize = 1;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        verifyRender(model, true, false);
+      });
+    });
+
+    it("changing minimumPixelSize doesn't affect bounding sphere or scale", function () {
+      const updateModelMatrix = spyOn(
+        ModelExperimentalSceneGraph.prototype,
+        "updateModelMatrix"
+      ).and.callThrough();
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          upAxis: Axis.Z,
+          forwardAxis: Axis.X,
+          minimumPixelSize: 1,
+          offset: new HeadingPitchRange(0, 0, 500),
+        },
+        scene
+      ).then(function (model) {
+        const expectedRadius = 0.866;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        expect(model.scale).toEqual(1.0);
+        expect(model.boundingSphere.radius).toEqualEpsilon(
+          expectedRadius,
+          CesiumMath.EPSILON3
+        );
+
+        model.minimumPixelSize = 0.0;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        expect(model.scale).toEqual(1.0);
+        expect(model.boundingSphere.radius).toEqualEpsilon(
+          expectedRadius,
+          CesiumMath.EPSILON3
+        );
+
+        model.minimumPixelSize = 1;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        expect(model.scale).toEqual(1.0);
+        expect(model.boundingSphere.radius).toEqualEpsilon(
+          expectedRadius,
+          CesiumMath.EPSILON3
+        );
+      });
+    });
+
+    it("initializes with maximumScale", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: new Uint8Array(buffer),
+            upAxis: Axis.Z,
+            forwardAxis: Axis.X,
+            maximumScale: 0.0,
+          },
+          scene
+        ).then(function (model) {
+          scene.renderForSpecs();
+          verifyRender(model, false);
+          expect(model.boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(model.boundingSphere.radius).toEqual(0.0);
+        });
+      });
+    });
+
+    it("changing maximumScale works", function () {
+      const updateModelMatrix = spyOn(
+        ModelExperimentalSceneGraph.prototype,
+        "updateModelMatrix"
+      ).and.callThrough();
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+          upAxis: Axis.Z,
+          forwardAxis: Axis.X,
+          scale: 2.0,
+        },
+        scene
+      ).then(function (model) {
+        scene.renderForSpecs();
+        verifyRender(model, true);
+
+        model.maximumScale = 0.0;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        verifyRender(model, false);
+
+        model.maximumScale = 1.0;
+        scene.renderForSpecs();
+        expect(updateModelMatrix).toHaveBeenCalled();
+        verifyRender(model, true);
+      });
+    });
+
+    it("changing maximumScale affects bounding sphere", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: new Uint8Array(buffer),
+            debugShowBoundingVolume: true,
+            scale: 20,
+            maximumScale: 10,
+          },
+          scene
+        ).then(function (model) {
+          scene.renderForSpecs();
+
+          const expectedRadius = 0.866;
+          const boundingSphere = model.boundingSphere;
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqualEpsilon(
+            expectedRadius * 10.0,
+            CesiumMath.EPSILON3
+          );
+
+          model.maximumScale = 0.0;
+          scene.renderForSpecs();
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqual(0.0);
+
+          model.maximumScale = 1.0;
+          scene.renderForSpecs();
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqualEpsilon(
+            expectedRadius,
+            CesiumMath.EPSILON3
+          );
+        });
+      });
+    });
+
+    it("changing maximumScale affects minimumPixelSize", function () {
+      const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
+      const loadPromise = resource.fetchArrayBuffer();
+      return loadPromise.then(function (buffer) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: new Uint8Array(buffer),
+            debugShowBoundingVolume: true,
+            minimumPixelSize: 1,
+            maximumScale: 10,
+          },
+          scene
+        ).then(function (model) {
+          scene.renderForSpecs();
+
+          const expectedRadius = 0.866;
+          const boundingSphere = model.boundingSphere;
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqualEpsilon(
+            expectedRadius,
+            CesiumMath.EPSILON3
+          );
+
+          model.maximumScale = 0.0;
+          scene.renderForSpecs();
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqual(0.0);
+
+          model.maximumScale = 10.0;
+          scene.renderForSpecs();
+          expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+          expect(boundingSphere.radius).toEqualEpsilon(
+            expectedRadius,
+            CesiumMath.EPSILON3
+          );
+        });
       });
     });
 
@@ -775,6 +1240,166 @@ describe(
       });
     });
 
+    it("throws when given clipping planes attached to another model", function () {
+      const plane = new ClippingPlane(Cartesian3.UNIT_X, 0.0);
+      const clippingPlanes = new ClippingPlaneCollection({
+        planes: [plane],
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
+        scene
+      )
+        .then(function (model) {
+          return loadAndZoomToModelExperimental(
+            { gltf: boxTexturedGlbUrl },
+            scene
+          );
+        })
+        .then(function (model2) {
+          expect(function () {
+            model2.clippingPlanes = clippingPlanes;
+          }).toThrowDeveloperError();
+        });
+    });
+
+    it("updates clipping planes when clipping planes are enabled", function () {
+      const plane = new ClippingPlane(Cartesian3.UNIT_X, 0.0);
+      const clippingPlanes = new ClippingPlaneCollection({
+        planes: [plane],
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl },
+        scene
+      ).then(function (model) {
+        const gl = scene.frameState.context._gl;
+        spyOn(gl, "texImage2D").and.callThrough();
+
+        scene.renderForSpecs();
+        const callsBeforeClipping = gl.texImage2D.calls.count();
+
+        model.clippingPlanes = clippingPlanes;
+        scene.renderForSpecs();
+        scene.renderForSpecs();
+        // When clipping planes are created, we expect two calls to texImage2D
+        // (one for initial creation, and one for copying the data in)
+        // because clipping planes is stored inside a texture.
+        expect(gl.texImage2D.calls.count() - callsBeforeClipping).toEqual(2);
+      });
+    });
+
+    it("initializes and updates with clipping planes", function () {
+      const plane = new ClippingPlane(Cartesian3.UNIT_X, -2.5);
+      const clippingPlanes = new ClippingPlaneCollection({
+        planes: [plane],
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
+        scene
+      ).then(function (model) {
+        scene.renderForSpecs();
+        verifyRender(model, false);
+
+        model.clippingPlanes = undefined;
+        scene.renderForSpecs();
+        verifyRender(model, true);
+      });
+    });
+
+    it("updating clipping planes properties works", function () {
+      const direction = Cartesian3.multiplyByScalar(
+        Cartesian3.UNIT_X,
+        -1,
+        new Cartesian3()
+      );
+      const plane = new ClippingPlane(direction, 0.0);
+      const clippingPlanes = new ClippingPlaneCollection({
+        planes: [plane],
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl },
+        scene
+      ).then(function (model) {
+        let modelColor;
+        scene.renderForSpecs();
+        expect(scene).toRenderAndCall(function (rgba) {
+          modelColor = rgba;
+        });
+
+        // The clipping plane should cut the model in half such that
+        // we see the back faces.
+        model.clippingPlanes = clippingPlanes;
+        scene.renderForSpecs();
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual(modelColor);
+        });
+
+        plane.distance = 10.0; // Move the plane away from the model
+        scene.renderForSpecs();
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual(modelColor);
+        });
+      });
+    });
+
+    it("clipping planes apply edge styling", function () {
+      const plane = new ClippingPlane(Cartesian3.UNIT_X, 0);
+      const clippingPlanes = new ClippingPlaneCollection({
+        planes: [plane],
+        edgeWidth: 25.0, // make large enough to show up on the render
+        edgeColor: Color.BLUE,
+      });
+
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl },
+        scene
+      ).then(function (model) {
+        let modelColor;
+        scene.renderForSpecs();
+        expect(scene).toRenderAndCall(function (rgba) {
+          modelColor = rgba;
+        });
+
+        model.clippingPlanes = clippingPlanes;
+
+        scene.renderForSpecs();
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual([0, 0, 255, 255]);
+        });
+
+        clippingPlanes.edgeWidth = 0.0;
+        scene.renderForSpecs();
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual(modelColor);
+        });
+      });
+    });
+
+    it("clipping planes union regions", function () {
+      const clippingPlanes = new ClippingPlaneCollection({
+        planes: [
+          new ClippingPlane(Cartesian3.UNIT_Z, 5.0),
+          new ClippingPlane(Cartesian3.UNIT_X, -2.0),
+        ],
+        unionClippingRegions: true,
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl },
+        scene
+      ).then(function (model) {
+        scene.renderForSpecs();
+        verifyRender(model, true);
+
+        // These planes are defined such that the model is outside their union.
+        model.clippingPlanes = clippingPlanes;
+        scene.renderForSpecs();
+        verifyRender(model, false);
+
+        model.clippingPlanes.unionClippingRegions = false;
+        scene.renderForSpecs();
+        verifyRender(model, true);
+      });
+    });
+
     it("destroy works", function () {
       spyOn(ShaderProgram.prototype, "destroy").and.callThrough();
       return loadAndZoomToModelExperimental(
@@ -809,35 +1434,73 @@ describe(
       });
     });
 
-    it("destroy doesn't destroy resources when they're in use", function () {
-      return when
-        .all([
-          loadAndZoomToModelExperimental({ gltf: boxTexturedGlbUrl }, scene),
-          loadAndZoomToModelExperimental({ gltf: boxTexturedGlbUrl }, scene),
-        ])
-        .then(function (models) {
-          const cacheEntries = ResourceCache.cacheEntries;
-          let cacheKey;
-          let cacheEntry;
-
-          scene.primitives.remove(models[0]);
-
-          for (cacheKey in cacheEntries) {
-            if (cacheEntries.hasOwnProperty(cacheKey)) {
-              cacheEntry = cacheEntries[cacheKey];
-              expect(cacheEntry.referenceCount).toBeGreaterThan(0);
-            }
-          }
-
-          scene.primitives.remove(models[1]);
-
-          for (cacheKey in cacheEntries) {
-            if (cacheEntries.hasOwnProperty(cacheKey)) {
-              cacheEntry = cacheEntries[cacheKey];
-              expect(cacheEntry.referenceCount).toBe(0);
-            }
-          }
+    it("destroys attached ClippingPlaneCollections", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+        },
+        scene
+      ).then(function (model) {
+        const clippingPlanes = new ClippingPlaneCollection({
+          planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
         });
+
+        model.clippingPlanes = clippingPlanes;
+        expect(model.isDestroyed()).toEqual(false);
+        expect(clippingPlanes.isDestroyed()).toEqual(false);
+
+        scene.primitives.remove(model);
+        expect(model.isDestroyed()).toEqual(true);
+        expect(clippingPlanes.isDestroyed()).toEqual(true);
+      });
+    });
+
+    it("destroys ClippingPlaneCollections that are detached", function () {
+      let clippingPlanes;
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+        },
+        scene
+      ).then(function (model) {
+        clippingPlanes = new ClippingPlaneCollection({
+          planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
+        });
+        model.clippingPlanes = clippingPlanes;
+        expect(clippingPlanes.isDestroyed()).toBe(false);
+
+        model.clippingPlanes = undefined;
+        expect(clippingPlanes.isDestroyed()).toBe(true);
+      });
+    });
+
+    it("destroy doesn't destroy resources when they're in use", function () {
+      return Promise.all([
+        loadAndZoomToModelExperimental({ gltf: boxTexturedGlbUrl }, scene),
+        loadAndZoomToModelExperimental({ gltf: boxTexturedGlbUrl }, scene),
+      ]).then(function (models) {
+        const cacheEntries = ResourceCache.cacheEntries;
+        let cacheKey;
+        let cacheEntry;
+
+        scene.primitives.remove(models[0]);
+
+        for (cacheKey in cacheEntries) {
+          if (cacheEntries.hasOwnProperty(cacheKey)) {
+            cacheEntry = cacheEntries[cacheKey];
+            expect(cacheEntry.referenceCount).toBeGreaterThan(0);
+          }
+        }
+
+        scene.primitives.remove(models[1]);
+
+        for (cacheKey in cacheEntries) {
+          if (cacheEntries.hasOwnProperty(cacheKey)) {
+            cacheEntry = cacheEntries[cacheKey];
+            expect(cacheEntry.referenceCount).toBe(0);
+          }
+        }
+      });
     });
   },
   "WebGL"

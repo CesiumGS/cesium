@@ -11,5 +11,4 @@ ThirdParty/**
 Tools/**
 Apps/Sandcastle/jsHintOptions.js
 Apps/Sandcastle/gallery/gallery-index.js
-Specs/spec-main.js
 index.release.html

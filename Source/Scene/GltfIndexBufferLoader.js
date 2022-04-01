@@ -1,11 +1,11 @@
 import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
-import when from "../ThirdParty/when.js";
 import JobType from "./JobType.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
@@ -70,7 +70,7 @@ export default function GltfIndexBufferLoader(options) {
   this._typedArray = undefined;
   this._buffer = undefined;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = when.defer();
+  this._promise = defer();
 }
 
 if (defined(Object.create)) {
@@ -190,7 +190,7 @@ function loadFromDraco(indexBufferLoader) {
       );
       indexBufferLoader._state = ResourceLoaderState.PROCESSING;
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (indexBufferLoader.isDestroyed()) {
         return;
       }
@@ -227,7 +227,7 @@ function loadFromBufferView(indexBufferLoader) {
       );
       indexBufferLoader._state = ResourceLoaderState.PROCESSING;
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (indexBufferLoader.isDestroyed()) {
         return;
       }

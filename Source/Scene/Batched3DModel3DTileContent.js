@@ -49,6 +49,8 @@ function Batched3DModel3DTileContent(
     ? undefined
     : tileset.classificationType;
 
+  this._metadata = undefined;
+
   // Populate from gltf when available
   this._batchIdAttributeName = undefined;
   this._diffuseAttributeOrUniformName = {};
@@ -57,7 +59,7 @@ function Batched3DModel3DTileContent(
   this._contentModelMatrix = undefined;
 
   this.featurePropertiesDirty = false;
-  this._groupMetadata = undefined;
+  this._group = undefined;
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -132,18 +134,27 @@ Object.defineProperties(Batched3DModel3DTileContent.prototype, {
     },
   },
 
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
+    },
+  },
+
   batchTable: {
     get: function () {
       return this._batchTable;
     },
   },
 
-  groupMetadata: {
+  group: {
     get: function () {
-      return this._groupMetadata;
+      return this._group;
     },
     set: function (value) {
-      this._groupMetadata = value;
+      this._group = value;
     },
   },
 });
@@ -313,11 +324,8 @@ function initialize(content, arrayBuffer, byteOffset) {
       pickIdLoaded: getPickIdCallback(content),
       addBatchIdToGeneratedShaders: batchLength > 0, // If the batch table has values in it, generated shaders will need a batchId attribute
       pickObject: pickObject,
-      imageBasedLightingFactor: tileset.imageBasedLightingFactor,
       lightColor: tileset.lightColor,
-      luminanceAtZenith: tileset.luminanceAtZenith,
-      sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
-      specularEnvironmentMaps: tileset.specularEnvironmentMaps,
+      imageBasedLighting: tileset.imageBasedLighting,
       backFaceCulling: tileset.backFaceCulling,
       showOutline: tileset.showOutline,
       showCreditsOnScreen: tileset.showCreditsOnScreen,
@@ -427,14 +435,12 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
   model.modelMatrix = this._contentModelMatrix;
 
   model.shadows = tileset.shadows;
-  model.imageBasedLightingFactor = tileset.imageBasedLightingFactor;
   model.lightColor = tileset.lightColor;
-  model.luminanceAtZenith = tileset.luminanceAtZenith;
-  model.sphericalHarmonicCoefficients = tileset.sphericalHarmonicCoefficients;
-  model.specularEnvironmentMaps = tileset.specularEnvironmentMaps;
+  model.imageBasedLighting = tileset.imageBasedLighting;
   model.backFaceCulling = tileset.backFaceCulling;
   model.debugWireframe = tileset.debugWireframe;
   model.showCreditsOnScreen = tileset.showCreditsOnScreen;
+  model.splitDirection = tileset.splitDirection;
 
   // Update clipping planes
   const tilesetClippingPlanes = tileset.clippingPlanes;

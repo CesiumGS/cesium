@@ -659,7 +659,10 @@ function createGetEntity(
 
     entityIndices[entityIndexProperty] = index;
 
-    this._clusterDirty = true;
+    const that = this;
+    Promise.resolve().then(function () {
+      that._clusterDirty = true;
+    });
 
     return entityItem;
   };
