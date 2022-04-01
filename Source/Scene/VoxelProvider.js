@@ -7,12 +7,12 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @alias VoxelProvider
  * @constructor
  *
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
- *
  * @see Cesium3DTilesVoxelProvider
  * @see GltfVoxelProvider
  * @see VoxelPrimitive
  * @see VoxelShapeType
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function VoxelProvider() {
   DeveloperError.throwInstantiationError();
@@ -21,6 +21,8 @@ function VoxelProvider() {
 Object.defineProperties(VoxelProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
+   *
+   * @memberof VoxelProvider.prototype
    * @type {Boolean}
    * @readonly
    */
@@ -30,6 +32,8 @@ Object.defineProperties(VoxelProvider.prototype, {
 
   /**
    * Gets the promise that will be resolved when the provider is ready for use.
+   *
+   * @memberof VoxelProvider.prototype
    * @type {Promise.<VoxelProvider>}
    * @readonly
    */
@@ -39,7 +43,9 @@ Object.defineProperties(VoxelProvider.prototype, {
 
   /**
    * A model matrix that is applied to all tiles. If undefined, the identity matrix will be used instead.
-   * @type {Matrix4}
+   *
+   * @memberof VoxelProvider.prototype
+   * @type {Matrix4|undefined}
    * @readonly
    */
   modelMatrix: {
@@ -49,6 +55,8 @@ Object.defineProperties(VoxelProvider.prototype, {
   /**
    * Gets the {@link VoxelShapeType}
    * This should not be called before {@link VoxelProvider#ready} returns true.
+   *
+   * @memberof VoxelProvider.prototype
    * @type {VoxelShapeType}
    * @readonly
    */
@@ -60,7 +68,9 @@ Object.defineProperties(VoxelProvider.prototype, {
    * Gets the minimum bounds.
    * If undefined, the shape's default minimum bounds will be used instead.
    * This should not be called before {@link VoxelProvider#ready} returns true.
-   * @type {Cartesian3}
+   *
+   * @memberof VoxelProvider.prototype
+   * @type {Cartesian3|undefined}
    * @readonly
    */
   minBounds: {
@@ -71,7 +81,9 @@ Object.defineProperties(VoxelProvider.prototype, {
    * Gets the maximum bounds.
    * If undefined, the shape's default maximum bounds will be used instead.
    * This should not be called before {@link VoxelProvider#ready} returns true.
-   * @type {Cartesian3}
+   *
+   * @memberof VoxelProvider.prototype
+   * @type {Cartesian3|undefined}
    * @readonly
    */
   maxBounds: {
@@ -81,6 +93,8 @@ Object.defineProperties(VoxelProvider.prototype, {
   /**
    * Gets the number of voxels per dimension of a tile. This is the same for all tiles in the dataset.
    * This should not be called before {@link VoxelProvider#ready} returns true.
+   *
+   * @memberof VoxelProvider.prototype
    * @type {Cartesian3}
    * @readonly
    */
@@ -91,7 +105,9 @@ Object.defineProperties(VoxelProvider.prototype, {
   /**
    * Gets the number of padding voxels before the tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage. If
    * This should not be called before {@link VoxelProvider#ready} returns true.
-   * @type {Cartesian3}
+   *
+   * @memberof VoxelProvider.prototype
+   * @type {Cartesian3|undefined}
    * @readonly
    */
   paddingBefore: {
@@ -101,7 +117,9 @@ Object.defineProperties(VoxelProvider.prototype, {
   /**
    * Gets the number of padding voxels after the tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage. If
    * This should not be called before {@link VoxelProvider#ready} returns true.
-   * @type {Cartesian3}
+   *
+   * @memberof VoxelProvider.prototype
+   * @type {Cartesian3|undefined}
    * @readonly
    */
   paddingAfter: {
@@ -111,7 +129,10 @@ Object.defineProperties(VoxelProvider.prototype, {
   /**
    * Gets the metadata names.
    * This should not be called before {@link VoxelProvider#ready} returns true.
+   *
+   * @memberof VoxelProvider.prototype
    * @type {String[]}
+   * @readonly
    */
   names: {
     get: DeveloperError.throwInstantiationError,
@@ -120,7 +141,10 @@ Object.defineProperties(VoxelProvider.prototype, {
   /**
    * Gets the metadata types
    * This should not be called before {@link VoxelProvider#ready} returns true.
+   *
+   * @memberof VoxelProvider.prototype
    * @type {MetadataType[]}
+   * @readonly
    */
   types: {
     get: DeveloperError.throwInstantiationError,
@@ -129,7 +153,10 @@ Object.defineProperties(VoxelProvider.prototype, {
   /**
    * Gets the metadata component types
    * This should not be called before {@link VoxelProvider#ready} returns true.
+   *
+   * @memberof VoxelProvider.prototype
    * @type {MetadataComponentType[]}
+   * @readonly
    */
   componentTypes: {
     get: DeveloperError.throwInstantiationError,
@@ -137,7 +164,10 @@ Object.defineProperties(VoxelProvider.prototype, {
 
   /**
    * Gets the metadata minimum values.
-   * @type {Number[]}
+   *
+   * @memberof VoxelProvider.prototype
+   * @type {Number[][]|undefined}
+   * @readonly
    */
   minimumValues: {
     get: DeveloperError.throwInstantiationError,
@@ -145,7 +175,10 @@ Object.defineProperties(VoxelProvider.prototype, {
 
   /**
    * Gets the metadata maximum values.
-   * @type {Number[]}
+   *
+   * @memberof VoxelProvider.prototype
+   * @type {Number[][]|undefined}
+   * @readonly
    */
   maximumValues: {
     get: DeveloperError.throwInstantiationError,
@@ -154,7 +187,10 @@ Object.defineProperties(VoxelProvider.prototype, {
   /**
    * The maximum number of tiles that exist for this provider. This value is used as a hint to the voxel renderer to allocate an appropriate amount of GPU memory. If this value is not known it can be undefined.
    * This should not be called before {@link VoxelProvider#ready} returns true.
-   * @type {Number}
+   *
+   * @memberof VoxelProvider.prototype
+   * @type {Number|undefined}
+   * @readonly
    */
   maximumTileCount: {
     get: DeveloperError.throwInstantiationError,
@@ -162,20 +198,9 @@ Object.defineProperties(VoxelProvider.prototype, {
 });
 
 /**
- * A hook to update the provider every frame, called from {@link VoxelPrimitive.update}.
- * If the provider doesn't need this functionality it should leave this function undefined.
- * @function
- * @param {FrameState} frameState
- *
- * @private
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
- */
-VoxelProvider.prototype.update = DeveloperError.throwInstantiationError;
-
-/**
  * Requests the data for a given tile. The data is a flattened 3D array ordered by X, then Y, then Z.
  * This function should not be called before {@link VoxelProvider#ready} returns true.
- * @function
+ *
  * @param {Object} [options] Object with the following properties:
  * @param {Number} [options.tileLevel=0] The tile's level.
  * @param {Number} [options.tileX=0] The tile's X coordinate.
@@ -183,9 +208,16 @@ VoxelProvider.prototype.update = DeveloperError.throwInstantiationError;
  * @param {Number} [options.tileZ=0] The tile's Z coordinate.
  * @returns {Promise<Array[]>|undefined} An array of promises for the requested voxel data or undefined if there was a problem loading the data.
  *
- * @private
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ * @exception {DeveloperError} The provider must be ready.
  */
 VoxelProvider.prototype.requestData = DeveloperError.throwInstantiationError;
+
+/**
+ * A hook to update the provider every frame, called from {@link VoxelPrimitive.update}.
+ * If the provider doesn't need this functionality it should leave this function undefined.
+ *
+ * @param {FrameState} frameState
+ */
+VoxelProvider.prototype.update = DeveloperError.throwInstantiationError;
 
 export default VoxelProvider;

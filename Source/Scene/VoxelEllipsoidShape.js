@@ -19,17 +19,12 @@ import VoxelShapeType from "./VoxelShapeType.js";
  * @alias VoxelEllipsoidShape
  * @constructor
  *
- * @param {Object} [options]
- * @param {Ellipsoid} [options.ellipsoid]
- * @param {Rectangle} [options.rectangle]
- * @param {Number} [options.minimumHeight]
- * @param {Number} [options.maximumHeight]
- * @param {Cartesian3} [options.translation]
- * @param {Cartesian3} [options.scale]
- * @param {Matrix3} [options.rotation]
- *
  * @see VoxelShape
+ * @see VoxelBoxShape
+ * @see VoxelCylinderShape
  * @see VoxelShapeType
+ *
+ * @private
  */
 function VoxelEllipsoidShape(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

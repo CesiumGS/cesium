@@ -21,9 +21,12 @@ import VoxelShapeType from "./VoxelShapeType.js";
  * @param {Object} options Object with the following properties:
  * @param {String|Resource|Uint8Array|Object|GltfLoader} options.gltf A Resource/URL to a glTF/glb file, a binary glTF buffer, or a JSON object containing the glTF contents
  *
- * @see VoxelProvider
  * @see Cesium3DTilesVoxelProvider
+ * @see VoxelProvider
  * @see VoxelPrimitive
+ * @see VoxelShapeType
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function GltfVoxelProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -34,15 +37,21 @@ function GltfVoxelProvider(options) {
 
   /**
    * Gets a value indicating whether or not the provider is ready for use.
+   *
    * @type {Boolean}
    * @readonly
    */
   this.ready = false;
 
+  /**
+   * @type {Promise.<VoxelProvider>}
+   * @private
+   */
   this._readyPromise = defer();
 
   /**
    * Gets the promise that will be resolved when the provider is ready for use.
+   *
    * @type {Promise.<GltfVoxelProvider>}
    * @readonly
    */
@@ -50,13 +59,15 @@ function GltfVoxelProvider(options) {
 
   /**
    * An optional model matrix that is applied to all tiles
-   * @type {Matrix4}
+   *
+   * @type {Matrix4|undefined}
    * @readonly
    */
   this.modelMatrix = undefined;
 
   /**
    * Gets the {@link VoxelShapeType}
+   *
    * @type {VoxelShapeType}
    * @readonly
    */
@@ -66,7 +77,8 @@ function GltfVoxelProvider(options) {
    * Gets the minimum bounds.
    * If undefined, the shape's default minimum bounds will be used instead.
    * This should not be called before {@link VoxelProvider#ready} returns true.
-   * @type {Cartesian3}
+   *
+   * @type {Cartesian3|undefined}
    * @readonly
    */
   this.minBounds = undefined;
@@ -75,7 +87,8 @@ function GltfVoxelProvider(options) {
    * Gets the maximum bounds.
    * If undefined, the shape's default maximum bounds will be used instead.
    * This should not be called before {@link VoxelProvider#ready} returns true.
-   * @type {Cartesian3}
+   *
+   * @type {Cartesian3|undefined}
    * @readonly
    */
   this.maxBounds = undefined;
@@ -83,6 +96,7 @@ function GltfVoxelProvider(options) {
   /**
    * Gets the number of voxels per dimension of a tile. This is the same for all tiles in the dataset.
    * This should not be called before {@link VoxelProvider#ready} returns true.
+   *
    * @type {Cartesian3}
    * @readonly
    */
@@ -92,7 +106,8 @@ function GltfVoxelProvider(options) {
    * Gets the number of padding voxels on the edge of a tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
    * TODO: mark this optional
    * This should not be called before {@link VoxelProvider#ready} returns true.
-   * @type {Number}
+   *
+   * @type {Number|undefined}
    * @readonly
    */
   this.paddingBefore = undefined;
@@ -101,7 +116,8 @@ function GltfVoxelProvider(options) {
    * Gets the number of padding voxels on the edge of a tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
    * This should not be called before {@link VoxelProvider#ready} returns true.
    * TODO: mark this optional
-   * @type {Number}
+   *
+   * @type {Number|undefined}
    * @readonly
    */
   this.paddingAfter = undefined;
@@ -110,48 +126,69 @@ function GltfVoxelProvider(options) {
 
   /**
    * Gets stuff
+   *
    * @type {String[]}
+   * @readonly
    */
   this.names = new Array();
 
   /**
    * Gets stuff
+   *
    * @type {MetadataType[]}
+   * @readonly
    */
   this.types = new Array();
 
   /**
    * Gets stuff
+   *
    * @type {MetadataComponentType[]}
+   * @readonly
    */
   this.componentTypes = new Array();
 
   /**
    * TODO is [][] valid JSDOC? https://stackoverflow.com/questions/25602978/jsdoc-two-dimensional-array
    * Gets the minimum value
-   * @type {Number[]}
+   *
+   * @type {Number[][]|undefined}
+   * @readonly
    */
   this.minimumValues = undefined;
 
   /**
    * TODO is [][] valid JSDOC? https://stackoverflow.com/questions/25602978/jsdoc-two-dimensional-array
    * Gets the maximum value
-   * @type {Number[][]}
+   *
+   * @type {Number[][]|undefined}
+   * @readonly
    */
   this.maximumValues = undefined;
 
   /**
    * The maximum number of tiles that exist for this provider. This value is used as a hint to the voxel renderer to allocate an appropriate amount of GPU memory. If this value is not known it can be set to 0.
-   * @type {Number}
+   *
+   * @type {Number|undefined}
+   * @readonly
    */
-  this.maximumTileCount = undefined;
+  this.maximumTileCount = 1;
 
   /**
    * A {@link GltfLoader} that is processed each frame until ready.
+   *
    * @type {GltfLoader}
    * @private
    */
   this._loader = undefined;
+
+  /**
+   * The voxel data.
+   *
+   * @type {Array[]}
+   * @private
+   */
+  this._data = undefined;
 
   const gltf = options.gltf;
   let promise;
@@ -207,114 +244,30 @@ function GltfVoxelProvider(options) {
       that.ready = true;
       that._readyPromise = Promise.resolve(that);
 
-      /**
-       * An optional model matrix that is applied to all tiles
-       * @type {Matrix4}
-       * @readonly
-       */
       that.modelMatrix = modelMatrix;
-
-      /**
-       * Gets the {@link VoxelShapeType}
-       * @type {VoxelShapeType}
-       * @readonly
-       */
       that.shape = shape;
-
-      /**
-       * Gets the minimum bounds.
-       * This should not be called before {@link GltfVoxelProvider#ready} returns true.
-       * @type {Cartesian3}
-       * @readonly
-       */
       that.minBounds = defined(voxel.minBounds)
         ? Cartesian3.clone(voxel.minBounds, new Cartesian3())
         : undefined;
-
-      /**
-       * Gets the maximum bounds.
-       * This should not be called before {@link GltfVoxelProvider#ready} returns true.
-       * @type {Cartesian3}
-       * @readonly
-       */
       that.maxBounds = defined(voxel.maxBounds)
         ? Cartesian3.clone(voxel.maxBounds, new Cartesian3())
         : undefined;
-
-      /**
-       * Gets the number of voxels per dimension of a tile. This is the same for all tiles in the dataset.
-       * This should not be called before {@link GltfVoxelProvider#ready} returns true.
-       * @type {Cartesian3}
-       * @readonly
-       */
       that.dimensions = Cartesian3.clone(voxel.dimensions, new Cartesian3());
-
-      /**
-       * Gets the number of padding voxels on the edge of a tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
-       * TODO: mark this optional
-       * This should not be called before {@link GltfVoxelProvider#ready} returns true.
-       * @type {Number}
-       * @readonly
-       */
       that.paddingBefore = defined(voxel.paddingBefore)
         ? Cartesian3.clone(voxel.paddingBefore, new Cartesian3())
         : undefined;
-
-      /**
-       * Gets the number of padding voxels on the edge of a tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
-       * This should not be called before {@link GltfVoxelProvider#ready} returns true.
-       * TODO: mark this optional
-       * @type {Number}
-       * @readonly
-       */
       that.paddingAfter = defined(voxel.paddingAfter)
         ? Cartesian3.clone(voxel.paddingAfter, new Cartesian3())
         : undefined;
 
       // TODO is there a good user-facing way to set names, types, componentTypes, min, max, etc? MetadataComponents.Primitive is close, but private and has some fields that voxels don't use
 
-      /**
-       * Gets stuff
-       * @type {String[]}
-       */
       that.names = names;
-
-      /**
-       * Gets stuff
-       * @type {MetadataType[]}
-       */
       that.types = types;
-
-      /**
-       * Gets stuff
-       * @type {MetadataComponentType[]}
-       */
       that.componentTypes = componentTypes;
-
-      /**
-       * TODO is [][] valid JSDOC? https://stackoverflow.com/questions/25602978/jsdoc-two-dimensional-array
-       * Gets the minimum value
-       * @type {Number[]}
-       */
       that.minimumValues = minimumValues;
-
-      /**
-       * TODO is [][] valid JSDOC? https://stackoverflow.com/questions/25602978/jsdoc-two-dimensional-array
-       * Gets the maximum value
-       * @type {Number[][]}
-       */
       that.maximumValues = maximumValues;
 
-      /**
-       * The maximum number of tiles that exist for this provider. This value is used as a hint to the voxel renderer to allocate an appropriate amount of GPU memory. If this value is not known it can be set to 0.
-       * @type {Number}
-       */
-      that.maximumTileCount = 1;
-
-      /**
-       * @private
-       * @type {Float32Array|Uint16Array|Uint8Array}
-       */
       that._data = new Array(attributesLength);
       for (let i = 0; i < attributesLength; i++) {
         const attribute = attributes[i];
@@ -332,7 +285,8 @@ function GltfVoxelProvider(options) {
         );
       }
 
-      // Now that the data is loaded there's no need to keep around the loader.
+      // Now that the data is loaded the loader can be unloaded.
+      that._loader.unload();
       that._loader = undefined;
     })
     .catch(function (error) {
@@ -343,11 +297,8 @@ function GltfVoxelProvider(options) {
 /**
  * A hook to update the provider every frame, called from {@link VoxelPrimitive.update}.
  * If the provider doesn't need this functionality it should leave this function undefined.
- * @function
- * @param {FrameState} frameState
  *
- * @private
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ * @param {FrameState} frameState
  */
 GltfVoxelProvider.prototype.update = function (frameState) {
   const loader = this._loader;
@@ -360,15 +311,16 @@ GltfVoxelProvider.prototype.update = function (frameState) {
  * Requests the data for a given tile. The data is a flattened 3D array ordered by X, then Y, then Z.
  * Note that there is only one "tile" for a glTF so the only valid input is the "root" tile coordinates.
  * This function should not be called before {@link GltfVoxelProvider#ready} returns true.
- * @function
  *
  * @param {Object} [options] Object with the following properties:
  * @param {Number} [options.tileLevel=0] The tile's level.
  * @param {Number} [options.tileX=0] The tile's X coordinate.
  * @param {Number} [options.tileY=0] The tile's Y coordinate.
  * @param {Number} [options.tileZ=0] The tile's Z coordinate.
- *
  * @returns {Promise<Array[]>|undefined} An array of promises for the requested voxel data or undefined if there was a problem loading the data.
+ *
+ * @exception {DeveloperError} The provider must be ready.
+ * @exception {DeveloperError} Only level 0 can be requested.
  */
 GltfVoxelProvider.prototype.requestData = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -394,11 +346,13 @@ GltfVoxelProvider.prototype.requestData = function (options) {
 /**
  * Check if the data is still being loaded.
  * This is intended to be used for unit tests only.
+ *
  * @returns {Boolean}
+ *
  * @private
  */
-GltfVoxelProvider.prototype._doneLoading = function () {
-  return !defined(this._loader);
+GltfVoxelProvider.prototype.doneLoading = function () {
+  return defined(this._data);
 };
 
 export default GltfVoxelProvider;

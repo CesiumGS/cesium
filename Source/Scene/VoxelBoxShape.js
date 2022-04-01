@@ -12,19 +12,19 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
  * @alias VoxelBoxShape
  * @constructor
  *
- * @private
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
- *
  * @see VoxelShape
  * @see VoxelEllipsoidShape
  * @see VoxelCylinderShape
  * @see VoxelShapeType
+ *
+ * @private
  */
 function VoxelBoxShape() {
   /**
    * An oriented bounding box containing the bounded shape.
    * The update function must be called before accessing this value.
    * @type {OrientedBoundingBox}
+   * @readonly
    */
   this.orientedBoundingBox = new OrientedBoundingBox();
 
@@ -32,6 +32,7 @@ function VoxelBoxShape() {
    * A bounding sphere containing the bounded shape.
    * The update function must be called before accessing this value.
    * @type {BoundingSphere}
+   * @readonly
    */
   this.boundingSphere = new BoundingSphere();
 
@@ -39,6 +40,7 @@ function VoxelBoxShape() {
    * A transformation matrix containing the bounded shape.
    * The update function must be called before accessing this value.
    * @type {Matrix4}
+   * @readonly
    */
   this.boundTransform = new Matrix4();
 
@@ -46,6 +48,7 @@ function VoxelBoxShape() {
    * A transformation matrix containing the shape, ignoring the bounds.
    * The update function must be called before accessing this value.
    * @type {Matrix4}
+   * @readonly
    */
   this.shapeTransform = new Matrix4();
 
@@ -53,13 +56,23 @@ function VoxelBoxShape() {
    * Check if the shape is visible. For example, if the shape has zero scale it will be invisible.
    * The update function must be called before accessing this value.
    * @type {Boolean}
+   * @readonly
    */
   this.isVisible = false;
 
+  /**
+   * @type {Cartesian3}
+   * @private
+   */
   this._minBounds = Cartesian3.clone(
     VoxelBoxShape.DefaultMinBounds,
     new Cartesian3()
   );
+
+  /**
+   * @type {Cartesian3}
+   * @private
+   */
   this._maxBounds = Cartesian3.clone(
     VoxelBoxShape.DefaultMaxBounds,
     new Cartesian3()
@@ -71,72 +84,11 @@ const scratchScale = new Cartesian3();
 const scratchRotation = new Matrix3();
 
 /**
- * @param {Cartesian3} minimumX
- * @param {Cartesian3} maximumX
- * @param {Cartesian3} minimumY
- * @param {Cartesian3} maximumY
- * @param {Cartesian3} minimumZ
- * @param {Cartesian3} maximumZ
- * @param {Matrix4} matrix
- * @param {OrientedBoundingBox} result
- * @returns {OrientedBoundingBox}
- */
-function getBoxChunkObb(
-  minimumX,
-  maximumX,
-  minimumY,
-  maximumY,
-  minimumZ,
-  maximumZ,
-  matrix,
-  result
-) {
-  const defaultMinBounds = VoxelBoxShape.DefaultMinBounds;
-  const defaultMaxBounds = VoxelBoxShape.DefaultMaxBounds;
-
-  const isDefaultBounds =
-    minimumX === defaultMinBounds.x &&
-    minimumY === defaultMinBounds.y &&
-    minimumZ === defaultMinBounds.z &&
-    maximumX === defaultMaxBounds.x &&
-    maximumY === defaultMaxBounds.y &&
-    maximumZ === defaultMaxBounds.z;
-
-  if (isDefaultBounds) {
-    result.center = Matrix4.getTranslation(matrix, result.center);
-    result.halfAxes = Matrix4.getMatrix3(matrix, result.halfAxes);
-  } else {
-    let scale = Matrix4.getScale(matrix, scratchScale);
-    const translation = Matrix4.getTranslation(matrix, scratchTranslation);
-    result.center = Cartesian3.fromElements(
-      translation.x + scale.x * 0.5 * (minimumX + maximumX),
-      translation.y + scale.y * 0.5 * (maximumY + minimumY),
-      translation.z + scale.z * 0.5 * (maximumZ + minimumZ),
-      result.center
-    );
-
-    scale = Cartesian3.fromElements(
-      scale.x * 0.5 * (maximumX - minimumX),
-      scale.y * 0.5 * (maximumY - minimumY),
-      scale.z * 0.5 * (maximumZ - minimumZ),
-      scratchScale
-    );
-    const rotation = Matrix4.getRotation(matrix, scratchRotation);
-    result.halfAxes = Matrix3.setScale(rotation, scale, result.halfAxes);
-  }
-
-  return result;
-}
-
-/**
  * Update the shape's state.
- * @function
+ *
  * @param {Matrix4} modelMatrix The model matrix.
  * @param {Cartesian3} minBounds The minimum bounds.
  * @param {Cartesian3} maxBounds The maximum bounds.
- *
- * @private
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 VoxelBoxShape.prototype.update = function (modelMatrix, minBounds, maxBounds) {
   //>>includeStart('debug', pragmas.debug);
@@ -205,16 +157,13 @@ VoxelBoxShape.prototype.update = function (modelMatrix, minBounds, maxBounds) {
 /**
  * Computes an oriented bounding box for a specified tile.
  * The update function must be called before calling this function.
- * @function
+ *
  * @param {Number} tileLevel The tile's level.
  * @param {Number} tileX The tile's x coordinate.
  * @param {Number} tileY The tile's y coordinate.
  * @param {Number} tileZ The tile's z coordinate.
  * @param {OrientedBoundingBox} result The oriented bounding box that will be set to enclose the specified tile
  * @returns {OrientedBoundingBox} The oriented bounding box.
- *
- * @private
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 VoxelBoxShape.prototype.computeOrientedBoundingBoxForTile = function (
   tileLevel,
@@ -283,12 +232,9 @@ VoxelBoxShape.prototype.computeOrientedBoundingBoxForTile = function (
 /**
  * Computes an approximate step size for raymarching the root tile of a voxel grid.
  * The update function must be called before calling this function.
- * @function
+ *
  * @param {Cartesian3} voxelDimensions The voxel grid dimensions for a tile.
  * @returns {Number} The step size.
- *
- * @private
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 VoxelBoxShape.prototype.computeApproximateStepSize = function (dimensions) {
   //>>includeStart('debug', pragmas.debug);
@@ -300,26 +246,84 @@ VoxelBoxShape.prototype.computeApproximateStepSize = function (dimensions) {
 
 /**
  * Defines the minimum bounds of the shape. Corresponds to minimum X, Y, Z.
- * @type {Cartesian3}
  *
- * @private
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ * @type {Cartesian3}
+ * @constant
+ * @readonly
  */
-VoxelBoxShape.DefaultMinBounds = Cartesian3.negate(
-  Cartesian3.ONE,
-  new Cartesian3()
-);
+VoxelBoxShape.DefaultMinBounds = new Cartesian3(-1.0, -1.0, -1.0);
 
 /**
  * Defines the maximum bounds of the shape. Corresponds to maximum X, Y, Z.
+ *
  * @type {Cartesian3}
+ * @constant
+ * @readonly
+ */
+VoxelBoxShape.DefaultMaxBounds = new Cartesian3(+1.0, +1.0, +1.0);
+
+/**
+ * Computes an {@link OrientedBoundingBox} for a subregion of the shape.
+ *
+ * @function
+ *
+ * @param {Cartesian3} minimumX The minimumX.
+ * @param {Cartesian3} maximumX The maximumX.
+ * @param {Cartesian3} minimumY The minimumY.
+ * @param {Cartesian3} maximumY The maximumY.
+ * @param {Cartesian3} minimumZ The minimumZ.
+ * @param {Cartesian3} maximumZ The maximumZ.
+ * @param {Matrix4} matrix The matrix to transform the points.
+ * @param {OrientedBoundingBox} result The object onto which to store the result.
+ * @returns {OrientedBoundingBox} The oriented bounding box that contains this subregion.
  *
  * @private
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-VoxelBoxShape.DefaultMaxBounds = Cartesian3.clone(
-  Cartesian3.ONE,
-  new Cartesian3()
-);
+function getBoxChunkObb(
+  minimumX,
+  maximumX,
+  minimumY,
+  maximumY,
+  minimumZ,
+  maximumZ,
+  matrix,
+  result
+) {
+  const defaultMinBounds = VoxelBoxShape.DefaultMinBounds;
+  const defaultMaxBounds = VoxelBoxShape.DefaultMaxBounds;
+
+  const isDefaultBounds =
+    minimumX === defaultMinBounds.x &&
+    minimumY === defaultMinBounds.y &&
+    minimumZ === defaultMinBounds.z &&
+    maximumX === defaultMaxBounds.x &&
+    maximumY === defaultMaxBounds.y &&
+    maximumZ === defaultMaxBounds.z;
+
+  if (isDefaultBounds) {
+    result.center = Matrix4.getTranslation(matrix, result.center);
+    result.halfAxes = Matrix4.getMatrix3(matrix, result.halfAxes);
+  } else {
+    let scale = Matrix4.getScale(matrix, scratchScale);
+    const translation = Matrix4.getTranslation(matrix, scratchTranslation);
+    result.center = Cartesian3.fromElements(
+      translation.x + scale.x * 0.5 * (minimumX + maximumX),
+      translation.y + scale.y * 0.5 * (maximumY + minimumY),
+      translation.z + scale.z * 0.5 * (maximumZ + minimumZ),
+      result.center
+    );
+
+    scale = Cartesian3.fromElements(
+      scale.x * 0.5 * (maximumX - minimumX),
+      scale.y * 0.5 * (maximumY - minimumY),
+      scale.z * 0.5 * (maximumZ - minimumZ),
+      scratchScale
+    );
+    const rotation = Matrix4.getRotation(matrix, scratchRotation);
+    result.halfAxes = Matrix3.setScale(rotation, scale, result.halfAxes);
+  }
+
+  return result;
+}
 
 export default VoxelBoxShape;

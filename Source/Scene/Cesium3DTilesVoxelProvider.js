@@ -28,7 +28,12 @@ import VoxelShapeType from "./VoxelShapeType.js";
  * @param {Object} options Object with the following properties:
  * @param {String|Resource|Uint8Array} options.url The URL to the tileset directory
  *
+ * @see GltfVoxelProvider
  * @see VoxelProvider
+ * @see VoxelPrimitive
+ * @see VoxelShapeType
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function Cesium3DTilesVoxelProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -38,15 +43,21 @@ function Cesium3DTilesVoxelProvider(options) {
 
   /**
    * Gets a value indicating whether or not the provider is ready for use.
+   *
    * @type {Boolean}
    * @readonly
    */
   this.ready = false;
 
+  /**
+   * @type {Promise.<VoxelProvider>}
+   * @private
+   */
   this._readyPromise = defer();
 
   /**
    * Gets the promise that will be resolved when the provider is ready for use.
+   *
    * @type {Promise.<VoxelProvider>}
    * @readonly
    */
@@ -54,13 +65,15 @@ function Cesium3DTilesVoxelProvider(options) {
 
   /**
    * An optional model matrix that is applied to all tiles
-   * @type {Matrix4}
+   *
+   * @type {Matrix4|undefined}
    * @readonly
    */
   this.modelMatrix = undefined;
 
   /**
    * Gets the {@link VoxelShapeType}
+   *
    * @type {VoxelShapeType}
    * @readonly
    */
@@ -70,7 +83,8 @@ function Cesium3DTilesVoxelProvider(options) {
    * Gets the minimum bounds.
    * If undefined, the shape's default minimum bounds will be used instead.
    * This should not be called before {@link VoxelProvider#ready} returns true.
-   * @type {Cartesian3}
+   *
+   * @type {Cartesian3|undefined}
    * @readonly
    */
   this.minBounds = undefined;
@@ -79,7 +93,8 @@ function Cesium3DTilesVoxelProvider(options) {
    * Gets the maximum bounds.
    * If undefined, the shape's default maximum bounds will be used instead.
    * This should not be called before {@link VoxelProvider#ready} returns true.
-   * @type {Cartesian3}
+   *
+   * @type {Cartesian3|undefined}
    * @readonly
    */
   this.maxBounds = undefined;
@@ -87,6 +102,7 @@ function Cesium3DTilesVoxelProvider(options) {
   /**
    * Gets the number of voxels per dimension of a tile. This is the same for all tiles in the dataset.
    * This should not be called before {@link VoxelProvider#ready} returns true.
+   *
    * @type {Cartesian3}
    * @readonly
    */
@@ -96,7 +112,8 @@ function Cesium3DTilesVoxelProvider(options) {
    * Gets the number of padding voxels on the edge of a tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
    * TODO: mark this optional
    * This should not be called before {@link VoxelProvider#ready} returns true.
-   * @type {Number}
+   *
+   * @type {Number|undefined}
    * @readonly
    */
   this.paddingBefore = undefined;
@@ -105,7 +122,8 @@ function Cesium3DTilesVoxelProvider(options) {
    * Gets the number of padding voxels on the edge of a tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
    * This should not be called before {@link VoxelProvider#ready} returns true.
    * TODO: mark this optional
-   * @type {Number}
+   *
+   * @type {Number|undefined}
    * @readonly
    */
   this.paddingAfter = undefined;
@@ -114,69 +132,89 @@ function Cesium3DTilesVoxelProvider(options) {
 
   /**
    * Gets stuff
+   *
    * @type {String[]}
+   * @readonly
    */
   this.names = new Array();
 
   /**
    * Gets stuff
+   *
    * @type {MetadataType[]}
+   * @readonly
    */
   this.types = new Array();
 
   /**
    * Gets stuff
+   *
    * @type {MetadataComponentType[]}
+   * @readonly
    */
   this.componentTypes = new Array();
 
   /**
    * TODO is [][] valid JSDOC? https://stackoverflow.com/questions/25602978/jsdoc-two-dimensional-array
    * Gets the minimum value
-   * @type {Number[]}
+   *
+   * @type {Number[][]|undefined}
+   * @readonly
    */
   this.minimumValues = undefined;
 
   /**
    * TODO is [][] valid JSDOC? https://stackoverflow.com/questions/25602978/jsdoc-two-dimensional-array
    * Gets the maximum value
-   * @type {Number[][]}
+   *
+   * @type {Number[][]|undefined}
+   * @readonly
    */
   this.maximumValues = undefined;
 
   /**
    * The maximum number of tiles that exist for this provider. This value is used as a hint to the voxel renderer to allocate an appropriate amount of GPU memory. If this value is not known it can be set to 0.
-   * @type {Number}
+   *
+   * @type {Number|undefined}
+   * @readonly
    */
   this.maximumTileCount = undefined;
 
   /**
    * @type {ImplicitTileset}
+   * @private
    */
   this._implicitTileset = undefined;
 
   /**
    * @type {ImplicitSubtreeCache}
+   * @private
    */
   this._subtreeCache = new ImplicitSubtreeCache();
 
   /**
    * glTFs that are in the process of being loaded.
+   *
    * @type {GltfLoader[]}
+   * @private
    */
   this._gltfLoaders = new Array();
 
   /**
    * Subtrees that are in the process of being loaded.
-   * This member exists for unit test purposes only. See _doneLoading.
+   * This member exists for unit test purposes only. See doneLoading.
+   *
    * @type {Subtree[]}
+   * @private
    */
   this._subtreeLoaders = new Array();
 
   /**
    * Subtree resources that are in the process of being loaded.
-   * This member exists for unit test purposes only. See _doneLoading.
+   * This member exists for unit test purposes only. See doneLoading.
+   *
    * @type {Resource[]}
+   * @private
    */
   this._subtreeResourceLoaders = new Array();
 
@@ -322,6 +360,7 @@ const scratchImplicitTileCoordinates = new ImplicitTileCoordinates({
 /**
  * Requests the data for a given tile. The data is a flattened 3D array ordered by X, then Y, then Z.
  * This function should not be called before {@link VoxelProvider#ready} returns true.
+ *
  * @param {Object} [options] Object with the following properties:
  * @param {Number} [options.tileLevel=0] The tile's level.
  * @param {Number} [options.tileX=0] The tile's X coordinate.
@@ -329,8 +368,7 @@ const scratchImplicitTileCoordinates = new ImplicitTileCoordinates({
  * @param {Number} [options.tileZ=0] The tile's Z coordinate.
  * @returns {Promise<Array[]>|undefined} An array of promises for the requested voxel data or undefined if there was a problem loading the data.
  *
- * @private
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ * @exception {DeveloperError} The provider must be ready.
  */
 Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -458,7 +496,7 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
 };
 
 /**
- * Optional per-frame processing. Not all {@link VoxelProvder} need to do this.
+ * A hook to update the provider every frame, called from {@link VoxelPrimitive.update}.
  *
  * @param {FrameState} frameState
  */
@@ -472,11 +510,13 @@ Cesium3DTilesVoxelProvider.prototype.update = function (frameState) {
 
 /**
  * Check if anything is still being loaded.
- * This is intended to be used for unit tests only.
+ * This is intended for unit test purposes only.
+ *
  * @returns {Boolean}
+ *
  * @private
  */
-Cesium3DTilesVoxelProvider.prototype._doneLoading = function () {
+Cesium3DTilesVoxelProvider.prototype.doneLoading = function () {
   return (
     this._gltfLoaders.length === 0 &&
     this._subtreeLoaders.length === 0 &&
@@ -485,9 +525,13 @@ Cesium3DTilesVoxelProvider.prototype._doneLoading = function () {
 };
 
 /**
+ * @function
+ *
  * @param {ArrayBuffer} gltfBuffer The buffer that comes when the promise from gltfResource.fetchArrayBuffer() resolves.
  * @param {Resource} gltfResource Resource derived from base that points to gltf.
  * @returns {GltfLoader}
+ *
+ * @private
  */
 function getGltfLoader(implicitTileset, tileCoord) {
   const gltfRelative = implicitTileset.contentUriTemplates[0].getDerivedResource(
@@ -510,7 +554,9 @@ function getGltfLoader(implicitTileset, tileCoord) {
 }
 
 /**
+ * @alias ImplicitSubtreeCacheNode
  * @constructor
+ *
  * @param {ImplicitSubtree} subtree
  * @param {Number} stamp
  *
@@ -522,7 +568,9 @@ function ImplicitSubtreeCacheNode(subtree, stamp) {
 }
 
 /**
+ * @alias ImplicitSubtreeCache
  * @constructor
+ *
  * @param {Object} [options] Object with the following properties
  * @param {Number} [options.maximumSubtreeCount=0] The total number of subtrees this cache can store. If adding a new subtree would exceed this limit, the lowest priority subtrees will be removed until there is room, unless the subtree that is going to be removed is the parent of the new subtree, in which case it will not be removed and the new subtree will still be added, exceeding the memory limit.
  *
@@ -614,8 +662,6 @@ ImplicitSubtreeCache.prototype.find = function (subtreeCoord) {
  * @param {ImplicitSubtreeCacheNode} a
  * @param {ImplicitSubtreeCacheNode} b
  * @returns {Number}
- *
- * @private
  */
 ImplicitSubtreeCache.comparator = function (a, b) {
   const aCoord = a.subtree.implicitCoordinates;

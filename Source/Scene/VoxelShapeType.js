@@ -8,8 +8,8 @@ import VoxelEllipsoidShape from "./VoxelEllipsoidShape.js";
  * An enum of voxel shapes supported by <code>EXT_primitive_voxels</code>. The shape controls
  * how the voxel grid is mapped to 3D space.
  *
- * @namespace
  * @enum VoxelShapeType
+ *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 const VoxelShapeType = {
@@ -82,8 +82,10 @@ VoxelShapeType.getMaxBounds = function (shapeType) {
 /**
  * Converts a primitive type to a voxel shape. glTF voxel primitive types are
  * defined by </code>EXT_primitive_voxels</code>.
+ *
  * @param {PrimitiveType} primitiveType The primitive type.
  * @returns {VoxelShapeType} The shape type.
+ *
  * @private
  */
 VoxelShapeType.fromPrimitiveType = function (primitiveType) {
@@ -105,8 +107,10 @@ VoxelShapeType.fromPrimitiveType = function (primitiveType) {
  * Converts a shape type to a constructor that can be used to create a shape
  * object or get per-shape properties like DefaultMinBounds and
  * DefaultMaxBounds.
+ *
  * @param {VoxelShapeType} shapeType The shape type.
  * @returns {Function} The shape's constructor.
+ *
  * @private
  */
 VoxelShapeType.getShapeConstructor = function (shapeType) {

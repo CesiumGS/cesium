@@ -54,12 +54,12 @@ import MetadataType from "./MetadataType.js";
  * @param {CustomShader} [options.customShader] The custom shader used to style the primitive.
  * @param {Clock} [options.clock] The clock used to control time dynamic behavior.
  *
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
- *
  * @see VoxelProvider
  * @see Cesium3DTilesVoxelProvider
  * @see GltfVoxelProvider
  * @see VoxelShapeType
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function VoxelPrimitive(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -86,14 +86,9 @@ function VoxelPrimitive(options) {
    */
   this._provider = options.provider;
 
-  // If the provider fails to initialize the primitive will fail too.
-  const that = this;
-  this._provider.readyPromise.catch(function (error) {
-    that._readyPromise.reject(`provider failed with error:\n${error}`);
-  });
-
   /**
    * This member is not created until the provider and shape are ready.
+   *
    * @type {VoxelTraversal}
    * @private
    */
@@ -101,6 +96,7 @@ function VoxelPrimitive(options) {
 
   /**
    * This member is not created until the provider is ready.
+   *
    * @type {VoxelShape}
    * @private
    */
@@ -108,6 +104,7 @@ function VoxelPrimitive(options) {
 
   /**
    * This member is not created until the provider is ready.
+   *
    * @type {Cartesian3}
    * @private
    */
@@ -115,6 +112,7 @@ function VoxelPrimitive(options) {
 
   /**
    * This member is not created until the provider is ready.
+   *
    * @type {Cartesian3}
    * @private
    */
@@ -122,6 +120,7 @@ function VoxelPrimitive(options) {
 
   /**
    * This member is not known until the provider is ready.
+   *
    * @type {Cartesian3}
    * @private
    */
@@ -130,6 +129,7 @@ function VoxelPrimitive(options) {
   /**
    * Used to detect if the shape is dirty.
    * This member is not known until the provider is ready.
+   *
    * @type {Cartesian3}
    * @private
    */
@@ -137,6 +137,7 @@ function VoxelPrimitive(options) {
 
   /**
    * This member is not known until the provider is ready.
+   *
    * @type {Cartesian3}
    * @private
    */
@@ -145,6 +146,7 @@ function VoxelPrimitive(options) {
   /**
    * Used to detect if the shape is dirty.
    * This member is not known until the provider is ready.
+   *
    * @type {Cartesian3}
    * @private
    */
@@ -152,6 +154,7 @@ function VoxelPrimitive(options) {
 
   /**
    * This member is not known until the provider is ready.
+   *
    * @type {Cartesian3}
    * @private
    */
@@ -160,6 +163,7 @@ function VoxelPrimitive(options) {
   /**
    * Used to detect if the clipping is dirty.
    * This member is not known until the provider is ready.
+   *
    * @type {Cartesian3}
    * @private
    */
@@ -167,6 +171,7 @@ function VoxelPrimitive(options) {
 
   /**
    * This member is not known until the provider is ready.
+   *
    * @type {Cartesian3}
    * @private
    */
@@ -175,13 +180,15 @@ function VoxelPrimitive(options) {
   /**
    * Used to detect if the clipping is dirty.
    * This member is not known until the provider is ready.
+   *
    * @type {Cartesian3}
    * @private
    */
   this._maxClippingBoundsOld = new Cartesian3();
 
   /**
-   * The primitive's model matrix
+   * The primitive's model matrix.
+   *
    * @type {Matrix4}
    * @private
    */
@@ -193,6 +200,7 @@ function VoxelPrimitive(options) {
   /**
    * The primitive's model matrix multiplied by the provider's model matrix.
    * This member is not known until the provider is ready.
+   *
    * @type {Matrix4}
    * @private
    */
@@ -201,6 +209,7 @@ function VoxelPrimitive(options) {
   /**
    * Used to detect if the shape is dirty.
    * This member is not known until the provider is ready.
+   *
    * @type {Matrix4}
    * @private
    */
@@ -246,20 +255,20 @@ function VoxelPrimitive(options) {
   this._pickId = undefined;
 
   // /**
-  //  * @private
   //  * @type {TimeIntervalCollection}
+  //  * @private
   //  */
   // this._timeIntervalCollection = undefined;
 
   // /**
-  //  * @private
   //  * @type {Clock}
+  //  * @private
   //  */
   // this._clock = options.clock;
 
   // /**
-  //  * @private
   //  * @type {Number}
+  //  * @private
   //  */
   // this._keyframeCount = 1;
 
@@ -267,45 +276,107 @@ function VoxelPrimitive(options) {
 
   /**
    * @type {Matrix4}
+   * @private
    */
   this._transformPositionWorldToUv = new Matrix4();
 
   /**
    * @type {Matrix4}
+   * @private
    */
   this._transformPositionUvToWorld = new Matrix4();
 
   /**
    * @type {Matrix3}
+   * @private
    */
   this._transformDirectionWorldToLocal = new Matrix3();
 
   /**
    * @type {Matrix3}
+   * @private
    */
   this._transformNormalLocalToWorld = new Matrix3();
 
   /**
    * @type {Number}
+   * @private
    */
   this._stepSizeUv = 1.0;
 
   // Rendering
+  /**
+   * @type {Boolean}
+   * @private
+   */
   this._jitter = true;
+
+  /**
+   * @type {Boolean}
+   * @private
+   */
   this._nearestSampling = false;
+
+  /**
+   * @type {Number}
+   * @private
+   */
   this._stepSizeMultiplier = 1.0;
+
+  /**
+   * @type {Boolean}
+   * @private
+   */
   this._despeckle = false;
+
+  /**
+   * @type {Boolean}
+   * @private
+   */
   this._depthTest = true;
+
+  /**
+   * @type {Boolean}
+   * @private
+   */
   this._useLogDepth = undefined;
+
+  /**
+   * @type {Number}
+   * @private
+   */
   this._screenSpaceError = 4.0; // in pixels
 
   // Debug / statistics
+  /**
+   * @type {PolylineCollection}
+   * @private
+   */
   this._debugPolylines = new PolylineCollection();
+
+  /**
+   * @type {Boolean}
+   * @private
+   */
   this._debugDraw = false;
+
+  /**
+   * @type {Boolean}
+   * @private
+   */
   this._disableRender = false;
+
+  /**
+   * @type {Boolean}
+   * @private
+   */
   this._disableUpdate = false;
 
   // Uniforms
+  /**
+   * @type {Object.<string, any>}
+   * @private
+   */
   this._uniformMapValues = {
     /**
      * @ignore
@@ -359,8 +430,8 @@ function VoxelPrimitive(options) {
 
   // Automatically generate uniform map from the uniform values
   /**
-   * @private
    * @type {Object.<string, function():any>}
+   * @private
    */
   this._uniformMap = {};
   const uniformMapValues = this._uniformMapValues;
@@ -374,11 +445,19 @@ function VoxelPrimitive(options) {
       this._uniformMap[`u_${key}`] = getUniformFunction(key);
     }
   }
+
+  // If the provider fails to initialize the primitive will fail too.
+  const provider = this._provider;
+  const primitive = this;
+  provider.readyPromise.catch(function (error) {
+    primitive._readyPromise.reject(`provider failed with error:\n${error}`);
+  });
 }
 
 Object.defineProperties(VoxelPrimitive.prototype, {
   /**
    * Gets a value indicating whether or not the primitive is ready for use.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Boolean}
    * @readonly
@@ -391,6 +470,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets the promise that will be resolved when the primitive is ready for use.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Promise.<VoxelPrimitive>}
    * @readonly
@@ -403,6 +483,8 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets the {@link VoxelProvider} associated with this primitive.
+   *
+   * @memberof VoxelPrimitive.prototype
    * @type {VoxelProvider}
    * @readonly
    */
@@ -414,10 +496,12 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets the bounding sphere.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {BoundingSphere}
-   * @throws {DeveloperError} If the primitive is not ready.
    * @readonly
+   *
+   * @exception {DeveloperError} If the primitive is not ready.
    */
   boundingSphere: {
     get: function () {
@@ -435,10 +519,12 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets the oriented bounding box.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {OrientedBoundingBox}
-   * @throws {DeveloperError} If the primitive is not ready.
    * @readonly
+   *
+   * @exception {DeveloperError} If the primitive is not ready.
    */
   orientedBoundingBox: {
     get: function () {
@@ -455,6 +541,8 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 
   /**
+   * Gets the model matrix.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Matrix4}
    * @readonly
@@ -473,10 +561,13 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 
   /**
+   * Gets the compound model matrix
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Matrix4}
-   * @throws {DeveloperError} If the primitive is not ready.
    * @readonly
+   *
+   * @exception {DeveloperError} If the primitive is not ready.
    */
   compoundModelMatrix: {
     get: function () {
@@ -494,10 +585,12 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets the shape type.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {VoxelShapeType}
-   * @throws {DeveloperError} If the primitive is not ready.
    * @readonly
+   *
+   * @exception {DeveloperError} If the primitive is not ready.
    */
   shape: {
     get: function () {
@@ -514,10 +607,13 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 
   /**
+   * Gets the voxel dimensions.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
-   * @throws {DeveloperError} If the primitive is not ready.
    * @readonly
+   *
+   * @exception {DeveloperError} If the primitive is not ready.
    */
   dimensions: {
     get: function () {
@@ -535,10 +631,12 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets the minimum value per channel of the voxel data.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Number[]}
-   * @throws {DeveloperError} If the primitive is not ready.
    * @readonly
+   *
+   * @exception {DeveloperError} If the primitive is not ready.
    */
   minimumValues: {
     get: function () {
@@ -556,10 +654,12 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets the maximum value per channel of the voxel data.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Number[]}
-   * @throws {DeveloperError} If the primitive is not ready.
    * @readonly
+   *
+   * @exception {DeveloperError} If the primitive is not ready.
    */
   maximumValues: {
     get: function () {
@@ -577,6 +677,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets or sets whether or not this primitive should be displayed.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Boolean}
    */
@@ -595,6 +696,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets or sets whether or not the primitive should update when the view changes.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Boolean}
    */
@@ -613,6 +715,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets or sets whether or not to render debug visualizations.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Boolean}
    */
@@ -631,6 +734,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets or sets whether or not to test against depth when rendering.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Boolean}
    */
@@ -653,6 +757,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   /**
    * Gets or sets whether or not to jitter the view ray during the raymarch.
    * This reduces stair-step artifacts but introduces noise.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Boolean}
    */
@@ -673,7 +778,10 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 
   /**
+   * Gets or sets the nearest sampling.
    *
+   * @memberof VoxelPrimitive.prototype
+   * @type {Boolean}
    */
   nearestSampling: {
     get: function () {
@@ -696,6 +804,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * of a voxel is greater than the screen space error, the tile is subdivided.
    * Lower screen space error corresponds with higher detail rendering, but could
    * result in worse performance and higher memory consumption.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Number}
    */
@@ -716,6 +825,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * Gets or sets the step size multiplier used during raymarching.
    * The lower the value, the higher the rendering quality, but
    * also the worse the performance.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Number}
    */
@@ -734,6 +844,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets or sets whether to reduce thin and noisy details.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Boolean}
    */
@@ -755,9 +866,11 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets or sets the minimum bounds. TODO: fill in the rest later
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
-   * @throws {DeveloperError} If the primitive is not ready.
+   *
+   * @exception {DeveloperError} If the primitive is not ready.
    */
   minBounds: {
     get: function () {
@@ -786,10 +899,12 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 
   /**
-   * Gets or sets the maximum bounds. TODO: fill in the rest later
+   * Gets or sets the maximum bounds. TODO: fill in the rest later.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
-   * @throws {DeveloperError} If the primitive is not ready.
+   *
+   * @exception {DeveloperError} If the primitive is not ready.
    */
   maxBounds: {
     get: function () {
@@ -821,9 +936,11 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * Gets or sets the minimum clipping location in the shape's local coordinate system.
    * Any voxel content outside the range is clipped.
    * The minimum value is 0 and the maximum value is 1.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
-   * @throws {DeveloperError} If the primitive is not ready.
+   *
+   * @exception {DeveloperError} If the primitive is not ready.
    */
   minClippingBounds: {
     get: function () {
@@ -858,9 +975,11 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * Gets or sets the maximum clipping location in the shape's local coordinate system.
    * Any voxel content outside the range is clipped.
    * The minimum value is 0 and the maximum value is 1.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
-   * @throws {DeveloperError} If the primitive is not ready.
+   *
+   * @exception {DeveloperError} If the primitive is not ready.
    */
   maxClippingBounds: {
     get: function () {
@@ -893,6 +1012,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets or sets the custom shader. If undefined, {@link VoxelPrimitive.DefaultCustomShader} is set.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {CustomShader}
    */
@@ -914,6 +1034,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
   /**
    * Gets an event that is raised whenever a custom shader is compiled.
+   *
    * @memberof VoxelPrimitive.prototype
    * @type {Event}
    * @readonly
@@ -953,7 +1074,8 @@ const transformPositionUvToLocal = Matrix4.fromRotationTranslation(
 );
 
 /**
- * @private
+ * Updates the voxel primitive.
+ *
  * @param {FrameState} frameState
  */
 VoxelPrimitive.prototype.update = function (frameState) {
@@ -975,10 +1097,10 @@ VoxelPrimitive.prototype.update = function (frameState) {
   if (!this._ready) {
     // Don't make the primitive ready until after its first update because
     // external code may want to change some of its properties before it's rendered.
-    const that = this;
+    const primitive = this;
     frameState.afterRender.push(function () {
-      that._ready = true;
-      that._readyPromise.resolve(that);
+      primitive._ready = true;
+      primitive._readyPromise.resolve(primitive);
     });
 
     // Create pickId here instead of the constructor because it needs the context object.
@@ -1324,13 +1446,23 @@ VoxelPrimitive.prototype.update = function (frameState) {
 
     // Set uniforms that come from the traversal.
     const traversal = this._traversal;
+    const useLeafNodeTexture = traversal.useLeafNodeTexture;
 
     uniforms.octreeInternalNodeTexture = traversal.internalNodeTexture;
+    uniforms.octreeInternalNodeTexelSizeUv = Cartesian2.clone(
+      traversal.internalNodeTexelSizeUv,
+      uniforms.octreeInternalNodeTexelSizeUv
+    );
     uniforms.octreeInternalNodeTilesPerRow = traversal.internalNodeTilesPerRow;
-    uniforms.octreeInternalNodeTexelSizeUv = traversal.internalNodeTexelSizeUv;
-    uniforms.octreeLeafNodeTexture = traversal.leafNodeTexture;
-    uniforms.octreeLeafNodeTilesPerRow = traversal.leafNodeTilesPerRow;
-    uniforms.octreeLeafNodeTexelSizeUv = traversal.leafNodeTexelSizeUv;
+
+    if (useLeafNodeTexture) {
+      uniforms.octreeLeafNodeTexture = traversal.leafNodeTexture;
+      uniforms.octreeLeafNodeTexelSizeUv = Cartesian2.clone(
+        traversal.leafNodeTexelSizeUv,
+        uniforms.octreeLeafNodeTexelSizeUv
+      );
+      uniforms.octreeLeafNodeTilesPerRow = traversal.leafNodeTilesPerRow;
+    }
 
     const megatextures = traversal.megatextures;
     const megatexture = megatextures[0];
@@ -1360,67 +1492,62 @@ VoxelPrimitive.prototype.update = function (frameState) {
       megatexture.regionSizeUv,
       uniforms.megatextureTileSizeUv
     );
-  } else {
-    // Update the voxel traversal
-    const traversal = this._traversal;
-    if (shape.isVisible) {
-      // Find the keyframe location to render at. Doesn't need to be a whole number.
-      let keyframeLocation = 0.0;
-      const clock = this._clock;
-      const timeIntervalCollection = this._timeIntervalCollection;
-      if (defined(timeIntervalCollection) && defined(clock)) {
-        let date = clock.currentTime;
-        let timeInterval;
-        let timeIntervalIndex = timeIntervalCollection.indexOf(date);
-        if (timeIntervalIndex >= 0) {
+  } else if (shape.isVisible) {
+    // Find the keyframe location to render at. Doesn't need to be a whole number.
+    let keyframeLocation = 0.0;
+    const clock = this._clock;
+    const timeIntervalCollection = this._timeIntervalCollection;
+    if (defined(timeIntervalCollection) && defined(clock)) {
+      let date = clock.currentTime;
+      let timeInterval;
+      let timeIntervalIndex = timeIntervalCollection.indexOf(date);
+      if (timeIntervalIndex >= 0) {
+        timeInterval = timeIntervalCollection.get(timeIntervalIndex);
+      } else {
+        // Date fell outside the range
+        timeIntervalIndex = ~timeIntervalIndex;
+        if (timeIntervalIndex === timeIntervalCollection.length) {
+          // Date past range
+          timeIntervalIndex = timeIntervalCollection.length - 1;
           timeInterval = timeIntervalCollection.get(timeIntervalIndex);
+          date = timeInterval.stop;
         } else {
-          // Date fell outside the range
-          timeIntervalIndex = ~timeIntervalIndex;
-          if (timeIntervalIndex === timeIntervalCollection.length) {
-            // Date past range
-            timeIntervalIndex = timeIntervalCollection.length - 1;
-            timeInterval = timeIntervalCollection.get(timeIntervalIndex);
-            date = timeInterval.stop;
-          } else {
-            // Date before range
-            timeInterval = timeIntervalCollection.get(timeIntervalIndex);
-            date = timeInterval.start;
-          }
+          // Date before range
+          timeInterval = timeIntervalCollection.get(timeIntervalIndex);
+          date = timeInterval.start;
         }
-
-        // De-lerp between the start and end of the interval
-        const totalSeconds = JulianDate.secondsDifference(
-          timeInterval.stop,
-          timeInterval.start
-        );
-        const secondsDifferenceStart = JulianDate.secondsDifference(
-          date,
-          timeInterval.start
-        );
-        const t = secondsDifferenceStart / totalSeconds;
-        keyframeLocation = timeIntervalIndex + t;
       }
 
-      traversal.update(
-        frameState,
-        keyframeLocation,
-        shapeIsDirty, // recomputeBoundingVolumes
-        this._disableUpdate // pauseUpdate
+      // De-lerp between the start and end of the interval
+      const totalSeconds = JulianDate.secondsDifference(
+        timeInterval.stop,
+        timeInterval.start
       );
+      const secondsDifferenceStart = JulianDate.secondsDifference(
+        date,
+        timeInterval.start
+      );
+      const t = secondsDifferenceStart / totalSeconds;
+      keyframeLocation = timeIntervalIndex + t;
     }
 
-    // Debug draw bounding boxes and other things. Must go after traversal update
-    // because that's what updates the tile bounding boxes.
-    if (this._debugDraw) {
+    // Update the voxel traversal
+    const traversal = this._traversal;
+
+    const hasLoadedData = traversal.update(
+      frameState,
+      keyframeLocation,
+      shapeIsDirty, // recomputeBoundingVolumes
+      this._disableUpdate // pauseUpdate
+    );
+
+    if (hasLoadedData && this._debugDraw) {
+      // Debug draw bounding boxes and other things. Must go after traversal update
+      // because that's what updates the tile bounding boxes.
       debugDraw(this, frameState);
     }
 
-    const rootNodeLoaded = traversal.rootNode.isRenderable(
-      traversal.frameNumber
-    );
-
-    if (shape.isVisible && !this._disableRender && rootNodeLoaded) {
+    if (hasLoadedData && !this._disableRender) {
       // Process clipping bounds.
       const minClip = this._minClippingBounds;
       const maxClip = this._maxClippingBounds;
@@ -1580,8 +1707,13 @@ VoxelPrimitive.prototype.update = function (frameState) {
 // Shader builder helpers
 
 /**
- * @param {MetadataType} type
- * @returns {String}
+ * Converts a {@link MetadataType} to a GLSL type.
+ *
+ * @function
+ *
+ * @param {MetadataType} type The {@link MetadataType}.
+ * @returns {String} The GLSL type.
+ *
  * @private
  */
 function getGlslType(type) {
@@ -1595,9 +1727,15 @@ function getGlslType(type) {
     return "vec4";
   }
 }
+
 /**
- * @param {MetadataType} type
- * @returns {String}
+ * Gets the GLSL swizzle when reading data from a texture.
+ *
+ * @function
+ *
+ * @param {MetadataType} type The {@link MetadataType}.
+ * @returns {String} The GLSL swizzle.
+ *
  * @private
  */
 function getGlslTextureSwizzle(type) {
@@ -1613,8 +1751,13 @@ function getGlslTextureSwizzle(type) {
 }
 
 /**
- * @param {MetadataType} type
- * @returns {String}
+ * Gets the GLSL type of the partial derivative of {@link MetadataType}.
+ *
+ * @function
+ *
+ * @param {MetadataType} type The {@link MetadataType}.
+ * @returns {String} The GLSL type.
+ *
  * @private
  */
 function getGlslPartialDerivativeType(type) {
@@ -1632,8 +1775,12 @@ function getGlslPartialDerivativeType(type) {
 /**
  * GLSL needs to have `.0` at the end of whole number floats or else it's
  * treated like an integer.
- * @param {Number} number
- * @returns {String}
+ *
+ * @function
+ *
+ * @param {Number} number The number to convert.
+ * @returns {String} The number as floating point in GLSL.
+ *
  * @private
  */
 function getGlslNumberAsFloat(number) {
@@ -1645,21 +1792,29 @@ function getGlslNumberAsFloat(number) {
 }
 
 /**
+ * Gets the GLSL field
+ *
+ * @function
+ *
  * @param {MetadataType} type
  * @param {Number} index
  * @returns {String}
+ *
  * @private
  */
 function getGlslField(type, index) {
   if (type === MetadataType.SCALAR) {
     return "";
   }
-  return `.[${index}]`;
+  return `[${index}]`;
 }
 
 /**
+ * @function
+ *
  * @param {VoxelPrimitive} that
  * @param {Context} context
+ *
  * @private
  */
 function buildDrawCommands(that, context) {
@@ -2314,10 +2469,10 @@ VoxelPrimitive.prototype.isDestroyed = function () {
  *
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  *
+ * @see VoxelPrimitive#isDestroyed
+ *
  * @example
  * voxelPrimitive = voxelPrimitive && voxelPrimitive.destroy();
- *
- * @see VoxelPrimitive#isDestroyed
  */
 VoxelPrimitive.prototype.destroy = function () {
   const drawCommand = this._drawCommand;
@@ -2332,19 +2487,7 @@ VoxelPrimitive.prototype.destroy = function () {
   }
 
   this._pickId = this._pickId && this._pickId.destroy();
-
-  if (defined(this._traversal)) {
-    const megatextures = this._traversal.megatextures;
-    const length = megatextures.length;
-    for (let i = 0; i < length; i++) {
-      const megatexture = megatextures[i];
-      // TODO: when would megatexture not be defined?
-      if (defined(megatexture)) {
-        megatexture.destroy();
-      }
-    }
-    this._traversal = undefined;
-  }
+  this._traversal = this._traversal && this._traversal.destroy();
 
   return destroyObject(this);
 };
@@ -2405,6 +2548,7 @@ const scratchCornersClipSpace = new Array(
  * clip space prior to perspective division.
  *
  * @function
+ *
  * @param {OrientedBoundingBox} orientedBoundingBox
  * @param {Matrix4} worldToProjection
  * @param {Cartesian4} result
@@ -2506,11 +2650,17 @@ const polylineYAxis = new Cartesian3(0.0, polylineAxisDistance, 0.0);
 const polylineZAxis = new Cartesian3(0.0, 0.0, polylineAxisDistance);
 
 /**
- * @ignore
+ * Draws the tile bounding boxes and axes.
+ *
+ * @function
+ *
  * @param {VoxelPrimitive} that
  * @param {FrameState} frameState
+ *
+ * @private
  */
 function debugDraw(that, frameState) {
+  const frameNumber = frameState.frameNumber;
   const traversal = that._traversal;
   const polylines = that._debugPolylines;
   const shapeVisible = that._shape.isVisible;
@@ -2545,7 +2695,6 @@ function debugDraw(that, frameState) {
   }
 
   function drawTile(tile) {
-    const frameNumber = traversal.frameNumber;
     if (!tile.isRenderable(frameNumber)) {
       return;
     }
@@ -2594,8 +2743,12 @@ function debugDraw(that, frameState) {
 
 /**
  * The default custom shader used by the primitive.
- * @private
+ *
  * @type {CustomShader}
+ * @constant
+ * @readonly
+ *
+ * @private
  */
 VoxelPrimitive.DefaultCustomShader = new CustomShader({
   fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)

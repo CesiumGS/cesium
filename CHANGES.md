@@ -3,6 +3,7 @@
 ### 1.93 - 2022-05-02
 
 ##### Additions :tada:
+
 - Added experimental voxel rendering that supports glTF with EXT_primitive_voxels extension, 3D Tiles, and procedural data. [#10253](https://github.com/CesiumGS/cesium/pull/10253).
 
 ### 1.92 - 2022-04-01

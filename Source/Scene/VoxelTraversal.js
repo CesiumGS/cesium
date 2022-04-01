@@ -26,6 +26,7 @@ import MetadataComponentType from "./MetadataComponentType.js";
 /**
  * Handles tileset traversal, tile requests, and GPU resources. Intended to be
  * private and paired with a {@link VoxelPrimitive}, which has a user-facing API.
+ *
  * @alias VoxelTraversal
  * @constructor
  *
@@ -49,16 +50,17 @@ function VoxelTraversal(
   maximumTextureMemoryByteLength
 ) {
   /**
-   * @private
+   * TODO: maybe this shouldn't be stored?
    * @type {VoxelPrimitive}
+   * @private
    */
-  this.primitive = primitive;
+  this._primitive = primitive;
 
   const length = types.length;
 
   /**
-   * @private
    * @type {Megatexture[]}
+   * @readonly
    */
   this.megatextures = new Array(length);
 
@@ -80,16 +82,16 @@ function VoxelTraversal(
   const maximumTileCount = this.megatextures[0].maximumTileCount;
 
   /**
-   * @private
    * @type {Number}
+   * @private
    */
-  this.simultaneousRequestCount = 0;
+  this._simultaneousRequestCount = 0;
 
   /**
-   * @private
    * @type {Boolean}
+   * @private
    */
-  this.debugPrint = false;
+  this._debugPrint = false;
 
   const shape = primitive._shape;
   const rootLevel = 0;
@@ -99,8 +101,8 @@ function VoxelTraversal(
   const rootParent = undefined;
 
   /**
-   * @private
    * @type {SpatialNode}
+   * @readonly
    */
   this.rootNode = new SpatialNode(
     rootLevel,
@@ -113,43 +115,43 @@ function VoxelTraversal(
   );
 
   /**
-   * @private
    * @type {DoubleEndedPriorityQueue}
+   * @private
    */
-  this.priorityQueue = new DoubleEndedPriorityQueue({
+  this._priorityQueue = new DoubleEndedPriorityQueue({
     maximumLength: maximumTileCount,
     comparator: KeyframeNode.priorityComparator,
   });
 
   /**
-   * @private
    * @type {KeyframeNode[]}
+   * @private
    */
-  this.highPriorityKeyframeNodes = new Array(maximumTileCount);
+  this._highPriorityKeyframeNodes = new Array(maximumTileCount);
 
   /**
-   * @private
    * @type {KeyframeNode[]}
+   * @private
    */
-  this.keyframeNodesInMegatexture = new Array(maximumTileCount);
+  this._keyframeNodesInMegatexture = new Array(maximumTileCount);
 
   /**
-   * @private
    * @type {Number}
+   * @private
    */
-  this.keyframeCount = keyframeCount;
+  this._keyframeCount = keyframeCount;
 
   /**
-   * @private
    * @type {Number}
+   * @private
    */
-  this.keyframeLocation = 0;
+  this._keyframeLocation = 0;
 
   /**
+   * @type {Number[]}
    * @private
-   * @type {Number}
    */
-  this.frameNumber = -1;
+  this._binaryTreeKeyframeWeighting = new Array(keyframeCount);
 
   function binaryTreeWeightingRecursive(arr, start, end, depth) {
     if (start > end) {
@@ -160,11 +162,12 @@ function VoxelTraversal(
     binaryTreeWeightingRecursive(arr, start, mid - 1, depth + 1);
     binaryTreeWeightingRecursive(arr, mid + 1, end, depth + 1);
   }
-  this.binaryTreeKeyframeWeighting = new Array(keyframeCount);
-  this.binaryTreeKeyframeWeighting[0] = 0;
-  this.binaryTreeKeyframeWeighting[keyframeCount - 1] = 0;
+
+  const binaryTreeKeyframeWeighting = this._binaryTreeKeyframeWeighting;
+  binaryTreeKeyframeWeighting[0] = 0;
+  binaryTreeKeyframeWeighting[keyframeCount - 1] = 0;
   binaryTreeWeightingRecursive(
-    this.binaryTreeKeyframeWeighting,
+    binaryTreeKeyframeWeighting,
     1,
     keyframeCount - 2,
     0
@@ -179,6 +182,10 @@ function VoxelTraversal(
     maximumTileCount / internalNodeTilesPerRow
   );
 
+  /**
+   * @type {Texture}
+   * @readonly
+   */
   this.internalNodeTexture = new Texture({
     context: context,
     pixelFormat: PixelFormat.RGBA,
@@ -191,14 +198,48 @@ function VoxelTraversal(
       magnificationFilter: TextureMagnificationFilter.NEAREST,
     }),
   });
+
+  /**
+   * @type {Number}
+   * @readonly
+   */
+  this.internalNodeTilesPerRow = internalNodeTilesPerRow;
+
+  /**
+   * @type {Cartesian2}
+   * @readonly
+   */
   this.internalNodeTexelSizeUv = new Cartesian2(
     1.0 / internalNodeTextureDimensionX,
     1.0 / internalNodeTextureDimensionY
   );
-  this.internalNodeTilesPerRow = internalNodeTilesPerRow;
 
+  /**
+   * @type {Boolean}
+   * @readonly
+   */
   this.useLeafNodeTexture = keyframeCount > 1;
-  if (this.useLeafNodeTexture) {
+
+  /**
+   * @type {Texture|undefined}
+   * @readonly
+   */
+  this.leafNodeTexture = undefined;
+
+  /**
+   * @type {Number|undefined}
+   * @readonly
+   */
+  this.leafNodeTilesPerRow = undefined;
+
+  /**
+   * @type {Cartesian2|undefined}
+   * @readonly
+   */
+  this.leafNodeTexelSizeUv = undefined;
+
+  const useLeafNodeTexture = this._useLeafNodeTexture;
+  if (useLeafNodeTexture) {
     const leafNodeTexelCount = 2;
     const leafNodeTextureDimensionX = 1024;
     const leafNodeTilesPerRow = Math.floor(
@@ -225,21 +266,17 @@ function VoxelTraversal(
       1.0 / leafNodeTextureDimensionY
     );
     this.leafNodeTilesPerRow = leafNodeTilesPerRow;
-  } else {
-    this.leafNodeTexture = undefined;
-    this.leafNodeTexelSizeUv = undefined;
-    this.leafNodeTilesPerRow = undefined;
   }
 }
 
 VoxelTraversal.simultaneousRequestCountMaximum = 50;
 
 /**
- * @private
  * @param {FrameState} frameState
  * @param {Number} keyframeLocation
  * @param {Boolean} recomputeBoundingVolumes
  * @param {Boolean} pauseUpdate
+ * @returns {Boolean} True if the voxel grid has any loaded data.
  */
 VoxelTraversal.prototype.update = function (
   frameState,
@@ -247,51 +284,99 @@ VoxelTraversal.prototype.update = function (
   recomputeBoundingVolumes,
   pauseUpdate
 ) {
-  const that = this;
-
-  const keyframeCount = that.keyframeCount;
-  that.keyframeLocation = CesiumMath.clamp(
+  const keyframeCount = this._keyframeCount;
+  this._keyframeLocation = CesiumMath.clamp(
     keyframeLocation,
     0.0,
     keyframeCount - 1
   );
 
   if (recomputeBoundingVolumes) {
-    recomputeBoundingVolumesRecursive(that, that.rootNode);
+    recomputeBoundingVolumesRecursive(this, this.rootNode);
   }
 
   if (!pauseUpdate) {
-    that.frameNumber = frameState.frameNumber;
-
     const timestamp0 = getTimestamp();
-    loadAndUnload(that, frameState);
+    loadAndUnload(this, frameState);
     const timestamp1 = getTimestamp();
-    generateOctree(that);
+    generateOctree(this, frameState);
     const timestamp2 = getTimestamp();
 
-    const debugStatistics = that.debugPrint;
+    const debugStatistics = this._debugPrint;
     if (debugStatistics) {
       const loadAndUnloadTimeMs = timestamp1 - timestamp0;
       const generateOctreeTimeMs = timestamp2 - timestamp1;
       const totalTimeMs = timestamp2 - timestamp0;
       printDebugInformation(
-        that,
+        this,
         loadAndUnloadTimeMs,
         generateOctreeTimeMs,
         totalTimeMs
       );
     }
   }
+
+  const rootNode = this.rootNode;
+  const frameNumber = frameState.frameNumber;
+  return rootNode.isRenderable(frameNumber);
 };
 
 /**
- * @ignore
+ * Returns true if this object was destroyed; otherwise, false.
+ * <br /><br />
+ * If this object was destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
+ * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
+ * @see VoxelTraversal#destroy
+ */
+VoxelTraversal.prototype.isDestroyed = function () {
+  return false;
+};
+
+/**
+ * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+ * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+ * <br /><br />
+ * Once an object is destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+ * assign the return value (<code>undefined</code>) to the object as done in the example.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @see VoxelTraversal#isDestroyed
+ *
+ * @example
+ * voxelTraversal = voxelTraversal && voxelTraversal.destroy();
+ */
+VoxelTraversal.prototype.destroy = function () {
+  const megatextures = this.megatextures;
+  const megatextureLength = megatextures.length;
+  for (let i = 0; i < megatextureLength; i++) {
+    megatextures[i] = megatextures[i] && megatextures[i].destroy();
+  }
+
+  this.internalNodeTexture =
+    this.internalNodeTexture && this.internalNodeTexture.destroy();
+
+  this.leafNodeTexture = this.leafNodeTexture && this.leafNodeTexture.destroy();
+
+  return destroyObject(this);
+};
+
+/**
+ * @function
+ *
  * @param {VoxelTraversal} that
  * @param {SpatialNode} node
+ *
+ * @private
  */
 function recomputeBoundingVolumesRecursive(that, node) {
-  const shape = that.primitive._shape;
-  const dimensions = that.primitive._provider.dimensions;
+  const primitive = that._primitive;
+  const shape = primitive._shape;
+  const dimensions = primitive._provider.dimensions;
   node.computeBoundingVolumes(shape, dimensions);
   if (defined(node.children)) {
     for (let i = 0; i < 8; i++) {
@@ -303,9 +388,13 @@ function recomputeBoundingVolumesRecursive(that, node) {
 
 /**
  * Call requestData for each metadata
- * @ignore
+ *
+ * @function
+ *
  * @param {VoxelTraversal} that
  * @param {KeyframeNode} keyframeNode
+ *
+ * @private
  */
 function requestTiles(that, keyframeNode) {
   const keys = Object.keys(that.megatextures);
@@ -316,20 +405,23 @@ function requestTiles(that, keyframeNode) {
   }
 }
 /**
- * @ignore
+ * @function
+ *
  * @param {VoxelTraversal} that
  * @param {KeyframeNode} keyframeNode
  * @param {String} metadataName
+ *
+ * @private
  */
 function requestData(that, keyframeNode, metadataName) {
   if (
-    that.simultaneousRequestCount >=
+    that._simultaneousRequestCount >=
     VoxelTraversal.simultaneousRequestCountMaximum
   ) {
     return;
   }
 
-  const primitive = that.primitive;
+  const primitive = that._primitive;
   const provider = primitive._provider;
   const keyframe = keyframeNode.keyframe;
   const spatialNode = keyframeNode.spatialNode;
@@ -339,7 +431,7 @@ function requestData(that, keyframeNode, metadataName) {
   const tileZ = spatialNode.z;
 
   const postRequestSuccess = function (result) {
-    that.simultaneousRequestCount--;
+    that._simultaneousRequestCount--;
     const length = primitive._provider.types.length;
 
     if (!defined(result)) {
@@ -373,7 +465,7 @@ function requestData(that, keyframeNode, metadataName) {
   };
 
   const postRequestFailure = function () {
-    that.simultaneousRequestCount--;
+    that._simultaneousRequestCount--;
     keyframeNode.state = VoxelTraversal.LoadState.FAILED;
   };
 
@@ -387,7 +479,7 @@ function requestData(that, keyframeNode, metadataName) {
   });
 
   if (defined(promise)) {
-    that.simultaneousRequestCount++;
+    that._simultaneousRequestCount++;
     keyframeNode.state = VoxelTraversal.LoadState.RECEIVING;
     promise.then(postRequestSuccess).catch(postRequestFailure);
   } else {
@@ -396,28 +488,34 @@ function requestData(that, keyframeNode, metadataName) {
 }
 
 /**
- * @ignore
+ * @function
+ *
  * @param {Number} x
  * @returns {Number}
+ *
+ * @private
  */
 function mapInfiniteRangeToZeroOne(x) {
   return x / (1.0 + x);
 }
 
 /**
- * @ignore
+ * @function
+ *
  * @param {VoxelTraversal} that
  * @param {FrameState} frameState
+ *
+ * @private
  */
 function loadAndUnload(that, frameState) {
-  const frameNumber = that.frameNumber;
-  const primitive = that.primitive;
+  const frameNumber = frameState.frameNumber;
+  const primitive = that._primitive;
   const shape = primitive._shape;
   const voxelDimensions = primitive._provider.dimensions;
   const targetScreenSpaceError = primitive._screenSpaceError;
-  const priorityQueue = that.priorityQueue;
-  const keyframeLocation = that.keyframeLocation;
-  const keyframeCount = that.keyframeCount;
+  const priorityQueue = that._priorityQueue;
+  const keyframeLocation = that._keyframeLocation;
+  const keyframeCount = that._keyframeCount;
   const rootNode = that.rootNode;
 
   const cameraPosition = frameState.camera.positionWC;
@@ -511,7 +609,7 @@ function loadAndUnload(that, frameState) {
         4.0
       );
       const binaryTreeFactor = Math.exp(
-        -that.binaryTreeKeyframeWeighting[keyframe]
+        -that._binaryTreeKeyframeWeighting[keyframe]
       );
       keyframeNode.priority = 10.0 * ssePriority;
       keyframeNode.priority += CesiumMath.lerp(
@@ -632,7 +730,7 @@ function loadAndUnload(that, frameState) {
   priorityQueue.reset();
   addToQueueRecursive(rootNode, CullingVolume.MASK_INDETERMINATE);
 
-  const highPriorityKeyframeNodes = that.highPriorityKeyframeNodes;
+  const highPriorityKeyframeNodes = that._highPriorityKeyframeNodes;
   let highPriorityKeyframeNodeCount = 0;
   let highPriorityKeyframeNode;
   while (priorityQueue.length > 0) {
@@ -644,7 +742,7 @@ function loadAndUnload(that, frameState) {
     highPriorityKeyframeNodeCount++;
   }
 
-  const keyframeNodesInMegatexture = that.keyframeNodesInMegatexture;
+  const keyframeNodesInMegatexture = that._keyframeNodesInMegatexture;
   // TODO: some of the megatexture state should be stored once, not duplicate for each megatexture
   const megatexture = that.megatextures[0];
   const keyframeNodesInMegatextureCount = megatexture.occupiedCount;
@@ -704,8 +802,11 @@ function loadAndUnload(that, frameState) {
 }
 
 /**
- * @ignore
+ * @function
+ *
  * @param {VoxelTraversal} that
+ *
+ * @private
  */
 function printDebugInformation(
   that,
@@ -713,7 +814,7 @@ function printDebugInformation(
   generateOctreeTimeMs,
   totalTimeMs
 ) {
-  const keyframeCount = that.keyframeCount;
+  const keyframeCount = that._keyframeCount;
   const rootNode = that.rootNode;
 
   const loadStateCount = Object.keys(VoxelTraversal.LoadState).length;
@@ -802,14 +903,17 @@ VoxelTraversal.LoadState = {
 };
 
 /**
- * @ignore
+ * @alias SpatialNode
  * @constructor
+ *
  * @param {Number} level
  * @param {Number} x
  * @param {Number} y
  * @param {Number} z
  * @param {SpatialNode} parent
  * @param {VoxelShapeType} shape
+ *
+ * @private
  */
 function SpatialNode(level, x, y, z, parent, shape, voxelDimensions) {
   /**
@@ -855,6 +959,11 @@ function SpatialNode(level, x, y, z, parent, shape, voxelDimensions) {
   this.computeBoundingVolumes(shape, voxelDimensions);
 }
 
+/**
+ * @param {SpatialNode} a
+ * @param {SpatialNode} b
+ * @returns {Boolean}
+ */
 SpatialNode.spatialComparator = function (a, b) {
   // The higher of the two screen space errors is prioritized
   return b.screenSpaceError - a.screenSpaceError;
@@ -863,7 +972,6 @@ SpatialNode.spatialComparator = function (a, b) {
 const scratchObbHalfScale = new Cartesian3();
 
 /**
- * @ignore
  * @param {VoxelShape} shape
  * @param {Cartesian3} voxelDimensions
  */
@@ -889,20 +997,17 @@ SpatialNode.prototype.computeBoundingVolumes = function (
 };
 
 /**
- * @ignore
  * @param {FrameState} frameState
  * @param {Number} visibilityPlaneMask
  * @returns {Number} A plane mask as described in {@link CullingVolume#computeVisibilityWithPlaneMask}.
  */
 SpatialNode.prototype.visibility = function (frameState, visibilityPlaneMask) {
-  const that = this;
-  const obb = that.orientedBoundingBox;
+  const obb = this.orientedBoundingBox;
   const cullingVolume = frameState.cullingVolume;
   return cullingVolume.computeVisibilityWithPlaneMask(obb, visibilityPlaneMask);
 };
 
 /**
- * @ignore
  * @param {Cartesian3} cameraPosition
  * @param {Number} screenSpaceErrorMultiplier
  */
@@ -910,15 +1015,14 @@ SpatialNode.prototype.computeScreenSpaceError = function (
   cameraPosition,
   screenSpaceErrorMultiplier
 ) {
-  const that = this;
-  const obb = that.orientedBoundingBox;
+  const obb = this.orientedBoundingBox;
 
   let distance = Math.sqrt(obb.distanceSquaredTo(cameraPosition));
   // Avoid divide-by-zero when viewer is inside the tile.
   distance = Math.max(distance, CesiumMath.EPSILON7);
-  const approximateVoxelSize = that.approximateVoxelSize;
+  const approximateVoxelSize = this.approximateVoxelSize;
   const error = screenSpaceErrorMultiplier * (approximateVoxelSize / distance);
-  that.screenSpaceError = error;
+  this.screenSpaceError = error;
 };
 
 // This object imitates a KeyframeNode. Only used for binary search function.
@@ -928,13 +1032,12 @@ const scratchBinarySearchKeyframeNode = {
 
 /**
  * Finds the index of the keyframe if it exists, or the complement (~) of the index where it would be in the sorted array.
- * @ignore
+ *
  * @param {Number} keyframe
  * @returns {Number}
  */
 SpatialNode.prototype.findKeyframeIndex = function (keyframe) {
-  const that = this;
-  const keyframeNodes = that.keyframeNodes;
+  const keyframeNodes = this.keyframeNodes;
   scratchBinarySearchKeyframeNode.keyframe = keyframe;
   const index = binarySearch(
     keyframeNodes,
@@ -943,15 +1046,15 @@ SpatialNode.prototype.findKeyframeIndex = function (keyframe) {
   );
   return index;
 };
+
 /**
  * Finds the index of the renderable keyframe if it exists, or the complement (~) of the index where it would be in the sorted array.
- * @ignore
+ *
  * @param {Number} keyframe
  * @returns {Number}
  */
 SpatialNode.prototype.findRenderableKeyframeIndex = function (keyframe) {
-  const that = this;
-  const renderableKeyframeNodes = that.renderableKeyframeNodes;
+  const renderableKeyframeNodes = this.renderableKeyframeNodes;
   scratchBinarySearchKeyframeNode.keyframe = keyframe;
   const index = binarySearch(
     renderableKeyframeNodes,
@@ -963,15 +1066,13 @@ SpatialNode.prototype.findRenderableKeyframeIndex = function (keyframe) {
 
 /**
  * Computes the most suitable keyframes for rendering, balancing between temporal and visual quality.
- * @ignore
+ *
  * @param {Number} keyframeLocation
  */
 SpatialNode.prototype.computeSurroundingRenderableKeyframeNodes = function (
   keyframeLocation
 ) {
-  const that = this;
-
-  let spatialNode = that;
+  let spatialNode = this;
   const startLevel = spatialNode.level;
 
   const targetKeyframePrev = Math.floor(keyframeLocation);
@@ -1058,12 +1159,12 @@ SpatialNode.prototype.computeSurroundingRenderableKeyframeNodes = function (
     spatialNode = spatialNode.parent;
   }
 
-  that.renderableKeyframeNodePrevious = bestKeyframeNodePrev;
-  that.renderableKeyframeNodeNext = bestKeyframeNodeNext;
+  this.renderableKeyframeNodePrevious = bestKeyframeNodePrev;
+  this.renderableKeyframeNodeNext = bestKeyframeNodeNext;
   if (defined(bestKeyframeNodePrev) && defined(bestKeyframeNodeNext)) {
     const bestKeyframePrev = bestKeyframeNodePrev.keyframe;
     const bestKeyframeNext = bestKeyframeNodeNext.keyframe;
-    that.renderableKeyframeNodeLerp =
+    this.renderableKeyframeNodeLerp =
       bestKeyframePrev === bestKeyframeNext
         ? 0.0
         : CesiumMath.clamp(
@@ -1076,30 +1177,25 @@ SpatialNode.prototype.computeSurroundingRenderableKeyframeNodes = function (
 };
 
 /**
- * @ignore
  * @param {Number} frameNumber
  * @returns {Boolean}
  */
 SpatialNode.prototype.isVisited = function (frameNumber) {
-  const that = this;
-  return that.visitedFrameNumber === frameNumber;
+  return this.visitedFrameNumber === frameNumber;
 };
 
 /**
- * @ignore
  * @param {Number} keyframe
  */
 SpatialNode.prototype.createKeyframeNode = function (keyframe) {
-  const that = this;
-  let index = that.findKeyframeIndex(keyframe);
+  let index = this.findKeyframeIndex(keyframe);
   if (index < 0) {
     index = ~index; // convert to insertion index
-    const keyframeNode = new KeyframeNode(that, keyframe);
-    that.keyframeNodes.splice(index, 0, keyframeNode);
+    const keyframeNode = new KeyframeNode(this, keyframe);
+    this.keyframeNodes.splice(index, 0, keyframeNode);
   }
 };
 /**
- * @ignore
  * @param {KeyframeNode} keyframeNode
  * @param {Megatexture} megatexture
  */
@@ -1107,15 +1203,13 @@ SpatialNode.prototype.destroyKeyframeNode = function (
   keyframeNode,
   megatextures
 ) {
-  const that = this;
-
   const keyframe = keyframeNode.keyframe;
-  const keyframeIndex = that.findKeyframeIndex(keyframe);
+  const keyframeIndex = this.findKeyframeIndex(keyframe);
   if (keyframeIndex < 0) {
     throw new DeveloperError("Keyframe node does not exist.");
   }
 
-  const keyframeNodes = that.keyframeNodes;
+  const keyframeNodes = this.keyframeNodes;
   keyframeNodes.splice(keyframeIndex, 1);
 
   if (keyframeNode.megatextureIndex !== -1) {
@@ -1127,14 +1221,14 @@ SpatialNode.prototype.destroyKeyframeNode = function (
       megatextureArray[i].remove(keyframeNode.megatextureIndex);
     }
 
-    const renderableKeyframeNodeIndex = that.findRenderableKeyframeIndex(
+    const renderableKeyframeNodeIndex = this.findRenderableKeyframeIndex(
       keyframe
     );
     if (renderableKeyframeNodeIndex < 0) {
       throw new DeveloperError("Renderable keyframe node does not exist.");
     }
 
-    const renderableKeyframeNodes = that.renderableKeyframeNodes;
+    const renderableKeyframeNodes = this.renderableKeyframeNodes;
     renderableKeyframeNodes.splice(renderableKeyframeNodeIndex, 1);
   }
 
@@ -1146,6 +1240,10 @@ SpatialNode.prototype.destroyKeyframeNode = function (
   keyframeNode.highPriorityFrameNumber = -1;
 };
 
+/**
+ * @param {KeyframeNode} keyframeNode
+ * @param {Megatexture[]} megatextures
+ */
 SpatialNode.prototype.addKeyframeNodeToMegatextures = function (
   keyframeNode,
   megatextures
@@ -1177,8 +1275,8 @@ SpatialNode.prototype.addKeyframeNodeToMegatextures = function (
   renderableKeyframeNodeIndex = ~renderableKeyframeNodeIndex;
   renderableKeyframeNodes.splice(renderableKeyframeNodeIndex, 0, keyframeNode);
 };
+
 /**
- * @ignore
  * @param {KeyframeNode} keyframeNode
  * @param {Megatexture} megatexture
  */
@@ -1186,8 +1284,6 @@ SpatialNode.prototype.addKeyframeNodeToMegatexture = function (
   keyframeNode,
   megatexture
 ) {
-  const that = this;
-
   if (
     keyframeNode.state !== VoxelTraversal.LoadState.RECEIVED ||
     keyframeNode.megatextureIndex !== -1 ||
@@ -1202,8 +1298,8 @@ SpatialNode.prototype.addKeyframeNodeToMegatexture = function (
   keyframeNode.metadatas[megatexture.metadataName] = undefined; // data is in megatexture so no need to hold onto it
   keyframeNode.state = VoxelTraversal.LoadState.LOADED;
 
-  const renderableKeyframeNodes = that.renderableKeyframeNodes;
-  let renderableKeyframeNodeIndex = that.findRenderableKeyframeIndex(
+  const renderableKeyframeNodes = this.renderableKeyframeNodes;
+  let renderableKeyframeNodeIndex = this.findRenderableKeyframeIndex(
     keyframeNode.keyframe
   );
   if (renderableKeyframeNodeIndex >= 0) {
@@ -1214,30 +1310,30 @@ SpatialNode.prototype.addKeyframeNodeToMegatexture = function (
 };
 
 /**
- * @ignore
  * @param {Number} frameNumber
  */
 SpatialNode.prototype.isRenderable = function (frameNumber) {
-  const that = this;
-
-  const previousNode = that.renderableKeyframeNodePrevious;
-  const nextNode = that.renderableKeyframeNodeNext;
-  const level = that.level;
+  const previousNode = this.renderableKeyframeNodePrevious;
+  const nextNode = this.renderableKeyframeNodeNext;
+  const level = this.level;
 
   return (
     defined(previousNode) &&
     defined(nextNode) &&
     (previousNode.spatialNode.level === level ||
       nextNode.spatialNode.level === level) &&
-    that.visitedFrameNumber === frameNumber
+    this.visitedFrameNumber === frameNumber
   );
 };
 
 /**
- * @ignore
+ * @alias KeyframeNode
  * @constructor
+ *
  * @param {SpatialNode} spatialNode
  * @param {Number} keyframe
+ *
+ * @private
  */
 function KeyframeNode(spatialNode, keyframe) {
   this.spatialNode = spatialNode;
@@ -1250,15 +1346,14 @@ function KeyframeNode(spatialNode, keyframe) {
 }
 
 /**
- * @ignore
  * @param {KeyframeNode} a
  * @param {KeyframeNode} b
  */
 KeyframeNode.priorityComparator = function (a, b) {
   return a.priority - b.priority;
 };
+
 /**
- * @ignore
  * @param {KeyframeNode} a
  * @param {KeyframeNode} b
  */
@@ -1302,13 +1397,15 @@ const GpuOctreeFlag = {
 };
 
 /**
- * @ignore
+ * @function
+ *
  * @param {VoxelTraversal} that
+ * @param {FrameState} frameState
  */
-function generateOctree(that) {
-  const keyframeLocation = that.keyframeLocation;
-  const useLeafNodes = that.useLeafNodeTexture;
-  const frameNumber = that.frameNumber;
+function generateOctree(that, frameState) {
+  const keyframeLocation = that._keyframeLocation;
+  const useLeafNodes = that._useLeafNodeTexture;
+  const frameNumber = frameState.frameNumber;
 
   let internalNodeCount = 0;
   let leafNodeCount = 0;
@@ -1523,7 +1620,6 @@ function generateOctree(that) {
 }
 
 /**
- * @private
  * @param {Number} tileCount
  * @param {Cartesian3} dimensions
  * @param {MetadataType[]} types
@@ -1555,13 +1651,16 @@ VoxelTraversal.getApproximateTextureMemoryByteLength = function (
 };
 
 /**
- * @ignore
+ * @alias Megatexture
  * @constructor
+ *
  * @param {Context} context
  * @param {Cartesian3} dimensions
  * @param {Number} channelCount
  * @param {MetadataComponentType} componentType
  * @param {Number} [textureMemoryByteLength]
+ *
+ * @private
  */
 function Megatexture(
   context,
@@ -1642,32 +1741,32 @@ function Megatexture(
 
   /**
    * @type {Number}
-   * @private
+   * @readonly
    */
   this.channelCount = channelCount;
 
   /**
    * @type {MetadataComponentType}
-   * @private
+   * @readonly
    */
   this.componentType = componentType;
 
   /**
    * @type {Cartesian3}
-   * @private
+   * @readonly
    */
   this.voxelCountPerTile = Cartesian3.clone(dimensions, new Cartesian3());
 
   /**
    * @type {Number}
-   * @private
+   * @readonly
    */
   this.maximumTileCount =
     regionCountPerMegatextureX * regionCountPerMegatextureY;
 
   /**
    * @type {Cartesian2}
-   * @private
+   * @readonly
    */
   this.regionCountPerMegatexture = new Cartesian2(
     regionCountPerMegatextureX,
@@ -1676,7 +1775,7 @@ function Megatexture(
 
   /**
    * @type {Cartesian2}
-   * @private
+   * @readonly
    */
   this.voxelCountPerRegion = new Cartesian2(
     voxelCountPerRegionX,
@@ -1685,7 +1784,7 @@ function Megatexture(
 
   /**
    * @type {Cartesian2}
-   * @private
+   * @readonly
    */
   this.sliceCountPerRegion = new Cartesian2(
     sliceCountPerRegionX,
@@ -1694,7 +1793,7 @@ function Megatexture(
 
   /**
    * @type {Cartesian2}
-   * @private
+   * @readonly
    */
   this.voxelSizeUv = new Cartesian2(
     1.0 / textureDimension,
@@ -1703,7 +1802,7 @@ function Megatexture(
 
   /**
    * @type {Cartesian2}
-   * @private
+   * @readonly
    */
   this.sliceSizeUv = new Cartesian2(
     dimensions.x / textureDimension,
@@ -1712,7 +1811,7 @@ function Megatexture(
 
   /**
    * @type {Cartesian2}
-   * @private
+   * @readonly
    */
   this.regionSizeUv = new Cartesian2(
     voxelCountPerRegionX / textureDimension,
@@ -1721,7 +1820,7 @@ function Megatexture(
 
   /**
    * @type {Texture}
-   * @private
+   * @readonly
    */
   this.texture = new Texture({
     context: context,
@@ -1739,13 +1838,17 @@ function Megatexture(
   });
 
   const ArrayType = MetadataComponentType.toTypedArrayType(componentType);
+
+  /**
+   * @type {Array}
+   */
   this.tileVoxelDataTemp = new ArrayType(
     voxelCountPerRegionX * voxelCountPerRegionY * channelCount
   );
 
   /**
    * @type {MegatextureNode[]}
-   * @private
+   * @readonly
    */
   this.nodes = new Array(this.maximumTileCount);
   for (let tileIndex = 0; tileIndex < this.maximumTileCount; tileIndex++) {
@@ -1762,89 +1865,88 @@ function Megatexture(
 
   /**
    * @type {MegatextureNode}
-   * @private
+   * @readonly
    */
   this.occupiedList = undefined;
 
   /**
    * @type {MegatextureNode}
-   * @private
+   * @readonly
    */
   this.emptyList = this.nodes[0];
 
   /**
    * @type {Number}
-   * @private
+   * @readonly
    */
   this.occupiedCount = 0;
 }
 
 /**
- * @ignore
+ * @alias MegatextureNode
  * @constructor
+ *
  * @param {Number} index
+ *
+ * @private
  */
 function MegatextureNode(index) {
+  /**
+   * @type {Number}
+   */
   this.index = index;
 
   /**
-   * @ignore
    * @type {MegatextureNode}
    */
   this.nextNode = undefined;
 
   /**
-   * @ignore
    * @type {MegatextureNode}
    */
   this.previousNode = undefined;
 }
 
 /**
- * @ignore
  * @param {Array} data
  * @returns {Number}
  */
 Megatexture.prototype.add = function (data) {
-  const that = this;
-
-  if (that.isFull()) {
+  if (this.isFull()) {
     throw new DeveloperError("Trying to add when there are no empty spots");
   }
 
   // remove head of empty list
-  const node = that.emptyList;
-  that.emptyList = that.emptyList.nextNode;
-  if (defined(that.emptyList)) {
-    that.emptyList.previousNode = undefined;
+  const node = this.emptyList;
+  this.emptyList = this.emptyList.nextNode;
+  if (defined(this.emptyList)) {
+    this.emptyList.previousNode = undefined;
   }
 
   // make head of occupied list
-  node.nextNode = that.occupiedList;
+  node.nextNode = this.occupiedList;
   if (defined(node.nextNode)) {
     node.nextNode.previousNode = node;
   }
-  that.occupiedList = node;
+  this.occupiedList = node;
 
   const index = node.index;
-  that.writeDataToTexture(index, data);
+  this.writeDataToTexture(index, data);
 
-  that.occupiedCount++;
+  this.occupiedCount++;
   return index;
 };
 
 /**
- * @ignore
  * @param {Number} index
  */
 Megatexture.prototype.remove = function (index) {
-  const that = this;
-  if (index < 0 || index >= that.maximumTileCount) {
+  if (index < 0 || index >= this.maximumTileCount) {
     throw new DeveloperError("Megatexture index out of bounds");
   }
 
   // remove from list
-  const node = that.nodes[index];
+  const node = this.nodes[index];
   if (defined(node.previousNode)) {
     node.previousNode.nextNode = node.nextNode;
   }
@@ -1853,26 +1955,23 @@ Megatexture.prototype.remove = function (index) {
   }
 
   // make head of empty list
-  node.nextNode = that.emptyList;
+  node.nextNode = this.emptyList;
   if (defined(node.nextNode)) {
     node.nextNode.previousNode = node;
   }
   node.previousNode = undefined;
-  that.emptyList = node;
-  that.occupiedCount--;
+  this.emptyList = node;
+  this.occupiedCount--;
 };
 
 /**
- * @ignore
  * @returns {Boolean}
  */
 Megatexture.prototype.isFull = function () {
-  const that = this;
-  return that.emptyList === undefined;
+  return this.emptyList === undefined;
 };
 
 /**
- * @ignore
  * @param {Number} tileCount
  * @param {Cartesian3} dimensions
  * @param {Number} channelCount number of channels in the metadata. Must be 1 to 4.
@@ -1925,18 +2024,16 @@ Megatexture.getApproximateTextureMemoryByteLength = function (
 };
 
 /**
- * @ignore
  * @param {Number} index
  * @param {Float32Array|Uint16Array|Uint8Array} data
  */
 Megatexture.prototype.writeDataToTexture = function (index, data) {
-  const that = this;
-  const texture = that.texture;
-  const channelCount = that.channelCount;
-  const regionDimensionsPerMegatexture = that.regionCountPerMegatexture;
-  const voxelDimensionsPerRegion = that.voxelCountPerRegion;
-  const voxelDimensionsPerTile = that.voxelCountPerTile;
-  const sliceDimensionsPerRegion = that.sliceCountPerRegion;
+  const texture = this.texture;
+  const channelCount = this.channelCount;
+  const regionDimensionsPerMegatexture = this.regionCountPerMegatexture;
+  const voxelDimensionsPerRegion = this.voxelCountPerRegion;
+  const voxelDimensionsPerTile = this.voxelCountPerTile;
+  const sliceDimensionsPerRegion = this.sliceCountPerRegion;
 
   let tileData = data;
 
@@ -1947,8 +2044,8 @@ Megatexture.prototype.writeDataToTexture = function (index, data) {
     for (let i = 0; i < elementCount / channelCount; i++) {
       for (let channelIndex = 0; channelIndex < channelCount; channelIndex++) {
         const dataIndex = i * channelCount + channelIndex;
-        const minimumValue = that.minimumValues[channelIndex];
-        const maximumValue = that.maximumValues[channelIndex];
+        const minimumValue = this.minimumValues[channelIndex];
+        const maximumValue = this.maximumValues[channelIndex];
         // TODO extrema are unnormalized, but we are normalizing to [0, 1] here. what do we want to do? will the user expect to get normalized samples and extrema in the style function?
         tileData[dataIndex] =
           (data[dataIndex] - minimumValue) / (maximumValue - minimumValue);
@@ -1961,7 +2058,7 @@ Megatexture.prototype.writeDataToTexture = function (index, data) {
     }
   }
 
-  const tileVoxelData = that.tileVoxelDataTemp;
+  const tileVoxelData = this.tileVoxelDataTemp;
   for (let z = 0; z < voxelDimensionsPerTile.z; z++) {
     const sliceVoxelOffsetX =
       (z % sliceDimensionsPerRegion.x) * voxelDimensionsPerTile.x;
@@ -2007,14 +2104,38 @@ Megatexture.prototype.writeDataToTexture = function (index, data) {
   texture.copyFrom(copyOptions);
 };
 
+/**
+ * Returns true if this object was destroyed; otherwise, false.
+ * <br /><br />
+ * If this object was destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
+ * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
+ * @see Megatexture#destroy
+ */
 Megatexture.prototype.isDestroyed = function () {
   return false;
 };
 
+/**
+ * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+ * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+ * <br /><br />
+ * Once an object is destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+ * assign the return value (<code>undefined</code>) to the object as done in the example.
+ *
+ * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+ *
+ * @see Megatexture#isDestroyed
+ *
+ * @example
+ * megatexture = megatexture && megatexture.destroy();
+ */
 Megatexture.prototype.destroy = function () {
-  const that = this;
-  that.texture = that.texture && that.texture.destroy();
-  return destroyObject(that);
+  this.texture = this.texture && this.texture.destroy();
+  return destroyObject(this);
 };
 
 export default VoxelTraversal;

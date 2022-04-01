@@ -88,7 +88,7 @@ describe(
         // need to call update until the promise is ready
         return pollToPromise(function () {
           provider.update(scene.frameState);
-          return provider._doneLoading();
+          return provider.doneLoading();
         })
           .then(function () {
             return requestTilePromise;
