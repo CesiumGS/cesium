@@ -7,6 +7,7 @@ import { Color } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { HeadingPitchRoll } from "../../Source/Cesium.js";
 import { NearFarScalar } from "../../Source/Cesium.js";
+import { JulianDate } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 
@@ -315,6 +316,10 @@ describe(
     });
 
     it("renders terrain with lambertDiffuseMultiplier", function () {
+      const renderOptions = {
+        scene: scene,
+        time: new JulianDate(2557522.0),
+      };
       globe.enableLighting = true;
       globe.dynamicAtmosphereLighting = true;
       globe.dynamicAtmosphereLightingFromSun = true;
@@ -359,12 +364,12 @@ describe(
 
         return updateUntilDone(globe).then(function () {
           let initialRgba;
-          expect(scene).toRenderAndCall(function (rgba) {
+          expect(renderOptions).toRenderAndCall(function (rgba) {
             initialRgba = rgba;
             expect(initialRgba).not.toEqual([0, 0, 0, 255]);
           });
           globe.lambertDiffuseMultiplier = 10.0;
-          expect(scene).toRenderAndCall(function (rgba) {
+          expect(renderOptions).toRenderAndCall(function (rgba) {
             expect(rgba).not.toEqual(initialRgba);
           });
         });
