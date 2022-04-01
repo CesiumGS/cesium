@@ -202,6 +202,27 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.showCreditsOnScreen = tileset.showCreditsOnScreen;
   model.splitDirection = tileset.splitDirection;
 
+  // Updating clipping planes requires more effort because of ownership checks
+  const tilesetClippingPlanes = tileset.clippingPlanes;
+  model.referenceMatrix = tileset.clippingPlanesOriginMatrix;
+  if (defined(tilesetClippingPlanes) && tile.clippingPlanesDirty) {
+    // Dereference the clipping planes from the model if they are irrelevant.
+    model._clippingPlanes =
+      tilesetClippingPlanes.enabled && tile._isClipped
+        ? tilesetClippingPlanes
+        : undefined;
+  }
+
+  // If the model references a different ClippingPlaneCollection from the tileset,
+  // update the model to use the new ClippingPlaneCollection.
+  if (
+    defined(tilesetClippingPlanes) &&
+    defined(model._clippingPlanes) &&
+    model._clippingPlanes !== tilesetClippingPlanes
+  ) {
+    model._clippingPlanes = tilesetClippingPlanes;
+  }
+
   model.update(frameState);
 };
 
@@ -331,6 +352,7 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     featureIdLabel: tileset.featureIdLabel,
     instanceFeatureIdLabel: tileset.instanceFeatureIdLabel,
     pointCloudShading: tileset.pointCloudShading,
+    clippingPlanes: tileset.clippingPlanes,
     backFaceCulling: tileset.backFaceCulling,
     shadows: tileset.shadows,
     showCreditsOnScreen: tileset.showCreditsOnScreen,

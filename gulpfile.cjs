@@ -395,10 +395,16 @@ gulp.task("prepare", function (done) {
 
 //Builds the documentation
 function generateDocumentation() {
-  child_process.execSync("npx jsdoc --configure Tools/jsdoc/conf.json", {
-    stdio: "inherit",
-    env: Object.assign({}, process.env, { CESIUM_VERSION: version }),
-  });
+  const argv = yargs.argv;
+  const generatePrivateDocumentation = argv.private ? "--private" : "";
+
+  child_process.execSync(
+    `npx jsdoc --configure Tools/jsdoc/conf.json --pedantic ${generatePrivateDocumentation}`,
+    {
+      stdio: "inherit",
+      env: Object.assign({}, process.env, { CESIUM_VERSION: version }),
+    }
+  );
 
   const stream = gulp
     .src("Documentation/Images/**")

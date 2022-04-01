@@ -74,5 +74,9 @@ void main()
 
     vec4 color = handleAlpha(material.diffuse, material.alpha);
 
+    #ifdef HAS_CLIPPING_PLANES
+    modelClippingPlanesStage(color);
+    #endif
+
     gl_FragColor = color;
 }

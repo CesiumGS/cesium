@@ -1,6 +1,8 @@
 import {
   Cartesian2,
   Cesium3DTileStyle,
+  ClippingPlane,
+  ClippingPlaneCollection,
   FeatureDetection,
   ImageBasedLighting,
   JulianDate,
@@ -1238,6 +1240,166 @@ describe(
       });
     });
 
+    it("throws when given clipping planes attached to another model", function () {
+      const plane = new ClippingPlane(Cartesian3.UNIT_X, 0.0);
+      const clippingPlanes = new ClippingPlaneCollection({
+        planes: [plane],
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
+        scene
+      )
+        .then(function (model) {
+          return loadAndZoomToModelExperimental(
+            { gltf: boxTexturedGlbUrl },
+            scene
+          );
+        })
+        .then(function (model2) {
+          expect(function () {
+            model2.clippingPlanes = clippingPlanes;
+          }).toThrowDeveloperError();
+        });
+    });
+
+    it("updates clipping planes when clipping planes are enabled", function () {
+      const plane = new ClippingPlane(Cartesian3.UNIT_X, 0.0);
+      const clippingPlanes = new ClippingPlaneCollection({
+        planes: [plane],
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl },
+        scene
+      ).then(function (model) {
+        const gl = scene.frameState.context._gl;
+        spyOn(gl, "texImage2D").and.callThrough();
+
+        scene.renderForSpecs();
+        const callsBeforeClipping = gl.texImage2D.calls.count();
+
+        model.clippingPlanes = clippingPlanes;
+        scene.renderForSpecs();
+        scene.renderForSpecs();
+        // When clipping planes are created, we expect two calls to texImage2D
+        // (one for initial creation, and one for copying the data in)
+        // because clipping planes is stored inside a texture.
+        expect(gl.texImage2D.calls.count() - callsBeforeClipping).toEqual(2);
+      });
+    });
+
+    it("initializes and updates with clipping planes", function () {
+      const plane = new ClippingPlane(Cartesian3.UNIT_X, -2.5);
+      const clippingPlanes = new ClippingPlaneCollection({
+        planes: [plane],
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
+        scene
+      ).then(function (model) {
+        scene.renderForSpecs();
+        verifyRender(model, false);
+
+        model.clippingPlanes = undefined;
+        scene.renderForSpecs();
+        verifyRender(model, true);
+      });
+    });
+
+    it("updating clipping planes properties works", function () {
+      const direction = Cartesian3.multiplyByScalar(
+        Cartesian3.UNIT_X,
+        -1,
+        new Cartesian3()
+      );
+      const plane = new ClippingPlane(direction, 0.0);
+      const clippingPlanes = new ClippingPlaneCollection({
+        planes: [plane],
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl },
+        scene
+      ).then(function (model) {
+        let modelColor;
+        scene.renderForSpecs();
+        expect(scene).toRenderAndCall(function (rgba) {
+          modelColor = rgba;
+        });
+
+        // The clipping plane should cut the model in half such that
+        // we see the back faces.
+        model.clippingPlanes = clippingPlanes;
+        scene.renderForSpecs();
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual(modelColor);
+        });
+
+        plane.distance = 10.0; // Move the plane away from the model
+        scene.renderForSpecs();
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual(modelColor);
+        });
+      });
+    });
+
+    it("clipping planes apply edge styling", function () {
+      const plane = new ClippingPlane(Cartesian3.UNIT_X, 0);
+      const clippingPlanes = new ClippingPlaneCollection({
+        planes: [plane],
+        edgeWidth: 25.0, // make large enough to show up on the render
+        edgeColor: Color.BLUE,
+      });
+
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl },
+        scene
+      ).then(function (model) {
+        let modelColor;
+        scene.renderForSpecs();
+        expect(scene).toRenderAndCall(function (rgba) {
+          modelColor = rgba;
+        });
+
+        model.clippingPlanes = clippingPlanes;
+
+        scene.renderForSpecs();
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual([0, 0, 255, 255]);
+        });
+
+        clippingPlanes.edgeWidth = 0.0;
+        scene.renderForSpecs();
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual(modelColor);
+        });
+      });
+    });
+
+    it("clipping planes union regions", function () {
+      const clippingPlanes = new ClippingPlaneCollection({
+        planes: [
+          new ClippingPlane(Cartesian3.UNIT_Z, 5.0),
+          new ClippingPlane(Cartesian3.UNIT_X, -2.0),
+        ],
+        unionClippingRegions: true,
+      });
+      return loadAndZoomToModelExperimental(
+        { gltf: boxTexturedGlbUrl },
+        scene
+      ).then(function (model) {
+        scene.renderForSpecs();
+        verifyRender(model, true);
+
+        // These planes are defined such that the model is outside their union.
+        model.clippingPlanes = clippingPlanes;
+        scene.renderForSpecs();
+        verifyRender(model, false);
+
+        model.clippingPlanes.unionClippingRegions = false;
+        scene.renderForSpecs();
+        verifyRender(model, true);
+      });
+    });
+
     it("destroy works", function () {
       spyOn(ShaderProgram.prototype, "destroy").and.callThrough();
       return loadAndZoomToModelExperimental(
@@ -1269,6 +1431,46 @@ describe(
         }
         expect(loader.isDestroyed()).toEqual(true);
         expect(model.isDestroyed()).toEqual(true);
+      });
+    });
+
+    it("destroys attached ClippingPlaneCollections", function () {
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+        },
+        scene
+      ).then(function (model) {
+        const clippingPlanes = new ClippingPlaneCollection({
+          planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
+        });
+
+        model.clippingPlanes = clippingPlanes;
+        expect(model.isDestroyed()).toEqual(false);
+        expect(clippingPlanes.isDestroyed()).toEqual(false);
+
+        scene.primitives.remove(model);
+        expect(model.isDestroyed()).toEqual(true);
+        expect(clippingPlanes.isDestroyed()).toEqual(true);
+      });
+    });
+
+    it("destroys ClippingPlaneCollections that are detached", function () {
+      let clippingPlanes;
+      return loadAndZoomToModelExperimental(
+        {
+          gltf: boxTexturedGlbUrl,
+        },
+        scene
+      ).then(function (model) {
+        clippingPlanes = new ClippingPlaneCollection({
+          planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
+        });
+        model.clippingPlanes = clippingPlanes;
+        expect(clippingPlanes.isDestroyed()).toBe(false);
+
+        model.clippingPlanes = undefined;
+        expect(clippingPlanes.isDestroyed()).toBe(true);
       });
     });
 
