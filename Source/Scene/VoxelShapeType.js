@@ -5,8 +5,8 @@ import VoxelCylinderShape from "./VoxelCylinderShape.js";
 import VoxelEllipsoidShape from "./VoxelEllipsoidShape.js";
 
 /**
- * An enum of voxel shapes. The shape controls how the voxel grid is mapped to
- * 3D space.
+ * An enum of voxel shapes supported by <code>EXT_primitive_voxels</code>. The shape controls
+ * how the voxel grid is mapped to 3D space.
  *
  * @enum VoxelShapeType
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -44,7 +44,7 @@ const VoxelShapeType = {
 
 /**
  * Converts a primitive type to a voxel shape. glTF voxel primitive types are
- * defined in EXT_primitive_voxels.
+ * defined in </code>EXT_primitive_voxels</code>.
  * @param {PrimitiveType} primitiveType The primitive type.
  * @returns {VoxelShapeType} The shape type.
  * @private

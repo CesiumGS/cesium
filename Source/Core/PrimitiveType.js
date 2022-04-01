@@ -67,7 +67,7 @@ const PrimitiveType = {
   TRIANGLE_FAN: WebGLConstants.TRIANGLE_FAN,
 
   /**
-   * Box voxel primitive from EXT_primitive_voxels.
+   * Box voxel primitive from <code>EXT_primitive_voxels</code>.
    *
    * @type {Number}
    * @constant
@@ -75,7 +75,7 @@ const PrimitiveType = {
   VOXEL_BOX: 0x80000000,
 
   /**
-   * Ellipsoid voxel primitive from EXT_primitive_voxels.
+   * Ellipsoid voxel primitive from <code>EXT_primitive_voxels</code>.
    *
    * @type {Number}
    * @constant
@@ -83,7 +83,7 @@ const PrimitiveType = {
   VOXEL_ELLIPSOID: 0x80000001,
 
   /**
-   * Cylinder voxel primitive from EXT_primitive_voxels.
+   * Cylinder voxel primitive from <code>EXT_primitive_voxels</code>.
    *
    * @type {Number}
    * @constant

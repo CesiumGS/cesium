@@ -543,7 +543,7 @@ function MorphTarget() {
 }
 
 /**
- * Properties from EXT_primitive_voxels
+ * Properties from <code>EXT_primitive_voxels</code>
  *
  * @alias ModelComponents.Voxel
  * @constructor
@@ -667,7 +667,7 @@ function Primitive() {
   this.propertyAttributeIds = [];
 
   /**
-   * Properties from EXT_primitive_voxels.
+   * Properties from <code>EXT_primitive_voxels</code>.
    * @type {ModelComponents.Voxel}
    * @private
    */

@@ -2353,8 +2353,6 @@ VoxelPrimitive.prototype.destroy = function () {
     this._traversal = undefined;
   }
 
-  // TODO: I assume the custom shader does not have to be destroyed
-
   return destroyObject(this);
 };
 
@@ -2607,8 +2605,6 @@ function debugDraw(that, frameState) {
  * @type {CustomShader}
  */
 VoxelPrimitive.DefaultCustomShader = new CustomShader({
-  // TODO what should happen when lightingModel undefined?
-  // lightingModel: Cesium.LightingModel.UNLIT,
   fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
 {
     material.diffuse = vec3(1.0);
