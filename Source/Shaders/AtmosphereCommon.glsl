@@ -136,7 +136,17 @@ void computeAtmosphericScattering(
     // Compute final color and opacity.
     rayleighColor = BETA_RAYLEIGH * rayleighAccumulation;
     mieColor = allowMie ? BETA_MIE * mieAccumulation : vec3(0.0);
-    opacity = length(exp(-((BETA_MIE * opticalDepth.y) + (BETA_RAYLEIGH * opticalDepth.x))));
+    
+    // Alter the opacity based on how close the viewer is to the ground.
+    // (0.0 = At edge of atmospher, 1.0 = On ground)
+    float cameraHeight = czm_eyeHeight + atmosphereInnerRadius;
+    opacity = clamp((atmosphereOuterRadius - cameraHeight) / (atmosphereOuterRadius - atmosphereInnerRadius), 0.0, 1.0);
+
+    // Alter the opacity based on time of day.
+    // (0.0 = Night, 1.0 = Day)
+    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
+    float nightAlpha = (lightEnum != 0.0) ? clamp(dot(normalize(positionWC), lightDirection), 0.0, 1.0) : 1.0;
+    opacity *= pow(nightAlpha, 0.5);
 }
 
 
@@ -165,6 +175,9 @@ vec4 computeAtmosphereColor(
     vec3 rayleigh = rayleighPhase * rayleighColor;
     vec3 mie = miePhase * mieColor;
 
+    vec3 color = (rayleigh + mie) * INTENSITY;
+    opacity = mix(clamp(color.b, 0.0, 1.0), 1.0, opacity) * smoothstep(0.0, 1.0, czm_morphTime);
+    
     return vec4((rayleigh + mie) * INTENSITY, opacity);
 }
 
