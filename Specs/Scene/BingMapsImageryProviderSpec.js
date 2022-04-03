@@ -13,7 +13,6 @@ import { ImageryProvider } from "../../Source/Cesium.js";
 import { ImageryState } from "../../Source/Cesium.js";
 import pollToPromise from "../pollToPromise.js";
 import { Uri } from "../../Source/Cesium.js";
-import { when } from "../../Source/Cesium.js";
 
 describe("Scene/BingMapsImageryProvider", function () {
   let supportsImageBitmapOptions;
@@ -122,10 +121,7 @@ describe("Scene/BingMapsImageryProvider", function () {
               __type:
                 "ImageryMetadata:http://schemas.microsoft.com/search/local/ws/rest/v1",
               imageHeight: 256,
-              imageUrl:
-                "http://ecn.{subdomain}.tiles.virtualearth.net.fake.invalid/tiles/" +
-                stylePrefix +
-                "{quadkey}.jpeg?g=3031&mkt={culture}",
+              imageUrl: `http://ecn.{subdomain}.tiles.virtualearth.net.fake.invalid/tiles/${stylePrefix}{quadkey}.jpeg?g=3031&mkt={culture}`,
               imageUrlSubdomains: ["t0", "t1", "t2", "t3"],
               imageWidth: 256,
               imageryProviders: [
@@ -177,7 +173,7 @@ describe("Scene/BingMapsImageryProvider", function () {
   function installFakeMetadataRequest(url, mapStyle, proxy) {
     const baseUri = new Uri(appendForwardSlash(url));
     const expectedUri = new Uri(
-      "REST/v1/Imagery/Metadata/" + mapStyle
+      `REST/v1/Imagery/Metadata/${mapStyle}`
     ).absoluteTo(baseUri);
 
     Resource._Implementations.loadAndExecuteScript = function (
@@ -426,7 +422,7 @@ describe("Scene/BingMapsImageryProvider", function () {
       .then(function () {
         fail("should not resolve");
       })
-      .otherwise(function (e) {
+      .catch(function (e) {
         expect(provider.ready).toBe(false);
         expect(e.message).toContain(url);
       });
@@ -546,12 +542,14 @@ describe("Scene/BingMapsImageryProvider", function () {
       errorEventRaised = true;
     });
 
-    return pollToPromise(function () {
-      return provider.ready || errorEventRaised;
-    }).then(function () {
-      expect(provider.ready).toEqual(false);
-      expect(errorEventRaised).toEqual(true);
-    });
+    return provider.readyPromise
+      .then(function () {
+        fail();
+      })
+      .catch(function () {
+        expect(provider.ready).toEqual(false);
+        expect(errorEventRaised).toEqual(true);
+      });
   });
 
   it("raises error event when image cannot be loaded", function () {
@@ -669,11 +667,11 @@ describe("Scene/BingMapsImageryProvider", function () {
     const layer = new ImageryLayer(provider);
 
     // Fake ImageryProvider.loadImage's expected output in the case of an empty tile
-    const e = new Error();
-    e.blob = { size: 0 };
-    const errorPromise = when.reject(e);
-
-    spyOn(ImageryProvider, "loadImage").and.returnValue(errorPromise);
+    spyOn(ImageryProvider, "loadImage").and.callFake(function () {
+      const e = new Error();
+      e.blob = { size: 0 };
+      return Promise.reject(e);
+    });
 
     return pollToPromise(function () {
       return provider.ready;

@@ -35,6 +35,7 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
   const runtimeNode = new ModelExperimentalNode({
     node: mockNode,
     transform: Matrix4.IDENTITY,
+    transformToRoot: Matrix4.fromTranslation(new Cartesian3(1, 2, 3)),
     sceneGraph: mockSceneGraph,
     children: [],
   });
@@ -80,18 +81,6 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     ],
   };
 
-  const runtimePrimitive = new ModelExperimentalPrimitive({
-    primitive: primitive,
-    node: mockNode,
-    model: mockModel,
-  });
-
-  const runtimePrimitiveWithoutIndices = new ModelExperimentalPrimitive({
-    primitive: primitiveWithoutIndices,
-    node: mockNode,
-    model: mockModel,
-  });
-
   const expectedDepthTest = {
     depthTest: {
       enabled: true,
@@ -99,6 +88,22 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
     },
     blending: BlendingState.DISABLED,
   };
+
+  let runtimePrimitive;
+  let runtimePrimitiveWithoutIndices;
+  beforeAll(function () {
+    runtimePrimitive = new ModelExperimentalPrimitive({
+      primitive: primitive,
+      node: mockNode,
+      model: mockModel,
+    });
+
+    runtimePrimitiveWithoutIndices = new ModelExperimentalPrimitive({
+      primitive: primitiveWithoutIndices,
+      node: mockNode,
+      model: mockModel,
+    });
+  });
 
   it("throws for undefined nodeRenderResources", function () {
     expect(function () {
@@ -179,8 +184,13 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
   it("inherits from model render resources", function () {
     const modelResources = new ModelRenderResources(mockModel);
     modelResources.shaderBuilder.addDefine("MODEL");
+    modelResources.renderStateOptions.cull = {
+      enabled: true,
+    };
+
     const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
     nodeResources.shaderBuilder.addDefine("NODE");
+
     const primitiveResources = new PrimitiveRenderResources(
       nodeResources,
       runtimePrimitive
@@ -197,6 +207,11 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
       modelResources.shaderBuilder
     );
 
+    // The primitive should have inherited the renderStateOptions of the model's
+    expect(primitiveResources.renderStateOptions.cull).toEqual({
+      enabled: true,
+    });
+
     // The defines should cascade through the three levels
     checkShaderDefines(modelResources.shaderBuilder, ["MODEL"]);
     checkShaderDefines(nodeResources.shaderBuilder, ["MODEL", "NODE"]);
@@ -210,14 +225,29 @@ describe("Scene/ModelExperimental/PrimitiveRenderResources", function () {
   it("inherits from node render resources", function () {
     const modelResources = new ModelRenderResources(mockModel);
     modelResources.shaderBuilder.addDefine("MODEL");
+    modelResources.renderStateOptions.cull = {
+      enabled: true,
+    };
+
     const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
     nodeResources.shaderBuilder.addDefine("NODE");
+    nodeResources.renderStateOptions.blending = BlendingState.ALPHA_BLEND;
+
     const primitiveResources = new PrimitiveRenderResources(
       nodeResources,
       runtimePrimitive
     );
+
     expect(primitiveResources.runtimeNode).toBe(runtimeNode);
-    expect(primitiveResources.modelMatrix).toEqual(runtimeNode.modelMatrix);
+    expect(primitiveResources.transform).toBe(nodeResources.transform);
     expect(primitiveResources.attributes).toEqual([]);
+
+    // The primitive should have inherited the renderStateOptions of the node's
+    expect(primitiveResources.renderStateOptions.cull).toEqual({
+      enabled: true,
+    });
+    expect(primitiveResources.renderStateOptions.blending).toEqual(
+      BlendingState.ALPHA_BLEND
+    );
   });
 });

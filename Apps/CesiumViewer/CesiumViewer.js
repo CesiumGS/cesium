@@ -11,6 +11,7 @@ import {
   CzmlDataSource,
   GeoJsonDataSource,
   KmlDataSource,
+  GpxDataSource,
   TileMapServiceImageryProvider,
   Viewer,
   viewerCesiumInspectorMixin,
@@ -83,7 +84,7 @@ function main() {
   }
 
   const showLoadError = function (name, error) {
-    const title = "An error occurred while loading the file: " + name;
+    const title = `An error occurred while loading the file: ${name}`;
     const message =
       "An error occurred while loading the file, which may indicate that it is invalid.  A detailed error report is below:";
     viewer.cesiumWidget.showErrorPanel(title, message, error);
@@ -118,6 +119,8 @@ function main() {
         sourceType = "geojson";
       } else if (/\.kml$/i.test(source) || /\.kmz$/i.test(source)) {
         sourceType = "kml";
+      } else if (/\.gpx$/i.test(source) || /\.gpx$/i.test(source)) {
+        sourceType = "gpx";
       }
     }
 
@@ -132,6 +135,8 @@ function main() {
         canvas: scene.canvas,
         screenOverlayContainer: viewer.container,
       });
+    } else if (sourceType === "gpx") {
+      loadPromise = GpxDataSource.load(source);
     } else {
       showLoadError(source, "Unknown format.");
     }
@@ -146,17 +151,14 @@ function main() {
             if (defined(entity)) {
               viewer.trackedEntity = entity;
             } else {
-              const error =
-                'No entity with id "' +
-                lookAt +
-                '" exists in the provided data source.';
+              const error = `No entity with id "${lookAt}" exists in the provided data source.`;
               showLoadError(source, error);
             }
           } else if (!defined(view) && endUserOptions.flyTo !== "false") {
             viewer.flyTo(dataSource);
           }
         })
-        .otherwise(function (error) {
+        .catch(function (error) {
           showLoadError(source, error);
         });
     }
@@ -172,7 +174,7 @@ function main() {
       document.body.classList.add("cesium-lighter");
       viewer.animation.applyThemeChanges();
     } else {
-      const error = "Unknown theme: " + theme;
+      const error = `Unknown theme: ${theme}`;
       viewer.cesiumWidget.showErrorPanel(error, "");
     }
   }
@@ -215,22 +217,14 @@ function main() {
     const position = camera.positionCartographic;
     let hpr = "";
     if (defined(camera.heading)) {
-      hpr =
-        "," +
-        CesiumMath.toDegrees(camera.heading) +
-        "," +
-        CesiumMath.toDegrees(camera.pitch) +
-        "," +
-        CesiumMath.toDegrees(camera.roll);
+      hpr = `,${CesiumMath.toDegrees(camera.heading)},${CesiumMath.toDegrees(
+        camera.pitch
+      )},${CesiumMath.toDegrees(camera.roll)}`;
     }
-    endUserOptions.view =
-      CesiumMath.toDegrees(position.longitude) +
-      "," +
-      CesiumMath.toDegrees(position.latitude) +
-      "," +
-      position.height +
-      hpr;
-    history.replaceState(undefined, "", "?" + objectToQuery(endUserOptions));
+    endUserOptions.view = `${CesiumMath.toDegrees(
+      position.longitude
+    )},${CesiumMath.toDegrees(position.latitude)},${position.height}${hpr}`;
+    history.replaceState(undefined, "", `?${objectToQuery(endUserOptions)}`);
   }
 
   let timeout;

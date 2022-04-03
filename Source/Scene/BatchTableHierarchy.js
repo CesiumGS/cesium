@@ -159,7 +159,7 @@ function getBinaryProperties(featuresLength, properties, binaryBody) {
         }
         if (!defined(binaryBody)) {
           throw new RuntimeError(
-            "Property " + name + " requires a batch table binary."
+            `Property ${name} requires a batch table binary.`
           );
         }
 
@@ -217,10 +217,7 @@ function validateInstance(hierarchy, instanceIndex, stack) {
 
   if (instanceIndex >= instancesLength) {
     throw new DeveloperError(
-      "Parent index " +
-        instanceIndex +
-        " exceeds the total number of instances: " +
-        instancesLength
+      `Parent index ${instanceIndex} exceeds the total number of instances: ${instancesLength}`
     );
   }
   if (stack.indexOf(instanceIndex) > -1) {
@@ -465,7 +462,7 @@ BatchTableHierarchy.prototype.setProperty = function (
       //>>includeStart('debug', pragmas.debug);
       if (instanceIndex !== batchId) {
         throw new DeveloperError(
-          'Inherited property "' + propertyId + '" is read-only.'
+          `Inherited property "${propertyId}" is read-only.`
         );
       }
       //>>includeEnd('debug');

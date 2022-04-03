@@ -21,7 +21,6 @@ import { TimeDynamicPointCloud } from "../../Source/Cesium.js";
 import createCanvas from "../createCanvas.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 
 describe(
   "Scene/TimeDynamicPointCloud",
@@ -155,7 +154,7 @@ describe(
 
       const uris = [];
       for (let i = 0; i < 5; ++i) {
-        uris.push(folderName + i + ".pnts");
+        uris.push(`${folderName + i}.pnts`);
       }
 
       function dataCallback(interval, index) {
@@ -216,6 +215,7 @@ describe(
       for (let i = 1; i < length; ++i) {
         promise = promise.then(getLoadFrameFunction(pointCloud, indexes[i]));
       }
+
       return promise.then(function () {
         goToFrame(indexes[0]);
       });
@@ -466,16 +466,20 @@ describe(
           pointSize: 10,
         }),
       });
-      return loadAllFrames(pointCloud).then(function () {
-        expect(scene).toRender([0, 0, 255, 255]);
-        pointCloud.style = new Cesium3DTileStyle({
-          color: 'color("lime")',
-          pointSize: 10,
+      return loadAllFrames(pointCloud)
+        .then(function () {
+          expect(scene).toRender([0, 0, 255, 255]);
+          pointCloud.style = new Cesium3DTileStyle({
+            color: 'color("lime")',
+            pointSize: 10,
+          });
+          return pointCloud.style.readyPromise;
+        })
+        .then(function () {
+          expect(scene).toRender([0, 255, 0, 255]);
+          goToFrame(1); // Also check that the style is updated for the next frame
+          expect(scene).toRender([0, 255, 0, 255]);
         });
-        expect(scene).toRender([0, 255, 0, 255]);
-        goToFrame(1); // Also check that the style is updated for the next frame
-        expect(scene).toRender([0, 255, 0, 255]);
-      });
     });
 
     it("make style dirty", function () {
@@ -775,7 +779,9 @@ describe(
       });
     });
 
-    it("frame failed event is raised from request failure", function () {
+    // Throws an un-catchable 404
+    // https://github.com/CesiumGS/cesium/issues/10178
+    xit("frame failed event is raised from request failure", function () {
       const pointCloud = createTimeDynamicPointCloud();
       spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
         request,
@@ -800,7 +806,7 @@ describe(
       for (i = 0; i < 5; ++i) {
         const arg = spyUpdate.calls.argsFor(i)[0];
         expect(arg).toBeDefined();
-        expect(arg.uri).toContain(i + ".pnts");
+        expect(arg.uri).toContain(`${i}.pnts`);
         expect(arg.message).toBe("404");
       }
     });
@@ -811,9 +817,9 @@ describe(
       });
       return loadFrame(pointCloud).then(function () {
         const decoder = DracoLoader._getDecoderTaskProcessor();
-        spyOn(decoder, "scheduleTask").and.returnValue(
-          when.reject({ message: "my error" })
-        );
+        spyOn(decoder, "scheduleTask").and.callFake(function () {
+          return Promise.reject({ message: "my error" });
+        });
         const spyUpdate = jasmine.createSpy("listener");
         pointCloud.frameFailed.addEventListener(spyUpdate);
         goToFrame(1);
@@ -823,7 +829,7 @@ describe(
         return pollToPromise(function () {
           const contents = pointCloud._frames[1].pointCloud;
           if (defined(contents) && !defined(failedPromise)) {
-            failedPromise = contents.readyPromise.otherwise(function () {
+            failedPromise = contents.readyPromise.catch(function () {
               frameFailed = true;
             });
           }

@@ -9,7 +9,8 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * are (level, x, y) for quadtrees or (level, x, y, z) for octrees.
  * <p>
  * Level numbers are 0-indexed and typically start at the root of the implicit
- * tileset (the tile with the <code>3DTILES_implicit_tiling</code> extension).
+ * tileset (the tile with either implicitTiling in its JSON (3D Tiles 1.1) or
+ * the <code>3DTILES_implicit_tiling</code> extension).
  * This object can also represent the relative offset from one set of coordinates
  * to another. See {@link ImplicitTileCoordinates#getOffsetCoordinates}. The term
  * local coordinates refers to coordinates that are relative to the root of a
@@ -107,8 +108,9 @@ export default function ImplicitTileCoordinates(options) {
   this.subtreeLevels = options.subtreeLevels;
 
   /**
-   * Level of this tile, relative to the tile with the
-   * <code>3DTILES_implicit_tiling</code> extension. Level numbers start at 0.
+   * Level of this tile, relative to the tile with implicit tiling in its JSON
+   * (3D Tiles 1.1) or the <code>3DTILES_implicit_tiling</code> extension.
+   * Level numbers start at 0.
    *
    * @type {Number}
    * @readonly
@@ -384,7 +386,7 @@ ImplicitTileCoordinates.prototype.getChildCoordinates = function (childIndex) {
   );
   if (childIndex < 0 || branchingFactor <= childIndex) {
     throw new DeveloperError(
-      "childIndex must be at least 0 and less than " + branchingFactor
+      `childIndex must be at least 0 and less than ${branchingFactor}`
     );
   }
   //>>includeEnd('debug');

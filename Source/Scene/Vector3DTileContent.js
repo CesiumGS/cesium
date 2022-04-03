@@ -1,5 +1,6 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -10,7 +11,6 @@ import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Rectangle from "../Core/Rectangle.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import when from "../ThirdParty/when.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
 import Vector3DTilePoints from "./Vector3DTilePoints.js";
@@ -42,7 +42,9 @@ function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
   this._points = undefined;
 
   this._contentReadyPromise = undefined;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
+
+  this._metadata = undefined;
 
   this._batchTable = undefined;
   this._features = undefined;
@@ -51,7 +53,7 @@ function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
    * Part of the {@link Cesium3DTileContent} interface.
    */
   this.featurePropertiesDirty = false;
-  this._groupMetadata = undefined;
+  this._group = undefined;
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -143,18 +145,27 @@ Object.defineProperties(Vector3DTileContent.prototype, {
     },
   },
 
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
+    },
+  },
+
   batchTable: {
     get: function () {
       return this._batchTable;
     },
   },
 
-  groupMetadata: {
+  group: {
     get: function () {
-      return this._groupMetadata;
+      return this._group;
     },
     set: function (value) {
-      this._groupMetadata = value;
+      this._group = value;
     },
   },
 });
@@ -278,9 +289,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   const version = view.getUint32(byteOffset, true);
   if (version !== 1) {
     throw new RuntimeError(
-      "Only Vector tile version 1 is supported.  Version " +
-        version +
-        " is not."
+      `Only Vector tile version 1 is supported.  Version ${version} is not.`
     );
   }
   byteOffset += sizeOfUint32;
@@ -643,9 +652,9 @@ Vector3DTileContent.prototype.getFeature = function (batchId) {
   const featuresLength = this.featuresLength;
   if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
     throw new DeveloperError(
-      "batchId is required and between zero and featuresLength - 1 (" +
-        (featuresLength - 1) +
-        ")."
+      `batchId is required and between zero and featuresLength - 1 (${
+        featuresLength - 1
+      }).`
     );
   }
   //>>includeEnd('debug');
@@ -711,12 +720,15 @@ Vector3DTileContent.prototype.update = function (tileset, frameState) {
       : undefined;
 
     const that = this;
-    this._contentReadyPromise = when
-      .all([pointsPromise, polygonPromise, polylinePromise])
+    this._contentReadyPromise = Promise.all([
+      pointsPromise,
+      polygonPromise,
+      polylinePromise,
+    ])
       .then(function () {
         that._readyPromise.resolve(that);
       })
-      .otherwise(function (error) {
+      .catch(function (error) {
         that._readyPromise.reject(error);
       });
   }

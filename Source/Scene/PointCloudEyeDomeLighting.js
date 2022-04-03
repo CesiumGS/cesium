@@ -184,9 +184,6 @@ PointCloudEyeDomeLighting.prototype.update = function (
   const commandList = frameState.commandList;
   const commandEnd = commandList.length;
 
-  let derivedCommand;
-  let originalShaderProgram;
-
   for (i = commandStart; i < commandEnd; ++i) {
     const command = commandList[i];
     if (
@@ -196,10 +193,8 @@ PointCloudEyeDomeLighting.prototype.update = function (
       continue;
     }
 
-    // These variables need to get reset for each iteration. It has to be
-    // done manually since var is function scope not block scope.
-    derivedCommand = undefined;
-    originalShaderProgram = undefined;
+    let derivedCommand;
+    let originalShaderProgram;
 
     let derivedCommandObject = command.derivedCommands.pointCloudProcessor;
     if (defined(derivedCommandObject)) {

@@ -120,7 +120,7 @@ TimeDynamicImagery.prototype.getFromCache = function (x, y, level, request) {
   const cache = this._tileCache[this._currentIntervalIndex];
   if (defined(cache) && defined(cache[key])) {
     const item = cache[key];
-    result = item.promise.otherwise(function (e) {
+    result = item.promise.catch(function (e) {
       // Set the correct state in case it was cancelled
       request.state = item.request.state;
       throw e;
@@ -215,7 +215,7 @@ TimeDynamicImagery.prototype._clockOnTick = function (clock) {
 };
 
 function getKey(x, y, level) {
-  return x + "-" + y + "-" + level;
+  return `${x}-${y}-${level}`;
 }
 
 function getKeyElements(key) {

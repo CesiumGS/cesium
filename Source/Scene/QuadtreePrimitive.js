@@ -415,18 +415,7 @@ function updateTileLoadProgress(primitive, frameState) {
       debug.maxDepthVisited !== debug.lastMaxDepthVisited
     ) {
       console.log(
-        "Visited " +
-          debug.tilesVisited +
-          ", Rendered: " +
-          debug.tilesRendered +
-          ", Culled: " +
-          debug.tilesCulled +
-          ", Max Depth Rendered: " +
-          debug.maxDepth +
-          ", Max Depth Visited: " +
-          debug.maxDepthVisited +
-          ", Waiting for children: " +
-          debug.tilesWaitingForChildren
+        `Visited ${debug.tilesVisited}, Rendered: ${debug.tilesRendered}, Culled: ${debug.tilesCulled}, Max Depth Rendered: ${debug.maxDepth}, Max Depth Visited: ${debug.maxDepthVisited}, Waiting for children: ${debug.tilesWaitingForChildren}`
       );
 
       debug.lastTilesVisited = debug.tilesVisited;

@@ -7,7 +7,6 @@ import Event from "../Core/Event.js";
 import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
-import when from "../ThirdParty/when.js";
 import ImageryProvider from "./ImageryProvider.js";
 import TimeDynamicImagery from "./TimeDynamicImagery.js";
 
@@ -287,7 +286,7 @@ function WebMapTileServiceImageryProvider(options) {
     });
   }
 
-  this._readyPromise = when.resolve(true);
+  this._readyPromise = Promise.resolve(true);
 
   // Check the number of tiles at the minimum level.  If it's more than four,
   // throw an exception, because starting at the higher minimum
@@ -305,9 +304,7 @@ function WebMapTileServiceImageryProvider(options) {
   //>>includeStart('debug', pragmas.debug);
   if (tileCount > 4) {
     throw new DeveloperError(
-      "The imagery provider's rectangle and minimumLevel indicate that there are " +
-        tileCount +
-        " tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported."
+      `The imagery provider's rectangle and minimumLevel indicate that there are ${tileCount} tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.`
     );
   }
   //>>includeEnd('debug');

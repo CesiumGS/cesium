@@ -7,6 +7,7 @@ import { ClockStep } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { combine } from "../../Source/Cesium.js";
 import { Credit } from "../../Source/Cesium.js";
+import { defer } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { Event } from "../../Source/Cesium.js";
 import { HeadingPitchRange } from "../../Source/Cesium.js";
@@ -37,7 +38,6 @@ import { LabelStyle } from "../../Source/Cesium.js";
 import { SceneMode } from "../../Source/Cesium.js";
 import createCamera from "../createCamera.js";
 import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 
 describe("DataSources/KmlDataSource", function () {
   const parser = new DOMParser();
@@ -194,7 +194,7 @@ describe("DataSources/KmlDataSource", function () {
       .then(function (blob) {
         return dataSource.load(blob);
       })
-      .otherwise(function (e) {
+      .catch(function (e) {
         expect(e).toBeInstanceOf(RuntimeError);
         expect(spy).toHaveBeenCalled();
       });
@@ -205,7 +205,7 @@ describe("DataSources/KmlDataSource", function () {
       .then(function (blob) {
         return KmlDataSource.load(blob, options);
       })
-      .otherwise(function (e) {
+      .catch(function (e) {
         expect(e).toBeInstanceOf(RuntimeError);
         expect(e.message).toEqual("KMZ file does not contain a KML document.");
       });
@@ -353,26 +353,26 @@ describe("DataSources/KmlDataSource", function () {
   });
 
   it("load rejects nonexistent URL", function () {
-    return KmlDataSource.load("test.invalid", options).otherwise(function (e) {
+    return KmlDataSource.load("test.invalid", options).catch(function (e) {
       expect(e).toBeInstanceOf(RequestErrorEvent);
     });
   });
 
   it("load rejects loading non-KML URL", function () {
-    return KmlDataSource.load("Data/Images/Blue.png", options).otherwise(
-      function (e) {
-        expect(e).toBeInstanceOf(RuntimeError);
-      }
-    );
+    return KmlDataSource.load("Data/Images/Blue.png", options).catch(function (
+      e
+    ) {
+      expect(e).toBeInstanceOf(RuntimeError);
+    });
   });
 
   it("load rejects valid KMZ zip URL with no KML contained", function () {
-    return KmlDataSource.load("Data/KML/empty.kmz", options).otherwise(
-      function (e) {
-        expect(e).toBeInstanceOf(RuntimeError);
-        expect(e.message).toEqual("KMZ file does not contain a KML document.");
-      }
-    );
+    return KmlDataSource.load("Data/KML/empty.kmz", options).catch(function (
+      e
+    ) {
+      expect(e).toBeInstanceOf(RuntimeError);
+      expect(e.message).toEqual("KMZ file does not contain a KML document.");
+    });
   });
 
   it("if load contains <icon> tag with no image included, no image is added", function () {
@@ -1625,20 +1625,17 @@ describe("DataSources/KmlDataSource", function () {
   });
 
   it("Styles: Applies expected styles to Point geometry", function () {
-    const kml =
-      '<?xml version="1.0" encoding="UTF-8"?>\
+    const kml = `<?xml version="1.0" encoding="UTF-8"?>\
         <Document xmlns="http://www.opengis.net/kml/2.2"\
                   xmlns:gx="http://www.google.com/kml/ext/2.2">\
-          <Placemark>' +
-      uberStyle +
-      "\
+          <Placemark>${uberStyle}\
             <name>TheName</name>\
             <Point>\
               <altitudeMode>absolute</altitudeMode>\
               <coordinates>1,2,3</coordinates>\
             </Point>\
           </Placemark>\
-        </Document>";
+        </Document>`;
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
@@ -1662,13 +1659,10 @@ describe("DataSources/KmlDataSource", function () {
   });
 
   it("Styles: Applies expected styles to extruded Point geometry", function () {
-    const kml =
-      '<?xml version="1.0" encoding="UTF-8"?>\
+    const kml = `<?xml version="1.0" encoding="UTF-8"?>\
         <Document xmlns="http://www.opengis.net/kml/2.2"\
                   xmlns:gx="http://www.google.com/kml/ext/2.2">\
-          <Placemark>' +
-      uberStyle +
-      "\
+          <Placemark>${uberStyle}\
             <name>TheName</name>\
             <Point>\
               <extrude>1</extrude>\
@@ -1676,7 +1670,7 @@ describe("DataSources/KmlDataSource", function () {
               <coordinates>1,2,3</coordinates>\
             </Point>\
           </Placemark>\
-        </Document>";
+        </Document>`;
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
@@ -1701,13 +1695,10 @@ describe("DataSources/KmlDataSource", function () {
   });
 
   it("Styles: Applies expected styles to LineString geometry", function () {
-    const kml =
-      '<?xml version="1.0" encoding="UTF-8"?>\
+    const kml = `<?xml version="1.0" encoding="UTF-8"?>\
         <Document xmlns="http://www.opengis.net/kml/2.2"\
                   xmlns:gx="http://www.google.com/kml/ext/2.2">\
-          <Placemark>' +
-      uberStyle +
-      "\
+          <Placemark>${uberStyle}\
             <name>TheName</name>\
             <LineString>\
             <coordinates>1,2,3 \
@@ -1715,7 +1706,7 @@ describe("DataSources/KmlDataSource", function () {
             </coordinates>\
             </LineString>\
           </Placemark>\
-        </Document>";
+        </Document>`;
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
@@ -1732,13 +1723,10 @@ describe("DataSources/KmlDataSource", function () {
   });
 
   it("Styles: Applies expected styles to extruded LineString geometry", function () {
-    const kml =
-      '<?xml version="1.0" encoding="UTF-8"?>\
+    const kml = `<?xml version="1.0" encoding="UTF-8"?>\
         <Document xmlns="http://www.opengis.net/kml/2.2"\
                   xmlns:gx="http://www.google.com/kml/ext/2.2">\
-          <Placemark>' +
-      uberStyle +
-      "\
+          <Placemark>${uberStyle}\
             <name>TheName</name>\
             <LineString>\
             <extrude>1</extrude>\
@@ -1748,7 +1736,7 @@ describe("DataSources/KmlDataSource", function () {
             </coordinates>\
             </LineString>\
           </Placemark>\
-        </Document>";
+        </Document>`;
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
@@ -1769,13 +1757,10 @@ describe("DataSources/KmlDataSource", function () {
   });
 
   it("Styles: Applies expected styles to Polygon geometry", function () {
-    const kml =
-      '<?xml version="1.0" encoding="UTF-8"?>\
+    const kml = `<?xml version="1.0" encoding="UTF-8"?>\
         <Document xmlns="http://www.opengis.net/kml/2.2"\
                   xmlns:gx="http://www.google.com/kml/ext/2.2">\
-          <Placemark>' +
-      uberStyle +
-      "\
+          <Placemark>${uberStyle}\
           <Polygon>\
             <extrude>1</extrude>\
             <altitudeMode>absolute</altitudeMode>\
@@ -1790,7 +1775,7 @@ describe("DataSources/KmlDataSource", function () {
               </outerBoundaryIs>\
             </Polygon>\
             </Placemark>\
-        </Document>";
+        </Document>`;
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
@@ -1810,13 +1795,10 @@ describe("DataSources/KmlDataSource", function () {
   });
 
   it("Styles: Applies expected styles to gx:Track geometry", function () {
-    const kml =
-      '<?xml version="1.0" encoding="UTF-8"?>\
+    const kml = `<?xml version="1.0" encoding="UTF-8"?>\
         <Document xmlns="http://www.opengis.net/kml/2.2"\
                   xmlns:gx="http://www.google.com/kml/ext/2.2">\
-          <Placemark>' +
-      uberStyle +
-      "\
+          <Placemark>${uberStyle}\
             <name>TheName</name>\
             <gx:Track>\
               <altitudeMode>absolute</altitudeMode>\
@@ -1824,7 +1806,7 @@ describe("DataSources/KmlDataSource", function () {
             <gx:coord>7 8 9</gx:coord>\
           </gx:Track>\
           </Placemark>\
-        </Document>";
+        </Document>`;
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
@@ -1855,13 +1837,10 @@ describe("DataSources/KmlDataSource", function () {
   });
 
   it("Styles: Applies expected styles to extruded gx:Track geometry", function () {
-    const kml =
-      '<?xml version="1.0" encoding="UTF-8"?>\
+    const kml = `<?xml version="1.0" encoding="UTF-8"?>\
         <Document xmlns="http://www.opengis.net/kml/2.2"\
                   xmlns:gx="http://www.google.com/kml/ext/2.2">\
-          <Placemark>' +
-      uberStyle +
-      "\
+          <Placemark>${uberStyle}\
             <name>TheName</name>\
             <gx:Track>\
               <extrude>1</extrude>\
@@ -1870,7 +1849,7 @@ describe("DataSources/KmlDataSource", function () {
               <gx:coord>7 8 9</gx:coord>\
             </gx:Track>\
           </Placemark>\
-        </Document>";
+        </Document>`;
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
@@ -1902,13 +1881,10 @@ describe("DataSources/KmlDataSource", function () {
   });
 
   it("Styles: Applies expected styles to gx:MultiTrack geometry", function () {
-    const kml =
-      '<?xml version="1.0" encoding="UTF-8"?>\
+    const kml = `<?xml version="1.0" encoding="UTF-8"?>\
         <Document xmlns="http://www.opengis.net/kml/2.2"\
                   xmlns:gx="http://www.google.com/kml/ext/2.2">\
-          <Placemark>' +
-      uberStyle +
-      "\
+          <Placemark>${uberStyle}\
             <name>TheName</name>\
             <gx:MultiTrack>\
               <gx:Track>\
@@ -1918,7 +1894,7 @@ describe("DataSources/KmlDataSource", function () {
               </gx:Track>\
             </gx:MultiTrack>\
           </Placemark>\
-        </Document>";
+        </Document>`;
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
@@ -1949,13 +1925,10 @@ describe("DataSources/KmlDataSource", function () {
   });
 
   it("Styles: Applies expected styles to extruded gx:MultiTrack geometry", function () {
-    const kml =
-      '<?xml version="1.0" encoding="UTF-8"?>\
+    const kml = `<?xml version="1.0" encoding="UTF-8"?>\
         <Document xmlns="http://www.opengis.net/kml/2.2"\
                   xmlns:gx="http://www.google.com/kml/ext/2.2">\
-          <Placemark>' +
-      uberStyle +
-      "\
+          <Placemark>${uberStyle}\
             <name>TheName</name>\
             <gx:MultiTrack>\
               <gx:Track>\
@@ -1966,7 +1939,7 @@ describe("DataSources/KmlDataSource", function () {
               </gx:Track>\
             </gx:MultiTrack>\
           </Placemark>\
-        </Document>";
+        </Document>`;
 
     return KmlDataSource.load(
       parser.parseFromString(kml, "text/xml"),
@@ -4586,7 +4559,7 @@ describe("DataSources/KmlDataSource", function () {
       }).then(function () {
         expect(spy).toHaveBeenCalledWith(
           dataSource,
-          expectedRefreshLinkHref + "?BBOX=-180%2C-90%2C180%2C90"
+          `${expectedRefreshLinkHref}?BBOX=-180%2C-90%2C180%2C90`
         );
 
         expect(entities.length).toEqual(3);
@@ -4612,7 +4585,7 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = when.defer();
+    const requestNetworkLink = defer();
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
       responseType,
@@ -4642,7 +4615,7 @@ describe("DataSources/KmlDataSource", function () {
             </Url>\
           </NetworkLink>';
 
-    const requestNetworkLink = when.defer();
+    const requestNetworkLink = defer();
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
       responseType,
@@ -4673,7 +4646,7 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = when.defer();
+    const requestNetworkLink = defer();
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
       responseType,
@@ -4691,7 +4664,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return requestNetworkLink.promise.then(function (url) {
       expect(url).toEqual(
-        expectedRefreshLinkHref + "?BBOX=-180%2C-90%2C180%2C90"
+        `${expectedRefreshLinkHref}?BBOX=-180%2C-90%2C180%2C90`
       );
     });
   });
@@ -4707,7 +4680,7 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = when.defer();
+    const requestNetworkLink = defer();
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
       responseType,
@@ -4725,7 +4698,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return requestNetworkLink.promise.then(function (url) {
       expect(url).toEqual(
-        expectedRefreshLinkHref + "?client=Cesium-v1&v=2.2&lang=English"
+        `${expectedRefreshLinkHref}?client=Cesium-v1&v=2.2&lang=English`
       );
     });
   });
@@ -4741,7 +4714,7 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = when.defer();
+    const requestNetworkLink = defer();
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
       responseType,
@@ -4759,7 +4732,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return requestNetworkLink.promise.then(function (url) {
       expect(url).toEqual(
-        expectedRefreshLinkHref + "?client=Cesium-v1&v=2.2&lang=English"
+        `${expectedRefreshLinkHref}?client=Cesium-v1&v=2.2&lang=English`
       );
     });
   });
@@ -4777,7 +4750,7 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = when.defer();
+    const requestNetworkLink = defer();
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
       responseType,
@@ -4795,8 +4768,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return requestNetworkLink.promise.then(function (url) {
       expect(url).toEqual(
-        expectedRefreshLinkHref +
-          "?BBOX=-180%2C-90%2C180%2C90&CAMERA=0%2C0%2C6378137%2C0%2C0&VIEW=45%2C45%2C512%2C512%2C1"
+        `${expectedRefreshLinkHref}?BBOX=-180%2C-90%2C180%2C90&CAMERA=0%2C0%2C6378137%2C0%2C0&VIEW=45%2C45%2C512%2C512%2C1`
       );
     });
   });
@@ -4814,7 +4786,7 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = when.defer();
+    const requestNetworkLink = defer();
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
       responseType,
@@ -4832,8 +4804,7 @@ describe("DataSources/KmlDataSource", function () {
 
     return requestNetworkLink.promise.then(function (url) {
       expect(url).toEqual(
-        expectedRefreshLinkHref +
-          "?BBOX=-180%2C-90%2C180%2C90&CAMERA=0%2C0%2C6378137%2C0%2C0&VIEW=45%2C45%2C512%2C512%2C1"
+        `${expectedRefreshLinkHref}?BBOX=-180%2C-90%2C180%2C90&CAMERA=0%2C0%2C6378137%2C0%2C0&VIEW=45%2C45%2C512%2C512%2C1`
       );
     });
   });
@@ -4850,7 +4821,7 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = when.defer();
+    const requestNetworkLink = defer();
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
       responseType,
@@ -4867,7 +4838,7 @@ describe("DataSources/KmlDataSource", function () {
     KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
     return requestNetworkLink.promise.then(function (url) {
-      expect(url).toEqual(expectedRefreshLinkHref + "?hq=1&vf=1");
+      expect(url).toEqual(`${expectedRefreshLinkHref}?hq=1&vf=1`);
     });
   });
 
@@ -4927,7 +4898,7 @@ describe("DataSources/KmlDataSource", function () {
       }).then(function () {
         expect(spy).toHaveBeenCalledWith(
           dataSource,
-          expectedRefreshLinkHref + "?BBOX=0%2C0%2C0%2C0"
+          `${expectedRefreshLinkHref}?BBOX=0%2C0%2C0%2C0`
         );
 
         expect(entities.length).toEqual(3);

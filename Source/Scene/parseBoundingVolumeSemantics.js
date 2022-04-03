@@ -13,7 +13,7 @@ import defined from "../Core/defined.js";
  *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata/Semantics|3D Metadata Semantic Reference} for the various bounding volumes and minimum/maximum heights.
  *
- * @param {TileMetadata} tileMetadata The metadata object for looking up values by semantic. In practice, this will typically be a {@link ImplicitTileMetadata}
+ * @param {TileMetadata} tileMetadata The metadata object for looking up values by semantic. In practice, this will typically be a {@link ImplicitMetadataView}
  * @return {Object} An object containing a <code>tile</code> property and a <code>content</code> property. These contain the bounding volume, and any minimum or maximum height.
  *
  * @private
@@ -53,7 +53,7 @@ export default function parseBoundingVolumeSemantics(tileMetadata) {
  * @private
  */
 function parseBoundingVolume(prefix, tileMetadata) {
-  const boundingBoxSemantic = prefix + "_BOUNDING_BOX";
+  const boundingBoxSemantic = `${prefix}_BOUNDING_BOX`;
   const boundingBox = tileMetadata.getPropertyBySemantic(boundingBoxSemantic);
 
   if (defined(boundingBox)) {
@@ -62,7 +62,7 @@ function parseBoundingVolume(prefix, tileMetadata) {
     };
   }
 
-  const boundingRegionSemantic = prefix + "_BOUNDING_REGION";
+  const boundingRegionSemantic = `${prefix}_BOUNDING_REGION`;
   const boundingRegion = tileMetadata.getPropertyBySemantic(
     boundingRegionSemantic
   );
@@ -73,7 +73,7 @@ function parseBoundingVolume(prefix, tileMetadata) {
     };
   }
 
-  const boundingSphereSemantic = prefix + "_BOUNDING_SPHERE";
+  const boundingSphereSemantic = `${prefix}_BOUNDING_SPHERE`;
   const boundingSphere = tileMetadata.getPropertyBySemantic(
     boundingSphereSemantic
   );
@@ -99,7 +99,7 @@ function parseBoundingVolume(prefix, tileMetadata) {
  * @private
  */
 function parseMinimumHeight(prefix, tileMetadata) {
-  const minimumHeightSemantic = prefix + "_MINIMUM_HEIGHT";
+  const minimumHeightSemantic = `${prefix}_MINIMUM_HEIGHT`;
   return tileMetadata.getPropertyBySemantic(minimumHeightSemantic);
 }
 
@@ -114,6 +114,6 @@ function parseMinimumHeight(prefix, tileMetadata) {
  * @private
  */
 function parseMaximumHeight(prefix, tileMetadata) {
-  const maximumHeightSemantic = prefix + "_MAXIMUM_HEIGHT";
+  const maximumHeightSemantic = `${prefix}_MAXIMUM_HEIGHT`;
   return tileMetadata.getPropertyBySemantic(maximumHeightSemantic);
 }

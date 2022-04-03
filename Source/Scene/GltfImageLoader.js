@@ -1,10 +1,10 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import loadImageFromTypedArray from "../Core/loadImageFromTypedArray.js";
 import loadKTX2 from "../Core/loadKTX2.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import when from "../ThirdParty/when.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 
@@ -60,7 +60,7 @@ export default function GltfImageLoader(options) {
   this._image = undefined;
   this._mipLevels = undefined;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = when.defer();
+  this._promise = defer();
 }
 
 if (defined(Object.create)) {
@@ -191,7 +191,7 @@ function loadFromBufferView(imageLoader) {
         imageLoader._promise.resolve(imageLoader);
       });
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (imageLoader.isDestroyed()) {
         return;
       }
@@ -222,11 +222,11 @@ function loadFromUri(imageLoader) {
       imageLoader._state = ResourceLoaderState.READY;
       imageLoader._promise.resolve(imageLoader);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (imageLoader.isDestroyed()) {
         return;
       }
-      handleError(imageLoader, error, "Failed to load image: " + uri);
+      handleError(imageLoader, error, `Failed to load image: ${uri}`);
     });
 }
 

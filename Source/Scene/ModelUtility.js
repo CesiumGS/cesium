@@ -159,9 +159,9 @@ ModelUtility.ModelState = {
 ModelUtility.getFailedLoadFunction = function (model, type, path) {
   return function (error) {
     model._state = ModelUtility.ModelState.FAILED;
-    let message = "Failed to load " + type + ": " + path;
+    let message = `Failed to load ${type}: ${path}`;
     if (defined(error)) {
-      message += "\n" + error.message;
+      message += `\n${error.message}`;
     }
     model._readyPromise.reject(new RuntimeError(message));
   };
@@ -180,7 +180,7 @@ ModelUtility.parseBuffers = function (model, bufferLoad) {
       bufferResource
         .fetchArrayBuffer()
         .then(bufferLoad(model, bufferViewId))
-        .otherwise(
+        .catch(
           ModelUtility.getFailedLoadFunction(
             model,
             "buffer",
@@ -318,7 +318,7 @@ function ensureSemanticExistenceForPrimitive(gltf, primitive) {
       const targetAttributes = targets[target];
       for (const attribute in targetAttributes) {
         if (attribute !== "extras") {
-          attributes[attribute + "_" + target] = targetAttributes[attribute];
+          attributes[`${attribute}_${target}`] = targetAttributes[attribute];
         }
       }
     }
@@ -339,20 +339,16 @@ function ensureSemanticExistenceForPrimitive(gltf, primitive) {
         if (lowerCase.charAt(0) === "_") {
           lowerCase = lowerCase.slice(1);
         }
-        const attributeName = "a_" + lowerCase;
+        const attributeName = `a_${lowerCase}`;
         technique.attributes[attributeName] = {
           semantic: semantic,
           type: accessor.componentType,
         };
         const pipelineExtras = vertexShader.extras._pipeline;
         let shaderText = pipelineExtras.source;
-        shaderText =
-          "attribute " +
-          ModelUtility.getShaderVariable(accessor.type) +
-          " " +
-          attributeName +
-          ";\n" +
-          shaderText;
+        shaderText = `attribute ${ModelUtility.getShaderVariable(
+          accessor.type
+        )} ${attributeName};\n${shaderText}`;
         pipelineExtras.source = shaderText;
       }
     }
@@ -584,7 +580,7 @@ ModelUtility.checkSupportedExtensions = function (
   for (const extension in extensionsRequired) {
     if (extensionsRequired.hasOwnProperty(extension)) {
       if (!ModelUtility.supportedExtensions[extension]) {
-        throw new RuntimeError("Unsupported glTF Extension: " + extension);
+        throw new RuntimeError(`Unsupported glTF Extension: ${extension}`);
       }
 
       if (extension === "EXT_texture_webp" && browserSupportsWebp === false) {
@@ -602,7 +598,7 @@ ModelUtility.checkSupportedGlExtensions = function (extensionsUsed, context) {
     for (let i = 0; i < glExtensionsUsedLength; i++) {
       const extension = extensionsUsed[i];
       if (extension !== "OES_element_index_uint") {
-        throw new RuntimeError("Unsupported WebGL Extension: " + extension);
+        throw new RuntimeError(`Unsupported WebGL Extension: ${extension}`);
       } else if (!context.elementIndexUint) {
         throw new RuntimeError(
           "OES_element_index_uint WebGL extension is not enabled."
@@ -682,11 +678,10 @@ ModelUtility.modifyShaderForDracoQuantizedAttributes = function (
       if (attributeSemantic.charAt(0) === "_") {
         attributeSemantic = attributeSemantic.substring(1);
       }
-      const decodeUniformVarName =
-        "gltf_u_dec_" + attributeSemantic.toLowerCase();
+      const decodeUniformVarName = `gltf_u_dec_${attributeSemantic.toLowerCase()}`;
 
       if (!defined(quantizedUniforms[decodeUniformVarName])) {
-        const newMain = "gltf_decoded_" + attributeSemantic;
+        const newMain = `gltf_decoded_${attributeSemantic}`;
         const decodedAttributeVarName = attributeVarName.replace(
           "a_",
           "gltf_a_dec_"
@@ -705,11 +700,11 @@ ModelUtility.modifyShaderForDracoQuantizedAttributes = function (
         if (quantization.octEncoded) {
           variableType = "vec3";
         } else if (size > 1) {
-          variableType = "vec" + size;
+          variableType = `vec${size}`;
         } else {
           variableType = "float";
         }
-        shader = variableType + " " + decodedAttributeVarName + ";\n" + shader;
+        shader = `${variableType} ${decodedAttributeVarName};\n${shader}`;
 
         // The gltf 2.0 COLOR_0 vertex attribute can be VEC4 or VEC3
         const vec3Color = size === 3 && attributeSemantic === "COLOR_0";
@@ -717,67 +712,37 @@ ModelUtility.modifyShaderForDracoQuantizedAttributes = function (
           shader = replaceAllButFirstInString(
             shader,
             decodedAttributeVarName,
-            "vec4(" + decodedAttributeVarName + ", 1.0)"
+            `vec4(${decodedAttributeVarName}, 1.0)`
           );
         }
 
         // splice decode function into the shader
         let decode = "";
         if (quantization.octEncoded) {
-          const decodeUniformVarNameRangeConstant =
-            decodeUniformVarName + "_rangeConstant";
-          shader =
-            "uniform float " +
-            decodeUniformVarNameRangeConstant +
-            ";\n" +
-            shader;
+          const decodeUniformVarNameRangeConstant = `${decodeUniformVarName}_rangeConstant`;
+          shader = `uniform float ${decodeUniformVarNameRangeConstant};\n${shader}`;
           decode =
-            "\n" +
-            "void main() {\n" +
-            // Draco oct-encoding decodes to zxy order
-            "    " +
-            decodedAttributeVarName +
-            " = czm_octDecode(" +
-            attributeVarName +
-            ".xy, " +
-            decodeUniformVarNameRangeConstant +
-            ").zxy;\n" +
-            "    " +
-            newMain +
-            "();\n" +
-            "}\n";
+            `${
+              "\n" +
+              "void main() {\n" +
+              // Draco oct-encoding decodes to zxy order
+              "    "
+            }${decodedAttributeVarName} = czm_octDecode(${attributeVarName}.xy, ${decodeUniformVarNameRangeConstant}).zxy;\n` +
+            `    ${newMain}();\n` +
+            `}\n`;
         } else {
-          const decodeUniformVarNameNormConstant =
-            decodeUniformVarName + "_normConstant";
-          const decodeUniformVarNameMin = decodeUniformVarName + "_min";
+          const decodeUniformVarNameNormConstant = `${decodeUniformVarName}_normConstant`;
+          const decodeUniformVarNameMin = `${decodeUniformVarName}_min`;
           shader =
-            "uniform float " +
-            decodeUniformVarNameNormConstant +
-            ";\n" +
-            "uniform " +
-            variableType +
-            " " +
-            decodeUniformVarNameMin +
-            ";\n" +
-            shader;
+            `uniform float ${decodeUniformVarNameNormConstant};\n` +
+            `uniform ${variableType} ${decodeUniformVarNameMin};\n${shader}`;
           const attributeVarAccess = vec3Color ? ".xyz" : "";
           decode =
-            "\n" +
-            "void main() {\n" +
-            "    " +
-            decodedAttributeVarName +
-            " = " +
-            decodeUniformVarNameMin +
-            " + " +
-            attributeVarName +
-            attributeVarAccess +
-            " * " +
-            decodeUniformVarNameNormConstant +
-            ";\n" +
-            "    " +
-            newMain +
-            "();\n" +
-            "}\n";
+            `${
+              "\n" + "void main() {\n" + "    "
+            }${decodedAttributeVarName} = ${decodeUniformVarNameMin} + ${attributeVarName}${attributeVarAccess} * ${decodeUniformVarNameNormConstant};\n` +
+            `    ${newMain}();\n` +
+            `}\n`;
         }
 
         shader = ShaderSource.replaceMain(shader, newMain);
@@ -809,11 +774,10 @@ ModelUtility.modifyShaderForQuantizedAttributes = function (
       if (attributeSemantic.charAt(0) === "_") {
         attributeSemantic = attributeSemantic.substring(1);
       }
-      const decodeUniformVarName =
-        "gltf_u_dec_" + attributeSemantic.toLowerCase();
+      const decodeUniformVarName = `gltf_u_dec_${attributeSemantic.toLowerCase()}`;
 
-      const decodeUniformVarNameScale = decodeUniformVarName + "_scale";
-      const decodeUniformVarNameTranslate = decodeUniformVarName + "_translate";
+      const decodeUniformVarNameScale = `${decodeUniformVarName}_scale`;
+      const decodeUniformVarNameTranslate = `${decodeUniformVarName}_translate`;
       if (
         !defined(quantizedUniforms[decodeUniformVarName]) &&
         !defined(quantizedUniforms[decodeUniformVarNameScale])
@@ -821,7 +785,7 @@ ModelUtility.modifyShaderForQuantizedAttributes = function (
         const quantizedAttributes = getQuantizedAttributes(gltf, accessorId);
         if (defined(quantizedAttributes)) {
           const decodeMatrix = quantizedAttributes.decodeMatrix;
-          const newMain = "gltf_decoded_" + attributeSemantic;
+          const newMain = `gltf_decoded_${attributeSemantic}`;
           const decodedAttributeVarName = attributeVarName.replace(
             "a_",
             "gltf_a_dec_"
@@ -837,66 +801,35 @@ ModelUtility.modifyShaderForQuantizedAttributes = function (
           // declare decoded attribute
           let variableType;
           if (size > 2) {
-            variableType = "vec" + (size - 1);
+            variableType = `vec${size - 1}`;
           } else {
             variableType = "float";
           }
-          shader =
-            variableType + " " + decodedAttributeVarName + ";\n" + shader;
+          shader = `${variableType} ${decodedAttributeVarName};\n${shader}`;
           // splice decode function into the shader - attributes are pre-multiplied with the decode matrix
           // uniform in the shader (32-bit floating point)
           let decode = "";
           if (size === 5) {
             // separate scale and translate since glsl doesn't have mat5
-            shader =
-              "uniform mat4 " + decodeUniformVarNameScale + ";\n" + shader;
-            shader =
-              "uniform vec4 " + decodeUniformVarNameTranslate + ";\n" + shader;
+            shader = `uniform mat4 ${decodeUniformVarNameScale};\n${shader}`;
+            shader = `uniform vec4 ${decodeUniformVarNameTranslate};\n${shader}`;
             decode =
-              "\n" +
-              "void main() {\n" +
-              "    " +
-              decodedAttributeVarName +
-              " = " +
-              decodeUniformVarNameScale +
-              " * " +
-              attributeVarName +
-              " + " +
-              decodeUniformVarNameTranslate +
-              ";\n" +
-              "    " +
-              newMain +
-              "();\n" +
-              "}\n";
+              `${
+                "\n" + "void main() {\n" + "    "
+              }${decodedAttributeVarName} = ${decodeUniformVarNameScale} * ${attributeVarName} + ${decodeUniformVarNameTranslate};\n` +
+              `    ${newMain}();\n` +
+              `}\n`;
 
             quantizedUniforms[decodeUniformVarNameScale] = { mat: 4 };
             quantizedUniforms[decodeUniformVarNameTranslate] = { vec: 4 };
           } else {
-            shader =
-              "uniform mat" +
-              size +
-              " " +
-              decodeUniformVarName +
-              ";\n" +
-              shader;
+            shader = `uniform mat${size} ${decodeUniformVarName};\n${shader}`;
             decode =
-              "\n" +
-              "void main() {\n" +
-              "    " +
-              decodedAttributeVarName +
-              " = " +
-              variableType +
-              "(" +
-              decodeUniformVarName +
-              " * vec" +
-              size +
-              "(" +
-              attributeVarName +
-              ",1.0));\n" +
-              "    " +
-              newMain +
-              "();\n" +
-              "}\n";
+              `${
+                "\n" + "void main() {\n" + "    "
+              }${decodedAttributeVarName} = ${variableType}(${decodeUniformVarName} * vec${size}(${attributeVarName},1.0));\n` +
+              `    ${newMain}();\n` +
+              `}\n`;
 
             quantizedUniforms[decodeUniformVarName] = { mat: size };
           }
@@ -1113,10 +1046,10 @@ ModelUtility.createUniformsForDracoQuantizedAttributes = function (
         attribute = attribute.substring(1);
       }
 
-      const uniformVarName = "gltf_u_dec_" + attribute.toLowerCase();
+      const uniformVarName = `gltf_u_dec_${attribute.toLowerCase()}`;
 
       if (quantization.octEncoded) {
-        const uniformVarNameRangeConstant = uniformVarName + "_rangeConstant";
+        const uniformVarNameRangeConstant = `${uniformVarName}_rangeConstant`;
         const rangeConstant = (1 << quantization.quantizationBits) - 1.0;
         uniformMap[uniformVarNameRangeConstant] = getScalarUniformFunction(
           rangeConstant
@@ -1124,14 +1057,14 @@ ModelUtility.createUniformsForDracoQuantizedAttributes = function (
         continue;
       }
 
-      const uniformVarNameNormConstant = uniformVarName + "_normConstant";
+      const uniformVarNameNormConstant = `${uniformVarName}_normConstant`;
       const normConstant =
         quantization.range / (1 << quantization.quantizationBits);
       uniformMap[uniformVarNameNormConstant] = getScalarUniformFunction(
         normConstant
       ).func;
 
-      const uniformVarNameMin = uniformVarName + "_min";
+      const uniformVarNameMin = `${uniformVarName}_min`;
       switch (decodedData.componentsPerAttribute) {
         case 1:
           uniformMap[uniformVarNameMin] = getScalarUniformFunction(
@@ -1184,7 +1117,7 @@ ModelUtility.createUniformsForQuantizedAttributes = function (
         const quantizedAttributes = extensions.WEB3D_quantized_attributes;
         if (defined(quantizedAttributes)) {
           const decodeMatrix = quantizedAttributes.decodeMatrix;
-          const uniformVariable = "gltf_u_dec_" + attribute.toLowerCase();
+          const uniformVariable = `gltf_u_dec_${attribute.toLowerCase()}`;
           let uniformVariableScale;
           let uniformVariableTranslate;
           switch (a.type) {
@@ -1208,8 +1141,8 @@ ModelUtility.createUniformsForQuantizedAttributes = function (
               break;
             case AttributeType.VEC4:
               // VEC4 attributes are split into scale and translate because there is no mat5 in GLSL
-              uniformVariableScale = uniformVariable + "_scale";
-              uniformVariableTranslate = uniformVariable + "_translate";
+              uniformVariableScale = `${uniformVariable}_scale`;
+              uniformVariableTranslate = `${uniformVariable}_translate`;
               uniformMap[uniformVariableScale] = getMat4UniformFunction(
                 scaleFromMatrix5Array(decodeMatrix)
               ).func;

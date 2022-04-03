@@ -90,7 +90,7 @@ function InfoBoxViewModel() {
  * @returns {String}
  */
 InfoBoxViewModel.prototype.maxHeightOffset = function (offset) {
-  return this.maxHeight - offset + "px";
+  return `${this.maxHeight - offset}px`;
 };
 
 Object.defineProperties(InfoBoxViewModel.prototype, {

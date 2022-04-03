@@ -4,7 +4,6 @@ import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import ForEach from "./GltfPipeline/ForEach.js";
-import when from "../ThirdParty/when.js";
 
 /**
  * @private
@@ -54,8 +53,9 @@ DracoLoader.hasExtension = function (model) {
 
 function addBufferToLoadResources(loadResources, typedArray) {
   // Create a new id to differentiate from original glTF bufferViews
-  const bufferViewId =
-    "runtime." + Object.keys(loadResources.createdBufferViews).length;
+  const bufferViewId = `runtime.${
+    Object.keys(loadResources.createdBufferViews).length
+  }`;
 
   const loadResourceBuffers = loadResources.buffers;
   const id = Object.keys(loadResourceBuffers).length;
@@ -146,7 +146,7 @@ function scheduleDecodingTask(
       }
     }
 
-    model._decodedData[taskData.mesh + ".primitive." + taskData.primitive] = {
+    model._decodedData[`${taskData.mesh}.primitive.${taskData.primitive}`] = {
       bufferView: decodedIndexBuffer.bufferViewId,
       numberOfIndices: decodedIndexBuffer.numberOfIndices,
       attributes: attributes,
@@ -224,7 +224,7 @@ DracoLoader.parse = function (model, context) {
  */
 DracoLoader.decodeModel = function (model, context) {
   if (!DracoLoader.hasExtension(model)) {
-    return when.resolve();
+    return Promise.resolve();
   }
 
   const loadResources = model._loadResources;
@@ -233,7 +233,7 @@ DracoLoader.decodeModel = function (model, context) {
     const cachedData = DracoLoader._decodedModelResourceCache[cacheKey];
     // Load decoded data for model when cache is ready
     if (defined(cachedData) && loadResources.pendingDecodingCache) {
-      return when(cachedData.ready, function () {
+      return Promise.resolve(cachedData.ready).then(function () {
         model._decodedData = cachedData.data;
         loadResources.pendingDecodingCache = false;
       });
@@ -249,7 +249,7 @@ DracoLoader.decodeModel = function (model, context) {
 
   if (loadResources.primitivesToDecode.length === 0) {
     // No more tasks to schedule
-    return when.resolve();
+    return Promise.resolve();
   }
 
   const decoderTaskProcessor = DracoLoader._getDecoderTaskProcessor();
@@ -271,7 +271,7 @@ DracoLoader.decodeModel = function (model, context) {
     );
   }
 
-  return when.all(decodingPromises);
+  return Promise.all(decodingPromises);
 };
 
 /**

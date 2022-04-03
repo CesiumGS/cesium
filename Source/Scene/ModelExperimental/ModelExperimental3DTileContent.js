@@ -1,4 +1,6 @@
 import Axis from "../Axis.js";
+import Color from "../../Core/Color.js";
+import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import Pass from "../../Renderer/Pass.js";
@@ -25,7 +27,8 @@ export default function ModelExperimental3DTileContent(
   this._resource = resource;
 
   this._model = undefined;
-  this._groupMetadata = undefined;
+  this._metadata = undefined;
+  this._group = undefined;
 }
 
 Object.defineProperties(ModelExperimental3DTileContent.prototype, {
@@ -117,12 +120,21 @@ Object.defineProperties(ModelExperimental3DTileContent.prototype, {
     },
   },
 
-  groupMetadata: {
+  metadata: {
     get: function () {
-      return this._groupMetadata;
+      return this._metadata;
     },
     set: function (value) {
-      this._groupMetadata = value;
+      this._metadata = value;
+    },
+  },
+
+  group: {
+    get: function () {
+      return this._group;
+    },
+    set: function (value) {
+      this._group = value;
     },
   },
 });
@@ -156,7 +168,12 @@ ModelExperimental3DTileContent.prototype.applyDebugSettings = function (
   enabled,
   color
 ) {
-  return;
+  color = enabled ? color : Color.WHITE;
+  if (this.featuresLength === 0) {
+    this._model.color = color;
+  } else if (defined(this.batchTable)) {
+    this.batchTable.setAllColor(color);
+  }
 };
 
 ModelExperimental3DTileContent.prototype.applyStyle = function (style) {
@@ -176,8 +193,35 @@ ModelExperimental3DTileContent.prototype.update = function (
   model.modelMatrix = tile.computedTransform;
   model.customShader = tileset.customShader;
   model.pointCloudShading = tileset.pointCloudShading;
-  model.featureIdIndex = tileset.featureIdIndex;
-  model.instanceFeatureIdIndex = tileset.instanceFeatureIdIndex;
+  model.featureIdLabel = tileset.featureIdLabel;
+  model.instanceFeatureIdLabel = tileset.instanceFeatureIdLabel;
+  model.lightColor = tileset.lightColor;
+  model.imageBasedLighting = tileset.imageBasedLighting;
+  model.backFaceCulling = tileset.backFaceCulling;
+  model.shadows = tileset.shadows;
+  model.showCreditsOnScreen = tileset.showCreditsOnScreen;
+  model.splitDirection = tileset.splitDirection;
+
+  // Updating clipping planes requires more effort because of ownership checks
+  const tilesetClippingPlanes = tileset.clippingPlanes;
+  model.referenceMatrix = tileset.clippingPlanesOriginMatrix;
+  if (defined(tilesetClippingPlanes) && tile.clippingPlanesDirty) {
+    // Dereference the clipping planes from the model if they are irrelevant.
+    model._clippingPlanes =
+      tilesetClippingPlanes.enabled && tile._isClipped
+        ? tilesetClippingPlanes
+        : undefined;
+  }
+
+  // If the model references a different ClippingPlaneCollection from the tileset,
+  // update the model to use the new ClippingPlaneCollection.
+  if (
+    defined(tilesetClippingPlanes) &&
+    defined(model._clippingPlanes) &&
+    model._clippingPlanes !== tilesetClippingPlanes
+  ) {
+    model._clippingPlanes = tilesetClippingPlanes;
+  }
 
   model.update(frameState);
 };
@@ -199,21 +243,17 @@ ModelExperimental3DTileContent.fromGltf = function (
 ) {
   const content = new ModelExperimental3DTileContent(tileset, tile, resource);
 
-  const modelOptions = {
+  const additionalOptions = {
     gltf: gltf,
-    cull: false, // The model is already culled by 3D Tiles
-    releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
-    opaquePass: Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
     basePath: resource,
-    modelMatrix: tile.computedTransform,
-    upAxis: tileset._gltfUpAxis,
-    forwardAxis: Axis.X,
-    incrementallyLoadTextures: false,
-    customShader: tileset.customShader,
-    content: content,
-    colorBlendMode: tileset.colorBlendMode,
-    colorBlendAmount: tileset.colorBlendAmount,
   };
+
+  const modelOptions = makeModelOptions(
+    tileset,
+    tile,
+    content,
+    additionalOptions
+  );
   content._model = ModelExperimental.fromGltf(modelOptions);
   return content;
 };
@@ -227,22 +267,18 @@ ModelExperimental3DTileContent.fromB3dm = function (
 ) {
   const content = new ModelExperimental3DTileContent(tileset, tile, resource);
 
-  const modelOptions = {
+  const additionalOptions = {
     arrayBuffer: arrayBuffer,
     byteOffset: byteOffset,
     resource: resource,
-    cull: false, // The model is already culled by 3D Tiles
-    releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
-    opaquePass: Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
-    modelMatrix: tile.computedTransform,
-    upAxis: tileset._gltfUpAxis,
-    forwardAxis: Axis.X,
-    incrementallyLoadTextures: false,
-    customShader: tileset.customShader,
-    content: content,
-    colorBlendMode: tileset.colorBlendMode,
-    colorBlendAmount: tileset.colorBlendAmount,
   };
+
+  const modelOptions = makeModelOptions(
+    tileset,
+    tile,
+    content,
+    additionalOptions
+  );
   content._model = ModelExperimental.fromB3dm(modelOptions);
   return content;
 };
@@ -256,22 +292,18 @@ ModelExperimental3DTileContent.fromI3dm = function (
 ) {
   const content = new ModelExperimental3DTileContent(tileset, tile, resource);
 
-  const modelOptions = {
+  const additionalOptions = {
     arrayBuffer: arrayBuffer,
     byteOffset: byteOffset,
     resource: resource,
-    cull: false, // The model is already culled by 3D Tiles
-    releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
-    opaquePass: Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
-    modelMatrix: tile.computedTransform,
-    upAxis: tileset._gltfUpAxis,
-    forwardAxis: Axis.X,
-    incrementallyLoadTextures: false,
-    customShader: tileset.customShader,
-    content: content,
-    colorBlendMode: tileset.colorBlendMode,
-    colorBlendAmount: tileset.colorBlendAmount,
   };
+
+  const modelOptions = makeModelOptions(
+    tileset,
+    tile,
+    content,
+    additionalOptions
+  );
   content._model = ModelExperimental.fromI3dm(modelOptions);
   return content;
 };
@@ -285,10 +317,24 @@ ModelExperimental3DTileContent.fromPnts = function (
 ) {
   const content = new ModelExperimental3DTileContent(tileset, tile, resource);
 
-  const modelOptions = {
+  const additionalOptions = {
     arrayBuffer: arrayBuffer,
     byteOffset: byteOffset,
     resource: resource,
+  };
+
+  const modelOptions = makeModelOptions(
+    tileset,
+    tile,
+    content,
+    additionalOptions
+  );
+  content._model = ModelExperimental.fromPnts(modelOptions);
+  return content;
+};
+
+function makeModelOptions(tileset, tile, content, additionalOptions) {
+  const mainOptions = {
     cull: false, // The model is already culled by 3D Tiles
     releaseGltfJson: true, // Models are unique and will not benefit from caching so save memory
     opaquePass: Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
@@ -298,9 +344,20 @@ ModelExperimental3DTileContent.fromPnts = function (
     incrementallyLoadTextures: false,
     customShader: tileset.customShader,
     content: content,
+    show: tileset.show,
     colorBlendMode: tileset.colorBlendMode,
     colorBlendAmount: tileset.colorBlendAmount,
+    lightColor: tileset.lightColor,
+    imageBasedLighting: tileset.imageBasedLighting,
+    featureIdLabel: tileset.featureIdLabel,
+    instanceFeatureIdLabel: tileset.instanceFeatureIdLabel,
+    pointCloudShading: tileset.pointCloudShading,
+    clippingPlanes: tileset.clippingPlanes,
+    backFaceCulling: tileset.backFaceCulling,
+    shadows: tileset.shadows,
+    showCreditsOnScreen: tileset.showCreditsOnScreen,
+    splitDirection: tileset.splitDirection,
   };
-  content._model = ModelExperimental.fromPnts(modelOptions);
-  return content;
-};
+
+  return combine(additionalOptions, mainOptions);
+}

@@ -55,9 +55,11 @@ function addWhitePixelCanvas(textureAtlas, labelCollection) {
   context2D.fillStyle = "#fff";
   context2D.fillRect(0, 0, canvas.width, canvas.height);
 
-  textureAtlas.addImage(whitePixelCanvasId, canvas).then(function (index) {
-    labelCollection._whitePixelIndex = index;
-  });
+  return textureAtlas
+    .addImage(whitePixelCanvasId, canvas)
+    .then(function (index) {
+      labelCollection._whitePixelIndex = index;
+    });
 }
 
 // reusable object for calling writeTextToCanvas
@@ -114,9 +116,7 @@ function unbindGlyph(labelCollection, glyph) {
 }
 
 function addGlyphToTextureAtlas(textureAtlas, id, canvas, glyphTextureInfo) {
-  textureAtlas.addImage(id, canvas).then(function (index) {
-    glyphTextureInfo.index = index;
-  });
+  glyphTextureInfo.index = textureAtlas.addImageSync(id, canvas);
 }
 
 const splitter = new GraphemeSplitter();
@@ -204,14 +204,7 @@ function rebindAllGlyphs(labelCollection, label) {
 
     let glyphTextureInfo = glyphTextureCache[id];
     if (!defined(glyphTextureInfo)) {
-      const glyphFont =
-        label._fontStyle +
-        " " +
-        label._fontWeight +
-        " " +
-        SDFSettings.FONT_SIZE +
-        "px " +
-        label._fontFamily;
+      const glyphFont = `${label._fontStyle} ${label._fontWeight} ${SDFSettings.FONT_SIZE}px ${label._fontFamily}`;
 
       const canvas = createGlyphCanvas(
         character,
@@ -614,6 +607,7 @@ function LabelCollection(options) {
     scene: this._scene,
   });
   this._backgroundBillboardCollection.destroyTextureAtlas = false;
+  this._backgroundImageReady = true;
 
   this._billboardCollection = new BillboardCollection({
     scene: this._scene,
@@ -915,13 +909,21 @@ LabelCollection.prototype.update = function (frameState) {
     billboardCollection.textureAtlas = this._textureAtlas;
   }
 
+  const that = this;
   if (!defined(this._backgroundTextureAtlas)) {
     this._backgroundTextureAtlas = new TextureAtlas({
       context: context,
       initialSize: whitePixelSize,
     });
     backgroundBillboardCollection.textureAtlas = this._backgroundTextureAtlas;
-    addWhitePixelCanvas(this._backgroundTextureAtlas, this);
+    that._backgroundImageReady = false;
+    addWhitePixelCanvas(this._backgroundTextureAtlas, this).then(function () {
+      that._backgroundImageReady = true;
+    });
+  }
+
+  if (!this._backgroundImageReady) {
+    return;
   }
 
   const len = this._labelsToUpdate.length;

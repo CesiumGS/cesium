@@ -167,15 +167,15 @@ ModelFeature.prototype.getProperty = function (name) {
 
 /**
  * Returns a copy of the feature's property with the given name, examining all
- * the metadata from the EXT_mesh_features and legacy EXT_feature_metadata glTF
+ * the metadata from the EXT_structural_metadata and legacy EXT_feature_metadata glTF
  * extensions. Metadata is checked against name from most specific to most
  * general and the first match is returned. Metadata is checked in this order:
  * <ol>
- *   <li>Feature metadata property by semantic</li>
- *   <li>Feature metadata property by property ID</li>
+ *   <li>structural metadata property by semantic</li>
+ *   <li>structural metadata property by property ID</li>
  * </ol>
  * <p>
- * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features Extension} as well as the
+ * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension} as well as the
  * previous {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
  * </p>
  *
@@ -185,9 +185,8 @@ ModelFeature.prototype.getProperty = function (name) {
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 ModelFeature.prototype.getPropertyInherited = function (name) {
-  const value = this._featureTable.getPropertyBySemantic(this._featureId, name);
-  if (defined(value)) {
-    return value;
+  if (this._featureTable.hasPropertyBySemantic(this._featureId, name)) {
+    return this._featureTable.getPropertyBySemantic(this._featureId, name);
   }
 
   return this._featureTable.getProperty(this._featureId, name);

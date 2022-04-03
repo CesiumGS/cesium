@@ -127,7 +127,7 @@ ShaderBuilder.prototype.addDefine = function (identifier, value, destination) {
   // The ShaderSource created in build() will add the #define part
   let line = identifier;
   if (defined(value)) {
-    line += " " + value.toString();
+    line += ` ${value.toString()}`;
   }
 
   if (ShaderDestination.includesVertexShader(destination)) {
@@ -234,7 +234,7 @@ ShaderBuilder.prototype.addFunction = function (
 /**
  * Add lines to a dynamically-generated function
  * @param {String} functionName The name of the function. This must be created beforehand using {@link ShaderBuilder#addFunction}
- * @param {String} lines An array of lines of GLSL code to add to the function body. Do not include any whitespace at the ends of each line, but do include the semicolon.
+ * @param {String[]} lines An array of lines of GLSL code to add to the function body. Do not include any preceding or ending whitespace, but do include the semicolon for each line.
  *
  * @example
  * // generates the following function in the vertex shader
@@ -269,7 +269,7 @@ ShaderBuilder.prototype.addFunctionLines = function (functionName, lines) {
  * // creates the line "uniform vec3 u_resolution;"
  * shaderBuilder.addUniform("vec3", "u_resolution", ShaderDestination.FRAGMENT);
  * // creates the line "uniform float u_time;" in both shaders
- * shaderBuilder.addDefine("float", "u_time", ShaderDestination.BOTH);
+ * shaderBuilder.addUniform("float", "u_time", ShaderDestination.BOTH);
  */
 ShaderBuilder.prototype.addUniform = function (type, identifier, destination) {
   //>>includeStart('debug', pragmas.debug);
@@ -278,7 +278,7 @@ ShaderBuilder.prototype.addUniform = function (type, identifier, destination) {
   //>>includeEnd('debug');
 
   destination = defaultValue(destination, ShaderDestination.BOTH);
-  const line = "uniform " + type + " " + identifier + ";";
+  const line = `uniform ${type} ${identifier};`;
 
   if (ShaderDestination.includesVertexShader(destination)) {
     this._vertexShaderParts.uniformLines.push(line);
@@ -318,7 +318,7 @@ ShaderBuilder.prototype.setPositionAttribute = function (type, identifier) {
   }
   //>>includeEnd('debug');
 
-  this._positionAttributeLine = "attribute " + type + " " + identifier + ";";
+  this._positionAttributeLine = `attribute ${type} ${identifier};`;
 
   // Some WebGL implementations require attribute 0 to always be active, so
   // this builder assumes the position will always go in location 0
@@ -348,12 +348,15 @@ ShaderBuilder.prototype.addAttribute = function (type, identifier) {
   Check.typeOf.string("identifier", identifier);
   //>>includeEnd('debug');
 
-  const line = "attribute " + type + " " + identifier + ";";
+  const line = `attribute ${type} ${identifier};`;
   this._attributeLines.push(line);
 
   const location = this._nextAttributeLocation;
   this._attributeLocations[identifier] = location;
-  this._nextAttributeLocation++;
+
+  // Most attributes only require a single attribute location, but matrices
+  // require more.
+  this._nextAttributeLocation += getAttributeLocationCount(type);
   return location;
 };
 
@@ -373,7 +376,7 @@ ShaderBuilder.prototype.addVarying = function (type, identifier) {
   Check.typeOf.string("identifier", identifier);
   //>>includeEnd('debug');
 
-  const line = "varying " + type + " " + identifier + ";";
+  const line = `varying ${type} ${identifier};`;
   this._vertexShaderParts.varyingLines.push(line);
   this._fragmentShaderParts.varyingLines.push(line);
 };
@@ -517,6 +520,19 @@ function generateStructLines(shaderBuilder) {
     vertexLines: vertexLines,
     fragmentLines: fragmentLines,
   };
+}
+
+function getAttributeLocationCount(glslType) {
+  switch (glslType) {
+    case "mat2":
+      return 2;
+    case "mat3":
+      return 3;
+    case "mat4":
+      return 4;
+    default:
+      return 1;
+  }
 }
 
 function generateFunctionLines(shaderBuilder) {

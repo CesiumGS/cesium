@@ -8,6 +8,7 @@ import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -31,7 +32,6 @@ import RenderState from "../Renderer/RenderState.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import VertexArray from "../Renderer/VertexArray.js";
-import when from "../ThirdParty/when.js";
 import BatchTable from "./BatchTable.js";
 import CullFace from "./CullFace.js";
 import DepthFunction from "./DepthFunction.js";
@@ -349,7 +349,7 @@ function Primitive(options) {
 
   this._createGeometryResults = undefined;
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   this._batchTable = undefined;
   this._batchTableAttributeIndices = undefined;
@@ -575,7 +575,7 @@ function createBatchTable(primitive, context) {
 
     attributeIndices[name] = i;
     attributes.push({
-      functionName: "czm_batchTable_" + name,
+      functionName: `czm_batchTable_${name}`,
       componentDatatype: attribute.componentDatatype,
       componentsPerAttribute: attribute.componentsPerAttribute,
       normalize: attribute.normalize,
@@ -743,74 +743,48 @@ Primitive._modifyShaderPosition = function (
   while ((match = positionRegex.exec(vertexShaderSource)) !== null) {
     const name = match[1];
 
-    const functionName =
-      "vec4 czm_compute" + name[0].toUpperCase() + name.substr(1) + "()";
+    const functionName = `vec4 czm_compute${name[0].toUpperCase()}${name.substr(
+      1
+    )}()`;
 
     // Don't forward-declare czm_computePosition because computePosition.glsl already does.
     if (functionName !== "vec4 czm_computePosition()") {
-      forwardDecl += functionName + ";\n";
+      forwardDecl += `${functionName};\n`;
     }
 
     if (!defined(primitive.rtcCenter)) {
       // Use GPU RTE
       if (!scene3DOnly) {
         attributes +=
-          "attribute vec3 " +
-          name +
-          "2DHigh;\n" +
-          "attribute vec3 " +
-          name +
-          "2DLow;\n";
+          `attribute vec3 ${name}2DHigh;\n` + `attribute vec3 ${name}2DLow;\n`;
 
         computeFunctions +=
-          functionName +
-          "\n" +
-          "{\n" +
-          "    vec4 p;\n" +
-          "    if (czm_morphTime == 1.0)\n" +
-          "    {\n" +
-          "        p = czm_translateRelativeToEye(" +
-          name +
-          "3DHigh, " +
-          name +
-          "3DLow);\n" +
-          "    }\n" +
-          "    else if (czm_morphTime == 0.0)\n" +
-          "    {\n" +
-          "        p = czm_translateRelativeToEye(" +
-          name +
-          "2DHigh.zxy, " +
-          name +
-          "2DLow.zxy);\n" +
-          "    }\n" +
-          "    else\n" +
-          "    {\n" +
-          "        p = czm_columbusViewMorph(\n" +
-          "                czm_translateRelativeToEye(" +
-          name +
-          "2DHigh.zxy, " +
-          name +
-          "2DLow.zxy),\n" +
-          "                czm_translateRelativeToEye(" +
-          name +
-          "3DHigh, " +
-          name +
-          "3DLow),\n" +
-          "                czm_morphTime);\n" +
-          "    }\n" +
-          "    return p;\n" +
-          "}\n\n";
+          `${functionName}\n` +
+          `{\n` +
+          `    vec4 p;\n` +
+          `    if (czm_morphTime == 1.0)\n` +
+          `    {\n` +
+          `        p = czm_translateRelativeToEye(${name}3DHigh, ${name}3DLow);\n` +
+          `    }\n` +
+          `    else if (czm_morphTime == 0.0)\n` +
+          `    {\n` +
+          `        p = czm_translateRelativeToEye(${name}2DHigh.zxy, ${name}2DLow.zxy);\n` +
+          `    }\n` +
+          `    else\n` +
+          `    {\n` +
+          `        p = czm_columbusViewMorph(\n` +
+          `                czm_translateRelativeToEye(${name}2DHigh.zxy, ${name}2DLow.zxy),\n` +
+          `                czm_translateRelativeToEye(${name}3DHigh, ${name}3DLow),\n` +
+          `                czm_morphTime);\n` +
+          `    }\n` +
+          `    return p;\n` +
+          `}\n\n`;
       } else {
         computeFunctions +=
-          functionName +
-          "\n" +
-          "{\n" +
-          "    return czm_translateRelativeToEye(" +
-          name +
-          "3DHigh, " +
-          name +
-          "3DLow);\n" +
-          "}\n\n";
+          `${functionName}\n` +
+          `{\n` +
+          `    return czm_translateRelativeToEye(${name}3DHigh, ${name}3DLow);\n` +
+          `}\n\n`;
       }
     } else {
       // Use RTC
@@ -827,11 +801,10 @@ Primitive._modifyShaderPosition = function (
       attributes += "attribute vec4 position;\n";
 
       computeFunctions +=
-        functionName +
-        "\n" +
-        "{\n" +
-        "    return u_modifiedModelView * position;\n" +
-        "}\n\n";
+        `${functionName}\n` +
+        `{\n` +
+        `    return u_modifiedModelView * position;\n` +
+        `}\n\n`;
 
       vertexShaderSource = vertexShaderSource.replace(
         /czm_modelViewRelativeToEye\s+\*\s+/g,
@@ -865,7 +838,7 @@ Primitive._appendShowToShader = function (primitive, vertexShaderSource) {
     "    gl_Position *= czm_batchTable_show(batchId); \n" +
     "}";
 
-  return renamedVS + "\n" + showMain;
+  return `${renamedVS}\n${showMain}`;
 };
 
 Primitive._updateColorAttribute = function (
@@ -923,11 +896,11 @@ function appendPickToVertexShader(source) {
     "    v_pickColor = czm_batchTable_pickColor(batchId); \n" +
     "}";
 
-  return renamedVS + "\n" + pickMain;
+  return `${renamedVS}\n${pickMain}`;
 }
 
 function appendPickToFragmentShader(source) {
-  return "varying vec4 v_pickColor;\n" + source;
+  return `varying vec4 v_pickColor;\n${source}`;
 }
 
 Primitive._updatePickColorAttribute = function (source) {
@@ -1035,7 +1008,7 @@ Primitive._appendDistanceDisplayConditionToShader = function (
     "    float show = (distanceSq >= nearSq && distanceSq <= farSq) ? 1.0 : 0.0; \n" +
     "    gl_Position *= show; \n" +
     "}";
-  return renamedVS + "\n" + distanceDisplayConditionMain;
+  return `${renamedVS}\n${distanceDisplayConditionMain}`;
 };
 
 function modifyForEncodedNormals(primitive, vertexShaderSource) {
@@ -1059,10 +1032,10 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
   let numComponents = containsSt && containsNormal ? 2.0 : 1.0;
   numComponents += containsTangent || containsBitangent ? 1 : 0;
 
-  const type = numComponents > 1 ? "vec" + numComponents : "float";
+  const type = numComponents > 1 ? `vec${numComponents}` : "float";
 
   const attributeName = "compressedAttributes";
-  const attributeDecl = "attribute " + type + " " + attributeName + ";";
+  const attributeDecl = `attribute ${type} ${attributeName};`;
 
   let globalDecl = "";
   let decode = "";
@@ -1070,47 +1043,35 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
   if (containsSt) {
     globalDecl += "vec2 st;\n";
     const stComponent =
-      numComponents > 1 ? attributeName + ".x" : attributeName;
-    decode +=
-      "    st = czm_decompressTextureCoordinates(" + stComponent + ");\n";
+      numComponents > 1 ? `${attributeName}.x` : attributeName;
+    decode += `    st = czm_decompressTextureCoordinates(${stComponent});\n`;
   }
 
   if (containsNormal && containsTangent && containsBitangent) {
     globalDecl += "vec3 normal;\n" + "vec3 tangent;\n" + "vec3 bitangent;\n";
-    decode +=
-      "    czm_octDecode(" +
-      attributeName +
-      "." +
-      (containsSt ? "yz" : "xy") +
-      ", normal, tangent, bitangent);\n";
+    decode += `    czm_octDecode(${attributeName}.${
+      containsSt ? "yz" : "xy"
+    }, normal, tangent, bitangent);\n`;
   } else {
     if (containsNormal) {
       globalDecl += "vec3 normal;\n";
-      decode +=
-        "    normal = czm_octDecode(" +
-        attributeName +
-        (numComponents > 1 ? "." + (containsSt ? "y" : "x") : "") +
-        ");\n";
+      decode += `    normal = czm_octDecode(${attributeName}${
+        numComponents > 1 ? `.${containsSt ? "y" : "x"}` : ""
+      });\n`;
     }
 
     if (containsTangent) {
       globalDecl += "vec3 tangent;\n";
-      decode +=
-        "    tangent = czm_octDecode(" +
-        attributeName +
-        "." +
-        (containsSt && containsNormal ? "z" : "y") +
-        ");\n";
+      decode += `    tangent = czm_octDecode(${attributeName}.${
+        containsSt && containsNormal ? "z" : "y"
+      });\n`;
     }
 
     if (containsBitangent) {
       globalDecl += "vec3 bitangent;\n";
-      decode +=
-        "    bitangent = czm_octDecode(" +
-        attributeName +
-        "." +
-        (containsSt && containsNormal ? "z" : "y") +
-        ");\n";
+      decode += `    bitangent = czm_octDecode(${attributeName}.${
+        containsSt && containsNormal ? "z" : "y"
+      });\n`;
     }
   }
 
@@ -1121,11 +1082,8 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
   modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+bitangent;/g, "");
   modifiedVS = ShaderSource.replaceMain(modifiedVS, "czm_non_compressed_main");
   const compressedMain =
-    "void main() \n" +
-    "{ \n" +
-    decode +
-    "    czm_non_compressed_main(); \n" +
-    "}";
+    `${"void main() \n" + "{ \n"}${decode}    czm_non_compressed_main(); \n` +
+    `}`;
 
   return [attributeDecl, globalDecl, modifiedVS, compressedMain].join("\n");
 }
@@ -1159,11 +1117,11 @@ function depthClampFS(fragmentShaderSource) {
     "    #endif\n" +
     "#endif\n" +
     "}\n";
-  modifiedFS =
+  modifiedFS = `${
     "#ifdef GL_EXT_frag_depth\n" +
     "#extension GL_EXT_frag_depth : enable\n" +
-    "#endif\n" +
-    modifiedFS;
+    "#endif\n"
+  }${modifiedFS}`;
   return modifiedFS;
 }
 
@@ -1184,9 +1142,7 @@ function validateShaderMatching(shaderProgram, attributeLocations) {
     if (shaderAttributes.hasOwnProperty(name)) {
       if (!defined(attributeLocations[name])) {
         throw new DeveloperError(
-          "Appearance/Geometry mismatch.  The appearance requires vertex shader attribute input '" +
-            name +
-            "', which was not computed as part of the Geometry.  Use the appearance's vertexFormat property when constructing the geometry."
+          `Appearance/Geometry mismatch.  The appearance requires vertex shader attribute input '${name}', which was not computed as part of the Geometry.  Use the appearance's vertexFormat property when constructing the geometry.`
         );
       }
     }
@@ -1295,12 +1251,12 @@ function loadAsynchronous(primitive, frameState) {
 
     primitive._state = PrimitiveState.CREATING;
 
-    when
-      .all(promises, function (results) {
+    Promise.all(promises)
+      .then(function (results) {
         primitive._createGeometryResults = results;
         primitive._state = PrimitiveState.CREATED;
       })
-      .otherwise(function (error) {
+      .catch(function (error) {
         setReady(primitive, frameState, PrimitiveState.FAILED, error);
       });
   } else if (primitive._state === PrimitiveState.CREATED) {
@@ -1334,30 +1290,35 @@ function loadAsynchronous(primitive, frameState) {
     primitive._createGeometryResults = undefined;
     primitive._state = PrimitiveState.COMBINING;
 
-    when(promise, function (packedResult) {
-      const result = PrimitivePipeline.unpackCombineGeometryResults(
-        packedResult
-      );
-      primitive._geometries = result.geometries;
-      primitive._attributeLocations = result.attributeLocations;
-      primitive.modelMatrix = Matrix4.clone(
-        result.modelMatrix,
-        primitive.modelMatrix
-      );
-      primitive._pickOffsets = result.pickOffsets;
-      primitive._offsetInstanceExtend = result.offsetInstanceExtend;
-      primitive._instanceBoundingSpheres = result.boundingSpheres;
-      primitive._instanceBoundingSpheresCV = result.boundingSpheresCV;
+    Promise.resolve(promise)
+      .then(function (packedResult) {
+        const result = PrimitivePipeline.unpackCombineGeometryResults(
+          packedResult
+        );
+        primitive._geometries = result.geometries;
+        primitive._attributeLocations = result.attributeLocations;
+        primitive.modelMatrix = Matrix4.clone(
+          result.modelMatrix,
+          primitive.modelMatrix
+        );
+        primitive._pickOffsets = result.pickOffsets;
+        primitive._offsetInstanceExtend = result.offsetInstanceExtend;
+        primitive._instanceBoundingSpheres = result.boundingSpheres;
+        primitive._instanceBoundingSpheresCV = result.boundingSpheresCV;
 
-      if (defined(primitive._geometries) && primitive._geometries.length > 0) {
-        primitive._recomputeBoundingSpheres = true;
-        primitive._state = PrimitiveState.COMBINED;
-      } else {
-        setReady(primitive, frameState, PrimitiveState.FAILED, undefined);
-      }
-    }).otherwise(function (error) {
-      setReady(primitive, frameState, PrimitiveState.FAILED, error);
-    });
+        if (
+          defined(primitive._geometries) &&
+          primitive._geometries.length > 0
+        ) {
+          primitive._recomputeBoundingSpheres = true;
+          primitive._state = PrimitiveState.COMBINED;
+        } else {
+          setReady(primitive, frameState, PrimitiveState.FAILED, undefined);
+        }
+      })
+      .catch(function (error) {
+        setReady(primitive, frameState, PrimitiveState.FAILED, error);
+      });
   }
 }
 
@@ -1854,7 +1815,7 @@ function getUniforms(primitive, appearance, material, frameState) {
         if (defined(materialUniformMap) && defined(materialUniformMap[name])) {
           // Later, we could rename uniforms behind-the-scenes if needed.
           throw new DeveloperError(
-            "Appearance and material have a uniform with the same name: " + name
+            `Appearance and material have a uniform with the same name: ${name}`
           );
         }
         //>>includeEnd('debug');

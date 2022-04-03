@@ -8,6 +8,7 @@ import CustomShaderStageFS from "../../Shaders/ModelExperimental/CustomShaderSta
 import AlphaMode from "../AlphaMode.js";
 import CustomShaderMode from "./CustomShaderMode.js";
 import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
+import MetadataPipelineStage from "./MetadataPipelineStage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 /**
@@ -71,6 +72,26 @@ CustomShaderPipelineStage.process = function (
   const shaderBuilder = renderResources.shaderBuilder;
   const customShader = renderResources.model.customShader;
 
+  // Check the lighting model and translucent options first, as sometimes
+  // these are used even if there is no vertex or fragment shader text.
+
+  // if present, the lighting model overrides the material's lighting model.
+  if (defined(customShader.lightingModel)) {
+    renderResources.lightingOptions.lightingModel = customShader.lightingModel;
+  }
+
+  const alphaOptions = renderResources.alphaOptions;
+  if (customShader.isTranslucent) {
+    alphaOptions.pass = Pass.TRANSLUCENT;
+    alphaOptions.alphaMode = AlphaMode.BLEND;
+  } else {
+    // Use the default pass (either OPAQUE or 3D_TILES), regardless of whether
+    // the material pipeline stage used translucent. The default is configured
+    // in AlphaPipelineStage
+    alphaOptions.pass = undefined;
+    alphaOptions.alphaMode = AlphaMode.OPAQUE;
+  }
+
   // Generate lines of code for the shader, but don't add them to the shader
   // yet.
   const generatedCode = generateShaderLines(customShader, primitive);
@@ -129,23 +150,6 @@ CustomShaderPipelineStage.process = function (
       const varyingType = varyings[varyingName];
       shaderBuilder.addVarying(varyingType, varyingName);
     }
-  }
-
-  // if present, the lighting model overrides the material's lighting model.
-  if (defined(customShader.lightingModel)) {
-    renderResources.lightingOptions.lightingModel = customShader.lightingModel;
-  }
-
-  const alphaOptions = renderResources.alphaOptions;
-  if (customShader.isTranslucent) {
-    alphaOptions.pass = Pass.TRANSLUCENT;
-    alphaOptions.alphaMode = AlphaMode.BLEND;
-  } else {
-    // Use the default pass (either OPAQUE or 3D_TILES), regardless of whether
-    // the material pipeline stage used translucent. The default is configured
-    // in AlphaPipelineStage
-    alphaOptions.pass = undefined;
-    alphaOptions.alphaMode = AlphaMode.OPAQUE;
   }
 
   renderResources.uniformMap = combine(
@@ -235,12 +239,7 @@ function generateVertexShaderLines(
       // Initializing attribute structs are just a matter of copying the
       // attribute or varying: E.g.:
       // "    vsInput.attributes.position = a_position;"
-      vertexInitialization =
-        "vsInput.attributes." +
-        variableName +
-        " = attributes." +
-        variableName +
-        ";";
+      vertexInitialization = `vsInput.attributes.${variableName} = attributes.${variableName};`;
       initializationLines.push(vertexInitialization);
     }
   }
@@ -251,9 +250,7 @@ function generateVertexShaderLines(
     if (!defined(attributeDefaults)) {
       CustomShaderPipelineStage._oneTimeWarning(
         "CustomShaderPipelineStage.incompatiblePrimitiveVS",
-        "Primitive is missing attribute " +
-          variableName +
-          ", disabling custom vertex shader"
+        `Primitive is missing attribute ${variableName}, disabling custom vertex shader`
       );
       // This primitive isn't compatible with the shader. Return early
       // to skip the vertex shader
@@ -261,12 +258,7 @@ function generateVertexShaderLines(
     }
 
     attributeFields.push(attributeDefaults.attributeField);
-    vertexInitialization =
-      "vsInput.attributes." +
-      variableName +
-      " = " +
-      attributeDefaults.value +
-      ";";
+    vertexInitialization = `vsInput.attributes.${variableName} = ${attributeDefaults.value};`;
     initializationLines.push(vertexInitialization);
   }
 
@@ -333,12 +325,7 @@ function generateFragmentShaderLines(
       // Initializing attribute structs are just a matter of copying the
       // value from the processed attributes
       // "    fsInput.attributes.positionMC = attributes.positionMC;"
-      fragmentInitialization =
-        "fsInput.attributes." +
-        variableName +
-        " = attributes." +
-        variableName +
-        ";";
+      fragmentInitialization = `fsInput.attributes.${variableName} = attributes.${variableName};`;
       initializationLines.push(fragmentInitialization);
     }
   }
@@ -349,9 +336,7 @@ function generateFragmentShaderLines(
     if (!defined(attributeDefaults)) {
       CustomShaderPipelineStage._oneTimeWarning(
         "CustomShaderPipelineStage.incompatiblePrimitiveFS",
-        "Primitive is missing attribute " +
-          variableName +
-          ", disabling custom fragment shader."
+        `Primitive is missing attribute ${variableName}, disabling custom fragment shader.`
       );
 
       // This primitive isn't compatible with the shader. Return early
@@ -360,12 +345,7 @@ function generateFragmentShaderLines(
     }
 
     attributeFields.push(attributeDefaults.attributeField);
-    fragmentInitialization =
-      "fsInput.attributes." +
-      variableName +
-      " = " +
-      attributeDefaults.value +
-      ";";
+    fragmentInitialization = `fsInput.attributes.${variableName} = ${attributeDefaults.value};`;
     initializationLines.push(fragmentInitialization);
   }
 
@@ -533,6 +513,12 @@ function addVertexLinesToShader(shaderBuilder, vertexLines) {
     FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
     "featureIds"
   );
+  // Add Metadata struct from the metadata stage
+  shaderBuilder.addStructField(
+    structId,
+    MetadataPipelineStage.STRUCT_NAME_METADATA,
+    "metadata"
+  );
 
   const functionId =
     CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS;
@@ -582,6 +568,12 @@ function addFragmentLinesToShader(shaderBuilder, fragmentLines) {
     structId,
     FeatureIdPipelineStage.STRUCT_NAME_FEATURE_IDS,
     "featureIds"
+  );
+  // Add Metadata struct from the metadata stage
+  shaderBuilder.addStructField(
+    structId,
+    MetadataPipelineStage.STRUCT_NAME_METADATA,
+    "metadata"
   );
 
   const functionId =

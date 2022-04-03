@@ -1,5 +1,6 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
@@ -11,7 +12,6 @@ import ForEach from "./GltfPipeline/ForEach.js";
 import parseGlb from "./GltfPipeline/parseGlb.js";
 import removePipelineExtras from "./GltfPipeline/removePipelineExtras.js";
 import updateVersion from "./GltfPipeline/updateVersion.js";
-import when from "../ThirdParty/when.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 
@@ -59,7 +59,7 @@ export default function GltfJsonLoader(options) {
   this._gltf = undefined;
   this._bufferLoaders = [];
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = when.defer();
+  this._promise = defer();
 }
 
 if (defined(Object.create)) {
@@ -139,7 +139,7 @@ GltfJsonLoader.prototype.load = function () {
       that._state = ResourceLoaderState.READY;
       that._promise.resolve(that);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (that.isDestroyed()) {
         return;
       }
@@ -160,14 +160,13 @@ function loadFromUri(gltfJsonLoader) {
 function handleError(gltfJsonLoader, error) {
   gltfJsonLoader.unload();
   gltfJsonLoader._state = ResourceLoaderState.FAILED;
-  const errorMessage =
-    "Failed to load glTF: " + gltfJsonLoader._gltfResource.url;
+  const errorMessage = `Failed to load glTF: ${gltfJsonLoader._gltfResource.url}`;
   gltfJsonLoader._promise.reject(gltfJsonLoader.getError(errorMessage, error));
 }
 
 function upgradeVersion(gltfJsonLoader, gltf) {
   if (gltf.asset.version === "2.0") {
-    return when.resolve();
+    return Promise.resolve();
   }
 
   // Load all buffers into memory. updateVersion will read and in some cases modify
@@ -196,7 +195,7 @@ function upgradeVersion(gltfJsonLoader, gltf) {
     }
   });
 
-  return when.all(promises).then(function () {
+  return Promise.all(promises).then(function () {
     updateVersion(gltf);
   });
 }
@@ -218,7 +217,7 @@ function decodeDataUris(gltf) {
       );
     }
   });
-  return when.all(promises);
+  return Promise.all(promises);
 }
 
 function loadEmbeddedBuffers(gltfJsonLoader, gltf) {
@@ -237,7 +236,7 @@ function loadEmbeddedBuffers(gltfJsonLoader, gltf) {
       promises.push(bufferLoader.promise);
     }
   });
-  return when.all(promises);
+  return Promise.all(promises);
 }
 
 function processGltfJson(gltfJsonLoader, gltf) {

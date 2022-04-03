@@ -30,13 +30,13 @@ datatypeToGlsl[WebGLConstants.SAMPLER_2D] = "sampler2D";
 datatypeToGlsl[WebGLConstants.SAMPLER_CUBE] = "samplerCube";
 
 AutomaticUniform.prototype.getDeclaration = function (name) {
-  let declaration = "uniform " + datatypeToGlsl[this._datatype] + " " + name;
+  let declaration = `uniform ${datatypeToGlsl[this._datatype]} ${name}`;
 
   const size = this._size;
   if (size === 1) {
     declaration += ";";
   } else {
-    declaration += "[" + size.toString() + "];";
+    declaration += `[${size.toString()}];`;
   }
 
   return declaration;
@@ -1539,8 +1539,26 @@ const AutomaticUniforms = {
   }),
 
   /**
+   * An automatic GLSL uniform representing the splitter position to use when rendering with a splitter.
+   * This will be in pixel coordinates relative to the canvas.
+   *
+   * @example
+   * // GLSL declaration
+   * uniform float czm_splitPosition;
+   */
+  czm_splitPosition: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT,
+    getValue: function (uniformState) {
+      return uniformState.splitPosition;
+    },
+  }),
+
+  /**
    * An automatic GLSL uniform representing the splitter position to use when rendering imagery layers with a splitter.
    * This will be in pixel coordinates relative to the canvas.
+   *
+   * @deprecated Use czm_splitPosition instead.
    *
    * @example
    * // GLSL declaration

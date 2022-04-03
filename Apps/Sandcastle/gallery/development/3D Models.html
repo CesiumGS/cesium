@@ -223,7 +223,7 @@
                 new Cesium.HeadingPitchRange(heading, pitch, r * 2.0)
               );
             })
-            .otherwise(function (error) {
+            .catch(function (error) {
               window.alert(error);
             });
         }
@@ -237,9 +237,7 @@
             Cesium.defined(pick.mesh)
           ) {
             // Output glTF node and mesh under the mouse.
-            console.log(
-              "node: " + pick.node.name + ". mesh: " + pick.mesh.name
-            );
+            console.log(`node: ${pick.node.name}. mesh: ${pick.mesh.name}`);
           }
         }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 

@@ -56,6 +56,8 @@ describe(
       "./Data/Models/GltfLoader/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
     const boxTextured =
       "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+    const boxTexturedWithPropertyAttributes =
+      "./Data/Models/GltfLoader/BoxTexturedWithPropertyAttributes/glTF/BoxTexturedWithPropertyAttributes.gltf";
     const boxVertexColors =
       "./Data/Models/GltfLoader/BoxVertexColors/glTF/BoxVertexColors.gltf";
     const pointCloudRGB =
@@ -914,7 +916,7 @@ describe(
       verifyFeatureStruct(shaderBuilder);
     });
 
-    it("processes POSITION, NORMAL and FEATURE_ID attributes from primitive", function () {
+    it("processes POSITION, NORMAL and _FEATURE_ID_n attributes from primitive", function () {
       const renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
@@ -1190,6 +1192,178 @@ describe(
           "HAS_NORMALS",
           "HAS_TEXCOORD_0",
         ]);
+      });
+    });
+
+    it("processes model with matrix attributes", function () {
+      const renderResources = {
+        attributes: [],
+        shaderBuilder: new ShaderBuilder(),
+        attributeIndex: 1,
+        model: {
+          type: ModelExperimentalType.TILE_GLTF,
+        },
+      };
+
+      return loadGltf(boxTexturedWithPropertyAttributes).then(function (
+        gltfLoader
+      ) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[1].primitives[0];
+
+        GeometryPipelineStage.process(renderResources, primitive);
+
+        const shaderBuilder = renderResources.shaderBuilder;
+        const attributes = renderResources.attributes;
+
+        expect(attributes.length).toEqual(6);
+
+        const normalAttribute = attributes[0];
+        expect(normalAttribute.index).toEqual(1);
+        expect(normalAttribute.vertexBuffer).toBeDefined();
+        expect(normalAttribute.componentsPerAttribute).toEqual(3);
+        expect(normalAttribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(normalAttribute.offsetInBytes).toBe(0);
+        expect(normalAttribute.strideInBytes).toBe(12);
+
+        const positionAttribute = attributes[1];
+        expect(positionAttribute.index).toEqual(0);
+        expect(positionAttribute.vertexBuffer).toBeDefined();
+        expect(positionAttribute.componentsPerAttribute).toEqual(3);
+        expect(positionAttribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(positionAttribute.offsetInBytes).toBe(288);
+        expect(positionAttribute.strideInBytes).toBe(12);
+
+        const texCoord0Attribute = attributes[2];
+        expect(texCoord0Attribute.index).toEqual(2);
+        expect(texCoord0Attribute.vertexBuffer).toBeDefined();
+        expect(texCoord0Attribute.componentsPerAttribute).toEqual(2);
+        expect(texCoord0Attribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(texCoord0Attribute.offsetInBytes).toBe(0);
+        expect(texCoord0Attribute.strideInBytes).toBe(8);
+
+        const warpMatrixAttribute = attributes[3];
+        expect(warpMatrixAttribute.index).toEqual(3);
+        expect(warpMatrixAttribute.vertexBuffer).toBeDefined();
+        expect(warpMatrixAttribute.componentsPerAttribute).toEqual(2);
+        expect(warpMatrixAttribute.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(warpMatrixAttribute.offsetInBytes).toBe(0);
+        expect(warpMatrixAttribute.strideInBytes).toBe(16);
+
+        const warpMatrixAttributePart2 = attributes[4];
+        expect(warpMatrixAttributePart2.index).toEqual(4);
+        expect(warpMatrixAttributePart2.vertexBuffer).toBeDefined();
+        expect(warpMatrixAttributePart2.componentsPerAttribute).toEqual(2);
+        expect(warpMatrixAttributePart2.componentDatatype).toEqual(
+          ComponentDatatype.FLOAT
+        );
+        expect(warpMatrixAttributePart2.offsetInBytes).toBe(8);
+        expect(warpMatrixAttributePart2.strideInBytes).toBe(16);
+
+        const temperaturesAttribute = attributes[5];
+        expect(temperaturesAttribute.index).toEqual(5);
+        expect(temperaturesAttribute.vertexBuffer).toBeDefined();
+        expect(temperaturesAttribute.componentsPerAttribute).toEqual(2);
+        expect(temperaturesAttribute.componentDatatype).toEqual(
+          ComponentDatatype.UNSIGNED_SHORT
+        );
+        expect(temperaturesAttribute.offsetInBytes).toBe(0);
+        expect(temperaturesAttribute.strideInBytes).toBe(4);
+
+        ShaderBuilderTester.expectHasVertexStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_VS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec3 normalMC;",
+            "    vec2 texCoord_0;",
+            "    mat2 warp_matrix;",
+            "    vec2 temperatures;",
+          ]
+        );
+        ShaderBuilderTester.expectHasFragmentStruct(
+          shaderBuilder,
+          GeometryPipelineStage.STRUCT_ID_PROCESSED_ATTRIBUTES_FS,
+          GeometryPipelineStage.STRUCT_NAME_PROCESSED_ATTRIBUTES,
+          [
+            "    vec3 positionMC;",
+            "    vec3 positionWC;",
+            "    vec3 positionEC;",
+            "    vec3 normalEC;",
+            "    vec2 texCoord_0;",
+            "    mat2 warp_matrix;",
+            "    vec2 temperatures;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_INITIALIZE_ATTRIBUTES,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_ATTRIBUTES,
+          [
+            "    attributes.positionMC = a_positionMC;",
+            "    attributes.normalMC = a_normalMC;",
+            "    attributes.texCoord_0 = a_texCoord_0;",
+            "    attributes.warp_matrix = a_warp_matrix;",
+            "    attributes.temperatures = a_temperatures;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVertexFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_VS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+          [
+            "    v_texCoord_0 = attributes.texCoord_0;",
+            "    v_warp_matrix = attributes.warp_matrix;",
+            "    v_temperatures = attributes.temperatures;",
+          ]
+        );
+        ShaderBuilderTester.expectHasFragmentFunction(
+          shaderBuilder,
+          GeometryPipelineStage.FUNCTION_ID_SET_DYNAMIC_VARYINGS_FS,
+          GeometryPipelineStage.FUNCTION_SIGNATURE_SET_DYNAMIC_VARYINGS,
+          [
+            "    attributes.texCoord_0 = v_texCoord_0;",
+            "    attributes.warp_matrix = v_warp_matrix;",
+            "    attributes.temperatures = v_temperatures;",
+          ]
+        );
+        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
+          "varying vec3 v_normalEC;",
+          "varying vec2 v_texCoord_0;",
+          "varying vec3 v_positionEC;",
+          "varying vec3 v_positionMC;",
+          "varying vec3 v_positionWC;",
+          "varying mat2 v_warp_matrix;",
+          "varying vec2 v_temperatures;",
+        ]);
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
+          "HAS_NORMALS",
+          "HAS_TEXCOORD_0",
+        ]);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_NORMALS",
+          "HAS_TEXCOORD_0",
+        ]);
+        ShaderBuilderTester.expectHasAttributes(
+          shaderBuilder,
+          "attribute vec3 a_positionMC;",
+          [
+            "attribute vec3 a_normalMC;",
+            "attribute vec2 a_texCoord_0;",
+            "attribute mat2 a_warp_matrix;",
+            "attribute vec2 a_temperatures;",
+          ]
+        );
+        verifyFeatureStruct(shaderBuilder);
       });
     });
   },

@@ -63,8 +63,8 @@ function createPropertyDescriptor(name, configurable, createPropertyCallback) {
   //The two extra toString calls work around the issue.
   return createProperty(
     name,
-    "_" + name.toString(),
-    "_" + name.toString() + "Subscription",
+    `_${name.toString()}`,
+    `_${name.toString()}Subscription`,
     defaultValue(configurable, false),
     defaultValue(createPropertyCallback, createConstantProperty)
   );

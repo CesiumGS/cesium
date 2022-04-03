@@ -1,6 +1,7 @@
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -16,7 +17,6 @@ import PolylineShadowVolumeFS from "../Shaders/PolylineShadowVolumeFS.js";
 import PolylineShadowVolumeMorphFS from "../Shaders/PolylineShadowVolumeMorphFS.js";
 import PolylineShadowVolumeMorphVS from "../Shaders/PolylineShadowVolumeMorphVS.js";
 import PolylineShadowVolumeVS from "../Shaders/PolylineShadowVolumeVS.js";
-import when from "../ThirdParty/when.js";
 import BlendingState from "./BlendingState.js";
 import ClassificationType from "./ClassificationType.js";
 import CullFace from "./CullFace.js";
@@ -193,7 +193,7 @@ function GroundPolylinePrimitive(options) {
   this._zIndex = undefined;
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   this._primitive = undefined;
 
@@ -377,8 +377,9 @@ function createShaderProgram(groundPolylinePrimitive, frameState, appearance) {
   );
 
   const vsDefines = [
-    "GLOBE_MINIMUM_ALTITUDE " +
-      frameState.mapProjection.ellipsoid.minimumRadius.toFixed(1),
+    `GLOBE_MINIMUM_ALTITUDE ${frameState.mapProjection.ellipsoid.minimumRadius.toFixed(
+      1
+    )}`,
   ];
   let colorDefine = "";
   let materialShaderSource = "";
@@ -454,8 +455,9 @@ function createShaderProgram(groundPolylinePrimitive, frameState, appearance) {
   if (!defined(colorProgramMorph)) {
     const vsColorMorph = new ShaderSource({
       defines: vsDefines.concat([
-        "MAX_TERRAIN_HEIGHT " +
-          ApproximateTerrainHeights._defaultMaxTerrainHeight.toFixed(1),
+        `MAX_TERRAIN_HEIGHT ${ApproximateTerrainHeights._defaultMaxTerrainHeight.toFixed(
+          1
+        )}`,
       ]),
       sources: [vsMorph],
     });

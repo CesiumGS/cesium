@@ -133,7 +133,7 @@
 
         const encoded = btoa(JSON.stringify(gltf));
 
-        const dataUrl = "data:application/json;charset=utf-8;base64," + encoded;
+        const dataUrl = `data:application/json;charset=utf-8;base64,${encoded}`;
 
         const czml = [
           {
@@ -167,7 +167,7 @@
           .then(function (dataSource) {
             viewer.trackedEntity = dataSource.entities.getById("cube");
           })
-          .otherwise(function (error) {
+          .catch(function (error) {
             window.alert(error);
           });
 

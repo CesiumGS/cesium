@@ -1,5 +1,6 @@
 import {
   Axis,
+  Cartesian3,
   Matrix4,
   ModelExperimentalNode,
   ModelRenderResources,
@@ -20,6 +21,7 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
   const runtimeNode = new ModelExperimentalNode({
     node: mockNode,
     transform: Matrix4.IDENTITY,
+    transformToRoot: Matrix4.fromTranslation(new Cartesian3(1, 2, 3)),
     sceneGraph: mockSceneGraph,
     children: [],
   });
@@ -29,6 +31,7 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
       expectedDefines
     );
   }
+
   it("throws for undefined modelRenderResources", function () {
     expect(function () {
       return new NodeRenderResources(undefined, runtimeNode);
@@ -47,17 +50,37 @@ describe("Scene/ModelExperimental/NodeRenderResources", function () {
     const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
 
     expect(nodeResources.runtimeNode).toBe(runtimeNode);
-    expect(nodeResources.modelMatrix).toBe(runtimeNode.transform);
+    const expectedTransform = Matrix4.multiplyTransformation(
+      runtimeNode.transformToRoot,
+      runtimeNode.transform,
+      new Matrix4()
+    );
+    expect(Matrix4.equals(nodeResources.transform, expectedTransform)).toBe(
+      true
+    );
     expect(nodeResources.attributes).toEqual([]);
+    expect(nodeResources.renderStateOptions).toEqual({});
   });
 
   it("inherits from model render resources", function () {
     const modelResources = new ModelRenderResources(mockModel);
     modelResources.shaderBuilder.addDefine("MODEL");
+    modelResources.renderStateOptions.cull = {
+      enabled: true,
+    };
+
     const nodeResources = new NodeRenderResources(modelResources, runtimeNode);
     nodeResources.shaderBuilder.addDefine("NODE");
 
     expect(nodeResources.model).toBe(mockModel);
+
+    // The node's render resources should be a clone of the model's.
+    expect(nodeResources.renderStateOptions).not.toBe(
+      modelResources.renderStateOptions
+    );
+    expect(nodeResources.renderStateOptions.cull).toEqual({
+      enabled: true,
+    });
 
     // The node's shader builder should be a clone of the model's
     expect(nodeResources.shaderBuilder).not.toBe(modelResources.shaderBuilder);

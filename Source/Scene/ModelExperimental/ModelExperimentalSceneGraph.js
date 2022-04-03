@@ -1,16 +1,23 @@
 import buildDrawCommands from "./buildDrawCommands.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Check from "../../Core/Check.js";
+import clone from "../../Core/clone.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
+import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelExperimentalPrimitive from "./ModelExperimentalPrimitive.js";
 import ModelExperimentalNode from "./ModelExperimentalNode.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 import ModelRenderResources from "./ModelRenderResources.js";
+import ModelSplitterPipelineStage from "./ModelSplitterPipelineStage.js";
 import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
+import RenderState from "../../Renderer/RenderState.js";
+import ShadowMode from "../ShadowMode.js";
+import SplitDirection from "../SplitDirection.js";
+import ModelClippingPlanesPipelineStage from "./ModelClippingPlanesPipelineStage.js";
 
 /**
  * An in memory representation of the scene graph for a {@link ModelExperimental}
@@ -103,16 +110,6 @@ export default function ModelExperimentalSceneGraph(options) {
   this._drawCommands = [];
 
   /**
-   * The array of bounding spheres of all the primitives in the scene graph.
-   *
-   * @type {BoundingSphere[]}
-   * @readonly
-   *
-   * @private
-   */
-  this._boundingSpheres = [];
-
-  /**
    * Pipeline stages to apply to this model. This
    * is an array of classes, each with a static method called
    * <code>process()</code>
@@ -125,7 +122,7 @@ export default function ModelExperimentalSceneGraph(options) {
   this.modelPipelineStages = [];
 
   this._boundingSphere = undefined;
-  this._computedModelMatrix = Matrix4.clone(this._model.modelMatrix);
+  this._computedModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
   initialize(this);
 }
@@ -181,25 +178,31 @@ function initialize(sceneGraph) {
   sceneGraph._computedModelMatrix = Matrix4.multiplyTransformation(
     model.modelMatrix,
     components.transform,
-    new Matrix4()
+    sceneGraph._computedModelMatrix
   );
 
-  ModelExperimentalUtility.correctModelMatrix(
+  sceneGraph._computedModelMatrix = ModelExperimentalUtility.correctModelMatrix(
     sceneGraph._computedModelMatrix,
     components.upAxis,
-    components.forwardAxis
+    components.forwardAxis,
+    sceneGraph._computedModelMatrix
+  );
+
+  sceneGraph._computedModelMatrix = Matrix4.multiplyByUniformScale(
+    sceneGraph._computedModelMatrix,
+    model.computedScale,
+    sceneGraph._computedModelMatrix
   );
 
   const rootNodes = scene.nodes;
+  const transformToRoot = Matrix4.IDENTITY;
   for (let i = 0; i < rootNodes.length; i++) {
     const rootNode = scene.nodes[i];
-    const rootNodeTransform = ModelExperimentalUtility.getNodeTransform(
-      rootNode
-    );
+
     const rootNodeIndex = traverseSceneGraph(
       sceneGraph,
       rootNode,
-      rootNodeTransform
+      transformToRoot
     );
 
     sceneGraph._rootNodes.push(rootNodeIndex);
@@ -212,31 +215,32 @@ function initialize(sceneGraph) {
  *
  * @param {ModelSceneGraph} sceneGraph The scene graph
  * @param {ModelComponents.Node} node The current node
- * @param {Matrix4} transform The current computed transform for this node.
+ * @param {Matrix4} transformToRoot The transforms of this node's ancestors.
  *
  * @returns {Number} The index of this node in the runtimeNodes array.
  *
  * @private
  */
-function traverseSceneGraph(sceneGraph, node, transform) {
+function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   // The indices of the children of this node in the runtimeNodes array.
   const childrenIndices = [];
+  const transform = ModelExperimentalUtility.getNodeTransform(node);
 
   // Traverse through scene graph.
   let i;
   if (defined(node.children)) {
     for (i = 0; i < node.children.length; i++) {
       const childNode = node.children[i];
-      const childNodeTransform = Matrix4.multiply(
+      const childNodeTransformToRoot = Matrix4.multiplyTransformation(
+        transformToRoot,
         transform,
-        ModelExperimentalUtility.getNodeTransform(childNode),
         new Matrix4()
       );
 
       const childIndex = traverseSceneGraph(
         sceneGraph,
         childNode,
-        childNodeTransform
+        childNodeTransformToRoot
       );
       childrenIndices.push(childIndex);
     }
@@ -246,6 +250,7 @@ function traverseSceneGraph(sceneGraph, node, transform) {
   const runtimeNode = new ModelExperimentalNode({
     node: node,
     transform: transform,
+    transformToRoot: transformToRoot,
     children: childrenIndices,
     sceneGraph: sceneGraph,
   });
@@ -291,6 +296,7 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
     modelPipelineStage.process(modelRenderResources, model, frameState);
   }
 
+  const boundingSpheres = [];
   for (i = 0; i < this._runtimeNodes.length; i++) {
     const runtimeNode = this._runtimeNodes[i];
     runtimeNode.configurePipeline();
@@ -335,7 +341,8 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       runtimePrimitive.boundingSphere = BoundingSphere.clone(
         primitiveRenderResources.boundingSphere
       );
-      this._boundingSpheres.push(primitiveRenderResources.boundingSphere);
+
+      boundingSpheres.push(runtimePrimitive.boundingSphere);
 
       const drawCommands = buildDrawCommands(
         primitiveRenderResources,
@@ -345,9 +352,17 @@ ModelExperimentalSceneGraph.prototype.buildDrawCommands = function (
       runtimePrimitive.drawCommands = drawCommands;
     }
   }
-  this._boundingSphere = BoundingSphere.fromBoundingSpheres(
-    this._boundingSpheres
+
+  this._boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
+
+  model._boundingSphere = BoundingSphere.transform(
+    this._boundingSphere,
+    model.modelMatrix,
+    model._boundingSphere
   );
+
+  model._initialRadius = model._boundingSphere.radius;
+  model._boundingSphere.radius *= model._clampedScale;
 };
 
 /**
@@ -362,8 +377,24 @@ ModelExperimentalSceneGraph.prototype.configurePipeline = function () {
   modelPipelineStages.length = 0;
 
   const model = this._model;
+
   if (defined(model.color)) {
     modelPipelineStages.push(ModelColorPipelineStage);
+  }
+
+  if (model.imageBasedLighting.enabled) {
+    modelPipelineStages.push(ImageBasedLightingPipelineStage);
+  }
+
+  if (model.isClippingEnabled()) {
+    modelPipelineStages.push(ModelClippingPlanesPipelineStage);
+  }
+
+  if (
+    defined(model.splitDirection) &&
+    model.splitDirection !== SplitDirection.NONE
+  ) {
+    modelPipelineStages.push(ModelSplitterPipelineStage);
   }
 };
 
@@ -389,24 +420,88 @@ ModelExperimentalSceneGraph.prototype.update = function (frameState) {
 };
 
 ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
-  this._computedModelMatrix = Matrix4.clone(this._model.modelMatrix);
-  Matrix4.multiply(
-    this._computedModelMatrix,
+  const model = this._model;
+
+  this._computedModelMatrix = Matrix4.multiplyTransformation(
+    model.modelMatrix,
     this._modelComponents.transform,
     this._computedModelMatrix
   );
 
-  ModelExperimentalUtility.correctModelMatrix(
+  this._computedModelMatrix = ModelExperimentalUtility.correctModelMatrix(
     this._computedModelMatrix,
     this._modelComponents.upAxis,
-    this._modelComponents.forwardAxis
+    this._modelComponents.forwardAxis,
+    this._computedModelMatrix
   );
 
+  this._computedModelMatrix = Matrix4.multiplyByUniformScale(
+    this._computedModelMatrix,
+    model.computedScale,
+    this._computedModelMatrix
+  );
+
+  // Mark all root nodes as dirty. Any and all children will be
+  // affected recursively in the update stage.
   const rootNodes = this._rootNodes;
   for (let i = 0; i < rootNodes.length; i++) {
     const node = this._runtimeNodes[rootNodes[i]];
-    node.updateModelMatrix();
+    node._transformDirty = true;
   }
+};
+
+function forEachRuntimePrimitive(sceneGraph, callback) {
+  for (let i = 0; i < sceneGraph._runtimeNodes.length; i++) {
+    const runtimeNode = sceneGraph._runtimeNodes[i];
+    for (let j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
+      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
+      callback(runtimePrimitive);
+    }
+  }
+}
+
+/**
+ * Traverses through all draw commands and changes the back-face culling setting.
+ *
+ * @param {Boolean} backFaceCulling The new value for the back-face culling setting.
+ *
+ * @private
+ */
+ModelExperimentalSceneGraph.prototype.updateBackFaceCulling = function (
+  backFaceCulling
+) {
+  const model = this._model;
+  forEachRuntimePrimitive(this, function (runtimePrimitive) {
+    for (let k = 0; k < runtimePrimitive.drawCommands.length; k++) {
+      const drawCommand = runtimePrimitive.drawCommands[k];
+      const renderState = clone(drawCommand.renderState, true);
+      const doubleSided = runtimePrimitive.primitive.material.doubleSided;
+      const translucent = defined(model.color) && model.color.alpha < 1.0;
+      renderState.cull.enabled =
+        backFaceCulling && !doubleSided && !translucent;
+      drawCommand.renderState = RenderState.fromCache(renderState);
+    }
+  });
+};
+
+/**
+ * Traverses through all draw commands and changes the shadow settings.
+ *
+ * @param {ShadowMode} shadowMode The new shadow settings.
+ *
+ * @private
+ */
+ModelExperimentalSceneGraph.prototype.updateShadows = function (shadowMode) {
+  const model = this._model;
+  const castShadows = ShadowMode.castShadows(model.shadows);
+  const receiveShadows = ShadowMode.receiveShadows(model.shadows);
+  forEachRuntimePrimitive(this, function (runtimePrimitive) {
+    for (let k = 0; k < runtimePrimitive.drawCommands.length; k++) {
+      const drawCommand = runtimePrimitive.drawCommands[k];
+      drawCommand.castShadows = castShadows;
+      drawCommand.receiveShadows = receiveShadows;
+    }
+  });
 };
 
 /**
@@ -417,12 +512,8 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
  */
 ModelExperimentalSceneGraph.prototype.getDrawCommands = function () {
   const drawCommands = [];
-  for (let i = 0; i < this._runtimeNodes.length; i++) {
-    const runtimeNode = this._runtimeNodes[i];
-    for (let j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
-      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
-      drawCommands.push.apply(drawCommands, runtimePrimitive.drawCommands);
-    }
-  }
+  forEachRuntimePrimitive(this, function (runtimePrimitive) {
+    drawCommands.push.apply(drawCommands, runtimePrimitive.drawCommands);
+  });
   return drawCommands;
 };

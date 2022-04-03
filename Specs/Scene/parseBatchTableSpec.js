@@ -6,6 +6,7 @@ import {
   MetadataClass,
   MetadataComponentType,
   MetadataType,
+  RuntimeError,
 } from "../../Source/Cesium.js";
 
 describe("Scene/parseBatchTable", function () {
@@ -158,7 +159,7 @@ describe("Scene/parseBatchTable", function () {
     expect(propertyTable.getProperty(0, "doubleProperty")).toBe(0.0);
   });
 
-  it("transcodes binary vectors to array types", function () {
+  it("transcodes binary vectors to vector types", function () {
     const vectorBatchTable = {
       vec2Property: {
         byteOffset: 0,
@@ -198,9 +199,6 @@ describe("Scene/parseBatchTable", function () {
     expect(properties.dvec4Property.componentType).toBe(
       MetadataComponentType.FLOAT64
     );
-    expect(properties.vec2Property.componentCount).toBe(2);
-    expect(properties.uvec3Property.componentCount).toBe(3);
-    expect(properties.dvec4Property.componentCount).toBe(4);
 
     const propertyTable = metadata.getPropertyTable(0);
     expect(propertyTable.getProperty(0, "vec2Property")).toEqual(
@@ -366,7 +364,7 @@ describe("Scene/parseBatchTable", function () {
     expect(propertyTable.getProperty(9, "year")).toBe("2018");
   });
 
-  it("stores extras and extensions in the transcoded FeatureMetadata", function () {
+  it("stores extras and extensions in the transcoded StructuralMetadata", function () {
     const batchTable = {
       extras: {
         author: "Cesium",
@@ -401,6 +399,6 @@ describe("Scene/parseBatchTable", function () {
         batchTable: binaryBatchTable,
         binaryBody: undefined,
       });
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 });

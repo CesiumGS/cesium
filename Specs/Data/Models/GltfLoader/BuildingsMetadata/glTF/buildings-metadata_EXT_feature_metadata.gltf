@@ -238,6 +238,11 @@
               },
               "id": {
                 "type": "INT32"
+              },
+              "year": {
+                "type": "STRING",
+                "optional": true,
+                "default": "2022"
               }
             }
           }

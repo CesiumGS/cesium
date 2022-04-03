@@ -3,16 +3,16 @@ import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import CesiumMath from "../Core/Math.js";
 import HilbertOrder from "../Core/HilbertOrder.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Rectangle from "../Core/Rectangle.js";
 import S2Cell from "../Core/S2Cell.js";
-import when from "../ThirdParty/when.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
-import ImplicitTileMetadata from "./ImplicitTileMetadata.js";
 import hasExtension from "./hasExtension.js";
 import MetadataSemantic from "./MetadataSemantic.js";
 import parseBoundingVolumeSemantics from "./parseBoundingVolumeSemantics.js";
@@ -34,8 +34,12 @@ import parseBoundingVolumeSemantics from "./parseBoundingVolumeSemantics.js";
  * @param {Cesium3DTileset} tileset The tileset this content belongs to
  * @param {Cesium3DTile} tile The tile this content belongs to.
  * @param {Resource} resource The resource for the tileset
- * @param {ArrayBuffer} arrayBuffer The array buffer that stores the content payload
- * @param {Number} [byteOffset=0] The offset into the array buffer
+ * @param {Object} [json] The JSON object containing the subtree. Mutually exclusive with arrayBuffer.
+ * @param {ArrayBuffer} [arrayBuffer] The array buffer that stores the content payload. Mutually exclusive with json.
+ * @param {Number} [byteOffset=0] The offset into the array buffer, if one was provided
+ *
+ * @exception {DeveloperError} One of json and arrayBuffer must be defined.
+ *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -43,12 +47,16 @@ export default function Implicit3DTileContent(
   tileset,
   tile,
   resource,
+  json,
   arrayBuffer,
   byteOffset
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("tile.implicitTileset", tile.implicitTileset);
   Check.defined("tile.implicitCoordinates", tile.implicitCoordinates);
+  if (defined(json) === defined(arrayBuffer)) {
+    throw new DeveloperError("One of json and arrayBuffer must be defined.");
+  }
   //>>includeEnd('debug');
 
   const implicitTileset = tile.implicitTileset;
@@ -60,10 +68,12 @@ export default function Implicit3DTileContent(
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
+
+  this._metadata = undefined;
 
   this.featurePropertiesDirty = false;
-  this._groupMetadata = undefined;
+  this._group = undefined;
 
   const templateValues = implicitCoordinates.getTemplateValues();
   const subtreeResource = implicitTileset.subtreeUriTemplate.getDerivedResource(
@@ -73,7 +83,7 @@ export default function Implicit3DTileContent(
   );
   this._url = subtreeResource.getUrlComponent(true);
 
-  initialize(this, arrayBuffer, byteOffset);
+  initialize(this, json, arrayBuffer, byteOffset);
 }
 
 Object.defineProperties(Implicit3DTileContent.prototype, {
@@ -143,18 +153,35 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
     },
   },
 
+  /**
+   * Part of the {@link Cesium3DTileContent} interface. <code>Implicit3DTileContent</code>
+   * always returns <code>undefined</code>. Only transcoded tiles have content metadata.
+   * @memberof Implicit3DTileContent.prototype
+   * @private
+   */
+  metadata: {
+    get: function () {
+      return undefined;
+    },
+    set: function () {
+      //>>includeStart('debug', pragmas.debug);
+      throw new DeveloperError("Implicit3DTileContent cannot have metadata");
+      //>>includeEnd('debug');
+    },
+  },
+
   batchTable: {
     get: function () {
       return undefined;
     },
   },
 
-  groupMetadata: {
+  group: {
     get: function () {
-      return this._groupMetadata;
+      return this._group;
     },
     set: function (value) {
-      this._groupMetadata = value;
+      this._group = value;
     },
   },
 });
@@ -164,28 +191,33 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
  * up a promise chain to expand the immediate subtree.
  *
  * @param {Implicit3DTileContent} content The implicit content
- * @param {ArrayBuffer} arrayBuffer The ArrayBuffer containing a subtree binary
+ * @param {Object} [json] The JSON containing the subtree. Mutually exclusive with arrayBuffer.
+ * @param {ArrayBuffer} [arrayBuffer] The ArrayBuffer containing a subtree binary. Mutually exclusive with json.
  * @param {Number} [byteOffset=0] The byte offset into the arrayBuffer
  * @private
  */
-function initialize(content, arrayBuffer, byteOffset) {
-  // Parse the subtree file
+function initialize(content, json, arrayBuffer, byteOffset) {
   byteOffset = defaultValue(byteOffset, 0);
-  const uint8Array = new Uint8Array(arrayBuffer, byteOffset);
+  let uint8Array;
+  if (defined(arrayBuffer)) {
+    uint8Array = new Uint8Array(arrayBuffer, byteOffset);
+  }
+
   const subtree = new ImplicitSubtree(
     content._resource,
+    json,
     uint8Array,
     content._implicitTileset,
     content._implicitCoordinates
   );
-  content._implicitSubtree = subtree;
 
+  content._implicitSubtree = subtree;
   subtree.readyPromise
     .then(function () {
       expandSubtree(content, subtree);
       content._readyPromise.resolve();
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       content._readyPromise.reject(error);
     });
 }
@@ -403,17 +435,23 @@ function deriveChildTile(
   let tileMetadata;
   let tileBounds;
   let contentBounds;
-  if (defined(subtree.metadataExtension)) {
-    const metadataTable = subtree.metadataTable;
-    tileMetadata = new ImplicitTileMetadata({
-      class: metadataTable.class,
-      implicitCoordinates: implicitCoordinates,
-      implicitSubtree: subtree,
-    });
+  if (defined(subtree.tilePropertyTableJson)) {
+    tileMetadata = subtree.getTileMetadataView(implicitCoordinates);
 
     const boundingVolumeSemantics = parseBoundingVolumeSemantics(tileMetadata);
     tileBounds = boundingVolumeSemantics.tile;
     contentBounds = boundingVolumeSemantics.content;
+  }
+
+  // Content is not loaded at this point, so this flag is set for future reference.
+  const contentPropertyTableJsons = subtree.contentPropertyTableJsons;
+  const length = contentPropertyTableJsons.length;
+  let hasImplicitContentMetadata = false;
+  for (let i = 0; i < length; i++) {
+    if (subtree.contentIsAvailableAtCoordinates(implicitCoordinates, i)) {
+      hasImplicitContentMetadata = true;
+      break;
+    }
   }
 
   const boundingVolume = getTileBoundingVolume(
@@ -462,17 +500,8 @@ function deriveChildTile(
     boundingVolume: boundingVolume,
     geometricError: childGeometricError,
     refine: implicitTileset.refine,
+    contents: contentJsons,
   };
-
-  if (contentJsons.length === 1) {
-    tileJson.content = contentJsons[0];
-  } else if (contentJsons.length > 1) {
-    tileJson.extensions = {
-      "3DTILES_multiple_contents": {
-        content: contentJsons,
-      },
-    };
-  }
 
   // combine() is used to pass through any additional properties the
   // user specified such as extras or extensions.
@@ -488,9 +517,11 @@ function deriveChildTile(
     combinedTileJson,
     parentTile
   );
+
   childTile.implicitCoordinates = implicitCoordinates;
   childTile.implicitSubtree = subtree;
   childTile.metadata = tileMetadata;
+  childTile.hasImplicitContentMetadata = hasImplicitContentMetadata;
 
   return childTile;
 }
@@ -500,7 +531,7 @@ function deriveChildTile(
  * Returns true if the minimumHeight/maximumHeight parameter
  * is defined and the bounding volume is a region or S2 cell.
  *
- * @param {Object} [boundingVolume] The bounding voume
+ * @param {Object} [boundingVolume] The bounding volume
  * @param {Object} [tileBounds] The tile bounds
  * @param {Number} [tileBounds.minimumHeight] The minimum height
  * @param {Number} [tileBounds.maximumHeight] The maximum height
@@ -525,23 +556,24 @@ function canUpdateHeights(boundingVolume, tileBounds) {
  * minimumHeight/maximumHeight parameter is defined and the
  * bounding volume is a region or S2 cell.
  *
- * @param {Object} boundingVolume The bounding voume
+ * @param {Object} boundingVolume The bounding volume
  * @param {Object} [tileBounds] The tile bounds
  * @param {Number} [tileBounds.minimumHeight] The new minimum height
  * @param {Number} [tileBounds.maximumHeight] The new maximum height
  * @private
  */
 function updateHeights(boundingVolume, tileBounds) {
-  if (
-    hasExtension(boundingVolume, "3DTILES_bounding_volume_S2") &&
-    defined(tileBounds)
-  ) {
+  if (!defined(tileBounds)) {
+    return;
+  }
+
+  if (hasExtension(boundingVolume, "3DTILES_bounding_volume_S2")) {
     updateS2CellHeights(
       boundingVolume.extensions["3DTILES_bounding_volume_S2"],
       tileBounds.minimumHeight,
       tileBounds.maximumHeight
     );
-  } else if (defined(boundingVolume.region) && defined(tileBounds)) {
+  } else if (defined(boundingVolume.region)) {
     updateRegionHeights(
       boundingVolume.region,
       tileBounds.minimumHeight,
@@ -821,16 +853,16 @@ function deriveBoundingVolumeS2(
   }
 
   // Extract the first 3 face bits from the 64-bit S2 cell ID.
-  // eslint-disable-next-line
-  var face = Number(parentTile._boundingVolume.s2Cell._cellId >> BigInt(61));
+  // eslint-disable-next-line no-undef
+  const face = Number(parentTile._boundingVolume.s2Cell._cellId >> BigInt(61));
   // The Hilbert curve is rotated for the "odd" faces on the S2 Earthcube.
   // See http://s2geometry.io/devguide/img/s2cell_global.jpg
   const position =
     face % 2 === 0
       ? HilbertOrder.encode2D(level, x, y)
       : HilbertOrder.encode2D(level, y, x);
-  // eslint-disable-next-line
-  var cell = S2Cell.fromFacePositionLevel(face, BigInt(position), level);
+  // eslint-disable-next-line no-undef
+  const cell = S2Cell.fromFacePositionLevel(face, BigInt(position), level);
 
   let minHeight, maxHeight;
   if (defined(z)) {
@@ -1042,9 +1074,11 @@ function makePlaceholderChildSubtree(content, parentTile, childIndex) {
     boundingVolume: childBoundingVolume,
     geometricError: childGeometricError,
     refine: implicitTileset.refine,
-    content: {
-      uri: childContentUri,
-    },
+    contents: [
+      {
+        uri: childContentUri,
+      },
+    ],
   };
 
   const tile = makeTile(

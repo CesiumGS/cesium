@@ -12,7 +12,7 @@ describe("Core/getAbsoluteUri", function () {
     expect(result).toEqual("http://test.com/awesome.png");
 
     result = getAbsoluteUri("awesome.png");
-    expect(result).toEqual(getBaseUri(document.location.href) + "awesome.png");
+    expect(result).toEqual(`${getBaseUri(document.location.href)}awesome.png`);
   });
 
   it("document.baseURI is respected", function () {

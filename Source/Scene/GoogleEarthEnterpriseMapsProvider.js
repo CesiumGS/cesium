@@ -2,6 +2,7 @@ import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -11,7 +12,6 @@ import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
-import when from "../ThirdParty/when.js";
 import ImageryProvider from "./ImageryProvider.js";
 
 /**
@@ -204,9 +204,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
   this._channel = options.channel;
   this._requestType = "ImageryMaps";
   this._credit = new Credit(
-    '<a href="http://www.google.com/enterprise/mapsearth/products/earthenterprise.html"><img src="' +
-      GoogleEarthEnterpriseMapsProvider.logoUrl +
-      '" title="Google Imagery"/></a>'
+    `<a href="http://www.google.com/enterprise/mapsearth/products/earthenterprise.html"><img src="${GoogleEarthEnterpriseMapsProvider.logoUrl}" title="Google Imagery"/></a>`
   );
 
   this._tilingScheme = undefined;
@@ -220,7 +218,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
   this._errorEvent = new Event();
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   const metadataResource = resource.getDerivedResource({
     url: "query",
@@ -258,8 +256,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
     let message;
 
     if (!defined(layer)) {
-      message =
-        "Could not find layer with channel (id) of " + that._channel + ".";
+      message = `Could not find layer with channel (id) of ${that._channel}.`;
       metadataError = TileProviderError.handleError(
         metadataError,
         that,
@@ -274,8 +271,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
     }
 
     if (!defined(layer.version)) {
-      message =
-        "Could not find a version in channel (id) " + that._channel + ".";
+      message = `Could not find a version in channel (id) ${that._channel}.`;
       metadataError = TileProviderError.handleError(
         metadataError,
         that,
@@ -305,7 +301,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
         ellipsoid: options.ellipsoid,
       });
     } else {
-      message = "Unsupported projection " + data.projection + ".";
+      message = `Unsupported projection ${data.projection}.`;
       metadataError = TileProviderError.handleError(
         metadataError,
         that,
@@ -325,8 +321,10 @@ function GoogleEarthEnterpriseMapsProvider(options) {
   }
 
   function metadataFailure(e) {
-    const message =
-      "An error occurred while accessing " + metadataResource.url + ".";
+    const message = defaultValue(
+      e.message,
+      `An error occurred while accessing ${metadataResource.url}.`
+    );
     metadataError = TileProviderError.handleError(
       metadataError,
       that,
@@ -341,8 +339,14 @@ function GoogleEarthEnterpriseMapsProvider(options) {
   }
 
   function requestMetadata() {
-    const metadata = metadataResource.fetchText();
-    when(metadata, metadataSuccess, metadataFailure);
+    metadataResource
+      .fetchText()
+      .then(function (text) {
+        metadataSuccess(text);
+      })
+      .catch(function (e) {
+        metadataFailure(e);
+      });
   }
 
   requestMetadata();

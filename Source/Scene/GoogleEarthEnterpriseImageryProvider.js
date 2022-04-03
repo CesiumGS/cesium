@@ -14,7 +14,6 @@ import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
 import protobuf from "../ThirdParty/protobufjs.js";
-import when from "../ThirdParty/when.js";
 
 /**
  * @private
@@ -228,7 +227,7 @@ function GoogleEarthEnterpriseImageryProvider(options) {
     .then(function (result) {
       if (!metadata.imageryPresent) {
         const e = new RuntimeError(
-          "The server " + metadata.url + " doesn't have imagery"
+          `The server ${metadata.url} doesn't have imagery`
         );
         metadataError = TileProviderError.handleError(
           metadataError,
@@ -240,14 +239,14 @@ function GoogleEarthEnterpriseImageryProvider(options) {
           undefined,
           e
         );
-        return when.reject(e);
+        return Promise.reject(e);
       }
 
       TileProviderError.handleSuccess(metadataError);
       that._ready = result;
       return result;
     })
-    .otherwise(function (e) {
+    .catch(function (e) {
       metadataError = TileProviderError.handleError(
         metadataError,
         that,
@@ -258,7 +257,7 @@ function GoogleEarthEnterpriseImageryProvider(options) {
         undefined,
         e
       );
-      return when.reject(e);
+      return Promise.reject(e);
     });
 }
 
@@ -663,7 +662,7 @@ function buildImageResource(imageryProvider, info, x, y, level, request) {
   version = defined(version) && version > 0 ? version : 1;
 
   return imageryProvider._metadata.resource.getDerivedResource({
-    url: "flatfile?f1-0" + quadKey + "-i." + version.toString(),
+    url: `flatfile?f1-0${quadKey}-i.${version.toString()}`,
     request: request,
   });
 }

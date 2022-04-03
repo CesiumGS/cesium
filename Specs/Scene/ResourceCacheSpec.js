@@ -7,7 +7,6 @@ import {
   ResourceCache,
   ResourceCacheKey,
   SupportedImageFormats,
-  when,
 } from "../../Source/Cesium.js";
 import concatTypedArrays from "../concatTypedArrays.js";
 import createScene from "../createScene.js";
@@ -264,7 +263,7 @@ describe(
 
     it("loads resource", function () {
       const fetchJson = spyOn(Resource.prototype, "fetchJson").and.returnValue(
-        when.resolve(schemaJson)
+        Promise.resolve(schemaJson)
       );
 
       const cacheKey = ResourceCacheKey.getSchemaCacheKey({
@@ -334,7 +333,7 @@ describe(
 
     it("destroys resource when reference count reaches 0", function () {
       spyOn(Resource.prototype, "fetchJson").and.returnValue(
-        when.resolve(schemaJson)
+        Promise.resolve(schemaJson)
       );
 
       const destroy = spyOn(
@@ -391,7 +390,7 @@ describe(
 
     it("unload throws if resourceLoader has already been unloaded from the cache", function () {
       spyOn(Resource.prototype, "fetchJson").and.returnValue(
-        when.resolve(schemaJson)
+        Promise.resolve(schemaJson)
       );
 
       const cacheKey = ResourceCacheKey.getSchemaCacheKey({
@@ -415,7 +414,7 @@ describe(
 
     it("gets resource", function () {
       spyOn(Resource.prototype, "fetchJson").and.returnValue(
-        when.resolve(schemaJson)
+        Promise.resolve(schemaJson)
       );
 
       const cacheKey = ResourceCacheKey.getSchemaCacheKey({
@@ -475,7 +474,7 @@ describe(
 
     it("loads external schema", function () {
       spyOn(Resource.prototype, "fetchJson").and.returnValue(
-        when.resolve(schemaJson)
+        Promise.resolve(schemaJson)
       );
 
       const expectedCacheKey = ResourceCacheKey.getSchemaCacheKey({
@@ -580,7 +579,7 @@ describe(
 
     it("loads external buffer", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(bufferArrayBuffer)
+        Promise.resolve(bufferArrayBuffer)
       );
 
       const expectedCacheKey = ResourceCacheKey.getExternalBufferCacheKey({
@@ -624,7 +623,7 @@ describe(
       const arrayBuffer = generateJsonBuffer(gltf).buffer;
 
       spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
-        when.resolve(arrayBuffer)
+        Promise.resolve(arrayBuffer)
       );
 
       const expectedCacheKey = ResourceCacheKey.getGltfCacheKey({
@@ -673,7 +672,7 @@ describe(
 
     it("loads buffer view", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(bufferArrayBuffer)
+        Promise.resolve(bufferArrayBuffer)
       );
 
       const expectedCacheKey = ResourceCacheKey.getBufferViewCacheKey({
@@ -755,11 +754,11 @@ describe(
 
     it("loads draco", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(dracoArrayBuffer)
+        Promise.resolve(dracoArrayBuffer)
       );
 
       spyOn(DracoLoader, "decodeBufferView").and.returnValue(
-        when.resolve(decodeDracoResults)
+        Promise.resolve(decodeDracoResults)
       );
 
       const expectedCacheKey = ResourceCacheKey.getDracoCacheKey({
@@ -844,7 +843,7 @@ describe(
 
     it("loads vertex buffer from buffer view", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(bufferArrayBuffer)
+        Promise.resolve(bufferArrayBuffer)
       );
 
       const expectedCacheKey = ResourceCacheKey.getVertexBufferCacheKey({
@@ -886,11 +885,11 @@ describe(
 
     it("loads vertex buffer from draco", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(dracoArrayBuffer)
+        Promise.resolve(dracoArrayBuffer)
       );
 
       spyOn(DracoLoader, "decodeBufferView").and.returnValue(
-        when.resolve(decodeDracoResults)
+        Promise.resolve(decodeDracoResults)
       );
 
       const expectedCacheKey = ResourceCacheKey.getVertexBufferCacheKey({
@@ -936,7 +935,7 @@ describe(
 
     it("loads vertex buffer as typed array", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(bufferArrayBuffer)
+        Promise.resolve(bufferArrayBuffer)
       );
 
       const expectedCacheKey = ResourceCacheKey.getVertexBufferCacheKey({
@@ -1050,7 +1049,7 @@ describe(
 
     it("loads index buffer from accessor", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(bufferArrayBuffer)
+        Promise.resolve(bufferArrayBuffer)
       );
 
       const expectedCacheKey = ResourceCacheKey.getIndexBufferCacheKey({
@@ -1091,11 +1090,11 @@ describe(
 
     it("loads index buffer from draco", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(dracoArrayBuffer)
+        Promise.resolve(dracoArrayBuffer)
       );
 
       spyOn(DracoLoader, "decodeBufferView").and.returnValue(
-        when.resolve(decodeDracoResults)
+        Promise.resolve(decodeDracoResults)
       );
 
       const expectedCacheKey = ResourceCacheKey.getIndexBufferCacheKey({
@@ -1139,7 +1138,7 @@ describe(
 
     it("loads index buffer as typed array", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        when.resolve(bufferArrayBuffer)
+        Promise.resolve(bufferArrayBuffer)
       );
 
       const expectedCacheKey = ResourceCacheKey.getIndexBufferCacheKey({
@@ -1213,7 +1212,7 @@ describe(
 
     it("loads image", function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        when.resolve(image)
+        Promise.resolve(image)
       );
 
       const expectedCacheKey = ResourceCacheKey.getImageCacheKey({
@@ -1295,7 +1294,7 @@ describe(
 
     it("loads texture", function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        when.resolve(image)
+        Promise.resolve(image)
       );
 
       const expectedCacheKey = ResourceCacheKey.getTextureCacheKey({

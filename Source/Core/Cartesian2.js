@@ -145,13 +145,12 @@ Cartesian2.unpack = function (array, startingIndex, result) {
 };
 
 /**
-     * Flattens an array of Cartesian2s into and array of components.
-     *
-     * @param {Cartesian2[]} array The array of cartesians to pack.
-     * @param {Number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 2 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 2) elements.
-
-     * @returns {Number[]} The packed array.
-     */
+ * Flattens an array of Cartesian2s into an array of components.
+ *
+ * @param {Cartesian2[]} array The array of cartesians to pack.
+ * @param {Number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 2 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 2) elements.
+ * @returns {Number[]} The packed array.
+ */
 Cartesian2.packArray = function (array, result) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("array", array);
@@ -162,9 +161,11 @@ Cartesian2.packArray = function (array, result) {
   if (!defined(result)) {
     result = new Array(resultLength);
   } else if (!Array.isArray(result) && result.length !== resultLength) {
+    //>>includeStart('debug', pragmas.debug);
     throw new DeveloperError(
       "If result is a typed array, it must have exactly array.length * 2 elements"
     );
+    //>>includeEnd('debug');
   } else if (result.length !== resultLength) {
     result.length = resultLength;
   }
@@ -176,7 +177,7 @@ Cartesian2.packArray = function (array, result) {
 };
 
 /**
- * Unpacks an array of cartesian components into and array of Cartesian2s.
+ * Unpacks an array of cartesian components into an array of Cartesian2s.
  *
  * @param {Number[]} array The array of components to unpack.
  * @param {Cartesian2[]} [result] The array onto which to store the result.
@@ -291,6 +292,32 @@ Cartesian2.maximumByComponent = function (first, second, result) {
 
   result.x = Math.max(first.x, second.x);
   result.y = Math.max(first.y, second.y);
+  return result;
+};
+
+/**
+ * Constrain a value to lie between two values.
+ *
+ * @param {Cartesian2} value The value to clamp.
+ * @param {Cartesian2} min The minimum bound.
+ * @param {Cartesian2} max The maximum bound.
+ * @param {Cartesian2} result The object into which to store the result.
+ * @returns {Cartesian2} The clamped value such that min <= result <= max.
+ */
+Cartesian2.clamp = function (value, min, max, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("value", value);
+  Check.typeOf.object("min", min);
+  Check.typeOf.object("max", max);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  const x = CesiumMath.clamp(value.x, min.x, max.x);
+  const y = CesiumMath.clamp(value.y, min.y, max.y);
+
+  result.x = x;
+  result.y = y;
+
   return result;
 };
 
@@ -792,6 +819,6 @@ Cartesian2.prototype.equalsEpsilon = function (
  * @returns {String} A string representing the provided Cartesian in the format '(x, y)'.
  */
 Cartesian2.prototype.toString = function () {
-  return "(" + this.x + ", " + this.y + ")";
+  return `(${this.x}, ${this.y})`;
 };
 export default Cartesian2;

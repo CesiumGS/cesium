@@ -6,7 +6,6 @@ import { PixelFormat } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
 import { TextureAtlas } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
-import { when } from "../../Source/Cesium.js";
 
 describe(
   "Scene/TextureAtlas",
@@ -30,7 +29,7 @@ describe(
     beforeAll(function () {
       scene = createScene();
 
-      return when.join(
+      return Promise.all([
         Resource.fetchImage("./Data/Images/Green.png").then(function (image) {
           greenImage = image;
           greenGuid = createGuid();
@@ -62,8 +61,8 @@ describe(
         ) {
           bigGreenImage = image;
           bigGreenGuid = createGuid();
-        })
-      );
+        }),
+      ]);
     });
 
     afterAll(function () {
@@ -78,14 +77,11 @@ describe(
       const x = textureCoordinates.x + textureCoordinates.width / 2.0;
       const y = textureCoordinates.y + textureCoordinates.height / 2.0;
       const fs =
-        "uniform sampler2D u_texture;" +
-        "void main() {" +
-        "  gl_FragColor = texture2D(u_texture, vec2(" +
-        x +
-        ", " +
-        y +
-        "));" +
-        "}";
+        `${
+          "uniform sampler2D u_texture;" +
+          "void main() {" +
+          "  gl_FragColor = texture2D(u_texture, vec2("
+        }${x}, ${y}));` + `}`;
       const uniformMap = {
         u_texture: function () {
           return texture;
@@ -239,7 +235,7 @@ describe(
       promises.push(atlas.addImage(greenGuid, greenImage));
       promises.push(atlas.addImage(blueGuid, blueImage));
 
-      return when.all(promises, function (indices) {
+      return Promise.all(promises, function (indices) {
         const greenIndex = indices[0];
         const blueIndex = indices[1];
 
@@ -276,7 +272,7 @@ describe(
       promises.push(atlas.addImage(greenGuid, greenImage));
       promises.push(atlas.addImage(blueGuid, blueImage));
 
-      return when.all(promises, function (indices) {
+      return Promise.all(promises, function (indices) {
         const greenIndex = indices[0];
         const blueIndex = indices[1];
 
@@ -302,7 +298,7 @@ describe(
       promises.push(atlas.addImage(bigRedGuid, bigRedImage));
       promises.push(atlas.addImage(bigBlueGuid, bigBlueImage));
 
-      return when.all(promises, function (indices) {
+      return Promise.all(promises, function (indices) {
         const greenIndex = indices.shift();
         const blueIndex = indices.shift();
         const bigRedIndex = indices.shift();
@@ -335,7 +331,7 @@ describe(
       promises.push(atlas.addImage(bigRedGuid, bigRedImage));
       promises.push(atlas.addImage(bigBlueGuid, bigBlueImage));
 
-      return when.all(promises, function (indices) {
+      return Promise.all(promises, function (indices) {
         const greenIndex = indices.shift();
         const blueIndex = indices.shift();
         const bigRedIndex = indices.shift();
@@ -422,7 +418,7 @@ describe(
       promises.push(atlas.addImage(bigRedGuid, bigRedImage));
       promises.push(atlas.addImage(bigBlueGuid, bigBlueImage));
 
-      return when.all(promises, function (indices) {
+      return Promise.all(promises, function (indices) {
         const greenIndex = indices.shift();
         const blueIndex = indices.shift();
         const bigRedIndex = indices.shift();
@@ -579,7 +575,7 @@ describe(
       const greenPromise = atlas.addImage(greenGuid, greenImage);
       const bluePromise = atlas.addImage(blueGuid, blueImage);
 
-      return when.all([greenPromise, bluePromise], function (indices) {
+      return Promise.all([greenPromise, bluePromise], function (indices) {
         const greenIndex = indices.shift();
         const blueIndex = indices.shift();
 
@@ -619,7 +615,7 @@ describe(
       const greenPromise = atlas.addImage(greenGuid, greenImage);
       const bluePromise = atlas.addImage(blueGuid, blueImage);
 
-      return when.all([greenPromise, bluePromise], function (indices) {
+      return Promise.all([greenPromise, bluePromise], function (indices) {
         const greenIndex = indices.shift();
         const blueIndex = indices.shift();
 
@@ -693,22 +689,23 @@ describe(
       const bigGreenPromise = atlas.addImage(bigGreenGuid, bigGreenImage);
       const bigRedPromise = atlas.addImage(bigRedGuid, bigRedImage);
 
-      return when.all([bluePromise, bigGreenPromise, bigRedPromise], function (
-        indices
-      ) {
-        const blueIndex = indices.shift();
-        const bigGreenIndex = indices.shift();
-        const bigRedIndex = indices.shift();
+      return Promise.all(
+        [bluePromise, bigGreenPromise, bigRedPromise],
+        function (indices) {
+          const blueIndex = indices.shift();
+          const bigGreenIndex = indices.shift();
+          const bigRedIndex = indices.shift();
 
-        const texture = atlas.texture;
-        const blueCoordinates = atlas.textureCoordinates[blueIndex];
-        const bigGreenCoordinates = atlas.textureCoordinates[bigGreenIndex];
-        const bigRedCoordinates = atlas.textureCoordinates[bigRedIndex];
+          const texture = atlas.texture;
+          const blueCoordinates = atlas.textureCoordinates[blueIndex];
+          const bigGreenCoordinates = atlas.textureCoordinates[bigGreenIndex];
+          const bigRedCoordinates = atlas.textureCoordinates[bigRedIndex];
 
-        expectToRender(texture, blueCoordinates, [0, 0, 255, 255]);
-        expectToRender(texture, bigGreenCoordinates, [0, 255, 0, 255]);
-        expectToRender(texture, bigRedCoordinates, [255, 0, 0, 255]);
-      });
+          expectToRender(texture, blueCoordinates, [0, 0, 255, 255]);
+          expectToRender(texture, bigGreenCoordinates, [0, 255, 0, 255]);
+          expectToRender(texture, bigRedCoordinates, [255, 0, 0, 255]);
+        }
+      );
     });
 
     it("promise resolves to index after calling addImage with Image", function () {
@@ -770,7 +767,7 @@ describe(
         new BoundingRectangle(0.5, 0.5, 0.5, 0.5)
       );
 
-      return when.all([promise1, promise2, promise3, promise4], function (
+      return Promise.all([promise1, promise2, promise3, promise4], function (
         indices
       ) {
         const index1 = indices.shift();
@@ -832,7 +829,7 @@ describe(
         new BoundingRectangle(0.5, 0.5, 0.5, 0.5)
       );
 
-      return when.all([promise1, promise2, promise3, promise4], function (
+      return Promise.all([promise1, promise2, promise3, promise4], function (
         indices
       ) {
         const index1 = indices.shift();
@@ -892,7 +889,7 @@ describe(
         return blueImage;
       });
 
-      return when.all([greenPromise, bluePromise], function (results) {
+      return Promise.all([greenPromise, bluePromise], function (results) {
         const greenIndex = results[0];
         const blueIndex = results[1];
 

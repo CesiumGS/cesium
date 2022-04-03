@@ -37,6 +37,7 @@ import TextureManager from "./TextureManager.js";
  * @typedef {Object} VertexVariableSets
  * @property {VariableSet} attributeSet A set of all unique attributes used in the vertex shader via the <code>vsInput.attributes</code> struct.
  * @property {VariableSet} featureIdSet A set of all unique feature ID sets used in the vertex shader via the <code>vsInput.featureIds</code> struct.
+ * @property {VariableSet} metadataSet A set of all unique metadata properties used in the vertex shader via the <code>vsInput.metadata</code> struct.
  * @private
  */
 
@@ -45,6 +46,7 @@ import TextureManager from "./TextureManager.js";
  * @typedef {Object} FragmentVariableSets
  * @property {VariableSet} attributeSet A set of all unique attributes used in the fragment shader via the <code>fsInput.attributes</code> struct
  * @property {VariableSet} featureIdSet A set of all unique feature ID sets used in the fragment shader via the <code>fsInput.featureIds</code> struct.
+ * @property {VariableSet} metadataSet A set of all unique metadata properties used in the fragment shader via the <code>fsInput.metadata</code> struct.
  * @property {VariableSet} materialSet A set of all material variables such as diffuse, specular or alpha that are used in the fragment shader via the <code>material</code> struct.
  * @private
  */
@@ -69,6 +71,9 @@ import TextureManager from "./TextureManager.js";
  * </ul>
  * <p>
  * To enable the use of {@link ModelExperimental} in {@link Cesium3DTileset}, set {@link ExperimentalFeatures.enableModelExperimental} to <code>true</code> or tileset.enableModelExperimental to <code>true</code>.
+ * </p>
+ * <p>
+ * See the {@link https://github.com/CesiumGS/cesium/tree/main/Documentation/CustomShaderGuide|Custom Shader Guide} for more detailed documentation.
  * </p>
  *
  * @param {Object} options An object with the following options
@@ -209,6 +214,7 @@ export default function CustomShader(options) {
   this.usedVariablesVertex = {
     attributeSet: {},
     featureIdSet: {},
+    metadataSet: {},
   };
   /**
    * A collection of variables used in <code>fragmentShaderText</code>. This
@@ -219,6 +225,7 @@ export default function CustomShader(options) {
   this.usedVariablesFragment = {
     attributeSet: {},
     featureIdSet: {},
+    metadataSet: {},
     materialSet: {},
   };
 
@@ -288,6 +295,7 @@ function getVariables(shaderText, regex, outputSet) {
 function findUsedVariables(customShader) {
   const attributeRegex = /[vf]sInput\.attributes\.(\w+)/g;
   const featureIdRegex = /[vf]sInput\.featureIds\.(\w+)/g;
+  const metadataRegex = /[vf]sInput\.metadata.(\w+)/g;
   let attributeSet;
 
   const vertexShaderText = customShader.vertexShaderText;
@@ -297,6 +305,9 @@ function findUsedVariables(customShader) {
 
     attributeSet = customShader.usedVariablesVertex.featureIdSet;
     getVariables(vertexShaderText, featureIdRegex, attributeSet);
+
+    attributeSet = customShader.usedVariablesVertex.metadataSet;
+    getVariables(vertexShaderText, metadataRegex, attributeSet);
   }
 
   const fragmentShaderText = customShader.fragmentShaderText;
@@ -306,6 +317,9 @@ function findUsedVariables(customShader) {
 
     attributeSet = customShader.usedVariablesFragment.featureIdSet;
     getVariables(fragmentShaderText, featureIdRegex, attributeSet);
+
+    attributeSet = customShader.usedVariablesFragment.metadataSet;
+    getVariables(fragmentShaderText, metadataRegex, attributeSet);
 
     const materialRegex = /material\.(\w+)/g;
     const materialSet = customShader.usedVariablesFragment.materialSet;
@@ -319,15 +333,15 @@ function expandCoordinateAbbreviations(variableName) {
   const eyeCoordinatesRegex = /^.*EC$/;
 
   if (modelCoordinatesRegex.test(variableName)) {
-    return variableName + " (model coordinates)";
+    return `${variableName} (model coordinates)`;
   }
 
   if (worldCoordinatesRegex.test(variableName)) {
-    return variableName + " (Cartesian world coordinates)";
+    return `${variableName} (Cartesian world coordinates)`;
   }
 
   if (eyeCoordinatesRegex.test(variableName)) {
-    return variableName + " (eye coordinates)";
+    return `${variableName} (eye coordinates)`;
   }
 
   return variableName;
@@ -340,13 +354,11 @@ function validateVariableUsage(
   vertexOrFragment
 ) {
   if (variableSet.hasOwnProperty(incorrectVariable)) {
-    const message =
-      expandCoordinateAbbreviations(incorrectVariable) +
-      " is not available in the " +
-      vertexOrFragment +
-      " shader. Did you mean " +
-      expandCoordinateAbbreviations(correctVariable) +
-      " instead?";
+    const message = `${expandCoordinateAbbreviations(
+      incorrectVariable
+    )} is not available in the ${vertexOrFragment} shader. Did you mean ${expandCoordinateAbbreviations(
+      correctVariable
+    )} instead?`;
     throw new DeveloperError(message);
   }
 }
@@ -395,9 +407,7 @@ CustomShader.prototype.setUniform = function (uniformName, value) {
   Check.defined("value", value);
   if (!defined(this.uniforms[uniformName])) {
     throw new DeveloperError(
-      "Uniform " +
-        uniformName +
-        " must be declared in the CustomShader constructor."
+      `Uniform ${uniformName} must be declared in the CustomShader constructor.`
     );
   }
   //>>includeEnd('debug');

@@ -35,7 +35,7 @@ BatchTexturePipelineStage.process = function (
 
   // Number of features in the feature table.
   const featuresLength = featureTable.featuresLength;
-  shaderBuilder.addUniform("float", "model_featuresLength");
+  shaderBuilder.addUniform("int", "model_featuresLength");
   batchTextureUniforms.model_featuresLength = function () {
     return featuresLength;
   };

@@ -9,6 +9,8 @@ import Matrix3 from "../../Core/Matrix3.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartesian4 from "../../Core/Cartesian4.js";
 import ModelComponents from "../ModelComponents.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
 
 const Material = ModelComponents.Material;
 const MetallicRoughness = ModelComponents.MetallicRoughness;
@@ -84,17 +86,25 @@ MaterialPipelineStage.process = function (
     );
   }
 
+  // If the primitive does not have normals, fall back to unlit lighting.
+  const hasNormals = ModelExperimentalUtility.getAttributeBySemantic(
+    primitive,
+    VertexAttributeSemantic.NORMAL
+  );
+
   const lightingOptions = renderResources.lightingOptions;
-  if (material.unlit) {
+  if (material.unlit || !hasNormals) {
     lightingOptions.lightingModel = LightingModel.UNLIT;
   } else {
     lightingOptions.lightingModel = LightingModel.PBR;
   }
 
   // Configure back-face culling
-  const cull = !material.doubleSided;
+  const model = renderResources.model;
+  const cull = model.backFaceCulling && !material.doubleSided;
+  const translucent = defined(model.color) && model.color.alpha < 1.0;
   renderResources.renderStateOptions.cull = {
-    enabled: cull,
+    enabled: cull && !translucent,
   };
 
   const alphaOptions = renderResources.alphaOptions;
@@ -129,7 +139,7 @@ function processTextureTransform(
   defineName
 ) {
   // Add a define to enable the texture transformation code in the shader.
-  const transformDefine = "HAS_" + defineName + "_TEXTURE_TRANSFORM";
+  const transformDefine = `HAS_${defineName}_TEXTURE_TRANSFORM`;
   shaderBuilder.addDefine(
     transformDefine,
     undefined,
@@ -137,7 +147,7 @@ function processTextureTransform(
   );
 
   // Add a uniform for the transformation matrix
-  const transformUniformName = uniformName + "Transform";
+  const transformUniformName = `${uniformName}Transform`;
   shaderBuilder.addUniform(
     "mat3",
     transformUniformName,
@@ -178,13 +188,13 @@ function processTexture(
   };
 
   // Add a #define directive to enable using the texture in the shader
-  const textureDefine = "HAS_" + defineName + "_TEXTURE";
+  const textureDefine = `HAS_${defineName}_TEXTURE`;
   shaderBuilder.addDefine(textureDefine, undefined, ShaderDestination.FRAGMENT);
 
   // Add a #define to tell the shader which texture coordinates varying to use.
   const texCoordIndex = textureReader.texCoord;
-  const texCoordVarying = "v_texCoord_" + texCoordIndex;
-  const texCoordDefine = "TEXCOORD_" + defineName;
+  const texCoordVarying = `v_texCoord_${texCoordIndex}`;
+  const texCoordDefine = `TEXCOORD_${defineName}`;
   shaderBuilder.addDefine(
     texCoordDefine,
     texCoordVarying,

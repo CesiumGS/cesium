@@ -68,7 +68,7 @@ function GeometryUpdater(options) {
   this._classificationTypeProperty = undefined;
   this._options = options.geometryOptions;
   this._geometryPropertyName = geometryPropertyName;
-  this._id = geometryPropertyName + "-" + entity.id;
+  this._id = `${geometryPropertyName}-${entity.id}`;
   this._observedPropertyNames = options.observedPropertyNames;
   this._supportsMaterialsforEntitiesOnTerrain = Entity.supportsMaterialsforEntitiesOnTerrain(
     options.scene

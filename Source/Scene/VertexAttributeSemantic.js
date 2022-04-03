@@ -72,7 +72,7 @@ const VertexAttributeSemantic = {
    * @type {String}
    * @constant
    */
-  FEATURE_ID: "FEATURE_ID",
+  FEATURE_ID: "_FEATURE_ID",
 };
 
 function semanticToVariableName(semantic) {
@@ -170,8 +170,7 @@ VertexAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
       return VertexAttributeSemantic.JOINTS;
     case "WEIGHTS":
       return VertexAttributeSemantic.WEIGHTS;
-    case "_FEATURE_ID": // for EXT_feature_metadata
-    case "FEATURE_ID": // for EXT_mesh_features
+    case "_FEATURE_ID":
       return VertexAttributeSemantic.FEATURE_ID;
   }
 
@@ -266,7 +265,7 @@ VertexAttributeSemantic.getVariableName = function (semantic, setIndex) {
 
   let variableName = semanticToVariableName(semantic);
   if (defined(setIndex)) {
-    variableName += "_" + setIndex;
+    variableName += `_${setIndex}`;
   }
   return variableName;
 };

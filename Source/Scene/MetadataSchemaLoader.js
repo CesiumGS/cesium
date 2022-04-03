@@ -1,7 +1,7 @@
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import when from "../ThirdParty/when.js";
 import MetadataSchema from "./MetadataSchema.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
@@ -44,7 +44,7 @@ export default function MetadataSchemaLoader(options) {
   this._resource = resource;
   this._cacheKey = cacheKey;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = when.defer();
+  this._promise = defer();
 }
 
 if (defined(Object.create)) {
@@ -123,12 +123,12 @@ function loadExternalSchema(schemaLoader) {
       schemaLoader._state = ResourceLoaderState.READY;
       schemaLoader._promise.resolve(schemaLoader);
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (schemaLoader.isDestroyed()) {
         return;
       }
       schemaLoader._state = ResourceLoaderState.FAILED;
-      const errorMessage = "Failed to load schema: " + resource.url;
+      const errorMessage = `Failed to load schema: ${resource.url}`;
       schemaLoader._promise.reject(schemaLoader.getError(errorMessage, error));
     });
 }

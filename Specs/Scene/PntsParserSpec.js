@@ -1,4 +1,5 @@
 import { PntsParser } from "../../Source/Cesium.js";
+import { RuntimeError } from "../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 
 describe("Scene/PntsParser", function () {
@@ -14,7 +15,7 @@ describe("Scene/PntsParser", function () {
     });
     expect(function () {
       return PntsParser.parse(arrayBuffer);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 
   it("throws if featureTableJsonByteLength is 0", function () {
@@ -23,7 +24,7 @@ describe("Scene/PntsParser", function () {
     });
     expect(function () {
       return PntsParser.parse(arrayBuffer);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 
   it("throws if the feature table does not contain POINTS_LENGTH", function () {
@@ -36,7 +37,7 @@ describe("Scene/PntsParser", function () {
     });
     expect(function () {
       return PntsParser.parse(arrayBuffer);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 
   it("throws if the feature table does not contain POSITION or POSITION_QUANTIZED", function () {
@@ -47,7 +48,7 @@ describe("Scene/PntsParser", function () {
     });
     expect(function () {
       return PntsParser.parse(arrayBuffer);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 
   it("throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_SCALE", function () {
@@ -62,7 +63,7 @@ describe("Scene/PntsParser", function () {
     });
     expect(function () {
       return PntsParser.parse(arrayBuffer);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 
   it("throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_OFFSET", function () {
@@ -77,7 +78,7 @@ describe("Scene/PntsParser", function () {
     });
     expect(function () {
       return PntsParser.parse(arrayBuffer);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 
   it("throws if the BATCH_ID semantic is defined but BATCH_LENGTH is not", function () {
@@ -90,6 +91,6 @@ describe("Scene/PntsParser", function () {
     });
     expect(function () {
       return PntsParser.parse(arrayBuffer);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 });

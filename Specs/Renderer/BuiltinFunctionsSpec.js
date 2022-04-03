@@ -453,22 +453,11 @@ describe(
     it("has czm_unpackFloat", function () {
       let packed = Cartesian4.packFloat(1);
       packed = Cartesian4.divideByScalar(packed, 255, packed);
-      const vec4 =
-        "vec4(" +
-        packed.x +
-        ", " +
-        packed.y +
-        ", " +
-        packed.z +
-        ", " +
-        packed.w +
-        ")";
+      const vec4 = `vec4(${packed.x}, ${packed.y}, ${packed.z}, ${packed.w})`;
       const fs =
-        "void main() { " +
-        "  gl_FragColor = vec4(czm_unpackFloat(" +
-        vec4 +
-        "));" +
-        "}";
+        `${
+          "void main() { " + "  gl_FragColor = vec4(czm_unpackFloat("
+        }${vec4}));` + `}`;
       expect({
         context: context,
         fragmentShader: fs,

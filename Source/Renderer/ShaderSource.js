@@ -128,7 +128,7 @@ function sortDependencies(dependencyNodes) {
     let message =
       "A circular dependency was found in the following built-in functions/structs/constants: \n";
     for (let k = 0; k < badNodes.length; ++k) {
-      message = message + badNodes[k].name + "\n";
+      message = `${message + badNodes[k].name}\n`;
     }
     throw new DeveloperError(message);
   }
@@ -146,7 +146,7 @@ function getBuiltinsAndAutomaticUniforms(shaderSource) {
   // Iterate in reverse so that dependent items are declared before they are used.
   let builtinsSource = "";
   for (let i = dependencyNodes.length - 1; i >= 0; --i) {
-    builtinsSource = builtinsSource + dependencyNodes[i].glslSource + "\n";
+    builtinsSource = `${builtinsSource + dependencyNodes[i].glslSource}\n`;
   }
 
   return builtinsSource.replace(root.glslSource, "");
@@ -162,7 +162,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
   if (defined(sources)) {
     for (i = 0, length = sources.length; i < length; ++i) {
       // #line needs to be on its own line.
-      combinedSources += "\n#line 0\n" + sources[i];
+      combinedSources += `\n#line 0\n${sources[i]}`;
     }
   }
 
@@ -177,7 +177,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
     //>>includeStart('debug', pragmas.debug);
     if (defined(version) && version !== group1) {
       throw new DeveloperError(
-        "inconsistent versions found: " + version + " and " + group1
+        `inconsistent versions found: ${version} and ${group1}`
       );
     }
     //>>includeEnd('debug');
@@ -226,7 +226,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
   // #version must be first
   // defaults to #version 100 if not specified
   if (defined(version)) {
-    result = "#version " + version + "\n";
+    result = `#version ${version}\n`;
   }
 
   const extensionsLength = extensions.length;
@@ -242,8 +242,10 @@ function combineShader(shaderSource, isFragmentShader, context) {
       "\
 #ifdef GL_FRAGMENT_PRECISION_HIGH\n\
     precision highp float;\n\
+    precision highp int;\n\
 #else\n\
     precision mediump float;\n\
+    precision mediump int;\n\
     #define highp mediump\n\
 #endif\n\n";
   }
@@ -254,7 +256,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
     for (i = 0, length = defines.length; i < length; ++i) {
       const define = defines[i];
       if (define.length !== 0) {
-        result += "#define " + define + "\n";
+        result += `#define ${define}\n`;
       }
     }
   }
@@ -352,7 +354,7 @@ ShaderSource.prototype.clone = function () {
 };
 
 ShaderSource.replaceMain = function (source, renamedMain) {
-  renamedMain = "void " + renamedMain + "()";
+  renamedMain = `void ${renamedMain}()`;
   return source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, renamedMain);
 };
 
@@ -416,7 +418,7 @@ ShaderSource.createPickVertexShaderSource = function (vertexShaderSource) {
     "    czm_pickColor = pickColor; \n" +
     "}";
 
-  return renamedVS + "\n" + pickMain;
+  return `${renamedVS}\n${pickMain}`;
 };
 
 ShaderSource.createPickFragmentShaderSource = function (
@@ -428,47 +430,59 @@ ShaderSource.createPickFragmentShaderSource = function (
     "czm_old_main"
   );
   const pickMain =
-    pickColorQualifier +
-    " vec4 czm_pickColor; \n" +
-    "void main() \n" +
-    "{ \n" +
-    "    czm_old_main(); \n" +
-    "    if (gl_FragColor.a == 0.0) { \n" +
-    "       discard; \n" +
-    "    } \n" +
-    "    gl_FragColor = czm_pickColor; \n" +
-    "}";
+    `${pickColorQualifier} vec4 czm_pickColor; \n` +
+    `void main() \n` +
+    `{ \n` +
+    `    czm_old_main(); \n` +
+    `    if (gl_FragColor.a == 0.0) { \n` +
+    `       discard; \n` +
+    `    } \n` +
+    `    gl_FragColor = czm_pickColor; \n` +
+    `}`;
 
-  return renamedFS + "\n" + pickMain;
+  return `${renamedFS}\n${pickMain}`;
 };
 
-ShaderSource.findVarying = function (shaderSource, names) {
+function containsString(shaderSource, string) {
   const sources = shaderSource.sources;
-
-  const namesLength = names.length;
-  for (let i = 0; i < namesLength; ++i) {
-    const name = names[i];
-
-    const sourcesLength = sources.length;
-    for (let j = 0; j < sourcesLength; ++j) {
-      if (sources[j].indexOf(name) !== -1) {
-        return name;
-      }
+  const sourcesLength = sources.length;
+  for (let i = 0; i < sourcesLength; ++i) {
+    if (sources[i].indexOf(string) !== -1) {
+      return true;
     }
   }
+  return false;
+}
 
+function findFirstString(shaderSource, strings) {
+  const stringsLength = strings.length;
+  for (let i = 0; i < stringsLength; ++i) {
+    const string = strings[i];
+    if (containsString(shaderSource, string)) {
+      return string;
+    }
+  }
   return undefined;
-};
+}
 
 const normalVaryingNames = ["v_normalEC", "v_normal"];
 
 ShaderSource.findNormalVarying = function (shaderSource) {
-  return ShaderSource.findVarying(shaderSource, normalVaryingNames);
+  // Fix for ModelExperimental: the shader text always has the word v_normalEC
+  // wrapped in an #ifdef so instead of looking for v_normalEC look for the define
+  if (containsString(shaderSource, "#ifdef HAS_NORMALS")) {
+    if (containsString(shaderSource, "#define HAS_NORMALS")) {
+      return "v_normalEC";
+    }
+    return undefined;
+  }
+
+  return findFirstString(shaderSource, normalVaryingNames);
 };
 
 const positionVaryingNames = ["v_positionEC"];
 
 ShaderSource.findPositionVarying = function (shaderSource) {
-  return ShaderSource.findVarying(shaderSource, positionVaryingNames);
+  return findFirstString(shaderSource, positionVaryingNames);
 };
 export default ShaderSource;

@@ -1,5 +1,4 @@
 import Uri from "../ThirdParty/Uri.js";
-import when from "../ThirdParty/when.js";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
@@ -197,7 +196,7 @@ IonResource.prototype._makeRequest = function (options) {
   if (!defined(options.headers)) {
     options.headers = {};
   }
-  options.headers.Authorization = "Bearer " + this._ionEndpoint.accessToken;
+  options.headers.Authorization = `Bearer ${this._ionEndpoint.accessToken}`;
 
   return Resource.prototype._makeRequest.call(this, options);
 };
@@ -216,7 +215,7 @@ IonResource._createEndpointResource = function (assetId, options) {
   server = Resource.createIfNeeded(server);
 
   const resourceOptions = {
-    url: "v1/assets/" + assetId + "/endpoint",
+    url: `v1/assets/${assetId}/endpoint`,
   };
 
   if (defined(accessToken)) {
@@ -241,7 +240,7 @@ function retryCallback(that, error) {
     (error.statusCode !== 401 &&
       !(imageDefined && error.target instanceof Image))
   ) {
-    return when.resolve(false);
+    return Promise.resolve(false);
   }
 
   // We use a shared pending promise for all derived assets, since they share
@@ -255,7 +254,7 @@ function retryCallback(that, error) {
         ionRoot._ionEndpoint = newEndpoint;
         return newEndpoint;
       })
-      .always(function (newEndpoint) {
+      .finally(function (newEndpoint) {
         // Pass or fail, we're done with this promise, the next failure should use a new one.
         ionRoot._pendingPromise = undefined;
         return newEndpoint;

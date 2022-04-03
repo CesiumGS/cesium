@@ -189,6 +189,7 @@ GltfLoaderUtil.createModelTextureReader = function (options) {
   }
 
   const modelTextureReader = new ModelComponents.TextureReader();
+  modelTextureReader.index = textureInfo.index;
   modelTextureReader.texture = texture;
   modelTextureReader.texCoord = texCoord;
   modelTextureReader.transform = transform;

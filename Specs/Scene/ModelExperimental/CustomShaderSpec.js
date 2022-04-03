@@ -167,6 +167,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
         "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
         "{",
         "    float value = vsInput.featureIds.featureId_0;",
+        "    float value2 = vsInput.metadata.temperature;",
         "    positionMC += vsInput.attributes.expansion * vsInput.attributes.normalMC;",
         "}",
       ].join("\n"),
@@ -174,6 +175,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
         "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
         "{",
         "    float value = fsInput.featureIds.featureId_1 + fsInput.featureIds.instanceFeatureId_0;",
+        "    float value2 = fsInput.metadata.pressure;",
         "    material.normalEC = normalize(fsInput.attributes.normalEC);",
         "    material.diffuse = fsInput.attributes.color_0;",
         "    material.specular = fsInput.attributes.positionWC / 1.0e6;",
@@ -188,6 +190,9 @@ describe("Scene/ModelExperimental/CustomShader", function () {
       },
       featureIdSet: {
         featureId_0: true,
+      },
+      metadataSet: {
+        temperature: true,
       },
     };
     const expectedFragmentVariables = {
@@ -205,6 +210,9 @@ describe("Scene/ModelExperimental/CustomShader", function () {
         featureId_1: true,
         instanceFeatureId_0: true,
       },
+      metadataSet: {
+        pressure: true,
+      },
     };
 
     expect(customShader.usedVariablesVertex).toEqual(expectedVertexVariables);
@@ -219,7 +227,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
         vertexShaderText: [
           "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
           "{",
-          "    vsOutput.positionMC = vsInput.attributes." + variableName + ";",
+          `    vsOutput.positionMC = vsInput.attributes.${variableName};`,
           "}",
         ].join("\n"),
       });
@@ -230,7 +238,7 @@ describe("Scene/ModelExperimental/CustomShader", function () {
         fragmentShaderText: [
           "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)",
           "{",
-          "    material.diffuse = fsInput.attributes." + variableName + ";",
+          `    material.diffuse = fsInput.attributes.${variableName};`,
           "}",
         ].join("\n"),
       });

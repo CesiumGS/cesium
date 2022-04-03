@@ -89,7 +89,7 @@ ResourceLoader.prototype.getError = function (errorMessage, error) {
   //>>includeEnd('debug');
 
   if (defined(error)) {
-    errorMessage += "\n" + error.message;
+    errorMessage += `\n${error.message}`;
   }
   return new RuntimeError(errorMessage);
 };

@@ -12,7 +12,6 @@ import { PostProcessStage } from "../../Source/Cesium.js";
 import { PostProcessStageSampleMode } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 
 describe(
   "Scene/PostProcessStage",
@@ -207,10 +206,9 @@ describe(
       const bgColor = 51; // Choose a factor of 255 to make sure there aren't rounding issues
       s.postProcessStages.add(
         new PostProcessStage({
-          fragmentShader:
-            "void main() { gl_FragColor = vec4(vec3(" +
-            bgColor / 255 +
-            "), 1.0); }",
+          fragmentShader: `void main() { gl_FragColor = vec4(vec3(${
+            bgColor / 255
+          }), 1.0); }`,
         })
       );
 
@@ -227,10 +225,10 @@ describe(
         .then(function () {
           expect(s).toRender([bgColor, bgColor, bgColor, 255]);
         })
-        .always(function (e) {
+        .finally(function (e) {
           s.destroyForSpecs();
           if (e) {
-            return when.reject(e);
+            return Promise.reject(e);
           }
         });
     });
@@ -269,8 +267,8 @@ describe(
         .then(function () {
           return model;
         })
-        .otherwise(function () {
-          return when.reject(model);
+        .catch(function () {
+          return Promise.reject(model);
         });
     }
 

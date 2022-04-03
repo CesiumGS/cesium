@@ -5,6 +5,7 @@ import Cartographic from "../Core/Cartographic.js";
 import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -20,7 +21,6 @@ import TimeIntervalCollection from "../Core/TimeIntervalCollection.js";
 import HeightReference from "../Scene/HeightReference.js";
 import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import VerticalOrigin from "../Scene/VerticalOrigin.js";
-import when from "../ThirdParty/when.js";
 import zip from "../ThirdParty/zip.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";
@@ -58,9 +58,9 @@ ExternalFileHandler.prototype.texture = function (texture) {
 
     // If its a data URI try and get the correct extension and then fetch the blob
     const regexResult = texture.url.match(imageTypeRegex);
-    filename = "texture_" + ++this._count;
+    filename = `texture_${++this._count}`;
     if (defined(regexResult)) {
-      filename += "." + regexResult[1];
+      filename += `.${regexResult[1]}`;
     }
 
     const promise = texture.fetchBlob().then(function (blob) {
@@ -73,10 +73,10 @@ ExternalFileHandler.prototype.texture = function (texture) {
   }
 
   if (texture instanceof HTMLCanvasElement) {
-    const deferred = when.defer();
+    const deferred = defer();
     this._promises.push(deferred.promise);
 
-    filename = "texture_" + ++this._count + ".png";
+    filename = `texture_${++this._count}.png`;
     texture.toBlob(function (blob) {
       that._files[filename] = blob;
       deferred.resolve();
@@ -108,7 +108,7 @@ ExternalFileHandler.prototype.model = function (model, time) {
   // Iterate through external files and add them to our list once the promise resolves
   for (const filename in externalFiles) {
     if (externalFiles.hasOwnProperty(filename)) {
-      const promise = when(externalFiles[filename]);
+      const promise = Promise.resolve(externalFiles[filename]);
       this._promises.push(promise);
 
       promise.then(getModelBlobHander(this, filename));
@@ -121,7 +121,7 @@ ExternalFileHandler.prototype.model = function (model, time) {
 Object.defineProperties(ExternalFileHandler.prototype, {
   promise: {
     get: function () {
-      return when.all(this._promises);
+      return Promise.all(this._promises);
     },
   },
   files: {
@@ -180,11 +180,11 @@ StyleCache.prototype.get = function (element) {
     return ids[key];
   }
 
-  let styleId = "style-" + ++this._count;
+  let styleId = `style-${++this._count}`;
   element.setAttribute("id", styleId);
 
   // Store with #
-  styleId = "#" + styleId;
+  styleId = `#${styleId}`;
   ids[key] = styleId;
   this._styles[key] = element;
 
@@ -220,7 +220,7 @@ IdManager.prototype.get = function (id) {
     return id;
   }
 
-  return id.toString() + "-" + ++ids[id];
+  return `${id.toString()}-${++ids[id]}`;
 };
 
 /**
@@ -334,17 +334,19 @@ function createKmz(kmlString, externalFiles) {
   const blobWriter = new zip.BlobWriter();
   const writer = new zip.ZipWriter(blobWriter);
   // We need to only write one file at a time so the zip doesn't get corrupted
-  return when(writer.add("doc.kml", new zip.TextReader(kmlString)))
+  return writer
+    .add("doc.kml", new zip.TextReader(kmlString))
     .then(function () {
       const keys = Object.keys(externalFiles);
       return addExternalFilesToZip(writer, keys, externalFiles, 0);
     })
     .then(function () {
-      return when(writer.close()).then(function (blob) {
-        return {
-          kmz: blob,
-        };
-      });
+      return writer.close();
+    })
+    .then(function (blob) {
+      return {
+        kmz: blob,
+      };
     });
 }
 
@@ -353,11 +355,11 @@ function addExternalFilesToZip(writer, keys, externalFiles, index) {
     return;
   }
   const filename = keys[index];
-  return when(
-    writer.add(filename, new zip.BlobReader(externalFiles[filename]))
-  ).then(function () {
-    return addExternalFilesToZip(writer, keys, externalFiles, index + 1);
-  });
+  return writer
+    .add(filename, new zip.BlobReader(externalFiles[filename]))
+    .then(function () {
+      return addExternalFilesToZip(writer, keys, externalFiles, index + 1);
+    });
 }
 
 exportKml._createState = function (options) {
@@ -1030,11 +1032,9 @@ function getRectangleBoundaries(state, rectangleGraphics, extrudedHeight) {
   for (let i = 0; i < 4; ++i) {
     cornerFunction[i](rectangle, scratchCartographic);
     coordinateStrings.push(
-      CesiumMath.toDegrees(scratchCartographic.longitude) +
-        "," +
-        CesiumMath.toDegrees(scratchCartographic.latitude) +
-        "," +
-        height
+      `${CesiumMath.toDegrees(
+        scratchCartographic.longitude
+      )},${CesiumMath.toDegrees(scratchCartographic.latitude)},${height}`
     );
   }
 
@@ -1061,11 +1061,11 @@ function getLinearRing(state, positions, height, perPositionHeight) {
   for (let i = 0; i < positionCount; ++i) {
     Cartographic.fromCartesian(positions[i], ellipsoid, scratchCartographic);
     coordinateStrings.push(
-      CesiumMath.toDegrees(scratchCartographic.longitude) +
-        "," +
-        CesiumMath.toDegrees(scratchCartographic.latitude) +
-        "," +
-        (perPositionHeight ? scratchCartographic.height : height)
+      `${CesiumMath.toDegrees(
+        scratchCartographic.longitude
+      )},${CesiumMath.toDegrees(scratchCartographic.latitude)},${
+        perPositionHeight ? scratchCartographic.height : height
+      }`
     );
   }
 
@@ -1455,11 +1455,11 @@ function getCoordinates(coordinates, ellipsoid) {
   for (let i = 0; i < count; ++i) {
     Cartographic.fromCartesian(coordinates[i], ellipsoid, scratchCartographic);
     coordinateStrings.push(
-      CesiumMath.toDegrees(scratchCartographic.longitude) +
-        "," +
-        CesiumMath.toDegrees(scratchCartographic.latitude) +
-        "," +
+      `${CesiumMath.toDegrees(
+        scratchCartographic.longitude
+      )},${CesiumMath.toDegrees(scratchCartographic.latitude)},${
         scratchCartographic.height
+      }`
     );
   }
 
@@ -1499,7 +1499,7 @@ function colorToString(color) {
   const bytes = color.toBytes();
   for (let i = 3; i >= 0; --i) {
     result +=
-      bytes[i] < 16 ? "0" + bytes[i].toString(16) : bytes[i].toString(16);
+      bytes[i] < 16 ? `0${bytes[i].toString(16)}` : bytes[i].toString(16);
   }
 
   return result;

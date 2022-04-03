@@ -77,7 +77,7 @@ ModelMaterial.prototype.setValue = function (name, value) {
   }
   //>>includeEnd('debug');
 
-  const uniformName = "u_" + name;
+  const uniformName = `u_${name}`;
   const v = this._uniformMap.values[uniformName];
 
   //>>includeStart('debug', pragmas.debug);
@@ -106,7 +106,7 @@ ModelMaterial.prototype.getValue = function (name) {
   }
   //>>includeEnd('debug');
 
-  const uniformName = "u_" + name;
+  const uniformName = `u_${name}`;
   const v = this._uniformMap.values[uniformName];
 
   if (!defined(v)) {

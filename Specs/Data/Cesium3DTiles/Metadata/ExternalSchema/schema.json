@@ -4,11 +4,11 @@
       "properties": {
         "author": {
           "description": "The person or entity that made the tileset",
-          "componentType": "STRING"
+          "type": "STRING"
         },
         "date": {
           "description": "Date of tileset creation in YYYY-MM-DD format",
-          "componentType": "STRING"
+          "type": "STRING"
         },
         "centerCartographic": {
           "description": "Center of the tileset as (longitude, latitude, height) where longitude and latitude are in radians, and height is in meters.",
@@ -17,6 +17,7 @@
         },
         "tileCount": {
           "description": "Total number of tiles in the tileset",
+          "type": "SCALAR",
           "componentType": "UINT8"
         }
       }

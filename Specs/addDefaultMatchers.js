@@ -6,7 +6,6 @@ import { DeveloperError } from "../Source/Cesium.js";
 import { FeatureDetection } from "../Source/Cesium.js";
 import { Math as CesiumMath } from "../Source/Cesium.js";
 import { PrimitiveType } from "../Source/Cesium.js";
-import { RuntimeError } from "../Source/Cesium.js";
 import { Buffer } from "../Source/Cesium.js";
 import { BufferUsage } from "../Source/Cesium.js";
 import { ClearCommand } from "../Source/Cesium.js";
@@ -20,15 +19,7 @@ function createMissingFunctionMessageFunction(
   expectedInterfacePrototype
 ) {
   return function () {
-    return (
-      "Expected function '" +
-      item +
-      "' to exist on " +
-      actualPrototype.constructor.name +
-      " because it should implement interface " +
-      expectedInterfacePrototype.constructor.name +
-      "."
-    );
+    return `Expected function '${item}' to exist on ${actualPrototype.constructor.name} because it should implement interface ${expectedInterfacePrototype.constructor.name}.`;
   };
 }
 
@@ -58,11 +49,11 @@ function makeThrowFunction(debug, Type, name) {
           let message;
           if (result) {
             message = [
-              "Expected function not to throw " + name + " , but it threw",
+              `Expected function not to throw ${name} , but it threw`,
               exception.message || exception,
             ].join(" ");
           } else {
-            message = "Expected function to throw " + name + ".";
+            message = `Expected function to throw ${name}.`;
           }
 
           return {
@@ -88,22 +79,6 @@ function makeThrowFunction(debug, Type, name) {
 
 function createDefaultMatchers(debug) {
   return {
-    toBeGreaterThanOrEqualTo: function (util, customEqualityTesters) {
-      return {
-        compare: function (actual, expected) {
-          return { pass: actual >= expected };
-        },
-      };
-    },
-
-    toBeLessThanOrEqualTo: function (util, customEqualityTesters) {
-      return {
-        compare: function (actual, expected) {
-          return { pass: actual <= expected };
-        },
-      };
-    },
-
     toBeBetween: function (util, customEqualityTesters) {
       return {
         compare: function (actual, lower, upper) {
@@ -225,38 +200,6 @@ function createDefaultMatchers(debug) {
           }
 
           return { pass: true };
-        },
-      };
-    },
-
-    toBeInstanceOf: function (util, customEqualityTesters) {
-      return {
-        compare: function (actual, expectedConstructor) {
-          const result = {};
-          if (expectedConstructor === String) {
-            result.pass =
-              typeof actual === "string" || actual instanceof String;
-          } else if (expectedConstructor === Number) {
-            result.pass =
-              typeof actual === "number" || actual instanceof Number;
-          } else if (expectedConstructor === Function) {
-            result.pass =
-              typeof actual === "function" || actual instanceof Function;
-          } else if (expectedConstructor === Object) {
-            result.pass = actual !== null && typeof actual === "object";
-          } else if (expectedConstructor === Boolean) {
-            result.pass = typeof actual === "boolean";
-          } else {
-            result.pass = actual instanceof expectedConstructor;
-          }
-          result.message =
-            "Expected " +
-            Object.prototype.toString.call(actual) +
-            " to be instance of " +
-            expectedConstructor.name +
-            ", but was instance of " +
-            (actual && actual.constructor.name);
-          return result;
         },
       };
     },
@@ -573,19 +516,9 @@ function createDefaultMatchers(debug) {
             ) {
               pass = false;
               if (epsilon === 0) {
-                message =
-                  "Expected context to render " +
-                  expected +
-                  ", but rendered: " +
-                  rgba;
+                message = `Expected context to render ${expected}, but rendered: ${rgba}`;
               } else {
-                message =
-                  "Expected context to render " +
-                  expected +
-                  " with epsilon = " +
-                  epsilon +
-                  ", but rendered: " +
-                  rgba;
+                message = `Expected context to render ${expected} with epsilon = ${epsilon}, but rendered: ${rgba}`;
               }
             }
           }
@@ -616,11 +549,7 @@ function createDefaultMatchers(debug) {
               rgba[3] === expected[3]
             ) {
               pass = false;
-              message =
-                "Expected context not to render " +
-                expected +
-                ", but rendered: " +
-                rgba;
+              message = `Expected context not to render ${expected}, but rendered: ${rgba}`;
             }
           }
 
@@ -683,15 +612,12 @@ function createDefaultMatchers(debug) {
         },
       };
     },
+
     toThrowDeveloperError: makeThrowFunction(
       debug,
       DeveloperError,
       "DeveloperError"
     ),
-
-    toThrowRuntimeError: makeThrowFunction(true, RuntimeError, "RuntimeError"),
-
-    toThrowSyntaxError: makeThrowFunction(true, SyntaxError, "SyntaxError"),
   };
 }
 
@@ -771,14 +697,11 @@ function renderEquals(
 
   let message;
   if (!pass) {
-    message =
-      "Expected " +
-      (expectEqual ? "" : "not ") +
-      "to render [" +
-      typedArrayToArray(expected) +
-      "], but actually rendered [" +
-      typedArrayToArray(actualRgba) +
-      "].";
+    message = `Expected ${
+      expectEqual ? "" : "not "
+    }to render [${typedArrayToArray(
+      expected
+    )}], but actually rendered [${typedArrayToArray(actualRgba)}].`;
   }
 
   return {
@@ -808,7 +731,7 @@ function pickPrimitiveEquals(actual, expected, x, y, width, height) {
   }
 
   if (!pass) {
-    message = "Expected to pick " + expected + ", but picked: " + result;
+    message = `Expected to pick ${expected}, but picked: ${result}`;
   }
 
   return {
@@ -838,7 +761,7 @@ function drillPickPrimitiveEquals(actual, expected, x, y, width, height) {
   }
 
   if (!pass) {
-    message = "Expected to pick " + expected + ", but picked: " + result;
+    message = `Expected to pick ${expected}, but picked: ${result}`;
   }
 
   return {
@@ -961,11 +884,7 @@ function expectContextToRender(actual, expected, expectEqual) {
       ) {
         return {
           pass: false,
-          message:
-            "After clearing the framebuffer, expected context to render [0, 0, 0, " +
-            expectedAlpha +
-            "], but rendered: " +
-            clearedRgba,
+          message: `After clearing the framebuffer, expected context to render [0, 0, 0, ${expectedAlpha}], but rendered: ${clearedRgba}`,
         };
       }
     }
@@ -983,11 +902,7 @@ function expectContextToRender(actual, expected, expectEqual) {
       ) {
         return {
           pass: false,
-          message:
-            "Expected context to render " +
-            expected +
-            ", but rendered: " +
-            rgba,
+          message: `Expected context to render ${expected}, but rendered: ${rgba}`,
         };
       }
     } else if (
@@ -998,11 +913,7 @@ function expectContextToRender(actual, expected, expectEqual) {
     ) {
       return {
         pass: false,
-        message:
-          "Expected context not to render " +
-          expected +
-          ", but rendered: " +
-          rgba,
+        message: `Expected context not to render ${expected}, but rendered: ${rgba}`,
       };
     }
   }

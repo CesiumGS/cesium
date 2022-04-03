@@ -3,6 +3,8 @@ import { Cartesian4 } from "../../Source/Cesium.js";
 import { CesiumTerrainProvider } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { Credit } from "../../Source/Cesium.js";
+import { CreditDisplay } from "../../Source/Cesium.js";
+import { defaultValue } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { EllipsoidTerrainProvider } from "../../Source/Cesium.js";
@@ -20,12 +22,12 @@ import { Globe } from "../../Source/Cesium.js";
 import { GlobeSurfaceShaderSet } from "../../Source/Cesium.js";
 import { GlobeSurfaceTileProvider } from "../../Source/Cesium.js";
 import { ImageryLayerCollection } from "../../Source/Cesium.js";
-import { ImagerySplitDirection } from "../../Source/Cesium.js";
 import { Model } from "../../Source/Cesium.js";
 import { QuadtreeTile } from "../../Source/Cesium.js";
 import { QuadtreeTileProvider } from "../../Source/Cesium.js";
 import { SceneMode } from "../../Source/Cesium.js";
 import { SingleTileImageryProvider } from "../../Source/Cesium.js";
+import { SplitDirection } from "../../Source/Cesium.js";
 import { WebMapServiceImageryProvider } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
@@ -165,9 +167,11 @@ describe(
             ) {
               expect(tile.data.imagery.length).toBeGreaterThan(0);
               for (let i = 0; i < tile.data.imagery.length; ++i) {
-                expect(tile.data.imagery[i].readyImagery.imageryLayer).toEqual(
-                  layer
+                const imagery = defaultValue(
+                  tile.data.imagery[i].readyImagery,
+                  tile.data.imagery[i].loadingImagery
                 );
+                expect(imagery.imageryLayer).toEqual(layer);
               }
             });
 
@@ -240,13 +244,15 @@ describe(
               let indexOfLastLayer1 = -1;
               let indexOfFirstLayer2 = tile.data.imagery.length;
               for (let i = 0; i < tile.data.imagery.length; ++i) {
-                if (tile.data.imagery[i].readyImagery.imageryLayer === layer1) {
+                const imagery = defaultValue(
+                  tile.data.imagery[i].readyImagery,
+                  tile.data.imagery[i].loadingImagery
+                );
+                if (imagery.imageryLayer === layer1) {
                   indexOfFirstLayer1 = Math.min(indexOfFirstLayer1, i);
                   indexOfLastLayer1 = i;
                 } else {
-                  expect(
-                    tile.data.imagery[i].readyImagery.imageryLayer
-                  ).toEqual(layer2);
+                  expect(imagery.imageryLayer).toEqual(layer2);
                   indexOfFirstLayer2 = Math.min(indexOfFirstLayer2, i);
                 }
               }
@@ -447,7 +453,7 @@ describe(
       );
 
       return updateUntilDone(scene.globe).then(function () {
-        expect(scene).notToRender([0, 0, 128, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
       });
     });
 
@@ -513,6 +519,42 @@ describe(
           scene.fog.screenSpaceErrorFactor = 0.0;
 
           expect(scene).toRender([0, 0, 0, 255]);
+
+          scene.fog = oldFog;
+        });
+      });
+
+      it("culls tiles but does not render fog visuals when renderable is false", function () {
+        expect(scene).toRender([0, 0, 0, 255]);
+        scene.imageryLayers.addImageryProvider(
+          new SingleTileImageryProvider({
+            url: "Data/Images/Red16x16.png",
+          })
+        );
+        const oldFog = scene.fog;
+        scene.fog = new Fog();
+        switchViewMode(
+          SceneMode.SCENE3D,
+          new GeographicProjection(Ellipsoid.WGS84)
+        );
+        scene.camera.lookUp(1.2); // Horizon-view
+
+        return updateUntilDone(scene.globe).then(function () {
+          expect(scene).notToRender([0, 0, 0, 255]);
+
+          scene.fog.enabled = true;
+          scene.fog.density = 0.001;
+          scene.fog.screenSpaceErrorFactor = 0.0;
+
+          let result;
+          expect(scene).toRenderAndCall(function (rgba) {
+            result = rgba;
+            expect(rgba).not.toEqual([0, 0, 0, 255]);
+          });
+
+          scene.fog.renderable = false;
+          expect(scene).notToRender(result);
+          expect(scene).notToRender([0, 0, 0, 255]);
 
           scene.fog = oldFog;
         });
@@ -629,7 +671,7 @@ describe(
       layer.gamma = 0.321;
       layer.saturation = 0.123;
       layer.hue = 0.456;
-      layer.splitDirection = ImagerySplitDirection.LEFT;
+      layer.splitDirection = SplitDirection.LEFT;
 
       switchViewMode(
         SceneMode.SCENE3D,
@@ -660,9 +702,7 @@ describe(
           expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0 / 0.321]);
           expect(uniforms.u_dayTextureSaturation()).toEqual([0.123]);
           expect(uniforms.u_dayTextureHue()).toEqual([0.456]);
-          expect(uniforms.u_dayTextureSplit()).toEqual([
-            ImagerySplitDirection.LEFT,
-          ]);
+          expect(uniforms.u_dayTextureSplit()).toEqual([SplitDirection.LEFT]);
         }
 
         expect(tileCommandCount).toBeGreaterThan(0);
@@ -820,7 +860,7 @@ describe(
 
           if (command.owner instanceof QuadtreeTile) {
             const tile = command.owner;
-            const key = "L" + tile.level + "X" + tile.x + "Y" + tile.y;
+            const key = `L${tile.level}X${tile.x}Y${tile.y}`;
             if (!defined(drawCommandsPerTile[key])) {
               drawCommandsPerTile[key] = 0;
 
@@ -844,15 +884,16 @@ describe(
         for (const tileID in drawCommandsPerTile) {
           if (drawCommandsPerTile.hasOwnProperty(tileID)) {
             ++tileCount;
-            expect(drawCommandsPerTile[tileID]).toBeGreaterThanOrEqualTo(2);
+            expect(drawCommandsPerTile[tileID]).toBeGreaterThanOrEqual(2);
           }
         }
 
-        expect(tileCount).toBeGreaterThanOrEqualTo(1);
+        expect(tileCount).toBeGreaterThanOrEqual(1);
       });
     });
 
     it("adds terrain and imagery credits to the CreditDisplay", function () {
+      const CreditDisplayElement = CreditDisplay.CreditDisplayElement;
       const imageryCredit = new Credit("imagery credit");
       scene.imageryLayers.addImageryProvider(
         new SingleTileImageryProvider({
@@ -872,10 +913,10 @@ describe(
         creditDisplay.showLightbox();
         expect(
           creditDisplay._currentFrameCredits.lightboxCredits.values
-        ).toContain(imageryCredit);
+        ).toContain(new CreditDisplayElement(imageryCredit));
         expect(
           creditDisplay._currentFrameCredits.lightboxCredits.values
-        ).toContain(terrainCredit);
+        ).toContain(new CreditDisplayElement(terrainCredit));
         creditDisplay.hideLightbox();
       });
     });

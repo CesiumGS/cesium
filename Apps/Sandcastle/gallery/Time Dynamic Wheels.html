@@ -111,7 +111,7 @@
           const metersPerSecond = Cesium.Cartesian3.magnitude(velocityVector);
           const kmPerHour = Math.round(metersPerSecond * 3.6);
 
-          return kmPerHour + " km/hr";
+          return `${kmPerHour} km/hr`;
         }
 
         const rotationProperty = new Cesium.CallbackProperty(function (

@@ -61,7 +61,7 @@ import ShadowMapShader from "./ShadowMapShader.js";
  * @param {Camera} options.lightCamera A camera representing the light source.
  * @param {Boolean} [options.enabled=true] Whether the shadow map is enabled.
  * @param {Boolean} [options.isPointLight=false] Whether the light source is a point light. Point light shadows do not use cascades.
- * @param {Boolean} [options.pointLightRadius=100.0] Radius of the point light.
+ * @param {Number} [options.pointLightRadius=100.0] Radius of the point light.
  * @param {Boolean} [options.cascadesEnabled=true] Use multiple shadow maps to cover different partitions of the view frustum.
  * @param {Number} [options.numberOfCascades=4] The number of cascades to use for the shadow map. Supported values are one and four.
  * @param {Number} [options.maximumDistance=5000.0] The maximum distance used for generating cascaded shadows. Lower values improve shadow quality.
@@ -815,15 +815,16 @@ function createDebugShadowViewCommand(shadowMap, context) {
       "} \n";
   } else {
     fs =
-      "uniform sampler2D shadowMap_texture; \n" +
-      "varying vec2 v_textureCoordinates; \n" +
-      "void main() \n" +
-      "{ \n" +
-      (shadowMap._usesDepthTexture
-        ? "    float shadow = texture2D(shadowMap_texture, v_textureCoordinates).r; \n"
-        : "    float shadow = czm_unpackDepth(texture2D(shadowMap_texture, v_textureCoordinates)); \n") +
-      "    gl_FragColor = vec4(vec3(shadow), 1.0); \n" +
-      "} \n";
+      `${
+        "uniform sampler2D shadowMap_texture; \n" +
+        "varying vec2 v_textureCoordinates; \n" +
+        "void main() \n" +
+        "{ \n"
+      }${
+        shadowMap._usesDepthTexture
+          ? "    float shadow = texture2D(shadowMap_texture, v_textureCoordinates).r; \n"
+          : "    float shadow = czm_unpackDepth(texture2D(shadowMap_texture, v_textureCoordinates)); \n"
+      }    gl_FragColor = vec4(vec3(shadow), 1.0); \n` + `} \n`;
   }
 
   const drawCommand = context.createViewportQuadCommand(fs, {

@@ -1,12 +1,12 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import Matrix4 from "../Core/Matrix4.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import when from "../ThirdParty/when.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Vector3DTileGeometry from "./Vector3DTileGeometry.js";
 
@@ -33,7 +33,9 @@ function Geometry3DTileContent(
   this._geometries = undefined;
 
   this._contentReadyPromise = undefined;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
+
+  this._metadata = undefined;
 
   this._batchTable = undefined;
   this._features = undefined;
@@ -42,7 +44,7 @@ function Geometry3DTileContent(
    * Part of the {@link Cesium3DTileContent} interface.
    */
   this.featurePropertiesDirty = false;
-  this._groupMetadata = undefined;
+  this._group = undefined;
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -120,18 +122,27 @@ Object.defineProperties(Geometry3DTileContent.prototype, {
     },
   },
 
+  metadata: {
+    get: function () {
+      return this._metadata;
+    },
+    set: function (value) {
+      this._metadata = value;
+    },
+  },
+
   batchTable: {
     get: function () {
       return this._batchTable;
     },
   },
 
-  groupMetadata: {
+  group: {
     get: function () {
-      return this._groupMetadata;
+      return this._group;
     },
     set: function (value) {
-      this._groupMetadata = value;
+      this._group = value;
     },
   },
 });
@@ -272,9 +283,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   const version = view.getUint32(byteOffset, true);
   if (version !== 1) {
     throw new RuntimeError(
-      "Only Geometry tile version 1 is supported.  Version " +
-        version +
-        " is not."
+      `Only Geometry tile version 1 is supported.  Version ${version} is not.`
     );
   }
   byteOffset += sizeOfUint32;
@@ -466,9 +475,9 @@ Geometry3DTileContent.prototype.getFeature = function (batchId) {
   const featuresLength = this.featuresLength;
   if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
     throw new DeveloperError(
-      "batchId is required and between zero and featuresLength - 1 (" +
-        (featuresLength - 1) +
-        ")."
+      `batchId is required and between zero and featuresLength - 1 (${
+        featuresLength - 1
+      }).`
     );
   }
   //>>includeEnd('debug');

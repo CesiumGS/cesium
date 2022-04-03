@@ -1,9 +1,9 @@
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import MetadataEntity from "./MetadataEntity.js";
 import MetadataTableProperty from "./MetadataTableProperty.js";
-import MetadataType from "./MetadataType.js";
 
 /**
  * A table containing binary metadata for a collection of entities. This is
@@ -16,7 +16,7 @@ import MetadataType from "./MetadataType.js";
  * @param {Object} options Object with the following properties:
  * @param {Number} options.count The number of entities in the table.
  * @param {Object} [options.properties] A dictionary containing properties.
- * @param {MetadataClass} [options.class] The class that properties conform to.
+ * @param {MetadataClass} options.class The class that properties conform to.
  * @param {Object.<String, Uint8Array>} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects.
  *
  * @alias MetadataTable
@@ -28,9 +28,11 @@ import MetadataType from "./MetadataType.js";
 function MetadataTable(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const count = options.count;
+  const metadataClass = options.class;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThan("options.count", count, 0);
+  Check.typeOf.object("options.class", metadataClass);
   //>>includeEnd('debug');
 
   const properties = {};
@@ -40,7 +42,7 @@ function MetadataTable(options) {
         properties[propertyId] = new MetadataTableProperty({
           count: count,
           property: options.properties[propertyId],
-          classProperty: options.class.properties[propertyId],
+          classProperty: metadataClass.properties[propertyId],
           bufferViews: options.bufferViews,
         });
       }
@@ -48,7 +50,7 @@ function MetadataTable(options) {
   }
 
   this._count = count;
-  this._class = options.class;
+  this._class = metadataClass;
   this._properties = properties;
 }
 
@@ -220,12 +222,16 @@ MetadataTable.prototype.getPropertyBySemantic = function (index, semantic) {
   Check.typeOf.string("semantic", semantic);
   //>>includeEnd('debug');
 
-  if (defined(this._class)) {
-    const property = this._class.propertiesBySemantic[semantic];
-    if (defined(property)) {
-      return this.getProperty(index, property.id);
-    }
+  let property;
+  const propertiesBySemantic = this._class.propertiesBySemantic;
+  if (defined(propertiesBySemantic)) {
+    property = propertiesBySemantic[semantic];
   }
+
+  if (defined(property)) {
+    return this.getProperty(index, property.id);
+  }
+
   return undefined;
 };
 
@@ -252,11 +258,14 @@ MetadataTable.prototype.setPropertyBySemantic = function (
   Check.typeOf.string("semantic", semantic);
   //>>includeEnd('debug');
 
-  if (defined(this._class)) {
-    const property = this._class.propertiesBySemantic[semantic];
-    if (defined(property)) {
-      return this.setProperty(index, property.id, value);
-    }
+  let property;
+  const propertiesBySemantic = this._class.propertiesBySemantic;
+  if (defined(propertiesBySemantic)) {
+    property = propertiesBySemantic[semantic];
+  }
+
+  if (defined(property)) {
+    return this.setProperty(index, property.id, value);
   }
 
   return false;
@@ -297,27 +306,33 @@ MetadataTable.prototype.getPropertyTypedArrayBySemantic = function (semantic) {
   Check.typeOf.string("semantic", semantic);
   //>>includeEnd('debug');
 
-  if (defined(this._class)) {
-    const property = this._class.propertiesBySemantic[semantic];
-    if (defined(property)) {
-      return this.getPropertyTypedArray(property.id);
-    }
+  let property;
+  const propertiesBySemantic = this._class.propertiesBySemantic;
+  if (defined(propertiesBySemantic)) {
+    property = propertiesBySemantic[semantic];
+  }
+
+  if (defined(property)) {
+    return this.getPropertyTypedArray(property.id);
   }
 
   return undefined;
 };
 
 function getDefault(classDefinition, propertyId) {
-  if (defined(classDefinition)) {
-    const classProperty = classDefinition.properties[propertyId];
-    if (defined(classProperty) && defined(classProperty.default)) {
-      let value = classProperty.default;
-      if (classProperty.type === MetadataType.ARRAY) {
-        value = value.slice(); // clone
-      }
-      value = classProperty.normalize(value);
-      return classProperty.unpackVectorAndMatrixTypes(value);
+  const classProperties = classDefinition.properties;
+  if (!defined(classProperties)) {
+    return undefined;
+  }
+
+  const classProperty = classProperties[propertyId];
+  if (defined(classProperty) && defined(classProperty.default)) {
+    let value = classProperty.default;
+    if (classProperty.isArray) {
+      value = clone(value, true);
     }
+    value = classProperty.normalize(value);
+    return classProperty.unpackVectorAndMatrixTypes(value);
   }
 }
 

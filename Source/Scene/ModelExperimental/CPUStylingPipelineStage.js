@@ -62,15 +62,15 @@ CPUStylingPipelineStage.process = function (
     };
   }
 
-  const originalCommandTranslucency =
-    renderResources.alphaOptions.pass === Pass.TRANSLUCENT;
   shaderBuilder.addUniform(
     "bool",
     "model_commandTranslucent",
     ShaderDestination.BOTH
   );
   renderResources.uniformMap.model_commandTranslucent = function () {
-    return originalCommandTranslucency;
+    // always check the current value, because custom shaders may
+    // change the value with the isTranslucent flag
+    return renderResources.alphaOptions.pass === Pass.TRANSLUCENT;
   };
 
   const featureTable = model.featureTables[model.featureTableId];

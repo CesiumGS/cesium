@@ -36,7 +36,6 @@
         "use strict";
         //Sandcastle_Begin
         // San Francisco Ferry Building photogrammetry model provided by Aerometrex
-        Cesium.ExperimentalFeatures.enableModelExperimental = true;
 
         const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
@@ -101,94 +100,94 @@
         const translucentWindowsShader = new Cesium.CustomShader({
           lightingModel: Cesium.LightingModel.UNLIT,
           isTranslucent: true,
-          fragmentShaderText: [
-            "const float WINDOW = 0.0;",
-            "const float SKYLIGHT = 4.0;",
-            "const float TOTAL_FEATURES = 12.0;",
-            "",
-            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {",
-            "  float featureId = fsInput.featureIds.featureId_0;",
-            "",
-            "  if (featureId == WINDOW || featureId == SKYLIGHT) {",
-            "    material.alpha = 0.4;",
-            "    material.roughness = 0.1;",
-            "  }",
-            "}",
-          ].join("\n"),
+          fragmentShaderText: `
+            const int WINDOW = 0;
+            const int SKYLIGHT = 4;
+            const int TOTAL_FEATURES = 12;
+            
+            void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
+              int featureId = fsInput.featureIds.featureId_0;
+            
+              if (featureId == WINDOW || featureId == SKYLIGHT) {
+                material.alpha = 0.4;
+                material.roughness = 0.1;
+              }
+            }
+            `,
         });
 
         const materialShader = new Cesium.CustomShader({
           lightingModel: Cesium.LightingModel.PBR,
           isTranslucent: true,
-          fragmentShaderText: [
-            "const float WINDOW = 0.0;",
-            "const float FRAME = 1.0;",
-            "const float WALL = 2.0;",
-            "const float ROOF = 3.0;",
-            "const float SKYLIGHT = 4.0;",
-            "const float AIR_CONDITIONER_WHITE = 5.0;",
-            "const float AIR_CONDITIONER_BLACK = 6.0;",
-            "const float AIR_CONDITIONER_TALL = 7.0;",
-            "const float CLOCK = 8.0;",
-            "const float PILLARS = 9.0;",
-            "const float STREET_LIGHT = 10.0;",
-            "const float TRAFFIC_LIGHT = 11.0;",
-            "",
-            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {",
-            "  float featureId = fsInput.featureIds.featureId_0;",
-            "",
-            "  if (featureId == CLOCK) {",
-            "    // Shiny brass",
-            "    material.specular = vec3(0.98, 0.90, 0.59);",
-            "    material.roughness = 0.3;",
-            "  } else if (",
-            "    featureId == STREET_LIGHT ||",
-            "    featureId == AIR_CONDITIONER_BLACK ||",
-            "    featureId == AIR_CONDITIONER_WHITE ||",
-            "    featureId == AIR_CONDITIONER_TALL ||",
-            "    featureId == ROOF",
-            "  ) {",
-            "    // dull aluminum",
-            "    material.specular = vec3(0.91, 0.92, 0.92);",
-            "    material.roughness = 0.5;",
-            "  } else if (featureId == WINDOW || featureId == SKYLIGHT) {",
-            "    // make translucent, but also set an orange emissive color so it looks like",
-            "    // it's lit from inside",
-            "    material.emissive = vec3(1.0, 0.3, 0.0);",
-            "    material.alpha = 0.5;",
-            "  } else if (featureId == WALL || featureId == FRAME || featureId == PILLARS) {",
-            "    // paint the walls and pillars white to contrast the brass clock",
-            "    material.diffuse = mix(material.diffuse, vec3(1.0), 0.8);",
-            "    material.roughness = 0.9;",
-            "  } else {",
-            "    // brighten everything else",
-            "    material.diffuse += 0.05;",
-            "    material.roughness = 0.9;",
-            "  }",
-            "}",
-          ].join("\n"),
+          fragmentShaderText: `
+            const int WINDOW = 0;
+            const int FRAME = 1;
+            const int WALL = 2;
+            const int ROOF = 3;
+            const int SKYLIGHT = 4;
+            const int AIR_CONDITIONER_WHITE = 5;
+            const int AIR_CONDITIONER_BLACK = 6;
+            const int AIR_CONDITIONER_TALL = 7;
+            const int CLOCK = 8;
+            const int PILLARS = 9;
+            const int STREET_LIGHT = 10;
+            const int TRAFFIC_LIGHT = 11;
+            
+            void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
+              int featureId = fsInput.featureIds.featureId_0;
+            
+              if (featureId == CLOCK) {
+                // Shiny brass
+                material.specular = vec3(0.98, 0.90, 0.59);
+                material.roughness = 0.1;
+              } else if (
+                featureId == STREET_LIGHT ||
+                featureId == AIR_CONDITIONER_BLACK ||
+                featureId == AIR_CONDITIONER_WHITE ||
+                featureId == AIR_CONDITIONER_TALL ||
+                featureId == ROOF
+              ) {
+                // dull aluminum
+                material.specular = vec3(0.91, 0.92, 0.92);
+                material.roughness = 0.5;
+              } else if (featureId == WINDOW || featureId == SKYLIGHT) {
+                // make translucent, but also set an orange emissive color so it looks like
+                // it's lit from inside
+                material.emissive = vec3(1.0, 0.3, 0.0);
+                material.alpha = 0.5;
+              } else if (featureId == WALL || featureId == FRAME || featureId == PILLARS) {
+                // paint the walls and pillars white to contrast the brass clock
+                material.diffuse = mix(material.diffuse, vec3(1.0), 0.8);
+                material.roughness = 0.9;
+              } else {
+                // brighten everything else
+                material.diffuse += 0.05;
+                material.roughness = 0.9;
+              }
+            }
+            `,
         });
 
         const NOTHING_SELECTED = 12;
         const selectFeatureShader = new Cesium.CustomShader({
           uniforms: {
             u_selectedFeature: {
-              type: Cesium.UniformType.FLOAT,
+              type: Cesium.UniformType.INT,
               value: NOTHING_SELECTED,
             },
           },
           lightingModel: Cesium.LightingModel.PBR,
-          fragmentShaderText: [
-            "const float NOTHING_SELECTED = 12.0;",
-            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {",
-            "  float featureId = fsInput.featureIds.featureId_0;",
-            "",
-            "  if (u_selectedFeature < NOTHING_SELECTED && featureId == u_selectedFeature) {",
-            "    material.specular = vec3(1.00, 0.85, 0.57);",
-            "    material.roughness = 0.3;",
-            "  }",
-            "}",
-          ].join("\n"),
+          fragmentShaderText: `
+            const int NOTHING_SELECTED = 12;
+            void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
+              int featureId = fsInput.featureIds.featureId_0;
+            
+              if (u_selectedFeature < NOTHING_SELECTED && featureId == u_selectedFeature) {
+                material.specular = vec3(1.00, 0.85, 0.57);
+                material.roughness = 0.1;
+              }
+            }
+            `,
         });
 
         const multipleFeatureIdsShader = new Cesium.CustomShader({
@@ -199,30 +198,30 @@
             },
           },
           lightingModel: Cesium.LightingModel.UNLIT,
-          fragmentShaderText: [
-            "const float IDS0_WINDOW = 0.0;",
-            "const float IDS1_FACADE = 2.0;",
-            "const float IDS1_ROOF = 3.0;",
-            "const vec3 PURPLE = vec3(0.5, 0.0, 1.0);",
-            "const vec3 YELLOW = vec3(1.0, 1.0, 0.0);",
-            "const vec3 NO_TINT = vec3(1.0);",
-            "",
-            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {",
-            "  float featureId0 = fsInput.featureIds.featureId_0; // fine features",
-            "  float featureId1 = fsInput.featureIds.featureId_1; // coarse features",
-            "",
-            "  // use both feature ID sets to determine where the features are",
-            "  float isWindow = float(featureId0 == IDS0_WINDOW);",
-            "  float isFacade = float(featureId1 == IDS1_FACADE);",
-            "  float isRoof = float(featureId1 == IDS1_ROOF);",
-            "",
-            "  // Tint the roof windows yellow and facade windows purple",
-            "  vec3 tint = NO_TINT;",
-            "  tint = mix(tint, YELLOW, isWindow * isRoof);",
-            "  tint = mix(tint, PURPLE, isWindow * isFacade);",
-            "  material.diffuse *= tint;",
-            "}",
-          ].join("\n"),
+          fragmentShaderText: `
+            const int IDS0_WINDOW = 0;
+            const int IDS1_FACADE = 2;
+            const int IDS1_ROOF = 3;
+            const vec3 PURPLE = vec3(0.5, 0.0, 1.0);
+            const vec3 YELLOW = vec3(1.0, 1.0, 0.0);
+            const vec3 NO_TINT = vec3(1.0);
+            
+            void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
+              int featureId0 = fsInput.featureIds.featureId_0; // fine features
+              int featureId1 = fsInput.featureIds.featureId_1; // coarse features
+            
+              // use both feature ID sets to determine where the features are
+              float isWindow = float(featureId0 == IDS0_WINDOW);
+              float isFacade = float(featureId1 == IDS1_FACADE);
+              float isRoof = float(featureId1 == IDS1_ROOF);
+            
+              // Tint the roof windows yellow and facade windows purple
+              vec3 tint = NO_TINT;
+              tint = mix(tint, YELLOW, isWindow * isRoof);
+              tint = mix(tint, PURPLE, isWindow * isFacade);
+              material.diffuse *= tint;
+            }
+            `,
         });
 
         // Demo Functions =====================================================================
@@ -232,7 +231,7 @@
           tileset.customShader = unlitShader;
           tileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT;
           tileset.colorBlendAmount = 0.5;
-          tileset.featureIdIndex = 0;
+          tileset.featureIdLabel = 0;
         }
 
         const showPhotogrammetry = defaults;
@@ -246,7 +245,7 @@
         function showAlternativeClassification() {
           showClassification();
           // This dataset has a second feature ID texture.
-          tileset.featureIdIndex = 1;
+          tileset.featureIdLabel = 1;
         }
 
         function translucentWindows() {
@@ -292,14 +291,12 @@
             const pickedObject = viewer.scene.pick(movement.endPosition);
             if (pickedObject instanceof Cesium.Cesium3DTileFeature) {
               nameOverlay.style.display = "block";
-              nameOverlay.style.bottom =
-                viewer.canvas.clientHeight - movement.endPosition.y + "px";
-              nameOverlay.style.left = movement.endPosition.x + "px";
-              const message =
-                "Component: " +
-                pickedObject.getProperty("component") +
-                "\nFeature ID: " +
-                pickedObject.featureId;
+              nameOverlay.style.bottom = `${
+                viewer.canvas.clientHeight - movement.endPosition.y
+              }px`;
+              nameOverlay.style.left = `${movement.endPosition.x}px`;
+              const component = pickedObject.getProperty("component");
+              const message = `Component: ${component}\nFeature ID: ${pickedObject.featureId}`;
               nameOverlay.textContent = message;
             } else {
               nameOverlay.style.display = "none";

@@ -1,4 +1,5 @@
 import { Cartesian3 } from "../../Source/Cesium.js";
+import { defer } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { Event } from "../../Source/Cesium.js";
 import { GeographicTilingScheme } from "../../Source/Cesium.js";
@@ -14,7 +15,6 @@ import { ImageryLayerFeatureInfo } from "../../Source/Cesium.js";
 import { ImageryProvider } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
-import { when } from "../../Source/Cesium.js";
 
 describe(
   "Scene/ImageryLayerCollection",
@@ -574,7 +574,7 @@ describe(
           hasAlphaChannel: true,
 
           pickFeatures: function (x, y, level, longitude, latitude) {
-            const deferred = when.defer();
+            const deferred = defer();
             setTimeout(function () {
               const featureInfo = new ImageryLayerFeatureInfo();
               featureInfo.name = "Foo";
@@ -629,7 +629,7 @@ describe(
           hasAlphaChannel: true,
 
           pickFeatures: function (x, y, level, longitude, latitude) {
-            const deferred = when.defer();
+            const deferred = defer();
             setTimeout(function () {
               const featureInfo = new ImageryLayerFeatureInfo();
               featureInfo.name = "Foo";
@@ -658,7 +658,7 @@ describe(
           hasAlphaChannel: true,
 
           pickFeatures: function (x, y, level, longitude, latitude) {
-            const deferred = when.defer();
+            const deferred = defer();
             setTimeout(function () {
               const featureInfo = new ImageryLayerFeatureInfo();
               featureInfo.name = "Bar";
@@ -721,10 +721,10 @@ describe(
           hasAlphaChannel: true,
 
           pickFeatures: function (x, y, level, longitude, latitude) {
-            const deferred = when.defer();
+            const deferred = defer();
             setTimeout(function () {
               const featureInfo = new ImageryLayerFeatureInfo();
-              featureInfo.name = "L" + level + "X" + x + "Y" + y;
+              featureInfo.name = `L${level}X${x}Y${y}`;
               deferred.resolve([featureInfo]);
             }, 1);
             return deferred.promise;
@@ -735,7 +735,7 @@ describe(
             if (level !== 1 || (x === 0 && y === 0)) {
               return ImageryProvider.loadImage(this, "Data/Images/Blue.png");
             }
-            return when.reject();
+            return Promise.reject();
           },
         };
 

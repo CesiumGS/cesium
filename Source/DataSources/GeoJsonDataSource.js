@@ -15,7 +15,6 @@ import RuntimeError from "../Core/RuntimeError.js";
 import HeightReference from "../Scene/HeightReference.js";
 import VerticalOrigin from "../Scene/VerticalOrigin.js";
 import topojson from "../ThirdParty/topojson.js";
-import when from "../ThirdParty/when.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CallbackProperty from "./CallbackProperty.js";
 import ColorMaterialProperty from "./ColorMaterialProperty.js";
@@ -76,24 +75,16 @@ function defaultDescribe(properties, nameProperty) {
       const value = properties[key];
       if (defined(value)) {
         if (typeof value === "object") {
-          html +=
-            "<tr><th>" +
-            key +
-            "</th><td>" +
-            defaultDescribe(value) +
-            "</td></tr>";
+          html += `<tr><th>${key}</th><td>${defaultDescribe(value)}</td></tr>`;
         } else {
-          html += "<tr><th>" + key + "</th><td>" + value + "</td></tr>";
+          html += `<tr><th>${key}</th><td>${value}</td></tr>`;
         }
       }
     }
   }
 
   if (html.length > 0) {
-    html =
-      '<table class="cesium-infoBox-defaultTable"><tbody>' +
-      html +
-      "</tbody></table>";
+    html = `<table class="cesium-infoBox-defaultTable"><tbody>${html}</tbody></table>`;
   }
 
   return html;
@@ -127,7 +118,7 @@ function createObject(geoJson, entityCollection, describe) {
     let i = 2;
     let finalId = id;
     while (defined(entityCollection.getById(finalId))) {
-      finalId = id + "_" + i;
+      finalId = `${id}_${i}`;
       i++;
     }
     id = finalId;
@@ -235,7 +226,7 @@ function processFeature(dataSource, feature, notUsed, crsFunction, options) {
   const geometryType = feature.geometry.type;
   const geometryHandler = geometryTypes[geometryType];
   if (!defined(geometryHandler)) {
-    throw new RuntimeError("Unknown geometry type: " + geometryType);
+    throw new RuntimeError(`Unknown geometry type: ${geometryType}`);
   }
   geometryHandler(dataSource, feature, feature.geometry, crsFunction, options);
 }
@@ -266,7 +257,7 @@ function processGeometryCollection(
     const geometryType = geometry.type;
     const geometryHandler = geometryTypes[geometryType];
     if (!defined(geometryHandler)) {
-      throw new RuntimeError("Unknown geometry type: " + geometryType);
+      throw new RuntimeError(`Unknown geometry type: ${geometryType}`);
     }
     geometryHandler(dataSource, geoJson, geometry, crsFunction, options);
   }
@@ -326,11 +317,11 @@ function createPoint(dataSource, geoJson, crsFunction, coordinates, options) {
   entity.billboard = billboard;
   entity.position = new ConstantPositionProperty(crsFunction(coordinates));
 
-  const promise = when(canvasOrPromise)
+  const promise = Promise.resolve(canvasOrPromise)
     .then(function (image) {
       billboard.image = new ConstantProperty(image);
     })
-    .otherwise(function () {
+    .catch(function () {
       billboard.image = new ConstantProperty(
         dataSource._pinBuilder.fromColor(color, size)
       );
@@ -962,14 +953,16 @@ GeoJsonDataSource.prototype.load = function (data, options) {
   };
 
   const that = this;
-  return when(promise, function (geoJson) {
-    return load(that, geoJson, options, sourceUri);
-  }).otherwise(function (error) {
-    DataSource.setLoading(that, false);
-    that._error.raiseEvent(that, error);
-    console.log(error);
-    return when.reject(error);
-  });
+  return Promise.resolve(promise)
+    .then(function (geoJson) {
+      return load(that, geoJson, options, sourceUri);
+    })
+    .catch(function (error) {
+      DataSource.setLoading(that, false);
+      that._error.raiseEvent(that, error);
+      console.log(error);
+      return Promise.reject(error);
+    });
 };
 
 /**
@@ -998,7 +991,7 @@ function load(that, geoJson, options, sourceUri) {
 
   const typeHandler = geoJsonObjectTypes[geoJson.type];
   if (!defined(typeHandler)) {
-    throw new RuntimeError("Unsupported GeoJSON object type: " + geoJson.type);
+    throw new RuntimeError(`Unsupported GeoJSON object type: ${geoJson.type}`);
   }
 
   //Check for a Coordinate Reference System.
@@ -1014,7 +1007,7 @@ function load(that, geoJson, options, sourceUri) {
     if (crs.type === "name") {
       crsFunction = crsNames[properties.name];
       if (!defined(crsFunction)) {
-        throw new RuntimeError("Unknown crs name: " + properties.name);
+        throw new RuntimeError(`Unknown crs name: ${properties.name}`);
       }
     } else if (crs.type === "link") {
       let handler = crsLinkHrefs[properties.href];
@@ -1024,22 +1017,22 @@ function load(that, geoJson, options, sourceUri) {
 
       if (!defined(handler)) {
         throw new RuntimeError(
-          "Unable to resolve crs link: " + JSON.stringify(properties)
+          `Unable to resolve crs link: ${JSON.stringify(properties)}`
         );
       }
 
       crsFunction = handler(properties);
     } else if (crs.type === "EPSG") {
-      crsFunction = crsNames["EPSG:" + properties.code];
+      crsFunction = crsNames[`EPSG:${properties.code}`];
       if (!defined(crsFunction)) {
-        throw new RuntimeError("Unknown crs EPSG code: " + properties.code);
+        throw new RuntimeError(`Unknown crs EPSG code: ${properties.code}`);
       }
     } else {
-      throw new RuntimeError("Unknown crs type: " + crs.type);
+      throw new RuntimeError(`Unknown crs type: ${crs.type}`);
     }
   }
 
-  return when(crsFunction, function (crsFunction) {
+  return Promise.resolve(crsFunction).then(function (crsFunction) {
     that._entityCollection.removeAll();
 
     // null is a valid value for the crs, but means the entire load process becomes a no-op
@@ -1048,7 +1041,7 @@ function load(that, geoJson, options, sourceUri) {
       typeHandler(that, geoJson, geoJson, crsFunction, options);
     }
 
-    return when.all(that._promises, function () {
+    return Promise.all(that._promises).then(function () {
       that._promises.length = 0;
       DataSource.setLoading(that, false);
       return that;

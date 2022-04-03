@@ -2,6 +2,7 @@ import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -11,7 +12,6 @@ import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
-import when from "../ThirdParty/when.js";
 import BingMapsStyle from "./BingMapsStyle.js";
 import DiscardEmptyTilePolicy from "./DiscardEmptyTileImagePolicy.js";
 import ImageryProvider from "./ImageryProvider.js";
@@ -178,9 +178,7 @@ function BingMapsImageryProvider(options) {
 
   this._proxy = options.proxy;
   this._credit = new Credit(
-    '<a href="http://www.bing.com"><img src="' +
-      BingMapsImageryProvider.logoUrl +
-      '" title="Bing Imagery"/></a>'
+    `<a href="http://www.bing.com"><img src="${BingMapsImageryProvider.logoUrl}" title="Bing Imagery"/></a>`
   );
 
   this._tilingScheme = new WebMercatorTilingScheme({
@@ -198,7 +196,7 @@ function BingMapsImageryProvider(options) {
   this._errorEvent = new Event();
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   let tileProtocol = this._tileProtocol;
 
@@ -218,7 +216,7 @@ function BingMapsImageryProvider(options) {
   }
 
   const metadataResource = this._resource.getDerivedResource({
-    url: "REST/v1/Imagery/Metadata/" + this._mapStyle,
+    url: `REST/v1/Imagery/Metadata/${this._mapStyle}`,
     queryParameters: {
       incl: "ImageryProviders",
       key: this._key,
@@ -285,8 +283,7 @@ function BingMapsImageryProvider(options) {
   }
 
   function metadataFailure(e) {
-    const message =
-      "An error occurred while accessing " + metadataResource.url + ".";
+    const message = `An error occurred while accessing ${metadataResource.url}.`;
     metadataError = TileProviderError.handleError(
       metadataError,
       that,
@@ -304,12 +301,12 @@ function BingMapsImageryProvider(options) {
   function requestMetadata() {
     const promise = metadataResource.fetchJsonp("jsonp");
     BingMapsImageryProvider._metadataCache[cacheKey] = promise;
-    promise.then(metadataSuccess).otherwise(metadataFailure);
+    promise.then(metadataSuccess).catch(metadataFailure);
   }
 
   const promise = BingMapsImageryProvider._metadataCache[cacheKey];
   if (defined(promise)) {
-    promise.then(metadataSuccess).otherwise(metadataFailure);
+    promise.then(metadataSuccess).catch(metadataFailure);
   } else {
     requestMetadata();
   }
@@ -666,14 +663,14 @@ BingMapsImageryProvider.prototype.requestImage = function (
   );
 
   if (defined(promise)) {
-    return promise.otherwise(function (error) {
+    return promise.catch(function (error) {
       // One cause of an error here is that the image we tried to load was zero-length.
       // This isn't actually a problem, since it indicates that there is no tile.
       // So, in that case we return the EMPTY_IMAGE sentinel value for later discarding.
       if (defined(error.blob) && error.blob.size === 0) {
         return DiscardEmptyTilePolicy.EMPTY_IMAGE;
       }
-      return when.reject(error);
+      return Promise.reject(error);
     });
   }
 

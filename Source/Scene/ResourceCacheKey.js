@@ -29,7 +29,7 @@ function getBufferViewCacheKey(bufferView) {
     byteLength = meshopt.byteLength;
   }
 
-  return byteOffset + "-" + (byteOffset + byteLength);
+  return `${byteOffset}-${byteOffset + byteLength}`;
 }
 
 function getAccessorCacheKey(accessor, bufferView) {
@@ -37,7 +37,7 @@ function getAccessorCacheKey(accessor, bufferView) {
   const componentType = accessor.componentType;
   const type = accessor.type;
   const count = accessor.count;
-  return byteOffset + "-" + componentType + "-" + type + "-" + count;
+  return `${byteOffset}-${componentType}-${type}-${count}`;
 }
 
 function getExternalBufferCacheKey(resource) {
@@ -46,7 +46,7 @@ function getExternalBufferCacheKey(resource) {
 
 function getEmbeddedBufferCacheKey(parentResource, bufferId) {
   const parentCacheKey = getExternalResourceCacheKey(parentResource);
-  return parentCacheKey + "-buffer-id-" + bufferId;
+  return `${parentCacheKey}-buffer-id-${bufferId}`;
 }
 
 function getBufferCacheKey(buffer, bufferId, gltfResource, baseResource) {
@@ -75,7 +75,7 @@ function getDracoCacheKey(gltf, draco, gltfResource, baseResource) {
 
   const bufferViewCacheKey = getBufferViewCacheKey(bufferView);
 
-  return bufferCacheKey + "-range-" + bufferViewCacheKey;
+  return `${bufferCacheKey}-range-${bufferViewCacheKey}`;
 }
 
 function getImageCacheKey(gltf, imageId, gltfResource, baseResource) {
@@ -103,7 +103,7 @@ function getImageCacheKey(gltf, imageId, gltfResource, baseResource) {
 
   const bufferViewCacheKey = getBufferViewCacheKey(bufferView);
 
-  return bufferCacheKey + "-range-" + bufferViewCacheKey;
+  return `${bufferCacheKey}-range-${bufferViewCacheKey}`;
 }
 
 function getSamplerCacheKey(gltf, textureInfo) {
@@ -112,15 +112,7 @@ function getSamplerCacheKey(gltf, textureInfo) {
     textureInfo: textureInfo,
   });
 
-  return (
-    sampler.wrapS +
-    "-" +
-    sampler.wrapT +
-    "-" +
-    sampler.minificationFilter +
-    "-" +
-    sampler.magnificationFilter
-  );
+  return `${sampler.wrapS}-${sampler.wrapT}-${sampler.minificationFilter}-${sampler.magnificationFilter}`;
 }
 
 /**
@@ -148,10 +140,10 @@ ResourceCacheKey.getSchemaCacheKey = function (options) {
   //>>includeEnd('debug');
 
   if (defined(schema)) {
-    return "embedded-schema:" + JSON.stringify(schema);
+    return `embedded-schema:${JSON.stringify(schema)}`;
   }
 
-  return "external-schema:" + getExternalResourceCacheKey(resource);
+  return `external-schema:${getExternalResourceCacheKey(resource)}`;
 };
 
 /**
@@ -171,7 +163,7 @@ ResourceCacheKey.getExternalBufferCacheKey = function (options) {
   Check.typeOf.object("options.resource", resource);
   //>>includeEnd('debug');
 
-  return "external-buffer:" + getExternalBufferCacheKey(resource);
+  return `external-buffer:${getExternalBufferCacheKey(resource)}`;
 };
 
 /**
@@ -194,9 +186,10 @@ ResourceCacheKey.getEmbeddedBufferCacheKey = function (options) {
   Check.typeOf.number("options.bufferId", bufferId);
   //>>includeEnd('debug');
 
-  return (
-    "embedded-buffer:" + getEmbeddedBufferCacheKey(parentResource, bufferId)
-  );
+  return `embedded-buffer:${getEmbeddedBufferCacheKey(
+    parentResource,
+    bufferId
+  )}`;
 };
 
 /**
@@ -216,7 +209,7 @@ ResourceCacheKey.getGltfCacheKey = function (options) {
   Check.typeOf.object("options.gltfResource", gltfResource);
   //>>includeEnd('debug');
 
-  return "gltf:" + getExternalResourceCacheKey(gltfResource);
+  return `gltf:${getExternalResourceCacheKey(gltfResource)}`;
 };
 
 /**
@@ -262,7 +255,7 @@ ResourceCacheKey.getBufferViewCacheKey = function (options) {
 
   const bufferViewCacheKey = getBufferViewCacheKey(bufferView);
 
-  return "buffer-view:" + bufferCacheKey + "-range-" + bufferViewCacheKey;
+  return `buffer-view:${bufferCacheKey}-range-${bufferViewCacheKey}`;
 };
 
 /**
@@ -291,7 +284,7 @@ ResourceCacheKey.getDracoCacheKey = function (options) {
   Check.typeOf.object("options.baseResource", baseResource);
   //>>includeEnd('debug');
 
-  return "draco:" + getDracoCacheKey(gltf, draco, gltfResource, baseResource);
+  return `draco:${getDracoCacheKey(gltf, draco, gltfResource, baseResource)}`;
 };
 
 /**
@@ -366,13 +359,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
       gltfResource,
       baseResource
     );
-    return (
-      "vertex-buffer:" +
-      dracoCacheKey +
-      "-draco-" +
-      attributeSemantic +
-      cacheKeySuffix
-    );
+    return `vertex-buffer:${dracoCacheKey}-draco-${attributeSemantic}${cacheKeySuffix}`;
   }
 
   const bufferView = gltf.bufferViews[bufferViewId];
@@ -388,13 +375,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
 
   const bufferViewCacheKey = getBufferViewCacheKey(bufferView);
 
-  return (
-    "vertex-buffer:" +
-    bufferCacheKey +
-    "-range-" +
-    bufferViewCacheKey +
-    cacheKeySuffix
-  );
+  return `vertex-buffer:${bufferCacheKey}-range-${bufferViewCacheKey}${cacheKeySuffix}`;
 };
 
 /**
@@ -439,7 +420,7 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
       gltfResource,
       baseResource
     );
-    return "index-buffer:" + dracoCacheKey + "-draco" + cacheKeySuffix;
+    return `index-buffer:${dracoCacheKey}-draco${cacheKeySuffix}`;
   }
 
   const accessor = gltf.accessors[accessorId];
@@ -457,13 +438,7 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
 
   const accessorCacheKey = getAccessorCacheKey(accessor, bufferView);
 
-  return (
-    "index-buffer:" +
-    bufferCacheKey +
-    "-accessor-" +
-    accessorCacheKey +
-    cacheKeySuffix
-  );
+  return `index-buffer:${bufferCacheKey}-accessor-${accessorCacheKey}${cacheKeySuffix}`;
 };
 
 /**
@@ -499,7 +474,7 @@ ResourceCacheKey.getImageCacheKey = function (options) {
     baseResource
   );
 
-  return "image:" + imageCacheKey;
+  return `image:${imageCacheKey}`;
 };
 
 /**
@@ -551,7 +526,7 @@ ResourceCacheKey.getTextureCacheKey = function (options) {
   // removing the sampleCacheKey here.
   const samplerCacheKey = getSamplerCacheKey(gltf, textureInfo);
 
-  return "texture:" + imageCacheKey + "-sampler-" + samplerCacheKey;
+  return `texture:${imageCacheKey}-sampler-${samplerCacheKey}`;
 };
 
 export default ResourceCacheKey;

@@ -28,7 +28,7 @@ describe("Core/RuntimeError", function () {
   it("has a working toString", function () {
     const str = new RuntimeError(testMessage).toString();
 
-    expect(str).toContain(name + ": " + testMessage);
+    expect(str).toContain(`${name}: ${testMessage}`);
 
     if (window.specsUsingRelease) {
       expect(str).toContain("Specs.js");

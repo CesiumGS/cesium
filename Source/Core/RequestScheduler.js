@@ -1,7 +1,7 @@
 import Uri from "../ThirdParty/Uri.js";
-import when from "../ThirdParty/when.js";
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
+import defer from "./defer.js";
 import defined from "./defined.js";
 import Event from "./Event.js";
 import Heap from "./Heap.js";
@@ -193,7 +193,7 @@ RequestScheduler.heapHasOpenSlots = function (desiredRequests) {
 function issueRequest(request) {
   if (request.state === RequestState.UNISSUED) {
     request.state = RequestState.ISSUED;
-    request.deferred = when.defer();
+    request.deferred = defer();
   }
   return request.deferred.promise;
 }
@@ -242,7 +242,7 @@ function startRequest(request) {
   request
     .requestFunction()
     .then(getRequestReceivedFunction(request))
-    .otherwise(getRequestFailedFunction(request));
+    .catch(getRequestFailedFunction(request));
   return promise;
 }
 
@@ -359,7 +359,7 @@ RequestScheduler.getServerKey = function (url) {
   let serverKey = uri.authority();
   if (!/:/.test(serverKey)) {
     // If the authority does not contain a port number, add port 443 for https or port 80 for http
-    serverKey = serverKey + ":" + (uri.scheme() === "https" ? "443" : "80");
+    serverKey = `${serverKey}:${uri.scheme() === "https" ? "443" : "80"}`;
   }
 
   const length = numberOfActiveRequestsByServer[serverKey];
@@ -445,29 +445,28 @@ function updateStatistics() {
   ) {
     if (statistics.numberOfAttemptedRequests > 0) {
       console.log(
-        "Number of attempted requests: " + statistics.numberOfAttemptedRequests
+        `Number of attempted requests: ${statistics.numberOfAttemptedRequests}`
       );
       statistics.numberOfAttemptedRequests = 0;
     }
 
     if (statistics.numberOfCancelledRequests > 0) {
       console.log(
-        "Number of cancelled requests: " + statistics.numberOfCancelledRequests
+        `Number of cancelled requests: ${statistics.numberOfCancelledRequests}`
       );
       statistics.numberOfCancelledRequests = 0;
     }
 
     if (statistics.numberOfCancelledActiveRequests > 0) {
       console.log(
-        "Number of cancelled active requests: " +
-          statistics.numberOfCancelledActiveRequests
+        `Number of cancelled active requests: ${statistics.numberOfCancelledActiveRequests}`
       );
       statistics.numberOfCancelledActiveRequests = 0;
     }
 
     if (statistics.numberOfFailedRequests > 0) {
       console.log(
-        "Number of failed requests: " + statistics.numberOfFailedRequests
+        `Number of failed requests: ${statistics.numberOfFailedRequests}`
       );
       statistics.numberOfFailedRequests = 0;
     }

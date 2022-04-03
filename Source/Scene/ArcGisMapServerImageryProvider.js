@@ -3,6 +3,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
@@ -15,7 +16,6 @@ import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
-import when from "../ThirdParty/when.js";
 import DiscardMissingTileImagePolicy from "./DiscardMissingTileImagePolicy.js";
 import ImageryLayerFeatureInfo from "./ImageryLayerFeatureInfo.js";
 import ImageryProvider from "./ImageryProvider.js";
@@ -228,7 +228,7 @@ function ArcGisMapServerImageryProvider(options) {
   this._errorEvent = new Event();
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   // Grab the details of this MapServer.
   const that = this;
@@ -254,10 +254,7 @@ function ArcGisMapServerImageryProvider(options) {
           ellipsoid: options.ellipsoid,
         });
       } else {
-        const message =
-          "Tile spatial reference WKID " +
-          data.tileInfo.spatialReference.wkid +
-          " is not supported.";
+        const message = `Tile spatial reference WKID ${data.tileInfo.spatialReference.wkid} is not supported.`;
         metadataError = TileProviderError.handleError(
           metadataError,
           that,
@@ -268,6 +265,9 @@ function ArcGisMapServerImageryProvider(options) {
           undefined,
           requestMetadata
         );
+        if (!metadataError.retry) {
+          that._readyPromise.reject(new RuntimeError(message));
+        }
         return;
       }
       that._maximumLevel = data.tileInfo.lods.length - 1;
@@ -323,10 +323,7 @@ function ArcGisMapServerImageryProvider(options) {
               data.fullExtent.ymax
             );
           } else {
-            const extentMessage =
-              "fullExtent.spatialReference WKID " +
-              data.fullExtent.spatialReference.wkid +
-              " is not supported.";
+            const extentMessage = `fullExtent.spatialReference WKID ${data.fullExtent.spatialReference.wkid} is not supported.`;
             metadataError = TileProviderError.handleError(
               metadataError,
               that,
@@ -337,6 +334,9 @@ function ArcGisMapServerImageryProvider(options) {
               undefined,
               requestMetadata
             );
+            if (!metadataError.retry) {
+              that._readyPromise.reject(new RuntimeError(extentMessage));
+            }
             return;
           }
         }
@@ -373,8 +373,7 @@ function ArcGisMapServerImageryProvider(options) {
   }
 
   function metadataFailure(e) {
-    const message =
-      "An error occurred while accessing " + that._resource.url + ".";
+    const message = `An error occurred while accessing ${that._resource.url}.`;
     metadataError = TileProviderError.handleError(
       metadataError,
       that,
@@ -394,8 +393,14 @@ function ArcGisMapServerImageryProvider(options) {
         f: "json",
       },
     });
-    const metadata = resource.fetchJsonp();
-    when(metadata, metadataSuccess, metadataFailure);
+    resource
+      .fetchJsonp()
+      .then(function (result) {
+        metadataSuccess(result);
+      })
+      .catch(function (e) {
+        metadataFailure(e);
+      });
   }
 
   if (this._useTiles) {
@@ -410,7 +415,7 @@ function buildImageResource(imageryProvider, x, y, level, request) {
   let resource;
   if (imageryProvider._useTiles) {
     resource = imageryProvider._resource.getDerivedResource({
-      url: "tile/" + level + "/" + y + "/" + x,
+      url: `tile/${level}/${y}/${x}`,
       request: request,
     });
   } else {
@@ -419,18 +424,11 @@ function buildImageResource(imageryProvider, x, y, level, request) {
       y,
       level
     );
-    const bbox =
-      nativeRectangle.west +
-      "," +
-      nativeRectangle.south +
-      "," +
-      nativeRectangle.east +
-      "," +
-      nativeRectangle.north;
+    const bbox = `${nativeRectangle.west},${nativeRectangle.south},${nativeRectangle.east},${nativeRectangle.north}`;
 
     const query = {
       bbox: bbox,
-      size: imageryProvider._tileWidth + "," + imageryProvider._tileHeight,
+      size: `${imageryProvider._tileWidth},${imageryProvider._tileHeight}`,
       format: "png32",
       transparent: true,
       f: "image",
@@ -446,7 +444,7 @@ function buildImageResource(imageryProvider, x, y, level, request) {
       query.imageSR = 3857;
     }
     if (imageryProvider.layers) {
-      query.layers = "show:" + imageryProvider.layers;
+      query.layers = `show:${imageryProvider.layers}`;
     }
 
     resource = imageryProvider._resource.getDerivedResource({
@@ -852,23 +850,16 @@ ArcGisMapServerImageryProvider.prototype.pickFeatures = function (
 
   let layers = "visible";
   if (defined(this._layers)) {
-    layers += ":" + this._layers;
+    layers += `:${this._layers}`;
   }
 
   const query = {
     f: "json",
     tolerance: 2,
     geometryType: "esriGeometryPoint",
-    geometry: horizontal + "," + vertical,
-    mapExtent:
-      rectangle.west +
-      "," +
-      rectangle.south +
-      "," +
-      rectangle.east +
-      "," +
-      rectangle.north,
-    imageDisplay: this._tileWidth + "," + this._tileHeight + ",96",
+    geometry: `${horizontal},${vertical}`,
+    mapExtent: `${rectangle.west},${rectangle.south},${rectangle.east},${rectangle.north}`,
+    imageDisplay: `${this._tileWidth},${this._tileHeight},96`,
     sr: sr,
     layers: layers,
   };

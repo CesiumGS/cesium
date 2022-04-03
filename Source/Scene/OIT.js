@@ -20,6 +20,7 @@ import BlendFunction from "./BlendFunction.js";
  * @private
  */
 function OIT(context) {
+  this._numSamples = 1;
   // We support multipass for the Chrome D3D9 backend and ES 2.0 on mobile.
   this._translucentMultipassSupport = false;
   this._translucentMRTSupport = false;
@@ -39,10 +40,12 @@ function OIT(context) {
     colorAttachmentsLength: this._translucentMRTSupport ? 2 : 1,
     createColorAttachments: false,
     createDepthAttachments: false,
+    depth: true,
   });
   this._alphaFBO = new FramebufferManager({
     createColorAttachments: false,
     createDepthAttachments: false,
+    depth: true,
   });
 
   this._adjustTranslucentFBO = new FramebufferManager({
@@ -201,14 +204,20 @@ function updateFramebuffers(oit, context) {
   return supported;
 }
 
-OIT.prototype.update = function (context, passState, framebuffer, useHDR) {
+OIT.prototype.update = function (
+  context,
+  passState,
+  framebuffer,
+  useHDR,
+  numSamples
+) {
   if (!this.isSupported()) {
     return;
   }
 
   this._opaqueFBO = framebuffer;
   this._opaqueTexture = framebuffer.getColorTexture(0);
-  this._depthStencilTexture = framebuffer.depthStencilTexture;
+  this._depthStencilTexture = framebuffer.getDepthStencilTexture();
 
   const width = this._opaqueTexture.width;
   const height = this._opaqueTexture.height;
@@ -219,11 +228,18 @@ OIT.prototype.update = function (context, passState, framebuffer, useHDR) {
     accumulationTexture.width !== width ||
     accumulationTexture.height !== height ||
     useHDR !== this._useHDR;
-  if (textureChanged) {
+  const samplesChanged = this._numSamples !== numSamples;
+
+  if (textureChanged || samplesChanged) {
+    this._numSamples = numSamples;
     updateTextures(this, context, width, height);
   }
 
-  if (!defined(this._translucentFBO.framebuffer) || textureChanged) {
+  if (
+    !defined(this._translucentFBO.framebuffer) ||
+    textureChanged ||
+    samplesChanged
+  ) {
     if (!updateFramebuffers(this, context)) {
       // framebuffer creation failed
       return;
@@ -480,23 +496,23 @@ function getTranslucentShaderProgram(context, shaderProgram, keyword, source) {
     fs.sources.splice(
       0,
       0,
-      (source.indexOf("gl_FragData") !== -1
-        ? "#extension GL_EXT_draw_buffers : enable \n"
-        : "") +
-        "vec4 czm_gl_FragColor;\n" +
-        "bool czm_discard = false;\n"
+      `${
+        source.indexOf("gl_FragData") !== -1
+          ? "#extension GL_EXT_draw_buffers : enable \n"
+          : ""
+      }vec4 czm_gl_FragColor;\n` + `bool czm_discard = false;\n`
     );
 
     fs.sources.push(
-      "void main()\n" +
+      `${
+        "void main()\n" +
         "{\n" +
         "    czm_translucent_main();\n" +
         "    if (czm_discard)\n" +
         "    {\n" +
         "        discard;\n" +
-        "    }\n" +
-        source +
-        "}\n"
+        "    }\n"
+      }${source}}\n`
     );
 
     shader = context.shaderCache.createDerivedShaderProgram(
@@ -656,7 +672,7 @@ function executeTranslucentCommandsSortedMultipass(
   passState.framebuffer = oit._adjustAlphaFBO.framebuffer;
   oit._adjustAlphaCommand.execute(context, passState);
 
-  const debugFramebuffer = oit._opaqueFBO;
+  const debugFramebuffer = oit._opaqueFBO.framebuffer;
   passState.framebuffer = oit._translucentFBO.framebuffer;
 
   for (j = 0; j < length; ++j) {
@@ -747,7 +763,7 @@ function executeTranslucentCommandsSortedMRT(
   passState.framebuffer = oit._adjustTranslucentFBO.framebuffer;
   oit._adjustTranslucentCommand.execute(context, passState);
 
-  const debugFramebuffer = oit._opaqueFBO;
+  const debugFramebuffer = oit._opaqueFBO.framebuffer;
   passState.framebuffer = oit._translucentFBO.framebuffer;
 
   let command;
@@ -824,7 +840,7 @@ OIT.prototype.execute = function (context, passState) {
 OIT.prototype.clear = function (context, passState, clearColor) {
   const framebuffer = passState.framebuffer;
 
-  passState.framebuffer = this._opaqueFBO;
+  passState.framebuffer = this._opaqueFBO.framebuffer;
   Color.clone(clearColor, this._opaqueClearCommand.color);
   this._opaqueClearCommand.execute(context, passState);
 

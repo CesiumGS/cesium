@@ -1,15 +1,15 @@
+import { defer } from "../../Source/Cesium.js";
 import { Ion } from "../../Source/Cesium.js";
 import { IonResource } from "../../Source/Cesium.js";
 import { RequestErrorEvent } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
 import { RuntimeError } from "../../Source/Cesium.js";
-import { when } from "../../Source/Cesium.js";
 
 describe("Core/IonResource", function () {
   const assetId = 123890213;
   const endpoint = {
     type: "3DTILES",
-    url: "https://assets.cesium.com/" + assetId + "/tileset.json",
+    url: `https://assets.cesium.com/${assetId}/tileset.json`,
     accessToken: "not_really_a_refresh_token",
     attributions: [],
   };
@@ -54,7 +54,7 @@ describe("Core/IonResource", function () {
     const tilesAssetId = 123890213;
     const tilesEndpoint = {
       type: "3DTILES",
-      url: "https://assets.cesium.com/" + tilesAssetId + "/tileset.json",
+      url: `https://assets.cesium.com/${tilesAssetId}/tileset.json`,
       accessToken: "not_really_a_refresh_token",
       attributions: [],
     };
@@ -68,7 +68,7 @@ describe("Core/IonResource", function () {
       resourceEndpoint
     );
     spyOn(resourceEndpoint, "fetchJson").and.returnValue(
-      when.resolve(tilesEndpoint)
+      Promise.resolve(tilesEndpoint)
     );
 
     return IonResource.fromAssetId(tilesAssetId, options).then(function (
@@ -90,7 +90,7 @@ describe("Core/IonResource", function () {
       resourceEndpoint
     );
     spyOn(resourceEndpoint, "fetchJson").and.returnValue(
-      when.resolve(externalEndpoint)
+      Promise.resolve(externalEndpoint)
     );
 
     return IonResource.fromAssetId(123890213).then(function (resource) {
@@ -126,7 +126,7 @@ describe("Core/IonResource", function () {
       attributions: [],
     })
       .then(fail)
-      .otherwise(function (e) {
+      .catch(function (e) {
         expect(e).toBeInstanceOf(RuntimeError);
       });
   });
@@ -135,11 +135,7 @@ describe("Core/IonResource", function () {
     const assetId = 2348234;
     const resource = IonResource._createEndpointResource(assetId);
     expect(resource.url).toBe(
-      Ion.defaultServer.url +
-        "v1/assets/" +
-        assetId +
-        "/endpoint?access_token=" +
-        Ion.defaultAccessToken
+      `${Ion.defaultServer.url}v1/assets/${assetId}/endpoint?access_token=${Ion.defaultAccessToken}`
     );
   });
 
@@ -153,11 +149,7 @@ describe("Core/IonResource", function () {
       accessToken: accessToken,
     });
     expect(resource.url).toBe(
-      serverUrl +
-        "v1/assets/" +
-        assetId +
-        "/endpoint?access_token=" +
-        accessToken
+      `${serverUrl}v1/assets/${assetId}/endpoint?access_token=${accessToken}`
     );
   });
 
@@ -171,11 +163,7 @@ describe("Core/IonResource", function () {
     const assetId = 2348234;
     const resource = IonResource._createEndpointResource(assetId);
     expect(resource.url).toBe(
-      Ion.defaultServer.url +
-        "v1/assets/" +
-        assetId +
-        "/endpoint?access_token=" +
-        Ion.defaultAccessToken
+      `${Ion.defaultServer.url}v1/assets/${assetId}/endpoint?access_token=${Ion.defaultAccessToken}`
     );
 
     Ion.defaultServer = defaultServer;
@@ -186,7 +174,7 @@ describe("Core/IonResource", function () {
     const originalOptions = {};
     const expectedOptions = {
       headers: {
-        Authorization: "Bearer " + endpoint.accessToken,
+        Authorization: `Bearer ${endpoint.accessToken}`,
       },
     };
 
@@ -201,7 +189,7 @@ describe("Core/IonResource", function () {
     const originalOptions = {};
     const expectedOptions = {
       headers: {
-        Authorization: "Bearer " + endpoint.accessToken,
+        Authorization: `Bearer ${endpoint.accessToken}`,
       },
     };
 
@@ -305,12 +293,12 @@ describe("Core/IonResource", function () {
     });
 
     function testCallback(resource, event) {
-      const deferred = when.defer();
+      const deferred = defer();
       spyOn(endpointResource, "fetchJson").and.returnValue(deferred.promise);
 
       const newEndpoint = {
         type: "3DTILES",
-        url: "https://assets.cesium.com/" + assetId,
+        url: `https://assets.cesium.com/${assetId}`,
         accessToken: "not_not_really_a_refresh_token",
       };
 

@@ -1,5 +1,7 @@
 import {
   Cartesian3,
+  Cesium3DContentGroup,
+  ContentMetadata,
   defined,
   ExperimentalFeatures,
   GroupMetadata,
@@ -13,7 +15,7 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
   const gltfContentUrl = "./Data/Cesium3DTiles/GltfContent/glTF/tileset.json";
   const glbContentUrl = "./Data/Cesium3DTiles/GltfContent/glb/tileset.json";
   const buildingsMetadataUrl =
-    "./Data/Cesium3DTiles/Metadata/FeatureMetadata/tileset.json";
+    "./Data/Cesium3DTiles/Metadata/StructuralMetadata/tileset.json";
   const withBatchTableUrl =
     "./Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json";
   const withoutBatchTableUrl =
@@ -77,6 +79,14 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
       scene,
       InstancedWithBatchTableUrl
     );
+  });
+
+  it("renders glb content", function () {
+    return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(function (
+      tileset
+    ) {
+      Cesium3DTilesTester.expectRender(scene, tileset);
+    });
   });
 
   it("renders glTF content", function () {
@@ -232,38 +242,83 @@ describe("Scene/ModelExperimental/ModelExperimental3DTileContent", function () {
     return Cesium3DTilesTester.tileDestroys(scene, buildingsMetadataUrl);
   });
 
-  describe("3DTILES_metadata", function () {
-    const metadataClass = new MetadataClass({
-      id: "test",
-      class: {
-        properties: {
-          name: {
-            componentType: "STRING",
-          },
-          height: {
-            componentType: "FLOAT32",
+  describe("metadata", function () {
+    let metadataClass;
+    let groupMetadata;
+    let contentMetadataClass;
+    let contentMetadata;
+
+    beforeAll(function () {
+      metadataClass = new MetadataClass({
+        id: "test",
+        class: {
+          properties: {
+            name: {
+              type: "STRING",
+            },
+            height: {
+              type: "SCALAR",
+              componentType: "FLOAT32",
+            },
           },
         },
-      },
-    });
-    const groupMetadata = new GroupMetadata({
-      id: "testGroup",
-      group: {
-        properties: {
-          name: "Test Group",
-          height: 35.6,
+      });
+
+      groupMetadata = new GroupMetadata({
+        id: "testGroup",
+        group: {
+          properties: {
+            name: "Test Group",
+            height: 35.6,
+          },
         },
-      },
-      class: metadataClass,
+        class: metadataClass,
+      });
+
+      contentMetadataClass = new MetadataClass({
+        id: "contentTest",
+        class: {
+          properties: {
+            author: {
+              type: "STRING",
+            },
+            color: {
+              type: "VEC3",
+              componentType: "UINT8",
+            },
+          },
+        },
+      });
+
+      contentMetadata = new ContentMetadata({
+        content: {
+          properties: {
+            author: "Test Author",
+            color: [255, 0, 0],
+          },
+        },
+        class: contentMetadataClass,
+      });
     });
 
-    it("assigns groupMetadata", function () {
+    it("assigns group metadata", function () {
       setCamera(centerLongitude, centerLatitude, 15.0);
       return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
         function (tileset) {
           const content = tileset.root.content;
-          content.groupMetadata = groupMetadata;
-          expect(content.groupMetadata).toBe(groupMetadata);
+          content.group = new Cesium3DContentGroup({ metadata: groupMetadata });
+          expect(content.group.metadata).toBe(groupMetadata);
+        }
+      );
+    });
+
+    it("assigns metadata", function () {
+      setCamera(centerLongitude, centerLatitude, 15.0);
+      return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(
+        function (tileset) {
+          const content = tileset.root.content;
+          content.metadata = contentMetadata;
+          expect(content.metadata).toBe(contentMetadata);
         }
       );
     });

@@ -1,9 +1,9 @@
-import when from "../ThirdParty/when.js";
 import AttributeCompression from "./AttributeCompression.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
+import defer from "./defer.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Event from "./Event.js";
@@ -114,7 +114,7 @@ function CesiumTerrainProvider(options) {
 
   this._availability = undefined;
 
-  const deferred = when.defer();
+  const deferred = defer();
   this._ready = false;
   this._readyPromise = deferred;
   this._tileCredits = undefined;
@@ -128,7 +128,7 @@ function CesiumTerrainProvider(options) {
   let attribution = "";
   const overallAvailability = [];
   let overallMaxZoom = 0;
-  when(options.url)
+  Promise.resolve(options.url)
     .then(function (url) {
       const resource = Resource.createIfNeeded(url);
       resource.appendForwardSlash();
@@ -142,7 +142,7 @@ function CesiumTerrainProvider(options) {
 
       requestLayerJson();
     })
-    .otherwise(function (e) {
+    .catch(function (e) {
       deferred.reject(e);
     });
 
@@ -201,8 +201,7 @@ function CesiumTerrainProvider(options) {
       hasWaterMask = true;
       that._requestWaterMask = true;
     } else if (data.format.indexOf("quantized-mesh-1.") !== 0) {
-      message =
-        'The tile format "' + data.format + '" is invalid or not supported.';
+      message = `The tile format "${data.format}" is invalid or not supported.`;
       metadataError = TileProviderError.handleError(
         metadataError,
         that,
@@ -235,8 +234,7 @@ function CesiumTerrainProvider(options) {
         ellipsoid: that._ellipsoid,
       });
     } else {
-      message =
-        'The projection "' + data.projection + '" is invalid or not supported.';
+      message = `The projection "${data.projection}" is invalid or not supported.`;
       metadataError = TileProviderError.handleError(
         metadataError,
         that,
@@ -258,7 +256,7 @@ function CesiumTerrainProvider(options) {
     if (!data.scheme || data.scheme === "tms" || data.scheme === "slippyMap") {
       that._scheme = data.scheme;
     } else {
-      message = 'The scheme "' + data.scheme + '" is invalid or not supported.';
+      message = `The scheme "${data.scheme}" is invalid or not supported.`;
       metadataError = TileProviderError.handleError(
         metadataError,
         that,
@@ -385,7 +383,7 @@ function CesiumTerrainProvider(options) {
         console.log(
           "A layer.json can't have a parentUrl if it does't have an available array."
         );
-        return when.resolve();
+        return Promise.resolve();
       }
       lastResource = lastResource.getDerivedResource({
         url: parentUrl,
@@ -395,15 +393,16 @@ function CesiumTerrainProvider(options) {
         url: "layer.json",
       });
       const parentMetadata = layerJsonResource.fetchJson();
-      return when(parentMetadata, parseMetadataSuccess, parseMetadataFailure);
+      return Promise.resolve(parentMetadata)
+        .then(parseMetadataSuccess)
+        .catch(parseMetadataFailure);
     }
 
-    return when.resolve();
+    return Promise.resolve();
   }
 
   function parseMetadataFailure(data) {
-    const message =
-      "An error occurred while accessing " + layerJsonResource.url + ".";
+    const message = `An error occurred while accessing ${layerJsonResource.url}.`;
     metadataError = TileProviderError.handleError(
       metadataError,
       that,
@@ -474,9 +473,9 @@ function CesiumTerrainProvider(options) {
   }
 
   function requestLayerJson() {
-    when(layerJsonResource.fetchJson())
+    Promise.resolve(layerJsonResource.fetchJson())
       .then(metadataSuccess)
-      .otherwise(metadataFailure);
+      .catch(metadataFailure);
   }
 }
 
@@ -524,10 +523,7 @@ function getRequestHeader(extensionsList) {
   }
   const extensions = extensionsList.join("-");
   return {
-    Accept:
-      "application/vnd.quantized-mesh;extensions=" +
-      extensions +
-      ",application/octet-stream;q=0.9,*/*;q=0.01",
+    Accept: `application/vnd.quantized-mesh;extensions=${extensions},application/octet-stream;q=0.9,*/*;q=0.01`,
   };
 }
 
@@ -850,7 +846,7 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
 
 function requestTileGeometry(provider, x, y, level, layerToUse, request) {
   if (!defined(layerToUse)) {
-    return when.reject(new RuntimeError("Terrain tile doesn't exist"));
+    return Promise.reject(new RuntimeError("Terrain tile doesn't exist"));
   }
 
   const urlTemplates = layerToUse.tileUrlTemplates;
@@ -1281,7 +1277,7 @@ function checkLayer(provider, x, y, level, layer, topLayer) {
     ) {
       let requestPromise;
       if (!topLayer) {
-        cacheKey = tile.level + "-" + tile.x + "-" + tile.y;
+        cacheKey = `${tile.level}-${tile.x}-${tile.y}`;
         requestPromise = layer.availabilityPromiseCache[cacheKey];
         if (!defined(requestPromise)) {
           // For cutout terrain, if this isn't the top layer the availability tiles

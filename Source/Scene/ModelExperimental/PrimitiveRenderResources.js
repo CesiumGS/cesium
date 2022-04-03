@@ -1,5 +1,6 @@
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
+import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import BlendingState from "../BlendingState.js";
@@ -111,14 +112,14 @@ export default function PrimitiveRenderResources(
   this.alphaOptions = clone(nodeRenderResources.alphaOptions);
 
   /**
-   * The model space transform for this primitive. This is cloned from the
-   * node render resources as the primitive may further modify it
+   * The transform from the node's local space to scene graph space for this primitive.
+   * This is cloned from the node render resources as the primitive may further modify it.
    *
    * @type {Matrix4}
    *
    * @private
    */
-  this.transform = nodeRenderResources.runtimeNode.transform.clone();
+  this.transform = nodeRenderResources.transform;
 
   /**
    * An object used to build a shader incrementally. This is cloned from the
@@ -236,13 +237,13 @@ export default function PrimitiveRenderResources(
    *
    * @private
    */
-  this.renderStateOptions = {
+  this.renderStateOptions = combine(nodeRenderResources.renderStateOptions, {
     depthTest: {
       enabled: true,
       func: DepthFunction.LESS_OR_EQUAL,
     },
     blending: BlendingState.DISABLED,
-  };
+  });
 
   /**
    * An enum describing the types of draw commands needed, based on the style.

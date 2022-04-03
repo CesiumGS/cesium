@@ -1,20 +1,26 @@
 import { MetadataClass, TileMetadata } from "../../Source/Cesium.js";
 
 describe("Scene/TileMetadata", function () {
+  const tileClassWithNoProperties = new MetadataClass({
+    id: "tile",
+    class: {},
+  });
+
   const tileClass = new MetadataClass({
     id: "tile",
     class: {
       properties: {
         color: {
-          type: "ARRAY",
+          type: "SCALAR",
           componentType: "FLOAT32",
-          componentCount: 8,
+          array: true,
+          count: 8,
           semantic: "COLOR",
         },
         isSquare: {
           description:
             "Is a square tile, rather than a rectangular partial tile",
-          componentType: "BOOLEAN",
+          type: "BOOLEAN",
         },
       },
     },
@@ -45,12 +51,21 @@ describe("Scene/TileMetadata", function () {
     }).toThrowDeveloperError();
   });
 
+  it("throws without class", function () {
+    expect(function () {
+      tileMetadata = new TileMetadata({
+        tile: {},
+        class: undefined,
+      });
+    }).toThrowDeveloperError();
+  });
+
   it("creates tile metadata with default values", function () {
     const metadata = new TileMetadata({
       tile: {},
+      class: tileClassWithNoProperties,
     });
 
-    expect(metadata.class).toBeUndefined();
     expect(metadata.extras).toBeUndefined();
     expect(metadata.extensions).toBeUndefined();
   });
@@ -106,8 +121,10 @@ describe("Scene/TileMetadata", function () {
     expect(propertyIds).toEqual(["color", "isSquare"]);
   });
 
-  it("getProperty returns undefined if a property does not exist", function () {
-    expect(tileMetadata.getProperty("numberOfPoints")).not.toBeDefined();
+  it("getProperty returns throws if a property does not exist", function () {
+    expect(function () {
+      return tileMetadata.getProperty("height");
+    }).toThrowDeveloperError();
   });
 
   it("getProperty returns the property value", function () {

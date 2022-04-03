@@ -328,7 +328,7 @@ function processFeatureIdAttributes(
 
     shaderBuilder.addAttribute(
       "float",
-      "a_instanceFeatureId_" + attribute.setIndex
+      `a_instanceFeatureId_${attribute.setIndex}`
     );
   }
 }
@@ -352,6 +352,7 @@ function processMatrixAttributes(node, count, renderResources, frameState) {
   const componentByteSize = ComponentDatatype.getSizeInBytes(
     ComponentDatatype.FLOAT
   );
+  const strideInBytes = componentByteSize * vertexSizeInFloats;
 
   const instancingVertexAttributes = [
     {
@@ -361,7 +362,7 @@ function processMatrixAttributes(node, count, renderResources, frameState) {
       componentDatatype: ComponentDatatype.FLOAT,
       normalize: false,
       offsetInBytes: 0,
-      strideInBytes: componentByteSize * vertexSizeInFloats,
+      strideInBytes: strideInBytes,
       instanceDivisor: 1,
     },
     {
@@ -371,7 +372,7 @@ function processMatrixAttributes(node, count, renderResources, frameState) {
       componentDatatype: ComponentDatatype.FLOAT,
       normalize: false,
       offsetInBytes: componentByteSize * 4,
-      strideInBytes: componentByteSize * vertexSizeInFloats,
+      strideInBytes: strideInBytes,
       instanceDivisor: 1,
     },
     {
@@ -381,7 +382,7 @@ function processMatrixAttributes(node, count, renderResources, frameState) {
       componentDatatype: ComponentDatatype.FLOAT,
       normalize: false,
       offsetInBytes: componentByteSize * 8,
-      strideInBytes: componentByteSize * vertexSizeInFloats,
+      strideInBytes: strideInBytes,
       instanceDivisor: 1,
     },
   ];

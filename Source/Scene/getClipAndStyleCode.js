@@ -21,22 +21,14 @@ function getClipAndStyleCode(
   //>>includeEnd('debug');
 
   const shaderCode =
-    "    float clipDistance = clip(gl_FragCoord, " +
-    samplerUniformName +
-    ", " +
-    matrixUniformName +
-    "); \n" +
-    "    vec4 clippingPlanesEdgeColor = vec4(1.0); \n" +
-    "    clippingPlanesEdgeColor.rgb = " +
-    styleUniformName +
-    ".rgb; \n" +
-    "    float clippingPlanesEdgeWidth = " +
-    styleUniformName +
-    ".a; \n" +
-    "    if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n" +
-    "    { \n" +
-    "        gl_FragColor = clippingPlanesEdgeColor;\n" +
-    "    } \n";
+    `    float clipDistance = clip(gl_FragCoord, ${samplerUniformName}, ${matrixUniformName}); \n` +
+    `    vec4 clippingPlanesEdgeColor = vec4(1.0); \n` +
+    `    clippingPlanesEdgeColor.rgb = ${styleUniformName}.rgb; \n` +
+    `    float clippingPlanesEdgeWidth = ${styleUniformName}.a; \n` +
+    `    if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n` +
+    `    { \n` +
+    `        gl_FragColor = clippingPlanesEdgeColor;\n` +
+    `    } \n`;
   return shaderCode;
 }
 export default getClipAndStyleCode;

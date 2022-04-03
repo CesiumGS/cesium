@@ -12,6 +12,7 @@ import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -41,7 +42,6 @@ import LabelStyle from "../Scene/LabelStyle.js";
 import SceneMode from "../Scene/SceneMode.js";
 import Autolinker from "../ThirdParty/Autolinker.js";
 import Uri from "../ThirdParty/Uri.js";
-import when from "../ThirdParty/when.js";
 import zip from "../ThirdParty/zip.js";
 import getElement from "../Widgets/getElement.js";
 import BillboardGraphics from "./BillboardGraphics.js";
@@ -189,7 +189,7 @@ const featureTypes = {
 
 function DeferredLoading(dataSource) {
   this._dataSource = dataSource;
-  this._deferred = when.defer();
+  this._deferred = defer();
   this._stack = [];
   this._promises = [];
   this._timeoutSet = false;
@@ -227,7 +227,7 @@ DeferredLoading.prototype.wait = function () {
     deferred.resolve();
   }
 
-  return when.join(deferred.promise, when.all(this._promises));
+  return Promise.all([deferred.promise, Promise.all(this._promises)]);
 };
 
 DeferredLoading.prototype.process = function () {
@@ -317,7 +317,7 @@ DeferredLoading.prototype._process = function (isFirstCall) {
 
 function isZipFile(blob) {
   const magicBlob = blob.slice(0, Math.min(4, blob.size));
-  const deferred = when.defer();
+  const deferred = defer();
   const reader = new FileReader();
   reader.addEventListener("load", function () {
     deferred.resolve(
@@ -332,7 +332,7 @@ function isZipFile(blob) {
 }
 
 function readBlobAsText(blob) {
-  const deferred = when.defer();
+  const deferred = defer();
   const reader = new FileReader();
   reader.addEventListener("load", function () {
     deferred.resolve(reader.result);
@@ -352,14 +352,14 @@ function insertNamespaces(text) {
 
   for (const key in namespaceMap) {
     if (namespaceMap.hasOwnProperty(key)) {
-      reg = RegExp("[< ]" + key + ":");
-      declaration = "xmlns:" + key + "=";
+      reg = RegExp(`[< ]${key}:`);
+      declaration = `xmlns:${key}=`;
       if (reg.test(text) && text.indexOf(declaration) === -1) {
         if (!defined(firstPart)) {
           firstPart = text.substr(0, text.indexOf("<kml") + 4);
           lastPart = text.substr(firstPart.length);
         }
-        firstPart += " " + declaration + '"' + namespaceMap[key] + '"';
+        firstPart += ` ${declaration}"${namespaceMap[key]}"`;
       }
     }
   }
@@ -393,7 +393,9 @@ function removeDuplicateNamespaces(text) {
 }
 
 function loadXmlFromZip(entry, uriResolver) {
-  return when(entry.getData(new zip.TextWriter())).then(function (text) {
+  return Promise.resolve(entry.getData(new zip.TextWriter())).then(function (
+    text
+  ) {
     text = insertNamespaces(text);
     text = removeDuplicateNamespaces(text);
     uriResolver.kml = parser.parseFromString(text, "application/xml");
@@ -405,11 +407,11 @@ function loadDataUriFromZip(entry, uriResolver) {
     MimeTypes.detectFromFilename(entry.filename),
     "application/octet-stream"
   );
-  return when(entry.getData(new zip.Data64URIWriter(mimeType))).then(function (
-    dataUri
-  ) {
-    uriResolver[entry.filename] = dataUri;
-  });
+  return Promise.resolve(entry.getData(new zip.Data64URIWriter(mimeType))).then(
+    function (dataUri) {
+      uriResolver[entry.filename] = dataUri;
+    }
+  );
 }
 
 function embedDataUris(div, elementType, attributeName, uriResolver) {
@@ -853,12 +855,7 @@ function getIconHref(
     y = 7 - Math.min(y / 32, 7);
     const iconNum = 8 * y + x;
 
-    href =
-      "https://maps.google.com/mapfiles/kml/pal" +
-      palette +
-      "/icon" +
-      iconNum +
-      ".png";
+    href = `https://maps.google.com/mapfiles/kml/pal${palette}/icon${iconNum}.png`;
   }
 
   const hrefResource = resolveHref(href, sourceResource, uriResolver);
@@ -876,13 +873,13 @@ function getIconHref(
     );
     if (refreshMode === "onInterval" || refreshMode === "onExpire") {
       oneTimeWarning(
-        "kml-refreshMode-" + refreshMode,
-        "KML - Unsupported Icon refreshMode: " + refreshMode
+        `kml-refreshMode-${refreshMode}`,
+        `KML - Unsupported Icon refreshMode: ${refreshMode}`
       );
     } else if (viewRefreshMode === "onStop" || viewRefreshMode === "onRegion") {
       oneTimeWarning(
-        "kml-refreshMode-" + viewRefreshMode,
-        "KML - Unsupported Icon viewRefreshMode: " + viewRefreshMode
+        `kml-refreshMode-${viewRefreshMode}`,
+        `KML - Unsupported Icon viewRefreshMode: ${viewRefreshMode}`
       );
     }
 
@@ -1124,8 +1121,8 @@ function applyStyle(
       );
       if (listItemType === "radioFolder" || listItemType === "checkOffOnly") {
         oneTimeWarning(
-          "kml-listStyle-" + listItemType,
-          "KML - Unsupported ListStyle with listItemType: " + listItemType
+          `kml-listStyle-${listItemType}`,
+          `KML - Unsupported ListStyle with listItemType: ${listItemType}`
         );
       }
     }
@@ -1175,7 +1172,7 @@ function computeFinalStyle(
           if (defined(styleUrl)) {
             styleEntity = styleCollection.getById(styleUrl);
             if (!defined(styleEntity)) {
-              styleEntity = styleCollection.getById("#" + styleUrl);
+              styleEntity = styleCollection.getById(`#${styleUrl}`);
             }
             if (defined(styleEntity)) {
               result.merge(styleEntity);
@@ -1186,8 +1183,8 @@ function computeFinalStyle(
           }
         } else {
           oneTimeWarning(
-            "kml-styleMap-" + key,
-            "KML - Unsupported StyleMap key: " + key
+            `kml-styleMap-${key}`,
+            `KML - Unsupported StyleMap key: ${key}`
           );
         }
       }
@@ -1205,12 +1202,12 @@ function computeFinalStyle(
         url: uri,
       });
 
-      id = resource.getUrlComponent() + "#" + tokens[1];
+      id = `${resource.getUrlComponent()}#${tokens[1]}`;
     }
 
     styleEntity = styleCollection.getById(id);
     if (!defined(styleEntity)) {
-      styleEntity = styleCollection.getById("#" + id);
+      styleEntity = styleCollection.getById(`#${id}`);
     }
     if (defined(styleEntity)) {
       result.merge(styleEntity);
@@ -1251,7 +1248,7 @@ function processStyles(
       node = styleNodes[i];
       id = queryStringAttribute(node, "id");
       if (defined(id)) {
-        id = "#" + id;
+        id = `#${id}`;
         if (isExternal && defined(sourceResource)) {
           id = sourceResource.getUrlComponent() + id;
         }
@@ -1284,7 +1281,7 @@ function processStyles(
           const pair = pairs[p];
           const key = queryStringValue(pair, "key", namespaces.kml);
           if (key === "normal") {
-            id = "#" + id;
+            id = `#${id}`;
             if (isExternal && defined(sourceResource)) {
               id = sourceResource.getUrlComponent() + id;
             }
@@ -1294,7 +1291,7 @@ function processStyles(
               let styleUrl = queryStringValue(pair, "styleUrl", namespaces.kml);
               if (defined(styleUrl)) {
                 if (styleUrl[0] !== "#") {
-                  styleUrl = "#" + styleUrl;
+                  styleUrl = `#${styleUrl}`;
                 }
 
                 if (isExternal && defined(sourceResource)) {
@@ -1318,8 +1315,8 @@ function processStyles(
             }
           } else {
             oneTimeWarning(
-              "kml-styleMap-" + key,
-              "KML - Unsupported StyleMap key: " + key
+              `kml-styleMap-${key}`,
+              `KML - Unsupported StyleMap key: ${key}`
             );
           }
         }
@@ -1403,16 +1400,12 @@ function heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode) {
   if (defined(altitudeMode)) {
     oneTimeWarning(
       "kml-altitudeMode-unknown",
-      "KML - Unknown <kml:altitudeMode>:" +
-        altitudeMode +
-        ", using <kml:altitudeMode>:CLAMP_TO_GROUND."
+      `KML - Unknown <kml:altitudeMode>:${altitudeMode}, using <kml:altitudeMode>:CLAMP_TO_GROUND.`
     );
   } else {
     oneTimeWarning(
       "kml-gx:altitudeMode-unknown",
-      "KML - Unknown <gx:altitudeMode>:" +
-        gxAltitudeMode +
-        ", using <kml:altitudeMode>:CLAMP_TO_GROUND."
+      `KML - Unknown <gx:altitudeMode>:${gxAltitudeMode}, using <kml:altitudeMode>:CLAMP_TO_GROUND.`
     );
   }
 
@@ -1440,8 +1433,10 @@ function createPositionPropertyFromAltitudeMode(
   ) {
     oneTimeWarning(
       "kml-altitudeMode-unknown",
-      "KML - Unknown altitudeMode: " +
-        defaultValue(altitudeMode, gxAltitudeMode)
+      `KML - Unknown altitudeMode: ${defaultValue(
+        altitudeMode,
+        gxAltitudeMode
+      )}`
     );
   }
 
@@ -1474,8 +1469,10 @@ function createPositionPropertyArrayFromAltitudeMode(
   ) {
     oneTimeWarning(
       "kml-altitudeMode-unknown",
-      "KML - Unknown altitudeMode: " +
-        defaultValue(altitudeMode, gxAltitudeMode)
+      `KML - Unknown altitudeMode: ${defaultValue(
+        altitudeMode,
+        gxAltitudeMode
+      )}`
     );
   }
 
@@ -2060,7 +2057,7 @@ function processUnsupportedGeometry(
 ) {
   oneTimeWarning(
     "kml-unsupportedGeometry",
-    "KML - Unsupported geometry: " + geometryNode.localName
+    `KML - Unsupported geometry: ${geometryNode.localName}`
   );
   return false;
 }
@@ -2180,12 +2177,10 @@ function processDescription(
       for (i = 0; i < keys.length; i++) {
         key = keys[i];
         value = extendedData[key];
-        text +=
-          "<tr><th>" +
-          defaultValue(value.displayName, key) +
-          "</th><td>" +
-          defaultValue(value.value, "") +
-          "</td></tr>";
+        text += `<tr><th>${defaultValue(
+          value.displayName,
+          key
+        )}</th><td>${defaultValue(value.value, "")}</td></tr>`;
       }
       text += "</tbody></table>";
     }
@@ -2242,10 +2237,10 @@ function processDescription(
   let tmp = '<div class="cesium-infoBox-description-lighter" style="';
   tmp += "overflow:auto;";
   tmp += "word-wrap:break-word;";
-  tmp += "background-color:" + background.toCssColorString() + ";";
-  tmp += "color:" + foreground.toCssColorString() + ";";
+  tmp += `background-color:${background.toCssColorString()};`;
+  tmp += `color:${foreground.toCssColorString()};`;
   tmp += '">';
-  tmp += scratchDiv.innerHTML + "</div>";
+  tmp += `${scratchDiv.innerHTML}</div>`;
   scratchDiv.innerHTML = "";
 
   //Set the final HTML as the description.
@@ -2420,7 +2415,7 @@ function processTour(dataSource, node, processingData, deferredLoading) {
           playlistNodeProcessor(tour, entryNode, ellipsoid);
         } else {
           console.log(
-            "Unknown KML Tour playlist entry type " + entryNode.localName
+            `Unknown KML Tour playlist entry type ${entryNode.localName}`
           );
         }
       }
@@ -2431,7 +2426,7 @@ function processTour(dataSource, node, processingData, deferredLoading) {
 }
 
 function processTourUnsupportedNode(tour, entryNode) {
-  oneTimeWarning("KML Tour unsupported node " + entryNode.localName);
+  oneTimeWarning(`KML Tour unsupported node ${entryNode.localName}`);
 }
 
 function processTourWait(tour, entryNode) {
@@ -2584,9 +2579,9 @@ function processScreenOverlay(
 
       if (defined(x) && x !== -1 && x !== 0) {
         if (xUnit === "fraction") {
-          xStyle = "width: " + Math.floor(x * 100) + "%";
+          xStyle = `width: ${Math.floor(x * 100)}%`;
         } else if (xUnit === "pixels") {
-          xStyle = "width: " + x + "px";
+          xStyle = `width: ${x}px`;
         }
 
         styles.push(xStyle);
@@ -2594,9 +2589,9 @@ function processScreenOverlay(
 
       if (defined(y) && y !== -1 && y !== 0) {
         if (yUnit === "fraction") {
-          yStyle = "height: " + Math.floor(y * 100) + "%";
+          yStyle = `height: ${Math.floor(y * 100)}%`;
         } else if (yUnit === "pixels") {
-          yStyle = "height: " + y + "px";
+          yStyle = `height: ${y}px`;
         }
 
         styles.push(yStyle);
@@ -2644,12 +2639,13 @@ function processScreenOverlay(
 
       if (defined(x)) {
         if (xUnit === "fraction") {
-          xStyle =
-            "left: " + "calc(" + Math.floor(x * 100) + "% - " + xOrigin + "px)";
+          xStyle = `${"left: " + "calc("}${Math.floor(
+            x * 100
+          )}% - ${xOrigin}px)`;
         } else if (xUnit === "pixels") {
-          xStyle = "left: " + (x - xOrigin) + "px";
+          xStyle = `left: ${x - xOrigin}px`;
         } else if (xUnit === "insetPixels") {
-          xStyle = "right: " + (x - xOrigin) + "px";
+          xStyle = `right: ${x - xOrigin}px`;
         }
 
         styles.push(xStyle);
@@ -2657,17 +2653,13 @@ function processScreenOverlay(
 
       if (defined(y)) {
         if (yUnit === "fraction") {
-          yStyle =
-            "bottom: " +
-            "calc(" +
-            Math.floor(y * 100) +
-            "% - " +
-            yOrigin +
-            "px)";
+          yStyle = `${"bottom: " + "calc("}${Math.floor(
+            y * 100
+          )}% - ${yOrigin}px)`;
         } else if (yUnit === "pixels") {
-          yStyle = "bottom: " + (y - yOrigin) + "px";
+          yStyle = `bottom: ${y - yOrigin}px`;
         } else if (yUnit === "insetPixels") {
-          yStyle = "top: " + (y - yOrigin) + "px";
+          yStyle = `top: ${y - yOrigin}px`;
         }
 
         styles.push(yStyle);
@@ -2799,7 +2791,7 @@ function processGroundOverlay(
     } else if (altitudeMode !== "clampToGround") {
       oneTimeWarning(
         "kml-altitudeMode-unknown",
-        "KML - Unknown altitudeMode: " + altitudeMode
+        `KML - Unknown altitudeMode: ${altitudeMode}`
       );
     }
     // else just use the default of 0 until we support 'clampToGround'
@@ -2828,7 +2820,7 @@ function processGroundOverlay(
     } else if (defined(altitudeMode)) {
       oneTimeWarning(
         "kml-altitudeMode-unknown",
-        "KML - Unknown altitudeMode: " + altitudeMode
+        `KML - Unknown altitudeMode: ${altitudeMode}`
       );
     }
   }
@@ -2850,8 +2842,8 @@ function processUnsupportedFeature(
     processingData.uriResolver
   );
   oneTimeWarning(
-    "kml-unsupportedFeature-" + node.nodeName,
-    "KML - Unsupported feature: " + node.nodeName
+    `kml-unsupportedFeature-${node.nodeName}`,
+    `KML - Unsupported feature: ${node.nodeName}`
   );
 }
 
@@ -3266,8 +3258,8 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
             );
           }
         })
-        .otherwise(function (error) {
-          oneTimeWarning("An error occured during loading " + href.url);
+        .catch(function (error) {
+          oneTimeWarning(`An error occured during loading ${href.url}`);
           dataSource._error.raiseEvent(dataSource, error);
         });
 
@@ -3318,48 +3310,46 @@ function loadKml(
 
   const deferredLoading = new KmlDataSource._DeferredLoading(dataSource);
   const styleCollection = new EntityCollection(dataSource);
-  return when
-    .all(
-      processStyles(
-        dataSource,
-        kml,
-        styleCollection,
-        sourceResource,
-        false,
-        uriResolver
-      )
+  return Promise.all(
+    processStyles(
+      dataSource,
+      kml,
+      styleCollection,
+      sourceResource,
+      false,
+      uriResolver
     )
-    .then(function () {
-      let element = kml.documentElement;
-      if (element.localName === "kml") {
-        const childNodes = element.childNodes;
-        for (let i = 0; i < childNodes.length; i++) {
-          const tmp = childNodes[i];
-          if (defined(featureTypes[tmp.localName])) {
-            element = tmp;
-            break;
-          }
+  ).then(function () {
+    let element = kml.documentElement;
+    if (element.localName === "kml") {
+      const childNodes = element.childNodes;
+      for (let i = 0; i < childNodes.length; i++) {
+        const tmp = childNodes[i];
+        if (defined(featureTypes[tmp.localName])) {
+          element = tmp;
+          break;
         }
       }
+    }
 
-      const processingData = {
-        parentEntity: undefined,
-        entityCollection: entityCollection,
-        styleCollection: styleCollection,
-        sourceResource: sourceResource,
-        uriResolver: uriResolver,
-        context: context,
-        screenOverlayContainer: screenOverlayContainer,
-      };
+    const processingData = {
+      parentEntity: undefined,
+      entityCollection: entityCollection,
+      styleCollection: styleCollection,
+      sourceResource: sourceResource,
+      uriResolver: uriResolver,
+      context: context,
+      screenOverlayContainer: screenOverlayContainer,
+    };
 
-      entityCollection.suspendEvents();
-      processFeatureNode(dataSource, element, processingData, deferredLoading);
-      entityCollection.resumeEvents();
+    entityCollection.suspendEvents();
+    processFeatureNode(dataSource, element, processingData, deferredLoading);
+    entityCollection.resumeEvents();
 
-      return deferredLoading.wait().then(function () {
-        return kml.documentElement;
-      });
+    return deferredLoading.wait().then(function () {
+      return kml.documentElement;
     });
+  });
 }
 
 function loadKmz(
@@ -3378,7 +3368,7 @@ function loadKmz(
   });
 
   const reader = new zip.ZipReader(new zip.BlobReader(blob));
-  return when(reader.getEntries()).then(function (entries) {
+  return Promise.resolve(reader.getEntries()).then(function (entries) {
     const promises = [];
     const uriResolver = {};
     let docEntry;
@@ -3409,7 +3399,7 @@ function loadKmz(
     if (defined(docEntry)) {
       promises.push(loadXmlFromZip(docEntry, uriResolver));
     }
-    return when.all(promises).then(function () {
+    return Promise.all(promises).then(function () {
       reader.close();
       if (!defined(uriResolver.kml)) {
         throw new RuntimeError("KMZ file does not contain a KML document.");
@@ -3459,7 +3449,7 @@ function load(dataSource, entityCollection, data, options) {
     screenOverlayContainer = getElement(screenOverlayContainer);
   }
 
-  return when(promise)
+  return Promise.resolve(promise)
     .then(function (dataToLoad) {
       if (dataToLoad instanceof Blob) {
         return isZipFile(dataToLoad).then(function (isZip) {
@@ -3533,10 +3523,10 @@ function load(dataSource, entityCollection, data, options) {
         context
       );
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       dataSource._error.raiseEvent(dataSource, error);
       console.log(error);
-      return when.reject(error);
+      return Promise.reject(error);
     });
 }
 
@@ -3905,11 +3895,11 @@ KmlDataSource.prototype.load = function (data, options) {
 
       return that;
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       DataSource.setLoading(that, false);
       that._error.raiseEvent(that, error);
       console.log(error);
-      return when.reject(error);
+      return Promise.reject(error);
     });
 };
 
@@ -4216,9 +4206,8 @@ KmlDataSource.prototype.update = function (time) {
               href
             )
           )
-          .otherwise(function (error) {
-            const msg =
-              "NetworkLink " + networkLink.href + " refresh failed: " + error;
+          .catch(function (error) {
+            const msg = `NetworkLink ${networkLink.href} refresh failed: ${error}`;
             console.log(msg);
             that._error.raiseEvent(that, msg);
           });

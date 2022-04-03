@@ -1,6 +1,7 @@
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -12,7 +13,6 @@ import ShaderProgram from "../Renderer/ShaderProgram.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import ShadowVolumeAppearanceVS from "../Shaders/ShadowVolumeAppearanceVS.js";
 import ShadowVolumeFS from "../Shaders/ShadowVolumeFS.js";
-import when from "../ThirdParty/when.js";
 import BlendingState from "./BlendingState.js";
 import ClassificationType from "./ClassificationType.js";
 import DepthFunction from "./DepthFunction.js";
@@ -163,7 +163,7 @@ function ClassificationPrimitive(options) {
   this._commandsIgnoreShow = [];
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   this._primitive = undefined;
   this._pickPrimitive = options._pickPrimitive;
@@ -479,11 +479,10 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
     const attributeName = "compressedAttributes";
 
     //only shadow volumes use extrudeDirection, and shadow volumes use vertexFormat: POSITION_ONLY so we don't need to check other attributes
-    const attributeDecl = "attribute vec2 " + attributeName + ";";
+    const attributeDecl = `attribute vec2 ${attributeName};`;
 
     const globalDecl = "vec3 extrudeDirection;\n";
-    const decode =
-      "    extrudeDirection = czm_octDecode(" + attributeName + ", 65535.0);\n";
+    const decode = `    extrudeDirection = czm_octDecode(${attributeName}, 65535.0);\n`;
 
     let modifiedVS = vertexShaderSource;
     modifiedVS = modifiedVS.replace(
@@ -495,11 +494,8 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
       "czm_non_compressed_main"
     );
     const compressedMain =
-      "void main() \n" +
-      "{ \n" +
-      decode +
-      "    czm_non_compressed_main(); \n" +
-      "}";
+      `${"void main() \n" + "{ \n"}${decode}    czm_non_compressed_main(); \n` +
+      `}`;
 
     return [attributeDecl, globalDecl, modifiedVS, compressedMain].join("\n");
   }

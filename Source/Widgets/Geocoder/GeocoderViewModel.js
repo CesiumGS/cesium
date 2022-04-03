@@ -11,7 +11,6 @@ import Rectangle from "../../Core/Rectangle.js";
 import sampleTerrainMostDetailed from "../../Core/sampleTerrainMostDetailed.js";
 import computeFlyToLocationForRectangle from "../../Scene/computeFlyToLocationForRectangle.js";
 import knockout from "../../ThirdParty/knockout.js";
-import when from "../../ThirdParty/when.js";
 import createCommand from "../createCommand.js";
 import getElement from "../getElement.js";
 
@@ -350,7 +349,7 @@ function computeFlyToLocationForCartographic(cartographic, terrainProvider) {
 
   if (!defined(availability)) {
     cartographic.height += DEFAULT_HEIGHT;
-    return when.resolve(cartographic);
+    return Promise.resolve(cartographic);
   }
 
   return sampleTerrainMostDetailed(terrainProvider, [cartographic]).then(
@@ -400,11 +399,11 @@ function flyToDestination(viewModel, destination) {
     promise = computeFlyToLocationForCartographic(destination, terrainProvider);
   }
 
-  promise
+  return promise
     .then(function (result) {
       finalDestination = ellipsoid.cartographicToCartesian(result);
     })
-    .always(function () {
+    .finally(function () {
       // Whether terrain querying succeeded or not, fly to the destination.
       camera.flyTo({
         destination: finalDestination,
@@ -431,7 +430,7 @@ function chainPromise(promise, geocoderService, query, geocodeType) {
       .then(function (result) {
         return { state: "fulfilled", value: result };
       })
-      .otherwise(function (err) {
+      .catch(function (err) {
         return { state: "rejected", reason: err };
       });
 
@@ -449,7 +448,7 @@ function geocode(viewModel, geocoderServices, geocodeType) {
 
   viewModel._isSearchInProgress = true;
 
-  let promise = when.resolve();
+  let promise = Promise.resolve();
   for (let i = 0; i < geocoderServices.length; i++) {
     promise = chainPromise(promise, geocoderServices[i], query, geocodeType);
   }
@@ -471,7 +470,7 @@ function geocode(viewModel, geocoderServices, geocodeType) {
       viewModel.destinationFound(viewModel, geocoderResults[0].destination);
       return;
     }
-    viewModel._searchText = query + " (not found)";
+    viewModel._searchText = `${query} (not found)`;
   });
 }
 
@@ -522,7 +521,7 @@ function updateSearchSuggestions(viewModel) {
     return;
   }
 
-  let promise = when.resolve([]);
+  let promise = Promise.resolve([]);
   viewModel._geocoderServices.forEach(function (service) {
     promise = promise.then(function (results) {
       if (results.length >= 5) {
@@ -536,7 +535,7 @@ function updateSearchSuggestions(viewModel) {
         });
     });
   });
-  promise.then(function (results) {
+  return promise.then(function (results) {
     const suggestions = viewModel._suggestions;
     for (let i = 0; i < results.length; i++) {
       suggestions.push(results[i]);

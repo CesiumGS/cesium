@@ -13,6 +13,7 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
  * @private
  */
 const ModelColorPipelineStage = {};
+ModelColorPipelineStage.name = "ModelColorPipelineStage"; // Helps with debugging
 
 ModelColorPipelineStage.COLOR_UNIFORM_NAME = "model_color";
 ModelColorPipelineStage.COLOR_BLEND_UNIFORM_NAME = "model_colorBlend";
@@ -51,7 +52,17 @@ ModelColorPipelineStage.process = function (
 
   // Pass the model's color as a uniform. Set the pass type to translucent, if needed.
   const color = model.color;
-  if (color.alpha > 0.0 && color.alpha < 1.0) {
+  const renderStateOptions = renderResources.renderStateOptions;
+  if (color.alpha === 0.0) {
+    // When the model is invisible, disable color and depth writes, but still write into the stencil buffer.
+    renderStateOptions.colorMask = {
+      red: false,
+      green: false,
+      blue: false,
+      alpha: false,
+    };
+    renderStateOptions.depthMask = false;
+  } else if (color.alpha < 1.0) {
     renderResources.alphaOptions.pass = Pass.TRANSLUCENT;
     renderResources.alphaOptions.alphaMode = AlphaMode.BLEND;
   }

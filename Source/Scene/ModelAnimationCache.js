@@ -32,7 +32,7 @@ function getAccessorKey(model, accessor) {
   const byteLength = accessor.count * numberOfComponentsForType(accessor.type);
 
   const uriKey = dataUriRegex.test(buffer.uri) ? "" : buffer.uri;
-  return model.cacheKey + "//" + uriKey + "/" + byteOffset + "/" + byteLength;
+  return `${model.cacheKey}//${uriKey}/${byteOffset}/${byteLength}`;
 }
 
 const cachedAnimationParameters = {};
@@ -92,7 +92,7 @@ ModelAnimationCache.getAnimationParameterValues = function (model, accessor) {
 const cachedAnimationSplines = {};
 
 function getAnimationSplineKey(model, animationName, samplerName) {
-  return model.cacheKey + "//" + animationName + "/" + samplerName;
+  return `${model.cacheKey}//${animationName}/${samplerName}`;
 }
 
 function ConstantSpline(value) {

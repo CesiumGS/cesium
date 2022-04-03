@@ -2,6 +2,7 @@ import arrayFill from "../Core/arrayFill.js";
 import Check from "../Core/Check.js";
 import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";
@@ -10,7 +11,6 @@ import JulianDate from "../Core/JulianDate.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
-import when from "../ThirdParty/when.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import PointCloud from "./PointCloud.js";
 import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
@@ -183,7 +183,7 @@ function TimeDynamicPointCloud(options) {
   this._nextInterval = undefined;
   this._lastRenderedFrame = undefined;
   this._clockMultiplier = 0.0;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   // For calculating average load time of the last N frames
   this._runningSum = 0.0;
@@ -259,7 +259,7 @@ Object.defineProperties(TimeDynamicPointCloud.prototype, {
 });
 
 function getFragmentShaderLoaded(fs) {
-  return "uniform vec4 czm_pickColor;\n" + fs;
+  return `uniform vec4 czm_pickColor;\n${fs}`;
 }
 
 function getUniformMapLoaded(stream) {
@@ -370,8 +370,8 @@ function handleFrameFailure(that, uri) {
         message: message,
       });
     } else {
-      console.log("A frame failed to load: " + uri);
-      console.log("Error: " + message);
+      console.log(`A frame failed to load: ${uri}`);
+      console.log(`Error: ${message}`);
     }
   };
 }
@@ -410,7 +410,7 @@ function requestFrame(that, interval, frameState) {
         });
         return frame.pointCloud.readyPromise;
       })
-      .otherwise(handleFrameFailure(that, uri));
+      .catch(handleFrameFailure(that, uri));
   }
   return frame;
 }

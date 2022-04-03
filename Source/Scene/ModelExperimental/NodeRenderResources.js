@@ -1,5 +1,6 @@
 import Check from "../../Core/Check.js";
 import clone from "../../Core/clone.js";
+import Matrix4 from "../../Core/Matrix4.js";
 
 /**
  * A model is made up of one or more nodes in the scene graph. Some details
@@ -64,7 +65,20 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    */
   this.alphaOptions = clone(modelRenderResources.alphaOptions);
 
-  // other properties
+  /**
+   * An object storing options for creating a {@link RenderState}.
+   * The pipeline stages simply set the options, the render state is created
+   * when the {@link DrawCommand} is constructed. Inherited from the model
+   * render resources.
+   *
+   * @type {Object}
+   * @readonly
+   *
+   * @private
+   */
+  this.renderStateOptions = clone(modelRenderResources.renderStateOptions);
+
+  // Other properties.
   /**
    * A reference to the runtime node
    *
@@ -74,14 +88,20 @@ export default function NodeRenderResources(modelRenderResources, runtimeNode) {
    * @private
    */
   this.runtimeNode = runtimeNode;
+
   /**
-   * The computed model matrix for this node.
+   * The transform from the node's local space to scene graph space for this node.
    *
    * @type {Matrix4}
    *
    * @private
    */
-  this.modelMatrix = runtimeNode.transform;
+  this.transform = Matrix4.multiplyTransformation(
+    runtimeNode.transformToRoot,
+    runtimeNode.transform,
+    new Matrix4()
+  );
+
   /**
    * An array of objects describing vertex attributes that will eventually
    * be used to create a {@link VertexArray} for the draw command. Attributes

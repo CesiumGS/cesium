@@ -28,12 +28,12 @@ export default function ShaderFunction(signature) {
 }
 
 /**
- * Add a single line to the body of the function
- * @param {String} lines Line of GLSL code to add to the function body. Do not include any preceding whitespace, but do include the semicolon for each line.
+ * Add an array of lines to the body of the function
+ * @param {String[]} lines An array of lines of GLSL code to add to the function body. Do not include any preceding or ending whitespace, but do include the semicolon for each line.
  */
 ShaderFunction.prototype.addLines = function (lines) {
   const paddedLines = lines.map(function (line) {
-    return "    " + line;
+    return `    ${line}`;
   });
   Array.prototype.push.apply(this.body, paddedLines);
 };

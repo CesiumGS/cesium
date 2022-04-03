@@ -314,14 +314,9 @@
 
         scene.postRender.addEventListener(function () {
           const time = Cesium.JulianDate.toGregorianDate(scene.lastRenderTime);
-          const value =
-            time.hour +
-            ":" +
-            time.minute +
-            ":" +
-            time.second +
-            ":" +
-            time.millisecond.toFixed(0);
+          const value = `${time.hour}:${time.minute}:${
+            time.second
+          }:${time.millisecond.toFixed(0)}`;
           Cesium.knockout.getObservable(viewModel, "lastRenderTime")(value);
         });
 

@@ -605,17 +605,7 @@ Color.prototype.equalsEpsilon = function (other, epsilon) {
  * @returns {String} A string representing this Color in the format '(red, green, blue, alpha)'.
  */
 Color.prototype.toString = function () {
-  return (
-    "(" +
-    this.red +
-    ", " +
-    this.green +
-    ", " +
-    this.blue +
-    ", " +
-    this.alpha +
-    ")"
-  );
+  return `(${this.red}, ${this.green}, ${this.blue}, ${this.alpha})`;
 };
 
 /**
@@ -630,9 +620,9 @@ Color.prototype.toCssColorString = function () {
   const green = Color.floatToByte(this.green);
   const blue = Color.floatToByte(this.blue);
   if (this.alpha === 1) {
-    return "rgb(" + red + "," + green + "," + blue + ")";
+    return `rgb(${red},${green},${blue})`;
   }
-  return "rgba(" + red + "," + green + "," + blue + "," + this.alpha + ")";
+  return `rgba(${red},${green},${blue},${this.alpha})`;
 };
 
 /**
@@ -643,24 +633,24 @@ Color.prototype.toCssColorString = function () {
 Color.prototype.toCssHexString = function () {
   let r = Color.floatToByte(this.red).toString(16);
   if (r.length < 2) {
-    r = "0" + r;
+    r = `0${r}`;
   }
   let g = Color.floatToByte(this.green).toString(16);
   if (g.length < 2) {
-    g = "0" + g;
+    g = `0${g}`;
   }
   let b = Color.floatToByte(this.blue).toString(16);
   if (b.length < 2) {
-    b = "0" + b;
+    b = `0${b}`;
   }
   if (this.alpha < 1) {
     let hexAlpha = Color.floatToByte(this.alpha).toString(16);
     if (hexAlpha.length < 2) {
-      hexAlpha = "0" + hexAlpha;
+      hexAlpha = `0${hexAlpha}`;
     }
-    return "#" + r + g + b + hexAlpha;
+    return `#${r}${g}${b}${hexAlpha}`;
   }
-  return "#" + r + g + b;
+  return `#${r}${g}${b}`;
 };
 
 /**

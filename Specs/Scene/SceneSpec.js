@@ -123,6 +123,7 @@ describe(
       expect(contextAttributes.stencil).toEqual(true);
       expect(contextAttributes.premultipliedAlpha).toEqual(true);
       expect(contextAttributes.preserveDrawingBuffer).toEqual(false);
+      expect(scene._depthPlane._ellipsoidOffset).toEqual(0);
     });
 
     it("constructor sets options", function () {
@@ -141,6 +142,7 @@ describe(
           webgl: webglOptions,
         },
         mapProjection: mapProjection,
+        depthPlaneEllipsoidOffset: Number.POSITIVE_INFINITY,
       });
 
       const contextAttributes = s.context._gl.getContextAttributes();
@@ -155,6 +157,7 @@ describe(
         webglOptions.preserveDrawingBuffer
       );
       expect(s.mapProjection).toEqual(mapProjection);
+      expect(s._depthPlane._ellipsoidOffset).toEqual(Number.POSITIVE_INFINITY);
 
       s.destroyForSpecs();
     });
@@ -827,7 +830,7 @@ describe(
 
       expect(s).toRenderAndCall(function (rgba) {
         expect(rgba[0]).toBeGreaterThan(0);
-        expect(rgba[0]).toBeLessThanOrEqualTo(255);
+        expect(rgba[0]).toBeLessThanOrEqual(255);
         expect(rgba[1]).toEqual(0);
         expect(rgba[2]).toEqual(0);
       });
@@ -1162,7 +1165,7 @@ describe(
 
       expect(function () {
         s.render();
-      }).toThrowRuntimeError();
+      }).toThrowError(RuntimeError);
 
       expect(spyListener).toHaveBeenCalledWith(s, error);
 
@@ -1392,13 +1395,13 @@ describe(
 
     it("get maximumAliasedLineWidth", function () {
       const s = createScene();
-      expect(s.maximumAliasedLineWidth).toBeGreaterThanOrEqualTo(1);
+      expect(s.maximumAliasedLineWidth).toBeGreaterThanOrEqual(1);
       s.destroyForSpecs();
     });
 
     it("get maximumCubeMapSize", function () {
       const s = createScene();
-      expect(s.maximumCubeMapSize).toBeGreaterThanOrEqualTo(16);
+      expect(s.maximumCubeMapSize).toBeGreaterThanOrEqual(16);
       s.destroyForSpecs();
     });
 
@@ -1424,7 +1427,7 @@ describe(
 
         expect(function () {
           s.renderForSpecs();
-        }).not.toThrowRuntimeError();
+        }).not.toThrowError(RuntimeError);
       }
       s.destroyForSpecs();
     });
@@ -1451,7 +1454,7 @@ describe(
 
         expect(function () {
           s.renderForSpecs();
-        }).not.toThrowRuntimeError();
+        }).not.toThrowError(RuntimeError);
       }
       s.destroyForSpecs();
     });

@@ -15,6 +15,11 @@ import MetadataEntity from "./MetadataEntity.js";
  * @constructor
  * @private
  */
+
+// An empty class is used because JsonMetadataTable is an older type of metadata table
+// that does not have a class definition.
+const emptyClass = {};
+
 export default function JsonMetadataTable(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThan("options.count", options.count, 0);
@@ -33,7 +38,7 @@ export default function JsonMetadataTable(options) {
  * @private
  */
 JsonMetadataTable.prototype.hasProperty = function (propertyId) {
-  return MetadataEntity.hasProperty(propertyId, this._properties);
+  return MetadataEntity.hasProperty(propertyId, this._properties, emptyClass);
 };
 
 /**
@@ -44,7 +49,7 @@ JsonMetadataTable.prototype.hasProperty = function (propertyId) {
  * @private
  */
 JsonMetadataTable.prototype.getPropertyIds = function (results) {
-  return MetadataEntity.getPropertyIds(this._properties, undefined, results);
+  return MetadataEntity.getPropertyIds(this._properties, emptyClass, results);
 };
 
 /**
@@ -63,9 +68,7 @@ JsonMetadataTable.prototype.getProperty = function (index, propertyId) {
   Check.typeOf.string("propertyId", propertyId);
 
   if (index < 0 || index >= this._count) {
-    throw new DeveloperError(
-      "index must be in the range [0, " + this._count + ")"
-    );
+    throw new DeveloperError(`index must be in the range [0, ${this._count})`);
   }
   //>>includeEnd('debug');
 
@@ -94,9 +97,7 @@ JsonMetadataTable.prototype.setProperty = function (index, propertyId, value) {
   Check.typeOf.string("propertyId", propertyId);
 
   if (index < 0 || index >= this._count) {
-    throw new DeveloperError(
-      "index must be in the range [0, " + this._count + ")"
-    );
+    throw new DeveloperError(`index must be in the range [0, ${this._count})`);
   }
   //>>includeEnd('debug');
 

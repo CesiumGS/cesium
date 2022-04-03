@@ -18,7 +18,6 @@ import Texture from "../Renderer/Texture.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
-import when from "../ThirdParty/when.js";
 import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
 
 /**
@@ -433,7 +432,7 @@ function getUniformValueGetterAndSetter(stage, uniforms, name) {
       ) {
         stage._texturesToRelease.push(actualValue);
         delete actualUniforms[name];
-        delete actualUniforms[name + "Dimensions"];
+        delete actualUniforms[`${name}Dimensions`];
       }
 
       if (currentValue instanceof Texture) {
@@ -508,7 +507,7 @@ function createUniformMap(stage) {
         value instanceof HTMLCanvasElement ||
         value instanceof HTMLVideoElement
       ) {
-        uniformMap[name + "Dimensions"] = getUniformMapDimensionsFunction(
+        uniformMap[`${name}Dimensions`] = getUniformMapDimensionsFunction(
           uniformMap,
           name
         );
@@ -559,32 +558,31 @@ function createDrawCommand(stage, context) {
 
     fs = fs.replace(/varying\s+vec2\s+v_textureCoordinates;/g, "");
     fs =
-      "#define CZM_SELECTED_FEATURE \n" +
-      "uniform sampler2D czm_idTexture; \n" +
-      "uniform sampler2D czm_selectedIdTexture; \n" +
-      "uniform float czm_selectedIdTextureStep; \n" +
-      "varying vec2 v_textureCoordinates; \n" +
-      "bool czm_selected(vec2 offset) \n" +
-      "{ \n" +
-      "    bool selected = false;\n" +
-      "    vec4 id = texture2D(czm_idTexture, v_textureCoordinates + offset); \n" +
-      "    for (int i = 0; i < " +
-      width +
-      "; ++i) \n" +
-      "    { \n" +
-      "        vec4 selectedId = texture2D(czm_selectedIdTexture, vec2((float(i) + 0.5) * czm_selectedIdTextureStep, 0.5)); \n" +
-      "        if (all(equal(id, selectedId))) \n" +
-      "        { \n" +
-      "            return true; \n" +
-      "        } \n" +
-      "    } \n" +
-      "    return false; \n" +
-      "} \n\n" +
-      "bool czm_selected() \n" +
-      "{ \n" +
-      "    return czm_selected(vec2(0.0)); \n" +
-      "} \n\n" +
-      fs;
+      `${
+        "#define CZM_SELECTED_FEATURE \n" +
+        "uniform sampler2D czm_idTexture; \n" +
+        "uniform sampler2D czm_selectedIdTexture; \n" +
+        "uniform float czm_selectedIdTextureStep; \n" +
+        "varying vec2 v_textureCoordinates; \n" +
+        "bool czm_selected(vec2 offset) \n" +
+        "{ \n" +
+        "    bool selected = false;\n" +
+        "    vec4 id = texture2D(czm_idTexture, v_textureCoordinates + offset); \n" +
+        "    for (int i = 0; i < "
+      }${width}; ++i) \n` +
+      `    { \n` +
+      `        vec4 selectedId = texture2D(czm_selectedIdTexture, vec2((float(i) + 0.5) * czm_selectedIdTextureStep, 0.5)); \n` +
+      `        if (all(equal(id, selectedId))) \n` +
+      `        { \n` +
+      `            return true; \n` +
+      `        } \n` +
+      `    } \n` +
+      `    return false; \n` +
+      `} \n\n` +
+      `bool czm_selected() \n` +
+      `{ \n` +
+      `    return czm_selected(vec2(0.0)); \n` +
+      `} \n\n${fs}`;
   }
 
   const fragmentShader = new ShaderSource({
@@ -711,7 +709,7 @@ function updateUniformTextures(stage, context) {
 
   if (promises.length > 0) {
     stage._ready = false;
-    stage._texturePromise = when.all(promises).then(function () {
+    stage._texturePromise = Promise.all(promises).then(function () {
       stage._ready = true;
       stage._texturePromise = undefined;
     });

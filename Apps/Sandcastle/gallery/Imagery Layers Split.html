@@ -69,11 +69,11 @@
         const earthAtNight = layers.addImageryProvider(
           new Cesium.IonImageryProvider({ assetId: 3812 })
         );
-        earthAtNight.splitDirection = Cesium.ImagerySplitDirection.LEFT; // Only show to the left of the slider.
+        earthAtNight.splitDirection = Cesium.SplitDirection.LEFT; // Only show to the left of the slider.
 
         // Sync the position of the slider with the split position
         const slider = document.getElementById("slider");
-        viewer.scene.imagerySplitPosition =
+        viewer.scene.splitPosition =
           slider.offsetLeft / slider.parentElement.offsetWidth;
 
         const handler = new Cesium.ScreenSpaceEventHandler(slider);
@@ -89,8 +89,8 @@
           const splitPosition =
             (slider.offsetLeft + relativeOffset) /
             slider.parentElement.offsetWidth;
-          slider.style.left = 100.0 * splitPosition + "%";
-          viewer.scene.imagerySplitPosition = splitPosition;
+          slider.style.left = `${100.0 * splitPosition}%`;
+          viewer.scene.splitPosition = splitPosition;
         }
 
         handler.setInputAction(function () {

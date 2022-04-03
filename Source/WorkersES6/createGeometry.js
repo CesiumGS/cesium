@@ -1,7 +1,6 @@
 /* global require */
 import defined from "../Core/defined.js";
 import PrimitivePipeline from "../Scene/PrimitivePipeline.js";
-import when from "../ThirdParty/when.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
 const moduleCache = {};
@@ -11,11 +10,11 @@ function getModule(moduleName) {
   if (!defined(module)) {
     if (typeof exports === "object") {
       // Use CommonJS-style require.
-      moduleCache[module] = module = require("Workers/" + moduleName);
+      moduleCache[module] = module = require(`Workers/${moduleName}`);
     } else {
       // Use AMD-style require.
       // in web workers, require is synchronous
-      require(["Workers/" + moduleName], function (f) {
+      require([`Workers/${moduleName}`], function (f) {
         module = f;
         moduleCache[module] = f;
       });
@@ -43,7 +42,7 @@ function createGeometry(parameters, transferableObjects) {
     }
   }
 
-  return when.all(resultsOrPromises, function (results) {
+  return Promise.all(resultsOrPromises).then(function (results) {
     return PrimitivePipeline.packCreateGeometryResults(
       results,
       transferableObjects
