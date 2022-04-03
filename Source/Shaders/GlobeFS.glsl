@@ -485,11 +485,11 @@ void main()
         #else
             #ifndef HDR
                 groundAtmosphereColor.rgb = vec3(1.0) - exp(-fExposure * groundAtmosphereColor.rgb);
+                groundAtmosphereColor.rgb = czm_saturation(groundAtmosphereColor.rgb, 1.6);
             #endif
             
-            float transmittance = (1.0 - groundAtmosphereColor.a);
-            vec3 finalAtmosphereColor = finalColor.rgb * transmittance + groundAtmosphereColor.rgb;
-            finalColor.rgb = mix(finalColor.rgb, finalAtmosphereColor, fade);
+            vec3 finalAtmosphereColor = mix(finalColor.rgb, groundAtmosphereColor.rgb, groundAtmosphereColor.a + 0.5);
+            finalColor.rgb = mix(finalColor.rgb, finalAtmosphereColor.rgb, fade);
         #endif
     }
 #endif
