@@ -16,6 +16,7 @@ import PerspectiveOffCenterFrustum from "../Core/PerspectiveOffCenterFrustum.js"
 import Quaternion from "../Core/Quaternion.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Primitive from "./Primitive.js";
+import Pass from "../Renderer/Pass.js";
 
 /**
  * Draws the outline of the camera's view frustum.
@@ -182,6 +183,7 @@ DebugCameraPrimitive.prototype.update = function (frameState) {
         }),
         asynchronous: false,
       });
+      planesPrimitives[i].pass = Pass.TERRAIN_CLASSIFICATION;
 
       outlinePrimitives[i] = new Primitive({
         geometryInstances: new GeometryInstance({
@@ -203,6 +205,7 @@ DebugCameraPrimitive.prototype.update = function (frameState) {
         }),
         asynchronous: false,
       });
+      outlinePrimitives[i].pass = Pass.TERRAIN_CLASSIFICATION;
     }
   }
 

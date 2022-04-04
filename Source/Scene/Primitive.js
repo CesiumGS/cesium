@@ -1926,6 +1926,7 @@ function createCommands(
   }
 
   var pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
+  if (primitive.pass) pass = primitive.pass;
 
   var multiplier = twoPasses ? 2 : 1;
   multiplier *= defined(primitive._depthFailAppearance) ? 2 : 1;
