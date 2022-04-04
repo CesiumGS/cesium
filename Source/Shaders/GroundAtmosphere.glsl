@@ -2,6 +2,7 @@ const float ATMOSPHERE_THICKNESS = 111e3; // The thickness of the atmosphere in 
 const float G = 0.9; // The anisotropy of the medium. Only used in the phase function for Mie scattering.
 const float RAYLEIGH_HEIGHT_LIMIT = 10e3; // The height at which Rayleigh scattering stops.
 const float MIE_HEIGHT_LIMIT = 3.2e3; // The height at which Mie scattering stops.
+const vec2 HEIGHT_SCALE = vec2(RAYLEIGH_HEIGHT_LIMIT, MIE_HEIGHT_LIMIT);
 const vec3 BETA_RAYLEIGH = vec3(5.8e-6, 13.5e-6, 33.1e-6); // Better constants from Precomputed Atmospheric Scattering (https://hal.inria.fr/inria-00288758/document)
 const vec3 BETA_MIE = vec3(21e-6);
 const vec3 LIGHT_INTENSITY = vec3(15.0);
@@ -33,8 +34,6 @@ void computeAtmosphericScattering(
     rayleighColor = vec3(0.0);
     mieColor = vec3(0.0);
     opacity = 0.0;
-
-    vec2 HEIGHT_SCALE = vec2(RAYLEIGH_HEIGHT_LIMIT, MIE_HEIGHT_LIMIT);
 
     // Setup the radii for the inner and outer ring of the atmosphere.
     float atmosphereInnerRadius = length(positionWC);

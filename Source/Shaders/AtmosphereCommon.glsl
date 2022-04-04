@@ -4,6 +4,7 @@ const float ATMOSPHERE_THICKNESS = 111e3; // The thickness of the atmosphere in 
 const float G = 0.9; // The anisotropy of the medium. Only used in the phase function for Mie scattering.
 const float RAYLEIGH_HEIGHT_LIMIT = 10e3; // The height at which Rayleigh scattering stops.
 const float MIE_HEIGHT_LIMIT = 3.2e3; // The height at which Mie scattering stops.
+const vec2 HEIGHT_SCALE = vec2(RAYLEIGH_HEIGHT_LIMIT, MIE_HEIGHT_LIMIT);
 const vec3 BETA_RAYLEIGH = vec3(5.8e-6, 13.5e-6, 33.1e-6); // Better constants from Precomputed Atmospheric Scattering (https://hal.inria.fr/inria-00288758/document)
 const vec3 BETA_MIE = vec3(21e-6);
 const vec3 LIGHT_INTENSITY = vec3(100.0);
@@ -172,10 +173,10 @@ vec4 computeAtmosphereColor(
     vec3 rayleigh = rayleighPhase * rayleighColor;
     vec3 mie = miePhase * mieColor;
 
-    vec3 color = (rayleigh + mie) * INTENSITY;
+    vec3 color = (rayleigh + mie) * LIGHT_INTENSITY;
     opacity = mix(clamp(color.b, 0.0, 1.0), 1.0, opacity) * smoothstep(0.0, 1.0, czm_morphTime);
     
-    return vec4((rayleigh + mie) * INTENSITY, opacity);
+    return vec4(color, opacity);
 }
 
 vec3 getLightDirection(vec3 positionWC)

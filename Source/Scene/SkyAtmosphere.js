@@ -253,10 +253,12 @@ SkyAtmosphere.prototype.update = function (frameState, globe) {
     }
 
     const vs = new ShaderSource({
+      defines: defines,
       sources: [AtmosphereCommon, SkyAtmosphereVS],
     });
 
     const fs = new ShaderSource({
+      defines: defines,
       sources: [AtmosphereCommon, SkyAtmosphereFS],
     });
 
