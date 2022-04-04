@@ -356,7 +356,7 @@ TileCoordinatesImageryProvider.prototype.requestImage = function (
   context.fillText(`X: ${x}`, 124, 136);
   context.fillText(`Y: ${y}`, 124, 186);
 
-  return canvas;
+  return Promise.resolve(canvas);
 };
 
 /**
