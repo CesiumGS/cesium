@@ -444,25 +444,35 @@ void main()
             dynamicLighting = true;     
         #endif
 
-        AtmosphereColor atmosphereColor;
+        vec3 rayleighColor;
+        vec3 mieColor;
+        float opacity;
+
         vec3 positionWC;
 
         // When the camera is far away (camera distance > nightFadeOutDistance), the scattering is computed in the fragment shader.
         // Otherwise, the scattering is computed in the vertex shader.
         #ifdef PER_FRAGMENT_GROUND_ATMOSPHERE
             positionWC = computeEllipsoidPosition();
-            atmosphereColor = computeGroundAtmosphereFromSpace(positionWC, dynamicLighting, atmosphereLightDirection);
+            vec3 lightDirection = czm_branchFreeTernary(dynamicLighting, atmosphereLightDirection, normalize(positionWC));
+            computeAtmosphericScattering(
+                positionWC,
+                lightDirection,
+                rayleighColor,
+                mieColor,
+                opacity
+            );
         #else
-            atmosphereColor.rayleigh = v_atmosphereRayleighColor;
-            atmosphereColor.mie = v_atmosphereMieColor;
-            atmosphereColor.opacity = v_atmosphereOpacity;
             positionWC = v_positionMC;
+            rayleighColor = v_atmosphereRayleighColor;
+            mieColor = v_atmosphereMieColor;
+            opacity = v_atmosphereOpacity;
         #endif
 
-        atmosphereColor.rayleigh = colorCorrect(atmosphereColor.rayleigh);
-        atmosphereColor.mie = colorCorrect(atmosphereColor.mie);
+        rayleighColor = colorCorrect(rayleighColor);
+        mieColor = colorCorrect(mieColor);
 
-        vec4 groundAtmosphereColor = computeFinalColor(positionWC, dynamicLighting, atmosphereLightDirection, atmosphereColor.rayleigh, atmosphereColor.mie, atmosphereColor.opacity);
+        vec4 groundAtmosphereColor = computeFinalColor(positionWC, dynamicLighting, atmosphereLightDirection, rayleighColor, mieColor, opacity);
 
         // Fog is applied to tiles selected for fog, close to the Eartth.
         #ifdef FOG

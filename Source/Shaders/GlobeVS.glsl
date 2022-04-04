@@ -221,11 +221,14 @@ void main()
     dynamicLighting = true;
 #endif
 
-    AtmosphereColor atmosColor = computeGroundAtmosphereFromSpace(position3DWC, dynamicLighting, atmosphereLightDirection);
- 
-    v_atmosphereRayleighColor = atmosColor.rayleigh;
-    v_atmosphereMieColor = atmosColor.mie;
-    v_atmosphereOpacity = atmosColor.opacity;
+    vec3 lightDirection = czm_branchFreeTernary(dynamicLighting, atmosphereLightDirection, normalize(position3DWC));
+    computeAtmosphericScattering(
+        position3DWC,
+        lightDirection,
+        v_atmosphereRayleighColor,
+        v_atmosphereMieColor,
+        v_atmosphereOpacity
+    );
 #endif
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(UNDERGROUND_COLOR) || defined(TRANSLUCENT)
