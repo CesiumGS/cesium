@@ -504,8 +504,8 @@ void main()
                 float fadeInDist = u_nightFadeDistance.x;
                 float fadeOutDist = u_nightFadeDistance.y;
             
-                float sunlitAtmosphereIntensity = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
-                float darken = clamp(dot(normalize(positionWC), atmosphereLightDirection), 0.0, 1.0);
+                float sunlitAtmosphereIntensity = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.1, 1.0);
+                float darken = clamp(dot(normalize(positionWC), atmosphereLightDirection), 0.1, 1.0);
                 vec3 darkenendGroundAtmosphereColor = mix(groundAtmosphereColor.rgb, finalColor.rgb, darken);
 
                 finalAtmosphereColor = mix(darkenendGroundAtmosphereColor, finalAtmosphereColor, sunlitAtmosphereIntensity);
