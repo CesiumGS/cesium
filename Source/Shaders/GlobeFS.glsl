@@ -499,6 +499,18 @@ void main()
             #endif
             
             vec3 finalAtmosphereColor = mix(finalColor.rgb, groundAtmosphereColor.rgb, groundAtmosphereColor.a + 0.5);
+
+            #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
+                float fadeInDist = u_nightFadeDistance.x;
+                float fadeOutDist = u_nightFadeDistance.y;
+            
+                float sunlitAtmosphereIntensity = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
+                float darken = clamp(dot(normalize(positionWC), atmosphereLightDirection), 0.0, 1.0);
+                vec3 darkenendGroundAtmosphereColor = mix(groundAtmosphereColor.rgb, finalColor.rgb, darken);
+
+                finalAtmosphereColor = mix(darkenendGroundAtmosphereColor, finalAtmosphereColor, sunlitAtmosphereIntensity);
+            #endif
+            
             finalColor.rgb = mix(finalColor.rgb, finalAtmosphereColor.rgb, fade);
         #endif
     }
