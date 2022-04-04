@@ -1,11 +1,15 @@
 uniform vec3 u_radiiAndDynamicAtmosphereColor;
 
-const float G = 0.9;
-const float ATMOSPHERE_THICKNESS = 111e3;
-const vec2 HEIGHT_SCALE = vec2(10e3, 3.2e3); // (Rayleigh, Mie) scales.
+const float ATMOSPHERE_THICKNESS = 111e3; // The thickness of the atmosphere in meters.
+const float G = 0.9; // The anisotropy of the medium. Only used in the phase function for Mie scattering.
+const float RAYLEIGH_HEIGHT_LIMIT = 10e3; // The height at which Rayleigh scattering stops.
+const float MIE_HEIGHT_LIMIT = 3.2e3; // The height at which Mie scattering stops.
 const vec3 BETA_RAYLEIGH = vec3(5.8e-6, 13.5e-6, 33.1e-6); // Better constants from Precomputed Atmospheric Scattering (https://hal.inria.fr/inria-00288758/document)
 const vec3 BETA_MIE = vec3(21e-6);
-const vec3 INTENSITY = vec3(100.0);
+const vec3 LIGHT_INTENSITY = vec3(100.0);
+const int PRIMARY_STEPS = 16; // Number of times the ray from the camera to the world position (primary ray) is sampled.
+const int LIGHT_STEPS = 4; // Number of times the light is sampled from the light source's intersection with the atmosphere to a sample position on the primary ray.
+
 
 /**
  * This function computes the colors contributed by Rayliegh and Mie scattering at a given position, as well as
@@ -30,10 +34,6 @@ void computeAtmosphericScattering(
     rayleighColor = vec3(0.0);
     mieColor = vec3(0.0);
     opacity = 0.0;
-
-    // Extract the ray sampling parameteres that affect the visual quality.
-    const float primaryRaySteps = 16.0;
-    const float lightRaySteps = 4.0;
 
     // Adjust the radius of the sky atmosphere, so at far away distances, low LOD tiles don't show gaps.
     float distMin = u_radiiAndDynamicAtmosphereColor.x / 4.0;
@@ -75,18 +75,15 @@ void computeAtmosphericScattering(
     primaryRayAtmosphereIntersect.stop = min(primaryRayAtmosphereIntersect.stop, length(cameraToPositionWC));
 
     // Setup for sampling positions along the ray - starting from the intersection with the outer ring of the atmosphere.
-    float rayStepLength = (primaryRayAtmosphereIntersect.stop - primaryRayAtmosphereIntersect.start) / primaryRaySteps;
+    float rayStepLength = (primaryRayAtmosphereIntersect.stop - primaryRayAtmosphereIntersect.start) / float(PRIMARY_STEPS);
     float rayPositionLength = primaryRayAtmosphereIntersect.start;
 
     vec3 rayleighAccumulation = vec3(0.0);
     vec3 mieAccumulation = vec3(0.0);
     vec2 opticalDepth = vec2(0.0);
 
-    const int primaryRayStepsInt = int(primaryRaySteps);
-    const int lightRayStepsInt = int(lightRaySteps);
-
     // Sample positions on the primary ray.
-    for (int i = 0; i < primaryRayStepsInt; i++) {
+    for (int i = 0; i < PRIMARY_STEPS; i++) {
         // Calculate sample position along viewpoint ray.
         vec3 samplePosition = czm_viewerPositionWC + cameraToPositionWCDirection * (rayPositionLength + rayStepLength);
         
@@ -101,13 +98,13 @@ void computeAtmosphericScattering(
         czm_ray lightRay = czm_ray(samplePosition, lightDirection);
         czm_raySegment lightRayAtmosphereIntersect = czm_raySphereIntersectionInterval(lightRay, origin, atmosphereOuterRadius);
         
-        float lightStepLength = lightRayAtmosphereIntersect.stop / lightRaySteps;
+        float lightStepLength = lightRayAtmosphereIntersect.stop / float(LIGHT_STEPS);
         float lightPositionLength = 0.0;
 
         vec2 lightOpticalDepth = vec2(0.0);
 
         // Sample positions along the light ray, to accumulate incidence of light on the latest sample segment.
-        for (int j = 0; j < lightRayStepsInt; j++) {
+        for (int j = 0; j < LIGHT_STEPS; j++) {
 
             // Calculate sample position along light ray.
             vec3 lightPosition = samplePosition + lightDirection * (lightPositionLength + lightStepLength * 0.5);
@@ -138,7 +135,7 @@ void computeAtmosphericScattering(
     mieColor = allowMie ? BETA_MIE * mieAccumulation : vec3(0.0);
     
     // Alter the opacity based on how close the viewer is to the ground.
-    // (0.0 = At edge of atmospher, 1.0 = On ground)
+    // (0.0 = At edge of atmosphere, 1.0 = On ground)
     float cameraHeight = czm_eyeHeight + atmosphereInnerRadius;
     opacity = clamp((atmosphereOuterRadius - cameraHeight) / (atmosphereOuterRadius - atmosphereInnerRadius), 0.0, 1.0);
 
