@@ -23,9 +23,8 @@ import CullFace from "./CullFace.js";
 import SceneMode from "./SceneMode.js";
 
 /**
- * An atmosphere drawn around the limb of the provided ellipsoid.  Based on
- * {@link https://developer.nvidia.com/gpugems/GPUGems2/gpugems2_chapter16.html|Accurate Atmospheric Scattering}
- * in GPU Gems 2.
+ * An atmosphere drawn around the limb of the provided ellipsoid. Based on
+ * {@link http://nishitalab.org/user/nis/cdrom/sig93_nis.pdf|Display of The Earth Taking Into Account Atmospheric Scattering}.
  * <p>
  * This is only supported in 3D. Atmosphere is faded out when morphing to 2D or Columbus view.
  * </p>
@@ -253,48 +252,21 @@ SkyAtmosphere.prototype.update = function (frameState, globe) {
       defines.push("GLOBE_TRANSLUCENT");
     }
 
-    let vs = new ShaderSource({
-      defines: defines.concat("SKY_FROM_SPACE"),
+    const vs = new ShaderSource({
       sources: [AtmosphereCommon, SkyAtmosphereVS],
     });
 
-    let fs = new ShaderSource({
-      defines: defines.concat("SKY_FROM_SPACE"),
+    const fs = new ShaderSource({
       sources: [AtmosphereCommon, SkyAtmosphereFS],
     });
 
-    this._spSkyFromSpace = ShaderProgram.fromCache({
+    this._spSkyAtmosphere = ShaderProgram.fromCache({
       context: context,
       vertexShaderSource: vs,
       fragmentShaderSource: fs,
     });
 
-    vs = new ShaderSource({
-      defines: defines.concat("SKY_FROM_ATMOSPHERE"),
-      sources: [AtmosphereCommon, SkyAtmosphereVS],
-    });
-
-    fs = new ShaderSource({
-      defines: defines.concat("SKY_FROM_ATMOSPHERE"),
-      sources: [AtmosphereCommon, SkyAtmosphereFS],
-    });
-
-    this._spSkyFromAtmosphere = ShaderProgram.fromCache({
-      context: context,
-      vertexShaderSource: vs,
-      fragmentShaderSource: fs,
-    });
-  }
-
-  const cameraPosition = frameState.camera.positionWC;
-  const cameraHeight = Cartesian3.magnitude(cameraPosition);
-
-  if (cameraHeight > this._radiiAndDynamicAtmosphereColor.x) {
-    // Camera in space
-    command.shaderProgram = this._spSkyFromSpace;
-  } else {
-    // Camera in atmosphere
-    command.shaderProgram = this._spSkyFromAtmosphere;
+    command.shaderProgram = this._spSkyAtmosphere;
   }
 
   return command;
@@ -353,9 +325,8 @@ SkyAtmosphere.prototype.isDestroyed = function () {
 SkyAtmosphere.prototype.destroy = function () {
   const command = this._command;
   command.vertexArray = command.vertexArray && command.vertexArray.destroy();
-  this._spSkyFromSpace = this._spSkyFromSpace && this._spSkyFromSpace.destroy();
-  this._spSkyFromAtmosphere =
-    this._spSkyFromAtmosphere && this._spSkyFromAtmosphere.destroy();
+  this._spSkyAtmosphere =
+    this._spSkyAtmosphere && this._spSkyAtmosphere.destroy();
   return destroyObject(this);
 };
 export default SkyAtmosphere;
