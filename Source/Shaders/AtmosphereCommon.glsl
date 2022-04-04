@@ -140,11 +140,6 @@ void computeAtmosphericScattering(
     float cameraHeight = czm_eyeHeight + atmosphereInnerRadius;
     opacity = clamp((atmosphereOuterRadius - cameraHeight) / (atmosphereOuterRadius - atmosphereInnerRadius), 0.0, 1.0);
 
-    // Alter the opacity based on time of day.
-    // (0.0 = Night, 1.0 = Day)
-    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
-    float nightAlpha = (lightEnum != 0.0) ? clamp(dot(normalize(positionWC), lightDirection), 0.0, 1.0) : 1.0;
-    opacity *= pow(nightAlpha, 0.5);
 }
 
 
