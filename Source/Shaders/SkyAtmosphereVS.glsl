@@ -6,6 +6,7 @@ varying vec3 v_outerPositionWC;
 varying vec3 v_mieColor;
 varying vec3 v_rayleighColor;
 varying float v_opacity;
+varying float v_translucent;
 #endif
 
 void main(void)
@@ -19,7 +20,8 @@ void main(void)
         lightDirection,
         v_rayleighColor,
         v_mieColor,
-        v_opacity
+        v_opacity,
+        v_translucent
     );
 #endif
     v_outerPositionWC = positionWC.xyz;

@@ -11,6 +11,15 @@ const vec3 LIGHT_INTENSITY = vec3(100.0);
 const int PRIMARY_STEPS = 16; // Number of times the ray from the camera to the world position (primary ray) is sampled.
 const int LIGHT_STEPS = 4; // Number of times the light is sampled from the light source's intersection with the atmosphere to a sample position on the primary ray.
 
+float interpolateByDistance(vec4 nearFarScalar, float distance)
+{
+    float startDistance = nearFarScalar.x;
+    float startValue = nearFarScalar.y;
+    float endDistance = nearFarScalar.z;
+    float endValue = nearFarScalar.w;
+    float t = clamp((distance - startDistance) / (endDistance - startDistance), 0.0, 1.0);
+    return mix(startValue, endValue, t);
+}
 
 /**
  * This function computes the colors contributed by Rayliegh and Mie scattering at a given position, as well as
@@ -28,13 +37,15 @@ void computeAtmosphericScattering(
     vec3 lightDirection,
     out vec3 rayleighColor,
     out vec3 mieColor,
-    out float opacity
+    out float opacity,
+    out float translucent
 ) {
 
     // Initialize the default scattering amounts to 0.
     rayleighColor = vec3(0.0);
     mieColor = vec3(0.0);
     opacity = 0.0;
+    translucent = 0.0;
 
     // Adjust the radius of the sky atmosphere, so at far away distances, low LOD tiles don't show gaps.
     float distMin = u_radiiAndDynamicAtmosphereColor.x / 4.0;
@@ -56,10 +67,32 @@ void computeAtmosphericScattering(
     // Calculate intersection from the camera to the outer ring of the atmosphere.
     czm_raySegment primaryRayAtmosphereIntersect = czm_raySphereIntersectionInterval(primaryRay, origin, atmosphereOuterRadius);
 
-    // Return empty colors if intersects with globe geometry, if globe is translucent and camera is inside atmosphere.
+    // Brighten the sky atmosphere under the Earth's atmosphere when translucency is enabled.
     #if defined(GLOBE_TRANSLUCENT)
+
+        // Check for intersection with the inner radius of the atmopshere.
         czm_raySegment primaryRayEarthIntersect = czm_raySphereIntersectionInterval(primaryRay, origin, atmosphereInnerRadius + ellipsoidRadiiDifference);
         if (primaryRayEarthIntersect.start > 0.0 && primaryRayEarthIntersect.stop > 0.0) {
+            
+            // Compute accuration position on globe.
+            vec3 direction = normalize(positionWC);
+            czm_ray ellipsoidRay = czm_ray(positionWC, -direction);
+            czm_raySegment ellipsoidIntersection = czm_rayEllipsoidIntersectionInterval(ellipsoidRay, origin, czm_ellipsoidInverseRadii);
+            vec3 onEarth = positionWC - (direction * ellipsoidIntersection.start);
+
+            // Control the color using the camera angle.
+            float angle = dot(normalize(czm_viewerPositionWC), normalize(onEarth));
+
+            // Control the opacity using the distance from Earth.
+            opacity = interpolateByDistance(vec4(0.0, 1.0, czm_ellipsoidRadii.x, 0.0), length(czm_viewerPositionWC - onEarth));
+            vec3 horizonColor = vec3(0.1, 0.2, 0.3);
+            vec3 nearColor = vec3(0.0);
+
+            rayleighColor = mix(nearColor, horizonColor, exp(-angle) * opacity);
+            
+            // Set the traslucent flag to avoid alpha adjustment in computeFinalColor funciton.
+            translucent = 1.0;
+
             return;
         }
     #endif
@@ -148,7 +181,8 @@ vec4 computeAtmosphereColor(
     vec3 lightDirection,
     vec3 rayleighColor,
     vec3 mieColor,
-    float opacity
+    float opacity,
+    float translucent
 ) {
 
     // Setup the primary ray: from the camera position to the vertex position.
@@ -169,7 +203,10 @@ vec4 computeAtmosphereColor(
     vec3 mie = miePhase * mieColor;
 
     vec3 color = (rayleigh + mie) * LIGHT_INTENSITY;
-    opacity = mix(clamp(color.b, 0.0, 1.0), 1.0, opacity) * smoothstep(0.0, 1.0, czm_morphTime);
+
+    if (translucent == 0.0) {
+        opacity = mix(clamp(color.b, 0.0, 1.0), 1.0, opacity) * smoothstep(0.0, 1.0, czm_morphTime);
+    }
     
     return vec4(color, opacity);
 }

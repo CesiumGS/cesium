@@ -6,6 +6,7 @@ uniform vec3 u_hsbShift;
 varying vec3 v_mieColor;
 varying vec3 v_rayleighColor;
 varying float v_opacity;
+varying float v_translucent;
 #endif
 
 void main (void)
@@ -15,6 +16,7 @@ void main (void)
     vec3 mieColor;
     vec3 rayleighColor;
     float opacity;
+    float translucent;
 
 
 #ifdef PER_FRAGMENT_ATMOSPHERE
@@ -23,15 +25,17 @@ void main (void)
         lightDirection,
         rayleighColor,
         mieColor,
-        opacity
+        opacity,
+        translucent
     );
 #else
     mieColor = v_mieColor;
     rayleighColor = v_rayleighColor;
     opacity = v_opacity;
+    translucent = v_translucent;
 #endif
 
-    vec4 color = computeAtmosphereColor(v_outerPositionWC, lightDirection, rayleighColor, mieColor, opacity);
+    vec4 color = computeAtmosphereColor(v_outerPositionWC, lightDirection, rayleighColor, mieColor, opacity, translucent);
 
 #ifndef HDR
     color.rgb = czm_acesTonemapping(color.rgb);
