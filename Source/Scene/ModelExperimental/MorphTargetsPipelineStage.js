@@ -100,7 +100,10 @@ MorphTargetsPipelineStage.process = function (renderResources, primitive) {
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
 };
 
-const scratchAttributeInfo = {};
+const scratchAttributeInfo = {
+  attributeString: undefined,
+  functionId: undefined,
+};
 
 function processMorphTargetAttribute(
   renderResources,
@@ -116,11 +119,14 @@ function processMorphTargetAttribute(
     attributeIndex
   );
 
-  getMorphTargetAttributeInfo(attribute, scratchAttributeInfo);
+  const attributeInfo = getMorphTargetAttributeInfo(
+    attribute,
+    scratchAttributeInfo
+  );
 
   addMorphTargetAttributeDeclarationAndFunctionLine(
     shaderBuilder,
-    scratchAttributeInfo,
+    attributeInfo,
     morphTargetIndex
   );
 }
@@ -151,20 +157,21 @@ function getMorphTargetAttributeInfo(attribute, result) {
       result.attributeString = "Position";
       result.functionId =
         MorphTargetsPipelineStage.FUNCTION_ID_GET_MORPHED_POSITION;
-      return;
+      break;
     case VertexAttributeSemantic.NORMAL:
       result.attributeString = "Normal";
       result.functionId =
         MorphTargetsPipelineStage.FUNCTION_ID_GET_MORPHED_NORMAL;
-      return;
+      break;
     case VertexAttributeSemantic.TANGENT:
       result.attributeString = "Tangent";
       result.functionId =
         MorphTargetsPipelineStage.FUNCTION_ID_GET_MORPHED_TANGENT;
-      return;
+      break;
     default:
-      return;
+      break;
   }
+  return result;
 }
 
 function addMorphTargetAttributeDeclarationAndFunctionLine(
