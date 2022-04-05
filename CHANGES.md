@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.93 - 2022-05-02
+
+##### Fixes :wrench:
+
+- Fixed debug label rendering in `Cesium3dTilesInspector`. [#10246](https://github.com/CesiumGS/cesium/issues/10246)
+
 ### 1.92 - 2022-04-01
 
 ##### Breaking Changes :mega:
