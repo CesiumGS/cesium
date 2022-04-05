@@ -167,6 +167,21 @@ function createDefaultMatchers(debug) {
               return Math.abs(a - b) <= epsilon;
             }
 
+            if (defined(a) && defined(b)) {
+              const keys = Object.keys(a);
+              for (let i = 0; i < keys.length; i++) {
+                if (!b.hasOwnProperty(keys[i])) {
+                  return false;
+                }
+                const aVal = a[keys[i]];
+                const bVal = b[keys[i]];
+                if (!equalityTester(aVal, bVal)) {
+                  return false;
+                }
+              }
+              return true;
+            }
+
             return equals(util, a, b);
           }
 
