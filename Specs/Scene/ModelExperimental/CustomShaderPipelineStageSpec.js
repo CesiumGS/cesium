@@ -331,7 +331,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       ]
     );
 
-    ShaderBuilderTester.expectHasVertexFunction(
+    ShaderBuilderTester.expectHasVertexFunctionUnordered(
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS,
@@ -341,7 +341,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         "    vsInput.attributes.texCoord_0 = attributes.texCoord_0;",
       ]
     );
-    ShaderBuilderTester.expectHasFragmentFunction(
+    ShaderBuilderTester.expectHasFragmentFunctionUnordered(
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
@@ -419,7 +419,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       ]
     );
 
-    ShaderBuilderTester.expectHasVertexFunction(
+    ShaderBuilderTester.expectHasVertexFunctionUnordered(
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS,
@@ -428,7 +428,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         "    vsInput.attributes.temperature = attributes.temperature;",
       ]
     );
-    ShaderBuilderTester.expectHasFragmentFunction(
+    ShaderBuilderTester.expectHasFragmentFunctionUnordered(
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
@@ -508,7 +508,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       ]
     );
 
-    ShaderBuilderTester.expectHasVertexFunction(
+    ShaderBuilderTester.expectHasVertexFunctionUnordered(
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS,
@@ -517,7 +517,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
         "    vsInput.attributes.color_1 = attributes.color_1;",
       ]
     );
-    ShaderBuilderTester.expectHasFragmentFunction(
+    ShaderBuilderTester.expectHasFragmentFunctionUnordered(
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
@@ -593,13 +593,13 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       ]
     );
 
-    ShaderBuilderTester.expectHasVertexFunction(
+    ShaderBuilderTester.expectHasVertexFunctionUnordered(
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS,
       ["    vsInput.attributes.positionMC = attributes.positionMC;"]
     );
-    ShaderBuilderTester.expectHasFragmentFunction(
+    ShaderBuilderTester.expectHasFragmentFunctionUnordered(
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
@@ -732,13 +732,13 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       ]
     );
 
-    ShaderBuilderTester.expectHasVertexFunction(
+    ShaderBuilderTester.expectHasVertexFunctionUnordered(
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS,
       []
     );
-    ShaderBuilderTester.expectHasFragmentFunction(
+    ShaderBuilderTester.expectHasFragmentFunctionUnordered(
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
@@ -811,13 +811,13 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
       ]
     );
 
-    ShaderBuilderTester.expectHasVertexFunction(
+    ShaderBuilderTester.expectHasVertexFunctionUnordered(
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_VS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_VS,
       ["    vsInput.attributes.texCoord_1 = vec2(0.0);"]
     );
-    ShaderBuilderTester.expectHasFragmentFunction(
+    ShaderBuilderTester.expectHasFragmentFunctionUnordered(
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,
@@ -986,7 +986,7 @@ describe("Scene/ModelExperimental/CustomShaderPipelineStage", function () {
     );
 
     expect(shaderBuilder._vertexShaderParts.functionIds).toEqual([]);
-    ShaderBuilderTester.expectHasFragmentFunction(
+    ShaderBuilderTester.expectHasFragmentFunctionUnordered(
       shaderBuilder,
       CustomShaderPipelineStage.FUNCTION_ID_INITIALIZE_INPUT_STRUCT_FS,
       CustomShaderPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_INPUT_STRUCT_FS,

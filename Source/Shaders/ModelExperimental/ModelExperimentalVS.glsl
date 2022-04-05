@@ -20,6 +20,9 @@ void main()
     dequantizationStage(attributes);
     #endif
 
+    #ifdef HAS_MORPH_TARGETS
+    morphTargetsStage(attributes);
+    #endif
 
     FeatureIds featureIds;
     featureIdStage(featureIds, attributes);
