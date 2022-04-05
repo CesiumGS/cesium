@@ -290,8 +290,6 @@
           });
           return tileset.readyPromise
             .then(function () {
-              tileset.pointCloudShading.attenuation = true;
-
               // Adjust height so tileset is in terrain
               const cartographic = Cesium.Cartographic.fromCartesian(
                 tileset.boundingSphere.center

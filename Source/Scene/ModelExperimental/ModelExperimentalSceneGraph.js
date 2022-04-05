@@ -17,6 +17,7 @@ import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
 import RenderState from "../../Renderer/RenderState.js";
 import ShadowMode from "../ShadowMode.js";
 import SplitDirection from "../SplitDirection.js";
+import ModelClippingPlanesPipelineStage from "./ModelClippingPlanesPipelineStage.js";
 
 /**
  * An in memory representation of the scene graph for a {@link ModelExperimental}
@@ -383,6 +384,10 @@ ModelExperimentalSceneGraph.prototype.configurePipeline = function () {
 
   if (model.imageBasedLighting.enabled) {
     modelPipelineStages.push(ImageBasedLightingPipelineStage);
+  }
+
+  if (model.isClippingEnabled()) {
+    modelPipelineStages.push(ModelClippingPlanesPipelineStage);
   }
 
   if (
