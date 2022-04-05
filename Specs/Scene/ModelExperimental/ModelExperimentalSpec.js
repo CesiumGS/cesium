@@ -45,6 +45,8 @@ describe(
     const boxBackFaceCullingUrl =
       "./Data/Models/Box-Back-Face-Culling/Box-Back-Face-Culling.gltf";
     const boxBackFaceCullingOffset = new HeadingPitchRange(Math.PI / 2, 0, 2.0);
+    const morphPrimitivesTestUrl =
+      "./Data/Models/GltfLoader/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf";
 
     let scene;
 
@@ -215,6 +217,23 @@ describe(
           .catch(function (error) {
             expect(error).toBeDefined();
           });
+      });
+    });
+
+    it("renders glTF with morph targets", function () {
+      const resource = Resource.createIfNeeded(morphPrimitivesTestUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: morphPrimitivesTestUrl,
+          },
+          scene
+        ).then(function (model) {
+          // The model is a plane made three-dimensional by morph targets.
+          // If morph targets aren't supported, the model won't appear in the camera.
+          verifyRender(model, true);
+        });
       });
     });
 

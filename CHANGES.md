@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.93 - 2022-05-01
+
+##### Additions :tada:
+
+- Added support for morph targets in `ModelExperimental`. [#10271](https://github.com/CesiumGS/cesium/pull/10271)
+
 ### 1.92 - 2022-04-01
 
 ##### Breaking Changes :mega:

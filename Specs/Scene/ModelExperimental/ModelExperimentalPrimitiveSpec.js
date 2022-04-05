@@ -11,6 +11,7 @@ import {
   MaterialPipelineStage,
   MetadataPipelineStage,
   ModelExperimentalType,
+  MorphTargetsPipelineStage,
   PickingPipelineStage,
   PointCloudAttenuationPipelineStage,
   PointCloudShading,
@@ -465,6 +466,36 @@ describe("Scene/ModelExperimental/ModelExperimentalPrimitive", function () {
 
     const expectedStages = [
       GeometryPipelineStage,
+      MaterialPipelineStage,
+      FeatureIdPipelineStage,
+      MetadataPipelineStage,
+      LightingPipelineStage,
+      AlphaPipelineStage,
+    ];
+
+    verifyExpectedStages(primitive.pipelineStages, expectedStages);
+  });
+
+  it("configures the pipeline stages for morph targets", function () {
+    const primitive = new ModelExperimentalPrimitive({
+      primitive: {
+        morphTargets: [{}],
+        morphWeights: [0.0],
+        featureIds: [],
+        featureIdTextures: [],
+        attributes: [],
+        primitiveType: PrimitiveType.GLTF,
+      },
+      node: mockNode,
+      model: {
+        type: ModelExperimentalType.GLTF,
+        featureIdLabel: "featureId_0",
+      },
+    });
+
+    const expectedStages = [
+      GeometryPipelineStage,
+      MorphTargetsPipelineStage,
       MaterialPipelineStage,
       FeatureIdPipelineStage,
       MetadataPipelineStage,

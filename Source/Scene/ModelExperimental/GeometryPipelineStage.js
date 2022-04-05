@@ -180,7 +180,7 @@ function processAttribute(
 
   // Some GLSL code must be dynamically generated
   updateAttributesStruct(shaderBuilder, attributeInfo);
-  updateInitialzeAttributesFunction(shaderBuilder, attributeInfo);
+  updateInitializeAttributesFunction(shaderBuilder, attributeInfo);
   updateSetDynamicVaryingsFunction(shaderBuilder, attributeInfo);
 }
 
@@ -370,7 +370,7 @@ function updateAttributesStruct(shaderBuilder, attributeInfo) {
   }
 }
 
-function updateInitialzeAttributesFunction(shaderBuilder, attributeInfo) {
+function updateInitializeAttributesFunction(shaderBuilder, attributeInfo) {
   if (attributeInfo.isQuantized) {
     // Skip initialization, it will be handled in the dequantization stage.
     return;
