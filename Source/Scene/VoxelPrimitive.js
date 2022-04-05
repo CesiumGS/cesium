@@ -414,7 +414,7 @@ function VoxelPrimitive(options) {
     cameraPositionUv: new Cartesian3(),
     ndcSpaceAxisAlignedBoundingBox: new Cartesian4(),
     stepSize: 1.0,
-    ellipsoidHeightDifferenceUv: 1.0,
+    ellipsoidInverseHeightDifferenceUv: 1.0,
     ellipsoidOuterRadiiLocal: new Cartesian3(),
     ellipsoidInverseRadiiSquaredLocal: new Cartesian3(),
     minBounds: new Cartesian3(),
@@ -1053,6 +1053,7 @@ const scratchTotalDimensions = new Cartesian3();
 const scratchIntersect = new Cartesian4();
 const scratchNdcAabb = new Cartesian4();
 const scratchScale = new Cartesian3();
+const scratchEllipsoidRadii = new Cartesian3();
 const scratchLocalScale = new Cartesian3();
 const scratchInverseLocalScale = new Cartesian3();
 const scratchRotation = new Matrix3();
@@ -1331,16 +1332,35 @@ VoxelPrimitive.prototype.update = function (frameState) {
 
     // Set other uniforms when the shape is dirty
     if (shapeType === VoxelShapeType.ELLIPSOID) {
-      uniforms.ellipsoidHeightDifferenceUv = shape._ellipsoidHeightDifferenceUv;
-      uniforms.ellipsoidOuterRadiiLocal = Cartesian3.clone(
-        shape._ellipsoidOuterRadiiLocal,
+      const radii = Matrix4.getScale(
+        compoundModelMatrix,
+        scratchEllipsoidRadii
+      );
+      const minHeight = minBounds.z;
+      const maxHeight = maxBounds.z;
+      // const minRadius = Cartesian3.minimumComponent(radii);
+      const maxRadius = Cartesian3.maximumComponent(radii);
+      uniforms.ellipsoidOuterRadiiLocal = Cartesian3.fromElements(
+        (radii.x + maxHeight) / (maxRadius + maxHeight),
+        (radii.y + maxHeight) / (maxRadius + maxHeight),
+        (radii.z + maxHeight) / (maxRadius + maxHeight),
         uniforms.ellipsoidOuterRadiiLocal
       );
-      uniforms.ellipsoidInverseRadiiSquaredLocal = Cartesian3.multiplyComponents(
-        shape._ellipsoidOuterRadiiLocal,
-        shape._ellipsoidOuterRadiiLocal,
+      uniforms.ellipsoidInverseRadiiSquaredLocal = Cartesian3.divideComponents(
+        Cartesian3.ONE,
+        Cartesian3.multiplyComponents(
+          uniforms.ellipsoidOuterRadiiLocal,
+          uniforms.ellipsoidOuterRadiiLocal,
+          uniforms.ellipsoidInverseRadiiSquaredLocal
+        ),
         uniforms.ellipsoidInverseRadiiSquaredLocal
       );
+
+      // TODO: not sure if this is accurate. It could just as well be
+      // (minRadius + minHeight) / (minRadius + maxHeight). Better approach might
+      // be to get height relative to inner ellipsoid.
+      uniforms.ellipsoidInverseHeightDifferenceUv =
+        (maxRadius + maxHeight) / (maxRadius + minHeight);
     }
 
     // Math that's only valid if the shape is visible.
@@ -1937,13 +1957,33 @@ function buildDrawCommands(that, context) {
   const isDefaultMaxX = maxBounds.x === defaultMaxBounds.x;
   const isDefaultMaxY = maxBounds.y === defaultMaxBounds.y;
   const isDefaultMaxZ = maxBounds.z === defaultMaxBounds.z;
-  const useBounds =
-    !isDefaultMinX ||
-    !isDefaultMinY ||
-    !isDefaultMinZ ||
-    !isDefaultMaxX ||
-    !isDefaultMaxY ||
-    !isDefaultMaxZ;
+
+  let useBounds = false;
+  if (shapeType === VoxelShapeType.BOX) {
+    useBounds =
+      !isDefaultMinX ||
+      !isDefaultMinY ||
+      !isDefaultMinZ ||
+      !isDefaultMaxX ||
+      !isDefaultMaxY ||
+      !isDefaultMaxZ;
+  } else if (shapeType === VoxelShapeType.CYLINDER) {
+    useBounds =
+      !isDefaultMinX ||
+      !isDefaultMinY ||
+      !isDefaultMinZ ||
+      !isDefaultMaxX ||
+      !isDefaultMaxY ||
+      !isDefaultMaxZ;
+  } else if (shapeType === shapeType.ELLIPSOID) {
+    useBounds =
+      !isDefaultMinX ||
+      !isDefaultMinY ||
+      !isDefaultMinZ ||
+      !isDefaultMaxY ||
+      !isDefaultMaxZ;
+  }
+
   if (useBounds) {
     shaderBuilder.addDefine("BOUNDS", undefined, ShaderDestination.FRAGMENT);
   }

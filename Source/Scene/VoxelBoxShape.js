@@ -233,7 +233,7 @@ VoxelBoxShape.prototype.computeOrientedBoundingBoxForTile = function (
  * Computes an approximate step size for raymarching the root tile of a voxel grid.
  * The update function must be called before calling this function.
  *
- * @param {Cartesian3} voxelDimensions The voxel grid dimensions for a tile.
+ * @param {Cartesian3} dimensions The voxel grid dimensions for a tile.
  * @returns {Number} The step size.
  */
 VoxelBoxShape.prototype.computeApproximateStepSize = function (dimensions) {
@@ -267,12 +267,12 @@ VoxelBoxShape.DefaultMaxBounds = new Cartesian3(+1.0, +1.0, +1.0);
  *
  * @function
  *
- * @param {Cartesian3} minimumX The minimumX.
- * @param {Cartesian3} maximumX The maximumX.
- * @param {Cartesian3} minimumY The minimumY.
- * @param {Cartesian3} maximumY The maximumY.
- * @param {Cartesian3} minimumZ The minimumZ.
- * @param {Cartesian3} maximumZ The maximumZ.
+ * @param {Number} minimumX The minimumX.
+ * @param {Number} maximumX The maximumX.
+ * @param {Number} minimumY The minimumY.
+ * @param {Number} maximumY The maximumY.
+ * @param {Number} minimumZ The minimumZ.
+ * @param {Number} maximumZ The maximumZ.
  * @param {Matrix4} matrix The matrix to transform the points.
  * @param {OrientedBoundingBox} result The object onto which to store the result.
  * @returns {OrientedBoundingBox} The oriented bounding box that contains this subregion.

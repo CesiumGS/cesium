@@ -373,6 +373,25 @@ OrientedBoundingBox.fromRectangle = function (
   maximumHeight = defaultValue(maximumHeight, 0.0);
   ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
+  if (rectangle.equals(Rectangle.MAX_VALUE)) {
+    if (!defined(result)) {
+      result = new OrientedBoundingBox();
+    }
+    result.halfAxes = Matrix3.fromScale(
+      Cartesian3.add(
+        ellipsoid.radii,
+        Cartesian3.fromElements(
+          maximumHeight,
+          maximumHeight,
+          maximumHeight,
+          scratchScale
+        ),
+        scratchScale
+      )
+    );
+    return result;
+  }
+
   let minX, maxX, minY, maxY, minZ, maxZ, plane;
 
   if (rectangle.width <= CesiumMath.PI) {

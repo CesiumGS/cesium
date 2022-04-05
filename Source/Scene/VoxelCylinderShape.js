@@ -380,12 +380,16 @@ const scratchScaleRatio = new Cartesian3();
  * Computes an approximate step size for raymarching the root tile of a voxel grid.
  * The update function must be called before calling this function.
  *
- * @param {Cartesian3} voxelDimensions The voxel grid dimensions for a tile.
+ * @param {Cartesian3} dimensions The voxel grid dimensions for a tile.
  * @returns {Number} The step size.
  */
 VoxelCylinderShape.prototype.computeApproximateStepSize = function (
-  voxelDimensions
+  dimensions
 ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("dimensions", dimensions);
+  //>>includeEnd('debug');
+
   const rootTransform = this.shapeTransform;
 
   const minRadius = this._minimumRadius;
@@ -395,9 +399,9 @@ VoxelCylinderShape.prototype.computeApproximateStepSize = function (
   const minAngle = this._minimumAngle;
   const maxAngle = this._maximumAngle;
 
-  const lerpRadius = 1.0 - 1.0 / voxelDimensions.x;
-  const lerpHeight = 1.0 - 1.0 / voxelDimensions.y;
-  const lerpAngle = 1.0 - 1.0 / voxelDimensions.z;
+  const lerpRadius = 1.0 - 1.0 / dimensions.x;
+  const lerpHeight = 1.0 - 1.0 / dimensions.y;
+  const lerpAngle = 1.0 - 1.0 / dimensions.z;
 
   // Compare the size of an outermost cylinder voxel to the total cylinder
   const voxelMinimumRadius = CesiumMath.lerp(minRadius, maxRadius, lerpRadius);

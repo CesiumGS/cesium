@@ -180,7 +180,7 @@ uniform vec3 u_maxClippingBounds;
 #endif
 
 #if defined(SHAPE_ELLIPSOID)
-uniform float u_ellipsoidHeightDifferenceUv;
+uniform float u_ellipsoidInverseHeightDifferenceUv;
 uniform vec3 u_ellipsoidOuterRadiiLocal; // [0,1]
 uniform vec3 u_ellipsoidInverseRadiiSquaredLocal;
 #endif
@@ -224,6 +224,9 @@ int intMin(int a, int b) {
 }
 int intMax(int a, int b) {
     return a >= b ? a : b;
+}
+int intClamp(int v, int minVal, int maxVal) {
+    return intMin(intMax(v, minVal), maxVal);
 }
 float safeMod(float a, float m) {
     return mod(mod(a, m) + m, m);
@@ -640,7 +643,7 @@ vec2 intersectUnitSphere(Ray ray)
 }
 #endif
 
-#if defined(SHAPE_ELLIPSOID) && defined(BOUNDS_2_MIN)
+#if defined(SHAPE_ELLIPSOID)
 vec2 intersectUnitSphereUnnormalizedDirection(Ray ray)
 {
     vec3 o = ray.pos;
@@ -708,54 +711,58 @@ vec2 intersectUncappedCone(Ray ray, float angle, float direction)
 }
 #endif
 
-#if defined(SHAPE_ELLIPSOID) && defined(BOUNDS)
-vec2 intersectClippedEllipsoid(Ray ray, vec3 minBounds, vec3 maxBounds)
+#if defined(SHAPE_ELLIPSOID)
+vec2 intersectEllipsoidShape(Ray ray)
 {
-    float lonMin = minBounds.x + 0.5 * czm_pi; // [-pi,+pi]
-    float lonMax = maxBounds.x + 0.5 * czm_pi; // [-pi,+pi]
-    float latMin = minBounds.y; // [-halfPi,+halfPi]
-    float latMax = maxBounds.y; // [-halfPi,+halfPi]
-    float heightMin = minBounds.z; // [-inf,+inf]
-    float heightMax = maxBounds.z; // [-inf,+inf]
-    
-    vec2 outerIntersect = intersectUnitSphere(ray);
-    if (outerIntersect == vec2(NoHit, NoHit)) {
-        return vec2(NoHit, NoHit);
-    }
-    
-    float intersections[SHAPE_INTERSECTION_COUNT];
-    intersections[BOUNDS_2_MAX_IDX * 2 + 0] = outerIntersect.x;
-    intersections[BOUNDS_2_MAX_IDX * 2 + 1] = outerIntersect.y;
-    
-    #if defined(BOUNDS_2_MIN)
-        float innerScale = heightMin;
-        Ray innerRay = Ray(ray.pos / innerScale, ray.dir / innerScale);
-        vec2 innerIntersect = intersectUnitSphereUnnormalizedDirection(innerRay);
-        intersections[BOUNDS_2_MIN_IDX * 2 + 0] = innerIntersect.x;
-        intersections[BOUNDS_2_MIN_IDX * 2 + 1] = innerIntersect.y;
-    #endif
+    #if !defined(BOUNDS)
+        return intersectUnitSphereUnnormalizedDirection(ray);
+    #else
+        float lonMin = u_minBounds.x; // [-pi,+pi]
+        float lonMax = u_maxBounds.x; // [-pi,+pi]
+        float latMin = u_minBounds.y; // [-halfPi,+halfPi]
+        float latMax = u_maxBounds.y; // [-halfPi,+halfPi]
+        float heightMin = u_minBounds.z; // [-inf,+inf]
+        float heightMax = u_maxBounds.z; // [-inf,+inf]
         
-    #if defined(BOUNDS_1_MIN)
-        vec2 botConeIntersect = intersectUncappedCone(ray, abs(latMin), sign(latMin));
-        intersections[BOUNDS_1_MIN_IDX * 2 + 0] = botConeIntersect.x;
-        intersections[BOUNDS_1_MIN_IDX * 2 + 1] = botConeIntersect.y;
+        vec2 outerIntersect = intersectUnitSphere(ray);
+        if (outerIntersect == vec2(NoHit, NoHit)) {
+            return vec2(NoHit, NoHit);
+        }
+        
+        float intersections[SHAPE_INTERSECTION_COUNT];
+        intersections[BOUNDS_2_MAX_IDX * 2 + 0] = outerIntersect.x;
+        intersections[BOUNDS_2_MAX_IDX * 2 + 1] = outerIntersect.y;
+        
+        #if defined(BOUNDS_2_MIN)
+            float innerScale = heightMin;
+            Ray innerRay = Ray(ray.pos / innerScale, ray.dir / innerScale);
+            vec2 innerIntersect = intersectUnitSphereUnnormalizedDirection(innerRay);
+            intersections[BOUNDS_2_MIN_IDX * 2 + 0] = innerIntersect.x;
+            intersections[BOUNDS_2_MIN_IDX * 2 + 1] = innerIntersect.y;
+        #endif
+            
+        #if defined(BOUNDS_1_MIN)
+            vec2 botConeIntersect = intersectUncappedCone(ray, abs(latMin), sign(latMin));
+            intersections[BOUNDS_1_MIN_IDX * 2 + 0] = botConeIntersect.x;
+            intersections[BOUNDS_1_MIN_IDX * 2 + 1] = botConeIntersect.y;
+        #endif
+        
+        #if defined(BOUNDS_1_MAX)
+            vec2 topConeIntersect = intersectUncappedCone(ray, abs(latMax), sign(latMax));
+            intersections[BOUNDS_1_MAX_IDX * 2 + 0] = topConeIntersect.x;
+            intersections[BOUNDS_1_MAX_IDX * 2 + 1] = topConeIntersect.y;
+        #endif
+        
+        #if defined(BOUNDS_0_MIN) || defined(BOUNDS_0_MAX)
+            vec3 planeNormal1 = -vec3(cos(lonMin), sin(lonMin), 0.0);
+            vec3 planeNormal2 = vec3(cos(lonMax), sin(lonMax), 0.0);
+            vec2 wedgeIntersect = intersectWedge(ray, planeNormal1, planeNormal2);
+            intersections[BOUNDS_0_MIN_MAX_IDX * 2 + 0] = wedgeIntersect.x;
+            intersections[BOUNDS_0_MIN_MAX_IDX * 2 + 1] = wedgeIntersect.y;
+        #endif
+        
+        return resolveIntersections(intersections);   
     #endif
-    
-    #if defined(BOUNDS_1_MAX)
-        vec2 topConeIntersect = intersectUncappedCone(ray, abs(latMax), sign(latMax));
-        intersections[BOUNDS_1_MAX_IDX * 2 + 0] = topConeIntersect.x;
-        intersections[BOUNDS_1_MAX_IDX * 2 + 1] = topConeIntersect.y;
-    #endif
-    
-    #if defined(BOUNDS_0_MIN) || defined(BOUNDS_0_MAX)
-        vec3 planeNormal1 = -vec3(cos(lonMin), sin(lonMin), 0.0);
-        vec3 planeNormal2 = vec3(cos(lonMax), sin(lonMax), 0.0);
-        vec2 wedgeIntersect = intersectWedge(ray, planeNormal1, planeNormal2);
-        intersections[BOUNDS_0_MIN_MAX_IDX * 2 + 0] = wedgeIntersect.x;
-        intersections[BOUNDS_0_MIN_MAX_IDX * 2 + 1] = wedgeIntersect.y;
-    #endif
-    
-    return resolveIntersections(intersections);   
 }
 #endif
 
@@ -853,8 +860,8 @@ vec3 transformFromUvToBoxSpace(in vec3 positionUv) {
 
 #if defined(SHAPE_ELLIPSOID)
 vec3 transformFromUvToEllipsoidSpace(in vec3 positionUv) {
-    // 1) Convert positionUv [0,1] to unit space [-1, +1] in ellipsoid scale space.
-    // 2) Convert to non-ellipsoid space. Max ellipsoid axis has value 1, anything shorter is < 1.
+    // 1) Convert positionUv [0,1] to unit ellipsoid space [-1,+1].
+    // 2) Convert from unit ellipsoid space [-1,+1] to local space. Max ellipsoid axis has value 1, anything shorter is < 1.
     // 3) Convert 3d position to 2D point relative to ellipse (since radii.x and radii.y are assumed to be equal for WGS84).
     // 4) Find closest distance. if distance > 1, it's outside the outer shell, if distance < u_ellipsoidMinimumHeightUv, it's inside the inner shell.
     // 5) Compute geodetic surface normal.
@@ -864,32 +871,13 @@ vec3 transformFromUvToEllipsoidSpace(in vec3 positionUv) {
     vec3 pos3D = posLocal * u_ellipsoidOuterRadiiLocal; // 2
     vec2 pos2D = vec2(length(pos3D.xy), pos3D.z); // 3
     float dist = ellipseDistanceIterative(pos2D, u_ellipsoidOuterRadiiLocal.xz); // 4
+    dist = 1.0 + dist * u_ellipsoidInverseHeightDifferenceUv; // same as delerp(dist, -u_ellipsoidHeightDifferenceUv, 0);
+
     vec3 normal = normalize(pos3D * u_ellipsoidInverseRadiiSquaredLocal); // 5
-    float longitude = atan(normal.y, normal.x); // 6
-    float latitude = asin(normal.z); // 6
+    float longitude = (atan(normal.y, normal.x) + czm_pi) / czm_twoPi; // 6
+    float latitude = (asin(normal.z) + czm_piOverTwo) / czm_pi; // 6
 
-    #if defined(BOUNDS)
-        float longitudeMin = u_minBounds.x;
-        float longitudeMax = u_maxBounds.x;
-        float latitudeMin = u_minBounds.x;
-        float latitudeMax = u_minBounds.y;
-        if (longitudeMin > longitudeMax) {
-            longitudeMin -= czm_twoPi;
-            if (longitude > longitudeMax) {
-                longitude -= czm_twoPi;
-            }
-        }
-        float shapeX = (longitude - longitudeMin) * u_boundsLengthInverse.x; // [0, 1]
-        float shapeY = (latitude - latitudeMin) * u_boundsLengthInverse.y; // [0, 1]
-    #else
-        float shapeX = (longitude / czm_pi) * 0.5 + 0.5;
-        float shapeY = (latitude / czm_piOverTwo) * 0.5 + 0.5;
-    #endif
-
-    float distMax = 0.0;
-    float distMin = -u_ellipsoidHeightDifferenceUv;
-    float shapeZ = (dist - distMin) / (distMax - distMin);
-    return vec3(shapeX, shapeY, shapeZ);
+    return vec3(longitude, latitude, dist);
 }
 #endif
 
@@ -922,51 +910,6 @@ vec3 transformFromUvToShapeSpace(in vec3 positionUv) {
     return positionShape;
 }
 
-#if defined(SHAPE_ELLIPSOID)
-vec3 geodeticSurfaceNormalCartographic(float longitude, float latitude) {
-    float cosLatitude = cos(latitude);
-    float x = cosLatitude * cos(longitude);
-    float y = cosLatitude * sin(longitude);
-    float z = sin(latitude);
-    return normalize(vec3(x, y, z));
-}
-vec3 cartographicToCartesianUv(float longitude, float latitude, float height) {
-    vec3 normal = geodeticSurfaceNormalCartographic(longitude, latitude);
-    vec3 k = normal * u_ellipsoidOuterRadiiLocal * u_ellipsoidOuterRadiiLocal;
-    k /= sqrt(dot(normal, k));
-    vec3 final = normal * height + k;
-    return final * 0.5 + 0.5;
-}
-#endif
-
-vec3 transformFromShapeSpaceToUv(in vec3 positionUvShapeSpace) {
-    #if defined(SHAPE_CYLINDER)
-        float dist = positionUvShapeSpace.x;
-        float angle = czm_twoPi * safeMod(positionUvShapeSpace.y, 1.0);
-        float slice = positionUvShapeSpace.z;
-        float x = 0.5 + 0.5 * dist * cos(angle);
-        float y = 0.5 + 0.5 * dist * sin(angle);
-        float z = slice;
-        return vec3(x, y, z);
-    #elif defined(SHAPE_ELLIPSOID)
-        #if defined(BOUNDS)
-            float longitudeMin = u_minBounds.x;
-            float longitudeMax = u_maxBounds.x;
-            float latitudeMin = u_minBounds.y;
-            float latitudeMax = u_maxBounds.y;
-            float longitude = mix(longitudeMin, longitudeMax, positionUvShapeSpace.x);
-            float latitude = mix(latitudeMin, latitudeMax, positionUvShapeSpace.y);
-            float height = mix(-u_ellipsoidHeightDifferenceUv, 0.0, positionUvShapeSpace.z);
-        #else
-            float longitude = positionUvShapeSpace.x * czm_twoPi - czm_pi;
-            float latitude = positionUvShapeSpace.y * czm_pi - czm_piOverTwo;
-            float height = positionUvShapeSpace.z;
-        #endif
-        return cartographicToCartesianUv(longitude, latitude, height);
-    #else
-        return positionUvShapeSpace;
-    #endif
-}
 
 // --------------------------------------------------------
 // Megatexture
@@ -1037,7 +980,7 @@ Properties getPropertiesFrom2DMegatextureAtVoxelCoord(vec3 voxelCoord, ivec3 vox
     // Slice location
     float slice = voxelCoord.z - 0.5;
     int sliceIndex = int(floor(slice));
-    int sliceIndex0 = intMax(sliceIndex, 0);
+    int sliceIndex0 = intClamp(sliceIndex, 0, voxelDims.z - 1);
     vec2 sliceUvOffset0 = index1DTo2DTexcoord(sliceIndex0, u_megatextureSliceDimensions, u_megatextureSliceSizeUv);
 
     // Voxel location

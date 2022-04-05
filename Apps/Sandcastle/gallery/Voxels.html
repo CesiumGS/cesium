@@ -35,7 +35,13 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          imageryProvider: new Cesium.TileMapServiceImageryProvider({
+            url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+          }),
+          baseLayerPicker: false,
+          geocoder: false,
+        });
         viewer.extend(Cesium.viewerVoxelInspectorMixin);
         viewer.scene.debugShowFramesPerSecond = true;
         let voxelPrimitive;
@@ -46,21 +52,30 @@
               break;
             }
             case Cesium.VoxelShapeType.ELLIPSOID: {
-              const west = -Cesium.Math.PI + 0.2;
-              const east = +Cesium.Math.PI;
-              const south = -Cesium.Math.PI_OVER_TWO;
-              const north = +Cesium.Math.PI_OVER_TWO;
-              const minimumHeight = -10.0;
-              const maximumHeight = +10.0;
-              this.minBounds = new Cesium.Cartesian3(
+              const minBounds = Cesium.VoxelShapeType.getMinBounds(
+                Cesium.VoxelShapeType.ELLIPSOID
+              );
+              const maxBounds = Cesium.VoxelShapeType.getMaxBounds(
+                Cesium.VoxelShapeType.ELLIPSOID
+              );
+              const west = minBounds.x;
+              const east = maxBounds.x;
+              const south = minBounds.y;
+              const north = maxBounds.y;
+              const minimumHeight = 0.0;
+              const maximumHeight = 2000000.0;
+
+              this.minBounds = Cesium.Cartesian3.fromElements(
                 west,
                 south,
-                minimumHeight
+                minimumHeight,
+                new Cesium.Cartesian3()
               );
-              this.maxBounds = new Cesium.Cartesian3(
+              this.maxBounds = Cesium.Cartesian3.fromElements(
                 east,
                 north,
-                maximumHeight
+                maximumHeight,
+                new Cesium.Cartesian3()
               );
               break;
             }
@@ -70,7 +85,7 @@
           }
 
           this.shape = shape;
-          this.dimensions = new Cesium.Cartesian3(4, 4, 4);
+          this.dimensions = new Cesium.Cartesian3(8, 8, 8);
           // this.names = ["color", "shininess"];
           // this.types = [Cesium.MetadataType.VEC4, Cesium.MetadataType.SCALAR];
           // this.componentTypes = [
@@ -87,7 +102,7 @@
         ProceduralSingleTileVoxelProvider.prototype.requestData = function (
           options
         ) {
-          const tileLevel = options.level;
+          const tileLevel = options.tileLevel;
           const tileX = options.tileX;
           const tileY = options.tileY;
           const tileZ = options.tileZ;
@@ -114,7 +129,7 @@
                 const lerperY = y / (dimensions.y - 1);
                 const lerperZ = z / (dimensions.z - 1);
 
-                const h = hue + lerperX * 0.1;
+                const h = hue + lerperX * 0.5 - lerperY * 0.3 + lerperZ * 0.2;
                 const s = 1.0 - lerperY * 0.2;
                 const v = 0.5 + 2.0 * (lerperZ - 0.5) * 0.2;
                 const color = Cesium.Color.fromHsl(h, s, v);
@@ -122,17 +137,17 @@
                 const index =
                   z * dimensions.y * dimensions.x + y * dimensions.x + x;
 
-                if (tileLevel === 0) {
-                  dataColor[index * channelCount + 0] = Math.random();
-                  dataColor[index * channelCount + 1] = Math.random();
-                  dataColor[index * channelCount + 2] = Math.random();
-                  dataColor[index * channelCount + 3] = 1.0;
-                } else {
-                  dataColor[index * channelCount + 0] = color.red;
-                  dataColor[index * channelCount + 1] = color.green;
-                  dataColor[index * channelCount + 2] = color.blue;
-                  dataColor[index * channelCount + 3] = 0.75;
-                }
+                // if (tileLevel === 0) {
+                //   dataColor[index * channelCount + 0] = Math.random();
+                //   dataColor[index * channelCount + 1] = Math.random();
+                //   dataColor[index * channelCount + 2] = Math.random();
+                //   dataColor[index * channelCount + 3] = 1.0;
+                // } else {
+                dataColor[index * channelCount + 0] = color.red;
+                dataColor[index * channelCount + 1] = color.green;
+                dataColor[index * channelCount + 2] = color.blue;
+                dataColor[index * channelCount + 3] = 0.75;
+                // }
               }
             }
           }
@@ -336,6 +351,11 @@
               customShader: customShader,
               modelMatrix: Cesium.Matrix4.fromScale(
                 Cesium.Ellipsoid.WGS84.radii,
+                // Cesium.Cartesian3.fromElements(
+                //   Cesium.Ellipsoid.WGS84.radii.x,
+                //   Cesium.Ellipsoid.WGS84.radii.y,
+                //   Cesium.Ellipsoid.WGS84.radii.z * 2.0
+                // ),
                 new Cesium.Matrix4()
               ),
             })
@@ -351,6 +371,8 @@
             .catch(function (error) {
               console.log(error);
             });
+
+          return voxelPrimitive;
         }
 
         const customShaderColor = new Cesium.CustomShader({
@@ -376,7 +398,25 @@
               const provider = new ProceduralSingleTileVoxelProvider(
                 Cesium.VoxelShapeType.BOX
               );
-              createPrimitive(provider, customShaderColor);
+              const primitive = createPrimitive(provider, customShaderColor);
+              primitive.readyPromise.then(function () {
+                viewer.camera.flyToBoundingSphere(primitive.boundingSphere, {
+                  duration: 0.0,
+                });
+                // viewer.camera.position = new Cesium.Cartesian3(
+                //   20210315.04663869,
+                //   22200569.010404103,
+                //   16940652.047713447
+                // );
+                viewer.camera.flyTo({
+                  destination: new Cesium.Cartesian3(
+                    22489095.52149246,
+                    15457085.667961657,
+                    20334893.228182133
+                  ),
+                  duration: 0.0,
+                });
+              });
             },
           },
           {
@@ -385,7 +425,7 @@
               const provider = new ProceduralMultiTileVoxelProvider(
                 Cesium.VoxelShapeType.BOX
               );
-              createPrimitive(provider, customShaderColor);
+              const primitive = createPrimitive(provider, customShaderColor);
             },
           },
           {
@@ -395,7 +435,7 @@
                 gltf:
                   "../../SampleData/Cesium3DTiles/Voxel/VoxelBoxGltf/voxelBox.gltf",
               });
-              createPrimitive(provider, customShaderAlpha);
+              const primitive = createPrimitive(provider, customShaderAlpha);
             },
           },
           {
@@ -405,7 +445,7 @@
                 url:
                   "../../SampleData/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json",
               });
-              createPrimitive(provider, customShaderAlpha);
+              const primitive = createPrimitive(provider, customShaderAlpha);
             },
           },
           {
@@ -414,7 +454,7 @@
               const provider = new ProceduralSingleTileVoxelProvider(
                 Cesium.VoxelShapeType.ELLIPSOID
               );
-              createPrimitive(provider, customShaderColor);
+              const primitive = createPrimitive(provider, customShaderColor);
             },
           },
           {
@@ -423,7 +463,7 @@
               const provider = new ProceduralMultiTileVoxelProvider(
                 Cesium.VoxelShapeType.ELLIPSOID
               );
-              createPrimitive(provider, customShaderColor);
+              const primitive = createPrimitive(provider, customShaderColor);
             },
           },
           {
@@ -433,7 +473,7 @@
                 gltf:
                   "../../SampleData/Cesium3DTiles/Voxel/VoxelEllipsoidGltf/voxelEllipsoid.gltf",
               });
-              createPrimitive(provider, customShaderAlpha);
+              const primitive = createPrimitive(provider, customShaderAlpha);
             },
           },
           {
@@ -443,7 +483,7 @@
                 url:
                   "../../SampleData/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
               });
-              createPrimitive(provider, customShaderAlpha);
+              const primitive = createPrimitive(provider, customShaderAlpha);
             },
           },
           {
@@ -452,7 +492,7 @@
               const provider = new ProceduralSingleTileVoxelProvider(
                 Cesium.VoxelShapeType.CYLINDER
               );
-              createPrimitive(provider, customShaderColor);
+              const primitive = createPrimitive(provider, customShaderColor);
             },
           },
           {
@@ -461,7 +501,7 @@
               const provider = new ProceduralMultiTileVoxelProvider(
                 Cesium.VoxelShapeType.CYLINDER
               );
-              createPrimitive(provider, customShaderColor);
+              const primitive = createPrimitive(provider, customShaderColor);
             },
           },
           {
@@ -471,7 +511,7 @@
                 gltf:
                   "../../SampleData/Cesium3DTiles/Voxel/VoxelCylinderGltf/voxelCylinder.gltf",
               });
-              createPrimitive(provider, customShaderAlpha);
+              const primitive = createPrimitive(provider, customShaderAlpha);
             },
           },
           {
@@ -481,7 +521,7 @@
                 url:
                   "../../SampleData/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json",
               });
-              createPrimitive(provider, customShaderAlpha);
+              const primitive = createPrimitive(provider, customShaderAlpha);
             },
           },
         ]);
@@ -493,6 +533,7 @@
           const mousePosition = movement.position;
           const pickedPrimitive = scene.pick(mousePosition);
           console.log(pickedPrimitive);
+          console.log(camera.position);
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         //Sandcastle_End
