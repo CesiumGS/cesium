@@ -61,10 +61,10 @@
               const west = minBounds.x;
               const east = maxBounds.x;
               // const south = -0.5;
-              // const north = +0.5;
+              const north = Cesium.Math.PI_OVER_TWO - 0.1;
               const south = minBounds.y;
-              const north = maxBounds.y;
-              const minimumHeight = 0.0;
+              // const north = maxBounds.y;
+              const minimumHeight = 1000000.0;
               const maximumHeight = 2000000.0;
 
               this.minBounds = Cesium.Cartesian3.fromElements(
@@ -394,6 +394,21 @@
         });
 
         Sandcastle.addToolbarMenu([
+          {
+            text: "Ellipsoid - Procedural Tile",
+            onselect: function () {
+              const provider = new ProceduralSingleTileVoxelProvider(
+                Cesium.VoxelShapeType.ELLIPSOID
+              );
+              const primitive = createPrimitive(provider, customShaderColor);
+              primitive.readyPromise.then(function () {
+                console.log(primitive.boundingSphere.center);
+                viewer.camera.flyToBoundingSphere(primitive.boundingSphere, {
+                  duration: 0.0,
+                });
+              });
+            },
+          },
           {
             text: "Box - Procedural Tile",
             onselect: function () {
