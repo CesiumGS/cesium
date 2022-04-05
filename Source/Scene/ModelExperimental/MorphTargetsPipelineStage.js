@@ -100,6 +100,8 @@ MorphTargetsPipelineStage.process = function (renderResources, primitive) {
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
 };
 
+const scratchAttributeInfo = {};
+
 function processMorphTargetAttribute(
   renderResources,
   attribute,
@@ -114,13 +116,13 @@ function processMorphTargetAttribute(
     attributeIndex
   );
 
-  addMorphTargetAttributeDeclaration(
+  getMorphTargetAttributeInfo(attribute, scratchAttributeInfo);
+
+  addMorphTargetAttributeDeclarationAndFunctionLine(
     shaderBuilder,
-    attribute,
+    scratchAttributeInfo,
     morphTargetIndex
   );
-
-  updateGetMorphedAttributeFunction(shaderBuilder, attribute, morphTargetIndex);
 }
 
 function addMorphTargetAttributeToRenderResources(
@@ -142,28 +144,39 @@ function addMorphTargetAttributeToRenderResources(
   renderResources.attributes.push(vertexAttribute);
 }
 
-function addMorphTargetAttributeDeclaration(
-  shaderBuilder,
-  attribute,
-  morphTargetIndex
-) {
+function getMorphTargetAttributeInfo(attribute, result) {
   const semantic = attribute.semantic;
-  let attributeName;
   switch (semantic) {
     case VertexAttributeSemantic.POSITION:
-      attributeName = `a_targetPosition_${morphTargetIndex}`;
-      break;
+      result.attributeString = "Position";
+      result.functionId =
+        MorphTargetsPipelineStage.FUNCTION_ID_GET_MORPHED_POSITION;
+      return;
     case VertexAttributeSemantic.NORMAL:
-      attributeName = `a_targetNormal_${morphTargetIndex}`;
-      break;
+      result.attributeString = "Normal";
+      result.functionId =
+        MorphTargetsPipelineStage.FUNCTION_ID_GET_MORPHED_NORMAL;
+      return;
     case VertexAttributeSemantic.TANGENT:
-      attributeName = `a_targetTangent_${morphTargetIndex}`;
-      break;
+      result.attributeString = "Tangent";
+      result.functionId =
+        MorphTargetsPipelineStage.FUNCTION_ID_GET_MORPHED_TANGENT;
+      return;
     default:
       return;
   }
+}
 
+function addMorphTargetAttributeDeclarationAndFunctionLine(
+  shaderBuilder,
+  attributeInfo,
+  morphTargetIndex
+) {
+  const attributeString = attributeInfo.attributeString;
+  const attributeName = `a_target${attributeString}_${morphTargetIndex}`;
+  const line = `morphed${attributeString} += u_morphWeights[${morphTargetIndex}] * a_target${attributeString}_${morphTargetIndex};`;
   shaderBuilder.addAttribute("vec3", attributeName);
+  shaderBuilder.addFunctionLines(attributeInfo.functionId, [line]);
 }
 
 function addGetMorphedAttributeFunctionDeclarations(shaderBuilder) {
@@ -202,34 +215,6 @@ function addGetMorphedAttributeFunctionDeclarations(shaderBuilder) {
     MorphTargetsPipelineStage.FUNCTION_ID_GET_MORPHED_TANGENT,
     [tangentLine]
   );
-}
-
-function updateGetMorphedAttributeFunction(
-  shaderBuilder,
-  attribute,
-  morphTargetIndex
-) {
-  let functionId;
-  let line;
-  const semantic = attribute.semantic;
-  switch (semantic) {
-    case VertexAttributeSemantic.POSITION:
-      functionId = MorphTargetsPipelineStage.FUNCTION_ID_GET_MORPHED_POSITION;
-      line = `morphedPosition += u_morphWeights[${morphTargetIndex}] * a_targetPosition_${morphTargetIndex};`;
-      break;
-    case VertexAttributeSemantic.NORMAL:
-      functionId = MorphTargetsPipelineStage.FUNCTION_ID_GET_MORPHED_NORMAL;
-      line = `morphedNormal += u_morphWeights[${morphTargetIndex}] * a_targetNormal_${morphTargetIndex};`;
-      break;
-    case VertexAttributeSemantic.TANGENT:
-      functionId = MorphTargetsPipelineStage.FUNCTION_ID_GET_MORPHED_TANGENT;
-      line = `morphedTangent += u_morphWeights[${morphTargetIndex}] * a_targetTangent_${morphTargetIndex};`;
-      break;
-    default:
-      return;
-  }
-
-  shaderBuilder.addFunctionLines(functionId, [line]);
 }
 
 function addGetMorphedAttributeFunctionReturns(shaderBuilder) {
