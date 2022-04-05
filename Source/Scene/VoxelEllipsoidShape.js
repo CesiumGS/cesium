@@ -322,7 +322,7 @@ VoxelEllipsoidShape.prototype.computeApproximateStepSize = function (
 VoxelEllipsoidShape.DefaultMinBounds = new Cartesian3(
   -CesiumMath.PI,
   -CesiumMath.PI_OVER_TWO,
-  0.0
+  0.0 // should be -1?
 );
 
 /**
@@ -335,7 +335,7 @@ VoxelEllipsoidShape.DefaultMinBounds = new Cartesian3(
 VoxelEllipsoidShape.DefaultMaxBounds = new Cartesian3(
   +CesiumMath.PI,
   +CesiumMath.PI_OVER_TWO,
-  1.0
+  1.0 // should be 0?
 );
 
 /**

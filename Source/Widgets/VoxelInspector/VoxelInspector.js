@@ -1,3 +1,4 @@
+import Cartesian3 from "../../Core/Cartesian3.js";
 import CesiumMath from "../../Core/Math.js";
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
@@ -127,6 +128,29 @@ function VoxelInspector(container, scene) {
     "boundsVisibleToggle"
   );
 
+  const boxMinBounds = VoxelShapeType.getMinBounds(VoxelShapeType.BOX);
+  const boxMaxBounds = VoxelShapeType.getMaxBounds(VoxelShapeType.BOX);
+
+  const ellipsoidMinBounds = Cartesian3.fromElements(
+    VoxelShapeType.getMinBounds(VoxelShapeType.ELLIPSOID).x,
+    VoxelShapeType.getMinBounds(VoxelShapeType.ELLIPSOID).y,
+    -6356752.3142451793, // The deepest height for WGS84
+    new Cartesian3()
+  );
+  const ellipsoidMaxBounds = Cartesian3.fromElements(
+    VoxelShapeType.getMaxBounds(VoxelShapeType.ELLIPSOID).x,
+    VoxelShapeType.getMaxBounds(VoxelShapeType.ELLIPSOID).y,
+    +10000000.0,
+    new Cartesian3()
+  );
+
+  const cylinderMinBounds = VoxelShapeType.getMinBounds(
+    VoxelShapeType.CYLINDER
+  );
+  const cylinderMaxBounds = VoxelShapeType.getMaxBounds(
+    VoxelShapeType.CYLINDER
+  );
+
   makeCoordinateRange(
     "Max X",
     "Min X",
@@ -140,8 +164,8 @@ function VoxelInspector(container, scene) {
     "boundsBoxMinY",
     "boundsBoxMaxZ",
     "boundsBoxMinZ",
-    VoxelShapeType.getMinBounds(VoxelShapeType.BOX),
-    VoxelShapeType.getMaxBounds(VoxelShapeType.BOX),
+    boxMinBounds,
+    boxMaxBounds,
     "shapeIsBox",
     boundsPanelContents
   );
@@ -159,8 +183,8 @@ function VoxelInspector(container, scene) {
     "boundsEllipsoidMinLatitude",
     "boundsEllipsoidMaxHeight",
     "boundsEllipsoidMinHeight",
-    VoxelShapeType.getMinBounds(VoxelShapeType.ELLIPSOID),
-    VoxelShapeType.getMaxBounds(VoxelShapeType.ELLIPSOID),
+    ellipsoidMinBounds,
+    ellipsoidMaxBounds,
     "shapeIsEllipsoid",
     boundsPanelContents
   );
@@ -178,8 +202,8 @@ function VoxelInspector(container, scene) {
     "boundsCylinderMinHeight",
     "boundsCylinderMaxAngle",
     "boundsCylinderMinAngle",
-    VoxelShapeType.getMinBounds(VoxelShapeType.CYLINDER),
-    VoxelShapeType.getMaxBounds(VoxelShapeType.CYLINDER),
+    cylinderMinBounds,
+    cylinderMaxBounds,
     "shapeIsCylinder",
     boundsPanelContents
   );
@@ -205,8 +229,8 @@ function VoxelInspector(container, scene) {
     "clippingBoxMinY",
     "clippingBoxMaxZ",
     "clippingBoxMinZ",
-    VoxelShapeType.getMinBounds(VoxelShapeType.BOX),
-    VoxelShapeType.getMaxBounds(VoxelShapeType.BOX),
+    boxMinBounds,
+    boxMaxBounds,
     "shapeIsBox",
     clippingPanelContents
   );
@@ -224,8 +248,8 @@ function VoxelInspector(container, scene) {
     "clippingEllipsoidMinLatitude",
     "clippingEllipsoidMaxHeight",
     "clippingEllipsoidMinHeight",
-    VoxelShapeType.getMinBounds(VoxelShapeType.ELLIPSOID),
-    VoxelShapeType.getMaxBounds(VoxelShapeType.ELLIPSOID),
+    ellipsoidMinBounds,
+    ellipsoidMaxBounds,
     "shapeIsEllipsoid",
     clippingPanelContents
   );
@@ -243,8 +267,8 @@ function VoxelInspector(container, scene) {
     "clippingCylinderMinHeight",
     "clippingCylinderMaxAngle",
     "clippingCylinderMinAngle",
-    VoxelShapeType.getMinBounds(VoxelShapeType.CYLINDER),
-    VoxelShapeType.getMaxBounds(VoxelShapeType.CYLINDER),
+    cylinderMinBounds,
+    cylinderMaxBounds,
     "shapeIsCylinder",
     clippingPanelContents
   );

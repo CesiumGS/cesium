@@ -2482,6 +2482,8 @@ function buildDrawCommands(that, context) {
     pass: Pass.VOXELS,
     executeInClosestFrustum: true,
     owner: this,
+    cull: depthTest, // don't cull or occlude if depth testing is off
+    occlude: depthTest, // don't cull or occlude if depth testing is off
   });
 
   // Create the pick draw command
