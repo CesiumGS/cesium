@@ -790,8 +790,8 @@ describe(
         };
 
         let result;
+        verifyRender(model, true);
         expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual([0, 0, 0, 255]);
           result = rgba;
         });
 
@@ -1321,6 +1321,7 @@ describe(
       ).then(function (model) {
         let modelColor;
         scene.renderForSpecs();
+        verifyRender(model, true);
         expect(scene).toRenderAndCall(function (rgba) {
           modelColor = rgba;
         });
@@ -1355,6 +1356,7 @@ describe(
       ).then(function (model) {
         let modelColor;
         scene.renderForSpecs();
+        verifyRender(model, true);
         expect(scene).toRenderAndCall(function (rgba) {
           modelColor = rgba;
         });
