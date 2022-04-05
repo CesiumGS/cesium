@@ -1289,12 +1289,31 @@ VoxelPrimitive.prototype.update = function (frameState) {
             uniforms.maxBoundsUv
           );
         } else if (shapeType === VoxelShapeType.ELLIPSOID) {
-          uniforms.minBoundsUv = Cartesian3.clone(
-            minBounds,
+          const minLongitudeUv =
+            (minBounds.x - defaultMinBounds.x) /
+            (defaultMaxBounds.x - defaultMinBounds.x);
+          const maxLongitudeUv =
+            (maxBounds.x - defaultMinBounds.x) /
+            (defaultMaxBounds.x - defaultMinBounds.x);
+          const minLatitudeUv =
+            (minBounds.y - defaultMinBounds.y) /
+            (defaultMaxBounds.y - defaultMinBounds.y);
+          const maxLatitudeUv =
+            (maxBounds.y - defaultMinBounds.y) /
+            (defaultMaxBounds.y - defaultMinBounds.y);
+          const minHeightUv = 0.0; // don't know what to do with these yet
+          const maxHeightUv = 0.0; // don't know what to do with these yet
+
+          uniforms.minBoundsUv = Cartesian3.fromElements(
+            minLongitudeUv,
+            minLatitudeUv,
+            minHeightUv,
             uniforms.minBoundsUv
           );
-          uniforms.maxBoundsUv = Cartesian3.clone(
-            maxBounds,
+          uniforms.maxBoundsUv = Cartesian3.fromElements(
+            maxLongitudeUv,
+            maxLatitudeUv,
+            maxHeightUv,
             uniforms.maxBoundsUv
           );
         } else if (shapeType === VoxelShapeType.CYLINDER) {
@@ -1962,26 +1981,32 @@ function buildDrawCommands(that, context) {
   if (shapeType === VoxelShapeType.BOX) {
     useBounds =
       !isDefaultMinX ||
-      !isDefaultMinY ||
-      !isDefaultMinZ ||
       !isDefaultMaxX ||
+      !isDefaultMinY ||
       !isDefaultMaxY ||
+      !isDefaultMinZ ||
       !isDefaultMaxZ;
   } else if (shapeType === VoxelShapeType.CYLINDER) {
     useBounds =
       !isDefaultMinX ||
-      !isDefaultMinY ||
-      !isDefaultMinZ ||
       !isDefaultMaxX ||
+      !isDefaultMinY ||
       !isDefaultMaxY ||
+      !isDefaultMinZ ||
       !isDefaultMaxZ;
-  } else if (shapeType === shapeType.ELLIPSOID) {
+  } else if (shapeType === VoxelShapeType.ELLIPSOID) {
+    const radii = Matrix4.getScale(that._compoundModelMatrix, scratchScale);
+    const hasInnerEllipsoid = !(
+      radii.x === radii.y &&
+      radii.y === radii.z &&
+      minBounds.z === -radii.x
+    );
     useBounds =
       !isDefaultMinX ||
+      !isDefaultMaxX ||
       !isDefaultMinY ||
-      !isDefaultMinZ ||
       !isDefaultMaxY ||
-      !isDefaultMaxZ;
+      hasInnerEllipsoid;
   }
 
   if (useBounds) {

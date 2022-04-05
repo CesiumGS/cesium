@@ -266,7 +266,7 @@ struct Ray
 const float NoHit = -czm_infinity;
 const float InfHit = czm_infinity;
 
-#if (defined(SHAPE_CYLINDER) && defined(BOUNDS)) || (defined(SHAPE_ELLIPSOID) && defined(BOUNDS))
+#if (defined(SHAPE_CYLINDER) || defined(SHAPE_ELLIPSOID)) && defined(BOUNDS)
 vec2 resolveIntersections(vec2 intersections[SHAPE_INTERSECTION_COUNT])
 {
     // TODO: completely skip shape if both of its Ts are below 0.0?
@@ -442,9 +442,9 @@ vec2 intersectWedge(Ray ray, float minAngle, float maxAngle)
     bool h = smax >= 0.0;
 
     // if () return vec2(tmin, tmax);
-    // else if () return vec2(NoHitNeg, tmin);
-    // else if () return vec2(NoHitNeg, tmax);
-    // else if () return vec2(tmax, NoHitPos);
+    // else if () return vec2(-InfHit, tmin);
+    // else if () return vec2(-InfHit, tmax);
+    // else if () return vec2(tmax, +InfHit);
     // else return vec2(NoHit, NoHit);
 
     if (e != g && f == h) return vec2(tmin, tmax);
@@ -705,8 +705,8 @@ vec2 intersectUncappedCone(Ray ray, float angle, float direction)
         return vec2(NoHit, NoHit);
     }
 
-    else if (h1 < 0.0) return vec2(tmax, NoHitPos);
-    else if (h2 < 0.0) return vec2(NoHitNeg, tmin);
+    else if (h1 < 0.0) return vec2(tmax, +InfHit);
+    else if (h2 < 0.0) return vec2(-InfHit, tmin);
     else return vec2(tmin, tmax);
 }
 #endif
@@ -724,44 +724,46 @@ vec2 intersectEllipsoidShape(Ray ray)
         float heightMin = u_minBounds.z; // [-inf,+inf]
         float heightMax = u_maxBounds.z; // [-inf,+inf]
         
-        vec2 outerIntersect = intersectUnitSphere(ray);
+        vec2 outerIntersect = intersectUnitSphereUnnormalizedDirection(ray);
+        return outerIntersect;
         if (outerIntersect == vec2(NoHit, NoHit)) {
             return vec2(NoHit, NoHit);
         }
         
-        float intersections[SHAPE_INTERSECTION_COUNT];
-        intersections[BOUNDS_2_MAX_IDX * 2 + 0] = outerIntersect.x;
-        intersections[BOUNDS_2_MAX_IDX * 2 + 1] = outerIntersect.y;
+        vec2 intersections[SHAPE_INTERSECTION_COUNT];
+        intersections[0] = vec2(float(0), outerIntersect.x);
+        intersections[1] = vec2(float(1), outerIntersect.y);
         
         #if defined(BOUNDS_2_MIN)
             float innerScale = heightMin;
             Ray innerRay = Ray(ray.pos / innerScale, ray.dir / innerScale);
             vec2 innerIntersect = intersectUnitSphereUnnormalizedDirection(innerRay);
-            intersections[BOUNDS_2_MIN_IDX * 2 + 0] = innerIntersect.x;
-            intersections[BOUNDS_2_MIN_IDX * 2 + 1] = innerIntersect.y;
+            intersections[2] = vec2(float(2), innerIntersect.x);
+            intersections[3] = vec2(float(3), innerIntersect.y);
         #endif
             
         #if defined(BOUNDS_1_MIN)
             vec2 botConeIntersect = intersectUncappedCone(ray, abs(latMin), sign(latMin));
-            intersections[BOUNDS_1_MIN_IDX * 2 + 0] = botConeIntersect.x;
-            intersections[BOUNDS_1_MIN_IDX * 2 + 1] = botConeIntersect.y;
+            intersections[BOUNDS_1_MIN_IDX * 2 + 0] = vec2(float(BOUNDS_1_MIN_IDX * 2 + 0), botConeIntersect.x);
+            intersections[BOUNDS_1_MIN_IDX * 2 + 1] = vec2(float(BOUNDS_1_MIN_IDX * 2 + 1), botConeIntersect.y);
         #endif
         
         #if defined(BOUNDS_1_MAX)
             vec2 topConeIntersect = intersectUncappedCone(ray, abs(latMax), sign(latMax));
-            intersections[BOUNDS_1_MAX_IDX * 2 + 0] = topConeIntersect.x;
-            intersections[BOUNDS_1_MAX_IDX * 2 + 1] = topConeIntersect.y;
+            intersections[BOUNDS_1_MAX_IDX * 2 + 0] = vec2(float(BOUNDS_1_MAX_IDX * 2 + 0), topConeIntersect.x);
+            intersections[BOUNDS_1_MAX_IDX * 2 + 1] = vec2(float(BOUNDS_1_MAX_IDX * 2 + 1), topConeIntersect.y);
         #endif
         
         #if defined(BOUNDS_0_MIN) || defined(BOUNDS_0_MAX)
             vec3 planeNormal1 = -vec3(cos(lonMin), sin(lonMin), 0.0);
             vec3 planeNormal2 = vec3(cos(lonMax), sin(lonMax), 0.0);
             vec2 wedgeIntersect = intersectWedge(ray, planeNormal1, planeNormal2);
-            intersections[BOUNDS_0_MIN_MAX_IDX * 2 + 0] = wedgeIntersect.x;
-            intersections[BOUNDS_0_MIN_MAX_IDX * 2 + 1] = wedgeIntersect.y;
+            intersections[BOUNDS_0_MIN_MAX_IDX * 2 + 0] = vec2(float(BOUNDS_0_MIN_MAX_IDX * 2 + 0), wedgeIntersect.x);
+            intersections[BOUNDS_0_MIN_MAX_IDX * 2 + 1] = vec2(float(BOUNDS_0_MIN_MAX_IDX * 2 + 1), wedgeIntersect.y);
         #endif
         
-        return resolveIntersections(intersections);   
+        return resolveIntersections(intersections);
+        // return vec2(0.0);
     #endif
 }
 #endif
@@ -854,7 +856,11 @@ float intersectDepth(vec2 fragCoord, vec2 screenUv, vec3 viewPosUv, vec3 viewDir
 
 #if defined(SHAPE_BOX)
 vec3 transformFromUvToBoxSpace(in vec3 positionUv) {
-    return positionUv;
+    vec3 positionShape = positionUv;
+    #if defined(BOUNDS)
+        positionShape = (positionShape - u_minBoundsUv) * u_inverseBoundsUv; // [0,1]
+    #endif
+    return positionShape;
 }
 #endif
 
@@ -877,6 +883,15 @@ vec3 transformFromUvToEllipsoidSpace(in vec3 positionUv) {
     float longitude = (atan(normal.y, normal.x) + czm_pi) / czm_twoPi; // 6
     float latitude = (asin(normal.z) + czm_piOverTwo) / czm_pi; // 6
 
+    #if defined(BOUNDS)
+        float minLongitude = u_minBoundsUv.x;
+        float maxLongitude = u_maxBoundsUv.x;
+        float minLatitude = u_minBoundsUv.y;
+        float maxLatitude = u_minBoundsUv.y;
+        longitude = (longitude - minLongitude) / (maxLongitude - minLongitude);
+        latitude = (latitude - minLatitude) / (maxLatitude - minLatitude);
+    #endif
+
     return vec3(longitude, latitude, dist);
 }
 #endif
@@ -887,7 +902,16 @@ vec3 transformFromUvToCylinderSpace(in vec3 positionUv) {
     float radius = length(positionLocal.xy); // [0,1]
     float height = positionUv.z; // [0,1]
     float angle = (atan(positionLocal.y, positionLocal.x) + czm_pi) / czm_twoPi; // [0,1]
-    return vec3(radius, height, angle);
+    vec3 positionShape = vec3(radius, height, angle);
+
+    #if defined(BOUNDS)
+        positionShape = (positionShape - u_minBoundsUv) * u_inverseBoundsUv; // [0,1]
+        // TODO: This breaks down when minBounds == maxBounds. To fix it, this
+        // function would have to know if ray is intersecting the front or back of the shape
+        // and set the shape space position to 1 (front) or 0 (back) accordingly.
+    #endif
+
+    return positionShape;
 }
 #endif
 
@@ -898,13 +922,6 @@ vec3 transformFromUvToShapeSpace(in vec3 positionUv) {
         vec3 positionShape = transformFromUvToEllipsoidSpace(positionUv);
     #elif defined(SHAPE_CYLINDER)
         vec3 positionShape = transformFromUvToCylinderSpace(positionUv);
-    #endif
-
-    #if defined(BOUNDS)
-        positionShape = (positionShape - u_minBoundsUv) * u_inverseBoundsUv; // [0,1]
-        // TODO: This breaks down when minBounds == maxBounds. To fix it, this
-        // function would have to know if ray is intersecting the front or back of the shape
-        // and set the shape space position to 1 (front) or 0 (back) accordingly.
     #endif
 
     return positionShape;
