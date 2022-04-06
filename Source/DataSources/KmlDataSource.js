@@ -3244,7 +3244,7 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
             } else {
               oneTimeWarning(
                 "kml-refrehMode-onStop-noCamera",
-                "A NetworkLink with viewRefreshMode=onStop requires a camera be passed in when creating the KmlDataSource"
+                "A NetworkLink with viewRefreshMode=onStop requires the `camera` property to be defined."
               );
             }
 
@@ -3615,15 +3615,18 @@ function KmlDataSource(options) {
   this._entityCluster = new EntityCluster();
 
   /**
-   * The Canvas that is used for sending viewer properties to network links.
+   * The current size of this Canvas will be used to populate the Link parameters
+   * for client height and width.
    *
    * @type {HTMLCanvasElement | undefined}
    */
   this.canvas = canvas;
 
   /**
-   * The {@link Camera} that is used for viewRefreshModes and sending camera
-   * properties to network links.
+   * The position and orientation of this {@link Camera} will be used to
+   * populate various camera parameters when making network requests.
+   * Camera movement will determine when to trigger NetworkLink refresh if
+   * <code>viewRefreshMode</code> is <code>onStop</code>.
    *
    * @type {Camera | undefined}
    */

@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.93 - 2022-05-01
+
+##### Additions :tada:
+
+- `KmlDataSource` now exposes the `camera` and `canvas` properties, which are used to provide information about the state of the Viewer when making network requests for a [Link](https://developers.google.com/kml/documentation/kmlreference#link). Passing these values in the constructor is now optional.
+
 ### 1.92 - 2022-04-01
 
 ##### Breaking Changes :mega:
