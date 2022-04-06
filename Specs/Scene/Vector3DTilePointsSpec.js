@@ -70,7 +70,6 @@ describe(
           0
         );
         return (
-          points._labelCollection._backgroundImageReady &&
           (!defined(backgroundBillboard) || backgroundBillboard.ready) &&
           points._labelCollection._labelsToUpdate.length === 0 &&
           (!defined(points._billboardCollection.get(0)) ||
