@@ -589,7 +589,7 @@ vec2 intersectEllipsoidShape(Ray ray)
         #endif
             
         #if defined(BOUNDS_1_MIN)
-            float halfAngleMin = sign(latMin) * (czm_piOverTwo - abs(latMin));
+            float halfAngleMin = -sign(latMin) * (czm_piOverTwo - abs(latMin));
             vec2 botConeIntersect = intersectUncappedCone(ray, halfAngleMin, -1.0);
             intersections[BOUNDS_1_MIN_IDX * 2 + 0] = vec2(float(BOUNDS_1_MIN_IDX * 2 + 0), botConeIntersect.x);
             intersections[BOUNDS_1_MIN_IDX * 2 + 1] = vec2(float(BOUNDS_1_MIN_IDX * 2 + 1), botConeIntersect.y);
