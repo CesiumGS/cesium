@@ -2,6 +2,10 @@
 
 ### 1.93 - 2022-05-02
 
+##### Additions :tada:
+
+- Added support for morph targets in `ModelExperimental`. [#10271](https://github.com/CesiumGS/cesium/pull/10271)
+
 ##### Fixes :wrench:
 
 - Fixed `GoogleEarthEnterpriseImageryProvider.requestImagery`, `GridImageryProvider.requestImagery`, and `TileCoordinateImageryProvider.requestImagery` return types to match interface. [#10265](https://github.com/CesiumGS/cesium/issues/10265)

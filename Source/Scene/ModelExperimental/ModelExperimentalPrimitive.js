@@ -14,6 +14,7 @@ import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
 import MetadataPipelineStage from "./MetadataPipelineStage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+import MorphTargetsPipelineStage from "./MorphTargetsPipelineStage.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
 import PointCloudAttenuationPipelineStage from "./PointCloudAttenuationPipelineStage.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
@@ -120,6 +121,8 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
   const model = this.model;
   const customShader = model.customShader;
 
+  const hasMorphTargets =
+    defined(primitive.morphTargets) && primitive.morphTargets.length > 0;
   const hasCustomShader = defined(customShader);
   const hasCustomFragmentShader =
     hasCustomShader && defined(customShader.fragmentShaderText);
@@ -139,6 +142,10 @@ ModelExperimentalPrimitive.prototype.configurePipeline = function () {
   // Start of pipeline -----------------------------------------------------
 
   pipelineStages.push(GeometryPipelineStage);
+
+  if (hasMorphTargets) {
+    pipelineStages.push(MorphTargetsPipelineStage);
+  }
 
   if (hasAttenuation && primitive.primitiveType === PrimitiveType.POINTS) {
     pipelineStages.push(PointCloudAttenuationPipelineStage);
