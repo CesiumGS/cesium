@@ -224,7 +224,9 @@ float hash(vec2 p)
 	return fract((p3.x + p3.y) * p3.z);
 }
 #endif
-
+float signNoZero(float v) {
+    return (v < 0.0) ? -1.0 : 1.0;
+}
 int intMod(int a, int b) {
     return a - (b * (a / b));
 }
@@ -832,50 +834,82 @@ vec3 transformFromUvToBoxSpace(in vec3 positionUv) {
 // robust iterative solution without trig functions
 // https://github.com/0xfaded/ellipse_demo/issues/1
 // https://stackoverflow.com/questions/22959698/distance-from-given-point-to-given-ellipse
-float ellipseDistanceIterative (vec2 p, in vec2 ab) {
-    float px = abs(p[0]);
-    float py = abs(p[1]);
+// Pro: Good when radii.x ~= radii.y
+// Con: Breaks at pos.x ~= 0.0, especially inside the ellipse
+// Con: Inaccurate with exterior points and thin ellipses
+float ellipseDistanceIterative (vec2 pos, vec2 radii) {
+    vec2 p = abs(pos);
+    vec2 invRadii = 1.0 / radii;
+    vec2 a = vec2(1.0, -1.0) * (radii.x * radii.x - radii.y * radii.y) * invRadii;
+    vec2 t = vec2(0.70710678118); // sqrt(2) / 2
+    vec2 v = radii * t;
 
-    float tx = 0.707;
-    float ty = 0.707;
+    const int iterations = 3;
+    for (int i = 0; i < iterations; i++) {
+        vec2 e = a * pow(t, vec2(3.0));
+        vec2 q = normalize(p - e) * length(v - e);
+        t = normalize((q + e) * invRadii);
+        v = radii * t;
+    }
+    return length(v * sign(pos) - pos) * sign(p.y - v.y);
+}
+#endif
 
-    float a = ab.x;
-    float b = ab.y;
+#if defined(SHAPE_ELLIPSOID)
+// From: https://www.shadertoy.com/view/4sS3zz
+// Pro: Accurate in most cases
+// Con: Breaks if radii.x ~= radii.y
+float ellipseDistanceAnalytical(vec2 pos, vec2 radii) {
+    vec2 p = pos;
+    vec2 ab = radii;
 
-    for (int i = 0; i < 3; i++) {
-        float x = a * tx;
-        float y = b * ty;
+	p = abs(p); 
+    if (p.x > p.y) {
+        p = p.yx;
+        ab = ab.yx;
+    }
+	
+	float l = ab.y * ab.y - ab.x * ab.x;
+    float m = ab.x * p.x / l; 
+	float n = ab.y * p.y / l; 
+	float m2 = m * m;
+	float n2 = n * n;
+    float c = (m2 + n2 - 1.0) / 3.0; 
+	float c3 = c * c * c;
+    float d = c3 + m2 * n2;
+    float q = d + m2 * n2;
+    float g = m + m * n2;
 
-        float ex = (a*a - b*b) * pow(tx, 3.0) / a;
-        float ey = (b*b - a*a) * pow(ty, 3.0) / b;
+    float co;
 
-        float rx = x - ex;
-        float ry = y - ey;
-
-        float qx = px - ex;
-        float qy = py - ey;
-
-        float r = sqrt(ry * ry + rx * rx);
-        float q = sqrt(qy * qy + qx * qx);
-
-        tx = clamp((qx * r / q + ex) / a, 0.0, 1.0);
-        ty = clamp((qy * r / q + ey) / b, 0.0, 1.0);
-        float t = sqrt(ty * ty + tx * tx);
-        tx /= t;
-        ty /= t;
+    if (d < 0.0) {
+        float h = acos(q / c3) / 3.0;
+        float s = cos(h) + 2.0;
+        float t = sin(h) * sqrt(3.0);
+        float rx = sqrt(m2 - c * (s + t));
+        float ry = sqrt(m2 - c * (s - t));
+        co = ry + sign(l) * rx + abs(g) / (rx * ry);
+    } else {
+        float h = 2.0 * m * n * sqrt(d);
+        float s = signNoZero(q + h) * pow(abs(q + h), 1.0 / 3.0);
+        float t = signNoZero(q - h) * pow(abs(q - h), 1.0 / 3.0);
+        float rx = -(s + t) - c * 4.0 + 2.0 * m2;
+        float ry =  (s - t) * sqrt(3.0);
+        float rm = sqrt(rx * rx + ry * ry);
+        co = ry / sqrt(rm - rx) + 2.0 * g / rm;
     }
 
-    float cX = a * tx;
-    float cY = b * ty;
-    vec2 pos = vec2(cX * sign(p[0]), cY * sign(p[1]));
-    return length(pos - p) * sign(py - cY);
+    co = (co - m) / 2.0;
+    float si = sqrt(max(1.0 - co * co, 0.0));
+    vec2 r = ab * vec2(co, si);
+    return length(r - p) * signNoZero(p.y - r.y);
 }
 #endif
 
 #if defined(SHAPE_ELLIPSOID)
 vec3 transformFromUvToEllipsoidSpace(in vec3 positionUv) {
     // 1) Convert positionUv [0,1] to local space [-1,+1] to normalized cartesian space [-a,+a] where a = (radii + height) / (max(radii) + height). A point on the largest ellipsoid axis would be [-1,+1] and everything else would be smaller.
-    // 2) Convert the 3D position to a 2D position relative to the ellipse (radii.x, radii.z) (assuming radii.x == radii.y which is true for WGS84). This is an optimization to do math with ellipses instead of ellipsoids.
+    // 2) Convert the 3D position to a 2D position relative to the ellipse (radii.x, radii.z) (assuming radii.x == radii.y which is true for WGS84). This is an optimization so that math can be done with ellipses instead of ellipsoids.
     // 3) Compute height from inner ellipse.
     // 4) Compute geodetic surface normal.
     // 5) Compute longitude from geodetic surface normal.
