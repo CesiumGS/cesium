@@ -45,6 +45,8 @@ describe(
     const boxBackFaceCullingUrl =
       "./Data/Models/Box-Back-Face-Culling/Box-Back-Face-Culling.gltf";
     const boxBackFaceCullingOffset = new HeadingPitchRange(Math.PI / 2, 0, 2.0);
+    const morphPrimitivesTestUrl =
+      "./Data/Models/GltfLoader/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf";
 
     let scene;
 
@@ -75,22 +77,36 @@ describe(
       camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
     }
 
-    function verifyRender(model, shouldRender, zoomToModel) {
+    const scratchBytes = [];
+
+    function verifyRender(model, shouldRender, options) {
       expect(model.ready).toBe(true);
-      zoomToModel = defaultValue(zoomToModel, true);
+      options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+      const zoomToModel = defaultValue(options.zoomToModel, true);
       if (zoomToModel) {
         zoomTo(model);
       }
+
+      const backgroundColor = defaultValue(
+        options.backgroundColor,
+        Color.BLACK
+      );
+      scene.backgroundColor = backgroundColor;
+      const backgroundColorBytes = backgroundColor.toBytes(scratchBytes);
+
       expect({
         scene: scene,
         time: JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC")),
       }).toRenderAndCall(function (rgba) {
         if (shouldRender) {
-          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).not.toEqual(backgroundColorBytes);
         } else {
-          expect(rgba).toEqual([0, 0, 0, 255]);
+          expect(rgba).toEqual(backgroundColorBytes);
         }
       });
+
+      scene.backgroundColor = Color.BLACK;
     }
 
     it("initializes and renders from Uint8Array", function () {
@@ -215,6 +231,29 @@ describe(
           .catch(function (error) {
             expect(error).toBeDefined();
           });
+      });
+    });
+
+    it("renders glTF with morph targets", function () {
+      const resource = Resource.createIfNeeded(morphPrimitivesTestUrl);
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelExperimental(
+          {
+            gltf: gltf,
+            basePath: morphPrimitivesTestUrl,
+          },
+          scene
+        ).then(function (model) {
+          // The background color must be changed because the model's texture
+          // contains black, which can confuse the test.
+          const renderOptions = {
+            backgroundColor: Color.BLUE,
+          };
+
+          // The model is a plane made three-dimensional by morph targets.
+          // If morph targets aren't supported, the model won't appear in the camera.
+          verifyRender(model, true, renderOptions);
+        });
       });
     });
 
@@ -790,8 +829,8 @@ describe(
         };
 
         let result;
+        verifyRender(model, true);
         expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual([0, 0, 0, 255]);
           result = rgba;
         });
 
@@ -897,9 +936,13 @@ describe(
           },
           scene
         ).then(function (model) {
+          const renderOptions = {
+            zoomToModel: false,
+          };
+
           const expectedRadius = 0.866;
           scene.renderForSpecs();
-          verifyRender(model, true, false);
+          verifyRender(model, true, renderOptions);
 
           // Verify that minimumPixelSize didn't affect other parameters
           expect(model.scale).toEqual(1.0);
@@ -926,19 +969,23 @@ describe(
         },
         scene
       ).then(function (model) {
+        const renderOptions = {
+          zoomToModel: false,
+        };
+
         scene.renderForSpecs();
         expect(updateModelMatrix).toHaveBeenCalled();
-        verifyRender(model, true, false);
+        verifyRender(model, true, renderOptions);
 
         model.minimumPixelSize = 0.0;
         scene.renderForSpecs();
         expect(updateModelMatrix).toHaveBeenCalled();
-        verifyRender(model, false, false);
+        verifyRender(model, false, renderOptions);
 
         model.minimumPixelSize = 1;
         scene.renderForSpecs();
         expect(updateModelMatrix).toHaveBeenCalled();
-        verifyRender(model, true, false);
+        verifyRender(model, true, renderOptions);
       });
     });
 
@@ -1321,6 +1368,7 @@ describe(
       ).then(function (model) {
         let modelColor;
         scene.renderForSpecs();
+        verifyRender(model, true);
         expect(scene).toRenderAndCall(function (rgba) {
           modelColor = rgba;
         });
@@ -1355,6 +1403,7 @@ describe(
       ).then(function (model) {
         let modelColor;
         scene.renderForSpecs();
+        verifyRender(model, true);
         expect(scene).toRenderAndCall(function (rgba) {
           modelColor = rgba;
         });
