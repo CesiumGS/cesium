@@ -1193,15 +1193,79 @@ VoxelPrimitive.prototype.update = function (frameState) {
     compoundModelMatrix,
     compoundModelMatrixOld
   );
+
   const shape = this._shape;
   const shapeType = provider.shape;
-
+  const defaultMinBounds = VoxelShapeType.getMinBounds(shapeType);
+  const defaultMaxBounds = VoxelShapeType.getMaxBounds(shapeType);
   const minBounds = this._minBounds;
   const maxBounds = this._maxBounds;
+
+  let isDefaultBoundsMin =
+    minBounds.x === defaultMinBounds.x &&
+    minBounds.y === defaultMinBounds.y &&
+    minBounds.z === defaultMinBounds.z;
+
+  let isDefaultBoundsMax =
+    maxBounds.x === defaultMaxBounds.x &&
+    maxBounds.y === defaultMaxBounds.y &&
+    maxBounds.z === defaultMaxBounds.z;
+
+  // Clamp the min bounds to the valid range.
+  if (!isDefaultBoundsMin) {
+    minBounds.x = CesiumMath.clamp(
+      minBounds.x,
+      defaultMinBounds.x,
+      defaultMaxBounds.x
+    );
+    minBounds.y = CesiumMath.clamp(
+      minBounds.y,
+      defaultMinBounds.y,
+      defaultMaxBounds.y
+    );
+    if (shapeType !== VoxelShapeType.ELLIPSOID) {
+      minBounds.z = CesiumMath.clamp(
+        minBounds.z,
+        defaultMinBounds.z,
+        defaultMaxBounds.z
+      );
+    }
+    isDefaultBoundsMin =
+      minBounds.x === defaultMinBounds.x &&
+      minBounds.y === defaultMinBounds.y &&
+      minBounds.z === defaultMinBounds.z;
+  }
+
+  // Clamp the max bounds to the valid range.
+  if (!isDefaultBoundsMax) {
+    maxBounds.x = CesiumMath.clamp(
+      maxBounds.x,
+      defaultMinBounds.x,
+      defaultMaxBounds.x
+    );
+    maxBounds.y = CesiumMath.clamp(
+      maxBounds.y,
+      defaultMinBounds.y,
+      defaultMaxBounds.y
+    );
+    if (shapeType !== VoxelShapeType.ELLIPSOID) {
+      maxBounds.z = CesiumMath.clamp(
+        maxBounds.z,
+        defaultMinBounds.z,
+        defaultMaxBounds.z
+      );
+    }
+    isDefaultBoundsMax =
+      maxBounds.x === defaultMaxBounds.x &&
+      maxBounds.y === defaultMaxBounds.y &&
+      maxBounds.z === defaultMaxBounds.z;
+  }
+
   const minBoundsOld = this._minBoundsOld;
   const maxBoundsOld = this._maxBoundsOld;
   const minBoundsDirty = !Cartesian3.equals(minBounds, minBoundsOld);
   const maxBoundsDirty = !Cartesian3.equals(maxBounds, maxBoundsOld);
+
   const shapeIsDirty =
     compoundModelMatrixDirty || minBoundsDirty || maxBoundsDirty;
 
@@ -1217,23 +1281,15 @@ VoxelPrimitive.prototype.update = function (frameState) {
     }
 
     if (minBoundsDirty || maxBoundsDirty) {
-      const defaultMinBounds = VoxelShapeType.getMinBounds(shapeType);
-      const defaultMaxBounds = VoxelShapeType.getMaxBounds(shapeType);
-      const isDefaultBoundsMinX = minBounds.x === defaultMinBounds.x;
-      const isDefaultBoundsMinY = minBounds.y === defaultMinBounds.y;
-      const isDefaultBoundsMinZ = minBounds.z === defaultMinBounds.z;
-      const isDefaultBoundsMaxX = maxBounds.x === defaultMaxBounds.x;
-      const isDefaultBoundsMaxY = maxBounds.y === defaultMaxBounds.y;
-      const isDefaultBoundsMaxZ = maxBounds.z === defaultMaxBounds.z;
-
       if (minBoundsDirty) {
-        const isDefaultOldBoundsMinX = minBoundsOld.x === defaultMinBounds.x;
-        const isDefaultOldBoundsMinY = minBoundsOld.y === defaultMinBounds.y;
-        const isDefaultOldBoundsMinZ = minBoundsOld.z === defaultMinBounds.z;
+        // Check if the min bounds became default or stopped being default
         if (
-          isDefaultBoundsMinX !== isDefaultOldBoundsMinX ||
-          isDefaultBoundsMinY !== isDefaultOldBoundsMinY ||
-          isDefaultBoundsMinZ !== isDefaultOldBoundsMinZ
+          (minBounds.x === defaultMinBounds.x) !==
+            (minBoundsOld.x === defaultMinBounds.x) ||
+          (minBounds.y === defaultMinBounds.y) !==
+            (minBoundsOld.y === defaultMinBounds.y) ||
+          (minBounds.z === defaultMinBounds.z) !==
+            (minBoundsOld.z === defaultMinBounds.z)
         ) {
           this._shaderDirty = true;
         }
@@ -1241,13 +1297,14 @@ VoxelPrimitive.prototype.update = function (frameState) {
       }
 
       if (maxBoundsDirty) {
-        const isDefaultOldBoundsMaxX = maxBoundsOld.x === defaultMaxBounds.x;
-        const isDefaultOldBoundsMaxY = maxBoundsOld.y === defaultMaxBounds.y;
-        const isDefaultOldBoundsMaxZ = maxBoundsOld.z === defaultMaxBounds.z;
+        // Check if the max bounds became default or stopped being default
         if (
-          isDefaultBoundsMaxX !== isDefaultOldBoundsMaxX ||
-          isDefaultBoundsMaxY !== isDefaultOldBoundsMaxY ||
-          isDefaultBoundsMaxZ !== isDefaultOldBoundsMaxZ
+          (maxBounds.x === defaultMaxBounds.x) !==
+            (maxBoundsOld.x === defaultMaxBounds.x) ||
+          (maxBounds.y === defaultMaxBounds.y) !==
+            (maxBoundsOld.y === defaultMaxBounds.y) ||
+          (maxBounds.z === defaultMaxBounds.z) !==
+            (maxBoundsOld.z === defaultMaxBounds.z)
         ) {
           this._shaderDirty = true;
         }
@@ -1255,14 +1312,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
       }
 
       // Set uniforms for bounds.
-      if (
-        !isDefaultBoundsMinX ||
-        !isDefaultBoundsMinY ||
-        !isDefaultBoundsMinZ ||
-        !isDefaultBoundsMaxX ||
-        !isDefaultBoundsMaxY ||
-        !isDefaultBoundsMaxZ
-      ) {
+      if (!isDefaultBoundsMin || !isDefaultBoundsMax) {
         uniforms.minBounds = Cartesian3.clone(minBounds, uniforms.minBounds);
         uniforms.maxBounds = Cartesian3.clone(maxBounds, uniforms.maxBounds);
         uniforms.inverseBounds = Cartesian3.divideComponents(
@@ -1603,29 +1653,82 @@ VoxelPrimitive.prototype.update = function (frameState) {
       // Process clipping bounds.
       const minClip = this._minClippingBounds;
       const maxClip = this._maxClippingBounds;
+
+      let isDefaultClippingBoundsMin =
+        minClip.x === defaultMinBounds.x &&
+        minClip.y === defaultMinBounds.y &&
+        minClip.z === defaultMinBounds.z;
+
+      let isDefaultClippingBoundsMax =
+        maxClip.x === defaultMaxBounds.x &&
+        maxClip.y === defaultMaxBounds.y &&
+        maxClip.z === defaultMaxBounds.z;
+
+      // Clamp the min bounds to the valid range.
+      if (!isDefaultClippingBoundsMin) {
+        minClip.x = CesiumMath.clamp(
+          minClip.x,
+          defaultMinBounds.x,
+          defaultMaxBounds.x
+        );
+        minClip.y = CesiumMath.clamp(
+          minClip.y,
+          defaultMinBounds.y,
+          defaultMaxBounds.y
+        );
+        if (shapeType !== VoxelShapeType.ELLIPSOID) {
+          minClip.z = CesiumMath.clamp(
+            minClip.z,
+            defaultMinBounds.z,
+            defaultMaxBounds.z
+          );
+        }
+        isDefaultClippingBoundsMin =
+          minClip.x === defaultMinBounds.x &&
+          minClip.y === defaultMinBounds.y &&
+          minClip.z === defaultMinBounds.z;
+      }
+
+      // Clamp the max bounds to the valid range.
+      if (!isDefaultClippingBoundsMax) {
+        maxClip.x = CesiumMath.clamp(
+          maxClip.x,
+          defaultMinBounds.x,
+          defaultMaxBounds.x
+        );
+        maxClip.y = CesiumMath.clamp(
+          maxClip.y,
+          defaultMinBounds.y,
+          defaultMaxBounds.y
+        );
+        if (shapeType !== VoxelShapeType.ELLIPSOID) {
+          maxClip.z = CesiumMath.clamp(
+            maxClip.z,
+            defaultMinBounds.z,
+            defaultMaxBounds.z
+          );
+        }
+        isDefaultClippingBoundsMax =
+          maxClip.x === defaultMaxBounds.x &&
+          maxClip.y === defaultMaxBounds.y &&
+          maxClip.z === defaultMaxBounds.z;
+      }
+
       const minClipOld = this._minClippingBoundsOld;
       const maxClipOld = this._maxClippingBoundsOld;
       const minClipDirty = !Cartesian3.equals(minClip, minClipOld);
       const maxClipDirty = !Cartesian3.equals(maxClip, maxClipOld);
       const clippingBoundsDirty = minClipDirty || maxClipDirty;
-      if (clippingBoundsDirty) {
-        const defaultMinBounds = VoxelShapeType.getMinBounds(shapeType);
-        const defaultMaxBounds = VoxelShapeType.getMaxBounds(shapeType);
-        const isDefaultClippingBoundsMinX = minClip.x === defaultMinBounds.x;
-        const isDefaultClippingBoundsMinY = minClip.y === defaultMinBounds.y;
-        const isDefaultClippingBoundsMinZ = minClip.z === defaultMinBounds.z;
-        const isDefaultClippingBoundsMaxX = maxClip.x === defaultMaxBounds.x;
-        const isDefaultClippingBoundsMaxY = maxClip.y === defaultMaxBounds.y;
-        const isDefaultClippingBoundsMaxZ = maxClip.z === defaultMaxBounds.z;
 
+      if (clippingBoundsDirty) {
         if (minClipDirty) {
-          const isDefaultOldClipMinX = minClipOld.x === defaultMinBounds.x;
-          const isDefaultOldClipMinY = minClipOld.y === defaultMinBounds.y;
-          const isDefaultOldClipMinZ = minClipOld.z === defaultMinBounds.z;
           if (
-            isDefaultClippingBoundsMinX !== isDefaultOldClipMinX ||
-            isDefaultClippingBoundsMinY !== isDefaultOldClipMinY ||
-            isDefaultClippingBoundsMinZ !== isDefaultOldClipMinZ
+            (minClip.x === defaultMinBounds.x) !==
+              (minClipOld.x === defaultMinBounds.x) ||
+            (minClip.y === defaultMinBounds.y) !==
+              (minClipOld.y === defaultMinBounds.y) ||
+            (minClip.z === defaultMinBounds.z) !==
+              (minClipOld.z === defaultMinBounds.z)
           ) {
             this._shaderDirty = true;
           }
@@ -1635,13 +1738,13 @@ VoxelPrimitive.prototype.update = function (frameState) {
           );
         }
         if (maxClipDirty) {
-          const isDefaultOldClipMaxX = maxClipOld.x === defaultMaxBounds.x;
-          const isDefaultOldClipMaxY = maxClipOld.y === defaultMaxBounds.y;
-          const isDefaultOldClipMaxZ = maxClipOld.z === defaultMaxBounds.z;
           if (
-            isDefaultClippingBoundsMaxX !== isDefaultOldClipMaxX ||
-            isDefaultClippingBoundsMaxY !== isDefaultOldClipMaxY ||
-            isDefaultClippingBoundsMaxZ !== isDefaultOldClipMaxZ
+            (maxClip.x === defaultMaxBounds.x) !==
+              (maxClipOld.x === defaultMaxBounds.x) ||
+            (maxClip.y === defaultMaxBounds.y) !==
+              (maxClipOld.y === defaultMaxBounds.y) ||
+            (maxClip.z === defaultMaxBounds.z) !==
+              (maxClipOld.z === defaultMaxBounds.z)
           ) {
             this._shaderDirty = true;
           }
@@ -1650,14 +1753,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
             this._maxClippingBoundsOld
           );
         }
-        if (
-          !isDefaultClippingBoundsMinX ||
-          !isDefaultClippingBoundsMinY ||
-          !isDefaultClippingBoundsMinZ ||
-          !isDefaultClippingBoundsMaxX ||
-          !isDefaultClippingBoundsMaxY ||
-          !isDefaultClippingBoundsMaxZ
-        ) {
+        if (!isDefaultClippingBoundsMin || !isDefaultClippingBoundsMax) {
           // Set clipping uniforms
           uniforms.minClippingBounds = Cartesian3.clone(
             minClip,

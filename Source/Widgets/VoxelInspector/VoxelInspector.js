@@ -343,7 +343,6 @@ VoxelInspector.prototype.destroy = function () {
 };
 
 function makeRangeInput(text, property, min, max, step, displayProperty) {
-  step = defaultValue(step, 0.01);
   displayProperty = defaultValue(displayProperty, property);
   const input = document.createElement("input");
   input.setAttribute("data-bind", `value: ${displayProperty}`);
@@ -353,7 +352,7 @@ function makeRangeInput(text, property, min, max, step, displayProperty) {
   slider.type = "range";
   slider.min = min;
   slider.max = max;
-  slider.step = step;
+  slider.step = defaultValue(step, "any");
   slider.setAttribute("data-bind", `valueUpdate: "input", value: ${property}`);
 
   const wrapper = document.createElement("div");
