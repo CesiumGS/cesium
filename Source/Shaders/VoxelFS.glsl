@@ -183,8 +183,10 @@ uniform vec3 u_maxClippingBounds;
 
 #if defined(SHAPE_ELLIPSOID)
 uniform float u_ellipsoidInverseHeightDifferenceUv;
-uniform vec3 u_ellipsoidOuterRadiiLocal; // [0,1]
-uniform vec3 u_ellipsoidInverseRadiiSquaredLocal;
+uniform float u_ellipsoidInverseInnerScaleUv;
+uniform vec3 u_ellipsoidRadiiUv; // [0,1]
+uniform vec3 u_ellipsoidInnerRadiiUv; // [0,1]
+uniform vec3 u_ellipsoidInverseRadiiSquaredUv; 
 #endif
 
 #if defined(PICKING)
@@ -501,12 +503,14 @@ vec2 intersectUnitSphereUnnormalizedDirection(Ray ray)
 #endif
 
 #if defined(SHAPE_ELLIPSOID) && (defined(BOUNDS_1_MIN) || defined(BOUNDS_1_MAX))
-// TODO: can angle and direction be folded into the same parameter
-vec2 intersectUncappedCone(Ray ray, float angle)
+vec2 intersectUncappedCone(Ray ray, float angle, float side)
 {
+    if (angle < 0.0) {
+        side *= -1.0;
+    }
     vec3 o = ray.pos;
     vec3 d = ray.dir;
-    float s = sign(angle);
+    float s = sign(side);
     float h = cos(abs(angle));
     float hh = h * h;
     
@@ -522,7 +526,11 @@ vec2 intersectUncappedCone(Ray ray, float angle)
     float det = b * b - a * c;
     
     if (det < 0.0) {
-        return vec2(NO_HIT, NO_HIT);
+        if (angle > 0.0) {
+            return vec2(NO_HIT, NO_HIT);
+        } else {
+            return vec2(-INF_HIT, +INF_HIT);
+        }
     }
     
     det = sqrt(det);
@@ -533,14 +541,19 @@ vec2 intersectUncappedCone(Ray ray, float angle)
 
     float h1 = (o.z + tmin * d.z) * s;
     float h2 = (o.z + tmax * d.z) * s;
- 
-    if (h1 < 0.0 && h2 < 0.0) {
-        return vec2(NO_HIT, NO_HIT);
-    }
 
-    else if (h1 < 0.0) return vec2(tmax, +INF_HIT);
-    else if (h2 < 0.0) return vec2(-INF_HIT, tmin);
-    else return vec2(tmin, tmax);
+    if (angle > 0.0) {
+        if (h1 < 0.0 && h2 < 0.0) return vec2(NO_HIT, NO_HIT);
+        else if (h1 < 0.0) return vec2(tmax, +INF_HIT);
+        else if (h2 < 0.0) return vec2(-INF_HIT, tmin);
+        else return vec2(tmin, tmax);
+    } else {
+        if (h1 < 0.0 && h2 < 0.0) return vec2(-INF_HIT, +INF_HIT);
+        else if (h1 < 0.0) return vec2(-INF_HIT, tmax);
+        else if (h2 < 0.0) return vec2(tmin, +INF_HIT);
+        else if (tmin < 0.0) return vec2(tmax, +INF_HIT);
+        else return vec2(-INF_HIT, tmin);
+    }
 }
 #endif
 
@@ -567,7 +580,7 @@ vec2 intersectEllipsoidShape(Ray ray)
         intersections[1] = vec2(float(1), outerIntersect.y);
         
         #if defined(BOUNDS_2_MIN)
-            Ray innerRay = Ray(ray.pos * u_ellipsoidInverseHeightDifferenceUv, ray.dir * u_ellipsoidInverseHeightDifferenceUv);
+            Ray innerRay = Ray(ray.pos * u_ellipsoidInverseInnerScaleUv, ray.dir * u_ellipsoidInverseInnerScaleUv);
             vec2 innerIntersect = intersectUnitSphereUnnormalizedDirection(innerRay);
             intersections[2] = vec2(float(2), innerIntersect.x);
             intersections[3] = vec2(float(3), innerIntersect.y);
@@ -575,14 +588,14 @@ vec2 intersectEllipsoidShape(Ray ray)
             
         #if defined(BOUNDS_1_MIN)
             float halfAngleMin = sign(latMin) * (czm_piOverTwo - abs(latMin));
-            vec2 botConeIntersect = intersectUncappedCone(ray, halfAngleMin);
+            vec2 botConeIntersect = intersectUncappedCone(ray, halfAngleMin, -1.0);
             intersections[BOUNDS_1_MIN_IDX * 2 + 0] = vec2(float(BOUNDS_1_MIN_IDX * 2 + 0), botConeIntersect.x);
             intersections[BOUNDS_1_MIN_IDX * 2 + 1] = vec2(float(BOUNDS_1_MIN_IDX * 2 + 1), botConeIntersect.y);
         #endif
         
         #if defined(BOUNDS_1_MAX)
             float halfAngleMax = sign(latMax) * (czm_piOverTwo - abs(latMax));
-            vec2 topConeIntersect = intersectUncappedCone(ray, halfAngleMax);
+            vec2 topConeIntersect = intersectUncappedCone(ray, halfAngleMax, +1.0);
             intersections[BOUNDS_1_MAX_IDX * 2 + 0] = vec2(float(BOUNDS_1_MAX_IDX * 2 + 0), topConeIntersect.x);
             intersections[BOUNDS_1_MAX_IDX * 2 + 1] = vec2(float(BOUNDS_1_MAX_IDX * 2 + 1), topConeIntersect.y);
         #endif
@@ -861,33 +874,28 @@ float ellipseDistanceIterative (vec2 p, in vec2 ab) {
 
 #if defined(SHAPE_ELLIPSOID)
 vec3 transformFromUvToEllipsoidSpace(in vec3 positionUv) {
-    // 1) Convert positionUv [0,1] to unit ellipsoid space [-1,+1].
-    // 2) Convert from unit ellipsoid space [-1,+1] to local space. Max ellipsoid axis has value 1, anything shorter is < 1.
-    // 3) Convert 3d position to 2D point relative to ellipse (since radii.x and radii.y are assumed to be equal for WGS84).
-    // 4) Find closest distance. if distance > 1, it's outside the outer shell, if distance < u_ellipsoidMinimumHeightUv, it's inside the inner shell.
-    // 5) Compute geodetic surface normal.
-    // 6) Compute longitude and latitude from geodetic surface normal.
-
-    vec3 posLocal = positionUv * 2.0 - 1.0; // 1
-    vec3 pos3D = posLocal * u_ellipsoidOuterRadiiLocal; // 2
-    vec2 pos2D = vec2(length(pos3D.xy), pos3D.z); // 3
-    float dist = ellipseDistanceIterative(pos2D, u_ellipsoidOuterRadiiLocal.xz); // 4
-    dist = 1.0 + dist * u_ellipsoidInverseHeightDifferenceUv; // same as delerp(dist, -u_ellipsoidHeightDifferenceUv, 0);
-
-    vec3 normal = normalize(pos3D * u_ellipsoidInverseRadiiSquaredLocal); // 5
-    float longitude = (atan(normal.y, normal.x) + czm_pi) / czm_twoPi; // 6
-    float latitude = (asin(normal.z) + czm_piOverTwo) / czm_pi; // 6
+    // 1) Convert positionUv [0,1] to local space [-1,+1] to normalized cartesian space [-a,+a] where a = (radii + height) / (max(radii) + height). A point on the largest ellipsoid axis would be [-1,+1] and everything else would be smaller.
+    // 2) Convert the 3D position to a 2D position relative to the ellipse (radii.x, radii.z) (assuming radii.x == radii.y which is true for WGS84). This is an optimization to do math with ellipses instead of ellipsoids.
+    // 3) Compute height from inner ellipse.
+    // 4) Compute geodetic surface normal.
+    // 5) Compute longitude from geodetic surface normal.
+    // 6) Compute latitude from geodetic surface normal.
+    vec3 pos3D = (positionUv * 2.0 - 1.0) * u_ellipsoidRadiiUv; // 1
+    vec2 pos2D = vec2(length(pos3D.xy), pos3D.z); // 2
+    float height = ellipseDistanceIterative(pos2D, u_ellipsoidInnerRadiiUv.xz); // 3
+    vec3 geodeticSurfaceNormal = normalize(pos3D *  u_ellipsoidInverseRadiiSquaredUv); // 4
+    float longitude = (atan(geodeticSurfaceNormal.y, geodeticSurfaceNormal.x) + czm_pi) / czm_twoPi; // 5
+    float latitude = (asin(geodeticSurfaceNormal.z) + czm_piOverTwo) / czm_pi; // 6
 
     #if defined(BOUNDS)
+        height *= u_ellipsoidInverseHeightDifferenceUv;
         float minLongitude = u_minBoundsUv.x;
-        float maxLongitude = u_maxBoundsUv.x;
         float minLatitude = u_minBoundsUv.y;
-        float maxLatitude = u_minBoundsUv.y;
-        longitude = (longitude - minLongitude) / (maxLongitude - minLongitude);
-        latitude = (latitude - minLatitude) / (maxLatitude - minLatitude);
+        longitude = (longitude - minLongitude) * u_inverseBoundsUv.x;
+        latitude = (latitude - minLatitude) * u_inverseBoundsUv.y;
     #endif
 
-    return vec3(longitude, latitude, dist);
+    return vec3(longitude, latitude, height);
 }
 #endif
 

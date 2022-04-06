@@ -415,8 +415,10 @@ function VoxelPrimitive(options) {
     ndcSpaceAxisAlignedBoundingBox: new Cartesian4(),
     stepSize: 1.0,
     ellipsoidInverseHeightDifferenceUv: 1.0,
-    ellipsoidOuterRadiiLocal: new Cartesian3(),
-    ellipsoidInverseRadiiSquaredLocal: new Cartesian3(),
+    ellipsoidInverseInnerScaleUv: 1.0,
+    ellipsoidRadiiUv: new Cartesian3(),
+    ellipsoidInnerRadiiUv: new Cartesian3(),
+    ellipsoidInverseRadiiSquaredUv: new Cartesian3(),
     minBounds: new Cartesian3(),
     maxBounds: new Cartesian3(),
     minBoundsUv: new Cartesian3(),
@@ -1357,29 +1359,40 @@ VoxelPrimitive.prototype.update = function (frameState) {
       );
       const minHeight = minBounds.z;
       const maxHeight = maxBounds.z;
-      // const minRadius = Cartesian3.minimumComponent(radii);
-      const maxRadius = Cartesian3.maximumComponent(radii);
-      uniforms.ellipsoidOuterRadiiLocal = Cartesian3.fromElements(
-        (radii.x + maxHeight) / (maxRadius + maxHeight),
-        (radii.y + maxHeight) / (maxRadius + maxHeight),
-        (radii.z + maxHeight) / (maxRadius + maxHeight),
-        uniforms.ellipsoidOuterRadiiLocal
-      );
-      uniforms.ellipsoidInverseRadiiSquaredLocal = Cartesian3.divideComponents(
-        Cartesian3.ONE,
-        Cartesian3.multiplyComponents(
-          uniforms.ellipsoidOuterRadiiLocal,
-          uniforms.ellipsoidOuterRadiiLocal,
-          uniforms.ellipsoidInverseRadiiSquaredLocal
-        ),
-        uniforms.ellipsoidInverseRadiiSquaredLocal
+      // The farthest distance a point can be from the center of the ellipsoid.
+      const maxExtent = Cartesian3.maximumComponent(radii) + maxHeight;
+      // The percent of space that is between the inner and outer ellipsoid
+      const thickness = (maxHeight - minHeight) / maxExtent;
+      // The percent of space that is taken up by the inner ellipsoid.
+      const innerScale = 1.0 - thickness;
+
+      // The ellipsoid radii scaled to [0,1]. The max ellipsoid radius will be 1.0 and others will be less.
+      uniforms.ellipsoidRadiiUv = Cartesian3.fromElements(
+        (radii.x + maxHeight) / maxExtent,
+        (radii.y + maxHeight) / maxExtent,
+        (radii.z + maxHeight) / maxExtent,
+        uniforms.ellipsoidRadiiUv
       );
 
-      // TODO: not sure if this is accurate. It could just as well be
-      // (minRadius + minHeight) / (minRadius + maxHeight). Better approach might
-      // be to get height relative to inner ellipsoid.
-      uniforms.ellipsoidInverseHeightDifferenceUv =
-        (maxRadius + maxHeight) / (maxRadius + minHeight);
+      // The inner ellipsoid radii scaled to [0,innerScale]. The max inner ellipsoid radius will be innerScale and others will be less.
+      uniforms.ellipsoidInnerRadiiUv = Cartesian3.multiplyByScalar(
+        uniforms.ellipsoidRadiiUv,
+        innerScale,
+        uniforms.ellipsoidInnerRadiiUv
+      );
+
+      // Used to compute geodetic surface normal.
+      uniforms.ellipsoidInverseRadiiSquaredUv = Cartesian3.divideComponents(
+        Cartesian3.ONE,
+        Cartesian3.multiplyComponents(
+          uniforms.ellipsoidRadiiUv,
+          uniforms.ellipsoidRadiiUv,
+          uniforms.ellipsoidInverseRadiiSquaredUv
+        ),
+        uniforms.ellipsoidInverseRadiiSquaredUv
+      );
+      uniforms.ellipsoidInverseHeightDifferenceUv = 1.0 / thickness;
+      uniforms.ellipsoidInverseInnerScaleUv = 1.0 / innerScale;
     }
 
     // Math that's only valid if the shape is visible.
