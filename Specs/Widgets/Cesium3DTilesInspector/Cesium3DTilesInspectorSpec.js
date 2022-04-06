@@ -1,5 +1,4 @@
 import { Ellipsoid } from "../../../Source/Cesium.js";
-import { Cesium3DTileset } from "../../../Source/Cesium.js";
 import { Globe } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import { Cesium3DTilesInspector } from "../../../Source/Cesium.js";
@@ -7,9 +6,6 @@ import { Cesium3DTilesInspector } from "../../../Source/Cesium.js";
 describe(
   "Widgets/Cesium3DTilesInspector/Cesium3DTilesInspector",
   function () {
-    // Parent tile with content and four child tiles with content
-    const tilesetUrl = "./Data/Cesium3DTiles/Tilesets/Tileset/tileset.json";
-
     let scene;
     beforeAll(function () {
       scene = createScene();
