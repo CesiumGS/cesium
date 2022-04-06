@@ -53,29 +53,6 @@ describe(
         return new Cesium3DTilesInspector(document.body);
       }).toThrowDeveloperError();
     });
-
-    describe("logging", function () {
-      let widget;
-      let container;
-
-      beforeAll(function () {
-        container = document.createElement("div");
-        container.id = "testContainer";
-        document.body.appendChild(container);
-        widget = new Cesium3DTilesInspector("testContainer", scene);
-
-        const viewModel = widget.viewModel;
-        viewModel.tileset = new Cesium3DTileset({
-          url: tilesetUrl,
-        });
-        return viewModel.tileset.readyPromise;
-      });
-
-      afterAll(function () {
-        widget.destroy();
-        document.body.removeChild(container);
-      });
-    });
   },
   "WebGL"
 );
