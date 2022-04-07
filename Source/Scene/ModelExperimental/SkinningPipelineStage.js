@@ -69,7 +69,7 @@ function addGetSkinningMatrixFunction(shaderBuilder, node) {
   );
 
   const initialLine = "mat4 skinnedMatrix = mat4(0);";
-  shaderBuilder.addFunction(
+  shaderBuilder.addFunctionLines(
     SkinningPipelineStage.FUNCTION_ID_GET_SKINNING_MATRIX,
     [initialLine]
   );
@@ -81,7 +81,7 @@ function addGetSkinningMatrixFunction(shaderBuilder, node) {
   for (let i = 0; i < length; i++) {
     const component = componentStrings[componentIndex];
     const line = `skinnedMatrix += a_weights_${attributeIndex}.${component} * u_jointMatrices[int(a_joints_${attributeIndex}.${component})];`;
-    shaderBuilder.addFunction(
+    shaderBuilder.addFunctionLines(
       SkinningPipelineStage.FUNCTION_ID_GET_SKINNING_MATRIX,
       [line]
     );
@@ -95,7 +95,7 @@ function addGetSkinningMatrixFunction(shaderBuilder, node) {
   }
 
   const returnLine = "return skinnedMatrix;";
-  shaderBuilder.addFunction(
+  shaderBuilder.addFunctionLines(
     SkinningPipelineStage.FUNCTION_ID_GET_SKINNING_MATRIX,
     [returnLine]
   );

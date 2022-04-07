@@ -216,13 +216,18 @@ function initialize(sceneGraph) {
   }
 
   // Handle skins after all runtime nodes are created
-  const skins = sceneGraph.components.skins;
+  const skins = components.skins;
   const runtimeSkins = sceneGraph._runtimeSkins;
 
   const length = skins.length;
   for (let i = 0; i < length; i++) {
     const skin = skins[i];
-    runtimeSkins.push(new ModelExperimentalSkin(skin, sceneGraph));
+    runtimeSkins.push(
+      new ModelExperimentalSkin({
+        skin: skin,
+        sceneGraph: sceneGraph,
+      })
+    );
   }
 
   const skinnedNodes = sceneGraph._skinnedNodes;
@@ -236,6 +241,7 @@ function initialize(sceneGraph) {
     const skinIndex = skin.index;
 
     skinnedNode._runtimeSkin = runtimeSkins[skinIndex];
+    skinnedNode.updateJointMatrices();
   }
 }
 

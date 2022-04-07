@@ -213,9 +213,22 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
    * @type {ModelExperimentalSkin}
    * @readonly
    */
-  skin: {
+  runtimeSkin: {
     get: function () {
       return this._runtimeSkin;
+    },
+  },
+
+  /**
+   * The computed joint matrices of this node, derived from its skin.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {Matrix4[]}
+   * @readonly
+   */
+  computedJointMatrices: {
+    get: function () {
+      return this._computedJointMatrices;
     },
   },
 });
@@ -270,4 +283,37 @@ ModelExperimentalNode.prototype.configurePipeline = function () {
   }
 
   updateStages.push(ModelMatrixUpdateStage);
+};
+
+/**
+ * Updates the joint matrices for this node, where each matrix is computed as
+ * [computedJointMatrix] = [nodeWorldTransform]^-1 * [skinjointMatrix].
+ *
+ * @private
+ */
+ModelExperimentalNode.prototype.updateJointMatrices = function () {
+  if (!defined(this._runtimeSkin)) {
+    return;
+  }
+
+  const computedJointMatrices = this._computedJointMatrices;
+  const skinJointMatrices = this._runtimeSkin.jointMatrices;
+  const length = skinJointMatrices.length;
+
+  for (let i = 0; i < length; i++) {
+    if (!defined(computedJointMatrices[i])) {
+      computedJointMatrices[i] = new Matrix4();
+    }
+
+    const nodeWorldTransform = Matrix4.multiplyTransformation(
+      this.transformToRoot,
+      this.transform,
+      computedJointMatrices[i]
+    );
+    computedJointMatrices[i] = Matrix4.multiplyTransformation(
+      nodeWorldTransform,
+      skinJointMatrices[i],
+      computedJointMatrices[i]
+    );
+  }
 };

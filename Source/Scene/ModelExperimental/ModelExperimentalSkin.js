@@ -1,3 +1,4 @@
+import Matrix4 from "../../Core/Matrix4.js";
 import Check from "../../Core/Check.js";
 import defaultValue from "../../Core/defaultValue.js";
 
@@ -27,9 +28,12 @@ export default function ModelExperimentalSkin(options) {
 
   this._skin = skin;
 
+  // Do we need this?
+  this._dirty = false;
+
   this._inverseBindMatrices = undefined;
   this._joints = [];
-  this._computedJointMatrices = [];
+  this._jointMatrices = [];
 
   initialize(this);
 }
@@ -95,7 +99,11 @@ Object.defineProperties(ModelExperimentalSkin.prototype, {
   },
 
   /**
-   * The computed joint matrices for the skin.
+   * The joint matrices for the skin, where each joint matrix is computed as
+   * [jointMatrix] = [jointWorldTransform] * [bindMatrix].
+   *
+   * Each node that references this skin is responsible for pre-multiplying its inverse
+   * world transform to the joint matrices for its own use.
    *
    * @memberof ModelExperimentalSkin.prototype
    * @type {Matrix4[]}
@@ -103,30 +111,53 @@ Object.defineProperties(ModelExperimentalSkin.prototype, {
    *
    * @private
    */
-  computedJointMatrices: {
+  jointMatrices: {
     get: function () {
-      return this._computedJointMatrices;
+      return this._jointMatrices;
     },
   },
 });
 
 function initialize(runtimeSkin) {
-  const skin = runtimeSkin._skin;
-  runtimeSkin._inverseBindMatrices = skin.inverseBindMatrices;
+  const skin = runtimeSkin.skin;
+  const inverseBindMatrices = skin.inverseBindMatrices;
+  runtimeSkin._inverseBindMatrices = inverseBindMatrices;
 
   const joints = skin.joints;
   const length = joints.length;
 
-  const runtimeNodes = runtimeSkin._sceneGraph._runtimeNodes;
+  const runtimeNodes = runtimeSkin.sceneGraph._runtimeNodes;
   const runtimeJoints = runtimeSkin.joints;
+  const runtimeJointMatrices = runtimeSkin._jointMatrices;
   for (let i = 0; i < length; i++) {
     const jointIndex = joints[i].index;
     const runtimeNode = runtimeNodes[jointIndex];
     runtimeJoints.push(runtimeNode);
-  }
 
-  // TODO: compute matrices
-  runtimeSkin._computedJointMatrices = new Array(length);
+    const bindMatrix = inverseBindMatrices[i];
+    const jointMatrix = computeJointMatrix(
+      runtimeNode,
+      bindMatrix,
+      new Matrix4()
+    );
+    runtimeJointMatrices.push(jointMatrix);
+  }
+}
+
+function computeJointMatrix(joint, bindMatrix, result) {
+  const jointWorldTransform = Matrix4.multiplyTransformation(
+    joint.transformToRoot,
+    joint.transform,
+    result
+  );
+
+  result = Matrix4.multiplyTransformation(
+    jointWorldTransform,
+    bindMatrix,
+    result
+  );
+
+  return result;
 }
 
 /**
@@ -134,4 +165,12 @@ function initialize(runtimeSkin) {
  *
  * @private
  */
-ModelExperimentalSkin.prototype.updateSkin = function () {};
+ModelExperimentalSkin.prototype.updateJointMarices = function () {
+  const jointMatrices = this._jointMatrices;
+  const length = jointMatrices.length;
+  for (let i = 0; i < length; i++) {
+    const joint = this.joints[i];
+    const bindMatrix = this.inverseBindMatrices[i];
+    jointMatrices[i] = computeJointMatrix(joint, bindMatrix, jointMatrices[i]);
+  }
+};

@@ -1,6 +1,7 @@
 import {
   combine,
   GltfLoader,
+  Matrix4,
   ModelExperimentalType,
   Resource,
   ResourceCache,
@@ -60,13 +61,20 @@ describe(
     const simpleSkinUrl =
       "./Data/Models/GltfLoader/SimpleSkin/glTF/SimpleSkin.gltf";
 
-    /*it("processes simple skin", function () {
+    it("processes simple skin", function () {
+      const mockJointMatrices = [
+        new Matrix4(),
+        Matrix4.clone(Matrix4.IDENTITY),
+      ];
       const renderResources = {
         attributes: [],
         shaderBuilder: new ShaderBuilder(),
         attributeIndex: 1,
         model: {
           type: ModelExperimentalType.TILE_GLTF,
+        },
+        runtimeNode: {
+          computedJointMatrices: mockJointMatrices,
         },
       };
 
@@ -101,10 +109,13 @@ describe(
           "uniform mat4 u_jointMatrices[2];",
         ]);
 
+        const runtimeNode = renderResources.runtimeNode;
         const uniformMap = renderResources.uniformMap;
-        expect(uniformMap.u_jointMatrices()).toBe(node.computedJointMatrices);
+        expect(uniformMap.u_jointMatrices()).toBe(
+          runtimeNode.computedJointMatrices
+        );
       });
-    });*/
+    });
   },
   "WebGL"
 );

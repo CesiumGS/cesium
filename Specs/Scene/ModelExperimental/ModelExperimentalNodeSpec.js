@@ -5,6 +5,7 @@ import {
   Matrix4,
   ModelExperimentalNode,
   ModelMatrixUpdateStage,
+  SkinningPipelineStage,
 } from "../../../Source/Cesium.js";
 
 describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
@@ -22,6 +23,14 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
       forwardAxis: Axis.Z,
     },
   };
+
+  function verifyTransforms(transform, transformToRoot, runtimeNode) {
+    expect(Matrix4.equals(runtimeNode.transform, transform)).toBe(true);
+    expect(Matrix4.equals(runtimeNode.originalTransform, transform)).toBe(true);
+    expect(Matrix4.equals(runtimeNode.transformToRoot, transformToRoot)).toBe(
+      true
+    );
+  }
 
   it("throws for undefined node", function () {
     expect(function () {
@@ -129,13 +138,39 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     expect(node.runtimePrimitives).toEqual([]);
   });
 
-  function verifyTransforms(transform, transformToRoot, runtimeNode) {
-    expect(Matrix4.equals(runtimeNode.transform, transform)).toBe(true);
-    expect(Matrix4.equals(runtimeNode.originalTransform, transform)).toBe(true);
-    expect(Matrix4.equals(runtimeNode.transformToRoot, transformToRoot)).toBe(
-      true
-    );
-  }
+  it("adds skinning pipeline stage if node is skinned", function () {
+    const mockSkin = {
+      index: 0,
+      inverseBindMatrices: [
+        Matrix4.clone(Matrix4.IDENTITY),
+        Matrix4.clone(Matrix4.IDENTITY),
+      ],
+      joints: [],
+    };
+
+    const skinnedMockNode = {
+      skin: mockSkin,
+    };
+
+    const node = new ModelExperimentalNode({
+      node: skinnedMockNode,
+      transform: transform,
+      transformToRoot: transformToRoot,
+      sceneGraph: mockSceneGraph,
+      children: [],
+    });
+
+    expect(node.node).toBe(skinnedMockNode);
+    expect(node.sceneGraph).toBe(mockSceneGraph);
+    expect(node.children.length).toEqual(0);
+
+    verifyTransforms(transform, transformToRoot, node);
+
+    expect(node.pipelineStages.length).toBe(1);
+    expect(node.pipelineStages[0]).toEqual(SkinningPipelineStage);
+    expect(node.updateStages).toEqual([ModelMatrixUpdateStage]);
+    expect(node.runtimePrimitives).toEqual([]);
+  });
 
   it("getChild throws for undefined index", function () {
     const node = new ModelExperimentalNode({
