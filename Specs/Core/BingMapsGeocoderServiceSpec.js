@@ -76,7 +76,7 @@ describe("Core/BingMapsGeocoderService", function () {
     });
   });
 
-  it("returns no geocoder results if Bing has no results", function (done) {
+  it("returns no geocoder results if Bing has no results", function () {
     const query = "some query";
     const data = {
       resourceSets: [],
@@ -89,13 +89,12 @@ describe("Core/BingMapsGeocoderService", function () {
       deferred.resolve(data);
     };
     const service = new BingMapsGeocoderService({ key: "" });
-    service.geocode(query).then(function (results) {
+    return service.geocode(query).then(function (results) {
       expect(results.length).toEqual(0);
-      done();
     });
   });
 
-  it("returns no geocoder results if Bing has results but no resources", function (done) {
+  it("returns no geocoder results if Bing has results but no resources", function () {
     const query = "some query";
     const data = {
       resourceSets: [
@@ -112,9 +111,8 @@ describe("Core/BingMapsGeocoderService", function () {
       deferred.resolve(data);
     };
     const service = new BingMapsGeocoderService({ key: "" });
-    service.geocode(query).then(function (results) {
+    return service.geocode(query).then(function (results) {
       expect(results.length).toEqual(0);
-      done();
     });
   });
 });

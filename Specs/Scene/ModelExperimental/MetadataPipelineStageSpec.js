@@ -103,19 +103,19 @@ describe(
           MetadataPipelineStage.STRUCT_NAME_METADATA,
           []
         );
-        ShaderBuilderTester.expectHasVertexFunction(
+        ShaderBuilderTester.expectHasVertexFunctionUnordered(
           shaderBuilder,
           MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
           []
         );
-        ShaderBuilderTester.expectHasFragmentFunction(
+        ShaderBuilderTester.expectHasFragmentFunctionUnordered(
           shaderBuilder,
           MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
           []
         );
-        ShaderBuilderTester.expectHasVertexFunction(
+        ShaderBuilderTester.expectHasVertexFunctionUnordered(
           shaderBuilder,
           MetadataPipelineStage.FUNCTION_ID_SET_METADATA_VARYINGS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_SET_METADATA_VARYINGS,
@@ -169,7 +169,7 @@ describe(
             "    float poloidalAngle;",
           ]
         );
-        ShaderBuilderTester.expectHasVertexFunction(
+        ShaderBuilderTester.expectHasVertexFunctionUnordered(
           shaderBuilder,
           MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
@@ -183,7 +183,7 @@ describe(
             "    metadata.poloidalAngle = czm_valueTransform(u_poloidalAngle_offset, u_poloidalAngle_scale, attributes.featureId_1);",
           ]
         );
-        ShaderBuilderTester.expectHasFragmentFunction(
+        ShaderBuilderTester.expectHasFragmentFunctionUnordered(
           shaderBuilder,
           MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
@@ -197,7 +197,7 @@ describe(
             "    metadata.poloidalAngle = czm_valueTransform(u_poloidalAngle_offset, u_poloidalAngle_scale, attributes.featureId_1);",
           ]
         );
-        ShaderBuilderTester.expectHasVertexFunction(
+        ShaderBuilderTester.expectHasVertexFunctionUnordered(
           shaderBuilder,
           MetadataPipelineStage.FUNCTION_ID_SET_METADATA_VARYINGS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_SET_METADATA_VARYINGS,
@@ -268,13 +268,13 @@ describe(
             "    int outsideTemperature;",
           ]
         );
-        ShaderBuilderTester.expectHasVertexFunction(
+        ShaderBuilderTester.expectHasVertexFunctionUnordered(
           shaderBuilder,
           MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
           []
         );
-        ShaderBuilderTester.expectHasFragmentFunction(
+        ShaderBuilderTester.expectHasFragmentFunctionUnordered(
           shaderBuilder,
           MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
@@ -284,7 +284,7 @@ describe(
             "    metadata.outsideTemperature = int(255.0 * texture2D(u_propertyTexture_1, attributes.texCoord_0).g);",
           ]
         );
-        ShaderBuilderTester.expectHasVertexFunction(
+        ShaderBuilderTester.expectHasVertexFunctionUnordered(
           shaderBuilder,
           MetadataPipelineStage.FUNCTION_ID_SET_METADATA_VARYINGS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_SET_METADATA_VARYINGS,
@@ -338,13 +338,13 @@ describe(
             "    vec2 valueTransformProperty;",
           ]
         );
-        ShaderBuilderTester.expectHasVertexFunction(
+        ShaderBuilderTester.expectHasVertexFunctionUnordered(
           shaderBuilder,
           MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_VS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
           []
         );
-        ShaderBuilderTester.expectHasFragmentFunction(
+        ShaderBuilderTester.expectHasFragmentFunctionUnordered(
           shaderBuilder,
           MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
@@ -356,7 +356,7 @@ describe(
             "    metadata.valueTransformProperty = czm_valueTransform(u_valueTransformProperty_offset, u_valueTransformProperty_scale, texture2D(u_propertyTexture_1, attributes.texCoord_0).rg);",
           ]
         );
-        ShaderBuilderTester.expectHasVertexFunction(
+        ShaderBuilderTester.expectHasVertexFunctionUnordered(
           shaderBuilder,
           MetadataPipelineStage.FUNCTION_ID_SET_METADATA_VARYINGS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_SET_METADATA_VARYINGS,
