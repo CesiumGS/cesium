@@ -212,8 +212,8 @@ describe(
         const modelComponents = sceneGraph._modelComponents;
         const runtimeNodes = sceneGraph._runtimeNodes;
 
-        expect(runtimeNodes[1].node).toEqual(modelComponents.nodes[0]);
-        expect(runtimeNodes[0].node).toEqual(modelComponents.nodes[1]);
+        expect(runtimeNodes[0].node).toEqual(modelComponents.nodes[0]);
+        expect(runtimeNodes[1].node).toEqual(modelComponents.nodes[1]);
       });
     });
 
@@ -239,10 +239,10 @@ describe(
         const childTransform = ModelExperimentalUtility.getNodeTransform(
           modelComponents.nodes[1]
         );
-        expect(runtimeNodes[1].transform).toEqual(parentTransform);
-        expect(runtimeNodes[1].transformToRoot).toEqual(Matrix4.IDENTITY);
-        expect(runtimeNodes[0].transform).toEqual(childTransform);
-        expect(runtimeNodes[0].transformToRoot).toEqual(parentTransform);
+        expect(runtimeNodes[0].transform).toEqual(parentTransform);
+        expect(runtimeNodes[0].transformToRoot).toEqual(Matrix4.IDENTITY);
+        expect(runtimeNodes[1].transform).toEqual(childTransform);
+        expect(runtimeNodes[1].transformToRoot).toEqual(parentTransform);
       });
     });
 

@@ -6,7 +6,7 @@ import Matrix4 from "../../Core/Matrix4.js";
 import InstancingPipelineStage from "./InstancingPipelineStage.js";
 import ModelMatrixUpdateStage from "./ModelMatrixUpdateStage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
-
+import SkinningPipelineStage from "./SkinningPipelineStage.js";
 /**
  * An in-memory representation of a node as part of the {@link ModelExperimentalSceneGraph}.
  *
@@ -36,10 +36,13 @@ export default function ModelExperimentalNode(options) {
   const sceneGraph = options.sceneGraph;
   const transform = options.transform;
   const transformToRoot = options.transformToRoot;
+  const node = options.node;
 
   this._sceneGraph = sceneGraph;
   this._children = options.children;
-  this._node = options.node;
+  this._node = node;
+
+  this._name = node.name; // Helps with debugging
 
   const components = sceneGraph.components;
 
@@ -55,6 +58,10 @@ export default function ModelExperimentalNode(options) {
   );
 
   this._transformDirty = false;
+
+  // Will be set by the scene graph after the skins have been created
+  this._runtimeSkin = undefined;
+  this._computedJointMatrices = [];
 
   /**
    * Pipeline stages to apply across all the mesh primitives of this node. This
@@ -175,6 +182,7 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
 
   /**
    * The node's axis corrected local space transform. Used in instancing.
+   *
    * @type {Matrix4}
    * @private
    * @readonly
@@ -195,6 +203,19 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   originalTransform: {
     get: function () {
       return this._originalTransform;
+    },
+  },
+
+  /**
+   * The skin applied to this node, if it exists.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {ModelExperimentalSkin}
+   * @readonly
+   */
+  skin: {
+    get: function () {
+      return this._runtimeSkin;
     },
   },
 });
@@ -242,6 +263,10 @@ ModelExperimentalNode.prototype.configurePipeline = function () {
 
   if (defined(node.instances)) {
     pipelineStages.push(InstancingPipelineStage);
+  }
+
+  if (defined(node.skin)) {
+    pipelineStages.push(SkinningPipelineStage);
   }
 
   updateStages.push(ModelMatrixUpdateStage);

@@ -24,6 +24,10 @@ void main()
     morphTargetsStage(attributes);
     #endif
 
+    #ifdef HAS_SKINNING
+    skinningStage(attributes);
+    #endif
+
     FeatureIds featureIds;
     featureIdStage(featureIds, attributes);
 
