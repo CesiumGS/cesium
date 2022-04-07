@@ -505,30 +505,46 @@ vec2 intersectUnitSphereUnnormalizedDirection(Ray ray)
 #endif
 
 #if defined(SHAPE_ELLIPSOID) && (defined(BOUNDS_1_MIN) || defined(BOUNDS_1_MAX))
-vec2 intersectUncappedCone(Ray ray, float angle, float side)
+vec2 intersectUncappedCone(Ray ray, float latitude)
 {
-    if (angle < 0.0) {
-        side *= -1.0;
-    }
+    float side = sign(latitude);
+    float halfAngle = czm_piOverTwo - abs(latitude);
+
     vec3 o = ray.pos;
     vec3 d = ray.dir;
-    float s = sign(side);
-    float h = cos(abs(angle));
+    if (side < 0.0) {
+        o.z *= -1.0;
+        d.z *= -1.0;
+    }
+
+    float h = cos(halfAngle);
     float hh = h * h;
-    
-    float ds = d.z * s;
-    float os = o.z * s;
     float dd = dot(d, d);
     float od = dot(o, d);
     float oo = dot(o, o);
 
-    float a = ds * ds - dd * hh;
-    float b = ds * os - od * hh;
-    float c = os * os - oo * hh;
+    // if (abs(normalize(o).z - h) < 0.1 && abs(d.z - h) < 0.1) {
+    //     if (angle > 0.0) {
+    //     //     if (o.z * s < 0.0) {
+    //     //         return vec2(0.0, +INF_HIT);
+    //     //     } else {
+    //     //         return vec2(-o.z / d.z, 0.0);
+    //     //         // return (o.z + x * d.z) * s = 0 
+    //     //     }
+    //         return vec2(-INF_HIT, +INF_HIT);
+    //     } else {
+    //         return vec2(NO_HIT, NO_HIT);
+    //     }
+    //     // return vec2(-10.0, +10.0);
+    // }
+
+    float a = d.z * d.z - dd * hh;
+    float b = d.z * o.z - od * hh;
+    float c = o.z * o.z - oo * hh;
     float det = b * b - a * c;
     
     if (det < 0.0) {
-        if (angle > 0.0) {
+        if (side > 0.0) {
             return vec2(NO_HIT, NO_HIT);
         } else {
             return vec2(-INF_HIT, +INF_HIT);
@@ -541,10 +557,10 @@ vec2 intersectUncappedCone(Ray ray, float angle, float side)
     float tmin = min(t1, t2);
     float tmax = max(t1, t2);
 
-    float h1 = (o.z + tmin * d.z) * s;
-    float h2 = (o.z + tmax * d.z) * s;
+    float h1 = o.z + tmin * d.z;
+    float h2 = o.z + tmax * d.z;
 
-    if (angle > 0.0) {
+    if (side > 0.0) {
         if (h1 < 0.0 && h2 < 0.0) return vec2(NO_HIT, NO_HIT);
         else if (h1 < 0.0) return vec2(tmax, +INF_HIT);
         else if (h2 < 0.0) return vec2(-INF_HIT, tmin);
@@ -589,15 +605,17 @@ vec2 intersectEllipsoidShape(Ray ray)
         #endif
             
         #if defined(BOUNDS_1_MIN)
-            float halfAngleMin = -sign(latMin) * (czm_piOverTwo - abs(latMin));
-            vec2 botConeIntersect = intersectUncappedCone(ray, halfAngleMin, -1.0);
+            // Flip the inputs because the intersection function expects a cone growing towards +Z.
+            Ray flippedRay = ray;
+            flippedRay.dir.z *= -1.0;
+            flippedRay.pos.z *= -1.0;
+            vec2 botConeIntersect = intersectUncappedCone(flippedRay, -latMin);
             intersections[BOUNDS_1_MIN_IDX * 2 + 0] = vec2(float(BOUNDS_1_MIN_IDX * 2 + 0), botConeIntersect.x);
             intersections[BOUNDS_1_MIN_IDX * 2 + 1] = vec2(float(BOUNDS_1_MIN_IDX * 2 + 1), botConeIntersect.y);
         #endif
         
         #if defined(BOUNDS_1_MAX)
-            float halfAngleMax = sign(latMax) * (czm_piOverTwo - abs(latMax));
-            vec2 topConeIntersect = intersectUncappedCone(ray, halfAngleMax, +1.0);
+            vec2 topConeIntersect = intersectUncappedCone(ray, latMax);
             intersections[BOUNDS_1_MAX_IDX * 2 + 0] = vec2(float(BOUNDS_1_MAX_IDX * 2 + 0), topConeIntersect.x);
             intersections[BOUNDS_1_MAX_IDX * 2 + 1] = vec2(float(BOUNDS_1_MAX_IDX * 2 + 1), topConeIntersect.y);
         #endif
