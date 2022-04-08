@@ -3,8 +3,8 @@ void skinningStage(inout ProcessedAttributes attributes)
     mat4 skinningMatrix = getSkinningMatrix();
     mat3 skinningMatrixMat3 = mat3(skinningMatrix);
 
-    vec3 positionMC = attributes.positionMC;
-    attributes.positionMC = skinningMatrix * positionMC;
+    vec4 positionMC = vec4(attributes.positionMC, 1.0);
+    attributes.positionMC = vec3(skinningMatrix * positionMC);
 
     #ifdef HAS_NORMALS
     vec3 normalMC = attributes.normalMC;

@@ -1,9 +1,10 @@
 import combine from "../../Core/combine.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import SkinningStageVS from "../../Shaders/ModelExperimental/SkinningStageVS.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
- * The skinning pipeline stage processes the joint matrices of a skinned node.
+ * The skinning pipeline stage processes the joint matrices of a skinned primitive.
  *
  * @namespace SkinningPipelineStage
  *
@@ -18,28 +19,26 @@ SkinningPipelineStage.FUNCTION_SIGNATURE_GET_SKINNING_MATRIX =
   "mat4 getSkinningMatrix()";
 
 /**
- * This pipeline stage processes the joint matrices of a skinned node, adding the relevant functions
- * and uniforms to the shaders. The joint and weight attributes of the primitive itself will be
- * processed in the geometry pipeline stage.
+ * This pipeline stage processes the joint matrices of a skinned primitive, adding
+ * the relevant functions and uniforms to the shaders. The joint and weight attributes
+ * themselves are processed in the geometry pipeline stage.
  *
- * Processes a node. This stage modifies the following parts of the render resources:
+ * Processes a primitive. This stage modifies the following parts of the render resources:
  * <ul>
  *  <li> adds the uniform declaration for the joint matrices in the vertex shader
  *  <li> adds the function to compute the skinning matrix in the vertex shader
  * </ul>
  *
- * @param {NodeRenderResources} renderResources The render resources for this node.
- * @param {ModelComponents.Node} node The node.
- * @param {FrameState} frameState The frame state.
+ * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
+ * @param {ModelComponents.Primitive} primitive The primitive.
  * @private
  */
 
-SkinningPipelineStage.process = function (renderResources, node, frameState) {
+SkinningPipelineStage.process = function (renderResources, primitive) {
   const shaderBuilder = renderResources.shaderBuilder;
 
   shaderBuilder.addDefine("HAS_SKINNING", undefined, ShaderDestination.VERTEX);
-
-  addGetSkinningMatrixFunction(shaderBuilder, node);
+  addGetSkinningMatrixFunction(shaderBuilder, primitive);
 
   const runtimeNode = renderResources.runtimeNode;
   const jointMatrices = runtimeNode.computedJointMatrices;
@@ -61,7 +60,29 @@ SkinningPipelineStage.process = function (renderResources, node, frameState) {
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
 };
 
-function addGetSkinningMatrixFunction(shaderBuilder, node) {
+function getMaximumAttributeSetIndex(primitive) {
+  let setIndex = -1;
+  const attributes = primitive.attributes;
+  const length = attributes.length;
+  for (let i = 0; i < length; i++) {
+    const attribute = attributes[i];
+    const isJointsOrWeights =
+      attribute.semantic === VertexAttributeSemantic.JOINTS ||
+      attribute.semantic === VertexAttributeSemantic.WEIGHTS;
+
+    if (!isJointsOrWeights) {
+      continue;
+    }
+
+    if (attribute.setIndex > setIndex) {
+      setIndex = attribute.setIndex;
+    }
+  }
+
+  return setIndex;
+}
+
+function addGetSkinningMatrixFunction(shaderBuilder, primitive) {
   shaderBuilder.addFunction(
     SkinningPipelineStage.FUNCTION_ID_GET_SKINNING_MATRIX,
     SkinningPipelineStage.FUNCTION_SIGNATURE_GET_SKINNING_MATRIX,
@@ -74,23 +95,18 @@ function addGetSkinningMatrixFunction(shaderBuilder, node) {
     [initialLine]
   );
 
-  let attributeIndex = 0;
-  let componentIndex = 0;
+  let setIndex;
+  let componentIndex;
   const componentStrings = ["x", "y", "z", "w"];
-  const length = node.skin.joints.length;
-  for (let i = 0; i < length; i++) {
-    const component = componentStrings[componentIndex];
-    const line = `skinnedMatrix += a_weights_${attributeIndex}.${component} * u_jointMatrices[int(a_joints_${attributeIndex}.${component})];`;
-    shaderBuilder.addFunctionLines(
-      SkinningPipelineStage.FUNCTION_ID_GET_SKINNING_MATRIX,
-      [line]
-    );
-
-    if (componentIndex === 3) {
-      componentIndex = 0;
-      attributeIndex++;
-    } else {
-      componentIndex++;
+  const maximumSetIndex = getMaximumAttributeSetIndex(primitive);
+  for (setIndex = 0; setIndex <= maximumSetIndex; setIndex++) {
+    for (componentIndex = 0; componentIndex <= 3; componentIndex++) {
+      const component = componentStrings[componentIndex];
+      const line = `skinnedMatrix += a_weights_${setIndex}.${component} * u_jointMatrices[int(a_joints_${setIndex}.${component})];`;
+      shaderBuilder.addFunctionLines(
+        SkinningPipelineStage.FUNCTION_ID_GET_SKINNING_MATRIX,
+        [line]
+      );
     }
   }
 
@@ -102,3 +118,5 @@ function addGetSkinningMatrixFunction(shaderBuilder, node) {
 }
 
 export default SkinningPipelineStage;
+
+// TODO: testing (sandcastle + additional unit tests?)
