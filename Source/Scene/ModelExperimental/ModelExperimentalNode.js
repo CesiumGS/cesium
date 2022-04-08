@@ -6,6 +6,7 @@ import Matrix4 from "../../Core/Matrix4.js";
 import InstancingPipelineStage from "./InstancingPipelineStage.js";
 import ModelMatrixUpdateStage from "./ModelMatrixUpdateStage.js";
 import ModelExperimentalUtility from "./ModelExperimentalUtility.js";
+
 /**
  * An in-memory representation of a node as part of the {@link ModelExperimentalSceneGraph}.
  *

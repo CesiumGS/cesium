@@ -118,5 +118,3 @@ function addGetSkinningMatrixFunction(shaderBuilder, primitive) {
 }
 
 export default SkinningPipelineStage;
-
-// TODO: testing (sandcastle + additional unit tests?)
