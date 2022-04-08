@@ -13,7 +13,7 @@ import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
-describe(
+fdescribe(
   "Scene/ModelExperimental/SkinningPipelineStage",
   function () {
     let scene;

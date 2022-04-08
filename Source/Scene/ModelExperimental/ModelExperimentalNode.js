@@ -305,8 +305,14 @@ ModelExperimentalNode.prototype.updateJointMatrices = function () {
       this.transform,
       computedJointMatrices[i]
     );
-    computedJointMatrices[i] = Matrix4.multiplyTransformation(
+
+    const inverseNodeWorldTransform = Matrix4.inverseTransformation(
       nodeWorldTransform,
+      computedJointMatrices[i]
+    );
+
+    computedJointMatrices[i] = Matrix4.multiplyTransformation(
+      inverseNodeWorldTransform,
       skinJointMatrices[i],
       computedJointMatrices[i]
     );
