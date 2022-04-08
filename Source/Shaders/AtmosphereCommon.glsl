@@ -205,9 +205,9 @@ vec4 computeAtmosphereColor(
     vec3 color = (rayleigh + mie) * LIGHT_INTENSITY;
 
     if (translucent == 0.0) {
-        opacity = mix(clamp(color.b, 0.0, 1.0), 1.0, opacity) * smoothstep(0.0, 1.0, czm_morphTime);
+        opacity = mix(clamp(length(color), 0.0, 1.0), 1.0, opacity) * smoothstep(0.0, 1.0, czm_morphTime);
     }
-    
+
     return vec4(color, opacity);
 }
 
