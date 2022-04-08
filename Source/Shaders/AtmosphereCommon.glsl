@@ -173,6 +173,9 @@ void computeAtmosphericScattering(
     float cameraHeight = czm_eyeHeight + atmosphereInnerRadius;
     opacity = clamp((atmosphereOuterRadius - cameraHeight) / (atmosphereOuterRadius - atmosphereInnerRadius), 0.0, 1.0);
 
+    // Alter alpha based on time of day (0.0 = night , 1.0 = day)
+    float nightAlpha = (u_radiiAndDynamicAtmosphereColor.z != 0.0) ? clamp(dot(normalize(positionWC), lightDirection), 0.0, 1.0) : 1.0;
+    opacity *= pow(nightAlpha, 0.5);
 }
 
 
