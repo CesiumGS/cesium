@@ -274,11 +274,15 @@ describe(
           runtimeNodes[1],
           runtimeNodes[2],
         ]);
+        expect(runtimeSkins[0].jointMatrices.length).toEqual(2);
 
         const skinnedNodes = sceneGraph._skinnedNodes;
         expect(skinnedNodes[0]).toEqual(0);
+
+        expect(runtimeNodes[0].computedJointMatrices.length).toEqual(2);
       });
     });
+
     it("adds ModelColorPipelineStage when color is set on the model", function () {
       spyOn(ModelColorPipelineStage, "process");
       return loadAndZoomToModelExperimental(

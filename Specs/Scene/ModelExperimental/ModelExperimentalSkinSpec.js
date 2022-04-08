@@ -5,12 +5,18 @@ describe("Scene/ModelExperimental/ModelExperimentalSkin", function () {
   const mockRuntimeNodes = [
     {
       node: mockNodes[0],
+      transform: Matrix4.clone(Matrix4.IDENTITY),
+      transformToRoot: Matrix4.clone(Matrix4.IDENTITY),
     },
     {
       node: mockNodes[1],
+      transform: Matrix4.clone(Matrix4.IDENTITY),
+      transformToRoot: Matrix4.clone(Matrix4.IDENTITY),
     },
     {
       node: mockNodes[2],
+      transform: Matrix4.clone(Matrix4.IDENTITY),
+      transformToRoot: Matrix4.clone(Matrix4.IDENTITY),
     },
   ];
 
@@ -55,5 +61,7 @@ describe("Scene/ModelExperimental/ModelExperimentalSkin", function () {
 
     expect(skin.inverseBindMatrices).toEqual(mockSkin.inverseBindMatrices);
     expect(skin.joints).toEqual([mockRuntimeNodes[1], mockRuntimeNodes[2]]);
+
+    expect(skin.jointMatrices).toEqual([Matrix4.IDENTITY, Matrix4.IDENTITY]);
   });
 });
