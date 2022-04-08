@@ -5,6 +5,7 @@
 ##### Additions :tada:
 
 - Added support for morph targets in `ModelExperimental`. [#10271](https://github.com/CesiumGS/cesium/pull/10271)
+- Added support for skins in `ModelExperimental`. [#10282](https://github.com/CesiumGS/cesium/pull/10282)
 
 ### 1.92 - 2022-04-01
 

@@ -10,7 +10,6 @@ import {
   GeometryPipelineStage,
   LightingPipelineStage,
   MaterialPipelineStage,
-  Matrix4,
   MetadataPipelineStage,
   ModelExperimentalPrimitive,
   ModelExperimentalType,
