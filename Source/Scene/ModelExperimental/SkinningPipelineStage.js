@@ -74,9 +74,7 @@ function getMaximumAttributeSetIndex(primitive) {
       continue;
     }
 
-    if (attribute.setIndex > setIndex) {
-      setIndex = attribute.setIndex;
-    }
+    setIndex = Math.max(setIndex, attribute.setIndex);
   }
 
   return setIndex;

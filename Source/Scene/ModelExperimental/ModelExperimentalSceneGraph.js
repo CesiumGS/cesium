@@ -100,7 +100,9 @@ export default function ModelExperimentalSceneGraph(options) {
   this._rootNodes = [];
 
   /**
-   * The indices of the skinned nodes in the runtime nodes array.
+   * The indices of the skinned nodes in the runtime nodes array. These refer
+   * to the nodes that will be manipulated by their skin, as oppose to the nodes
+   * acting as joints for the skin.
    *
    * @type {Number[]}
    * @readonly
@@ -110,7 +112,7 @@ export default function ModelExperimentalSceneGraph(options) {
   this._skinnedNodes = [];
 
   /**
-   * The runtime skins that affect nodes in the scene graph
+   * The runtime skins that affect nodes in the scene graph.
    *
    * @type {ModelExperimentalSkin[]}
    * @readonly
@@ -199,6 +201,9 @@ function initialize(sceneGraph) {
 
   const nodes = components.nodes;
   const nodesLength = nodes.length;
+
+  // Initialize this array to be the same size as the nodes array in the model's file.
+  // This is so nodes can be stored by their index in the file, for future ease of access.
   sceneGraph._runtimeNodes = new Array(nodesLength);
 
   const rootNodes = scene.nodes;
@@ -494,40 +499,13 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
   }
 };
 
-const scratchObjectSpace = new Matrix4();
-
 ModelExperimentalSceneGraph.prototype.updateJointMatrices = function () {
   const model = this._model;
   const skinnedNodes = model._skinnedNodes;
 
   for (let i = 0; i < skinnedNodes.length; i++) {
     const node = skinnedNodes[i];
-
-    const objectSpace = Matrix4.inverseTransformation(
-      node.transformToRoot,
-      scratchObjectSpace
-    );
-
-    const computedJointMatrices = node.computedJointMatrices;
-    const joints = node.joints;
-    const inverseBindMatrices = node.inverseBindMatrices;
-
-    for (let m = 0; m < inverseBindMatrices.length; ++m) {
-      // [joint-matrix] = [node-to-root^-1][joint-to-root][inverse-bind]
-      if (!defined(computedJointMatrices[m])) {
-        computedJointMatrices[m] = new Matrix4();
-      }
-      computedJointMatrices[m] = Matrix4.multiplyTransformation(
-        objectSpace,
-        joints[m].transformToRoot,
-        computedJointMatrices[m]
-      );
-      computedJointMatrices[m] = Matrix4.multiplyTransformation(
-        computedJointMatrices[m],
-        inverseBindMatrices[m],
-        computedJointMatrices[m]
-      );
-    }
+    node.updateJointMatrices();
   }
 };
 
