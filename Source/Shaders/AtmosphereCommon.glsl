@@ -102,9 +102,6 @@ void computeAtmosphericScattering(
         return;
     }
 
-    // Prevent Mie glow on objects right in front of the camera.
-    bool allowMie = length(cameraToPositionWC) > primaryRayAtmosphereIntersect.stop;
-
     primaryRayAtmosphereIntersect.start = max(primaryRayAtmosphereIntersect.start, 0.0);
     primaryRayAtmosphereIntersect.stop = min(primaryRayAtmosphereIntersect.stop, length(cameraToPositionWC));
 
@@ -166,7 +163,7 @@ void computeAtmosphericScattering(
 
     // Compute final color and opacity.
     rayleighColor = BETA_RAYLEIGH * rayleighAccumulation;
-    mieColor = allowMie ? BETA_MIE * mieAccumulation : vec3(0.0);
+    mieColor = BETA_MIE * mieAccumulation;
     
     // Alter the opacity based on how close the viewer is to the ground.
     // (0.0 = At edge of atmosphere, 1.0 = On ground)
