@@ -1,0 +1,107 @@
+[
+    {
+      "name": "Autolinker.js",
+      "license": "MIT",
+      "url": "https://github.com/gregjacobs/Autolinker.js"
+    },
+    {
+        "name": "bitmap-sdf",
+        "license": "MIT",
+        "url": "https://github.com/dy/bitmap-sdf"
+    },
+    {
+        "name": "DOMPurify",
+        "license": "Apache-2.0",
+        "url": "https://github.com/cure53/DOMPurify"
+    },
+    {
+        "name": "Draco",
+        "license": "Apache-2.0",
+        "url": "https://github.com/google/draco"
+    },
+    {
+        "name": "earcut",
+        "license": "ISC",
+        "url": "https://github.com/mapbox/earcut"
+    },
+    {
+        "name": "GraphemeSplitter",
+        "license": "MIT",
+        "url": "https://github.com/orling/grapheme-splitter"
+    },
+    {
+        "name": "jsep",
+        "license": "MIT",
+        "url": "https://github.com/EricSmekens/jsep"
+    },
+    {
+        "name": "kdbush",
+        "license": "ISC",
+        "url": "https://github.com/mourner/kdbush"
+    },
+    {
+        "name": "KTX-Parse",
+        "license": "MIT",
+        "url": "https://github.com/donmccurdy/KTX-Parse/"
+    },
+    {
+        "name": "LERC",
+        "license": "Apache-2.0",
+        "url": "http://github.com/Esri/lerc/"
+    },
+    {
+        "name": "mersenne-twister.js",
+        "license": "BSD-3-Clause",
+        "url": "https://gist.github.com/banksean/300494"
+    },
+    {
+        "name": "meshoptimizer",
+        "license": "MIT",
+        "url": "https://github.com/zeux/meshoptimizer/blob/master/LICENSE.md"
+    },
+    {
+        "name": "NoSleep.js",
+        "license": "MIT",
+        "url": "https://github.com/richtr/NoSleep.js"
+    },
+    {
+        "name": "pako",
+        "license": "MIT",
+        "url": "https://github.com/nodeca/pako"
+    },
+    {
+        "name": "protobuf",
+        "license": "BSD-3-Clause",
+        "url": "https://github.com/dcodeIO/ProtoBuf.js"
+    },
+    {
+        "name": "rbush",
+        "license": "MIT",
+        "url": "https://github.com/mourner/rbush"
+    },
+    {
+        "name": "requirejs",
+        "url": "https://www.npmjs.com/package/requirejs",
+        "license": "MIT"
+      },
+    {
+        "name": "topojson-client",
+        "license": "ISC",
+        "url": "https://github.com/topojson/topojson-client"
+    },
+    {
+        "name": "tween.js",
+        "license": "MIT",
+        "url": "https://github.com/sole/tween.js"
+    },
+    {
+        "name": "URI.js",
+        "license": "MIT",
+        "url": "http://medialize.github.io/URI.js/"
+    },
+    {
+        "name": "zip.js",
+        "license": "BSD-3-Clause",
+        "url": "https://github.com/gildas-lormeau/zip.js"
+    },
+]
