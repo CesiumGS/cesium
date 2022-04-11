@@ -1417,11 +1417,13 @@ function loadSkin(loader, gltf, gltfSkin, nodes) {
   }
   skin.joints = joints;
 
+  let useDefaultBindMatrices = true;
   const inverseBindMatricesAccessorId = gltfSkin.inverseBindMatrices;
   if (defined(inverseBindMatricesAccessorId)) {
     const accessor = gltf.accessors[inverseBindMatricesAccessorId];
     const bufferViewId = accessor.bufferView;
     if (defined(bufferViewId)) {
+      useDefaultBindMatrices = false;
       const bufferViewLoader = loadBufferView(loader, gltf, bufferViewId);
       bufferViewLoader.promise.then(function (bufferViewLoader) {
         if (loader.isDestroyed()) {
@@ -1442,7 +1444,7 @@ function loadSkin(loader, gltf, gltfSkin, nodes) {
     }
   }
 
-  if (!defined(skin.inverseBindMatrices)) {
+  if (useDefaultBindMatrices) {
     skin.inverseBindMatrices = arrayFill(
       new Array(jointsLength),
       Matrix4.IDENTITY
