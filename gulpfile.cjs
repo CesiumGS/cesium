@@ -468,6 +468,7 @@ gulp.task(
         "LICENSE.md",
         "CHANGES.md",
         "README.md",
+        "web.config",
       ],
       {
         base: ".",
