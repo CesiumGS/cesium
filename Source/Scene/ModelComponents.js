@@ -674,6 +674,15 @@ function Instances() {
  */
 function Skin() {
   /**
+   * The index of the skin in the glTF. This is useful for finding the skin
+   * that applies to a node after the skin is instantiated at runtime.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.index = undefined;
+
+  /**
    * The joints.
    *
    * @type {ModelComponents.Node[]}
@@ -699,6 +708,23 @@ function Skin() {
  * @private
  */
 function Node() {
+  /**
+   * The name of the node.
+   *
+   * @type {String}
+   * @private
+   */
+  this.name = undefined;
+
+  /**
+   * The index of the node in the glTF. This is useful for finding the nodes
+   * that belong to a skin after they have been instantiated at runtime.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.index = undefined;
+
   /**
    * The children nodes.
    *
@@ -833,6 +859,13 @@ function Components() {
    * @type {ModelComponents.Node[]}
    */
   this.nodes = undefined;
+
+  /**
+   * All skins in the model.
+   *
+   * @type {ModelComponents.Skin[]}
+   */
+  this.skins = undefined;
 
   /**
    * Structural metadata containing the schema, property tables, property

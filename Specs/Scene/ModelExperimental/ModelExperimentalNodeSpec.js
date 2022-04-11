@@ -23,6 +23,14 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     },
   };
 
+  function verifyTransforms(transform, transformToRoot, runtimeNode) {
+    expect(Matrix4.equals(runtimeNode.transform, transform)).toBe(true);
+    expect(Matrix4.equals(runtimeNode.originalTransform, transform)).toBe(true);
+    expect(Matrix4.equals(runtimeNode.transformToRoot, transformToRoot)).toBe(
+      true
+    );
+  }
+
   it("throws for undefined node", function () {
     expect(function () {
       return new ModelExperimentalNode({
@@ -128,14 +136,6 @@ describe("Scene/ModelExperimental/ModelExperimentalNode", function () {
     expect(node.updateStages).toEqual([ModelMatrixUpdateStage]);
     expect(node.runtimePrimitives).toEqual([]);
   });
-
-  function verifyTransforms(transform, transformToRoot, runtimeNode) {
-    expect(Matrix4.equals(runtimeNode.transform, transform)).toBe(true);
-    expect(Matrix4.equals(runtimeNode.originalTransform, transform)).toBe(true);
-    expect(Matrix4.equals(runtimeNode.transformToRoot, transformToRoot)).toBe(
-      true
-    );
-  }
 
   it("getChild throws for undefined index", function () {
     const node = new ModelExperimentalNode({

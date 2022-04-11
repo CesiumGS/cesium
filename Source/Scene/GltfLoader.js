@@ -1333,52 +1333,10 @@ function loadInstanceFeaturesLegacy(
   }
 }
 
-function loadSkin(loader, gltf, gltfSkin, nodes) {
-  const skin = new Skin();
-
-  const jointIds = gltfSkin.joints;
-  const jointsLength = jointIds.length;
-  const joints = new Array(jointsLength);
-  for (let i = 0; i < jointsLength; ++i) {
-    joints[i] = nodes[jointIds[i]];
-  }
-  skin.joints = joints;
-
-  const inverseBindMatricesAccessorId = gltfSkin.inverseBindMatrices;
-  if (defined(inverseBindMatricesAccessorId)) {
-    const accessor = gltf.accessors[inverseBindMatricesAccessorId];
-    const bufferViewId = accessor.bufferView;
-    if (defined(bufferViewId)) {
-      const bufferViewLoader = loadBufferView(loader, gltf, bufferViewId);
-      bufferViewLoader.promise.then(function (bufferViewLoader) {
-        if (loader.isDestroyed()) {
-          return;
-        }
-        const bufferViewTypedArray = bufferViewLoader.typedArray;
-        const packedTypedArray = getPackedTypedArray(
-          gltf,
-          accessor,
-          bufferViewTypedArray
-        );
-        const inverseBindMatrices = new Array(jointsLength);
-        for (let i = 0; i < jointsLength; ++i) {
-          inverseBindMatrices[i] = Matrix4.unpack(packedTypedArray, i * 16);
-        }
-        skin.inverseBindMatrices = inverseBindMatrices;
-      });
-    }
-  } else {
-    skin.inverseBindMatrices = arrayFill(
-      new Array(jointsLength),
-      Matrix4.IDENTITY
-    );
-  }
-
-  return skin;
-}
-
 function loadNode(loader, gltf, gltfNode, supportedImageFormats, frameState) {
   const node = new Node();
+
+  node.name = gltfNode.name;
 
   node.matrix = fromArray(Matrix4, gltfNode.matrix);
   node.translation = fromArray(Cartesian3, gltfNode.translation);
@@ -1424,13 +1382,15 @@ function loadNodes(loader, gltf, supportedImageFormats, frameState) {
   const nodesLength = gltf.nodes.length;
   const nodes = new Array(nodesLength);
   for (i = 0; i < nodesLength; ++i) {
-    nodes[i] = loadNode(
+    const node = loadNode(
       loader,
       gltf,
       gltf.nodes[i],
       supportedImageFormats,
       frameState
     );
+    node.index = i;
+    nodes[i] = node;
   }
 
   for (i = 0; i < nodesLength; ++i) {
@@ -1443,14 +1403,82 @@ function loadNodes(loader, gltf, supportedImageFormats, frameState) {
     }
   }
 
-  for (i = 0; i < nodesLength; ++i) {
-    const skinId = gltf.nodes[i].skin;
-    if (defined(skinId)) {
-      nodes[i].skin = loadSkin(loader, gltf, gltf.skins[skinId], nodes);
+  return nodes;
+}
+
+function loadSkin(loader, gltf, gltfSkin, nodes) {
+  const skin = new Skin();
+
+  const jointIds = gltfSkin.joints;
+  const jointsLength = jointIds.length;
+  const joints = new Array(jointsLength);
+  for (let i = 0; i < jointsLength; ++i) {
+    joints[i] = nodes[jointIds[i]];
+  }
+  skin.joints = joints;
+
+  let useDefaultBindMatrices = true;
+  const inverseBindMatricesAccessorId = gltfSkin.inverseBindMatrices;
+  if (defined(inverseBindMatricesAccessorId)) {
+    const accessor = gltf.accessors[inverseBindMatricesAccessorId];
+    const bufferViewId = accessor.bufferView;
+    if (defined(bufferViewId)) {
+      useDefaultBindMatrices = false;
+      const bufferViewLoader = loadBufferView(loader, gltf, bufferViewId);
+      bufferViewLoader.promise.then(function (bufferViewLoader) {
+        if (loader.isDestroyed()) {
+          return;
+        }
+        const bufferViewTypedArray = bufferViewLoader.typedArray;
+        const packedTypedArray = getPackedTypedArray(
+          gltf,
+          accessor,
+          bufferViewTypedArray
+        );
+        const inverseBindMatrices = new Array(jointsLength);
+        for (let i = 0; i < jointsLength; ++i) {
+          inverseBindMatrices[i] = Matrix4.unpack(packedTypedArray, i * 16);
+        }
+        skin.inverseBindMatrices = inverseBindMatrices;
+      });
     }
   }
 
-  return nodes;
+  if (useDefaultBindMatrices) {
+    skin.inverseBindMatrices = arrayFill(
+      new Array(jointsLength),
+      Matrix4.IDENTITY
+    );
+  }
+
+  return skin;
+}
+
+function loadSkins(loader, gltf, nodes) {
+  let i;
+
+  const gltfSkins = gltf.skins;
+  if (!defined(gltfSkins)) {
+    return [];
+  }
+
+  const skinsLength = gltf.skins.length;
+  const skins = new Array(skinsLength);
+  for (i = 0; i < skinsLength; ++i) {
+    const skin = loadSkin(loader, gltf, gltf.skins[i], nodes);
+    skin.index = i;
+    skins[i] = skin;
+  }
+
+  const nodesLength = nodes.length;
+  for (i = 0; i < nodesLength; ++i) {
+    const skinId = gltf.nodes[i].skin;
+    if (defined(skinId)) {
+      nodes[i].skin = skins[skinId];
+    }
+  }
+
+  return skins;
 }
 
 function loadStructuralMetadata(
@@ -1518,6 +1546,7 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
   }
 
   const nodes = loadNodes(loader, gltf, supportedImageFormats, frameState);
+  const skins = loadSkins(loader, gltf, nodes);
   const scene = loadScene(gltf, nodes);
 
   const components = new Components();
@@ -1533,6 +1562,7 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
   components.asset = asset;
   components.scene = scene;
   components.nodes = nodes;
+  components.skins = skins;
   components.upAxis = loader._upAxis;
   components.forwardAxis = loader._forwardAxis;
 

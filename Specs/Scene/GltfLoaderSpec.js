@@ -709,6 +709,8 @@ describe(
         expect(weightsAttribute.byteOffset).toBe(160);
         expect(weightsAttribute.byteStride).toBe(16);
 
+        expect(components.skins).toEqual([skin]);
+
         expect(skin.joints.length).toBe(2);
         expect(skin.joints[0]).toBe(nodes[1]);
         expect(skin.joints[1]).toBe(nodes[2]);
