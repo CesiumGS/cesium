@@ -68,14 +68,18 @@ Object.defineProperties(VoxelShape.prototype, {
   },
 
   /**
-   * Check if the shape is visible. For example, if the shape has zero scale it will be invisible.
-   * The update function must be called before accessing this value.
-   *
-   * @memberof VoxelShape.prototype
-   * @type {Boolean}
+   * @type {Object.<string, any>}
    * @readonly
    */
-  isVisible: {
+  shaderUniforms: {
+    get: DeveloperError.throwInstantiationError,
+  },
+
+  /**
+   * @type {Object.<string, any>}
+   * @readonly
+   */
+  shaderDefines: {
     get: DeveloperError.throwInstantiationError,
   },
 });
@@ -86,6 +90,7 @@ Object.defineProperties(VoxelShape.prototype, {
  * @param {Matrix4} modelMatrix The model matrix.
  * @param {Cartesian3} minBounds The minimum bounds.
  * @param {Cartesian3} maxBounds The maximum bounds.
+ * @returns {Boolean} Whether the shape is visible.
  */
 VoxelShape.prototype.update = DeveloperError.throwInstantiationError;
 

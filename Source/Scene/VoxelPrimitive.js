@@ -3,6 +3,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defer from "../Core/defer.js";
@@ -101,6 +102,12 @@ function VoxelPrimitive(options) {
    * @private
    */
   this._shape = undefined;
+
+  /**
+   * @type {Boolean}
+   * @private
+   */
+  this._shapeVisible = false;
 
   /**
    * This member is not created until the provider is ready.
@@ -372,12 +379,11 @@ function VoxelPrimitive(options) {
    */
   this._disableUpdate = false;
 
-  // Uniforms
   /**
    * @type {Object.<string, any>}
    * @private
    */
-  this._uniformMapValues = {
+  this._uniforms = {
     /**
      * @ignore
      * @type {Texture}
@@ -414,37 +420,33 @@ function VoxelPrimitive(options) {
     cameraPositionUv: new Cartesian3(),
     ndcSpaceAxisAlignedBoundingBox: new Cartesian4(),
     stepSize: 1.0,
-    ellipsoidInverseHeightDifferenceUv: 1.0,
-    ellipsoidInverseInnerScaleUv: 1.0,
-    ellipsoidRadiiUv: new Cartesian3(),
-    ellipsoidInnerRadiiUv: new Cartesian3(),
-    ellipsoidInverseRadiiSquaredUv: new Cartesian3(),
-    minBounds: new Cartesian3(),
-    maxBounds: new Cartesian3(),
-    minBoundsUv: new Cartesian3(),
-    maxBoundsUv: new Cartesian3(),
-    inverseBounds: new Cartesian3(),
-    inverseBoundsUv: new Cartesian3(),
     minClippingBounds: new Cartesian3(),
     maxClippingBounds: new Cartesian3(),
     pickColor: new Color(),
   };
 
-  // Automatically generate uniform map from the uniform values
   /**
+   * Shape specific shader defines from the previous shape update. Used to detect if the shader needs to be rebuilt.
+   * @type {Object.<string, any>}
+   * @private
+   */
+  this._shapeDefinesOld = {};
+
+  /**
+   * Map uniform names to functions that return the uniform values.
    * @type {Object.<string, function():any>}
    * @private
    */
   this._uniformMap = {};
-  const uniformMapValues = this._uniformMapValues;
-  function getUniformFunction(key) {
-    return function () {
-      return uniformMapValues[key];
-    };
-  }
-  for (const key in uniformMapValues) {
-    if (uniformMapValues.hasOwnProperty(key)) {
-      this._uniformMap[`u_${key}`] = getUniformFunction(key);
+
+  const uniforms = this._uniforms;
+  const uniformMap = this._uniformMap;
+  for (const key in uniforms) {
+    if (uniforms.hasOwnProperty(key)) {
+      const name = `u_${key}`;
+      uniformMap[name] = function () {
+        return uniforms[key];
+      };
     }
   }
 
@@ -1055,7 +1057,6 @@ const scratchTotalDimensions = new Cartesian3();
 const scratchIntersect = new Cartesian4();
 const scratchNdcAabb = new Cartesian4();
 const scratchScale = new Cartesian3();
-const scratchEllipsoidRadii = new Cartesian3();
 const scratchLocalScale = new Cartesian3();
 const scratchInverseLocalScale = new Cartesian3();
 const scratchRotation = new Matrix3();
@@ -1084,7 +1085,7 @@ const transformPositionUvToLocal = Matrix4.fromRotationTranslation(
 VoxelPrimitive.prototype.update = function (frameState) {
   const context = frameState.context;
   const provider = this._provider;
-  const uniforms = this._uniformMapValues;
+  const uniforms = this._uniforms;
 
   // Update the provider, if applicable.
   if (defined(provider.update)) {
@@ -1110,11 +1111,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
     this._pickId = context.createPickId({
       primitive: this,
     });
-
-    // Set uniforms for picking
     uniforms.pickColor = Color.clone(this._pickId.color, uniforms.pickColor);
-
-    // Set member variables that come from the provider.
 
     // const keyframeCount = defaultValue(provider.keyframeCount, 1);
     // // TODO remove?
@@ -1130,15 +1127,12 @@ VoxelPrimitive.prototype.update = function (frameState) {
 
     const dimensions = provider.dimensions;
     const shapeType = provider.shape;
+
+    // Set the bounds
     const defaultMinBounds = VoxelShapeType.getMinBounds(shapeType);
     const defaultMaxBounds = VoxelShapeType.getMaxBounds(shapeType);
     const minBounds = defaultValue(provider.minBounds, defaultMinBounds);
     const maxBounds = defaultValue(provider.maxBounds, defaultMaxBounds);
-    const minimumValues = provider.minimumValues;
-    const maximumValues = provider.maximumValues;
-
-    const ShapeConstructor = VoxelShapeType.getShapeConstructor(shapeType);
-    this._shape = new ShapeConstructor();
     this._minBounds = Cartesian3.clone(minBounds, this._minBounds);
     this._maxBounds = Cartesian3.clone(maxBounds, this._maxBounds);
     this._minClippingBounds = Cartesian3.clone(
@@ -1149,6 +1143,34 @@ VoxelPrimitive.prototype.update = function (frameState) {
       defaultMaxBounds,
       this._maxClippingBounds
     );
+
+    // Create the shape object
+    const ShapeConstructor = VoxelShapeType.getShapeConstructor(shapeType);
+    this._shape = new ShapeConstructor();
+
+    const shape = this._shape;
+    const shapeDefines = shape.shaderDefines;
+    this._shapeDefinesOld = clone(shapeDefines, true);
+
+    // Add shape uniforms to the uniform map
+    const shapeUniforms = shape.shaderUniforms;
+    const uniformMap = this._uniformMap;
+    for (const key in shapeUniforms) {
+      if (shapeUniforms.hasOwnProperty(key)) {
+        const name = `u_${key}`;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (defined(uniformMap[name])) {
+          throw new DeveloperError(`Uniform name "${name}" is already defined`);
+        }
+        //>>includeEnd('debug');
+
+        uniformMap[name] = function () {
+          return shapeUniforms[key];
+        };
+      }
+    }
+
     this._paddingBefore = Cartesian3.clone(
       defaultValue(provider.paddingBefore, Cartesian3.ZERO),
       this._paddingBefore
@@ -1169,6 +1191,9 @@ VoxelPrimitive.prototype.update = function (frameState) {
       this._paddingAfter,
       uniforms.paddingAfter
     );
+
+    const minimumValues = provider.minimumValues;
+    const maximumValues = provider.maximumValues;
     if (defined(minimumValues) && defined(maximumValues)) {
       uniforms.minimumValues = minimumValues.slice();
       uniforms.maximumValues = maximumValues.slice();
@@ -1178,336 +1203,124 @@ VoxelPrimitive.prototype.update = function (frameState) {
   // Check if the shape is dirty before updating it. This needs to happen every
   // frame because the member variables can be modified externally via the
   // getters.
-  const primitiveModelMatrix = this._modelMatrix;
-  const providerModelMatrix = defaultValue(
+  const primitiveTransform = this._modelMatrix;
+  const providerTransform = defaultValue(
     provider.modelMatrix,
     Matrix4.IDENTITY
   );
-  const compoundModelMatrix = Matrix4.multiplyTransformation(
-    providerModelMatrix,
-    primitiveModelMatrix,
+  const compoundTransform = Matrix4.multiplyTransformation(
+    providerTransform,
+    primitiveTransform,
     this._compoundModelMatrix
   );
-  const compoundModelMatrixOld = this._compoundModelMatrixOld;
-  const compoundModelMatrixDirty = !Matrix4.equals(
-    compoundModelMatrix,
-    compoundModelMatrixOld
+  const compoundTransformOld = this._compoundModelMatrixOld;
+  const compoundTransformDirty = !Matrix4.equals(
+    compoundTransform,
+    compoundTransformOld
   );
 
   const shape = this._shape;
   const shapeType = provider.shape;
-  const defaultMinBounds = VoxelShapeType.getMinBounds(shapeType);
-  const defaultMaxBounds = VoxelShapeType.getMaxBounds(shapeType);
   const minBounds = this._minBounds;
   const maxBounds = this._maxBounds;
-
-  let isDefaultBoundsMin =
-    minBounds.x === defaultMinBounds.x &&
-    minBounds.y === defaultMinBounds.y &&
-    minBounds.z === defaultMinBounds.z;
-
-  let isDefaultBoundsMax =
-    maxBounds.x === defaultMaxBounds.x &&
-    maxBounds.y === defaultMaxBounds.y &&
-    maxBounds.z === defaultMaxBounds.z;
-
-  // Clamp the min bounds to the valid range.
-  if (!isDefaultBoundsMin) {
-    minBounds.x = CesiumMath.clamp(
-      minBounds.x,
-      defaultMinBounds.x,
-      defaultMaxBounds.x
-    );
-    minBounds.y = CesiumMath.clamp(
-      minBounds.y,
-      defaultMinBounds.y,
-      defaultMaxBounds.y
-    );
-    if (shapeType !== VoxelShapeType.ELLIPSOID) {
-      minBounds.z = CesiumMath.clamp(
-        minBounds.z,
-        defaultMinBounds.z,
-        defaultMaxBounds.z
-      );
-    }
-    isDefaultBoundsMin =
-      minBounds.x === defaultMinBounds.x &&
-      minBounds.y === defaultMinBounds.y &&
-      minBounds.z === defaultMinBounds.z;
-  }
-
-  // Clamp the max bounds to the valid range.
-  if (!isDefaultBoundsMax) {
-    maxBounds.x = CesiumMath.clamp(
-      maxBounds.x,
-      defaultMinBounds.x,
-      defaultMaxBounds.x
-    );
-    maxBounds.y = CesiumMath.clamp(
-      maxBounds.y,
-      defaultMinBounds.y,
-      defaultMaxBounds.y
-    );
-    if (shapeType !== VoxelShapeType.ELLIPSOID) {
-      maxBounds.z = CesiumMath.clamp(
-        maxBounds.z,
-        defaultMinBounds.z,
-        defaultMaxBounds.z
-      );
-    }
-    isDefaultBoundsMax =
-      maxBounds.x === defaultMaxBounds.x &&
-      maxBounds.y === defaultMaxBounds.y &&
-      maxBounds.z === defaultMaxBounds.z;
-  }
-
   const minBoundsOld = this._minBoundsOld;
   const maxBoundsOld = this._maxBoundsOld;
   const minBoundsDirty = !Cartesian3.equals(minBounds, minBoundsOld);
   const maxBoundsDirty = !Cartesian3.equals(maxBounds, maxBoundsOld);
+  const shapeDirty = compoundTransformDirty || minBoundsDirty || maxBoundsDirty;
 
-  const shapeIsDirty =
-    compoundModelMatrixDirty || minBoundsDirty || maxBoundsDirty;
-
-  // Update the shape if dirty or the first frame.
-  if (!this._ready || shapeIsDirty) {
-    shape.update(compoundModelMatrix, minBounds, maxBounds);
-
-    if (compoundModelMatrixDirty) {
+  // Update the shape on the first frame or if it's dirty.
+  // If the shape is visible it will do some extra work.
+  if (
+    (!this._ready || shapeDirty) &&
+    (this._shapeVisible = shape.update(compoundTransform, minBounds, maxBounds))
+  ) {
+    if (compoundTransformDirty) {
       this._compoundModelMatrixOld = Matrix4.clone(
-        compoundModelMatrix,
+        compoundTransform,
         this._compoundModelMatrixOld
       );
     }
-
-    if (minBoundsDirty || maxBoundsDirty) {
-      if (minBoundsDirty) {
-        // Check if the min bounds became default or stopped being default
-        if (
-          (minBounds.x === defaultMinBounds.x) !==
-            (minBoundsOld.x === defaultMinBounds.x) ||
-          (minBounds.y === defaultMinBounds.y) !==
-            (minBoundsOld.y === defaultMinBounds.y) ||
-          (minBounds.z === defaultMinBounds.z) !==
-            (minBoundsOld.z === defaultMinBounds.z)
-        ) {
-          this._shaderDirty = true;
-        }
-        this._minBoundsOld = Cartesian3.clone(minBounds, this._minBoundsOld);
-      }
-
-      if (maxBoundsDirty) {
-        // Check if the max bounds became default or stopped being default
-        if (
-          (maxBounds.x === defaultMaxBounds.x) !==
-            (maxBoundsOld.x === defaultMaxBounds.x) ||
-          (maxBounds.y === defaultMaxBounds.y) !==
-            (maxBoundsOld.y === defaultMaxBounds.y) ||
-          (maxBounds.z === defaultMaxBounds.z) !==
-            (maxBoundsOld.z === defaultMaxBounds.z)
-        ) {
-          this._shaderDirty = true;
-        }
-        this._maxBoundsOld = Cartesian3.clone(maxBounds, this._maxBoundsOld);
-      }
-
-      // Set uniforms for bounds.
-      if (!isDefaultBoundsMin || !isDefaultBoundsMax) {
-        uniforms.minBounds = Cartesian3.clone(minBounds, uniforms.minBounds);
-        uniforms.maxBounds = Cartesian3.clone(maxBounds, uniforms.maxBounds);
-        uniforms.inverseBounds = Cartesian3.divideComponents(
-          Cartesian3.ONE,
-          Cartesian3.subtract(maxBounds, minBounds, uniforms.inverseBounds),
-          uniforms.inverseBounds
-        );
-
-        if (shapeType === VoxelShapeType.BOX) {
-          const minXUv = minBounds.x * 0.5 + 0.5;
-          const maxXUv = maxBounds.x * 0.5 + 0.5;
-          const minYUv = minBounds.y * 0.5 + 0.5;
-          const maxYUv = maxBounds.y * 0.5 + 0.5;
-          const minZUv = minBounds.z * 0.5 + 0.5;
-          const maxZUv = maxBounds.z * 0.5 + 0.5;
-          uniforms.minBoundsUv = Cartesian3.fromElements(
-            minXUv,
-            minYUv,
-            minZUv,
-            uniforms.minBoundsUv
-          );
-          uniforms.maxBoundsUv = Cartesian3.fromElements(
-            maxXUv,
-            maxYUv,
-            maxZUv,
-            uniforms.maxBoundsUv
-          );
-        } else if (shapeType === VoxelShapeType.ELLIPSOID) {
-          const minLongitudeUv =
-            (minBounds.x - defaultMinBounds.x) /
-            (defaultMaxBounds.x - defaultMinBounds.x);
-          const maxLongitudeUv =
-            (maxBounds.x - defaultMinBounds.x) /
-            (defaultMaxBounds.x - defaultMinBounds.x);
-          const minLatitudeUv =
-            (minBounds.y - defaultMinBounds.y) /
-            (defaultMaxBounds.y - defaultMinBounds.y);
-          const maxLatitudeUv =
-            (maxBounds.y - defaultMinBounds.y) /
-            (defaultMaxBounds.y - defaultMinBounds.y);
-          const minHeightUv = 0.0; // don't know what to do with these yet
-          const maxHeightUv = 0.0; // don't know what to do with these yet
-
-          uniforms.minBoundsUv = Cartesian3.fromElements(
-            minLongitudeUv,
-            minLatitudeUv,
-            minHeightUv,
-            uniforms.minBoundsUv
-          );
-          uniforms.maxBoundsUv = Cartesian3.fromElements(
-            maxLongitudeUv,
-            maxLatitudeUv,
-            maxHeightUv,
-            uniforms.maxBoundsUv
-          );
-        } else if (shapeType === VoxelShapeType.CYLINDER) {
-          const minRadiusUv = minBounds.x;
-          const maxRadiusUv = maxBounds.x;
-          const minHeightUv = minBounds.y * 0.5 + 0.5;
-          const maxHeightUv = maxBounds.y * 0.5 + 0.5;
-          const minAngleUv = (minBounds.z + CesiumMath.PI) / CesiumMath.TWO_PI;
-          const maxAngleUv = (maxBounds.z + CesiumMath.PI) / CesiumMath.TWO_PI;
-          uniforms.minBoundsUv = Cartesian3.fromElements(
-            minRadiusUv,
-            minHeightUv,
-            minAngleUv,
-            uniforms.minBoundsUv
-          );
-          uniforms.maxBoundsUv = Cartesian3.fromElements(
-            maxRadiusUv,
-            maxHeightUv,
-            maxAngleUv,
-            uniforms.maxBoundsUv
-          );
-        }
-
-        uniforms.inverseBoundsUv = Cartesian3.divideComponents(
-          Cartesian3.ONE,
-          Cartesian3.subtract(
-            uniforms.maxBoundsUv,
-            uniforms.minBoundsUv,
-            uniforms.inverseBoundsUv
-          ),
-          uniforms.inverseBoundsUv
-        );
-      }
+    if (minBoundsDirty) {
+      this._minBoundsOld = Cartesian3.clone(minBounds, this._minBoundsOld);
+    }
+    if (maxBoundsDirty) {
+      this._maxBoundsOld = Cartesian3.clone(maxBounds, this._maxBoundsOld);
     }
 
-    // Set other uniforms when the shape is dirty
-    if (shapeType === VoxelShapeType.ELLIPSOID) {
-      const radii = Matrix4.getScale(
-        compoundModelMatrix,
-        scratchEllipsoidRadii
-      );
-      const minHeight = minBounds.z;
-      const maxHeight = maxBounds.z;
-      // The farthest distance a point can be from the center of the ellipsoid.
-      const maxExtent = Cartesian3.maximumComponent(radii) + maxHeight;
-      // The percent of space that is between the inner and outer ellipsoid
-      const thickness = (maxHeight - minHeight) / maxExtent;
-      // The percent of space that is taken up by the inner ellipsoid.
-      const innerScale = 1.0 - thickness;
-
-      // The ellipsoid radii scaled to [0,1]. The max ellipsoid radius will be 1.0 and others will be less.
-      uniforms.ellipsoidRadiiUv = Cartesian3.fromElements(
-        (radii.x + maxHeight) / maxExtent,
-        (radii.y + maxHeight) / maxExtent,
-        (radii.z + maxHeight) / maxExtent,
-        uniforms.ellipsoidRadiiUv
-      );
-
-      // The inner ellipsoid radii scaled to [0,innerScale]. The max inner ellipsoid radius will be innerScale and others will be less.
-      uniforms.ellipsoidInnerRadiiUv = Cartesian3.multiplyByScalar(
-        uniforms.ellipsoidRadiiUv,
-        innerScale,
-        uniforms.ellipsoidInnerRadiiUv
-      );
-
-      // Used to compute geodetic surface normal.
-      uniforms.ellipsoidInverseRadiiSquaredUv = Cartesian3.divideComponents(
-        Cartesian3.ONE,
-        Cartesian3.multiplyComponents(
-          uniforms.ellipsoidRadiiUv,
-          uniforms.ellipsoidRadiiUv,
-          uniforms.ellipsoidInverseRadiiSquaredUv
-        ),
-        uniforms.ellipsoidInverseRadiiSquaredUv
-      );
-      uniforms.ellipsoidInverseHeightDifferenceUv = 1.0 / thickness;
-      uniforms.ellipsoidInverseInnerScaleUv = 1.0 / innerScale;
+    // Rebuild the shader if any of the shape defines changed.
+    const shapeDefines = shape.shaderDefines;
+    const shapeDefinesOld = this._shapeDefinesOld;
+    let shapeDefinesChanged = false;
+    for (const property in shapeDefines) {
+      if (shapeDefines.hasOwnProperty(property)) {
+        const value = shapeDefines[property];
+        const valueOld = shapeDefinesOld[property];
+        if (value !== valueOld) {
+          shapeDefinesChanged = true;
+          break;
+        }
+      }
+    }
+    if (shapeDefinesChanged) {
+      this._shaderDirty = true;
+      this._shapeDefinesOld = clone(shapeDefines, true);
     }
 
-    // Math that's only valid if the shape is visible.
-    if (shape.isVisible) {
-      const transformPositionLocalToWorld = shape.shapeTransform;
-      const transformPositionWorldToLocal = Matrix4.inverse(
-        transformPositionLocalToWorld,
-        scratchTransformPositionWorldToLocal
-      );
-      const rotation = Matrix4.getRotation(
-        transformPositionLocalToWorld,
-        scratchRotation
-      );
-      // Note that inverse(rotation) is the same as transpose(rotation)
-      const inverseRotation = Matrix3.transpose(
-        rotation,
-        scratchInverseRotation
-      );
-      const scale = Matrix4.getScale(
-        transformPositionLocalToWorld,
-        scratchScale
-      );
-      const maximumScaleComponent = Cartesian3.maximumComponent(scale);
-      const localScale = Cartesian3.divideByScalar(
-        scale,
-        maximumScaleComponent,
-        scratchLocalScale
-      );
-      const inverseLocalScale = Cartesian3.divideComponents(
-        Cartesian3.ONE,
-        localScale,
-        scratchInverseLocalScale
-      );
-      const rotationAndLocalScale = Matrix3.multiplyByScale(
-        rotation,
-        localScale,
-        scratchRotationAndLocalScale
-      );
+    const transformPositionLocalToWorld = shape.shapeTransform;
+    const transformPositionWorldToLocal = Matrix4.inverse(
+      transformPositionLocalToWorld,
+      scratchTransformPositionWorldToLocal
+    );
+    const rotation = Matrix4.getRotation(
+      transformPositionLocalToWorld,
+      scratchRotation
+    );
+    // Note that inverse(rotation) is the same as transpose(rotation)
+    const inverseRotation = Matrix3.transpose(rotation, scratchInverseRotation);
+    const scale = Matrix4.getScale(transformPositionLocalToWorld, scratchScale);
+    const maximumScaleComponent = Cartesian3.maximumComponent(scale);
+    const localScale = Cartesian3.divideByScalar(
+      scale,
+      maximumScaleComponent,
+      scratchLocalScale
+    );
+    const inverseLocalScale = Cartesian3.divideComponents(
+      Cartesian3.ONE,
+      localScale,
+      scratchInverseLocalScale
+    );
+    const rotationAndLocalScale = Matrix3.multiplyByScale(
+      rotation,
+      localScale,
+      scratchRotationAndLocalScale
+    );
 
-      // Set member variables when the shape is dirty
-      const dimensions = provider.dimensions;
-      this._stepSizeUv = shape.computeApproximateStepSize(dimensions);
-      this._transformPositionWorldToUv = Matrix4.multiply(
-        transformPositionLocalToUv,
-        transformPositionWorldToLocal,
-        this._transformPositionWorldToUv
-      );
-      this._transformPositionUvToWorld = Matrix4.multiply(
-        transformPositionLocalToWorld,
-        transformPositionUvToLocal,
-        this._transformPositionUvToWorld
-      );
-      this._transformDirectionWorldToLocal = Matrix3.setScale(
-        inverseRotation,
-        inverseLocalScale,
-        this._transformDirectionWorldToLocal
-      );
-      this._transformNormalLocalToWorld = Matrix3.inverseTranspose(
-        rotationAndLocalScale,
-        this._transformNormalLocalToWorld
-      );
-    }
+    // Set member variables when the shape is dirty
+    const dimensions = provider.dimensions;
+    this._stepSizeUv = shape.computeApproximateStepSize(dimensions);
+    this._transformPositionWorldToUv = Matrix4.multiply(
+      transformPositionLocalToUv,
+      transformPositionWorldToLocal,
+      this._transformPositionWorldToUv
+    );
+    this._transformPositionUvToWorld = Matrix4.multiply(
+      transformPositionLocalToWorld,
+      transformPositionUvToLocal,
+      this._transformPositionUvToWorld
+    );
+    this._transformDirectionWorldToLocal = Matrix3.setScale(
+      inverseRotation,
+      inverseLocalScale,
+      this._transformDirectionWorldToLocal
+    );
+    this._transformNormalLocalToWorld = Matrix3.inverseTranspose(
+      rotationAndLocalScale,
+      this._transformNormalLocalToWorld
+    );
   }
 
-  // Initialize the voxel traversal now that the shape is ready to use. This only happens once.
+  // Initialize from the ready shape. This only happens once.
   if (!this._ready) {
     const dimensions = provider.dimensions;
     const paddingBefore = this._paddingBefore;
@@ -1547,6 +1360,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
     );
 
     // Set uniforms that come from the traversal.
+    // TODO: should this be done in VoxelTraversal?
     const traversal = this._traversal;
     const useLeafNodeTexture = traversal.useLeafNodeTexture;
 
@@ -1594,11 +1408,18 @@ VoxelPrimitive.prototype.update = function (frameState) {
       megatexture.regionSizeUv,
       uniforms.megatextureTileSizeUv
     );
-  } else if (shape.isVisible) {
-    // Find the keyframe location to render at. Doesn't need to be a whole number.
-    let keyframeLocation = 0.0;
+  }
+
+  // Update the traversal and prepare for rendering.
+  // This doesn't happen on the first update frame. It needs to wait until the
+  // primitive is made ready after the end of the first update frame.
+  if (this._ready && this._shapeVisible) {
+    const traversal = this._traversal;
     const clock = this._clock;
     const timeIntervalCollection = this._timeIntervalCollection;
+
+    // Find the keyframe location to render at. Doesn't need to be a whole number.
+    let keyframeLocation = 0.0;
     if (defined(timeIntervalCollection) && defined(clock)) {
       let date = clock.currentTime;
       let timeInterval;
@@ -1634,12 +1455,10 @@ VoxelPrimitive.prototype.update = function (frameState) {
     }
 
     // Update the voxel traversal
-    const traversal = this._traversal;
-
     const hasLoadedData = traversal.update(
       frameState,
       keyframeLocation,
-      shapeIsDirty, // recomputeBoundingVolumes
+      shapeDirty, // recomputeBoundingVolumes
       this._disableUpdate // pauseUpdate
     );
 
@@ -1653,6 +1472,9 @@ VoxelPrimitive.prototype.update = function (frameState) {
       // Process clipping bounds.
       const minClip = this._minClippingBounds;
       const maxClip = this._maxClippingBounds;
+
+      const defaultMinBounds = VoxelShapeType.getMinBounds(shapeType);
+      const defaultMaxBounds = VoxelShapeType.getMaxBounds(shapeType);
 
       let isDefaultClippingBoundsMin =
         minClip.x === defaultMinBounds.x &&
@@ -1808,7 +1630,6 @@ VoxelPrimitive.prototype.update = function (frameState) {
         const cameraPositionWorld = frameState.camera.positionWC;
 
         // Update uniforms that can change every frame
-        const uniforms = this._uniformMapValues;
         uniforms.transformPositionViewToUv = Matrix4.multiply(
           transformPositionWorldToUv,
           transformPositionViewToWorld,
@@ -1975,12 +1796,10 @@ function buildDrawCommands(that, context) {
   const useLogDepth = that._useLogDepth;
   const paddingBefore = that.paddingBefore;
   const paddingAfter = that.paddingAfter;
-  const minBounds = that._minBounds;
-  const maxBounds = that._maxBounds;
+  const shape = that._shape;
+  const shapeDefines = shape.shaderDefines;
   const minimumValues = provider.minimumValues;
   const maximumValues = provider.maximumValues;
-  const minClippingBounds = that._minClippingBounds;
-  const maxClippingBounds = that._maxClippingBounds;
   const keyframeCount = that._keyframeCount;
   const despeckle = that._despeckle;
   const jitter = that._jitter;
@@ -2077,195 +1896,35 @@ function buildDrawCommands(that, context) {
     ShaderDestination.FRAGMENT
   );
 
-  const defaultMinBounds = VoxelShapeType.getMinBounds(shapeType);
-  const defaultMaxBounds = VoxelShapeType.getMaxBounds(shapeType);
-  const isDefaultMinX = minBounds.x === defaultMinBounds.x;
-  const isDefaultMinY = minBounds.y === defaultMinBounds.y;
-  const isDefaultMinZ = minBounds.z === defaultMinBounds.z;
-  const isDefaultMaxX = maxBounds.x === defaultMaxBounds.x;
-  const isDefaultMaxY = maxBounds.y === defaultMaxBounds.y;
-  const isDefaultMaxZ = maxBounds.z === defaultMaxBounds.z;
-
-  let useBounds = false;
-  if (shapeType === VoxelShapeType.BOX) {
-    useBounds =
-      !isDefaultMinX ||
-      !isDefaultMaxX ||
-      !isDefaultMinY ||
-      !isDefaultMaxY ||
-      !isDefaultMinZ ||
-      !isDefaultMaxZ;
-  } else if (shapeType === VoxelShapeType.CYLINDER) {
-    useBounds =
-      !isDefaultMinX ||
-      !isDefaultMaxX ||
-      !isDefaultMinY ||
-      !isDefaultMaxY ||
-      !isDefaultMinZ ||
-      !isDefaultMaxZ;
-  } else if (shapeType === VoxelShapeType.ELLIPSOID) {
-    const radii = Matrix4.getScale(that._compoundModelMatrix, scratchScale);
-    const hasInnerEllipsoid = !(
-      radii.x === radii.y &&
-      radii.y === radii.z &&
-      minBounds.z === -radii.x
-    );
-    useBounds =
-      !isDefaultMinX ||
-      !isDefaultMaxX ||
-      !isDefaultMinY ||
-      !isDefaultMaxY ||
-      hasInnerEllipsoid;
+  // Shape specific defines
+  for (const key in shapeDefines) {
+    if (shapeDefines.hasOwnProperty(key)) {
+      const value = shapeDefines[key];
+      if (defined(value)) {
+        shaderBuilder.addDefine(key, value, ShaderDestination.FRAGMENT);
+      }
+    }
   }
 
-  if (useBounds) {
-    shaderBuilder.addDefine("BOUNDS", undefined, ShaderDestination.FRAGMENT);
-  }
-  if (!isDefaultMinX) {
-    shaderBuilder.addDefine(
-      "BOUNDS_0_MIN",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-  if (!isDefaultMaxX) {
-    shaderBuilder.addDefine(
-      "BOUNDS_0_MAX",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-  if (!isDefaultMinY) {
-    shaderBuilder.addDefine(
-      "BOUNDS_1_MIN",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-  if (!isDefaultMaxY) {
-    shaderBuilder.addDefine(
-      "BOUNDS_1_MAX",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-  if (!isDefaultMinZ) {
-    shaderBuilder.addDefine(
-      "BOUNDS_2_MIN",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-  if (!isDefaultMaxZ) {
-    shaderBuilder.addDefine(
-      "BOUNDS_2_MAX",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-  let intersectionCount = 0;
-  if (shapeType === VoxelShapeType.BOX) {
-    // A bounded box is still a box, so it has the same number of shape intersections: 1
-    intersectionCount = 1;
-  } else if (shapeType === VoxelShapeType.ELLIPSOID) {
-    // Intersects an outer ellipsoid for the max radius
-    {
-      shaderBuilder.addDefine(
-        "BOUNDS_2_MAX_IDX",
-        intersectionCount,
-        ShaderDestination.FRAGMENT
-      );
-      intersectionCount++;
-    }
-    // Intersects an inner ellipsoid for the min radius
-    if (!isDefaultMinZ) {
-      shaderBuilder.addDefine(
-        "BOUNDS_2_MIN_IDX",
-        intersectionCount,
-        ShaderDestination.FRAGMENT
-      );
-      intersectionCount++;
-    }
-    // Intersects a cone for min latitude
-    if (!isDefaultMinY) {
-      shaderBuilder.addDefine(
-        "BOUNDS_1_MIN_IDX",
-        intersectionCount,
-        ShaderDestination.FRAGMENT
-      );
-      intersectionCount++;
-    }
-    // Intersects a cone for max latitude
-    if (!isDefaultMaxY) {
-      shaderBuilder.addDefine(
-        "BOUNDS_1_MAX_IDX",
-        intersectionCount,
-        ShaderDestination.FRAGMENT
-      );
-      intersectionCount++;
-    }
-    // Intersects a wedge for the min and max longitude
-    if (!isDefaultMinX || !isDefaultMaxX) {
-      shaderBuilder.addDefine(
-        "BOUNDS_0_MIN_MAX_IDX",
-        intersectionCount,
-        ShaderDestination.FRAGMENT
-      );
-      intersectionCount++;
-    }
-  } else if (shapeType === VoxelShapeType.CYLINDER) {
-    // Intersects a capped cylinder for the max radius
-    // The min and max height are handled as part of the capped cylinder intersection
-    {
-      shaderBuilder.addDefine(
-        "BOUNDS_0_MAX_IDX",
-        intersectionCount,
-        ShaderDestination.FRAGMENT
-      );
-      intersectionCount++;
-    }
-    // Intersects an inner infinite cylinder for the min radius
-    if (!isDefaultMinX) {
-      shaderBuilder.addDefine(
-        "BOUNDS_0_MIN_IDX",
-        intersectionCount,
-        ShaderDestination.FRAGMENT
-      );
-      intersectionCount++;
-    }
-    // Intersects a wedge for the min and max theta
-    if (!isDefaultMinZ || !isDefaultMaxZ) {
-      shaderBuilder.addDefine(
-        "BOUNDS_2_MIN_MAX_IDX",
-        intersectionCount,
-        ShaderDestination.FRAGMENT
-      );
-      intersectionCount++;
-    }
-  }
-  // The intersection count is multiplied by 2 because there is an enter and exit for each intersection
-  shaderBuilder.addDefine(
-    "SHAPE_INTERSECTION_COUNT",
-    intersectionCount * 2,
-    ShaderDestination.FRAGMENT
-  );
-  const useClippingBounds =
-    minClippingBounds.x !== defaultMinBounds.x ||
-    minClippingBounds.y !== defaultMinBounds.y ||
-    minClippingBounds.z !== defaultMinBounds.z ||
-    maxClippingBounds.x !== defaultMaxBounds.x ||
-    maxClippingBounds.y !== defaultMaxBounds.y ||
-    maxClippingBounds.z !== defaultMaxBounds.z;
-  if (useClippingBounds) {
-    shaderBuilder.addDefine(
-      "CLIPPING_BOUNDS",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
+  // const useClippingBounds =
+  //   minClippingBounds.x !== defaultMinBounds.x ||
+  //   minClippingBounds.y !== defaultMinBounds.y ||
+  //   minClippingBounds.z !== defaultMinBounds.z ||
+  //   maxClippingBounds.x !== defaultMaxBounds.x ||
+  //   maxClippingBounds.y !== defaultMaxBounds.y ||
+  //   maxClippingBounds.z !== defaultMaxBounds.z;
+  // if (useClippingBounds) {
+  //   shaderBuilder.addDefine(
+  //     "CLIPPING_BOUNDS",
+  //     undefined,
+  //     ShaderDestination.FRAGMENT
+  //   );
+  // }
 
   // Fragment shader uniforms
 
+  // The reason this uniform is added by shader builder is because some of the
+  // dynamically generated shader code reads from it.
   shaderBuilder.addUniform(
     "sampler2D",
     "u_megatextureTextures[METADATA_COUNT]",

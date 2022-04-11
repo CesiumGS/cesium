@@ -50,7 +50,7 @@ function VoxelTraversal(
   maximumTextureMemoryByteLength
 ) {
   /**
-   * TODO: maybe this shouldn't be stored?
+   * TODO: maybe this shouldn't be stored or passed into update function?
    * @type {VoxelPrimitive}
    * @private
    */

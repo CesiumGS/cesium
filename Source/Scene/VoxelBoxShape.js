@@ -53,14 +53,6 @@ function VoxelBoxShape() {
   this.shapeTransform = new Matrix4();
 
   /**
-   * Check if the shape is visible. For example, if the shape has zero scale it will be invisible.
-   * The update function must be called before accessing this value.
-   * @type {Boolean}
-   * @readonly
-   */
-  this.isVisible = false;
-
-  /**
    * @type {Cartesian3}
    * @private
    */
@@ -77,6 +69,27 @@ function VoxelBoxShape() {
     VoxelBoxShape.DefaultMaxBounds,
     new Cartesian3()
   );
+
+  /**
+   * @type {Object.<string, any>}
+   * @readonly
+   */
+  this.shaderUniforms = {
+    boxMinBounds: new Cartesian3(),
+    boxMaxBounds: new Cartesian3(),
+  };
+
+  /**
+   * @type {Object.<string, any>}
+   * @readonly
+   */
+  this.shaderDefines = {
+    BOX_INTERSECTION_COUNT: 1,
+    BOX_BOUNDED: undefined,
+    BOX_XY_PLANE: undefined,
+    BOX_XZ_PLANE: undefined,
+    BOX_YZ_PLANE: undefined,
+  };
 }
 
 const scratchTranslation = new Cartesian3();
@@ -89,6 +102,7 @@ const scratchRotation = new Matrix3();
  * @param {Matrix4} modelMatrix The model matrix.
  * @param {Cartesian3} minBounds The minimum bounds.
  * @param {Cartesian3} maxBounds The maximum bounds.
+ * @returns {Boolean} Whether the shape is visible.
  */
 VoxelBoxShape.prototype.update = function (modelMatrix, minBounds, maxBounds) {
   //>>includeStart('debug', pragmas.debug);
@@ -97,10 +111,29 @@ VoxelBoxShape.prototype.update = function (modelMatrix, minBounds, maxBounds) {
   Check.typeOf.object("maxBounds", maxBounds);
   //>>includeEnd('debug');
 
-  // Don't render if any of the min bounds exceed the max bounds.
-  // Don't render if two of the min bounds equal the max bounds because it would be an invisible line.
-  // Don't render if all of the min bounds equal the max bounds because it would be an invisible point.
-  // Still render if one of the min bounds is equal to the max bounds because it will be a square/rectangle.
+  const defaultMinBounds = VoxelBoxShape.DefaultMinBounds;
+  const defaultMaxBounds = VoxelBoxShape.DefaultMaxBounds;
+
+  minBounds = this._minBounds = Cartesian3.clamp(
+    minBounds,
+    defaultMinBounds,
+    defaultMaxBounds,
+    this._minBounds
+  );
+
+  maxBounds = this._maxBounds = Cartesian3.clamp(
+    maxBounds,
+    defaultMinBounds,
+    defaultMaxBounds,
+    this._maxBounds
+  );
+
+  const scale = Matrix4.getScale(modelMatrix, scratchScale);
+
+  // Not visible if:
+  // - any of the min bounds exceed the max bounds
+  // - two or more of the min bounds equal the max bounds (line and point respectively)
+  // - scale is 0 for any component
   if (
     minBounds.x > maxBounds.x ||
     minBounds.y > maxBounds.y ||
@@ -108,35 +141,22 @@ VoxelBoxShape.prototype.update = function (modelMatrix, minBounds, maxBounds) {
     (minBounds.x === maxBounds.x) +
       (minBounds.y === maxBounds.y) +
       (minBounds.z === maxBounds.z) >=
-      2
+      2 ||
+    scale.x === 0.0 ||
+    scale.y === 0.0 ||
+    scale.z === 0.0
   ) {
-    this.isVisible = false;
-    return;
+    return false;
   }
-
-  // If two or more of the scales are 0 the shape will not render.
-  // If one of the scales is 0 it will still be visible but will appear as a square/rectangle.
-  const scale = Matrix4.getScale(modelMatrix, scratchScale);
-  if ((scale.x === 0.0) + (scale.y === 0.0) + (scale.z === 0.0) >= 2) {
-    this.isVisible = false;
-    return;
-  }
-
-  this._minBounds = Cartesian3.clone(minBounds, this._minBounds);
-  this._maxBounds = Cartesian3.clone(maxBounds, this._maxBounds);
-
-  this.orientedBoundingBox = getBoxChunkObb(
-    minBounds.x,
-    maxBounds.x,
-    minBounds.y,
-    maxBounds.y,
-    minBounds.z,
-    maxBounds.z,
-    modelMatrix,
-    this.orientedBoundingBox
-  );
 
   this.shapeTransform = Matrix4.clone(modelMatrix, this.shapeTransform);
+
+  this.orientedBoundingBox = getBoxChunkObb(
+    this._minBounds,
+    this._maxBounds,
+    this.shapeTransform,
+    this.orientedBoundingBox
+  );
 
   // All of the box bounds go from -1 to +1, so the model matrix scale can be
   // used as the oriented bounding box half axes.
@@ -151,8 +171,30 @@ VoxelBoxShape.prototype.update = function (modelMatrix, minBounds, maxBounds) {
     this.boundingSphere
   );
 
-  this.isVisible = true;
+  const shaderUniforms = this.shaderUniforms;
+  const shaderDefines = this.shaderDefines;
+
+  shaderUniforms.minBounds = Cartesian3.clone(
+    minBounds,
+    shaderUniforms.minBounds
+  );
+  shaderUniforms.maxBounds = Cartesian3.clone(
+    maxBounds,
+    shaderUniforms.maxBounds
+  );
+
+  const hasBounds =
+    !Cartesian3.equals(minBounds, defaultMinBounds) &&
+    !Cartesian3.equals(maxBounds, defaultMaxBounds);
+  shaderDefines.BOX_BOUNDS = hasBounds ? 1 : undefined;
+
+  return true;
 };
+
+const scratchMinBounds = new Cartesian3();
+const scratchMaxBounds = new Cartesian3();
+const scratchMinLerp = new Cartesian3();
+const scratchMaxLerp = new Cartesian3();
 
 /**
  * Computes an oriented bounding box for a specified tile.
@@ -180,53 +222,33 @@ VoxelBoxShape.prototype.computeOrientedBoundingBoxForTile = function (
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  const rootTransform = this.shapeTransform;
   const sizeAtLevel = 1.0 / Math.pow(2, tileLevel);
 
-  const minBounds = this._minBounds;
-  const maxBounds = this._maxBounds;
-
-  const minimumX = CesiumMath.lerp(
-    minBounds.x,
-    maxBounds.x,
-    sizeAtLevel * tileX
-  );
-  const minimumY = CesiumMath.lerp(
-    minBounds.y,
-    maxBounds.y,
-    sizeAtLevel * tileY
-  );
-  const minimumZ = CesiumMath.lerp(
-    minBounds.z,
-    maxBounds.z,
-    sizeAtLevel * tileZ
-  );
-  const maximumX = CesiumMath.lerp(
-    minBounds.x,
-    maxBounds.x,
-    sizeAtLevel * (tileX + 1)
-  );
-  const maximumY = CesiumMath.lerp(
-    minBounds.y,
-    maxBounds.y,
-    sizeAtLevel * (tileY + 1)
-  );
-  const maximumZ = CesiumMath.lerp(
-    minBounds.z,
-    maxBounds.z,
-    sizeAtLevel * (tileZ + 1)
+  const minBounds = Cartesian3.lerp(
+    this._minBounds,
+    this._maxBounds,
+    Cartesian3.fromElements(
+      sizeAtLevel * tileX,
+      sizeAtLevel * tileY,
+      sizeAtLevel * tileZ,
+      scratchMinLerp
+    ),
+    scratchMinBounds
   );
 
-  return getBoxChunkObb(
-    minimumX,
-    maximumX,
-    minimumY,
-    maximumY,
-    minimumZ,
-    maximumZ,
-    rootTransform,
-    result
+  const maxBounds = Cartesian3.lerp(
+    this._minBounds,
+    this._maxBounds,
+    Cartesian3.fromElements(
+      sizeAtLevel * (tileX + 1),
+      sizeAtLevel * (tileY + 1),
+      sizeAtLevel * (tileZ + 1),
+      scratchMaxLerp
+    ),
+    scratchMaxBounds
   );
+
+  return getBoxChunkObb(minBounds, maxBounds, this.shapeTransform, result);
 };
 
 /**
@@ -267,38 +289,21 @@ VoxelBoxShape.DefaultMaxBounds = new Cartesian3(+1.0, +1.0, +1.0);
  *
  * @function
  *
- * @param {Number} minimumX The minimumX.
- * @param {Number} maximumX The maximumX.
- * @param {Number} minimumY The minimumY.
- * @param {Number} maximumY The maximumY.
- * @param {Number} minimumZ The minimumZ.
- * @param {Number} maximumZ The maximumZ.
+ * @param {Number} minimumBounds The minimum bounds.
+ * @param {Number} maximumBounds The maximum bounds.
  * @param {Matrix4} matrix The matrix to transform the points.
  * @param {OrientedBoundingBox} result The object onto which to store the result.
  * @returns {OrientedBoundingBox} The oriented bounding box that contains this subregion.
  *
  * @private
  */
-function getBoxChunkObb(
-  minimumX,
-  maximumX,
-  minimumY,
-  maximumY,
-  minimumZ,
-  maximumZ,
-  matrix,
-  result
-) {
+function getBoxChunkObb(minimumBounds, maximumBounds, matrix, result) {
   const defaultMinBounds = VoxelBoxShape.DefaultMinBounds;
   const defaultMaxBounds = VoxelBoxShape.DefaultMaxBounds;
 
   const isDefaultBounds =
-    minimumX === defaultMinBounds.x &&
-    minimumY === defaultMinBounds.y &&
-    minimumZ === defaultMinBounds.z &&
-    maximumX === defaultMaxBounds.x &&
-    maximumY === defaultMaxBounds.y &&
-    maximumZ === defaultMaxBounds.z;
+    Cartesian3.equals(minimumBounds, defaultMinBounds) &&
+    Cartesian3.equals(maximumBounds, defaultMaxBounds);
 
   if (isDefaultBounds) {
     result.center = Matrix4.getTranslation(matrix, result.center);
@@ -307,16 +312,15 @@ function getBoxChunkObb(
     let scale = Matrix4.getScale(matrix, scratchScale);
     const translation = Matrix4.getTranslation(matrix, scratchTranslation);
     result.center = Cartesian3.fromElements(
-      translation.x + scale.x * 0.5 * (minimumX + maximumX),
-      translation.y + scale.y * 0.5 * (maximumY + minimumY),
-      translation.z + scale.z * 0.5 * (maximumZ + minimumZ),
+      translation.x + scale.x * 0.5 * (minimumBounds.x + maximumBounds.x),
+      translation.y + scale.y * 0.5 * (maximumBounds.y + minimumBounds.y),
+      translation.z + scale.z * 0.5 * (maximumBounds.z + minimumBounds.z),
       result.center
     );
-
     scale = Cartesian3.fromElements(
-      scale.x * 0.5 * (maximumX - minimumX),
-      scale.y * 0.5 * (maximumY - minimumY),
-      scale.z * 0.5 * (maximumZ - minimumZ),
+      scale.x * 0.5 * (maximumBounds.x - minimumBounds.x),
+      scale.y * 0.5 * (maximumBounds.y - minimumBounds.y),
+      scale.z * 0.5 * (maximumBounds.z - minimumBounds.z),
       scratchScale
     );
     const rotation = Matrix4.getRotation(matrix, scratchRotation);
