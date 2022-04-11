@@ -1,8 +1,8 @@
+import AlphaMode from "./AlphaMode.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
-import AlphaMode from "./AlphaMode.js";
 
 /**
  * Components for building models.
@@ -811,6 +811,147 @@ function Scene() {
 }
 
 /**
+ * The type of interpolation used in an animation.
+ *
+ * @alias {ModelComponents.InterpolationType}
+ * @enum {Number}
+ *
+ * @private
+ */
+const InterpolationType = {
+  STEP: 0,
+  LINEAR: 1,
+  CUBICSPLINE: 2,
+};
+
+/**
+ * The property of the node that is targeted by an animation.
+ *
+ * @alias {ModelComponents.AnimatedPropertyType}
+ * @enum {Number}
+ *
+ * @private
+ */
+const AnimatedPropertyType = {
+  TRANSLATION: 0,
+  ROTATION: 1,
+  SCALE: 2,
+  WEIGHTS: 3,
+};
+
+/**
+ * An animation sampler that describes the sources of animated keyframe data
+ * and their interpolation.
+ *
+ * @alias {ModelComponents.AnimationSampler}
+ * @constructor
+ *
+ * @private
+ */
+function AnimationSampler() {
+  /**
+   * The timesteps of the animation.
+   *
+   * @type {Number[]}
+   * @private
+   */
+  this.input = undefined;
+
+  /**
+   * The method used to interpolate between the animation's keyframe data.
+   *
+   * @type {ModelComponents.InterpolationType}
+   * @private
+   */
+  this.interpolation = undefined;
+
+  /**
+   * The keyframe data of the animation.
+   *
+   * @type {Number[]|Cartesian3[]|Cartesian4[]}
+   * @private
+   */
+  this.output = undefined;
+}
+
+/**
+ * An animation target, which specifies the node and property to animate.
+ *
+ * @alias {ModelComponents.AnimationTarget}
+ * @constructor
+ *
+ * @private
+ */
+function AnimationTarget() {
+  /**
+   * The node that will be affected by the animation.
+   *
+   * @type {ModelComponents.Node}
+   * @private
+   */
+  this.node = undefined;
+
+  /**
+   * The property of the node to be animated.
+   *
+   * @type {ModelComponents.AnimatedPropertyType}
+   * @private
+   */
+  this.path = undefined;
+}
+
+/**
+ * An animation channel linking an animation sampler and the target it animates.
+ * @alias {ModelComponents.AnimationChannel}
+ * @constructor
+ *
+ * @private
+ */
+function AnimationChannel() {
+  /**
+   * The sampler used as the source of the animation data.
+   *
+   * @type {ModelComponents.AnimationSampler}
+   * @private
+   */
+  this.sampler = undefined;
+
+  /**
+   * The target of the animation.
+   *
+   * @type {ModelComponents.AnimationTarget}
+   * @private
+   */
+  this.target = undefined;
+}
+
+/**
+ * An animation in the model.
+ *
+ * @alias {ModelComponents.Animation}
+ * @constructor
+ *
+ * @private
+ */
+function Animation() {
+  /**
+   * The samplers used in this animation.
+   *
+   * @type {ModelComponents.AnimationSampler[]}
+   * @private
+   */
+  this.samplers = [];
+
+  /**
+   * The channels used in this animation.
+   *
+   * @type {ModelComponents.AnimationChannel[]}
+   * @private
+   */
+  this.channels = [];
+}
+
+/**
  * The asset of the model.
  *
  * @alias {ModelComponents.Asset}
@@ -866,6 +1007,13 @@ function Components() {
    * @type {ModelComponents.Skin[]}
    */
   this.skins = undefined;
+
+  /**
+   * All animations in the model.
+   *
+   * @type {ModelComponents.Animation[]}
+   */
+  this.animations = undefined;
 
   /**
    * Structural metadata containing the schema, property tables, property
@@ -1207,6 +1355,12 @@ ModelComponents.Instances = Instances;
 ModelComponents.Skin = Skin;
 ModelComponents.Node = Node;
 ModelComponents.Scene = Scene;
+ModelComponents.InterpolationType = Object.freeze(InterpolationType);
+ModelComponents.AnimatedPropertyType = Object.freeze(AnimatedPropertyType);
+ModelComponents.AnimationSampler = AnimationSampler;
+ModelComponents.AnimationTarget = AnimationTarget;
+ModelComponents.AnimationChannel = AnimationChannel;
+ModelComponents.Animation = Animation;
 ModelComponents.Asset = Asset;
 ModelComponents.Components = Components;
 ModelComponents.TextureReader = TextureReader;
