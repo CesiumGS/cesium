@@ -7,7 +7,7 @@ const float MIE_HEIGHT_LIMIT = 3.2e3; // The height at which Mie scattering stop
 const vec2 HEIGHT_SCALE = vec2(RAYLEIGH_HEIGHT_LIMIT, MIE_HEIGHT_LIMIT);
 const vec3 BETA_RAYLEIGH = vec3(5.8e-6, 13.5e-6, 33.1e-6); // Better constants from Precomputed Atmospheric Scattering (https://hal.inria.fr/inria-00288758/document)
 const vec3 BETA_MIE = vec3(21e-6);
-const vec3 LIGHT_INTENSITY = vec3(100.0);
+const vec3 LIGHT_INTENSITY = vec3(50.0);
 const int PRIMARY_STEPS = 16; // Number of times the ray from the camera to the world position (primary ray) is sampled.
 const int LIGHT_STEPS = 4; // Number of times the light is sampled from the light source's intersection with the atmosphere to a sample position on the primary ray.
 
@@ -50,10 +50,13 @@ void computeAtmosphericScattering(
     // Adjust the radius of the sky atmosphere, so at far away distances, low LOD tiles don't show gaps.
     float distMin = u_radiiAndDynamicAtmosphereColor.x / 4.0;
     float distMax = u_radiiAndDynamicAtmosphereColor.x;
-    float distAdjust = 10e3 * clamp((czm_eyeHeight - distMin) / (distMax - distMin), 0.2, 1.2);
+    float distAdjust = 12e3 * clamp((czm_eyeHeight - distMin) / (distMax - distMin), 0.0, 1.0);
 
     // Setup the radii for the inner and outer ring of the atmosphere.
-    float ellipsoidRadiiDifference = (u_radiiAndDynamicAtmosphereColor.x - u_radiiAndDynamicAtmosphereColor.y) + distAdjust;
+
+    // We adjust the distance here because otherwise, at lower altitudes, we'd be left with a black area near the horizon (due to length of the primary ray),
+    // which would normally be displayed differently by accounting for other atmospheric conditions such as haze.
+    float ellipsoidRadiiDifference = ((u_radiiAndDynamicAtmosphereColor.x - u_radiiAndDynamicAtmosphereColor.y) / 4.0) + distAdjust;
     float atmosphereInnerRadius = (length(czm_viewerPositionWC) - czm_eyeHeight) - ellipsoidRadiiDifference;
     float atmosphereOuterRadius = atmosphereInnerRadius + ATMOSPHERE_THICKNESS;
 
@@ -205,7 +208,7 @@ vec4 computeAtmosphereColor(
     vec3 color = (rayleigh + mie) * LIGHT_INTENSITY;
 
     if (translucent == 0.0) {
-        opacity = mix(clamp(length(color), 0.0, 1.0), 1.0, opacity) * smoothstep(0.0, 1.0, czm_morphTime);
+        opacity = mix(color.b, 1.0, opacity) * smoothstep(0.0, 1.0, czm_morphTime);
     }
 
     return vec4(color, opacity);
