@@ -101,7 +101,7 @@ export default function ModelExperimentalSceneGraph(options) {
 
   /**
    * The indices of the skinned nodes in the runtime nodes array. These refer
-   * to the nodes that will be manipulated by their skin, as oppose to the nodes
+   * to the nodes that will be manipulated by their skin, as opposed to the nodes
    * acting as joints for the skin.
    *
    * @type {Number[]}
@@ -225,8 +225,8 @@ function initialize(sceneGraph) {
   const skins = components.skins;
   const runtimeSkins = sceneGraph._runtimeSkins;
 
-  const length = skins.length;
-  for (let i = 0; i < length; i++) {
+  const skinsLength = skins.length;
+  for (let i = 0; i < skinsLength; i++) {
     const skin = skins[i];
     runtimeSkins.push(
       new ModelExperimentalSkin({
@@ -237,7 +237,8 @@ function initialize(sceneGraph) {
   }
 
   const skinnedNodes = sceneGraph._skinnedNodes;
-  for (let i = 0; i < skinnedNodes.length; i++) {
+  const skinnedNodesLength = skinnedNodes.length;
+  for (let i = 0; i < skinnedNodesLength; i++) {
     const skinnedNodeIndex = skinnedNodes[i];
     const skinnedNode = sceneGraph._runtimeNodes[skinnedNodeIndex];
 
@@ -295,7 +296,8 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   // Traverse through scene graph.
   let i;
   if (defined(node.children)) {
-    for (i = 0; i < node.children.length; i++) {
+    const childrenLength = node.children.length;
+    for (i = 0; i < childrenLength; i++) {
       const childNode = node.children[i];
       const childNodeTransformToRoot = Matrix4.multiplyTransformation(
         transformToRoot,
@@ -322,7 +324,8 @@ function traverseSceneGraph(sceneGraph, node, transformToRoot) {
   });
 
   if (defined(node.primitives)) {
-    for (i = 0; i < node.primitives.length; i++) {
+    const primitivesLength = node.primitives.length;
+    for (i = 0; i < primitivesLength; i++) {
       runtimeNode.runtimePrimitives.push(
         new ModelExperimentalPrimitive({
           primitive: node.primitives[i],
