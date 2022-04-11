@@ -1440,7 +1440,9 @@ function loadSkin(loader, gltf, gltfSkin, nodes) {
         skin.inverseBindMatrices = inverseBindMatrices;
       });
     }
-  } else {
+  }
+
+  if (!defined(skin.inverseBindMatrices)) {
     skin.inverseBindMatrices = arrayFill(
       new Array(jointsLength),
       Matrix4.IDENTITY

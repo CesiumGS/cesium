@@ -25,15 +25,14 @@ SkinningPipelineStage.FUNCTION_SIGNATURE_GET_SKINNING_MATRIX =
  *
  * Processes a primitive. This stage modifies the following parts of the render resources:
  * <ul>
- *  <li> adds the uniform declaration for the joint matrices in the vertex shader
- *  <li> adds the function to compute the skinning matrix in the vertex shader
+ *  <li> adds the uniform declaration for the joint matrices in the vertex shader</li>
+ *  <li> adds the function to compute the skinning matrix in the vertex shader</li>
  * </ul>
  *
  * @param {PrimitiveRenderResources} renderResources The render resources for this primitive.
  * @param {ModelComponents.Primitive} primitive The primitive.
  * @private
  */
-
 SkinningPipelineStage.process = function (renderResources, primitive) {
   const shaderBuilder = renderResources.shaderBuilder;
 
@@ -53,7 +52,7 @@ SkinningPipelineStage.process = function (renderResources, primitive) {
 
   const uniformMap = {
     u_jointMatrices: function () {
-      return jointMatrices;
+      return runtimeNode.computedJointMatrices;
     },
   };
 
@@ -100,6 +99,7 @@ function addGetSkinningMatrixFunction(shaderBuilder, primitive) {
   for (setIndex = 0; setIndex <= maximumSetIndex; setIndex++) {
     for (componentIndex = 0; componentIndex <= 3; componentIndex++) {
       const component = componentStrings[componentIndex];
+      // Example: skinnedMatrix += a_weights_0.x * u_jointMatrices[int(a_joints_0.x)];
       const line = `skinnedMatrix += a_weights_${setIndex}.${component} * u_jointMatrices[int(a_joints_${setIndex}.${component})];`;
       shaderBuilder.addFunctionLines(
         SkinningPipelineStage.FUNCTION_ID_GET_SKINNING_MATRIX,

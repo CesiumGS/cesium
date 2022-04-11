@@ -207,8 +207,9 @@ function initialize(sceneGraph) {
   sceneGraph._runtimeNodes = new Array(nodesLength);
 
   const rootNodes = scene.nodes;
+  const rootNodesLength = rootNodes.length;
   const transformToRoot = Matrix4.IDENTITY;
-  for (let i = 0; i < rootNodes.length; i++) {
+  for (let i = 0; i < rootNodesLength; i++) {
     const rootNode = scene.nodes[i];
 
     const rootNodeIndex = traverseSceneGraph(
@@ -502,8 +503,9 @@ ModelExperimentalSceneGraph.prototype.updateModelMatrix = function () {
 ModelExperimentalSceneGraph.prototype.updateJointMatrices = function () {
   const model = this._model;
   const skinnedNodes = model._skinnedNodes;
+  const length = skinnedNodes.length;
 
-  for (let i = 0; i < skinnedNodes.length; i++) {
+  for (let i = 0; i < length; i++) {
     const node = skinnedNodes[i];
     node.updateJointMatrices();
   }

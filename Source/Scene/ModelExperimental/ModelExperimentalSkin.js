@@ -28,9 +28,6 @@ export default function ModelExperimentalSkin(options) {
 
   this._skin = skin;
 
-  // Do we need this?
-  this._dirty = false;
-
   this._inverseBindMatrices = undefined;
   this._joints = [];
   this._jointMatrices = [];
@@ -100,7 +97,7 @@ Object.defineProperties(ModelExperimentalSkin.prototype, {
 
   /**
    * The joint matrices for the skin, where each joint matrix is computed as
-   * [jointMatrix] = [jointWorldTransform] * [bindMatrix].
+   * jointMatrix = jointWorldTransform * inverseBindMatrix.
    *
    * Each node that references this skin is responsible for pre-multiplying its inverse
    * world transform to the joint matrices for its own use.
@@ -134,17 +131,17 @@ function initialize(runtimeSkin) {
     const runtimeNode = runtimeNodes[jointIndex];
     runtimeJoints.push(runtimeNode);
 
-    const bindMatrix = inverseBindMatrices[i];
+    const inverseBindMatrix = inverseBindMatrices[i];
     const jointMatrix = computeJointMatrix(
       runtimeNode,
-      bindMatrix,
+      inverseBindMatrix,
       new Matrix4()
     );
     runtimeJointMatrices.push(jointMatrix);
   }
 }
 
-function computeJointMatrix(joint, bindMatrix, result) {
+function computeJointMatrix(joint, inverseBindMatrix, result) {
   const jointWorldTransform = Matrix4.multiplyTransformation(
     joint.transformToRoot,
     joint.transform,
@@ -153,7 +150,7 @@ function computeJointMatrix(joint, bindMatrix, result) {
 
   result = Matrix4.multiplyTransformation(
     jointWorldTransform,
-    bindMatrix,
+    inverseBindMatrix,
     result
   );
 
@@ -165,12 +162,16 @@ function computeJointMatrix(joint, bindMatrix, result) {
  *
  * @private
  */
-ModelExperimentalSkin.prototype.updateJointMarices = function () {
+ModelExperimentalSkin.prototype.updateJointMatrices = function () {
   const jointMatrices = this._jointMatrices;
   const length = jointMatrices.length;
   for (let i = 0; i < length; i++) {
     const joint = this.joints[i];
-    const bindMatrix = this.inverseBindMatrices[i];
-    jointMatrices[i] = computeJointMatrix(joint, bindMatrix, jointMatrices[i]);
+    const inverseBindMatrix = this.inverseBindMatrices[i];
+    jointMatrices[i] = computeJointMatrix(
+      joint,
+      inverseBindMatrix,
+      jointMatrices[i]
+    );
   }
 };

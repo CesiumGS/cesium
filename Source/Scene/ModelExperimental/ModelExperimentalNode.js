@@ -283,7 +283,7 @@ ModelExperimentalNode.prototype.configurePipeline = function () {
 
 /**
  * Updates the joint matrices for this node, where each matrix is computed as
- * [computedJointMatrix] = [nodeWorldTransform]^-1 * [skinjointMatrix].
+ * computedJointMatrix = nodeWorldTransform^(-1) * skinJointMatrix.
  *
  * @private
  */
