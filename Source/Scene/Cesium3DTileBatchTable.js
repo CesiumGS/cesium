@@ -320,6 +320,14 @@ Cesium3DTileBatchTable.prototype.hasProperty = function (batchId, name) {
   );
 };
 
+/**
+ * @private
+ */
+Cesium3DTileBatchTable.prototype.hasPropertyBySemantic = function () {
+  // Cesium 3D Tiles 1.0 formats do not have semantics
+  return false;
+};
+
 Cesium3DTileBatchTable.prototype.getPropertyNames = function (
   batchId,
   results
@@ -351,6 +359,7 @@ Cesium3DTileBatchTable.prototype.getPropertyBySemantic = function (
   batchId,
   name
 ) {
+  // Cesium 3D Tiles 1.0 formats do not have semantics
   return undefined;
 };
 
@@ -861,6 +870,10 @@ Cesium3DTileBatchTable.prototype.addDerivedCommands = function (
 
   for (let i = commandStart; i < commandEnd; ++i) {
     const command = commandList[i];
+    if (command.pass === Pass.COMPUTE) {
+      continue;
+    }
+
     let derivedCommands = command.derivedCommands.tileset;
     if (!defined(derivedCommands) || command.dirty) {
       derivedCommands = {};

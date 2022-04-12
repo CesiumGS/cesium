@@ -12,7 +12,7 @@ import MetadataEntity from "./MetadataEntity.js";
  * @param {Object} options Object with the following properties:
  * @param {String} options.id The ID of the group.
  * @param {Object} options.group The group JSON object.
- * @param {MetadataClass} [options.class] The class that group metadata conforms to.
+ * @param {MetadataClass} options.class The class that group metadata conforms to.
  *
  * @alias GroupMetadata
  * @constructor
@@ -23,15 +23,16 @@ function GroupMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const id = options.id;
   const group = options.group;
+  const metadataClass = options.class;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("options.id", id);
   Check.typeOf.object("options.group", group);
+  Check.typeOf.object("options.class", metadataClass);
   //>>includeEnd('debug');
 
   const properties = defined(group.properties) ? group.properties : {};
 
-  this._class = options.class;
+  this._class = metadataClass;
   this._properties = properties;
   this._id = id;
   this._extras = group.extras;

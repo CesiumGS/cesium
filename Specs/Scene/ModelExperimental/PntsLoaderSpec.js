@@ -8,6 +8,7 @@ import {
   PntsLoader,
   Resource,
   ResourceCache,
+  RuntimeError,
   VertexAttributeSemantic,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
@@ -88,25 +89,25 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
   function expectLoadError(arrayBuffer) {
     expect(function () {
       return loadPntsArrayBuffer(arrayBuffer);
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   }
 
-  function expectEmptyMetadata(featureMetadata) {
-    expect(featureMetadata).toBeDefined();
-    expect(featureMetadata.schema).toEqual({});
-    expect(featureMetadata.propertyTableCount).toEqual(1);
-    const propertyTable = featureMetadata.getPropertyTable(0);
+  function expectEmptyMetadata(structuralMetadata) {
+    expect(structuralMetadata).toBeDefined();
+    expect(structuralMetadata.schema).toEqual({});
+    expect(structuralMetadata.propertyTableCount).toEqual(1);
+    const propertyTable = structuralMetadata.getPropertyTable(0);
     expect(propertyTable.getPropertyIds(0)).toEqual([]);
   }
 
-  function expectMetadata(featureMetadata, expectedProperties) {
-    expect(featureMetadata).toBeDefined();
-    const schema = featureMetadata.schema;
+  function expectMetadata(structuralMetadata, expectedProperties) {
+    expect(structuralMetadata).toBeDefined();
+    const schema = structuralMetadata.schema;
     const batchClass = schema.classes[MetadataClass.BATCH_TABLE_CLASS_NAME];
     const properties = batchClass.properties;
 
-    expect(featureMetadata.propertyTableCount).toEqual(1);
-    const propertyTable = featureMetadata.getPropertyTable(0);
+    expect(structuralMetadata.propertyTableCount).toEqual(1);
+    const propertyTable = structuralMetadata.getPropertyTable(0);
     expect(propertyTable.getPropertyIds(0).sort()).toEqual(
       Object.keys(expectedProperties).sort()
     );
@@ -239,7 +240,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
   }
 
   function expectBatchId(attribute, componentDatatype) {
-    expect(attribute.name).toBe("FEATURE_ID");
+    expect(attribute.name).toBe("_FEATURE_ID");
     expect(attribute.semantic).toBe(VertexAttributeSemantic.FEATURE_ID);
     expect(attribute.componentDatatype).toBe(componentDatatype);
     expect(attribute.type).toBe(AttributeType.SCALAR);
@@ -251,7 +252,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudRGBUrl).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectEmptyMetadata(components.featureMetadata);
+      expectEmptyMetadata(components.structuralMetadata);
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
@@ -265,7 +266,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudRGBAUrl).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectEmptyMetadata(components.featureMetadata);
+      expectEmptyMetadata(components.structuralMetadata);
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
@@ -279,7 +280,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudRGB565Url).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectEmptyMetadata(components.featureMetadata);
+      expectEmptyMetadata(components.structuralMetadata);
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
@@ -293,7 +294,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudNoColorUrl).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectEmptyMetadata(components.featureMetadata);
+      expectEmptyMetadata(components.structuralMetadata);
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
@@ -307,7 +308,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudConstantColorUrl).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectEmptyMetadata(components.featureMetadata);
+      expectEmptyMetadata(components.structuralMetadata);
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
@@ -321,7 +322,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudNormalsUrl).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectEmptyMetadata(components.featureMetadata);
+      expectEmptyMetadata(components.structuralMetadata);
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
@@ -336,7 +337,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudNormalsOctEncodedUrl).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectEmptyMetadata(components.featureMetadata);
+      expectEmptyMetadata(components.structuralMetadata);
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
@@ -355,7 +356,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudQuantizedUrl).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectEmptyMetadata(components.featureMetadata);
+      expectEmptyMetadata(components.structuralMetadata);
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
@@ -369,7 +370,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudQuantizedOctEncodedUrl).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectEmptyMetadata(components.featureMetadata);
+      expectEmptyMetadata(components.structuralMetadata);
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
@@ -388,7 +389,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudDracoUrl).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectEmptyMetadata(components.featureMetadata);
+      expectEmptyMetadata(components.structuralMetadata);
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
@@ -407,7 +408,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudDracoPartialUrl).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectEmptyMetadata(components.featureMetadata);
+      expectEmptyMetadata(components.structuralMetadata);
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
@@ -422,17 +423,17 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudDracoBatchedUrl).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectMetadata(components.featureMetadata, {
+      expectMetadata(components.structuralMetadata, {
         dimensions: {
           type: MetadataType.VEC3,
           componentType: MetadataComponentType.FLOAT32,
         },
         name: {
-          type: MetadataType.SINGLE,
+          type: MetadataType.SCALAR,
           isJson: true,
         },
         id: {
-          type: MetadataType.SINGLE,
+          type: MetadataType.SCALAR,
           componentType: MetadataComponentType.UINT32,
         },
       });
@@ -455,7 +456,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudWGS84Url).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectEmptyMetadata(components.featureMetadata);
+      expectEmptyMetadata(components.structuralMetadata);
 
       const primitive = components.nodes[0].primitives[0];
       const attributes = primitive.attributes;
@@ -469,17 +470,17 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     return loadPnts(pointCloudBatchedUrl).then(function (loader) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectMetadata(components.featureMetadata, {
+      expectMetadata(components.structuralMetadata, {
         dimensions: {
           type: MetadataType.VEC3,
           componentType: MetadataComponentType.FLOAT32,
         },
         name: {
-          type: MetadataType.SINGLE,
+          type: MetadataType.SCALAR,
           isJson: true,
         },
         id: {
-          type: MetadataType.SINGLE,
+          type: MetadataType.SCALAR,
           componentType: MetadataComponentType.UINT32,
         },
       });
@@ -500,9 +501,9 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     ) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectMetadata(components.featureMetadata, {
+      expectMetadata(components.structuralMetadata, {
         temperature: {
-          type: MetadataType.SINGLE,
+          type: MetadataType.SCALAR,
           componentType: MetadataComponentType.FLOAT32,
         },
         secondaryColor: {
@@ -510,7 +511,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
           componentType: MetadataComponentType.FLOAT32,
         },
         id: {
-          type: MetadataType.SINGLE,
+          type: MetadataType.SCALAR,
           componentType: MetadataComponentType.UINT16,
         },
       });
@@ -529,9 +530,9 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
     ) {
       const components = loader.components;
       expect(components).toBeDefined();
-      expectMetadata(components.featureMetadata, {
+      expectMetadata(components.structuralMetadata, {
         "temperature ℃": {
-          type: MetadataType.SINGLE,
+          type: MetadataType.SCALAR,
           componentType: MetadataComponentType.FLOAT32,
         },
         secondaryColor: {
@@ -539,7 +540,7 @@ describe("Scene/ModelExperimental/PntsLoader", function () {
           componentType: MetadataComponentType.FLOAT32,
         },
         id: {
-          type: MetadataType.SINGLE,
+          type: MetadataType.SCALAR,
           componentType: MetadataComponentType.UINT16,
         },
       });

@@ -12,6 +12,7 @@ import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -41,7 +42,6 @@ import LabelStyle from "../Scene/LabelStyle.js";
 import SceneMode from "../Scene/SceneMode.js";
 import Autolinker from "../ThirdParty/Autolinker.js";
 import Uri from "../ThirdParty/Uri.js";
-import when from "../ThirdParty/when.js";
 import zip from "../ThirdParty/zip.js";
 import getElement from "../Widgets/getElement.js";
 import BillboardGraphics from "./BillboardGraphics.js";
@@ -189,7 +189,7 @@ const featureTypes = {
 
 function DeferredLoading(dataSource) {
   this._dataSource = dataSource;
-  this._deferred = when.defer();
+  this._deferred = defer();
   this._stack = [];
   this._promises = [];
   this._timeoutSet = false;
@@ -227,7 +227,7 @@ DeferredLoading.prototype.wait = function () {
     deferred.resolve();
   }
 
-  return when.join(deferred.promise, when.all(this._promises));
+  return Promise.all([deferred.promise, Promise.all(this._promises)]);
 };
 
 DeferredLoading.prototype.process = function () {
@@ -317,7 +317,7 @@ DeferredLoading.prototype._process = function (isFirstCall) {
 
 function isZipFile(blob) {
   const magicBlob = blob.slice(0, Math.min(4, blob.size));
-  const deferred = when.defer();
+  const deferred = defer();
   const reader = new FileReader();
   reader.addEventListener("load", function () {
     deferred.resolve(
@@ -332,7 +332,7 @@ function isZipFile(blob) {
 }
 
 function readBlobAsText(blob) {
-  const deferred = when.defer();
+  const deferred = defer();
   const reader = new FileReader();
   reader.addEventListener("load", function () {
     deferred.resolve(reader.result);
@@ -393,7 +393,9 @@ function removeDuplicateNamespaces(text) {
 }
 
 function loadXmlFromZip(entry, uriResolver) {
-  return when(entry.getData(new zip.TextWriter())).then(function (text) {
+  return Promise.resolve(entry.getData(new zip.TextWriter())).then(function (
+    text
+  ) {
     text = insertNamespaces(text);
     text = removeDuplicateNamespaces(text);
     uriResolver.kml = parser.parseFromString(text, "application/xml");
@@ -405,11 +407,11 @@ function loadDataUriFromZip(entry, uriResolver) {
     MimeTypes.detectFromFilename(entry.filename),
     "application/octet-stream"
   );
-  return when(entry.getData(new zip.Data64URIWriter(mimeType))).then(function (
-    dataUri
-  ) {
-    uriResolver[entry.filename] = dataUri;
-  });
+  return Promise.resolve(entry.getData(new zip.Data64URIWriter(mimeType))).then(
+    function (dataUri) {
+      uriResolver[entry.filename] = dataUri;
+    }
+  );
 }
 
 function embedDataUris(div, elementType, attributeName, uriResolver) {
@@ -904,8 +906,8 @@ function getIconHref(
     const ellipsoid = dataSource._ellipsoid;
     processNetworkLinkQueryString(
       hrefResource,
-      dataSource._camera,
-      dataSource._canvas,
+      dataSource.camera,
+      dataSource.canvas,
       viewBoundScale,
       dataSource._lastCameraView.bbox,
       ellipsoid
@@ -3108,8 +3110,8 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
         const ellipsoid = dataSource._ellipsoid;
         processNetworkLinkQueryString(
           href,
-          dataSource._camera,
-          dataSource._canvas,
+          dataSource.camera,
+          dataSource.canvas,
           viewBoundScale,
           dataSource._lastCameraView.bbox,
           ellipsoid
@@ -3232,7 +3234,7 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
                   "KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element"
                 );
               }
-            } else if (dataSource._camera) {
+            } else if (defined(dataSource.camera)) {
               // Only allow onStop refreshes if we have a camera
               networkLinkInfo.refreshMode = RefreshMode.STOP;
               networkLinkInfo.time = defaultValue(
@@ -3242,7 +3244,7 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
             } else {
               oneTimeWarning(
                 "kml-refrehMode-onStop-noCamera",
-                "A NetworkLink with viewRefreshMode=onStop requires a camera be passed in when creating the KmlDataSource"
+                "A NetworkLink with viewRefreshMode=onStop requires the `camera` property to be defined."
               );
             }
 
@@ -3256,7 +3258,7 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
             );
           }
         })
-        .otherwise(function (error) {
+        .catch(function (error) {
           oneTimeWarning(`An error occured during loading ${href.url}`);
           dataSource._error.raiseEvent(dataSource, error);
         });
@@ -3308,48 +3310,46 @@ function loadKml(
 
   const deferredLoading = new KmlDataSource._DeferredLoading(dataSource);
   const styleCollection = new EntityCollection(dataSource);
-  return when
-    .all(
-      processStyles(
-        dataSource,
-        kml,
-        styleCollection,
-        sourceResource,
-        false,
-        uriResolver
-      )
+  return Promise.all(
+    processStyles(
+      dataSource,
+      kml,
+      styleCollection,
+      sourceResource,
+      false,
+      uriResolver
     )
-    .then(function () {
-      let element = kml.documentElement;
-      if (element.localName === "kml") {
-        const childNodes = element.childNodes;
-        for (let i = 0; i < childNodes.length; i++) {
-          const tmp = childNodes[i];
-          if (defined(featureTypes[tmp.localName])) {
-            element = tmp;
-            break;
-          }
+  ).then(function () {
+    let element = kml.documentElement;
+    if (element.localName === "kml") {
+      const childNodes = element.childNodes;
+      for (let i = 0; i < childNodes.length; i++) {
+        const tmp = childNodes[i];
+        if (defined(featureTypes[tmp.localName])) {
+          element = tmp;
+          break;
         }
       }
+    }
 
-      const processingData = {
-        parentEntity: undefined,
-        entityCollection: entityCollection,
-        styleCollection: styleCollection,
-        sourceResource: sourceResource,
-        uriResolver: uriResolver,
-        context: context,
-        screenOverlayContainer: screenOverlayContainer,
-      };
+    const processingData = {
+      parentEntity: undefined,
+      entityCollection: entityCollection,
+      styleCollection: styleCollection,
+      sourceResource: sourceResource,
+      uriResolver: uriResolver,
+      context: context,
+      screenOverlayContainer: screenOverlayContainer,
+    };
 
-      entityCollection.suspendEvents();
-      processFeatureNode(dataSource, element, processingData, deferredLoading);
-      entityCollection.resumeEvents();
+    entityCollection.suspendEvents();
+    processFeatureNode(dataSource, element, processingData, deferredLoading);
+    entityCollection.resumeEvents();
 
-      return deferredLoading.wait().then(function () {
-        return kml.documentElement;
-      });
+    return deferredLoading.wait().then(function () {
+      return kml.documentElement;
     });
+  });
 }
 
 function loadKmz(
@@ -3368,7 +3368,7 @@ function loadKmz(
   });
 
   const reader = new zip.ZipReader(new zip.BlobReader(blob));
-  return when(reader.getEntries()).then(function (entries) {
+  return Promise.resolve(reader.getEntries()).then(function (entries) {
     const promises = [];
     const uriResolver = {};
     let docEntry;
@@ -3399,7 +3399,7 @@ function loadKmz(
     if (defined(docEntry)) {
       promises.push(loadXmlFromZip(docEntry, uriResolver));
     }
-    return when.all(promises).then(function () {
+    return Promise.all(promises).then(function () {
       reader.close();
       if (!defined(uriResolver.kml)) {
         throw new RuntimeError("KMZ file does not contain a KML document.");
@@ -3449,7 +3449,7 @@ function load(dataSource, entityCollection, data, options) {
     screenOverlayContainer = getElement(screenOverlayContainer);
   }
 
-  return when(promise)
+  return Promise.resolve(promise)
     .then(function (dataToLoad) {
       if (dataToLoad instanceof Blob) {
         return isZipFile(dataToLoad).then(function (isZip) {
@@ -3523,26 +3523,43 @@ function load(dataSource, entityCollection, data, options) {
         context
       );
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       dataSource._error.raiseEvent(dataSource, error);
       console.log(error);
-      return when.reject(error);
+      return Promise.reject(error);
     });
 }
 
+// NOTE: LoadOptions properties are repeated in ConstructorOptions because some
+// tooling does not support "base types" for @typedef.  Remove if/when
+// https://github.com/microsoft/TypeScript/issues/20077 and/or
+// https://github.com/jsdoc/jsdoc/issues/1199 actually get resolved
 /**
  * @typedef {Object} KmlDataSource.LoadOptions
  *
  * Initialization options for the `load` method.
  *
- * @property {Camera} camera The camera that is used for viewRefreshModes and sending camera properties to network links.
- * @property {HTMLCanvasElement} canvas The canvas that is used for sending viewer properties to network links.
  * @property {String} [sourceUri] Overrides the url to use for resolving relative links and other KML network features.
  * @property {Boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
- * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
  * @property {Element|String} [screenOverlayContainer] A container for ScreenOverlay images.
  */
+
+/**
+ * @typedef {Object} KmlDataSource.ConstructorOptions
+ *
+ * Options for constructing a new KmlDataSource, or calling the static `load` method.
+ *
+ * @property {Camera} [camera] The camera that is used for viewRefreshModes and sending camera properties to network links.
+ * @property {HTMLCanvasElement} [canvas] The canvas that is used for sending viewer properties to network links.
+ * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ *
+ * @property {String} [sourceUri] Overrides the url to use for resolving relative links and other KML network features.
+ * @property {Boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
+ * @property {Element|String} [screenOverlayContainer] A container for ScreenOverlay images.
+
+*/
 
 /**
  * A {@link DataSource} which processes Keyhole Markup Language 2.2 (KML).
@@ -3562,11 +3579,7 @@ function load(dataSource, entityCollection, data, options) {
  * @alias KmlDataSource
  * @constructor
  *
- * @param {Object} options An object with the following properties:
- * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
- * @param {HTMLCanvasElement} options.canvas The canvas that is used for sending viewer properties to network links.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @param {KmlDataSource.ConstructorOptions} [options] Object describing initialization options
  *
  * @see {@link http://www.opengeospatial.org/standards/kml/|Open Geospatial Consortium KML Standard}
  * @see {@link https://developers.google.com/kml/|Google KML Documentation}
@@ -3587,15 +3600,6 @@ function KmlDataSource(options) {
   const camera = options.camera;
   const canvas = options.canvas;
 
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(camera)) {
-    throw new DeveloperError("options.camera is required.");
-  }
-  if (!defined(canvas)) {
-    throw new DeveloperError("options.canvas is required.");
-  }
-  //>>includeEnd('debug');
-
   this._changed = new Event();
   this._error = new Event();
   this._loading = new Event();
@@ -3610,8 +3614,24 @@ function KmlDataSource(options) {
   this._networkLinks = new AssociativeArray();
   this._entityCluster = new EntityCluster();
 
-  this._canvas = canvas;
-  this._camera = camera;
+  /**
+   * The current size of this Canvas will be used to populate the Link parameters
+   * for client height and width.
+   *
+   * @type {HTMLCanvasElement | undefined}
+   */
+  this.canvas = canvas;
+
+  /**
+   * The position and orientation of this {@link Camera} will be used to
+   * populate various camera parameters when making network requests.
+   * Camera movement will determine when to trigger NetworkLink refresh if
+   * <code>viewRefreshMode</code> is <code>onStop</code>.
+   *
+   * @type {Camera | undefined}
+   */
+  this.camera = camera;
+
   this._lastCameraView = {
     position: defined(camera) ? Cartesian3.clone(camera.positionWC) : undefined,
     direction: defined(camera)
@@ -3644,7 +3664,7 @@ function KmlDataSource(options) {
  * Creates a Promise to a new instance loaded with the provided KML data.
  *
  * @param {Resource|String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
- * @param {KmlDataSource.LoadOptions} [options] An object specifying configuration options
+ * @param {KmlDataSource.ConstructorOptions} [options] An object specifying configuration options
  *
  * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
  */
@@ -3813,11 +3833,7 @@ Object.defineProperties(KmlDataSource.prototype, {
  * Asynchronously loads the provided KML data, replacing any existing data.
  *
  * @param {Resource|String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
- * @param {Object} [options] An object with the following properties:
- * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
- * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
- * @param {Element|String} [options.screenOverlayContainer] A container for ScreenOverlay images.
+ * @param {KmlDataSource.LoadOptions} [options] An object specifying configuration options
  *
  * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
  */
@@ -3895,11 +3911,11 @@ KmlDataSource.prototype.load = function (data, options) {
 
       return that;
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       DataSource.setLoading(that, false);
       that._error.raiseEvent(that, error);
       console.log(error);
-      return when.reject(error);
+      return Promise.reject(error);
     });
 };
 
@@ -4118,7 +4134,7 @@ KmlDataSource.prototype.update = function (time) {
 
   let cameraViewUpdate = false;
   const lastCameraView = this._lastCameraView;
-  const camera = this._camera;
+  const camera = this.camera;
   if (
     defined(camera) &&
     !(
@@ -4187,8 +4203,8 @@ KmlDataSource.prototype.update = function (time) {
         const ellipsoid = defaultValue(that._ellipsoid, Ellipsoid.WGS84);
         processNetworkLinkQueryString(
           href,
-          that._camera,
-          that._canvas,
+          that.camera,
+          that.canvas,
           networkLink.viewBoundScale,
           lastCameraView.bbox,
           ellipsoid
@@ -4206,7 +4222,7 @@ KmlDataSource.prototype.update = function (time) {
               href
             )
           )
-          .otherwise(function (error) {
+          .catch(function (error) {
             const msg = `NetworkLink ${networkLink.href} refresh failed: ${error}`;
             console.log(msg);
             that._error.raiseEvent(that, msg);

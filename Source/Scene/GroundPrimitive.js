@@ -4,6 +4,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -16,7 +17,6 @@ import ClassificationType from "./ClassificationType.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import SceneMode from "./SceneMode.js";
 import ShadowVolumeAppearance from "./ShadowVolumeAppearance.js";
-import when from "../ThirdParty/when.js";
 
 const GroundPrimitiveUniformMap = {
   u_globeMinimumAltitude: function () {
@@ -212,7 +212,7 @@ function GroundPrimitive(options) {
   this._boundingVolumes2D = [];
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   this._primitive = undefined;
 

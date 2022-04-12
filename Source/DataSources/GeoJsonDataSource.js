@@ -15,7 +15,6 @@ import RuntimeError from "../Core/RuntimeError.js";
 import HeightReference from "../Scene/HeightReference.js";
 import VerticalOrigin from "../Scene/VerticalOrigin.js";
 import topojson from "../ThirdParty/topojson.js";
-import when from "../ThirdParty/when.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import CallbackProperty from "./CallbackProperty.js";
 import ColorMaterialProperty from "./ColorMaterialProperty.js";
@@ -318,11 +317,11 @@ function createPoint(dataSource, geoJson, crsFunction, coordinates, options) {
   entity.billboard = billboard;
   entity.position = new ConstantPositionProperty(crsFunction(coordinates));
 
-  const promise = when(canvasOrPromise)
+  const promise = Promise.resolve(canvasOrPromise)
     .then(function (image) {
       billboard.image = new ConstantProperty(image);
     })
-    .otherwise(function () {
+    .catch(function () {
       billboard.image = new ConstantProperty(
         dataSource._pinBuilder.fromColor(color, size)
       );
@@ -958,14 +957,15 @@ function preload(that, data, options, clear) {
     clampToGround: defaultValue(options.clampToGround, defaultClampToGround),
   };
 
-  return when(promise, function (geoJson) {
-    return load(that, geoJson, options, sourceUri, clear);
-  }).otherwise(function (error) {
-    DataSource.setLoading(that, false);
-    that._error.raiseEvent(that, error);
-    console.log(error);
-    return when.reject(error);
-  });
+  return Promise.resolve(promise)
+    .then(function (geoJson) {
+      return load(that, geoJson, options, sourceUri, clear);
+    })
+    .catch(function (error) {
+      DataSource.setLoading(that, false);
+      that._error.raiseEvent(that, error);
+      throw error;
+    });
 }
 
 /**
@@ -1035,7 +1035,7 @@ function load(that, geoJson, options, sourceUri, clear) {
     }
   }
 
-  return when(crsFunction, function (crsFunction) {
+  return Promise.resolve(crsFunction).then(function (crsFunction) {
     if (clear) {
       that._entityCollection.removeAll();
     }
@@ -1046,7 +1046,7 @@ function load(that, geoJson, options, sourceUri, clear) {
       typeHandler(that, geoJson, geoJson, crsFunction, options);
     }
 
-    return when.all(that._promises, function () {
+    return Promise.all(that._promises).then(function () {
       that._promises.length = 0;
       DataSource.setLoading(that, false);
       return that;

@@ -60,7 +60,7 @@
           .then(function (dataSource) {
             viewer.flyTo(dataSource.entities.getById("BatchedColors"));
           })
-          .otherwise(function (error) {
+          .catch(function (error) {
             window.alert(error);
           });
         //Sandcastle_End

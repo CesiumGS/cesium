@@ -18,13 +18,14 @@ vec2 computeSt(float featureId)
 
 void selectedFeatureIdStage(out SelectedFeature feature, FeatureIds featureIds)
 {   
-    float featureId = featureIds.SELECTED_FEATURE_ID;
+    int featureId = featureIds.SELECTED_FEATURE_ID;
+
 
     if (featureId < model_featuresLength)
     {
-        vec2 featureSt = computeSt(featureId);
+        vec2 featureSt = computeSt(float(featureId));
 
-        feature.id = int(featureId);
+        feature.id = featureId;
         feature.st = featureSt;
         feature.color = texture2D(model_batchTexture, featureSt);
     }
@@ -35,8 +36,16 @@ void selectedFeatureIdStage(out SelectedFeature feature, FeatureIds featureIds)
     // greater than the number of features.
     else
     {
-        feature.id = int(model_featuresLength) + 1;
+        feature.id = model_featuresLength + 1;
         feature.st = vec2(0.0);
         feature.color = vec4(1.0);
     }
+
+    #ifdef HAS_NULL_FEATURE_ID
+    if (featureId == model_nullFeatureId) {
+        feature.id = featureId;
+        feature.st = vec2(0.0);
+        feature.color = vec4(1.0);
+    }
+    #endif
 }

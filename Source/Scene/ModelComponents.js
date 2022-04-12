@@ -326,7 +326,7 @@ function Indices() {
 }
 
 /**
- * Maps per-vertex or per-instance feature IDs to a feature table. Feature
+ * Maps per-vertex or per-instance feature IDs to a property table. Feature
  * IDs are stored in an accessor.
  *
  * @alias ModelComponents.FeatureIdAttribute
@@ -336,7 +336,23 @@ function Indices() {
  */
 function FeatureIdAttribute() {
   /**
-   * The ID of the feature table that feature IDs index into. If undefined,
+   * How many unique features are defined in this set of feature IDs
+   *
+   * @type {Number}
+   * @private
+   */
+  this.featureCount = undefined;
+
+  /**
+   * This value indicates that no feature is indicated with this vertex
+   *
+   * @type {Number}
+   * @private
+   */
+  this.nullFeatureId = undefined;
+
+  /**
+   * The ID of the property table that feature IDs index into. If undefined,
    * feature IDs are used for classification, but no metadata is associated.
    *
    *
@@ -352,6 +368,25 @@ function FeatureIdAttribute() {
    * @private
    */
   this.setIndex = undefined;
+
+  /**
+   * The label to identify this set of feature IDs. This is used in picking,
+   * styling and shaders.
+   *
+   * @type {String}
+   * @private
+   */
+  this.label = undefined;
+
+  /**
+   * Label to identify this set of feature IDs by its position in the array.
+   * This will always be either "featureId_N" for primitives or
+   * "instanceFeatureId_N" for instances.
+   *
+   * @type {String}
+   * @private
+   */
+  this.positionalLabel = undefined;
 }
 
 /**
@@ -366,7 +401,23 @@ function FeatureIdAttribute() {
  */
 function FeatureIdImplicitRange() {
   /**
-   * The ID of the feature table that feature IDs index into. If undefined,
+   * How many unique features are defined in this set of feature IDs
+   *
+   * @type {Number}
+   * @private
+   */
+  this.featureCount = undefined;
+
+  /**
+   * This value indicates that no feature is indicated with this vertex
+   *
+   * @type {Number}
+   * @private
+   */
+  this.nullFeatureId = undefined;
+
+  /**
+   * The ID of the property table that feature IDs index into. If undefined,
    * feature IDs are used for classification, but no metadata is associated.
    *
    * @type {Number}
@@ -390,10 +441,29 @@ function FeatureIdImplicitRange() {
    * @private
    */
   this.repeat = undefined;
+
+  /**
+   * The label to identify this set of feature IDs. This is used in picking,
+   * styling and shaders.
+   *
+   * @type {String}
+   * @private
+   */
+  this.label = undefined;
+
+  /**
+   * Label to identify this set of feature IDs by its position in the array.
+   * This will always be either "featureId_N" for primitives or
+   * "instanceFeatureId_N" for instances.
+   *
+   * @type {String}
+   * @private
+   */
+  this.positionalLabel = undefined;
 }
 
 /**
- * A texture that contains per-texel feature IDs that index into a feature table.
+ * A texture that contains per-texel feature IDs that index into a property table.
  *
  * @alias ModelComponents.FeatureIdTexture
  * @constructor
@@ -402,7 +472,24 @@ function FeatureIdImplicitRange() {
  */
 function FeatureIdTexture() {
   /**
-   * The ID of the feature table that feature IDs index into.
+   * How many unique features are defined in this set of feature IDs
+   *
+   * @type {Number}
+   * @private
+   */
+  this.featureCount = undefined;
+
+  /**
+   * This value indicates that no feature is indicated with this texel
+   *
+   * @type {Number}
+   * @private
+   */
+  this.nullFeatureId = undefined;
+
+  /**
+   * The ID of the property table that feature IDs index into. If undefined,
+   * feature IDs are used for classification, but no metadata is associated.
    *
    * @type {String}
    * @private
@@ -416,6 +503,25 @@ function FeatureIdTexture() {
    * @private
    */
   this.textureReader = undefined;
+
+  /**
+   * The label to identify this set of feature IDs. This is used in picking,
+   * styling and shaders.
+   *
+   * @type {String}
+   * @private
+   */
+  this.label = undefined;
+
+  /**
+   * Label to identify this set of feature IDs by its position in the array.
+   * This will always be either "featureId_N" for primitives or
+   * "instanceFeatureId_N" for instances.
+   *
+   * @type {String}
+   * @private
+   */
+  this.positionalLabel = undefined;
 }
 
 /**
@@ -510,6 +616,15 @@ function Primitive() {
    * @private
    */
   this.propertyTextureIds = [];
+
+  /**
+   * The property attribute IDs. These indices correspond to the array of
+   * property attributes in the EXT_structural_metadata extension.
+   *
+   * @type {Number[]}
+   * @private
+   */
+  this.propertyAttributeIds = [];
 }
 
 /**
@@ -559,6 +674,15 @@ function Instances() {
  */
 function Skin() {
   /**
+   * The index of the skin in the glTF. This is useful for finding the skin
+   * that applies to a node after the skin is instantiated at runtime.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.index = undefined;
+
+  /**
    * The joints.
    *
    * @type {ModelComponents.Node[]}
@@ -584,6 +708,23 @@ function Skin() {
  * @private
  */
 function Node() {
+  /**
+   * The name of the node.
+   *
+   * @type {String}
+   * @private
+   */
+  this.name = undefined;
+
+  /**
+   * The index of the node in the glTF. This is useful for finding the nodes
+   * that belong to a skin after they have been instantiated at runtime.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.index = undefined;
+
   /**
    * The children nodes.
    *
@@ -670,6 +811,24 @@ function Scene() {
 }
 
 /**
+ * The asset of the model.
+ *
+ * @alias {ModelComponents.Asset}
+ * @constructor
+ *
+ * @private
+ */
+function Asset() {
+  /**
+   * The credits of the model.
+   *
+   * @type {Credit[]}
+   * @private
+   */
+  this.credits = [];
+}
+
+/**
  * The components that make up a model.
  *
  * @alias ModelComponents.Components
@@ -678,6 +837,14 @@ function Scene() {
  * @private
  */
 function Components() {
+  /**
+   * The asset of the model.
+   *
+   * @type {ModelComponents.Asset}
+   * @private
+   */
+  this.asset = new Asset();
+
   /**
    * The default scene.
    *
@@ -694,12 +861,20 @@ function Components() {
   this.nodes = undefined;
 
   /**
-   * Feature metadata containing the schema, feature tables, and feature textures.
+   * All skins in the model.
    *
-   * @type {FeatureMetadata}
+   * @type {ModelComponents.Skin[]}
+   */
+  this.skins = undefined;
+
+  /**
+   * Structural metadata containing the schema, property tables, property
+   * textures and property mappings
+   *
+   * @type {StructuralMetadata}
    * @private
    */
-  this.featureMetadata = undefined;
+  this.structuralMetadata = undefined;
 
   /**
    * The model's up axis.
@@ -742,6 +917,16 @@ function TextureReader() {
    * @private
    */
   this.texture = undefined;
+
+  /**
+   * The index of the texture in the glTF. This is useful for determining
+   * when textures are shared to avoid attaching a texture in multiple uniform
+   * slots in the shader.
+   *
+   * @type {Number}
+   * @private
+   */
+  this.index = undefined;
 
   /**
    * The texture coordinate set.
@@ -1022,6 +1207,7 @@ ModelComponents.Instances = Instances;
 ModelComponents.Skin = Skin;
 ModelComponents.Node = Node;
 ModelComponents.Scene = Scene;
+ModelComponents.Asset = Asset;
 ModelComponents.Components = Components;
 ModelComponents.TextureReader = TextureReader;
 ModelComponents.MetallicRoughness = MetallicRoughness;

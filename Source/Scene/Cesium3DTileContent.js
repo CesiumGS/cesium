@@ -222,20 +222,43 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
   },
 
   /**
-   * Gets the group metadata for this content if the content uses the
-   * <code>3DTILES_metadata</code> extension. If the extension is not used,
+   * Gets the metadata for this content, whether it is available explicitly or via
+   * implicit tiling. If there is no metadata, this property should be undefined.
+   * <p>
+   * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
+   * not part of the public Cesium API.
+   * </p>
+   *
+   * @type {ImplicitMetadataView|undefined}
+   *
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  metadata: {
+    // eslint-disable-next-line getter-return
+    get: function () {
+      DeveloperError.throwInstantiationError();
+    },
+    set: function (value) {
+      DeveloperError.throwInstantiationError();
+    },
+  },
+
+  /**
+   * Gets the group for this content if the content has metadata (3D Tiles 1.1) or
+   * if it uses the <code>3DTILES_metadata</code> extension. If neither are present,
    * this property should be undefined.
    * <p>
    * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
    * not part of the public Cesium API.
    * </p>
    *
-   * @type {GroupMetadata|undefined}
+   * @type {Cesium3DTileContentGroup|undefined}
    *
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
-  groupMetadata: {
+  group: {
     // eslint-disable-next-line getter-return
     get: function () {
       DeveloperError.throwInstantiationError();

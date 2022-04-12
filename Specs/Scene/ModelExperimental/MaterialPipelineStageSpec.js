@@ -76,6 +76,8 @@ describe(
     const boomBoxSpecularGlossiness =
       "./Data/Models/PBR/BoomBoxSpecularGlossiness/BoomBox.gltf";
     const boxUnlit = "./Data/Models/GltfLoader/UnlitTest/glTF/UnlitTest.gltf";
+    const boxNoNormals =
+      "./Data/Models/GltfLoader/BoxNoNormals/glTF/BoxNoNormals.gltf";
 
     function expectShaderLines(shaderLines, expected) {
       for (let i = 0; i < expected.length; i++) {
@@ -396,6 +398,29 @@ describe(
 
     it("enables unlit lighting when KHR_materials_unlit is present", function () {
       return loadGltf(boxUnlit).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[1].primitives[0];
+        const lightingOptions = new ModelLightingOptions();
+        const renderResources = {
+          shaderBuilder: new ShaderBuilder(),
+          uniformMap: {},
+          lightingOptions: lightingOptions,
+          alphaOptions: new ModelAlphaOptions(),
+          renderStateOptions: {},
+          model: {},
+        };
+
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
+        expect(lightingOptions.lightingModel).toBe(LightingModel.UNLIT);
+      });
+    });
+
+    it("gracefully falls back to unlit shading for models without normals", function () {
+      return loadGltf(boxNoNormals).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
         const lightingOptions = new ModelLightingOptions();

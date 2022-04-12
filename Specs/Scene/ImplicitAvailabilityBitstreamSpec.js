@@ -1,4 +1,7 @@
-import { ImplicitAvailabilityBitstream } from "../../Source/Cesium.js";
+import {
+  ImplicitAvailabilityBitstream,
+  RuntimeError,
+} from "../../Source/Cesium.js";
 
 describe("Scene/ImplicitAvailabilityBitstream", function () {
   it("throws on missing lengthBits", function () {
@@ -13,7 +16,7 @@ describe("Scene/ImplicitAvailabilityBitstream", function () {
         lengthBits: 17,
         bitstream: new Uint8Array([0xff, 0x02]),
       });
-    }).toThrowRuntimeError();
+    }).toThrowError(RuntimeError);
   });
 
   it("reads bits from constant", function () {

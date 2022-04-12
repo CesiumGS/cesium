@@ -1,12 +1,12 @@
 import Check from "../Core/Check.js";
 import CesiumMath from "../Core/Math.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import Texture from "../Renderer/Texture.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
-import when from "../ThirdParty/when.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import JobType from "./JobType.js";
 import ResourceLoader from "./ResourceLoader.js";
@@ -77,7 +77,7 @@ export default function GltfTextureLoader(options) {
   this._mipLevels = undefined;
   this._texture = undefined;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = when.defer();
+  this._promise = defer();
 }
 
 if (defined(Object.create)) {
@@ -158,7 +158,7 @@ GltfTextureLoader.prototype.load = function () {
       that._mipLevels = imageLoader.mipLevels;
       that._state = ResourceLoaderState.PROCESSING;
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (that.isDestroyed()) {
         return;
       }

@@ -3,7 +3,6 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
-import when from "../ThirdParty/when.js";
 import ConditionsExpression from "./ConditionsExpression.js";
 import Expression from "./Expression.js";
 
@@ -88,7 +87,7 @@ function Cesium3DTileStyle(style) {
     const resource = Resource.createIfNeeded(style);
     promise = resource.fetchJson(style);
   } else {
-    promise = when.resolve(style);
+    promise = Promise.resolve(style);
   }
 
   const that = this;

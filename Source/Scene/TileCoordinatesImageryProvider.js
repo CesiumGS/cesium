@@ -3,7 +3,6 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
-import when from "../ThirdParty/when.js";
 
 /**
  * @typedef {Object} TileCoordinatesImageryProvider.ConstructorOptions
@@ -39,7 +38,7 @@ function TileCoordinatesImageryProvider(options) {
   this._errorEvent = new Event();
   this._tileWidth = defaultValue(options.tileWidth, 256);
   this._tileHeight = defaultValue(options.tileHeight, 256);
-  this._readyPromise = when.resolve(true);
+  this._readyPromise = Promise.resolve(true);
 
   /**
    * The default alpha blending value of this provider, with 0.0 representing fully transparent and
@@ -357,7 +356,7 @@ TileCoordinatesImageryProvider.prototype.requestImage = function (
   context.fillText(`X: ${x}`, 124, 136);
   context.fillText(`Y: ${y}`, 124, 186);
 
-  return canvas;
+  return Promise.resolve(canvas);
 };
 
 /**

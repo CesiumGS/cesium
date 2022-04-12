@@ -159,7 +159,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     const url = ImageryProvider.loadImage.calls
       .mostRecent()
       .args[1].getUrlComponent();
-    expect("123".indexOf(url)).toBeGreaterThanOrEqualTo(0);
+    expect("123".indexOf(url)).toBeGreaterThanOrEqual(0);
   });
 
   it("supports subdomains array urls", function () {
@@ -182,7 +182,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     const url = ImageryProvider.loadImage.calls
       .mostRecent()
       .args[1].getUrlComponent();
-    expect(["foo", "bar"].indexOf(url)).toBeGreaterThanOrEqualTo(0);
+    expect(["foo", "bar"].indexOf(url)).toBeGreaterThanOrEqual(0);
   });
 
   it("generates expected tile urls from template", function () {

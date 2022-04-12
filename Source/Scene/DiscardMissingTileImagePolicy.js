@@ -90,7 +90,7 @@ function DiscardMissingTileImagePolicy(options) {
       flipY: true,
     })
     .then(success)
-    .otherwise(failure);
+    .catch(failure);
 }
 
 /**

@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
       "noEmit": true,
-      "types": [],
-      "preserveConstEnums": true
+      "types": []
   },
   "files": [
     "../../Source/Cesium.d.ts"

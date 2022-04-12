@@ -37,14 +37,14 @@ describe("Scene/ModelExperimental/BatchTexturePipelineStage", function () {
     ]);
 
     ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
-      "uniform float model_featuresLength;",
+      "uniform int model_featuresLength;",
       "uniform sampler2D model_batchTexture;",
       "uniform vec4 model_textureStep;",
       "uniform vec2 model_textureDimensions;",
     ]);
 
     ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
-      "uniform float model_featuresLength;",
+      "uniform int model_featuresLength;",
       "uniform sampler2D model_batchTexture;",
       "uniform vec4 model_textureStep;",
       "uniform vec2 model_textureDimensions;",

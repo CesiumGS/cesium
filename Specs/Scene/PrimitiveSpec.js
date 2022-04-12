@@ -750,8 +750,8 @@ describe(
       scene.camera.setView({ destination: rectangle1 });
       expect(scene).toRenderAndCall(function (rgba) {
         expect(rgba[0]).not.toEqual(0);
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[2]).toBeGreaterThanOrEqualTo(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[2]).toBeGreaterThanOrEqual(0);
         expect(rgba[3]).toEqual(255);
       });
     });
@@ -1136,7 +1136,7 @@ describe(
           .then(function () {
             fail("should not be called");
           })
-          .otherwise(function (e) {
+          .catch(function (e) {
             expect(e).toBe(primitive._error);
             // Use toThrow since the error is thrown by RequireJS for the web worker import script
             expect(function () {

@@ -3,6 +3,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -21,7 +22,6 @@ import ShaderSource from "../Renderer/ShaderSource.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import PolylineCommon from "../Shaders/PolylineCommon.js";
 import Vector3DTilePolylinesVS from "../Shaders/Vector3DTilePolylinesVS.js";
-import when from "../ThirdParty/when.js";
 import BlendingState from "./BlendingState.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 
@@ -89,7 +89,7 @@ function Vector3DTilePolylines(options) {
   this._geometryByteLength = 0;
 
   this._ready = false;
-  this._readyPromise = when.defer();
+  this._readyPromise = defer();
 
   this._verticesPromise = undefined;
 }
@@ -228,7 +228,7 @@ function createVertexArray(polylines, context) {
       return;
     }
 
-    when(verticesPromise)
+    verticesPromise
       .then(function (result) {
         if (polylines._keepDecodedPositions) {
           polylines._decodedPositions = new Float64Array(
@@ -255,7 +255,7 @@ function createVertexArray(polylines, context) {
 
         polylines._ready = true;
       })
-      .otherwise(function (error) {
+      .catch(function (error) {
         polylines._readyPromise.reject(error);
       });
   }

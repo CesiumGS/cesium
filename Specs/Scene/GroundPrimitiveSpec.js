@@ -240,7 +240,9 @@ describe(
       expect(primitive.geometryInstances).toBeDefined();
       scene.groundPrimitives.add(primitive);
       scene.renderForSpecs();
-      expect(primitive.geometryInstances).not.toBeDefined();
+      return primitive.readyPromise.then(function () {
+        expect(primitive.geometryInstances).not.toBeDefined();
+      });
     });
 
     it("does not release geometry instances when releaseGeometryInstances is false", function () {
@@ -257,7 +259,9 @@ describe(
       expect(primitive.geometryInstances).toBeDefined();
       scene.groundPrimitives.add(primitive);
       scene.renderForSpecs();
-      expect(primitive.geometryInstances).toBeDefined();
+      return primitive.readyPromise.then(function () {
+        expect(primitive.geometryInstances).toBeDefined();
+      });
     });
 
     it("adds afterRender promise to frame state", function () {
@@ -893,9 +897,9 @@ describe(
       scene.groundPrimitives.add(primitive);
       scene.camera.setView({ destination: rectangle });
       expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[2]).toBeGreaterThanOrEqualTo(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[2]).toBeGreaterThanOrEqual(0);
         expect(rgba[3]).toEqual(255);
       });
     });
@@ -914,9 +918,9 @@ describe(
       scene.groundPrimitives.add(primitive);
       scene.camera.setView({ destination: rectangle });
       expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
-        expect(rgba[2]).toBeGreaterThanOrEqualTo(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[1]).toBeGreaterThanOrEqual(0);
+        expect(rgba[2]).toBeGreaterThanOrEqual(0);
         expect(rgba[3]).toEqual(255);
       });
     });

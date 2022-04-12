@@ -1,9 +1,10 @@
-import { Cesium3DTileset } from "../../../Source/Cesium.js";
-import { Cesium3DTileStyle } from "../../../Source/Cesium.js";
-import { Globe } from "../../../Source/Cesium.js";
+import {
+  Cesium3DTileset,
+  Cesium3DTilesInspectorViewModel,
+  Cesium3DTileStyle,
+  Globe,
+} from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
-import { when } from "../../../Source/Cesium.js";
-import { Cesium3DTilesInspectorViewModel } from "../../../Source/Cesium.js";
 
 describe(
   "Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel",
@@ -65,16 +66,13 @@ describe(
           url: tilesetUrl,
         });
         viewModel.tileset = tileset;
-        const done = when.defer();
-        tileset.readyPromise.then(function () {
+        return tileset.readyPromise.then(function () {
           expect(viewModel.properties.indexOf("id") !== -1).toBe(true);
           expect(viewModel.properties.indexOf("Longitude") !== -1).toBe(true);
           expect(viewModel.properties.indexOf("Latitude") !== -1).toBe(true);
           expect(viewModel.properties.indexOf("Height") !== -1).toBe(true);
           viewModel.destroy();
-          done.resolve();
         });
-        return done;
       });
     });
 
@@ -302,7 +300,10 @@ describe(
           url: tilesetUrl,
         });
 
-        return viewModel.tileset.readyPromise;
+        return Promise.all([
+          viewModel.tileset.readyPromise,
+          style.readyPromise,
+        ]);
       });
 
       afterAll(function () {
@@ -332,10 +333,12 @@ describe(
         viewModel.styleString = JSON.stringify(s);
         viewModel.compileStyle();
         viewModel._update();
-        expect(viewModel.tileset.style.style.color).toBe("color('red')");
-        expect(viewModel.tileset.style.style.meta.description).toBe(
-          "'Building id ${id} has height ${Height}.'"
-        );
+        return style.readyPromise.then(function () {
+          expect(viewModel.tileset.style.style.color).toBe("color('red')");
+          expect(viewModel.tileset.style.style.meta.description).toBe(
+            "'Building id ${id} has height ${Height}.'"
+          );
+        });
       });
 
       it("does not throw on invalid value", function () {

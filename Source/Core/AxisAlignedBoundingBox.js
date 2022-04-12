@@ -31,7 +31,7 @@ function AxisAlignedBoundingBox(minimum, maximum, center) {
    */
   this.maximum = Cartesian3.clone(defaultValue(maximum, Cartesian3.ZERO));
 
-  //If center was not defined, compute it.
+  // If center was not defined, compute it.
   if (!defined(center)) {
     center = Cartesian3.midpoint(this.minimum, this.maximum, new Cartesian3());
   } else {
@@ -44,6 +44,35 @@ function AxisAlignedBoundingBox(minimum, maximum, center) {
    */
   this.center = center;
 }
+
+/**
+ * Creates an instance of an AxisAlignedBoundingBox from its corners.
+ *
+ * @param {Cartesian3} minimum The minimum point along the x, y, and z axes.
+ * @param {Cartesian3} maximum The maximum point along the x, y, and z axes.
+ * @param {AxisAlignedBoundingBox} [result] The object onto which to store the result.
+ * @returns {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if one was not provided.
+ *
+ * @example
+ * // Compute an axis aligned bounding box from the two corners.
+ * const box = Cesium.AxisAlignedBoundingBox.fromCorners(new Cesium.Cartesian3(-1, -1, -1), new Cesium.Cartesian3(1, 1, 1));
+ */
+AxisAlignedBoundingBox.fromCorners = function (minimum, maximum, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("minimum", minimum);
+  Check.defined("maximum", maximum);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new AxisAlignedBoundingBox();
+  }
+
+  result.minimum = Cartesian3.clone(minimum, result.minimum);
+  result.maximum = Cartesian3.clone(maximum, result.maximum);
+  result.center = Cartesian3.midpoint(minimum, maximum, result.center);
+
+  return result;
+};
 
 /**
  * Computes an instance of an AxisAlignedBoundingBox. The box is determined by

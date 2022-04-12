@@ -22,6 +22,8 @@ describe(
       "./Data/Models/PBR/VertexColorTest/VertexColorTest.gltf";
     const buildingsMetadata =
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
+    const simpleSkinGltfUrl =
+      "./Data/Models/GltfLoader/SimpleSkin/glTF/SimpleSkin.gltf";
 
     let scene;
 
@@ -57,87 +59,102 @@ describe(
     });
 
     it("builds draw commands for all opaque styled features", function () {
-      return loadAndZoomToModelExperimental(
-        {
-          gltf: buildingsMetadata,
+      const style = new Cesium3DTileStyle({
+        color: {
+          conditions: [["${height} > 1", "color('red')"]],
         },
-        scene
-      ).then(function (model) {
-        model.style = new Cesium3DTileStyle({
-          color: {
-            conditions: [["${height} > 1", "color('red')"]],
-          },
-        });
-        const frameState = scene.frameState;
-        const sceneGraph = model._sceneGraph;
-        // Reset the draw commands so we can inspect the draw command generation.
-        model._drawCommandsBuilt = false;
-        frameState.commandList = [];
-        scene.renderForSpecs();
-
-        const drawCommands = sceneGraph.getDrawCommands();
-
-        expect(drawCommands.length).toEqual(1);
-        expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
-        expect(frameState.commandList.length).toEqual(1);
       });
+      return style.readyPromise
+        .then(function () {
+          return loadAndZoomToModelExperimental(
+            {
+              gltf: buildingsMetadata,
+            },
+            scene
+          );
+        })
+        .then(function (model) {
+          model.style = style;
+          const frameState = scene.frameState;
+          const sceneGraph = model._sceneGraph;
+          // Reset the draw commands so we can inspect the draw command generation.
+          model._drawCommandsBuilt = false;
+          frameState.commandList = [];
+          scene.renderForSpecs();
+
+          const drawCommands = sceneGraph.getDrawCommands();
+
+          expect(drawCommands.length).toEqual(1);
+          expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
+          expect(frameState.commandList.length).toEqual(1);
+        });
     });
 
     it("builds draw commands for all translucent styled features", function () {
-      return loadAndZoomToModelExperimental(
-        {
-          gltf: buildingsMetadata,
+      const style = new Cesium3DTileStyle({
+        color: {
+          conditions: [["${height} > 1", "color('red', 0.1)"]],
         },
-        scene
-      ).then(function (model) {
-        model.style = new Cesium3DTileStyle({
-          color: {
-            conditions: [["${height} > 1", "color('red', 0.1)"]],
-          },
-        });
-        const frameState = scene.frameState;
-        const sceneGraph = model._sceneGraph;
-        // Reset the draw commands so we can inspect the draw command generation.
-        model._drawCommandsBuilt = false;
-        frameState.commandList = [];
-        scene.renderForSpecs();
-
-        const drawCommands = sceneGraph.getDrawCommands();
-
-        expect(drawCommands.length).toEqual(1);
-        expect(drawCommands[0].pass).toEqual(Pass.TRANSLUCENT);
-        expect(frameState.commandList.length).toEqual(1);
       });
+      return style.readyPromise
+        .then(function () {
+          return loadAndZoomToModelExperimental(
+            {
+              gltf: buildingsMetadata,
+            },
+            scene
+          );
+        })
+        .then(function (model) {
+          model.style = style;
+          const frameState = scene.frameState;
+          const sceneGraph = model._sceneGraph;
+          // Reset the draw commands so we can inspect the draw command generation.
+          model._drawCommandsBuilt = false;
+          frameState.commandList = [];
+          scene.renderForSpecs();
+
+          const drawCommands = sceneGraph.getDrawCommands();
+
+          expect(drawCommands.length).toEqual(1);
+          expect(drawCommands[0].pass).toEqual(Pass.TRANSLUCENT);
+          expect(frameState.commandList.length).toEqual(1);
+        });
     });
 
     it("builds draw commands for both opaque and translucent styled features", function () {
-      return loadAndZoomToModelExperimental(
-        {
-          gltf: buildingsMetadata,
+      const style = new Cesium3DTileStyle({
+        color: {
+          conditions: [
+            ["${height} > 80", "color('red', 0.1)"],
+            ["true", "color('blue')"],
+          ],
         },
-        scene
-      ).then(function (model) {
-        model.style = new Cesium3DTileStyle({
-          color: {
-            conditions: [
-              ["${height} > 80", "color('red', 0.1)"],
-              ["true", "color('blue')"],
-            ],
-          },
-        });
-        const frameState = scene.frameState;
-        const sceneGraph = model._sceneGraph;
-        // Reset the draw commands so we can inspect the draw command generation.
-        model._drawCommandsBuilt = false;
-        frameState.commandList = [];
-        scene.renderForSpecs();
-
-        const drawCommands = sceneGraph.getDrawCommands();
-        expect(drawCommands.length).toEqual(2);
-        expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
-        expect(drawCommands[1].pass).toEqual(Pass.TRANSLUCENT);
-        expect(frameState.commandList.length).toEqual(2);
       });
+      return style.readyPromise
+        .then(function () {
+          return loadAndZoomToModelExperimental(
+            {
+              gltf: buildingsMetadata,
+            },
+            scene
+          );
+        })
+        .then(function (model) {
+          model.style = style;
+          const frameState = scene.frameState;
+          const sceneGraph = model._sceneGraph;
+          // Reset the draw commands so we can inspect the draw command generation.
+          model._drawCommandsBuilt = false;
+          frameState.commandList = [];
+          scene.renderForSpecs();
+
+          const drawCommands = sceneGraph.getDrawCommands();
+          expect(drawCommands.length).toEqual(2);
+          expect(drawCommands[0].pass).toEqual(Pass.OPAQUE);
+          expect(drawCommands[1].pass).toEqual(Pass.TRANSLUCENT);
+          expect(frameState.commandList.length).toEqual(2);
+        });
     });
 
     it("builds draw commands for each primitive", function () {
@@ -188,7 +205,7 @@ describe(
       });
     });
 
-    it("traverses scene graph correctly", function () {
+    it("stores runtime nodes correctly", function () {
       return loadAndZoomToModelExperimental(
         { gltf: parentGltfUrl },
         scene
@@ -197,8 +214,11 @@ describe(
         const modelComponents = sceneGraph._modelComponents;
         const runtimeNodes = sceneGraph._runtimeNodes;
 
-        expect(runtimeNodes[1].node).toEqual(modelComponents.nodes[0]);
-        expect(runtimeNodes[0].node).toEqual(modelComponents.nodes[1]);
+        expect(runtimeNodes[0].node).toEqual(modelComponents.nodes[0]);
+        expect(runtimeNodes[1].node).toEqual(modelComponents.nodes[1]);
+
+        const rootNodes = sceneGraph._rootNodes;
+        expect(rootNodes[0]).toEqual(0);
       });
     });
 
@@ -218,16 +238,48 @@ describe(
         expect(modelComponents.upAxis).toEqual(Axis.Z);
         expect(modelComponents.forwardAxis).toEqual(Axis.X);
 
-        expect(runtimeNodes[1].transform).toEqual(
-          ModelExperimentalUtility.getNodeTransform(modelComponents.nodes[0])
+        const parentTransform = ModelExperimentalUtility.getNodeTransform(
+          modelComponents.nodes[0]
         );
-        expect(runtimeNodes[0].transform).toEqual(
-          Matrix4.multiplyTransformation(
-            runtimeNodes[1].transform,
-            ModelExperimentalUtility.getNodeTransform(modelComponents.nodes[1]),
-            new Matrix4()
-          )
+        const childTransform = ModelExperimentalUtility.getNodeTransform(
+          modelComponents.nodes[1]
         );
+        expect(runtimeNodes[0].transform).toEqual(parentTransform);
+        expect(runtimeNodes[0].transformToRoot).toEqual(Matrix4.IDENTITY);
+        expect(runtimeNodes[1].transform).toEqual(childTransform);
+        expect(runtimeNodes[1].transformToRoot).toEqual(parentTransform);
+      });
+    });
+
+    it("creates runtime skin from model", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: simpleSkinGltfUrl },
+        scene
+      ).then(function (model) {
+        const sceneGraph = model._sceneGraph;
+        const modelComponents = sceneGraph._modelComponents;
+        const runtimeNodes = sceneGraph._runtimeNodes;
+
+        expect(runtimeNodes[0].node).toEqual(modelComponents.nodes[0]);
+        expect(runtimeNodes[1].node).toEqual(modelComponents.nodes[1]);
+        expect(runtimeNodes[2].node).toEqual(modelComponents.nodes[2]);
+
+        const rootNodes = sceneGraph._rootNodes;
+        expect(rootNodes[0]).toEqual(0);
+        expect(rootNodes[1]).toEqual(1);
+
+        const runtimeSkins = sceneGraph._runtimeSkins;
+        expect(runtimeSkins[0].skin).toEqual(modelComponents.skins[0]);
+        expect(runtimeSkins[0].joints).toEqual([
+          runtimeNodes[1],
+          runtimeNodes[2],
+        ]);
+        expect(runtimeSkins[0].jointMatrices.length).toEqual(2);
+
+        const skinnedNodes = sceneGraph._skinnedNodes;
+        expect(skinnedNodes[0]).toEqual(0);
+
+        expect(runtimeNodes[0].computedJointMatrices.length).toEqual(2);
       });
     });
 

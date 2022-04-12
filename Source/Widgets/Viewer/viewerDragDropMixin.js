@@ -6,6 +6,7 @@ import wrapFunction from "../../Core/wrapFunction.js";
 import CzmlDataSource from "../../DataSources/CzmlDataSource.js";
 import GeoJsonDataSource from "../../DataSources/GeoJsonDataSource.js";
 import KmlDataSource from "../../DataSources/KmlDataSource.js";
+import GpxDataSource from "../../DataSources/GpxDataSource.js";
 import getElement from "../getElement.js";
 
 /**
@@ -272,6 +273,11 @@ function createOnLoadCallback(viewer, file, proxy, clampToGround) {
           clampToGround: clampToGround,
           screenOverlayContainer: viewer.container,
         });
+      } else if (/\.gpx$/i.test(fileName)) {
+        loadPromise = GpxDataSource.load(file, {
+          sourceUri: fileName,
+          proxy: proxy,
+        });
       } else {
         viewer.dropError.raiseEvent(
           viewer,
@@ -289,7 +295,7 @@ function createOnLoadCallback(viewer, file, proxy, clampToGround) {
               viewer.flyTo(dataSource);
             }
           })
-          .otherwise(function (error) {
+          .catch(function (error) {
             viewer.dropError.raiseEvent(viewer, fileName, error);
           });
       }

@@ -2,7 +2,6 @@ import {
   Resource,
   TextureManager,
   TextureUniform,
-  when,
 } from "../../../Source/Cesium.js";
 import createScene from "../../createScene.js";
 import pollToPromise from "../../pollToPromise.js";
@@ -136,7 +135,9 @@ describe(
     });
 
     it("sets a defaultTexture on error", function () {
-      spyOn(Resource.prototype, "fetchImage").and.returnValue(when.reject());
+      spyOn(Resource.prototype, "fetchImage").and.callFake(function () {
+        return Promise.reject();
+      });
       const textureManager = new TextureManager();
       textureManagers.push(textureManager);
       const id = "testTexture";
@@ -155,7 +156,7 @@ describe(
           const defaultTexture = scene.frameState.context.defaultTexture;
           expect(texture).toBe(defaultTexture);
         })
-        .otherwise(console.error);
+        .catch(console.error);
     });
 
     it("destroys", function () {

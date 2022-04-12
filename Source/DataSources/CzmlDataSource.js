@@ -41,7 +41,6 @@ import LabelStyle from "../Scene/LabelStyle.js";
 import ShadowMode from "../Scene/ShadowMode.js";
 import VerticalOrigin from "../Scene/VerticalOrigin.js";
 import Uri from "../ThirdParty/Uri.js";
-import when from "../ThirdParty/when.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import BoxGraphics from "./BoxGraphics.js";
 import CallbackProperty from "./CallbackProperty.js";
@@ -4767,14 +4766,16 @@ function load(dataSource, czml, options, clear) {
 
   DataSource.setLoading(dataSource, true);
 
-  return when(promise, function (czml) {
-    return loadCzml(dataSource, czml, sourceUri, clear);
-  }).otherwise(function (error) {
-    DataSource.setLoading(dataSource, false);
-    dataSource._error.raiseEvent(dataSource, error);
-    console.log(error);
-    return when.reject(error);
-  });
+  return Promise.resolve(promise)
+    .then(function (czml) {
+      return loadCzml(dataSource, czml, sourceUri, clear);
+    })
+    .catch(function (error) {
+      DataSource.setLoading(dataSource, false);
+      dataSource._error.raiseEvent(dataSource, error);
+      console.log(error);
+      return Promise.reject(error);
+    });
 }
 
 function loadCzml(dataSource, czml, sourceUri, clear) {

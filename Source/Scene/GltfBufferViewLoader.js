@@ -1,8 +1,8 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
+import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import hasExtension from "./hasExtension.js";
-import when from "../ThirdParty/when.js";
 import MeshoptDecoder from "../ThirdParty/meshoptimizer.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
@@ -87,7 +87,7 @@ export default function GltfBufferViewLoader(options) {
   this._bufferLoader = undefined;
   this._typedArray = undefined;
   this._state = ResourceLoaderState.UNLOADED;
-  this._promise = when.defer();
+  this._promise = defer();
 }
 
 if (defined(Object.create)) {
@@ -174,7 +174,7 @@ GltfBufferViewLoader.prototype.load = function () {
         that._promise.resolve(that);
       }
     })
-    .otherwise(function (error) {
+    .catch(function (error) {
       if (that.isDestroyed()) {
         return;
       }

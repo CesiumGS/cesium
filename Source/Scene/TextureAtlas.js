@@ -10,7 +10,6 @@ import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import Framebuffer from "../Renderer/Framebuffer.js";
 import Texture from "../Renderer/Texture.js";
-import when from "../ThirdParty/when.js";
 
 // The atlas is made up of regions of space called nodes that contain images or child nodes.
 function TextureAtlasNode(
@@ -75,6 +74,7 @@ function TextureAtlas(options) {
   this._textureCoordinates = [];
   this._guid = createGuid();
   this._idHash = {};
+  this._indexHash = {};
   this._initialSize = initialSize;
 
   this._root = undefined;
@@ -353,6 +353,66 @@ function addImage(textureAtlas, image, index) {
   textureAtlas._guid = createGuid();
 }
 
+function getIndex(atlas, image) {
+  if (!defined(atlas) || atlas.isDestroyed()) {
+    return -1;
+  }
+
+  const index = atlas.numberOfImages;
+
+  addImage(atlas, image, index);
+
+  return index;
+}
+
+/**
+ * If the image is already in the atlas, the existing index is returned. Otherwise, the result is undefined.
+ *
+ * @param {String} id An identifier to detect whether the image already exists in the atlas.
+ * @returns {Number|undefined} The image index, or undefined if the image does not exist in the atlas.
+ */
+TextureAtlas.prototype.getImageIndex = function (id) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(id)) {
+    throw new DeveloperError("id is required.");
+  }
+  //>>includeEnd('debug');
+
+  return this._indexHash[id];
+};
+
+/**
+ * Adds an image to the atlas synchronously.  If the image is already in the atlas, the atlas is unchanged and
+ * the existing index is used.
+ *
+ * @param {String} id An identifier to detect whether the image already exists in the atlas.
+ * @param {HTMLImageElement|HTMLCanvasElement} image An image or canvas to add to the texture atlas.
+ * @returns {Number} The image index.
+ */
+TextureAtlas.prototype.addImageSync = function (id, image) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(id)) {
+    throw new DeveloperError("id is required.");
+  }
+  if (!defined(image)) {
+    throw new DeveloperError("image is required.");
+  }
+  //>>includeEnd('debug');
+
+  let index = this._indexHash[id];
+  if (defined(index)) {
+    // we're already aware of this source
+    return index;
+  }
+
+  index = getIndex(this, image);
+  // store the promise
+  this._idHash[id] = Promise.resolve(index);
+  this._indexHash[id] = index;
+  // but return the value synchronously
+  return index;
+};
+
 /**
  * Adds an image to the atlas.  If the image is already in the atlas, the atlas is unchanged and
  * the existing index is used.
@@ -395,16 +455,9 @@ TextureAtlas.prototype.addImage = function (id, image) {
   }
 
   const that = this;
-
-  indexPromise = when(image, function (image) {
-    if (that.isDestroyed()) {
-      return -1;
-    }
-
-    const index = that.numberOfImages;
-
-    addImage(that, image, index);
-
+  indexPromise = Promise.resolve(image).then(function (image) {
+    const index = getIndex(that, image);
+    that._indexHash[id] = index;
     return index;
   });
 
@@ -438,7 +491,7 @@ TextureAtlas.prototype.addSubRegion = function (id, subRegion) {
   }
 
   const that = this;
-  return when(indexPromise, function (index) {
+  return Promise.resolve(indexPromise).then(function (index) {
     if (index === -1) {
       // the atlas is destroyed
       return -1;

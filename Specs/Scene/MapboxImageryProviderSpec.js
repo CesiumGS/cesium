@@ -146,13 +146,12 @@ describe("Scene/MapboxImageryProvider", function () {
       mapId: "test-id",
     });
 
-    expect(provider.url).toEqual(
-      "made/up/mapbox/server/test-id/{z}/{x}/{y}.png?access_token=test-token"
-    );
-
     return pollToPromise(function () {
       return provider.ready;
     }).then(function () {
+      expect(provider.url).toEqual(
+        "made/up/mapbox/server/test-id/{z}/{x}/{y}.png?access_token=test-token"
+      );
       expect(provider.tileWidth).toEqual(256);
       expect(provider.tileHeight).toEqual(256);
       expect(provider.maximumLevel).toBeUndefined();
@@ -232,7 +231,9 @@ describe("Scene/MapboxImageryProvider", function () {
       mapId: "test-id",
       maximumLevel: 5,
     });
-    expect(provider.maximumLevel).toEqual(5);
+    return provider.readyPromise.then(function () {
+      expect(provider.maximumLevel).toEqual(5);
+    });
   });
 
   it("uses minimumLevel passed to constructor", function () {
@@ -242,7 +243,9 @@ describe("Scene/MapboxImageryProvider", function () {
       mapId: "test-id",
       minimumLevel: 1,
     });
-    expect(provider.minimumLevel).toEqual(1);
+    return provider.readyPromise.then(function () {
+      expect(provider.minimumLevel).toEqual(1);
+    });
   });
 
   it("when no credit is supplied, the provider adds a default credit", function () {
@@ -251,7 +254,9 @@ describe("Scene/MapboxImageryProvider", function () {
       url: "made/up/mapbox/server/",
       mapId: "test-id",
     });
-    expect(provider.credit).toBe(MapboxImageryProvider._defaultCredit);
+    return provider.readyPromise.then(function () {
+      expect(provider.credit).toBe(MapboxImageryProvider._defaultCredit);
+    });
   });
 
   it("turns the supplied credit into a logo", function () {
@@ -262,7 +267,9 @@ describe("Scene/MapboxImageryProvider", function () {
       mapId: "test-id",
       credit: creditText,
     });
-    expect(providerWithCredit.credit.html).toEqual(creditText);
+    return providerWithCredit.readyPromise.then(function () {
+      expect(providerWithCredit.credit.html).toEqual(creditText);
+    });
   });
 
   it("raises error event when image cannot be loaded", function () {

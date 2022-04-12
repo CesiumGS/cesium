@@ -249,7 +249,7 @@ describe(
       }
 
       // The nominalFrameRate event should have been raised.
-      expect(monitor.lastFramesPerSecond).toBeGreaterThanOrEqualTo(10);
+      expect(monitor.lastFramesPerSecond).toBeGreaterThanOrEqual(10);
       expect(nominalListener).toHaveBeenCalled();
     });
   },

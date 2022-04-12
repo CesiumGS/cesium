@@ -1,9 +1,12 @@
 import {
   Cartesian3,
+  Cesium3DContentGroup,
   Color,
+  ContentMetadata,
   HeadingPitchRange,
   MetadataClass,
   GroupMetadata,
+  ImplicitMetadataView,
 } from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
@@ -144,41 +147,115 @@ describe(
       return Cesium3DTilesTester.tileDestroys(scene, compositeUrl);
     });
 
-    describe("3DTILES_metadata", function () {
-      const metadataClass = new MetadataClass({
-        id: "test",
-        class: {
-          properties: {
-            name: {
-              componentType: "STRING",
-            },
-            height: {
-              componentType: "FLOAT32",
+    describe("metadata", function () {
+      let metadataClass;
+      let groupMetadata;
+      let contentMetadataClass;
+      let explicitMetadata;
+      let implicitMetadata;
+
+      beforeAll(function () {
+        metadataClass = new MetadataClass({
+          id: "test",
+          class: {
+            properties: {
+              name: {
+                type: "STRING",
+              },
+              height: {
+                type: "SCALAR",
+                componentType: "FLOAT32",
+              },
             },
           },
-        },
-      });
-      const groupMetadata = new GroupMetadata({
-        id: "testGroup",
-        group: {
-          properties: {
-            name: "Test Group",
-            height: 35.6,
+        });
+
+        groupMetadata = new GroupMetadata({
+          id: "testGroup",
+          group: {
+            properties: {
+              name: "Test Group",
+              height: 35.6,
+            },
           },
-        },
-        class: metadataClass,
+          class: metadataClass,
+        });
+
+        contentMetadataClass = new MetadataClass({
+          id: "contentTest",
+          class: {
+            properties: {
+              author: {
+                type: "STRING",
+              },
+              color: {
+                type: "VEC3",
+                componentType: "UINT8",
+              },
+            },
+          },
+        });
+
+        explicitMetadata = new ContentMetadata({
+          content: {
+            properties: {
+              author: "Test Author",
+              color: [255, 0, 0],
+            },
+          },
+          class: contentMetadataClass,
+        });
+
+        implicitMetadata = new ImplicitMetadataView({
+          metadataTable: {},
+          class: {},
+          entityId: 0,
+          propertyTableJson: {},
+        });
       });
 
-      it("assigning groupMetadata propagates to inner contents", function () {
+      it("assigning group metadata propagates to inner contents", function () {
         return Cesium3DTilesTester.loadTileset(scene, compositeUrl).then(
           function (tileset) {
             const content = tileset.root.content;
-            content.groupMetadata = groupMetadata;
-            expect(content.groupMetadata).toBe(groupMetadata);
+            content.group = new Cesium3DContentGroup({
+              metadata: groupMetadata,
+            });
+            expect(content.group.metadata).toBe(groupMetadata);
 
             const innerContents = content.innerContents;
             for (let i = 0; i < innerContents.length; i++) {
-              expect(innerContents[i].groupMetadata).toBe(groupMetadata);
+              expect(innerContents[i].group.metadata).toBe(groupMetadata);
+            }
+          }
+        );
+      });
+
+      it("assigning explicit content metadata propagates to inner contents", function () {
+        return Cesium3DTilesTester.loadTileset(scene, compositeUrl).then(
+          function (tileset) {
+            const content = tileset.root.content;
+            content.metadata = explicitMetadata;
+            expect(content.metadata).toBe(explicitMetadata);
+
+            const innerContents = content.innerContents;
+            for (let i = 0; i < innerContents.length; i++) {
+              expect(innerContents[i].metadata).toBe(explicitMetadata);
+            }
+          }
+        );
+      });
+
+      it("assigning implicit content metadata propagates to inner contents", function () {
+        return Cesium3DTilesTester.loadTileset(scene, compositeUrl).then(
+          function (tileset) {
+            const content = tileset.root.content;
+            content.metadata = implicitMetadata;
+            expect(content.metadata).toBe(implicitMetadata);
+
+            const innerContents = content.innerContents;
+            for (let i = 0; i < innerContents.length; i++) {
+              expect(innerContents[i].metadata).toBe(implicitMetadata);
             }
           }
         );

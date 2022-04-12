@@ -1997,10 +1997,10 @@ describe(
       }).contextToRender();
     });
 
-    it("has czm_imagerySplitPosition", function () {
+    it("has czm_splitPosition", function () {
       const fs =
         "void main() { " +
-        "  gl_FragColor = vec4(czm_imagerySplitPosition == 0.0); " +
+        "  gl_FragColor = vec4(czm_splitPosition == 0.0); " +
         "}";
       expect({
         context: context,
