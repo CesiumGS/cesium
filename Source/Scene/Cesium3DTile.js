@@ -1200,7 +1200,7 @@ function requestSingleContent(tile) {
         singleContentFailed(
           tile,
           tileset,
-          "Tile was unloaded while content was processing"
+          "Tile is unloaded before the content finishes loading"
         );
         return;
       }
@@ -1222,7 +1222,7 @@ function requestSingleContent(tile) {
           singleContentFailed(
             tile,
             tileset,
-            "Tile was unloaded while content was processing"
+            "Tile is unloaded before the content finishes loading"
           );
           return;
         }
