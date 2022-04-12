@@ -935,6 +935,14 @@ function AnimationChannel() {
  */
 function Animation() {
   /**
+   * The name of the animation.
+   *
+   * @type {String}
+   * @private
+   */
+  this.name = undefined;
+
+  /**
    * The samplers used in this animation.
    *
    * @type {ModelComponents.AnimationSampler[]}

@@ -35,6 +35,12 @@ const Primitive = ModelComponents.Primitive;
 const Instances = ModelComponents.Instances;
 const Skin = ModelComponents.Skin;
 const Node = ModelComponents.Node;
+const InterpolationType = ModelComponents.InterpolationType;
+const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
+const AnimationSampler = ModelComponents.AnimationSampler;
+const AnimationTarget = ModelComponents.AnimationTarget;
+const AnimationChannel = ModelComponents.AnimationChannel;
+const Animation = ModelComponents.Animation;
 const Asset = ModelComponents.Asset;
 const Scene = ModelComponents.Scene;
 const Components = ModelComponents.Components;
@@ -447,6 +453,35 @@ function getPackedTypedArray(gltf, accessor, bufferViewTypedArray) {
   }
 
   return accessorTypedArray;
+}
+
+function loadAccessor(
+  loader,
+  gltf,
+  accessorId,
+  callbackOnSuccess,
+  defaultCallback
+) {
+  const accessor = gltf.accessors[accessorId];
+  const bufferViewId = defined(accessor) ? accessor.bufferView : undefined;
+  if (defined(bufferViewId)) {
+    const bufferViewLoader = loadBufferView(loader, gltf, bufferViewId);
+    bufferViewLoader.promise.then(function (bufferViewLoader) {
+      if (loader.isDestroyed()) {
+        return;
+      }
+      const bufferViewTypedArray = bufferViewLoader.typedArray;
+      const packedTypedArray = getPackedTypedArray(
+        gltf,
+        accessor,
+        bufferViewTypedArray
+      );
+
+      callbackOnSuccess(accessor, packedTypedArray);
+    });
+  } else {
+    defaultCallback(accessor);
+  }
 }
 
 function fromArray(MathType, values) {
@@ -1406,6 +1441,10 @@ function loadNodes(loader, gltf, supportedImageFormats, frameState) {
   return nodes;
 }
 
+function loadDefaultBindMatrices(skin, count) {
+  skin.inverseBindMatrices = arrayFill(new Array(count), Matrix4.IDENTITY);
+}
+
 function loadSkin(loader, gltf, gltfSkin, nodes) {
   const skin = new Skin();
 
@@ -1419,34 +1458,23 @@ function loadSkin(loader, gltf, gltfSkin, nodes) {
 
   const inverseBindMatricesAccessorId = gltfSkin.inverseBindMatrices;
   if (defined(inverseBindMatricesAccessorId)) {
-    const accessor = gltf.accessors[inverseBindMatricesAccessorId];
-    const bufferViewId = accessor.bufferView;
-    if (defined(bufferViewId)) {
-      const bufferViewLoader = loadBufferView(loader, gltf, bufferViewId);
-      bufferViewLoader.promise.then(function (bufferViewLoader) {
-        if (loader.isDestroyed()) {
-          return;
-        }
-        const bufferViewTypedArray = bufferViewLoader.typedArray;
-        const packedTypedArray = getPackedTypedArray(
-          gltf,
-          accessor,
-          bufferViewTypedArray
-        );
+    loadAccessor(
+      loader,
+      gltf,
+      inverseBindMatricesAccessorId,
+      function (accessor, packedTypedArray) {
         const inverseBindMatrices = new Array(jointsLength);
         for (let i = 0; i < jointsLength; ++i) {
           inverseBindMatrices[i] = Matrix4.unpack(packedTypedArray, i * 16);
         }
         skin.inverseBindMatrices = inverseBindMatrices;
-      });
-    }
-  }
-
-  if (!defined(skin.inverseBindMatrices)) {
-    skin.inverseBindMatrices = arrayFill(
-      new Array(jointsLength),
-      Matrix4.IDENTITY
+      },
+      function (accessor) {
+        loadDefaultBindMatrices(skin, jointsLength);
+      }
     );
+  } else {
+    loadDefaultBindMatrices(skin, jointsLength);
   }
 
   return skin;
@@ -1502,6 +1530,175 @@ function loadStructuralMetadata(
   return structuralMetadataLoader;
 }
 
+function loadAnimationSampler(loader, gltf, gltfSampler) {
+  const animationSampler = new AnimationSampler();
+
+  const inputAccessorId = gltfSampler.input;
+  loadAccessor(
+    loader,
+    gltf,
+    inputAccessorId,
+    function (accessor, packedTypedArray) {
+      animationSampler.input = packedTypedArray.slice();
+    },
+    function (accessor) {
+      const accessorCount = accessor.count;
+      animationSampler.input = arrayFill(new Array(accessorCount), 0);
+    }
+  );
+
+  const gltfInterpolation = gltfSampler.interpolation;
+  switch (gltfInterpolation) {
+    case "STEP":
+      animationSampler.interpolation = InterpolationType.STEP;
+      break;
+    case "CUBICSPLINE":
+      animationSampler.interpolation = InterpolationType.CUBICSPLINE;
+      break;
+    case "LINEAR":
+    default:
+      animationSampler.interpolation = InterpolationType.LINEAR;
+      break;
+  }
+
+  const outputAccessorId = gltfSampler.output;
+  loadAccessor(
+    loader,
+    gltf,
+    outputAccessorId,
+    function (accessor, packedTypedArray) {
+      const accessorType = accessor.type;
+      const accessorCount = accessor.count;
+      const values = new Array(accessorCount);
+      for (let i = 0; i < accessorCount; i++) {
+        switch (accessorType) {
+          case "SCALAR":
+            values[i] = packedTypedArray[i];
+            break;
+          case "VEC3":
+            values[i] = Cartesian3.fromArray(packedTypedArray, i * 3);
+            break;
+          case "VEC4":
+            values[i] = Quaternion.unpack(packedTypedArray, i * 4);
+            break;
+          default:
+            break;
+        }
+      }
+      animationSampler.output = values;
+    },
+    function (accessor) {
+      const accessorType = accessor.type;
+      const accessorCount = accessor.count;
+      const values = new Array(accessorCount);
+      switch (accessorType) {
+        case "SCALAR":
+          animationSampler.output = arrayFill(values, 0);
+          break;
+        case "VEC3":
+          animationSampler.output = arrayFill(
+            values,
+            Cartesian3.clone(Cartesian3.ZERO)
+          );
+          break;
+        case "VEC4":
+          animationSampler.output = arrayFill(
+            values,
+            Quaternion.clone(Quaternion.ZERO)
+          );
+          break;
+      }
+      animationSampler.output = values;
+    }
+  );
+
+  return animationSampler;
+}
+
+function loadAnimationTarget(gltfTarget, nodes) {
+  const animationTarget = new AnimationTarget();
+
+  const nodeIndex = gltfTarget.node;
+  // If the node isn't defined, the animation channel should be ignored.
+  // It's easiest to signal this by returning undefined.
+  if (!defined(nodeIndex)) {
+    return undefined;
+  }
+
+  animationTarget.node = nodes[nodeIndex];
+  switch (gltfTarget.path) {
+    case "translation":
+      animationTarget.path = AnimatedPropertyType.TRANSLATION;
+      break;
+    case "rotation":
+      animationTarget.path = AnimatedPropertyType.ROTATION;
+      break;
+    case "scale":
+      animationTarget.path = AnimatedPropertyType.SCALE;
+      break;
+    case "weights":
+      animationTarget.path = AnimatedPropertyType.WEIGHTS;
+      break;
+  }
+
+  return animationTarget;
+}
+
+function loadAnimationChannel(gltfChannel, samplers, nodes) {
+  const animationChannel = new AnimationChannel();
+
+  const samplerIndex = gltfChannel.sampler;
+  animationChannel.sampler = samplers[samplerIndex];
+  animationChannel.target = loadAnimationTarget(gltfChannel.target, nodes);
+
+  return animationChannel;
+}
+
+function loadAnimation(loader, gltf, gltfAnimation, nodes) {
+  let i;
+
+  const animation = new Animation();
+  animation.name = gltfAnimation.name;
+
+  const gltfSamplers = gltfAnimation.samplers;
+  const samplersLength = gltfSamplers.length;
+
+  const samplers = new Array(samplersLength);
+  for (i = 0; i < samplersLength; i++) {
+    samplers[i] = loadAnimationSampler(loader, gltf, gltfSamplers[i]);
+  }
+
+  const gltfChannels = gltfAnimation.channels;
+  const channelsLength = gltfChannels.length;
+
+  const channels = new Array(channelsLength);
+  for (i = 0; i < channelsLength; i++) {
+    channels[i] = loadAnimationChannel(gltfChannels[i], samplers, nodes);
+  }
+
+  animation.samplers = samplers;
+  animation.channels = channels;
+
+  return animation;
+}
+
+function loadAnimations(loader, gltf, nodes) {
+  let i;
+
+  const gltfAnimations = gltf.animations;
+  if (!defined(gltfAnimations)) {
+    return [];
+  }
+
+  const animationsLength = gltf.animations.length;
+  const animations = new Array(animationsLength);
+  for (i = 0; i < animationsLength; ++i) {
+    animations[i] = loadAnimation(loader, gltf, gltf.animations[i], nodes);
+  }
+
+  return animations;
+}
+
 function getSceneNodeIds(gltf) {
   let nodesIds;
   if (defined(gltf.scenes) && defined(gltf.scene)) {
@@ -1545,6 +1742,7 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
 
   const nodes = loadNodes(loader, gltf, supportedImageFormats, frameState);
   const skins = loadSkins(loader, gltf, nodes);
+  const animations = loadAnimations(loader, gltf, nodes);
   const scene = loadScene(gltf, nodes);
 
   const components = new Components();
@@ -1561,6 +1759,7 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
   components.scene = scene;
   components.nodes = nodes;
   components.skins = skins;
+  components.animations = animations;
   components.upAxis = loader._upAxis;
   components.forwardAxis = loader._forwardAxis;
 
