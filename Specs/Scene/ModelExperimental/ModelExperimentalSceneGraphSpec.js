@@ -22,6 +22,8 @@ describe(
       "./Data/Models/PBR/VertexColorTest/VertexColorTest.gltf";
     const buildingsMetadata =
       "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
+    const simpleSkinGltfUrl =
+      "./Data/Models/GltfLoader/SimpleSkin/glTF/SimpleSkin.gltf";
 
     let scene;
 
@@ -203,7 +205,7 @@ describe(
       });
     });
 
-    it("traverses scene graph correctly", function () {
+    it("stores runtime nodes correctly", function () {
       return loadAndZoomToModelExperimental(
         { gltf: parentGltfUrl },
         scene
@@ -212,8 +214,11 @@ describe(
         const modelComponents = sceneGraph._modelComponents;
         const runtimeNodes = sceneGraph._runtimeNodes;
 
-        expect(runtimeNodes[1].node).toEqual(modelComponents.nodes[0]);
-        expect(runtimeNodes[0].node).toEqual(modelComponents.nodes[1]);
+        expect(runtimeNodes[0].node).toEqual(modelComponents.nodes[0]);
+        expect(runtimeNodes[1].node).toEqual(modelComponents.nodes[1]);
+
+        const rootNodes = sceneGraph._rootNodes;
+        expect(rootNodes[0]).toEqual(0);
       });
     });
 
@@ -239,10 +244,42 @@ describe(
         const childTransform = ModelExperimentalUtility.getNodeTransform(
           modelComponents.nodes[1]
         );
-        expect(runtimeNodes[1].transform).toEqual(parentTransform);
-        expect(runtimeNodes[1].transformToRoot).toEqual(Matrix4.IDENTITY);
-        expect(runtimeNodes[0].transform).toEqual(childTransform);
-        expect(runtimeNodes[0].transformToRoot).toEqual(parentTransform);
+        expect(runtimeNodes[0].transform).toEqual(parentTransform);
+        expect(runtimeNodes[0].transformToRoot).toEqual(Matrix4.IDENTITY);
+        expect(runtimeNodes[1].transform).toEqual(childTransform);
+        expect(runtimeNodes[1].transformToRoot).toEqual(parentTransform);
+      });
+    });
+
+    it("creates runtime skin from model", function () {
+      return loadAndZoomToModelExperimental(
+        { gltf: simpleSkinGltfUrl },
+        scene
+      ).then(function (model) {
+        const sceneGraph = model._sceneGraph;
+        const modelComponents = sceneGraph._modelComponents;
+        const runtimeNodes = sceneGraph._runtimeNodes;
+
+        expect(runtimeNodes[0].node).toEqual(modelComponents.nodes[0]);
+        expect(runtimeNodes[1].node).toEqual(modelComponents.nodes[1]);
+        expect(runtimeNodes[2].node).toEqual(modelComponents.nodes[2]);
+
+        const rootNodes = sceneGraph._rootNodes;
+        expect(rootNodes[0]).toEqual(0);
+        expect(rootNodes[1]).toEqual(1);
+
+        const runtimeSkins = sceneGraph._runtimeSkins;
+        expect(runtimeSkins[0].skin).toEqual(modelComponents.skins[0]);
+        expect(runtimeSkins[0].joints).toEqual([
+          runtimeNodes[1],
+          runtimeNodes[2],
+        ]);
+        expect(runtimeSkins[0].jointMatrices.length).toEqual(2);
+
+        const skinnedNodes = sceneGraph._skinnedNodes;
+        expect(skinnedNodes[0]).toEqual(0);
+
+        expect(runtimeNodes[0].computedJointMatrices.length).toEqual(2);
       });
     });
 

@@ -36,10 +36,13 @@ export default function ModelExperimentalNode(options) {
   const sceneGraph = options.sceneGraph;
   const transform = options.transform;
   const transformToRoot = options.transformToRoot;
+  const node = options.node;
 
   this._sceneGraph = sceneGraph;
   this._children = options.children;
-  this._node = options.node;
+  this._node = node;
+
+  this._name = node.name; // Helps with debugging
 
   const components = sceneGraph.components;
 
@@ -55,6 +58,10 @@ export default function ModelExperimentalNode(options) {
   );
 
   this._transformDirty = false;
+
+  // Will be set by the scene graph after the skins have been created
+  this._runtimeSkin = undefined;
+  this._computedJointMatrices = [];
 
   /**
    * Pipeline stages to apply across all the mesh primitives of this node. This
@@ -175,6 +182,7 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
 
   /**
    * The node's axis corrected local space transform. Used in instancing.
+   *
    * @type {Matrix4}
    * @private
    * @readonly
@@ -195,6 +203,32 @@ Object.defineProperties(ModelExperimentalNode.prototype, {
   originalTransform: {
     get: function () {
       return this._originalTransform;
+    },
+  },
+
+  /**
+   * The skin applied to this node, if it exists.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {ModelExperimentalSkin}
+   * @readonly
+   */
+  runtimeSkin: {
+    get: function () {
+      return this._runtimeSkin;
+    },
+  },
+
+  /**
+   * The computed joint matrices of this node, derived from its skin.
+   *
+   * @memberof ModelExperimentalNode.prototype
+   * @type {Matrix4[]}
+   * @readonly
+   */
+  computedJointMatrices: {
+    get: function () {
+      return this._computedJointMatrices;
     },
   },
 });
@@ -245,4 +279,43 @@ ModelExperimentalNode.prototype.configurePipeline = function () {
   }
 
   updateStages.push(ModelMatrixUpdateStage);
+};
+
+/**
+ * Updates the joint matrices for this node, where each matrix is computed as
+ * computedJointMatrix = nodeWorldTransform^(-1) * skinJointMatrix.
+ *
+ * @private
+ */
+ModelExperimentalNode.prototype.updateJointMatrices = function () {
+  if (!defined(this._runtimeSkin)) {
+    return;
+  }
+
+  const computedJointMatrices = this._computedJointMatrices;
+  const skinJointMatrices = this._runtimeSkin.jointMatrices;
+  const length = skinJointMatrices.length;
+
+  for (let i = 0; i < length; i++) {
+    if (!defined(computedJointMatrices[i])) {
+      computedJointMatrices[i] = new Matrix4();
+    }
+
+    const nodeWorldTransform = Matrix4.multiplyTransformation(
+      this.transformToRoot,
+      this.transform,
+      computedJointMatrices[i]
+    );
+
+    const inverseNodeWorldTransform = Matrix4.inverseTransformation(
+      nodeWorldTransform,
+      computedJointMatrices[i]
+    );
+
+    computedJointMatrices[i] = Matrix4.multiplyTransformation(
+      inverseNodeWorldTransform,
+      skinJointMatrices[i],
+      computedJointMatrices[i]
+    );
+  }
 };

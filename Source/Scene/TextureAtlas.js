@@ -74,6 +74,7 @@ function TextureAtlas(options) {
   this._textureCoordinates = [];
   this._guid = createGuid();
   this._idHash = {};
+  this._indexHash = {};
   this._initialSize = initialSize;
 
   this._root = undefined;
@@ -365,6 +366,22 @@ function getIndex(atlas, image) {
 }
 
 /**
+ * If the image is already in the atlas, the existing index is returned. Otherwise, the result is undefined.
+ *
+ * @param {String} id An identifier to detect whether the image already exists in the atlas.
+ * @returns {Number|undefined} The image index, or undefined if the image does not exist in the atlas.
+ */
+TextureAtlas.prototype.getImageIndex = function (id) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(id)) {
+    throw new DeveloperError("id is required.");
+  }
+  //>>includeEnd('debug');
+
+  return this._indexHash[id];
+};
+
+/**
  * Adds an image to the atlas synchronously.  If the image is already in the atlas, the atlas is unchanged and
  * the existing index is used.
  *
@@ -382,7 +399,7 @@ TextureAtlas.prototype.addImageSync = function (id, image) {
   }
   //>>includeEnd('debug');
 
-  let index = this._idHash[id];
+  let index = this._indexHash[id];
   if (defined(index)) {
     // we're already aware of this source
     return index;
@@ -391,6 +408,7 @@ TextureAtlas.prototype.addImageSync = function (id, image) {
   index = getIndex(this, image);
   // store the promise
   this._idHash[id] = Promise.resolve(index);
+  this._indexHash[id] = index;
   // but return the value synchronously
   return index;
 };
@@ -438,7 +456,9 @@ TextureAtlas.prototype.addImage = function (id, image) {
 
   const that = this;
   indexPromise = Promise.resolve(image).then(function (image) {
-    return getIndex(that, image);
+    const index = getIndex(that, image);
+    that._indexHash[id] = index;
+    return index;
   });
 
   // store the promise

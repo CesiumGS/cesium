@@ -41,7 +41,6 @@ function GlyphTextureInfo(labelCollection, index, dimensions) {
 
 // Traditionally, leading is %20 of the font size.
 const defaultLineSpacingPercent = 1.2;
-
 const whitePixelCanvasId = "ID_WHITE_PIXEL";
 const whitePixelSize = new Cartesian2(4, 4);
 const whitePixelBoundingRegion = new BoundingRectangle(1, 1, 1, 1);
@@ -55,11 +54,8 @@ function addWhitePixelCanvas(textureAtlas, labelCollection) {
   context2D.fillStyle = "#fff";
   context2D.fillRect(0, 0, canvas.width, canvas.height);
 
-  return textureAtlas
-    .addImage(whitePixelCanvasId, canvas)
-    .then(function (index) {
-      labelCollection._whitePixelIndex = index;
-    });
+  const index = textureAtlas.addImageSync(whitePixelCanvasId, canvas);
+  labelCollection._whitePixelIndex = index;
 }
 
 // reusable object for calling writeTextToCanvas
@@ -607,7 +603,6 @@ function LabelCollection(options) {
     scene: this._scene,
   });
   this._backgroundBillboardCollection.destroyTextureAtlas = false;
-  this._backgroundImageReady = true;
 
   this._billboardCollection = new BillboardCollection({
     scene: this._scene,
@@ -909,21 +904,13 @@ LabelCollection.prototype.update = function (frameState) {
     billboardCollection.textureAtlas = this._textureAtlas;
   }
 
-  const that = this;
   if (!defined(this._backgroundTextureAtlas)) {
     this._backgroundTextureAtlas = new TextureAtlas({
       context: context,
       initialSize: whitePixelSize,
     });
     backgroundBillboardCollection.textureAtlas = this._backgroundTextureAtlas;
-    that._backgroundImageReady = false;
-    addWhitePixelCanvas(this._backgroundTextureAtlas, this).then(function () {
-      that._backgroundImageReady = true;
-    });
-  }
-
-  if (!this._backgroundImageReady) {
-    return;
+    addWhitePixelCanvas(this._backgroundTextureAtlas, this);
   }
 
   const len = this._labelsToUpdate.length;
