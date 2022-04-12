@@ -4986,7 +4986,6 @@ Object.defineProperties(CzmlDataSource.prototype, {
   },
 });
 
-// TODO: typedef for Packet (and about a hundred other things)
 /**
  * @callback CzmlDataSource.UpdaterFunction
  *

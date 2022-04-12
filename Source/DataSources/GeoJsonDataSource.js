@@ -555,6 +555,7 @@ function processTopology(dataSource, geoJson, geometry, crsFunction, options) {
  * Initialization options for the <code>load</code> method.
  *
  * @property {String} [sourceUri] Overrides the url to use for resolving relative links.
+ * @property {GeoJsonDataSource.describe} [describe=GeoJsonDataSource.defaultDescribeProperty] A function which returns a Property object (or just a string).
  * @property {Number} [markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
  * @property {String} [markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
  * @property {Color} [markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
